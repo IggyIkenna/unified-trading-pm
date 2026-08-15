@@ -105,9 +105,10 @@ and MVP-tagging needs.
       plan's own per-symbol-date discipline, motivated by the same regime/coverage-window correctness concern that
       plan's Progress Log documents for XAU/XAG/SPY). Repo: instruments-service. — **NO CODE CHANGE NEEDED** (already
       registered) + instruments-service@4eca07bac4 (regression test). See Progress Log.
-- [ ] [SCRIPT] P2. Once IS enumerates the new symbols, launch the CeFi Tardis/venue-native backfill for the
+- [x] ✅ [SCRIPT] P2. Once IS enumerates the new symbols, launch the CeFi Tardis/venue-native backfill for the
       tokenized-equity SPOT window (existing launcher — verify whether OKX/Bybit SPOT tokenized-equity trades ride the
-      same Tardis archive as the equity perps, or need their own adapter check first). Repo: deployment-service.
+      same Tardis archive as the equity perps, or need their own adapter check first). Repo: deployment-service. —
+      **LAUNCHED 2026-08-15T15:14 UTC (slot-3·backend_engineer)**, see Progress Log.
 - [x] ✅ [DOCS] P2. Propagate to `/codex/02-data/mvp-scope-canonical.md` and `/codex/02-data/cefi-capture-universe.md`
       once the above lands. — unified-trading-pm (this commit), see Progress Log.
 
@@ -354,3 +355,21 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   unreliable per gcloud's own warning) before assuming the gate has cleared; once it passes, run the exact
   `launch-cefi-sharded-backfill.sh` command above (drop `DRY_RUN=1`), then flip this checkbox with the VM name +
   evidence.
+
+- **2026-08-15T15:14 UTC — Todo 6 (launch the backfill) COMPLETE — LAUNCHED.** Slot-3 backend_engineer worker
+  (dispatched via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s mirrored tracking entry for this same underlying
+  launch). Re-ran the sourced guard function (not a manual `gcloud` count):
+  `source scripts/vm/tardis-concurrency-guard.sh; tardis_concurrency_guard 1 asia-northeast1-c central-element-323112` →
+  **OK: 0 running + 1 planned = 1 <= cap 1** — every previously-blocking VM from the prior 4 gated checks
+  (`cefi-okx-swap-2026-light-*`, `mtds-backfill-cefi-extended-starknet-fullhist-1`,
+  `mtds-backfill-cefi-pipelinecheck-*`) had finished/terminated by this check. Dry-run
+  (`DRY_RUN=1 VENUES="OKX-SPOT BYBIT-SPOT" YEARS="2025 2026" SINGLE_VM_QUEUE=1 bash scripts/vm/launch-cefi-sharded-backfill.sh`)
+  confirmed the identical single-combined-VM plan every prior check recorded (`heavy|trades;book_snapshot_5`,
+  e2-highmem-16, `VM_START_DATE=2025-01-01 VM_END_DATE=2026-08-14`) — no code change needed, catalogue-mvp-driven as
+  before. Launched for real (same command, `DRY_RUN` dropped): **`cefi-queue-heavy-okxspot-x2-20260815-151408`**
+  (e2-highmem-16, `asia-northeast1-c`, project `central-element-323112`) covering OKX-SPOT + BYBIT-SPOT,
+  `VM_START_DATE=2025-01-01 VM_END_DATE=2026-08-14`, `VM_DATA_TYPES=trades;book_snapshot_5`,
+  `VM_SHUTDOWN_ON_COMPLETION=true`. Confirmed STARTED:
+  `gcloud compute instances list --filter="name~cefi-queue-heavy-okxspot"` → `STATUS=STAGING` immediately after launch
+  (transitioning to RUNNING as expected). No code shipped (none needed) — the launcher + universe/catalogue registration
+  from Todos 1-5 already fully cover this launch. This was the plan's last open todo.

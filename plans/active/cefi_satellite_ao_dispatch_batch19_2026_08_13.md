@@ -523,7 +523,16 @@ source: >-
       `SPOT_PAIR` record per symbol dated to its real `availableSince`); a regression guard shipped —
       **`instruments-service@4eca07bac4`** (confirmed ancestor of `origin/live-defi-rollout`). No code shipped by this
       batch (none needed). Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
-- [ ] [CODE] P2. Launch the CeFi Tardis/venue-native backfill for the tokenized-equity SPOT window Source:
+- [x] ✅ [CODE] P2. Launch the CeFi Tardis/venue-native backfill for the tokenized-equity SPOT window — **LAUNCHED
+      2026-08-15T15:14 UTC (slot-3·backend_engineer).** Tardis 1-VM concurrency guard cleared (0 running Tardis
+      consumers, per the sourced `tardis_concurrency_guard 1 asia-northeast1-c central-element-323112` function, not a
+      manual `gcloud` count) → OK, 0 running + 1 planned = 1 <= cap 1. Dry-run confirmed the same single-combined-VM
+      plan every prior gated check recorded; launched for real via
+      `VENUES="OKX-SPOT BYBIT-SPOT" YEARS="2025 2026" SINGLE_VM_QUEUE=1 bash scripts/vm/launch-cefi-sharded-backfill.sh`
+      (deployment-service repo). VM `cefi-queue-heavy-okxspot-x2-20260815-151408` (e2-highmem-16, asia-northeast1-c)
+      confirmed STAGING via `gcloud compute instances list` immediately after launch — covers OKX-SPOT + BYBIT-SPOT,
+      `VM_START_DATE=2025-01-01 VM_END_DATE=2026-08-14`, data_types trades;book_snapshot_5, shuts down on completion.
+      Source doc's own Todo 6 flipped in the same commit (see its Progress Log). Source:
       `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [x] ✅ [CODE] P2. Grep prior mdps-cefi-_/mdps-tradfi-_/mdps-defi-* run.log archives (or manifest attempted_failed
       reason strings) for the exact Timestamp-vs-float TypeError signature to size the historical blast radius, and
