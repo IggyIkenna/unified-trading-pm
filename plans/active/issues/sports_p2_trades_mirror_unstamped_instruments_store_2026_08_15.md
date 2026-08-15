@@ -61,10 +61,55 @@ Extend the existing `trades`→`odds` re-stamp tooling
 fresh live probe whether the manifest consolidator's cross-bucket sync already carries these on its next cycle, before
 assuming a code fix is needed).
 
+## Progress Log
+
+**2026-08-15 (slot-29) — live census + decision.** Ran a fresh, memory-bounded census against
+`instruments-store-sports-prd-central-element-323112`'s canonical `_index/availability_index.parquet`
+(`instruments-service/scripts/census_sports_is_bucket_trades_mirror_2026_08_15.py`, column-projected direct
+`pd.read_parquet` — the naive `merge_canonical_with_outstanding_shards(columns=...)` path measured >8GB RSS on this
+bucket even slim-columned, so this script bypasses it; a read-only census does not need the outstanding-per-VM-shard
+merge that helper exists for). Findings corroborate + refresh this doc's original "What I found" counts (same
+124,502-row all-status total: `trades`=122,286, `TRADES`=2,216):
+
+- By `capture_status`: `captured`=43,758 (1,547,287 total row_count) / `attempted_failed`=33,629 /
+  `empty_confirmed`=47,115.
+- By `venue`: dominated by bookmaker venues under `pipeline_mode=batch_odds_api` (WILLIAMHILL, MATCHBOOK, BETONLINEAG,
+  UNIBET, PINNACLE, …) — the same population the tick-bucket P0 re-stamp already relabeled on the OTHER surface.
+- `date` range 2018-01-01 → 2026-08-15 (today); `written_at` range 2026-05-05 → **2026-08-15 06:37:30 UTC (today)**,
+  with **19,992 rows written_at within the last 7 days**.
+
+**Verdict: LIVE PRODUCER, not a stale historical mirror.** The sports odds_api writer is still actively stamping
+`data_type=trades`/`TRADES` on new captures into this surface as of today. This matches the KNOWN PHASED-STATE CAVEAT
+`manifest_swap_trades_to_odds_2026_08_12.py` already documented for the sibling tick-bucket surface: writers keep
+emitting the old token until P3 (`sports_taxonomy_p3_consumers_2026_08_08`) flips them — that plan is the tracked scope
+for the writer-side fix, not duplicated here. Consequently a one-time metadata relabel is not durable by itself (new
+`trades` rows will keep appearing until P3 lands), but it is still the correct immediate action — same posture already
+accepted for the tick-bucket sibling script — so the relabel was drafted + locally validated (synthetic in-memory frame,
+no GCS calls) this session: `instruments-service/scripts/restamp_sports_is_bucket_trades_mirror_to_odds_2026_08_15.py`.
+Execution against prod needs a dedicated VM launch (15.7M-row manifest, matches the already-executed 19-token
+casing-restamp's own VM-launch requirement on this exact bucket) — split to the new `[OPERATOR]` todo below rather than
+run inline on the shared host, per the memory-bounding + heavy-I/O HARD RULES.
+
 - [ ] [DATA] P2. Census the `instruments-store-sports-prd` manifest's `trades`/`TRADES` rows' `capture_status`/
       `venue`/`date` distribution, confirm whether they are stale historical mirrors of already-migrated tick-bucket
       shards (safe metadata-only relabel) or reflect a live producer still writing the old label into this surface, then
       re-stamp or fix the writer accordingly. §3a does not apply (no object delete, manifest-only). Re-run this doc's
       census after the fix; 0 remaining `trades`/`TRADES` rows on this surface closes the parent plan's "assert the
       vocabulary has collapsed to TWO types" REVIEW todo. (repo: instruments-service or market-tick-data-service,
-      whichever owns the write path found)
+      whichever owns the write path found) **CENSUS + DECISION DONE 2026-08-15 (slot-29) — execution split to the new
+      `[OPERATOR]` todo below, see Progress Log.** This checkbox stays open until 0 remaining is actually re-verified
+      post-relabel.
+- [ ] [OPERATOR] P2. **Execute the drafted manifest relabel against prod, via a dedicated VM launch** (this manifest is
+      15.7M rows — too large for an inline interactive CAS write per the memory-bounding + heavy-I/O HARD RULES,
+      `unified-trading-pm/agents/RULES.md` §1; the already-executed 19-token casing restamp on this exact bucket
+      required its own VM-launcher category, `sports_taxonomy_p2_migration_2026_08_08.md` Progress Log 2026-08-14, for
+      the same reason). Script:
+      `instruments-service/scripts/restamp_sports_is_bucket_trades_mirror_to_odds_2026_08_15.py` (drafted + locally
+      validated against a synthetic in-memory frame this session — NOT yet run against prod). Manifest-only relabel
+      (merged `_index/availability_index.parquet` + every non-empty `_index/per_vm/*.parquet` shard), no GCS object
+      touched, §3a n/a. Reuse (or extend) the `sports-19token-restamp` VM-launcher category. After apply: re-run
+      `census_sports_is_bucket_trades_mirror_2026_08_15.py`; 0 remaining `trades`/`TRADES` closes the todo above.
+      **KNOWN PHASED-STATE CAVEAT**: the live odds_api writer keeps stamping `data_type=trades` on new captures until P3
+      (`sports_taxonomy_p3_consumers_2026_08_08`) flips it to the canonical token — a re-run after P3 lands may be
+      needed if fresh `trades` rows reappear (same caveat already accepted for the sibling tick-bucket restamp,
+      `manifest_swap_trades_to_odds_2026_08_12.py`).
