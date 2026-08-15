@@ -272,3 +272,28 @@ tested, and collectively inert: the revocation actuator (no caller), the depende
 health prober (no injected probe). Each passed review because each layer was genuinely finished. The cheap defence is an
 anti-inertness guard per layer — assert the thing has a non-test caller — and it belongs with the component, not in a
 checklist.
+
+### 2026-08-15 — two traps worth not re-learning
+
+**Prettier reformats conflict markers into valid markdown, defeating a naive grep.** A stash-pop conflict in this file
+left a seven-angle-bracket "Stashed changes" marker, which prettier rewrote into a markdown blockquote by putting a
+space between every bracket. An anchored grep for the raw marker then reported **zero markers** on a file that plainly
+had them, and I relayed that "0 markers" result as fact. The repo's own `scripts/plan-hygiene/check_conflict_markers.sh`
+catches it because it normalises whitespace first. Use it; do not hand-roll the check. Downstream cost of the false
+negative: the resolution kept BOTH the flipped and unflipped copies of one todo, so the plan briefly claimed the AWS
+gate was simultaneously landed and not landed.
+
+**The stale-local-content trap is real, and `check_todo_regression.sh` is what catches it.** This slot's copy of this
+plan was ~16h stale. A peer session had, in the meantime, both FIXED the catalogue-stale `upstream_entity` gap and filed
+a far deeper P0 todo tracing `DP-MANIFEST-001` to `assert_consolidator_healthy` in unified-trading-library (it calls
+bare `log_event()`, never reaches `route_finding()`, so that alert has no production call site at all — and
+`"manifest-consolidator"` is not even a registered `upstream_entity_type`). Editing the stale copy and pushing would
+have silently reverted both, with **no conflict signal** — exactly what CLAUDE.md's "full-file staging overwrites, not
+merges" warns about. The todo-regression check flagged `origin=9 current=8` and stopped it. Two rules earned here:
+`git diff origin/<branch> -- <path>` BEFORE pushing an edited plan, and treat a todo-count drop as a real loss until
+proven otherwise.
+
+**Corollary on inheriting a dead session's WIP.** The 16h-stale local edit was correctly inheritable by the liveness
+rule, and inheriting it would still have been wrong — because "not actively held" is not the same as "still accurate".
+Verify an inherited finding against the CURRENT origin before committing it: two of that note's three specifics had
+already been overtaken.
