@@ -237,6 +237,17 @@ a cycle:
   not ingested/dispatched), but flipping it to `status: active` to actually dispatch it is an operator decision — park
   it as a normal `- [ ]` follow-up item, never auto-flip.
 
+### Reconcile prior dated parked docs FIRST (added 2026-08-15, operator ruling — same rule as `/plan-reconcile` Phase -1)
+
+Before auditing a tranche fresh, `ls`/grep for that tranche's own prior `ag_closeout_audit_<tranche>_parked_<date>.md`
+docs (see "Parked findings ALWAYS get a durable issue doc" below) and reconcile them against current corpus state first:
+pull fresh, check each parked item against what's landed since, flip/archive what's resolved, only then run a new Phase
+0-2 pass. A stale unretired parked doc left for the next scheduled run to re-discover is the same false-progress pattern
+`/plan-reconcile` Phase -1 exists to kill — full treatment (why, and the exact steps) lives there; this is the one-line
+pointer so it isn't re-derived per skill. Trust mode (same doc, "Trust mode" section) also applies here: a parked
+judgment call with a clear `[WORKER REC]` gets applied and logged, not left parked, unless it's a codex-SSOT edit or one
+of the standing hard-stops.
+
 ## Running as one of N concurrent sharded tranche workers — two HARD safety rules (added 2026-07-30)
 
 The scheduled shape of this skill is NOT one worker sweeping 10 tranches — it is up to 9-10 workers, ONE PER TRANCHE,
