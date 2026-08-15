@@ -273,3 +273,30 @@ archival — no live Databento dependency).
   re-attempt once the invoice todo is next confirmed paid. No code changed; this doc's existing `[ ]` P0 invoice todo
   already covers the fix. Filed no new issue doc (this one already tracks the live recurrence). Paged the operator via
   `/blocked` per the escalation contract — same pre-existing `[OPERATOR]`-gated action, not a new decision.
+
+- **2026-08-15 (slot-14, backend_engineer, `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "run the by_date
+  re-feed chain" todo) — STILL `blocked`, IS reference-data adapter (not just MTDS OHLCV) also hits the same wall, AND
+  the failure is narrower than this doc's "full account-level outage" framing.** Launched
+  `instr-backfill-tradfi-20260815` (`launch-instruments-backfill-vm.sh --asset-group TRADFI`, the exact re-feed path
+  this doc's "What's actually different" section names —
+  `instruments_service/reference_data/adapters/tradfi/databento/adapter.py`). Within the first ~3 minutes (2020-01-01
+  through 2020-01-03 shards) CME hit `Databento SDK error dataset GLBX.MDP3 symbols=78: 402 account_delinquent_invoice`
+  on every single date, retry-exhausted both attempts every time (10s then 30s backoff) — same signature as the
+  04:39:56Z BATCH-side confirmation above, now independently reconfirmed ~5h later the same day on the IS reference-data
+  path. **Narrower finding, worth flagging against this doc's current "FULL account-level outage... EVERY Databento
+  request... will fail" characterization**: in the same shards, the OTHER 4 venues (ICE/NASDAQ/NYSE/FX) wrote
+  successfully — each date logged `4/5 venues written (80% complete), 1 missing — ['CME']`, not a 0/5 account-wide
+  failure. Only CME's `GLBX.MDP3` dataset returned 402; no other venue's fetch in this run hit a
+  402/delinquent/suspended error. Not re-verified whether NASDAQ/NYSE actually route through Databento for this call
+  (router.py's own docstring says they do) or a different source — flagging the discrepancy rather than guessing; if
+  true this is dataset/subscription-scoped (GLBX.MDP3 specifically unpaid), not account-wide, which would change the
+  resolution's blast radius but not its `[OPERATOR]`-gated nature. **Did NOT let the VM keep running** — deleted it
+  (`gcloud compute instances delete instr-backfill-tradfi-20260815 --zone=asia-northeast1-c`) once the 02-day pattern
+  confirmed CME would fail identically across the full 2020-2026 requested range (~2400 days × ~40s of guaranteed-futile
+  CME retry overhead each, on top of SPOT compute cost for zero CME progress) — mirrors the 04:39:56Z entry's same
+  delete-on-confirmed-402 precedent. The re-feed todo's own done-when ("write-rate recovers toward the historical
+  16-18K/day range") cannot be satisfied while CME/GLBX.MDP3 — TradFi's largest single instrument-type population
+  (options/futures) per this same plan family's own G1 enumerate counts — stays blocked; marking that todo
+  `NOT ACTIONABLE` in its batch plan rather than partially running it. No code changed; this doc's existing `[ ]` P0
+  invoice todo already covers the fix. Did not re-page the operator — already paged same day (04:39:56Z entry above),
+  this is corroboration not a new event.
