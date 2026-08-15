@@ -8,7 +8,7 @@ summary: >-
   read-only this run, leaving 44 non-grace docs (~1.9MB) as the actionable set, plus the normative refs (PLAN_FORMAT.md
   / task_template.md / INDEX.md / ACTIVE_INDEX.md) and codex which stay in scope for every shard per
   cursor-configs/skills/plan-reconcile/SKILL.md.
-status: open
+status: archived
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -29,8 +29,8 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: review
 assigned_vm: planning
 execution_scope: orchestrator-agent
-locked_by: plan_reconciler
-locked_since: "2026-08-10"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by:
@@ -45,6 +45,11 @@ context_scope:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **ARCHIVED 2026-08-15** — content-complete (0 genuinely open items; the sole `[SCRIPT] P2` finding was shipped
+> `unified-trading-pm@0edf5bf2ee`, all archive candidates blocked at run time are re-verified resolved by the 2026-08-15
+> `/plan-reconcile` fresh sweep, see `plan_reconciler_findings_all_2026_08_15.md`). Unlocked and archived per explicit
+> operator `[unlock-plan]` (2026-08-15).
 
 # plan_reconciler run — 2026-08-10 (agt-8005f6, sports tranche)
 
