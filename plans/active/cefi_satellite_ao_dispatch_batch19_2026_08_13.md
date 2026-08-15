@@ -221,10 +221,13 @@ source: >-
       hard cap (currently 1001L, pre-existing — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks ANY commit
       touching this file until it's under cap) so its own stale `meta_watchers.check_high_attempted_failed`
       windowed-ratio checkbox (line ~303, already satisfied by `deployment-service@96271280`/`@0c38c00d` — see this
-      batch's todo above + its Progress Log entry) can finally be flipped. Judgment call on what to archive/condense
-      (likely candidate: fold the many near-duplicate `(cefi, book_snapshot_5)` STATIC-BACKLOG repeat-dispatch Progress
-      Log entries into a condensed summary, per the plan-completion-and-archival-discipline SSOT), so out of scope for
-      this batch's mechanical todo. Repo: unified-trading-pm.
+      batch's todo above + its Progress Log entry) AND its stale "Resolve margin_type for the ~1,578 cefi liquidation
+      instrument_ids" checkbox (line ~289, already satisfied by `unified-trading-library@8142cab5ad` +
+      `market-data-processing-service@6422150034` — see this batch's own todo above) can finally be flipped. Judgment
+      call on what to archive/condense (likely candidate: fold the many near-duplicate `(cefi, book_snapshot_5)`
+      STATIC-BACKLOG repeat-dispatch Progress Log entries into a condensed summary, per the
+      plan-completion-and-archival-discipline SSOT), so out of scope for this batch's mechanical todo. Repo:
+      unified-trading-pm.
 - [x] ✅ [CODE] P2. Codex SSOT updates for crypto-venue equity-perp sourcing + equity-basis arb archetype Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **SHIPPED unified-trading-pm (this
       commit).** `/codex/02-data/tradfi-databento-sourcing-ssot.md`: new subsection documenting DBEQ.BASIC's missing
@@ -296,8 +299,19 @@ source: >-
   drafting** — see `plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md` for the resulting 5-phase
   plan (UAC oracle dual-acceptance → writer+adapters+catalogue migrate together → operator-gated backfill → oracle
   narrows + close-out). No code changed by this investigation; this todo's own tracked work now lives in that plan.
-- [ ] [CODE] P2. Resolve margin_type for the ~1,578 cefi liquidation instrument_ids lacking @LIN/@INV suffix via
-      instruments-service reference data Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Resolve margin_type for the ~1,578 cefi liquidation instrument_ids lacking @LIN/@INV suffix via
+      instruments-service reference data — **SHIPPED unified-trading-library@8142cab5ad +
+      market-data-processing-service@6422150034** (2026-08-15, slot-11·backend_engineer). New
+      `read_instruments_catalog_margin_type()` reader in UTL's `instruments_catalog_reader.py`, mirroring the existing
+      `read_instruments_catalog_contract_size()` shape/cache exactly (shared `_get_cached_catalog_row` scan;
+      `margin_type` was already in `CATALOG_COLUMNS` — no writer change needed). Wired as a fallback in
+      `liquidations_adapter.py::_resolve_margin_type_via_catalog_fallback`, tried only when `infer_cefi_quote_margin`'s
+      string heuristics exhaust unresolved — before falling to the honest `MalformedTickFieldError`. 8 new unit tests
+      across both repos (`TestReadInstrumentsCatalogMarginType`, `TestUnsuffixedMarginTypeFromCatalog`), both gates
+      green. **Source doc's own checkbox NOT flipped in this commit** — that file is already 1001L, over its 1000-line
+      hard cap (pre-existing, unrelated to this fix); `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks any
+      commit touching it (same situation as this batch's earlier "Map the index perps" todo). Source:
+      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [x] ✅ [CODE] P2. Widen canonical_writer_shaping int32->int64 coercion to every contract-declared int64 column (or
       assert dtype match at the write seam) — **SHIPPED market-data-processing-service@5b2701fa9f (2026-08-15,
       slot-9·backend_engineer).** `_inject_schema_contract_columns` now accepts an optional
@@ -600,3 +614,18 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   new work and not a conflict. No code shipped (none needed). **Source doc's own checkbox ALSO flipped in this commit**
   — `cefi_consolidated_closeout_2026_07_18.md` is 693L, well under its 1000-line hard cap, so no line-cap block applies
   here (unlike several sibling entries above).
+
+- **2026-08-15 (slot-11·backend_engineer)**: shipped the "Resolve margin_type for the ~1,578 cefi liquidation
+  instrument_ids lacking @LIN/@INV suffix" todo — `unified-trading-library@8142cab5ad` (new
+  `read_instruments_catalog_margin_type()` reader in `instruments_catalog_reader.py`, mirroring
+  `read_instruments_catalog_contract_size()`'s shape/shared-cache exactly; `margin_type` was already in
+  `CATALOG_COLUMNS` since it long predated the `contract_size` gap, so no writer-side change was needed) +
+  `market-data-processing-service@6422150034` (new module-level `_resolve_margin_type_via_catalog_fallback` helper in
+  `liquidations_adapter.py`, called between `infer_cefi_quote_margin`'s heuristic resolution and the
+  `MalformedTickFieldError` raise — tries the catalogue only when the heuristics genuinely exhaust unresolved; extracted
+  to a helper rather than inlined to keep `process_to_candles` under the ruff C901 complexity cap). 5 new UTL unit tests
+  (`TestReadInstrumentsCatalogMarginType`) + 4 new MDPS unit tests (`TestUnsuffixedMarginTypeFromCatalog`, covering
+  catalogue-resolves-inverse, catalogue-resolves-linear, catalogue-miss-still-fails-honestly, and
+  suffixed-ids-never-call-the-fallback). Both gates green. Same 1000-line hard-cap block as the sibling entries above
+  prevents flipping the source doc's own checkbox in this commit — added to the existing trim-under-cap follow-up todo
+  above rather than a new one.
