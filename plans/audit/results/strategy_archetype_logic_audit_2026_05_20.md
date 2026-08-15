@@ -635,12 +635,11 @@ USDT, USDC, GBP | Sports cross-book slots show `gbp` (e.g. `...epl-gbp-v2`); alw
 Solana) | — | | `MARKET_MAKING_EVENT_SETTLED` | GBP | USD, EUR | Sports books settle GBP | | `MARKET_MAKING_PREDICTION`
 | USDC | — | Polymarket/Kalshi native | | `MARKET_MAKING_*` (4 CeFi variants) | USDT or USD | USDC | — | | `DEFI_LP_*` |
 USDC | USDT, ETH | DeFi protocols primary in USDC | | `EVENT_DRIVEN` | USDT | USDC | — | | All `VOL_*` (CeFi options) |
-USDT | USDC, USD | LEAPS/TERM_STRUCTURE/DISPERSION:
-`USDT                                                                              | USD` | | `STAT_ARB_PAIRS_FIXED` /
-`CROSS_SECTIONAL` | USD | USDT | — | | `PORTFOLIO_*` | USD | any | Portfolio layer converts each sub-strategy NAV to
-reporting currency | | `ML_DIRECTIONAL_CONTINUOUS` | USDT or ETH or USD | any | Doc states "BANKROLL in share_class
-currency (e.g., USDT, ETH, USD)" — currency-agnostic | | `ML_DIRECTIONAL_EVENT_SETTLED` | USD or GBP or EUR | USDC | — |
-| `RULES_DIRECTIONAL_CONTINUOUS` | USD | USDT, ETH | — | | `RULES_DIRECTIONAL_EVENT_SETTLED` | USD | GBP | — |
+USDT | USDC, USD | LEAPS/TERM_STRUCTURE/DISPERSION: `USDT | USD` | | `STAT_ARB_PAIRS_FIXED` / `CROSS_SECTIONAL` | USD |
+USDT | — | | `PORTFOLIO_*` | USD | any | Portfolio layer converts each sub-strategy NAV to reporting currency | |
+`ML_DIRECTIONAL_CONTINUOUS` | USDT or ETH or USD | any | Doc states "BANKROLL in share_class currency (e.g., USDT, ETH,
+USD)" — currency-agnostic | | `ML_DIRECTIONAL_EVENT_SETTLED` | USD or GBP or EUR | USDC | — | |
+`RULES_DIRECTIONAL_CONTINUOUS` | USD | USDT, ETH | — | | `RULES_DIRECTIONAL_EVENT_SETTLED` | USD | GBP | — |
 
 **Share class enum collision** (P1 — affects sports + TradFi tracks):
 
@@ -860,7 +859,7 @@ coordinated at VM level).
 | 12  | `uac/internal/architecture_v2/enums.py` (`AllocatorArchetype`)                                                                       | CONDITIONAL               | If new allocator needed                                     |
 | 13  | Run `scripts/propagation/sync-archetype-capability-to-ui.sh`                                                                         | REQUIRED                  | Regenerates `coverage.ts`; UI QG diffs                      |
 | 14  | `unified-trading-system-ui/lib/architecture-v2/coverage.ts`                                                                          | REQUIRED (auto-generated) | UI capability matrix                                        |
-| 15  | `unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/xyz-foo.md`                                                         | REQUIRED                  | Per-archetype design SSOT (doc → plan → code)               |
+| 15  | `unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md`                                                | REQUIRED                  | Per-archetype design SSOT (doc → plan → code)               |
 | 16  | `deployment-service/scripts/vm/<launcher>.sh`                                                                                        | CONDITIONAL               | If new VM topology / new prefix                             |
 | 17  | `deployment-service/scripts/vm/vm_zombie_watchdog.py` (`VM_PREFIX_TO_BUCKET`)                                                        | CONDITIONAL               | If new VM prefix                                            |
 
