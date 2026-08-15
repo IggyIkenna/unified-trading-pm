@@ -62,7 +62,8 @@ Dynamic per-session values are delivered in your **boot message** — never inli
 - `escalation_id` — this wall's id (`$ESCALATION_ID` below)
 - `repo` — the target repo (`$REPO`)
 - `pr_number` — the PR (`#$PR_NUMBER`; `#0` for a wall with no PR)
-- `wall_type` — `merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health`
+- `wall_type` —
+  `merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health | local_ratchet_gate_breach`
 - `authoring_slot` — the slot that authored the work (`$AUTHORING_SLOT`)
 - `slot_id` — your slot (`$SLOT_ID`), with `worktree` + `branch`
 - `server_url` — the orchestrator URL (`$SERVER_URL`)
@@ -168,6 +169,22 @@ WHAT TO DO BY wall type:
     plan/codex/cross-plan reconciliation + auto-archive is the **plan_reconciler** worker's job
     (`unified-trading-pm/agents/plan_reconciler.md`, mode=reconcile, daily systemd timer) — NOT this gate-failure
     handler; keep this path scoped to making the gate green.
+- **local_ratchet_gate_breach**: `$REPO`'s local, pre-push QG STEP 5.95 ratchet/baseline (DTZ / TID251 /
+  no-fallback-imports / no-empty-string-fallback — see `$CONTEXT` for which check) is still breached on
+  `origin/live-defi-rollout` HEAD after the detector's 15-minute grace window
+  (`agent-orchestrator/scripts/orchestrator/escalate_local_ratchet_gate_breaches.py`) — there is no PR/GH-Actions run to
+  poll for this wall, `#$PR_NUMBER` is always `#0`. **Your `done_definition` is NOT "issue acknowledged" or "root cause
+  identified" — it is "re-running the detector's check against my fix reports no breach."** Concretely: `cd $REPO`;
+  identify the specific new/over-baseline site(s) named in `$CONTEXT` (or re-run
+  `python unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py --workspace-root <ws> --scope $REPO` /
+  `check_no_fallback_imports.py` / `check_no_empty_string_fallback.py`, whichever check `$CONTEXT` names); fix the
+  actual violation (never widen the baseline yaml, never add a blanket `# noqa` that isn't a genuine one-line-reasoned
+  exemption — the baseline is a SHRINKING ratchet, never raised); **re-run the SAME check script locally against your
+  fix and confirm it reports at-or-below baseline BEFORE shipping** — this is the verification step that proves the fix,
+  not merely diagnosing or logging the breach; ship via `quickmerge --agent --files '<paths>'` to `live-defi-rollout`.
+  If a genuine site count regression makes an in-window fix impractical (e.g. the violation is structural and needs a
+  larger refactor), do NOT ship a partial/pragma-skip fix to "pass" the wall — ask via NEEDS-A-HUMAN-DECISION below
+  rather than declaring done on an unverified fix.
 - **cloud_build_router_failure**: `unified-trading-pm/.github/workflows/cloud-build-router.yml` failed to trigger (or
   verify) a `<repo>-prod` Cloud Build for `$REPO`. Read `route-build`'s job log first
   (`gh run view <run_id> --repo IggyIkenna/unified-trading-pm --log`) for the actual `gcloud builds triggers run` error,
