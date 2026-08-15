@@ -137,3 +137,26 @@ goes green), not a design/judgment call.
 
 Open — repo-blocker declared (`kind: qg_red`) alongside this filing per `agents/worker.md` § 4b; the backend's
 `RepoHealthWatcher` will notify waiters once `quality-gates-v2` reads green again on `live-defi-rollout` for this repo.
+
+## Progress Log
+
+- **2026-08-15 (slot-20)**: Todo 2 (fallback-import) fixed — `agent-orchestrator/server/codex_bridge_server.py:217`
+  marked `# noqa: fallback-import` (openai-codex is a genuinely-optional SDK for this not-yet-deployed bridge process;
+  see the function's own docstring). `check_no_fallback_imports.py --scope agent-orchestrator`: 1 -> 0 (baseline 0).
+  Committed `agent-orchestrator@adac938`, not yet shipped (blocked on todo 4 below). **Correction to this doc's "STEP
+  5.95 ... runs entirely local/pre-push (Pass 1 of quality-gates.sh)" framing**:
+  `agent-orchestrator/scripts/quality-gates.sh` deliberately does NOT source `quality-gates-base/base-service.sh` (own
+  header comment, citing `agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` G6 — AO is a standalone
+  FastAPI service, not a UTL-based one) — so STEP 5.94/5.95/5.101 ratchet checks are NOT part of AO's own local Pass-1
+  gate or its pre-commit hooks (confirmed: neither appeared in a full local `quality-gates.sh` run nor in this session's
+  own commit's pre-commit hook output). Todos 1 and 3 (DTZ, empty-string-fallback) remain real, worth-fixing issues
+  against the standalone checker scripts (presumably tracked by the new fleet-wide detector), but do NOT themselves
+  block AO's own quickmerge ship path — worth knowing before assuming their fix is what unblocks shipping. The SOLE
+  actual local Pass-1 blocker for AO right now is todo 4 (`test_tier1_guidance_does_not_rearm_once_a_force_has_fired`),
+  reconfirmed failing on a fresh full local run just now (1 failed, 3959 passed, 2 skipped) on current HEAD (0 commits
+  behind origin). Also noting: the qg_red blocker (`RB-2903a236`) resolved via `watcher_green` within ~1 min of joining,
+  but a local Pass-1 run on that SAME HEAD immediately failed — a likely stale/false-positive CI read (same class as
+  `repo_blocker_resolution_signal_false_positive_2026_07_28.md`; not personally chased further here, flagging for
+  whoever owns that mechanism). Re-declared the blocker (`RB-2549326a` — slot-24 independently reached the same
+  root-cause diagnosis for their own todo-3 work and joined too) citing the corrected sole blocker. Waiting on todo 4's
+  fix to ship.
