@@ -56,7 +56,7 @@ have since gained real callers or explicit lifecycle markers contradicting the D
   `unified-trading-system-ui@181ae65d8f`.
 - market-tick-data-service: fixed (not deleted — it's a stale pointer inside a live QG script, not a standalone dead
   checker) the `quality-gates.sh:278` SSOT citation from the never-existent `_migrate_tradfi_hyphen_rewriter.py` to the
-  real `migrate_tradfi_to_hive.py`. `market-tick-data-service@d6ca0a67`.
+  real `migrate_tradfi_to_hive.py`. `market-tick-data-service@eda08816`.
 - unified-api-contracts `check_schema_organization.py`: already deleted upstream (commit `156c1eca`, "delete
   DELETE-class docs, fix residual mirror refs") — no action needed, checkbox-mirror only.
 
@@ -134,9 +134,15 @@ has actually verified).
 - [ ] [CODE] P3. Re-run `codemods/migrate_page_headers.py` against the ~20 still-unmigrated `app/**/page.tsx` files (or
       confirm they're intentionally excluded, e.g. non-standard header shape) before re-evaluating its `Delete-when`
       gate. Repo: unified-trading-system-ui.
-- [ ] [CODE] P3. Replace the 3 remaining direct `Loader2` + `animate-spin` usages under `app/(ops)/admin/` with
+- [x] ✅ [CODE] P3. Replace the 3 remaining direct `Loader2` + `animate-spin` usages under `app/(ops)/admin/` with
       `<Spinner />` before re-evaluating `codemods/replace-loader2-spinner.py`'s `Delete-when` gate. Repo:
-      unified-trading-system-ui.
+      unified-trading-system-ui. — **Ran the codemod against the whole tree** (not just the 3 named files — 5 more files
+      elsewhere had gained `Loader2` usages since the 2026-08-14 audit): `notifications/page.tsx`, `onboard/page.tsx`,
+      `requests/page.tsx`, `invoice-dashboard.tsx`, `invoice-detail-drawer.tsx`, `invoice-generate-modal.tsx`,
+      `EnvelopeBrowser.tsx`, `withdrawal-request-button.tsx`. Zero `Loader2` usages remain outside
+      `components/shared/spinner.tsx` (the Spinner impl itself) and the codemod-excluded `archive/` dir — its own
+      `Delete-when: ...no Loader2 remain` gate is now met. QG green (109s, all 6 stages).
+      `unified-trading-system-ui@58b332e852`.
 - [ ] [CODE] P3. Confirm which openapi json file actually feeds `openapi-typescript` (likely
       `lib/registry/openapi.json`, already duplicate-free) vs. the 7-duplicate
       `context/api-contracts/openapi/unified-trading-system.openapi.json`; if the latter is a genuine typegen input, run
@@ -152,3 +158,7 @@ has actually verified).
 - **2026-08-15 (slot 28)**: Flipped the `aggregate_instruments.py` follow-up todo — slot-29 had already resolved it in
   code (`deployment-service@b47a372e`) but the checkbox wasn't flipped. Confirmed the replacement is
   `download_instruments.py`'s `InstrumentAggregator`, not `build_instrument_catalogue.py`.
+- **2026-08-15 (slot 15)**: Resolved the Loader2/Spinner todo — ran `codemods/replace-loader2-spinner.py` repo-wide,
+  which caught 5 files beyond the 3 originally named (new Loader2 usages had appeared since the 2026-08-14 audit). QG
+  green, shipped `unified-trading-system-ui@58b332e852`. Two todos remain open (page-header codemod re-run, openapi
+  typegen-input confirmation).
