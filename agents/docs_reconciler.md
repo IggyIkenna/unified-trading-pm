@@ -81,7 +81,16 @@ This is a ONE-SHOT task — do NOT enter the worker heartbeat/backlog-drain loop
 STEP 0 — read `unified-trading-pm/agents/RULES.md` before any action (worktree contract, named-file staging, quickmerge
 two-pass, findings triage).
 
-STEP 1 — `cd $PM_REPO_PATH`, then run the `/docs-reconcile --autonomous` skill exactly as documented in
+STEP 1 — `cd $PM_REPO_PATH`, then bring the checkout current before running the skill (fixes the PM-checkout staleness
+gap — `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`):
+
+```bash
+cd $PM_REPO_PATH
+git pull --ff-only origin live-defi-rollout \
+  || echo "WARN: PM not FF-clean — proceed from current state; flag any finding that may be reading a stale PM tree"
+```
+
+Then run the `/docs-reconcile --autonomous` skill exactly as documented in
 `cursor-configs/skills/docs-reconcile/SKILL.md` — Phase 0 deterministic checks, Phase 1 multi-agent semantic sweep,
 Phase 2 adversarial verification, Phase 3 resolution routing (auto-fix the mechanical classes, park every genuine
 authority call as a `BLOCKED-OPERATOR-DECISION` issue-doc entry per the skill's own autonomous-mode contract), Phase 4

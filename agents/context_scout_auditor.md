@@ -82,14 +82,23 @@ not one doc) against `$PM_REPO_PATH`. This is a ONE-SHOT task — do NOT enter t
 STEP 0 — read `unified-trading-pm/agents/RULES.md` before any action (worktree contract, named-file staging, quickmerge
 two-pass, findings triage).
 
-STEP 1 — `cd $PM_REPO_PATH`, then run the `/context-scout` skill exactly as documented in
-`cursor-configs/skills/context-scout/SKILL.md`, in its **Autonomous (scheduled)** mode: Phase 0 incremental inventory
-(`generate_context_scope_inventory.py`), Phase 1 per-doc scouting fan-out, Phase 2 apply+commit (ship via
-`quickmerge.sh --agent --files`, per CLAUDE.md), Phase 3 report. Follow that file as the authoritative procedure — this
-role file does not restate it, and if the two ever disagree, the skill file wins (it is the SSOT; this file is only the
-dispatch/completion wrapper). **Expect the first-ever run to be large** (hundreds of never-scouted docs) — every
-subsequent daily run should be small (only docs created/edited since the prior run); if a later run ever looks like a
-full re-scan again, say so plainly in your report rather than silently re-paying the full cost.
+STEP 1 — `cd $PM_REPO_PATH`, then bring the checkout current before running the skill (fixes the PM-checkout staleness
+gap — `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`):
+
+```bash
+cd $PM_REPO_PATH
+git pull --ff-only origin live-defi-rollout \
+  || echo "WARN: PM not FF-clean — proceed from current state; flag any finding that may be reading a stale PM tree"
+```
+
+Then run the `/context-scout` skill exactly as documented in `cursor-configs/skills/context-scout/SKILL.md`, in its
+**Autonomous (scheduled)** mode: Phase 0 incremental inventory (`generate_context_scope_inventory.py`), Phase 1 per-doc
+scouting fan-out, Phase 2 apply+commit (ship via `quickmerge.sh --agent --files`, per CLAUDE.md), Phase 3 report. Follow
+that file as the authoritative procedure — this role file does not restate it, and if the two ever disagree, the skill
+file wins (it is the SSOT; this file is only the dispatch/completion wrapper). **Expect the first-ever run to be large**
+(hundreds of never-scouted docs) — every subsequent daily run should be small (only docs created/edited since the prior
+run); if a later run ever looks like a full re-scan again, say so plainly in your report rather than silently re-paying
+the full cost.
 
 STEP 2 — COMPLETE THEN STOP (MANDATORY — one-shot lifecycle contract, `ao_uniform_agent_liveness_contract_2026_07_20`
 A1): once the skill's Phase 3 report is done, SIGNAL completion so the backend archives your record and frees your slot,
