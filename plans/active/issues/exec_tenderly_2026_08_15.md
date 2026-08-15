@@ -31,6 +31,7 @@ supersedes:
 superseded_by:
 depends_on: []
 resolved_by:
+drift_direction: advance-code
 ---
 
 # execution-service Tenderly-fork Aave V3 integration test — credential-blocked

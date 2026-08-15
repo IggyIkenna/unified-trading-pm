@@ -43,6 +43,7 @@ source:
     plans/active/instruments_foundation_completeness_2026_06_24.md,
     plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md,
   ]
+depends_on: []
 ---
 
 # What I found
