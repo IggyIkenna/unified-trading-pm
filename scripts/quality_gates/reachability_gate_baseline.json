@@ -1,0 +1,34 @@
+{
+  "_comment": "Shrinking-ratchet baseline for the reachability gate (check_reachability_gate.py). targets[<key>] is the exact set of class names tolerated as unreachable for that ReachabilityTarget. NEVER hand-add a name here to silence a failure -- either wire the class into a real production caller, delete it as confirmed dead code (the V2InstructionRouter resolution), or re-run --update-baseline after reviewing why the new name is a deliberate, tracked gap. SSOT: plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md.",
+  "targets": {
+    "execution-service:defi_protocols": [
+      "AsterConnector",
+      "BeefyConnector",
+      "CCTPBridgeConnector",
+      "ConvexConnector",
+      "EigenLayerConnector",
+      "EtherFiConnector",
+      "IdleConnector",
+      "JitoConnector",
+      "JitoRestakingConnector",
+      "KaminoConnector",
+      "KarakConnector",
+      "KelpDAOConnector",
+      "MarinadeConnector",
+      "MorphoConnector",
+      "OrcaConnector",
+      "PacificaConnector",
+      "PendleConnector",
+      "PufferConnector",
+      "RaydiumConnector",
+      "RenzoConnector",
+      "RocketPoolConnector",
+      "SocketBridgeConnector",
+      "SolBlazeConnector",
+      "SymbioticConnector",
+      "WethConnector",
+      "YearnConnector"
+    ],
+    "strategy-service:close_all_registry": ["ArbitragePriceDispersionCloseAll", "CarryStakedBasisCloseAll"]
+  }
+}
