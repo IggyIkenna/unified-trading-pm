@@ -9,7 +9,7 @@ summary: >-
   It was not deleted — it is live on disk, actively maintained (fixed 4 days ago), and still documented as a live
   launcher in /codex/05-infrastructure/vm-launcher-runbook.md and /codex/05-infrastructure/launcher-script-ssot.md. Both
   launch-ml-training-vm.sh and launch-ml-vm.sh exist side by side; which one is authoritative is unresolved.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -48,7 +48,7 @@ context_scope:
   ]
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm (this commit — self-contained codex doc fix, no code repo touched)
 source: >-
   Found while running the 6-step archival ritual for
   ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md (2026-08-15), whose own todo 1
@@ -57,6 +57,9 @@ source: >-
 ---
 
 # codex says `launch-ml-training-vm.sh` was deleted — both it and `launch-ml-vm.sh` are live
+
+> **Status (2026-08-15)**: ✅ RESOLVED. `launch-ml-training-vm.sh` confirmed LIVE (fired by deployment-api's
+> `POST /api/ml/experiment/launch` route). Both codex docs fixed at `unified-trading-pm` (this commit).
 
 ## What I found
 
@@ -94,11 +97,26 @@ it + fix the 2 codex docs that still describe it as live) or whether it serves a
 
 ## Todos
 
-- [ ] [DOC] P3. Determine whether `launch-ml-training-vm.sh` is dead code (never invoked, fully superseded by
+- [x] ✅ [DOC] P3. Determine whether `launch-ml-training-vm.sh` is dead code (never invoked, fully superseded by
       `launch-ml-vm.sh`) or still live/callable (check `deployment-api`'s launch-trigger routes, `launcher_registry.py`
       self-heal keys, and `VM_PREFIX_TO_BUCKET` for `ml-train-`). If dead: delete the script + its `ml-train-` registry
       entries, and fix `/codex/05-infrastructure/vm-launcher-runbook.md` §9 +
       `/codex/05-infrastructure/launcher-script-ssot.md` to drop it. If live: fix
       `/codex/04-architecture/ml-service-architecture.md` § "Launcher + Cloud Build" and
       `/codex/05-infrastructure/vm-tarball-deployment.md` § "ML launcher" to stop claiming it was deleted, and state
-      what each of the two launchers is actually for. Repo: deployment-service, unified-trading-pm.
+      what each of the two launchers is actually for. Repo: deployment-service, unified-trading-pm. — unified-trading-pm (this commit)
+      **Verdict: LIVE.** `launch-ml-training-vm.sh` is the exact launcher `deployment-api`'s
+      `POST /api/ml/experiment/launch` route fires (`ml_experiment_launch.py`, `_LAUNCHER_FILENAME`) — confirmed via
+      grep, not just doc claim. `launch-ml-vm.sh` has no programmatic caller found (manual/CLI use only). Neither is
+      registered in `VM_PREFIX_TO_BUCKET` under `ml-train-` specifically — only `ml-` (from `launch-ml-vm.sh`) is
+      registered; `ml-train-` VM names prefix-match against it. `vm-launcher-runbook.md` and `launcher-script-ssot.md`
+      already correctly listed `launch-ml-training-vm.sh` as live (no fix needed there — this issue's "both pairs
+      disagree" framing meant the OTHER pair, `ml-service-architecture.md` + `vm-tarball-deployment.md`, was wrong).
+      Fixed both: `/codex/04-architecture/ml-service-architecture.md` § "Launcher + Cloud Build" + its Migration
+      history 2026-05-20 bullet, and `/codex/05-infrastructure/vm-tarball-deployment.md` § "ML launcher".
+
+## Progress Log
+
+- 2026-08-15 (slot-18): Resolved. Both codex docs now state both launchers are live and what each is for; issue
+  closed (no further work — the two launchers staying distinct rather than being merged is a separate, un-filed
+  follow-up decision, not required by this P3 doc-drift finding).

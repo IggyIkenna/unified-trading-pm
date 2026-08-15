@@ -351,11 +351,20 @@ from any of the above (the closest-shape anchor is the best starting point), not
 
 ---
 
-## ML launcher (non-singleton, consolidated 2026-05-20)
+## ML launcher (non-singleton; consolidation NEVER fully executed — TWO live launchers)
 
-`launch-ml-vm.sh` (consolidated from `launch-ml-training-vm.sh` per `ml_repo_consolidation_2026_05_19`) — runs training,
-inference, or evaluation for a single ml-service instrument×target×timeframe combination on GCE, writing artefacts to
-the ml model_registry in GCS. VM prefix: `ml-{instrument}-{ts}`.
+**Corrected 2026-08-15** (`/plans/archive/issues/launch_ml_training_vm_codex_claims_deleted_but_live_2026_08_15.md`):
+the `ml_repo_consolidation_2026_05_19` plan intended `launch-ml-vm.sh` to fully replace `launch-ml-training-vm.sh`, but
+`launch-ml-training-vm.sh` was never deleted and is still live — it is the exact launcher `deployment-api`'s
+`POST /api/ml/experiment/launch` route (`deployment-api/deployment_api/routes/ml_experiment_launch.py`) fires, and was
+fixed 2026-08-09 (`deployment-service@082a5eda`) to point at the real post-consolidation `ml_service.training` module.
+Both scripts run training/inference/evaluation for a single ml-service instrument×target×timeframe combination on GCE,
+writing artefacts to the ml model_registry in GCS:
+
+- `launch-ml-vm.sh` — general `--operation`-parameterised launcher (`train|infer|evaluate|grid-search|pipeline`),
+  invokes `python -m ml_service`. VM prefix: `ml-{instrument}-{ts}`. No programmatic caller found (manual/CLI use).
+- `launch-ml-training-vm.sh` — train-only, invokes `python -m ml_service.training`. VM prefix:
+  `ml-train-{instrument}-{ts}`. Fired by `deployment-api`'s experiment-launch route.
 
 - **Not singleton-locked** — parallel training is expected (different instruments, different target types, different
   hyper-param grids). ml-service does not share a rate-limited API key; it reads feature parquet + fits models locally.
