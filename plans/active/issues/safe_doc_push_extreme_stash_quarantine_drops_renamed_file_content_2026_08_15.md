@@ -175,6 +175,25 @@ tracked-but-missing shape.
       caller error) rather than a single combined `git add`, plus a companion fix re-deriving `KNOWN_RENAME_SOURCES`
       from `FILES` directly (absent-from-disk + present-in-HEAD) instead of an already-staged `-M` diff pair, which
       was silently empty on the isolated-worktree path — see Progress Log for full detail + regression coverage.
+- [ ] [SCRIPT] P1. **RESIDUAL GAP found 2026-08-15 (session resumption, slot-2), post-fix**: `stage_named_files()`'s
+      "already-staged, nothing to do" handling does NOT cover the case where the CALLER runs `git mv <old> <new>`
+      themselves BEFORE ever invoking `safe-doc-push.sh` (as opposed to the script staging it mid-loop, which the
+      fix above does handle). Reproduced live on a real archival (`plans/active/issues/sports_is_odds_horizon_bucket_
+      blank_timeframe_odds_api_dominant_2026_08_15.md` → `plans/archive/2026_08/issues/...`, this slot's own dirty
+      checkout, genuinely 18 pre-existing stash entries — not a synthetic repro): (1) manual `git mv` first, then
+      `safe-doc-push.sh --files '<old> <new> <other>'` → fails deterministically on attempt 1/6 with the exact
+      pre-fix `fatal: pathspec '<old>' did not match any files` error, twice in a row (not transient — 2 identical
+      consecutive failures). (2) `git reset` (unstage everything, leave working tree as-is — old path absent, new
+      path present, nothing staged) then re-run the SAME `safe-doc-push.sh` call → succeeds immediately on attempt
+      1/6, logging `-> re-staging deletion of rename source` (the `reassert_renames()` path this fix added) and
+      pushes cleanly. Both runs hit the SAME "18 entries is extreme, quarantining current dirty tree" branch, so the
+      quarantine-stash-pop cycle itself isn't what differs — something about a rename staged via `git mv` BEFORE the
+      stash/pop round-trip leaves the post-pop index in a shape `stage_named_files()`'s missing-from-disk check
+      doesn't recognize as "already staged", falling through to the old bare-`git add` failure path instead. Not
+      root-caused further this session (workaround found and used successfully: `git reset` before invoking the
+      script if you already ran `git mv` yourself). Needs the same isolated-scratch-repo reproduction discipline this
+      doc's own P1 fix used, specifically exercising `git mv` (not `rm`+`git add`) as the pre-staging step, across a
+      stash-quarantine cycle. Repo: unified-trading-pm.
 - [ ] [SCRIPT] P2. Once fixed, consider lowering the "24 entries is extreme" bar or adding a lighter-weight
       protect-and-restore path that doesn't require a full stash round-trip for the common case (few named files,
       most of the pile pre-existing and unrelated) — the current design pays the highest-risk code path exactly when
