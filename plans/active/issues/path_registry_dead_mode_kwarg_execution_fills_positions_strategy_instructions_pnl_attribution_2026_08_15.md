@@ -111,21 +111,22 @@ This needs an explicit design decision before a fix ships — a straight templat
 for live production data** (existing objects at the old, mode-collapsed path may already hold commingled/ overwritten
 data from multiple modes), not a bounded mechanical fix:
 
-1. **[OPERATOR] Decide the migration/backward-compat strategy.** Options include: (a) add the `{mode}` segment and cut
-   over fresh (old commingled objects become stale/orphaned, readers must know the cutover date), (b) add the segment
-   with a reader fallback that probes the old flat path when the new mode-partitioned path is empty, (c) something else.
-   Also decide the segment's value vocabulary (the narrower `batch`/`live`/`paper` string `domain_adapter.py`'s callers
-   already use vs. the fuller `PipelineMode` enum) and whether `unified-trading-api`'s already-mode-partitioned
-   `live_service.py` template should become the canonical shape instead of the `PATH_REGISTRY` one.
-2. **[CODE] Once (1) is decided**, add the `{mode}` placeholder to the 4 affected `path_template`s in
-   `unified-trading-library/unified_trading_library/config_interface/paths/registry.py` (`execution_fills`, `positions`,
-   `strategy_instructions`, `pnl_attribution`), add `mode` to each `partition_keys` list, and verify every writer/reader
-   call site (`execution-service/execution_service/results/save_operations.py`,
-   `strategy-service/strategy_service/pnl/adapters/domain_adapter.py`, and any others a fresh grep turns up) still
-   resolves the SAME path at both ends (byte-parity, per `domain_adapter.py`'s own existing "BYTE-PARITY TWIN" comments
-   on this exact risk).
-3. **[CODE] Harden `build_path()` itself** to fail loudly instead of silently dropping unconsumed kwargs (e.g. assert
-   the passed keys match `spec.partition_keys` exactly, or use a stricter formatter that raises on unused arguments) —
-   this exact bug class (a template silently missing a placeholder a caller already passes) has now recurred twice
-   (`raw_tick_data` 2026-07-28, this one). Fixing it at the shared helper stops future recurrences fleet-wide instead of
-   relying on per-dataset manual audits.
+- [ ] [OPERATOR] P1. **Decide the migration/backward-compat strategy.** Options include: (a) add the `{mode}` segment
+      and cut over fresh (old commingled objects become stale/orphaned, readers must know the cutover date), (b) add the
+      segment with a reader fallback that probes the old flat path when the new mode-partitioned path is empty, (c)
+      something else. Also decide the segment's value vocabulary (the narrower `batch`/`live`/`paper` string
+      `domain_adapter.py`'s callers already use vs. the fuller `PipelineMode` enum) and whether `unified-trading-api`'s
+      already-mode-partitioned `live_service.py` template should become the canonical shape instead of the
+      `PATH_REGISTRY` one.
+- [ ] [CODE] P1. **Once the above is decided**, add the `{mode}` placeholder to the 4 affected `path_template`s in
+      `unified-trading-library/unified_trading_library/config_interface/paths/registry.py` (`execution_fills`,
+      `positions`, `strategy_instructions`, `pnl_attribution`), add `mode` to each `partition_keys` list, and verify
+      every writer/reader call site (`execution-service/execution_service/results/save_operations.py`,
+      `strategy-service/strategy_service/pnl/adapters/domain_adapter.py`, and any others a fresh grep turns up) still
+      resolves the SAME path at both ends (byte-parity, per `domain_adapter.py`'s own existing "BYTE-PARITY TWIN"
+      comments on this exact risk).
+- [ ] [CODE] P1. **Harden `build_path()` itself** to fail loudly instead of silently dropping unconsumed kwargs (e.g.
+      assert the passed keys match `spec.partition_keys` exactly, or use a stricter formatter that raises on unused
+      arguments) — this exact bug class (a template silently missing a placeholder a caller already passes) has now
+      recurred twice (`raw_tick_data` 2026-07-28, this one). Fixing it at the shared helper stops future recurrences
+      fleet-wide instead of relying on per-dataset manual audits.

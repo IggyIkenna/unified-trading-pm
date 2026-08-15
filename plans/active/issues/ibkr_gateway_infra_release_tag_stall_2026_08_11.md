@@ -123,6 +123,14 @@ the underlying condition (27 commits, all non-package, tag unchanged) between 00
       change both" invariant, since that copy is the live semver-agent bump signal
       (`unified-trading-ci/.github/workflows/semver-agent.yml` L612-626 consumes its `source_touched` field directly).
       Not attempted this pass; do not implement without the audit landing first. (repo: unified-trading-pm)
+- [ ] [OPERATOR] P2. **Audit/complete `workspace-manifest.json`'s `breaking_scan_dir` (or an equivalent curated per-repo
+      source-dir list) for every fleet repo carrying `semver-agent.yml`, e2e-testing included.** Confirmed incomplete
+      for at least e2e-testing (`breaking_scan_dir: "tests"` misses `scripts/`'s 144 `.py` files, several with landed
+      `fix(...)` commits) — the rest of the fleet is unaudited. This is the "OPERATOR audit todo" the CODE P2 todo above
+      is gated on: implementing per-repo-source_dir-awareness off an incomplete source would silently reintroduce the
+      exact false-negative class `detect_breaking_change.py`'s 2026-08-09 revert was fixing. Once this audit lands, also
+      apply the same scoped-check change to `detect_breaking_change.py`'s own `_source_touched()` per this file's own
+      "if you change one, change both" invariant. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P3. **Fleet-wide sweep completed 2026-08-15** — compared every repo's `semver-agent.yml` `source_dir:`
       against its repo-name-derived guess (`repo-name-with-hyphens-to-underscores`) across all 24 repos carrying the
       workflow. `ibkr-gateway-infra` (`source_dir="ibkr_gateway_client"`) is the ONLY mismatch — every other repo

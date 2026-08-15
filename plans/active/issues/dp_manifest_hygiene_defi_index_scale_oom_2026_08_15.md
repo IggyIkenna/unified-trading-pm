@@ -159,5 +159,12 @@ Three real options, not mutually exclusive:
 
 **Resolution**: the streaming/DuckDB rewrite (Option A) is tracked as the P1 todo in
 `data_pipeline_self_healing_completion_residual_2026_07_24.md` — dispatch it from there, do not re-open this
-investigation. Option C (defi manifest granularity) is NOT yet tracked as a separate todo — a follow-up worker/ operator
-should add it as its own `- [ ]` item (non-blocking on A) rather than fold it into A's scope.
+investigation. Option C (defi manifest granularity) is now tracked below (non-blocking on A).
+
+## Follow-up
+
+- [ ] [DIAG] P3. **Investigate whether defi's manifest SHOULD be this granular at write time (Option C, non-blocking on
+      Option A).** If per-pool/per-instrument rows could be aggregated coarser at write time (or the index itself
+      pre-aggregated to a smaller companion artifact), the problem shrinks at the source instead of every downstream
+      reader needing to cope with 160M rows. Separate investigation, does not gate the Option-A streaming/DuckDB
+      rewrite.
