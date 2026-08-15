@@ -280,6 +280,24 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-30, data_engineering) — checkpoint: VM confirmed RUNNING + genuinely progressing post-relaunch,
+  still multi-hour remaining, task GATED not skipped-wrongly.** Live-verified (not trusted from a stale prior note):
+  `gcloud compute instances describe mtds-oracle-prices-backfill --zone=asia-northeast1-c` = RUNNING, created
+  `2026-08-15T01:28:48-07:00` (08:28:48 UTC) — this is the post-preemption relaunch from the entry below, ~6min old at
+  check time. `run.log` (via UTL `download_from_storage`, not `gsutil` — 388 lines, small text file, safe to read whole)
+  shows real per-day Chainlink/AAVE/Spark/Compound-V3 oracle queries actively advancing (currently 2022-07-27, day 3 of
+  chunk 1's ~60-day window covering the 2022-07-25 start of the ~1,480-day full range) with `ManifestWriter` writes
+  landing real rows to the per-VM shard (`mtds-oracle-prices-backfill-c1.parquet`) and periodic
+  `PIPELINE_HEARTBEAT`/`RESOURCE_SAMPLE` lines (RSS ~513MiB, well within `e2-highmem-4` bounds — no repeat-OOM
+  signature). The `WARNING Short return`/`Failed to decode`/`Failed to query` lines are EXPECTED honest-absence noise at
+  this early 2022 block height (pre-genesis for several feeds/oracles at this date), not job failures — matches the
+  doc's own (b) finding about pre-genesis dates issuing harmless real RPC calls. At the observed ~46s/day pace this is
+  genuinely a multi-hour (plausibly ~15-20h across ~25 chunks) job, consistent with the prior entry's own estimate — NOT
+  something a single bounded worker session should busy-poll to completion. Skipping this task now via
+  `reason_code: GATED` (per `worker.md` §4c — this task's own done-when condition, not a genuine ambiguity) so the fleet
+  cooldown arms instead of the task re-dispatching to the next heartbeat; the separate "Verify … reached a terminal
+  state" follow-up todo below remains the done-when for whoever picks this up next once enough wall-clock has passed. No
+  code changed this session (verification-only checkpoint).
 - **2026-08-15 (slot-30, data_engineering) — Prod full-history backfill: new launcher shipped, real OOM found+fixed,
   real PROD VM launched, preempted once, relaunched — not yet complete (multi-hour job).** Scoped to the 5 landed EVM
   pairs (AAVE_V3 rewards excluded — no handler; KAMINO-SOLANA excluded — see follow-up todo). No VM launcher existed for
