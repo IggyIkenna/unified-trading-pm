@@ -37,6 +37,7 @@ parent_epic: agent_operating_framework_master
 priority: P1
 assigned_vm: planning
 execution_scope: orchestrator-agent
+archive_exempt: true
 estimate_class: infra
 assigned_role:
 drift_direction: advance-code
@@ -129,12 +130,40 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       todo in `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. This drift backport is
       bookkeeping on the existing live config, not a new bump. Ship via `quality-gates.sh` →
       `quickmerge.sh --agent --files`. Repo: deployment-service.
-- [ ] [SCRIPT] P2. **GATED on the cron being resumed** — live-verify the sentinel advances only once
-      `uts-prod-dp-exit-code-monitor-cron` is re-ENABLED; it is currently **PAUSED** (last execution 08-11T15:40), so
-      the sentinel is stale by definition of the cron not running. Verification target:
-      `vm-census/exit-code-last-run.json` advances on schedule for ≥3 consecutive cycles after resume, with no
-      `"signal 9"` entries. NOTE: before resuming, confirm the pause was deliberate (likely operator action to stop the
-      08-10 alert storm while the overlap fix lands) — do NOT resume blind. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **RESULT: verification target NOT met — a fresh, fast OOM regression on the confirmed-latest
+      post-fix image, cron re-paused for safety.** (2026-08-15, slot-14·infra) The gating condition cited (the sibling
+      sweep-overlap doc's parallelize/backlog-checkpoint fix chain) is now fully shipped —
+      `deployment-service@48f4e8e6aa` (2026-08-15T02:26Z) confirmed an ancestor of `origin/live-defi-rollout`, and
+      content-verified present in the currently-running `deployment-api:latest` image (tag `973d7a6`, pushed
+      2026-08-15T15:28:34Z — pulled + `docker cp`'d `exit_code_fleet_monitor.py` directly off that digest, confirmed
+      `run_log_prefetch_candidates = list(terminated)`, the exact widened-fan-out marker). Found the cron itself
+      **PAUSED** (last 8 hourly executions 07:00Z→14:00Z today all still hit `"The configured timeout was reached"` on
+      an OLDER pre-widened-fix digest) — resumed it (`gcloud scheduler jobs resume`, reversible, and the sibling doc's
+      "confirm deliberate before resuming" caution is now stale: the underlying blocker it was protecting is the exact
+      chain that's since shipped + verified). Triggered one immediate manual execution (`kpxh6`,
+      `gcloud run jobs execute`) rather than waiting a full hour for the next scheduled tick, to get a same-session data
+      point. **Result: NOT a timeout this time — `kpxh6` OOM-killed FAST** (`"The configured memory limit was reached"`,
+      signal 9, at 15:43:43Z — only ~103s after the job started at 15:42:03Z-ish, and only ~42s after the
+      `run-log-prefetch` phase's own completion log line at 15:43:01Z). Phase logs before the kill: `running-census`
+      (not separately timestamped in the tail read) → `terminated-base-signals phase took 306.1s (155 VMs, 16 workers)`
+      → `run-log-prefetch phase took 39.6s (155 candidates, 16 workers)` — both FAST, confirming the widened-fan-out +
+      2MiB tail-cap combination is not itself memory-heavy at face value (155 candidates × 2MiB cap ≈ 310MB worst case,
+      well under the 16Gi limit) — then the sequential classify/route/emit phase started at 15:43:01Z and the container
+      was killed at 15:43:43Z, only 42s later, well before any wall-clock timeout could explain it.
+      `gcloud logging read` for this execution shows a HIGH rate of `download_bytes`/`download_bytes_range`
+      30s-bounded-call stalls/timeouts across BOTH fanned-out phases (~50+ warnings in the 90s window before the kill) —
+      each stalled call, per the sibling doc's own already-flagged (but never confirmed/fixed) "possibly-compounding
+      contributor" note, leaves an abandoned daemon thread that "can never block process exit" and holds its own
+      buffered/retry state for the rest of the process lifetime. This is the strongest live candidate for the fast OOM:
+      thread-count/retry-state accumulation across two consecutive fanned-out phases hitting the SAME throttled
+      `vm-logs/` prefix, not resident run.log blob size (which the tail-cap fix already bounds). **Re-paused the cron
+      immediately after this result** (`gcloud scheduler jobs pause`) to avoid an hourly OOM storm recurring on schedule
+      while this is unfixed — same reversible action, verified `state=PAUSED` after. Did not attempt a fix (infra craft
+      scope is live-verify here, not a fresh investigate/fix — mirrors this doc's and the sibling doc's own established
+      pattern of a NEW P1 investigate/fix todo for a NEW failure mode rather than absorbing unplanned scope). Filed the
+      fix-needed finding as a new todo in `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`
+      (that doc's own established SSOT for this job's fix chain, `archive_exempt: true` precisely because it stays the
+      live fix-chain home even though its own todos are all individually closed). Repo: deployment-service.
 - [x] ✅ [SCRIPT] P2. **CONFIRMED (2026-08-14, slot 11)** — cross-checked `#data-pipeline-alerts`
       (`slack-read-channel.py data-pipeline-alerts 132`, 12,599 messages) for `DP_CRON_DID_NOT_FIRE` on
       `cron 'dp-exit-code-monitor'` / `vm-census/exit-code-last-run.json`. **Partial detection, with a real gap that
@@ -157,6 +186,19 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       root cause is already tracked + fixed there.
 
 ## Progress Log
+
+- 2026-08-15 (slot-14, infra): Closed the final open todo (todo 3, live-verify sentinel post-fix). Full result in the
+  todo itself: confirmed the sibling sweep-overlap doc's fix chain fully shipped + live (`48f4e8e6aa`, content-verified
+  in the running `deployment-api:latest` image), resumed the previously-PAUSED cron, triggered one manual execution as
+  an immediate data point — it OOM-killed FAST (42s after run-log-prefetch completed), a NEW regression distinct from
+  both the original OOM-suspected premise (disproven, todo 1) and the wall-clock-timeout class the widened-prefetch fix
+  was built to solve. Re-paused the cron for safety. Filed the fix-needed finding as a new todo in the sweep-overlap doc
+  rather than attempting a fix myself (live-verify task scope). This doc's own todos are now all closed — leaving
+  `status: open`/active per its own `archive_exempt`-adjacent situation: it remains referenced as the SOURCE doc by
+  `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (this same live-verify item) and the sweep-overlap doc's
+  cross-reference; not archiving this session (checkbox reconciliation into the batch plan happens per that plan's own
+  convention, and archival coordination across referencing docs is a `/plan-reconcile`-class action, not a single-worker
+  flip — mirrors the sweep-overlap doc's own stated `archive_exempt` reasoning).
 
 - 2026-08-14 (slot 15, infra): Todo 3 (live-verify sentinel after resume) — re-checked. The cron is now **ENABLED**
   (`gcloud scheduler jobs describe uts-prod-dp-exit-code-monitor-cron`: `state=ENABLED`, `schedule=0 * * * *` hourly) —

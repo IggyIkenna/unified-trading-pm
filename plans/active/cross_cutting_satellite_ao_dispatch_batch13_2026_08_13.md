@@ -515,16 +515,16 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed separately.**
-                                                                  Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
-                                                                  `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
-                                                                  — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
-                                                                  within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
-                                                                  already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
-                                                                  per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
-                                                                  outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
-                                                                  one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
-                                                                  than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
+                                                                          Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
+                                                                          `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
+                                                                          — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
+                                                                          within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
+                                                                          already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
+                                                                          per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
+                                                                          outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
+                                                                          one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
+                                                                          than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -851,8 +851,15 @@ source: >-
 - [x] ✅ [CODE] P2. **CONFIRMED already done, no code change** (2026-08-15, slot-20·infra) — terraform already reads
       cpu=4/16Gi/1800s (2026-08-10 backport, `deployment-service@a87831b5`); live matches, zero drift; overlap-storm doc
       rules out a further bump. Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
-- [ ] [CODE] P2. Live-verify vm-census/exit-code-last-run.json advances on schedule for 3+ consecutive cycles post-fix
-      with no further signal-9 entries Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
+- [x] ✅ [CODE] P2. **RESULT: target NOT met — a fresh, fast OOM regression found, cron re-paused for safety.**
+      (2026-08-15, slot-14·infra) The fix chain this todo gates on (`deployment-service@48f4e8e6aa`) is confirmed live
+      (content-verified in the running `deployment-api:latest` image) and its wall-clock goal is achieved, but a
+      manually-triggered execution OOM-killed ~42s after the widened run-log-prefetch phase completed — a NEW failure
+      mode (likely abandoned-daemon-thread accumulation across 3 fanned-out phases, not the already-fixed unbounded-
+      blob-size class). Re-paused the previously-resumed cron to prevent an hourly OOM storm. Filed a new P1
+      investigate/fix todo in `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` (this fix chain's established
+      SSOT). Full evidence in that doc + `dp_exit_code_monitor_oom_signal9_2026_08_09.md`'s todo 3 / Progress Log.
+      Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
 - [ ] [CODE] P2. Cross-check #data-pipeline-alerts for DP_CRON_DID_NOT_FIRE::vm-census/exit-code-last-run.json during
       the stale window Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
 - [ ] [CODE] P2. Parallelize per-VM GCS reads in sweep() (exit_code_fleet_monitor.py + heartbeat_stall_watcher.py) via

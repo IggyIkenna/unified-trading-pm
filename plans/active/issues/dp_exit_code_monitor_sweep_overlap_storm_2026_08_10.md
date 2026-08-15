@@ -38,7 +38,7 @@ depends_on: []
 locked_by:
 archive_exempt: true
 resolved_by:
-last_updated: 2026-08-14
+last_updated: 2026-08-15
 locked_since:
 context_scope:
   [
@@ -395,6 +395,37 @@ until the next sweep) and is a stopgap, not the root fix.
       module suite green (291 passed). `deployment-service@48f4e8e6aa`, QG green, verified ancestor of
       `origin/live-defi-rollout`. Repo: deployment-service.
 
+- [ ] [BACKEND] P1. **ADDED 2026-08-15 (slot-14, infra live-verify follow-up)** — the widened-prefetch fix
+      (`deployment-service@48f4e8e6aa`) is confirmed live (content-verified in the running `deployment-api:latest`
+      image, tag `973d7a6`, pushed 2026-08-15T15:28:34Z) and its OWN wall-clock goal is achieved
+      (`terminated-base- signals` 306.1s + `run-log-prefetch` 39.6s for a 155-VM/155-candidate execution, both fast) —
+      but a manually triggered execution (`kpxh6`) OOM-killed (signal 9, "The configured memory limit was reached") only
+      ~42s after the `run-log-prefetch phase took...` completion log line, well before any wall-clock timeout could
+      explain it. This is NOT the `qgtnz`-class OOM the tail-cap fix (`e69f8aeda4`) already closed (that was unbounded
+      blob SIZE; the tail-cap remains in place and each read is still capped at 2MiB) — 155 candidates × 2MiB worst-case
+      ≈ 310MB, far under the 16Gi limit, so resident blob size alone does not explain a fast OOM here.
+      `gcloud logging read` for `kpxh6` shows a high rate (~50+ in the ~90s window before the kill) of
+      `download_bytes`/`download_bytes_range` 30s-bounded-call stall/timeout warnings across BOTH the
+      `terminated-base-signals` AND `run-log-prefetch` fanned- out phases — each stalled call's own log line states it
+      "is left running as a daemon so it can never block process exit" (an already-known but never-confirmed/fixed
+      mechanism, first flagged as a "possibly-compounding contributor" in the `qgtnz` addendum below the tail-cap-fix
+      todo). Investigate: (1) instrument actual live RSS (not just phase wall-clock) across the fanned-out phases to
+      directly measure whether abandoned-daemon-thread accumulation (retry buffers, thread stack memory, or GCS client
+      connection state held per leaked thread) is the real driver, vs. an as-yet-unidentified fourth mechanism; (2) if
+      confirmed, either bound the number of concurrently-outstanding stalled/retrying calls (e.g. a hard cap independent
+      of `_SWEEP_IO_MAX_WORKERS`, or a `daemon=False` + explicit join-with-timeout-then-abandon-and-count instead of
+      fire-and-forget) or make the bounded-call timeout itself fail fast/non-retrying under sustained throttling (an
+      escalating-backoff circuit breaker) rather than accumulating retries across 3 separate fanned-out phases
+      (running-census, terminated-base- signals, run-log-prefetch) that all hit the same throttled `vm-logs/` GCS prefix
+      in the same execution. Verify with a profiled run that logs live RSS at each phase boundary (not just wall-clock)
+      before landing an ungrounded fix — same discipline this doc's own prior fixes required. Target: sweep completes
+      under both the 1800s timeout AND the 16Gi memory ceiling with zero signal-9 kills across ≥3 consecutive scheduled
+      executions. **Cron `uts-prod-dp-exit-code-monitor-cron` re-PAUSED** (2026-08-15, same session,
+      `gcloud scheduler jobs pause`) to prevent an hourly OOM storm while this is unfixed — re-enable only after a fix
+      lands and is live-verified. Full evidence in
+      `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`'s todo 3 / Progress Log, 2026-08-15 entry.
+      Repo: deployment-service.
+
 ## Related
 
 - `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` — the exit-code-monitor OOM (signal 9)
@@ -405,6 +436,14 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-15 (slot-14, infra): While closing the sibling OOM doc's final live-verify todo (todo 3), confirmed
+  `48f4e8e6aa` live + achieving its own wall-clock goal (fast phase completions), but a manually-triggered execution
+  (`kpxh6`) OOM-killed fast (~42s after `run-log-prefetch` completed) — a NEW failure mode, not the `qgtnz`-class OOM
+  the tail-cap fix already closed (blob size stays capped; the new evidence points at abandoned-daemon-thread
+  accumulation across 3 fanned-out phases hitting the same throttled prefix, an already-flagged-but-unconfirmed
+  mechanism). Re-paused the cron for safety. Filed a new P1 investigate/fix todo above. No fix attempted (live-verify
+  task scope, mirrors this doc's own established pattern for prior new-failure-mode discoveries).
 
 - 2026-08-15 (slot 11, backend): Closed the final P1 todo (last remaining unchecked item on this doc). Confirmed via
   live evidence that candidate (3) — the incremental-checkpoint backlog-shrink hypothesis — is CORRECT: the
