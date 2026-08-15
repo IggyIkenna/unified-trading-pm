@@ -150,7 +150,7 @@ not `2026-01-07`.
       (investigation) / instruments-service or the venue capture pipeline (repair, TBD once inspected). —
       **investigation complete 2026-08-15 (slot-12, infra), see Progress Log; repair split into the new todo below
       pending a delete-safety-cited action.**
-- [ ] [DATA] P2. **Repair the corrupted `XRP_USDC-30JAN26-2D3-P.parquet` object** (path above) once its combo-vs-legit
+- [x] ✅ [DATA] P2. **DONE 2026-08-15 (slot-12, data_engineering)** — Repair the corrupted `XRP_USDC-30JAN26-2D3-P.parquet` object** (path above) once its combo-vs-legit
       classification is settled: cross-check against `deribit_combo_perpetual_partition_move_2026_07_21.md`'s combo
       GCS-driven census (the shape regex `-(FS|CS|PS|STRD|STD|IRON|BOX)-` used there does NOT match this filename — no
       infix token — so it is either a residual combo-shape variant that escaped that migration's 2026-08-12 `--apply`,
