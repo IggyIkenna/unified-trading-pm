@@ -2580,3 +2580,5 @@
 {"timestamp": "2026-08-15T14:14:59Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.144.1 (branch=main, bump=patch)", "commit_sha": "e3c50c770067ea2c2fa583ff62a105eba2451d37"}
 {"timestamp": "2026-08-15T14:20:05Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.13 (branch=main, run=31889605724)", "commit_sha": "fd537f5be8154c33e710b7798560312d220c495d"}
 {"timestamp": "2026-08-15T14:20:08Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.13 (branch=main, bump=patch)", "commit_sha": "fd537f5be8154c33e710b7798560312d220c495d"}
+{"timestamp": "2026-08-15T14:23:31Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.136.0 (branch=main, run=31889760839)", "commit_sha": "fd626e64c580d6c6584b6106df5411c00f6f6771"}
+{"timestamp": "2026-08-15T14:23:36Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.136.0 (branch=main, bump=minor)", "commit_sha": "fd626e64c580d6c6584b6106df5411c00f6f6771"}
