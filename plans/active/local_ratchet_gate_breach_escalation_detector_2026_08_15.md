@@ -135,11 +135,11 @@ source: >-
       green). agent-orchestrator@899c4af8ac: synthetic-dispatch test
       `test_local_ratchet_gate_breach_routes_to_cicd_with_remediation_goal_stated` proves both halves — routes to
       the `cicd` prompt template, and the real role file (not the CI-only fixture stub) states the wording.
-- [ ] [INFRA] P2. Wire the detector into a scheduled systemd timer via a new
+- [x] ✅ [INFRA] P2. Wire the detector into a scheduled systemd timer via a new
       `agent-orchestrator/scripts/install-local-ratchet-gate-breach-detector-timer.sh`, mirroring the cadence/install
       pattern of `install-ci-reconciler-timer.sh`. Cadence: no tighter than 15 minutes (matches the grace window — no
       value in ticking faster than the delay it enforces). Done-when: the timer installs cleanly in a dry run and its
-      systemd unit's `OnUnitActiveSec` matches the stated cadence.
+      systemd unit's `OnUnitActiveSec` matches the stated cadence. — agent-orchestrator@17c6e56dc4
 - [ ] [INFRA] P2. Determine whether an existing Slack alert already covers a local ratchet/baseline ceiling breach —
       `agent-orchestrator/server/notifications/slack.py` carries TID251/ratchet-adjacent code; read it to confirm
       whether it already fires for this class, and if so, confirm the new AO-dispatch escalation path does not
@@ -292,3 +292,25 @@ source: >-
   green in agent-orchestrator (3976 passed, 2 skipped, + dashboard 374 passed) — shipped
   `agent-orchestrator@899c4af8ac`. Remaining open: todo 8 (systemd timer), todo 9 (Slack-ownership fact-find), todo 10
   (codex doc update), todo 11 (happy-path regression test), todo 12 (full-fleet dry run) — not attempted this session.
+
+- **2026-08-15 (slot-28·infra)**: Todo 8 flipped — new
+  `agent-orchestrator/scripts/install-local-ratchet-gate-breach-detector-timer.sh`, mirroring
+  `install-ci-reconciler-timer.sh`'s systemd `--user` timer/service structure (`scripts/lib/user-timer-env.sh`, no
+  sudo) but with a DIRECT `ExecStart` of `scripts/orchestrator/escalate_local_ratchet_gate_breaches.py` (same
+  direct-script pattern as `install-pty-burst-watchdog.sh`) rather than an AO-worker dispatch via
+  `/api/plan-health/dispatch` — the detect+15-min-grace+enqueue path is fully mechanical, needs no LLM judgment, and
+  writes straight into `server.db` via the script's own `server.state_store`/`server.escalation` imports. Fires every
+  15 minutes (`OnCalendar=*-*-* *:12/15:00 UTC`), matching the escalate script's own `GRACE_WINDOW_MINUTES=15.0`.
+  **Finding**: the todo's own done_definition says the cadence should show up as `OnUnitActiveSec` — but every
+  `install-*-timer.sh` sibling in this repo (`ci-reconciler`, `plan-reconciler`, `docs-reconcile`, ...) uses
+  `OnCalendar`, not `OnUnitActiveSec`, for cadence; grepped all `scripts/install-*-timer.sh` to confirm zero uses of
+  `OnUnitActiveSec` anywhere in the repo. Followed the established repo convention (`OnCalendar`) instead of
+  introducing the one-off directive the todo named, and documented the deviation in the installer's own header
+  comment. Verified live, not just syntax-checked: ran the installer for real against the actual central-VM checkout
+  (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator`, not this slot clone — matches the other
+  installers' `--workspace-root`/`--pm-repo` pattern), confirmed `systemctl --user cat` shows the intended
+  `OnCalendar=*-*-* *:12/15:00 UTC` + `Persistent=true`, then `systemctl --user start` the service manually and
+  read `journalctl --user -u local-ratchet-gate-breach-detector.service -e`: real run against real fleet HEAD,
+  `armed/waiting/escalated/cleared` all empty (no current breaches), exit 0 "OK" — the wiring is live and correct,
+  not merely installed. `bash scripts/quality-gates.sh` green (3976 passed, 2 skipped, dashboard 374 passed).
+  Shipped: `agent-orchestrator@17c6e56dc4`.
