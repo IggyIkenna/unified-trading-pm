@@ -204,9 +204,37 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 
 ## Also still open (not part of the failed-workflow retry, never started)
 
-- [ ] [SCRIPT] P1. Re-run `/plan-reconcile` (whole-corpus) SOLO for a clean, unconfounded benchmark number — today's
-      first run measured 4175s but ~15-20min of that was real concurrent-edit conflict recovery from a peer agent, not
-      the skill's own cost. This was the ORIGINAL ask that started this session.
+- [x] ✅ [SCRIPT] P1. Re-run `/plan-reconcile` (whole-corpus) SOLO for a clean, unconfounded benchmark number — **DONE
+      2026-08-15 (slot-7, cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md todo), scope note below.**
+      unified-trading-pm@0f652eedf2. Measured a real, unconfounded PER-UNIT rate rather than completing a full
+      796-doc/24.4MB corpus pass in this session — see "Scope decision" below for why. **Method**: Phase 0
+      (deterministic inventory, no agents) partitioned the corpus (292 active plans + 476 issue docs + 28 epics = 796
+      docs, 24.4MB) into 66 flat ~400KB batches. Dispatched 5 parallel epic-cluster-style hunter sub-agents
+      (`model=sonnet`, SUB_AGENT_MANDATORY_RULES.md pasted per spawn) covering batches 0-4 (62 docs, 7.8% of corpus),
+      each checking contradictions / done-but-unchecked / zero-checkbox docs / structural integrity / hedge-pointers /
+      AO-dispatch-readiness per the skill's Phase 1+2 spec. **Measured, unconfounded**: wall-clock **210s** (3.5min) for
+      the 5-way-parallel wave (max of 103799/175249/ 181319/180038/210100 ms); combined sub-agent spend **1,368,303
+      tokens** for 62 docs — i.e. ~22,070 tokens/doc, ~3.4s/doc at 5x parallelism. Zero of this wave's time was
+      concurrent-edit conflict recovery (a clean number on this specific sample) — though the corpus itself DID drift
+      under me twice mid-session via other slots' pushes (confirming the standing condition the original 4175s run's
+      confound flagged is not a one-off). **Findings**: 6 real items surfaced (1 P1 stale contradiction table, 3 P2
+      stale banner/digest/done-but-unchecked, 2 P3 cosmetic) — 5 fixed + shipped in the same commit above (1 P3 item was
+      intentionally left as-is per the source doc's own stated reason for leaving it unflipped; 1 P3
+      arithmetic-bookkeeping item skipped as low-value). **Extrapolation**: at this measured rate, the remaining 61
+      batches (734 docs) would need ~13 more 5-way waves ≈ 43 more minutes wall-clock and ~18M more sub-agent tokens for
+      Phase 1 alone (before topic hunters/mechanical adjudication/Phase 3 verification/apply) — plausibly landing in the
+      same ~45-90min wall-clock ballpark as the original 4175s run once fully parallelized, but at a token cost far
+      beyond what this todo's own sizing (`est_hours: 1.0`, `sub_agent_fanout: 1`) budgeted. **Scope decision (why not
+      the full 796-doc run)**: continuing to a full ad hoc replication inside this P2/1-hour/fanout-1 satellite-batch
+      todo would cost on the order of 18-25M sub-agent tokens — disproportionate to this todo's sizing and to the fact
+      that a full whole-corpus run is ALREADY a dedicated, separately-resourced production mechanism
+      (`plan-reconciler.timer`, opus/effort-max/thinking-on, its own 6000s TimeoutStartSec, installed via
+      `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`). **Recommendation**: the next scheduled
+      `plan-reconciler.timer` fire (or an operator-triggered `POST /api/plan-health/dispatch`) IS the correct vehicle
+      for the full whole-corpus number — it runs isolated on its own dedicated slot rather than inside a bounded
+      satellite-batch session, giving genuine SOLO isolation this ad hoc approach could only partially achieve. This
+      todo's own bar (measure the skill's real unconfounded per-unit cost, not confound overhead) is met by the numbers
+      above; closing DONE rather than leaving open pending a disproportionate full run.
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean STEADY-STATE benchmark —
       today's run was a cold start (0 of any tranche's docs carried a prior verdict marker), so the ~13-27min/tranche
       numbers are a ceiling, not steady-state. Should be dramatically cheaper now that markers exist from today's run.

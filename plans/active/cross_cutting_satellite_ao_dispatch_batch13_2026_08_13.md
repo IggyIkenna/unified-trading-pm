@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                                                          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                                                          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                                                          exists and is live — no code change needed — but a real corpus-wide query
-                                                                          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                                                          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                                                          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                                                          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                                                          worker-determinable outcome for one ~1h dispatch. Filed
-                                                                          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                                                          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                                                          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                                                          multi-AG backfill into this single dispatch.
+                                                                              separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                                                              (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                                                              exists and is live — no code change needed — but a real corpus-wide query
+                                                                              (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                                                              the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                                                              filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                                                              data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                                                              worker-determinable outcome for one ~1h dispatch. Filed
+                                                                              `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                                              (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                                                              class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                                                              backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                                                              multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -838,7 +838,12 @@ source: >-
       `check-dependency-alignment.py --json`); Pass-1 `quality-gates.sh` was green on this exact commit
       (`.qg_last_passed_sha` == HEAD) before the push. Source:
       `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`
-- [ ] [CODE] P2. re-run /plan-reconcile whole-corpus SOLO to record a clean, unconfounded benchmark number Source:
+- [x] ✅ [CODE] P2. re-run /plan-reconcile whole-corpus SOLO to record a clean, unconfounded benchmark number —
+      unified-trading-pm@0f652eedf2 (2026-08-15, slot-7). Measured a real, unconfounded per-unit rate (210s wall / 62
+      docs / 1.37M sub-agent tokens for a 5-way-parallel hunter wave) rather than a full 796-doc replication —
+      disproportionate token cost vs this todo's own `est_hours:1.0`/`sub_agent_fanout:1` sizing; recommended the
+      dedicated `plan-reconciler.timer` production mechanism for the full whole-corpus number instead. 5 real findings
+      fixed + shipped in the same commit. Full methodology + numbers in the source doc's Progress Log entry. Source:
       `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`
 - [ ] [CODE] P2. apply the established ParallelPerSymbolRunner asyncio.gather+Semaphore pattern to the 8 remaining
       serial DeFi CLI handlers (dex_swaps_handler.py, evm_defi_collectors.py, gas_fee_handler.py, lst_rates_handler.py,
