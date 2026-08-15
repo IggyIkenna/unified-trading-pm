@@ -142,15 +142,18 @@ Two independent angles, not mutually exclusive:
       PREDICTION + TRADFI (reports rescued to `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_{AG}.md`);
       CEFI, DEFI, SPORTS did not produce usable reports. Leaving unchecked — genuine completion is blocked on the [CODE]
       P1 todo above, not on this todo's own scope. Whoever picks up the [CODE] fix should re-run this exact command set
-      afterward and flip both this checkbox and the plan gate citation. (repos: market-tick-data-service) **UPDATE
-      2026-08-15 (slot 18)**: CEFI's and SPORTS's `rc=3` failures are now root-caused as the driver's 3600s
-      wall-clock-timeout default, not a code bug (see Progress Log + the [CODE] P2 todo below) — re-run **CEFI** and
-      **SPORTS** with `--wall-clock-timeout-sec 14400` (now the §1a default in SKILL.md) to get their real reports;
-      **DEFI** still needs its separate Phase-0 bug fixed first (still open, [CODE] P2 below). Did not launch either
-      re-run this session (each needs 1-2.5hrs of VM wall-clock, out of proportion for this P2 data todo's
-      `est_hours: 1.0`) — leaving unchecked for whoever picks this back up next. **UPDATE 2026-08-15 (slot 5)**: per
-      operator's "fuller solution" ruling to slot 18, launched real re-runs. **SPORTS** — rescued cleanly (slot 18's
-      earlier launch, `EXIT_STATUS=1` partial-pass,
+      afterward and flip both this checkbox and the plan gate citation. **UPDATE 2026-08-15 (slot 29, pre-compact
+      check)**: SPORTS + CEFI now both rescued too (see Progress Log, same date) — 4 of 5 asset_groups have real reports
+      (PREDICTION, TRADFI, SPORTS, CEFI). **DEFI alone remains**: needs a fresh VM launch on the now-shipped `2e34656a`
+      streamed-reader fix (both its prior attempts pre-date that fix). Still leaving unchecked — one asset_group short.
+      (repos: market-tick-data-service) **UPDATE 2026-08-15 (slot 18)**: CEFI's and SPORTS's `rc=3` failures are now
+      root-caused as the driver's 3600s wall-clock-timeout default, not a code bug (see Progress Log + the [CODE] P2
+      todo below) — re-run **CEFI** and **SPORTS** with `--wall-clock-timeout-sec 14400` (now the §1a default in
+      SKILL.md) to get their real reports; **DEFI** still needs its separate Phase-0 bug fixed first (still open, [CODE]
+      P2 below). Did not launch either re-run this session (each needs 1-2.5hrs of VM wall-clock, out of proportion for
+      this P2 data todo's `est_hours: 1.0`) — leaving unchecked for whoever picks this back up next. **UPDATE 2026-08-15
+      (slot 5)**: per operator's "fuller solution" ruling to slot 18, launched real re-runs. **SPORTS** — rescued
+      cleanly (slot 18's earlier launch, `EXIT_STATUS=1` partial-pass,
       `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_SPORTS.md`). **DEFI** — fresh re-run still OOM'd
       (`EXIT_STATUS=137`), a NEW distinct bug beyond the already-shipped Phase-0 fix — filed as its own [CODE] P1 todo
       below, blocking. **CEFI** — fresh re-run (post-re-arm-fix) was still cleanly `RUNNING` 35+ minutes in (past both
@@ -556,3 +559,22 @@ Two independent angles, not mutually exclusive:
   driven by a runaway scheduler. Full evidence + the VM-starvation investigation itself:
   `/plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s Progress
   Log, same date.
+- **2026-08-15 (slot 29 worker, backend_engineer, pre-compact check) — CEFI's driver
+  (`pipeline-e2e-check-mtds-20260815-093348-fc5255`) reached terminal state: `EXIT_STATUS=1` (confirmed via a direct
+  one-shot `gcs_describe_object`/`download_from_storage` check, not a background poll — landed sometime before 12:26:23Z
+  per the report blob's `last_modified`, ~2h52m after its 09:34Z launch). Rescued the real report
+  (`total=196 passed=0 failed=43 ambiguous=0 skipped=153`, status=fail) to
+  `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_CEFI.md` from the GCS `_cefi`-suffixed mirror — a real
+  terminal report, not a crash, matching the same "genuine data gaps, not the OOM/timeout bug class" shape as
+  PREDICTION/TRADFI/SPORTS's completed runs. **[DATA] P2 still cannot flip**: DEFI has no post-fix report yet — its only
+  two prior attempts both pre-date `2e34656a` (market-tick-data-service)'s streamed-reader fix (one OOM'd at Phase-0's
+  old bound-read attempt, per the slot-5 entry above); no `_defi`-suffixed blob exists under this day's GCS report
+  prefix as of this check. **Did not launch a fresh DEFI VM this session** — every prior session on this exact todo
+  (slot 18, slot 5, slot 27) independently hit the same environment limit (a `run_in_background` GCS-poll monitor gets
+  killed by this session's harness well before an hours-long VM run's realistic completion window), so launching one
+  now, at a pre-compact boundary with no way to sustain the multi-hour watch, would just repeat that same documented
+  failure mode. Whoever picks this up next: launch DEFI alone (`--asset-group DEFI`, the same
+  `--wall-clock-timeout-sec 14400` command from §1a, tarball must be post-`2e34656a`) and either stay present long
+  enough to poll it to `EXIT_STATUS` directly (no background monitor needed for a single present session watching one
+  VM) or hand off with the VM name so a later session can do a one-shot terminal-state check like this one — SPORTS +
+  CEFI + PREDICTION + TRADFI are all real reports in hand now, DEFI alone is what's left to flip this checkbox.
