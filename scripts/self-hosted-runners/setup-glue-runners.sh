@@ -417,6 +417,19 @@ cmd_install() {
   fi
   chown -R "${RUNNER_USER}:${RUNNER_USER}" "${SLOT_REPO}" "${SLOT_VENV}"
 
+  # `gh repo clone` authenticates ONLY that one invocation — it does not wire git's OWN credential
+  # helper, so a later PLAIN `git pull` (github-glue-slot-refresh.service's refresh-slot-repo.sh runs
+  # exactly that, with no `gh` involved) has no way to authenticate at all: fails loudly with
+  # "could not read Username for 'https://github.com'" (found live 2026-08-11 on i-042a6332509482556,
+  # all 7 pools — see plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md § "Incidental").
+  # Fix: wire git's global credential helper to gh's OWN stored token (`gh auth git-credential`) —
+  # same no-PAT-on-disk security property as the clone above (the helper prints a fresh credential
+  # from gh's persisted auth on each call; nothing is ever written into .git/config). Unconditional
+  # (not gated behind the clone-if-missing branch above) so re-running `install` also repairs an
+  # existing pool that predates this fix, without a reclone.
+  sudo -u "${RUNNER_USER}" gh auth setup-git \
+    || die "gh auth setup-git failed — check that 'gh auth status' is green for ${RUNNER_USER}"
+
   # Seed the freshness stamp. Honest by construction: the clone was JUST made current, so install
   # time is genuinely when it was last fresh. Two reasons this is not merely cosmetic:
   #   • the refresh timer runs as ${RUNNER_USER} and rewrites this file, but CREATING a new file in
