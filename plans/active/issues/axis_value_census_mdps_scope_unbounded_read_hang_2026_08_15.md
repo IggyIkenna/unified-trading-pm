@@ -148,7 +148,24 @@ now-confirmed reader gap (point 2 above), not because `service_name` itself is a
       (+971, +0.015%) drift from new tradfi data captured between 2026-08-15's investigation and this fix landing, not a
       correctness regression. Reporting the honest measured number rather than the unmet single-digit claim (CLAIM ≤
       MEASUREMENT) — the fix is still a functional win (unusable/hanging → 26.79s, well inside any normal HTTP gateway
-      timeout).
+      timeout). **Addendum (slot-29, 2026-08-15):** picked up this same todo independently (dispatcher race — both slots
+      booted it before either's commit was visible to the other) and re-implemented the identical fix, landing on LDR as
+      `deployment-api@7564785dd8` on top of slot-28's already-shipped `82b0469a7e` — net effect was a duplicated
+      `filters` variable declaration + a duplicate test method name
+      (`test_candle_census_pushes_service_name_into_read_ filters`, silently shadowing the first in the same class;
+      harmless functionally since both computed the same list, but real dead code). Caught via the plan-flip conflict
+      (this file had already been modified on pull). Cleaned up in `deployment-api@23cad17909` (+
+      `deployment-api@328d9bd`): removed the duplicate block/test, confirmed working tree byte-identical to `82b0469a7e`
+      for both files, re-verified on `origin/live-defi-rollout`. Also independently live-verified the fix (in-process,
+      tradfi/MDPS): read alone completes in 11.40s (row_count=6,333,546), full endpoint round trip in 26.32s —
+      consistent with slot-28's 26.79s figure. **Process note filed separately**: shipping the cleanup hit a real
+      quickmerge bug — `scripts/quickmerge.sh`'s FIRST early-exit check (~line 1420, `git diff origin/main --quiet`) has
+      no carve-out for commits already ahead on `live-defi-rollout` (unlike the second, later check at ~line 2257-2275,
+      which was fixed for exactly this case 2026-06-10), so a fix commit whose net content matches `origin/main`
+      silently fails to push even though LDR's own tip still carries the bug it's fixing — LDR would have re-promoted
+      the duplicate to `main` on the next cycle. Worked around here by bundling a genuine typing improvement into the
+      same commit to force a real diff; see
+      `quickmerge_first_early_exit_missing_unpushed_commits_carveout_2026_08_15.md` for the fix-quickmerge.sh follow-up.
 - [ ] [BACKEND] P3. Separate, lower-priority follow-up (not blocking todo 2): the general reader gap confirmed in
       Findings above — `read_availability_index`'s pushdown `filters=` silently SKIPS (not backfill-safely excludes) a
       filter condition on any column absent from a given raw file — is real for genuinely legacy-optional columns (v6+
