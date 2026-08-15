@@ -350,8 +350,13 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
       leaving a one-line pointer; applied the pre-computed `context_scope` (3 entries, re-verified to resolve on disk);
       added the `context-scout` Progress Log marker; bumped `last_updated`. Result: 999L → 974L, well under the 1000L
       hard cap — `bash scripts/plan-hygiene/check_line_caps.sh` passes (SOFT, 974L).
-- [ ] [SCRIPT] P3. Complete the full context-scout for fleet_audit_triad_deferred_followups_2026_06_01.md (Phase-1
-      analysis + a proper context_scope list; the applied entry is a stub).
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-15 (slot-14).** Completed the full Phase-1 context-scout pass on
+      `fleet_audit_triad_deferred_followups_2026_06_01.md`: confirmed all its numbered Plan items are done, added the
+      one genuinely-missing entry (`/codex/05-infrastructure/vm-log-archival.md` — the doc's own domain SSOT, already
+      named in its `related:` frontmatter but never added to `context_scope`), re-verified the other 4 entries
+      unchanged, and fixed that codex doc's own stale "not yet deployed" banner as an adjacent finding (contradicted by
+      the doc's own confirmed-shipped record). `context_scope` now 5 entries, dated Progress Log marker added on the
+      target doc. See that doc's own Progress Log for the full account.
 - [ ] [SCRIPT] P3. Trim/split 3 more docs newly confirmed sitting at the EXACT 1000-line hard cap during the 2026-08-07
       corpus-wide context-scout run (same remediation pattern as this issue's own earlier 11-doc batch — extract the
       oldest fully-closed Progress Log section(s) to an archive-bound history doc, leave a one-line pointer): (1)
@@ -366,6 +371,9 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
 
 - **2026-08-15 (slot-16)**: closed the elysium Follow-up above — trim/split + pre-computed `context_scope` applied,
   marker added. 2 Follow-ups remain open (fleet_audit_triad full scout; the 3-doc 2026-08-07 batch).
+- **2026-08-15 (slot-14)**: closed the fleet_audit_triad full-scout Follow-up — real Phase-1 analysis done (not just a
+  re-apply), 1 genuinely-missing entry found and added, an adjacent stale-banner finding fixed in the cited codex doc.
+  1 Follow-up remains open (the 3-doc 2026-08-07 batch).
 
 > **2026-08-06 archive-candidate audit**: The doc's locked-docs note explicitly says
 > 'fleet_audit_triad_deferred_followups_2026_06_01.md had no proposed list computed ... a future pass should do the full
