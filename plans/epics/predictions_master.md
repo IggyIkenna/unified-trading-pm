@@ -48,6 +48,8 @@ related_plans:
   - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md
   - ../active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
+  - ../active/prediction_satellite_ao_dispatch_batch11_2026_08_13.md
+  - ../active/prediction_satellite_ao_dispatch_batch11_2026_08_13_finalize.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
 last_updated: 2026-08-15
 locked_by: live-defi-rollout
@@ -910,9 +912,10 @@ features predict.
 
 ## Assigned active plans
 
-_16 active plans declare `parent_epic: predictions_master` in their frontmatter (batch10 + batch10_finalize archived
-complete 2026-08-10; `predictions_other_bucket_and_ui_drilldown_2026_06_20` archived complete 2026-08-15). Workers pick
-up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_18 active plans declare `parent_epic: predictions_master` in their frontmatter (batch10 + batch10_finalize archived
+complete 2026-08-10; `predictions_other_bucket_and_ui_drilldown_2026_06_20` archived complete 2026-08-15; batch11 +
+batch11_finalize added 2026-08-15, `/plan-reconcile` fix — created 2026-08-13, missed by the last auto-population run).
+Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -983,6 +986,14 @@ batch CLOB depth & trades capture infrastructure
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: Predictions ML Model 2A walk-forward +
 arb_calculator (sports_predictions_e2e predictions half)
+
+### [`prediction_satellite_ao_dispatch_batch11_2026_08_13`](../active/prediction_satellite_ao_dispatch_batch11_2026_08_13.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor)
+
+### [`prediction_satellite_ao_dispatch_batch11_2026_08_13_finalize`](../active/prediction_satellite_ao_dispatch_batch11_2026_08_13_finalize.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: prediction satellite AO batch 11 — finalize
 
 ## P3 — backlog; revisit quarterly
 

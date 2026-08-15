@@ -150,20 +150,17 @@ context_scope:
 
 **Per-child open-todo snapshot (2026-07-24 — so the split itself is AO-legible without opening each child):**
 
-- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **13
-  open** (verified via `grep -c` 2026-07-25 consolidated-closeout split — was 11, +2 relocated in from this parent's
-  former "Queued audits + reviews"/"Distinct Values" P3 sections: the adapter dead-code audit (new Phase-A "A5"
-  subsection) and the merged `/data-pipeline-reconciliation` cadence + duplicate-note todo (Phase B); the POLYMARKET
-  schema-extension item also relocated here but folded into the EXISTING A2 dual-write-trees todo, so it added no new
-  checkbox). Top: [BACKEND] P0. Finish the prediction capture-incident remediation — harden the capture path; [BACKEND]
-  P0. Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix.
+- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **6
+  open** (re-verified via `grep -c` 2026-08-15, `/plan-reconcile` sweep — was 13 as of the 2026-07-25 split, since
+  drained by shipped work; snapshot below was 20 days stale). Top (still open): [DATA] P0. Enumeration-driven
+  canonical/dedupe migration of the prediction manifest; [DATA] P0. Backfill the fixture-match attributes (A4 columns).
 - [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
-  **4 open**. Top P0: [UI] P0. RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api.
+  **2 open** (re-verified via `grep -c` 2026-08-15 — was 4). Top P0: [UI] P0. RE-ADD the data-status "dimensions
+  enumeration" view to deployment-ui/api.
 - [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`](/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md)
-  — **6 open** (verified via `grep -c` 2026-07-25 consolidated-closeout split — was 3, +3 relocated in from this
-  parent's former "Queued audits + reviews" section: the `-is`/`-mtds` 3x-cadence top-ups and the adversarial
-  AO-dispatch-readiness pass). Top (still the same 2 P0s): [DATA] P0. Run `data-pipeline-check-is` for prediction-only,
-  all shards, post-migration; [DATA] P0. Run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
+  — **5 open** (re-verified via `grep -c` 2026-08-15 — was 6). Top (still the same 2 P0s): [DATA] P0. Run
+  `data-pipeline-check-is` for prediction-only, all shards, post-migration; [DATA] P0. Run `data-pipeline-check-mtds`
+  for prediction-only, all shards, post-migration.
 - [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
   — **3 open** (2 P1 + 1 P2, no P0 yet). Top: [BACKEND] P1. Verified end-to-end fixture link on Polymarket + Kalshi
   soccer; [BACKEND] P1. Wire the arb engine to CONSUME `af_fixture_id`.
@@ -322,25 +319,24 @@ fixture-linked before MVP backfill.
 - **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
   - **[BACKEND] P0.**
-    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 13 open
-    (2026-07-25 consolidated-closeout split, was 11; +2 relocated in from this parent's former "Queued audits +
-    reviews"/"Distinct Values" sections). Top: finish the prediction capture-incident remediation; kill the dead Kalshi
-    `trading-api.kalshi.com` host.
+    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 6 open
+    (re-verified via `grep -c` 2026-08-15, `/plan-reconcile` sweep — was 13 as of the 2026-07-25 split). Top: finish the
+    prediction capture-incident remediation; kill the dead Kalshi `trading-api.kalshi.com` host.
   - **[UI] P0.**
     [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
-    4 open. Top: RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api.
+    2 open (re-verified 2026-08-15 — was 4). Top: RE-ADD the data-status "dimensions enumeration" view to
+    deployment-ui/api.
   - **[DATA] P0.**
     [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`](/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md)
-    — 6 open (2026-07-25 consolidated-closeout split, was 3; +3 relocated in from this parent's former "Queued audits +
-    reviews" section). Top: run `data-pipeline-check-is` for prediction-only, all shards, post-migration; run
-    `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
+    — 5 open (re-verified via `grep -c` 2026-08-15 — was 6). Top: run `data-pipeline-check-is` for prediction-only, all
+    shards, post-migration; run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
   - **[BACKEND] P1.**
     [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
     — 3 open (2 P1 + 1 P2). Top: verify the end-to-end fixture link on Polymarket + Kalshi soccer; wire the arb engine
     to CONSUME `af_fixture_id`.
 - **Capture / correctness**:
   - [`plans/active/prediction_capture_incident_remediation_2026_07_06.md`](/plans/active/prediction_capture_incident_remediation_2026_07_06.md)
-    (9 open total)
+    (7 open total, re-verified via `grep -c` 2026-08-15 — was 9)
     - **[VERIFY] P0.** Demo dry-run: returned tickers are genuine perps (`BTC-PERPETUAL` shape, `contract_type` present)
     - **[CODE] P1.** Make the perp base URL config-driven — `KALSHI_PERP_ENV=demo|prod` (via `UnifiedCloudConfig`)
     - **[CODE] P1.** Extract the RSA-PSS signing that ALREADY EXISTS in `adapters/prediction/kalshi.py`
@@ -553,23 +549,16 @@ sports's own consolidated closeout plan; short digest only:
 - [`plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md`](/plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md)
   — ARCHIVED 2026-08-11, all 5 todos shipped (`run_sports_backtest` CLI wiring + fixture data source + `L0Matcher`
   execution-alpha harness).
-- [`plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md)
-  (8 open total — listed in full, not over the >8 cap threshold)
-  - **[DATA] P1.** NEW compute, not a rename: add per-bookmaker raw decimal-odds retention
-  - **[DATA] P1.** Update `unified_api_contracts`'s `OddsFeaturesMixin`/`SportsFeatureVector` fields to the names chosen
-  - **[DATA] P2.** Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS`
-  - **[BACKEND] P2.** Close the silent-agnostic gap in `SportsFeatureLoaderMixin`
-  - **[BACKEND] P2.** Migrate `SportsValueBettingEngine` + `SportsArbDutchingEngine` (`on_tick`'s)
-  - **[BACKEND] P2.** Migrate the legacy `strategy_service/adapters/sports_feature_subscriber.py`
-  - **[REVIEW] P3.** Once todos 2–6 land, write the FSS-output ↔ ml-service-input ↔ strategy-service-input parity test
-  - **[REVIEW] P3.** Cross-reference this migration against whichever plan ends up doing the "wire sports end-to-end"
+- [`plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md)
+  — ARCHIVED 2026-08-15, 0 open todos (all 9 shipped: UAC/features-service/ml-service/strategy-service migration +
+  loud-schema-validation + FSS↔ml-service↔strategy-service parity test, `features-service@36fb7b88`).
 - [`plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md`](/plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md)
   (6 open, all `[OPERATOR]/[INFRA]/[DATA]/[REVIEW] P3`) — top: decide whether to pursue a live sports-odds ingestion
   path at all (the structural blocker); once that's a yes, scope the MTDS live-odds connector. +4 more — see file.
-- [`plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`](/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md)
-  — 0 open todos. **DECIDED 2026-07-23**: naming scheme canonicalized per
-  [`sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md)
-  (Option A, UAC-as-SSOT); scoped 3-repo migration in flight — do not re-litigate.
+- [`plans/archive/2026_08/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`](/plans/archive/2026_08/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md)
+  — ARCHIVED 2026-08-15, 0 open todos. **DECIDED 2026-07-23**: naming scheme canonicalized per
+  [`sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md)
+  (Option A, UAC-as-SSOT); 3-repo migration + parity test shipped — do not re-litigate.
 - [`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`](/plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md)
   (resolved) — 0 open todos (closed/archived/record-only)
 

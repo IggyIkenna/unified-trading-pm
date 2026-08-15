@@ -55,7 +55,7 @@ related:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
     /plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
   ]
 created: "2026-08-04"
 last_updated: "2026-08-06"

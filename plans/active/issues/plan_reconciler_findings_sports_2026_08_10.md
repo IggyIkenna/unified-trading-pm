@@ -212,7 +212,11 @@ depends_on: []
      by `sports_taxonomy_p3_consumers_2026_08_08_finalize.md` for coordinated archival.
   3. `backfill_smoke_write_path_canonical_audit_2026_07_20.md` (6 done) — `archive_exempt: true`; companion finalize
      plan owns its archival.
-  4. `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (6 done, DEFERRED=2) — deferred items need migration.
+  4. `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (6 done, DEFERRED=2 — **STALE, corrected 2026-08-15
+     `/plan-reconcile`: both deferred items were already resolved by 2026-07-25/2026-08-09, the doc's own "Deferred
+     work" table just wasn't updated to say so until this pass; all 6 todos are genuinely `[x]`, 0 open**) — real
+     blocker is unrelated: `status: open`→`resolved` flip is deliberately deferred to a separate archival-ritual commit
+     (2026-08-09 Progress Log entry), not blocked by any open work.
   5. `autonomous_session_operator_decisions_2026_07_25.md` (2 done, DEFERRED=7) — 7 deferred, many operator-gated.
   6. `sports_satellite_ao_dispatch_batch11_2026_08_09.md` (2 done, DEFERRED=2) — deferred + companion finalize open.
   7. `sports_satellite_ao_dispatch_batch5_2026_07_26.md` (2 done, DEFERRED=5) — 5 deferred items need migration.

@@ -24,7 +24,7 @@ tags: [sports, ao-dispatch, close-out, batch-11, satellite-docs]
 related:
   [
     /plans/active/issues/mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md,
-    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md,
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
@@ -163,9 +163,9 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
       strategy-service literals (`odds_decimal_` prefix, `prob_fair_` prefix, `prob_implied_home/draw/away`) still match
       the live `sports_value_betting.py`/`sports_arb_dutching.py`/`sports_feature_subscriber.py` source exactly — no
       drift since the 2026-08-04 ship. No new code needed; nothing to ship. Done-when met by pre-existing work. Source:
-      `/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` todo 9 (`[REVIEW] P3`, itself already
-      resolved-by-citation 2026-08-09 — see that doc's own Progress Log). — features-service@36fb7b88 (pre-existing;
-      this pass verified only, shipped no new commit)
+      `/plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md` todo 9 (`[REVIEW] P3`, itself
+      already resolved-by-citation 2026-08-09 — see that doc's own Progress Log). — features-service@36fb7b88
+      (pre-existing; this pass verified only, shipped no new commit)
 
 ## Codex SSOTs
 

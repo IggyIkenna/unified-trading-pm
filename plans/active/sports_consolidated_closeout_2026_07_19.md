@@ -37,7 +37,7 @@ related:
     /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
     /plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md,
@@ -412,7 +412,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [x] [CODE] P0. ✅⏪ **K1 — emit UPPER at the LIVE writer SHIPPED + VERIFIED (2026-07-22) — SUPERSEDED 2026-07-23, MUST
       BE REVERTED.** (was: fix `_build_sports_shard_path` (`venue_fetch.py:871-900`) + the sentinel row-key builders per
       the dual-accept pre-step ordering this todo specified). The dual-accept pre-step shipped first as designed
-      (`market-data-processing-service@fa4281d2`), then the atomic writer flip (`market-tick-data-service@2536b91c`, 7
+      (`market-data-processing-service@7c8454d4`), then the atomic writer flip (`market-tick-data-service@2536b91c`, 7
       call sites). **This session's casing reconciliation (see Canonical target above) decided sports data_type is
       LOWER-case for ALL types, no UPPER exception — this todo's UPPER writer flip is now the WRONG direction and is
       tracked for revert in the new todo below, not extended.** Kept here (not deleted) as the historical record of what
@@ -488,7 +488,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       "watch."** **Done when**: either value reappears in a FUTURE dated read (re-open then, trace
       `written_at`/`service_name` on the specific row before treating as live), or this is struck as confirmed-dead
       after one more clean read on a later date.
-- [x] [CODE] P0. ✅ **NEW — fixed via `batch1_ao_ready` todo 3** — `market-data-processing-service@51502c3` +
+- [x] [CODE] P0. ✅ **NEW — fixed via `batch1_ao_ready` todo 3** — `market-data-processing-service@c9b7f4a` +
       `instruments-service@f46e553e` (verified via `git log`); every non-sports asset_group verified byte-identical.
       **Not independently verified**: the literal done-when (Distinct Values panel on fresh LIVE writes) needs a
       post-fix write to land. Pre-existing finding surfaced (not caused by this fix):
@@ -742,10 +742,14 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       the ONLY remaining blocker is that this safety tooling doesn't exist yet (harder than the league_id migration's
       pure scheduling gate — nothing to schedule until this is built). Detail: see the issue doc's own §7 (re-triaged
       2026-07-23).
-- [ ] [DESIGN] P2. **NEW 2026-07-23 (decision 13) — implement RAISE-on-all-NaT for `AvailableAtStampingError`
+- [x] ✅ [DESIGN] P2. **NEW 2026-07-23 (decision 13) — implement RAISE-on-all-NaT for `AvailableAtStampingError`
       (operator-ruled), not skip-with-record.** Fail loud at the shard that can't be stamped — catches a CF-8-class
       regression the moment it starts instead of accumulating a silent ~40-50% fill-rate gap for weeks. Wire this into
-      the same code path CF-8's fix touches (Track H's CF-8 todo below) so both land together.
+      the same code path CF-8's fix touches (Track H's CF-8 todo below) so both land together. — **DONE (plan-reconcile
+      2026-08-15)**: `market-tick-data-service@84ee34f2` — removed `AvailableAtStampingError` from
+      `_stamp_sports_shard_available_at`'s except clause (only `KeyError` remains caught). Two named tests
+      (venue-failure-on-all-NaT integration + direct `pytest.raises(AvailableAtStampingError)` unit), QG green (9972
+      passed). Shipped + cited via `sports_consolidated_native_ao_extract_2026_07_25.md:346-350`.
 - [ ] [CODE] P1. **NEW 2026-07-23 (decision 11) — schedule + run the CF-8 available_at maintenance window.** Fix is
       built + unit-tested, never run in production; CF-8 stays ~40-50% `available_at` fill until it does. Lift operator
       stop `BLK-d9137d48` and clear the still-false backlog parking-gate condition
