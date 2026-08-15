@@ -732,3 +732,8 @@ batch)
   [cross_cutting_consolidated_closeout_history_2026_08_09.md](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md).
   Each forked Track's header stays in place as a short pointer stub (mirroring how Track 24 was already extracted
   2026-07-26) so existing cross-references by Track number stay valid. See the "Split notice" section above.
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — no content change since 2026-08-09; existing set
+  (ag-closeout-audit SKILL.md + the master canonicalisation-migration plan + 4 codex SSOTs spanning
+  data-pipeline-correctness/manifest/pipeline-mode/honest-coverage) already covers this hub doc's Reachability-map-wide
+  themes across Tracks 1-13, 16-17, 23-24; still accurate.

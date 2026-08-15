@@ -38,9 +38,11 @@ drift_direction: advance-code
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/live/connectors/,
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
-    e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py,
-    deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
+    /plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md,
+    /plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
+    /plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
   ]
 supersedes:
 superseded_by:
@@ -340,3 +342,17 @@ _(append dated entries here)_
   the conflict was pure stash-pop residue, not a real content difference). Left the now-redundant `autostash` stash
   entry in place (its content was already fully applied/resolved in the working tree; `git stash drop` is hard-blocked
   for agents by the orchestrator guardrail, correctly).
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — swapped the two DONE-item targets
+  (`validate_batch_live_smoke_matrix.py`, `launch-mtds-live-cefi-consolidated.sh`) for the still-open work:
+  `live/websocket_runner.py` (the prediction-stall root-cause fix target, `LiveWebsocketRunner`'s never-wired hot-reload
+  path), the new prediction-stall issue doc, and the archived Finding-D gap doc. **Fingerprint cross-reference (step
+  4a)**: Finding B's `PHOENIX-SOLANA` exclusion claim (`defi_venues.py:800`, deliberately excluded 2026-07-22) shares
+  the literal `PHOENIX-SOLANA` with `/plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`
+  (open, `assigned_vm: planning`), which independently found `PHOENIX-SOLANA` IS present in `ALL_DEFI_VENUES`
+  (`defi_venues.py`, 135 members) but missing from `VENUES_BY_ASSET_GROUP["defi"]` (`market_data_categories.py`, 103
+  members) — one of 33 venues affected by a separate, still-open registry-gap bug. Different registries, not necessarily
+  contradictory, but the open registry-gap fix (adding all 33 missing venues back to `VENUES_BY_ASSET_GROUP`) could
+  silently re-surface a venue this doc's Finding B found was deliberately excluded for a dead REST API — added to
+  context_scope so the pending `[OPERATOR]` phoenix ruling accounts for it; the other doc is outside this batch,
+  reported for its own pickup.

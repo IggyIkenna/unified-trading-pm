@@ -58,6 +58,7 @@ context_scope:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize.md,
   ]
 source: >-
   Drafted by the 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full-corpus sweep (interactive session). status:
@@ -628,3 +629,10 @@ source: >-
 None — every item drafted here already cleared the conflict-check. Items that did NOT clear (genuinely operator-gated,
 time-gated, or too-large-for-a-batch-todo) were left in their source docs and are not duplicated here; see the
 2026-08-13 audit's full classification data for the complete list.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (5 entries) — dispatch-batch coordinator doc extracting 89 items
+  across 39 source docs (no single dominant source target, matches the coordinator-doc exemption); added this doc's own
+  gated finalize plan (`cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`), mirroring the established
+  sibling-batch convention (batch1b/batch1 already do this).

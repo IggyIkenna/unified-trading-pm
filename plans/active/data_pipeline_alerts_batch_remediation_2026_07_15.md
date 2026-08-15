@@ -138,3 +138,6 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   remaining item is a genuine real-wall-clock observation window (up to 24h, needed to watch a RESOLVED/green bookend
   post once the underlying sports/tradfi/cefi conditions actually clear) — DEPENDENCY_BLOCKED on time passing, not agent
   effort; the explicit operator "run this locally" instruction still governs the doc's `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries) -- the intervening
+  `data_pipeline_hardening_self_monitoring` archival commit already resolves correctly via this doc's existing
+  archive-path entry; no new reference target since the 2026-08-07 scout pass.

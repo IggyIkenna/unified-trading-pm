@@ -988,3 +988,4 @@ MIGRATE-TO-CODEX; no codex target needs creating.
 - **context-scout 2026-08-03**: refreshed (5 entries) — swapped superseded consolidation issue for
   `check_repo_docs_ssot.py`.
 - **context-scout 2026-08-05, 08-07**: re-scouted both; unchanged (5 entries).
+- **context-scout 2026-08-15**: refreshed; context_scope unchanged (5 entries), still accurate.

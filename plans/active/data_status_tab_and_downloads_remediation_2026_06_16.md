@@ -460,3 +460,4 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   correctly blocked pending a fresh `pw:L2` full-suite green (the cited nav-regression blocker doc is resolved but no
   re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay correctly
   HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.

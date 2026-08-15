@@ -40,11 +40,12 @@ superseded_by:
 source:
 context_scope:
   [
+    agent-orchestrator/server/codex_bridge_server.py,
     agent-orchestrator/server/accounts.py,
-    agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/model_pricing.py,
     agent-orchestrator/server/deepseek_native_proxy_server.py,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
+    /codex/06-coding-standards/model-tier-selection.md,
   ]
 ---
 
@@ -217,3 +218,10 @@ template, minus the third-party dependency).
      this session (genuinely blocked, not skipped): `model_pricing.py` Luna entry, real usage-capture wiring (a
      token-count placeholder exists, clearly marked never-to-be-trusted-for-billing), and the bridge is not deployed
      anywhere — it's a file in this repo, not a running service.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added `codex_bridge_server.py` (the bridge
+  scaffold shipped earlier today, now the concrete build target) and
+  `/codex/06-coding-standards/model-tier-selection.md` (the doc's own "Why" section already names this as a hard
+  dependency — every provider decision here must respect the opus/fable-hard-pinned-to-Claude rule it defines); dropped
+  `autospawn.py` (the shared routing mechanism it carries is already-shipped per this doc's own todo, lower-value than
+  the two additions for the REMAINING open work) to stay within the 6-entry cap.

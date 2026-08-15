@@ -43,13 +43,12 @@ effort: high
 drift_direction: advance-code
 context_scope:
   [
-    agent-orchestrator/server/state_store/slots.py,
+    agent-orchestrator/server/deepseek_native_proxy_server.py,
     agent-orchestrator/server/deepseek_balance_poller.py,
     agent-orchestrator/server/deepseek_usage_poller.py,
-    agent-orchestrator/server/model_pricing.py,
+    agent-orchestrator/server/state_store/slots.py,
     agent-orchestrator/server/orm.py,
-    agent-orchestrator/dashboard/src/DeepSeekWalletPanel.tsx,
-    /plans/archive/2026_08/issues/deepseek_flash_spend_235_residual_2026_08_10.md,
+    /codex/12-agent-workflow/measurement-claims-discipline.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]
 locked_by:
@@ -489,3 +488,11 @@ Progress Log).
   shared checkout, "the file isn't where I left it" can mean "your local HEAD is stale," not "it was deleted" — check
   `git show origin/<branch>:<path>` before assuming loss, and prefer the isolated-worktree ship scripts specifically
   because they don't depend on local HEAD being sane.
+
+- **context-scout 2026-08-15**: refreshed context_scope (7 entries) -- trimmed from 8: swapped in
+  `deepseek_native_proxy_server.py` (the actual root-cause fix, the doc's own central artifact -- was missing entirely)
+  and `measurement-claims-discipline.md` (already named in this doc's own "Codex SSOTs" section); dropped
+  `model_pricing.py` (investigation closed -- "needed no change", confirmed byte-identical to vendor pricing),
+  `DeepSeekWalletPanel.tsx` (UI wiring already shipped; remaining open work is backend-only), and the
+  `deepseek_flash_spend_235_residual_2026_08_10.md` issue (already surfaced via this doc's own `related:` field, and
+  superseded by this doc's own fuller root-cause narrative).

@@ -481,3 +481,7 @@ source: >-
 None — every item drafted here already cleared the conflict-check. Items that did NOT clear (genuinely operator-gated,
 time-gated, or too-large-for-a-batch-todo) were left in their source docs and are not duplicated here; see the
 2026-08-13 audit's full classification data for the complete list.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries), still accurate.

@@ -291,6 +291,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   `verify_wip_preserve_ref()`) against each of the 9 named slots' repos — the verifier itself needs no further work,
   only reach. Do NOT re-attempt this from a session without `ip-172-31-5-118` filesystem/SSM access — it will reproduce
   this same 0/25 result.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **2026-08-01** — Todo 2 shipped (`agent-orchestrator@af98fcd`, landed on `live-defi-rollout` ahead of batch4's sibling
   todo per the file-adjacency rule above — sidestepped it entirely by keeping the new watchdog a standalone module
   rather than folding into `WorkerLivenessWatchdog._tick_once`). Full evidence + the live-backlog backfill-check result

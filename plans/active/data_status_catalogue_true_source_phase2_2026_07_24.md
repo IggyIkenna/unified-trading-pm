@@ -87,53 +87,53 @@ plan is that other half.
       captured). Respect T4 (integrate by contract/projection, not a direct service→service import).
 
       **NOT DONE — but DESIGNED + de-risked on real data 2026-07-17. The obvious implementation was investigated,
-          PROTOTYPED, and DELIBERATELY REVERTED as wrong; read this before starting, it will save you the same detour.**
+                  PROTOTYPED, and DELIBERATELY REVERTED as wrong; read this before starting, it will save you the same detour.**
 
-          **1. The tempting shortcut, and why it is NOT the answer.** The natural move is to extend
-          `_IDENTITY_CATALOGUE_ASSET_GROUPS` (`routes/data_status/_catalogue.py`) so prediction+sports also read
-          `prod/catalog.parquet`, since cefi/defi/tradfi already do post-@62cc10f and the gap looks enormous — measured live:
-          | AG | explorer shows today | `prod/catalog.parquet` | missing | object |
-          | --- | --- | --- | --- | --- |
-          | sports | **1,786** non-blank ids | **27,250** | 25,464 (94%) | 0.6 MB |
-          | prediction | 12,921 non-blank ids (**and only 79 survive `_dedupe_latest`** — see finding 4) | **2,673,230** | ~2.66M (99.5%) | 184.5 MB |
-          I prototyped exactly this for sports (0.6 MB, so no latency cost) and **reverted it**, because driving the shipped
-          code against real GCS showed it trades correctness for correctness rather than winning:
-          - the sports identity catalogue has **`venue=''`** on every row (sports keys on `league_id`, not venue) → the
-          explorer's venue narrow would silently return nothing for sports, a regression vs the `_index` path which carries
-          a real venue;
-          - it carries **no `capture_status`/`error_reason`/`attempted_at`** (manifest-only per-shard fields), which the
-          identity path defaults to `captured`/`""`/`""`. That default is defensible for cefi/defi/tradfi (their `_index`
-          has literally zero per-instrument rows, so it is "something vs nothing"), but for sports it would **stamp
-          `captured` on ~25k rows whose real per-day status the `_index` already knows** — a fabricated status, which is
-          precisely what the honest-absence rule forbids;
-          - its `instrument_type` is lowercase legacy (`'team'`) — see the sports non-canonical todo above.
+                  **1. The tempting shortcut, and why it is NOT the answer.** The natural move is to extend
+                  `_IDENTITY_CATALOGUE_ASSET_GROUPS` (`routes/data_status/_catalogue.py`) so prediction+sports also read
+                  `prod/catalog.parquet`, since cefi/defi/tradfi already do post-@62cc10f and the gap looks enormous — measured live:
+                  | AG | explorer shows today | `prod/catalog.parquet` | missing | object |
+                  | --- | --- | --- | --- | --- |
+                  | sports | **1,786** non-blank ids | **27,250** | 25,464 (94%) | 0.6 MB |
+                  | prediction | 12,921 non-blank ids (**and only 79 survive `_dedupe_latest`** — see finding 4) | **2,673,230** | ~2.66M (99.5%) | 184.5 MB |
+                  I prototyped exactly this for sports (0.6 MB, so no latency cost) and **reverted it**, because driving the shipped
+                  code against real GCS showed it trades correctness for correctness rather than winning:
+                  - the sports identity catalogue has **`venue=''`** on every row (sports keys on `league_id`, not venue) → the
+                  explorer's venue narrow would silently return nothing for sports, a regression vs the `_index` path which carries
+                  a real venue;
+                  - it carries **no `capture_status`/`error_reason`/`attempted_at`** (manifest-only per-shard fields), which the
+                  identity path defaults to `captured`/`""`/`""`. That default is defensible for cefi/defi/tradfi (their `_index`
+                  has literally zero per-instrument rows, so it is "something vs nothing"), but for sports it would **stamp
+                  `captured` on ~25k rows whose real per-day status the `_index` already knows** — a fabricated status, which is
+                  precisely what the honest-absence rule forbids;
+                  - its `instrument_type` is lowercase legacy (`'team'`) — see the sports non-canonical todo above.
 
-          **2. The load-bearing realisation (this is the actual reason phase-2 is "architecturally open-ended").**
-          `prod/catalog.parquet` is **not** the true catalogue. It is *"every instrument we ever CAPTURED, rolled up with
-          lifecycle windows"* (`build_instrument_catalogue.py` walks the `by_date` capture snapshots). So it **cannot answer
-          "what EXISTS but was never captured" for ANY asset group** — swapping sources just changes *which* captured-derived
-          projection you read. The phase-1 label "captured instruments (availability-derived)" therefore stays HONEST even
-          for the identity-catalogue asset groups. This todo's ask genuinely requires the **expected-universe** side.
+                  **2. The load-bearing realisation (this is the actual reason phase-2 is "architecturally open-ended").**
+                  `prod/catalog.parquet` is **not** the true catalogue. It is *"every instrument we ever CAPTURED, rolled up with
+                  lifecycle windows"* (`build_instrument_catalogue.py` walks the `by_date` capture snapshots). So it **cannot answer
+                  "what EXISTS but was never captured" for ANY asset group** — swapping sources just changes *which* captured-derived
+                  projection you read. The phase-1 label "captured instruments (availability-derived)" therefore stays HONEST even
+                  for the identity-catalogue asset groups. This todo's ask genuinely requires the **expected-universe** side.
 
-          **3. Concrete design direction (T4-safe).** instruments-service already computes the expected universe —
-          `scripts/enumerate_expected_universe.py` + `scripts/expected_universe.py` (and the `expected_unattempted` manifest
-          state is materialised from it by the WRITER). The right phase-2 shape is therefore **a published projection, not a
-          read path**: have instruments-service publish a small per-AG `_catalogue/expected_universe.parquet`
-          (instrument_id + venue/league_id + instrument_type + lifecycle + `is_expected`), and have deployment-api read that
-          ONE bounded object alongside the identity catalogue, tagging each row `exists_in_catalogue` vs `captured`. That
-          integrates by **artifact contract** (exactly like MTDS consumes IS's published outputs) with **no service→service
-          import**, satisfying T4 — whereas a deployment-api→IS HTTP read path would add the T4-banned edge.
+                  **3. Concrete design direction (T4-safe).** instruments-service already computes the expected universe —
+                  `scripts/enumerate_expected_universe.py` + `scripts/expected_universe.py` (and the `expected_unattempted` manifest
+                  state is materialised from it by the WRITER). The right phase-2 shape is therefore **a published projection, not a
+                  read path**: have instruments-service publish a small per-AG `_catalogue/expected_universe.parquet`
+                  (instrument_id + venue/league_id + instrument_type + lifecycle + `is_expected`), and have deployment-api read that
+                  ONE bounded object alongside the identity catalogue, tagging each row `exists_in_catalogue` vs `captured`. That
+                  integrates by **artifact contract** (exactly like MTDS consumes IS's published outputs) with **no service→service
+                  import**, satisfying T4 — whereas a deployment-api→IS HTTP read path would add the T4-banned edge.
 
-          **4. Prerequisite (found while scoping, must be fixed first or phase-2 inherits it).** `/catalogue` for
-          **prediction** currently reports `total_count=79` on real data — 12,921 non-blank `_index` ids collapse to 79 after
-          `_dedupe_latest`, because prediction `_index` rows key on the cqg BUNDLE, not the per-market instrument. So the
-          Prediction tab of the explorer is effectively empty today and phase-2 should not be built on top of that path.
-          (Distinct from the `/prediction-catalogue` browser, which reads the real 2.67M-row catalogue and works.)
+                  **4. Prerequisite (found while scoping, must be fixed first or phase-2 inherits it).** `/catalogue` for
+                  **prediction** currently reports `total_count=79` on real data — 12,921 non-blank `_index` ids collapse to 79 after
+                  `_dedupe_latest`, because prediction `_index` rows key on the cqg BUNDLE, not the per-market instrument. So the
+                  Prediction tab of the explorer is effectively empty today and phase-2 should not be built on top of that path.
+                  (Distinct from the `/prediction-catalogue` browser, which reads the real 2.67M-row catalogue and works.)
 
-          **5. Perf constraint (already measured, see the two PERF todos above).** Any prediction phase-2 MUST come with the
-          projected artifact: its catalogue object is 184.5 MB / ~84s cold transpacific, which is exactly why the
-          `/prediction-catalogue` first-hit residual is ~157s. A source swap without a narrowed artifact would import that
-          latency into `/catalogue` too.
+                  **5. Perf constraint (already measured, see the two PERF todos above).** Any prediction phase-2 MUST come with the
+                  projected artifact: its catalogue object is 184.5 MB / ~84s cold transpacific, which is exactly why the
+                  `/prediction-catalogue` first-hit residual is ~157s. A source swap without a narrowed artifact would import that
+                  latency into `/catalogue` too.
 
 ## Progress Log
 
@@ -154,3 +154,4 @@ prior design history verbatim from the parent plan's Progress Log.)_
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; the sole todo
   remains self-described architecturally open-ended with the prediction /catalogue 79-row-collapse prerequisite still
   unresolved.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.

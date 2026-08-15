@@ -54,6 +54,7 @@ context_scope:
     /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
     instruments-service/scripts/measure_honest_coverage.py,
+    /plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md,
   ]
 ---
 
@@ -81,102 +82,102 @@ context_scope:
       successive checks, not flat), and the N=1 concurrency guard is confirmed satisfied throughout the launch.
 
       **Evidence**: pre-launch baseline coverage measured via `instruments-service/scripts/measure_honest_coverage.py
-          --asset-group cefi`: **44.96%** (3,136,068/6,975,460 reachable). Confirmed 0 running Tardis-consuming VMs both
-          clouds (GCP `gcloud compute instances list` + AWS `describe-instances`, both empty) before launch — N=1 cap
-          clear. Launched `bash scripts/vm/launch-cefi-sharded-backfill.sh` with `START_DATE=2026-02-01
-          SINGLE_VM_QUEUE=1 LAUNCH_GROUPS=heavy TARDIS_MAX_CONCURRENT_DOWNLOADS=32 TARDIS_CONCURRENCY_LEASE=1` (targets
-          the actual 2026-02..2026-07 gap window per the doc's own by-day cross-tab, not a wasteful year-granular walk).
-          Enumerated all 17 main venues × years 2020-2026 (SINGLE_VM_QUEUE bucketing requires evaluating every combo
-          regardless of scope filters — confirmed via `bash -x` trace, not a bug), then flushed into ONE combined VM:
-          `[tardis-guard] slot reserved for 'cefi-queue-heavy-binancefutu-x17-20260727-210013' (1/1 Tardis VMs; 1 created
-          by this launcher)` — **N=1 cap satisfied by the guard's own reservation mechanism throughout**. VM confirmed
-          `RUNNING` (`gcloud compute instances describe`, machine `e2-highmem-16`). **Progress climbing confirmed over
-          2+ successive checks**: run.log grew 136→391 lines within ~5 min, with `Tardis lease ACQUIRED by
-          cefi-queue-heavy-binancefutu-x17-...` (confirms this VM — and only this VM — holds the shared single-IP Tardis
-          lease) and 69+ `Tardis streaming success: N rows...` entries (real data landing, not just retries/skips);
-          CPU 100%, RSS climbing (10.9GB→12.0GB), `PIPELINE_HEARTBEAT` emitting normally. **Minor non-blocking finding**:
-          the VM's `RESOURCE_SAMPLE` metric emission hits a `pubsub.topics.publish` permission error on
-          `projects/central-element-323112/topics/resource-samples` — a telemetry-only gap (the actual backfill/Tardis
-          work is unaffected); not fixed here as it's outside this todo's launch-and-confirm scope, flagged for a future
-          pass. Full backfill completion (not required by this todo's done-when) is tracked by the MID/POST checkpoint
-          todos below.
+                  --asset-group cefi`: **44.96%** (3,136,068/6,975,460 reachable). Confirmed 0 running Tardis-consuming VMs both
+                  clouds (GCP `gcloud compute instances list` + AWS `describe-instances`, both empty) before launch — N=1 cap
+                  clear. Launched `bash scripts/vm/launch-cefi-sharded-backfill.sh` with `START_DATE=2026-02-01
+                  SINGLE_VM_QUEUE=1 LAUNCH_GROUPS=heavy TARDIS_MAX_CONCURRENT_DOWNLOADS=32 TARDIS_CONCURRENCY_LEASE=1` (targets
+                  the actual 2026-02..2026-07 gap window per the doc's own by-day cross-tab, not a wasteful year-granular walk).
+                  Enumerated all 17 main venues × years 2020-2026 (SINGLE_VM_QUEUE bucketing requires evaluating every combo
+                  regardless of scope filters — confirmed via `bash -x` trace, not a bug), then flushed into ONE combined VM:
+                  `[tardis-guard] slot reserved for 'cefi-queue-heavy-binancefutu-x17-20260727-210013' (1/1 Tardis VMs; 1 created
+                  by this launcher)` — **N=1 cap satisfied by the guard's own reservation mechanism throughout**. VM confirmed
+                  `RUNNING` (`gcloud compute instances describe`, machine `e2-highmem-16`). **Progress climbing confirmed over
+                  2+ successive checks**: run.log grew 136→391 lines within ~5 min, with `Tardis lease ACQUIRED by
+                  cefi-queue-heavy-binancefutu-x17-...` (confirms this VM — and only this VM — holds the shared single-IP Tardis
+                  lease) and 69+ `Tardis streaming success: N rows...` entries (real data landing, not just retries/skips);
+                  CPU 100%, RSS climbing (10.9GB→12.0GB), `PIPELINE_HEARTBEAT` emitting normally. **Minor non-blocking finding**:
+                  the VM's `RESOURCE_SAMPLE` metric emission hits a `pubsub.topics.publish` permission error on
+                  `projects/central-element-323112/topics/resource-samples` — a telemetry-only gap (the actual backfill/Tardis
+                  work is unaffected); not fixed here as it's outside this todo's launch-and-confirm scope, flagged for a future
+                  pass. Full backfill completion (not required by this todo's done-when) is tracked by the MID/POST checkpoint
+                  todos below.
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot-6, data_engineering)** — Ran `/data-pipeline-check-is` for cefi as the
       MID-BACKFILL SPOT-CHECK, partway through the coverage backfill launched in the todo above. Repo:
       instruments-service (skill run, no code change).
 
       **Evidence**: operator-pinned spot-check date `2026-03-15` (early-window historical date, per operator's answer
-          to my `/blocked` question — approach B, likely already processed at mid-run). Ran the full force+skip matrix
-          (`scripts/pipeline_e2e_check.py --asset-group CEFI --day 2026-03-15 --legs force,skip`) across all 26 MVP cefi
-          venues, then the live leg (`--legs live`, inherently MVP-scoped). **Ground-truth verified every shard** per the
-          skill's documented "checker verdict is unreliable during the raw-vs-canonical-id migration" caveat — cross-checked
-          each venue's own VM `run.log` via `gcloud storage cat`, not the checker's own status field.
+                  to my `/blocked` question — approach B, likely already processed at mid-run). Ran the full force+skip matrix
+                  (`scripts/pipeline_e2e_check.py --asset-group CEFI --day 2026-03-15 --legs force,skip`) across all 26 MVP cefi
+                  venues, then the live leg (`--legs live`, inherently MVP-scoped). **Ground-truth verified every shard** per the
+                  skill's documented "checker verdict is unreliable during the raw-vs-canonical-id migration" caveat — cross-checked
+                  each venue's own VM `run.log` via `gcloud storage cat`, not the checker's own status field.
 
-          **Result breakdown (26 MVP cefi venues)**:
-          - **23 venues — false-positive-pattern (checker wrong, real writes)**: BINANCE-SPOT/FUTURES/DELIVERY, BYBIT,
-          OKX/OKX-SPOT/OKX-FUTURES/OKX-SWAP, DERIBIT, UPBIT, COINBASE-SPOT/FUTURES, BYBIT-SPOT, BITFINEX-SPOT/FUTURES,
-          BITGET-SPOT/FUTURES, KRAKEN-SPOT/FUTURES, HYPERLIQUID, ASTER, EXTENDED-STARKNET, LIGHTER-ZKSYNC all showed the
-          checker's `manifest_status_invalid:no_matching_row` false "failed" verdict on force+skip while their run.log
-          confirmed real writes (`Shard completeness OK`, `wrote N records`, no Traceback) — the documented migration
-          blindspot, not a regression. Confirmed correct on the live leg too (`status=passed`, `manifest=captured` — the
-          live leg's own verification is NOT affected by the migration blindspot).
-          - **1 genuine gap — COINBASE-CDE**: real crash (`URDI returned zero records`, `RuntimeError` Traceback), confirmed
-          via `no_parquet_at` on ALL THREE legs (force/skip/live). Filed as
-          `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` for root-cause follow-up.
-          - **2 expected non-findings — KALSHI-PERP, POLYMARKET-PERP**: showed `no_parquet_at` on force+skip, but ground
-          truth confirmed a clean `exit_code=0` ("No active venues for date=2026-03-15", no crash) — and the live leg's
-          own MVP-scope filter independently confirmed both are `not_in_mvp_scope`, corroborating these are non-MVP
-          and/or pre-existence-date venues for this early spot-check date, not a coverage bug.
+                  **Result breakdown (26 MVP cefi venues)**:
+                  - **23 venues — false-positive-pattern (checker wrong, real writes)**: BINANCE-SPOT/FUTURES/DELIVERY, BYBIT,
+                  OKX/OKX-SPOT/OKX-FUTURES/OKX-SWAP, DERIBIT, UPBIT, COINBASE-SPOT/FUTURES, BYBIT-SPOT, BITFINEX-SPOT/FUTURES,
+                  BITGET-SPOT/FUTURES, KRAKEN-SPOT/FUTURES, HYPERLIQUID, ASTER, EXTENDED-STARKNET, LIGHTER-ZKSYNC all showed the
+                  checker's `manifest_status_invalid:no_matching_row` false "failed" verdict on force+skip while their run.log
+                  confirmed real writes (`Shard completeness OK`, `wrote N records`, no Traceback) — the documented migration
+                  blindspot, not a regression. Confirmed correct on the live leg too (`status=passed`, `manifest=captured` — the
+                  live leg's own verification is NOT affected by the migration blindspot).
+                  - **1 genuine gap — COINBASE-CDE**: real crash (`URDI returned zero records`, `RuntimeError` Traceback), confirmed
+                  via `no_parquet_at` on ALL THREE legs (force/skip/live). Filed as
+                  `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` for root-cause follow-up.
+                  - **2 expected non-findings — KALSHI-PERP, POLYMARKET-PERP**: showed `no_parquet_at` on force+skip, but ground
+                  truth confirmed a clean `exit_code=0` ("No active venues for date=2026-03-15", no crash) — and the live leg's
+                  own MVP-scope filter independently confirmed both are `not_in_mvp_scope`, corroborating these are non-MVP
+                  and/or pre-existence-date venues for this early spot-check date, not a coverage bug.
 
-          **Live-leg caveat (documented finding, not a bug)**: every live-leg "passed" verdict carries the checker's own
-          embedded note — `routed via launch-instruments-backfill-vm.sh, which currently always runs --mode batch under
-          setup-data-pipeline-vm.sh -- this leg does not yet prove the true --mode live code path`. The live leg is
-          real-VM and MVP-scoped, but does not yet exercise `--mode live` code specifically.
+                  **Live-leg caveat (documented finding, not a bug)**: every live-leg "passed" verdict carries the checker's own
+                  embedded note — `routed via launch-instruments-backfill-vm.sh, which currently always runs --mode batch under
+                  setup-data-pipeline-vm.sh -- this leg does not yet prove the true --mode live code path`. The live leg is
+                  real-VM and MVP-scoped, but does not yet exercise `--mode live` code specifically.
 
-          Final tally (live leg, the leg with reliable checker verification): `total=26 passed=21 failed=1 ambiguous=0
-          skipped=4` (4 skipped = BINANCE-DELIVERY, OKX, KALSHI-PERP, POLYMARKET-PERP, all `not_in_mvp_scope`).
+                  Final tally (live leg, the leg with reliable checker verification): `total=26 passed=21 failed=1 ambiguous=0
+                  skipped=4` (4 skipped = BINANCE-DELIVERY, OKX, KALSHI-PERP, POLYMARKET-PERP, all `not_in_mvp_scope`).
 
-          **Report**: `instruments-service/pipeline_e2e_check_reports/data_pipeline_e2e_check_is_2026_03_15.md` (live-leg
-          results; force+skip ground truth captured via direct VM run.log inspection per shard, cited above and in the new
-          issue doc). **Run date**: `2026-03-15`.
+                  **Report**: `instruments-service/pipeline_e2e_check_reports/data_pipeline_e2e_check_is_2026_03_15.md` (live-leg
+                  results; force+skip ground truth captured via direct VM run.log inspection per shard, cited above and in the new
+                  issue doc). **Run date**: `2026-03-15`.
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot-6, data_engineering)** — Ran `/data-pipeline-check-mtds` for cefi as the
       MID-BACKFILL SPOT-CHECK, partway through the coverage backfill launched above. Repo: market-tick-data-service
       (skill run, no code change).
 
       **Evidence**: full MVP force/skip matrix (`scripts/pipeline_e2e_check.py --asset-group CEFI --day 2026-03-15
-          --legs force,skip --mvp-only --require-captured --auto-day`), run 04:20–05:08 UTC while the Track-2 coverage
-          backfill VM (`cefi-queue-heavy-binancefutu-x17-20260727-210013`) was continuously active and holding the sole
-          Tardis IP lease. **Report**: `plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md`.
-          **Result**: `total=468 passed=0 failed=124 ambiguous=0 skipped=344` — root-caused, NOT a data-correctness
-          finding: `launch-mtds-backfill-vm.sh` applies the Tardis N=1 concurrency guard to EVERY cefi venue launch
-          (gates on `asset_group==cefi`, no venue check), not just Tardis-sourced ones, so even the documented
-          CAP-EXEMPT native-REST venues (HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC) were refused the same as
-          real Tardis venues for the entire run — confirmed in source
-          (`deployment-service/scripts/vm/launch-mtds-backfill-vm.sh:238-243`) and in the run log (identical guard
-          refusal message on a HYPERLIQUID launch attempt). Zero VMs were created for any failed cell
-          (`vm_not_success:launcher_script_nonzero_rc=1`, 0 parquet writes each) — nothing was mis-captured. Filed
-          `issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md` (P1, scope the guard to
-          Tardis-sourced venues only, then re-run for a genuine non-Tardis verdict).
+                  --legs force,skip --mvp-only --require-captured --auto-day`), run 04:20–05:08 UTC while the Track-2 coverage
+                  backfill VM (`cefi-queue-heavy-binancefutu-x17-20260727-210013`) was continuously active and holding the sole
+                  Tardis IP lease. **Report**: `plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md`.
+                  **Result**: `total=468 passed=0 failed=124 ambiguous=0 skipped=344` — root-caused, NOT a data-correctness
+                  finding: `launch-mtds-backfill-vm.sh` applies the Tardis N=1 concurrency guard to EVERY cefi venue launch
+                  (gates on `asset_group==cefi`, no venue check), not just Tardis-sourced ones, so even the documented
+                  CAP-EXEMPT native-REST venues (HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC) were refused the same as
+                  real Tardis venues for the entire run — confirmed in source
+                  (`deployment-service/scripts/vm/launch-mtds-backfill-vm.sh:238-243`) and in the run log (identical guard
+                  refusal message on a HYPERLIQUID launch attempt). Zero VMs were created for any failed cell
+                  (`vm_not_success:launcher_script_nonzero_rc=1`, 0 parquet writes each) — nothing was mis-captured. Filed
+                  `issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md` (P1, scope the guard to
+                  Tardis-sourced venues only, then re-run for a genuine non-Tardis verdict).
 
-          **Non-Tardis live-leg** (`--legs live`, separate run): HYPERLIQUID completed cleanly (3 `passed` — liquidations,
-          ohlcv_1m, perp_funding — 6 `failed` on cells with no sampled instrument/live-manifest row for this day, a
-          known non-MVP-scope/no-data pattern, not a regression). ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC stopped
-          partway through (each live-leg shard check took ~6-7min of VM boot+poll overhead; completing all 4 venues'
-          9 shards each would have taken hours for a spot-check's marginal value) — flagged as an honest gap, not
-          silently dropped; not required by this todo's done-bar.
+                  **Non-Tardis live-leg** (`--legs live`, separate run): HYPERLIQUID completed cleanly (3 `passed` — liquidations,
+                  ohlcv_1m, perp_funding — 6 `failed` on cells with no sampled instrument/live-manifest row for this day, a
+                  known non-MVP-scope/no-data pattern, not a regression). ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC stopped
+                  partway through (each live-leg shard check took ~6-7min of VM boot+poll overhead; completing all 4 venues'
+                  9 shards each would have taken hours for a spot-check's marginal value) — flagged as an honest gap, not
+                  silently dropped; not required by this todo's done-bar.
 
-          **Also found + filed** `issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (the mirror-image bug:
-          `launch-mtds-live.sh` is MISSING the guard entirely for venues that DO need it) while investigating the live
-          leg earlier in this same run.
+                  **Also found + filed** `issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (the mirror-image bug:
+                  `launch-mtds-live.sh` is MISSING the guard entirely for venues that DO need it) while investigating the live
+                  leg earlier in this same run.
 
-          **DERIBIT `options_chain`/`futures_chain` corroboration** (direct manifest read, not part of the MVP matrix
-          above): `attempted_failed` counts (113,639 / 112,752) are essentially flat vs. the 2026-07-26 re-verify in the
-          already-tracked, still-open `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` — expected at this
-          MID-backfill point (that doc's own fix path is the Track-2 backfill capturing the underlying per-symbol data,
-          which was still mid-run), not a new regression. Added a note to that doc is NOT done here — its own
-          instruction says the re-check trigger is the POST-BACKFILL checkpoint, not this MID one; leaving it for that
-          todo.
+                  **DERIBIT `options_chain`/`futures_chain` corroboration** (direct manifest read, not part of the MVP matrix
+                  above): `attempted_failed` counts (113,639 / 112,752) are essentially flat vs. the 2026-07-26 re-verify in the
+                  already-tracked, still-open `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` — expected at this
+                  MID-backfill point (that doc's own fix path is the Track-2 backfill capturing the underlying per-symbol data,
+                  which was still mid-run), not a new regression. Added a note to that doc is NOT done here — its own
+                  instruction says the re-check trigger is the POST-BACKFILL checkpoint, not this MID one; leaving it for that
+                  todo.
 
 - [ ] [DATA] P1. **Run `/data-pipeline-check-is` for cefi as the POST-BACKFILL FINAL GATE**, after the coverage backfill
       completes. Repo: instruments-service (skill run, no code change). **Done when**: the report path + run date, plus
@@ -311,6 +312,10 @@ context_scope:
   only once the 8th VM measurably self-terminates at scope end — next re-verify should watch for a terminal
   `delete`/exit on the 8th VM (the 2 known stall classes — lease-race, honest-absence false-stall — are both fixed since
   `deployment-service@8095aeba`).
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`, the 2026-08-09 cross-reference
+  finding the doc's own newest `[INFRA] P1` todo cites.
 
 ## Reconciliation
 

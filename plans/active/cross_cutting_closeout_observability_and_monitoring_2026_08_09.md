@@ -239,3 +239,7 @@ smoke-green foundation gate would be premature).
   genuinely open on direct read (Track 14's DeFi-handlers-zero-concurrency refactor, Track 19's residual forks, Track
   20's data-status items). Persists until its Tracks close, per its own "Close-out criterion" per Track. Doc stays
   `assigned_vm: NA`.
+- **context-scout 2026-08-15**: populated context_scope (3 entries) — pure pointer/index hub over 15 source docs across
+  6 Tracks (14, 18-22), no code target of its own (matches the coordinator-doc exemption); existing 3 codex SSOTs
+  (manifest/data-status, data-pipeline-correctness, manifest-consolidator) span the Tracks' common themes and remain the
+  minimal correct set.

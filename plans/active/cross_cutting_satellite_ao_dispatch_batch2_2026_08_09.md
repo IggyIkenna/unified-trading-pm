@@ -68,11 +68,12 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
     /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    instruments-service/instruments_service/reference_data/adapters/tradfi/databento/,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md,
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
   ]
 source: >-
   Satellite-batch-extraction sweep 2026-08-09 (8 parallel classification agents over the cross-cutting tranche's 27
@@ -957,3 +958,9 @@ drift_direction: advance-code
   verification is recorded in the Progress Log above (slots 2+15). Checkbox flipped with final evidence citations.
   **Remaining work on this plan: 0 open todos.** The CME COMBO malformed-symbol item (line 557) is still `[ ]` — but
   that's a separate plan todo, not part of this G1 item. This was the last open item in the batch.
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — down to 1 open todo (24/25 done): the CME COMBO
+  malformed-symbol `build_instrument_id` fix, native to this doc (no external `Source:` doc — found during this batch's
+  own 2026-08-09 live-verification pass). Swapped the generic AO-architecture codex citation for
+  `instruments-service/.../adapters/tradfi/databento/` (the CME/Databento adapter home, the concrete remaining-work
+  target) and added this doc's own finalize plan (established sibling-batch convention, e.g. batch1b/batch13).

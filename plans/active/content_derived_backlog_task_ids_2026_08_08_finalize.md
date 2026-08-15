@@ -50,7 +50,9 @@ context_scope:
   [
     /plans/active/content_derived_backlog_task_ids_2026_08_08.md,
     agent-orchestrator/server/dispatch.py,
-    agent-orchestrator/server/bootstrap.py,
+    agent-orchestrator/server/routes/slots_worker.py,
+    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -104,3 +106,7 @@ So the questions below are asked against **live state after the fact**, not agai
 ## Progress Log
 
 - **2026-08-08 (interactive session, slot 1)**: Authored alongside the parent as its required gated finalize companion.
+- **context-scout 2026-08-15**: populated context_scope (5 entries) — dropped `bootstrap.py` (not cited anywhere in this
+  doc's own body); added `routes/slots_worker.py` (todo 2's hazard-1 target — `/done`/`/progress`/`/blocked` 404
+  checks), the root-cause issue doc (todo 5's explicit reconciliation target), and the archival-discipline codex SSOT
+  (todo 6 + this doc's own "Codex SSOTs" section).

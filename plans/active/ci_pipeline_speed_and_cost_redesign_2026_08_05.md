@@ -364,3 +364,4 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
     go, directly targeting the sole remaining open todo (the fast-checkout no-op mystery). Kept the ci-cd-flow codex
     SSOT + the capacity-crisis source doc unchanged. (A stray context-scout marker from 2026-08-05 sits above under
     "Codex SSOTs" — written before this doc had a Progress Log section; left as historical record, not relocated.)
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

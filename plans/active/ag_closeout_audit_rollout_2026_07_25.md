@@ -1007,3 +1007,4 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
   tiering-shaped. Reaffirms round7's own verdict: this is a 6-asset_group cross-cutting doc explicitly flagged as out of
   a single-tranche sweep's authority — not actioned here, still recommend a dedicated cross-cutting close + archive
   pass. Doc stays NA.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

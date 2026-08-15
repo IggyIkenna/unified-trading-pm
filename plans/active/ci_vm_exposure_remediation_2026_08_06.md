@@ -188,3 +188,5 @@ with real numbers (TasksCurrent 274-326 idle baseline, ~46 tasks/run measured vi
 ACTIONS_RUNNER_HOOK_JOB_STARTED support for the pinned runner version + JIT-ephemeral runners, (2) a canary on ONE
 low-traffic pool of 25, (3) K sized from real per-run measurements -- a genuinely unresolved live-production-infra
 judgment call across a fleet-wide shared resource, not a single checkable fact.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

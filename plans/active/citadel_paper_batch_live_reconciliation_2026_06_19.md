@@ -891,3 +891,4 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 - **operator ruling 2026-08-08** (NA-corpus blocker digest, cross-cutting round 5, id=47): re-confirmed — live wallet +
   custody (Copper/CEFFU) approval not yet ready, P2.7.3 stays `BLOCKED-OPERATOR-DECISION` pending. No change to status;
   the paper↔batch-rerun ε=0 proof (P2.7.1/P2.7.2) remains unaffected since it does not depend on live custody.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

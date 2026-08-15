@@ -50,6 +50,7 @@ context_scope:
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
     /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -75,3 +76,11 @@ context_scope:
       archived alongside it in the same commit.
 
 ## Progress Log
+
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) -- added the plan-completion-and-archival-
+  discipline codex SSOT (todo 2's 6-step ritual cites "CLAUDE.md's plan-archival rule" but not the codex doc itself);
+  kept the gated parent batch doc (has all 22 todos' `Source:` citations) plus the 2 of its 6 named source docs with the
+  most citations (9 mentions each) -- the other 4 source docs (`instruments_completion_tracker_2026_07_06.md`,
+  `instruments_store_cf_canonicalization_single_walk_2026_07_24.md`, `mvp_scope_catalogue_tagging_2026_06_08.md`,
+  `is_catalogue_g1_root_audit_log_2026_07_24.md`) are already discoverable via the batch doc's own per-todo `Source:`
+  lines and this doc's `related:` frontmatter, so are not duplicated here.

@@ -135,3 +135,6 @@ severities were weakened to `"none"`, masking 574 errors).
   correctly cite SUPERSEDED-BY-BATCH1 (verified `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` still open on
   both), 1.5b remains genuinely gated on `features_service_e2e_pipeline_test_2026_05_26.md` reaching a fully-closed
   end-to-end-green state. `locked_by: live-defi-rollout` still applies.
+- **context-scout 2026-08-15**: refreshed; context_scope unchanged (4 entries) — 1.3b/1.7e are now both `[x]` DONE (via
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`), only 1.5b (column pruning, gated on
+  `features_service_e2e_pipeline_test_2026_05_26.md`) remains open; existing scope still covers it.

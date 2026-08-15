@@ -52,7 +52,9 @@ context_scope:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
     plans/audit/results/cf_manifest_audit_all.py,
+    market-tick-data-service/scripts/reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py,
   ]
 ---
 
@@ -128,3 +130,7 @@ todos/plans or a documented reason it still can't be scoped.
   requires a judgment call sequenced after 1-4 land real numbers, so the whole doc doesn't clear the RECLASSIFY bar yet.
   Corroborated same-day by `defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s fresh extraction pass, which examined
   this doc and found zero extractable items. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- added `pipeline-mode-partition.md` (already named
+  in this doc's own "Codex SSOTs" section but missing from context_scope) and
+  `reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py` (the concrete file the doc's own todo 3 names as the
+  relabel-precedent pattern to cite, resolved from its `reshape_*_2026_07.py` glob reference).

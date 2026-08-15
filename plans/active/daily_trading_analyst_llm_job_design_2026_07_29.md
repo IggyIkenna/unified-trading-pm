@@ -364,3 +364,7 @@ job's per-category input adapters for the reconciliation-derived categories, per
   content anywhere in the corpus; item 6's actual open question (the escalation-N day-count + default `assigned_vm` for
   filed docs) shows no evidence of an operator ruling in this doc or its Progress Log. Treating item 6 as still
   genuinely open rather than assuming the cited ruling applies here — flagging the mismatch rather than guessing.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) -- the only substantive change
+  since the 2026-08-07 scout pass was item 6 (`[OPERATOR]`-tagged) resolving via a 2026-08-08 operator ruling
+  (escalation-N=3 days, `assigned_vm` default planning) -- a checkbox flip, no new source/codex reference introduced;
+  the Stage-4 source path + 5 plan/codex links remain accurate.

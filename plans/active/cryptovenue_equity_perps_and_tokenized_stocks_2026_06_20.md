@@ -997,3 +997,4 @@ answer rather than a paid tick vendor. This note is kept for historical record, 
   — pointers above replaced with real evidence (SHAs verified reachable on origin), 1 mislabeled Progress Log header
   fixed (todo 8's entry was headed "todo 6"). **Doc-wide open count: 15/36, unchanged** (already checked at
   batch11-drafting; this pass only added evidence) — see the 2026-08-08 audit entry above for the breakdown.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).

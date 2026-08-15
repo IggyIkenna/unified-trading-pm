@@ -130,3 +130,7 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   citing the standing "Plan destination -- ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly
   overrides. The sole todo's own output is authoring a NEW dispatch batch, which defaults NA -- not re-litigating an
   already-resolved-today question.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) -- the only edit since the
+  2026-08-03 scout pass was a referrer-path fix (`honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` moved to
+  `plans/archive/issues/`), which this doc's context_scope doesn't reference; still a pure coordination-index doc over 8
+  source plans, no source-code path applies.
