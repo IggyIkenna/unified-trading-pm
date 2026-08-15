@@ -167,12 +167,27 @@ direct testing, not documentation-reading:**
       `test_hyperliquid_adapter.py`'s structure. Also fixed 1 collateral test
       (`test_pipeline_e2e_prediction.py::test_rule11_per_ag_dedup_target_counts_byte_unchanged`, CEFI dedup count 24→25)
       caught by the full QG run. Evidence: `quality-gates.sh` ALL PASSED (199s).
-- [ ] [SCRIPT] P3. **New follow-up (surfaced 2026-08-14, not in the original plan draft)**: run a reconciliation pass to
-      attempt resolving the 265 `QUARANTINE_REGISTRY`-listed `PACIFICA-SOLANA` objects
-      (`unified_api_contracts/canonical/quarantine.py`) against the real catalogue now that §C's adapter is live —
-      read-only classify, not GCS-destructive. Not done as part of §B/§C themselves (real data reconciliation, not a
-      registry-code change) — the registry entry's `reason` field was updated to note this is now possible, but the 265
-      objects are deliberately left registered/quarantined until this pass actually runs.
+- [x] [SCRIPT] P3. ✅ **Reconciliation pass run** — `unified-api-contracts@f82d0406bc`. Read-only, per the delete-safety
+      protocol (no GCS writes/renames/deletes). Real finding: the design doc's "265 objects" figure was stale — an
+      exhaustive prefix-scoped GCS scan (`market-data-tick-cefi-prd-.../venue=PACIFICA-SOLANA/`, two independent scans
+      agreeing) found **787 objects, not 265**, reducing to exactly 5 wire stems (BTC/ETH/HYPE/SOL/XRP-USDC@LIN). All 5
+      base symbols confirmed live on `GET /info` (2026-08-15) — **787/787 (100%) now resolve** against the canonical id
+      the resurrected §C adapter builds. `QUARANTINE_REGISTRY`'s `reason`/`verified_by` updated to record the measured
+      count + full resolution proof; objects are UNCHANGED on disk (still non-canonical filenames) — this is a
+      classification update only. The real unblock is tracked as its own todo below (a rename is a write+delete pair,
+      genuinely out of scope for a read-only pass).
+- [ ] [SCRIPT] P3. **New follow-up (surfaced 2026-08-15 by the reconciliation pass above)**: run the actual GCS
+      migration for the 787 now-resolvable `PACIFICA-SOLANA` objects — rename each object to prefix the filename with
+      `PACIFICA-SOLANA:PERPETUAL:`, backfill matching manifest rows (none currently exist for this venue's raw-tick
+      data), and route the whole thing through `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s proof gate
+      before touching any object (a rename is a write+delete pair, not a pure read — the reconciliation pass above
+      deliberately did not attempt it).
+- [ ] [OPERATOR] P3. **New follow-up (surfaced 2026-08-15)**: decide whether to provision a Pacifica
+      `wallet_private_key` (base58 Ed25519 Solana keypair — main wallet or a delegated Pacifica "API Agent Key") via
+      Secret Manager and flip `execution_service.defi_execution.protocols.pacifica.PacificaConnector.supports_live` to
+      `True`, to unblock real live order placement. The signing code itself is scaffolded and tested
+      (`execution-service@4aafcbda77`) — this todo is purely the credential-provisioning + go-live decision, a
+      human-only step per the workspace's wallet-keys hard-stop.
 
 ## D. market-tick-data-service — batch and live capture
 
@@ -227,6 +242,14 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
       module docstring + `_build_order_params()` comment as an explicit defer, per this todo's own instruction. **Honest
       gap also flagged**: Pacifica's actual maker/taker fee schedule was not independently verified during the research
       pass, so simulated fills record `fee=Decimal("0")` rather than a fabricated rate — covered by a dedicated test.
+- [x] [SCRIPT] P3. ✅ **Live-signing path scaffolded (2026-08-15, operator: "scaffold the signing code path now")** —
+      `execution-service@4aafcbda77`. Real, tested Ed25519 signing (`sign_pacifica_payload`, `sort_keys_recursive`) and
+      keypair loading (`_load_keypair_from_config`, mirroring `solana_base.py`'s `Keypair.from_base58_string`
+      convention) — not stubs; 10 new tests including a round-trip signature-verify proof and a mocked full sign+POST
+      call. **Still structurally unreachable**: `supports_live` stays `False` (unchanged, fail-closed); flipping it
+      requires a one-line code change AND an operator-provided `wallet_private_key`, neither done here — no key was
+      generated, no credential was touched. The real POST round-trip against Pacifica's live API remains unverified (no
+      credential to test with).
 
 ## F. strategy-service — venue selection
 
@@ -264,6 +287,26 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
       (not-yet-resolved) gates; this plan's own Progress Log (below) already carries the split-decision pointer forward.
 
 ## Progress Log
+
+- **2026-08-15 (post-completion follow-up — both remaining open items addressed as far as safely possible)** — Operator
+  asked to ship the "3 things worth knowing" fixes after a `/pre-compact` checkpoint. Item 3 (sub-agent corrections) was
+  already resolved during the original build. The two genuinely open items:
+  1. **Quarantine reconciliation** (the P3 todo above) — actually run, not just re-deferred:
+     `unified-api-contracts@ f82d0406bc`. Found the design doc's count was stale (787 objects, not 265) and confirmed
+     100% now resolve.
+  2. **Live-signing gap** — presented to the operator as a real choice rather than silently left alone or unilaterally
+     decided; operator chose "scaffold the signing code path now." Shipped: `execution-service@4aafcbda77`. The actual
+     hard-stop (an operator-provided Solana wallet key) still was NOT crossed — no key generated, no credential touched,
+     `supports_live` unchanged. This is the honest ceiling of "ship it as best we can" for that item: real, tested code
+     up to the point a human decision is legally/ operationally required, and no further. Two real transient failures
+     hit during this pass, both diagnosed before retrying (not blindly re-run): a stuck QG admission-wait with zero
+     actual contention (killed, confirmed via `lsof`, re-ran clean) and a genuine multi-slot wall-clock-ceiling failure
+     from other sessions' concurrent QG load on the shared host (retried after contention eased, verified via `ps` that
+     other slots were genuinely active — not blind-retried). One self-caught mistake: a "quality gates passed"
+     background-task notification was trusted without re-verifying the actual content landed — it hadn't (quickmerge's
+     own re-gate failed on a method-size cap I'd only fixed by 1-2 lines short of the threshold); caught by re-reading
+     the actual log tail rather than the notification's exit code, consistent with this workspace's CLAIM ≤ MEASUREMENT
+     rule.
 
 - **2026-08-15 (§G landed — plan stays active, one deferred item remains)** — §G shipped
   (`unified-trading-pm@ f5fd1a87f0`): codex doc updated with the real post-reintegration state + git-history facts, both
