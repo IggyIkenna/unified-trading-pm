@@ -193,22 +193,22 @@ cannot find it — the fix has to be sought in the two dependency repos.
       against.
 
       **CROSS-SLOT MEASUREMENT 2026-08-15 (slot 5) — READ BEFORE SPENDING THE OPERATOR DECISION.** In slot 5's
-          checkout the count is **1259, not 1261** — at `deployment-service@657c897b`, `unified-api-contracts@e8a55ca8`,
-          `unified-trading-library@624b2cf607`. Reproduced **twice against two separately-created empty
-          `BASEDPYRIGHT_CACHE_DIR`s** (same cache-contention control this doc used to establish 1261), both
-          `1259 errors, 0 warnings, 0 notes`. Enforcement is `[ "$ERROR_COUNT" -gt "$_max_bp_errors" ]`
-          (`scripts/quality-gates-base/base-service.sh:1368`), so exactly-1259 takes the `elif` warn branch at :1372 and
-          **PASSES** — deployment-service shipping is not blocked from this slot. This does NOT mean slot 15 now reads
-          1259: the two slots are independent clones with independent venvs and independent dep HEADs, and the count is
-          the thing under dispute, so it must be re-measured there rather than assumed. What it does establish is that
-          **1259 is reachable on a real current tree**, which supports this doc's original editable-dep-inference root
-          cause (the count tracks dep state, with zero deployment-service `.py` changed) even though Todo 1's bisection
-          could not pin the specific commit — a pinning failure is not evidence the premise is wrong when the count is
-          demonstrably dep-state-dependent in both directions. **Therefore option (a) (raise the ratchet to 1261) should
-          not be actioned yet** — it would permanently relax a gate to accommodate a condition that is already absent on
-          another current tree, and the ratchet-only-goes-down norm exists precisely to stop that. Cheaper next step for
-          slot 15 before escalating: `git pull --ff-only` all three editable deps, then re-measure with a fresh cache dir.
-          Provenance: measured while landing an unrelated deployment-service change from slot 5.
+                  checkout the count is **1259, not 1261** — at `deployment-service@657c897b`, `unified-api-contracts@e8a55ca8`,
+                  `unified-trading-library@624b2cf607`. Reproduced **twice against two separately-created empty
+                  `BASEDPYRIGHT_CACHE_DIR`s** (same cache-contention control this doc used to establish 1261), both
+                  `1259 errors, 0 warnings, 0 notes`. Enforcement is `[ "$ERROR_COUNT" -gt "$_max_bp_errors" ]`
+                  (`scripts/quality-gates-base/base-service.sh:1368`), so exactly-1259 takes the `elif` warn branch at :1372 and
+                  **PASSES** — deployment-service shipping is not blocked from this slot. This does NOT mean slot 15 now reads
+                  1259: the two slots are independent clones with independent venvs and independent dep HEADs, and the count is
+                  the thing under dispute, so it must be re-measured there rather than assumed. What it does establish is that
+                  **1259 is reachable on a real current tree**, which supports this doc's original editable-dep-inference root
+                  cause (the count tracks dep state, with zero deployment-service `.py` changed) even though Todo 1's bisection
+                  could not pin the specific commit — a pinning failure is not evidence the premise is wrong when the count is
+                  demonstrably dep-state-dependent in both directions. **Therefore option (a) (raise the ratchet to 1261) should
+                  not be actioned yet** — it would permanently relax a gate to accommodate a condition that is already absent on
+                  another current tree, and the ratchet-only-goes-down norm exists precisely to stop that. Cheaper next step for
+                  slot 15 before escalating: `git pull --ff-only` all three editable deps, then re-measure with a fresh cache dir.
+                  Provenance: measured while landing an unrelated deployment-service change from slot 5.
 
 - [x] [CODE] P2. Determine whether the `bf69b2b289` "ALL QUALITY GATES PASSED" run that established the 1259 baseline
       was a live basedpyright execution or a `quality-gates.sh` content-sentinel cache HIT (`.qg_last_passed_sha` /
@@ -239,6 +239,21 @@ cannot find it — the fix has to be sought in the two dependency repos.
       `prune`, confirmed clean via `git worktree list`). A trustworthy re-measurement would need a fully isolated venv
       provision at `0aeb925f`, out of scope for this todo's DoD (which only required cache-hit-vs-genuine + corrected
       baseline commit, both now answered).
+
+**2026-08-15 (agt-d1be49, slot 18) — this now ALSO blocks a live DP-MANIFEST-001 root-cause fix.** Hit this same
+`1261 > 1259` failure shipping `deployment-service/scripts/recovery/relaunch_consolidator.py` +
+`data_pipeline_monitors/escalation.py` (the CONSOLIDATOR_DOWN actuator built the wrong Cloud Run job name —
+`manifest-consolidator-{ag}` vs the real `uts-prod-manifest-consolidator-{kind}-{ag}` — every real relaunch 404'd since
+inception). `git fetch origin live-defi-rollout` on `unified-api-contracts`/`unified-trading-library` showed ZERO
+incoming commits (already current); `deployment-api` had 2 incoming (a consolidator staleness-budget bump + a Docker
+digest pin, `3a5d3cc..f6c1d70`) — pulled it, re-ran `basedpyright deployment_service/` with a fresh
+`BASEDPYRIGHT_CACHE_DIR` → still `1261 errors, 0 warnings, 0 notes`, unchanged. One more negative data point against a
+findable single culprit commit. **Not escalating a duplicate — the operator-decision todo above already covers this**;
+noting it here so the decision's cost (a P0 truncated-sweep fix AND this P1 alerting-actuator fix both sitting
+unshippable) is visible. My own escalation's underlying incident is already resolved LIVE (manual
+`relaunch_consolidator.py --asset-group tradfi --service-kind instruments` invocation confirmed the Cloud Run execution
+SUCCEEDED, tradfi consolidator heartbeat should refresh next sweep) — only the code fix (so the NEXT CONSOLIDATOR_DOWN
+finding auto-recovers instead of re-escalating) is blocked on this ratchet.
 
 ## Evidence
 
