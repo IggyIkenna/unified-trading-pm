@@ -328,7 +328,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       swallowed to an empty 200 instead of an error). Fixed same-day: `deployment-api@dcc72be104` adds a cross-recursion
       `NodeBudget` (totals computed from the full df, never the tree) — 212s→32.4s, verified live post-deploy:
       `captured=20246 empty_confirmed=55653 attempted_failed=112 total=76011` (byte-identical to direct manifest read).
-- [ ] [SCRIPT] P3. **Capture per-category timing for features-delta-one-service + features-onchain-service's rollup
+- [ ] [SCRIPT] P3. (instrumentation shipped `deployment-api@b1e0f0cb92`, live measurement still open) **Capture per-category timing for features-delta-one-service + features-onchain-service's rollup
       compute** (same method as instruments-service's 2026-08-10 fix: 3 live measurements against prod buckets), then
       decide whether they need a `_CHILD_JOIN_TIMEOUT_OVERRIDES_S` entry — do not blind-bump. If cumulative container
       memory pressure (not per-service compute time) is the real driver, the fix is elsewhere (e.g. lowering
