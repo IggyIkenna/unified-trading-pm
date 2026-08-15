@@ -102,3 +102,18 @@ identity and not a legitimate cross-reference to a sibling key before changing i
   issue docs are structurally exempt from that gate.
 - **context-scout 2026-08-03**: populated context_scope (2 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.
+- **slot 15, 2026-08-15**: **Code WRITTEN and verified correct, NOT YET SHIPPED.** All 6 self-identity strings corrected
+  `DP-WATCHER-003 → DP-WATCHER-004`: `consolidator_scheduler_watcher.py` lines 1, 15, 71 (line 15's filename citation to
+  the archived `dp_watcher_003_consolidator_scheduler_paused_maintenance_window_gap_2026_07_29.md` deliberately left
+  unchanged — immutable historical reference, not a live self-identity string), 204, 222; `cli.py` lines 101, 792. Note
+  the doc's line numbers above (87/498/516/835) had already drifted from other edits landing in `cli.py` since this
+  issue was filed 2026-07-31 — verified the correct current locations by reading full file content and matching the
+  doc's quoted string text (`"KEY #2/DP-WATCHER-003"`, `"DP-WATCHER-003 off this sweep"`,
+  `"skipping DP-WATCHER-003 this sweep"`), not by trusting the stale numbers. `cli.py:167`'s `DP-WATCHER-002` (sibling
+  watcher) and other sibling references (`-005`, `-006`) confirmed untouched — full-file re-read after editing.
+  Comment/docstring/log-string only, zero type-relevant surface touched. **Blocked on shipping** by an unrelated,
+  pre-existing basedpyright ratchet break (1261 > 1259, zero deployment-service source involved) — filed as
+  `plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md`. Do not redo this
+  work — resume by fixing that blocker, then `quickmerge.sh` this file alongside the sibling exit-code-monitor fix
+  (`plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` Todo 2), both currently sitting
+  uncommitted in the same working tree for the same reason.
