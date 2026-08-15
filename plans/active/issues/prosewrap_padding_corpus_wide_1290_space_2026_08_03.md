@@ -130,6 +130,17 @@ Mechanical, bounded remediation — not a design/judgment call:
 - [ ] [BACKEND] P3. Once the flagged-line count reaches 0 (or a deliberately-accepted lower plateau), run
       `check_prosewrap_padding.sh --update-baseline` to lower the ratchet from 4472 toward 0 and commit the updated
       `scripts/plan-hygiene/prosewrap_padding_baseline.yaml`. (repo: unified-trading-pm)
+- [ ] [OPERATOR] P2. **Decide whether to invest in a source-level fix for the generative mechanism itself** (confirmed
+      2026-08-15, Progress Log below): `prettier-autostage.sh` reflowing an ordinary commit's own staged
+      `plans/active/*.md` file can worsen pre-existing near-threshold indentation via prettier's non-idempotent
+      proseWrap bug, and this is deliberately NOT blocked at precommit (correctly — blocking unrelated edits on someone
+      else's stale prose would be worse). Options: (a) patch `.prettierrc`/prettier version/config fleet-wide to close
+      the underlying non-idempotency (highest leverage, highest blast radius — touches every repo's formatting); (b)
+      make `prettier-autostage.sh` skip re-reformatting a file's pre-existing over-threshold paragraphs specifically
+      (narrower, still nontrivial — needs a way to diff "reflow of existing content" from "this commit's real formatting
+      need"); (c) accept continuous hand-repair as the permanent model and treat the ratchet purely as a rate-limiter,
+      never expecting it to reach a stable low plateau. **Done when**: the operator picks a direction (or explicitly
+      rules "(c), accept as-is") — this is cross-cutting fleet tooling, not a single-session call.
 
 ## Progress Log
 
@@ -189,3 +200,33 @@ Mechanical, bounded remediation — not a design/judgment call:
   dedent gave "the formatter a fixed point": it does not, and the measurement above disproves it. The only durable fix
   is the one this doc already recommends — author the annotation as a top-level blockquote so there is no nested
   continuation for the printer to re-indent.
+
+- **Re-opened 2026-08-15 (slot 3) — confirmed live, this is the predicted recurrence from the 2026-08-03 note above
+  ("re-open this doc if the ratchet baseline climbs again").** A `unified-trading-pm` promote-PR streak
+  (`quality-gates-v2`) failed continuously from 06:45Z for 4.5+ hours, root-caused to this exact gate. Measured directly
+  against `origin/live-defi-rollout` tip (via a disposable `git worktree`, not a possibly-stale local checkout): **2324
+  violating lines vs baseline 2011 (313 excess), up from 2217 (206 excess) just ~10 minutes earlier on a slightly-behind
+  snapshot.** This is real, currently-growing corpus debt — not a false-positive or a stale-snapshot artifact — driven
+  by the mechanism this doc already predicted: `prettier-autostage.sh` reformats a commit's own staged files (confirmed
+  by reading it — it is NOT a whole-tree reformat, it's scoped to `"$@"`, the pre-commit-handed file list), so any
+  ordinary edit that happens to touch an already-marginally-corrupted `plans/active/*.md` file (the busiest file class
+  in the repo — nearly every todo-flip commit lands on one) can push existing near-threshold prose further over
+  `INDENT_THRESHOLD` via the non-idempotent reflow bug. `check_prosewrap_padding.sh --only`'s rec-(A) logic deliberately
+  does NOT flag this at precommit (a pre-existing-text-just-reflowed hit is intentionally treated as debt, not this
+  commit's new problem — the correct call, since blocking ordinary edits on someone else's stale prose would be worse),
+  so the corpus-wide count is the only place this growth is ever visible, and it accumulates across many concurrent
+  sessions' otherwise-unrelated commits faster than serial hand-repair converges it (this session's own 2026-08-14
+  73-line/20-file repair, `unified-trading-pm@20b7132823`, was fully absorbed within hours). **Separately found and
+  fixed while investigating this**: `check_prosewrap_padding.sh` gained a `--diff-base <ref>` mode on 2026-08-11
+  (identical signature-set-comparison shape to reference-paths/archive-candidates/effort-ratchet/ na-corpus/ag-closeout)
+  but `run_hygiene_sweep.sh`'s `run_check` call for it was never actually passed the shared `DIFF_BASE_REF`, unlike its
+  5 siblings — a real wiring gap, now closed (`unified-trading-pm@<pending>`). This does **not** fix the promote-PR
+  streak above: `DIFF_BASE_REF` is deliberately empty on `promote/*` heads and the `live-defi-rollout` dispatch (the
+  2026-08-10 double-jeopardy/deadlock design, `run_hygiene_sweep.sh` lines ~350-385), so promote-path behavior for this
+  check is unchanged by the wiring fix — it only affects the rare "normal PR into main" CI path. Confirmed via direct
+  measurement that baseline+buffer mode is doing its job correctly here; this is genuine debt, not an architecture bug.
+  **Not attempted, and not something a single session should do unilaterally**: patching `prettier-autostage.sh` or
+  `.prettierrc` itself to stop the generative reflow (the only fix that would actually stop new debt at the source,
+  rather than reactively repairing it) — that tooling is shared fleet-wide, and a change to it is exactly the kind of
+  cross-cutting, SSOT-level call CLAUDE.md reserves for an explicit operator decision, not a mid-poll-tick patch. Left
+  as an explicit open todo below rather than actioned.
