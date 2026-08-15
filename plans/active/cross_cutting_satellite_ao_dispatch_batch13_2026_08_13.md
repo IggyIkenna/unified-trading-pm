@@ -253,8 +253,14 @@ source: >-
       None). `bash scripts/quality-gates.sh` green (799s, sentinel-verified at HEAD); quickmerge landed on LDR
       (post-push ancestry verified `8e22704756` on `origin/live-defi-rollout`). Source: this doc's own 2026-08-15
       diagnosis, folded in per the tradfi attempted_failed retry todo above.
-- [ ] [INFRA] P3. disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label
-      Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
+- [x] ✅ [INFRA] P3. disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label —
+      unified-trading-pm (2026-08-15, slot-15·infra). Replaced every ambiguous "the planning VM" reference in the
+      source issue doc's Root-cause chain / Why-neither-can-self-serve / Todos / Progress Log sections with the specific
+      EC2 instance ID + a stable label ("old orchestrator VM" for `i-0c9b283b31d6b5ca7`, "CI-runner VM" for
+      `i-042a6332509482556`); added an explicit host pointer to the P2 monitoring-gap todo naming `i-042a6332509482556`
+      as the watchdog's target, not `i-0c9b283b31d6b5ca7`. Fleet grep confirmed no other codex/monitoring doc used the
+      ambiguous phrase — this issue doc was the sole source. Full detail in that doc's own P3 todo, now flipped. Source:
+      `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [x] ✅ [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in
