@@ -180,12 +180,21 @@ Two independent angles, not mutually exclusive:
       (registered `E2E-CHECK-DRIVER` at VM boot), and the crash lands at exactly 3600s after `DEPLOYMENT_STARTED` — this
       is `pipeline_e2e_check.py`'s own documented `--wall-clock-timeout-sec` SIGALRM backstop (default 3600s) firing on
       a real sweep that legitimately runs longer, not a per-shard-failure propagation defect. **No code fix needed for
-      (b)** — `unified-trading-pm/cursor-configs/skills/     data-pipeline-check-mtds/SKILL.md` §1a now passes
+      (b)** — `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a now passes
       `--wall-clock-timeout-sec 14400` explicitly (this commit). **Remaining scope of this todo is (a) DEFI's Phase-0
       death only** — root-cause `_force_consolidate_test_buckets` (or whatever Phase-0 does immediately before the
       crash), then re-run **DEFI** to confirm; **CEFI/SPORTS should be re-run with the corrected
       `--wall-clock-timeout-sec 14400` flag** (tracked as the [DATA] P2 re-run todo above, not here — no further code
       change expected for those two). (repos: market-tick-data-service)
+- [x] ✅ [DOCS] P2. **NEW (found + closed 2026-08-15 slot 18).** Root-cause the `rc=3` mystery (SPORTS + CEFI half of
+      the [CODE] P2 todo above) and ship the interim doc-only mitigation so future re-runs don't hit the same
+      wall-clock-timeout wall. Confirmed via direct `run.log` grep (deployment id = the driver's own top-level record,
+      crash at exactly 3600s post-`DEPLOYMENT_STARTED`) that `rc=3` is `pipeline_e2e_check.py`'s own
+      `--wall-clock-timeout-sec` SIGALRM backstop (3600s default) firing on a legitimately-longer sweep, not a per-shard
+      sub-VM failure propagating up as slot 27 theorized — see Progress Log for full evidence. No code change required
+      (the driver-VM launcher already passes arbitrary flags through). (repos: unified-trading-pm) —
+      unified-trading-pm@8a56e126e2: `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a now passes
+      `--wall-clock-timeout-sec 14400` explicitly in the per-`--asset-group` loop example.
 
 ## Progress Log
 
