@@ -99,9 +99,24 @@ execution-service-only).
       promoted projection, not the base), and Working with Multiple Agents/Sessions (per-slot-worktree model, citing
       `/codex/05-infrastructure/per-tab-worktrees.md`, replacing the old "each session works on its own PR branch"
       framing). Evidence: `execution-service@72fbc742da`.
-- [ ] [DOC] P3. Grep every other service repo's `CONTRIBUTING.md` for the same instruments-service-derived template
-      (title mismatch / `auto/timestamp` PR-branch language / `git add -A`) and file one follow-up todo per repo found —
-      repo: unified-trading-pm (this doc, or a fresh finding doc per repo).
+- [x] ✅ [DOC] P3. **DONE 2026-08-15 — grepped every repo checkout under `.tabs/15/` for `CONTRIBUTING.md`.** Of the 7
+      live repos that have one (`deployment-service`, `execution-service`, `instruments-service`,
+      `market-data-processing-service`, `market-tick-data-service`, `unified-api-contracts`, `unified-trading-library`),
+      3 are byte-identical 219-line copies of the same stale instruments-service-derived template found in
+      execution-service (title `# Contributing to Instruments Service`, `git checkout main` + `auto/timestamp`
+      PR-branch + `gh pr` workflow, `Source code: instruments_service/`, 3× `git add -A`): **`deployment-service`,
+      `market-data-processing-service`, `unified-trading-library`**. Filed as todos 3-5 below, one per repo.
+      `instruments-service`'s own copy is correct (it IS about itself). `market-tick-data-service` and
+      `unified-api-contracts` have their own distinct, non-stale content. The
+      `*.stale-pre-history-rewrite-20260805T112618Z` shadow checkouts were excluded — not live working repos.
+- [ ] [DOC] P3. Rewrite `deployment-service/CONTRIBUTING.md` end-to-end against the current workflow, following the same
+      pattern as `execution-service@72fbc742da` (title, File Locations for deployment-service's actual package layout,
+      quickmerge section replacing the PR-branch flow, Branch Protection, Working with Multiple Agents/Sessions per
+      `/codex/05-infrastructure/per-tab-worktrees.md`) — repo: deployment-service.
+- [ ] [DOC] P3. Rewrite `market-data-processing-service/CONTRIBUTING.md` end-to-end, same pattern as
+      `execution-service@72fbc742da` — repo: market-data-processing-service.
+- [ ] [DOC] P3. Rewrite `unified-trading-library/CONTRIBUTING.md` end-to-end, same pattern as
+      `execution-service@72fbc742da` — repo: unified-trading-library.
 
 ## Progress Log
 
@@ -115,3 +130,11 @@ execution-service-only).
   plain staleness issue, safe `git pull --ff-only`), which had been blocking quickmerge's Stage-1 dependency validation;
   fast-forwarded it, no conflict. Todo 2 (cross-repo grep for the same stale template) remains open and unstarted — not
   attempted this session.
+- **2026-08-15 (slot-15, interactive, cont'd)**: picked up todo 2. Grepped all 7 live repo checkouts with a
+  `CONTRIBUTING.md`; found 3 more byte-identical copies of the stale template beyond execution-service:
+  deployment-service, market-data-processing-service, unified-trading-library. Filed todos 3-5, one per repo. First ship
+  attempt used `--isolated`; it failed the `check_evidence_backed_completion` gate because the isolated worktree
+  (`/tmp/qm-iso-1603818/.tabs/15/unified-trading-pm/`) has no sibling `execution-service` checkout to resolve the
+  pre-existing `execution-service@72fbc742da` citation against — a structural limitation of isolated mode in this
+  multi-repo workspace, not a defect in the edit. Re-shipping from the main checkout (non-isolated) instead, since no
+  other session has this file dirty.
