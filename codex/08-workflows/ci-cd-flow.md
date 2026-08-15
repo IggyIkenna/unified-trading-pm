@@ -450,7 +450,7 @@ they diverged.
     that is reachable but NOT an ancestor is treated the same as an unreachable one and falls through to the safe
     `origin/main..origin/live-defi-rollout` fallback range. Full incident + the fleet-wide scope audit confirming
     exactly 3 repos were affected:
-    `/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.
+    `/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.
 
 Every shippable unit goes through exactly two passes:
 

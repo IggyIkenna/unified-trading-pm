@@ -178,7 +178,7 @@ by bug-signal term (script name, `STALE_HEADS`, `PROMOTE_HEAD`, `orphan-ref`, `s
 **Recommendation [WORKER REC]**: retag `asset_group: [cross-cutting]` → `[ci]`. The one open P3 todo (extend the fleet
 bot's cleanup step) is real, live, undispatched work.
 
-### 6. `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` — real owner `ci`
+### 6. `plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` — real owner `ci`
 
 **Doc state**: `status: open`, `asset_group: [cross-cutting]`, `priority: P1`. 1 of 3 top-level items done (`[OPERATOR]`
 root-cause fix, live-verified); 2 `[DEVOPS] P2` items remain open (per-repo tactical unblock for
@@ -296,9 +296,9 @@ spot per this skill's SKILL.md).
       longer matters for an archived, resolved doc. No action taken (retagging a closed archive entry has no downstream
       effect on closeout membership).
 - [ ] [DOCS] P3. Retag
-      `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s `asset_group`
-      `[cross-cutting]` → `[ci]` (finding 6) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
-      tag is corrected and the doc is folded into `ci`'s closeout membership.
+      `plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s
+      `asset_group` `[cross-cutting]` → `[ci]` (finding 6) — owning-tranche fix, leave to the `ci` tranche's own audit.
+      Done when: the tag is corrected and the doc is folded into `ci`'s closeout membership.
 - [ ] [DOCS] P3. Retag `plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`'s `asset_group`
       `[cross-cutting]` → `[infrastructure]` (finding 7) — owning-tranche fix, leave to the `infra` tranche's own audit.
       Done when: the tag is corrected and the doc is folded into `infra`'s closeout membership.

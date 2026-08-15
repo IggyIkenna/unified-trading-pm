@@ -35,7 +35,7 @@ summary: >-
   near-perfect correlation, not a coincidence — a repo self-heals the instant ONE promote clears (its marker then points
   at a valid post-rewrite SHA), but getting that first clean promote through is itself blocked by the very bug being
   described (a deadlock).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -61,11 +61,10 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-06
-last_updated: "2026-08-08"
+last_updated: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-archive_exempt: true
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
@@ -74,7 +73,7 @@ assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source: "surfaced while diagnosing instruments-service PR #1084 (497c4f5e provenance-blocked), 2026-08-06"
-resolved_by:
+resolved_by: "PENDING_ARCHIVAL_SHA"
 locked_by:
 locked_since:
 context_scope:
@@ -89,9 +88,11 @@ context_scope:
 
 # LDR→main provenance-marker corrupted post-history-rewrite — 3 repos stuck since 2026-08-05
 
-> **Archival status (2026-08-08): all 3 todos done, but the archival move itself is BLOCKED** by a newly-discovered
-> tooling deadlock — see `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`.
-> This doc stays `status: open` (not `resolved`) at its original path until that's cleared, per that doc's own todo #2.
+> **Resolved + archived 2026-08-15**: all 3 todos done since 2026-08-08; the archival move itself was blocked by a
+> tooling deadlock (`/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`)
+> between the corpus-wide broken-link gate and the line-cap gate, resolved via a `check_line_caps.sh` carve-out
+> (`unified-trading-pm@d765b4cfb1`). Archival completed once that carve-out shipped and 11 active-corpus referrers were
+> repointed to this doc's new path.
 
 ## What was measured (live, 2026-08-06)
 

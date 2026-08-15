@@ -48,7 +48,7 @@ related:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
-    /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
+    /plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /plans/archive/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
@@ -143,7 +143,8 @@ computed `BASELINE=0.0.0` (i.e. `git describe --tags` found no reachable `v*` ta
 2026-08-05T11:24:53Z security-driven history rewrite disconnected `instruments-service`'s (and 4 other repos')
 pre-rewrite tag history from post-rewrite `main` for a window, corrupting `promote_provenance_range.py`'s marker
 resolution and causing a churn of closed/reopened promote PRs — already fully diagnosed, root-cause-fixed, and
-live-verified in `/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
+live-verified in
+`/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
 (instruments-service's own thread there is marked fully resolved, main tip `51f45049…`, matching what this repo's `main`
 shows today). Not re-investigated or re-fixed here — cross-referenced only. The stray `v0.1.0` tag itself is still
 sitting in the tag namespace (unreachable, harmless — `git describe` on the current, correct `main` resolves `v0.98.0`
