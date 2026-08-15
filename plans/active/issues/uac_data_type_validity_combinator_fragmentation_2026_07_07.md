@@ -280,6 +280,22 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-32, data_engineering) — 3rd SPOT preemption caught + relaunched (4th launch); relaunch was also
+  blocked on a stale-tarball safety gate (diagnosed, no code defect — worked around); still not complete.** Confirmed
+  the same preemption signature as before (`run.log` stalled `10:05:32Z` mid-write, `EXIT_STATUS` stuck `RUNNING`
+  `09:46:10Z`, VM absent from `instances list`). Relaunch initially ABORTED: `lc_verify_tarball_freshness` (auto mode)
+  flagged `market-tick-data-service`/`unified-trading-library`/`deployment-service` stale even post-auto-republish — NOT
+  the known `lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md` regression (that's fixed +
+  test-covered; the gate correctly failed CLOSED here, the safe behavior). Traced to `create-code-tarballs.sh`'s
+  skip-if-unchanged cache racing this slot's 5-min `slot-cron-ff-pull.sh` auto-FF (confirmed UTL's local HEAD moved
+  mid-session, `399a6cde9a07` @ `11:53:11Z`) — an ordinary live-branch race, not a defect; no shared-code fix shipped
+  (needs more confirmation before touching a ~140-launcher-shared lib). Worked around: manual
+  `create-code-tarballs.sh --force --include market-tick-data-service --include deployment-service`, then relaunched
+  successfully — VM created `~12:10Z`, confirmed RUNNING with fresh `run.log`/`EXIT_STATUS` post-boot. **Revised ETA**:
+  pre-preemption pace was ~7.4 min/new-day of real RPC work — even chunk 1 (60d) hasn't finished across 4 launches, each
+  lost to ~1.5-2h-cadence SPOT preemption (full range ~1,481 days); flagging for operator whether an on-demand relaunch
+  or smaller `--chunk-days` is warranted if this continues (not applied — cost tradeoff, not unilateral). No code
+  changed this session. GATED-skipping per `worker.md` §4c — the terminal-state follow-up todo stays the done-when.
 - **2026-08-15 (slot-8) — AAVE_V3 rewards todo DONE, shipped + done-when reproven.** Peer code (`c6195b59`) + UAC
   genesis produced 0 rows — the static `_AAVE_V3_REWARD_RESERVES` list had zero active incentives. Fixed via live
   `getAllReservesTokens()`/`getReserveTokensAddresses()` discovery (mirrors `lending_indices_rpc.py`) — currently-
@@ -368,48 +384,10 @@ just belongs on a different layer than instrument_type does, and conflating the 
   `oracle_prices` key from each venue's dict, kept `lst_rates`). Re-ran the audit function: 0 violations, fully
   reconciled. Fixed the audit-join test's control case to a synthetic `monkeypatch` injection (no real drift pair left
   to exercise it against). QG green, 6/6 tests pass, shipped via quickmerge.
-- **2026-08-15 (superseded by the entry above, slot-12, data_engineering) — VERIFY-then-reconcile todo
-  (ROCKETPOOL-ETHEREUM/oracle_prices, SOLBLAZE-SOLANA/oracle_prices): registries confirmed, methodology lesson found,
-  live-manifest verification NOT yet complete.** No code shipped this session. Confirmed both pairs' current registry
-  state: `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` — `rocketpool`'s
-  `PROTOCOL_CAPABILITIES` entry (~line 839) declares `data_types=["lst_rates", "staking_yields"]`; `solblaze`'s
-  (~line 974) declares `data_types=["lst_rates"]` — **neither declares `oracle_prices`**.
-  `unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py` —
-  `DEFI_VENUE_DATA_TYPE_CAPABILITIES["ROCKETPOOL-ETHEREUM"]` (~line 290) and `["SOLBLAZE-SOLANA"]` (~line 310) both
-  declare an `oracle_prices` genesis date. This confirms the doc's own Layer-1/Layer-2 drift shape for both pairs.
-  **Methodology lesson (new, not previously documented in this doc)**:
-  `read_availability_index(bucket, columns, filters=[...])`
-  (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`) hangs/stalls (RSS flat ~2MB, no
-  progress) rather than erroring when the consolidated index blob is older than the default
-  `MANIFEST_CONSOLIDATED_STALENESS_SEC` (120s) — it falls into the per-VM-shard-merge fallback path, which per
-  `_read_index.py:401` (`budget = _resolve_per_vm_merge_max_bytes() if filters is None else None`) has **no byte cap at
-  all** when `filters` is set (the exact case a one-off diagnostic query uses), unlike the codex's documented
-  "single-venue bare query is fast" precedent (that precedent's window must have caught the index inside its freshness
-  budget by luck). Confirmed via `gcs_describe_object` that the live consolidated index
-  (`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, 6.74GB) was ~19min old at
-  query time — well past the 120s default. **Fix**: set env var `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` before the
-  read (same fix the DeFi codex doc already documents for the instruments-catalog reader, now confirmed to apply here
-  too) — this dropped the read from a 280s+ unbounded hang to ~51s for the single-venue filtered query. **Provisional
-  result, UNVERIFIED**: with the fix applied, `venue="ROCKETPOOL-ETHEREUM"` (the literal
-  `DEFI_VENUE_DATA_TYPE_CAPABILITIES` composite dict-key string) + `data_type="oracle_prices"` returned **0 rows total**
-  (not just 0 captured — zero rows of any `capture_status`). **This is NOT yet trustworthy as evidence of absence** —
-  this exact doc's own prior finding (the ALCHEMY `gas_fees` composite-key case, see the 2026-08-15 slot-14 entry below)
-  proved a `DEFI_VENUE_DATA_TYPE_CAPABILITIES` composite dict key (e.g. `"ALCHEMY-ETHEREUM"`) does not necessarily match
-  what the writer actually stamps (bare `venue="ALCHEMY"` + separate `chain=` column) — querying the wrong vocabulary
-  silently returns a false "absent" verdict, per the workspace's own HARD RULE ("an absence result is evidence only once
-  you've confirmed you probed the vocabulary the WRITER actually emits"). Dispatched an Explore sub-agent (not yet
-  returned when this checkpoint was written, mid-`/pre-compact`) to find the actual rocketpool/solblaze MTDS handler
-  code and confirm whether it stamps the bare-venue+chain form or the composite form before re-querying. **Next step for
-  whoever resumes this**: read the sub-agent's findings (or re-derive: grep `market-tick-data-service` for
-  `rocketpool`/`solblaze` handler code, check what `venue=`/`chain=` it passes to `record_captured`/`manifest.add`),
-  then re-query both pairs with the CORRECT vocabulary (bare venue + chain filter, not composite string) using
-  `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` (re-check the index's own freshness via `gcs_describe_object` first — the
-  24h override is only safe when the blob is actually same-day fresh). Then apply the todo's own resolution rule: real
-  captured rows → declare `oracle_prices` in the protocol's `PROTOCOL_CAPABILITIES.data_types`; genuinely zero → roll
-  back the `DEFI_VENUE_DATA_TYPE_CAPABILITIES` genesis date. SOLBLAZE-SOLANA/oracle_prices was not queried at all yet in
-  this session (was doing ROCKETPOOL first to nail the methodology before repeating). No files edited outside this doc;
-  4 tiny scratchpad diagnostic scripts (not referenced by anything committed, trivially recreatable) were left in the
-  scratchpad, not promoted.
+- **2026-08-15 (superseded by the entry above, slot-12) — in-progress checkpoint, condensed.** Confirmed both pairs'
+  Layer-1/Layer-2 drift + found the `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` override + the composite-vs-bare-venue
+  vocabulary-mismatch risk (see the ALCHEMY `gas_fees` entry below) that the slot-14 DONE entry above fully resolved. No
+  code shipped. Full original methodology writeup superseded — see the slot-14 DONE entry above for the resolution.
 - **2026-08-15 (slot-27, data_engineering) — VERIFY-then-roll-back todo DONE, both pairs resolved WIRE-not-roll-back.**
   `unified-api-contracts@0b4ab0e204` (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Queried the
   live prod defi availability manifest directly (column-pruned/filtered pyarrow read on `venue`+`data_type`, no
