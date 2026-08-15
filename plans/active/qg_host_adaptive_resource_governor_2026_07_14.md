@@ -934,3 +934,12 @@ to attributable; option 2 (dedicated low-resource fast-lane, sized for small dif
 separate from the `--apply`-style heavy-script contention pool) would likely prevent this specific shipping task's stall
 entirely. Blocking further diagnosis on operator input rather than guessing at a host-daemon scheduling change
 unilaterally.
+
+**Progress Log 2026-08-15 (slot-25, post-compaction re-check) — 8th consecutive silent death confirmed; live evidence of
+concurrent cross-slot contention.** Re-checked retry9 (PID `2669545`) in a fresh session window: PID gone from `ps`, log
+frozen at `queued 330s`, still zero `EXIT=` line — same signature as the 7th death logged above, now the 8th. New data
+point this check: `pgrep -af quickmerge` at the same moment shows slots 16, 5, and 18 ALL running `quickmerge.sh`
+against the same MTDS repo concurrently (a `drilldown_reconciliation_guard` QG wiring, a Bybit WS chunking fix, and a
+`websocket_runner` blocking-write fix respectively) — direct proof this is genuine multi-slot host contention at the
+moment of failure, not a one-off. No retry10 launched (per the consuming task's retry-discipline stop, cross-linked
+above); still awaiting operator decision on option 1 vs option 2.
