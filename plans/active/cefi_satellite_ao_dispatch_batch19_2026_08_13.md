@@ -90,16 +90,20 @@ source: >-
       DERIBIT/BYBIT inverse+linear options_chain/futures_chain rows as NON_CANONICAL and dropping legitimate production
       data. Fixed at the oracle (widened `_CANONICAL_INSTRUMENT_ID_RE`), not worked around in the writer — **SHIPPED
       unified-api-contracts@8b81dd78bb**.
-- [ ] [WRITER] P3. Extend Gap 1's row-level gate with first-class manifest visibility: add a `quarantined_legs` field to
-      UTL's `ManifestRow` schema (unified-trading-library) and thread it from `FinalisedShard.quarantined_legs` through
-      `ShardChunk.metadata` → the day-level `_DateRunState` accumulator (`venue_fetch.py`) → `_write_bundle_shard_row`'s
-      aggregate `record_captured_from_counts` call (`manifest_finalize.py`), so the underlying-keyed captured row itself
-      carries the dropped-leg list, per §5b's original "the manifest keeps its existing underlying-keyed row, plus a new
-      quarantined_legs: [...] field" spec. Deferred out of the Gap 1 todo above because `ManifestRow` lives in a
-      different repo (unified-trading-library) not named in that todo's scope, and today's per-leg
-      `record_failed(error="NON_CANONICAL_INSTRUMENT_ID")` rows already give reconciliation a queryable (if
-      row-granularity rather than field-granularity) signal. Repos: unified-trading-library, market-tick-data-service.
-      Source: `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md` §5b.
+- [x] ✅ [WRITER] P3. Extend Gap 1's row-level gate with first-class manifest visibility: add a `quarantined_legs` field
+      to UTL's `ManifestRow` schema (unified-trading-library) and thread it from `FinalisedShard.quarantined_legs`
+      through `ShardChunk.metadata` → the day-level `_DateRunState` accumulator (`venue_fetch.py`) →
+      `_write_bundle_shard_row`'s aggregate `record_captured_from_counts` call (`manifest_finalize.py`), so the
+      underlying-keyed captured row itself carries the dropped-leg list, per §5b's original "the manifest keeps its
+      existing underlying-keyed row, plus a new quarantined_legs: [...] field" spec. Deferred out of the Gap 1 todo
+      above because `ManifestRow` lives in a different repo (unified-trading-library) not named in that todo's scope,
+      and today's per-leg `record_failed(error="NON_CANONICAL_INSTRUMENT_ID")` rows already give reconciliation a
+      queryable (if row-granularity rather than field-granularity) signal. Repos: unified-trading-library,
+      market-tick-data-service. Source: `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md` §5b.
+      **SHIPPED** `unified-trading-library@04ffad098c` (`ManifestRow`/`AvailabilityRecord.quarantined_legs` +
+      `record_captured_from_counts` threading) + `market-tick-data-service@839480686b`
+      (`PartitionedTickWriter.record_quarantined_legs` → `_DateRunState.chain_bundle_quarantined_legs` →
+      `_write_bundle_shard_row`'s `record_captured_from_counts` call).
 - [x] ✅ [WRITER] P2. implement Gap 2's resolution — make the live/on-chain lane's manifest key a deterministic function
       of the already-computed column value instead of an independent resolve_cefi_instrument_id() call
       (market-tick-data-service: venue_fetch.py, partitioned_writer.py) — **SHIPPED
