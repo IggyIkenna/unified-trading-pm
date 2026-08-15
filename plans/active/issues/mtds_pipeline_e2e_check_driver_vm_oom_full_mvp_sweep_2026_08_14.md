@@ -161,14 +161,19 @@ Two independent angles, not mutually exclusive:
       on this exact commit. This closes the silent-clobber risk for FUTURE per-AG runs; it does not itself produce the
       still-missing CEFI/DEFI/SPORTS reports from the [CODE] P1 root-cause todo above, which remains open. (repos:
       market-tick-data-service)
-- [ ] [CODE] P2. **NEW (found 2026-08-15, see Progress Log).** Slot 6's 2026-08-15 per-`--asset-group` re-run hit two
-      failure modes the memory-growth fix above does NOT explain and has NOT been verified to fix: (a) **DEFI** died
-      silently ~1 minute in, immediately after the Phase-0 manifest-consolidation line and BEFORE any per-shard
-      force/skip work was logged — too early to be the per-shard `genuine_skip_proof()` memory growth this issue's
-      root-caused todo targets, so likely a distinct bug in `_force_consolidate_test_buckets`/Phase-0 itself; (b)
-      **SPORTS** exited `rc=3` with no Traceback/ERROR/Exception string anywhere in its run.log — undiagnosed.
-      Root-cause both independently (they may not share a cause) — re-run `--asset-group DEFI` and
-      `--asset-group SPORTS` alone with the memory-growth fix already shipped to confirm whether either symptom
+- [ ] [CODE] P2. **NEW (found 2026-08-15, see Progress Log; WIDENED 2026-08-15 slot 27).** Slot 6's 2026-08-15
+      per-`--asset-group` re-run hit two failure modes the memory-growth fix above does NOT explain and has NOT been
+      verified to fix: (a) **DEFI** died silently ~1 minute in, immediately after the Phase-0 manifest-consolidation
+      line and BEFORE any per-shard force/skip work was logged — too early to be the per-shard `genuine_skip_proof()`
+      memory growth this issue's root-caused todo targets, so likely a distinct bug in
+      `_force_consolidate_test_buckets`/Phase-0 itself; (b) **SPORTS** exited `rc=3` with no Traceback/ERROR/Exception
+      string anywhere in its run.log — undiagnosed. **Slot 27 confirmed the SAME `rc=3` also hit CEFI** in the unscoped
+      full-sweep live-verification run (`pipeline-e2e-check-mtds-20260815-004426-388f81`, terminal `EXIT_STATUS: 3`
+      ~64min in — see Progress Log) — the propagation mechanism is a per-shard sub-VM `DEPLOYMENT_FAILED(exit_code=3)`
+      that isn't caught/skipped, killing the whole driver instead. So `rc=3` is not DEFI/SPORTS-specific; it's a general
+      per-shard-sub-deployment-failure-not-isolated bug. Root-cause it directly (bound the driver to continue past a
+      single failed sub-deployment instead of dying) rather than re-running per-asset-group to fish for the trigger —
+      re-run **CEFI** and **DEFI** with the memory-growth fix already shipped to confirm whether either symptom
       persists, then diagnose from there. (repos: market-tick-data-service)
 
 ## Progress Log
@@ -239,3 +244,18 @@ Two independent angles, not mutually exclusive:
   before launching a fresh one. **NOT claiming this fixes DEFI's ~1-min Phase-0 crash or SPORTS's `rc=3`** — DEFI's
   death predates any per-shard skip-leg work entirely, so it's very likely a separate bug; filed as its own new [CODE]
   P2 todo above rather than assumed-fixed.
+- **2026-08-15 (slot 27 worker, backend_engineer)**: checked slot 21's live-verification VM
+  (`pipeline-e2e-check-mtds-20260815-004426-388f81`) to its actual terminal state (it had since self-deleted). Confirmed
+  **`EXIT_STATUS: 3`** — the identical `rc=3` failure mode as slot 6's SPORTS run, but this time on **CEFI**, ~64
+  minutes into the unscoped sweep (launched 00:44:26Z, crashed 01:48:46Z; driver RSS held flat at 17.7GB the whole time
+  — not a memory issue). `run.log` tail shows the crash is a per-shard sub-VM `DEPLOYMENT_FAILED` (exit_code=3) inside
+  `launch_vm_and_wait`, immediately followed by the driver's own `received signal 15` shutdown — the sub-deployment's
+  `rc=3` propagates up and kills the whole driver rather than being caught/skipped per-shard. This is real, new evidence
+  that **the `rc=3` bug is NOT confined to DEFI's Phase-0 path or SPORTS** (widen scope of the open todo above beyond
+  just DEFI+SPORTS) — the memory-growth fix genuinely works (no OOM, ran 6x longer than the pre-fix ~10min crash point)
+  but does not touch this separate `rc=3` propagation bug, which remains the actual blocker on a clean full-sweep MTDS
+  baseline. Did not launch a further retry (would hit the same unfixed bug; out of proportion for a P2 satellite todo).
+  The unsuffixed report at
+  `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-07-01/data_pipeline_e2e_check_mtds_2026_07_01.md`
+  is stale — it's slot 6's earlier TRADFI-only per-AG report (generated 00:32:34Z, before this VM's 00:44:26Z launch),
+  not a product of this run; this run crashed before writing any report at all.
