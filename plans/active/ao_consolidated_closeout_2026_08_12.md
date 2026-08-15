@@ -131,3 +131,8 @@ The blockage this plan resolves was itself mis-recorded before it was understood
 none was ACTIVE. The distinction mattered: the false version implied the tranche had never been closed out, the true one
 shows it was closed out and then kept producing work. Recorded here because the wrong version was believed long enough
 to shape a plan.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries); doc had no prior Progress Log section,
+  added a minimal one.

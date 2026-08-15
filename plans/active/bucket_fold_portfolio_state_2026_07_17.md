@@ -67,10 +67,8 @@ source:
 context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
-    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
-    unified-trading-library/unified_trading_library/config_interface/paths/registry.py,
-    strategy-service/strategy_service/pnl/config.py,
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
   ]
 ---
 
@@ -201,3 +199,8 @@ per-domain path prefixes:
 - **operator ruling 2026-08-08** (NA-corpus blocker digest, cross-cutting round 5, id=45): 60 days is fine — ship the
   default STANDARD→COLDLINE@60d for `portfolio-state-prd` live-trading snapshots, no exception needed. IAM+lifecycle
   todo updated to drop the retention-confirm gate; still open pending the actual IAM-join + lifecycle-policy execution.
+
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries, trimmed from 5) — cutover/parity-migrate/redeploy
+  are all DONE; remaining opens are the AWS-leg provision, the IAM+lifecycle Group-B join, and alias sunset, so swapped
+  the (now-closed) registry.py/pnl-config.py cutover source paths for the Phase-2 Group-B IAM plan this fold joins +
+  `bucket_naming.py` (the alias-sunset target).

@@ -47,9 +47,8 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 ---
 
@@ -103,3 +102,8 @@ context_scope:
   `authority: operator_pending`, created 2026-08-10T01:39:38Z; main's interim "do NOT unlock" answer recorded, no
   operator final decision. No new action available until the operator answers `BLK-df57c9fc`; releasing via
   `/skip-current-task` with `reason_code: GATED` so the fleet cooldown arms.
+
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries, trimmed from 4) — swapped the historical
+  na-eligibility-audit/ag-closeout-audit-skill provenance refs for
+  `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, the doc directly governing the current blocker
+  (`BLK-df57c9fc`).

@@ -359,3 +359,6 @@ before touching the source doc directly._
   already-landed content, resolved by keeping the landed HEAD version; one conflict resolution surfaced and fixed a real
   content duplication bug in the triage doc). See the individual archived docs' own Progress Logs for full per-item
   evidence.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — kept to the Track 1/Track 2 codex SSOTs
+  - dispatch.py/worker_liveness_watchdog.py; this tracker's own design is "each todo cites its Source doc", so a wider
+    list would duplicate what's already per-item.

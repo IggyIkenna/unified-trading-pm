@@ -51,11 +51,8 @@ source:
 context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
-    unified-trading-library/unified_trading_library/domain_client/artifact_store.py,
-    unified-trading-library/unified_trading_library/ml/model_registry.py,
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
   ]
 ---
 
@@ -262,11 +259,11 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       mirror (deferred 2026-07-17: PM quickmerge STAGE 1.5 dependency-alignment gate fails on an UNRELATED fleet drift —
       `ibkr-gateway-infra` pins `cryptography>=46,<47` vs canonical `>=47,<50`, which blocks ALL PM config quickmerges).
       The mirror is non-runtime (deployment-service authoring + UAC packaged are the read copies, both shipped). Re-sync
-      when the ibkr drift clears, or bundle into the closeout copy-reconcile. FLEET FINDING flagged to operator.
-      **DONE (staleness-recheck 2026-08-09)** — `unified-trading-pm@5f04b0702a` ("fold PM cloud-providers.yaml mirrors
-      (Folds A/B/C/D/E) — add features/ml-store/portfolio-state folded keys...", 2026-07-19) already added the
-      `ml-store` key to `configs/cloud-providers.yaml`; confirmed live at HEAD (both GCP + AWS rows present, lines
-      64-70/231-232) and `git merge-base --is-ancestor 5f04b0702a origin/live-defi-rollout` = true.
+      when the ibkr drift clears, or bundle into the closeout copy-reconcile. FLEET FINDING flagged to operator. **DONE
+      (staleness-recheck 2026-08-09)** — `unified-trading-pm@5f04b0702a` ("fold PM cloud-providers.yaml mirrors (Folds
+      A/B/C/D/E) — add features/ml-store/portfolio-state folded keys...", 2026-07-19) already added the `ml-store` key
+      to `configs/cloud-providers.yaml`; confirmed live at HEAD (both GCP + AWS rows present, lines 64-70/231-232) and
+      `git merge-base --is-ancestor 5f04b0702a origin/live-defi-rollout` = true.
 - [ ] [CODE] P3. **Alias sunset** — after the reader-fallback window closes and the 5 legacy kinds are grep-clean of any
       resolver caller, hard-remove the `_KIND_ALIASES` entries + retired yaml keys ("no double SSOT"); `terraform plan`
       stays green. (Deferred to the closeout plan if the window is still open when the other folds land.) ALSO drop the
@@ -509,3 +506,8 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   IAM/scheduler drift, flagged operator-aware, not resolved this pass); IAM+lifecycle P1, deployment-api display cutover
   P2, PM mirror re-sync P3, and alias sunset P3 are all named-blocker residuals (foreign uncommitted deps / fleet ibkr
   crypto-pin drift / fallback-window timing), none newly resolved.
+
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries, trimmed from 6) — sources DONE (delete sources
+  shipped 2026-08-08); sole remaining open todo is the P3 alias-sunset stretch item, so swapped the
+  artifact_store.py/model_registry.py security-gate source paths (that todo is done) for `bucket_naming.py` (where
+  `_KIND_ALIASES` lives, the alias-sunset todo's actual target); dropped the fold-design plan (now archived history).

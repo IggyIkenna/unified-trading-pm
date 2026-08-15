@@ -102,3 +102,6 @@ superseded_by:
   `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`. Authored `status: active` per the established
   no-double-gate precedent; `gate_on_depends: true` already machine-holds every task here until the source doc's sole
   remaining todo is done.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — the depended-on source issue doc, the
+  VM-launcher runbook, and the 2 scripts this doc's own todo 1 names directly (`launch-canonical-migration-vm.sh`,
+  `verify_cefi_canonical_4surface_2026_07_20.py`).

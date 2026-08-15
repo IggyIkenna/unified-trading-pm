@@ -48,6 +48,7 @@ context_scope:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 ---
 
@@ -131,3 +132,6 @@ context_scope:
 - **2026-08-08** — drafted by the `/ag-closeout-audit` cefi run (slot 8, dispatch agt-6bc9c4) alongside batch10;
   authored `status: active` per the 2026-07-30 no-double-gate ruling, machine-held by `gate_on_depends: true` until
   batch10's todos are done.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) — added
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` (already cited in this doc's own "Codex
+  SSOTs" section).

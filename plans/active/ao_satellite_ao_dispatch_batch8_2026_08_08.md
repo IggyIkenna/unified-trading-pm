@@ -60,7 +60,6 @@ context_scope:
     agent-orchestrator/server/deepseek_usage_poller.py,
     /codex/06-coding-standards/ui-testing-layers.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
-    scripts/quickmerge.sh,
   ]
 source: >-
   /ag-closeout-audit ao skill run 2026-08-08 (autonomous, scheduled ag_closeout_auditor dispatch, slot 12). Phase 0
@@ -336,3 +335,4 @@ isolation does NOT cover", `/codex/12-agent-workflow/plan-completion-and-archiva
   Codex convention documented: `ui-testing-layers.md` § "agent-orchestrator e2e: background-poller vs. fixture-data
   interaction" — `unified-trading-pm@88693651d`. Source docs' Progress Logs updated same turn. `agent-orchestrator` QG
   green (2711 passed, 2 skipped; dashboard skipped — node_modules absent).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (7 entries).

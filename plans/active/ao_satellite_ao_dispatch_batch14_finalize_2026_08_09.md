@@ -41,6 +41,7 @@ sequential: true
 context_scope:
   [
     /plans/active/ao_satellite_ao_dispatch_batch14_2026_08_09.md,
+    /plans/archive/2026_08/issues/deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -67,31 +68,31 @@ source: >-
       clean spawn-auth test remains genuinely untestable, not a new regression.
 
       **DISCREPANCY FOUND**: batch14's claim "Literal key removed from the live file; re-sourced via
-                          `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key
-                          --project=central-element-323112)"`" did not actually happen. Direct verification of the live file
-                          `~/.claude-accounts/deepseek-v4-pro.env` (the exact `oauth_token_env_file` the running orchestrator's
-                          `data/config/accounts.json` resolves for this account — confirmed via that file, not a guess): `sha256sum` of the
-                          live file is BYTE-IDENTICAL to `deepseek-v4-pro.env.bak-presm-1786317618` (the "pre-secret-manager" backup batch14
-                          itself created before the intended edit) — `42b42e22...c9d181b` both. `grep -c "gcloud secrets versions access"`
-                          on the live file returns `0`. The live file's mtime (`2026-08-04 15:39:18`) predates the claimed edit date
-                          (2026-08-09) entirely and matches the backup's mtime almost exactly (`cp -p`-preserved), consistent with the
-                          backup having been taken but the actual substitution edit never applied. Net effect: the literal API token is
-                          STILL live in the file today, unchanged; batch14's "hash-match + identical-402-both-configs" verification method
-                          was comparing the unedited file against itself under two labels, not a genuine before/after comparison — it could
-                          not have caught this because there was no "after" state to compare against.
+                                      `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key
+                                      --project=central-element-323112)"`" did not actually happen. Direct verification of the live file
+                                      `~/.claude-accounts/deepseek-v4-pro.env` (the exact `oauth_token_env_file` the running orchestrator's
+                                      `data/config/accounts.json` resolves for this account — confirmed via that file, not a guess): `sha256sum` of the
+                                      live file is BYTE-IDENTICAL to `deepseek-v4-pro.env.bak-presm-1786317618` (the "pre-secret-manager" backup batch14
+                                      itself created before the intended edit) — `42b42e22...c9d181b` both. `grep -c "gcloud secrets versions access"`
+                                      on the live file returns `0`. The live file's mtime (`2026-08-04 15:39:18`) predates the claimed edit date
+                                      (2026-08-09) entirely and matches the backup's mtime almost exactly (`cp -p`-preserved), consistent with the
+                                      backup having been taken but the actual substitution edit never applied. Net effect: the literal API token is
+                                      STILL live in the file today, unchanged; batch14's "hash-match + identical-402-both-configs" verification method
+                                      was comparing the unedited file against itself under two labels, not a genuine before/after comparison — it could
+                                      not have caught this because there was no "after" state to compare against.
 
-                          **Process note**: while diagnosing, a partial live-token substring was inadvertently printed to this session's
-                          own tool output before the mistake was caught (RULES.md "never print or log the literal secret value" — a real
-                          violation, flagged here for the record; no further prints followed, and the token's plaintext exposure surface
-                          does not change since it was already resident in cleartext on this host prior to and independent of this
-                          session).
+                                      **Process note**: while diagnosing, a partial live-token substring was inadvertently printed to this session's
+                                      own tool output before the mistake was caught (RULES.md "never print or log the literal secret value" — a real
+                                      violation, flagged here for the record; no further prints followed, and the token's plaintext exposure surface
+                                      does not change since it was already resident in cleartext on this host prior to and independent of this
+                                      session).
 
-                          **Actions taken**: (a) reverted `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo 1 checkbox from
-                          `[x]` back to `[ ]` (verified false-done claim, task confirmed non-`dispatched` in the live backlog first) +
-                          called `POST /api/backlog/ao_satellite_ao_dispatch_batch14-2e3084f54dd3/reopen`; (b) opened a new tracked todo
-                          immediately below to actually perform the fix, per this todo's own done-when clause. Todo 2 (reconcile) below
-                          MUST NOT proceed until that new todo is genuinely done — its whole job is writing REAL evidence into the source
-                          checkbox, which doesn't exist yet.
+                                      **Actions taken**: (a) reverted `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo 1 checkbox from
+                                      `[x]` back to `[ ]` (verified false-done claim, task confirmed non-`dispatched` in the live backlog first) +
+                                      called `POST /api/backlog/ao_satellite_ao_dispatch_batch14-2e3084f54dd3/reopen`; (b) opened a new tracked todo
+                                      immediately below to actually perform the fix, per this todo's own done-when clause. Todo 2 (reconcile) below
+                                      MUST NOT proceed until that new todo is genuinely done — its whole job is writing REAL evidence into the source
+                                      checkbox, which doesn't exist yet.
 
 - [x] ✅ [INFRA] P0. **DONE 2026-08-10 (slot 5).** Actually applied the GSM re-sourcing to the live env file — batch14's
       todo 1 done-claim was false (see above): the literal token was still live in
@@ -118,17 +119,17 @@ source: >-
       record it here or on the source doc's `[OPERATOR] P2` recurrence todo.
 
       **CORRECTION 2026-08-12 (slot 16, review craft) — this DONE record is STALE; the edit was real but got reverted.**
-              Fresh live-file re-measurement (`plans/archive/2026_08/issues/deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md`)
-              found `~/.claude-accounts/deepseek-v4-pro.env` back to a literal token (sha256 `86f0758f...`, NOT this todo's own
-              post-edit `c154633...c2f42`; `grep -c 'gcloud secrets versions access'` = `0`) — the GSM indirection was not live
-              for ~2 days despite the checkbox above. Root cause: `creds_env_poller.py` re-syncs the local env file from the S3
-              creds bucket (`uts-orchestrator-creds-427895769566/accounts/deepseek-v4-pro.env`) every
-              `creds_env_poll_interval_seconds` (default 300s, `config.py:1001`); this todo's fix edited only the LOCAL file, so
-              the poller reverted it to the (byte-identical) S3 literal within one poll tick. **Now durably re-applied**: the
-              issue doc's `[INFRA] P0` todo (DONE 2026-08-12, slot 18) updated BOTH the S3 bucket object and the local file to
-              the indirection, so the poller now distributes it instead of reverting it — verified resolved-token sha256
-              `715f0bb8...` == GSM secret `deepseek-v4-pro-api-key` hash, `claude -p` probe HTTP 200 (balance was topped up).
-              Flagging here so todo 3 below reconciles from the CURRENT durable fix, not this superseded 2026-08-10 record.
+                          Fresh live-file re-measurement (`plans/archive/2026_08/issues/deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md`)
+                          found `~/.claude-accounts/deepseek-v4-pro.env` back to a literal token (sha256 `86f0758f...`, NOT this todo's own
+                          post-edit `c154633...c2f42`; `grep -c 'gcloud secrets versions access'` = `0`) — the GSM indirection was not live
+                          for ~2 days despite the checkbox above. Root cause: `creds_env_poller.py` re-syncs the local env file from the S3
+                          creds bucket (`uts-orchestrator-creds-427895769566/accounts/deepseek-v4-pro.env`) every
+                          `creds_env_poll_interval_seconds` (default 300s, `config.py:1001`); this todo's fix edited only the LOCAL file, so
+                          the poller reverted it to the (byte-identical) S3 literal within one poll tick. **Now durably re-applied**: the
+                          issue doc's `[INFRA] P0` todo (DONE 2026-08-12, slot 18) updated BOTH the S3 bucket object and the local file to
+                          the indirection, so the poller now distributes it instead of reverting it — verified resolved-token sha256
+                          `715f0bb8...` == GSM secret `deepseek-v4-pro-api-key` hash, `claude -p` probe HTTP 200 (balance was topped up).
+                          Flagging here so todo 3 below reconciles from the CURRENT durable fix, not this superseded 2026-08-10 record.
 
 - [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into
       `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own `[INFRA] P2` checkbox** — replace the
@@ -198,3 +199,6 @@ source: >-
   now-durable re-fix (S3 bucket + local file both updated, slot 18, 2026-08-12). Did not touch the todo 2 checkbox
   itself (the edit described there was real at the time) — only appended, per the append-don't-replace rule. Todo 3
   (reconcile) can now draw truthful data from the corrected record.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added
+  `deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md` (holds the current durable fix this plan's own todo 2
+  correction points to).

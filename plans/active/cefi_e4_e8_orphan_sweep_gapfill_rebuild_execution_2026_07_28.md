@@ -341,3 +341,6 @@ todo's isolated wording. No reclassification.
   plan-destination-default-to-AO for auto-filed findings and the specific GSM secret/webhook additions) — none newly
   bound Phases D/E. Phase D is a real-production `_index` rebuild `--apply`; Phase E is its verify gate; both remain
   VM-scale prod-writes this doc's own banner reserves for human execution. No reclassification.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged — Phase C's gate doc, Phase D/E's 2
+  source-code scripts + the audit-instructions doc, the vm-launcher runbook, and the parent L3 plan all still resolve
+  and remain the right minimal set for the still-open Phase D/E manifest-rebuild+verify work.

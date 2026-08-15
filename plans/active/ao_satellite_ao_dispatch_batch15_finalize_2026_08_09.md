@@ -126,3 +126,4 @@ source: >-
   1/2/3, plus a note citing this finalize plan's own todo 1 independent re-verification. Both source docs got a dated
   Progress Log entry recording the reconciliation. Todos 3/4 (archive-decision confirmation, batch-plan archival ritual)
   are separate, not actioned by this todo.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

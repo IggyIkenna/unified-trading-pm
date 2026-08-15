@@ -129,3 +129,4 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — added the shipped Terraform external-tables file
   (`deployment-service@eaff3a7`) as a real source target alongside the 2 composes-with codex SSOTs.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (3 entries), still accurate.

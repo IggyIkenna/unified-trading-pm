@@ -269,3 +269,4 @@ source: >-
     though it's outside todo 2's original enumeration. Todo 2 itself stays `- [ ]` — this pass is preparatory evidence
     for whoever runs the full 3-doc, ~6-flip reconciliation session todo 2 actually requires; it does not attempt to
     satisfy it in part.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

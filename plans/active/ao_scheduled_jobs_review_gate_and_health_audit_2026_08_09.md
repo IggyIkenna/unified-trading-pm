@@ -44,21 +44,10 @@ source:
   "interactive session, 2026-08-09 — follow-up from the plan_reconciler steady-state graduation + PR-backlog discovery"
 context_scope:
   [
-    agent-orchestrator/scripts/install-plan-reconciler-timer.sh,
-    agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh,
-    agent-orchestrator/scripts/install-cefi-mtds-smoke-timer.sh,
-    agent-orchestrator/scripts/install-cefi-reconciliation-timer.sh,
-    agent-orchestrator/scripts/install-context-scout-timer.sh,
-    agent-orchestrator/scripts/install-docs-reconcile-timer.sh,
-    agent-orchestrator/scripts/install-escalation-queue-reconciler-timer.sh,
-    agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh,
-    agent-orchestrator/scripts/scheduled_job_already_ran.py,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-    agent-orchestrator/server/operator_gated_options.py,
-    agents/plan_reconciler.md,
-    cursor-configs/skills/plan-reconcile/SKILL.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    agents/plan_reconciler.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    agent-orchestrator/scripts/scheduled_job_already_ran.py,
     /plans/active/issues/plan_reconciler_findings_2026_08_08.md,
     /plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
   ]
@@ -169,7 +158,13 @@ reliability/escalation shape, not re-running its normal audit content.
   exact scope. Track A's 25-PR list and Track B's 7-job list both pulled live from `gh pr list` / the installer-script
   directory listing this same session, immediately before authoring.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — first audit pass on this doc.
-  Its own `source:` frontmatter and body state it was authored "following the operator's explicit 'human plan' ruling
-  on this exact scope" — a citable dated ruling on citation alone. Independently, every open todo is genuine per-item
-  human judgment (Track A: rebase-and-re-verify vs. close-as-superseded per PR, 25 individual calls; Track B: a
-  7-job reliability/escalation-health audit), not mechanical/bounded work.
+  Its own `source:` frontmatter and body state it was authored "following the operator's explicit 'human plan' ruling on
+  this exact scope" — a citable dated ruling on citation alone. Independently, every open todo is genuine per-item human
+  judgment (Track A: rebase-and-re-verify vs. close-as-superseded per PR, 25 individual calls; Track B: a 7-job
+  reliability/escalation-health audit), not mechanical/bounded work.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — trimmed from 17 to the shared root-cause
+  files (`plan_reconciler.md`, `regen_backlog_from_plan.py`, `scheduled_job_already_ran.py`), the scheduled-jobs codex
+  SSOT, and the 2 related issue docs already in `related:`; dropped the 7 individual `install-<job>-timer.sh` scripts
+  (each already named inline in its own Track B todo) plus the plan-reconcile skill doc, `operator_gated_options.py`,
+  and the single-vm-architecture codex ref.

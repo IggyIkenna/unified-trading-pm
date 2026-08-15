@@ -115,3 +115,4 @@ source: >-
   `plans/archive/2026_08/issues/`, all corpus path-referrers updated (this finalize's own `related:`,
   batch17/batch6/ao_consolidated_closeout). Shipped `unified-trading-pm@883f11bc62` (reconcile) + `54ae3f5966`
   (archival); both verified on origin, no lingering duplicate at the old active path.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

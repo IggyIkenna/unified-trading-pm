@@ -80,3 +80,4 @@ Gated closeout. Nothing here starts until the source plan's own todos are done â
 ## Progress Log
 
 - 2026-08-10: drafted alongside the source plan, to satisfy the finalize-plan-coverage gate.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

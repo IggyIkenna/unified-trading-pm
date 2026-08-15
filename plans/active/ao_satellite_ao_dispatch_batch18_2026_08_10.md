@@ -132,3 +132,4 @@ here (5 items already extracted this way).
   `ao_open_issues_consolidated_close_out_2026_07_17.md`) was dropped mid-authoring after discovering a concurrent
   session (`ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4) had already fully closed it the same day — see this
   doc's own summary for detail.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (2 entries).

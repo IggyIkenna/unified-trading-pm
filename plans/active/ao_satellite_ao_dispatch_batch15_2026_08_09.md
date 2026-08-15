@@ -164,3 +164,4 @@ way).
   docs themselves. Both source docs are brand-new (created 2026-08-09, never previously touched by a na-eligibility-
   audit or ag-closeout-audit pass), so this is a first-pass classification, not a re-derivation. File-disjointness
   verified across all 3 todos.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

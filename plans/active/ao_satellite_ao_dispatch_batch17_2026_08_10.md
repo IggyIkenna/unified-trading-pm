@@ -47,6 +47,7 @@ depends_on: []
 context_scope:
   [
     /plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
+    market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
@@ -102,3 +103,4 @@ source: >-
   Conflict-check against active `assigned_vm: planning` docs sharing `parent_epic: agent_operating_framework_master`: no
   overlap on this repo/commit. Low priority and genuinely small — a single bounded git-rescue-or-confirm-moot task,
   matching the exact outcome-defined shape this same source doc's own todos 1-2 already used successfully.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).
