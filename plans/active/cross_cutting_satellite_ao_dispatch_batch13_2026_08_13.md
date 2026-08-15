@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                      separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                      (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                      exists and is live — no code change needed — but a real corpus-wide query
-                                      (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                      the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                      filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                      data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                      worker-determinable outcome for one ~1h dispatch. Filed
-                                      `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                      class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                      backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                      multi-AG backfill into this single dispatch.
+                                          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                          exists and is live — no code change needed — but a real corpus-wide query
+                                          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                          worker-determinable outcome for one ~1h dispatch. Filed
+                                          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                          multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -661,8 +661,17 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [CODE] P2. Flip data-pipeline-alerts.registry.yaml modes verbose->active as each escalation tier is confirmed
       wired Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
-- [ ] [CODE] P2. (stretch) Persist full launch-spec CLI args into DeploymentRegistryEntry for exact-replay relaunch
-      Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
+- [x] ✅ [CODE] P2. (stretch) Persist full launch-spec CLI args into DeploymentRegistryEntry for exact-replay relaunch —
+      deployment-service@14a7fc5ee9 (2026-08-15, slot-9·infra). `vm-exec-with-gcs-tee.sh` now JSON-encodes the exact
+      workload command it invokes (`"$@"`) and passes it to `heartbeat_cli.py` via a new `--launch-args` flag; the CLI
+      threads it through `HeartbeatEntry.metadata["launch_args"]` into `DeploymentRegistryEntry.extras["launch_args"]`
+      (round-tripped through the heartbeat/complete cycle, not just register), using the field's existing free-form
+      `extras: dict[str,str]` rather than a schema migration. A relaunch/operator can now read the EXACT launcher
+      invocation instead of reconstructing one from launcher+asset_group/task/mode/dates. 2 new regression tests
+      (`test_entry_to_registry_persists_launch_args_into_extras`,
+      `test_entry_to_registry_no_launch_args_leaves_extras_empty`) in `tests/unit/test_vm_event_emission.py`.
+      `bash quality-gates.sh --no-fix` green (797s, sentinel-verified at HEAD); quickmerge landed on LDR (post-push
+      ancestry verified). Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
 - [ ] [CODE] P2. Wire the generalised extra='forbid'-style source-required checker into MTDS + MDPS quality-gates.sh
       Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
 - [ ] [CODE] P2. Run scripts/quality_gates/audit_source_column_distribution.py against prod post-backfill and report the
