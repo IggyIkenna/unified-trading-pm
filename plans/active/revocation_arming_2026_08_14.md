@@ -258,26 +258,32 @@ source:
 > it and wraps the result into a `PipelineFinding`, rather than re-deriving staleness from scratch a second time.
 > deployment-service already depends on UTL everywhere, so this is the normal dependency direction, not a new one.
 
-- [ ] [CODE] P0. **Wire `DP-MANIFEST-001` into `route_finding()` by reusing UTL's consolidator-liveness reader.** No
-      production emitter exists today (confirmed: `grep -rn 'registry_id="DP-MANIFEST-001"' deployment_service/` → zero
-      hits outside tests). Add a call in deployment-service's sweep (`cli.py`, alongside the existing
-      `consolidator_oom_watcher`/`consolidator_scheduler_watcher` call sites) that invokes
-      `unified_trading_library.monitors.consolidator_liveness`'s per-bucket reader for each `manifest-consolidator`
-      bucket, and for every bucket reporting DOWN with `reason=REASON_HEARTBEAT_STALE` (the non-OOM, non-paused case —
-      `consolidator_oom_watcher`/`DP-WATCHER-004` already cover their reasons), emit
-      `PipelineFinding(event="CONSOLIDATOR_DOWN", registry_id="DP-MANIFEST-001", tier=EscalationTier.PAGE_OPERATOR,     details={"asset_group": ..., "reason": "heartbeat_stale", ...})`
-      through `route_finding()`. Mirror `check_catalogue_freshness`'s miss-tracker/consecutive-miss shape rather than
-      paging on the first stale read. Repo: deployment-service.
-- [ ] [CODE] P0. **Add self-scoped `asset_group`-only target resolution to `targets_for_finding()`.** Today the
-      self-scoped path in `revocation_targets.py` is keyed ONLY on `vm_name` (`family_of(vm_name)`) — there is no path
-      for "hold this asset_group's family, no VM died, no entity graph." Add one: when `asset_group` is given and
-      `vm_name`/`upstream_entity` are not, resolve via `prefix_families_for([asset_group.value])` directly (same
-      function `DP-CATALOG-001`'s fan-out path already uses, just without the `resolve_dependents()` hop). This closes
-      BOTH `DP-MANIFEST-001` (todo above) and `DP-WATCHER-004` — the latter already reaches `route_finding()` today but
-      currently stamps only `details={"scheduler_job": job_name}`; also update
-      `consolidator_scheduler_watcher.check_consolidator_scheduler_paused` to derive + stamp `asset_group` from the
-      scheduler job name (reverse of `_scheduler_key_for_bucket`'s naming convention) so it resolves through the new
-      path too. Repo: deployment-service.
+- [x] ✅ [CODE] P0. **Wire `DP-MANIFEST-001` into `route_finding()` by reusing UTL's consolidator-liveness reader.** —
+      **deployment-service@e766285059.** New `consolidator_heartbeat_watcher.py` calls
+      `ConsolidatorLivenessMonitor.check()` (the read-only per-bucket probe, NOT `.check_and_emit()` — avoids
+      double-emitting through UTL's own `log_event()` channel) for both `market_data_bucket`/`instruments_store_bucket`
+      per asset_group, and emits `PipelineFinding(registry_id="DP-MANIFEST-001", ...)` through
+      `meta_watchers.emit_finding` (the PUBLIC alias — `_emit` directly would have tripped basedpyright
+      `reportPrivateUsage` and pushed the ratchet from 1259→1260, caught by running `--lint` separately while the shared
+      host's memory pressure blocked `--test`). **One deviation from the plan as written**: `tier=AUTO_RECOVER`, not
+      `PAGE_OPERATOR` — matches the codex table's own "auto-recover (re-merge) then page" and reuses the SAME
+      `_recover_consolidator` actuator `consolidator_oom_watcher` already wires (no `details["oom"]` here, so the
+      relaunch stays same-tier). Mirrors `check_catalogue_freshness`'s consecutive-miss gate. Wired into `cli.py`'s
+      sweep. Tests: 4 new (`test_consolidator_heartbeat_*`). Repo: deployment-service.
+- [x] ✅ [CODE] P0. **Add self-scoped `asset_group`-only target resolution to `targets_for_finding()`.** —
+      **deployment-service@e766285059.** New `elif` branch in `targets_for_finding()` (admission-scoped actions only —
+      DEPS_DRAIN excluded, matches the operator's target-granularity ruling since asset_group-only has no VM to drain):
+      resolves via `prefix_families_for([asset_group.value])` when no `vm_name`/`upstream_entity` is given.
+      `consolidator_scheduler_watcher.check_consolidator_scheduler_paused` now stamps `details["asset_group"]` via a
+      reverse-lookup against `meta_targets.consolidator_scheduler_job`/`consolidator_instruments_scheduler_job` (name
+      construction, not string-parsing — can't drift from the real naming convention), closing DP-WATCHER-004 too. **A
+      second, adjacent bug found while wiring this**: `escalation._apply_revocation()` never threaded `asset_group`
+      through to `targets_for_finding()` AT ALL — meaning the already-shipped DP-CATALOG-001 fix
+      (`deployment-service@2cc79b2a7c`) was fanning out FLEET-WIDE (`asset_group=None` → every dependent asset_group)
+      instead of scoped to the specific AG whose catalogue was actually found stale. Fixed in the same commit:
+      extracts + safely converts `details["asset_group"]` (degrades to `None` on an unrecognised value, never raises).
+      Tests: 2 new for the threading fix, 2 for the self-scoped path, 1 for the fan-out-vs-self-unit precedence. Repo:
+      deployment-service.
 
 ## Progress Log
 
