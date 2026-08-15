@@ -27,6 +27,9 @@
 # 2026-08-09) — the exact same fast-path-blind-to-full-gate pattern as the other checks
 # migrated here today.
 #
+# Both modes compare against merge-base(HEAD, origin/live-defi-rollout) when resolvable, not the
+# raw moving tip — see the COMPARE_REF comment below for why.
+#
 # CANCELLED/SUPERSEDED disposition (2026-08-09): task_template.md's `/done`-time disposition
 # markers document converting a dead/re-scoped `- [ ] <brief>` line into a bold, non-checkbox
 # bullet (`- **[TAG] P<n>. CANCELLED — SUPERSEDED <date> (<who>, per <ref>).**`) — a legitimate
@@ -38,20 +41,40 @@ set -euo pipefail
 ORIGIN="origin/live-defi-rollout"
 CANCELLED_RE='^- \*\*\[[A-Z]+\] P[0-9]+\. CANCELLED'
 
+# Comparison base resolution (2026-08-15, fix for the check_todo_regression.sh todo in
+# plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md): $ORIGIN's tip is a
+# MOVING target under concurrent live-defi-rollout churn — a CI re-run minutes after the first can
+# fetch a materially newer tip, so a file THIS push never touched can show a spurious "loss" purely
+# because $ORIGIN grew elsewhere in the meantime (confirmed live: a doc's origin=14/current=13
+# "lost=1" verdict that was actually origin GAINING a todo after this branch's own fork point, not a
+# deletion). The merge-base of HEAD and $ORIGIN is the STABLE fork point — comparing against it
+# instead answers "did THIS branch's own history lose anything since it diverged", which does not
+# move as $ORIGIN keeps advancing. Falls back to the raw (racy) $ORIGIN tip when merge-base can't
+# resolve (e.g. insufficient local history) — same fail-open shape as every other best-effort probe
+# in this script; the CI caller deepens/unshallows before invoking this script specifically so that
+# fallback is the rare case, not the common one (see python-quality-gates-v2.yml's "Plan hygiene hard
+# gate" step in unified-trading-ci).
+COMPARE_REF="$ORIGIN"
+if _mb="$(git merge-base HEAD "$ORIGIN" 2>/dev/null)" && [ -n "$_mb" ]; then
+  COMPARE_REF="$_mb"
+fi
+
 _check_one() {
   # $1 = file path (may be staged working-tree path or corpus-glob path), $2 = repo-relative path
   local f="$1" rel="$2"
   local cur_checkbox cur_cancelled cur_total gh_total
   cur_checkbox=$(grep -cE "^- \[[ xX]\]" "$f" 2>/dev/null || true)
   cur_cancelled=$(grep -cE "$CANCELLED_RE" "$f" 2>/dev/null || true)
-  gh_total=$(git show "${ORIGIN}:${rel}" 2>/dev/null | grep -cE "^- \[[ xX]\]" || true)
+  gh_total=$(git show "${COMPARE_REF}:${rel}" 2>/dev/null | grep -cE "^- \[[ xX]\]" || true)
   cur_checkbox="${cur_checkbox:-0}"
   cur_cancelled="${cur_cancelled:-0}"
   gh_total="${gh_total:-0}"
   cur_total=$(( cur_checkbox + cur_cancelled ))
   if [ "$gh_total" -gt 0 ] && [ "$cur_total" -lt "$gh_total" ]; then
     local lost=$(( gh_total - cur_total ))
-    echo "LOSS  $(basename "$f")  origin=${gh_total}  current=${cur_total}  lost=${lost} (TOTAL todos open+done — a flip or a CANCELLED/SUPERSEDED conversion is conserved; a drop = deletion/collapse)"
+    local base_note=""
+    [ "$COMPARE_REF" != "$ORIGIN" ] && base_note=" (base=${COMPARE_REF:0:12}, merge-base of HEAD/${ORIGIN})"
+    echo "LOSS  $(basename "$f")  origin=${gh_total}  current=${cur_total}  lost=${lost}${base_note} (TOTAL todos open+done — a flip or a CANCELLED/SUPERSEDED conversion is conserved; a drop = deletion/collapse)"
     return 1
   fi
   return 0
@@ -105,6 +128,7 @@ if [ "${#WARNINGS[@]}" -gt 0 ]; then
   echo "Fix: restore from GitHub — keep new frontmatter, restore GitHub body:"
   echo "  FM=\$(head -N file); BODY=\$(git show ${ORIGIN}:plans/active/file | tail -n +M)"
   echo "  printf '%s\n%s\n' \"\$FM\" \"\$BODY\" > file"
+  [ "$COMPARE_REF" != "$ORIGIN" ] && echo "(compared against merge-base ${COMPARE_REF:0:12} of HEAD/${ORIGIN}, not ${ORIGIN}'s current tip — restoring from ${ORIGIN} is still a safe superset)"
   exit 1
 else
   [ "$QUIET" != "--quiet" ] && echo "✅ check_todo_regression: all plans match or exceed ${ORIGIN} total todo count (flips conserved)"
