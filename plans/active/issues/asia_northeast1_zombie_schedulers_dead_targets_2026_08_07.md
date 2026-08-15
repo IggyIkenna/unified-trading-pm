@@ -215,11 +215,53 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       map; targeted `tofu apply` confirms destroyed; post-apply
       `gcloud scheduler jobs describe uts-prod-features-sports-t1-schedule` → `NOT_FOUND`. Shipped
       deployment-service@7b418aabe784234e8a3dfd0e6266aac83c45b5c6.
-- [ ] [DIAG] P3. For the 34 non-repoint dead-target schedulers (dev/staging-tier `*-t1-schedule`s +
-      `central-market-data-service-scheduler-trigger`): confirm with each owning service team/repo whether the
-      dev/staging-tier T1-recon Cloud Run Job was deliberately decommissioned (in which case these schedulers should
-      eventually be DELETED, not just left paused forever) or should be redeployed. Not resolved here — this pass's
-      scope was pause + triage only.
+- [x] ✅ [DIAG] P3. **CONFIRMED 2026-08-15 — dev/staging tier is abandoned, not actively maintained; recommend
+      RETIRE (delete), not redeploy.** For the 34 non-repoint dead-target schedulers (dev/staging-tier
+      `*-t1-schedule`s + `central-market-data-service-scheduler-trigger`): no owning "service team" exists to consult
+      (single-operator workspace) — resolved via direct code + live-infra evidence instead. Three independent signals
+      all point the same direction:
+      1. **Terraform defines the schedulers per-environment but the Cloud Run Job targets were added LATER and never
+         backfilled to dev/staging.** `t1_batch_scheduler.tf`'s `google_cloud_scheduler_job.t1_batch_schedule`
+         resource is `for_each`'d over `local.t1_batch_services` for EVERY environment (dev/staging/prod alike, minus
+         the sports-only dev exclusion) — so a scheduler exists per tier once that tier's state was ever applied. But
+         the actual `google_cloud_run_v2_job` resources for most of these targets (strategy, market-data-processing,
+         batch-live-reconciliation, instruments-cefi/prediction, mtds-fast/cefi/tradfi) live in
+         `audit03_cron_provisioning.tf` and `t1_recon_instruments_jobs.tf` — both added 2026-05-22 through 2026-07-14,
+         well after dev/staging's schedulers were first created — and neither file scopes its modules away from
+         dev/staging (no `count`/`for_each` on `var.environment`), so a real `ENV=dev ./tofu.sh apply` WOULD create
+         them if run.
+      2. **That apply has never happened.** `grep -rn "ENV=dev\|ENV=staging" deployment-service/.github/workflows/`
+         returns zero hits — the only CI-driven deploy path is the GCP Cloud Build pipeline on `branch=main`, which is
+         `ENV=prod` only (confirmed at `deployment-service/.github/workflows/quality-gates-v2.yml:142`). There is no
+         scheduled or triggered job anywhere in this repo's CI that runs `ENV=dev`/`ENV=staging` `tofu apply` for this
+         directory — dev/staging applies, if they ever happened, were one-off manual actions, not a maintained path.
+      3. **Live GCP confirms it**: `gcloud run jobs list --region=asia-northeast1` shows exactly ONE
+         `uts-dev-*`/`uts-staging-*` job in the entire fleet (~114 jobs) — `uts-dev-instruments-service-t1-recon`,
+         which is itself the OLD all-AG job name t1_batch_scheduler.tf's own header comment says was "RETIRED and
+         replaced by per-AG jobs" (i.e., a stray leftover from BEFORE the per-AG split, not evidence of active
+         dev-tier maintenance). Zero `uts-dev-`/`uts-staging-` jobs at all in europe-west1 (checked for
+         `central-market-data-service` specifically too — none).
+      **Conclusion**: dev/staging is not a live, actively-deployed tier for this T1 batch pipeline — it was
+      provisioned once (schedulers only) and never kept in sync as the job-provisioning side of the stack grew.
+      Redeploying would mean running a one-off manual `ENV=dev/staging ./tofu.sh apply` against a stack with no CI
+      path keeping it current, for an environment with no operator-stated need (same shape as the sports dev-tier
+      precedent already ruled on 2026-07-14 in this same file: dev held no unique data/value vs. prod). Recommend
+      RETIRE, matching the pattern already executed for repoint candidates (1)/(3)/(4) in this doc. Filed the actual
+      Terraform decommission as a new STANDING-ACTION todo below rather than executing it in this diagnostic pass
+      (34+1 schedulers across the shared `t1_batch_services` map is a bigger, more error-prone change than this DIAG
+      todo's scope — needs its own careful `for_each` exclusion work, not folded in here).
+- [ ] [INFRA] P3. **STANDING-ACTION — Terraform-retire the 34 confirmed-abandoned dev/staging-tier `*-t1-schedule`
+      schedulers + `central-market-data-service-scheduler-trigger` (europe-west1)**, per the DIAG finding directly
+      above. In `deployment-service/terraform/gcp/t1_batch_scheduler.tf`: extend the existing
+      `t1_batch_services_dev_excluded_keys` pattern (currently sports-only) to a broader
+      `t1_batch_services_dev_staging_excluded_keys` covering every key whose dev/staging Cloud Run Job was never
+      provisioned (all keys except none currently confirmed-live for dev/staging — i.e. exclude for BOTH dev AND
+      staging, not just dev), and change the `t1_batch_services` local's conditional from `var.environment == "dev"`
+      to `contains(["dev", "staging"], var.environment)` gated on the new excluded-keys list. Separately retire
+      `central-market-data-service-scheduler-trigger` (its own resource, not in this map — locate it, likely in
+      `deployment-service/terraform/gcp/` under a service-liveness or MDPS-named `.tf` file). Targeted `tofu apply`
+      per env (`ENV=dev`, `ENV=staging` — prod untouched), verify `gcloud scheduler jobs describe` → `NOT_FOUND` for
+      all 35, matching the verification pattern already used for repoint candidates (1)/(3)/(4) above.
 
 ## Progress Log
 
@@ -243,3 +285,13 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   ENABLED, confirmed via a real scheduled fire that SUCCEEDED. Retagged the todo `[OPERATOR]` -> `[DOC]`, flipped done,
   and filed a new `[OPERATOR]` STANDING-ACTION todo for the actual Terraform decommission (pause is not full
   retirement), matching repoint candidates (1) and (3)'s existing pattern for consistency.
+- **2026-08-15 (DIAG P3 todo resolved)**: Confirmed the remaining 34 non-repoint dead-target schedulers via code +
+  live-infra evidence (no "owning service team" exists to ask in this single-operator workspace): dev/staging is not
+  an actively-deployed tier for this T1 batch pipeline — the Cloud Run Job resources for most targets were added to
+  Terraform (`audit03_cron_provisioning.tf`, `t1_recon_instruments_jobs.tf`) well after dev/staging's schedulers were
+  first created, no CI path anywhere runs `ENV=dev`/`ENV=staging` `tofu apply` for this directory (Cloud Build is
+  `ENV=prod`-only), and live GCP shows exactly one stray `uts-dev-*` job fleet-wide (`uts-dev-instruments-service-t1-recon`,
+  itself a pre-per-AG-split leftover, not evidence of maintenance) and zero in europe-west1. Recommend RETIRE, not
+  redeploy — same shape as the sports dev-tier precedent above. Filed the actual Terraform decommission as a new
+  `[INFRA]` STANDING-ACTION todo rather than executing it in this diagnostic pass (needs its own careful
+  `for_each`-exclusion change against the shared `t1_batch_services` map, not folded into a DIAG todo).
