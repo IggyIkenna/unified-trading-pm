@@ -181,3 +181,14 @@ on shared AWS infra, not something to self-grant.
   recovery instruction succeeded in reaching the real AWS error — confirms the guard's retry-once behavior is real and
   does not mask or interfere with this underlying IAM gap. No new information on the IAM gap itself; ten days unresolved
   as of this entry.
+- **2026-08-15 (slot-16, ci_reconciler)**: ELEVENTH independent confirmation, from `/ci-reconcile`'s §0c
+  (host/VM-dispatched-watchdog sweep — trying to check `github-glue-runner-unified-api-contracts@glue-1.service` on
+  `i-042a6332509482556` after a live `glue-runner-crash-loop-watchdog` CRITICAL post citing a 26.3h-active process with
+  "current job's own start time not resolvable"). Identical `AccessDeniedException` on `ssm:SendCommand`. Also checked
+  (per this doc's own self-service precedent, §0c pattern (q)) whether `ikenna-worker` could self-grant per
+  `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` — confirmed that doc's self-service carve-out is
+  explicitly scoped to the orchestrator's own two service identities (`unified-trading-sa` GCP, `uts-orchestrator-epic-role`
+  AWS), not `ikenna-worker`; `aws configure list-profiles` shows only `default` (no alternate profile to assume the
+  self-service role from), and `iam:ListAttachedUserPolicies`/`iam:ListUserPolicies` on `ikenna-worker` itself are still
+  denied. §0c's glue-runner watchdog sweep is reported as an explicit coverage gap in this run rather than a fresh
+  finding — this issue doc already covers the root cause and remains the correct escalation. Eleven days unresolved.
