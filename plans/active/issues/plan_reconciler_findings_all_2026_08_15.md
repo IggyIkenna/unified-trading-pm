@@ -100,9 +100,9 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `market-tick-data-service@28e2eb36d8`). Self-flagged in
       `sports_p2_raw_tick_live_writer_still_emits_trades_2026_08_15.md:145-153` but the finder explicitly declined to
       create a tracked todo ("small enough to fold in") — itself a HARD RULE violation (every follow-up must be a
-      `- [ ]     todo, never prose"). Needs: (a) update the UAC registry entry, (b) this todo IS the tracked instance now.     **DONE 2026-08-15**: `("sports","odds")`matrix entry flipped from`frozenset({"trades",
+      `- [ ] todo, never prose"). Needs: (a) update the UAC registry entry, (b) this todo IS the tracked instance now. **DONE 2026-08-15**: `("sports","odds")`matrix entry flipped from`frozenset({"trades",
       "odds_horizon_bucket"})`to`frozenset({"odds",
-      "odds_horizon_bucket"})`; 2 tests in     `tests/internal/unit/test_sports_prediction_contracts.py`that asserted the old`"trades"`canonical value updated     to assert`"odds"`; the legacy `CONTRACT_REGISTRY[("sports","odds","trades")]`schema intentionally retained     (documented as no-longer-matrix-reachable, backs pre-migration prod rows) — full`quality-gates.sh`green.    `unified-api-contracts@0bc2fc7c14`.
+      "odds_horizon_bucket"})`; 2 tests in `tests/internal/unit/test_sports_prediction_contracts.py`that asserted the old`"trades"`canonical value updated to assert`"odds"`; the legacy `CONTRACT_REGISTRY[("sports","odds","trades")]`schema intentionally retained (documented as no-longer-matrix-reachable, backs pre-migration prod rows) — full`quality-gates.sh`green. `unified-api-contracts@0bc2fc7c14`.
 - [x] ✅ [DOCS] P1. **AWS-vs-GCP epic contradiction — infrastructure_master.md still frames DeFi compute as
       AWS-primary.** `plans/epics/infrastructure_master.md:869,875` carries 2 open todos ("Operator sign-off on
       dual-cloud parity", "GCP bucket decommission" post-AWS-parity) that are opposite-direction from
@@ -135,7 +135,7 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `unified-trading-pm@1c3fef9ea5`.
 - [x] ✅ [BACKEND] P1. **QG-red commit claim — RESOLVED, claim was accurate, gate doc was stale.** Live re-run of the
       actual scanner (`check_adapter_contract_regression.py`) against the current checkout:
-      `OK — 363 baselined     file(s) at or above minimum` — NOT currently red. `4844b6286b`'s api_football refactor
+      `OK — 363 baselined file(s) at or above minimum` — NOT currently red. `4844b6286b`'s api_football refactor
       legitimately split `sports_reference_core.py` (extracting `sports_reference_fixture_existence_gate.py`, confirmed
       real `record_empty()` calls, not a stub); the baseline was correctly regenerated same-day
       (`unified-trading-pm@438838ae72`, on `origin/live-defi-rollout`, 14+6=20 ≥ original 19 — call count went UP).
@@ -218,7 +218,7 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       could be archived while carrying genuine open work. Fix: normalize bullet to `-`, AND check whether
       `check_archive_candidates.sh`/`count_open_tasks.py` has this same regex gap. **DONE 2026-08-15** — normalized the
       bullet (content unchanged). Confirmed the tooling gap by reading source: `count_open_tasks.py`'s
-      `OPEN_RE =     re.compile(r"^\s*- \[ \]")` and `check_archive_candidates.sh`'s `grep -cE '^[[:space:]]*- \[.\]'`
+      `OPEN_RE = re.compile(r"^\s*- \[ \]")` and `check_archive_candidates.sh`'s `grep -cE '^[[:space:]]*- \[.\]'`
       both require a dash bullet — neither counts `* [ ]`. Reported here for a human to fix in the tooling itself (out
       of scope for this docs-only pass). `unified-trading-pm@f6d90162b4`.
 

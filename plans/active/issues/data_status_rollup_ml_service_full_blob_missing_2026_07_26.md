@@ -945,12 +945,12 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       ~40min (2 cron cycles), never silently skipped because of a stale dead-man's lock.
 
       **FIXED 2026-08-15 (slot-3)**: `deployment-api@0bb3694c80`. Combined (a)+(c) — pure (c) can't work alone (a
-              genuinely long full sweep, ~116min worst case, would expire its own still-live lock); pure (a) alone leaves the
-              dead-lock window at 150min. `run_rollup()` takes a new `on_service_done` hook (per-service, best-effort);
-              `_rollup.py` wires it to re-`acquire_maintenance_window(...)` with the same `locked_by` (same-locked_by
-              reacquisition, no new UTL code). `_ROLLUP_LOCK_TTL_MINUTES` 150 -> 40, matching this todo's own done-when
-              target. 4 new/updated tests in `test_rollup_worker.py` + `test_data_status_beta_rollup_and_cli_config.py`. Full
-              QG green, verified on origin. **Not done**: the live 24h Cloud Logging confirmation — split to a P2 follow-up.
+      genuinely long full sweep, ~116min worst case, would expire its own still-live lock); pure (a) alone leaves the
+      dead-lock window at 150min. `run_rollup()` takes a new `on_service_done` hook (per-service, best-effort);
+      `_rollup.py` wires it to re-`acquire_maintenance_window(...)` with the same `locked_by` (same-locked_by
+      reacquisition, no new UTL code). `_ROLLUP_LOCK_TTL_MINUTES` 150 -> 40, matching this todo's own done-when
+      target. 4 new/updated tests in `test_rollup_worker.py` + `test_data_status_beta_rollup_and_cli_config.py`. Full
+      QG green, verified on origin. **Not done**: the live 24h Cloud Logging confirmation — split to a P2 follow-up.
 
 - [ ] [DATA] P2. **NEW (2026-08-15), follow-up to the dead-lock fix above.** Once `deployment-api@0bb3694c80` reaches
       live `uts-prod-data-status-rollup-svc`, live-verify its own done-when: a 24h Cloud Logging trace showing every one

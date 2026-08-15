@@ -435,7 +435,7 @@ investigation confirmed are both achievable with existing primitives:
 - [ ] [OPERATOR] P1. **Operator-gated — hand to Harsh, pure verification, no coding.** Issue a long-lived worker-role
       JWT (`issue_token(role="worker", machine="<name>-laptop")`, `server/auth.py:323-341`) and register. From the
       `agent-orchestrator` repo root:
-      `     python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)"     mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token   # paste the token     AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name>   # 9001=Ikenna, 9002=Harsh     `
+      ` python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)" mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token # paste the token AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name> # 9001=Ikenna, 9002=Harsh `
       Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and the operator shows up in AO's
       `GET /api/agents`.
 - [ ] [SCRIPT] P2. **Operator-gated — hand to Harsh, pure verification, no coding.** Run one real, low-stakes task

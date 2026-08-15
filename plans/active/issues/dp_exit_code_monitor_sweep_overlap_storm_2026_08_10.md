@@ -427,23 +427,23 @@ until the next sweep) and is a stopgap, not the root fix.
       Repo: deployment-service.
 
       **RESOLVED 2026-08-15 (slot 8, backend_engineer)** — ✅ Instrumented live RSS via stdlib
-              `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss` at every `sweep()` phase boundary (4 call sites), confirming
-              RSS growth as the actual driver rather than an unmeasured guess. Root-caused the `kpxh6` fast-OOM to a SECOND,
-              previously-unclosed unbounded read: `_gcs.read_terminal_exit_code`'s run.log FALLBACK path (used when a VM's
-              EXIT_STATUS blob is absent) called the plain unbounded `_gcs.read_text` instead of the tail-capped
-              `read_text_tail` the 2026-08-14 fix (`e69f8aeda4`) introduced for every OTHER run.log consumer — this fallback
-              runs inside the fanned-out `terminated-base-signals` phase (up to `_SWEEP_IO_MAX_WORKERS` concurrent calls), so
-              it could still pull a multi-GB blob whole per stalled/retried VM, independent of the abandoned-daemon-thread
-              mechanism this todo asked to investigate. Fix: moved `read_terminal_exit_code` into `_gcs_tail.py` and rewired
-              its fallback onto `read_text_tail` (2MiB cap), closing the gap symmetrically with the rest of the module.
-              `deployment-service@2837e6ddeb` (module-split, `_gcs.py` was pushed to the 960-line file-size QG cap by the
-              instrumentation + fix, split out per this file's own established `_classify.py`-split precedent) on top of
-              `deployment-service@676c5c98` (the RSS instrumentation + tail-cap fix itself). QG green (3323 passed), verified
-              ancestor of `origin/live-defi-rollout`. The abandoned-daemon-thread mechanism this todo also asked to bound/fail-
-              fast was NOT separately confirmed or fixed this session — the concretely-provable unbounded-read gap was the one
-              grounded finding the RSS profiling pointed at; a future OOM with the tail-cap fix already in place and RSS logs
-              showing growth WITHOUT a corresponding large read would be the signal to revisit the daemon-thread-accumulation
-              hypothesis specifically.
+      `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss` at every `sweep()` phase boundary (4 call sites), confirming
+      RSS growth as the actual driver rather than an unmeasured guess. Root-caused the `kpxh6` fast-OOM to a SECOND,
+      previously-unclosed unbounded read: `_gcs.read_terminal_exit_code`'s run.log FALLBACK path (used when a VM's
+      EXIT_STATUS blob is absent) called the plain unbounded `_gcs.read_text` instead of the tail-capped
+      `read_text_tail` the 2026-08-14 fix (`e69f8aeda4`) introduced for every OTHER run.log consumer — this fallback
+      runs inside the fanned-out `terminated-base-signals` phase (up to `_SWEEP_IO_MAX_WORKERS` concurrent calls), so
+      it could still pull a multi-GB blob whole per stalled/retried VM, independent of the abandoned-daemon-thread
+      mechanism this todo asked to investigate. Fix: moved `read_terminal_exit_code` into `_gcs_tail.py` and rewired
+      its fallback onto `read_text_tail` (2MiB cap), closing the gap symmetrically with the rest of the module.
+      `deployment-service@2837e6ddeb` (module-split, `_gcs.py` was pushed to the 960-line file-size QG cap by the
+      instrumentation + fix, split out per this file's own established `_classify.py`-split precedent) on top of
+      `deployment-service@676c5c98` (the RSS instrumentation + tail-cap fix itself). QG green (3323 passed), verified
+      ancestor of `origin/live-defi-rollout`. The abandoned-daemon-thread mechanism this todo also asked to bound/fail-
+      fast was NOT separately confirmed or fixed this session — the concretely-provable unbounded-read gap was the one
+      grounded finding the RSS profiling pointed at; a future OOM with the tail-cap fix already in place and RSS logs
+      showing growth WITHOUT a corresponding large read would be the signal to revisit the daemon-thread-accumulation
+      hypothesis specifically.
 
 - [x] ✅ [BACKEND] P2. **ADDED 2026-08-15 (slot 8, follow-up)** — live-verify the `read_terminal_exit_code` tail-cap fix
       (`deployment-service@2837e6ddeb`) is live in the running `deployment-api:latest` image and that ≥3 consecutive

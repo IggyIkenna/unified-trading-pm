@@ -126,21 +126,21 @@ Two remedies exist and both were declined deliberately:
       unified-trading-pm@2b4bee96d3.
 
       The same `check_cloudbuild_template_drift.py` PM already ran fleet-wide is now also run scoped to the repo being
-                      gated (`--repo`), as `base-service.sh` STEP 5.108 (17 consumer repos) and `base-ui.sh` `[5.108]` (the 2 UI repos —
-                      `deployment-ui` has no `.venv`, so it uses the graceful python-probe of the adjacent DeFi step). No new rule: same
-                      baseline file, same never-raise semantics, only the detection POINT moves. Both directions are now caught at
-                      introduction — a CONSUMER edit by the consumer's own gate, a TEMPLATE edit by PM's fleet-wide run.
+      gated (`--repo`), as `base-service.sh` STEP 5.108 (17 consumer repos) and `base-ui.sh` `[5.108]` (the 2 UI repos —
+      `deployment-ui` has no `.venv`, so it uses the graceful python-probe of the adjacent DeFi step). No new rule: same
+      baseline file, same never-raise semantics, only the detection POINT moves. Both directions are now caught at
+      introduction — a CONSUMER edit by the consumer's own gate, a TEMPLATE edit by PM's fleet-wide run.
 
-                      **Verified, not assumed** — (1) all 19 consumers measured at-or-below baseline BEFORE wiring, so this could not
-                      replace one fleet-wide block with another; (2) the real incident reproduced in a scratch workspace by re-injecting
-                      the reverted `verify-auth-contract` step — same `19 > 16`, same three markers; (3) the shell block exercised with
-                      real variables: `V=0` at baseline, `V=1` on the injected drift, `V=0` for a non-template-mapped repo (safe no-op,
-                      not a skip); (4) observed passing inside an actual PM gate run (`✅ STEP 5.108`), not only in a harness.
+      **Verified, not assumed** — (1) all 19 consumers measured at-or-below baseline BEFORE wiring, so this could not
+      replace one fleet-wide block with another; (2) the real incident reproduced in a scratch workspace by re-injecting
+      the reverted `verify-auth-contract` step — same `19 > 16`, same three markers; (3) the shell block exercised with
+      real variables: `V=0` at baseline, `V=1` on the injected drift, `V=0` for a non-template-mapped repo (safe no-op,
+      not a skip); (4) observed passing inside an actual PM gate run (`✅ STEP 5.108`), not only in a harness.
 
-                      **Evidence that this was worth doing**: three separate agents independently filed three separate issue docs for
-                      this one incident (`deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12.md`,
-                      `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, and this doc). The cost of detecting
-                      drift far from its cause is measured in duplicated diagnosis, not argued.
+      **Evidence that this was worth doing**: three separate agents independently filed three separate issue docs for
+      this one incident (`deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12.md`,
+      `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, and this doc). The cost of detecting
+      drift far from its cause is measured in duplicated diagnosis, not argued.
 
 - [x] ✅ [DOCS] P2. **THIS doc is the SSOT; the other two are superseded.** — see "Consolidation" below.
       `deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12` and
@@ -149,9 +149,9 @@ Two remedies exist and both were declined deliberately:
       content was carried across as todos below, not dropped.
 
       **Chosen on referrer count, not authorship** — this doc has 7 referrers of which FOUR are shipped code/config
-                  (`check_cloudbuild_template_drift.py`, `cloudbuild_template_drift_baseline.yaml`, `base-service.sh`,
-                  `base-ui.sh`); the other two docs have 1 and 2, all of them docs. Repointing shipped code would mean re-shipping
-                  it through the gate to fix a docs problem.
+      (`check_cloudbuild_template_drift.py`, `cloudbuild_template_drift_baseline.yaml`, `base-service.sh`,
+      `base-ui.sh`); the other two docs have 1 and 2, all of them docs. Repointing shipped code would mean re-shipping
+      it through the gate to fix a docs problem.
 
 - [x] ✅ [DOCS] P3. **`mktemp` trailing-X trap recorded in codex.** —
       `/codex/06-coding-standards/bats-hermeticity-and-gate-budget.md`, new section "An eighth defect, structurally
@@ -179,15 +179,15 @@ Two remedies exist and both were declined deliberately:
       template's other consumer `client-reporting-api`.
 
       **The premise both files argued from was stale.** Each justified its opposite default with "the harness isn't in
-              the image, so it exits 127". It does not: `deployment-api/scripts/quality-gates.sh` detects the absent base script
-              and, when `CLOUD_BUILD=true` (which the step sets), prints "quality-gates base script unavailable in image;
-              skipping in-image gate pass" and **exits 0** — a guard added deliberately to mirror mtds. So `"true"` never failed
-              a build; it pulled and ran the image to execute a script that immediately no-ops. Zero signal, non-zero build
-              time. `"false"` skips it outright: same signal, less work. Both comments corrected.
+      the image, so it exits 127". It does not: `deployment-api/scripts/quality-gates.sh` detects the absent base script
+      and, when `CLOUD_BUILD=true` (which the step sets), prints "quality-gates base script unavailable in image;
+      skipping in-image gate pass" and **exits 0** — a guard added deliberately to mirror mtds. So `"true"` never failed
+      a build; it pulled and ran the image to execute a script that immediately no-ops. Zero signal, non-zero build
+      time. `"false"` skips it outright: same signal, less work. Both comments corrected.
 
-              **Correction to this todo's own premise** (and to the superseded doc it came from): this was NOT "latent drift the
-              ratchet has already absorbed into the baseline". Measured — deployment-api is 16 (== baseline) both before and
-              after — see the new todo below.
+      **Correction to this todo's own premise** (and to the superseded doc it came from): this was NOT "latent drift the
+      ratchet has already absorbed into the baseline". Measured — deployment-api is 16 (== baseline) both before and
+      after — see the new todo below.
 
 - [ ] [SCRIPT] P1. **Substitutions are INVISIBLE to the drift ratchet, and a rollout would silently drop three
       production values.** Measured 2026-08-12 while reconciling `_RUN_INIMAGE_QG`: changing that substitution moved the
@@ -197,19 +197,19 @@ Two remedies exist and both were declined deliberately:
       ratchet never saw it.
 
       **Why this is P1 rather than a labelling nit.** The would-drop-content guard in `rollout-cloudbuild.py` is what
-              makes `--apply` safe, and it inherits the same blind spot. deployment-api's `substitutions` carry `_DEPLOY`,
-              `_ROLLUP_JOB`, and `_ROLLUP_SVC`, **none of which exist in `cloudbuild-api-template.yaml`** (verified by key-set
-              diff). A `rollout-cloudbuild.py --apply` on deployment-api would therefore render them away, and the guard could
-              not object, because it only compares steps. `_ROLLUP_SVC` names a live Cloud Run service
-              (`uts-prod-data-status-rollup-svc`) that the deploy step syncs; `_DEPLOY` gates whether the deploy step runs at
-              all.
+      makes `--apply` safe, and it inherits the same blind spot. deployment-api's `substitutions` carry `_DEPLOY`,
+      `_ROLLUP_JOB`, and `_ROLLUP_SVC`, **none of which exist in `cloudbuild-api-template.yaml`** (verified by key-set
+      diff). A `rollout-cloudbuild.py --apply` on deployment-api would therefore render them away, and the guard could
+      not object, because it only compares steps. `_ROLLUP_SVC` names a live Cloud Run service
+      (`uts-prod-data-status-rollup-svc`) that the deploy step syncs; `_DEPLOY` gates whether the deploy step runs at
+      all.
 
-              **Why it was not fixed in this pass**: adding a `substitutions` marker category would RAISE the drift count for
-              every consumer that legitimately carries per-repo substitutions, against a baseline whose header says "NEVER raise
-              a count" and whose writer silently refuses to. That is the one case where the never-raise rule genuinely needs an
-              operator-sanctioned exception, so it is a decision rather than a drive-by. Done when: either the guard compares
-              substitutions (with a one-off sanctioned re-seed of the baseline), or `--apply` is proven to preserve
-              consumer-only substitution keys and that proof is recorded here. Repo: unified-trading-pm.
+      **Why it was not fixed in this pass**: adding a `substitutions` marker category would RAISE the drift count for
+      every consumer that legitimately carries per-repo substitutions, against a baseline whose header says "NEVER raise
+      a count" and whose writer silently refuses to. That is the one case where the never-raise rule genuinely needs an
+      operator-sanctioned exception, so it is a decision rather than a drive-by. Done when: either the guard compares
+      substitutions (with a one-off sanctioned re-seed of the baseline), or `--apply` is proven to preserve
+      consumer-only substitution keys and that proof is recorded here. Repo: unified-trading-pm.
 
 ## Consolidation — three docs, one incident (2026-08-12)
 

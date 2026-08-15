@@ -71,7 +71,7 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       auto-regenerated files every time — `plans/active/INDEX.md`, `workspace-manifest.json`,
       `workspace-constraints.toml`, `uv.lock`, `quality_gates/adapter_contract_baseline.yaml` — plus dozens of plan
       `.md` files with 1-9 line frontmatter/status diffs. This is the signature of hygiene-sweep/regen tooling running
-      mid-`git pull       --rebase --autostash`, not hand-authored irreplaceable prose; these files regenerate on every
+      mid-`git pull --rebase --autostash`, not hand-authored irreplaceable prose; these files regenerate on every
       sweep and the stashed snapshot is stale-by-construction days later. - **Bulk archival deletions (stash@{9},
       stash@{10}):** 14 files were mid-archival-delete in the working tree (`D` status) when the autostash fired — e.g.
       `plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md`,
@@ -182,7 +182,7 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 - [ ] [OPERATOR] P3. **[BLOCKED on the re-audit — do not run as written]** Run the mechanical stash drop for slots 1, 2,
       3 (same blocked-for-agents situation as the `.tabs/4` todo above — the judgment-call review is done, only the
       mechanical drop remains):
-      `     cd .tabs/1/unified-trading-pm && for i in $(seq 1 45); do git stash drop stash@{0}; done     cd .tabs/2/unified-trading-pm && for i in $(seq 1 10); do git stash drop stash@{0}; done     cd .tabs/3/unified-trading-pm && for i in $(seq 1 33); do git stash drop stash@{0}; done     `
+      ` cd .tabs/1/unified-trading-pm && for i in $(seq 1 45); do git stash drop stash@{0}; done cd .tabs/2/unified-trading-pm && for i in $(seq 1 10); do git stash drop stash@{0}; done cd .tabs/3/unified-trading-pm && for i in $(seq 1 33); do git stash drop stash@{0}; done `
       Confirm each with `git stash list` (should print nothing). Note: `slot 3`'s checkout is the SAME repo as, but a
       DIFFERENT clone from, the original slot-3 checkout this doc was originally filed against in 2026-07-26 (which had
       26 entries then) — this pass audited the CURRENT slot-3 clone's 33 entries as they stand today, not a re-check of

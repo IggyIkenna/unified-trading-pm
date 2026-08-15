@@ -184,7 +184,7 @@ has actually verified).
       correctly evaluated against `lib/registry/openapi.json`, is actually met — out of THIS todo's bounded scope to act
       on unilaterally).
 - [ ] [CODE] P3. `dedupe-openapi-operation-ids.py`'s own
-      `Delete-when: after OpenAPI operation-id dedup verified + no     duplicate ids in schema` condition was previously
+      `Delete-when: after OpenAPI operation-id dedup verified + no duplicate ids in schema` condition was previously
       evaluated against the wrong file (the unrelated `context/api-contracts/...` reference copy, which has 7 dupes).
       Now that the genuine typegen input (`lib/registry/openapi.json`) is confirmed and already has 0 duplicate
       operationIds, re-evaluate whether this script is safe to delete — confirm there's no other regeneration path that

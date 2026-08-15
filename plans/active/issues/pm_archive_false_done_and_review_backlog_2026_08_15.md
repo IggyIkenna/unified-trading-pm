@@ -60,7 +60,7 @@ drift_direction: advance-code
       exact pattern already confirmed TWICE: `plans/archive/recon_rebalancing_order_recovery_2026_03_10.plan.md`
       (2026-03-10) and `plans/archive/defi_transfers_and_gas_fees_2026_03_27.plan.md` (2026-03-27) both claim a
       `PortfolioRebalancer`/`DeFiVaultRebalancer` implementation that never existed anywhere in the codebase
-      (`rg -l     'class PortfolioRebalancer'` returns only the plan files themselves). An initial spot-check of 16
+      (`rg -l 'class PortfolioRebalancer'` returns only the plan files themselves). An initial spot-check of 16
       archived plans from this era found these 2 hits and no other false-done claims (everything else checked out or was
       a legitimate, evidenced relocation/refactor) — a fuller sweep of the full ~160-doc March-2026 cluster was
       explicitly out of scope for that spot-check. Repo: unified-trading-pm. Done-when: a report artifact (or this
