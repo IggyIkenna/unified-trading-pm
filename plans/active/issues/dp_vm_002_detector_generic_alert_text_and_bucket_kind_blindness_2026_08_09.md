@@ -126,16 +126,44 @@ per-VM shard) actually need anything new this run?" before concluding GONE_NO_CA
 
 ## Todos
 
-- [ ] [CODE] P3. Confirm whether `exit_code_fleet_monitor.py`'s `DP_VM_GONE_NO_CAPTURE` alert text's `"(N → M)"`
+- [x] ✅ [CODE] P3. Confirm whether `exit_code_fleet_monitor.py`'s `DP_VM_GONE_NO_CAPTURE` alert text's `"(N → M)"`
       captured-count figure is genuinely interpolated per-VM or a fixed/templated string (grep `_finding_for` / wherever
       the alert `context` string is built). If fixed/templated, either wire in the real
       `captured_before`/`captured_after` values already computed in `sweep()`, or drop the misleading `"(0 → 0)"` suffix
-      from the message entirely. Repo: deployment-service.
-- [ ] [CODE] P3. Extend `cli.py::_make_captured_reader`'s bucket resolution (and its probe-fallback) to also try
+      from the message entirely. Repo: deployment-service. — **CONFIRMED genuinely interpolated, no fix needed
+      (2026-08-15, slot-25).** `_classify.py::finding_for`'s `DP_VM_GONE_NO_CAPTURE` branch (lines ~671-682) builds the
+      summary as an f-string reading `result.captured_before`/`result.captured_after` directly off the
+      `TerminationResult` dataclass — those fields are populated in `classify_terminated_vm` from the real
+      `captured_before`/`captured_after` args threaded through from `sweep()`'s per-VM `captured_reader()` calls (NOT a
+      constant). `tests/unit/test_data_pipeline_monitors.py` already exercises non-zero flat values
+      (`captured_reader=lambda _vm: 100`, line 1550/1604/1714) that assert a `GONE_NO_CAPTURE` verdict — those cases
+      would render `"(100 → 100)"`, not `"(0 → 0)"`, proving the string is not templated. The `"(0 → 0)"` seen
+      identically across all 23 VMs sampled in the source audit is the HONEST consequence of those specific VMs'
+      `captured_reader()` genuinely returning 0 both before and after — because `GONE_NO_CAPTURE` structurally requires
+      `captured_after <= captured_before` (a climbing count routes to CLEAN/PARTIAL_UNCONFIRMED instead), a VM whose
+      reader can't find its real shard (Finding 2's bucket-`kind`-blindness, already tracked as the next todo below)
+      will always show flat 0→0 even when real data was captured elsewhere. No code change needed for this todo — the
+      fix for the misleading reading lives entirely in Finding 2's bucket-resolution todo, not here. (repo:
+      deployment-service, investigation only)
+- [x] ✅ [CODE] P3. Extend `cli.py::_make_captured_reader`'s bucket resolution (and its probe-fallback) to also try
       `kind="instruments-store"` and `kind="features"` when `kind="market-data"` doesn't resolve or reads 0 rows for a
       VM prefix known to write elsewhere — at minimum for the `instr-backfill-*`, `fs-backfill-*`, and
       `features-<family>-<ag>-*` prefix families confirmed in this doc's summary. Add a regression test per prefix
-      family proving the reader now finds the correct bucket. Repo: deployment-service.
+      family proving the reader now finds the correct bucket. Repo: deployment-service. — **ALREADY LANDED
+      (2026-08-15, slot-27), no new code needed.** Found the fix already implemented in
+      `_captured_reader.py::make_captured_reader`/`_shard_buckets`/`_probe_all` (split out of `cli.py` 2026-08-10,
+      re-exported as `cli._make_captured_reader`) — `_SHARD_BUCKET_KINDS = ("market-data", "instruments-store",
+      "features")` plus the flat `features-sports` fallback key are already probed when the primary market-data
+      bucket doesn't resolve or the shard isn't found there. `tests/unit/test_data_pipeline_monitors_cli.py` already
+      carries a regression test per prefix family:
+      `test_captured_reader_probes_instruments_store_when_market_data_blob_absent` (instr-backfill-\*),
+      `test_captured_reader_probes_instruments_store_for_fs_backfill_prefix` (fs-backfill-\*),
+      `test_captured_reader_probes_features_bucket_for_features_family_prefix` (features-<family>-<ag>-\*), plus
+      `test_captured_reader_prefers_primary_bucket_blob_when_present` proving the probe-fallback doesn't fire when
+      the primary bucket already has the shard. All 5 captured-reader tests pass on HEAD. Traced to commit
+      `0c38c00d` ("fix(dp-monitors): race-free relaunch state, alert-accuracy quartet, windowed attempted_failed
+      ratio, test hermeticity") — a bundled fix commit that implemented this exact finding without linking back to
+      this issue doc's todo. No code change required; checkbox flip only. (repo: deployment-service)
 - [ ] [DATA] P3. One-off: pull the raw escalation payload + `_finding_for()` code path for
       `mdps-features-live-cefi-20260807-001235`'s specific `DP_VM_GONE_NO_CAPTURE` firing (escalation_queue local
       `sqlite3 -readonly`, co-located on-VM session — see the archived source doc's Access note for how) and determine
@@ -147,3 +175,7 @@ per-VM shard) actually need anything new this run?" before concluding GONE_NO_CA
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **slot-27 (data_engineering) 2026-08-15**: bucket-kind-blindness todo flipped — verified the fix + a regression
+  test per prefix family already landed at deployment-service@0c38c00d; all 5 captured-reader tests pass on HEAD. No
+  new code shipped. Remaining open todo in this doc: the finding-3 one-off `mdps-features-live-cefi-*` investigation
+  (DATA, not this task's scope).

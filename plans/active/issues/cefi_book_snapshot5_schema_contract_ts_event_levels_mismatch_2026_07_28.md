@@ -1072,3 +1072,8 @@ against the reproduction script.
   attempted_at=2026-08-11T14:47:01Z (4d stale, matches alert), zero `"schema contract violated"` rows since
   2026-07-31T04:02:18Z (15d stale) — byte-consistent with every prior checkpoint. Re-fire is the filed dedup-inert
   gap, not a regression. No code change, no GCS write, no VM launch. Doc over cap — 1-line close-out only.**
+- **2026-08-15 (data_pipeline_failure escalation worker, agt-19ae42, slot 3) — another fan-out, reading
+  5,749/171,651 = 3.3%, STATIC BACKLOG — no new af activity in 4d; no code fix. All 11 fix commits (MTDS
+  339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
+  a564cca/6f464325/9102eb9b/1b035c52) re-verified ancestors of origin/live-defi-rollout. Numbers continue the decay
+  trend (5,799→5,749). No code change, no GCS write, no VM launch. Doc over cap — 1-line close-out only.**

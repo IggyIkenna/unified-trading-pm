@@ -528,16 +528,26 @@ source: >-
       needed).** Full evidence extracted verbatim (2026-08-15) to
       `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [INFRA] P3. Fix `launch-cefi-onchain-forward-poll.sh`'s per-venue `VENUE_INSTRUMENTS`/`VENUE_DATA_TYPES` tables
-      (EXTENDED-STARKNET hardcoded to `BTC;ETH;SOL` vs. the live IS catalogue's 200 mvp perpetuals; `derivative_ticker`
-      missing from its data_types) so the daily forward-poll doesn't keep re-accumulating the gap the
-      `mtds-backfill-cefi-extended-starknet-fullhist-1` VM (2026-08-15) is closing. Requires re-pointing this venue's
-      `VM_TASK` at the `mtds-backfill`-style onchain-perp-batch routing (the only VM_TASK branch in
-      `setup-data-pipeline-vm.sh` that actually threads `--data-types`/catalogue-driven `ALL` symbols through for
-      onchain-perp venues — the plain `--operation download` path the forward-poll launcher currently uses does not) —
-      audit whether LIGHTER-ZKSYNC/HYPERLIQUID/ASTER share the same narrow-instrument-list gap before touching the
-      shared script, since it's a daily-cron launcher for all 4 venues. Repo: deployment-service. Source: this doc's own
-      2026-08-15 diagnosis, folded in per the EXTENDED-STARKNET todo above.
+- [x] ✅ [INFRA] P3. Fixed `launch-cefi-onchain-forward-poll.sh`'s per-venue `VENUE_INSTRUMENTS`/`VENUE_DATA_TYPES`
+      tables — deployment-service@02808f21c6 (2026-08-15, slot-29·infra). Re-pointed `VM_TASK` from
+      `cefi-onchain-forward-poll` (no dedicated branch in `setup-data-pipeline-vm.sh` — fell through to the generic
+      `--operation download` fallback, which does not thread `--data-types`/catalogue-driven `ALL` symbols for
+      onchain-perp venues) to `mtds-backfill`, the only branch that detects membership in
+      `umi_tick_provider.ONCHAIN_PERP_VENUE_CHAIN` + `VM_DATA_TYPES` set and routes to `collect-onchain-perp-batch`.
+      Audited all 4 venues (not just EXTENDED-STARKNET): confirmed the SAME narrow-instrument-list gap on
+      LIGHTER-ZKSYNC/HYPERLIQUID/ASTER too (each hardcoded to 2-5 coins vs. the live IS catalogue's ~200 mvp
+      perpetuals) — set `VENUE_INSTRUMENTS=ALL` (the catalogue-driven sentinel, `_CATALOGUE_UNIVERSE_SENTINEL` in
+      `_onchain_perp_batch_symbols.py`) for all 4. Corrected `VENUE_DATA_TYPES` to each venue's actual
+      `onchain_perp_batch_handler.py`-documented capability set: dropped the dead `perp_funding` token everywhere
+      (not a real `--onchain-perp-data-types` value for any of these venues — funding is embedded in
+      `derivative_ticker`); LIGHTER-ZKSYNC is `derivative_ticker`-ONLY (trades/book are snapshot-only, excluded);
+      EXTENDED-STARKNET/ASTER exclude `book_snapshot_5` (current-snapshot-only REST endpoint, no historical range);
+      HYPERLIQUID keeps all 3 (`trades;book_snapshot_5;derivative_ticker`). Verified with `bash -n` +
+      `--dry-run 2026-08-14 2026-08-14` (correct per-venue metadata assembly, singleton lock still works against
+      live GCP state). `bash scripts/quality-gates.sh` green (311s, sentinel-verified at HEAD); quickmerge landed on
+      LDR (first attempt's local timeout mid-push left the commit unpushed but intact; retried — post-push ancestry
+      independently verified `02808f21c6` on `origin/live-defi-rollout`). Repo: deployment-service. Source: this
+      doc's own 2026-08-15 diagnosis, folded in per the EXTENDED-STARKNET todo above.
 - [ ] [CODE] P2. Step 3 cross-data_type completeness capture per venue_data_types.yaml Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 

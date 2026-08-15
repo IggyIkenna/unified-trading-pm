@@ -179,15 +179,14 @@ not `2026-01-07`.
       (likely via a VM launcher setting `DEPLOYMENT_ENV` the way `launch-mtds-backfill-vm.sh` does, not an
       interactive ad hoc invocation).
       Repo: market-tick-data-service (fix + delete-verify).
-- [ ] [DATA] P3. **Re-fetch `XRP_USDC-30JAN26-2D3-P` (Deribit option, expiry 2026-01-30, strike 2.3, Put) for day
-      2026-01-15**, now that `mtds@06c07089` correctly classifies it `instrument_type=option` instead of `perpetual`.
-      The object is confirmed already-deleted (see todo above) so this is a pure re-capture, not a delete-then-fetch.
-      First confirm the correct env-resolution mechanism for a single-symbol/single-day CLI download from this
-      interactive-session class (the prior session's `DEPLOYMENT_ENV=prod` env-var override did not take effect —
-      diagnose why before retrying, e.g. check whether `UnifiedCloudConfig` reads env from VM metadata only, not a
-      process env var, in which case this needs to run via a launcher-set VM instead). Verify post-fetch: the new
-      object lands at `.../instrument_type=option/data_type=trades/DERIBIT:OPTION:XRP_USDC-30JAN26-2D3-P.parquet` (or
-      the canonical option id form), parquet footer valid, row count non-zero. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. **Re-fetch `XRP_USDC-30JAN26-2D3-P` (Deribit option, expiry 2026-01-30, strike 2.3, Put) for day
+      2026-01-15** — **resolved as NOT NEEDED, not executed as a code fix.** See Progress Log
+      2026-08-15 (slot-33, data_engineering) for the full evidence chain: the env-resolution question is answered
+      (root cause found, harmless), and the re-fetch itself is architecturally impossible/inapplicable by design
+      (Deribit per-strike options are `options_chain`-ONLY, never per-symbol `trades` — v10 scope,
+      `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4). The already-executed delete (prior todo) is the correct
+      terminal state; no re-fetch under `data_type=trades` will ever succeed for this instrument by design.
+      Repo: market-tick-data-service (investigation only, no code shipped).
 
 ## Progress Log
 
@@ -399,3 +398,40 @@ not `2026-01-07`.
   than risk a write against the wrong bucket or an uncontrolled Tardis API call. Filed as a new `[DATA] P3` todo
   rather than a blocked question, since it's a bounded, worker-determinable follow-up (diagnose the env-resolution
   path, then re-fetch), not a judgment call.
+
+- **2026-08-15 (slot-33, data_engineering)**: Resolved the final open todo (re-fetch). **Env-resolution root cause
+  found**: `ServiceRuntime.from_env_and_args` (`unified-trading-library/unified_trading_library/service_runtime.py:174`)
+  reads env var `ENVIRONMENT` (default `"dev"`) for its `environment` field — NOT `DEPLOYMENT_ENV`, which is why the
+  prior session's `DEPLOYMENT_ENV=prod` didn't change the logged `env=dev`. This is cosmetic/log-only for the download
+  codepath, though: bucket resolution goes through a fully separate mechanism
+  (`unified_trading_library/cloud_interface/bucket_naming.py`'s `resolve_raw_deployment_env()`, checking
+  `os.environ["DEPLOYMENT_ENV"]` then `os.environ["ENVIRONMENT"]`, defaulting to `"prod"` if neither is set) — so the
+  prior dry-run WAS already correctly targeting the prod bucket tier regardless of the misleading log line. Separately,
+  confirmed `--day` is dead for the `download` operation: grepping `cli/` + `engine/`, `args.day` is consumed only by
+  `cli/shard_key.py` (the `--shard-key`/`--date`-alias path) — `TickDataHandler`/`_adapter.py` never reads it, so
+  passing bare `--day` left `start_date`/`end_date` both empty and the batch-mode defaulter fired
+  ("no explicit dates provided — defaulting to yesterday", `unified_trading_library/service_framework/_adapter.py:214-218`).
+  The fix is `--start-date`/`--end-date` (both set to the target day), confirmed via `service_cli.py:201-202`.
+
+  **Executed the real (non-dry-run) re-fetch** with the corrected invocation
+  (`DEPLOYMENT_ENV=prod ENVIRONMENT=prod .venv/bin/python -m market_tick_data_service.cli.main --operation download
+  --mode batch --asset-group cefi --venues DERIBIT --start-date 2026-01-15 --end-date 2026-01-15 --data-types trades
+  --instrument-ids XRP_USDC-30JAN26-2D3-P --force`) — confirmed `ServiceRuntime: ... env=prod` this time. Result:
+  **0 records fetched by design, not a failure.** Log:
+  `TardisAdapter: stripped 1 Deribit per-strike OPTION symbol(s) from the per-symbol trades request -- options are
+  options_chain-ONLY, never per-strike`. Traced this to `tardis_batch_download.py:557-573` and its regression test
+  `tests/unit/test_tardis_batch_download_deribit_option_grain.py`, whose own docstring states: "Deribit options are
+  options_chain-ONLY (v10 scope, mvp_backfill_cefi_tick_v10_2026_06_27.md G4) -- per-strike option captures at
+  trades/book_snapshot_5 grain are legacy artifacts (~1,048 rows purged in instruments-service@6986e8e4)." **The
+  corrupted file this whole chain started from was itself one of those legacy artifacts** — a per-strike option
+  captured under `data_type=trades`, which the v10 architecture explicitly forbids going forward. Its earlier delete
+  (prior todo) is therefore the CORRECT terminal state, not a step awaiting a re-fetch; a re-fetch under
+  `data_type=trades` for a per-strike Deribit option cannot ever succeed (0 records every time, by design), so
+  continuing to retry would just repeat this same no-op. No code change needed — nothing to fix, the strip guard is
+  working as intended. Confirmed the run had zero side effects beyond the attempted fetch: 0 objects written, and the
+  attempted manifest write was itself REFUSED by the legacy-index-size guard (`ManifestWriter write failed: ... over
+  the 209715200-byte legacy-read guard budget`), so no manifest mutation occurred either — safe to have run
+  interactively (single-instrument, single-day scope, well under the heavy-I/O threshold). Flipped the todo `[x]`
+  with this resolution rather than leaving it perpetually retrying an architecturally-impossible action. Every prior
+  open todo in this doc is now closed; doc stays `assigned_vm: planning` / `archive_exempt: true` per its own
+  frontmatter (no archival action taken or needed).

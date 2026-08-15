@@ -370,6 +370,108 @@ issue's scope); flagged as a follow-up todo below.
       isolate the exact call site), (c) confirming venue=ODDS_API specifically routes through this path (vs. the
       ~12 uppercase-bookmaker venues sharing the same blank shape per the archived IS doc — may be the same cause or
       a second one). Do not assume confirmed without doing (a)-(c). (repo: market-data-processing-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up (b) partial progress on the P1 todo above**: `_normalise_timeframe()`
+      (`canonical_writer_shaping.py:232-240`, now read in full) is a trivial passthrough — it only special-cases
+      `"24h"` → `"1d"` and returns every other token, including `"horizon"`, unchanged. **This disproves the P1
+      todo's leading hypothesis**: `_normalise_timeframe` does NOT blank `"horizon"`. `CandleOutput`
+      (`unified_api_contracts.internal`) also carries no `timeframe` field at all — every constructor call site
+      (`base_adapter.py::_make_empty_candle_output`/`_make_zero_activity_candle_output`, and
+      `SportsBucketAssignmentAdapter.process_to_candles`'s real return) omits it, confirming `timeframe` is threaded
+      alongside `candles_df` by the caller, not carried inside it. **New candidate mechanism found**: the caller
+      chain is `live_workers_chain.py::_process_all_timeframes` (line 356) → for each `timeframe` in
+      `sorted_tfs = sorted(valid_tfs, ...)` where `valid_tfs = adapter.get_valid_output_timeframes(timeframes)`
+      (`base_adapter.py:164-174`) → `_write_or_record_empty_timeframe(timeframe=timeframe, ...)` (line 542, body
+      unread past line 569). `get_valid_output_timeframes` filters via
+      `TIMEFRAME_SECONDS.get(tf, 0) >= base_secs` — **an unrecognized token defaults to 0 seconds**, and the code's
+      own comment at that line names this exact defaulting shape as the "confirmed root cause of the 2026-08-12
+      liquidations 1d re-derive silent no-op" (a prior, different-timeframe instance of the same class of bug).
+      `"horizon"` is very likely not a `TIMEFRAME_SECONDS` key. **Still open, precise next steps**: (i) confirm
+      whether `"horizon"` is actually absent from `TIMEFRAME_SECONDS` (definition/import origin not yet located —
+      a plain-text grep for its assignment came back empty in this pass, so it's probably re-exported from a shared
+      constants module); (ii) read `get_base_granularity()`'s default (`base_adapter.py:155`, not yet read) —
+      `SportsBucketAssignmentAdapter` does not override it, so it inherits whatever the base default returns, which
+      determines whether `0 >= base_secs` passes or fails for `"horizon"`; if it fails, `"horizon"` is filtered out
+      of `valid_tfs` entirely and `_process_all_timeframes` returns early with zero candles written — **this needs
+      reconciling against the observed non-empty blank-timeframe row population** (a total-drop wouldn't produce a
+      blank-but-present row, so either this filter isn't the actual mechanism, or `base_secs` also resolves to 0 and
+      `"horizon"` passes through this filter intact — in which case the string `"horizon"` reaches
+      `_write_or_record_empty_timeframe` un-blanked, meaning the blanking happens somewhere in that function's
+      unread body (`live_workers_chain.py:542-569+`) or in the canonical-writer call it eventually makes); (iii)
+      read that unread body next. Do not assume confirmed without doing (i)-(iii). (repo:
+      market-data-processing-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up (c) — items (i)-(iii) from the todo above, now read**:
+      `TIMEFRAME_SECONDS`/`BASE_GRANULARITY_BY_DATA_TYPE` import from `unified_api_contracts.registry`
+      (`base_adapter.py:22`) — not readable from this checkout's shell (`unified_api_contracts` not on the bare
+      `python3` path; needs the repo's `.venv`, not yet run). `get_base_granularity()`
+      (`base_adapter.py:155-161`): priority is a `base_granularity` class attribute (confirmed
+      `SportsBucketAssignmentAdapter` does NOT define one — zero grep hits) > `BASE_GRANULARITY_BY_DATA_TYPE.get(
+      self.data_type, "15s")`. So if `"odds_horizon_bucket"` is an unregistered key there, `base_secs` resolves via
+      the recognized `"15s"` fallback (a real, non-zero `TIMEFRAME_SECONDS` entry), NOT via the same
+      defaults-to-0 hole as `"horizon"` itself. That means `get_valid_output_timeframes(["horizon"])`'s check
+      `TIMEFRAME_SECONDS.get("horizon", 0) >= base_secs` very likely evaluates `0 >= 15` = **False**, filtering
+      `"horizon"` out of `valid_tfs` entirely — `sorted_tfs` would be empty and `_process_all_timeframes`
+      (`live_workers_chain.py:356`) returns early with **zero candles written**, not a blank-timeframe row. **This
+      contradicts the observed non-empty blank-timeframe population** — so `live_workers_chain.py`'s batch/chain
+      path is likely NOT the one producing these rows; the true production entry point for
+      `odds_horizon_bucket` is probably `live_workers_streaming.py` (checked this pass — its
+      `_streaming_write_per_tf`/`_record_streaming_empty_timeframe` also thread a `timeframe`/`tf` parameter
+      straight through to `record_captured`/`record_empty_for_shard`/`record_failed_for_shard`, never re-deriving
+      it from `candles_df`, so the same open question applies there too). **Ruled out this pass**: the
+      `live_workers_streaming.py:756` comment ("this is the actual root cause of
+      mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md") is a DIFFERENT, already-fixed
+      bug (wrong write-bucket resolution, not a timeframe field) — read in full and confirmed unrelated to this
+      todo. **Precise next step, still open**: run inside the MDPS `.venv` to actually read
+      `TIMEFRAME_SECONDS`/`BASE_GRANULARITY_BY_DATA_TYPE`'s real values for `"horizon"`/`"odds_horizon_bucket"` (the
+      one fact this pass could not directly measure), which resolves whether `get_valid_output_timeframes` filters
+      `"horizon"` out (contradicts observed data — wrong mechanism) or passes it through (right track — then trace
+      one level further into `_streaming_write_per_tf`'s eventual `record_captured`/writer call to find where the
+      string actually goes blank). Do not assume confirmed without running this. (repo:
+      market-data-processing-service)
+- [x] [DATA] P1. **RESOLVED this pass, 2026-08-16 — MAJOR REDIRECT, overturns the P1 chase above**: ran the
+      registry lookup via `market-tick-data-service/.venv/bin/python` (MDPS itself has no `.venv` in this checkout;
+      MTDS shares the same `unified_api_contracts` install). Confirmed: `BASE_GRANULARITY_BY_DATA_TYPE.get(
+      "odds_horizon_bucket")` = `"15m"` (a real, registered, non-zero-seconds token — NOT the `"15s"` fallback),
+      and `"horizon" in TIMEFRAME_SECONDS` = **False** (confirmed absent, defaults to 0 per
+      `get_valid_output_timeframes`'s `.get(tf, 0)`). So `get_valid_output_timeframes(["horizon"])` evaluates
+      `TIMEFRAME_SECONDS.get("horizon", 0) >= base_secs` → `0 >= 900` (15m in seconds) → **False** —
+      `"horizon"` is filtered out of `valid_tfs` entirely. Then also confirmed
+      `live_workers_streaming.py:874-875` calls the IDENTICAL `adapter.get_valid_output_timeframes(timeframes)` →
+      `sorted_tfs` construction as the chain path (not a different, unfiltered list as hoped). **Conclusion: BOTH
+      of MDPS's live-dispatch write paths (`live_workers_chain.py::_process_all_timeframes` AND
+      `live_workers_streaming.py`'s streaming equivalent) filter `"horizon"` out before ever reaching a write call
+      — neither can produce an `odds_horizon_bucket` row, blank-timeframe or otherwise.** This means the entire
+      chase through `live_workers_chain.py`/`live_workers_streaming.py`/`canonical_writer*.py` in the two todos
+      above was down the WRONG code path — the ~914,490 observed rows were NOT written by MDPS's standard live
+      adapter dispatch mechanism at all. **New, precise next step**: the real writer must be a batch/backfill/
+      reprocessing script that calls `SportsBucketAssignmentAdapter.process_to_candles`/
+      `process_to_bucketed_df` directly and constructs its own write call, bypassing
+      `get_valid_output_timeframes` — strong candidates already named in this doc's own repo (all under
+      `market-data-processing-service/scripts/`, none read yet this pass):
+      `backfill_odds_horizon_bucket_missing_shards_2026_07_28.py`, `reprocess_sports_odds.py`,
+      `reclassify_odds_horizon_bucket_unresolvable_rows_2026_07_28.py`,
+      `close_odds_horizon_bucket_expected_unattempted_cells_2026_07_25.py`,
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`. Read each for how it calls the adapter and
+      what `timeframe` value (if any) it threads into its own write call — one of these is the actual culprit.
+      (repo: market-data-processing-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up — 1 of 5 candidates read, narrows the search**:
+      `reprocess_sports_odds.py` (grepped, not fully read) writes REAL per-horizon `timeframe` values — it maps
+      `horizon_name` (e.g. `"T-24h"`) straight into its `ManifestWriter.add(...)` call (`timeframe=horizon_name,`
+      at line 1226, sourced from a dict built at line 739 per the `horizon_name`→manifest-`timeframe` mapping
+      documented at line 726). **This script is very likely NOT the culprit for the FINE (per-league_id,
+      per-timeframe) rows** — its `timeframe` is never blank by construction. BUT its own sibling script
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py` documents (in its own header, not yet read in
+      full) that `reprocess_sports_odds.py` ALSO writes a **second, COARSE per-day row with NO `league_id`/
+      `timeframe` — "the aggregate" row, by design**, distinct from the FINE per-(league_id, timeframe) row. This
+      is a candidate legitimately-blank-by-design write, but from a DIFFERENT writer than the one the P3 entry
+      above already ruled out (`manifest_finalize.py`'s coarse path, which can't write this `data_type` at all) —
+      **not yet checked whether reprocess_sports_odds.py's own coarse write could be misclassified/queried as if
+      it were a fine row** (i.e., whether the audit script's `read_availability_index_safe` query conflates the
+      two row shapes). **Next, most precise step**: read `reprocess_sports_odds.py` lines ~700-760 (the coarse-row
+      write call, sibling to the line-739/1226 fine-row path already found) to confirm whether its coarse rows are
+      tagged with a `data_type` that could land in the audited `odds_horizon_bucket` population, and if so whether
+      that's legitimate-by-design (closes this P1 todo with "no bug, working as intended, audit query needs a
+      coarse/fine filter") or itself a bug. The other 4 candidate scripts remain unread. (repo:
+      market-data-processing-service)
 
 ## Progress Log
 

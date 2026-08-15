@@ -340,6 +340,18 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   real captured rows + advancing manifest shard writes — genuinely progressing, not fire-and-forget. Multi-hour VM-scale
   job; filed a new Follow-up to re-verify final captured-row coverage once the fleet reaches
   `DEPLOYMENT_COMPLETED exit_code=0`.
+- **slot-25 2026-08-15** (coverage_floor_registries_no_cross_propagation-5ad673d1aad8): Re-verify-HYPERLIQUID todo
+  checked ~57 min after the 7-shard fleet launch — `gcloud compute instances list --filter="name~'hyperliquid'"`
+  still shows all 7 shard VMs `RUNNING` (not yet `DEPLOYMENT_COMPLETED`). This todo's own done-condition explicitly
+  requires the fleet to reach completion first, so did NOT force a premature re-verify. Live-probed the manifest
+  anyway (bounded, column-projected, `filters=[venue==HYPERLIQUID, date 2023-06-14..2023-12-31]`) to confirm the fleet
+  is genuinely progressing, not stalled: `book_snapshot_5` 8,132 captured / 27,270 empty_confirmed / 8,516
+  expected_unattempted (80.6% of rows resolved), `derivative_ticker` 8,534 captured / 26,848 empty_confirmed / 8,930
+  expected_unattempted (79.9% resolved) — up from the fully-open state at launch. Every one of the 201 calendar days
+  in the window now has at least one resolved (captured/empty_confirmed) row, so this is a per-instrument tail, not a
+  stuck-on-day-1 hang. Skipped with `reason_code: GATED` (not `/blocked`) rather than waiting inline — the fleet needs
+  more wall-clock time than this task's `est_hours: 1.0` budget. Re-verification of final coverage stays this same
+  open Follow-up below (still `[ ]`) for the next dispatch once the fleet completes.
 
 ## Follow-ups
 
