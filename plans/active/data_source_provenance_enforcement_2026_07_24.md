@@ -135,13 +135,13 @@ context_scope:
       source-blind by construction. `market-tick-data-service@63ce1e05`, verified ancestor of
       `origin/live-defi-rollout`.
 
-- [ ] [QG] P1. **(checker DONE, wiring REMAINING)** Checker generalised —
-      `check_tradfi_source_explicit_at_record_captured.py` now flags only when a callsite's resolved
-      `(category, data_type)` (literal or module-constant) is multi-source per `source_required()` AND `source=` is
-      absent; covers `record_captured` + `add`; degrades to no-op if UAC absent (PM@5bba69651, slot ref). Verified
-      catches defi/tradfi multi-source-blank, skips single-source (auto-stamp). **REMAINING: wire into MTDS + MDPS
-      `quality-gates.sh` — blocked until the checker reaches LDR (can't wire a clean repo to a PM script not yet
-      promoted).** **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
+- [x] ✅ [QG] P1. Checker generalised — `check_tradfi_source_explicit_at_record_captured.py` now flags only when a
+      callsite's resolved `(category, data_type)` (literal or module-constant) is multi-source per `source_required()`
+      AND `source=` is absent; covers `record_captured` + `add`; degrades to no-op if UAC absent (PM@5bba69651, slot
+      ref). Verified catches defi/tradfi multi-source-blank, skips single-source (auto-stamp). **Wiring complete
+      2026-08-15**: MDPS already wired (STEP 5.109); MTDS closed the remaining gap —
+      `market-tick-data-service@bbd54fc6b8` (STEP 5.97, slot-19·infra), verified clean run (0 baselined, 0 new
+      occurrences). **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
 - [x] ✅ [MTDS] P1. **RESOLVED-MOOT via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 5.** A12a — all

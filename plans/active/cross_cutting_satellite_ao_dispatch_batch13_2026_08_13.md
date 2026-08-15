@@ -515,16 +515,16 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed separately.**
-          Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
-          `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
-          — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
-          within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
-          already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
-          per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
-          outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
-          one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
-          than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
+              Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
+              `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
+              — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
+              within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
+              already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
+              per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
+              outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+              (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
+              one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
+              than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -620,8 +620,10 @@ source: >-
       detectors — confirming each needs a per-repo call-site search beyond this single dispatch's scope; re-picking this
       up per-repo (not a single cross-cutting AO dispatch) is the natural next tranche. Source:
       `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
-- [ ] [CODE] P2. Wire the generalised extra='forbid'-style source-required checker into MTDS + MDPS quality-gates.sh
-      Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
+- [x] ✅ [CODE] P2. Wire the generalised extra='forbid'-style source-required checker into MTDS + MDPS quality-gates.sh
+      — MDPS was already wired (STEP 5.109); MTDS was the remaining gap, closed `market-tick-data-service@bbd54fc6b8`
+      (STEP 5.97, mirrors the MDPS/UTL wiring; verified clean run — 0 baselined, 0 new occurrences). Source:
+      `plans/active/data_source_provenance_enforcement_2026_07_24.md`
 - [x] ✅ [CODE] P2. **Ran + fixed a real memory/scale bug in the tool itself.** unified-trading-pm@7b37c29e46 (landed on
       LDR, post-push ancestry verified) (2026-08-15, slot-18·infra). The script's single-shot `pd.read_parquet()` (even
       column-projected) stalled indefinitely against the DeFi prod manifest (6.7GB/~160M rows) on this shared host —
