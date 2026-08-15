@@ -1,32 +1,32 @@
 ---
 name: check-agent-orchestrator
 description:
-  Check the live agent-orchestrator's backlog/dispatch status AND fleet health (recent tmux/worker deaths, their full
-  diagnostic payload, core-dump forensics) read-only — no dashboard JWT needed, no VM firewall change — via AWS SSM
-  Session Manager running commands on the orchestrator VM itself. Reports per-task status (queued/dispatched/done) and
-  which slot claimed what, optionally filtered by a plan-name substring; separately reports recent `tmux_session_lost`
-  events with host/account/pane/spawn-concurrency/core-dump diagnostics per death. Never writes or mutates orchestrator
-  state. Trigger on `/check-agent-orchestrator`, "check AO status", "check the agent-orchestrator", "is the orchestrator
-  picking up my plan", "check if background agents are working on X", "check the backlog", "did AO dispatch this yet",
-  "is the orchestrator stuck", "why did slot N die", "check for recent tmux deaths", "did we catch why that worker
-  crashed".
+  Check the live agent-orchestrator's backlog/dispatch status read-only — no dashboard JWT needed, no VM firewall change
+  — via AWS SSM Session Manager running `curl localhost:8765/api/backlog` on the orchestrator VM itself. Reports
+  per-task status (queued/dispatched/done) and which slot claimed what, optionally filtered by a plan-name substring.
+  Never writes or mutates orchestrator state. Trigger on `/check-agent-orchestrator`, "check AO status", "check the
+  agent-orchestrator", "is the orchestrator picking up my plan", "check if background agents are working on X", "check
+  the backlog", "did AO dispatch this yet", "is the orchestrator stuck".
 ---
 
 # /check-agent-orchestrator — read-only live backlog/dispatch status check
 
-Answers "has the orchestrator ingested my plan, and has a slot actually claimed a task from it yet" without needing the
-dashboard's JWT or a route to the VM's public `:8765` (neither is available from a normal dev checkout — see
-`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Checking live backlog/dispatch status" for
-the full SSOT this skill wraps).
+Answers "has the orchestrator ingested my plan, and has a slot actually claimed a task from it yet" without needing a
+dashboard JWT provisioned locally (see `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §
+"Checking live backlog/dispatch status" for the full SSOT this skill wraps, including a 2026-08-15 correction: the VM's
+public `:8765` is NOT actually firewalled off — verified directly reachable with a live auth gate — this skill's SSM
+path is still the right choice below because it needs no credential at all, not because the port is closed).
 
 ## Why SSM instead of hitting the API directly
 
-The orchestrator's public IP has no inbound rule for `:8765` by design (the API is meant to be reached from localhost or
-the dashboard's own proxy, not the open internet), and the dashboard JWT (`HS256`, `data/config/users.json` or
-`ORCHESTRATOR_JWT_SECRET`) isn't provisioned in dev checkouts. AWS SSM Session Manager's `send-command` runs a shell
-command **on the VM itself**, so `curl localhost:8765/api/backlog` succeeds against the server's permissive local-read
-mode (`auth.ALLOW_ANONYMOUS=True` per `agent-orchestrator/dashboard/API_REFERENCE.md`) — no inbound firewall change, no
-JWT, and every call is CloudTrail-audited. This is genuinely read-only: only `GET` endpoints are ever called.
+The dashboard JWT (`HS256`, `data/config/users.json` or `ORCHESTRATOR_JWT_SECRET`) isn't provisioned in most dev
+checkouts, so a direct authenticated call isn't available without first minting one. AWS SSM Session Manager's
+`send-command` runs a shell command **on the VM itself**, so `curl localhost:8765/api/backlog` succeeds against the
+server's permissive local-read mode (`auth.ALLOW_ANONYMOUS=True` per `agent-orchestrator/dashboard/API_REFERENCE.md`) —
+no credential of any kind needed, and every call is CloudTrail-audited. This is genuinely read-only: only `GET`
+endpoints are ever called. (A caller that DOES already hold a bearer token can reach the API directly over HTTPS instead
+— see the codex SSOT's correction for what's now confirmed reachable and a flagged, unresolved domain-vs-IP connectivity
+anomaly.)
 
 ## Modes
 
@@ -71,30 +71,7 @@ needed.**
   noted in the codex SSOT (a checkout that looks current but whose running process has gone stale) before escalating —
   this skill only reports state, it doesn't diagnose or restart anything.
 
-## 3. Checking for recent tmux/worker deaths (fleet health, not backlog status)
-
-A different question from "is my plan dispatched" — "did a worker just die, and why." Same SSM access pattern, reads
-`state.db`'s `activity_log` directly instead of the HTTP API:
-
-```bash
-bash agent-orchestrator/scripts/orchestrator/check-ao-recent-deaths.sh                # last 10 tmux_session_lost, any slot
-bash agent-orchestrator/scripts/orchestrator/check-ao-recent-deaths.sh --slot 2       # last 10 for one slot
-bash agent-orchestrator/scripts/orchestrator/check-ao-recent-deaths.sh --limit 30
-```
-
-Every SLOT-scope death (agent-orchestrator@d825c415c6 / @007995b3bd) now carries, automatically, no manual capture
-script needed in advance: `burst_size` (1 = isolated, >1 = a tmux-SERVER-wide crash), `tmux_server_alive` (was the
-server itself confirmed down, not just this pane), `host_snapshot` (load/RAM/swap at the moment of death),
-`account_snapshot` (the dying slot's own rate-limit/overage/auth state), `pane_death_info`/`pane_tail` (tmux's own exit
-diagnostic + scrollback, when the pane object survived — often empty, that's the harshest and most common signature, not
-a capture failure), `concurrent_recent_spawns` (a spawn-storm proxy), and `core_dumps_found` (a real kernel-written
-crash artifact, if the process was spawned after the `LimitCORE=infinity` fix AND died from a self-inflicted signal — an
-external SIGKILL never produces one). Full field reference + what each one rules in/out:
-`/codex/15-runbooks/tmux-death-diagnostics.md`. That doc also has the "how to safely apply a live `orchestrator.service`
-change" procedure (the live installed unit is per-VM path-substituted, NOT identical to the repo template — a raw file
-overwrite risks breaking the live service).
-
-## 4. Hard constraints — do not extend this into a write path
+## 3. Hard constraints — do not extend this into a write path
 
 - Never call `POST /api/backlog/regen` (or any other mutating endpoint) as part of a routine check — forcing an
   immediate regen is a deliberate, separate, operator-directed action, not something to fold into "just checking
