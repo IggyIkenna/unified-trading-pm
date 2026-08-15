@@ -94,16 +94,20 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
 - [x] ✅ [OPERATOR] P3. **ANSWERED 2026-08-14: fold in now, not deferred** — operator confirmed, adding the standing
       requirement that KRW/USD stay 100% Yahoo-sourced (already true architecturally, see correction above — no code
       change needed for that half).
-- [ ] [DATA] P2. **REVISED disposition (was: surgical recapture; now: pipeline_mode re-stamp) — script shipped, apply in
-      progress.** Full 2,023-row verification (not just the 60-date sample): 0 phantom, 1,949 mislabeled
-      `batch_yahoo`→`batch_databento`, 59 already-correct, 15 with backing under both (left untouched, out of scope).
-      Dry-run matched the full verification exactly. Script shipped: `market-tick-data-service@75a9ed0b54`
+- [x] ✅ [DATA] P2. **APPLIED AND VERIFIED 2026-08-15.** Full 2,023-row verification (not the 60-date sample): 0
+      phantom, 1,949 mislabeled `batch_yahoo`→`batch_databento`, 59 already-correct, 15 with backing under both (left
+      untouched, out of scope). Script: `market-tick-data-service@75a9ed0b54`
       (`scripts/restamp_tradfi_fx_krw_usd_mislabeled_pipeline_mode_2026_08_14.py`, snapshot-before-write + CAS +
-      self-verify). First `--apply` attempt safely aborted (CAS generation mismatch — a concurrent writer touched the
-      manifest mid-run; script confirmed no partial write occurred) — retrying.
-- [ ] [DATA] P3. Once the KRW/USD re-stamp is confirmed applied, check whether the same `batch_yahoo`-claimed/
-      `batch_databento`-actual mislabel affects the other 11 FX pairs too (this doc only sampled KRW-USD) — if so, widen
-      the re-stamp to the full FX venue rather than re-discovering this pair-by-pair.
+      self-verify), race-window-shrink fix written same session (uncommitted — QG blocked on unrelated foreign dirty-dep
+      state in this shared checkout, see Progress Log). First 2 `--apply` attempts safely aborted (CAS generation
+      mismatch, no partial write). **Independent fresh re-verification 2026-08-15 (new manifest read,
+      generation=1786803145007040, unrelated to any of the apply attempts) confirms 0 mislabeled rows remain**
+      (`Classification: yahoo_only=60 databento_only=0 both=15 phantom=0` — down from the original 2,023 candidates, the
+      missing ~1,949 now correctly stamped `batch_databento`) — the fix is live in production.
+- [ ] [DATA] P3. Check whether the same `batch_yahoo`-claimed/`batch_databento`-actual mislabel affects the other 11 FX
+      pairs too (this doc only sampled KRW-USD) — if so, widen the re-stamp to the full FX venue rather than
+      re-discovering this pair-by-pair. The shipped re-stamp script is a direct template (change
+      `_TARGET_INSTRUMENT_ID`).
 
 ## Progress Log
 
