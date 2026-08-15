@@ -1479,6 +1479,11 @@
           "name": "strategy-service",
           "version": ">=0.1.0,<1.0.0",
           "required": false
+        },
+        {
+          "name": "deployment-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
         }
       ],
       "completion_path": "infrastructure",
