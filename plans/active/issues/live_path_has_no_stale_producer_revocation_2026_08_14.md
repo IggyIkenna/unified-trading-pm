@@ -191,10 +191,15 @@ none of them appear as todos in that plan.
 - [ ] [TEST] P0. An anti-inertness guard for the live path, mirroring the batch one: assert the dependency-health policy
       has a non-test consumer that changes behaviour (not just logs/pages) — so a future regression back to alerts-only
       fails CI instead of silently reverting to today's inert state. Repo: alerting-service.
-- [ ] [DOC] P1. `/codex/04-architecture/dependency-health-policy.md` reads as though the policy governs behaviour; it
+- [x] ✅ [DOC] P1. `/codex/04-architecture/dependency-health-policy.md` reads as though the policy governs behaviour; it
       governs alerting only (and today, per the three-level-inertness finding above, does not even reliably alert —
       every built-in probe fail-opens). State that explicitly until an actuator + real probes exist. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — `unified-trading-pm@7d1bb31b72` (2026-08-15, slot 15). The doc already carried the "This
+      policy ALERTS. It does not ACT." section (added 2026-08-14) but its "Status — WIRED end-to-end" section still
+      described `dependency_health_prober.py` as "probe-driven" without stating the built-in `_dispatch()` is a
+      fail-open scaffold — verified directly against `alerting-service/alerting_service/dependency_health_prober.py`
+      (`_dispatch()` unconditionally returns `True`; `probe_fn` has zero production injection sites, confirmed via
+      `rg`). Added that caveat inline in the WIRED section so a reader doesn't come away thinking probing is real.
 - [ ] [OPERATOR] P1. Decide the lightweight-launcher admission-gate question (see "Admission-gate coverage for the
       lightweight launcher path" above) — one of: migrate the ~158 `launcher_common.sh` launchers onto
       `vm-exec-with-gcs-tee.sh`; grant a narrow documented exception to the cloud-CLI-in-startup-script guardrail for a
