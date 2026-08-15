@@ -205,16 +205,25 @@ issue's scope); flagged as a follow-up todo below.
       `1c9a7858` to `e0b34e77fd` — quickmerge amended HEAD to add the missing `Quickmerge: agent` trailer before pushing
       (content unchanged, not a rebase this time), exactly the kind of sha drift this doc's own note warned about.
       `quality-gates.sh` was GREEN (10865 passed, 0 failed) before commit.
-- [ ] [DATA] P0. **NARROWED per 2026-08-15 audit (see Progress Log) — do NOT blanket-delete.** Of the live 14,330
-      in-window phantom rows, 6.5% (13/200 sampled, extrapolates to ~930) have NO non-blank-timeframe sibling under
-      their coarse (date,venue,league_id,data_type,service_name) key — deleting THOSE would be destructive,
-      contradicting this doc's original "NON-destructive" claim for that subset. 12/13 sampled exceptions share
-      `league_id=LA_LIGA_2, service_name=market-data-processing-service`. Before any delete: (a) run the full-population
-      (not 200-sample) sibling check via `audit_sports_captured_phantom_timeframe_2026_08_16.py`, (b) root-cause why
-      LA_LIGA_2/MDPS rows lack a sibling (single-horizon-bucket league? a second, different bug?), (c) exclude any
-      no-sibling row from delete scope entirely (leave those as-is, don't guess). Only the sibling-confirmed subset is
-      safe to delete; snapshot first, verify via row-count before/after. Also audit whether the same class of phantom
-      row exists on IS from the 500-row test there. (repo: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P0. **NARROWED per 2026-08-15 FULL-POPULATION audit (see Progress Log) — do NOT blanket-delete.** (a) is
+      now DONE: of the live 14,330 in-window phantom rows (full population, not sampled — confirmed exact, matching the
+      200-sample extrapolation), 959 (6.69%) have NO non-blank-timeframe sibling under their coarse
+      (date,venue,league_id,data_type,service_name) key — deleting THOSE would be destructive, contradicting this doc's
+      original "NON-destructive" claim for that subset. Refined finding:
+      `league_id=LA_LIGA_2,     service_name=market-data-processing-service` accounts for 872/959 (91%) of no-sibling
+      rows, and — cross-checked against the blast-radius breakdown — LA_LIGA_2's phantom-population count is ALSO
+      exactly 872, meaning 100% of LA_LIGA_2's phantom rows lack a sibling (not the 92% the 200-row sample suggested).
+      The remaining 87 no-sibling rows spread thinly across ~20 other minor leagues (SOCCER_RUSSIA_PREMIER_LEAGUE 22,
+      SOCCER_AUSTRALIA_ALEAGUE 12, SOCCER_SWITZERLAND_SUPERLEAGUE 9, ... all ≤9 each), ALL on
+      `market-data-processing-service`, none observed on IS. This 100% correlation for LA_LIGA_2 is strong (not yet
+      confirmed) evidence for the "single-horizon-bucket league" hypothesis over "a second, different bug" — a random
+      second bug would not concentrate at exactly 100% in one league. Remaining before any delete: (b) confirm the
+      single-horizon-bucket hypothesis directly against MDPS's capture config for LA_LIGA_2 (and the ~20 minor leagues)
+      rather than relying on the correlation alone, (c) exclude every no-sibling row (959, enumerated by
+      date/venue/league_id/service_name in the retry audit log) from delete scope entirely (leave those as-is). Only the
+      sibling-confirmed 13,371-row subset is safe to delete; snapshot first, verify via row-count before/after. Also
+      audit whether the same class of phantom row exists on IS from the 500-row test there — NOT YET DONE (this script
+      only audits MDPS). (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **NEW finding, 2026-08-15 audit**: 14,982 blank-`timeframe` `data_type=odds_horizon_bucket` rows exist
       on MDPS OUTSIDE the session's 2026-08-15T11:0x-2x UTC window (i.e. NOT created by this session's bug) — a
       population almost as large as the in-window one, previously unknown. Root-cause: are these from an earlier,
@@ -452,3 +461,33 @@ issue's scope); flagged as a follow-up todo below.
   the dry-run audit script (with both the import-pattern and RUF005 fixes) is now fully landed — run the FULL-population
   sibling check (not the 200-row sample) via `audit_sports_captured_phantom_timeframe_2026_08_16.py` to finalize todo
   #2's exclusion scope, per the todo's own already-narrowed spec above.
+- **data_engineering slot-2, 2026-08-15 (6th checkpoint — full-population sibling check DONE, with a background-task
+  measurement trap caught and corrected first)**: ran the landed `e91c3ef2` script with `--sibling-sample-size 50000`
+  (exceeds the 14,330 phantom count, forcing full-population coverage per the script's own
+  `sample = phantom if len(phantom) <= args.sibling_sample_size else ...` logic). First attempt was backgrounded as
+  `cmd | tee logfile` and the harness reported it `completed, exit code 0` — but both the tee'd scratchpad log and the
+  harness's own `.output` file were stable at only 7-8 lines, cut off immediately after the "PerformanceWarning:
+  indexing past lexsort depth" line, with NONE of the script's final `logger.info` summary lines (sibling-check result,
+  blast radius, would-delete count) present. Per CLAIM ≤ MEASUREMENT, treated the "completed/exit 0" claim as unverified
+  rather than trusting it: `dmesg`/`journalctl` were unreadable (`Operation not permitted`, not informative either way),
+  no lingering process was found via `ps aux`, and the harness had already reaped the task record (`TaskOutput` → "No
+  task found"). Root cause not fully confirmed (plausible: `tee`/pipe exit-code masking a killed upstream process, since
+  a bare `cmd | tee file` without `pipefail` reports `tee`'s exit code, not the script's), but the fix was
+  straightforward: re-ran the identical script synchronously with a direct `> file 2>&1` redirect (no pipe, explicit
+  `echo EXIT_CODE=$?` after) instead of backgrounding through `tee`. **This run genuinely completed** (27-line log, all
+  summary sections present, real exit 0). **Lesson for future sessions**: a background task's reported exit code is only
+  as trustworthy as the command that produced it — `cmd | tee file &` can report the wrapper's/tee's exit code rather
+  than the real command's; either add `set -o pipefail` before piping through `tee`, or skip `tee` entirely and redirect
+  straight to a file with an explicit `echo EXIT_CODE=$?` when the file's own line count/final-section presence is the
+  only reliable completion signal available. **Full-population results** (see todo #2 above for the narrative): 14,330
+  total phantom rows (exact, matches the 200-sample extrapolation), 959 (6.69%) with no sibling, 872 of those (91%) are
+  `league_id=LA_LIGA_2`/MDPS — and LA_LIGA_2's no-sibling count (872) exactly equals its total phantom count (872), i.e.
+  100% of LA_LIGA_2 phantom rows have no sibling, strengthening the single-horizon-bucket-league hypothesis over "a
+  second bug" (not yet independently confirmed against MDPS's capture config). Remaining ~20 minor leagues each
+  contribute ≤22 no-sibling rows, all MDPS, none IS. Full retry-audit log preserved at
+  `market-tick-data-service/scripts/audit_sports_captured_phantom_timeframe_2026_08_16.py`'s own scratchpad output
+  (ephemeral, regenerable by re-running the script — not promoted, since the script itself is the durable artifact and
+  is already landed). **Next actionable item**: todo #2 sub-step (b) — confirm the single-horizon-bucket hypothesis
+  against MDPS's actual capture/backfill config for LA_LIGA_2 (and the ~20 minor leagues) rather than relying on the
+  100% correlation alone — then sub-step (c) (exclude the 959 rows from delete scope) and the still-untouched IS-side
+  check (the script only audits MDPS; IS's 500-row test population has not been checked for the same phantom-row class).
