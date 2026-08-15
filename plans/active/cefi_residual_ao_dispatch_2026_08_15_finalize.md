@@ -73,5 +73,5 @@ resolved_by:
     `last_modified` timestamp 40+ real minutes stale, causing a false "possibly wedged" alarm that direct SSH to the
     VM's own local log immediately disproved). Not root-caused this session (client-side caching vs. a genuine
     `vm-exec-with-gcs-tee.sh` sync-lag vs. GCS read-after-write staleness on a frequently-overwritten object — all
-    plausible, none confirmed) — worth a small tracked follow-up if this pattern recurs, since it could mislead a future
-    stall-diagnosis the same way it did here.
+    plausible, none confirmed) — tracked as its own issue doc:
+    `plans/active/issues/cloud_interface_list_blobs_stale_read_misled_vm_stall_diagnosis_2026_08_15.md`.
