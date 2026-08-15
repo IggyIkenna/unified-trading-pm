@@ -167,34 +167,33 @@ Two independent angles, not mutually exclusive:
       on this exact commit. This closes the silent-clobber risk for FUTURE per-AG runs; it does not itself produce the
       still-missing CEFI/DEFI/SPORTS reports from the [CODE] P1 root-cause todo above, which remains open. (repos:
       market-tick-data-service)
-- [ ] [CODE] P2. **NEW (found 2026-08-15, see Progress Log; WIDENED 2026-08-15 slot 27; `rc=3` HALF CORRECTED 2026-08-15
-      slot 18 — see Progress Log for the full evidence).** Slot 6's 2026-08-15 per-`--asset-group` re-run hit two
-      failure modes the memory-growth fix above does NOT explain and has NOT been verified to fix: (a) **DEFI** died
+- [x] ✅ [CODE] P2. **NEW (found 2026-08-15, see Progress Log; WIDENED 2026-08-15 slot 27; `rc=3` HALF RESOLVED
+      2026-08-15 slot 18 — see Progress Log for the full evidence).** Slot 6's 2026-08-15 per-`--asset-group` re-run hit
+      two failure modes the memory-growth fix above does NOT explain and has NOT been verified to fix: (a) **DEFI** died
       silently ~1 minute in, immediately after the Phase-0 manifest-consolidation line and BEFORE any per-shard
       force/skip work was logged — too early to be the per-shard `genuine_skip_proof()` memory growth this issue's
-      root-caused todo targets, so likely a distinct bug in `_force_consolidate_test_buckets`/Phase-0 itself — **STILL
-      OPEN, no fix yet**; (b) **SPORTS** exited `rc=3` with no Traceback/ERROR/Exception string anywhere in its run.log
-      — ~~undiagnosed~~ **ROOT-CAUSED, not a code bug**: slot 27 confirmed the SAME `rc=3` also hit CEFI in the unscoped
-      full-sweep live-verification run and theorized it was a per-shard sub-VM `DEPLOYMENT_FAILED` propagating up
-      uncaught — **slot 18 corrected this**: the deployment id in that log line is the TOP-LEVEL driver's own record
-      (registered `E2E-CHECK-DRIVER` at VM boot), and the crash lands at exactly 3600s after `DEPLOYMENT_STARTED` — this
-      is `pipeline_e2e_check.py`'s own documented `--wall-clock-timeout-sec` SIGALRM backstop (default 3600s) firing on
-      a real sweep that legitimately runs longer, not a per-shard-failure propagation defect. **No code fix needed for
-      (b)** — `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a now passes
-      `--wall-clock-timeout-sec 14400` explicitly (this commit). **Remaining scope of this todo is (a) DEFI's Phase-0
-      death only** — root-cause `_force_consolidate_test_buckets` (or whatever Phase-0 does immediately before the
-      crash), then re-run **DEFI** to confirm; **CEFI/SPORTS should be re-run with the corrected
-      `--wall-clock-timeout-sec 14400` flag** (tracked as the [DATA] P2 re-run todo above, not here — no further code
-      change expected for those two). (repos: market-tick-data-service)
-- [x] ✅ [DOCS] P2. **NEW (found + closed 2026-08-15 slot 18).** Root-cause the `rc=3` mystery (SPORTS + CEFI half of
-      the [CODE] P2 todo above) and ship the interim doc-only mitigation so future re-runs don't hit the same
-      wall-clock-timeout wall. Confirmed via direct `run.log` grep (deployment id = the driver's own top-level record,
-      crash at exactly 3600s post-`DEPLOYMENT_STARTED`) that `rc=3` is `pipeline_e2e_check.py`'s own
-      `--wall-clock-timeout-sec` SIGALRM backstop (3600s default) firing on a legitimately-longer sweep, not a per-shard
-      sub-VM failure propagating up as slot 27 theorized — see Progress Log for full evidence. No code change required
-      (the driver-VM launcher already passes arbitrary flags through). (repos: unified-trading-pm) —
-      unified-trading-pm@8a56e126e2: `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a now passes
-      `--wall-clock-timeout-sec 14400` explicitly in the per-`--asset-group` loop example.
+      root-caused todo targets, so likely a distinct bug in `_force_consolidate_test_buckets`/Phase-0 itself — **split
+      off to its own new todo below, still open**; (b) **SPORTS** exited `rc=3` with no Traceback/ERROR/Exception string
+      anywhere in its run.log — ~~undiagnosed~~ **ROOT-CAUSED, not a code bug**: slot 27 confirmed the SAME `rc=3` also
+      hit CEFI in the unscoped full-sweep live-verification run and theorized it was a per-shard sub-VM
+      `DEPLOYMENT_FAILED` propagating up uncaught — **slot 18 corrected this**: the deployment id in that log line is
+      the TOP-LEVEL driver's own record (registered `E2E-CHECK-DRIVER` at VM boot), and the crash lands at exactly 3600s
+      after `DEPLOYMENT_STARTED` — this is `pipeline_e2e_check.py`'s own documented `--wall-clock-timeout-sec` SIGALRM
+      backstop (default 3600s) firing on a real sweep that legitimately runs longer, not a per-shard-failure propagation
+      defect. **No code fix needed for (b)** —
+      `unified-trading-pm/cursor-configs/skills/     data-pipeline-check-mtds/SKILL.md` §1a now passes
+      `--wall-clock-timeout-sec 14400` explicitly. **CEFI/SPORTS should be re-run with the corrected flag** (tracked as
+      the [DATA] P2 re-run todo above, not here — no further code change expected for those two). (repos:
+      market-tick-data-service) — unified-trading-pm@8a56e126e2:
+      `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a now passes `--wall-clock-timeout-sec 14400`
+      explicitly in the per-`--asset-group` loop example (see Progress Log for the full root-cause evidence).
+- [ ] [CODE] P2. **NEW (split off 2026-08-15 slot 18 from the [CODE] P2 todo above — this is the (a) DEFI half that is
+      still genuinely unresolved).** **DEFI** died silently ~1 minute in, immediately after the Phase-0
+      manifest-consolidation line and BEFORE any per-shard force/skip work was logged (see Progress Log, slot 6
+      2026-08-15 entry, for the full `run.log` excerpt) — too early to be the wall-clock timeout (that fires at exactly
+      3600s, not ~52s) or the per-shard `genuine_skip_proof()` memory growth the root-cause todo above fixed, so likely
+      a distinct bug in `_force_consolidate_test_buckets`/Phase-0 itself. Root-cause it directly, then re-run **DEFI**
+      to confirm. (repos: market-tick-data-service)
 
 ## Progress Log
 
