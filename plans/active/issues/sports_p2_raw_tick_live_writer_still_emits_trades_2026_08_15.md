@@ -155,3 +155,29 @@ rather than a dedicated VM launch, per proportionality.
      next touches that registry file). QG: full `quality-gates.sh` green (10,796 passed, 0 sports-related failures after
      updating 9 tests that asserted the old `"trades"` literal — all CeFi/TradFi/prediction `"trades"` usages elsewhere
      in those same test files were left untouched, confirmed genuinely unrelated).
+
+- **2026-08-15 (slot-19, data_engineering) — dispatched onto the P1 todo, found P0 already independently shipped by
+  slot-30 mid-flight.** Had authored the identical P0 fix myself before discovering slot-30's `28e2eb36d8` had already
+  landed on origin — `git pull --rebase --autostash` auto-deduplicated the byte-identical hunks, leaving a small
+  residual commit (`market-tick-data-service@63728200`, LOCAL — not yet pushed, pending QG below) that fixes 2 test
+  files slot-30's sweep missed: `tests/unit/test_manifest_bucket_per_asset_group_routing.py` (2 stale `"trades"`
+  shard_key fixtures) and `tests/unit/engine/test_manifest_finalize_coverage.py`'s
+  `test_write_shard_counts_preserves_instrument_type_all_asset_groups` (1 more). All currently pass regardless (the
+  stale fixtures don't happen to exercise the renamed branch's failure mode), so this is hygiene, not a live bug.
+  **Separately found this branch red for an UNRELATED reason** while chasing full `quality-gates.sh` green: 2
+  `market-tick-data-service` tests (`test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py`,
+  `test_venue_fetch_cefi_manifest_canonicalization.py`) asserted the OLD `combo`-stays-lowercase behavior that
+  `unified_trading_library.canonical.canonicalize_manifest_instrument_type` no longer has — someone very recently
+  shipped the correct reversal (bare `combo` now maps to `InstrumentType.COMBO`, per
+  `/plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`'s live investigation) and these 2
+  consumer-side tests hadn't caught up yet, so EVERY commit on this branch was failing QG regardless of content.
+  Verified pre-existing via clean-tree reproduction (RULES.md § 4b) before fixing; both tests updated
+  (`market-tick-data-service@6fa0dd9d`, LOCAL, same as above — small+clear+unrelated, fixed inline per the findings
+  triage rule rather than filing a repo-blocker). **Status at write time**: both commits local-only (`ahead=2` on
+  `live-defi-rollout`), full `quality-gates.sh` re-running now (this branch is extremely high-churn — 5+ rebases in one
+  session — QG has been legitimately re-queued/re-run repeatedly by newly-landed peer commits, plus this shared host is
+  under heavy fleet-wide memory/load contention causing several backgrounded QG attempts to die mid-queue before this
+  one). **P1 itself (the actual ~3.2K-row GCS+manifest restamp) has NOT been started yet** — next action once QG is
+  green: quickmerge ship these 2 commits, then run `scripts/sports/restamp_sports_trades_to_odds_2026_08_12.py` +
+  `manifest_swap_trades_to_odds_2026_08_12.py` over `--day` 2026-08-10..2026-08-15 (the writer-fix deploy window),
+  verify with a fresh census (0 `trades` rows with `attempted_at` after the fix), then flip P1's checkbox.
