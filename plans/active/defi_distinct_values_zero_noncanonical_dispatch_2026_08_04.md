@@ -246,15 +246,22 @@ tracking doc with real checkboxes — not duplicated here.)_
       `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`, same recurrence class as the POOL-uppercase
       regrowth); `dex_swaps` (3.46M captured) is the separately-tracked open migration on that same doc. Full evidence
       trail: `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`'s Progress Log.
-- [ ] [DATA] P3. **Cross-check `instrument_type=spot_pair` (9,802 rows) against `defi-canonical-naming-ssot.md`'s locked
-      instrument_type list** — flagged 2026-08-07 ("not yet cross-checked... needs a quick check before assuming drift
-      vs. legitimate") but never followed up.
-- [ ] [BACKEND] P3. **Fix the Distinct Values panel's `<blank>` `instrument_type` badge to exclude `empty_confirmed`
-      rows.** Currently over-reports ~5.35M blank rows when only ~58 `captured` rows are a genuine gap (the rest are
-      legitimate honest-absence markers, ~212,800-215,600 per data_type, consistent with one empty-marker per missing
-      cell). Needs a `_distinct_values.py` / `measure_honest_coverage.py` change to exclude `empty_confirmed` from the
-      blank-key check specifically (mirrors the `capture_status != "attempted_failed"` filter already shipped 2026-08-10
-      for the enumeration-key bug, `instruments-service@8b59e8ba2`). Repo: instruments-service or deployment-api.
+- [x] ✅ [DATA] P3. **DONE — unified-trading-pm (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** Cross-check
+      `instrument_type=spot_pair` (9,802 rows) against `defi-canonical-naming-ssot.md`'s locked instrument_type list —
+      flagged 2026-08-07 ("not yet cross-checked... needs a quick check before assuming drift vs. legitimate"). Live
+      re-check (2026-08-12 honest-coverage rollup) found CHAINLINK/PYTH spot_pair cells are LEGITIMATE
+      (registry-declared); `defi-canonical-naming-ssot.md`'s locked row was stale, corrected in that batch's commit.
+      EIGENLAYER's spot_pair cells are unexplained — filed as
+      `plans/active/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md` for root-cause.
+- [x] ✅ [BACKEND] P3. **DONE — instruments-service@1e82416a (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** Fix the Distinct Values panel's
+      `<blank>` `instrument_type` badge to exclude `empty_confirmed` rows.** Currently over-reports ~5.35M blank rows
+      when only ~58 `captured` rows are a genuine gap (the rest are legitimate honest-absence markers, ~212,800-215,600
+      per data_type, consistent with one empty-marker per missing cell). Needs a `_distinct_values.py` /
+      `measure_honest_coverage.py` change to exclude `empty_confirmed` from the blank-key check specifically (mirrors
+      the `capture_status != "attempted_failed"` filter already shipped 2026-08-10 for the enumeration-key bug,
+      `instruments-service@8b59e8ba2`). Repo: instruments-service or deployment-api.
 
 ## Progress Log
 
@@ -625,7 +632,7 @@ tracking doc with real checkboxes — not duplicated here.)_
   - **REVISED completion sequencing — SUPERSEDED 2026-08-10, moved to a dedicated plan.** `measure_honest_coverage.py`
     fix shipped (this entry). The rebuild VM OOM'd twice since (`-163511` then `-093118`), root-caused + fixed
     (`market-tick-data-service@483eb895`), and relaunched (`-101545`) — see
-    `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`. The remaining
+    `/plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`. The remaining
     retire/rollup/recheck steps now live in
     `/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` (this doc's Todos section,
     above) rather than as prose here — do not trust either copy without a live status check.

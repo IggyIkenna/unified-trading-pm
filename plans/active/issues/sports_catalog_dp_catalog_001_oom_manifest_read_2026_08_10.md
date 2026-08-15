@@ -38,7 +38,7 @@ related:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
-    /plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
+    /plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
   ]
 created: 2026-08-10
 last_updated: "2026-08-10"

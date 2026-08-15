@@ -25,7 +25,7 @@ summary: >-
   did not happen here (the requirement was found only while writing up this doc, after the relaunch was already made
   under a standing `/autonomous` grant). This doc is that page, after the fact — operator should review/override on next
   check-in if this judgment call was wrong.
-status: open
+status: archived
 nature: issue
 asset_group: [defi, infrastructure]
 stage: [data]
@@ -67,6 +67,10 @@ context_scope:
 ---
 
 # `-163511` OOM root cause, fix, and relaunch under the RB-INFRA-RELAUNCH carve-out
+
+> **🟢 ARCHIVED 2026-08-15 — all todos complete.** The shard-density-trend verification todo closed (MIXED result,
+> follow-up filed at `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md`), reconciled via
+> `defi_satellite_ao_dispatch_batch13_2026_08_13.md` / `defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
 
 ## What the prior audit found (2026-08-10T~05:15Z, `ag_closeout_audit`)
 
@@ -261,33 +265,37 @@ already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not j
 
 ## Todos
 
-- [ ] [DATA] P3. **Verify whether the declining DeFi shard-density trend observed across this session's rebuild runs is
-      genuine (venue retirement/consolidation) or an actual capture gap.** Measured, unverified: Dec 2025–Feb 2026
-      averaged ~28,000 shards/day; 2026-06-10..29 averaged ~5,695/day; 2026-06-30..07-19 averaged only ~934/day — a >30x
-      drop that was ASSUMED (not confirmed) to reflect ongoing DeFi venue retirement/consolidation reducing raw shard
-      counts over time (several retirement plans are in flight — `dex_pools`/`dex_swaps`/`kamino_lending`/
-      `blazestake`/`sushiswap`), never independently checked against actual venue-count/capture-coverage data for
-      June/July 2026. If wrong, this could indicate a real, currently-unflagged DeFi capture gap for that window.
-      Done-when: cross-check per-day distinct-venue counts for a June/July 2026 sample against a known-good earlier
-      month (e.g. via `read_availability_index()` `distinct_venues` — the rebuild's own per-chunk summary already logs
-      this) — confirm the drop tracks a documented retirement, or file a fresh capture-gap issue if it doesn't. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P3. **DONE — unified-trading-pm (reconciled via `defi_satellite_ao_dispatch_batch13_2026_08_13.md`) —
+      MIXED result.** Distinct venue count fell only ~31% (54.54→37.55/day) vs a >26x total shard drop, so venue
+      retirement alone doesn't explain the magnitude; the dominant data_types (pool-grain, not venue-grain) are
+      directionally consistent with named in-flight retirements but not confirmed at the pool-count level. Follow-up:
+      `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md`. Verify whether the declining
+      DeFi shard-density trend observed across this session's rebuild runs is genuine (venue retirement/consolidation)
+      or an actual capture gap.** Measured, unverified: Dec 2025–Feb 2026 averaged ~28,000 shards/day; 2026-06-10..29
+      averaged ~5,695/day; 2026-06-30..07-19 averaged only ~934/day — a >30x drop that was ASSUMED (not confirmed) to
+      reflect ongoing DeFi venue retirement/consolidation reducing raw shard counts over time (several retirement plans
+      are in flight — `dex_pools`/`dex_swaps`/`kamino_lending`/ `blazestake`/`sushiswap`), never independently checked
+      against actual venue-count/capture-coverage data for June/July 2026. If wrong, this could indicate a real,
+      currently-unflagged DeFi capture gap for that window. Done-when: cross-check per-day distinct-venue counts for a
+      June/July 2026 sample against a known-good earlier month (e.g. via `read_availability_index()` `distinct_venues` —
+      the rebuild's own per-chunk summary already logs this) — confirm the drop tracks a documented retirement, or file
+      a fresh capture-gap issue if it doesn't. (repo: market-tick-data-service)
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — MIXED result, does NOT cleanly confirm retirement alone;
-              follow-up issue filed.** Bounded `read_availability_index_safe(bucket, columns=[date,venue,capture_status],
-              filters=[date range, capture_status=captured])` cross-check, 3 windows: known-good (Dec2025-Feb2026) avg
-              33,091.8 shards/day, 54.54 distinct venues/day; mid (Jun10-29) avg 6,188.7 shards/day, 46.45 venues/day; recent
-              (Jun30-Jul19) avg 1,254.5 shards/day (close to the doc's own ~934 estimate), 37.55 venues/day. **Distinct-venue
-              count fell only ~31% (54.5→37.55) — far short of the >26x total shard-count drop** — so venue retirement alone
-              cannot explain the magnitude; ORCA/RAYDIUM/PHOENIX/TRADER_JOE_V2/KAMINO/SOLEND/HYPERLIQUID/BALANCER dropped out
-              of the venue set (consistent with the doc's named in-flight retirements — KAMINO/SUSHISWAP match directly), but
-              that's ~8/55 venues, not enough. Per-data_type breakdown for the recent window: `dex_pool_state` 657.35/day +
-              `dex_pool_swaps` 173.75/day dominate (66% of the total) — both POOL-grain, not venue-grain, so the true driver is
-              likely a shrinking tracked-POOL universe per venue, not fewer venues; this is directionally consistent with the
-              doc's named `dex_pools`/`dex_swaps` retirement plans but NOT independently confirmed at the pool-count level
-              (out of this bounded check's scope — would need an instrument/pool-level census, not just venue/data_type
-              aggregates). Filed `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md` for the
-              pool-count-level cross-check this todo's done-when couldn't fully resolve.
+                      follow-up issue filed.** Bounded `read_availability_index_safe(bucket, columns=[date,venue,capture_status],
+                      filters=[date range, capture_status=captured])` cross-check, 3 windows: known-good (Dec2025-Feb2026) avg
+                      33,091.8 shards/day, 54.54 distinct venues/day; mid (Jun10-29) avg 6,188.7 shards/day, 46.45 venues/day; recent
+                      (Jun30-Jul19) avg 1,254.5 shards/day (close to the doc's own ~934 estimate), 37.55 venues/day. **Distinct-venue
+                      count fell only ~31% (54.5→37.55) — far short of the >26x total shard-count drop** — so venue retirement alone
+                      cannot explain the magnitude; ORCA/RAYDIUM/PHOENIX/TRADER_JOE_V2/KAMINO/SOLEND/HYPERLIQUID/BALANCER dropped out
+                      of the venue set (consistent with the doc's named in-flight retirements — KAMINO/SUSHISWAP match directly), but
+                      that's ~8/55 venues, not enough. Per-data_type breakdown for the recent window: `dex_pool_state` 657.35/day +
+                      `dex_pool_swaps` 173.75/day dominate (66% of the total) — both POOL-grain, not venue-grain, so the true driver is
+                      likely a shrinking tracked-POOL universe per venue, not fewer venues; this is directionally consistent with the
+                      doc's named `dex_pools`/`dex_swaps` retirement plans but NOT independently confirmed at the pool-count level
+                      (out of this bounded check's scope — would need an instrument/pool-level census, not just venue/data_type
+                      aggregates). Filed `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md` for the
+                      pool-count-level cross-check this todo's done-when couldn't fully resolve.
 
 ## Pointers
 

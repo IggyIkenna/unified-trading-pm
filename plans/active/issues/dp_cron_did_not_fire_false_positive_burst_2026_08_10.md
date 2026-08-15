@@ -255,9 +255,15 @@ is exactly the kind of judgment call this doc should surface, not resolve.
       `launch-prediction-live.sh` shard) is confirmed not running, matching finding 2's evidence. This confirmation-only
       todo is satisfied; whether to relaunch it folds into the same open [OPERATOR] scope-decision as the doc's other
       genuinely-absent producers (todos 1-2 above) — not a separate action.
-- [ ] [SCRIPT] P3. Live-verify DP-LIVE-003 correctly RESOLVES (posts a `✅ RESOLVED` bookend via
-      `meta_watchers.reconcile_resolved`) for whichever of findings 3-10 get relaunched, confirming the RESOLVED path
-      works for this new check type as well as the paging path already confirmed here. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P3. **DONE — deployment-service@a927715ed6 (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** Live-checked both remaining ACTIVE
+      genuinely-absent producers: zero running instances, zero relaunch yet (the source doc's `[OPERATOR]`
+      relaunch-intent todo is still open, so a genuine production RESOLVED bookend cannot be observed yet). Closed via
+      the worker-executable equivalent instead: added
+      `test_missing_producer_resolved_bookend_fires_when_producer_relaunches` exercising the full lifecycle end-to-end,
+      proving the mechanism itself is correct. Live-verify DP-LIVE-003 correctly RESOLVES (posts a `✅ RESOLVED` bookend
+      via `meta_watchers.reconcile_resolved`) for whichever of findings 3-10 get relaunched, confirming the RESOLVED
+      path works for this new check type as well as the paging path already confirmed here. Repo: deployment-service.
 
 ## Progress Log
 

@@ -50,7 +50,7 @@ locked_since:
 context_scope:
   [
     /codex/02-data/lst-exchange-rate-surfaces.md,
-    /plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
+    /plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
     /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
     features-service/features_service/onchain/engine/lst_features.py,
@@ -125,9 +125,9 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       archiving this todo further.
 
       **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: a literal regen-script run IS required before this
-              closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
-              `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
-              infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`.
+                      closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
+                      `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
+                      infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`.
 
 ## Phase 2 — Collectors ready to fetch
 
@@ -820,16 +820,17 @@ tarball once; always check the launcher's own freshness warning output, and if s
   19 dated check-in entries (VM fleet re-checks, 4 dex-swaps SPOT preemption-and-resume cycles, the on-demand-fallback
   decision, the `lst_rates` backfill completion, and the split into a 3-VM date-sharded fleet) moved verbatim to
   `/plans/archive/2026_08/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md` per
-  `/plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 1. **Condensed summary**: the
-  `lst_rates` backfill (`mtds-lst-rates-20260722-181845`) ran to completion 2026-07-23 02:04 UTC with zero preemptions
-  (full `2021-08-17→2026-07-22` window, `exit_code=0`); the follow-on `lst_yields` feature compute stays operator-owned
-  (see the Deferred table above). The `dex_pool_swaps` backfill preempted 4× on SPOT with strictly decreasing
-  time-to-preemption, switched to on-demand as a sanctioned one-run exception (2026-07-23 04:54 UTC — see the "SPOT
-  preemption frequency" Lesson below), then split into the 3-VM `mtds-dex-swaps-backfill-1/2/3` fleet (2026-07-23 07:10
-  UTC, exact shard ranges in the Deferred table above); a genuine dead-subgraph efficiency finding (~15 of 24 configured
-  protocol/chain shards permanently unindexed, never fixed mid-backfill) and a `--protocols` flag/`gcloud --metadata`
-  collision bug were both surfaced but left as follow-ups, not fixed inline. The fleet's current terminal state lives in
-  this doc's own Deferred-work table, not in the extracted history — see that table for what's still open.
+  `/plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 1. **Condensed
+  summary**: the `lst_rates` backfill (`mtds-lst-rates-20260722-181845`) ran to completion 2026-07-23 02:04 UTC with
+  zero preemptions (full `2021-08-17→2026-07-22` window, `exit_code=0`); the follow-on `lst_yields` feature compute
+  stays operator-owned (see the Deferred table above). The `dex_pool_swaps` backfill preempted 4× on SPOT with strictly
+  decreasing time-to-preemption, switched to on-demand as a sanctioned one-run exception (2026-07-23 04:54 UTC — see the
+  "SPOT preemption frequency" Lesson below), then split into the 3-VM `mtds-dex-swaps-backfill-1/2/3` fleet (2026-07-23
+  07:10 UTC, exact shard ranges in the Deferred table above); a genuine dead-subgraph efficiency finding (~15 of 24
+  configured protocol/chain shards permanently unindexed, never fixed mid-backfill) and a `--protocols`
+  flag/`gcloud --metadata` collision bug were both surfaced but left as follow-ups, not fixed inline. The fleet's
+  current terminal state lives in this doc's own Deferred-work table, not in the extracted history — see that table for
+  what's still open.
 - **na-eligibility-audit 2026-08-03**: KEEP-NA valid — doc is over the 1000L cap (pre-existing, operator ruling
   2026-08-02), so this is a marker-only append (no checkbox changes) per that ruling's scoped exception. 3 of 6 open
   items are STALE (already shipped: A2 staking=strategy-service@e93902d8; recursive-staking borrow=

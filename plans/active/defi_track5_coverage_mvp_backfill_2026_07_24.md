@@ -133,19 +133,25 @@ context_scope:
       `status: complete` (all 17 todos done, P8 cross-AG verify/reconcile confirmed clean for all 4 AGs, archived
       2026-07-28). This checkbox's own definition-of-done (name the launcher + a measured write-concurrency figure) has
       not itself been produced anywhere found in the corpus — not closing, just unblocked now.
-- [ ] [DATA] P1. **Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi backfill**
-      (gate-audit §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs
-      of either on record for defi today). Cite each run's report path + date. (repos: instruments-service,
-      market-tick-data-service) **UNPARKED 2026-08-08 (operator ruling): `--day 2026-07-01` for the baseline/mid/final
-      checkpoints.** Resolves the `BLK-d355f03a` blocked question from
-      `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27.md` (both skills' SKILL.md § 0 forbid
-      synthesizing `--day` without operator input — now supplied). Exact commands for whoever runs the 3x-each
-      cadence: - Baseline: `/data-pipeline-check-is --day 2026-07-01` + `/data-pipeline-check-mtds --day 2026-07-01` -
-      Mid-backfill spot-check: `/data-pipeline-check-is --day 2026-07-01` + `/data-pipeline-check-mtds --day 2026-07-01`
-      (re-run once the MVP backfill above is genuinely mid-flight — cite the report path + date of that run, not a
-      duplicate of the baseline run under a different label) - Post-backfill final gate: same command, run once the MVP
-      backfill is complete **2026-08-08 apply-pass attempt**: invoked `/data-pipeline-check-is --day 2026-07-01` from
-      this session — the skill loaded and its own §1a states this check must run via a dedicated VM driver
+- [ ] [DATA] P1. **PARTIAL progress via `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`
+      (2026-08-14/15) — baseline attempted, mid/final still correctly ungated (backfill not yet 100%).** IS baseline VM
+      (`pipeline-e2e-check-is-20260814-224849-f6e2db`) alive + progressing. MTDS baseline hit a driver-VM OOM (fixed
+      2026-08-15) then a still-open `rc=3` per-shard bug on CEFI — no clean MTDS baseline yet. Full detail in
+      `plans/active/issues/mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md`'s Progress Log. Still
+      open — this todo's own done-when (3x each, cited report paths) is not met. Run `/data-pipeline-check-is` and
+      `/data-pipeline-check-mtds` 3x each across the defi backfill** (gate-audit §11: pre-backfill baseline,
+      mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs of either on record for defi today).
+      Cite each run's report path + date. (repos: instruments-service, market-tick-data-service) **UNPARKED 2026-08-08
+      (operator ruling): `--day 2026-07-01` for the baseline/mid/final checkpoints.** Resolves the `BLK-d355f03a`
+      blocked question from `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27.md` (both skills'
+      SKILL.md § 0 forbid synthesizing `--day` without operator input — now supplied). Exact commands for whoever runs
+      the 3x-each cadence: - Baseline: `/data-pipeline-check-is --day 2026-07-01` +
+      `/data-pipeline-check-mtds --day 2026-07-01` - Mid-backfill spot-check:
+      `/data-pipeline-check-is --day 2026-07-01` + `/data-pipeline-check-mtds --day 2026-07-01` (re-run once the MVP
+      backfill above is genuinely mid-flight — cite the report path + date of that run, not a duplicate of the baseline
+      run under a different label) - Post-backfill final gate: same command, run once the MVP backfill is complete
+      **2026-08-08 apply-pass attempt**: invoked `/data-pipeline-check-is --day 2026-07-01` from this session — the
+      skill loaded and its own §1a states this check must run via a dedicated VM driver
       (`launch-pipeline-e2e-check-driver-vm.sh`, real GCS-bucket provisioning + a full MVP `(asset_group, venue)` matrix
       sweep, explicitly "never run inline on the shared host", multi-minute-plus real VM spend). Did NOT launch that VM
       this session — out of proportion to run to completion synchronously alongside this apply session's other 8 items,

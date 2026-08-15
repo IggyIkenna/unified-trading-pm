@@ -134,9 +134,15 @@ Two independently-shippable angles:
 - [ ] [DESIGN] P2. Decide the right detection/warning mechanism for `_read_slow_path`'s stale-fallback path to avoid
       this false-completion signature for other callers workspace-wide (not just this one launcher) — see "Recommended
       fix" angle 2 above. Needs a design call on the threshold/signal, not a bounded mechanical fix.
-- [ ] [DATA] P1. The dex_swaps fold run that used this flag (`backfill-defi-legacy-datatype-fold-20260807-121120`,
-      260/27549 shards, 22,359/~3.46M rows) is genuinely incomplete — NOT a valid completion. Do not count it as done.
-      Relaunch WITHOUT `--allow-stale-fallback` once the DeFi consolidator has genuinely caught up (wait for the
+- [ ] [DATA] P1. **PARTIAL progress via `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`
+      (2026-08-15) — precondition verified (consolidator caught up), relaunch attempted twice, both blocked by VM infra
+      failures (zombie-reaped attempt, then OOM under an oversubscribed `--workers 24` — root-caused + fixed,
+      `deployment-service@7480588f57`). Still open — a genuinely completed relaunch has not landed.** Follow-up (now
+      unblocked by the worker-count fix):
+      `plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md`. The dex_swaps fold run
+      that used this flag (`backfill-defi-legacy-datatype-fold-20260807-121120`, 260/27549 shards, 22,359/~3.46M rows)
+      is genuinely incomplete — NOT a valid completion. Do not count it as done. Relaunch WITHOUT
+      `--allow-stale-fallback` once the DeFi consolidator has genuinely caught up (wait for the
       `canonical-migration-defi-rebuild` VM's own operation to finish/resume the cron, or otherwise confirm freshness) —
       see `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 4 for the parent tracking
       context. The 260-shard partial run is harmless (additive/idempotent copy-forward, `blob_exists`-gated, no data

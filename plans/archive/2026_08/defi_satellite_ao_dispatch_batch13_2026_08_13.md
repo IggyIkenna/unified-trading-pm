@@ -9,7 +9,7 @@ summary: >-
   into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: active
+status: archived
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -28,9 +28,9 @@ related:
     /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
     /plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md,
-    /plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
+    /plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
     /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md,
-    /plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
+    /plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
     /plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md,
   ]
 created: "2026-08-13"
@@ -64,6 +64,10 @@ source: >-
 ---
 
 # defi satellite AO dispatch batch 13 — 2026-08-13
+
+> **🟢 ARCHIVED 2026-08-15 — all 16 todos complete.** Reconciled into their source docs' own checkboxes via
+> `defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`; see that finalize plan for the full reconciliation
+> evidence.
 
 > **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
 > bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
@@ -173,13 +177,13 @@ source: >-
       `a927715ed6b160ea2689634aece13d0c7056676c`).
 - [x] [CODE] P2. ✅ Extract the lst_rate_honest_coverage_2026_07_21.md Progress Log's VM-monitoring-history block
       (~2026-07-21..07-26 entries) into a companion doc, per Todo 1's stated pattern Source:
-      `plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` — unified-trading-pm (this commit).
-      Extracted the 19-entry contiguous chronological block of VM re-check / preemption-resume / T+N-min health-check
-      entries (2026-07-22 19:51 UTC → 2026-07-26 07:56 UTC, the LST-rates + dex-swaps backfill fleets) verbatim into
-      `plans/archive/2026_08/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md`, leaving a condensed
-      summary + pointer in the live plan's Progress Log. Also fixed the Deferred-work table's internal "see 2026-07-26
-      Progress Log entry" pointer to cite the new companion doc directly. Grepped the corpus for any other doc citing a
-      specific timestamped entry inside the extracted range by path — none found (the two hits,
+      `plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` — unified-trading-pm (this
+      commit). Extracted the 19-entry contiguous chronological block of VM re-check / preemption-resume / T+N-min
+      health-check entries (2026-07-22 19:51 UTC → 2026-07-26 07:56 UTC, the LST-rates + dex-swaps backfill fleets)
+      verbatim into `plans/archive/2026_08/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md`, leaving a
+      condensed summary + pointer in the live plan's Progress Log. Also fixed the Deferred-work table's internal "see
+      2026-07-26 Progress Log entry" pointer to cite the new companion doc directly. Grepped the corpus for any other
+      doc citing a specific timestamped entry inside the extracted range by path — none found (the two hits,
       `defi_satellite_ao_dispatch_batch2_2026_07_26.md` and this todo's own source issue doc, cite by commit
       SHA/description only, still valid after the move). Doc dropped from 1019L to 856L (well under the 1000L hard cap;
       `check_line_caps.sh` confirms). Left the Sanctum-reconciliation ship entry and the lst_yields feature-deferral
@@ -196,11 +200,11 @@ source: >-
 - [x] [CODE] P2. ✅ Verify whether the declining DeFi shard-density trend (Dec2025-Feb2026 ~28,000 shards/day →
       2026-06-30..07-19 ~934/day, a >30x drop assumed but never confirmed to reflect venue retirement) is genuine or an
       actual capture gap — bounded cross-check with an explicit done-when already stated in the doc. Source:
-      `plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md` — MIXED result: distinct
-      venue count fell only ~31% (54.54→37.55/day) vs a >26x total shard drop, so venue retirement alone doesn't explain
-      the magnitude; the dominant data_types (`dex_pool_state`+`dex_pool_swaps`, pool-grain not venue-grain) are
-      directionally consistent with named in-flight retirements but not confirmed at the pool-count level. Full evidence
-      in the source doc's Track todo; follow-up filed at
+      `plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md` — MIXED result:
+      distinct venue count fell only ~31% (54.54→37.55/day) vs a >26x total shard drop, so venue retirement alone
+      doesn't explain the magnitude; the dominant data_types (`dex_pool_state`+`dex_pool_swaps`, pool-grain not
+      venue-grain) are directionally consistent with named in-flight retirements but not confirmed at the pool-count
+      level. Full evidence in the source doc's Track todo; follow-up filed at
       `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md`.
 - [x] [CODE] P2. ✅ PARTIAL — Run /data-pipeline-check-is and /data-pipeline-check-mtds 3x each
       (baseline/mid-backfill/final) across the defi backfill using --day 2026-07-01 (operator-unparked 2026-08-08, exact
@@ -240,40 +244,40 @@ source: >-
       `plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`
 
       **INVESTIGATED 2026-08-14 (slot-18, backend_engineer) — no workload-intrinsic factor found; best explanation is a
-                          generic, pre-fix detection-bug window, not anything specific to this task.** Read both closed root-cause docs for
-                          the fleet-wide crash-loop:
-                          `plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` (archived 2026-08-09)
-                          and `plans/archive/2026_08/issues/review_slot1_tmuxpruner_crash_loop_recurrence_2026_08_14.md` (archived
-                          2026-08-14). Neither identified mechanism is workload/content-gated: (1) an undebounced `has_session()` transient
-                          probe miss in `reap_orphan_agents` (fixed `agent-orchestrator@5a163e7`, 2026-08-09) and a broken
-                          `remain-on-exit` tmux target (`set-option -t "=name"` failing silently since 2026-06-25, fixed
-                          `agent-orchestrator@c9dad3e`, 2026-08-09) are pure host-timing/tmux-target bugs that fire identically regardless
-                          of what the session's prompt/tool-calls/worktree look like; (2) the 2026-08-14 recurrence's root cause
-                          (`agent-orchestrator@c107c96a52`) was an unconditional `status="killed"` DB write regardless of whether
-                          `kill_session()` actually terminated the tmux process — again content-agnostic. The one review-role-specific
-                          mechanism found (`dd01255`, frozen `SlotRow.last_ping` because review's loop never calls the slot-heartbeat
-                          endpoint) does not apply here — this task ran under a generic worker/`data_engineering` craft, which calls
-                          `/api/slots/{N}/heartbeat` directly. Both non-role-specific fixes shipped 2026-08-09, i.e. AFTER this task's
-                          2026-08-08 17:31-18:00Z wedge window — consistent with the task simply being dispatched during the live pre-fix
-                          bug window, not reacting to it. Checked the task's own workload shape for a size/pattern anomaly: its plan
-                          (`plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`, 132 lines) and referenced scope doc
-                          (`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`, 168 lines) are both unremarkable in
-                          size for this corpus (many active plans run 500-1000+ lines); `context_scope` is a normal short pointer list —
-                          nothing here would push a fresh boot's initial context meaningfully higher than a typical task. The strongest
-                          direct evidence is already in the source doc itself (Progress Log, 18:15Z/18:16Z entries, pre-dating this
-                          investigation): the SAME exact task ran to a full clean `boot->work->done` cycle TWICE within minutes of the 4
-                          wedge events (slot-33 and slot-7, both `already_in_progress` re-dispatches), each independently completing a
-                          real ~1-AI-day brand-new build (Solana signature-walk + swap decoder) with quality-gates green — direct proof
-                          the task's own workload is not inherently oversized or crash-prone. Live activity-log query for the original
-                          2026-08-08 window was attempted (`GET /api/activity?task=solana_dex_pool_swaps_indexer-002`) but the `task`
-                          filter param did not scope the response (returned generic recent activity, not task-scoped) and the event table
-                          has rolled ~500k ids past that 6-day-old window since — not independently re-derivable at this remove; relying
-                          on the doc's own live-captured table instead. **Conclusion: no workload-characteristic disproportion found** —
-                          the 4-in-30min concentration is best explained by simple redispatch-timing bad luck landing inside the
-                          still-active (pre-2026-08-09-fix) detection-bug window, not a property of this task's prompt size, tool-call
-                          pattern, or worktree size. No code change indicated by this finding (the underlying bugs are already fixed);
-                          checkbox reconciliation into the source doc's own todo 1 is out of scope for this batch (per the batch's stated
-                          design, source docs are reconciled by the paired finalize plan). unified-trading-pm (this commit).
+                                  generic, pre-fix detection-bug window, not anything specific to this task.** Read both closed root-cause docs for
+                                  the fleet-wide crash-loop:
+                                  `plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` (archived 2026-08-09)
+                                  and `plans/archive/2026_08/issues/review_slot1_tmuxpruner_crash_loop_recurrence_2026_08_14.md` (archived
+                                  2026-08-14). Neither identified mechanism is workload/content-gated: (1) an undebounced `has_session()` transient
+                                  probe miss in `reap_orphan_agents` (fixed `agent-orchestrator@5a163e7`, 2026-08-09) and a broken
+                                  `remain-on-exit` tmux target (`set-option -t "=name"` failing silently since 2026-06-25, fixed
+                                  `agent-orchestrator@c9dad3e`, 2026-08-09) are pure host-timing/tmux-target bugs that fire identically regardless
+                                  of what the session's prompt/tool-calls/worktree look like; (2) the 2026-08-14 recurrence's root cause
+                                  (`agent-orchestrator@c107c96a52`) was an unconditional `status="killed"` DB write regardless of whether
+                                  `kill_session()` actually terminated the tmux process — again content-agnostic. The one review-role-specific
+                                  mechanism found (`dd01255`, frozen `SlotRow.last_ping` because review's loop never calls the slot-heartbeat
+                                  endpoint) does not apply here — this task ran under a generic worker/`data_engineering` craft, which calls
+                                  `/api/slots/{N}/heartbeat` directly. Both non-role-specific fixes shipped 2026-08-09, i.e. AFTER this task's
+                                  2026-08-08 17:31-18:00Z wedge window — consistent with the task simply being dispatched during the live pre-fix
+                                  bug window, not reacting to it. Checked the task's own workload shape for a size/pattern anomaly: its plan
+                                  (`plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`, 132 lines) and referenced scope doc
+                                  (`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`, 168 lines) are both unremarkable in
+                                  size for this corpus (many active plans run 500-1000+ lines); `context_scope` is a normal short pointer list —
+                                  nothing here would push a fresh boot's initial context meaningfully higher than a typical task. The strongest
+                                  direct evidence is already in the source doc itself (Progress Log, 18:15Z/18:16Z entries, pre-dating this
+                                  investigation): the SAME exact task ran to a full clean `boot->work->done` cycle TWICE within minutes of the 4
+                                  wedge events (slot-33 and slot-7, both `already_in_progress` re-dispatches), each independently completing a
+                                  real ~1-AI-day brand-new build (Solana signature-walk + swap decoder) with quality-gates green — direct proof
+                                  the task's own workload is not inherently oversized or crash-prone. Live activity-log query for the original
+                                  2026-08-08 window was attempted (`GET /api/activity?task=solana_dex_pool_swaps_indexer-002`) but the `task`
+                                  filter param did not scope the response (returned generic recent activity, not task-scoped) and the event table
+                                  has rolled ~500k ids past that 6-day-old window since — not independently re-derivable at this remove; relying
+                                  on the doc's own live-captured table instead. **Conclusion: no workload-characteristic disproportion found** —
+                                  the 4-in-30min concentration is best explained by simple redispatch-timing bad luck landing inside the
+                                  still-active (pre-2026-08-09-fix) detection-bug window, not a property of this task's prompt size, tool-call
+                                  pattern, or worktree size. No code change indicated by this finding (the underlying bugs are already fixed);
+                                  checkbox reconciliation into the source doc's own todo 1 is out of scope for this batch (per the batch's stated
+                                  design, source docs are reconciled by the paired finalize plan). unified-trading-pm (this commit).
 
 - [x] [CODE] P2. ✅ Update defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md row 1's stale
       script-name/numbers once the gas_fees manifest purge is confirmed complete — bounded doc-hygiene edit Source:

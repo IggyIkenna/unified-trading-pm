@@ -170,9 +170,10 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
       referenced by any entry in `_query_and_parse`'s fallback-cascade table (superseded by `_parse_messari_dex` on
       2026-07-27, per that function's own docstring) — flagged as a new todo below rather than fixed (dead-code cleanup,
       not this issue's live-writer scope).
-- [ ] [SCRIPT] P3. Delete the now-dead `_parse_curve` function
-      (`market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_parsers.py`) — confirmed unreferenced
-      by any entry in `_dex_pools_subgraph._query_and_parse`'s fallback-cascade table (superseded by
+- [x] ✅ [SCRIPT] P3. **DONE — market-tick-data-service@97a8b8e870 (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** Delete the now-dead `_parse_curve`
+      function (`market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_parsers.py`) — confirmed
+      unreferenced by any entry in `_dex_pools_subgraph._query_and_parse`'s fallback-cascade table (superseded by
       `_parse_messari_dex` since the 2026-07-27 switch, per that call site's own comment). Also carries a LATENT variant
       of THIS issue's bug (emits `daily_volume_usd`/`daily_total_revenue_usd` instead of `volume_usd`/`fees_usd` — would
       silently zero `CanonicalDexPoolProvider` reads if ever wired back up), so deleting it (workspace HARD RULE: delete

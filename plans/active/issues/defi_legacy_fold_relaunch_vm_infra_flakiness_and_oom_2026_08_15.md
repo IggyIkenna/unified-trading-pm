@@ -41,9 +41,9 @@ tags:
   ]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
-    /plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
+    /plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
   ]
 created: "2026-08-15"
@@ -57,9 +57,9 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.25
 source: >-
-  AO-dispatched satellite batch todo (defi_satellite_ao_dispatch_batch13_2026_08_13.md), the "relaunch dex_swaps fold
-  without --allow-stale-fallback" item — precondition (consolidator freshness) was verified and met, but the relaunch
-  itself hit unrelated VM-infra failures.
+  AO-dispatched satellite batch todo (/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md), the
+  "relaunch dex_swaps fold without --allow-stale-fallback" item — precondition (consolidator freshness) was verified and
+  met, but the relaunch itself hit unrelated VM-infra failures.
 assigned_role: infra
 drift_direction: advance-code
 locked_by:
