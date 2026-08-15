@@ -332,7 +332,24 @@ just belongs on a different layer than instrument_type does, and conflating the 
   confidence): decide + implement option (a) — relabel `defi_venue_capabilities.py:227-231`'s gas_fees keys to bare
   `ALCHEMY`, deciding whether per-chain genesis-date grain is dropped or preserved via a parallel `chain`-keyed
   structure — then run `test_venue_key_parity.py` + ship. No code changed yet. `docs(plans):` commit for this note only.
-
+- **2026-08-15 (slot-14, data_engineering) — gas_fees/alchemy_onchain todo DONE, shipped.**
+  `unified-api-contracts@21a7e5c305` (`origin/live-defi-rollout`, post-push ancestry verified, QG green — "ALL QUALITY
+  GATES PASSED", 0 new ❌). Resolved per the option-(a) direction from the prior two entries, but simpler than a
+  bare-`ALCHEMY` relabel-with-grain-tradeoff: the composite `ALCHEMY-<CHAIN>` keys in
+  `DEFI_VENUE_DATA_TYPE_CAPABILITIES` were pure phantom declarations no writer ever emits (confirmed by the prior
+  entry's full-bucket venue distribution — zero `ALCHEMY-<CHAIN>` rows anywhere) that the authoritative reconciler
+  (`instruments-service/scripts/enumerate_expected_universe.py`'s `_yield_v2_defi_pre_launch_rows`, via its own
+  `GAS_FEE_CHAIN_START_DATES` lookup) never reads for gas_fees in the first place — it already matches expected/captured
+  rows on the writer's real bare-`ALCHEMY`-venue + `chain`-column grain. So no per-chain genesis-date grain needed
+  preserving via a parallel structure: the 5 phantom keys were simply deleted (not relabeled), the stale "aspirational:
+  not yet wired" `PROTOCOL_CAPABILITIES["alchemy_onchain"]` gas_fees comment was corrected to explain the real history,
+  and `tests/data/mtds_batch_live_coverage_baseline.json` was updated (5 `ALCHEMY-<CHAIN>` entries removed from
+  `missing_live_coverage`, since `batch_capable_venues()` derives from the same registry and correctly shrinks —
+  ratchet-down, ran `test_venue_key_parity.py`'s parent QG suite, all green). Todo checkbox flipped above. **Lesson
+  carried**: a "0 captured rows" signal on a Layer-2 registry key does not by itself mean the writer is unwired — check
+  whether ANY reconciler that computes completeness actually reads that specific registry for that data_type before
+  assuming the registry is the source of truth; here it wasn't (the reconciler has its own independent lookup table), so
+  the registry key was free to delete rather than needing to match the writer's exact string.
 - **2026-08-12** — **SPARK-ETHEREUM oracle_prices capture wired (the decomposed per-pair todo), done + shipped.**
   Shipped `market-tick-data-service@845bd085` (`_spark_oracle_collection.py` + wiring) +
   `unified-api-contracts@e34b0f44` (BATCH_SPARK / SOURCE_MODE_CAPABILITY["spark"]={BATCH} / SOURCE_PRIORITY +
@@ -732,17 +749,24 @@ just belongs on a different layer than instrument_type does, and conflating the 
       `DEFI_VENUE_DATA_TYPE_CAPABILITIES` for the AAVE_V3-<chain> venues once the write path is proven. Done-when:
       single-day force-compute produces real `captured` `rewards` rows for at least AAVE_V3-ETHEREUM against the
       `-test-` bucket. (repos: market-tick-data-service, unified-api-contracts)
-- [ ] [CODE] P2. **WIRE gas_fees capture for alchemy_onchain** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
-      `gas_fees` is declared valid for `alchemy_onchain` in `PROTOCOL_CAPABILITIES` (added 2026-08-05) with zero
-      captured rows. **First verify the venue-key**: `gas_fees` genesis dates already exist in
-      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` on `ALCHEMY-ETHEREUM/ARBITRUM/POLYGON/OPTIMISM/BASE`
-      (`defi_venue_capabilities.py:210-214`) and
-      `market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py` exists — so this may be a
-      venue-key mismatch (writer emits `ALCHEMY-<chain>`, `PROTOCOL_CAPABILITIES` keys it under `alchemy_onchain`)
-      rather than a genuinely-unwired path. Check the live manifest for real `ALCHEMY-<chain>/gas_fees` captured rows
-      first; if captured, reconcile the Layer-1↔Layer-2 venue-key naming instead of wiring new capture. Done-when:
-      `gas_fees` has real `captured` rows reconciled to the declared venue key (proven, not just declared). (repos:
-      market-tick-data-service, unified-api-contracts)
+- [x] ✅ [CODE] P2. **WIRE gas_fees capture for alchemy_onchain** (operator ruling 2026-08-09: WIRE REAL CAPTURE, not
+      roll-back — recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) —
+      `unified-api-contracts@21a7e5c305` (`origin/live-defi-rollout`, post-push ancestry verified). **Confirmed a
+      venue-key mismatch, not a missing writer** — `gas_fee_handler.py` correctly writes `venue="ALCHEMY"` (bare) + a
+      separate `chain=` column, and the authoritative reconciler
+      (`instruments-service/scripts/enumerate_expected_universe.py`, `_yield_v2_defi_pre_launch_rows` via
+      `GAS_FEE_CHAIN_START_DATES`) already matches expected/captured rows on that exact grain — it never reads
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` for gas_fees at all. The 5 composite `ALCHEMY-<CHAIN>` gas_fees keys in
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (`defi_venue_capabilities.py:210-214`) were phantom declarations no writer
+      could ever match, making completeness read permanently 0% despite real captured rows existing. Fix: removed the 5
+      phantom keys, corrected the stale "aspirational: not yet wired" comment in
+      `PROTOCOL_CAPABILITIES["alchemy_onchain"]` (`capability_declarations/_defi.py`), and updated
+      `tests/data/mtds_batch_live_coverage_baseline.json` (removed the 5 now-absent `ALCHEMY-<CHAIN>` entries from
+      `missing_live_coverage`, since `batch_capable_venues()` derives from the same registry and correctly shrinks). QG
+      green (`ALL QUALITY GATES PASSED`, 0 new ❌/regressions). Done-when met: real capture already existed under the
+      writer's actual venue key; the Layer-2 registry now reflects that reality instead of an unreachable composite key.
+      (repos: unified-api-contracts)
 - [x] ✅ [CODE] P2. **VERIFY-then-roll-back the 2 over-claim misclassifications** (`AAVE-ETHEREUM/oracle_prices`,
       `MAKER-ETHEREUM/lst_rates`) — `unified-api-contracts@0b4ab0e204` (`origin/live-defi-rollout`, post-push ancestry
       verified). **Both pairs verified as REAL capture surfaces — neither rolled back.** Queried the live prod defi
