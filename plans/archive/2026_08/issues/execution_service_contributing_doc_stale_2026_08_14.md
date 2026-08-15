@@ -9,7 +9,7 @@ summary: >-
   `main` as the base branch) that no longer matches the current git/ship workflow (commit directly on
   `live-defi-rollout` via named-file staging, `--agent`/`--isolated` quickmerge, `docs(plans):` plan-flip). It also
   repeatedly instructs `git add -A`, which CLAUDE.md's "Commit + Push + Flip" HARD RULE bans.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -22,7 +22,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-14
-last_updated: "2026-08-14"
+last_updated: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -33,7 +33,9 @@ estimate_calibrated_ai_days: 0.12
 assigned_role: infra
 effort: medium
 drift_direction: advance-code
-resolved_by:
+resolved_by: >-
+  execution-service@72fbc742da, deployment-service@514e0f8ff9, market-data-processing-service@50fb61b346,
+  unified-trading-library@8b686aef65
 locked_by:
 locked_since:
 supersedes:
@@ -113,10 +115,17 @@ execution-service-only).
       pattern as `execution-service@72fbc742da` (title, File Locations for deployment-service's actual package layout,
       quickmerge section replacing the PR-branch flow, Branch Protection, Working with Multiple Agents/Sessions per
       `/codex/05-infrastructure/per-tab-worktrees.md`) — repo: deployment-service.
-- [ ] [DOC] P3. Rewrite `market-data-processing-service/CONTRIBUTING.md` end-to-end, same pattern as
-      `execution-service@72fbc742da` — repo: market-data-processing-service.
-- [ ] [DOC] P3. Rewrite `unified-trading-library/CONTRIBUTING.md` end-to-end, same pattern as
-      `execution-service@72fbc742da` — repo: unified-trading-library.
+- [x] ✅ [DOC] P3. **DONE 2026-08-15 — rewrote `market-data-processing-service/CONTRIBUTING.md` end-to-end**, same
+      pattern as `execution-service@72fbc742da`: title (`Contributing to Market Data Processing Service`), File
+      Locations (`market_data_processing_service/`, `tests/{unit,integration,e2e,smoke,perf}/`, `scripts/`, `docs/`),
+      the quickmerge section, Branch Protection, and Working with Multiple Agents/Sessions per
+      `/codex/05-infrastructure/per-tab-worktrees.md`. Evidence: `market-data-processing-service@50fb61b346`.
+- [x] ✅ [DOC] P3. **DONE 2026-08-15 — rewrote `unified-trading-library/CONTRIBUTING.md` end-to-end**, same pattern as
+      `execution-service@72fbc742da`: title (`Contributing to Unified Trading Library`), File Locations (actual
+      `unified_trading_library/` package layout plus its distinct multi-suite `tests/` tree and `plans/`/`issues/`
+      dirs), the quickmerge section (also noting this repo is a path dependency every downstream service repo cascades
+      against), Branch Protection, and Working with Multiple Agents/Sessions per
+      `/codex/05-infrastructure/per-tab-worktrees.md`. Evidence: `unified-trading-library@8b686aef65`.
 
 ## Progress Log
 
@@ -138,3 +147,21 @@ execution-service-only).
   pre-existing `execution-service@72fbc742da` citation against — a structural limitation of isolated mode in this
   multi-repo workspace, not a defect in the edit. Re-shipping from the main checkout (non-isolated) instead, since no
   other session has this file dirty.
+- **2026-08-15 (slot-15, interactive, cont'd)**: picked up todo 3. Rewrote `deployment-service/CONTRIBUTING.md`
+  end-to-end following the `execution-service@72fbc742da` pattern; shipped via quickmerge (non-isolated,
+  `--agent --files 'CONTRIBUTING.md'`), full quality gate passed (docs-only fast path, 24s). Landed on
+  `live-defi-rollout` at `514e0f8ff9`, post-push ancestry verified.
+- **2026-08-15 (slot-15, interactive, cont'd)**: picked up todos 4-5, the last two remaining. Rewrote
+  `market-data-processing-service/CONTRIBUTING.md` (shipped `market-data-processing-service@50fb61b346`) and
+  `unified-trading-library/CONTRIBUTING.md` (shipped `unified-trading-library@8b686aef65`), both following the
+  `execution-service@72fbc742da` pattern via non-isolated quickmerge, both full quality-gate passes. All 5 todos now
+  done across all 4 stale-template repos found (execution-service, deployment-service, market-data-processing-service,
+  unified-trading-library). No open work remains — archiving.
+
+## Status
+
+Resolved. All 5 todos done, all 4 stale-template `CONTRIBUTING.md` copies rewritten end-to-end against the current
+`.claude/CLAUDE.md` workflow and shipped: `execution-service@72fbc742da`, `deployment-service@514e0f8ff9`,
+`market-data-processing-service@50fb61b346`, `unified-trading-library@8b686aef65`. `instruments-service`'s own copy was
+already correct (source of the template, not a copy); `market-tick-data-service` and `unified-api-contracts` were
+confirmed to have distinct, non-stale content. No further work tracked by this issue.
