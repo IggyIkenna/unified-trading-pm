@@ -110,6 +110,66 @@ def test_only_with_multiple_paths_reports_every_violation_among_them(tmp_path: P
     assert rc == 1
 
 
+# ── duplicate-gate creation-time guard (todo 1,
+#    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md) ───────────
+
+
+def test_only_fails_when_staged_finalize_plan_duplicates_an_existing_gate(tmp_path: Path) -> None:
+    """Reconstructs the 2026-07-31 collision shape: two finalize plans, filenames
+    differing only by a redundant date suffix, both depends_on the same parent."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md")
+    _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+    new_finalize = _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(new_finalize)])
+    assert rc == 1
+
+
+def test_only_ignores_a_pre_existing_duplicate_gate_when_neither_side_is_staged(tmp_path: Path) -> None:
+    """The corpus already carries a duplicate (e.g. landed before this guard
+    existed), but --only names an unrelated clean plan — RULE-11 blast-radius
+    safety: this commit didn't create the duplicate, so it must not be blocked."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_06.md")
+    _write_plan(
+        active / "parent_2026_08_06_finalize.md",
+        extra_frontmatter="depends_on: [parent_2026_08_06]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_2026_08_06_finalize_dup.md",
+        extra_frontmatter="depends_on: [parent_2026_08_06]\ngate_on_depends: true",
+    )
+    # assigned_vm="NA" so this plan is exempt from the PRE-EXISTING missing-finalize-
+    # companion check too — this test isolates the duplicate-gate guard specifically.
+    clean = _write_plan(active / "unrelated_2026_08_06.md", assigned_vm="NA")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(clean)])
+    assert rc == 0
+
+
+def test_only_passes_for_a_single_finalize_plan_with_no_duplicate(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_06.md")
+    finalize = _write_plan(
+        active / "source_plan_2026_08_06_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_06]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(finalize)])
+    assert rc == 0
+
+
 # ── default (no --only) mode stays corpus-wide + baseline-ratchet ────────────
 
 
