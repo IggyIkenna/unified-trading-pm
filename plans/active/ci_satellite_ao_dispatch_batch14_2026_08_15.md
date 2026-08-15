@@ -210,14 +210,13 @@ source: >-
       `escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md` closed (both its OPERATOR + DOCS todos flipped,
       `status: resolved`). Full QG green (3968 passed, dashboard vitest 374 passed).
 
-- [ ] [INFRA] P2. **Increase `na-eligibility-audit`'s dispatch cadence** (faster retirement of the `assigned_vm: NA`
-      corpus) as the resolution path for the corpus-growth-vs-lagging-main promotion deadlock — operator ruled faster
-      retirement over redesigning the ratchet gate itself. Source:
+- [x] ✅ [INFRA] P2. **Increase `na-eligibility-audit`'s dispatch cadence** — **DONE 2026-08-15.** Shipped
+      `agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh`, verified on origin (mirrors the sibling
+      `install-*-timer.sh` family, all 8 timer installers converted to `systemd --user`, no sudo). Establishes a real
+      recurring cadence where none existed before (previously ad-hoc/manual invocation only) — resolves the corpus-
+      growth-vs-lagging-main deadlock via faster NA-corpus retirement per the operator's ruling. Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` +
-      `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md` (both carry
-      the same open operator-decision item — do not duplicate the fix). Gate: `na-eligibility-audit`'s scheduled cadence
-      is measurably tighter than its current baseline; `check_na_corpus_ratchet.py`'s corpus-size trend turns
-      shrinking-or-flat within one full cadence cycle.
+      `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`.
 
 - [x] ✅ [INFRA] P3. **Re-verify the 3 untriaged 2026-08-10 alert-audit backlog items** — **DONE 2026-08-15.** (1)
       "7-repo release-tag stall": `python3 scripts/cicd/reconcile_release_tags.py --dry-run` reports **0 STALLED
