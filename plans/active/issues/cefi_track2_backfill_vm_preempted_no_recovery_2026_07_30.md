@@ -986,3 +986,14 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   Gate remains unmet — VM mid-run, no terminal exit. Declining `-003` via `reason_code: "GATED"` (no `park_now`, per
   slot-3's 13:36Z rationale — periodic re-verify beats a park that risks the silent-stall class) per the established
   mechanism (slot-13's finding, 2026-08-02).
+
+- [ ] [INFRA] P1. **NEW 2026-08-15 (slot-7) — 9th relaunch.** 8th VM (`...binancefutu-x17-20260809-083733`) died: last
+      write `last_completed_date=2020-12-21`/`updated=2026-08-11T12:13:33Z` (day ~721/2769, ~26%), `run.log` cuts off
+      mid-request `15:21:43Z` same day; dead ~4d, no relaunch since. Reproduce 8th VM's `LAUNCH_PARAMS.json` via
+      `launch-cefi-sharded-backfill.sh --on-demand` (stall fixes already live). Repo: deployment-service.
+
+- **2026-08-15T21:53Z (slot-7, dispatched on `cefi_track2_coverage_backfill_checkpoints-005`)**: Re-verified — 8th VM
+  dead 4 days, undocumented until now (todo above); both docs' Progress Logs went quiet after 2026-08-10, the
+  silent-stall class the 2026-08-04 entry warned about (flagging, not re-diagnosing). `okxspot-x2-20260815-151408`
+  (todo 6's supplement) also ran+terminated (15:15-15:49Z), unchecked — out of scope. Declining `-005`, skip
+  `reason_code: "GATED"` (no `park_now` — this gap just proved periodic re-verify beats parking).
