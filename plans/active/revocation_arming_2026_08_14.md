@@ -504,3 +504,51 @@ proven otherwise.
 rule, and inheriting it would still have been wrong — because "not actively held" is not the same as "still accurate".
 Verify an inherited finding against the CURRENT origin before committing it: two of that note's three specifics had
 already been overtaken.
+
+### 2026-08-15 — resumption prompt (Step 8b): name the full goalposts, not just the next todo
+
+Per `/cursor-configs/skills/pre-compact/SKILL.md` § Step 8b (added this session — a standing requirement now, not a
+one-off, and mirrored generically into `agents/RULES.md` § 0b so it reaches worker/escalation/plan_health-family
+sessions too, not just this main/review session). Umbrella goal: the alert-driven-revocation mechanism fully armed —
+every emitted DP identity registered, every target resolvable, the guard that keeps it that way in place, and both plans
+in this chain closed and archived. Governing documents:
+
+- `/plans/active/revocation_arming_2026_08_14.md` — this plan, the active child
+- `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` — the parent; cannot archive until this child closes
+- `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` — tracks 2 of the items below; same
+  underlying work as the parent plan's copies, don't do it twice
+
+Open items across the chain, deduplicated, in priority order:
+
+1. **[CODE] P0 — actionable now.** Register the 7 emitted-but-unregistered DP ids (`DP-WATCHER-005/006`, `DP-VM-012`,
+   `DP-LIVE-001/002/003/004`) into `unified-api-contracts/canonical/crosscutting/dependency_revocation.py`'s
+   `DP_FAILURE_MODE_ACTIONS`, after the `DP-WATCHER-004` entry. Ready-to-paste text was produced and verified this
+   session (not repeated here — regenerate against current `evaluate_revocation()` behavior if this entry has aged).
+   Don't touch the two deliberate `_NONE`s (`DP-WATCHER-006`, `DP-LIVE-004`) without a fresh operator ruling.
+2. **[CODE] P1 — actionable now.** Build the two-arm `test_registry_id_closed_set.py` guard in `deployment-service`: arm
+   1 AST-walks `data_pipeline_monitors/**.py` for every `registry_id=` literal and asserts each resolves via
+   `evaluate_revocation()` (`len(ids) >= 10` guard-the-guard); arm 2 catches emitters that bypass `route_finding()`
+   entirely, which arm 1 structurally can't see.
+3. **[CODE] P1 — actionable now, code already written.** Ship the `launch-prediction-pipeline-vm.sh` migration onto the
+   canonical `setup-data-pipeline-vm.sh` admission-gated path. Code is written and live-verified (real smoke VM boot
+   confirmed the new `VM_TASK=prediction-pipeline` dispatch branch, the admission-gate wiring, and real MDPS work
+   against prod GCS data) but sits as an **uncommitted local diff** in this slot's `deployment-service` checkout
+   (`scripts/vm/setup-data-pipeline-vm.sh`, `scripts/vm/launch-prediction-pipeline-vm.sh`) — verify it's still there
+   before assuming it needs redoing. Just needs the gate run + quickmerge + this checkbox flipped with the real sha.
+4. **[SCRIPT] P0 — blocked-on-infra.** p95/max shard-duration measurement needs a slot with the runtime env wired or a
+   VM-side run, not fixable from a bare dev checkout. Leave open and say so if still blocked.
+5. **[CODE] P2 — actionable now, needs a design call.** FLEET_HALT/MaintenanceWindow double-page risk: either route
+   `_pause_schedulers` through `scheduler_maintenance.pause_for_maintenance()` (needs a `bucket`/`surface`/
+   `ttl_minutes` design decision) or confirm via a live sweep it never double-pages and close as a non-issue.
+6. **[CODE] P2 — operator-owned.** Does DP-WATCHER-001/002 need a FLEET_HALT mapping, or is the deadman poster's
+   independence from the revocation layer the intended design? Ask; do not decide unilaterally.
+7. **[DOC] P3 — actionable now, read-only.** Re-confirm the DP-MANIFEST-001/DP-CATALOG-001 HOLD-vs-DRAIN policy still
+   holds against the original "money-burn" framing.
+8. **[REVIEW] P0 — the final closing action.** Once every item above (and everything already open in the parent plan) is
+   done and unlocked, archive `alert_driven_dependency_revocation_2026_08_12.md` per the standard archival ritual, then
+   close this plan too.
+
+**Batching guidance**: gate once across `unified-api-contracts` + `deployment-service` before any commit — the shared QG
+governor measured NOT FIFO (a 42-minute wait was overtaken by younger runs); every extra gate cycle is a fresh lottery,
+not a queue position. Ship code via `quickmerge.sh --agent --files '<paths>'`, docs via `safe-doc-push.sh`. Flip this
+checkbox in the same turn as any ship.
