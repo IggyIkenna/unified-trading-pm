@@ -4,12 +4,12 @@ title:
   sports catalogue re-roll (--since 2019-01-01) is an 840K-blob multi-hour corpus walk, not a single-command job —
   killed after ~26min direct on shared host
 summary: >-
-  sports_satellite_ao_dispatch_batch13_2026_08_13.md's "re-roll build_instrument_catalogue.py --asset-group sports
-  --since 2019-01-01" todo was classified as a single-command, deterministic-outcome item. Smoke-tested it (confirmed
-  auth/merge/monotonic-guard all work), then launched the real full run: it discovered 840,035 by_date parquets to roll
-  up — a genuinely corpus-scale, multi-hour GCS walk — and was killed by the harness ~26 min in with no OOM evidence and
-  no sign the memory-cap wrapper fired. Recommends dispatching as a dedicated one-off VM job (infra craft) instead of
-  direct-host execution.
+  /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md's "re-roll build_instrument_catalogue.py
+  --asset-group sports --since 2019-01-01" todo was classified as a single-command, deterministic-outcome item.
+  Smoke-tested it (confirmed auth/merge/monotonic-guard all work), then launched the real full run: it discovered
+  840,035 by_date parquets to roll up — a genuinely corpus-scale, multi-hour GCS walk — and was killed by the harness
+  ~26 min in with no OOM evidence and no sign the memory-cap wrapper fired. Recommends dispatching as a dedicated
+  one-off VM job (infra craft) instead of direct-host execution.
 status: open
 nature: issue
 asset_group: [sports]
@@ -17,7 +17,11 @@ stage: [data]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, instruments-service, catalogue, vm-launcher, corpus-scale]
-related: [/plans/active/sports_satellite_ao_dispatch_batch13_2026_08_13.md]
+related:
+  [
+    /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 created: 2026-08-15
 author: claude-code (slot-18, backend_engineer, AO-dispatched)
 parent_epic: sports_master
@@ -25,8 +29,8 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P2
 source: >-
-  Investigated while executing sports_satellite_ao_dispatch_batch13_2026_08_13.md's build_instrument_catalogue.py
-  re-roll todo.
+  Investigated while executing /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md's
+  build_instrument_catalogue.py re-roll todo.
 resolved_by:
 locked_by:
 locked_since:
@@ -36,7 +40,7 @@ locked_since:
 
 ## What I found
 
-`sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s todo "Re-roll
+`/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s todo "Re-roll
 `build_instrument_catalogue.py --asset-group sports --since 2019-01-01` to pick up the +26,894 round rows" was
 classified by the 2026-08-13 conflict-check as "a real, single-command, deterministic-outcome item" —
 bounded/deterministic enough for direct backend_engineer dispatch.

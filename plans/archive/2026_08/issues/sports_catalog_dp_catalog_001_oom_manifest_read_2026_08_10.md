@@ -14,7 +14,7 @@ summary: >-
   manifest grows ~20MB/day). Fixed by bumping the sports lifecycle-catalogue-regen job 4Gi→16Gi/cpu4 in terraform (exact
   prediction precedent, 2026-07-15) + removing the redundant frame copy in code. The manual verification run at 16Gi
   cleared the manifest read and entered the FTP rollup (146,421 parquets) — see Verification.
-status: open
+status: archived
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -67,6 +67,10 @@ context_scope:
 ---
 
 # DP-CATALOG-001: sports catalogue stale — daily job OOMs at 4Gi on the 17.1M-row manifest read
+
+> **🟢 ARCHIVED 2026-08-15 — all todos complete.** The streaming-read todo closed (`instruments-service@f6f38f2f24`),
+> reconciled via `sports_satellite_ao_dispatch_batch13_2026_08_13.md` /
+> `sports_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
 
 ## Evidence trail (all verified live, this session — `gcloud`/`gsutil` as `unified-trading-sa`)
 
@@ -127,9 +131,11 @@ tradfi/prediction — a provisioning fix for a real data-volume growth curve, no
       2026-08-09T01:15:36Z, clearing DP-CATALOG-001. **RESOLVED 2026-08-10** — run `gg4kh` completed exit 0 in
       15m37.77s, `CATALOGUE_PROMOTED` rows=532868 `guard_reason=monotonic_ok`, `prod/catalog.parquet` mtime
       2026-08-10T10:52:49Z (verified live via `gsutil stat` + `gcloud logging read`). (repo: instruments-service)
-- [ ] [DATA] P3. Consider streaming the sports manifest read (pyarrow column projection + current-data_type filter
-      before to_pandas) so the rollup's peak memory stops tracking manifest growth linearly; the 16Gi bump gives
-      headroom, but the manifest will keep growing ~20MB/day. (repo: instruments-service)
+- [x] ✅ [DATA] P3. **DONE — instruments-service@f6f38f2f24 (reconciled via
+      `sports_satellite_ao_dispatch_batch13_2026_08_13.md`).** Consider streaming the sports manifest read (pyarrow
+      column projection + current-data_type filter before to_pandas) so the rollup's peak memory stops tracking manifest
+      growth linearly; the 16Gi bump gives headroom, but the manifest will keep growing ~20MB/day. (repo:
+      instruments-service)
 
 ## Progress Log
 

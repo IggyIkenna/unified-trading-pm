@@ -181,11 +181,15 @@ source: >-
       `test_drop_removed_venues_matches_base_before_first_hyphen` asserting a now-stale expected drop (pre-existing red,
       verified on a clean tree before touching it) — updated the assertion to match the current correct behavior.
       Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [BACKEND] P2. Add a deploy-churn/crash-loop health condition (e.g. a service redeployed ~14x in hours, ~40%
-      config-only) (Phase 6 stretch) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (same craft-mismatch catch as the todo
-      above): also a pure `_condition()` derivation over already-fetched `DeployFact`s in
-      `deployment-api/deployment_api/services/artifact_pipeline/service.py`, rendered by the same generic Health table —
-      no TS/React surface. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [x] ✅ [BACKEND] P2. Add a deploy-churn/crash-loop health condition (e.g. a service redeployed ~14x in hours, ~40%
+      config-only) (Phase 6 stretch) — deployment-api@`ec80509550`. Added `_deploy_churn_condition()` (a workload with
+      ≥10 redeploys in the trailing 24h — `_CHURN_MIN_DEPLOYS`/`_CHURN_WINDOW_HOURS`, picked comfortably below the doc's
+      own "~14x in hours" example) built purely off already-fetched `DeployFact`s, reporting the worst offender's
+      redeploy count + config-only fraction; wired into `health()`'s conditions list, rendered by the existing generic
+      Health table (no TS/React surface). 3 new unit tests
+      (`test_health_flags_deploy_churn`/`test_health_does_not_flag_deploy_churn_below_threshold`/
+      `test_health_does_not_flag_deploy_churn_outside_window`); full deployment-api quality-gates passed. Source:
+      `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [x] ✅ [CODE] P2. Resolve the ACTIVE_INDEX.md dangling normative-ref: edit
       cursor-configs/skills/plan-reconcile/SKILL.md (lines 5,59,425) + agents/plan_reconciler.md (line 114) to drop the
       stale name and cite only INDEX.md, or regenerate ACTIVE_INDEX.md if a distinct artifact was genuinely intended —

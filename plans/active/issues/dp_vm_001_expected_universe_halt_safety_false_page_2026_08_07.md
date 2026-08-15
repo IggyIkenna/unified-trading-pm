@@ -172,11 +172,13 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
       already owns this" from "genuinely orphaned" before paging, rather than adding a bespoke per-signal carve-out each
       time a new benign-but-noisy exit code surfaces (this is the second such carve-out in this file, after
       124/worker_stalled — a pattern worth generalizing if a third case appears).
-- [ ] [DOC] P3. `/codex/15-runbooks/incidents/rb_infra_relaunch.md` currently frames every DP-VM-001 dispatch as
-      "relaunch the VM" by default; add a short callout that a worker should first check whether the failing VM's own
-      launcher family has a supervising wrapper (grep `deployment-service/scripts/vm/` for a `*-historical-*` or
-      loop-style caller) before relaunching, mirroring the "re-fails the SAME way twice → STOP" rule that's already
-      there but easy to skip past under dispatch pressure.
+- [x] ✅ [DOC] P3. **DONE — unified-trading-pm@c5816bc7e6 (reconciled via
+      `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`).**
+      `/codex/15-runbooks/incidents/rb_infra_relaunch.md` currently frames every DP-VM-001 dispatch as "relaunch the VM"
+      by default; add a short callout that a worker should first check whether the failing VM's own launcher family has
+      a supervising wrapper (grep `deployment-service/scripts/vm/` for a `*-historical-*` or loop-style caller) before
+      relaunching, mirroring the "re-fails the SAME way twice → STOP" rule that's already there but easy to skip past
+      under dispatch pressure.
 
 ## Progress Log
 

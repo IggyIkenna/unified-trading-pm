@@ -14,7 +14,7 @@ summary: >-
   the paired finalize plan). Conflict-checked against every existing active batch/finalize plan for this tranche via
   basename-citation cross-reference before drafting — no item here duplicates ground an existing dispatched Todos entry
   already claims.
-status: active
+status: archived
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -27,7 +27,7 @@ related:
     /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
     /plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
-    /plans/active/issues/sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md,
+    /plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md,
     /plans/archive/2026_08/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md,
     /plans/archive/2026_08/issues/sports_features_dp_vm_001_upstream_fixtures_gap_2026_08_10.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
@@ -66,6 +66,10 @@ source: >-
 ---
 
 # sports satellite AO dispatch batch 13 — 2026-08-13
+
+> **🟢 ARCHIVED 2026-08-15 — all 21 todos complete.** Reconciled into their source docs' own checkboxes via
+> `sports_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`; see that finalize plan for the full reconciliation
+> evidence.
 
 > **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
 > bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
@@ -151,25 +155,25 @@ source: >-
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
-                                          Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
-                                          rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
-                                          the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
-                                          identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
-                                          `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
-                                          **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
-                                          evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
-                                          source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
-                                          only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
-                                          filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
-                                          `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
-                                          call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
-                                          venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
-                                          `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
-                                          onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
-                                          market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
-                                          no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
-                                          correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
-                                          list instead.
+                                                          Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
+                                                          rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+                                                          the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+                                                          identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
+                                                          `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+                                                          **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
+                                                          evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
+                                                          source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
+                                                          only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
+                                                          filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
+                                                          `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
+                                                          call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
+                                                          venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
+                                                          `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
+                                                          onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
+                                                          market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
+                                                          no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
+                                                          correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
+                                                          list instead.
 
 - [x] ✅ [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
       before folding into K2 **ALREADY DONE — duplicate of `sports_consolidated_native_ao_extract_2026_07_25.md`'s own

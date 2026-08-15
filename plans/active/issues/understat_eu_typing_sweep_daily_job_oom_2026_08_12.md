@@ -108,10 +108,10 @@ mechanism, currently and repeatedly failing.
       17,200,956 rows / 42 columns / 210,619,070 bytes on disk as of 2026-08-12 (vs. this job's own terraform sizing
       comment's stale "~5M rows" baseline from 2026-07-13, confirming genuine index growth, not a code change, as the
       trigger). Cross-referenced the identical-file precedent
-      `sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md`: the SAME sports availability_index.parquet OOM'd
-      a DIFFERENT Cloud Run Job (`lifecycle-catalogue-regen-sports`) at 4Gi doing its own bare full-schema read, root-
-      caused to pandas' per-cell object-dtype overhead inflating a compact on-disk parquet to ~19.5GB peak RSS — fixed
-      there by bumping to 16Gi/cpu4. Same mechanism here.
+      `/plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md`: the SAME sports
+      availability_index.parquet OOM'd a DIFFERENT Cloud Run Job (`lifecycle-catalogue-regen-sports`) at 4Gi doing its
+      own bare full-schema read, root- caused to pandas' per-cell object-dtype overhead inflating a compact on-disk
+      parquet to ~19.5GB peak RSS — fixed there by bumping to 16Gi/cpu4. Same mechanism here.
 - [x] ✅ [CODE/INFRA] P1. Fix based on the diagnosis above — either raise the Cloud Run Job's memory allocation (with a
       measured number, not a guess — same discipline as the rollup-service memory fix in the deploy-blocker incident
       chain) or add column projection to the index read. Repo: instruments-service / deployment-service (whichever owns
@@ -167,10 +167,10 @@ mechanism, currently and repeatedly failing.
       `gcloud run jobs update`)**: bumped `terraform/gcp/understat_eu_typing_scheduler.tf`'s `understat_eu_typing_job`
       8Gi/cpu2 → 16Gi/cpu4 — MEASURED, not guessed: exact precedent match to the sibling
       `lifecycle-catalogue-regen-sports` fix on the SAME file (4Gi→16Gi/cpu4,
-      `sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md`), and Cloud Run gen2 requires cpu>=4 for 16Gi.
-      Applied to the LIVE job immediately via `gcloud run jobs update --memory=16Gi --cpu=4` (verified:
-      `gcloud run jobs describe` now reads 16Gi/4), matching that precedent's "don't wait for terraform apply"
-      approach. 3. **Adjacent finding, fixed same pass (unified-trading-library@ed210854cf)**:
+      `/plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md`), and Cloud Run gen2
+      requires cpu>=4 for 16Gi. Applied to the LIVE job immediately via `gcloud run jobs update --memory=16Gi --cpu=4`
+      (verified: `gcloud run jobs describe` now reads 16Gi/4), matching that precedent's "don't wait for terraform
+      apply" approach. 3. **Adjacent finding, fixed same pass (unified-trading-library@ed210854cf)**:
       `read_availability_index()`'s own docstring said `filters=` is "ignored on the full-schema path" — false as of
       `mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`, which added `_read_availability_index_full_filtered`
       specifically to honor `filters=` on that path too (the function's own docstring already said so — a real
