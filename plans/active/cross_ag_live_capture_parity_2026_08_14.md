@@ -245,12 +245,45 @@ The rest is unowned.
       VM was safe to cycle — deleted `mtds-live-cefi-consolidated-20260809-121034`, relaunched via
       `launch-mtds-live-cefi-consolidated.sh` (`mtds-live-cefi-consolidated-20260814-041422`), confirmed the new VM's
       on-disk code contains `_resolve_is_lookup_venue`/`_MAX_CHANNELS_PER_SUBSCRIBE_MSG` (the fix functions). Caught and
-      stopped a duplicate-VM race from a too-fast second launch attempt before it created a second VM. **Captured-row
-      verification NOT YET obtained** — as of this session, instruments-service had not yet published 2026-08-14's CEFI
-      instrument catalog at all (0 blobs under `instrument_availability/by_date/day=2026-08-14/`, vs 22 on 08-12/08-13;
-      08-13's catalog itself wasn't published until 13:37 UTC) — this affects EVERY cefi venue on the VM uniformly,
-      including the 6 previously-healthy ones, confirming it's an unrelated IS daily-catalog-timing gap, not a
-      regression from this fix. Re-check after ~13:00 UTC today for captured rows on all four shards.
+      stopped a duplicate-VM race from a too-fast second launch attempt before it created a second VM. **2026-08-15
+      re-verification (empty_confirmed_and_coverage_correctness_audit_2026_08_15.md todo "Verify/close BYBIT-FUTURES
+      captured-row verification")**: confirmed live via SSH into the VM (still `RUNNING`, boot
+      `2026-08-13T20:25:34-07:00`) + a direct manifest query. Findings: - The instrument-availability index shows
+      BYBIT-FUTURES 100% `empty_confirmed` across all 4,664 historical rows including 4,652 dated today (2026-08-15) —
+      as of the moment this query ran, still zero `captured` rows. - Tailing `live-bybit-futures-trades.log` (mirrors
+      all 4 BYBIT-FUTURES shards) shows the ORIGINAL fix (`_resolve_is_lookup_venue` routing BYBIT-FUTURES → the primary
+      `BYBIT` catalog) is genuinely active and correct, but hit a SEPARATE, previously-undiagnosed problem: every
+      5-minute retry from VM boot (2026-08-14 03:27 UTC) through 2026-08-15 06:02 UTC logged
+      `read_is_universe_sync: no instruments.parquet for       cefi/BYBIT-FUTURES (lookup_venue=BYBIT) day=<date> in either by_date layout`
+      — the resolved lookup venue was right, but instruments-service's BYBIT catalog for that UTC day genuinely did not
+      exist yet at every checked time, for BOTH 08-14 and 08-15 (not a one-day fluke). **Then, at 2026-08-15 06:07:55
+      UTC, the identical retry succeeded**:
+      `read_is_universe_sync: resolved 1282 instruments cefi/BYBIT-FUTURES day=2026-08-15` — confirming this is a
+      genuine IS daily-catalog PUBLISH-TIMING gap (the catalog for a given UTC day isn't available until sometime in the
+      morning UTC, well after the day rolls over), not a code bug in the venue-resolution fix. The retry loop is working
+      as designed and does NOT need a restart once the catalog lands. - **Captured-row confirmation: CONFIRMED STILL
+      ZERO, a real unresolved bug** — read the live VM's per-VM manifest shard directly
+      (`_index/per_vm/mtds-live-cefi-consolidated-20260814-041422.parquet`, NOT the possibly-lagging consolidated index)
+      ~1h after the 06:07:55 UTC successful universe resolution: 5,128 BYBIT-FUTURES rows in that shard, **100%
+      `empty_confirmed`**, including `data_type=trades` rows dated today — i.e. after the venue-alias fix correctly
+      resolved 1,282 instruments, the connector is still writing confirmed-empty markers, not real captured trades. This
+      is a THIRD, previously undiagnosed problem, distinct from both the original Tardis-alias bug (fixed, confirmed
+      working) and the IS catalog publish-timing gap (real, but not the current blocker — the catalog was available and
+      resolved successfully by 06:07:55). Not further root-caused this session (would need the WS connect/subscribe code
+      path + a live log grep for subscribe-frame confirmations/errors after the 06:07:55 resolve — out of budget for
+      this pass). - [ ] [CODE] P1. **BYBIT-FUTURES live capture is confirmed still fully broken as of 2026-08-15**
+      despite the 2026-08-09 venue-alias fix working correctly (universe resolves) — root-cause why the WS connector
+      produces zero captured rows across all 4 data_types (trades/book_snapshot_5/derivative_ticker/ depth_of_book_10)
+      even after a successful instrument-universe resolve. Start by grepping `live-bybit-futures-trades.log` on
+      `mtds-live-cefi-consolidated-20260814-041422` for subscribe-frame confirmations/rejections in the minutes after a
+      `resolved N instruments` line, and check whether the connector's subscribe step ever actually fires post-resolve.
+      DoD: real `captured` rows appear for at least one BYBIT-FUTURES data_type, or a named root cause + fix is filed. -
+      [ ] [DATA] P2. File the separate IS daily-catalog PUBLISH-TIMING gap as its own instruments-service issue —
+      BYBIT's `instrument_availability/by_date/day=<today>/.../venue=BYBIT/instruments.parquet` was absent at every
+      check from VM boot (2026-08-14 03:27 UTC) through 2026-08-15 06:02 UTC, only appearing by 06:07:55 UTC — i.e. the
+      same-day catalog isn't reliably available until well into the UTC morning. Likely affects every live shard that
+      depends on a same-day IS catalog at boot/early-day, not just BYBIT-FUTURES — worth a dedicated investigation into
+      IS's daily catalog cron schedule/duration.
 - [x] [DATA] P1. Add a standing live-capture-productivity check across all asset groups — a shard with a running process
       and zero `captured` rows over N days must page — DoD: replaying the check against the 2026-08 manifest window
       fires on sports, prediction and the four cefi shards; routes per the actionable-only alerting rule. — DONE
