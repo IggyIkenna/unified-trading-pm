@@ -408,8 +408,30 @@ source: >-
       evidence of a gap. The 2026-06-17 "10 dataless coins" diagnosis was accurate **at the time** (pre-2026-06-23
       mechanism); the catalogue-mvp cutover + subsequent periodic backfill runs already closed it — no VM launch needed,
       nothing left to do here. Source: `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
-- [ ] [CODE] P2. OKX-SWAP perp funding sparse (only ~9 coins captured in 2026 vs expected ~19+) -- verify the OKX
-      derivative_ticker backfill universe in MTDS. Source:
+- [x] ✅ [CODE] P2. **STALE PREMISE — the "only ~9 coins" figure is ~2 months stale; the current OKX-SWAP
+      derivative_ticker backfill universe + capture are healthy, no code bug found.** (2026-08-15, slot-20·infra) Two
+      independent, bounded (single-object, column-projected) live checks against prod `central-element-323112`: (1)
+      **Universe-resolution code** (`tardis_symbol_resolution._catalogue_symbols_for_venue_date`, the actual
+      per-(venue,date) backfill-universe resolver `TardisAdapter._resolve_symbols` calls) reads the rolled-up CeFi
+      lifecycle catalogue (`instruments-store-cefi-prd-…/prod/catalog.parquet`) with NO per-venue base-currency
+      restriction — the MVP base universe (`CEFI_BASE_ASSET_UNIVERSE`, ~490 assets) is shared across every cefi venue,
+      gated only by the generic mvp+perp-gate predicate. Live read: OKX-SWAP carries 667 catalogue PERPETUAL rows / 417
+      distinct mvp base assets vs BINANCE-FUTURES' 929 rows / 592 distinct mvp bases — same order of magnitude, no
+      OKX-specific universe cap in the resolver. (2) **Actual captured data** — a bounded, streamed (column-projected,
+      `iter_batches`, no full-corpus load; wrapped under `run-bounded-analysis.sh`), read of
+      `market-data-tick-cefi-prd-…/_index/availability_index.parquet` (29.4M rows) filtered to
+      `data_type=derivative_ticker` + `date>=2026-01-01` found OKX-SWAP has **379 distinct base assets with
+      `capture_status=captured` AND `row_count>0` in 2026** — vs BINANCE-FUTURES 603 and BYBIT 555 (same read). This
+      directly contradicts the "~9 coins" premise (a >40x gap vs the actual current count) — the June observation was
+      accurate at the time (the source doc's own coverage-window note: "funding to 2026-05-24") but the ongoing
+      pipeline/backfill work since then closed the gap; no separate fix landed here, this is a fresh verification.
+      **Content spot-check** (3 real captured OKX-SWAP + 1 BINANCE-FUTURES shard, read via the production
+      `CanonicalParquetReader.read_shard(..., pipeline_mode="batch_tardis")`, same code path a live caller uses):
+      `funding_rate` column present and >99.9% non-null in every sample (NEIRO-USDT 41172/41178, MOODENG-USDT
+      90260/90269, ACE-USDT 43693/43693) — no captured-but-empty-funding defect either. **Verdict**: nothing to fix in
+      MTDS's OKX-SWAP derivative_ticker backfill universe or capture path; closing as verified rather than filing a new
+      finding. (Not touching the source doc per this batch's own convention — checkbox reconciliation back into source
+      docs happens in the paired finalize plan.) Source:
       `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
 - [x] ✅ [CODE] P2. **STALE PREMISE, CONFIRMED — duplicate of an already-resolved source-doc item, no fix needed.**
       (2026-08-15, slot-10·infra) The source doc's own item (`citadel_paper_batch_live_reconciliation_2026_06_19.md`
