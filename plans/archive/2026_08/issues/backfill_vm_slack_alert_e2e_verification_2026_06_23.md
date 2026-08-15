@@ -6,7 +6,7 @@ summary: >-
   tick before writing its sentinel (fixed in code, not yet deployed), Python stdout/stderr isn't captured in Cloud
   Logging for fleet monitors/alerting, Slack delivery isn't end-to-end observable, and delivered alerts were generic
   because the UTL envelope was never unwrapped.
-status: open
+status: resolved # (was: open) 2026-08-15 — 0 open todos, archived per the 6-step ritual (follow-on to the 2026-08-12 BRIDGE note)
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,7 +31,6 @@ source:
   ]
 assigned_vm: NA
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -48,6 +47,11 @@ context_scope:
     alerting-service/alerting_service/notifiers/data_pipeline_slack.py,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-15** — this is the follow-on archival pass the doc's own 2026-08-12 BRIDGE note deferred to. 0
+> open todos, `locked_by:` already empty. `archive_exempt: true` dropped, `status: resolved`, moved to
+> `plans/archive/2026_08/issues/`. Reconciled via `/plans/active/issues/plan_reconciler_findings_all_2026_08_15.md` P3.
+> Corpus referrers with a literal path to the old `plans/active/issues/` location repointed in the same pass.
 
 ## What I found
 

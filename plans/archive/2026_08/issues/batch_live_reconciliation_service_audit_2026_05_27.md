@@ -5,7 +5,7 @@ summary: >-
   Full repo audit of batch-live-reconciliation-service (BLRS), the T+1 nightly batch-vs-live reconciliation
   orchestrator: documents its multi-stage DAG, data flow, and CLI/API surface, and catalogues codex↔code drift plus
   misplaced cross-repo responsibilities as ✅-decided vs ❓-needs-operator items tracked in §7.
-status: open
+status: resolved # (was: open) 2026-08-15 — 0 open todos, archived per the 6-step ritual (follow-on to the 2026-08-12 BRIDGE note)
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,7 +44,6 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -61,6 +60,11 @@ context_scope:
 ---
 
 # Batch-Live Reconciliation Service (BLRS) — Audit
+
+> **✅ ARCHIVED 2026-08-15** — this is the follow-on archival pass the doc's own 2026-08-12 BRIDGE note deferred to. 0
+> open todos, `locked_by:` already empty. `archive_exempt: true` dropped, `status: resolved`, moved to
+> `plans/archive/2026_08/issues/`. Reconciled via `/plans/active/issues/plan_reconciler_findings_all_2026_08_15.md` P3.
+> Corpus referrers with a literal path to the old `plans/active/issues/` location repointed in the same pass.
 
 > **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** D1 already DECIDED=A. The three routed items
 > are now ruled (FINAL). Execution: **slot 7** records each into `batch_live_symmetry_master` (SSOT) and ships the quick

@@ -22,11 +22,11 @@ related:
     /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    /plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
     /plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md,
     /plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/v2_engine_venue_buildout_2026_06_15.md,
   ]
 created: "2026-07-26"
@@ -70,15 +70,16 @@ context_scope:
   (the carry_staked_basis family — combines DeFi LST staking with CeFi perp funding across venues; open: live/broad-
   universe coverage-completion work)
 - [citadel_paper_batch_live_reconciliation_2026_06_19.md](/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md)
-- [issues/batch_live_reconciliation_service_audit_2026_05_27.md](/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md)
+- [issues/batch_live_reconciliation_service_audit_2026_05_27.md](/plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md)
+  (archived 2026-08-15)
 - [issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md](/plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md)
   (the paper==batch-rerun==live determinism-spine family — finishing the ε=0 proof machinery + BLRS audit remediation +
   the 4-AG smoke-harness discrepancy set)
 - [defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md](/plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
 - [issues/capability_wizard_analysis_findings_2026_06_11.md](/plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md)
-- [issues/capability_wizard_gap_discovery_2026_06_11.md](/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
-  (the capability-wizard family — full-taxonomy coverage across the 53-57 archetype registry, spans DeFi/CeFi treasury
-  splits + options/vol)
+- [issues/capability_wizard_gap_discovery_2026_06_11.md](/plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md)
+  (archived 2026-08-15) (the capability-wizard family — full-taxonomy coverage across the 53-57 archetype registry,
+  spans DeFi/CeFi treasury splits + options/vol)
 - [v2_engine_venue_buildout_2026_06_15.md](/plans/active/v2_engine_venue_buildout_2026_06_15.md) (confirmed multi-AG:
   CeFi venues, DeFi/GMX, sports/betfair-smarkets, TradFi/CME options, prediction/ML_LEAN engines, one buildout). **Known
   over-count, carried from the parent's audit**: this doc's 37 open boxes are MOSTLY already covered by its own

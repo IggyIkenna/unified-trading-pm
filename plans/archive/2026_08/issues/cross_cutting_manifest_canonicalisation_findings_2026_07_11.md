@@ -22,7 +22,7 @@ summary:
   adjudicated (no fresh CF-audit found). Legacy-BUCKET delete (a distinct axis from in-bucket duplicate cleanup, which
   is done) remains genuinely open for all four AGs — see the 'Adjudication 2026-07-14' section for the full per-claim
   evidence.**"
-status: open
+status: resolved # (was: open) 2026-08-15 — 0 open todos, archived per the 6-step ritual (follow-on to the 2026-08-12 BRIDGE note)
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -50,7 +50,6 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 source:
@@ -65,6 +64,11 @@ context_scope:
 ---
 
 # Cross-cutting manifest-canonicalisation findings (2026-07-11 /autonomous)
+
+> **✅ ARCHIVED 2026-08-15** — this is the follow-on archival pass the doc's own 2026-08-12 BRIDGE note deferred to. 0
+> open todos, `locked_by:` already empty. `archive_exempt: true` dropped, `status: resolved`, moved to
+> `plans/archive/2026_08/issues/`. Reconciled via `/plans/active/issues/plan_reconciler_findings_all_2026_08_15.md` P3.
+> Corpus referrers with a literal path to the old `plans/active/issues/` location repointed in the same pass.
 
 > Companion to the 5 per-AG `*_manifest_canonicalisation_2026_06_01.md` plans + the master catalogue. Written after
 > driving PREDICTION to full completion (E7-green manifest content + E8 tick-bucket delete + E8b instruments-store
