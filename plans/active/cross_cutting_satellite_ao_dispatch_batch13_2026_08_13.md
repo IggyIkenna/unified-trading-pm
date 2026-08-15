@@ -318,8 +318,15 @@ source: >-
       its output-capturing `$(...)` call, so none carries the inherited-`-e` trap. No repo outside `unified-trading-pm`
       has any `.github/workflows/` file matching either pattern at all. No code change needed. Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
-- [ ] [BACKEND] P2. add a meta-assertion that any job publishing a notify-consumed verdict output emits it on the
-      failure path too Source:
+- [x] ✅ [BACKEND] P2. Added `check_verdict_output_failure_path.py`, wired into `base-service.sh` (fleet-wide, every
+      repo's own `.github/workflows`) — unified-trading-pm@cb1a09203b (2026-08-15, slot-11·backend). Flags any job whose
+      job-level `outputs:` maps a key literally named `verdict` to a step output, when that output is consumed elsewhere
+      in the same file via `needs.<job>.outputs.verdict`, unless the producing step (or a sibling `if: always()` step)
+      guarantees the write survives a failing checker command (`set +e`, a `trap ... EXIT` handler, or a dedicated
+      always-step). Verified both directions: PASSES clean on the current fleet (59 PM workflows + every sibling repo's
+      own workflows, incl. `ldr-docs-gate.yml`'s already-shipped `set +e` fix), and a synthetic reproduction of the
+      original unguarded-inline shape is correctly flagged. `bash quality-gates.sh     --no-fix` green,
+      sentinel-verified at HEAD; quickmerge landed on LDR (post-push ancestry verified). Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
 - [x] ✅ [CODE] P2. Pass --build-arg
       SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION in strategy-service and greeks-service
