@@ -113,7 +113,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       unreachable local state. `quality-gates.sh` fully green (4760 passed, 0 failed, all 4 previously-red invariant
       tests now pass); full evidence in
       `plans/active/issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (resolved).
-- [x] ✅ [IS] P1. **Regenerate catalogue + expected universe** — `build_instrument_catalogue.py` +
+- [ ] [IS] P1. **Regenerate catalogue + expected universe** — `build_instrument_catalogue.py` +
       `enumerate_expected_universe.py` (v2); confirm the new `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` +
       `(AAVE, spot_asset, oracle_prices)` cells appear as `expected_unattempted` (honest RED). Verify #1 (CEX) needs no
       edit (no-op). — covered by the adapter registration above (shipped `instruments-service@fd0d12a9`); the AAVE
@@ -124,10 +124,21 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       is still open if this plan intends a literal regen pass beyond the invariant-test confirmation — check before
       archiving this todo further.
 
-      **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: a literal regen-script run IS required before this
-                      closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
-                      `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
-                      infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`.
+      **REVERTED to `[ ]` (2026-08-15, /plan-reconcile, operator interactive) — live infra check against the 2026-08-12
+          ruling below found only HALF done.** Checked directly via `gcs_describe_object`/`download_bytes`
+          (`unified_trading_library.cloud_interface`, no gsutil/gcloud): `build_instrument_catalogue.py`'s output
+          (`gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`) has `last_modified
+          2026-08-15T04:34:25Z` — genuinely regenerated post-ruling, with `CHAINLINK-ETHEREUM:SPOT_PAIR:AAVE-USD` and the
+          AAVE_V3 spot_asset rows present (78,447 rows total). But `enumerate_expected_universe.py`'s own dedicated output
+          (`gs://market-data-tick-defi-prd-central-element-323112/_index/expected_universe_ranges.parquet`) has
+          `last_modified 2026-07-03T23:31:06Z` — over a month BEFORE the ruling, unchanged since. The ruling required BOTH
+          scripts to have run; only the catalogue half did. This todo stays open until the v2 enumerator is actually
+          executed and its output timestamp moves past 2026-08-12.
+
+          **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: a literal regen-script run IS required before this
+                          closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
+                          `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
+                          infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`.
 
 ## Phase 2 — Collectors ready to fetch
 
