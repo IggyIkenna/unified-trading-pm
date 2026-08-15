@@ -164,14 +164,20 @@ source:
       Recover: restore the blob and re-run quickmerge on a quiet host, or use the sanctioned `IGNORE_TIMEOUT=true` since
       the content is already verified green.
 
-- [ ] [CODE] P1. **Admission-gate coverage is 173/186 launchers — the real gap is the 8 AWS-path launchers** (measured
-      2026-08-14). Only launchers routing through `setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` get the
-      admission check and the heartbeat drain poll; the 158 that use `launcher_common.sh`'s `lc_` helper get the
-      LIGHTWEIGHT observability snippet, which deliberately omits the tarball+venv+heartbeat-daemon install and
-      therefore has neither gate. The two sets overlap, so the honest statement is: the canonical path is gated, the
-      lightweight path is not, and a per-launcher census is needed to say which real VMs are uncovered. Either add the
-      admission check to the `lc_` helper (it needs no venv — it can curl the marker) or document the lightweight path
-      as deliberately ungated. Repo: deployment-service.
+> **OPERATOR DECISION 2026-08-15 — migrate the lightweight `lc_`-helper launchers onto `vm-exec-with-gcs-tee.sh`**,
+> rather than duplicating an admission check into the lightweight path or accepting it as permanently ungated. Removes
+> the second, ungated launch path entirely instead of growing a parallel gate implementation for it.
+
+- [ ] [CODE] P1. **Scope the `lc_`-helper → `vm-exec-with-gcs-tee.sh` migration.** 158 launchers currently use
+      `launcher_common.sh`'s lightweight `lc_` snippet (no venv/tarball/heartbeat-daemon install, hence no admission
+      gate and no drain poll). Before migrating any of them: (1) a fresh per-launcher census — how many of the 158 still
+      resolve to a real, currently-launchable VM_NAME/VM_PREFIX vs. dead/superseded scripts (the VM-launcher-
+      registration QG step already skips 18 with no derivable prefix — start there); (2) confirm
+      `vm-exec-with-gcs-tee.sh` genuinely has no venv-weight assumptions that the lightweight callers were specifically
+      avoiding (why they're on `lc_` at all, not `setup-data-pipeline-vm.sh`, needs to be understood per-launcher, not
+      assumed uniform); (3) given the count, this is very likely too large for one todo in this plan — SPLIT into its
+      own migration plan once the census is in (`plans/active/task_template.md` "10-100 todos" /
+      partial-parallelism-must-split rule). Repo: deployment-service.
 - [x] ✅ [CODE] P1. **`DP-CATALOG-001` (catalogue-stale) now stamps `upstream_entity`.** —
       **deployment-service@2cc79b2a7c.** `meta_watchers.check_catalogue_freshness` now sets
       `details["upstream_entity"] = "instrument-catalog"`, the registered UAC entity type
@@ -180,33 +186,40 @@ source:
       `dependency_revocation.py`), so this closes a real dormant path: `route_finding()` was already reached, the policy
       already said HOLD, only the target resolution was empty. Test updated (`test_catalogue_stale_emits_critical` now
       asserts the stamped field). Repo: deployment-service.
-- [ ] [CODE] P0. **`DP-MANIFEST-001` — the operator's own named "money-burn" scenario — cannot actuate at all, and the
-      gap is deeper than a missing field.** Found 2026-08-14 correcting the todo above: `meta_watchers` has no
-      `check_consolidator_liveness` function (that name never existed under that spelling). The codex table's actual
-      DP-MANIFEST-001 emitter is `assert_consolidator_healthy` in **`unified-trading-library`**
-      (`unified_trading_library/monitors/consolidator_liveness.py`), which calls UTL's bare `log_event()` — confirmed by
-      reading it: `log_event` writes to the event-log spine (GCS/PubSub), NOT a `PipelineFinding`, and never reaches
-      deployment-service's `escalation.route_finding()`. Confirmed via
-      `grep -rn 'registry_id="DP-MANIFEST-001"' deployment_service/` → zero hits outside tests: this alert has **no
-      production `route_finding()` call site at all**, so it cannot be armed by anything this plan already shipped — it
-      never gets as far as `targets_for_finding()`. **Second, independent problem**: even a wired emitter would resolve
-      zero fan-out targets, because `"manifest-consolidator"` is not a registered `upstream_entity_type` in
-      `unified_api_contracts.instruments_preflight_dag` at all — the only 5 registered values are `fixtures` / `teams` /
-      `instrument-catalog` / `canonical_question_group_registry` / `instruments`
-      (`grep -n upstream_entity_type= instruments_preflight_dag.py`). `DP-WATCHER-004` (accidental scheduler pause, same
-      `_HOLD` policy, comment: "same dependent action" as DP-MANIFEST-001) DOES reach `route_finding()` today
-      (`meta_watchers._emit` call site in `consolidator_scheduler_watcher.py`) but hits the identical second problem —
-      stamping `upstream_entity` on it would be a no-op until the entity is registered. The closest thing that DOES
-      reach `route_finding()` with a real target-resolvable shape is `consolidator_oom_watcher.check_consolidator_oom`
-      (registry_id `DP-WATCHER-005`, OOM-only variant, details carry `asset_group` not `vm_name`/`upstream_entity` —
-      same dormancy). **This is a design decision, not a mechanical stamp**: either (a) add `manifest-consolidator` as a
-      real `upstream_entity_type` with a `PreflightRequirement` per asset_group in UAC (cross-repo, changes the
-      admission-gate semantics, needs an operator call on whether "manifest freshness" is a preflight requirement the
-      same way `fixtures`/`teams` are), or (b) give deployment-service its own non-OOM-gated
-      consolidator-heartbeat-staleness watcher that emits a real `PipelineFinding(registry_id="DP-MANIFEST-001")`
-      through `route_finding()`, mirroring `check_catalogue_freshness`'s shape, and use `vm_name`/family-style
-      resolution (bucket → asset_group → prefix family, no entity graph needed) instead of the entity-fan-out path.
-      Repo: unified-trading-library (read), deployment-service (fix), unified-api-contracts (if option a).
+
+> **OPERATOR DECISION 2026-08-15 — `DP-MANIFEST-001`/`DP-WATCHER-004` resolve SELF-SCOPED, no UAC entity-graph
+> registration.** Verified topology first: each manifest-consolidator instance maps 1:1 to one
+> `(asset_group, market-data|instruments)` pair (`_BUCKET_PREFIX_TO_SCHEDULER_KEY_KIND` × `_KNOWN_ASSET_GROUPS` in
+> `consolidator_liveness.py`) — it is not a fleet-wide shared surface the way `dependent_asset_groups()`'s own docstring
+> speculatively describes. A stale consolidator only ever needs to hold its OWN asset_group's launches, the same shape
+> as a dead VM holding its own family. Registering `"manifest-consolidator"` as an `upstream_entity_type` in UAC's
+> `instruments_preflight_dag.py` was rejected: cross-repo, and it would stretch that graph's meaning (which today means
+> "this admission-gate check requires entity X fresh") to cover something that isn't a per-preflight-trigger dependency
+> at all. **Wiring reuses UTL's existing reader** — `consolidator_liveness.py`'s per-bucket stale/paused-reason logic
+> (`REASON_SCHEDULER_PAUSED` / `REASON_HEARTBEAT_STALE`) is already built and tested; deployment-service's sweep calls
+> it and wraps the result into a `PipelineFinding`, rather than re-deriving staleness from scratch a second time.
+> deployment-service already depends on UTL everywhere, so this is the normal dependency direction, not a new one.
+
+- [ ] [CODE] P0. **Wire `DP-MANIFEST-001` into `route_finding()` by reusing UTL's consolidator-liveness reader.** No
+      production emitter exists today (confirmed: `grep -rn 'registry_id="DP-MANIFEST-001"' deployment_service/` → zero
+      hits outside tests). Add a call in deployment-service's sweep (`cli.py`, alongside the existing
+      `consolidator_oom_watcher`/`consolidator_scheduler_watcher` call sites) that invokes
+      `unified_trading_library.monitors.consolidator_liveness`'s per-bucket reader for each `manifest-consolidator`
+      bucket, and for every bucket reporting DOWN with `reason=REASON_HEARTBEAT_STALE` (the non-OOM, non-paused case —
+      `consolidator_oom_watcher`/`DP-WATCHER-004` already cover their reasons), emit
+      `PipelineFinding(event="CONSOLIDATOR_DOWN", registry_id="DP-MANIFEST-001", tier=EscalationTier.PAGE_OPERATOR,     details={"asset_group": ..., "reason": "heartbeat_stale", ...})`
+      through `route_finding()`. Mirror `check_catalogue_freshness`'s miss-tracker/consecutive-miss shape rather than
+      paging on the first stale read. Repo: deployment-service.
+- [ ] [CODE] P0. **Add self-scoped `asset_group`-only target resolution to `targets_for_finding()`.** Today the
+      self-scoped path in `revocation_targets.py` is keyed ONLY on `vm_name` (`family_of(vm_name)`) — there is no path
+      for "hold this asset_group's family, no VM died, no entity graph." Add one: when `asset_group` is given and
+      `vm_name`/`upstream_entity` are not, resolve via `prefix_families_for([asset_group.value])` directly (same
+      function `DP-CATALOG-001`'s fan-out path already uses, just without the `resolve_dependents()` hop). This closes
+      BOTH `DP-MANIFEST-001` (todo above) and `DP-WATCHER-004` — the latter already reaches `route_finding()` today but
+      currently stamps only `details={"scheduler_job": job_name}`; also update
+      `consolidator_scheduler_watcher.check_consolidator_scheduler_paused` to derive + stamp `asset_group` from the
+      scheduler job name (reverse of `_scheduler_key_for_bucket`'s naming convention) so it resolves through the new
+      path too. Repo: deployment-service.
 
 ## Progress Log
 
