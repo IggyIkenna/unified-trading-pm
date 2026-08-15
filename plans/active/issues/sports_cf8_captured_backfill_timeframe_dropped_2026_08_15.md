@@ -226,3 +226,14 @@ issue's scope); flagged as a follow-up todo below.
   found this `timeframe`-drop bug via a precise row-key re-verification before scaling further. Stopped, released both
   maintenance windows, resumed both crons, filed this issue. No data destroyed; backfill genuinely incomplete on both
   surfaces.
+- **data_engineering slot-2, 2026-08-15 (checkpoint)**: this doc + the parent todo's Progress Log entry are pushed
+  (`unified-trading-pm@e6d24727aa`). One remaining shipping item: the 2 memory-bounded read-path helper scripts this
+  session added (`_sports_is_captured_stream_read_2026_08_15.py`,
+  `_sports_is_captured_backfill_from_subset_2026_08_15.py`) are committed locally on `market-tick-data-service`
+  (`28109508`) but not yet pushed — `quality-gates.sh` has been retried 8+ times and keeps getting starved by
+  exceptional, sustained fleet-wide QG contention (30+ concurrent `quality-gates.sh` instances observed across the
+  fleet; matches the ALREADY-TRACKED, unresolved `qg_host_governor_caps_instances_not_fanout_2026_08_10.md` P2 infra
+  issue, not something this session can work around). Retrying; will ship via `quickmerge --agent` the moment a QG pass
+  completes. If this session ends before that lands: the commit is safe on disk (`git log --oneline -1` on the
+  market-tick-data-service slot-2 checkout), just needs Pass-1 QG + Pass-2 quickmerge to reach origin — non-urgent (2
+  new diagnostic-only files, zero production risk sitting uncommitted-to-origin).
