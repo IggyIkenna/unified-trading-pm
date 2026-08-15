@@ -240,7 +240,39 @@ source: >-
       errors, unrelated to the zero-rows question. Full evidence in the source doc's own todo (same commit).
 - [ ] [CODE] P2. Chain relabel migration part 2 of 2 (options_chain/futures_chain path-position fix,
       entity-rename-governed, writer+manifest+status+gate+UI same change) Source:
-      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` — **SCOPING INVESTIGATION DONE
+      (2026-08-15, slot-28·backend_engineer), NOT DISPATCHABLE AS A SINGLE 1HR AO TODO — escalated `BLK-f5cd6b22`,
+      awaiting operator ruling.** This is a genuine multi-repo entity-rename PLUS a live production GCS data move with
+      unknown blast radius, not a mechanical fix. Full consumer inventory (entity-rename-governed rule step 1): **(1)
+      market-tick-data-service** — writer builds the wrong shape at `partitioned_writer.py:179-225` (`_get_writer`
+      passes `instrument_type=` the raw `"options_chain"`/`"futures_chain"` string; `data_type` column defaults to
+      literal `"trades"` at `partitioned_writer.py:338-340`; `_resolve_partition_data_type`/ `_MERGED_DATA_TYPE_MAP` in
+      `symbol_rules.py:160-162,218-220` never remaps to `data_type=`), same drift mirrored in the manifest at
+      `manifest_finalize.py::_write_bundle_shard_row` (`base_row_key`, lines 255-265, 360-379). **(2)
+      unified-api-contracts** — `canonical/partition_paths.py::build_cefi_partition_path`/ `build_tradfi_partition_path`
+      (lines 219-302/320-) construct the same wrong shape; critically, the canonical-path ORACLE itself —
+      `canonical/_partition_path_canonicality.py:61,70` (`CEFI_CHAIN_INSTRUMENT_TYPES` /
+      `TRADFI_CHAIN_INSTRUMENT_TYPES`) — currently VALIDATES `options_chain`/`futures_chain` as legitimate
+      `instrument_type` values, so fixing only the writer would immediately trip `canonical_path_violations()` the other
+      way; the oracle must migrate in the SAME change. **(3) market-data-processing-service** — chain adapters
+      (`app/adapters/cefi/options_chain_adapter.py`, `futures_chain_adapter.py`, routing already fixed part-1
+      `@93d783df`), `schemas/output_schemas.py:307,314,321` hardcoded `applies_to={"options_chain","futures_chain"}`,
+      `app/core/output_path_helpers.py:31` `is_chain_bundle_data_type`. **(4) deployment-api** — the whole data-status
+      stack: `services/data_status_hierarchical.py`, `services/data_status_drilldown/*`,
+      `routes/data_status/{_distinct_values,_axis_census,_downloads,_query_meta,_live_coverage}.py`,
+      `services/shard_detail/_shard_core.py`, `utils/path_combinatorics.py`, `services/deploy_missing.py`. **(5)
+      deployment-ui** — `DataStatusTab.tsx`, `DataStatusDrilldown.tsx`, `ShardDetailModal.tsx`, `src/lib/mock-api.ts`.
+      **Blast radius: unknown** — no existing GCS-object/manifest-row count doc found anywhere in the corpus; the source
+      doc's only quantification is qualitative ("affecting every vintage", "6+ years of good data", a 2019 vs 2025-06-16
+      spot-check). **Unresolved tactical tension flagged, not settled**: the source doc says "move, don't
+      copy-then-delete-separately" (operator, 2026-08-10) but the cited precedent
+      (`market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py:1-72`) does
+      COPY-ONLY-then-separately-gated-delete specifically because GCS has no atomic move (a bare move risks data loss on
+      a partial failure) — the source doc itself says to check that rationale before overriding it, i.e. this was left
+      open, not decided. Filed `BLK-f5cd6b22` with a recommended path (code-side migration this dispatch across all 5
+      repos in one coordinated change; the live GCS copy/delete split into a separate `[OPERATOR]`-tagged
+      delete-safety-gated follow-up) rather than attempting an unbounded prod-data migration inside an unattended 1-hour
+      AO session. No code changed by this investigation.
 - [ ] [CODE] P2. Resolve margin_type for the ~1,578 cefi liquidation instrument_ids lacking @LIN/@INV suffix via
       instruments-service reference data Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Widen canonical_writer_shaping int32->int64 coercion to every contract-declared int64 column (or assert
@@ -348,6 +380,18 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   Tardis-guard-conditional relaunch text, the launcher-host `GONE_NO_CAPTURE` exemption) rather than trusting the commit
   subject alone. No code shipped by this batch (none needed) — checkbox flipped citing the sha; the source doc's own
   checkbox was flipped in the same commit, see its Progress Log entry for full file:line detail.
+
+- **2026-08-15 (slot-28·backend_engineer)**: dispatched the "Chain relabel migration part 2 of 2" todo. Investigated (2
+  Explore sub-agent passes) before touching any code and found it is NOT a 1-hour mechanical fix — a genuine 5-repo
+  entity-rename (market-tick-data-service writer+manifest, unified-api-contracts canonical builders + the canonical-path
+  oracle itself, market-data-processing-service adapters/schemas, deployment-api's full data-status stack,
+  deployment-ui) plus a live production GCS data move over "6+ years" of vintage data with no measured blast radius
+  anywhere in the corpus. The source doc's own instruction ("move, don't copy-then-delete-separately") is in unresolved
+  tension with the cited precedent script's copy-first/delete-later safety pattern — the source doc itself flags this as
+  something to double-check, not a settled call. Filed `BLK-f5cd6b22` (recommendation: code-side 5-repo migration this
+  dispatch, live GCS copy/delete split into a separate `[OPERATOR]`-tagged delete-safety-gated follow-up) rather than
+  guessing on a judgment call this size. Full consumer inventory + file:line citations added to the todo item above. No
+  code changed — investigation + escalation only.
 
 - **2026-08-15 (slot-16·backend_engineer)**: dispatched the "Determine which layer wrote the cefi attempted_failed rows"
   read-only analysis todo. Live-queried `market-data-tick-cefi-prd-.../_index/availability_index.parquet`
