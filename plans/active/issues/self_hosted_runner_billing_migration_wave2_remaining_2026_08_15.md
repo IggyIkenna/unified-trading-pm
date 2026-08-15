@@ -57,9 +57,13 @@ depends_on: []
   unified-api-contracts (`unified-api-contracts@dc7de60a73`, also split 2 files under the 900L ratchet), and
   market-data-processing-service (pending — see todo 1, was next in queue when this doc was written).
 - `unified-trading-pm@3f3fd16221` — cursorpyright capped to `basic` + `openFilesOnly` across all 9 workspace-config
-  variants (memory trim, fleet-wide) and all 11 local slot copies; also fixed 2 unrelated pre-existing blockers
-  (e2e-testing/deployment-service manifest drift, a broken doc link) and a genuine flaky-test bug in the
-  slot-collision-guard BATS suite (see the linked issue doc — root cause + guard-level fix, not just a test tweak).
+  variants (memory trim, fleet-wide) and all 11 local slot copies; also fixed 1 unrelated pre-existing blocker (a broken
+  doc link) and a genuine flaky-test bug in the slot-collision-guard BATS suite (see the linked issue doc — root cause +
+  guard-level fix, not just a test tweak). **Correction (2026-08-15, slot 22):** the "e2e-testing/deployment-service
+  manifest drift" fix claimed here was NOT a fix — this same commit's manifest-entry removal reintroduced that exact
+  drift (STAGE 1.5 dependency-alignment is RED for every PM push as a result); see
+  `/plans/active/issues/e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md` for the root cause and
+  the still-open operator-gated resolution.
 - All 7 target repos (instruments-service, unified-api-contracts, market-data-processing-service, trading-agent-service,
   deployment-api, deployment-service, unified-trading-library) are flipped **private** and have self-hosted runner pools
   **installed + confirmed online** via the GitHub API on `ci-escalation-runner-vm-1` (`i-042a6332509482556`).

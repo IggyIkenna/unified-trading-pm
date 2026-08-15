@@ -23,7 +23,7 @@ tags: [cross-repo, ci-cd, quickmerge, dependency-alignment, tier-dag, e2e-testin
 related:
   [
     /plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md,
-    /plans/active/ci_satellite_ao_dispatch_batch14_2026_08_15.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch14_2026_08_15.md,
   ]
 created: "2026-08-15"
 author: slot-7
@@ -132,10 +132,11 @@ Two independent fixes, different scopes:
 - [ ] [OPERATOR] P1. **Decide the tier-DAG vs. e2e-testing-black-box-testing resolution path** (see "Recommended
       decision" option a/b/c above) — genuine architectural judgment call, not worker-determinable. Gate: an operator
       ruling recorded here, then re-tag `[OPERATOR]` → the implementing craft tag.
-- [ ] [DOC] P2. **Correct the stale "e2e-testing/deployment-service manifest drift" fix claim** in
+- [x] [DOC] P2. **Correct the stale "e2e-testing/deployment-service manifest drift" fix claim** in
       `plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md` (line 60-61) — annotate
       that `unified-trading-pm@3f3fd1622195` actually reintroduced this drift (see this doc's "What I found" §2), not
-      fixed it. Gate: the referenced line no longer claims this is fixed without qualification.
+      fixed it. Gate: the referenced line no longer claims this is fixed without qualification. ✅ — unified-trading-pm
+      (this correction lands via the same commit as this checkbox flip)
 
 ## Progress Log
 
@@ -144,3 +145,8 @@ Two independent fixes, different scopes:
   HEAD~1 byte-identical re-check. Did not attempt either fix option myself (both need operator judgment or touch files
   outside this task's scope) — used the documented dirty-deps direct-push carve-out
   (`Quickmerge: direct-carveout-dirty-deps`) to land the unrelated sit-unlock.yml fix instead of blocking on this.
+- **2026-08-15 (slot 22)**: closed the [DOC] P2 todo — annotated
+  `self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md` lines 59-62 with a correction: the
+  "e2e-testing/deployment-service manifest drift" was not fixed by `unified-trading-pm@3f3fd16221`; that commit's
+  manifest-entry removal is the regression this doc root-caused. The `[OPERATOR]` P1 todo (tier-DAG vs. black-box-testing
+  resolution) remains open.
