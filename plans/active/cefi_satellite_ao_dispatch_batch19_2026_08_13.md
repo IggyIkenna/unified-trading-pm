@@ -184,8 +184,21 @@ source: >-
       separate change needed. No code shipped by this batch (none needed) — this todo's source line
       (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phase 5) simply never had its own checkbox flipped
       after batch11's fix landed. Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-- [ ] [CODE] P2. Deprecate + remove all Barchart code (Phase 5, cross-repo delete-deprecated-code) Source:
-      `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+- [x] ✅ [CODE] P2. Deprecate + remove all Barchart code (Phase 5, cross-repo delete-deprecated-code) Source:
+      `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **bulk removal already shipped
+      2026-08-09** (`unified-api-contracts@fc1b4897`, `market-tick-data-service@aea655a9`, see
+      `cefi_consolidated_closeout_2026_07_18.md` Track 0's own entry for that todo — same underlying Phase-5 item, cited
+      via a sibling source doc). Verified live on `origin/live-defi-rollout` before closing this one as a duplicate:
+      `rg -i barchart` across every repo in the slot found zero live adapter/client/schema/registry-entry code —
+      everything remaining was either historical-retirement comments (correct to keep, e.g. "barchart RETIRED
+      2026-06-24") or 2 genuinely stale residuals fixed by THIS todo: (1) `ProviderBinding.provider`'s type comment in
+      `unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py` still listed `barchart` as a valid
+      provider value post-removal — **SHIPPED unified-api-contracts@49ae9bc433**; (2)
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/__init__.py`'s module
+      docstring pointed at `scripts/upload_vix_barchart_local.py`, a one-time backfill script deleted along with the
+      rest of the Barchart adapter (confirmed gone via `git log --all -- '*upload_vix_barchart*'`, last existed at
+      `05348709`) — **SHIPPED market-tick-data-service@ea870f05cd**. Both are misleading-comment/dead-pointer fixes per
+      CLAUDE.md's "doc/comment that MISLED you is a finding" rule, not new Barchart-removal scope.
 - [x] ✅ [CODE] P2. Map the index perps (SPXUSDT/NAS100/SPYUSDT/XAUUSDT) to the CME index-future canonical with
       contract_multiplier (Phase 1c, unified-api-contracts) **CLOSED — already-satisfied (2026-08-15,
       slot-29·backend_engineer).** This exact mapping already shipped **unified-api-contracts@e973c62d** (2026-08-09,
@@ -367,6 +380,18 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   source doc's mirror checkbox could NOT be flipped in the same commit: that file is already 1003L, over its 1000-line
   hard cap (pre-existing, unrelated to this fix) — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks any commit
   touching it. Filed a P3 follow-up todo above to trim it under cap first; the source checkbox stays stale until then.
+
+- **2026-08-15 (slot-7·backend_engineer)**: dispatched the "Deprecate + remove all Barchart code" todo. Verified live:
+  the bulk removal already shipped 2026-08-09 (`unified-api-contracts@fc1b4897`, `market-tick-data-service@aea655a9`,
+  same underlying Phase-5 item as `cefi_consolidated_closeout_2026_07_18.md` Track 0's own entry) — `rg -i barchart`
+  workspace-wide found zero live adapter/client/schema/registry code, only historical-retirement comments (correctly
+  kept) plus 2 stale residuals: a `ProviderBinding.provider` type-comment still listing `barchart` as valid
+  (`unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py`), and a tradfi-adapters module docstring
+  pointing at the deleted one-time backfill script `scripts/upload_vix_barchart_local.py`
+  (`market-tick-data-service/.../adapters/tradfi/__init__.py`). Both fixed as misleading-pointer corrections (CLAUDE.md
+  "doc/comment that MISLED you is a finding"), not new Barchart-removal scope. **SHIPPED
+  unified-api-contracts@49ae9bc433, market-tick-data-service@ea870f05cd** — both verified ancestors of
+  `origin/live-defi-rollout`.
 
 - **context-scout 2026-08-15**: refreshed context_scope (4 entries), still accurate.
 
