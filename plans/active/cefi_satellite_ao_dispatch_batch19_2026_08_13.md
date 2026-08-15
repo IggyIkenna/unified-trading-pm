@@ -468,7 +468,8 @@ source: >-
       `plans/active/cefi_consolidated_closeout_2026_07_18.md` — **SAME underlying work as this batch's earlier
       "Recurring daily funding/basis scan" todo above (both cite the same cryptovenue Phase 1b item via different source
       docs)** — SHIPPED e2e-testing@d1fe3dc6aa, see that entry for full evidence.
-- [ ] [CODE] P2. Track 0: Launch the CeFi Tardis backfill for the equity-perp window Source:
+- [x] ✅ [CODE] P2. Track 0: Launch the CeFi Tardis backfill for the equity-perp window **LAUNCHED 2026-08-15
+      (slot-14·backend_engineer)** — see Progress Log for VM name + evidence. Source:
       `plans/active/cefi_consolidated_closeout_2026_07_18.md`
 - [x] ✅ [CODE] P2. **DONE 2026-08-15 (slot-19·backend_engineer) — residual FOUND, not literal 100% UPPERCASE.** Fresh
       live re-count of the cefi manifest's `instrument_type` column
@@ -814,3 +815,21 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   `unified-trading-pm@0c49f53583`. Also filed + self-resolved repo-blocker `RB-0d4b223c` (push_race) after 3+
   consecutive quickmerge kills under sustained branch churn (code was green throughout — QG sentinel matched HEAD on
   every attempt).
+
+- **2026-08-15 (slot-14·backend_engineer)**: **SHIPPED** the "Track 0: Launch the CeFi Tardis backfill for the
+  equity-perp window" todo that slot-27 left GATED earlier today (same Progress Log, above) — no new design work needed,
+  only re-checking the Tardis fleet per slot-27's own hand-off note. Live
+  `gcloud compute instances list --project=central-element-323112` re-check confirmed both prior occupants slot-27
+  identified (`mtds-backfill-cefi-extended-starknet-fullhist-1`, another slot's `pipelinecheck` smoke VM) are no longer
+  running, and grep for the launcher's own Tardis-consumer name pattern
+  (`^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-`) against the live fleet returned zero matches —
+  fleet genuinely clear. Re-ran the exact `DRY_RUN=1` command slot-27 validated
+  (`VENUES="BINANCE-FUTURES" YEARS="2026" LAUNCH_GROUPS="heavy" ONLY="BINANCE-FUTURES:2026:heavy" bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`)
+  to reconfirm the same shard (`VM_START_DATE=2026-01-01 VM_END_DATE=2026-08-14 VM_DATA_TYPES=trades;book_snapshot_5`,
+  catalogue-mvp-driven universe), then launched for real (same command, no `DRY_RUN`): `tardis_concurrency_guard` passed
+  (fleet clear) and the launcher reported "All 1 VMs launched". Verified live:
+  `cefi-binance-futures-2026-heavy-20260815-143847` present in `gcloud compute instances list` (zone
+  `asia-northeast1-c`, status `STAGING` at verification time). No code changed — this is an infra-launch todo; the
+  launcher script + its concurrency guard are the existing mechanism, used as designed. The knowingly-uncovered ~3-week
+  Dec-2025 XAU/XAG tail and the `light` group slice remain the documented follow-up (slot-27's note above) — not part of
+  this todo's scope.
