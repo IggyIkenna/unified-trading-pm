@@ -92,15 +92,17 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       recheck-live-billing-doc caveat. **DONE 2026-08-15** — re-verified billing doc still `blocked` as of 2026-08-15;
       added a dated caveat to the MVP-of-MVP doc pointing to the billing doc as live source of truth.
       `unified-trading-pm@f6d90162b4`.
-- [ ] [CODE] P1. **UAC sports odds registry contradicts the 2026-08-08 operator-ruled canonical `data_type`, no tracked
-      todo.** `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1565-1591`'s
+- [x] ✅ [CODE] P1. **UAC sports odds registry contradicts the 2026-08-08 operator-ruled canonical `data_type`, no
+      tracked todo.** `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1565-1591`'s
       `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("sports","odds")]` still declares `data_type="trades"` as canonical.
       Contradicts the 2026-08-08 operator ruling + 2026-08-12/13/14 executed migration that standardized on `"odds"`
       (see `sports_odds_api_data_type_casing_standardization_2026_08_15.md`, shipped
       `market-tick-data-service@28e2eb36d8`). Self-flagged in
       `sports_p2_raw_tick_live_writer_still_emits_trades_2026_08_15.md:145-153` but the finder explicitly declined to
-      create a tracked todo ("small enough to fold in") — itself a HARD RULE violation (every follow-up must be a `- [ ]
-      todo, never prose"). Needs: (a) update the UAC registry entry, (b) this todo IS the tracked instance now.
+      create a tracked todo ("small enough to fold in") — itself a HARD RULE violation (every follow-up must be a
+      `- [ ]     todo, never prose"). Needs: (a) update the UAC registry entry, (b) this todo IS the tracked instance now.     **DONE 2026-08-15**: `("sports","odds")`matrix entry flipped from`frozenset({"trades",
+      "odds_horizon_bucket"})`to`frozenset({"odds",
+      "odds_horizon_bucket"})`; 2 tests in     `tests/internal/unit/test_sports_prediction_contracts.py`that asserted the old`"trades"`canonical value updated     to assert`"odds"`; the legacy `CONTRACT_REGISTRY[("sports","odds","trades")]`schema intentionally retained     (documented as no-longer-matrix-reachable, backs pre-migration prod rows) — full`quality-gates.sh`green.    `unified-api-contracts@0bc2fc7c14`.
 - [x] ✅ [DOCS] P1. **AWS-vs-GCP epic contradiction — infrastructure_master.md still frames DeFi compute as
       AWS-primary.** `plans/epics/infrastructure_master.md:869,875` carries 2 open todos ("Operator sign-off on
       dual-cloud parity", "GCP bucket decommission" post-AWS-parity) that are opposite-direction from

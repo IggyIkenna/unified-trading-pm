@@ -173,6 +173,16 @@ rather than a dedicated VM launch, per proportionality.
       confirmed via direct per-VM manifest-shard read: 325/325 rows `data_type=odds`, growing clean. The live writer is
       now genuinely fixed at the deployment-parameter level, not just the code level.
 
+- [x] ✅ [CODE] P1. **UAC registry drift self-flagged below (slot-30 Progress Log) without a tracked todo — fixed.**
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`'s
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("sports","odds")]` still declared `data_type="trades"` as canonical,
+      contradicting this issue's own P0 fix + the 2026-08-08 operator ruling
+      (`/plans/active/sports_taxonomy_p2_migration_2026_08_08.md`). The slot-30 finder explicitly declined to file a
+      tracked todo ("small enough to fold into whoever next touches that registry file") — a HARD RULE violation (every
+      follow-up must be a `- [ ]` todo, never prose); tracked+closed retroactively via
+      `plans/active/issues/plan_reconciler_findings_all_2026_08_15.md`'s matching P1 bullet. **DONE 2026-08-15**: matrix
+      entry flipped to `frozenset({"odds", "odds_horizon_bucket"})`, 2 dependent tests updated, full `quality-gates.sh`
+      green. `unified-api-contracts@0bc2fc7c14`.
 - [x] ✅ [SCRIPT] P2. **Sweep the 1,604 `trades` rows orphaned in the deleted mislabeled VM's per-VM manifest shard**
       (`_index/per_vm/mtds-live-sports-odds-api-trades-20260815-111158.parquet`, all `date=2026-08-15`) once the sports
       asset_group's manifest consolidator (hourly Cloud Scheduler cron,
