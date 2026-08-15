@@ -74,6 +74,21 @@ checks out — not a blind migrate, not a hold.
 
 ## Progress Log
 
+- **2026-08-15 (todo #2 done — both re-verifies confirm zero remaining write work)**: re-ran
+  `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py` fresh per todo #1's caveat — confirmed
+  again: all 787 objects, 5/5 stems `canonical_already`. **Independently checked manifest-row state** (todo #1
+  explicitly had not) via `read_availability_index_safe(bucket, filters=[("venue", "=", "PACIFICA-SOLANA")])` against
+  the live `market-data-tick-cefi-prd-central-element-323112` bucket: **787 rows already present**, all
+  `data_type=ohlcv_1m`/`capture_status=captured`, one-to-one with the 787 GCS objects, spanning 2025-07-15..2025-12-31.
+  **Conclusion: both the rename and the manifest-backfill are already complete — no write work remained to execute**, so
+  the delete-safety protocol's proof gate / reversibility-qualified rename pattern was not invoked (nothing to write).
+  Corrected the now-doubly-stale claims in `quarantine.py` (module docstring's "no lane / no manifest rows... still
+  on-disk non-canonical" + the registry entry's `reason`/`verified_by`, which still said manifest state was unchecked) —
+  `unified-api-contracts@84d62f242e`; full QG green (362s). The on-disk/manifest change's original mechanism remains
+  UNCONFIRMED (no rename/backfill commit found in either repo's git log across either todo's re-verify) — out of scope
+  to root-cause here, noted for any future investigation. **Every todo in this plan is now done and unlocked — archiving
+  per the plan-completion-and-archival HARD RULE.**
+
 - **2026-08-15 (todo #1 done — re-verify found a real drift, not a clean confirm)**: re-ran
   `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py` fresh (`uv sync` + direct run against
   the prod `market-data-tick-cefi-prd-...` bucket, read-only, no GCS writes). **Count/shape confirmed**: 787 objects, 5
