@@ -106,3 +106,4 @@ source: >-
   placeholder, 4 genuine), all 12 present in the 23-entry baseline — round5 estimate (14 unresolved, ~6-8 genuine)
   validated, no material divergence. Count recorded inline on todo 1. (Note: todo 2 flipped concurrently by another slot
   @d86597c6c3 — this flip appends alongside, not overwrites.)
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

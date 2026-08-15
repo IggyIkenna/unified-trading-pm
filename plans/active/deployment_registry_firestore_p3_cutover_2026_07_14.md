@@ -262,3 +262,4 @@ QG-green per repo.
   HALT (2026-07-14) gated on a 4-item GO/NO-GO checklist not yet met (fleet writing Firestore, resource stats from new
   surface, per-VM data retrievable, parity check) — irreversible cutover steps stay blocked until the sibling
   migration-overview doc's dual-write deploy (reclassified this run) clears the precondition.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

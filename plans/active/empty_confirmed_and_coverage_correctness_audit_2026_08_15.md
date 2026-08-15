@@ -253,12 +253,12 @@ data that's actually needed. This plan gets the evidence first.
       operational.
 
       **DONE 2026-08-15 (slot-28, backend_engineer) — same operation as
-          `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
-          (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
-          (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
-          completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
-          `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
-          CME-scoped and unscoped across all venues).
+              `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
+              (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
+              (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
+              completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
+              `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
+              CME-scoped and unscoped across all venues).
 
 - [ ] [DATA] P2. Fix cefi's legacy blank-instrument-id FUTURE bucket (~3,299 captured rows, BYBIT/DERIBIT) — add
       `"future"` to `_BUNDLE_GRAIN_EXCLUDED` or route it to `futures_chain` at `rebuild_cefi_manifest.py:454` (mirrors
@@ -301,3 +301,4 @@ data that's actually needed. This plan gets the evidence first.
   are correct simultaneously — they're about two different consumers (Layer-2 backfill vs Layer-1 audit) that the
   2026-07-07 decision didn't distinguish. Documented the reconciliation in both the test and the registry comment so a
   future reader doesn't repeat the same "looks inert, safe to delete" mistake.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (7 entries).

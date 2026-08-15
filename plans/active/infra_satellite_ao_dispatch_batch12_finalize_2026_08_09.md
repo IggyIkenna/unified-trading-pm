@@ -87,3 +87,4 @@ source: >-
   new contract (label-string investigation with 0 genuine gaps); (4) confirmed no new durable contract; (5) repointed
   all referrers (INDEX.md, infrastructure_master.md ×2, ag_closeout_audit_infra_parked_2026_08_10.md, this finalize
   plan's `related:`/`context_scope:`); (6) confirmed no lock, physically moved to `plans/archive/2026_08/`.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (3 entries).

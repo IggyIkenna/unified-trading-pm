@@ -235,3 +235,4 @@ read-only scoping finding.
   ritual (banner + git mv + fixing ~19 corpus referrers) in the same pass — genuinely done, intentional terminal state,
   but that referrer sweep deserves its own dedicated plan-hygiene pass, not a rushed side-step of an already-large
   gate-unblocking session.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (3 entries).

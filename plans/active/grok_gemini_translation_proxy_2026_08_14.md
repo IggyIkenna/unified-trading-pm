@@ -249,3 +249,7 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
     "Done when" bar** — every one requires a REAL Grok/Gemini completion, balance fetch, or live throttle proof, all
     structurally impossible without credentials. Checkboxes below stay unflipped on purpose. Todo 143 (tool-use
     translation smoke test) is NOT addressed at all this session — LiteLLM itself was only configured, never run.
+
+## Context scout
+
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
