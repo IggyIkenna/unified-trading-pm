@@ -574,3 +574,58 @@ still recoverable from the stash.
   `unified-api-contracts`'s venv. Confirmed by attempting the import directly and getting `ModuleNotFoundError` before
   trusting the doc's template. Read the real invariant files, not just the doc describing the pattern, before writing a
   new one.
+
+## READ SIDE — shipped 2026-08-15
+
+The read/execute asymmetry that opened this doc is **closed for the LST family**, and closed in a way that cannot
+silently re-open:
+
+| Surface                             | Before                    | After                                                           |
+| ----------------------------------- | ------------------------- | --------------------------------------------------------------- |
+| DeFi venues with a position adapter | 3 (aave, morpho, uniswap) | **8** — those 3 + LIDO, ROCKETPOOL, ETHERFI, PUFFER, RENZO      |
+| How a venue becomes readable        | new hardcoded factory arm | **an address in the UAC SSOT** — no code change in `factory.py` |
+
+- `unified-api-contracts@53a5adc7` + `@bed96aa0` — `registry/lst_token_addresses.py`, the address SSOT. Every address
+  MIGRATED from an already-cited execution-service constant; none authored, inferred or extrapolated.
+- `strategy-service@5b2a50ed` — `_generic_token_balance_adapter()` in the factory's `case _`, composing
+  `lst_token_addresses_for_venue()`. Registry-driven ON PURPOSE: an enumerated venue list would drift from the SSOT, and
+  the drift direction that matters is a venue we can trade and cannot reconcile.
+
+**Deliberately still NOT readable, with reasons** (so nobody re-scores this as done):
+
+- **Kelp / rsETH and ether.fi's eETH** — shipped in `@53a5adc7` and REMOVED in `@bed96aa0`. `LST_VENUE_TO_TOKENS`
+  declares `ETHERFI: ("weETH",)` and has no `KELPDAO` key at all, so both entries were unreachable. Re-adding needs a
+  **cited `LST_TOKEN_GENESIS` date** — that map drives coverage denominators, so an invented date corrupts them
+  silently. Blocked on a citation, not on effort.
+- **Vault-share protocols** (Yearn/Beefy/Convex/Idle) — position address is per-vault, i.e. runtime input, not registry
+  data. The adapter already accepts `tokens=[...]`; what's undecided is whether that becomes a config surface.
+- **The four stateful protocols** (Morpho health factor, Pendle maturity, Symbiotic/Karak withdrawal queues) — a bare
+  balance MISREPRESENTS these rather than merely missing them. Bespoke readers, still unbuilt.
+
+## Lessons — 2026-08-15 (session 4)
+
+- **A green gate is evidence about the tree pytest COLLECTED, not about the files you are shipping.** A concurrent
+  `cascade-*` stash swept two new files mid-gate; pytest collected a tree without them, the gate passed on their
+  ABSENCE, and the orphan-detecting test that would have caught the eETH/rsETH defect never ran. I then re-shipped after
+  recovering the files **without re-gating**, reasoning the content was byte-identical to what had passed — having
+  written, one message earlier, that "the gate passed on content that was gone by the time the ship ran." Identifying a
+  hazard is not the same as being protected from it.
+- **`__pycache__/*.pyc` is the cheap per-file proof a test actually executed.** Absent `.pyc` + 396 present for siblings
+  = definitively not collected. Grepping the log for the test's NAME proves nothing: passing tests are never named in
+  pytest output, only failures. Where `.pyc` isn't available, make a falsifiable prediction on the COUNT ("must rise
+  above 2019") before reading the result.
+- **Structural evidence is not observational evidence, and I substituted one for the other.** `PYTEST_UNIT_DIR="tests/"`
+  covering `tests/unit/` is a sound argument that a file _should_ be collected; it says nothing about whether the file
+  was _on disk_ at collection time. I used the `.pyc` check correctly on strategy-service and skipped it on UAC an hour
+  earlier, in the same session, with the same evidence available.
+- **Registering one dormant directory found 20 OTHER dormant tests.** Adding `scripts/plan-hygiene/` to PM's
+  `PYTEST_UNIT_DIR` raised the count by exactly 24 — 4 mine, 20 pre-existing, guarding the NA-corpus ratchet, AG
+  closeout linkage and terminal-status archival. `PYTEST_UNIT_DIR` passes explicit path args which OVERRIDE
+  `pyproject`'s `testpaths`, so a directory absent from that one string is silently never collected
+  (`unified-trading-pm@4a4716151f`). **`check_pytest_unit_dir_coverage.py` exists to catch exactly this and passed
+  throughout** — fixing that detector matters more than the directory it missed.
+- **A ship script's non-zero exit can carry more information than the situation appears to.** quickmerge exit 12 said
+  "NOTHING TO COMMIT, but --files named … almost certainly PARKED, not lost", gave the recovery command, and warned that
+  a blind retry ADDS a stash entry and makes it fire sooner. Untracked files do not appear in
+  `git stash show --name-only` — they live in the third parent, `stash@{N}^3`. The instinctive re-run would have
+  compounded it.
