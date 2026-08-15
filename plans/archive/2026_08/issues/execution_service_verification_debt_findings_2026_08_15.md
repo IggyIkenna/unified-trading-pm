@@ -8,9 +8,9 @@ summary:
   2b92d6ac6) and the removed v2/handlers.py — a residual local duplicate of UAC's DeFi LST address SSOT, an untested
   exception-handling widen in the GCS data loaders, and a dormant (deleted, not fixed-in-place) unverified
   strategy_instance_id-as-slot_label substitution. No fixes applied during the audit; scoped here for AO dispatch.
-status: open
+status: resolved
 nature: process
-resolved_by:
+resolved_by: execution-service@0c4de35b
 asset_group: [defi]
 stage: [execution]
 repos: [execution-service, unified-api-contracts]
@@ -24,6 +24,7 @@ related:
   ]
 created: "2026-08-15"
 last_updated: "2026-08-15"
+archived: "2026-08-15"
 parent_epic: execution_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -57,6 +58,10 @@ drift_direction: advance-code
 ---
 
 # execution-service Verification-Debt Findings (2026-08-15 Audit)
+
+> **🟢 ARCHIVED 2026-08-15 — RESOLVED** (status: resolved, 0 open todos, unlocked). All 3 findings fixed:
+> execution-service@d981725c24 (LST address dedup), execution-service@8a3ab8b261 (GoogleAPICallError coverage),
+> execution-service@0c4de35b (fail-loud slot_label shape guard).
 
 > Read-only verification audit of production commits already shipped in execution-service. No fixes were applied —
 > findings are scoped below for AO dispatch to decide execution order. Small plan (3 todos); the archival step is folded
@@ -96,7 +101,7 @@ drift_direction: advance-code
       (`test(data): add GoogleAPICallError coverage for GCS blob-existence probe fallback`, landed ahead of this
       dispatch); both `test_google_api_call_error_falls_back_to_canonical_candidate` cases verified passing.
 
-- [ ] [BACKEND] P3. Add a fail-loud guard (explicit `None`/shape check, not a silent pass-through) to
+- [x] ✅ [BACKEND] P3. Add a fail-loud guard (explicit `None`/shape check, not a silent pass-through) to
       `ExecutionPolicyResolver.resolve()` / `resolve_config_algorithm()` in `execution_service/v2/policy_resolver.py`,
       plus a one-line docstring note citing this finding, so that when `HandlerRegistry.select_algorithm`'s `slot_label`
       wiring is eventually reactivated (currently zero live callers anywhere in execution-service — confirmed via a
@@ -108,7 +113,14 @@ drift_direction: advance-code
       logs fail-loud on an unset/placeholder `slot_label` rather than accepting any string silently, and this todo's
       checkbox is flipped with a commit citing the change; once all three todos above are `[x]`, run the standard
       archival ritual on this doc (git mv to `plans/archive/2026_08/`, corpus-wide referrer fixup) in the same commit
-      that flips this checkbox.
+      that flips this checkbox. **Already done — execution-service@0c4de35b** ("feat(v2): fail-loud slot_label shape
+      guard in ExecutionPolicyResolver", landed ahead of this dispatch by a different slot). `_require_shaped_slot_label()`
+      + `_SLOT_LABEL_SHAPE_RE` (`{archetype}@{scope}` grammar) added to `policy_resolver.py`, called at the top of
+      `ExecutionPolicyResolver.resolve()` (so `resolve_config_algorithm()` inherits the guard via its call to
+      `resolver.resolve()`), raising `MalformedSlotLabelError` on a non-conforming `slot_label`; the exception's
+      docstring cites the deleted `v2/handlers.py` precedent + the UAC `TradingWalletConfig` quote verbatim. No code
+      change needed this dispatch — checkbox flipped citing the existing SHA. All three todos now `[x]`; archiving this
+      doc in the same commit per the ritual above.
 
 ## Progress Log
 
@@ -124,3 +136,9 @@ drift_direction: advance-code
   `test_loaders_base.py`), each raising `GoogleAPICallError` from a mocked `blob_exists` probe and asserting the
   fallback to `expected_candidates[0]`. Ran both directly (`pytest ... -v`): 2 passed. No code change needed — checkbox
   flipped citing the existing SHA.
+- **2026-08-15 (slot-3)**: Todo 3 (`policy_resolver.py` fail-loud `slot_label` guard) found ALREADY DONE on fresh-pull —
+  commit `execution-service@0c4de35b` ("feat(v2): fail-loud slot_label shape guard in ExecutionPolicyResolver") had
+  already landed the exact guard this todo asked for. No code change needed — checkbox flipped citing the existing SHA.
+  All three todos now `[x]`; archiving this doc per the ritual (git mv to `plans/archive/2026_08/`, referrer fixup in
+  `pm_archive_false_done_and_review_backlog_2026_08_15.md` +
+  `plans/archive/2026_08/issues/strategy_service_verification_debt_findings_2026_08_15.md`) in the same commit.
