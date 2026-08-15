@@ -457,3 +457,24 @@ better chance of admission), then
 `bash scripts/quickmerge.sh "fix(mtds): bridge CME/TradFi root-parent-symbol atom-format mismatch in preflight skip" --agent --files 'market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py market_tick_data_service/engine/orchestrator/known_dead_shard_gate.py tests/unit/engine/test_tradfi_manifest_shard.py tests/unit/test_known_dead_shard_gate.py'`,
 verify the SHA lands on `origin/live-defi-rollout`, THEN flip the P2 checkbox above with the landed SHA. Do not redo the
 investigation or the fix — both are complete; only the ship step remains.
+
+### 2026-08-15 — adjacent no-op fix in `_apply_freshness_skip` shipped (slot 12); does NOT close the revised P2 todo
+
+Was dispatched the original (now-superseded) P2 framing before the entry above's atom-format-mismatch root-cause landed;
+task was cancelled mid-flight once the revised framing superseded it (correct call — confirmed no file/plan conflict
+with slot 13's fix, which lives entirely in `_tradfi_manifest_shard.py`/`known_dead_shard_gate.py`, disjoint from the
+file below). Rather than discard already-committed, QG-verified work, shipped it as a genuinely separate, confirmed
+defect this same investigation surfaced (see the "both original hypotheses ruled out" entry above):
+`_apply_freshness_skip` (`tick_data_handler.py:507-508`) short-circuited on any truthy `explicit_venues` BEFORE ever
+calling `check_shard_freshness` — a structural no-op for the whole CME OHLCV launcher family (`--venues CME` is always
+explicit). Fix: `explicit_venues` now scopes `expected_venues` for the freshness check instead of bypassing it outright,
+so a date that's genuinely fresh for the requested venue(s) now correctly short-circuits `process_ticks` entirely
+instead of falling through to the (previously atom-mismatched, now-fixed-by-slot-13) preflight machinery every single
+time. **Shipped**: `market-tick-data-service@abc40d9f` (+ regression test
+`test_process_explicit_venues_still_checks_freshness` in `tests/unit/test_handler.py`), verified ancestor of
+`origin/live-defi-rollout`. Hit the same `qg_host_adaptive_resource_governor` RAM-valve kills documented above (4
+consecutive QG/quickmerge attempts sacrificed under 14-15 concurrent host-wide QG runs, load 9-14 sustained) before a
+clean window let it through — same governor, same root cause, independent confirmation of that entry's diagnosis.
+**Scope note**: this fix is real and adjacent but does NOT itself resolve the revised P2 atom-format-mismatch todo above
+(disjoint files, disjoint mechanism) — leaving that checkbox unflipped for whoever lands
+`c35af0713c70b75c09815a5859430c62c5135256`.
