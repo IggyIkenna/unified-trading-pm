@@ -10,7 +10,7 @@ summary: >-
   with the real evidence, not just re-flipping it blind — then checks whether any source doc is now fully closed
   (unlikely given each retains other open, non-extracted items) and archives it if so, before archiving the batch plan
   itself.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -44,7 +44,6 @@ superseded_by:
 depends_on: [ao_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
 sequential: true
-archive_exempt: true
 context_scope:
   [
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
@@ -58,6 +57,17 @@ source: >-
 ---
 
 # AO satellite AO batch 10 — finalize
+
+> **🔴 ARCHIVED 2026-08-15 — COMPLETE (all 5 todos `[x]`, unlocked).** All 5 todos ran to completion: re-verified all 6
+> of batch10's done-claims (2026-08-10), reconciled evidence into the 3 TRUE source docs' own checkboxes (2026-08-10),
+> checked and confirmed only batch2 reached zero-open (its archival owned by its own finalize plan, not duplicated
+> here), archived the batch plan itself (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md`,
+> 2026-08-11), and resolved the corpus-wide plan-hygiene drift discovered mid-run (2 archive candidates + 3 inventory
+> orphans, all closed 2026-08-10). Found still carrying a stale `archive_exempt: true` bridge marker + `status: active`
+> during a `/plan-reconcile` verification pass 2026-08-15 — the follow-on `git mv` half of the ritual was never executed
+> even though all todos were done; same-commit flip+archival per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "Single-repo finalize plans" (this doc's own
+> archival is pure PM-repo doc work regardless of what the underlying batch touched).
 
 > **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until all 6 of that batch's todos are `done`. The batch itself stays
