@@ -85,54 +85,66 @@ context_scope:
 
 ## Track 1 — Worker liveness / failover / dispatch correctness
 
-- [ ] [BACKEND] P2. **Detect + surface an orphaned `BlockedRow` at slot-reassign time.** Neither `reassign_slot` nor
-      `skip_current_task` in `server/routes/slots_ops.py` touches `BlockedRow` today, so a blocked-question row can
-      survive its task being reassigned with no disposition. Done when: `classify_retirement` gains an
-      `auto_orphaned_slot_reassigned` disposition (or equivalent) + a regression test. Source:
-      `/plans/active/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md`.
-- [ ] [BACKEND] P3. **Warn/alert when a parked task's id changes across a regen tick, both failure paths.**
-      `_migrate_parking_state`'s "no candidate found" and "below similarity threshold" paths silently drop parking state
-      with no log line — only the success path logs. Source:
-      `/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md`.
-- [ ] [BACKEND] P2. **Reclaim-and-push for a DIVERGED killed slot outside a dispatchable-work window.**
-      `_sweep_unpushed_slots` skips the diverged case entirely; `heal_dead_slot_branch_quarantine` handles diverged but
-      only fires inside `_do_spawn`, gated behind a dispatchable-work check — so it never runs during a zero-backlog
-      window. Source: `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`.
+- [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@3d2e368`** (2026-08-14, after this tracker's own authoring).
+      `retire_orphaned_blocked_rows()` (`server/blocked_reconcile.py:564`) now called at both `reassign_slot`
+      (`server/routes/slots_ops.py:763`) and `skip_current_task` (`:1060`) — the `auto_orphaned_slot_reassigned`
+      disposition + `blocked_retired_auto_orphaned_slot_reassigned` log event this todo asked for, exactly. Verified
+      2026-08-15 (`/ag-closeout-audit`-style reconciliation sweep, this session). Source:
+      `/plans/active/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md` — flip its own
+      checkbox too, same evidence.
+- [x] [REVIEW] P3. **DONE.** Both `_migrate_parking_state` failure paths now `logger.warning(...)` on drop
+      (`server/regen_backlog_from_plan.py` — no-candidate branch ~2876-2895, below-threshold branch ~2899-2919), each
+      inline-citing this issue doc. Verified 2026-08-15 (reconciliation sweep, this session). Source:
+      `/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` (its one remaining open todo,
+      "consider an alerting surface," is a separate, deliberately-open P3 — not this claim).
+- [x] [REVIEW] P2. **DONE.** `_sweep_unpushed_slots` now calls `heal_dead_slot_branch_quarantine` directly
+      (`server/worker_liveness_watchdog.py:1953`) inside its own unconditional per-tick sweep — fires every tick
+      regardless of backlog state, no `_do_spawn` gate. Verified 2026-08-15 (reconciliation sweep, this session).
+      Source: `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` — its own
+      checkbox + Progress Log are stale (still describe the gap as open as of 2026-08-03), flip + close.
 - [ ] [INFRA] P3. **`orphan_reap.py` special-case a worker-shell-parented detached background process** (distinct from
       the already-fixed CPU-progressing-quickmerge guard — this is `nohup`/`disown`-style background jobs a worker
       itself launched via `run_in_background`). Also cross-check the RAM-exhaustion doc's journalctl signatures against
       `orphan_reap`/`kill_session` — never done. Source:
       `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`.
-- [ ] [BACKEND] P1. **SQLite `database is locked` storm — root fix, not just the 2 loops already covered.**
-      `TmuxPruner`'s read/act/write restructuring + `ensure_review_agents` fixed 2 of ~10 loops hit in the
-      143-lock/32min storm; the same anti-pattern is unconfirmed-fixed for
-      `WorkerLivenessKicker`/`AgentKeeper`/`HealthMonitor`/
-      `UsagePoller`/`AutoParkReconciler`/`RepoHealthWatcher`/`PlanReconcilerLivenessCanary`/`BlockedQueueReconciler`/
-      `AutoSpawnLoop`/context-lifecycle. **DO-NOT-ARCHIVE guard on the source doc** — this is a live incident, not
-      closed by other checked items. Source:
-      `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
-- [ ] [BACKEND] P2. **Auto-submit a typed-but-unsubmitted guided `/compact`.** 2026-08-08 caught a queued `/compact`
-      sitting unsubmitted live; the orchestrator's own forced-compact retry/hold logic doesn't auto-drive a
-      worker-self-typed guided confirmation. Source:
-      `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md` (line ~136).
+- [ ] [BACKEND] P1. **STILL OPEN, scope narrowed 2026-08-15 (reconciliation sweep, this session).** `HealthMonitor`
+      (`server/health.py:144-160`) and `AgentKeeper` (`server/main_agent_keeper.py:1166-1184`) are now ALSO confirmed
+      fixed (explicit "Read/act/write split" docstrings), and `WorkerLivenessKicker`'s `_tick_once` structurally already
+      reads-then-acts-then-writes — so 5 of ~10 loops are clean, not 2. `UsagePoller`/
+      `AutoParkReconciler`/`RepoHealthWatcher` never made `has_session`/`capture_pane` calls at all — never guilty, just
+      contention victims. **The confirmed-still-bad one: `context_lifecycle.py`'s `_read_pct` (~line 1354-1373, called
+      every tick for main/review/every worker) still opens `session_scope()` and calls `capture_pane()` (a tmux
+      subprocess) INSIDE that open write transaction — the exact anti-pattern, still live today.** `AutoSpawnLoop`/
+      `PlanReconcilerLivenessCanary`/`BlockedQueueReconciler` not yet re-checked. **DO-NOT-ARCHIVE guard stays on the
+      source doc.** Source: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
+- [x] [REVIEW] P2. **DONE.** `WorkerLivenessKicker` now auto-submits a frozen `/compact`/`/pre-compact` at/above
+      `context_worker_compact_gate_pct` (`server/worker_liveness/__init__.py:988-1027`, logs
+      `frozen_guided_compact_auto_submitted`), citing this exact todo. Verified 2026-08-15 (reconciliation sweep, this
+      session). Source: `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`
+      (line ~136) — checkbox is stale, flip it.
 - [ ] [BACKEND] P2. **Force kill+resume reachable BEFORE `spawn_retry_cap_reached`, ordering unconfirmed.** No commits
       since 2026-08-08 touch `_respawn.py`'s ordering; whether `retry_count` counts each force-resume attempt is still
       an open question. Source: same doc, line ~141.
 - [ ] [BACKEND] P3. **Per-slot context-plateau detection — unbuilt.** `grep -r "plateau"` returns zero hits in
       agent-orchestrator. Source: same doc, line ~145.
-- [ ] [BACKEND] P3. **Re-check the learned context-windows once the fleet is fully on sonnet-5 — NOW ACTIONABLE.** The
-      precondition (fleet on sonnet-5) has held since 2026-08-08 per `model_tier.py`'s `sonnet_variant: light` being an
-      unused opt-in; the actual inspect/reset of `learned_context_windows.json` has not been done. Source: same doc,
-      line ~342.
+- **[REVIEW] P3. CANCELLED — SUPERSEDED 2026-08-15 (reconciliation sweep, this session).** Was: manually inspect/reset
+  `learned_context_windows.json` once the fleet is fully on sonnet-5. Two follow-on fixes shipped + archived since
+  (`ao_learned_context_window_registry_never_revalidates_2026_08_09`,
+  `ao_deepseek_context_window_unknown_and_self_repoisoning_2026_08_10`): `context_probe.context_window_for()` now
+  self-corrects a poisoned/under-estimated entry at READ time against a repeatedly-confirmed watermark, and
+  `model_tier._ALLOWED_MODEL_WINDOWS` carries a corpus-measured sonnet-5 prior (937,882 tokens / 17,974 transcripts) as
+  the cold-start fallback. The manual purge-and-relearn this todo asked for is obsolete — the same correction now
+  happens automatically. Source: same doc, line ~342.
 - [ ] [BACKEND] P2. **Re-run the 60-min context-signal validation after a clean fleet — overdue.** Multiple qualifying
       changes to `context_lifecycle.py`/`context_probe.py` have landed since 2026-08-08 (`a1e2969`, `59d9417`,
       `c00dc13`, `acc41b1`, `4af78dc`, `ac9ba18`, `905c210`, `c730f46`, `e943d72`+) with no re-run recorded since the
       2026-08-10 audit. Source: same doc, line ~411.
-- [ ] [BACKEND] P3. **Make `/done` idempotent-success for an already-`lifecycle-complete` row from the SAME session** —
-      distinct from the already-shipped reap-vs-done distinction + `agent_id` self-identify recovery (`43fc142`).
-      `DoneRequest` still has no `claude_session_id` field; a genuinely-already-complete row still 409/400s instead of
-      returning idempotent 200. Source:
-      `/plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`.
+- [x] [REVIEW] P3. **DONE.** `DoneRequest.claude_session_id` field exists (`server/models/worker_api.py:275`);
+      `_done_one_off` (`server/routes/slots_worker.py:1912-1924`) matches it against the archived row's own
+      `claude_session_id` and returns idempotent 200 instead of 409. Tracker's premise ("still has no field") is stale.
+      Verified 2026-08-15 (reconciliation sweep, this session). Source:
+      `/plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` (its own
+      "declined-P3, revisited" section already narrates this as shipped — flip the checkbox to match).
 
 ## Track 2 — Scheduled jobs, benchmarking, model/provider routing
 
@@ -182,14 +194,15 @@ context_scope:
       ongoing, multi-session work — re-run the inventory script for a current NEVER_SCOUTED count before scoping
       further. Source: `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (also tracked, do not duplicate, in
       `/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`).
-- [ ] [BACKEND] P1. **STEP 2's literal curl example still missing** — `agent-orchestrator/server/prompts.py` STEP 2 text
-      is still the generic boot-with-session-vars instruction, no per-field curl example added. Source:
+- [x] [REVIEW] P1. **DONE.** `server/prompts.py:296` now has a literal curl body for the `/boot` STEP 2 call. Verified
+      2026-08-15 (manual grep, this session). Source:
       `/plans/active/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`.
-- [ ] [BACKEND] P2. **Finish the `worktree_path`→`worktree` rename** — `slot_role` now flows through, but the actual key
-      is still `worktree_path` at 3 call sites (`server.py:1149`, `routes/agents.py:110`, `autospawn.py:1961`). Source:
-      same doc.
-- [ ] [BACKEND] P3. **Add `extra="forbid"` to `BootRequest`** — only `populate_by_name=True` is set today. Source: same
-      doc.
+- [x] [REVIEW] P2. **DONE.** Zero `worktree_path` hits left in `server.py`/`routes/agents.py`/`autospawn.py` — the
+      rename is complete. Verified 2026-08-15 (manual grep, this session). Source: same doc.
+- [x] [REVIEW] P3. **DONE.** `BootRequest` carries `model_config = ConfigDict(extra="forbid")`
+      (`server/models/worker_api.py:50`), with a comment citing this exact todo. Verified 2026-08-15 (manual read, this
+      session). Source: same doc — with all 3 Track-3 items from it now done, check whether the source doc itself is
+      fully closeable.
 
 ## Track 4 — Infra / VM / host hygiene
 
@@ -220,17 +233,25 @@ context_scope:
 - [ ] [SCRIPT] P3. Consider a fleet-wide `PYRIGHT_TIMEOUT` bump if a QG kill recurs outside a burst window — still
       hardcoded at 120s in `base-service.sh`, watch-condition not yet triggered. Source:
       `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`.
-- [ ] [INFRA] P3. Prune/tombstone the ghost host row `ip-172-31-0-185` (permanently `reporter_stale`/`ff_cron_stale` for
-      a terminated VM) — `git_health.py` has no prune/tombstone/host-liveness logic at all yet; design fork unresolved.
-      Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`.
+- [x] [REVIEW] P3. **DONE — shipped `agent-orchestrator@426e8cf55` TODAY (2026-08-15).** New `server/host_tombstone.py`:
+      `is_host_tombstoned()`/`tombstoned_since()`, `ip-172-31-0-185` hardcoded as a fail-safe floor + live AWS EC2
+      existence check for future ghost hosts. Resolved the design fork as tombstone-never-prune (row stays for audit
+      trail); wired into `models/git_health.py` + `routes/git_health.py:361,428` to exclude tombstoned hosts from
+      fleet-wide stale/drift totals. Verified 2026-08-15 (reconciliation sweep, this session, same day as the shipping
+      commit). Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` — flip its
+      checkbox too.
 - [ ] [OPERATOR] P2. Run the dry-run + live-apply steps for the content-derived-task-id migration against ~1,728 legacy
       positional ids (minting itself already shipped and live). Source:
       `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (tracked live in
       `/plans/active/content_derived_backlog_task_ids_2026_08_08.md`, do not duplicate there).
-- [ ] [BACKEND] P2. **Design + implement a recovery path for the rejected-push case in
-      `push_or_preserve_ahead_commits`** — a rejected `git push` still falls straight to `_preserve(...)` with no retry,
-      no re-stamped sentinel, no distinct alert. Source:
-      `/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md`.
+- [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@c6d43ac`** (2026-08-14).
+      `worktree_clean_check/_ahead_push.py::push_or_preserve_ahead_commits` (lines 262-283): on a rejected push,
+      re-verifies against the new HEAD, restamps the sentinel (`_restamp_sentinel_at_head`), and emits a distinct
+      `ahead_push_rejected_and_stale` event. Regression:
+      `test_sweep_rejected_push_restamps_sentinel_and_flags_rejected`. Verified 2026-08-15 (reconciliation sweep, this
+      session). Source:
+      `/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` — flip + archive
+      if now 0 open todos.
 - [x] [REVIEW] P2. Per-occurrence audit of the ~14 `BLOCKED-PREREQ` files in the active corpus (external-gate-mislabel
       vs. same-corpus-dependency), then re-grep-and-confirm as a follow-up. Source:
       `/plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`. **DONE
@@ -240,10 +261,12 @@ context_scope:
       table in the source doc's Progress Log. Both of the source doc's own todos closed; spawned 1 new tracked follow-up
       (`[BACKEND] P3`, the residual `agent-orchestrator` design question) — doc correctly stays open, not archived (real
       design work remains).
-- [ ] [BACKEND] P3. Root-cause the "zero-derived-parent-row" third `gate_on_depends` failure mechanism (distinct from
-      the two already-shipped fixes `13a5dd8`/`bd522d0`) — `gate_on_depends_unmet_upstreams_on_disk` still lacks the
-      defense-in-depth checkbox-scan fallback `_wire_gate_on_depends_prereqs` already got. Source:
-      `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`.
+- [x] [REVIEW] P3. **DONE — shipped `agent-orchestrator@2c8302c`** (2026-08-14). `_upstream_plan_open_on_disk()`
+      (`server/regen_backlog_from_plan.py:2483-2516`) is now the single shared definition used by BOTH
+      `_wire_gate_on_depends_prereqs` and `gate_on_depends_unmet_upstreams_on_disk`, including the checkbox-scan
+      fallback (`_plan_has_any_unchecked_checkbox`) this todo asked for. Verified 2026-08-15 (reconciliation sweep, this
+      session). Source: `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` — flip
+      its checkbox too.
 
 ## Track 5 — Dashboard e2e flakiness
 
@@ -306,9 +329,12 @@ before touching the source doc directly._
       (`orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`) is genuinely still open and already tracked as
       its own item in this tracker's Track 4. The source triage doc itself reached 0 open todos after both items above
       and was archived in the same pass (`/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`).
-- [ ] [BACKEND] P2. **Ship the escalation-route collision fix** (`server/routes/agents.py` still only has
-      `/api/escalate`) named in the linked epic's own P1 todo. Source:
-      `/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md`.
+- [x] [REVIEW] P2. **DONE.** `/api/escalate` (unchanged CI-wall dispatch) coexists cleanly with the namespaced-plural
+      `/api/escalations/active`, `/api/escalations/{id}`, `/api/escalations/{id}/resolve` — no collision. Docstring at
+      `server/routes/agents.py:444-451` explicitly cites this as the resolution. Verified 2026-08-15 (reconciliation
+      sweep, this session). Source: `/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md` (this
+      checkbox actually tracks via `escalation_and_disaster_recovery_master`'s own P1 todo per its 2026-08-07
+      na-eligibility note — flip both).
 - [ ] [UI] P3. Build the backlog-relations UI (`backlog/graph` endpoint doesn't exist yet). Source: same doc.
 - [ ] [REVIEW] P3. Re-test the `l2_book` microstructure-capture retest gate once
       `/plans/active/l2_book_microstructure_capture_2026_07_13.md` clears its own `assigned_vm: NA` hold. Source: same
@@ -362,3 +388,18 @@ before touching the source doc directly._
 - **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — kept to the Track 1/Track 2 codex SSOTs
   - dispatch.py/worker_liveness_watchdog.py; this tracker's own design is "each todo cites its Source doc", so a wider
     list would duplicate what's already per-item.
+- **2026-08-15 (interactive session, operator-requested reconciliation)**: operator asked for a full reconcile against
+  live code before dispatching anything further — ran a targeted Workflow verification sweep (18 code-checkable items)
+  plus manual grep confirmation on Track 3's 3 items, 21 of the 51 originally-open items checked. **Result: 12 already
+  DONE (several shipped in just the last 24-48h — `agent-orchestrator@3d2e368`/`c6d43ac`/`2c8302c`/`426e8cf55`, one
+  literally shipped the SAME DAY this reconciliation ran), 1 SUPERSEDED (learned-context-windows manual-reset premise
+  made obsolete by two later self-correcting fixes), 8 confirmed STILL genuinely open** (context-plateau detection
+  unbuilt, orphan_reap nohup/disown case, force-kill-vs-retry-cap ordering unconfirmed, 60-min context-signal
+  re-validation overdue, DB-readiness→restart wiring missing, cgroup-vs-host RAM mismatch unbuilt, dashboard e2e
+  flakiness partial, and the SQLite lock-storm P1 — narrowed to a specific confirmed-still-bad site,
+  `context_lifecycle.py`'s `_read_pct`, rather than the original blanket "9 unconfirmed loops" framing). **30 items
+  (Track 2's 8, most of Track 4, remainder of Track 6) not yet re-swept** — this pass prioritized the code-verifiable,
+  highest-signal items over full coverage given session time constraints. Each DONE/SUPERSEDED item above also names its
+  source doc's own stale checkbox to flip — not yet done in this pass (tracker-level reconciliation only; source docs
+  are a fast, mechanical follow-up). No implementation happened in this pass — verification only, per the operator's
+  explicit "list them out, I'll review" request before any dispatch.
