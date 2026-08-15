@@ -185,8 +185,6 @@ source: >-
       `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) Source:
       `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P2. UAC generated-artifact churn: gitignore + git rm --cached openapi/ui-reference-data.json /
-      capability-manifest.json (unified-api-contracts) Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [x] ✅ [CODE] P2. **Diagnosed: mis-scoped for single-task AO dispatch, NOT attempted — corrected classification
       instead.** (2026-08-15, slot-31·infra) Concrete file-by-file scope survey of all 18
       `market_data_processing_service/app/adapters/*` files implementing `process_to_candles`, their 4 production caller
@@ -202,6 +200,28 @@ source: >-
       item's designated SSOT owner) instead. Source issue:
       `plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`
       (market-data-processing-service). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. **PARTIAL — ui-reference-data.json untracked; capability-manifest.json intentionally LEFT TRACKED
+      (real consumer dependency, not done).** unified-api-contracts@f70f29c8 (2026-08-15, slot-14·infra). Verified both
+      files' actual consumers before untracking either: `openapi/ui-reference-data.json` is safe — its only real reader,
+      `unified-trading-system-ui`'s `.github/workflows/uac-registry-sync.yml`, regenerates it by running
+      `scripts/generate_ui_reference_data.py` from source (`pip install -e .` then invoke the generator), never reads
+      this repo's committed copy — gitignored + `git rm --cached`, QG green (369s), quickmerge landed (post-push
+      ancestry verified `f70f29c8f` on origin; quickmerge's own diff-check false-flagged "push landed but change did
+      not" for this now-gitignored path — a known false-positive class since a deleted+gitignored file has no
+      before/after diff to compare; confirmed the real land via
+      `git cat-file -e     origin/live-defi-rollout:openapi/ui-reference-data.json` → absent, as intended).
+      `openapi/capability-manifest.json` is NOT safe to untrack as-is:
+      `agent-orchestrator/server/mcp/manifest_loader.py` hard-requires it be a **committed** file in this repo's sibling
+      clone (`_MANIFEST_REL`, `manifest_path()`; raises `ManifestUnavailableError` with no regen fallback if absent) —
+      untracking it would break AO's capability MCP server on any fresh clone. Filed as a new followup todo below rather
+      than silently skipped. Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [ ] [CODE] P3. **New finding, 2026-08-15**: before `openapi/capability-manifest.json` can be untracked per the
+      generated-artifact-churn cleanup above, fix `agent-orchestrator/server/mcp/manifest_loader.py`'s hard dependency
+      on it being a committed file (`_MANIFEST_REL = "unified-api-contracts/openapi/capability-manifest.json"`,
+      `ManifestUnavailableError` on missing, no regen path) — either wire a regen-on-demand fallback (invoke
+      `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` when the committed copy is absent) or accept
+      the file staying committed permanently and close this out as won't-do. Repo: agent-orchestrator +
+      unified-api-contracts. Source: this doc, todo above.
 - [ ] [CODE] P2. Run PM bash scripts/quality-gates.sh to confirm the plan + codex update pass (unified-trading-pm)
       Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [x] ✅ [CODE] P2. **STALE PREMISE — the "13 cells/~12.5k rows" digest figure is ~3 weeks stale; the actual retry
