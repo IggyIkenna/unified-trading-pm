@@ -105,12 +105,18 @@ drift_direction: advance-code
       `codex/10-audit/_archive/unified-internal-contracts.yaml`) — which explains the absence. Annotated the archived
       doc's `write-check-uic-completeness` entry with a `verified:` field recording this evidence (same commit).
 
-- [ ] [REVIEW] P3. Verify + correct the claim in `plans/archive/operational_config_migration_2026_03_11.plan.md` (id
+- [x] ✅ [REVIEW] P3. Verify + correct the claim in `plans/archive/operational_config_migration_2026_03_11.plan.md` (id
       `update-code-references`) citing `catalogue_updater.py` in instruments-service plus commits
       `c12c35e`/`824e723`/`07e1044`/`3a41740`/`3ba90bf` — no `catalogue_updater.py` (or an obvious rename) found
       anywhere in the workspace. Repo: unified-trading-pm. Done-when: check the cited commits against instruments-service's
       full git history (shallow clone was inconclusive) to confirm whether the path was renamed/deleted post-hoc
       (legitimate) or the claim was fabricated (genuine false-done); annotate the archived doc accordingly.
+      ✅ DONE 2026-08-15 — CONFIRMED-BUILT-THEN-SUPERSEDED-VIA-REFACTOR, not fabricated. `gh api` against
+      instruments-service on GitHub confirms both `c12c35e` and `824e723` genuinely made the claimed edits
+      (2026-03-11). `catalogue_updater.py` was created 2026-03-08 and deleted 2026-03-24 (commit `29f34ff083`,
+      "production-ready instruments-service ... per-bucket ManifestWriter catalogue") as part of a documented
+      refactor, not fabricated or silently dropped. Annotated the archived doc's `update-code-references` entry with
+      a `verified:` field (same commit).
 
 - [ ] [OPERATOR] P3. Name the specific document/session referred to as "Chunks 1/2 and Phase B full code review" (an
       unreviewed prior deliverable named in the original audit request). An exhaustive search — AND-grep for all three
@@ -199,3 +205,23 @@ drift_direction: advance-code
   substantive DONE claim was needed — only the confirmation itself. The doc stays `status: open` — 2 todos remain
   (the `operational_config_migration` P3 `catalogue_updater.py` verification, and the `[OPERATOR]` "Chunks 1/2 and
   Phase B" naming ask).
+
+- **2026-08-15 (todo `update-code-references`, review slot 3)**: verified via `gh api` against instruments-service on
+  GitHub (the local clone is shallow and inconclusive, per this todo's own text) — both cited commits are genuine.
+  `c12c35e` (a pre-history-rewrite SHA — this repo underwent a documented history rewrite on 2026-08-05, per the
+  `instruments-service.stale-pre-history-rewrite-20260805T112618Z` clone directory seen elsewhere in this workspace;
+  the identical change is reachable post-rewrite as `9e752677d4`, same date/message) genuinely modified
+  `instruments_service/catalogue_updater.py` + `pyproject.toml` on 2026-03-11T21:41:12Z ("fix: update catalogue path
+  to unified-trading-pm/configs/"); `824e723` genuinely modified `.github/workflows/quality-gates.yml` the same day.
+  Traced the file's full lifecycle via a path-filtered commit-history query (`gh api
+  repos/.../commits?path=instruments_service/catalogue_updater.py`): CREATED 2026-03-08 (`724990c60e`,
+  "feat(catalogue): add catalogue_updater post-batch hook"), correctly updated 2026-03-11 exactly as claimed, then
+  REMOVED — not renamed (`previous_filename: null`) — 2026-03-24 by `29f34ff083` ("feat: production-ready
+  instruments-service — ... per-bucket ManifestWriter catalogue ..."), which deleted both `catalogue_updater.py`
+  and its test file as part of a documented architectural refactor superseding it with a `ManifestWriter`-based
+  catalogue. **CONFIRMED-BUILT-THEN-SUPERSEDED-VIA-REFACTOR, not fabrication** — mirrors the sibling
+  `write-check-uic-completeness` pattern exactly. Annotated
+  `plans/archive/operational_config_migration_2026_03_11.plan.md`'s `update-code-references` entry with a
+  `verified:` field (same commit). This doc stays `status: open` — only the `[OPERATOR]` "Chunks 1/2 and Phase B"
+  naming ask remains, and it cannot be resolved by a dispatched worker per its own text (genuine ambiguity, no
+  data-derivable answer).
