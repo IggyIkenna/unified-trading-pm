@@ -1054,3 +1054,9 @@ against the reproduction script.
   8db188fe/1c4d8864, deployment-service a564cca/6f464325/9102eb9b/1b035c52) re-verified ancestors of
   origin/live-defi-rollout. Re-fire is the filed dedup-inert gap, not a regression. No code change, no GCS write, no VM
   launch. Doc over cap — 1-line close-out only.**
+- **2026-08-15 (data_pipeline_failure escalation worker, agt-3f4b47, slot 5) — new dispatch, reading 7,800/178,942 =
+  4.4% (abs>=500), alert self-labeled STATIC BACKLOG — 1 af row in last 1d; no code fix. All 11 fix commits (MTDS
+  339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
+  a564cca/6f464325/9102eb9b/1b035c52) re-verified ancestors of origin/live-defi-rollout via fresh `git fetch` in all
+  three repos. Same decaying-trickle condition, not a regression. No code change, no GCS write, no VM launch. Doc over
+  cap — 1-line close-out only.**
