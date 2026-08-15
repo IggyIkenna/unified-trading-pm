@@ -148,22 +148,35 @@ context_scope:
 
 ## Track 2 — Scheduled jobs, benchmarking, model/provider routing
 
-- [ ] [DATA] P3. **Measure whether the hoisted working-pane guard actually reduced false spawn-retry-cap pages**
-      (baseline: 45 cap declarations, 8 false `pane=working` pages, `agent-orchestrator@9d26598`) — cheap, still
-      unmeasured since 2026-08-06. Source: `/plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`.
-- [ ] [DOC] P3. Document the pane-guard-before-cap-branch ordering invariant in
-      `/codex/04-architecture/agent-orchestrator-worker-liveness.md`. Source: same doc.
-- [ ] [BACKEND] P3. Decide keep-vs-drop on the `no_capacity` legacy status. Source: same doc.
-- [ ] [OPERATOR] P2. Re-install all 7 scheduled-job systemd-user timer units on the live VM (installers already
-      converted to `systemd --user`, `agent-orchestrator@c3a85c3b4`) — actual re-install unverified from a dev checkout.
+- [x] [REVIEW] P3. **DONE — measured 2026-08-15 (reconciliation, this session).** False-positive RATE dropped from 17.8%
+      (8/45 baseline) to 0.7% (8/1148) since `agent-orchestrator@9d26598` — 1,148 spawn-retry-cap declarations in the
+      `2026-08-06..present` window, still only 8 showing `pane=working` at declaration. The guard fix worked. Source:
+      `/plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — flip its checkbox with these
+      numbers.
+- [ ] [DOC] P3. **STILL OPEN — false-completion finding 2026-08-15 (reconciliation, this session).** The SOURCE doc
+      (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`) has this checked `[x]` "DONE 2026-08-14" claiming a new
+      subsection was added to `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — it was NOT. Read the live
+      971-line codex doc directly: zero hits for "pane-guard"/"cap-branch"/"9d26598"/`_diagnose_unbooted_pane` anywhere.
+      The underlying code (`server/worker_liveness/_auth_failover.py:31-192`) is real and worth documenting — the doc
+      edit itself was just never made despite the checkbox. **Both the source doc's checkbox AND this tracker item need
+      to stay open until the doc edit actually happens.** Source: same doc.
+- [x] [REVIEW] P3. **DONE.** Decision made + recorded live: `server/models/scheduled_jobs.py:19-27` carries a dated
+      `DECISION (...2026-08-04.md, 2026-08-14): KEEP "no_capacity"` — reachable only by an ad-hoc caller omitting
+      `job_name`, every real timer-driven dispatch now reports `queued` instead (post `@5087f30`); kept as
+      lowest-blast-radius fail-fast opt-out. Verified 2026-08-15 (reconciliation sweep, this session). Source: same doc.
+- [x] [REVIEW] P2. **DONE — confirmed live 2026-08-15 (this session, direct SSM check).** Not just re-installed — 11
+      timers now (more than the original 7), all present as unit files, all enabled (`timers.target.wants/` symlinks),
+      linger enabled for ubuntu, live `systemd --user` instance running (PID 1111), and actively firing — confirmed real
+      log output from `CIReconcileLoop`/`AutoParkReconciler`/`BlockedQueueReconciler` started 2026-08-15 09:08:32.
       Source: same doc.
 - [ ] [SCRIPT] P1. Re-run `/plan-reconcile` (whole-corpus) SOLO for a clean, unconfounded benchmark number. Source:
       `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean steady-state benchmark.
       Source: same doc.
-- [ ] [SCRIPT] P2. Add `git pull --ff-only` to `na_eligibility_auditor.md` STEP 1 (the orchestrator VM's shared PM
-      checkout goes stale between runs — `plan_reconciler.md` already has this fix, the na-eligibility skill doesn't).
-      Source: same doc.
+- [x] [REVIEW] P2. **DONE — shipped `unified-trading-pm@d708247af1` TODAY (2026-08-15).**
+      `agents/na_eligibility_auditor.md` STEP 1 (lines 109-115) now runs `git pull --ff-only origin live-defi-rollout`
+      before proceeding, matching `agents/plan_reconciler.md`'s existing pattern exactly. Verified 2026-08-15
+      (reconciliation sweep, this session, same day as the shipping commit). Source: same doc — flip its checkbox too.
 - [ ] [DOC] P2. Update the published skills-benchmark artifact once the two re-runs above land. Source: same doc.
       _(DeepSeek/Claude blended-routing work — `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` —
       and the Luna/Flex bridge — `codex_luna_flex_bridge_2026_08_14.md` (local-only, not yet pushed to origin as of this
@@ -206,23 +219,34 @@ context_scope:
 
 ## Track 4 — Infra / VM / host hygiene
 
-- [ ] [CREDS] P0. **Finish vm-0 Secrets-Manager wiring**: align the blob's stale `ORCHESTRATOR_JWT_SECRET` (SM ← vm-0).
-      Exact operator commands already staged as of 2026-08-08 — spot-check they're still current, then run. Source:
+- [ ] [CREDS] P0. **GENUINELY OPERATOR-BLOCKED — confirmed 2026-08-15 (this session).** Finish vm-0 Secrets-Manager
+      wiring: align the blob's stale `ORCHESTRATOR_JWT_SECRET` (SM ← vm-0). The source doc explicitly states
+      **"Agent-side secret writes are permission-blocked by design"** — this is a deliberate barrier, not reflexive
+      caution; exact commands are staged (line ~297) but must be run by a human. Source:
       `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`.
-- [ ] [DESIGN] P0. **Design the dirty-worktree resolution policy** (Ikenna, Slack 2026-06-12 — the "no dirty worktrees"
-      next-phase flow). Genuinely unbuilt; the existing `resolve_dirty_state()` is a different, fresh-spawn-only gate.
+- [ ] [DESIGN] P0. **GENUINELY OPERATOR-BLOCKED — confirmed 2026-08-15 (this session).** Design the dirty-worktree
+      resolution policy (Ikenna, Slack 2026-06-12 — the "no dirty worktrees" next-phase flow). References a specific
+      design intent from a conversation only the operator has context on — genuinely unbuilt, not a bounded task.
       Source: same doc.
-- [ ] [DIAG] P2. Best-effort root-cause the specific 49.3G/16G-swap peak more precisely, if feasible. Source:
+- [ ] [DIAG] P2. Best-effort root-cause the specific 49.3G/16G-swap peak more precisely, if feasible. **Confirmed still
+      genuinely open 2026-08-15** (reconciliation sweep) — enforcement (resource-watchdog) shipped and live, the "49.3G"
+      figure is a sticky cgroup `memory.peak` high-water-mark (not fresh per-restart evidence, confirmed across 3+
+      restarts), but the actual proximate cause was never pinned down (both live candidate processes checked at the time
+      were ruled out). Explicitly "best-effort... if feasible," no bounded done-when. Source:
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`.
-- [ ] [OPERATOR] P2. Confirm/rule out kernel-level OOM-killer activity via `dmesg`/`journalctl -k` with root access.
-      Source: same doc.
+- [x] [REVIEW] P2. **DONE — confirmed live 2026-08-15 (this session, direct SSM check).** Zero kernel OOM-killer hits
+      host-wide in the last 30 days (`journalctl -k`, no root needed — the orchestrator's own service user,
+      `ubuntu`/group `adm`, can already read this). Ruled out cleanly. Source: same doc.
 - [ ] [BACKEND] P2. **Wire the DB-aware readiness signal to an actual restart trigger.** `_readiness_check()` already
       does a real `select(1)` DB probe (has since 2026-05-19, predates the issue) — but no installer polls `/readiness`
       to act on it; every `ExecStartPre` health-gate only hits `/api/healthz` (liveness). Source:
       `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`.
-- [ ] [BACKEND] P3. Right-size/harden the DB pool for known concurrency — the "raise pool_size/max_overflow" option is
-      already disproven by this doc's own occurrence #6/#7 evidence (root cause was write-lock-holding-during-spawn); no
-      code addresses the surviving design fork. Source: same doc.
+- [ ] [BACKEND] P3. **Confirmed still open + genuine design fork 2026-08-15 (reconciliation sweep).** Right-size/harden
+      the DB pool — `pool_size`/`max_overflow` raise correctly stays un-bumped (disproven, matches the SQLAlchemy
+      defaults still in `server/db.py`); `pool_timeout` was raised to 125s for a separate P2 issue, not this one. Two
+      live unresolved alternatives remain: "lower pool_timeout" vs. "batch/serialise per-slot git-status writes" (no
+      batching exists in `server/routes/git_health.py` today — still one `session_scope()` per request). Correctly NA —
+      a real judgment call between two designs, not a bounded task. Source: same doc.
 - [ ] [BACKEND] P2. **Surface a cgroup-vs-host RAM mismatch on the dashboard/alerting.** `host_resources.py` reads only
       host-level `/proc/meminfo`; no cgroup-specific memory-stat reader (`memory.current`/`memory.high`/ `memory.max`)
       exists anywhere. Source:
@@ -230,9 +254,13 @@ context_scope:
 - [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, dominant disk consumer) for real cleanup headroom. Source:
       `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`.
 - [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G). Source: same doc.
-- [ ] [SCRIPT] P3. Consider a fleet-wide `PYRIGHT_TIMEOUT` bump if a QG kill recurs outside a burst window — still
-      hardcoded at 120s in `base-service.sh`, watch-condition not yet triggered. Source:
-      `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`.
+- **[SCRIPT] P3. CANCELLED — SUPERSEDED 2026-08-15 (reconciliation sweep, this session).** Was: bump `PYRIGHT_TIMEOUT`
+  if a QG kill recurs. Already closed 2026-08-12 by `/plan-reconcile`: the kill DID recur (9 occurrences,
+  `pytest_timeout_60s_flaky_under_contention*` doc-chain) but that investigation explicitly rejected a timeout bump
+  ("same capacity-side root cause, not a per-repo timeout raise") — the real, already-adopted fix is the
+  resource-reservation admission governor (`/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`, active),
+  matching the fleet's "QG concurrency is RESOURCE-based" policy. Source:
+  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`.
 - [x] [REVIEW] P3. **DONE — shipped `agent-orchestrator@426e8cf55` TODAY (2026-08-15).** New `server/host_tombstone.py`:
       `is_host_tombstoned()`/`tombstoned_since()`, `ip-172-31-0-185` hardcoded as a fail-safe floor + live AWS EC2
       existence check for future ghost hosts. Resolved the design fork as tombstone-never-prune (row stays for audit
@@ -277,12 +305,21 @@ before touching the source doc directly._
 - [ ] [TEST] P2. Root-cause `deepseek-per-turn-metrics.spec.ts` + `deepseek-wallet-reconciliation.spec.ts` intermittent
       failures — some fix evidence exists elsewhere (timeout bump, poller no-op) but no explicit re-run-confirmation is
       recorded against THIS todo. Source: `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`.
-- [ ] [TEST] P3. Root-cause `backlog-collision.spec.ts`'s intermittent "click Fix" failure (async-completion race in
-      remint→confirm). Source: same doc.
+- [x] [REVIEW] P3. **DONE.** Root cause was NOT the hypothesized async remint→confirm race — it was two local-slot-only
+      port-mismatch bugs (hardcoded fixture port + missing `process.env` propagation), fixed by
+      `agent-orchestrator@1e2ecac`+`3ba4ba4` (both confirmed ancestors of `origin/live-defi-rollout`). Fixture file
+      deleted; runner now regenerates the backend port dynamically, slot-offset-aware. 3 independent isolated re-runs
+      (6/6 tests, zero flakes) reproduced the fix — the source doc's checkbox stays unflipped only per its own
+      evidence-append-only governance rule, not because the fix is unconfirmed. Verified 2026-08-15 (reconciliation
+      sweep, this session). Source: same doc.
 - [ ] [DOC] P3. Note the fix pattern in `/codex/06-coding-standards/ui-testing-layers.md`, including the
-      "PlanRegenLoop-in-mock-mode" general class, once root-caused. Source: same doc.
-- [ ] [INFRA] P3. Split Playwright's `webServer` config so a single-project e2e run doesn't boot all 6 backend+dashboard
-      pairs. Source: same doc.
+      "PlanRegenLoop-in-mock-mode" general class, once root-caused. Now actionable — both flaky-spec root causes above
+      are confirmed. Source: same doc.
+- [x] [REVIEW] P3. **DONE — shipped `agent-orchestrator@9cd1fa0`** (2026-08-11). `dashboard/playwright.config.ts`'s
+      `serversForThisRun()`/`neededProjects()` (lines ~119-231) filters the `webServer` array to only the pair(s)
+      matching the requested `--project`/positional filter — a single-project run now boots only that pair, "start
+      everything" preserved only as the conservative fallback for unmappable filters. Verified 2026-08-15
+      (reconciliation sweep, this session). Source: same doc.
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
@@ -403,3 +440,16 @@ before touching the source doc directly._
   source doc's own stale checkbox to flip — not yet done in this pass (tracker-level reconciliation only; source docs
   are a fast, mechanical follow-up). No implementation happened in this pass — verification only, per the operator's
   explicit "list them out, I'll review" request before any dispatch.
+- **2026-08-15 (same extended session, batch 2)**: operator confirmed nothing further was blocked on them and asked to
+  flow through the remaining items — ran a second Workflow verification sweep (9 more code-checkable items) plus 3
+  direct live checks (kernel OOM history via `journalctl -k`, systemd-user timer enablement + live firing, and an actual
+  measurement of the spawn-retry-cap guard's false-positive rate since its fix). **Result: 6 more DONE (2 shipped TODAY
+  — `na_eligibility_auditor.md`'s ff-only fix and the timer confirmation), 1 more SUPERSEDED (`PYRIGHT_TIMEOUT` — a
+  different fix direction was already adopted 2026-08-12), 3 more confirmed STILL open, and 1 genuine FALSE-COMPLETION
+  finding** (the pane-guard-before-cap-branch codex doc edit — checked `[x]` in its source doc but never actually
+  written, verified by reading the live 971-line codex file directly). **Cumulative across both batches + manual checks:
+  19 DONE, 2 SUPERSEDED, 11 confirmed STILL open, 2 genuinely OPERATOR-BLOCKED** (vm-0 JWT secret write — explicitly
+  "permission-blocked by design," and the dirty-worktree resolution policy design — needs the operator's own
+  Slack-conversation intent). Only `context_scope` backfill (Track 3/6, large standing effort) and a handful of pure
+  re-run/publish items (`/plan-reconcile` solo, `/na-eligibility-audit` all-tranches, the benchmark artifact update)
+  remain genuinely un-triaged — everything else in the original 51-item list now has a live, evidence-backed verdict.
