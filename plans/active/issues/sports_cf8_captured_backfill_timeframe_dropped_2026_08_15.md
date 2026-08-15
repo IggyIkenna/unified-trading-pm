@@ -287,3 +287,23 @@ issue's scope); flagged as a follow-up todo below.
   called — still conditioned on MTDS landing. Next session/window: read whichever watchdog is live at resume time, and
   if it TIMED OUT, re-check `mtds_tradfi_combo_casing_qg_red_2026_08_15.md`'s `status:` before relaunching watchdog #7
   (cheap single grep, avoids relaunching a watchdog for a blocker that already cleared).
+- **data_engineering slot-2, 2026-08-15 (2nd pre-compact checkpoint — 6 consecutive watchdog timeouts, flagging
+  stall)**: watchdog #6 (`bwyrxn16q`) completed its full 8-check cycle and TIMED OUT — drift climbed
+  `ahead=1/behind=24→26` across its run; the market-tick-data-service commit
+  (`908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09`) remains NOT-LANDED. Re-confirmed
+  `mtds_tradfi_combo_casing_qg_red_2026_08_15.md` still `status: open`. Re-confirmed — this time via actual
+  `ToolSearch(select:...)` schema inspection, not just name-matching — that none of `PushNotification` (desktop/phone
+  alert, not task-scoped), `RemoteTrigger` (claude.ai trigger API), `SendMessage` (inter-agent chat), `TaskUpdate`
+  (session-local `TaskList` only, not the AO backlog), or `DesignSync` (design-system sync) is an AO
+  `/progress`/`/heartbeat` call — no such mechanism exists anywhere in this tool surface; not fabricated, and this
+  should stop future sessions re-deriving the same negative result. Pre-compact Step 1 scratchpad audit: `duckdb-tmp/`
+  holds 3 `manifest-consolidate-*` dirs — regenerable DuckDB temp state from the earlier (already-completed) MDPS
+  consolidate diagnosis, not referenced by any committed doc (grep confirmed clean), not needed by any open todo;
+  deliberately not promoted. `qm-watchdog-2.log` is a 0-byte watchdog-script artifact; deliberately not promoted. No
+  secrets found. Both repos' working trees clean; this PM repo `ahead=0`. **This is now 6 consecutive watchdog timeouts
+  (~48+ min of pure wait) with `behind` climbing from ~11 to 26 over the session** — the blocking doc's own "likely
+  self-resolves" expectation has clearly not held on this timescale; flagging to the operator in-chat per this ritual's
+  Step 3 (interactive mode, operator present) rather than escalating unilaterally, since the fix itself is out of this
+  task's scope and already owned by slot-29. `/done` still NOT called — still conditioned on MTDS landing. Next
+  session/window: same as above — re-check the blocker's `status:` before relaunching another watchdog; if still open
+  after a much longer gap, escalating THAT issue's priority (not this one) is the right lever, not further polling here.
