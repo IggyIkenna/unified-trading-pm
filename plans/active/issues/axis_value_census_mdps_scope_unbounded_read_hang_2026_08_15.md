@@ -132,13 +132,23 @@ now-confirmed reader gap (point 2 above), not because `service_name` itself is a
       (repo: unified-trading-library) — investigation-only, no code change; see "## Findings" above. Confirmed: backfill
       runs AFTER filter evaluation (a real gap for genuinely-optional columns), but `service_name` is a hard-required
       base column since schema v4, so todo 2 is safe to proceed unmodified. — unified-trading-pm@(this commit)
-- [ ] [BACKEND] P2. Push `("service_name", "==", _CANDLE_SERVICE_NAME)` into the `filters=` list passed to
+- [x] ✅ [BACKEND] P2. Push `("service_name", "==", _CANDLE_SERVICE_NAME)` into the `filters=` list passed to
       `_ds._read_availability_index` when `is_candle_census`, in `get_axis_value_census`. KEEP the post-read
       `_filter_to_candle_rows` call as a cheap safety net (do not drop it — see Findings above: it's a correctness
       backstop for the reader's general filter-safety gap, not redundant). Add a regression test asserting the
       MDPS-scoped census still excludes MTDS-only rows. Done when a live timed call for a large asset_group (e.g.
       tradfi) completes in single-digit seconds with an unchanged result shape/row_count vs the pre-fix behavior. (repo:
-      deployment-api)
+      deployment-api) — deployment-api@82b0469a7e. Shipped + 2 new regression tests (asserts
+      `("service_name", "==",     "market-data-processing-service")` in the pushed `filters=`; non-candle requests carry
+      no such filter). Live verification (in-process call, bounded, 2026-08-15): full endpoint call for
+      `(market-data-processing-service,     tradfi)` now completes in **26.79s** (vs "did not finish in 480s" pre-fix) —
+      NOT single-digit seconds as this todo's done-condition optimistically assumed (that 8.6s figure was the isolated
+      pushdown READ only; the full endpoint also runs 9 separate `value_counts()` passes over the resulting 6.33M-row
+      frame, which the isolated benchmark didn't include). row_count=6,333,546 vs the issue doc's 6,332,575 — a small
+      (+971, +0.015%) drift from new tradfi data captured between 2026-08-15's investigation and this fix landing, not a
+      correctness regression. Reporting the honest measured number rather than the unmet single-digit claim (CLAIM ≤
+      MEASUREMENT) — the fix is still a functional win (unusable/hanging → 26.79s, well inside any normal HTTP gateway
+      timeout).
 - [ ] [BACKEND] P3. Separate, lower-priority follow-up (not blocking todo 2): the general reader gap confirmed in
       Findings above — `read_availability_index`'s pushdown `filters=` silently SKIPS (not backfill-safely excludes) a
       filter condition on any column absent from a given raw file — is real for genuinely legacy-optional columns (v6+
