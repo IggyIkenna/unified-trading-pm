@@ -581,15 +581,22 @@ someone scoped and did not finish**. Deleting it silently discards the design de
       (`strategy_config_loader.py::load_strategy_config_by_type`, "batch and live use the same config loader") which
       reads `strategy_type` as a raw unvalidated string that consults NEITHER enum — confirmed by real production YAML
       values (`mean_reversion`, `COMMODITY_REGIME`) matching neither; `GcsStrategyConfig` itself confirmed dead code,
-      zero live callers anywhere) — all 4 renames + the PnL fail-fast fix in `strategy-service@a28fd458a0`. **2 remain,
-      deliberately declined a second time with deeper evidence rather than forced**: `PnLAttribution`/`PnLSummary`
-      (UAC's versions require different fields (`attribution_id`/`summary_id` + shard dims) and different field names
-      (`start_time`/`end_time` vs `start_date`/`end_date`) — traced the full construction chain this round:
-      `PnLCalculator.__init__` (the only constructor) carries no client_id/account_id/category at all, so UAC's required
-      identity fields can only be fabricated, not derived, without a real constructor-signature change first; and the
-      entire `PnLCalculator`/local-`PnLAttribution`/`PnLSummary`/`output_builders.build_pnl_attribution_df()` chain has
-      zero live callers anywhere in the tree today — a real PnL-domain data-shape migration blocked on a prerequisite
-      API change, not a mechanical fix, and fabricating identity fields to force it through is banned).
+      zero live callers anywhere) — all 4 renames + the PnL fail-fast fix in `strategy-service@a28fd458a0`. **All 15 of
+      15 now resolved** — `PnLAttribution`/`PnLSummary`, the last 2, migrated onto UAC's versions directly (not renamed)
+      — `strategy-service@99a93fea1d`. The earlier "blocked, can only fabricate identity" verdict was half right: UAC's
+      fields genuinely weren't derivable from `PnLCalculator`'s OLD scope, but a real source exists nearby —
+      `StrategyInstanceIdentity` (UAC, the exact type every `StrategyBase` subclass already carries as `self.identity`,
+      built by `V2EngineOrchestrator.register_instance` in the live V2 engine path). `PnLCalculator.__init__` now
+      accepts an optional `identity: StrategyInstanceIdentity | None`; when supplied, `client_id`/`strategy_family`
+      populate for real (`None` preserves prior behavior). `attribution_id`/`summary_id` needed no invention: UAC's own
+      `__post_init__` already auto-assigns a `pnl_<uuid>`/`summary_<uuid>` when passed empty string — a mechanism the
+      class ships with, not one this migration added. Fields with no available source
+      (`category`/`account_id`/`client_name`/`strategy_name`) stay at UAC's own documented `""` defaults — honest use of
+      an optional field, not fabrication. `positions`/`prices`/`reconciliation_status` (no UAC slot) preserved via
+      `self.last_positions`/`self.last_prices` and `metadata` rather than dropped. Since the whole chain still has zero
+      live callers, a new test (`tests/unit/engine/core/test_pnl_calculator.py`) is the correctness proof in lieu of a
+      live-path regression: constructs a `PnLCalculator` with a REAL `StrategyInstanceIdentity`, runs
+      `calculate_attribution()`/`generate_summary()`, and asserts both computed values and identity-derived fields.
 - [ ] [AGENT] P1. **For every remaining row, name the SSOT in codex and mark the other path.** Where both must exist for
       a real reason (Group B / Group C in J3), **state in both places which is authoritative and why**. A dual path
       documented as intentional stops costing an auditor an hour; an undocumented one costs it every time.
@@ -636,6 +643,26 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
 
 ## Progress Log
 
+- **2026-08-15 (round 5)** — Closed out the last 2 shadow-SSOT items, `PnLAttribution`/`PnLSummary`
+  (`strategy-service@99a93fea1d`, verified on origin: UAC-backed import present,
+  `identity: StrategyInstanceIdentity | None` param present, zero local class definitions remain, new test landed,
+  baseline yaml has zero entries left). **Shadow-SSOT baseline: 15 of 15 resolved.** The prior round's "blocked,
+  identity fields can only be fabricated" verdict was half right — UAC's required fields genuinely weren't derivable
+  from `PnLCalculator`'s OLD scope, but a real, already-existing identity source was found nearby:
+  `StrategyInstanceIdentity` (UAC — the exact type every `StrategyBase` subclass already carries as `self.identity`,
+  built by `V2EngineOrchestrator.register_instance` in the live V2 engine path; `FillAttributor.attribute()` in
+  `position/v2/attribution.py` already shows the same identity→field mapping pattern this migration reuses).
+  `PnLCalculator.__init__` now accepts an optional `identity: StrategyInstanceIdentity | None = None`; when supplied,
+  `client_id`/`strategy_family` populate for real on every `PnLAttribution`. `attribution_id`/`summary_id` needed no
+  invented generator: UAC's own `__post_init__` already auto-assigns a `pnl_<uuid>`/`summary_<uuid>` when passed empty
+  string. Fields with genuinely no available source (`category`/`account_id`/`client_name`/`strategy_name`) stay at
+  UAC's own documented `""` defaults — honest use of an optional field, not fabrication. Since the whole `PnLCalculator`
+  chain still has zero live callers, the correctness proof is a new test
+  (`tests/unit/engine/core/test_pnl_calculator.py`) rather than a live-path regression: constructs a `PnLCalculator`
+  with a REAL `StrategyInstanceIdentity`, runs `calculate_attribution()`/`generate_summary()`, and asserts both the
+  computed values and the identity-derived fields are correct — all 3 new tests pass, plus all 71 pre-existing
+  PnL-adjacent tests across `test_flash_loan_settlement.py`, `test_flash_loan_settlement_integration.py`,
+  `test_models_and_types.py`, `test_pnl_residual_emitter.py`, and `test_output_builders.py` remained green.
 - **2026-08-15 (round 4)** — Resolved all 6 remaining shadow-SSOT-type collisions with the same rigor as before
   (read+compare fields before deciding, never assume from the name). `ClientContext`→`ClientRuntimeContext`
   (coincidental name reuse, UAC's is an unrelated JWT-claims record — `strategy-service@1ca0736bec`).
