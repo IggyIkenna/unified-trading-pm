@@ -492,11 +492,15 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       heartbeat-timeout grace window (~L140), a `pane_state == "working"` hit `continue`s WITHOUT burning a retry and
       re-arms `kicker._spawn_cap_alerted` (~L150-166), and only a non-working pane falls through to the retry-cap branch
       (~L168). Documented the exact ordering + a warning against reintroducing it (repo: unified-trading-pm).
-- [ ] [SCRIPT] P3. `no_capacity` is now a legacy status for scheduled callers only reachable by an ad-hoc caller that
+- [x] ✅ [SCRIPT] P3. `no_capacity` is now a legacy status for scheduled callers only reachable by an ad-hoc caller that
       omits `job_name` (agent-orchestrator@5087f30). Once the queue has a few days of live evidence, decide whether to
       (a) drop it from `ScheduledJobStatus` entirely and make `job_name` required on the dispatch route, or (b) keep it
       as the deliberate opt-out for operator one-offs that want fail-fast. Do not leave both paths undocumented. (repo:
-      agent-orchestrator)
+      agent-orchestrator) — **Verdict (b) KEEP, shipped 2026-08-14; re-verified live 2026-08-15.** Documented in
+      `server/models/scheduled_jobs.py:19-30` + `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md:173,
+      181-183`. `job_name` stays optional (`server/models/escalation.py:226`); omitting it skips the queue path -> 503
+      (`server/plan_health.py:682-690,720-730`, covered by `test_dispatch_endpoint_no_capacity_maps_to_503`). All 9
+      `install-*-timer.sh` scripts pass `job_name`, so only a hypothetical ad-hoc caller hits it; no code change needed.
 - [ ] [DOCS] P3. **CLAUDE.md's "AO scheduled jobs" line is stale (confirmed live 2026-08-15).** Codex SSOT
       (`agent-orchestrator-scheduled-jobs.md:131,138`) correctly says "NO sudo" per the P1 todo above, but CLAUDE.md
       still says "re-run `sudo bash scripts/install-<job>-timer.sh`". CLAUDE.md edits are operator-gated regardless of
