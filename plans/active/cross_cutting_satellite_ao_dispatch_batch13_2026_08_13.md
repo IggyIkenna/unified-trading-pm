@@ -549,19 +549,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                  exists and is live — no code change needed — but a real corpus-wide query
-                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                  worker-determinable outcome for one ~1h dispatch. Filed
-                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                  multi-AG backfill into this single dispatch.
+                      separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                      (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                      exists and is live — no code change needed — but a real corpus-wide query
+                      (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                      the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                      filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                      data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                      worker-determinable outcome for one ~1h dispatch. Filed
+                      `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                      class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                      backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                      multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -582,8 +582,31 @@ source: >-
       the same class of judgment call CLAUDE.md's "AO-eligible = worker-determinable outcome" rule excludes). Nothing to
       verify-and-close as broken; the current tag-all design is intentional and already the SSOT of record. Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. DeFi honest-absence residual-tail fixes: record genuine zeros post-capture, add missing subgraphs,
-      catalogue monotonicity check Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. **All 3 sub-items verified: 2 already shipped by prior work, 1 residual gap closed here.**
+      (2026-08-15, slot-16·infra) Live code verification of each named sub-item: (1) **record genuine zeros
+      post-capture** — already comprehensively wired: `_dex_pools_subgraph.py`/`_dex_swaps_queries.py` call
+      `DefiManifestRecorder.record_zero_rows` (launch-date-aware `SOURCE_RETURNED_ZERO`-with-`FetchEvidence`) and
+      `record_catalogue_residual_empty` (`EXPECTED_NOT_ENOUGH_TVL`) in both dex handlers — the "FOUNDATION SHIPPED"
+      state the source doc records. (2) **add missing subgraphs for TRADER_JOE_V2/UNISWAP_V4/ORCA/KAMINO/
+      VELODROME_V2/RAYDIUM** — confirmed live in `dex_pools_handler.py`'s `_DEFAULT_PROTOCOLS` +
+      `_dex_pools_subgraph.py`'s `fallbacks` cascade: `velodrome_v2`/`trader_joe_v2` both route via the shared
+      `messari_basic` entry (`mtds_defi_dex_zero_capture_protocols_2026_07_14`), `uniswap_v4` has its own adapter +
+      cascade entry, `kamino`/`orca`/`raydium` are live Solana AMM collectors in `solana_defi_amm.py` — all 6 named
+      venues already covered, nothing to add. (3) **catalogue monotonicity check** — the monotonic->=-prev ASSERTION was
+      already answered per this doc's own 2026-07-03 cross-ref (`evaluate_monotonic_guard` gates every daily promote);
+      the residual CSV-distribution-report half was genuinely missing — added `instruments-service@0c057aad`
+      (`scripts/report_defi_catalogue_distribution_2026_08_15.py`, read-only single- object bounded read, no corpus
+      walk), run live against the prod DeFi catalogue: 78,447 rows / 134 distinct (venue,chain,data_type) groups,
+      `available_from` 1970-01-01→2026-08-14, `available_to` 2021-01-01→2026-08-13 (11,758 still-active), monthly
+      growth-over-time confirmed monotonically cumulative. **Also fixed a genuine pre-existing QG-red found while
+      shipping** (unrelated to this todo, blocked the commit under the green-tree rule): 4 tests in
+      `tests/unit/scripts/test_enumerate_expected_universe_v2.py` still asserted the pre-
+      `tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`-fix lowercase `"combo"` instrument_type where the
+      shipped fix (`_canonical_writer_instrument_type`, "Fixed 2026-08-03" docstring) now correctly canonicalizes to
+      uppercase `"COMBO"` — updated the 4 stale assertions (+docstrings) to match, fixed inline as a hotfix —
+      `instruments-service@80d357bb`; `test_enumerate_expected_universe_v2.py` 240/240 pass; full `quality-gates.sh`
+      green, sentinel-verified at HEAD `80d357bb`; both commits quickmerge-landed on LDR (post- push ancestry verified).
+      Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [CODE] P2. DeFi swallow-fixes (CF-11 class) in DefiManifestRecorder pass-through, liquidations_handler.py,
       polymarket_adapter Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [x] ✅ [CODE] P2. **STALE PREMISE — no regression exists; adapter-contract baseline already met, nothing to restore.**
