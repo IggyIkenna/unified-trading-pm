@@ -544,6 +544,40 @@ issue's scope); flagged as a follow-up todo below.
       `manifest_finalize.py`) — a repo-wide grep for `odds_horizon_bucket` writers under
       `market-tick-data-service/` (not yet run) is the precise next step, not another MDPS-side read. (repo:
       market-tick-data-service)
+- [ ] [DATA] P1. **NEW, 2026-08-15 (later pass) — repo-wide MTDS script search run, exhausted with a negative
+      result; narrowed to one unconfirmed structural candidate.** All 24 MTDS files referencing
+      `odds_horizon_bucket` (`grep -rl`) were triaged by write-call presence, then each real candidate checked:
+        - `manifest_swap_2026_07_22.py`: EXPLICITLY excludes `odds_horizon_bucket` from scope (its own header,
+          lines 68-70: lists it among data_types "none of which are in this relocation's scope") — its REMOVE
+          filter is deliberately restricted to `data_type=trades`/`instrument_type=odds` specifically to avoid
+          touching it. Ruled out.
+        - `migrate_sports_league_id_casing_2026_07_21.py`: its own docstring states it "never writes a manifest
+          row" (pure GCS object copy, confirmed by `manifest_swap_2026_07_22.py`'s header which independently
+          verified this via grep) — and its scope is `data_type=trades` raw ticks, not the computed
+          `odds_horizon_bucket` rollup. Ruled out.
+        - `preflight.py`, `pipeline_e2e_check.py`, `recover_sports_mtds_index_leagues_2026_06_19.py`: initial grep
+          hits for `.add(`/`record_captured` were ALL false positives — generic Python `set.add()`/`dict.add()`
+          calls or docstring/comment mentions, not actual manifest write call sites. Ruled out.
+      **One structural candidate found, NOT yet confirmed live**: `MTDSShardManifestRecorder.record_captured()`
+      (`market_tick_data_service/live/manifest_recorder.py:136-185`) — the live WebSocket-ingest manifest writer
+      (per its own docstring, superseded 2026-07-30 by `LiveEventFacadeSink` → Pub/Sub → Cloud-Storage-sink, but
+      possibly still the active path during our population's 2026-05-05/07-13 write dates, i.e. BEFORE that
+      correction). Its `record_captured()` signature has **no `timeframe` parameter at all** — not merely omitted
+      at a call site (this doc's `_write_captured_rows()` bug class) but structurally absent from the function
+      itself — so any row written through it inherits `ManifestWriter.record_captured`'s blank default
+      unconditionally. Its caller, `websocket_streaming_handler.py:259`, passes `data_type=data_type` generically
+      (whatever an upstream adapter classifies a tick as), so this is NOT confirmed to ever fire for
+      `odds_horizon_bucket` specifically — and per `pipeline_e2e_check.py`'s own comment, the `SOURCE_PRIORITY`
+      registry lists ZERO raw-vendor sources for `odds_horizon_bucket` (MDPS's `mdps_odds_horizon_bucket` is the
+      only registered producer), which argues AGAINST a raw WS adapter ever emitting this data_type. Stopping here
+      rather than asserting this as the answer without that confirmation — this session already shipped one
+      incorrect root-cause claim this pass (see the CORRECTION entry above) and the same
+      correlation-without-proof mistake must not repeat. **Precise next step**: trace which adapter(s) wired into
+      `websocket_streaming_handler.py`'s dispatch table can classify an ODDS_API tick as
+      `data_type="odds_horizon_bucket"` — if none, this candidate is ALSO ruled out and the search should pivot to
+      `git log --since=2026-04-01 --until=2026-07-15 -- '**/*.py'` across MTDS for any now-deleted/superseded
+      script matching the bug signature, since the population's write dates (2026-05-05, 2026-07-13) both predate
+      this repo's current script inventory and a removed one-off is plausible. (repo: market-tick-data-service)
 
 ## Progress Log
 
