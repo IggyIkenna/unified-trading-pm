@@ -102,10 +102,13 @@ context_scope:
       regardless of backlog state, no `_do_spawn` gate. Verified 2026-08-15 (reconciliation sweep, this session).
       Source: `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` — its own
       checkbox + Progress Log are stale (still describe the gap as open as of 2026-08-03), flip + close.
-- [ ] [INFRA] P3. **`orphan_reap.py` special-case a worker-shell-parented detached background process** (distinct from
-      the already-fixed CPU-progressing-quickmerge guard — this is `nohup`/`disown`-style background jobs a worker
-      itself launched via `run_in_background`). Also cross-check the RAM-exhaustion doc's journalctl signatures against
-      `orphan_reap`/`kill_session` — never done. Source:
+- [x] [INFRA] P3. **DELIBERATE WON'T-BUILD — 2026-08-15 (this session).** `orphan_reap.py` special-casing a
+      worker-shell-parented detached background process. The source doc's own "Recommended decision" section already
+      hedges this as "optional... there might not be a legitimate use case" — the PRIMARY fix (RULES.md/worker.md
+      callout: never `nohup <cmd> & echo $!`, use the harness's own `run_in_background` instead) already shipped
+      2026-07-28 and worked (5+ occurrences before the fix, zero confirmed since). Building a structural exception would
+      risk recreating the exact "genuinely orphaned/leaked process never reaped" hazard the sweep exists to prevent, for
+      a use case the doc's own author couldn't confirm is real. Correctly stays unbuilt. Source:
       `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`.
 - [x] [BACKEND] P1. **DONE — full 10-component sweep closed 2026-08-15 (this session).** Final per-component verdict:
       `HealthMonitor` FIXED (`agent-orchestrator@349dbc0`), `AgentKeeper` FIXED (`@eb4265c`), `BlockedQueueReconciler`
@@ -123,11 +126,25 @@ context_scope:
       `frozen_guided_compact_auto_submitted`), citing this exact todo. Verified 2026-08-15 (reconciliation sweep, this
       session). Source: `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`
       (line ~136) — checkbox is stale, flip it.
-- [ ] [BACKEND] P2. **Force kill+resume reachable BEFORE `spawn_retry_cap_reached`, ordering unconfirmed.** No commits
-      since 2026-08-08 touch `_respawn.py`'s ordering; whether `retry_count` counts each force-resume attempt is still
-      an open question. Source: same doc, line ~141.
-- [ ] [BACKEND] P3. **Per-slot context-plateau detection — unbuilt.** `grep -r "plateau"` returns zero hits in
-      agent-orchestrator. Source: same doc, line ~145.
+- [x] [BACKEND] P2. **RESOLVED — 2026-08-15 (this session), code-confirmed no ordering ambiguity.** "Force kill+resume
+      reachable before `spawn_retry_cap_reached`" was a category error, not a real ordering bug: the two mechanisms
+      share NO state. Spawn-heartbeat-timeout retries (`_auth_failover.py`, boot-time — a spawn that never produced a
+      `/heartbeat`) are bounded by `slot.spawn_retry_count` vs `_SPAWN_HEARTBEAT_MAX_RETRIES` (incremented only at
+      `_auth_failover.py:261`, reset only in `autospawn.py`/`slots_ops.py`). Force-kill+resume retries
+      (`_respawn.py::maybe_auto_respawn_stuck_slot` → `resume_lifecycle.classify_dead_worker`, mid-task — an
+      already-running worker found wedged) are bounded by the entirely separate `slot.resume_attempts` vs
+      `cfg.tuning.resume_max_attempts`. Different counters, different config knobs, different trigger conditions
+      (never-booted vs. wedged-while-running) — neither can race or double-count the other. Source: same doc, line ~141.
+- [x] [BACKEND] P3. **DONE — already built by a later, more robust mechanism; 2026-08-15 (this session).** Per-slot
+      context-plateau detection. The literal ask (`grep -r "plateau"` — zero hits) is genuinely unbuilt, but
+      `context_lifecycle.py::_tick_saturation_detector` (shipped `ao_context_saturation_never_alerts_2026_08_09`, AFTER
+      this todo was filed) is a strict superset: runs for EVERY target (main/review/worker) every tick, independent of
+      the tier-1/tier-2 paths, and pages (`notify_context_saturation_detected`) the moment a target has been at/above
+      threshold (defaults: 80% via `resume_fresh_context_pct` fallback, 30 min window, 4h re-remind) with NO compaction
+      observed — catching sustained saturation regardless of minor pct fluctuation (stricter than the original literal
+      "same exact pct repeated" spec), plus an auto-`_resolved` bookend the original ask never required. Nobody had
+      connected this later fix back to this todo. No new code needed — building a parallel exact-pct-matching detector
+      would duplicate/conflict with an existing, better mechanism. Source: same doc, line ~145.
 - **[REVIEW] P3. CANCELLED — SUPERSEDED 2026-08-15 (reconciliation sweep, this session).** Was: manually inspect/reset
   `learned_context_windows.json` once the fleet is fully on sonnet-5. Two follow-on fixes shipped + archived since
   (`ao_learned_context_window_registry_never_revalidates_2026_08_09`,
@@ -248,12 +265,18 @@ context_scope:
       `bash scripts/refresh_env_from_sm.sh` dry-run on vm-0: `add=0 replace=0 keep=7`,
       `DRY-RUN: in sync, nothing to do`, JWT included. No write performed — this item is genuinely closed, not deferred.
       Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox flipped there too.
-- [ ] [DESIGN] P0. **STILL OPERATOR-BLOCKED, but the operator is actively revising the policy itself (2026-08-15, this
-      session) — do not batch this item until the revision lands.** Design the dirty-worktree resolution policy (Ikenna,
-      Slack 2026-06-12 — the "no dirty worktrees" next-phase flow). Prior audits (5 passes, 07-30 through 08-10) each
-      flagged the design as possibly-already-decided (the 4-step policy IS spelled out verbatim in the source doc) but
-      deferred a final call; this session put that question to the operator directly, who confirmed they want to revise
-      the policy before it's dispatched as implementation work. Source: same doc.
+- [x] [BACKEND] P0. **DESIGN RESOLVED 2026-08-15 (this session, operator discussion) — no longer operator-blocked, now
+      bounded implementation work.** Design the dirty-worktree resolution policy (Ikenna, Slack 2026-06-12). Operator
+      confirmed the revision directly in-session: keep steps 1-2 unchanged (QG-green→quickmerge /
+      fixable→fix+quickmerge), **replace steps 3-4 (hand to operator / operator-sanctioned hard-reset) with a single
+      step 3: not-easily-fixable → `git stash` and proceed with the next task, never block on a human** — reasoning: an
+      operator response won't arrive fast enough, so the slot just sits idle until something else times it out and kills
+      it anyway; better to let the slot resolve itself. **New finding from this discussion**: stashing must be paired
+      with a bounded-retention sweep (age out stash/`wip-preserve/*` refs past ~7 days) — the accumulation risk is not
+      hypothetical, this session directly observed 47 autostash entries piling up on this exact host with nothing
+      pruning them. Full resolved spec + both required deliverables (worker prompt template + dispatch hook; retention
+      sweep) written into the source doc. Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox
+      flipped there too.
 - [ ] [DIAG] P2. Best-effort root-cause the specific 49.3G/16G-swap peak more precisely, if feasible. **Confirmed still
       genuinely open 2026-08-15** (reconciliation sweep) — enforcement (resource-watchdog) shipped and live, the "49.3G"
       figure is a sticky cgroup `memory.peak` high-water-mark (not fresh per-restart evidence, confirmed across 3+
@@ -560,3 +583,25 @@ before touching the source doc directly._
   the DB-pool right-sizing design fork flagged just above; and the `l2_book` retest gate (correctly blocked on its own
   separate hold). DeepSeek/Luna-bridge items stay CANCELLED-out-of-scope per the standing 2026-08-14 operator ruling
   (see the one disclosed exception immediately above).
+- **2026-08-15 (same extended session, final reconciliation pass before handoff)**: operator confirmed the JWT item was
+  a false alarm (already in sync, verified live, no write needed) and personally resolved the dirty-worktree DESIGN item
+  in a direct back-and-forth — **zero items remain operator-blocked**. 3 more items closed via code investigation alone
+  (orphan_reap nohup case — deliberate won't-build, matches the source doc's own hedged recommendation; force-kill vs
+  retry-cap ordering — resolved, confirmed separate non-racing counters; context-plateau detection — already built by a
+  later, more robust mechanism, `_tick_saturation_detector`, that nobody had connected back to this todo). Separately
+  (not tracked as tracker items, since they're new work the operator directly commissioned this session, not
+  pre-existing todos): built + shipped a fleet-wide pre-commit hook (`check-gitignore-readd.sh`, blocks force-adding a
+  gitignored path) across all 26 repos' `.pre-commit-config.yaml` templates, PM-side landed
+  (`unified-trading-pm@88758ab6a5`); added missing `blob-report/` gitignore entries to agent-orchestrator/deployment-ui/
+  unified-trading-system-ui; hit a real quickmerge dependency cascade shipping agent-orchestrator's own copy
+  (agent-orchestrator → unified-trading-library → unified-api-contracts, each needing its own commit first) — UAC's
+  quickmerge was still queued behind severe host-wide QG contention (13+ min, host-wide cap of 7 concurrent QG slots
+  saturated by other sessions) when this pass ended; agent-orchestrator/deployment-ui/unified-trading-system-ui's own
+  gitignore+hook commits and the remaining ~22 repos' mechanical `.pre-commit-config.yaml` pickup are UNSHIPPED,
+  next-session work. **Cumulative: 24 DONE, 2 SUPERSEDED, 14 confirmed STILL open, 1 won't-build, 0 operator-blocked.**
+  Handing off to a fresh session/agent for the remainder — see this doc's own remaining `- [ ]` items for the full list;
+  none require the operator. **Note**: the "14 confirmed STILL open" count above was written concurrently with, and did
+  not have visibility into, the "wave-5 close-out" entry directly above it — that entry's 2 new shipped commits
+  (`agent-orchestrator@6a4b7cbb31` Track 5 dashboard-e2e, `@398685cd3c` Track 2 DeepSeek-routing) may close 1-2 more
+  items than this count reflects. **The next session should re-verify the Track 2/Track 5 line items against those two
+  SHAs before trusting "14" as current** — flip any that are now genuinely done rather than re-doing the work.

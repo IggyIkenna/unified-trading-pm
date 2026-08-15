@@ -289,28 +289,30 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       **STAGED 2026-08-08 (operator ruling, ao round-5 apply session item 22): "Operator will run it - give exact
               staged commands."** Verified against the live `refresh_env_from_sm.sh` (its own `fetch_blob()`/usage header)
               before writing this, not guessed. Run entirely on vm-0 (`i-0c9b283b31d6b5ca7`, EIP 13.113.200.22) as one pass:
-                                  ```bash
-                                  cd "${WORKSPACE_ROOT}/agent-orchestrator"
-                                  # 1. Fetch the current SM blob (same two-cloud fallback refresh_env_from_sm.sh itself uses):
-                                  TMPFILE="$(mktemp)"; chmod 600 "$TMPFILE"
-                                  trap 'rm -f "$TMPFILE" "${TMPFILE}.new"' EXIT
-                                  { aws secretsmanager get-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --query SecretString --output text 2>/dev/null \
-                                      || gcloud secrets versions access latest --secret=ORCHESTRATOR_ENV_LOCAL --project=central-element-323112; \
-                                  } > "$TMPFILE"
-                                  # 2. Replace the blob's ORCHESTRATOR_JWT_SECRET line with vm-0's own LIVE .env.local value (the direction this
-                                  #    todo requires -- SM catches up to vm-0, not the reverse):
-                                  LIVE_JWT_LINE="$(grep '^ORCHESTRATOR_JWT_SECRET=' .env.local)"
-                                  grep -v '^ORCHESTRATOR_JWT_SECRET=' "$TMPFILE" > "${TMPFILE}.new"
-                                  echo "$LIVE_JWT_LINE" >> "${TMPFILE}.new"
-                                  mv "${TMPFILE}.new" "$TMPFILE"
-                                  # 3. Write back to BOTH clouds (both are kept in sync per the blob's own two-cloud design):
-                                  aws secretsmanager put-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --secret-string "file://$TMPFILE"
-                                  gcloud secrets versions add ORCHESTRATOR_ENV_LOCAL --project=central-element-323112 --data-file="$TMPFILE"
-                                  # 4. Verify (dry-run, no writes) -- expect ALL keys including JWT to report "keep" now that SM matches vm-0:
-                                  bash scripts/refresh_env_from_sm.sh
-                                  ```
+              ```bash
+              cd "${WORKSPACE_ROOT}/agent-orchestrator"
+              # 1. Fetch the current SM blob (same two-cloud fallback refresh_env_from_sm.sh itself uses):
+              TMPFILE="$(mktemp)"; chmod 600 "$TMPFILE"
+              trap 'rm -f "$TMPFILE" "${TMPFILE}.new"' EXIT
+              { aws secretsmanager get-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --query SecretString --output text 2>/dev/null \
+                  || gcloud secrets versions access latest --secret=ORCHESTRATOR_ENV_LOCAL --project=central-element-323112; \
+              } > "$TMPFILE"
+              # 2. Replace the blob's ORCHESTRATOR_JWT_SECRET line with vm-0's own LIVE .env.local value (the direction this
+              #    todo requires -- SM catches up to vm-0, not the reverse):
+              LIVE_JWT_LINE="$(grep '^ORCHESTRATOR_JWT_SECRET=' .env.local)"
+              grep -v '^ORCHESTRATOR_JWT_SECRET=' "$TMPFILE" > "${TMPFILE}.new"
+              echo "$LIVE_JWT_LINE" >> "${TMPFILE}.new"
+              mv "${TMPFILE}.new" "$TMPFILE"
+              # 3. Write back to BOTH clouds (both are kept in sync per the blob's own two-cloud design):
+              aws secretsmanager put-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --secret-string "file://$TMPFILE"
+              gcloud secrets versions add ORCHESTRATOR_ENV_LOCAL --project=central-element-323112 --data-file="$TMPFILE"
+              # 4. Verify (dry-run, no writes) -- expect ALL keys including JWT to report "keep" now that SM matches vm-0:
+              bash scripts/refresh_env_from_sm.sh
+              ```
               The `trap` removes the temp file on exit regardless of success/failure. Step 4's dry-run output is the
-              done-when check: 7x keep / "in sync", zero REPLACE lines. Repo: agent-orchestrator (+ operator SM write).
+              done-when check: 7x keep / "in sync", zero REPLACE lines. Repo: agent-orchestrator (+ operator SM write). **This
+              staged write is now historical reference only — confirmed 2026-08-15 the blob and vm-0 already matched, no write
+              was ever executed; kept here for provenance, not as an outstanding action.**
 
 **Operator-concerns verification session (2026-06-12 PM, on the live vm-e2e-test):** three concerns checked +
 e2e-tested; two new live bugs found + fixed in the process (agent-orchestrator@094f691 + @1a0bea0, both deployed to the
@@ -384,16 +386,45 @@ Live bugs found during this verification (both fixed):
       untouched; legacy DBs without blocked_queue tolerated). 3 new tests pin ingest/sync/prune. Was:
       **[OPERATOR]-tagged todos become dispatchable tasks** — vm-planning slot-5 (11:44 UTC) burned a real worker boot
       to ask flip-or-leave. Repo: agent-orchestrator. Found 2026-06-12 Slack-alert triage.
-- [ ] [DESIGN] P0. **Dirty-worktree resolution policy (Ikenna, Slack 2026-06-12 — the next-phase "no dirty worktrees"
-      flow)**: orchestrator directs a worker on a dirty slot tree to (1) run `quality-gates.sh` — green → quickmerge the
-      WIP per the active plans; (2) red but easily fixable → fix, re-QG, quickmerge; (3) not easily fixable → hand to
-      the operator as a GENUINELY dirty tree (operator judges useful-or-not); (4) operator says not useful → worker
-      hard-resets the slot from remote LDR (operator-sanctioned reset — the only sanctioned discard path). Composes with
-      the existing liveness-gated machinery: `resolve_dirty_state` (FM2/FM3/FM8 orphan-WIP inherit) already auto-commits
-      DEAD predecessors' WIP; a LIVE operator session's WIP stays protected (FM8) — this policy covers the in-between
-      (committed-able but unverified WIP). Needs: worker prompt template + an orchestrator dispatch hook + plan todos
-      per repo surface. Repo: agent-orchestrator. Provenance: Ikenna Slack reply on BLK (central-VM migration),
-      2026-06-12.
+- [ ] [BACKEND] P0. **DESIGN RESOLVED — 2026-08-15 (operator, this session); now bounded implementation work, no longer
+      operator-gated.** Original ask (Ikenna, Slack 2026-06-12 — the next-phase "no dirty worktrees" flow): orchestrator
+      directs a worker on a dirty slot tree to (1) `quality-gates.sh` green → quickmerge the WIP; (2) red but easily
+      fixable → fix, re-QG, quickmerge; (3) not easily fixable → hand to the operator; (4) operator says not useful →
+      hard-reset from LDR. **Revised 2026-08-15** after the operator flagged the escalation branch as a real liveness
+      hazard (an unresponsive human-escalation leaves the slot stuck, doing nothing, until something else eventually
+      times it out and kills it anyway — better to let the slot resolve itself and move on):
+
+      1. `quality-gates.sh` green → quickmerge the WIP as-is. (unchanged)
+              2. Red but easily fixable → fix, re-QG, quickmerge. (unchanged)
+              3. **Not easily fixable → `git stash` (named, tagging the predecessor/task context) and proceed with the next
+                 task — NEVER hand to the operator, never block on a human.** Replaces the old steps 3–4 entirely; preserves
+                 the work (recoverable via the stash), never discards it, never leaves a slot idle waiting on a response that
+                 may not come "fast enough" (operator's framing) before something else reaps it anyway.
+
+              **Composition with existing machinery** (unchanged from the original ask — this policy is additive, not a
+              replacement): `resolve_dirty_state` (FM2/FM3/FM8) already handles the PRE-SPAWN handoff case — auto-commits a
+              DEAD predecessor's WIP to an isolated `wip-preserve/orchestrator-slot-<N>` ref (never the shared branch, then
+              resets the slot to clean `origin/<base>`; verified via direct code read of
+              `server/worktree_clean_check/_orphan.py::commit_and_push_dirty_repos` this session — no CI exposure), and
+              protects a genuinely-live peer's WIP (FM8, never touched). This new policy covers the gap FM2/3/8 structurally
+              can't: an ACTIVE worker discovering its OWN in-progress tree is dirty, mid-session — not a handoff, and not yet
+              classifiable as dead-or-live since it's the worker's own current state.
+
+              **New, genuinely-open finding from this session's discussion (not in the original Slack ask)**: both this
+              policy's step 3 (stash) AND the existing FM8 inherit-to-wip-preserve-ref path share the same unbounded-retention
+              risk already OBSERVED LIVE on this host — `safe-doc-push.sh` reported 47 autostash/safety-snapshot entries
+              accumulating with nothing pruning them (2026-08-15, this session). "Stash it and move on" only stays safe if
+              paired with a bounded-retention sweep: age out (or flag for review) any stash/wip-preserve ref past ~7 days.
+              Implementing step 3 without also fixing this is trading one accumulation problem (stuck-idle slots) for another
+              (an ever-growing unreviewed pile) — **both halves are required for this item to be done**, not just the stash
+              mechanism alone.
+
+              **Needs** (both required): (a) a worker prompt template + orchestrator dispatch hook implementing the 3-step
+              flow above, wired at the point an active worker's own mid-task tree is found dirty; (b) a bounded-retention sweep
+              (new scheduled job or extension of an existing one) that ages out/flags stale stash and `wip-preserve/*` refs.
+              Repo: agent-orchestrator. Provenance: Ikenna Slack reply on BLK (central-VM migration), 2026-06-12; revised
+              2026-08-15 (this session, operator discussion — see
+              `/plans/active/ao_open_work_consolidated_tracker_2026_08_14.md` Track 4 for the tracker-level pointer).
 
 **VM-from-scratch e2e LIVE RUN (2026-06-12, i-086e8787dddda52d6 / agent-orch-vm-e2e-test-20260612, 18.183.31.192, LEFT
 RUNNING):** launched from bare Ubuntu via the new launcher; **bootstrap completed in 219 s** (console-verified); all 3
