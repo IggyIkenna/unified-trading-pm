@@ -67,7 +67,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
-    /plans/active/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md,
+    /plans/archive/2026_08/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -248,8 +248,9 @@ tracking doc with real checkboxes — not duplicated here.)_
       flagged 2026-08-07 ("not yet cross-checked... needs a quick check before assuming drift vs. legitimate"). Live
       re-check (2026-08-12 honest-coverage rollup) found CHAINLINK/PYTH spot_pair cells are LEGITIMATE
       (registry-declared); `defi-canonical-naming-ssot.md`'s locked row was stale, corrected in that batch's commit.
-      EIGENLAYER's spot_pair cells are unexplained — filed as
-      `plans/active/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md` for root-cause.
+      EIGENLAYER's spot_pair cells were unexplained — filed as
+      `/plans/archive/2026_08/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md`, now
+      root-caused (stale pre-taxonomy-fix expected-universe seed) and purged (instruments-service@552c576857).
 - [x] ✅ [BACKEND] P3. **DONE — instruments-service@1e82416a (reconciled via
       `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** Fix the Distinct Values panel's
       `<blank>` `instrument_type` badge to exclude `empty_confirmed` rows.** Currently over-reports ~5.35M blank rows
