@@ -875,3 +875,20 @@ local-only; the 2026-07-14 Progress Log entry independently corroborates ('Opera
 plan...'). This doc has been through FIVE prior na-eligibility-audit passes (2026-07-30 KEEP-NA-STALE citation-cleanup,
 2026-08-03/08-04/08-06/08-09 all CONFIRMS-KEEP-NA-valid), each re-verifying open items against this same standing ruling
 and finding none clear the whole-doc RECLASSIFY bar.
+
+**Progress Log 2026-08-15 (slot-25) — 7th consecutive silent death, self-logging wrapper also killed.** Independently
+hit the identical signature slot-29 logged earlier today (queued pre-admission `quality-gates.sh` run vanishes, no
+terminal marker, dmesg/journalctl OOM checks empty) while shipping `market-tick-data-service` via quickmerge
+(`/plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`, retries 3-9, all 7 died silently
+while queued in the `qg-governor` host-wide cap-6 pool). Retries 8 and 9 used a self-logging launch wrapper specifically
+added to catch this (`setsid bash -c '<cmd> ...; echo "EXIT=$?..." >> "$LOG"' < /dev/null &` — designed so the wrapper
+shell survives even a SIGKILLed child) — **both still produced zero `EXIT=` line**, meaning whatever kills these is
+killing the wrapper shell too, not just the inner command. This rules out a plain per-process resource-limit kill
+(cgroup OOM, ulimit) targeting only the heavy child — a process-group-wide or session-wide kill is a better-fitting
+hypothesis, though not confirmed (no dmesg/journalctl evidence found either way — may be outside this host's audit log
+retention, or the kill signal itself may not be logged for this kill path). **Operator decision needed**: this doc's own
+option 1 (queue-timeout + explicit `KILLED(timeout)` log line) would at minimum convert future occurrences from silent
+to attributable; option 2 (dedicated low-resource fast-lane, sized for small diffs like a 5-file test+script quickmerge,
+separate from the `--apply`-style heavy-script contention pool) would likely prevent this specific shipping task's stall
+entirely. Blocking further diagnosis on operator input rather than guessing at a host-daemon scheduling change
+unilaterally.
