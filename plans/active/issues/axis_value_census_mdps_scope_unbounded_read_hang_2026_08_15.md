@@ -139,10 +139,10 @@ now-confirmed reader gap (point 2 above), not because `service_name` itself is a
       MDPS-scoped census still excludes MTDS-only rows. Done when a live timed call for a large asset_group (e.g.
       tradfi) completes in single-digit seconds with an unchanged result shape/row_count vs the pre-fix behavior. (repo:
       deployment-api) — deployment-api@82b0469a7e. Shipped + 2 new regression tests (asserts
-      `("service_name", "==",     "market-data-processing-service")` in the pushed `filters=`; non-candle requests carry
-      no such filter). Live verification (in-process call, bounded, 2026-08-15): full endpoint call for
-      `(market-data-processing-service,     tradfi)` now completes in **26.79s** (vs "did not finish in 480s" pre-fix) —
-      NOT single-digit seconds as this todo's done-condition optimistically assumed (that 8.6s figure was the isolated
+      `("service_name", "==", "market-data-processing-service")` in the pushed `filters=`; non-candle requests carry no
+      such filter). Live verification (in-process call, bounded, 2026-08-15): full endpoint call for
+      `(market-data-processing-service, tradfi)` now completes in **26.79s** (vs "did not finish in 480s" pre-fix) — NOT
+      single-digit seconds as this todo's done-condition optimistically assumed (that 8.6s figure was the isolated
       pushdown READ only; the full endpoint also runs 9 separate `value_counts()` passes over the resulting 6.33M-row
       frame, which the isolated benchmark didn't include). row_count=6,333,546 vs the issue doc's 6,332,575 — a small
       (+971, +0.015%) drift from new tradfi data captured between 2026-08-15's investigation and this fix landing, not a

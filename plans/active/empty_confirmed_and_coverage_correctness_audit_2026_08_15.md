@@ -201,7 +201,7 @@ data that's actually needed. This plan gets the evidence first.
       `write_guard.py::validate_prediction_instrument_type` (lines 35-45) raises `ValueError` unless
       `instrument_type == PREDICTION_MARKET` — it is the ONLY value possible, enforced at write time. (2) No
       existing-column proxy — `venue + instrument_type` collapses to just `venue` (2 values) since instrument_type is
-      invariant. (3)/(4) A classifier already computes `(category, underlying,     resolution_period)` internally
+      invariant. (3)/(4) A classifier already computes `(category, underlying, resolution_period)` internally
       (`classifiers.py`) but never persists it; `CanonicalQuestionGroup` is a small, closed, static 89-member enum, not
       a live-cardinality problem — **recommendation: build an ~89-row static `cqg → category` lookup table** (a UAC
       registry addition, NOT a manifest schema change, near-zero cost), covering the cqg-bundle grain used everywhere in
@@ -261,7 +261,7 @@ data that's actually needed. This plan gets the evidence first.
       — gap is real and ONGOING through today: 08-03/08-05/08-08 had 62-63 POLYMARKET blobs, **08-10 through 08-15 all
       have exactly 0** (KALSHI stayed healthy every date, 43→50 growing) — the actual break point is between 08-08 and
       08-10, not immediately after 08-05. Separately confirmed the Gamma API itself is healthy right now (live
-      unauthenticated `GET     gamma-api.polymarket.com/markets?closed=false&active=true` → HTTP 200, normal payload, no
+      unauthenticated `GET gamma-api.polymarket.com/markets?closed=false&active=true` → HTTP 200, normal payload, no
       schema drift), so this is **NOT** the same SOURCE_RETURNED_ZERO-absorption class as the cefi/defi bugs just fixed
       above (those were a code path silently swallowing a real fetch failure into a false confirmed-empty stamp).
       Checked for a Cloud Scheduler job or GH Actions `schedule:` workflow driving this catalogue build — found neither
@@ -312,7 +312,7 @@ data that's actually needed. This plan gets the evidence first.
       Agent-Orchestrator agents, without requiring interactive Google OAuth sign-in each time. **2026-08-15**:
       deployment-api already had a working `X-API-Key` header auth path (`deployment_api/auth.py::verify_api_key`) — no
       new code needed. Retrieved the live secret
-      (`gcloud secrets versions access latest     --secret=deployment-api-api-key --project=central-element-323112`) and
+      (`gcloud secrets versions access latest --secret=deployment-api-api-key --project=central-element-323112`) and
       verified it end-to-end against the live Cloud Run service (`uts-shared-deployment-api`, `asia-northeast1`): `401`
       without the key, `200` with it, on a real protected endpoint (`/api/data-status/honest-coverage`), not just
       `/api/health`. Granted `roles/secretmanager.secretAccessor` on that secret to
@@ -320,7 +320,7 @@ data that's actually needed. This plan gets the evidence first.
       — including AO-dispatched worker VMs — already runs as), so AO agents can read the same secret without a new grant
       per-VM. My own interactive gcloud identity (`ikenna@odum-research.com`) already had read access, confirmed
       working. Usage:
-      `curl -H "X-API-Key: $(gcloud     secrets versions access latest --secret=deployment-api-api-key     --project=central-element-323112)" https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app/api/...`.
+      `curl -H "X-API-Key: $(gcloud secrets versions access latest --secret=deployment-api-api-key --project=central-element-323112)" https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app/api/...`.
 - [x] ✅ [DATA] P1. **Verify/close the BYBIT-FUTURES captured-row verification** from
       `cross_ag_live_capture_parity_2026_08_14.md` (the 2026-08-09 venue-alias fix was applied + a fresh VM launched,
       but captured-row confirmation was blocked on an IS daily-catalog-timing gap as of the last checkpoint).
@@ -338,12 +338,12 @@ data that's actually needed. This plan gets the evidence first.
       operational.
 
       **DONE 2026-08-15 (slot-28, backend_engineer) — same operation as
-                      `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
-                      (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
-                      (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
-                      completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
-                      `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
-                      CME-scoped and unscoped across all venues).
+              `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
+              (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
+              (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
+              completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
+              `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
+              CME-scoped and unscoped across all venues).
 
 - [x] ✅ [DATA] P2. Fix cefi's legacy blank-instrument-id FUTURE bucket (~3,299 captured rows, BYBIT/DERIBIT) — add
       `"future"` to `_BUNDLE_GRAIN_EXCLUDED` or route it to `futures_chain` at `rebuild_cefi_manifest.py:454` (mirrors
@@ -380,8 +380,8 @@ data that's actually needed. This plan gets the evidence first.
       without also changing what gets grouped into one shard.
 - [x] ✅ [DATA] P2. Add the ~89-row static `cqg → category` lookup table to UAC (per todo 10's recommendation) and wire
       it into the deployment-api/ui drilldown once built. **2026-08-15: premise corrected — this already exists, nothing
-      to build.** `category_for_group(cqg) ->     PredictionMarketCategory`
-      (`unified-api-contracts/unified_api_contracts/canonical/domain/predictions/     cross_venue_mapping.py:338`) is a
+      to build.** `category_for_group(cqg) -> PredictionMarketCategory`
+      (`unified-api-contracts/unified_api_contracts/canonical/domain/predictions/ cross_venue_mapping.py:338`) is a
       complete, tested, already-public (`unified_api_contracts.predictions` facade) cqg→category function covering every
       `CanonicalQuestionGroup` member via `underlying_for_group` + `_category_for_underlying` composition — functionally
       identical to the requested static table (7 categories:

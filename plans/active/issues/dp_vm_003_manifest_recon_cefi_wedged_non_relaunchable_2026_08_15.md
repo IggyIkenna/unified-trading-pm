@@ -151,10 +151,10 @@ triage.
 
 - [ ] [OPERATOR] P2. Decide kill-vs-diagnose-first for `manifest-recon-cefi-20260815-093854` per the recommended
       decision above, and terminate it once resolved (it will keep billing until then).
-- [ ] [BACKEND] P3. If this recurs for another `manifest-recon-*`/phantom-recon dry-run, capture a live
-      `py-spy     dump` before killing to identify the exact blocking call, then bound it with a timeout (the
-      DP-VM-003/004 "unbounded HTTP call hangs" fix pattern) in whichever of `reconcile_phantom_manifest_rows_all.py` or
-      `heartbeat_daemon.py`'s uploader loop turns out to be the culprit.
+- [ ] [BACKEND] P3. If this recurs for another `manifest-recon-*`/phantom-recon dry-run, capture a live `py-spy dump`
+      before killing to identify the exact blocking call, then bound it with a timeout (the DP-VM-003/004 "unbounded
+      HTTP call hangs" fix pattern) in whichever of `reconcile_phantom_manifest_rows_all.py` or `heartbeat_daemon.py`'s
+      uploader loop turns out to be the culprit.
 
 ## Progress Log
 

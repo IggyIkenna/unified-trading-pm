@@ -236,8 +236,8 @@ context_scope:
       was never needed: vm-0's live `ORCHESTRATOR_JWT_SECRET` and the `ORCHESTRATOR_ENV_LOCAL` SM blob already matched
       at check time (compared equal without printing either value), confirmed authoritatively via
       `bash scripts/refresh_env_from_sm.sh` dry-run on vm-0: `add=0 replace=0 keep=7`,
-      `DRY-RUN: in sync, nothing to     do`, JWT included. No write performed — this item is genuinely closed, not
-      deferred. Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox flipped there too.
+      `DRY-RUN: in sync, nothing to do`, JWT included. No write performed — this item is genuinely closed, not deferred.
+      Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox flipped there too.
 - [ ] [DESIGN] P0. **STILL OPERATOR-BLOCKED, but the operator is actively revising the policy itself (2026-08-15, this
       session) — do not batch this item until the revision lands.** Design the dirty-worktree resolution policy (Ikenna,
       Slack 2026-06-12 — the "no dirty worktrees" next-phase flow). Prior audits (5 passes, 07-30 through 08-10) each
@@ -376,7 +376,7 @@ before touching the source doc directly._
       done-claims, reconcile evidence into 10 source docs incl. fixing a broken citation + resolving its sign-off
       question, re-check 31 declined-orphan gates, archive 1 newly-eligible source doc, archive the batch plan itself).
       Both batch5 and batch5_finalize `git mv`'d to `plans/archive/2026_08/`, banners added,
-      `status: active →     complete`, all corpus-wide referrers repointed.
+      `status: active → complete`, all corpus-wide referrers repointed.
 - [ ] [SCRIPT] P2. Finish the `context_scope` backfill named in `batch3`'s own open todo (see Track 3) — this is what
       still gates `batch3_finalize`'s 5 todos via `gate_on_depends`. Source:
       `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`.

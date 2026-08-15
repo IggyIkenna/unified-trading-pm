@@ -226,7 +226,7 @@ source: >-
       ancestry verified `f70f29c8f` on origin; quickmerge's own diff-check false-flagged "push landed but change did
       not" for this now-gitignored path — a known false-positive class since a deleted+gitignored file has no
       before/after diff to compare; confirmed the real land via
-      `git cat-file -e     origin/live-defi-rollout:openapi/ui-reference-data.json` → absent, as intended).
+      `git cat-file -e origin/live-defi-rollout:openapi/ui-reference-data.json` → absent, as intended).
       `openapi/capability-manifest.json` is NOT safe to untrack as-is:
       `agent-orchestrator/server/mcp/manifest_loader.py` hard-requires it be a **committed** file in this repo's sibling
       clone (`_MANIFEST_REL`, `manifest_path()`; raises `ManifestUnavailableError` with no regen fallback if absent) —
@@ -325,8 +325,8 @@ source: >-
       guarantees the write survives a failing checker command (`set +e`, a `trap ... EXIT` handler, or a dedicated
       always-step). Verified both directions: PASSES clean on the current fleet (59 PM workflows + every sibling repo's
       own workflows, incl. `ldr-docs-gate.yml`'s already-shipped `set +e` fix), and a synthetic reproduction of the
-      original unguarded-inline shape is correctly flagged. `bash quality-gates.sh     --no-fix` green,
-      sentinel-verified at HEAD; quickmerge landed on LDR (post-push ancestry verified). Source:
+      original unguarded-inline shape is correctly flagged. `bash quality-gates.sh --no-fix` green, sentinel-verified at
+      HEAD; quickmerge landed on LDR (post-push ancestry verified). Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
 - [x] ✅ [CODE] P2. Pass --build-arg
       SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION in strategy-service and greeks-service
@@ -334,7 +334,7 @@ source: >-
       greeks-service@d4b796dfd5 (2026-08-15, slot-12·infra). Both prior blockers were already clear: strategy-service's
       own QG is not red at LDR tip (confirmed by an earlier todo in this same batch); greeks-service's git status is
       clean (no peer WIP conflict). Added `--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION`to the`build`step's    `docker
-      build`in both`cloudbuild.yaml`files, matching the fleet pattern already used in     agent-orchestrator/deployment-service/alerting-service/features-service. QG green + sentinel-verified on both     repos; both quickmerge-landed on LDR (post-push ancestry verified). Source:    `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
+      build`in both`cloudbuild.yaml`files, matching the fleet pattern already used in agent-orchestrator/deployment-service/alerting-service/features-service. QG green + sentinel-verified on both repos; both quickmerge-landed on LDR (post-push ancestry verified). Source: `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
 - [x] ✅ [CODE] P2. Re-run hosted-baseline.sh to resync the derived cloud-build-router.yml snapshot with the live
       workflow — unified-trading-pm@f7fb62f580 (2026-08-15: `hosted-baseline.sh snapshot` re-run; the `derived`
       `cloud-build-router.yml` baseline now reflects the 2026-08-10 `build_error_detail` credential-scrub fix landed in
@@ -350,11 +350,11 @@ source: >-
       `ml-models-store` was already deleted 2026-08-08 (operator-authorized) via the sibling plan
       `bucket_fold_ml_2026_07_17.md`'s "Delete sources" todo — this batch's extraction just hadn't picked that up. Fresh
       live re-verification this session (not just trusting the note):
-      `gcloud asset search-all-resources     --scope=projects/central-element-323112 --query="name:ml-" --asset-types="storage.googleapis.com/Bucket"`
+      `gcloud asset search-all-resources --scope=projects/central-element-323112 --query="name:ml-" --asset-types="storage.googleapis.com/Bucket"`
       returns only `ml-store-test-central-element-323112` and `ml-store-prd-central-element-323112` (the folded
       canonical buckets) — zero hits for `ml-models-store`, confirming the flat legacy bucket is gone. Dead
       TF/yaml-reference half also re-confirmed clean: fresh
-      `grep -rn "ml-models-store\b" deployment-service/terraform deployment-service/configs deployment-api     unified-api-contracts`
+      `grep -rn "ml-models-store\b" deployment-service/terraform deployment-service/configs deployment-api unified-api-contracts`
       across all 4 repos returns only comments/docstrings describing the already-executed fold (`outputs.tf`,
       `_core.py`, a test docstring, `_ml_training_contract.py`) — no live resource declarations or resolver calls. No
       retention check or delete action was needed or taken. Source:
@@ -517,7 +517,7 @@ source: >-
 - [x] ✅ [CODE] P2. **Filed + re-verified live (confirmed real, not hypothetical).** (2026-08-15, slot-18·infra).
       Re-read current HEAD `registry.py`: all 4 templates (`execution_fills`, `positions`, `strategy_instructions`,
       `pnl_attribution`) still have no `{mode}` placeholder, and confirmed real LIVE callers already pass `mode=` on
-      every call (`strategy-service/strategy_service/pnl/adapters/     domain_adapter.py:50,63,76,84`;
+      every call (`strategy-service/strategy_service/pnl/adapters/ domain_adapter.py:50,63,76,84`;
       `execution-service/execution_service/results/save_operations.py:790`) — the kwarg is silently dropped by
       `str.format`, so batch/paper/live writes collide at the same object path today. Filed
       `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`

@@ -212,7 +212,7 @@ The rest is unowned.
 - [x] [DATA] P1. Diagnose the tradfi CME live shard producing 28 rows since 2026-06-22 and `ohlcv_15m` failing outright
       — DoD: root cause named; state whether the Databento live subscription actually covers the requested schema. —
       DONE 2026-08-14: root cause is a Databento account billing outage, NOT a code bug —
-      `mtds-live-tradfi-cme-     trades-20260809-163443`'s run.log shows `gateway error code=api_key_deactivated` +
+      `mtds-live-tradfi-cme- trades-20260809-163443`'s run.log shows `gateway error code=api_key_deactivated` +
       `CRAM authentication error: ... unpaid invoice` at 2026-08-12T00:03:57Z, one failed reconnect, then silence for
       ~50h with the process still heartbeating (invisible to any liveness check). Manifest confirms the exact boundary:
       captured cleanly 08-09..08-11, 100% `empty_confirmed` from 08-12 onward. This is a RECURRENCE of
@@ -254,7 +254,7 @@ The rest is unowned.
       all 4 BYBIT-FUTURES shards) shows the ORIGINAL fix (`_resolve_is_lookup_venue` routing BYBIT-FUTURES → the primary
       `BYBIT` catalog) is genuinely active and correct, but hit a SEPARATE, previously-undiagnosed problem: every
       5-minute retry from VM boot (2026-08-14 03:27 UTC) through 2026-08-15 06:02 UTC logged
-      `read_is_universe_sync: no instruments.parquet for       cefi/BYBIT-FUTURES (lookup_venue=BYBIT) day=<date> in either by_date layout`
+      `read_is_universe_sync: no instruments.parquet for cefi/BYBIT-FUTURES (lookup_venue=BYBIT) day=<date> in either by_date layout`
       — the resolved lookup venue was right, but instruments-service's BYBIT catalog for that UTC day genuinely did not
       exist yet at every checked time, for BOTH 08-14 and 08-15 (not a one-day fluke). **Then, at 2026-08-15 06:07:55
       UTC, the identical retry succeeded**:
@@ -288,7 +288,7 @@ The rest is unowned.
       and zero `captured` rows over N days must page — DoD: replaying the check against the 2026-08 manifest window
       fires on sports, prediction and the four cefi shards; routes per the actionable-only alerting rule. — DONE
       2026-08-14: added **DP-LIVE-004** to
-      `deployment-service/deployment_service/data_pipeline_monitors/     live_stream_watcher.py`
+      `deployment-service/deployment_service/data_pipeline_monitors/ live_stream_watcher.py`
       (`check_live_capture_productivity` + `build_running_live_shards`, generalized across every registered
       `LONG_LIVED_LIVE` VM prefix — not just prediction — and grouped per `(venue, data_type)` so a single consolidated
       multi-shard VM, e.g. the cefi VM, is evaluated per-shard) — fires when a shard's `attempted_at` is recent (proving

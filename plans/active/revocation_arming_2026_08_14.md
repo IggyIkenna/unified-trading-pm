@@ -132,7 +132,7 @@ source:
       the LDR→main promote is a projection that rewrites SHAs, so `git merge-base --is-ancestor` reports "not promoted"
       for work that has fully landed; verify by content (`git cat-file -e origin/main:<path>`). (b) + (c) together in
       one measured line, 2026-08-15 07:20:58 UTC:
-      `revocation deps_drain delivered for mdps-defi-2022-20260815-050859 -> ['vm-logs/…/DRAIN_REQUESTED.json',     'vm-census/admission-hold/….json'] (DP-VM-002)`
+      `revocation deps_drain delivered for mdps-defi-2022-20260815-050859 -> ['vm-logs/…/DRAIN_REQUESTED.json', 'vm-census/admission-hold/….json'] (DP-VM-002)`
       — both markers written, and `deps_hold delivered for mdps-defi-` (DP-VM-001) shows prefix-family targeting working
       too. **30 distinct VMs received a delivery in 12h.** The mechanism is live and acting. Repo: deployment-service.
 - [ ] [CODE] P0. **Register the 7 emitted-but-unregistered DP ids, or the revocation layer stays blind to them.**
