@@ -736,6 +736,20 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       already-committed fix (`market-tick-data-service@8b353ef2`) from ever getting a green-gate ship, since the sub-cap
       for that repo is 1 host-wide and 4-5 concurrent slots were observed contending for it. Evidence:
       `qg_host_adaptive_resource_governor_2026_07_14.md` Progress Log entries dated 2026-08-15 (slot 29, two entries).
+      **UPDATE, same session (slot 29) — 5th launch BROKE the pattern.** A 5th attempt (launched via the AO harness's
+      native `run_in_background` tracking, no custom wrapper this time) survived past the ~300s mark that killed all 4
+      priors — observed alive and still legitimately queued (incrementing `queued Ns` log lines, no death, no admission
+      yet) at 510s and counting. This weakens "anything waiting past 300s in this loop gets killed" as a blanket rule —
+      it is NOT a fixed timeout on the wait itself. Two live possibilities now: (a) the earlier 4 deaths were specific
+      to something about launch context/session state at the time (not reproduced by this 5th launch), or (b) this 5th
+      launch will still die, just later, and 300s was never the real threshold — only a coincidence of how long real
+      contention happened to last in those 4 prior windows. Whoever picks this up next: check whether run6 eventually
+      dies too (if so, note its actual death time — is it still cleanly divisible by ~300s, i.e. 600s/900s, suggesting a
+      periodic reaper with multiple missed cycles tolerated; if not, the periodic-cron-reaper lead weakens further). If
+      run6 completes cleanly, that's strong evidence the deaths are transient/environmental rather than a structural bug
+      in the governor's queue loop itself — deprioritize this from "blocking the mtds ship" to "flaky, keep retrying"
+      and downgrade urgency accordingly (still worth root-causing, but no longer the sole path to shipping
+      `market-tick-data-service@8b353ef2`).
 
 ## Measured runtime drift — RESOLVED 2026-07-22 (plan-reconcile follow-up)
 
