@@ -138,12 +138,24 @@ source: >-
       re-running quality gates before shipping. 6 new unit tests (UAC `tests/unit/test_quarantine.py`, MTDS
       `tests/unit/test_symbol_rules_read_gate.py`), both gates green. Source:
       `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`
-- [ ] [SCRIPT] P3. Root-cause + fix mtds_chunk_loop.sh's PROGRESS.json GCS upload call - confirmed silently stopped
+- [x] ✅ [SCRIPT] P3. Root-cause + fix mtds_chunk_loop.sh's PROGRESS.json GCS upload call - confirmed silently stopped
       firing after chunk 17 on mtds-backfill-odds-smallchunk2-20260807 while run.log's own PROGRESS: chunk=N lines kept
       advancing normally through at least chunk 21. Done when: the upload call's failure mode is identified (e.g. a
       swallowed exception, a once-per-VM-lifetime guard misfiring, a stale path) and fixed, with a regression check that
       PROGRESS.json keeps advancing across >=20 consecutive chunks on a fresh run. Repo: deployment-service. Source:
-      `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`
+      `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` — **Root cause: `HAD_FAILURE` in
+      `mtds_chunk_loop.sh`'s generator is exactly the "once-per-VM-lifetime guard misfiring" hinted at — it's a sticky
+      flag that, once set by any earlier chunk/league failure or low-memory skip, latches for the rest of the run BY
+      DESIGN (protects the `[[VM_PROGRESS]]` resume checkpoint from skipping past an unresolved gap), which also
+      silences `[[VM_PROGRESS]]`, and therefore the PROGRESS.json GCS upload, forever — even while later chunks keep
+      succeeding.** Fix: added an unconditional `[[VM_LIVENESS]] last_chunk_seen=N/TOTAL` marker per chunk, independent
+      of `HAD_FAILURE`, and taught `vm-exec-with-gcs-tee.sh`'s watchdog to merge it into PROGRESS.json's
+      `last_chunk_seen`/`updated` fields without ever advancing `last_completed_date` (the resume-checkpoint semantics
+      are unchanged/still correct). Two new regression tests in `test_vm_launcher_scripts.py`
+      (`TestMtdsChunkLoopLivenessMarker`) using the existing real-heredoc-extraction harness: one proves the marker
+      advances across 20 consecutive healthy chunks (the exact bar in this todo), the other proves it keeps firing
+      after `HAD_FAILURE` latches from an earlier failure. Full `quality-gates.sh` green (1270s). Evidence:
+      deployment-service@41856de513 (verified ancestor of origin/live-defi-rollout).
 - [x] [CODE] P2. Re-launch mdps-cefi-2021-* sharded MDPS CeFi backfill (launch-mdps-sharded-backfill.sh cefi
       --year 2021) **OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service
       backfill/recompute work is excluded from this batch unless manifest-canonical or migration-related. The underlying
