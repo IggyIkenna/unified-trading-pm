@@ -7,7 +7,7 @@ summary: >-
   source doc's checkbox (this was an extraction batch, so the source docs' own checkboxes are the ones that go stale),
   archives any source doc that reaches zero open todos as a result, and runs the standard 6-step archival ritual on the
   batch plan itself.
-status: active
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -16,11 +16,11 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, satellite-batch, close-out, finalize]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,9 +53,12 @@ source: >-
 
 # cross-cutting satellite AO batch 13b — finalize
 
-> **Machine-gated on `/plans/active/cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`** (`depends_on` +
-> `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch itself stays
-> `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
+> **ARCHIVED 2026-08-15** — all 3 todos done. Batch-13b + its 4 eligible source docs archived; batch-13b itself archived
+> alongside this doc in the same commit.
+
+> **Machine-gated on `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`**
+> (`depends_on` + `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch
+> itself stays `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
 
 ## Todos
 
@@ -83,11 +86,31 @@ source: >-
       flipped by a peer session; several other todos in this doc remain genuinely open, out of this batch's scope).
       Every flip cites the reconciling commit sha; re-verified live (not trusted from the batch's own text) against each
       source doc's actual current checkbox state before flipping.
-- [ ] [REVIEW] P2. For each source doc reconciled above, check whether it now has zero open todos. If so, run the
+- [x] ✅ [REVIEW] P2. For each source doc reconciled above, check whether it now has zero open todos. If so, run the
       standard 6-step archival ritual on it (dated archive folder, exact-successor banner if applicable, corpus-wide
       referrer-path fixup) — do not leave a now-fully-done source doc live and un-archived. Done when: every source doc
-      left with zero open todos is archived, and `run_hygiene_sweep.sh` reports no orphan referrers to any of them.
-- [ ] [REVIEW] P2. Once `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md` itself has zero open todos, run the
-      standard 6-step archival ritual on it, then archive this finalize plan too. Done when: the batch plan and this
+      left with zero open todos is archived, and `run_hygiene_sweep.sh` reports no orphan referrers to any of them. —
+      **DONE 2026-08-14 (slot-20, review)**, `unified-trading-pm@fce9c0c4f3`: of the 11 source docs, 4 had reached 0
+      open todos (`mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md`,
+      `pipeline_smoke_sweep_findings_2026_07_20.md`, `qg_ratchets_block_unrelated_ships_2026_08_12.md`,
+      `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`) — all 4 archived to `plans/archive/2026_08/issues/`
+      (status: resolved, `resolved_by` cited, archive banner added, path-form referrers repointed in the active corpus +
+      codex). The remaining 6 (`na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`,
+      `per_client_config_surface_keying_and_missing_axes_2026_08_12.md`, `plan_reconciler_findings_all_2026_08_12.md`,
+      `plan_reconciler_findings_cross_cutting_2026_08_10.md` (also locked by `plan_reconciler`),
+      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`,
+      `service_config_ownership_and_instruction_contract_2026_08_12.md`) still carry genuine open todos outside this
+      batch's scope — left active, not archived. **Byproduct finding, fixed same commit**: the
+      `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` archival would have silently dropped its still-unruled
+      instrument-universe hot-swap position-state-safety question (prose-only, no tracked todo) — split it into a new
+      tracked issue, `plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`, per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2.
+- [x] ✅ [REVIEW] P2. Once `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md` itself has zero open todos, run
+      the standard 6-step archival ritual on it, then archive this finalize plan too. Done when: the batch plan and this
       finalize plan are both under `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan
-      referrers to either.
+      referrers to either. — **DONE 2026-08-14 (slot-20, review)**: batch plan verified 0/39 open todos, unlocked —
+      archived to `plans/archive/2026_08/`. This finalize plan archived alongside it in the same commit (single-repo
+      finalize-plan mode-1: same-commit flip+archival sanctioned per the archival-discipline doc's 2026-08-10
+      narrowing). Referrers checked corpus-wide: every active-corpus hit is a bare-filename Progress Log citation
+      ("reconciled from `<slug>.md`"), not a path-form link — no repoint needed; `plans/active/INDEX.md`'s two
+      relative-link entries are auto-generated and refreshed via `regenerate_active_plan_index.py` in this same commit.
