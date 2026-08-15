@@ -373,9 +373,15 @@ source: >-
       `[OPERATOR]` `breaking_scan_dir`-completeness audit landing first. Source:
       `plans/active/issues/ibkr_gateway_infra_release_tag_stall_2026_08_11.md` (updated with full diagnosis + Progress
       Log entry, same commit).
-- [ ] [CODE] P2. Make claim/heartbeat behaviour under test injectable so the common cases can be covered without a real
-      tmux server, per the doc's own P2 [SCRIPT] todo Source:
-      `plans/active/issues/pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md`
+- [x] ✅ [CODE] P2. Make claim/heartbeat behaviour under test injectable so the common cases can be covered without a
+      real tmux server, per the doc's own P2 [SCRIPT] todo — unified-trading-pm@ef78ddc842 (2026-08-15, slot-12·infra).
+      Factored `refresh_agent_claim_heartbeat()`'s inline `tmux has-session` check in
+      `scripts/dev/slot-git-status-report.sh` into its own `_claim_heartbeat_session_alive()` function; the bats suite
+      now redefines that function after sourcing to cover the "alive"/"dead" cases with NO real tmux server spawned.
+      Only the exact-match-collision test still uses a real tmux session (it exists specifically to prove tmux's own
+      `-t "="` exact-match semantics) — tagged `# bats test_tags=integration,tmux` so it's selectable via
+      `bats --filter-tags` even though the fleet's current bats invocation doesn't filter. All 5 tests green locally.
+      Source: `plans/active/issues/pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md`
 - [ ] [CODE] P2. Implement the schema/NaN contract in e2e-testing/scripts/validation/validate_shards_4pillar.py per the
       operator-ruled spec (wire _TICK_REQUIRED, add tick to _NAN_SCAN_COLUMNS, wire _DEFI_REQUIRED/_SPORTS_REQUIRED
       narrowly) Source: `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
