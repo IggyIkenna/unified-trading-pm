@@ -272,3 +272,18 @@ issue's scope); flagged as a follow-up todo below.
   repo-blocker with no ETA. Next session/window: re-check `mtds_tradfi_combo_casing_qg_red_2026_08_15.md`'s `status:` —
   once it flips to resolved (or the 2 named tests pass independently), retry the quickmerge; if still open after a long
   gap, consider escalating that issue's priority rather than continuing to poll here.
+- **data_engineering slot-2, 2026-08-15 (pre-compact checkpoint, still blocked — watchdog #6 armed)**: re-confirmed
+  directly (not from stale cache) that `mtds_tradfi_combo_casing_qg_red_2026_08_15.md` is still `status: open` and the
+  market-tick-data-service commit (`908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09`) is still NOT-LANDED; drift has climbed to
+  `ahead=1/behind=24` (remote advancing, not a regression here). Five prior background heartbeat watchdogs (`bic38kbwy`,
+  `br77dd2be`, `btme3cpyp`, `bizkfhjjq`, `bu1luwlak`) each ran their full 8-check (~8 min) cycle and timed out without
+  landing; a 6th (`bwyrxn16q`) is now armed and polling. Both repos' working trees are clean; this PM repo is fully
+  pushed (`ahead=0` vs `origin/live-defi-rollout`) — the only durability gap is the already-diagnosed, already-tracked
+  MTDS commit sitting local-only behind someone else's P1 repo-blocker, which is a "cannot be done yet" condition (needs
+  slot-29's fix or the blocker's self-resolution), not lost/uncommitted work. Also searched this session's available
+  tools for an AO `/progress` heartbeat mechanism (`ToolSearch` query `"heartbeat progress done task_id"`) and found
+  none — only generic session tools (Monitor, TaskUpdate, PushNotification, etc.). No AO-specific `/progress` call
+  exists in this tool surface; per the standing instruction to not guess it, it remains un-sent. `/done` still NOT
+  called — still conditioned on MTDS landing. Next session/window: read whichever watchdog is live at resume time, and
+  if it TIMED OUT, re-check `mtds_tradfi_combo_casing_qg_red_2026_08_15.md`'s `status:` before relaunching watchdog #7
+  (cheap single grep, avoids relaunching a watchdog for a blocker that already cleared).
