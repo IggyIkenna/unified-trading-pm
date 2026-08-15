@@ -109,12 +109,13 @@ Dispatch the three fixes below as ordinary AO-eligible backend_engineer work —
 mechanically-verifiable fix (bring an observed count back to baseline, or fix one gating-logic bug + confirm the test
 goes green), not a design/judgment call.
 
-- [ ] [BACKEND] P1. Fix the 6 new/over-baseline DTZ ruff sites in `agent-orchestrator` back to
+- [x] ✅ [BACKEND] P1. Fix the 6 new/over-baseline DTZ ruff sites in `agent-orchestrator` back to
       `datetime.now(timezone.utc)` (or the zone-aware equivalent for the specific DTZ00x/011/901 code each site is
       flagged for) — `gcs_sync.py:501`, `resource_history.py:112`, `resource_history.py:154`, `backlog.py:1072`,
       `usage_tracker.py:584`, `usage_tracker.py:622`. Done-when:
       `python unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py --workspace-root <ws> --scope agent-orchestrator`
-      reports `dtz: <=8` (no `[FAIL]` line) on a fresh HEAD checkout. (repo: agent-orchestrator)
+      reports `dtz: <=8` (no `[FAIL]` line) on a fresh HEAD checkout. (repo: agent-orchestrator) —
+      `agent-orchestrator@c884ce3c9c`
 - [x] ✅ [BACKEND] P1. Fix the 1 new fallback-import site at `agent-orchestrator/server/codex_bridge_server.py:217`
       (import the dependency directly + declare it in `pyproject.toml`, or add a one-line-reasoned
       `# noqa: fallback-import` if it is genuinely a documented optional extra). Done-when:
@@ -182,3 +183,13 @@ Open — repo-blocker declared (`kind: qg_red`) alongside this filing per `agent
   `6d00256`; the previously-failing test now passes; full local `bash scripts/quality-gates.sh` PASSED end-to-end,
   `.qg_last_passed_sha` sentinel verified matching HEAD; quickmerge's own post-push ancestry check + an independent
   `git merge-base --is-ancestor` both confirm the SHA landed on `origin/live-defi-rollout`). Checkbox flipped above.
+- **2026-08-15 (slot-6)**: Todo 1 (DTZ ratchet) fixed — replaced the 6 named naive `date.today()`/`strptime()` call
+  sites with zone-aware equivalents: `gcs_sync.py:501` and `resource_history.py:112,154` (`date.today()` →
+  `datetime.now(UTC).date()`), `routes/backlog.py:1072` (`datetime.min` → `datetime.min.replace(tzinfo=UTC)` as the sort
+  fallback), `usage_tracker.py:584,622` (`datetime.strptime(...)` → `.strptime(...).replace(tzinfo=...)` chained, so
+  ruff's DTZ007 check sees the tz-attach directly on the constructor call).
+  `check_ruff_rule_ratchet.py --scope agent-orchestrator`: dtz 14 → 8 (`== baseline`, no `[FAIL]`). Committed, then
+  blocked waiting on todo 4 (repo-blocker `RB-2549326a`, joined — same root cause slot-20/slot-24 independently found);
+  rebased onto `agent-orchestrator@6d00256` once slot-16's fix landed, full local `bash scripts/quality-gates.sh`:
+  PASSED end-to-end. Shipped `agent-orchestrator@c884ce3c9c` via quickmerge (SHA verified ancestor of
+  `origin/live-defi-rollout`).
