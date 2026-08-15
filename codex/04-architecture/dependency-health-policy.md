@@ -111,7 +111,13 @@ wired:
 - **Producer + subscriber**: `alerting-service@42347de` — `dependency_health_prober.py` (probe-driven, dispatches on
   each policy's `test_method`, N-consecutive-failure gate before the outage clock starts) +
   `dependency_health_event_handler.py`, registered in `subscribers/alert_subscriber.py` under `DEPENDENCY_DEGRADED` /
-  `DEPENDENCY_RECOVERED`
+  `DEPENDENCY_RECOVERED`. **"Probe-driven" describes the plumbing, not live probing (2026-08-15)**: the built-in
+  `_dispatch()` for every `test_method` is, by its own docstring, a SCAFFOLD that unconditionally returns
+  `reachable=True` — the policies carry `test_method` but no endpoint/host/url/topic to probe against. A real check
+  requires injecting `probe_fn` at construction, which has **zero production injection sites** (verified 2026-08-15: the
+  only references are the parameter declaration and its own assignment). So today every registered dependency reports
+  healthy forever and **no dependency-health alert has ever fired or can fire** — this is the first of the three
+  inertness levels below, not a separate/lesser caveat.
 - **Integration test proving the wire, not just the arithmetic**: `alerting-service@7291bee`
   (`tests/integration/test_dependency_health_wiring.py`) — drives a simulated outage through the real
   producer→handler→rule→router chain (only the router boundary mocked); the pre-existing unit tests of
