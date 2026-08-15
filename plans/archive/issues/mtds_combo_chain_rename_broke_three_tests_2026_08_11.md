@@ -24,7 +24,7 @@ summary: >-
   486f82ba added 5 sites → 71) was independently already resolved by the time of this fix: the same b13e3a2b split
   commit's net effect left the corpus at 64 sites (7 below its own post-486f82ba peak), so no baseline bump or code
   change was needed there.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -233,12 +233,28 @@ would have been wrong per the `git add -A` ban.
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Confirm `market-tick-data-service@ccb84c57c9` promotes LDR→`main` cleanly (the
-      `ldr-to-main-promote-fleet.yml` fleet job runs on its own `*/15` cadence — not manually triggered per CLAUDE.md's
-      ad-hoc-dispatch ban). Once confirmed green + merged, flip this doc's `status` to `resolved` and archive per the
-      plan-completion-and-archival-discipline rule.
+- [x] ✅ [OPERATOR] P2. Confirm `market-tick-data-service@ccb84c57c9` promotes LDR→`main` cleanly — CONFIRMED (content-
+      verified 2026-08-15, see Progress Log). Doc `status` flipped to `resolved` + archived per
+      plan-completion-and-archival-discipline.
 
 ## Progress Log
+
+- **2026-08-15 (tradfi_satellite_ao_dispatch_batch13 item)**: Confirmed `ccb84c57c9`'s promotion — NOT a literal SHA
+  ancestor of `origin/main` (`git merge-base --is-ancestor` false, and no matching `git patch-id` on any `main` commit
+  in the 2026-08-11..13 window either), because `main-backmerge-to-ldr`'s "Option-B direct" promote bulk-pushes/squashes
+  many LDR commits per promote event rather than preserving individual commit hashes — expected, not a defect. Verified
+  the actual SUBSTANCE instead: `migrate_tradfi_canonical_classify_2026_07.py` on `main` is byte-identical to
+  `ccb84c57c9`'s version. `migrate_tradfi_underlying_display_names_2026_08.py` differs from `ccb84c57c9`'s raw diff, but
+  only because a later, unrelated, legitimate commit (`c1559849`, 2026-08-14, "unblock STEP 5.101 baseline via noqa
+  annotations on unrelated pre-existing tradfi migration script") re-touched the same lines for the DIFFERENT
+  empty-string-fallback ratchet check — confirmed `origin/live-defi-rollout`'s current tip matches `origin/main` exactly
+  on this file (no LDR/main divergence, no lost work). Confirmed neither file carries a reintroduced blanket
+  `# pyright: reportX=false, ...` header on `main` (`grep '^# pyright:'` → 0 hits both files) — `ccb84c57c9`'s actual
+  STEP-5.94 fix (narrow per-line ignores, no blanket header) is intact and live on `main`. Fleet-wide
+  `scripts/cicd/promotion_lag_monitor.py` (run via `.venv`) independently reports "all branches in sync" — the promote
+  pipeline itself is healthy, not stuck. Conclusion: `ccb84c57c9` promoted LDR→main cleanly in substance; the SHA itself
+  is absent from `main`'s ancestry only due to the promote mechanism's own squash/bulk-push shape, not a lost or dropped
+  commit. Flipping this doc to `resolved` + archiving per the follow-up's own instruction.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 
