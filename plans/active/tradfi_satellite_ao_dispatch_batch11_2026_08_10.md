@@ -26,7 +26,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
     /plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md,
-    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -43,6 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true # 0 open todos by design — gated behind tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md (depends_on + gate_on_depends: true), which still has open work; both archive together once the finalize closes.
 context_scope:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,

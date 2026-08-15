@@ -68,7 +68,6 @@ ALLOWED_DUPLICATE_STEMS: frozenset[str] = frozenset(
         # that had already been archived; neither side is a stale copy of the other.
         "ag_closeout_audit_cefi_parked_2026_08_10.md",
         "ag_closeout_audit_prediction_parked_2026_08_10.md",
-        "ag_closeout_audit_tradfi_parked_2026_08_10.md",
         # An archived snapshot of the generated active-plan index; both copies are intentional.
         "INDEX.md",
     }

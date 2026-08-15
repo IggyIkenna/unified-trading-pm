@@ -32,7 +32,7 @@ related:
     /plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
-    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
