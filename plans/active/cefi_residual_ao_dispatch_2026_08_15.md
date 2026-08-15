@@ -53,12 +53,16 @@ re-authorization).
 
 ## Todos
 
-- [ ] [DATA] P2. Read the 2026-07-17 operator decisions section
-      (`cefi_residual_followups_after_honest_done_2026_07_17.md` § "Operator decisions (2026-07-17, AskUserQuestion)",
-      decision #4) and determine whether it already authorizes force-decomposing the 586 marker-less
-      `VENUE:PERPETUAL:BASE-QUOTE` rows (BITGET-FUTURES 275 / BINANCE-FUTURES 153 / COINBASE-FUTURES 107 /
-      BINANCE-DELIVERY 27 / BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3) to add the `@LIN`/`@INV` margin marker. If yes:
-      execute the decompose. If no: file as a fresh, narrower operator question rather than guessing. (repo:
+- [x] ✅ [DATA] P2. **Read decision #4 — does NOT already authorize; filed a fresh, narrower operator question
+      (BLK-96fd40c0).** Decision #4 ("Venue decomposition: DECOMPOSE ALL cefi venues (not just the 6 margin-marker) —
+      true canonical everywhere") sets the general design target, but the SAME
+      `cefi_residual_followups_after_honest_done_2026_07_17.md` doc, in the SAME 2026-07-17 session, explicitly carves
+      this exact 586-row item out under its Phase -1 section: "Deliberately OUT of scope of the Phase -1 fix (the gate
+      is `0` `:PERP:`, not `0` marker-less) — rewriting them is a 586-row blast radius that needs its own decision +
+      drain." A specific, contemporaneous carve-out written alongside decision #4 outweighs the general statement —
+      treating decision #4 as blanket cover would mean the carve-out sentence was pointless noise in the same doc. Filed
+      `BLK-96fd40c0` (options A: decision #4 covers it, proceed now / B: needs its own decision + drain, recommendation
+      B) rather than guessing either way. Awaiting operator answer before any `--apply` executes. (repo:
       instruments-service)
 - [x] ✅ [SCRIPT] P1. **CORRECTED SCOPE, 2026-08-15 (slot-14, data_engineering) — the ~4.5M-file corpus-wide backfill is
       ~97% ALREADY COMPLETE, not a fresh campaign.** Before launching anything, checked the existing tracked campaign
