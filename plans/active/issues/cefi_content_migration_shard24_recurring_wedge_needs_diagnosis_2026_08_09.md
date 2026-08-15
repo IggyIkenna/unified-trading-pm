@@ -139,7 +139,7 @@ not `2026-01-07`.
       count spike) that the migration script's per-file loop chokes on, by comparing shard 24's file-count/size
       distribution against a shard that completed cleanly. Repo: market-tick-data-service. —
       market-tick-data-service@483eb895
-- [ ] [SCRIPT] P3. **New, 2026-08-15**: shard 24's final completed run (`canonical-migration-cefi-content-apply-
+- [x] ✅ [SCRIPT] P3. **New, 2026-08-15**: shard 24's final completed run (`canonical-migration-cefi-content-apply-
       20260815-181337`, WORKERS=8, reached `EXIT_STATUS=0` / 52,519/52,519 files) logged a confirmed poison-pill file
       the script's own safety-skip correctly refused to read:
       `raw_tick_data/by_date/day=2026-01-15/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/
@@ -147,7 +147,26 @@ not `2026-01-07`.
       2611989805 uncompressed bytes from only 5159827874 bytes on disk (> 2147483648 ceiling)`. `read_error` totaled 3
       for the run (2 earlier, unconfirmed from the log tail alone); this is the 1 explicitly confirmed. Manually
       inspect/repair or re-fetch this specific file from the upstream source. Repo: market-tick-data-service
-      (investigation) / instruments-service or the venue capture pipeline (repair, TBD once inspected).
+      (investigation) / instruments-service or the venue capture pipeline (repair, TBD once inspected). —
+      **investigation complete 2026-08-15 (slot-12, infra), see Progress Log; repair split into the new todo below
+      pending a delete-safety-cited action.**
+- [ ] [DATA] P2. **Repair the corrupted `XRP_USDC-30JAN26-2D3-P.parquet` object** (path above) once its combo-vs-legit
+      classification is settled: cross-check against `deribit_combo_perpetual_partition_move_2026_07_21.md`'s combo
+      GCS-driven census (the shape regex `-(FS|CS|PS|STRD|STD|IRON|BOX)-` used there does NOT match this filename — no
+      infix token — so it is either a residual combo-shape variant that escaped that migration's 2026-08-12 `--apply`,
+      or a different, non-combo corruption; the corrupted footer prevents reading the content column to tell which).
+      If confirmed combo-shape (leg tokens `2D3`/`30JAN26` match catalogue rows
+      `DERIBIT:COMBO:XRP_USDC-CS-30JAN26-2D3_2D6` and `DERIBIT-COMBO:COMBO:...-RR-27MAR26-2D3_2D4` — see Progress Log):
+      delete the corrupted object per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a (single-object,
+      soft-delete-retention-checked delete; do not batch) and let the combo migration's normal capture/backfill path
+      supply the correct data if it's genuinely missing from the `instrument_type=combo` partition. If NOT combo-shape
+      (a standalone corrupted capture with no catalogue analog): delete + re-fetch via
+      `market_tick_data_service.cli.main --operation download --day 2026-01-15 --force` scoped to this shard/venue,
+      after confirming the correct `instrument_type` via the live catalogue (do NOT assume `perpetual` — the raw
+      filename form itself, unlike its ~1MB canonical-form siblings in the same directory, suggests it predates/escaped
+      migration). Repo: market-tick-data-service (delete/re-fetch) + cross-reference
+      `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` (closed but directly relevant combo
+      census methodology).
 
 ## Progress Log
 
@@ -276,3 +295,35 @@ not `2026-01-07`.
   `cefi_residual_ao_dispatch_2026_08_15.md`'s todo 2. One new finding filed as a todo above (a confirmed poison-pill
   parquet file this run's own safety-skip correctly refused). Full verification evidence + method:
   `cefi_residual_ao_dispatch_2026_08_15_finalize.md` Progress Log (now archived to `plans/archive/2026_08/`).
+- **2026-08-15 (slot-12, infra)**: Investigated the poison-pill file (direct GCS reads via
+  `unified_trading_library.cloud_interface.get_storage_client()` — no subprocess `gcloud`/`gsutil`, all bounded
+  single-object gets/ranges, no corpus walk). **Confirmed genuinely corrupted, not a false-positive safety-skip:**
+  1. **Object metadata**: 5,159,827,874 bytes (~4.8GB) on disk, `last_modified=2026-06-27T21:30:52Z`.
+  2. **Sibling comparison** (same directory, `list_blobs` on the exact prefix): the other 3 objects in
+     `.../venue=DERIBIT/instrument_type=perpetual/data_type=trades/` for this day are 1.0-1.2MB each
+     (`DERIBIT:PERPETUAL:BTC-USD@INV.parquet`=1,174,053B, `DERIBIT:PERPETUAL:ETH-USD@INV.parquet`=1,023,601B,
+     `ticks.parquet`=1,173,742B) — the flagged file is **~4,400x larger** than its peers, and unlike them its filename
+     is a RAW (non-canonical) symbol stem, not the already-migrated `DERIBIT:PERPETUAL:...` form its siblings carry —
+     consistent with this object predating or escaping the id-catalogue migration.
+  3. **Parquet footer magic check** (last 4MiB via `download_bytes_range`, no full-file download): the file's final 4
+     bytes are `89 50 41 52`, NOT the required parquet magic `50 41 52 31` ("PAR1") — the footer is genuinely
+     corrupted (or the file is truncated/malformed at the tail), which is why pyarrow's footer-length parse produced
+     the nonsensical claimed-uncompressed-size the migration script's `_MAX_CLAIMED_UNCOMPRESSED_BYTES` guard
+     correctly caught. This is NOT a case of the safety threshold being too conservative — the file cannot be
+     correctly parsed as parquet at all from its current tail bytes.
+  4. **Catalogue cross-check** (`prod/catalog.parquet`, `instruments-store-cefi-prd-central-element-323112`, one
+     bounded 9.1MB read): **no catalogue row exists for `raw_symbol=XRP_USDC-30JAN26-2D3-P` under any venue** — this
+     exact symbol string isn't a registered instrument. But a substring search for the shared leg-token `2D3` found 4
+     catalogue rows, all DERIBIT/DERIBIT-COMBO **COMBO** instruments sharing both the `2D3` leg code and the
+     `30JAN26` expiry: `DERIBIT:COMBO:XRP_USDC-CS-30JAN26-2D3_2D6` and
+     `DERIBIT-COMBO:COMBO:XRP_USDC-RR-27MAR26-2D3_2D4` (plus their DERIBIT-COMBO-venue twins). This is the same
+     symbol-shape family `deribit_combo_perpetual_partition_move_2026_07_21.md` (closed 2026-08-12, 1,719 objects
+     moved `perpetual`→`combo`) diagnosed and fixed — but that migration's census regex
+     (`-(FS|CS|PS|STRD|STD|IRON|BOX)-`) requires a combo-type infix token, which this filename
+     (`XRP_USDC-30JAN26-2D3-P`, no infix) does NOT match, so it would not have been swept by that census either way.
+  **Conclusion**: likely a residual/malformed DERIBIT combo-shape object (a truncated or differently-encoded combo leg
+  symbol) that both (a) sat outside the sibling migration's shape regex and (b) is independently corrupted at the
+  parquet-footer level — two separate defects on one object, not one. Repair needs a delete-safety-cited action, not a
+  blind re-fetch under `instrument_type=perpetual` (which would just recreate a wrong classification if this is
+  confirmed combo-shaped) — split into the new `[DATA] P2` todo above rather than executing a guess this session. No
+  GCS object was written, moved, or deleted this session — every check was a read.
