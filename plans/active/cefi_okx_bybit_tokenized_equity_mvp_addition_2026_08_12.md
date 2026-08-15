@@ -329,3 +329,28 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   `unified_api_contracts/registry/cefi_instrument_universe.py` (Todo 3's `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` SSOT),
   and added `launch-cefi-sharded-backfill.sh` — the exact script the doc's sole remaining open todo (Todo 6, launch)
   repeatedly names as the next action once the Tardis 1-VM-cap frees.
+
+- **2026-08-15T12:07 UTC — Todo 6 re-checked, STILL GATED, not launched (different blocking VMs than every prior
+  check).** Slot-8 backend_engineer worker (dispatched via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s
+  duplicate tracking entry for this same underlying launch). The previously-tracked `cefi-okx-swap-2026-light-*` VM has
+  since finished — it no longer appears in `gcloud compute instances list`. But the guard is now blocked by TWO
+  different Tardis-consuming VMs that came up in the meantime: `mtds-backfill-cefi-extended-starknet-fullhist-1`
+  (RUNNING since 2026-08-15T11:14:58 UTC, `VM_START_DATE=2024-10-01`/`VM_END_DATE=2026-08-14`, a ~22-month historical
+  range — the long pole) and `mtds-backfill-cefi-pipelinecheck-20260815-120442-fca574` (RUNNING since
+  2026-08-15T12:04:45 UTC, `staging`/`IS_TEST_RUN=true` — looks like a short-lived smoke-check VM, not a long backfill).
+  Both stamp `VM_TARDIS_CONSUMER=1` in their metadata (confirmed via
+  `gcloud compute instances describe --format='value(metadata.items[].key,metadata.items[].value)'`, not just the
+  unreliable `--filter` query — gcloud itself warns that filter's `metadata.items.value=1` match is not yet fully
+  wired). Ran the actual guard function (not just a manual gcloud count):
+  `source scripts/vm/tardis-concurrency-guard.sh; tardis_concurrency_guard 1 asia-northeast1-c central-element-323112` →
+  **refused**: "2 running + 1 planned = 3 > 1".
+  `DRY_RUN=1 VENUES="OKX-SPOT BYBIT-SPOT" YEARS="2025 2026" SINGLE_VM_QUEUE=1 bash scripts/vm/launch-cefi-sharded-backfill.sh`
+  still confirms the launch plan resolves to exactly ONE combined VM (`cefi-queue-heavy-okxspot-x2-*`, e2-highmem-16,
+  `VM_START_DATE=2025-01-01 VM_END_DATE=2026-08-14`) — the plan itself is unchanged and ready, only the concurrency gate
+  blocks it. Task skipped again with `reason_code: GATED`, `estimated_unblock_minutes: 180` (fleet cooldown cap; the
+  pipelinecheck VM should clear within ~10-15min per its smoke-test duration profile, but the extended-starknet fullhist
+  VM's 22-month range makes its own ETA genuinely uncertain — likely hours, not minutes). **Next worker**: re-run
+  `tardis_concurrency_guard` (sourced, not just a manual `gcloud instances list` count — the `--filter` form is
+  unreliable per gcloud's own warning) before assuming the gate has cleared; once it passes, run the exact
+  `launch-cefi-sharded-backfill.sh` command above (drop `DRY_RUN=1`), then flip this checkbox with the VM name +
+  evidence.
