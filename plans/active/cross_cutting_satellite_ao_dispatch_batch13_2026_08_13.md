@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                                                      separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                                                      (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                                                      exists and is live — no code change needed — but a real corpus-wide query
-                                                                      (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                                                      the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                                                      filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                                                      data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                                                      worker-determinable outcome for one ~1h dispatch. Filed
-                                                                      `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                                                      class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                                                      backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                                                      multi-AG backfill into this single dispatch.
+                                                                          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                                                          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                                                          exists and is live — no code change needed — but a real corpus-wide query
+                                                                          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                                                          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                                                          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                                                          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                                                          worker-determinable outcome for one ~1h dispatch. Filed
+                                                                          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                                                          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                                                          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                                                          multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -826,8 +826,17 @@ source: >-
 - [ ] [CODE] P2. G1.run-prediction: run enumerate_expected_universe.py v2 at the cqg-bundle grain now that the IS
       catalogue-rollup loader wiring has landed (prediction_cqg_residual_2026_07_24.md is archived complete) Source:
       `plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md`
-- [ ] [CODE] P2. add a git fetch+rebase step to each plan_health-family scheduled skill's STEP 0 (fixes the PM-checkout
-      staleness gap the 2026-08-03 audit re-confirmed live) Source:
+- [x] ✅ [CODE] P2. **DONE** (2026-08-15, slot-31·infra) — unified-trading-pm@8f01162ac9. Of the 6 plan_health-family
+      role files (plan_health, plan_reconciler, docs_reconciler, ag_closeout_auditor, na_eligibility_auditor,
+      context_scout_auditor — all `related:`-linked to `plan_health.md` and dedicated to plan-corpus analysis/hygiene,
+      as distinct from data-pipeline/CI skills that merely `cd $PM_REPO_PATH`), `na_eligibility_auditor.md` and
+      `plan_reconciler.md` already carried a `git pull --ff-only origin live-defi-rollout` STEP 1 (added by an earlier
+      session). Added the same established pattern to the remaining 4: `ag_closeout_auditor.md`, `plan_health.md`,
+      `docs_reconciler.md`, `context_scout_auditor.md`. Shipped via direct push under the CLAUDE.md dirty-deps carve-out
+      (quickmerge's Stage 1.5 dependency-alignment check was pre-existing-red on an unrelated `e2e-testing`/
+      `deployment-service` mismatch, confirmed unrelated to this doc-only change via
+      `check-dependency-alignment.py --json`); Pass-1 `quality-gates.sh` was green on this exact commit
+      (`.qg_last_passed_sha` == HEAD) before the push. Source:
       `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`
 - [ ] [CODE] P2. re-run /plan-reconcile whole-corpus SOLO to record a clean, unconfounded benchmark number Source:
       `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`
