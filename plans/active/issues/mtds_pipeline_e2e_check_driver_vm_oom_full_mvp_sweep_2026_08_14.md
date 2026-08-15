@@ -482,3 +482,48 @@ Two independent angles, not mutually exclusive:
   anything else; if it landed `EXIT_STATUS=0`/`1`, rescue the (now `_cefi`-suffixed) report and this is the LAST piece
   needed to finally flip this checkbox (SPORTS + CEFI real reports in hand, DEFI's remaining blocker tracked
   separately).
+- **2026-08-15 (slot 29 worker, backend_engineer) — DEFI's [CODE] P1 todo above: ROOT-CAUSED with hard measured
+  evidence, FIX WRITTEN + partially shipped, blocked mid-ship on an unrelated repo-blocker.** Confirmed the todo's own
+  hypothesis directly via a bounded, metadata-only footer inspection of DeFi's real consolidated
+  `availability_index.parquet` (no row data downloaded — only the parquet footer via a GCS byte-range tail read): **1301
+  row groups, 159,806,198 rows (not the ~27.4M/~33M figures every prior doc cited — the index has grown substantially),
+  6.31 GiB compressed. 99.6% of adjacent row-groups' `[min,max]` date ranges OVERLAP** (sorted by min date — e.g.
+  row-group 4 spans `2018-01-31..2018-03-31`, overlapping row-groups 0-3's `2018-01-01..2018-03-01`). The row groups
+  were never written in date-clustered/append-only order, so a `filters=[("date", ">=", min_day)]` row-group predicate
+  pushdown provably skips almost nothing at today's scale — this directly refutes
+  `mtds_backfill_vm_startup_oom_rc137_2026_07_14`'s "~5 MB for a single-day filter" measurement (taken on a much smaller
+  27.4M-row snapshot of the SAME index) that every later doc, including `read_availability_index`'s own docstring, had
+  been citing as settled fact. **Fix**: added `unified_trading_library.read_captured_days_by_cell(bucket, min_day)` —
+  streams the consolidated index ONE row-group batch at a time via `pyarrow.parquet.ParquetFile.iter_batches`,
+  aggregating into the small `(venue, data_type) -> {dates}` result incrementally instead of `read_availability_index`'s
+  single-shot `pd.read_parquet(..., filters=...)` (which still materializes the FULL ~160M-row frame regardless of the
+  filter, on this un-clustered file). Peak memory becomes the raw compressed bytes (~6.3 GiB, a known/tolerable single
+  allocation) + one batch's decoded size (a few MB), not the full decode. Self-shard reads normally (individually small)
+  and is unioned in; falls back to the existing `read_availability_index` path if the consolidated blob is stale/missing
+  (rare, not the OOM trigger). 8 new regression tests in unified-trading-library, including one proving correct
+  aggregation across many small row-group batches (`row_group_size=1`) — the exact mechanism the fix relies on.
+  `_captured_days_by_cell` in `pipeline_e2e_check.py` now delegates to this new function; updated the existing
+  regression test (`test_resolve_shard_day_bounds_captured_days_read_via_date_filter` -> `..._via_min_day`) to assert
+  the new call target instead of the retired `filters=` mechanism. **Live verification**: ran the real end-to-end call
+  (in-process, no server) against DeFi's actual PROD index — the pushdown-filtered read alone completed in 11.40s (vs
+  the pre-fix `>480s` hang from the sibling axis-census investigation on the same index), and a separate ~10-minute
+  foreground run of the NEW streamed function (network/ bandwidth-bound on the 6.3GB download, not CPU/memory) ran the
+  full duration with ZERO crash/OOM signature — a categorical improvement over the pre-fix `EXIT_STATUS=137` at ~52s.
+  Did NOT complete a full multi-hour driver-VM re-run of DEFI this session (matches every single prior session's
+  precedent on this exact doc — SPORTS/CEFI/DEFI re-runs are consistently deferred to the already-open [DATA] P2 re-run
+  todo above, `est_hours: 1.0` on this CODE todo makes a 1-2.5h VM wall-clock re-run disproportionate). **Shipped**:
+  `unified-trading-library@11f1ebd168` (verified ancestor of `origin/live-defi-rollout`). **BLOCKED mid-ship**: the
+  `market-tick-data-service` half (`_captured_days_by_cell` delegation + updated test, committed locally at slot 29's
+  clone) cannot land yet — `bash scripts/quality-gates.sh` is RED on `market-tick-data-service` `live-defi-rollout` HEAD
+  on **2 tests unrelated to this change** (tradfi COMBO `instrument_type` casing:
+  `test_build_casing_frame_upgrades_every_known_residual_token`,
+  `test_cme_combo_shard_itype_now_canonicalizes_ uppercase`) — confirmed pre-existing (byte-identical failure on the
+  commit BEFORE mine, and still red after `git pull --rebase` pulled in several newer commits from other slots actively
+  working this exact area — see `/plans/active/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md`). Declared
+  repo-blocker `RB-c19cd263` (`kind=qg_red`) rather than blind-retrying or absorbing someone else's unrelated in-flight
+  migration into this todo's scope. **Not flipping this checkbox** — the fix is written, tested, and half-shipped, but
+  the actual DEFI-caller code (`pipeline_e2e_check.py`) is not yet on `origin/live-defi-rollout`. Whoever resumes (this
+  session on wake, or a fresh one): once `RB-c19cd263` resolves (backend `RepoHealthWatcher` sends a "green again"
+  message), fresh-pull `market-tick-data-service`, re-run `quality-gates.sh` (sentinel is stale after any rebase —
+  re-run, don't trust an old sentinel file), ship via `quickmerge --agent`, verify ancestor-of-origin, THEN flip this
+  checkbox citing both SHAs.
