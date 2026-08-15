@@ -2479,7 +2479,27 @@ if [ -f "scripts/quality-gates.sh" ]; then
         # failure counted as zero and the run told the agent "every content check passed. Do NOT
         # go looking for a content bug" while one was staring at it. A false all-clear is worse
         # than the false alarm this branch was written to remove.
-        _qm_other_fail=$(sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null \
+        #
+        # Also exclude codex-compliance's own per-violation ❌ lines when that STEP's verdict was
+        # WARN-tolerated, not FAILED: base-service.sh's log_fail() fires once per violation
+        # category unconditionally as each check runs (qg-common.sh), regardless of whether the
+        # total ends up under CODEX_MAX_VIOLATIONS — only the rollup line after them decides
+        # pass/warn/fail. Without this, a run that tolerated codex compliance but failed purely on
+        # the later, independent duration hard-gate got misread as "a REAL content failure"
+        # (strategy-service 2026-08-10 repro,
+        # strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md). Anchor
+        # on the log's OWN verdict lines instead of raw-grepping every ❌ in the file: a hard
+        # "Codex compliance FAILED" line means the script exited right there (base-service.sh
+        # ~L2440-2442) and IS a real failure; a WARN-tolerated "within tolerance" verdict means
+        # everything before it was noise, so scope the scan to content AFTER it, where only STEPS
+        # that can still fail the run live (post-codex ratchets + duration budget).
+        _qm_log_stripped=$(sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null)
+        _qm_scope="$_qm_log_stripped"
+        if ! echo "$_qm_log_stripped" | grep -q '^❌ Codex compliance FAILED' \
+           && echo "$_qm_log_stripped" | grep -q 'Codex compliance:.*within tolerance'; then
+          _qm_scope=$(echo "$_qm_log_stripped" | awk '/Codex compliance:.*within tolerance/{found=1; next} found')
+        fi
+        _qm_other_fail=$(echo "$_qm_scope" \
           | grep -E '❌|^FAILED |^ERROR |^E   ' | grep -vc 'must complete in <' || true)
         if [ "${_qm_other_fail:-1}" -eq 0 ]; then
           echo "[$REPO_NAME] ⏳ Re-gate hit ONLY the duration budget — every content check passed."
@@ -2489,7 +2509,7 @@ if [ -f "scripts/quality-gates.sh" ]; then
           exit 1
         fi
         echo "[$REPO_NAME] ❌ Re-gate FAILED against the current tree — this is a REAL failure, not a lost race."
-        sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null | grep '❌' | grep -v 'must complete in <' | head -5 | sed 's/^/[re-gate] /'
+        echo "$_qm_scope" | grep '❌' | grep -v 'must complete in <' | head -5 | sed 's/^/[re-gate] /'
         exit 1
       fi
     done
