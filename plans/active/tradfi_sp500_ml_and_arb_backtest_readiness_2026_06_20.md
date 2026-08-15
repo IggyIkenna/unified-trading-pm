@@ -159,7 +159,10 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       expansion). Route `compute_vix_features()` off the existing VX futures OHLCV per the P2 items below. Barchart is a
       retired tradfi source (`CLAUDE.md`: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). **Additionally**:
       `realized_vol` + `vix` calculators exist in features-service but are NOT wired into `FEATURE_GROUPS` or the CLI
-      dispatch — wiring gap todo below.
+      dispatch — wiring gap todo below. **UPDATE 2026-08-15: the `vix` half of the wiring gap is now CLOSED** — see the
+      `[x]` P2 item below. `realized_vol` (the general, non-VIX calculator) is untouched, tracked separately in its own
+      P2 item. **Real remaining gap for THIS item is now narrower**: features-volatility-service still has never run
+      even once for tradfi at any range — see the smoke-verification note below for what has (and hasn't) been proven.
 
 - [ ] [AGENT] P2. **DEFERRED: Wire `realized_vol` feature group into features-volatility CLI dispatch** —
       `compute_realized_vol_features()` in `calculators/realized_vol_calculator.py` exists but is NOT in
@@ -182,12 +185,97 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       original ask are void (no such VIX-index series exists — deleted 2026-06-23); the only live remainder (steps
       (3)/(4)) is carried forward verbatim in the next item, so this one closes rather than sitting open alongside its
       own successor. (Provenance: slot-23 investigation 2026-06-24.)
-- [ ] [AGENT] P2. **Live sub-todo under the resolved VIX ruling above** — steps (1)/(2) in the item above now target the
-      existing VX futures_chain IS entry (CBOE venue, XCBF.PITCH, already captured per
+- [x] ✅ [AGENT] P2. **`vix` half DONE 2026-08-15 (this dispatch); `realized_vol_vix` half NOT DONE — see note.** Live
+      sub-todo under the resolved VIX ruling above — steps (1)/(2) in the item above now target the existing VX
+      futures_chain IS entry (CBOE venue, XCBF.PITCH, already captured per
       `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`) instead of a VIX cash-index IS entry /
       Yahoo-Barchart VIX-index OHLCV path (no such series exists — it was deleted 2026-06-23): derive VIX-equivalent
-      features from VX futures OHLCV. Steps (3)/(4) (add `"vix"`/`"realized_vol_vix"` to `FEATURE_GROUPS` + dispatch in
-      `feature_group_service._calculate_features`) are unchanged and still open.
+      features from VX futures OHLCV. Steps (3)/(4) originally read "add `vix`/`realized_vol_vix` to `FEATURE_GROUPS` +
+      dispatch" — **`vix` is now wired** (all 4 steps from the sibling `realized_vol` item's pattern, applied to `vix`):
+      (1) `"vix"` added to `FEATURE_GROUPS` in `cli/parser.py` (+ TRADFI-only validation guard); (2) new
+      `VolatilityDataLoader.load_vix_ohlcv_raw()` in `core/data_loader.py` reads the single-instrument
+      `venue=CBOE/instrument_type=FUTURE/instrument_id=CBOE:FUTURE:VIX` candle (data_type=`ohlcv_15m` by default — see
+      "ohlcv_1m vs ohlcv_15m" finding below); (3) `_load_raw_data`/`_calculate_features` dispatch branches +
+      `_calculate_vix_features` added in `engine/feature_group_service.py`; (4) unit tests added to
+      `tests/volatility/unit/test_data_loader.py` + `test_orchestration_service.py`. Also registered a new
+      `VIX_FEATURES_SCHEMA` in `schemas/output_schemas.py` (was falling back to `OPTIONS_IV_SCHEMA`, whose required
+      columns don't match VIX output). **`realized_vol_vix` was NOT built** — no such calculator/feature group exists
+      anywhere in the codebase (distinct from the real `realized_vol_calculator.py` tracked in the sibling P2 item
+      above, which this dispatch did not touch); this string appears to be aspirational/undefined leftover text, not a
+      concrete scope item — flagging rather than silently closing it. **`ohlcv_1m` vs `ohlcv_15m` finding (part of this
+      dispatch's mandate — resolve, don't guess)**: UAC `required_inputs.py`'s `vix_features` entry declares BOTH
+      `ohlcv_1m` and `ohlcv_15m` as required inputs; `compute_vix_features()`'s signature (`candles_1m` + optional
+      `candles_1h`) never mentions 15m. Traced via git archaeology, NOT assumption: the `ohlcv_15m` entry is CORRECT and
+      forward-looking — it was added 2026-05-16/06-24 anticipating a real, later-shipped 2026-08-07 decision (source
+      doc: `/plans/archive/2026_08/issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`,
+      also cited verbatim in MDPS `orchestration_scanner.py`'s `_COARSE_TIMEFRAME_CHAIN_ADMISSIONS` comment: "HAS a real
+      downstream consumer for coarse candles (vix_features ohlcv_15m)") that purpose-built a CBOE-scoped
+      `ohlcv_15m`/`ohlcv_24h` aggregation specifically so `vix_features` could consume it — live-verified captured
+      2026-08-14 (same doc). The declared `ohlcv_1m` requirement, by contrast, corresponds to NO clean read path: CBOE
+      VX-futures raw `ohlcv_1m`/`ohlcv_1s` ticks are captured only at the multi-leg `instrument_type=futures_chain`
+      grain (no front-month-leg-selection logic exists anywhere in this codebase to turn that into a single clean
+      series). No other calculator in `features-volatility-service` was already wired to read a single-instrument OHLCV
+      bar series (every wired group reads an options/futures CHAIN snapshot) —
+      `realized_vol`/`treasury_yields_calculator.py`/ `dxy_calculator.py` share the identical unwired gap, confirming
+      this is a real, previously-unaddressed shape gap in the orchestrator, not specific to VIX. Resolution: wired
+      `load_vix_ohlcv_raw()` off `ohlcv_15m` (confirmed available, purpose-built for this exact consumer) rather than
+      `ohlcv_1m` (unconfirmed/unusable at a clean grain). `compute_vix_features()` needed ZERO code changes — its
+      `candles_1m` parameter name reflects original 1m design intent but is not an enforced cadence; it operates
+      correctly on any regularly-spaced OHLCV series. Did NOT touch `required_inputs.py` (`unified-api-contracts`) — its
+      `ohlcv_15m` declaration is correct as-is; whether to also correct/remove the `ohlcv_1m` declaration (since the
+      shipped wiring never reads it) is a small, separate UAC-repo judgment call left unresolved here — flagging, not
+      fixing, since it doesn't block anything else.
+
+      **Shipped**: `features-service@3ed5bed254` (initial wiring). **Live-verified 2026-08-15 against real,
+          manifest-captured CBOE data** (`python -m features_service.volatility.cli.main --feature-group vix --asset-group
+          TRADFI --start-date 2026-07-20 --end-date 2026-07-20 --instruments VIX --dry-run --force`, real ADC creds, no
+          mocks): the first live run surfaced 2 real bugs the mocked unit tests couldn't catch — (a) the initial
+          `load_vix_ohlcv_raw()` reused the generic `_candle_blob_candidates`/`{instrument_id}.parquet` path convention,
+          but the REAL object (confirmed via direct `list_blobs` on `market-data-tick-tradfi-prd-central-element-323112`)
+          sits at a different shape:
+          `processed_candles/by_date/day={d}/pipeline_mode=batch_databento/timeframe=15m/data_type=ohlcv_15m/instrument_type=FUTURE/venue=CBOE/underlying=VIX/ticks.parquet`
+          (an `underlying=` folder segment + bare `ticks.parquet` leaf — the coarse-timeframe aggregation writer's own
+          convention, distinct from the chain/spot/derivative-ticker convention); (b) `_calculate_vix_features` converted
+          "timestamp" to an epoch-int64, but `feature_writer._add_timestamp_out` does `pl.col("timestamp") +
+          pl.duration(...)`, which requires a temporal dtype — crashed on write. Both fixed + re-verified live. **Fixed +
+          shipped**: `features-service@f6c0273421`. **Final live evidence**: `load_vix_ohlcv_raw(2026-07-20)` → 809 real
+          rows (`venue=CBOE`, symbol=`VX/V6`, real OHLC); `load_vix_ohlcv_raw(2026-07-21)` → 812 real rows (second date,
+          independent confirmation); `_calculate_vix_features` on both → non-NaN-blanket real values (`vix_level=21.82`→
+          `18.45` across the two dates; 97.5-99.4% non-null across all 8 feature columns, matching expected rolling-window
+          warm-up). **What's still NOT verified**: an actual parquet WRITE to GCS — the write pipeline itself works
+          mechanically (schema validates with only a non-fatal dtype warning, write-gate passes) but is suppressed by
+          `unified_trading_library.emission_publisher.publish_with_policy`'s STRICT_FAIL default for the unregistered
+          `("features-volatility-service", "vix")` pair (any day with rolling-window warm-up NaN — i.e. every day — hits
+          this). Root-caused + a fix drafted (add `("features-volatility-service", "vix"): ServiceEmissionPolicy.NAN_FILL`
+          to `unified_api_contracts/canonical/crosscutting/service_emission_policy/_policies.py`, mirroring the existing
+          `vol_30d` entry's identical rolling-window-warmup rationale) — **NOT shipped**: `unified-api-contracts`'s QG
+          failed on 2 pre-existing, topically-unrelated test failures (`test_cassette_orphan_checker.py::
+          test_no_unallowlisted_orphans`, `test_execution_service_venue_coverage_cascade_invariant.py::
+          ...no_new_regressions`) that block a green tree for an unrelated reason; forcing a UAC ship through a red gate
+          for those 2 failures is out of this dispatch's scope. Tracked as its own todo below. features-service's
+          `load_vix_ohlcv_raw`/`_calculate_vix_features` code is NOT blocked by this — it's purely the cross-repo
+          emission-policy registration.
+
+- [ ] [AGENT] P2. **Follow-up: register a UAC emission policy for `("features-volatility-service", "vix")`** — the pair
+      is currently unregistered, so `publish_with_policy` defaults to `STRICT_FAIL`, silently suppressing every `vix`
+      feature write (rolling-window momentum/vol-of-vol features always carry SOME per-day warm-up NaN, so
+      `completeness_fraction` is never exactly 1.0). Fix: add
+      `("features-volatility-service", "vix"): ServiceEmissionPolicy.NAN_FILL` to
+      `unified_api_contracts/canonical/crosscutting/service_emission_policy/_policies.py` (mirrors the existing
+      `("features-service", "vol_30d"): NAN_FILL` entry — same rolling-window-warmup rationale; ML consumers NaN-fill
+      natively). Discovered + drafted 2026-08-15 during this dispatch's live-verification of the `vix` wiring above, but
+      NOT shipped: `unified-api-contracts`'s `quality-gates.sh` failed on 2 pre-existing failures unrelated to this
+      1-line change (`test_cassette_orphan_checker.py`, `test_execution_service_venue_coverage_cascade_invariant.py`) —
+      fixing those is a separate, out-of-scope investigation. Done-when: the entry is added, UAC QG is green (either
+      those 2 pre-existing failures are independently fixed, or confirmed unrelated + already-baselined so the gate
+      passes), shipped, and a real `vix` parquet write is live-verified landing in GCS (not just dry-run local write).
+      **Also worth a side-note for whoever picks this up**: while investigating the emission-policy key, found that the
+      3 existing volatility entries (`("features-service", "high_low_24h"/"vol_30d"/"realised_vol_intraday")`) are keyed
+      under the bare `"features-service"` service name, but `features_service/volatility/core/feature_writer.py`'s
+      `_check_emission_policy` actually calls `publish_with_policy(service=_SERVICE_NAME, ...)` where
+      `_SERVICE_NAME = "features-volatility-service"` (a different literal) — those 3 entries may ALSO be silently
+      dead/unmatched at runtime. Not confirmed or fixed here (out of scope) — worth a quick live check before assuming
+      those 3 groups' NAN_FILL/PARTIAL_OK policies are actually taking effect.
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)
 
