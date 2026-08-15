@@ -326,13 +326,16 @@ over all pending draft batches) that independently spot-verified every todo belo
       Done when: `defi_prediction_instrument_seeds.py` no longer contains an AAVE_V3 `rewards` seed,
       `defi_venue_capabilities.py` no longer declares `rewards` for any of the 10 AAVE_V3 chains, and
       `unified-api-contracts`' `quality-gates.sh` stays green after the removal.
-- [ ] [DATA] P3. **Read the live-merged manifest for vault_share_price captures dated after 2026-08-04** across
+- [x] ✅ [DATA] P3. **Read the live-merged manifest for vault_share_price captures dated after 2026-08-04** across
       MAKER/YEARN_V3/ETHENA/FRAX/MORPHO_VAULTS and confirm at least one row per venue now carries a non-null
       `instrument_id` matching its written GCS object's own `instrument_id` column value (post the
       `market-tick-data-service@b0909a5e` fix); if confirmed, flip the issue doc's status to resolved/archived. Repo:
       market-tick-data-service. Source: `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md`. Done
       when: a fresh non-null-`instrument_id` manifest row is confirmed for every one of the 5 venues (or the doc is
-      updated naming which venue(s) still lack a natural post-fix capture).
+      updated naming which venue(s) still lack a natural post-fix capture). — unified-trading-pm@ (this commit). 4/5
+      venues confirmed non-null `instrument_id` (MAKER/YEARN_V3/ETHENA/FRAX); MORPHO_VAULTS named as lacking any
+      post-08-04 capture (separate gap, filed as a new follow-up todo in the issue doc). Doc stays `open` per the
+      alternate done-when condition.
 - [ ] [DIAG] P3. **Dead-code disposition of `e2e-testing/scripts/defi/copy_research_perp_ctx_to_canonical.py`** —
       narrowed by conflict-check from the source doc's original broader "investigate if data was lost" framing, which is
       already answered (preserved): `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md` fact #3 +
