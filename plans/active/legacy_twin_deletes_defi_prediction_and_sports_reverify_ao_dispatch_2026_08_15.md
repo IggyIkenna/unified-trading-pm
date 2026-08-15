@@ -150,21 +150,58 @@ resolved_by:
       but this 5-sample investigation is NOT a full re-proof; no delete disposition changes from this todo alone. Filed
       as todo 4 below (the fix + full re-verification), per the plan-authoring "every follow-up is a `- [ ]` todo, never
       prose" rule. (repo: instruments-service)
-- [ ] [DATA] P2. **Re-verify Part 2 (content, not crc32c) for the full 1,080 CURVE/ETHEREUM/pool/dex_pool_state
+- [x] ✅ [DATA] P2. **Re-verify Part 2 (content, not crc32c) for the full 1,080 CURVE/ETHEREUM/pool/dex_pool_state
       population and fix `cleanup_legacy_twins.py`'s canonical-twin resolution** (repo: instruments-service) — todo 3
       found (5-sample, not exhaustive) that canonical twins exist at `pipeline_mode=batch_onchain_subgraph` for 100% of
       sampled days (38/38) with content-equivalent `timestamp`/`tvl_usd` values despite a crc32c mismatch caused by a
-      schema-width difference (legacy 17 cols vs canonical 59 v9-schema cols), not genuine content divergence. Two
-      concrete fixes needed before any delete reconsideration: (1) `is_deletable()`'s crc32c-equality gate is too strict
-      for this population — needs a schema-aware content comparison (compare the shared/legacy column set's VALUES, not
-      raw object bytes) to distinguish a genuine divergence from a wider-schema rewrite, so it doesn't misclassify
-      content-equivalent pairs as `no-migrate-first`; (2) root-cause + fix why `_source_by_cell_from_manifest()` misses
-      these 2021-01/02 CURVE cells (needs the corpus-scale manifest read — dispatch to a dedicated VM per todo 1's
-      `defi-legacy-dup-cleanup` launcher precedent, never on this shared host) so `canonical_twin_path()` resolves the
-      already-correct-source guess (`onchain_subgraph`) automatically instead of reporting a false "canonical twin NOT
-      captured/resolvable". Re-run the full 1,080-candidate dry-run after both fixes; only then re-evaluate delete
-      disposition — no delete executed by this todo. Codex SSOT: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
-      §1 Part 2.
+      schema-width difference (legacy 17 cols vs canonical 59 v9-schema cols), not genuine content divergence. **DONE
+      2026-08-15 (slot-6, data_engineering) — both fixes shipped + verified via a fresh full-population VM re-run.**
+      (1) `is_deletable()` now accepts an independently-computed `content_equivalent: bool | None` alongside raw
+      crc32c equality — on a crc32c MISMATCH, `_verify_one()` downloads both objects and calls the new
+      `_content_equivalent()`/pure `_rows_subset_on_shared_columns()` helper: legacy's own column set is projected onto
+      the canonical object and legacy's row-tuples must be a SUBSET of canonical's (order/count-independent — a wider
+      schema may hold more rows/columns, that's exactly what "wider" means); fails safe (not equivalent) if legacy
+      carries any column canonical lacks. Only paid for pairs that already have two present, differing crc32cs — never
+      for a crc32c-identical or crc-missing pair. (2) `_verify_one()` no longer trusts
+      `_source_by_cell_from_manifest()`'s cell dict as the ONLY path to a candidate source: when the manifest-guessed
+      source's derived twin doesn't resolve (`gcs_describe_object` returns `None`), it falls back to
+      `_probe_candidate_sources()`, which tries every source
+      `unified_api_contracts.external_batch_sources_for_asset_group(asset_group)` has registered for the asset_group
+      directly against GCS (first match wins) — closing the whole class of manifest-side cell-lookup gap, not just this
+      one population, at the cost of a few extra `gcs_describe_object` calls PER CANDIDATE THAT ALREADY MISSED. Shipped
+      `instruments-service@d24a098e18` (10 new unit tests: 3 `is_deletable` content_equivalent cases, 4 pure
+      `_rows_subset_on_shared_columns` cases, 2 `_probe_candidate_sources` fallback cases; QG green, sentinel-verified
+      on origin). **Full 1,080-candidate dry-run re-verified on a dedicated VM**
+      (`canonical-migration-defi-legacy-dup-cleanup-20260815-230101`, dry mode, tarball confirmed fresh @ `d24a098e18c5`
+      before launch, ~96s runtime, exit_code=0): **`=== CF-21 verified-delete: 837 deletable, 243 blocked ===`** — up
+      from the pre-fix `0 deletable, 1080 blocked`. The residual 243 are a legitimate per-object finding, not a
+      resolution-gate bug: the blocked sample (first 25 logged, days 2021-01-17 through 01-21) are specific
+      pool-address filenames — including several `_migrated_curve_ETHEREUM_<ts>.parquet` artifacts from an old
+      migration attempt — for which no EXACT-filename canonical twin exists, even on days where OTHER pool addresses'
+      canonical twins do (matching todo 3's Part-1 finding that day-level coverage is ~27-32 objects, not necessarily a
+      1:1 filename match for every legacy object on that day). No delete executed by this todo (dry-run only);
+      disposition re-evaluation (837/1080 = 77.5% twin-coverage, short of Part 5's required 100% for an
+      asset_group-wide `--apply`) + the 243-object residual investigation are filed as todo 5 below, per the "every
+      follow-up is a tracked todo" rule. Codex SSOT: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1
+      Part 2.
+- [ ] [DATA] P3. **Investigate + resolve the 243-object CURVE/ETHEREUM/pool/dex_pool_state residual found by todo 4's
+      post-fix re-run** (repo: instruments-service) — after both the schema-aware content-compare and source-probe
+      fixes, 243 of the 1,080 candidates still block on "canonical twin NOT captured/resolvable" at the EXACT legacy
+      filename (pool address), concentrated (per the first 25 logged) in days 2021-01-17 through 01-21 and including
+      several `_migrated_curve_ETHEREUM_<timestamp>.parquet` artifacts that look like leftovers from an old migration
+      attempt rather than per-pool captures. Determine per sub-population: (a) do these specific pool addresses have NO
+      canonical capture at all for that day (a genuine v9-registration gap for that specific pool, not the whole day —
+      would need per-address, not just per-day, GCS existence checks), or (b) are the `_migrated_curve_*` artifacts
+      themselves not real per-pool legacy objects at all (e.g. an intermediate/scratch file from the 2026-05-04
+      migration run that should be classified differently by `migration_orphan_sweep.py`, not evaluated as a class-B
+      duplicate in the first place)? Re-run the dry-run's blocked-list logging with the array-slice cap
+      (`blocked[:25]`) either removed or raised for this investigation so the FULL 243-row reason list is available,
+      not just the first 25 (all currently-visible entries happen to share one reason/date-range, which may or may not
+      hold for the rest). Part 5 twin-coverage for the population overall is 837/1080 = 77.5%, short of the 100%
+      required before any `--apply` reconsideration for this asset_group (delete-safety protocol §1 Part 5) — this
+      todo's outcome, not todo 4's, decides whether the residual is migrate-forward, a classifier fix, or permanent
+      `no-migrate-first`. No delete executed by this todo either. Codex SSOT:
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5.
 
 ## Progress Log
 
@@ -195,3 +232,17 @@ resolved_by:
   `instruments_completion_tracker_2026_07_06.md`'s legacy-twin todo. Operator explicitly asked for the sports re-check
   as a real verification task, not a rubber-stamp — todo 2 is written as a measure-then-report task, not a pre-decided
   outcome.
+- **2026-08-15 (slot-6, data_engineering)**: Executed todo 4 end-to-end. Shipped both fixes in
+  `instruments-service@d24a098e18` — (1) `is_deletable()` gained a `content_equivalent` param + the new
+  `_content_equivalent()`/`_rows_subset_on_shared_columns()` schema-aware compare (legacy's shared-column rows must be
+  a subset of canonical's, computed only when crc32c is present-but-differing on both sides); (2) `_verify_one()`
+  gained a `_probe_candidate_sources()` fallback that tries every `external_batch_sources_for_asset_group(asset_group)`
+  source directly via `gcs_describe_object` when the manifest-cell-lookup-derived source's twin doesn't resolve. 10 new
+  unit tests, QG green, verified landed on origin/live-defi-rollout. Re-ran the full 1,080-candidate dry-run on a fresh
+  VM dispatch (`canonical-migration-defi-legacy-dup-cleanup-20260815-230101`, tarball confirmed @ `d24a098e18c5`,
+  exit_code=0): **837 deletable / 243 blocked**, up from the pre-fix 0/1080. Confirmed via the run.log
+  (`gs://deployment-scripts-central-element-323112/log-archive/final/<vm>/run.log`, read via
+  `unified_trading_library.get_storage_client()`, never a subprocess `gcloud storage`/`gsutil` call). The 243 residual
+  is a legitimate per-object finding (exact-filename twin genuinely absent for specific pool addresses/some old-migration
+  artifacts), not a resolution bug — filed as todo 5. No delete executed (dry-run only); Part 5 twin-coverage
+  (837/1080 = 77.5%) still short of the 100% an asset_group-wide `--apply` would need.

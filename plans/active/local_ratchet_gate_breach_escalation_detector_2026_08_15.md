@@ -148,11 +148,17 @@ source: >-
       todo below or a fresh issue doc. Done-when: the finding is stated in this plan's Progress Log with file+line
       evidence, and any real gap found has a tracked follow-up (not left as prose alone). — no code change (docs-only
       finding, see Progress Log)
-- [ ] [INFRA] P2. Update `/codex/04-architecture/agent-orchestrator-alerting.md` (or `ci-alerting.md`, per the prior
+- [x] ✅ [INFRA] P2. Update `/codex/04-architecture/agent-orchestrator-alerting.md` (or `ci-alerting.md`, per the prior
       todo's finding of which surface actually owns Slack notification for this class) to document the new
       `local_ratchet_gate_breach` wall type, the 15-minute grace window, and the AO-dispatch-is-primary /
       Slack-is-visibility-only split. Done-when: the doc change is committed and cross-referenced from this plan and the
-      source issue doc.
+      source issue doc. — `agent-orchestrator-alerting.md` (todo 9's own finding: this wall inherits the generic
+      escalation-lifecycle notifiers, no bespoke alert exists, so `ci-alerting.md` — the OTHER, unrelated
+      `ci-failures`-channel surface — was never the right target). New subsection added before "Self-monitoring
+      detector registry" naming the wall type, the 15-minute grace window, and the AO-dispatch-primary/
+      Slack-visibility-only split; `code_refs` gained `agent-orchestrator/server/escalation.py`; `last_reviewed`
+      bumped. Cross-referenced both directions: the new subsection cites this plan + the source issue doc; the
+      source issue doc (see its own note, same date) now cites this codex doc back.
 - [ ] [INFRA] P2. Add a regression test pinning the full happy path (breach detected -> unresolved past 15 minutes ->
       enqueue -> dispatch -> fix lands -> detector re-run confirms resolved) in
       `agent-orchestrator/tests/test_escalation.py`, alongside the existing wall-type test suite. Done-when: the new
@@ -343,3 +349,16 @@ source: >-
   established by todo 6's finding, unchanged). **No real gap found — no follow-up todo/issue doc filed**; this
   matches the parent issue doc's own resolution-option framing (route through existing CI-escalation infra, not a
   bespoke alerting path) and confirms it was followed correctly.
+
+- **2026-08-15 (slot-23·infra)**: Todo 10 flipped — new subsection in
+  `/codex/04-architecture/agent-orchestrator-alerting.md`, placed immediately before "Self-monitoring detector
+  registry", naming the `local_ratchet_gate_breach` wall type, the 15-minute grace window (self-heal-on-next-
+  quickmerge is the observed pattern, matching todo 3/4's implementation), and the AO-dispatch-primary/
+  Slack-visibility-only split — carrying forward todo 9's own finding verbatim (no dedicated Slack notifier exists
+  for this class; it inherits the generic `notify_escalation_dispatched`/`_resolved`/`_unresolved`/`_abandoned`
+  lifecycle path this doc already documented). `code_refs` gained `agent-orchestrator/server/escalation.py`;
+  `last_reviewed` bumped to 2026-08-15. Cross-referenced both directions per the todo's done-when: the new
+  subsection cites this plan + the source issue doc; the archived source issue doc
+  (`/plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`) got a
+  dated addendum pointing back at the shipped codex subsection. Remaining open: todo 11 (happy-path regression
+  test), todo 12 (full-fleet dry run) — not attempted this session.

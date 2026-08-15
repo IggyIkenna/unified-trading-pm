@@ -65,14 +65,19 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
-      `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
-      refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
-      two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
-      filename would have missed this; key it on the `depends_on` relationship, which is the real contract. **Done
-      when**: the creation path (or a pre-commit/QG check standing in for it) refuses to add a second finalize plan
-      whose `depends_on` names a parent already covered by an existing `gate_on_depends: true` plan, verified against a
-      reconstructed copy of this doc's own 2026-07-31 collision.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-15 (slot-16).** Made finalize-plan creation idempotent at the point of creation.
+      Added `_gated_by()` + `_find_duplicate_gate_creation_violations()` to `check_finalize_plan_coverage.py`, keyed on
+      the `depends_on` relationship (not filename shape, per this doc's own lesson) — a staged finalize plan whose
+      `depends_on` parent is already gated by a DIFFERENT existing `gate_on_depends: true` plan now fails
+      `check_finalize_plan_coverage.py --only <staged>`. That call already runs on every staged-plans commit via
+      `run_hygiene_sweep.sh`'s `--precommit` fast path, so the guard is live at commit time with no new wiring needed;
+      updated that script's failure message to name the new failure mode too. `main()`'s `--only` reporting was
+      extracted to `_run_only_mode()` to keep it under the ruff C901 complexity gate. Verified against a reconstructed
+      copy of this doc's own 2026-07-31 collision (two finalize plans, filenames differing only by a redundant date
+      suffix, both `depends_on` the same parent) —
+      `test_only_fails_when_staged_finalize_plan_duplicates_an_existing_gate`; also covered blast-radius safety (a
+      pre-existing duplicate not involving the staged file passes clean) and the normal single-finalize-plan
+      non-regression case. `bash scripts/quality-gates.sh` green (2076 passed). Evidence: unified-trading-pm@5255d0cbea.
 
 - [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
       `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
@@ -131,3 +136,8 @@ just picking a winner by filename.
   directly once all 3 todos clear.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **2026-08-15 (slot-16)**: closed todo 1 — creation-time duplicate-gate guard shipped in
+  `check_finalize_plan_coverage.py` (`unified-trading-pm@5255d0cbea`), already exercised by every staged-plans commit
+  via the existing `--only` precommit call site. Todos 2 (corpus-wide hygiene-sweep detector) and 3 (one-time sweep,
+  gated on todo 2) remain open.

@@ -130,6 +130,106 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
     return out
 
 
+def _gated_by(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """Every gated parent slug -> the finalize plan path(s) whose depends_on names it.
+
+    Companion to `_gated_slugs()`: that function collapses to a `set[str]`, which
+    dedupes by construction — a slug named by TWO finalize plans is structurally
+    invisible through it, exactly the gap that let two finalize plans gate the same
+    parent silently on 2026-07-31 (duplicate_finalize_plans_created_for_one_parent_
+    2026_08_06.md). This keeps every gating plan's path, so a duplicate is directly
+    observable.
+    """
+    out: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                out.setdefault(dep.strip(), []).append(cov.path)
+    return out
+
+
+def _find_duplicate_gate_creation_violations(
+    all_plans: list[Coverage], only_resolved: set[Path]
+) -> list[tuple[str, list[Path]]]:
+    """Creation-time idempotency guard (todo 1,
+    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md): refuse to add a
+    SECOND finalize plan whose `depends_on` names a parent already covered by an
+    existing `gate_on_depends: true` plan. Keyed on the depends_on relationship, not
+    filename shape — the 2026-07-31 collision differed only by a redundant date
+    suffix, so a filename-keyed guard would have missed it.
+
+    --only-only by design (mirrors the other staged-files-scoped checks in this
+    module): only reported when at least one of the colliding finalize plans is in
+    `only_resolved`, i.e. this fires at the moment a new/edited finalize plan is
+    committed. A standing corpus-wide detector (reporting every existing duplicate,
+    ratcheted into the hygiene sweep) is a separate follow-up
+    (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md todo 2) — this
+    function intentionally does not attempt that broader scan.
+    """
+    violations: list[tuple[str, list[Path]]] = []
+    for slug, paths in sorted(_gated_by(all_plans).items()):
+        if len(paths) < 2:
+            continue
+        if not any(p.resolve() in only_resolved for p in paths):
+            continue
+        violations.append((slug, paths))
+    return violations
+
+
+def _run_only_mode(active_dir: Path, only: list[str], violations: list[Path], draft_gate_violations: list[Path]) -> int:
+    """--only mode: resolve each given path the same way (relative-to-cwd or absolute
+    both work, since argparse hands us whatever the caller typed) and keep just the
+    violations that ARE one of them — the corpus scan already ran in full (gating is
+    inherently corpus-wide), only the reported/failed set narrows. A plan outside
+    --only that's ALSO in violation is silently not-our-problem here, same as
+    check_frontmatter_schema.py's staged-files scoping
+    (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18). Extracted out of
+    main() to keep its cyclomatic complexity within the ruff C901 limit.
+    """
+    only_resolved = {Path(o).resolve() for o in only}
+    violations = [v for v in violations if v.resolve() in only_resolved]
+    draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
+    # Creation-time idempotency guard (todo 1,
+    # duplicate_finalize_plans_created_for_one_parent_2026_08_06.md): a staged
+    # finalize plan whose depends_on parent is ALSO gated by another (different)
+    # existing finalize plan — the exact 2026-07-31 collision shape, keyed on
+    # depends_on rather than filename.
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    duplicate_gate_violations = _find_duplicate_gate_creation_violations(all_plans, only_resolved)
+    if not violations and not draft_gate_violations and not duplicate_gate_violations:
+        print("✅ finalize-plan-coverage (--only): clean.")
+        return 0
+    if violations:
+        print(
+            "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
+            " to a new/existing companion plan — see task_template.md §4):"
+        )
+        for v in violations:
+            print(f"  - {v}")
+    if draft_gate_violations:
+        print(
+            "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
+            " flip to status: active, see task_template.md §4):"
+        )
+        for v in draft_gate_violations:
+            print(f"  - {v}")
+    if duplicate_gate_violations:
+        print(
+            "❌ Duplicate gated finalize plan(s) — a staged finalize plan's depends_on names a parent already"
+            " covered by a DIFFERENT existing gate_on_depends: true plan (keyed on depends_on, not filename —"
+            " see duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):"
+        )
+        for slug, paths in duplicate_gate_violations:
+            rels = ", ".join(str(p) for p in paths)
+            print(f"  - parent '{slug}' gated by {len(paths)} finalize plans: {rels}")
+    return 1
+
+
 def _find_violations(active_dir: Path) -> list[Path]:
     all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
     gated = _gated_slugs(all_plans)
@@ -276,33 +376,7 @@ def main(argv: list[str] | None = None) -> int:
     draft_gate_violations = _find_draft_gate_violations(active_dir)
 
     if only is not None:
-        # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
-        # since argparse hands us whatever the caller typed) and keep just the violations that
-        # ARE one of them — the corpus scan above still ran in full (gating is inherently
-        # corpus-wide), only the reported/failed set narrows. A plan outside --only that's
-        # ALSO in violation is silently not-our-problem here, same as check_frontmatter_schema.py's
-        # staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18).
-        only_resolved = {Path(o).resolve() for o in only}
-        violations = [v for v in violations if v.resolve() in only_resolved]
-        draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
-        if not violations and not draft_gate_violations:
-            print("✅ finalize-plan-coverage (--only): clean.")
-            return 0
-        if violations:
-            print(
-                "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
-                " to a new/existing companion plan — see task_template.md §4):"
-            )
-            for v in violations:
-                print(f"  - {v}")
-        if draft_gate_violations:
-            print(
-                "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
-                " flip to status: active, see task_template.md §4):"
-            )
-            for v in draft_gate_violations:
-                print(f"  - {v}")
-        return 1
+        return _run_only_mode(active_dir, only, violations, draft_gate_violations)
 
     print(
         f"Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — "

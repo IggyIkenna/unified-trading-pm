@@ -19,12 +19,13 @@ created: 2026-07-13
 authoritative_for: [agent-orchestrator Slack alert routing, daily-summary digest, git-health guard dedup]
 referenced_by:
 owner:
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-15
 code_refs:
   - agent-orchestrator/server/notifications/slack.py
   - agent-orchestrator/server/daily_summary.py
   - agent-orchestrator/scripts/fleet-git-health-guard.sh
   - agent-orchestrator/server/context_lifecycle.py
+  - agent-orchestrator/server/escalation.py
 ---
 
 # Agent-Orchestrator Alerting
@@ -179,6 +180,29 @@ check it against this table** — the default for any automatic/self-healing/lif
 | `notify_disk_space_low`                                                                                                                                                                                                                                                                                                                                                                                           | **PAGE**                                 | orchestrator VM root filesystem free space dropped below `tuning.disk_space_min_free_gb` (default 60G) — `DiskSpaceCanary` (`server/disk_space_canary.py`, infra_satellite_ao_dispatch_batch10_2026_08_09 todo 3), 300s cadence; closes the gap both the 2026-06-28 full-disk wedge and the 2026-08-08 175G abandoned `manifest-consolidate-*` scratch find exposed (caught by a human, not a monitor). State-transition dedup on `dedup_state.disk_space_breach_path()`                                                                    |
 | `notify_disk_space_resolved`                                                                                                                                                                                                                                                                                                                                                                                      | **PAGE**                                 | ✅ closure bookend for the above — fires the first tick free space is observed back above threshold                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `notify_spawn_failure` / `notify_slot_stale` / `notify_slot_failed` / `notify_unpushed_plans` / `notify_main_agent_rate_limited` / `notify_worker_usage_frozen` / `notify_account_pool_exhausted` / `notify_plan_health_findings` / `notify_account_rotated` / `notify_context_burn` / `notify_likely_claude_outage` / `notify_account_usage_high` / `notify_gh_rate_limit_threshold` / `notify_run_volume_spike` | summary                                  | already `logger.info` (prior downgrades)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+
+## `local_ratchet_gate_breach` — a wall type with no bespoke alert (2026-08-15)
+
+A LOCAL, pre-push `quality-gates.sh` ratchet/baseline-ceiling breach (QG STEP 5.95's DTZ/TID251 count ceiling,
+`unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py`) detected fleet-wide against live
+`origin/live-defi-rollout` HEAD per repo — a class of CI incident every OTHER wall type structurally cannot see, since
+each is keyed on a GitHub Actions run CONCLUSION and a local pre-push gate failure never reaches origin, so no PR/run
+ever fires (`/plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`).
+
+- **15-minute grace window**: the detector
+  (`agent-orchestrator/scripts/orchestrator/escalate_local_ratchet_gate_breaches.py`, installed via
+  `install-local-ratchet-gate-breach-detector-timer.sh`) re-checks a breach 15 minutes after first detecting it, before
+  escalating — the observed pattern is self-heal on the very next quickmerge. Only a breach STILL present past the
+  window reaches `escalation.enqueue()`.
+- **AO dispatch is the primary remediation path, not Slack.** Routes through the generic `cicd` boot prompt
+  (push-fix-to-LDR, same shape as `main_ci_red`/`data_pipeline_failure` — `unified-trading-pm/agents/cicd.md`'s
+  wall-type table states the remediation goal explicitly: drive the metric back below its baseline, never just
+  acknowledge it). **No dedicated Slack notifier exists for this wall** — confirmed at implementation time (no existing
+  alert referenced the CI ratchet/TID251 class at all), so it simply inherits the generic escalation-lifecycle notifiers
+  this doc already documents above (`notify_escalation_dispatched`/`_resolved`/ `_unresolved`/`_abandoned`), the same as
+  every other push-fix-to-LDR wall type — nothing bespoke to duplicate or collide with.
+- SSOT: `/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md`,
+  `/plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`.
 
 ## Self-monitoring detector registry — owner / cadence / verifier
 

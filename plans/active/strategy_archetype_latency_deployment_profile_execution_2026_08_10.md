@@ -191,19 +191,25 @@ source: >-
       re-provisioned to match it yet, and it hasn't. No auto-apply todo exists in this plan, so this is the expected
       state, not a defect. Confirms the derivation genuinely works end-to-end against real strategy-service data
       (not just the unit-test archetype fixtures) — the "does this actually work" proof this todo asked for.
-- [ ] [SCRIPT] P3. **Translate `total_load_units` into a concrete machine size, and fix the load formula's two measured
-      blind spots** (repo: deployment-service, `deployment_service/deployment_profile_derivation.py`). The sizing todo
-      above deliberately stopped at a dimensionless load proxy — nothing yet maps it to vCPU/memory/machine_type, so no
-      caller can provision from it. Two measured defects in `ArchetypeLoad.load_units`
-      (`client_count * instrument_count_per_client`), verified 2026-08-11 by running the `--live-config` CLI: (a) an
-      archetype with 50 clients and 0 declared instruments derives `total_load_units: 0` — clients cost nothing when the
-      instrument count is zero, even though client isolation materialises per-client instances
-      (`/codex/04-architecture/client-funds-isolation.md`); (b) the product cannot distinguish 1 client × 100
-      instruments from 100 clients × 1 instrument, which are structurally different costs for the same reason. Fix =
-      separate per-client and per-instrument terms, then map to a machine size (a per-`DeploymentProfile` base is needed
-      too: `co_located_vm` bundles strategy/execution/MTDH on ONE VM, `distributed` scales them out separately).
-      Coefficients must be calibrated or explicitly labelled a starting assumption — do not ship invented numbers
-      unlabelled.
+- [x] ✅ [SCRIPT] P3. **DONE (already covered) 2026-08-15 (slot 3, backend_engineer) —
+      deployment-service@6a189157.** Verified (not assumed) that this exact requirement is already fully satisfied by
+      `deployment_service/deployment_profile_sizing.py`, committed on origin `6a189157` (slot-17, 2026-08-11 21:37 —
+      same day this todo was filed, but the checkbox was never flipped). It maps to a concrete machine size
+      (`size_deployment_profile_instance` → `required_vcpu`/`required_memory_gib`/`machine_type` off the canonical
+      `MEMORY_TIER_LADDER` for `co_located_vm`, Cloud-Run replica count for `distributed`) and fixes both blind spots
+      by construction, not by patching `ArchetypeLoad.load_units` in place: `isolated_instances = client_count ×
+      |isolated services at the SLA tier|` is a term separate from `instrument_slots = client_count ×
+      instruments_per_client`, so (a) a 50-client/0-instrument archetype still contributes nonzero
+      `isolated_service_instances` (client cost is never zero merely because instrument count is zero — see
+      `test_sizing_is_linear_in_client_count`, which sizes with the default `instruments=0`), and (b) 1×100 vs 100×1
+      (client × instrument) configs produce different `isolated_service_instances` (1×n vs 100×n) even though
+      `instrument_slots` is identical in both, so they are no longer indistinguishable
+      (`test_instrument_slots_scale_with_clients_times_instruments`). `SizingModel`'s coefficients are explicitly
+      labelled a v1 starting assumption in the module docstring, not invented-and-unlabelled. Ran the full
+      `bash scripts/quality-gates.sh` on current HEAD (fresh-pulled) to confirm genuinely green today, not relying on
+      the historical landing: `✅ ALL QUALITY GATES PASSED (939s)`, sentinel
+      `.qg_last_passed_sha=34bca6e6b6967d42d1275bb8e0121a65f79b3352`. No new code shipped — this flip corrects a
+      tracked-vs-actual gap (coverage existed, checkbox didn't reflect it), same pattern as todos 5/6 above.
 
 ## Progress Log
 
@@ -359,3 +365,17 @@ source: >-
   plan-only by design (todo 3) and no auto-apply todo exists in this plan yet. Proves the derivation works end-to-end
   against real strategy-service data, not just unit-test fixtures. One P3 todo remains open (load-formula/machine-
   sizing fix).
+
+- **backend_engineer (slot 3) 2026-08-15**: The "translate `total_load_units` into a concrete machine size, fix the
+  load formula's two blind spots" todo done — verification-only, no code shipped. Found `deployment-service@6a189157`
+  (slot-17, 2026-08-11, already on origin) had already built `deployment_profile_sizing.py`, a full replacement sizing
+  module that maps to `machine_type`/`required_vcpu`/`required_memory_gib` via the canonical `MEMORY_TIER_LADDER` +
+  Cloud Run replica ceiling, and fixes both measured blind spots by separating the per-client isolated-service term
+  (`isolated_service_instances`, scales with `client_count` alone) from the per-instrument term (`instrument_slots`) —
+  confirmed against its own regression tests (`test_sizing_is_linear_in_client_count`,
+  `test_instrument_slots_scale_with_clients_times_instruments`). The checkbox had never been flipped even though the
+  landing commit predates this todo's Progress Log entry by hours the same day. Ran the full `bash scripts/quality-
+  gates.sh` on current HEAD (fresh-pulled) to confirm genuinely green today: `✅ ALL QUALITY GATES PASSED (939s)`,
+  sentinel `.qg_last_passed_sha=34bca6e6b6967d42d1275bb8e0121a65f79b3352`. Every remaining open item in this plan is
+  the residual-gaps todo, which self-declares not-AO-eligible (operator ruling required) — this plan is not
+  fully done and stays active.

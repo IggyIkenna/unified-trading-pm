@@ -328,12 +328,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       swallowed to an empty 200 instead of an error). Fixed same-day: `deployment-api@dcc72be104` adds a cross-recursion
       `NodeBudget` (totals computed from the full df, never the tree) — 212s→32.4s, verified live post-deploy:
       `captured=20246 empty_confirmed=55653 attempted_failed=112 total=76011` (byte-identical to direct manifest read).
-- [ ] [SCRIPT] P3. **Capture per-category timing for features-delta-one-service + features-onchain-service's rollup
-      compute** (same method as instruments-service's 2026-08-10 fix: 3 live measurements against prod buckets), then
-      decide whether they need a `_CHILD_JOIN_TIMEOUT_OVERRIDES_S` entry — do not blind-bump. If cumulative container
-      memory pressure (not per-service compute time) is the real driver, the fix is elsewhere (e.g. lowering
-      `_CHILD_RLIMIT_AS_BYTES` further, or reducing services-per-sweep) — measure before choosing. (repo:
-      deployment-api) **Progress 2026-08-15**: per-category timing instrumentation shipped (`deployment-api@b1e0f0cb92` — `manifest.py`'s `_dispatch_serial_isolated`/`_dispatch_serial_isolated_dual_scope`, the latter being the leg the rollup worker actually exercises, now `logger.info`s `elapsed_s` per category on every live cycle); prior sessions never had this — only the per-service aggregate (`manifest_elapsed_s`) was logged, which could not distinguish one slow category from several moderately-slow ones. NOT yet flipping this todo: the actual 3-measurement capture needs the code live in prod first (LDR→main promote + Cloud Build deploy, not immediate), then reading Cloud Logging for `features-delta-one-service`/`features-onchain-service` across ≥3 rollup cycles — left open for the next dispatch to pick up per this doc's own established "long-running work spans multiple dispatches" pattern (see the odds_api babysit todo above). Do not re-ship the instrumentation; it is already live once promoted — just read the logs.
+- [x] ✅ [SCRIPT] P3. **Shipped per-category timing instrumentation** — `manifest.py`'s isolated-serial dispatch now
+      `logger.info`s `elapsed_s` per category (was only per-service aggregate). Full original scope (3 live
+      measurements, override decision) NOT done — split below, needs prod deploy first. `deployment-api@b1e0f0cb92`.
+- [ ] [SCRIPT] P3. **Read the shipped per-category timing logs (≥3 rollup cycles, once deployed) for
+      features-delta-one-service/features-onchain-service; decide `_CHILD_JOIN_TIMEOUT_OVERRIDES_S`** — do not
+      blind-bump. onchain already root-caused 2026-08-14 (structural, no override) so this mainly targets delta-one.
+      (repo: deployment-api)
 - [x] ✅ [SCRIPT] P2. **Checked `type_understat_eu_no_provider_coverage.py` — NOT the same pattern, no action needed.**
       Dry-run (2026-08-07T22:18Z) confirms understat's 25 rows are `reason=EXPECTED_NO_FIXTURE`, dates 2026-08-05→
       2026-08-07 (today/yesterday) — matches the earlier "slot 4" diagnosis exactly (self-resolving IS-cron artifact for
