@@ -120,12 +120,12 @@ children.
 - [ ] [SCRIPT] P0. **Drilldown-correctness guard (§2.3)** — (1) UI renders the SSOT value, never recomputes; (2)
       **reconciliation guard**: independent raw-GCS recompute == manifest/SSOT/UI (ε=0), wired as a QG step + watchdog →
       `#data-pipeline-alerts` on drift; (3) manifest-freshness watchdog + per-cell click→GCS traceability. DoD: a seeded
-      manifest/raw divergence trips the guard; cockpit number is proven == ground-truth. **Reconciled 2026-07-28 — STILL
-      OPEN, unbuilt.** No ε=0 reconciliation-guard QG step or watchdog found; the cefi child plan's own canonical- form
-      audit (2026-06-25) explicitly lists "the §2.3 ε=0 reconciliation guard wiring" among the still-remaining
-      canonical-form work, and a separate cefi finding (G1.3 follow-up) notes the guard "must treat split↔glued as
-      equivalent" for on-chain-perp venues **until** it is aligned — i.e. describes a future state, not a live guard.
-      Leaving `[ ]` open.
+      manifest/raw divergence trips the guard; cockpit number is proven == ground-truth. **UPDATE 2026-08-15 (slot-32):
+      the QG-step half of (2) is now SHIPPED** — `deployment-api@4bb3fbe5e8` (`origin/live-defi-rollout`), a new
+      `quality-gates.sh` STEP checks ONE reference cell (cefi BINANCE-FUTURES/trades) — see the follow-up todo in
+      `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` for the still-open watchdog wiring + multi-cell
+      coverage. Leaving `[ ]` open at THIS level — the item as scoped here (all three sub-parts, all cells, the
+      watchdog, per-cell UI traceability) is still far from complete; only the narrow QG-step slice landed.
 - **[SCRIPT] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Verification
   discipline — captured∩expected KEY-OVERLAP, not raw count (§6.1/§6.3). See the batch doc for the full scoped todo; do
   not duplicate-dispatch from here.

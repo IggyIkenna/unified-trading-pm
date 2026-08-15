@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                                                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                                                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                                                  exists and is live — no code change needed — but a real corpus-wide query
-                                                                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                                                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                                                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                                                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                                                  worker-determinable outcome for one ~1h dispatch. Filed
-                                                                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                                                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                                                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                                                  multi-AG backfill into this single dispatch.
+                                                                          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                                                          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                                                          exists and is live — no code change needed — but a real corpus-wide query
+                                                                          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                                                          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                                                          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                                                          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                                                          worker-determinable outcome for one ~1h dispatch. Filed
+                                                                          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                                                          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                                                          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                                                          multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -811,8 +811,43 @@ source: >-
       needs its own shard-grain definition before a cumulative-drawdown check can be written). New finding, 2026-08-15,
       from the todo above's scoping diagnosis. Repo: instruments-service (+ a design doc under `codex/02-data/` once the
       shape is decided). Source: this doc's own 2026-08-15 diagnosis, folded in per the cumulative-drawdown todo above.
-- [ ] [CODE] P2. Build the drilldown-correctness ep=0 reconciliation guard as a QG step + watchdog Source:
-      `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
+- [x] ✅ [CODE] P2. **QG-step half SHIPPED** (watchdog half split to a new follow-up todo below) — Build the
+      drilldown-correctness ε=0 reconciliation guard as a QG step + watchdog Source:
+      `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`. Shipped `deployment-api@4bb3fbe5e8`
+      (`origin/live-defi-rollout`, QG green, post-push ancestry verified) —
+      `scripts/check_drilldown_reconciliation_guard.py` (new, single-repo, mirrors
+      `check_sports_distinct_values_canonical.py`'s pattern: pure comparator + a `--raw-count`/`--manifest-count`
+      fixture path for offline tests, live path calls real GCS + the manifest) wired as a new `quality-gates.sh` STEP
+      5.X. Scoped to ONE reference cell (cefi BINANCE-FUTURES/trades, batch_tardis, last 3 complete UTC days, lag=1) —
+      single-walk discipline (one scoped `list_blobs` prefix per day, never a `by_date/` walk). Seeded-divergence unit
+      test proves the DoD ("a seeded manifest/raw divergence trips the guard"):
+      `tests/unit/test_check_drilldown_reconciliation_guard.py`. Live QG run measured
+      `raw_gcs=0 manifest_captured=0 match=True` for the 3-day window checked (2026-08-12..14) — an honest zero-zero
+      match, NOT independently cross-verified against a wider window this session (a manual wider-window manifest read
+      was attempted for due diligence and hit a genuine OOM/SIGKILL — exit 137 — an unrelated shared-host
+      memory-bounding lesson, not a defect in the shipped guard, which only ever reads a tight
+      3-day/2-column/`columns=`+`filters=`-projected slice). Watchdog wiring (deployment-service side,
+      `#data-pipeline-alerts`) + extending to more cells/asset_groups is the new follow-up todo immediately below.
+- [ ] [CODE] P2. **New follow-up (2026-08-15, split from the QG-step todo above).** Wire the periodic
+      `#data-pipeline-alerts` watchdog half of the drilldown-correctness ε=0 reconciliation guard (§2.3,
+      `instruments_foundation_phase0_cross_cutting_2026_07_24.md`) — the QG-step half already ships and passes
+      (`deployment-api@4bb3fbe5e8`, `scripts/check_drilldown_reconciliation_guard.py`), this todo is the standing
+      periodic check that pages on drift. Mirror
+      `deployment-service/deployment_service/data_pipeline_monitors/ attempted_failed_staleness.py`'s CLI
+      `--mode {exit-code,heartbeat,meta}` pattern (registered in that dir's `cli.py`) — since deployment-api and
+      deployment-service are both T4 (no service↔service deps; each depends only on UTL), the CORRECT design is to move
+      the core comparison logic
+      (`compute_raw_gcs_count`/`compute_manifest_captured_count`/`check_drilldown_reconciliation` from
+      `deployment-api/scripts/check_drilldown_reconciliation_guard.py`) into `unified-trading-library` as an importable
+      function first, so both the deployment-api QG step AND the new deployment-service watchdog import the SAME UTL
+      function rather than duplicating it or creating a cross-repo import. On drift, emit
+      `log_event("DP_DRILLDOWN_RECONCILIATION_DRIFT", ...)` (UTL events) — the alerting-service router
+      (`alerting_service/notifiers/router.py` + `rules/data_pipeline_rules.py`) fnmatch-routes it to
+      `alerting_service/notifiers/data_pipeline_slack.py::send_data_pipeline_alert(...)`; register a new
+      `DP-<CATEGORY>-<NNN>` row in `/codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml` per that doc's
+      own format. Extending beyond the one reference cell (cefi BINANCE-FUTURES/trades) to more cells/asset_groups is a
+      separate scoping decision for whoever picks this up. Repo: unified-trading-library, deployment-service,
+      deployment-api (pin bump only, once UTL publishes).
 - [ ] [CODE] P2. Fix canonicalize_instruments_store_index.py's _bucket_for to resolve the prediction instruments-store
       bucket (currently a dead --asset-group prediction path) Source:
       `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`
