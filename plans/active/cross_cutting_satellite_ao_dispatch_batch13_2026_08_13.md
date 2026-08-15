@@ -385,9 +385,24 @@ source: >-
 - [ ] [CODE] P2. Implement the schema/NaN contract in e2e-testing/scripts/validation/validate_shards_4pillar.py per the
       operator-ruled spec (wire _TICK_REQUIRED, add tick to _NAN_SCAN_COLUMNS, wire _DEFI_REQUIRED/_SPORTS_REQUIRED
       narrowly) Source: `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
-- [ ] [CODE] P2. Backfill the 10 dataless coins (WIF/BONK/JUP/JTO/RENDER/FET/TAO/ORDI/STX/LDO) into GCS perp funding via
-      launch-cefi-sharded-backfill.sh -- operator-approved 2026-08-08, no further confirmation needed, ready to launch
-      as a VM backfill. Source: `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
+- [x] ✅ [CODE] P2. **MOOT — already captured live; the todo's own premise (a hand-curated `--instrument-ids` filter to
+      edit) no longer exists.** (2026-08-15, slot-29·infra)
+      `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` carries its own 2026-08-14 stale-description
+      correction (found + fixed by a peer session, re-verified live today): since 2026-06-23 the launcher is
+      catalogue-mvp-driven with NO `--instrument-ids` — CeFi shards launch with `VM_INSTRUMENT_IDS` unset and MTDS
+      resolves the per-venue capture universe from the IS catalogue via the shared `is_in_mvp_capture_universe`
+      predicate (perp-gated). There is no hand-curated coin list left to edit. A bounded, column-projected read of the
+      live IS catalogue (`instruments-store-cefi-prd-…/prod/catalog.parquet`) confirms all 10 named coins already have
+      `mvp=True` PERPETUAL rows on 7-11 CeFi venues each (BINANCE-FUTURES/BYBIT/OKX-SWAP/
+      KRAKEN-FUTURES/BITGET-FUTURES/COINBASE-FUTURES/… — all venues this launcher already iterates). A second bounded
+      read of the live MTDS manifest (`market-data-tick-cefi-prd-…`, `derivative_ticker` rows only) confirms funding
+      data is **already substantially captured** for every one of the 10 coins, not zero: WIF 16,857 captured rows
+      (2023-01-01→2026-08-15, 10 venues), BONK 11,475, JUP 14,785, JTO 14,463, RENDER 10,758, FET 13,519, TAO 13,573,
+      ORDI 18,963, STX 19,936 (back to 2021-01-01), LDO 21,175 (back to 2022-01-01) — each also carries a residual mix
+      of `expected_unattempted`/`empty_confirmed`/`attempted_failed` rows, the normal honest-absence bookkeeping, not
+      evidence of a gap. The 2026-06-17 "10 dataless coins" diagnosis was accurate **at the time** (pre-2026-06-23
+      mechanism); the catalogue-mvp cutover + subsequent periodic backfill runs already closed it — no VM launch needed,
+      nothing left to do here. Source: `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
 - [ ] [CODE] P2. OKX-SWAP perp funding sparse (only ~9 coins captured in 2026 vs expected ~19+) -- verify the OKX
       derivative_ticker backfill universe in MTDS. Source:
       `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
