@@ -423,7 +423,7 @@ remaining items besides the over-cap-gated one above).
 **too_large_or_risky (3)** — itself a live multi-phase migration/investigation, risky to fold into one batch todo:
 `issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md`,
 `issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`,
-`issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
+`plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
 
 **time_gated (2)** — needs elapsed real time / a pending external event before re-triage is meaningful:
 `issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md`,

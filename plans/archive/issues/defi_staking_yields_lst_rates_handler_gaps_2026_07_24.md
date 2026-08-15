@@ -25,7 +25,7 @@ summary: >-
   match its actual `write_defi_rows()` call) are fixed in this pass. Recommendation for staking_yields: WIRE a scheduler
   job (not retire) — it is a UAC-capability-declared, codex-catalogued "Production" data type with no credential blocker
   and no redundancy with lst_rates; the gap is an operational rollout oversight, not obsolete code.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -40,6 +40,7 @@ related:
     canonical_path_oracle_blind_to_filename_stem_2026_07_20,
   ]
 created: 2026-07-24
+last_updated: 2026-08-15
 author: unknown
 priority: P2
 parent_epic: infrastructure_master
@@ -51,7 +52,6 @@ execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
 locked_by:
-archive_exempt: true # bridge for the cross-repo flip/mv two-commit split — dropped in the immediately-following archival commit; see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py,
@@ -69,6 +69,10 @@ assigned_role: data_engineering
 ---
 
 # staking_yields dead-in-prod confirmed; lst_rates non-canonical-path claim was stale
+
+> **Status (2026-08-15)**: ✅ RESOLVED. Phase 2 (§7's 3 AAVE-Oracle protocols — RENZO/KELPDAO/PUFFER) implemented and
+> shipped, market-tick-data-service@11bccb8c38. All prior findings (§1-§6) and both capability-completion phases (§7)
+> are now complete; every follow-up todo is checked. See the Follow-ups section for full evidence.
 
 ## 0. Why this doc exists
 

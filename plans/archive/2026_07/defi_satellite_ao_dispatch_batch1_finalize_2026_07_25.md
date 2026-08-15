@@ -44,7 +44,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -107,7 +107,7 @@ context_scope:
       lst_rates_handler.py combine), `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` (all 3 folded into
       1 combined todo), `issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`,
       `archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md` (2 todos, now archived — fully closed
-      2026-07-30), `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` (2 todos),
+      2026-07-30), `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` (2 todos),
       `issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md` (2 todos),
       `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`,
       `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` (2 todos),

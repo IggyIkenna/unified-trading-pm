@@ -663,7 +663,7 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 - `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s 63.9M-row seed-apply completion — large-scale, gated
   behind the manifest purge + glued-id rebuild; belongs in its own dedicated plan/monitored VM run, not a single batch
   todo.
-- `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`'s §6.3 capability-completion (11 of 14 UAC-declared
+- `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`'s §6.3 capability-completion (11 of 14 UAC-declared
   staking protocols unimplemented) — a substantial multi-protocol build, not a bounded single todo; §6.2 already has a
   drafted (not yet active) todo in batch5.
 
