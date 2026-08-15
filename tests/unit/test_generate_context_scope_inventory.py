@@ -174,6 +174,22 @@ def test_marker_claimed_count_returns_none_when_no_parenthetical():
     assert MOD._marker_claimed_count(body, marker_pos) is None
 
 
+def test_marker_claimed_count_handles_comma_extended_claim_with_later_quoted_trap():
+    """Reproduces the confirmed false positive
+    (context_scope_count_mismatch_regex_false_positive_comma_extended_claim_2026_08_08.md): the
+    marker's OWN claim is comma-extended ("(4 entries, written and counted with extra care)"), and
+    a LATER, backtick-quoted, strict-form "(5 entries)" excerpt from a different doc's marker text
+    sits further along in the same bullet. The real claim (4) must win, not the quoted trap (5)."""
+    body = (
+        "- **context-scout 2026-08-07**: refreshed context_scope (4 entries, written and counted "
+        "with extra care given this doc's own subject matter) -- swapped some doc, plus "
+        "`check_line_caps.sh`. Live-checked some_doc.md at write time: still carries the stale "
+        "`context-scout 2026-08-01 (5 entries)` marker, plus other stuff.\n"
+    )
+    marker_pos = body.index("context-scout")
+    assert MOD._marker_claimed_count(body, marker_pos) == 4
+
+
 # ---------------------------------------------------------------------------
 # End-to-end: main() over a real fixture tree
 # ---------------------------------------------------------------------------
@@ -392,6 +408,71 @@ def test_up_to_date_when_marker_has_no_count_claim(tmp_path, monkeypatch):
     records = _run_json()
     assert len(records) == 1
     assert records[0]["verdict"] == "UP_TO_DATE"
+
+
+def test_count_mismatch_false_positive_comma_extended_claim_with_quoted_trap_resolved(tmp_path, monkeypatch):
+    """End-to-end repro of
+    context_scope_count_mismatch_regex_false_positive_comma_extended_claim_2026_08_08.md: a
+    marker's own comma-extended claim (4) must be found instead of a later backtick-quoted
+    strict-form claim (5) from a different doc's marker text quoted in the same bullet -- so a
+    4-entry live context_scope reads UP_TO_DATE, not a false COUNT_MISMATCH."""
+    plans_dir = tmp_path / "plans" / "active" / "issues"
+    plans_dir.mkdir(parents=True)
+    doc = plans_dir / "fixture_comma_extended_claim_2026_08_08.md"
+    doc.write_text(
+        """\
+---
+doc_type: issue
+title: comma-extended claim fixture
+summary: test
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer]
+tags: []
+related: []
+created: "2026-08-08"
+parent_epic: agent_operating_framework_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.1
+estimate_calibrated_ai_days: 0.1
+assigned_role: infra
+drift_direction: none
+depends_on: []
+resolved_by:
+locked_by:
+context_scope:
+  - /codex/02-data/honest-coverage-model.md
+  - /codex/02-data/pipeline-mode-partition.md
+  - /codex/04-architecture/tier-and-import-architecture.md
+  - /cursor-configs/skills/context-scout/SKILL.md
+---
+
+# comma-extended claim fixture
+
+Fixture body.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries, written and counted with extra
+  care given this doc's own subject matter) -- swapped the now-fixed `some_other_doc.md`, plus
+  `check_line_caps.sh`. Live-checked `some_target_doc.md` at write time: still carries the stale
+  `context-scout 2026-08-01 (5 entries)` marker, but that is unrelated.
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    monkeypatch.setattr(MOD, "_git_last_commit_date_cheap", lambda path: "2026-08-06")
+    monkeypatch.setattr(MOD, "_git_last_commit_date_accurate", lambda path: "2026-08-06")
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "UP_TO_DATE"
+    assert records[0]["context_scope_count"] == 4
 
 
 def test_up_to_date_when_marker_count_matches_actual(tmp_path, monkeypatch):

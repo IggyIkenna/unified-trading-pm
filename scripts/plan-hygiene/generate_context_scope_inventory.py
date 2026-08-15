@@ -55,8 +55,10 @@ IN_SCOPE_STATUS = {
 MARKER_RE = re.compile(r"context-scout\s+(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
 
 # COUNT_MISMATCH detection: parenthetical count claim in a context-scout Progress Log bullet.
-# Matches "(1 entry)" and "(4 entries)" — the two forms used in corpus markers.
-COUNT_RE = re.compile(r"\((\d+)\s+entr(?:y|ies)\)")
+# Matches "(1 entry)", "(4 entries)", and a comma-extended claim like "(4 entries, written and
+# counted with extra care ...)" -- the closing paren need not land immediately after
+# "entry"/"entries" (see context_scope_count_mismatch_regex_false_positive_comma_extended_claim_2026_08_08.md).
+COUNT_RE = re.compile(r"\((\d+)\s+entr(?:y|ies)\b")
 # Marker bullet window: bounds how far to scan before/after the marker text.
 _WINDOW_END_PATTERNS = ("\n- ", "\n## ", "\n```", "\n---", "\n> ")
 _MAX_MARKER_WINDOW_CHARS = 2000
@@ -270,7 +272,17 @@ def _latest_marker(body: str) -> str | None:
 
 def _marker_claimed_count(body: str, marker_pos: int) -> int | None:
     """Return the `(N entries)` count claimed in the Progress Log bullet containing
-    `marker_pos`, or None if the bullet carries no parenthetical count claim."""
+    `marker_pos`, or None if the bullet carries no parenthetical count claim.
+
+    Skips any COUNT_RE match that falls inside a backtick-quoted span within the window --
+    this corpus's convention for citing ANOTHER doc's marker text verbatim (e.g. "the stale
+    `context-scout 2026-08-01 (5 entries)` marker") is to wrap it in backticks, so a quoted
+    excerpt is never this marker's own claim. Without this, a comma-extended claim (which the
+    old strict `\\((\\d+) entr(?:y|ies)\\)` regex skipped entirely, since it requires the closing
+    paren immediately after "entries") let `.search()` fall through to a LATER, backtick-quoted,
+    strict-form match instead -- confirmed false positive:
+    context_scope_count_mismatch_regex_false_positive_comma_extended_claim_2026_08_08.md.
+    """
     start = body.rfind("\n- ", max(0, marker_pos - _BULLET_LOOKBACK), marker_pos)
     if start == -1:
         start = body.rfind("\n-", max(0, marker_pos - _BULLET_LOOKBACK), marker_pos)
@@ -281,8 +293,13 @@ def _marker_claimed_count(body: str, marker_pos: int) -> int | None:
         idx = body.find(pat, marker_pos, min(len(body), marker_pos + _MAX_MARKER_WINDOW_CHARS))
         if idx != -1 and idx < end:
             end = idx
-    m = COUNT_RE.search(body[start:end])
-    return int(m.group(1)) if m else None
+    window = body[start:end]
+    backtick_positions = [i for i, ch in enumerate(window) if ch == "`"]
+    quoted_spans = list(zip(backtick_positions[0::2], backtick_positions[1::2], strict=False))
+    for m in COUNT_RE.finditer(window):
+        if not any(s <= m.start() < e for s, e in quoted_spans):
+            return int(m.group(1))
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:
