@@ -118,6 +118,44 @@ isolated copy, then bisect by checking out each dependency repo at successive co
 `basedpyright deployment_service/` after each, until the count flips from <=1259 to 1261. That pins the exact commit
 without disturbing this shared checkout.
 
+**Update 2026-08-15 (isolated-worktree bisection executed — the "3-known-deps" theory is FALSIFIED.** Ran the
+methodology above for real: `git worktree add` isolated copies of `unified-api-contracts`, `unified-trading-library`,
+AND a third editable LOCAL_DEP this doc had never checked — `deployment-api`
+(`deployment-service/scripts/quality-gates.sh:48: LOCAL_DEPS=(deployment-api)`) — plus an `rsync`'d copy of
+`deployment-service/.venv` with its three `_editable_impl_*.pth` files repointed at the isolated worktrees (so nothing
+in the shared checkout or its venv was ever touched). Confirmed the isolated setup reproduces the live result first
+(1261, matching the shared checkout exactly), then pinned each dependency to its last commit **before the arming
+window** (`2026-08-14T11:40Z`): `unified-api-contracts@acbd0882`, `unified-trading-library@dd193279`,
+`deployment-api@7f8fb83`.
+
+| Combination                                           | `basedpyright deployment_service/` result |
+| ----------------------------------------------------- | ----------------------------------------- |
+| All 3 at current (post-backmerge) HEAD                | 1261 errors                               |
+| `unified-api-contracts` pre-window, other 2 current   | 1261 errors                               |
+| `unified-trading-library` pre-window, other 2 current | 1261 errors                               |
+| **All 3 pinned pre-window simultaneously**            | **1261 errors — unchanged**               |
+
+Pinning all three known editable LOCAL_DEPS to before the arming window does NOT recover the 1259 ratchet ceiling.
+`basedpyright` is pinned identical (`==1.38.2`, exact hash match, both at `bf69b2b289` and current — confirmed via
+`uv.lock`), and `deployment-service`'s own diff `bf69b2b289..HEAD` is still empty for `.py`/config files (Dockerfile + 3
+shell launcher scripts only). **This means the doc's original premise — a dependency backmerge in the `11:40Z..01:24Z`
+window regressed the count — does not hold**: reverting every plausible culprit in that window, together, produces the
+identical error count as leaving them all current. Two live leads for whoever picks this up next, not yet chased down
+(ran out of turn budget after the elimination, and this is now squarely a design/measurement-methodology question rather
+than a code hunt):
+
+1. `.qg_last_passed_sha` / `.qg_content_sentinel` (gitignored, present in this checkout, timestamped `01:11` — _before_
+   the 01:20-01:23 backmerge-completion commits) suggest `quality-gates.sh`'s content-sentinel cache was primed around
+   that time. Worth checking whether the "ALL QUALITY GATES PASSED (303s)" run this doc's Root Cause section cites for
+   `bf69b2b289` was a **live basedpyright execution** or a **sentinel cache HIT** reusing an earlier verified-good hash
+   — `qg-common.sh`'s `_qg_editable_sibling_hash()` does fold in every editable sibling's live `git rev-parse HEAD` +
+   `git diff HEAD` generically (all `*.dist-info/direct_url.json` with `"editable": true`, which covers `deployment-api`
+   too, not just the 2 originally suspected), so a stale-hash explanation would need the sentinel mechanism itself to
+   have a gap, not just an unhashed sibling.
+2. Alternatively the true baseline may simply never have been a live-verified 1259 at exactly `bf69b2b289` — worth
+   re-deriving it from the last commit where `.qg_last_passed_sha` demonstrably matched a genuine full basedpyright run,
+   rather than trusting the doc's original claim.
+
 ## Why this matters
 
 `BASEDPYRIGHT_MAX_ERRORS=1259` is a hard-fail gate in `deployment-service/scripts/quality-gates.sh` — every quickmerge
@@ -128,18 +166,32 @@ cannot find it — the fix has to be sought in the two dependency repos.
 
 ## Todos
 
-- [ ] [CODE] P1. 5 candidate commits checked and ruled out 2026-08-15 (see updated Root Cause section — none touch a
-      type signature). Next attempt MUST bisect in an ISOLATED worktree/clone of `unified-api-contracts` +
-      `unified-trading-library` (never this shared checkout — editable installs mean a manual checkout here changes what
-      every concurrent slot session sees), stepping through commits in `2026-08-14T11:40Z..2026-08-15T01:24Z` until
-      `basedpyright deployment_service/` flips 1259→1261. DoD: `basedpyright deployment_service/` back to <=1259 (or
-      ratchet the ceiling DOWN once fixed further, never up).
-- [ ] [OPERATOR] P2. Two guessing passes (5 candidate commits total) have NOT found the root cause — "quickly" per this
-      todo's original DoD has now elapsed. Decide whether to temporarily raise `BASEDPYRIGHT_MAX_ERRORS` (against the
-      ratchet-only-goes-down norm) to unblock shipping — including the already-written, already-tested Todo 2 fix in
-      `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` sitting uncommitted — while the isolated-worktree
-      bisection above is pursued, or hold all deployment-service quickmerges until fixed. DoD: a stated decision, not a
-      default.
+- [x] [CODE] P1. Isolated-worktree bisection executed 2026-08-15 (see Update in Root Cause section) — pinned all 3
+      editable LOCAL_DEPS (`unified-api-contracts`, `unified-trading-library`, and previously-unchecked
+      `deployment-api`) to pre-arming-window commits simultaneously, in an isolated `git worktree add` + `rsync`'d venv
+      copy that never touched the shared checkout. Result: still 1261, unchanged. **This DoD ("bisect until the count
+      flips 1259→1261") could not be met — the count never flips, because the dependency-backmerge premise itself
+      appears to be wrong.** Closing this todo as "methodology executed, hypothesis falsified" rather than leaving it
+      open against a premise the evidence no longer supports; the 2 follow-on leads (sentinel-cache-hit vs.
+      never-truly-1259) are new open questions, tracked below as Todo 3, not a continuation of this bisection.
+- [ ] [OPERATOR] P2. **BLOCKED-OPERATOR-DECISION.** Two guessing passes (5 candidate commits) plus a rigorous
+      isolated-worktree elimination (all 3 known editable deps pinned pre-window simultaneously) have now all failed to
+      find a code-level culprit — the evidence increasingly says this isn't a simple "backmerge broke it" regression.
+      Options: (a) temporarily raise `BASEDPYRIGHT_MAX_ERRORS` from 1259 to 1261 (against the ratchet-only-goes-down
+      norm) to unblock all deployment-service shipping — including the already-written, already-tested Todo 2 fix in
+      `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` sitting uncommitted — while Todo 3's sentinel-cache
+      investigation runs in parallel; (b) hold all deployment-service quickmerges until Todo 3 resolves.
+      **Recommendation: (a)** — the ratchet's purpose is catching real regressions in deployment-service's own surface,
+      and 3 independent lines of evidence now say this isn't one; blocking all shipping on an unresolved
+      measurement-methodology question has a real cost (a P0 truncated-sweep fix is parked). DoD: a stated decision, not
+      a default.
+- [ ] [CODE] P2. Determine whether the `bf69b2b289` "ALL QUALITY GATES PASSED" run that established the 1259 baseline
+      was a live basedpyright execution or a `quality-gates.sh` content-sentinel cache HIT (`.qg_last_passed_sha` /
+      `.qg_content_sentinel`, gitignored, present in this checkout timestamped `01:11` — before the backmerge-completion
+      commits at 01:20-01:23). If it was a cache hit reusing an earlier genuinely-verified hash, re-derive the true
+      last-live-verified baseline from history instead of trusting `bf69b2b289`'s claimed count. See the Root Cause
+      section's Update for the 2 concrete leads. DoD: a stated determination (cache-hit vs. genuine) with evidence, and
+      if cache-hit, the corrected true baseline commit + count.
 
 ## Evidence
 
@@ -148,13 +200,17 @@ cannot find it — the fix has to be sought in the two dependency repos.
   fresh isolated cache dir), both from `deployment-service` HEAD `7939f176`.
 - `unified-api-contracts` HEAD `85caa70a` (2026-08-15T01:20:55Z), `unified-trading-library` HEAD `bd587735`
   (2026-08-15T01:23:34Z) — both editable-installed LOCAL_DEPS of deployment-service.
+- Isolated-worktree elimination (2026-08-15, this checkout untouched): `unified-api-contracts@acbd0882` +
+  `unified-trading-library@dd193279` + `deployment-api@7f8fb83` (all 3 pre-arming-window) against `deployment-service`
+  current HEAD → still `1261 errors, 0 warnings, 0 notes`. `basedpyright==1.38.2` pinned byte-identical (exact hash
+  match) in `uv.lock` at both `bf69b2b289` and current HEAD.
 
 ## Deferred work after 2026-08-15
 
-| Item                                                                                              | State / why deferred                                                                                                                                                                                                                                                                    | Blocked on                                                 |
-| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Todo 2 of `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` (truncated-sweep signal) | **Code + tests WRITTEN, compile-checked, uncommitted** in `deployment-service` working tree (`exit_code_fleet_monitor.py` + `tests/unit/test_data_pipeline_monitors.py`) — cannot ship, quickmerge requires a green `quality-gates.sh` and this ratchet break is unrelated-but-blocking | This doc's Todo 1 (or an operator override of Todo 2 here) |
+| Item                                                                                              | State / why deferred                                                                                                                                                                                                                                                                    | Blocked on                            |
+| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Todo 2 of `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` (truncated-sweep signal) | **Code + tests WRITTEN, compile-checked, uncommitted** in `deployment-service` working tree (`exit_code_fleet_monitor.py` + `tests/unit/test_data_pipeline_monitors.py`) — cannot ship, quickmerge requires a green `quality-gates.sh` and this ratchet break is unrelated-but-blocking | This doc's Todo 2 (operator decision) |
+| Todo 3 of this doc (sentinel-cache-hit vs. never-truly-1259 investigation)                        | Needs reading gitignored `.qg_last_passed_sha`/`.qg_content_sentinel` history + `qg-common.sh` cache-hit logic in detail — genuinely open investigation, not a quick finish                                                                                                             | Nobody — real work, pick it up        |
 
-**Recommended next item**: root-cause Todo 1 above (start with `unified-api-contracts@53a5adc7`/`bed96aa0` and
-`unified-trading-library@ff9cb5f8` — read their diffs for type-annotation changes) — it unblocks ALL deployment-service
-shipping, not just this one change.
+**Recommended next item**: Todo 2 (operator decision) — it unblocks ALL deployment-service shipping immediately,
+independent of whether Todo 3's cache-hit investigation ever resolves the "why."
