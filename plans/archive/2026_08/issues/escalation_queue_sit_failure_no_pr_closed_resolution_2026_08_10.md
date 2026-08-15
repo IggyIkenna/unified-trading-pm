@@ -20,7 +20,7 @@ summary: >-
   promote PR is a definitive, DIRECT terminal signal, not the unrelated repo-wide QG-green the 08-09 fix protected
   against. Routed to main first (BLK-f7bb0212) per Step 3; timed out 2-min bounded wait — operator decision pending in
   /api/blocked.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -44,7 +44,7 @@ estimate_baseline: 0.1
 calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
-resolved_by:
+resolved_by: "ci_satellite_ao_dispatch_batch14_2026_08_15.md todo 3 — agent-orchestrator@de26a5e911, 2026-08-15"
 locked_by:
 depends_on: []
 context_scope:
@@ -122,9 +122,12 @@ probe-return contract). Gate: only apply when the escalate payload actually name
 
 ## Status / follow-ups
 
-- [ ] [SCRIPT] P1. Operator decision on BLK-f7bb0212: approve extending the direct PR-closed/merged check to sit_failure
+- [x] ✅ [SCRIPT] P1. Operator decision on BLK-f7bb0212: approve extending the direct PR-closed/merged check to sit_failure
       with pr_number>0 (mirror d990ed5, add regression test, ship via quickmerge) — OR declare the current behavior
-      intended and note why. (escalation_queue_reconciler, agt-ddadf8, 2026-08-10)
+      intended and note why. (escalation_queue_reconciler, agt-ddadf8, 2026-08-10) **RESOLVED 2026-08-15**
+      (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 3): BLK-f7bb0212 approved. `agent-orchestrator@de26a5e911`
+      — direct `_pr_merge_state` check for `sit_failure` (no head-branch QG poll, deliberately unlike
+      `ldr_qg_failure`); 5 new regression tests mirroring `ldr_qg_failure`'s merge-state coverage; QG green.
 
 ## Progress Log
 

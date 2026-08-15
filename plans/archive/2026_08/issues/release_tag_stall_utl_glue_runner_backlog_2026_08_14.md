@@ -9,7 +9,7 @@ summary: >-
   todos done) — migrating the prose deferral into a real todo here per the archival-discipline HARD RULE ("never let a
   deferral evaporate with the archived plan") rather than investigating from scratch, since none of the three conditions
   has been re-verified as still-live since 2026-08-10.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -33,7 +33,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: infra
 effort: medium
 drift_direction: advance-code
-resolved_by:
+resolved_by: "ci_satellite_ao_dispatch_batch14_2026_08_15.md todo 11 — all 3 items re-verified stale/self-resolved, 2026-08-15"
 locked_by:
 locked_since:
 supersedes:
@@ -81,13 +81,21 @@ count) before doing any deeper fix — do not assume any of the three is still a
 
 ## Todos
 
-- [ ] [INFRA] P3. Re-verify whether the 7-repo release-tag stall is still live (re-run
+- [x] ✅ [INFRA] P3. Re-verify whether the 7-repo release-tag stall is still live (re-run
       `scripts/cicd/reconcile_release_tags.py` or equivalent check); if stale/self-resolved, close this item; if live,
-      root-cause and fix — repo: unified-trading-ci.
-- [ ] [INFRA] P3. Re-verify the UTL production trigger issue is still live and root-cause it if so — repo:
-      unified-trading-library.
-- [ ] [INFRA] P3. Re-verify the glue-runner's restart count; if still elevated, root-cause the restart loop — repo:
-      unified-trading-ci.
+      root-cause and fix — repo: unified-trading-ci. **RESOLVED 2026-08-15**
+      (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 11): `python3 scripts/cicd/reconcile_release_tags.py
+      --dry-run` reports 0 STALLED fleet-wide (21 healthy, 1 ahead-but-benign, 0 stalled) — confirmed stale/self-resolved,
+      consistent with the 2026-08-11 `ibkr_gateway_infra_release_tag_stall` sweep.
+- [x] ✅ [INFRA] P3. Re-verify the UTL production trigger issue is still live and root-cause it if so — repo:
+      unified-trading-library. **RESOLVED 2026-08-15**: no live GitHub Actions Cloud Build trigger workflow found under
+      that description on `unified-trading-library`; no active tracking doc exists in the corpus for it either —
+      treated as already resolved/archived, no live symptom found.
+- [x] ✅ [INFRA] P3. Re-verify the glue-runner's restart count; if still elevated, root-cause the restart loop — repo:
+      unified-trading-ci. **RESOLVED 2026-08-15**: `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` and
+      the same for `unified-trading-ci` both report `total_count: 0` — zero self-hosted runners currently registered
+      at either repo, consistent with the already-documented public-repo revert + dedicated-VM split
+      (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`); nothing currently running to restart.
 
 ## Progress Log
 

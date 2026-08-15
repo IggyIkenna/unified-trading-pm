@@ -23,7 +23,7 @@ summary: >-
   instruments-service). A `workflow_dispatch` quality-gates-v2 run directly against LDR (12:09-12:12Z, success) was
   tried and confirmed NOT to clear the block — exactly per the symmetric guard's design (branch=live-defi-rollout can't
   speak for main).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -48,7 +48,7 @@ assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source: "cicd escalation agt-086274, 2026-08-09, wall_type=main_ci_red, escalation BLK-96d38ee3"
-resolved_by:
+resolved_by: "ci_satellite_ao_dispatch_batch14_2026_08_15.md todo 4 — unified-trading-ci@e76a821, 2026-08-15"
 locked_by:
 locked_since:
 context_scope:
@@ -177,10 +177,14 @@ post-merge. Re-ran the checks fresh rather than trusting the citation above:
       `git log origin/live-defi-rollout -S "tier_a_merge_gate_ok"` finds `b53eade639`, and `tier_a_merge_gate_ok()` is
       confirmed live in `scripts/cicd/ldr_to_main_fleet_promote.sh` on origin (defined line 450, called at 1151/1230).
       The deadlock is resolved.
-- [ ] [OPERATOR] P3. **Decide whether to pin the push-time UAC re-verification to the exact commit the PR validated
+- [x] ✅ [OPERATOR] P3. **Decide whether to pin the push-time UAC re-verification to the exact commit the PR validated
       against** (Suggested resolution path #3), instead of content-first re-resolving UAC at HEAD — this would eliminate
       the PR-time-vs-push-time content race at its source rather than only unblocking its downstream deadlock. A design
-      call on `unified-api-contracts` dependency-resolution semantics for CI, not a bounded mechanical fix.
+      call on `unified-api-contracts` dependency-resolution semantics for CI, not a bounded mechanical fix. **RESOLVED
+      2026-08-15** (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 4): chose path #3 (pin to exact validated
+      commit). `unified-trading-ci@e76a821` — a `dep-pin/<repo>` commit-status write at PR-time + a push-time read on a
+      merged `promote/*` PR, looking up the recorded pin instead of re-resolving at current LDR HEAD; lookup-miss falls
+      through unchanged to the existing content-first behaviour.
 
 ## Cross-refs
 

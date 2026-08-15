@@ -15,7 +15,7 @@ tags: [escalation, ci, quality-gates, ratchet, close-out, ao-dispatch]
 related:
   [
     /plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md,
-    /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
+    /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
   ]
 created: "2026-08-15"
 last_updated: "2026-08-15"
@@ -39,7 +39,7 @@ sequential: true
 context_scope:
   [
     /plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md,
-    /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
+    /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -57,7 +57,7 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. Flip `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`'s
+- [ ] [REVIEW] P2. Flip `plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`'s
       own `- [ ] [REVIEW] P2. Author the implementation plan for the 2026-08-12-ruled detector above ...` checkbox to
       `[x]`, citing the implementation plan's path plus its final landing commit sha(s) as evidence; if every finding in
       that issue doc is now resolved, update its `status` accordingly. Do not trust the implementation plan's own

@@ -21,7 +21,7 @@ summary: >-
   response. A live AO backlog query for `market-tick-data-service` (6 matching tasks) shows zero tasks referencing
   TID251/ratchet. Filed as its own issue per the task's instruction not to build a new escalation integration inline —
   wiring ratchet-breach detection into the escalation machinery is real, separately-scoped infra work.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting, meta]
 stage: [meta]
@@ -42,7 +42,7 @@ depends_on: []
 locked_by:
 supersedes:
 superseded_by:
-resolved_by: ""
+resolved_by: "ci_satellite_ao_dispatch_batch14_2026_08_15.md todo 8 — implementation plan authored + in-progress at local_ratchet_gate_breach_escalation_detector_2026_08_15.md, 2026-08-15"
 context_scope:
   [
     agent-orchestrator/server/escalation.py,
@@ -179,7 +179,15 @@ the fix inline. Does not block anything currently (the originating incident is r
 > implemented in this docs-only pass. Per the "AO plan or human plan?" hard rule, ask the operator before authoring the
 > implementation plan; tracked as the todo below.
 
-- [ ] [REVIEW] P2. Author the implementation plan for the 2026-08-12-ruled detector above (ask operator: AO-dispatched
+- [x] ✅ [REVIEW] P2. Author the implementation plan for the 2026-08-12-ruled detector above (ask operator: AO-dispatched
       vs human plan, per the standing hard rule, before authoring) — scope: new escalation wall type in
       `server/escalation.py`, a 15-minute delayed re-check against LDR before dispatch, AO-driven remediation that
       restores the breached ratchet/baseline below its ceiling, existing Slack alert left as visibility-only.
+      **RESOLVED 2026-08-15**: authored as `/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md`
+      (`assigned_vm: planning`, AO-dispatched per operator routing decision BLK-3f47f1af) +
+      `local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md`. Implementation is actively in progress
+      there (wall type, detector, 15-min grace-window state machine, and `enqueue()` wiring all shipped as of this
+      date; remaining scope — remediation-goal wording, systemd timer, Slack-ownership fact-find, codex doc update,
+      full-fleet dry run — tracked in that plan, not here). This doc's own scope (author the plan) is done; archiving
+      here does not require the dedicated plan's OWN remaining todos to be finished first — see that plan for
+      ongoing status.

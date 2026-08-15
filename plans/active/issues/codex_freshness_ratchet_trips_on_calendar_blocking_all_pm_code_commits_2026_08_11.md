@@ -95,12 +95,18 @@ Three exits were available and two are closed:
       two that exist". Dated `last_reviewed: 2026-08-11`. **Gate verified GREEN after both**:
       `check_codex_doc_freshness.py` → `Scanned 316 codex doc(s) … 0 violation(s)`, `✅ At-or-below baseline`. PM code
       commits are unblocked; the ratchet was never re-baselined.
-- [ ] [DEVOPS] P2. **Decide whether a calendar-triggered ratchet should be able to block commits at all.** The content
+- [x] ✅ [DEVOPS] P2. **Decide whether a calendar-triggered ratchet should be able to block commits at all.** The content
       of these docs did not change; the clock moved. A staleness sweep that hard-fails Pass 1 converts a documentation
       hygiene signal into a fleet-wide commit outage on an arbitrary morning, and the only fast exits are a banned
       re-baseline or a dishonest date — which is a design that pressures agents toward the dishonest one. Options to
       weigh: WARN-only for pure-age violations while staying HARD for content-drift ones; a grace band; or a scheduled
-      pre-expiry nudge (the docs were 89d stale yesterday and nothing said so). Repo: unified-trading-pm.
+      pre-expiry nudge (the docs were 89d stale yesterday and nothing said so). Repo: unified-trading-pm. **RESOLVED
+      2026-08-15** (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 1): moved off the blocking Pass-1 path
+      entirely — `CODEX_FRESHNESS_CHECKER` removed from `quality-gates.sh`; a new daily-cron
+      `codex-freshness-sweep.yml` runs the checker and dispatches a `codex_freshness_stale` AO escalation on violation
+      (auto-resolves on a subsequent clean run), matching `digest-drift-sweep.yml`'s shape. PM-side:
+      `unified-trading-pm@e2ed126d78`. AO-side (`WALL_TYPES` + `_poll_wall_resolution` + `EscalateRequest` Literal):
+      `agent-orchestrator@0224dfa4ac`. Both QG-green.
 
 ## Note for whoever picks this up
 

@@ -21,7 +21,7 @@ related:
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/04-architecture/ci-alerting.md,
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
+    /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
     /plans/archive/issues/ci_escalation_wall_type_mismatch_silent_human_only_2026_07_27.md,
   ]
 created: 2026-08-12
@@ -160,8 +160,8 @@ fresh mystery.
 - **Local pre-push ratchet-gate breaches** (a `quality-gates.sh` Pass-1 failure that blocks the commit before it ever
   reaches a GitHub Actions run) have NO wall_type — structurally invisible to every GH-Actions-run-based wall type, not
   just an unwired one. Filed and scoped:
-  `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` (P2, needs a new
-  detector, not just a new wall_type).
+  `plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` (P2, needs a
+  new detector, not just a new wall_type).
 - `branch-health.yml`'s `no_promote_pr` / `unknown` lag causes (`promotion_lag_monitor.py::_promote_pr_cause`) have no
   dedicated escalation path — the monitor honestly flags "can't tell" rather than guessing, but nothing acts on that
   signal beyond the Slack post.

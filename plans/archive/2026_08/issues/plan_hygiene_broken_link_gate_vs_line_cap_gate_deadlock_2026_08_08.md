@@ -8,7 +8,7 @@ summary: >-
   todos done, immediate-archival HARD RULE per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
   `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (1007L, already over the 1000L hard cap, `todos=1` so
   not itself archival-eligible) cites the doc via a markdown-syntax link
-  `[...](/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md)`. Once the
+  `[...](/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md)`. Once the
   target moves to `plans/archive/2026_08/issues/...`, that link 404s. `scripts/validators/validate_plan_links.py` (run
   unconditionally, corpus-wide, HARD, via `run_hygiene_sweep.sh`'s `--precommit` mode whenever a commit touches `plans/`
   or `codex/` — see `.pre-commit-config.yaml`'s `files: ^(plans/|codex/)` trigger) globs ALL of `plans/active/*.md` on
@@ -24,7 +24,7 @@ summary: >-
   "fix a stale outbound link in an over-cap file with a genuinely tiny (net-zero-length) edit." The archival ritual's
   own SSOT anticipates exactly this shape of conflict ("if the hook still blocks the staged move, that is the gate
   mis-scoping... fix the scoping, do not shrink a finished doc to appease it") but names no concrete fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, cross-cutting]
 stage: [meta]
@@ -34,7 +34,7 @@ tags: [plan-hygiene, line-caps, broken-links, archival, tooling-gap, pre-commit]
 related:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
+    /plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-08
@@ -52,7 +52,7 @@ depends_on: []
 source:
   "cicd slot 6, discovered mid-archival of provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
   2026-08-08"
-resolved_by:
+resolved_by: "ci_satellite_ao_dispatch_batch14_2026_08_15.md todo 13 — deferred archival completed, 2026-08-15"
 locked_by:
 locked_since:
 context_scope:
@@ -73,9 +73,9 @@ unlocked) per the immediate-archival HARD RULE:
 1. `git mv` to `plans/archive/2026_08/issues/` + repointed 5 well-formed (leading-slash) active-corpus referrers —
    passed plan-hygiene cleanly for those.
 2. `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` also cites the doc, but via markdown-link syntax
-   `[`...`](/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md)` (line
+   `[`...`](/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md)` (line
    741). Leaving it untouched → `validate_plan_links.py` (corpus-wide, unconditional, HARD) fails the commit:
-   `BROKEN: active/cross_cutting_consolidated_closeout_2026_07_25.md -> /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
+   `BROKEN: active/cross_cutting_consolidated_closeout_2026_07_25.md -> /plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
    (once archived out from under this path).
 3. Fixing that one line → `check_line_caps.sh` SCOPED mode fails instead: the file is 1007L (over the 1000L hard cap,
    `todos=1` so not archival-eligible itself), and a same-line text substitution always shows `DELETED=1` in
@@ -141,13 +141,18 @@ force it through or damage another agent's active doc.
       a materially larger, separately-scoped unit of work than "implement the carve-out," and this issue's own scope
       (per the task that ruled it) was the carve-out itself. Left as its own explicit next todo below rather than
       silently expanding scope mid-fix.
-- [ ] [INFRA] P1. **Complete the deferred archival** of
+- [x] ✅ [INFRA] P1. **Complete the deferred archival** of
       `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` (all 3 todos
       already `[x]`, unlocked, `archive_exempt: true` pending exactly this) now that the carve-out fix above is shipped
       and verified: `git mv` to `plans/archive/2026_08/issues/`, repoint the 11 active-corpus referrers enumerated above
       (the `check_line_caps.sh` fix unblocks `cross_cutting_consolidated_closeout_2026_07_25.md`'s specifically — the
       other 10 aren't over-cap and don't need the carve-out, just a normal link update), un-set `archive_exempt`, fill
-      `resolved_by` with the completing SHA, run the standard 6-step archival ritual.
+      `resolved_by` with the completing SHA, run the standard 6-step archival ritual. **RESOLVED 2026-08-15**
+      (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 13): archived to `plans/archive/2026_08/issues/`; live
+      referrers repointed (`cross_cutting_consolidated_closeout_2026_07_25.md`, `/codex/08-workflows/ci-cd-flow.md`,
+      `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`,
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` — the other 7 of the originally-cited 11 were
+      already-archived docs, not live referrers). Verified directly against `origin/live-defi-rollout`.
 
 ## Progress Log
 

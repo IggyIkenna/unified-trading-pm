@@ -50,7 +50,7 @@ locked_since:
 context_scope:
   [
     agent-orchestrator/server/escalation.py,
-    /plans/active/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md,
+    /plans/archive/2026_08/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md,
   ]
 archive_exempt: true # 2026-08-10 — all 4 todos resolved, but doc serves as operator-visible historical-blast-radius record per its own stated scope (§Disposition item 1)
 source: >-

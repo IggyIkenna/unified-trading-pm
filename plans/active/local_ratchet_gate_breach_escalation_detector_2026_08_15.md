@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [escalation, ci, quality-gates, ratchet, coverage-gap, ci-failure-watcher, ao-dispatch]
 related:
   [
-    /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
+    /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
     /plans/active/local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md,
     /plans/active/task_template.md,
   ]
@@ -42,7 +42,7 @@ depends_on: []
 sequential: true
 context_scope:
   [
-    /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
+    /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
     /plans/active/task_template.md,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/ci_reconcile.py,
@@ -52,7 +52,7 @@ context_scope:
 source: >-
   Authored per the operator-approved BLK-3f47f1af routing decision (AO-dispatched, 2026-08-15) against the
   2026-08-12-ruled detector shape recorded in
-  `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`. `sequential: true` —
+  `plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`. `sequential: true` —
   every todo below touches or extends `agent-orchestrator/server/escalation.py` / its own new detector module, and each
   step is a genuine dependency of the next (wall type before enqueue, detector before the delay state machine, delay
   state machine before dispatch, dispatch before tests/docs) — not embarrassingly parallel work.
