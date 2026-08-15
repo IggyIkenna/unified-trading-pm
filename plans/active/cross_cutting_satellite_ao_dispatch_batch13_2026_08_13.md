@@ -586,16 +586,16 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed separately.**
-                          Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
-                          `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
-                          — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
-                          within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
-                          already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
-                          per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
-                          outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
-                          one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
-                          than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
+                                  Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
+                                  `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
+                                  — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
+                                  within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
+                                  already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
+                                  per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
+                                  outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
+                                  one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
+                                  than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -855,10 +855,10 @@ source: >-
       live_aggregator.py::_handle_zero_tick_window) by dispatching the write via a dedicated executor, per the same
       pattern already shipped for the async sites Source:
       `plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`
-- [ ] [CODE] P2. confirm via migration_orphan_sweep.py/cefi-dedup-apply/cefi-content-apply run history or manifest
-      history whether the cefi legacy-duplicate corpus is genuinely already gone, then flip the original checkbox in
-      cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md citing this doc's todo-3 evidence Source:
-      `plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md`
+- [x] ✅ [CODE] P2. Confirmed gone via run history (2026-08-15, slot-17): the 2026-07-27-complete
+      `cefi-content-apply`/`cefi-dedup-apply`/eu-twin-drop campaigns predate the stale 2026-07-02 candidate list — not a
+      false-absence. Flipped issue-doc todo 4 + `status: resolved`; cited in batch2's checkbox note. Source:
+      `plans/archive/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md`
 - [ ] [CODE] P2. execute the operator-approved sports CF-8 targeted backfill
       (market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py) plus the bundled
       CF-3/CF-4 legacy-row cleanup on instruments-store-sports-prd/market-data-tick-sports-prd, per the doc's own

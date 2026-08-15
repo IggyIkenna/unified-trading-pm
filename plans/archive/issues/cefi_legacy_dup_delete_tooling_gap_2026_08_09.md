@@ -17,7 +17,7 @@ summary: >-
   (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` is a 2351-line security-sensitive bash script with a
   hardcoded per-category dispatch — no generic passthrough exists) plus a genuinely multi-hour VM-scale run, which this
   session did not complete.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,12 +43,21 @@ source: [cross_cutting_satellite_ao_dispatch_batch2-c67c2aa57f37]
 assigned_vm: planning
 parent_epic: instruments_master
 priority: P1
-resolved_by:
+resolved_by: >-
+  (2026-08-15, slot-17) All 4 recommended-decision todos closed. Run-history cross-check
+  (`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`, status: complete) confirms the
+  cefi-content-apply/cefi-dedup-apply/eu-twin-drop campaigns physically removed the legacy corpus by 2026-07-27, before
+  the stale 2026-07-02 candidate list's 2026-08-09 dry-run ran — explains the "0 deletable" result as expected, not a
+  false-absence signal. Batch2's original checkbox citation updated accordingly.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **ARCHIVED 2026-08-15** — all 4 todos resolved. cefi legacy-duplicate corpus confirmed genuinely gone (removed by the
+> already-tracked cefi-content-apply/cefi-dedup-apply/eu-twin-drop campaigns, completed 2026-07-27), not a false-absence
+> signal. Moved to `plans/archive/issues/`.
 
 # What I found
 
@@ -166,15 +175,22 @@ and only needed a spot-check.
       in `cleanup_legacy_twins.py` (its crc32c/manifest gate behaved exactly as designed against a now-stale list) and
       NOT a live-data-loss risk (nothing was deleted; nothing WOULD have been deleted even under `--apply`, since 0 were
       classified deletable). Repo: deployment-service, instruments-service.
-- [ ] [REVIEW] P1. **Retargeted** (was: "after the full run's post-delete verification reports 0 still present" — that
-      full run correctly never happened, see todo 3's finding above, so that precondition can never be met as originally
-      written). Confirm independently whether the cefi legacy-duplicate corpus is genuinely already gone (e.g. check
-      `migration_orphan_sweep.py`/`cefi-dedup-apply`/`cefi-content-apply` run history or manifest history for when/how
-      it was removed) or whether this is itself a false-absence signal worth a second opinion, THEN flip the original
-      checkbox in `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` citing this issue doc + todo
-      3's evidence (0 deletable, stratified live-sample confirming legacy objects already absent). If a genuine
-      unexplained-disappearance concern surfaces instead, escalate per CLAUDE.md's "big finding" rule (NOTIFY OPERATOR).
-      Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P1. **Confirmed via run history — the cefi legacy-duplicate corpus is genuinely gone, not a
+      false-absence signal.** (2026-08-15, slot-17·infra)
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (`status: complete`, verified
+      2026-07-28 plan-hygiene sweep) records that the `cefi-content-apply` launcher category (its "Script 1", 42
+      concurrent `canonical-migration-cefi-content-apply-055803-*` VMs) ran its corpus-wide parquet-content `--apply`
+      campaign to completion at **2026-07-27T~19:44Z** ("FLEET FULLY DRAINED. Script 1's corpus-wide `--apply` campaign
+      is COMPLETE"), alongside "Script 3" (manifest dedup v2 — the `cefi-dedup-apply` category, `_MARKER_MIN` lowered to
+      10,000) and "Script 4" (eu-twin drop — 28,755 dropped, 0 residual), both also landed COMPLETE the same session.
+      All three predate the `legacy_dup_delete_list_cefi.parquet` candidate list this issue's todo 1 confirmed exists
+      (`last_modified=2026-07-02`) AND the todo-3 dry-run (2026-08-09) that found every sampled legacy object already
+      absent live. Timeline is consistent and non-mysterious: the 2026-07-02 candidate list was generated before the
+      2026-07-27 content-apply/dedup-v2/eu-twin-drop campaigns physically removed/renamed the bare legacy paths it
+      described, so by the time the legacy-dup-cleanup dry-run ran against that stale list on 2026-08-09, the legacy
+      side of every candidate pair had already been migrated away by a different, independently-tracked mechanism — not
+      a data-loss or false-absence event. No unexplained disappearance; not escalating. Flipping the original batch2
+      checkbox now (see that doc's own note for the citation).
 
 # Progress Log
 
@@ -214,3 +230,9 @@ and only needed a spot-check.
   days). Full `--apply` run deliberately NOT launched (would be a no-op against 0 deletable candidates). Flipped todo 3;
   retargeted todo 4's precondition since the original "after the full run" framing no longer applies.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- 2026-08-15 (slot-17, task `cross_cutting_satellite_ao_dispatch_batch13-20a09cbc517f`): confirmed via run history (not
+  a fresh corpus walk) that the cefi legacy-duplicate corpus is genuinely already gone —
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (status: complete) shows the
+  `cefi-content-apply` ("Script 1"), `cefi-dedup-apply`/dedup-v2 ("Script 3"), and eu-twin-drop ("Script 4") campaigns
+  all completed 2026-07-27, predating both the 2026-07-02 candidate list and the 2026-08-09 dry-run that found 0
+  deletable. Flipped todo 4 + `status: resolved`; updated the batch2 doc's checkbox note with the citation.
