@@ -9,7 +9,7 @@ summary: >-
   back into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [data]
@@ -21,7 +21,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
     /plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md,
-    /plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md,
+    /plans/archive/2026_08/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md,
     /plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md,
     /plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
     /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md,
@@ -56,6 +56,10 @@ source: >-
   draft per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE — needs explicit operator approval (flip to
   status: active) before dispatch.
 ---
+
+<!-- ARCHIVED: all 18 todos shipped/verified, reconciled into their 7 source docs' own checkboxes by the paired
+finalize plan (2026-08-15). No new aggregate codex contract — each item's own codex updates, where needed, landed
+individually during execution. -->
 
 # infrastructure satellite AO dispatch batch 16 — 2026-08-13
 
@@ -142,8 +146,8 @@ source: >-
       generate_na_doc_tranche_inventory.py so a marker's full continuation-line span is excluded from
       body_content_hash(); add the stated regression test asserting hash-before ==
       hash-after-writing-the-declared-hash-marker; verify against real multi-line markers in the corpus. Source:
-      `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md` —
-      STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
+      `plans/archive/2026_08/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
+      — STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
       `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): this item was carved into
       this batch citing the source issue doc's own todo 1, but that todo was already `[x]` at
       `unified-trading-pm@fcaaa677f1` before this batch dispatched — verified live: `fcaaa677f1` is an ancestor of
@@ -153,9 +157,13 @@ source: >-
       `test_body_content_hash_multiline_marker_stops_at_next_bullet`) exist in
       `tests/unit/test_generate_na_doc_tranche_inventory.py`. No new code needed; flipping this checkbox to match
       reality — unified-trading-pm@fcaaa677f1 (pre-existing).
-- [ ] [SCRIPT] P3. Once fixed, spot-check docs with old (pre-fix) markers to confirm the next na-eligibility-audit run
-      correctly reports incremental_skip: true when no real content changed. Source:
-      `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
+- [x] ✅ [SCRIPT] P3. Once fixed, spot-check docs with old (pre-fix) markers to confirm the next na-eligibility-audit
+      run correctly reports incremental_skip: true when no real content changed. Source:
+      `plans/archive/2026_08/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
+      — ran the shipped script live against the tradfi tranche corpus (26 marked docs): 6 already
+      `incremental_skip:     true`, including a genuine 3-line multi-line marker exercising the git-fallback path; all
+      20 `false` verdicts independently confirmed as real stored-hash≠current-hash content drift (one spot-verified via
+      `git diff`). Full finding + evidence in the source issue doc's Progress Log, its own todo flipped `[x]` too.
 - [x] ✅ [CODE] P2. Make the swallowed ImportError loud in unified-trading-pm/scripts/quality_gates/_capability_gaps.py
       (~line 864) Source: `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
       — STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per

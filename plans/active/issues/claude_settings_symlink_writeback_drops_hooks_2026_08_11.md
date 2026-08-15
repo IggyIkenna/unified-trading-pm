@@ -121,28 +121,39 @@ indefinitely and the clone silently diverges from the SSOT.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Add a hygiene-sweep check that fails when `cursor-configs/settings.json` is dirty in any clone, OR
+- [x] ✅ [SCRIPT] P1. Add a hygiene-sweep check that fails when `cursor-configs/settings.json` is dirty in any clone, OR
       when any `.claude/settings.local.json` is a symlink. The guard above prevents recurrence via this one code path;
-      the check catches any other writer that reaches the same file.
+      the check catches any other writer that reaches the same file. — `unified-trading-pm@99a13bea88`
+      (`scripts/plan-hygiene/check_settings_symlink_hygiene.sh`, wired into `run_hygiene_sweep.sh`; verified PASS on a
+      clean workspace and FAIL on both violation modes). Shipped via `infra_satellite_ao_dispatch_batch16_2026_08_13.md`
+      (reconciled here 2026-08-15, source doc's own checkbox had gone stale).
 - [x] ✅ [INVESTIGATE] P2. Find where the `settings.local.json` symlinks came from — see 2026-08-14 Progress Log entry:
       negative-result investigation — no script, past or present, ever creates a symlink at that path; most likely a
       manual `ln -s` typo by an operator.
-- [ ] [DOCS] P2. Update `/codex/05-infrastructure/claude-code-settings-symlink.md`: record that `settings.local.json`
+- [x] ✅ [DOCS] P2. Update `/codex/05-infrastructure/claude-code-settings-symlink.md`: record that `settings.local.json`
       must be a real per-clone file and never a link, and that `cursor-configs/settings.json` is git-TRACKED (the
       `link-claude-skills.sh` header still says it is gitignored, which is stale and was actively misleading during this
-      investigation).
-- [ ] [DOCS] P2. Record the Cursor permission-mode fix (see Progress Log) in the same codex doc, flagged as
+      investigation). — `unified-trading-pm@547e3e8bfb`. Shipped via `infra_satellite_ao_dispatch_batch16_2026_08_13.md`
+      (reconciled here 2026-08-15, source doc's own checkbox had gone stale).
+- [x] ✅ [DOCS] P2. Record the Cursor permission-mode fix (see Progress Log) in the same codex doc, flagged as
       **per-machine setup**: `claudeCode.allowDangerouslySkipPermissions` + `claudeCode.initialPermissionMode` live in
       Cursor's user settings, which is deliberately personal and untracked, so it does NOT propagate via git — every
       operator machine needs it applied once. State explicitly that `permissions.defaultMode` in settings.json does not
-      control IDE sessions.
+      control IDE sessions. — `unified-trading-pm@e103a86d6c`. Shipped via
+      `infra_satellite_ao_dispatch_batch16_2026_08_13.md` (reconciled here 2026-08-15, source doc's own checkbox had
+      gone stale).
 - [ ] [INVESTIGATE] P2. Decide whether `DISABLE_AUTOUPDATER: "1"` in the team settings is still wanted, now that it pins
       the CLI (1.0.112) a full generation behind the Cursor extension (2.1.227). Document the reason if it stays.
-- [ ] [INVESTIGATE] P3. Memory: the `pyright-lsp@claude-plugins-official` plugin spawned one basedpyright language
+- [x] ✅ [INVESTIGATE] P3. Memory: the `pyright-lsp@claude-plugins-official` plugin spawned one basedpyright language
       server per Claude session — 6 servers against slot 1 alone, 1.6 GB, each independently indexing a 31-repo
       workspace with no sharing. Disabled in the team + personal settings 2026-08-11 at operator direction (in-editor
       diagnostics only; `quality-gates.sh` runs basedpyright itself, so the gate is unaffected). Confirm no workflow
-      depended on the in-session diagnostics before making it permanent.
+      depended on the in-session diagnostics before making it permanent. — confirmed via
+      `infra_satellite_ao_dispatch_batch16_2026_08_13.md`: grepped every `.json`/`.md`/`.sh`/`.py`/`.yml`/`.yaml` file
+      fleet-wide for `pyright-lsp`/`pyright_lsp`/"language server"/"lsp"/"in-session diagnostic" — the only live hit is
+      `cursor-configs/settings.json:35`'s own disable line; no skill, codex doc, CI workflow, or script depends on it.
+      Negative-result investigation, no code change needed (reconciled here 2026-08-15, source doc's own checkbox had
+      gone stale).
 
 ## Progress Log
 

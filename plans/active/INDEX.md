@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 291 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 290 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -1021,7 +1021,7 @@ by hand._
   market-data-processing-service) to all ~23 Python fleet repos, to turn the selective-test-execution design's savings
   estimate from a…
 
-### infrastructure (16)
+### infrastructure (14)
 
 - [`codex_violations_ratchet_to_five_2026_06_10`](./codex_violations_ratchet_to_five_2026_06_10.md) — Ratchet all repo
   codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py 18k, orchestrator.py
@@ -1050,13 +1050,6 @@ by hand._
   — Gated closeout for `infra_satellite_ao_dispatch_batch12_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until that plan's single todo is done. Batch 12 is a single-item batch (the last
   cleared-but-unbatched…
-- [`infra_satellite_ao_dispatch_batch16_2026_08_13`](./infra_satellite_ao_dispatch_batch16_2026_08_13.md) — Extraction
-  batch from the infrastructure tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 18
-  conflict-cleared, bounded/deterministic items pulled directly from 7 source docs (RECLASSIFY_SPLIT bounded items from…
-- [`infra_satellite_ao_dispatch_batch16_2026_08_13_finalize`](./infra_satellite_ao_dispatch_batch16_2026_08_13_finalize.md)
-  — Gated closeout for infra_satellite_ao_dispatch_batch16_2026_08_13.md — machine-held via depends_on + gate_on_depends
-  until every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source doc's
-  checkbox…
 - [`infra_satellite_ao_dispatch_batch7_finalize_2026_08_04`](./infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md)
   — Gated closeout for `infra_satellite_ao_dispatch_batch7_2026_08_04.md`, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
@@ -1078,8 +1071,12 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (3)
+### meta (4)
 
+- [`empty_confirmed_and_coverage_correctness_audit_2026_08_15`](./empty_confirmed_and_coverage_correctness_audit_2026_08_15.md)
+  — Pre-investigation phase before any manifest mutation, backfill, or purge: for each asset_group's large
+  empty_confirmed population, determine root cause (genuinely out-of-scope → prune, mislabeled → re-backfill, or
+  tagging-quality bug → fix…
 - [`meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10`](./meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md)
   — First AO-dispatch batch drawn from the PARKED-findings corpus rather than from satellite plans. A 2026-08-10
   operator review of all 28 live `ag_closeout_audit_<tranche>_parked_<date>.md` docs found 62 open todos of which only
