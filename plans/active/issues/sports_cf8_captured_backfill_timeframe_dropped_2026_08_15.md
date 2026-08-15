@@ -190,12 +190,16 @@ issue's scope); flagged as a follow-up todo below.
 
 ## Todos
 
-- [ ] [DATA] P0. Fix `_write_captured_rows()` (`market-tick-data-service/scripts/_rebuild_sports_write.py:305-327`) to
+- [x] [DATA] P0. Fix `_write_captured_rows()` (`market-tick-data-service/scripts/_rebuild_sports_write.py:305-327`) to
       thread `timeframe=str(row.get("timeframe") or "")` through the `writer.add()` call, so a rewrite carries the
       original row's real timeframe value instead of defaulting to blank. Add a regression test proving a
       multi-timeframe `odds_horizon_bucket` group re-emits N distinct rows (one per original timeframe), not one phantom
       blank-timeframe row. Needs review given this surface's 2 prior real regressions — small-scale test first, matching
-      this doc's own established protocol. (repo: market-tick-data-service)
+      this doc's own established protocol. (repo: market-tick-data-service) — ✅ landed pending sha
+      (`market-tick-data-service`, `_write_captured_rows` now passes `timeframe=`; regression tests
+      `test_write_captured_rows_threads_original_timeframe_through` +
+      `test_write_captured_rows_blank_timeframe_row_stays_blank` added to
+      `tests/unit/scripts/test_rebuild_sports_manifest_v9.py`, both green)
 - [ ] [DATA] P0. Once the fix above ships, identify + clean up the phantom timeframe-blank rows this session created on
       MDPS (~26,982 lower-bound, `data_type=odds_horizon_bucket`, `written_at` in the 2026-08-15T11:0x-2x UTC window,
       `timeframe` blank) — either delete them (they carry no information the corrected rewrite won't re-derive) or leave
@@ -319,3 +323,13 @@ issue's scope); flagged as a follow-up todo below.
   `market-tick-data-service` commit `908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09` immediately — no further wait needed on
   this specific blocker (a fresh `live-defi-rollout` pull may still surface unrelated drift; that's ordinary trunk
   churn, not this blocker recurring).
+- **data_engineering slot-2, 2026-08-15 (landing confirmed, correcting stale SHA above)**: retried and landed. The
+  diagnostic-scripts commit is now `market-tick-data-service@820bb93527f6252d52d4822163e40b5ecc68e70f` — the
+  `908cfecf...` SHA cited in the checkpoints above is a pre-rebase intermediate that churned through several
+  `git pull --rebase --autostash` cycles (`908cfecf`→`42b90b74`→`820bb935`) before landing; this is expected rebase
+  churn, not lost work (verified `git merge-base --is-ancestor 820bb935 origin/live-defi-rollout` = true, both scripts
+  present under `market_tick_data_service/scripts/`). AO
+  `task_id=cf_manifest_audit_first_full_rollup_findings-d1fc625d0914` marked `completed`. **This closes only the
+  diagnostic-script shipping loose end** — the CF-8 backfill itself remains genuinely incomplete; the 4 todos below (P1
+  `timeframe=` fix, P2 phantom-row cleanup, P2 backfill re-attempt, P3 maintenance-window gap) are still open and still
+  the actual remaining scope. Picking up todo #1 next.
