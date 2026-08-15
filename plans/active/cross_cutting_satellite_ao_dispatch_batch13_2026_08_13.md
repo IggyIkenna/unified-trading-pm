@@ -473,34 +473,9 @@ source: >-
       PACIFICA-SOLANA over the full 2019-03-30..2026-08-14 range. No code changes required (data-op only); no commit to
       ship. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [x] ✅ [CODE] P2. **Launched — real 62,645-cell gap confirmed + closing; candles/orderbook already 100% (no action
-      needed).** (2026-08-15, slot-4·infra) Live manifest read (bounded, column-projected
-      `read_availability_index(columns=[...])`) found `ohlcv_1m` (candles) and `book_snapshot_5` (orderbook) already
-      have ZERO `expected_unattempted` cells — the original todo's premise that all 4 sub-types needed a backfill was
-      stale; only `derivative_ticker` (funding/ticker, 37,961 cells) and `trades` (24,684 cells) had a real gap,
-      spanning 2024-10-01→2026-08-15 across 267 instruments, including 5,147+5,179 cells in the last 30 days alone
-      (still actively growing). Root cause: the daily forward-poll launcher
-      (`deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`) hardcodes EXTENDED-STARKNET's instrument
-      list to `BTC;ETH;SOL` — but the live IS catalogue (`instruments-store-cefi-prd/prod/catalog.parquet`) has **200
-      mvp=True perpetuals** for this venue, so only 3/200 were ever attempted daily; `derivative_ticker` was also
-      missing from that launcher's per-venue data_types list entirely. **Fix path traced + verified live before
-      shipping** (an initial launcher edit using the `--onchain-perp-symbols ALL` catalogue-driven sentinel was REVERTED
-      after confirming `VM_TASK=cefi-onchain-forward-poll` has no dedicated branch in `setup-data-pipeline-vm.sh` and
-      falls through to the generic `--operation download` path, which does NOT route onchain-perp venues through
-      `OnchainPerpBatchHandler`/the `ALL` sentinel at all — shipping that edit would have been a silent no-op or
-      regression). Instead launched the historical backfill via the ALREADY-CORRECT `launch-mtds-backfill-vm.sh`
-      (`VM_TASK=mtds-backfill`, which DOES auto-detect onchain-perp venues via `ONCHAIN_PERP_VENUE_CHAIN` and route to
-      `collect-onchain-perp-batch --onchain-perp-symbols ALL`):
-      `bash scripts/vm/launch-mtds-backfill-vm.sh --asset-group CEFI --venues EXTENDED-STARKNET --data-types 'trades;derivative_ticker' --instrument-ids ALL --start 2024-10-01 --end 2026-08-14 --vm-name mtds-backfill-cefi-extended-starknet-fullhist-1`.
-      VM `mtds-backfill-cefi-extended-starknet-fullhist-1` (asia-northeast1-c, e2-highmem-4, SPOT) confirmed RUNNING at
-      T+3min (heartbeat blob live) and T+~4min run.log showed REAL progress:
-      `OnchainPerpBatch: catalogue-driven universe for EXTENDED-STARKNET on 2024-10-02 = 76 symbols` (catalogue-driven,
-      not the old 3-symbol hardcode) + `ManifestWriter: per-VM shard updated (202 total entries, 151 new...)` —
-      day-chunked (5-day chunks, auto-selected for the recent-history tail), SPOT-preemption resumable, self-healing per
-      the standard launcher contract; no further manual monitoring required this session. **Follow-up filed** (NOT fixed
-      here — shared daily-cron script, 4-venue blast radius, needs its own verification): new todo below + in the source
-      doc's banner for fixing `launch-cefi-onchain-forward-poll.sh`'s EXTENDED-STARKNET (and likely
-      LIGHTER-ZKSYNC/HYPERLIQUID/ASTER, same hardcoded-list pattern) instrument scoping so the gap doesn't re-accumulate
-      once this one-time backfill converges. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+      needed).** Full evidence extracted verbatim (2026-08-15) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [INFRA] P3. Fix `launch-cefi-onchain-forward-poll.sh`'s per-venue `VENUE_INSTRUMENTS`/`VENUE_DATA_TYPES` tables
       (EXTENDED-STARKNET hardcoded to `BTC;ETH;SOL` vs. the live IS catalogue's 200 mvp perpetuals; `derivative_ticker`
       missing from its data_types) so the daily forward-poll doesn't keep re-accumulating the gap the
@@ -938,7 +913,19 @@ source: >-
 - [ ] [CODE] P2. Verify whether the GCS-backed relaunch budget fix is actually present in the deployed
       deployment-api:latest image Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Re-probe the 39 VMs whose serial-console read returned no parseable timestamp Source:
+- [x] ✅ [CODE] P2. **NOT ATTEMPTED — premise unmet: the specific 39 VM names were never persisted, and the fleet has
+      fully turned over since.** (2026-08-15, slot-22·infra) The source doc's remediation sessions saved name lists for
+      every VM it acted ON (`reaped_vms_2026_08_11.txt`, `reaped_duplicate_year_shards_2026_08_11.txt`), but the 39
+      "probe inconclusive" VMs were classified and left alone — no list of which 39 they were was ever written anywhere
+      (checked `plans/active/issues/vm_reap_lists/`: only the two reap lists exist, no third file). Without that name
+      list there is nothing to re-probe. Live fleet check confirms re-deriving it isn't viable either: the project now
+      runs 88 instances total (`gcloud compute instances list --project=central-element-323112`), all but 2 launched
+      2026-08-13 or later — only `mdps-cefi-2025-20260811-212851` and `betfair-egress-proxy-20260811-211046` survive
+      from the 2026-08-11 wedge window, and neither can be confirmed as a member of the original 39 (that membership was
+      never recorded). Per CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" rule, did not
+      fabricate a probe target list. No code change; the tool
+      (`deployment-service/scripts/vm/probe_vm_serial_liveness.sh`) is still in place for a future incident with a
+      preserved name list. Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 
 ## Deferred
