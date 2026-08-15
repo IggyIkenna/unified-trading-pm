@@ -126,13 +126,32 @@ source:
       **deployment-service@cf5e041e7** (guard, AST-based not grep) + **@79864746c** (xfail removed once wired) +
       **@375835a9a** (same guard now covers `release()`). The whole mechanism sat wired-but-unreachable through six
       green phases; a grep-level guard is what makes that unrepeatable. Repo: deployment-service.
-- [ ] [OPERATOR] P0. **Confirm it live after wiring**: the monitor runs as the `uts-prod-dp-exit-code-monitor` Cloud Run
-      Job on an hourly `0 * * * *` schedule (CORRECTED 2026-08-14 — this todo said `*/5`; the live
-      `uts-prod-dp-exit-code-monitor-cron` is `0 * * * *`, ENABLED, measured via `gcloud scheduler jobs list`, and
-      executions start on the hour), so verify (a) the job's deployed image contains the wiring commit
-      (`gcloud run jobs describe`), (b) an execution actually invoked revocation (log a `DP-REVOCATION-*` line), and (c)
-      a marker appears in `vm-census/admission-hold/` for a real condition. A green Cloud Build is NOT this —
-      `Evidence: cloudbuild=<id>` plus an execution log line is. Repo: deployment-service.
+- [x] ✅ [OPERATOR] P0. **Confirm it live after wiring** — CONFIRMED 2026-08-15. All three conditions met on
+      `uts-prod-dp-exit-code-monitor` (hourly `0 * * * *`; the `*/5` in the original todo was corrected 2026-08-14). (a)
+      The arming commits' CONTENT is on `origin/main` and in the live image — note SHA-ancestry is the WRONG test here,
+      the LDR→main promote is a projection that rewrites SHAs, so `git merge-base --is-ancestor` reports "not promoted"
+      for work that has fully landed; verify by content (`git cat-file -e origin/main:<path>`). (b) + (c) together in
+      one measured line, 2026-08-15 07:20:58 UTC:
+      `revocation deps_drain delivered for mdps-defi-2022-20260815-050859 -> ['vm-logs/…/DRAIN_REQUESTED.json',     'vm-census/admission-hold/….json'] (DP-VM-002)`
+      — both markers written, and `deps_hold delivered for mdps-defi-` (DP-VM-001) shows prefix-family targeting working
+      too. **30 distinct VMs received a delivery in 12h.** The mechanism is live and acting. Repo: deployment-service.
+- [ ] [CODE] P0. **Register the 7 emitted-but-unregistered DP ids, or the revocation layer stays blind to them.**
+      Measured 2026-08-15: `DP-LIVE-001/002/003/004`, `DP-VM-012`, `DP-WATCHER-005/006` are emitted by monitor source
+      but appear in NEITHER closed set (`data-pipeline-alerts.registry.yaml`'s 54 ids, nor `AlertCode`), so
+      `evaluate_revocation()` raises `UnknownAlertIdentityError` and `_apply_revocation` logs
+      `revocation: <id> did not evaluate` and returns `{}`. **127 such rejections in 6h** on `uts-prod-dp-meta-watchers`
+      alone (DP-WATCHER-006 ×68, DP-LIVE-004 ×34, DP-LIVE-001 ×15, DP-LIVE-003 ×10). This is NOT the whole mechanism
+      failing — the registered ids (DP-VM-001/002) deliver correctly; it is a per-id registration gap. **The DP-LIVE
+      family is the live-trading signal**, including `missing_live_producer_watcher` (DP-LIVE-003), which is the closest
+      existing thing to the producer-silence trigger in `/plans/active/producer_silence_flatten_protocol_2026_08_14.md`
+      — so this gap will silently swallow that plan's trigger too unless closed first. Each id needs a deliberate
+      `DependentAction` (registering at `NONE` is safe and explicit; anything stronger on a LIVE code is a risk
+      decision). Repo: unified-api-contracts + unified-trading-pm (registry).
+- [ ] [CODE] P1. **Make an unregistered identity fail loudly at CI time, not silently at runtime.** The gap above
+      survived because a `WARNING` in a Cloud Run job's logs is invisible until someone greps for it. Add a check that
+      every `registry_id=` literal passed to `emit_finding()` resolves in `evaluate_revocation()`'s closed set — an AST
+      sweep over the monitor source, in the same family as the anti-inertness guards. A code emitting into a policy
+      layer that cannot key it is the same class of defect as a component with no caller. Repo: deployment-service.
 
 > **📏 COVERAGE NUMBERS CORRECTED 2026-08-14 — I got this wrong twice, both times by counting the wrong thing.** First I
 > reported "179/184 covered" by counting launchers that SOURCE `launcher_common.sh`; that lib only MENTIONS the wrapper
