@@ -361,8 +361,18 @@ source: >-
       NOT flipped in this commit** — see the new follow-up todo below (the source doc is 1001L, over its 1000-line hard
       cap, pre-existing, blocking any commit that touches it). Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Fix sports reference-table exporter fabricating http_status=200 FetchEvidence for a GCS-missing
-      upstream Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix sports reference-table exporter fabricating http_status=200 FetchEvidence for a GCS-missing
+      upstream — **SHIPPED features-service@656f2e10** (2026-08-15, slot-7·backend_engineer). Root cause:
+      `_run_reference_tables`'s `df.empty` branch unconditionally fabricated a `http_status=200`/`rows_in_response=0`
+      `FetchEvidence` for ANY empty export, including a REQUIRED entity (only `fixtures` today) whose GCS blob
+      instruments-service hasn't written yet — `read_all_reference_data()` swallows that `DependencyError` per-entity
+      for shard isolation, so the exporter's cached read couldn't distinguish a genuine 2xx-empty upstream from one
+      never actually reached. New `_dependency_missing_gate.py` (extracted to keep `batch_handler.py` under the 900-line
+      QG cap) re-probes REQUIRED entities directly before recording empty; a `DependencyError` now routes to
+      `record_failed`, mirroring `_run_feature_group`'s existing handling of this same gap class. 1 new regression test
+      (`test_run_reference_tables_records_failed_on_dependency_error`). Also regenerated the
+      `adapter_contract_baseline.yaml` entry for the two touched files (the `record_failed` call moved, not vanished) —
+      `unified-trading-pm@0c49f53583`. Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [x] ✅ [CODE] P2. Recompute the 2026-08-10 sports reference tables once instruments-service backfills that day
       **CLOSED — stale-checkbox correction (2026-08-15), already-shipped elsewhere per the AO-dispatch conflict-check
       protocol §3(4).** The source doc's own identical todo was verified done by slot-29 on 2026-08-14 (manifest lookup:
@@ -786,3 +796,21 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   full breakdown (incl. the two out-of-scope buckets: chain-bundle `instrument_type` values already tracked by
   `cefi_chain_relabel_migration_options_futures_2026_08_15.md`, and `index`/blank rows already the aggregated-sources
   doc's separate "resolve from id / remap" row).
+
+- **2026-08-15 (slot-7·backend_engineer)**: dispatched + shipped the "sports reference-table exporter fabricating
+  http_status=200" todo — `features-service@656f2e10`, see the todo's own entry above for the fix. Notable infra
+  friction worth recording for the next worker hitting it: this session's `quality-gates.sh`/`quickmerge.sh` runs
+  repeatedly got silently killed (zero output, no exit code) under severe shared-host contention (load 25-39, sub-1Gi
+  free RAM for a sustained ~25min window) — matches
+  `plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s documented pattern. Plain Bash
+  `run_in_background: true` invocations were the ones dying instantly with zero output every time (5 consecutive kills,
+  including a quickmerge attempt that never even started its own internal rebase); wrapping the SAME commands in the
+  `Monitor` tool instead succeeded reliably on the first or second try once host RAM recovered — worth trying that swap
+  before escalating if `run_in_background` keeps dying silently on this host. Also hit + fixed a self-caused regression:
+  extracting `_dependency_missing_gate.py` (to keep `batch_handler.py` under the 900-line file-size cap) moved a
+  `record_failed` call out of `batch_handler.py`, tripping the non-shrinking `adapter_contract_baseline.yaml` ratchet
+  (STEP 5.83) — fixed via a targeted 2-line hand-edit of the baseline (not a full `--regenerate-baseline`, which would
+  have bundled in a large amount of unrelated fleet-wide drift from other slots' merged work) —
+  `unified-trading-pm@0c49f53583`. Also filed + self-resolved repo-blocker `RB-0d4b223c` (push_race) after 3+
+  consecutive quickmerge kills under sustained branch churn (code was green throughout — QG sentinel matched HEAD on
+  every attempt).
