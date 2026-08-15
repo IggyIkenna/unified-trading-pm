@@ -22,6 +22,9 @@ tags: [manifest, consolidator, dedup, data-correctness]
 related: [/plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md]
 resolved_by:
 locked_by:
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Manifest schema-drift dup — root causes resolved, residual re-scoped
