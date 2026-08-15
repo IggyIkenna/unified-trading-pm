@@ -12,17 +12,23 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, watchdog, slack, infrastructure]
-related: [/codex/04-architecture/agent-orchestrator-autospawn.md, /codex/04-architecture/agent-orchestrator-overview.md]
+related:
+  [
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /plans/active/ao_human_fleet_integration_2026_08_15.md,
+  ]
 created: 2026-06-01
-authoritative_for: [agent-orchestrator worker-liveness watchdog]
+authoritative_for: [agent-orchestrator worker-liveness watchdog, human-slot liveness/dispatch exemption contract]
 referenced_by:
   [
     /codex/04-architecture/agent-orchestrator-autospawn.md,
     /codex/04-architecture/agent-orchestrator-overview.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
+    /plans/active/ao_human_fleet_integration_2026_08_15.md,
   ]
 owner:
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-15
 code_refs:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
@@ -33,6 +39,9 @@ code_refs:
     agent-orchestrator/server/orphan_reap.py,
     agent-orchestrator/server/context_probe.py,
     agent-orchestrator/server/context_lifecycle.py,
+    agent-orchestrator/server/config.py,
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/scripts/human_fleet/ao_client.sh,
   ]
 ---
 
@@ -181,17 +190,6 @@ synchronous, multi-minute foreground wait (rather than truly backgrounding it AN
 per the worker heartbeat HARD RULE) is exactly the scenario this reaps — confirmed root cause for
 `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s ~19-minute reproduction.
 
-**`orphan_reap.py::sweep_orphan_processes` spares a CPU-progressing detached quickmerge (`agent-orchestrator@f91b4d0`,
-2026-08-08).** Distinct from `_reap_pane_tree` above (which reaps at kill-time, as part of ending a session):
-`sweep_orphan_processes` is a periodic sweep that previously killed ANY detached process (`PPID=1`) on a frozen-pane
-read, including an in-flight quickmerge whose QG child was actively CPU-progressing — producing a false-done (task
-already read `done` server-side, code committed-but-unpushed, no automatic push path). `_has_cpu_progressing_descendant`
-now walks the descendant process tree and spares a detached quickmerge with a live, CPU-progressing pytest/QG child
-before classifying the pane as reap-eligible. Closes the false-done shape documented in
-`reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` (archived, `plans/archive/issues/`); see the
-`/done`-time sha-on-origin gate in `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` for the
-complementary server-side guard against the same false-done class.
-
 ---
 
 ## WorkerLivenessKicker — host-load-aware grace shield + hard-kill escalation (2026-07-29/30)
@@ -328,27 +326,6 @@ remains exactly as defeatable as the 2026-07-26 incident. Regression coverage: `
 (a FINAL-answered historical row does not false-positive gate).
 
 ---
-
-## Same-VM slot-to-slot double-dispatch — release-safety + observability fixes (2026-08-01/04)
-
-**The gap.** `_reconcile_unacked_dispatches` released a `status="dispatched"` task past `dispatch_ack_timeout_seconds`
-(1800s) back to `queued` on a SINGLE pane-classify snapshot alone (no real liveness check), then `dispatch.py`'s R5
-`_target_slot_is_dead()` (a shorter 600s ping-silence threshold) let a DIFFERENT slot claim the freshly-queued task
-moments later — while the true owner's pane was still alive, mid a long silent operation like `quality-gates.sh`.
-Observed live: `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (archived, `plans/archive/issues/`),
-7 incidents across 2026-07-25 to 2026-08-09, both doc-only convergences (self-mitigating) and real same-file
-code-conflict near-misses.
-
-- **Release-safety fix** (`agent-orchestrator@7911083`, 2026-08-01). `_reconcile_unacked_dispatches` now requires
-  `_pane_is_dead` (the same discriminator `_sweep_dirty_slots` already uses) before releasing an un-ACKed dispatch — a
-  worker that's silent-but-provably-alive (PID up, forward progress) no longer has its in-flight task pulled out from
-  under it.
-- **Observability fix** (`agent-orchestrator@82578c3`, 2026-08-04). `assign_task_to_slot` now clears any DIFFERENT
-  slot's stale `current_task` before assigning a task to a new slot, and logs a loud warning naming both slot ids + the
-  task — so `/api/state` never silently shows one task `working` in two slots at once.
-
-This is a same-VM slot-to-slot race (release timing), distinct from the FLEET-scope in-flight guard below (which closes
-a session-boundary gap for long-running resumable todos). Both remain live, complementary layers.
 
 ## Fleet-wide in-flight-task double-dispatch guard + abandoned-claim threshold (2026-08-06/09)
 
@@ -716,39 +693,6 @@ SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § "Opera
 
 ---
 
-## Pane-guard-before-cap-branch ordering invariant (2026-08-06, `agent-orchestrator@9d26598`)
-
-**The invariant.** In `check_spawn_heartbeat_timeouts` (`server/worker_liveness/_auth_failover.py`, ~L54-181), pane
-diagnosis (`_diagnose_unbooted_pane`) MUST run and be consulted **before** the retry-cap branch, never after. The
-function's real order, top to bottom once a slot has passed the grace window
-(`elapsed >= SPAWN_HEARTBEAT_TIMEOUT_SECONDS`):
-
-1. `_diagnose_unbooted_pane(slot.tmux_session)` runs first (~L140), unconditionally, for every slot that has reached the
-   timeout — one `capture_pane` per slot per tick.
-2. If the diagnosis reads `pane_state == "working"` (~L150-166): the slot is skipped WITHOUT burning a retry, and
-   `kicker._spawn_cap_alerted.discard(slot.slot_id)` re-arms the cap alert for that slot — the same re-arm a real
-   `/heartbeat` triggers earlier in the function. This is a hard `continue`, so a working pane never reaches the
-   retry-cap branch at all.
-3. Only a slot whose pane is NOT working falls through to the retry-cap check
-   (`retry_count >= _SPAWN_HEARTBEAT_MAX_RETRIES`, ~L168) and, if capped, fires `spawn_retry_cap_reached` + the operator
-   page.
-
-**Why the order is the whole bug, not a detail.** Before this commit, the pane-working guard sat AFTER the cap branch,
-which `continue`s on its own — so once a slot burned its `spawn_retry_count` retries, the guard was structurally
-unreachable for that slot ever again, regardless of what its pane actually showed. Measured 2026-07-30..08-06 on the
-orchestrator VM: 8 of 45 `spawn_retry_cap_reached` pages carried `pane_state == "working"` — i.e. the operator was paged
-about a spawn that had already, demonstrably, succeeded. Hoisting the diagnosis above the cap branch and re-arming
-`_spawn_cap_alerted` on a working-pane hit closes both halves at once: a working pane can no longer be reported as
-capped, and a slot that recovers after being capped is not left permanently marked as such.
-
-**A future refactor must preserve this order.** Any change to `check_spawn_heartbeat_timeouts` that reintroduces the
-retry-cap check ahead of the pane diagnosis (or that adds a new early-return between "timeout elapsed" and "diagnose
-pane") silently reopens this exact false-page class — it will not show up as a test failure unless the test specifically
-asserts on ordering, since both branches remain individually correct in isolation; the bug is only in their sequence.
-Source: `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`.
-
----
-
 ## Calibration-source contract: only CLI-rendered percentages may calibrate a learned window (2026-08-09)
 
 **The rule.** `context_probe.observe(model, tokens, *, pane_pct=...)` treats `pane_pct` as an AUTHORITATIVE calibration
@@ -966,3 +910,62 @@ int id).
   was deleting special cases, not changing policy. The remaining main-specific branches in `context_lifecycle.py`
   (`_main_pct`, the `slot_id is None` wedge-recovery) are scheduled to be collapsed into the ordinary slot path (issue
   todos 5-6) once the row is the stable base; the row existing NOW is what makes those collapses pure refactors.
+
+## Human slots — a human operator's own session, self-reporting, never spawned or killed (2026-08-15)
+
+**The contract.** A "human slot" is a real `SlotRow` (in a documented, non-colliding id range —
+`config.HUMAN_SLOT_ID_BASE = 9000`, `DEFAULT_HUMAN_SLOTS = (9001, 9002)`, `server/config.py`) representing an operator's
+own interactive Claude Code session on their own laptop — never a tmux-spawned AO agent, never dispatched via
+`pick_next_task`, and structurally exempt from every liveness/kill mechanism AO has. Full design:
+`plans/active/ao_human_fleet_integration_2026_08_15.md` (Phases 0-3 shipped
+`agent-orchestrator@c5e6018`/`@5516874`/`@e9bb4aa`/`@6b50caa`; Phase 4 — per-operator credential issuance + first live
+run — is the operator-gated tail, not autonomous by design).
+
+**Two hard guarantees, both structural, not policy:**
+
+1. **AO can never kill/kick/spawn onto a human slot.** `config.human_slot_ids()` mirrors `review_slot_ids()`'s exact
+   shape and is checked at the SAME three pre-tmux-call sites `review_slot_ids()` already gates —
+   `WorkerLivenessWatchdog._tick_once` (before `has_session`), `AutoSpawn._should_spawn` (before `has_session`),
+   `WorkerLivenessKicker._tick_once` (merged into one combined condition with the review check, to stay under ruff's
+   C901 complexity cap on that function). A human slot's `tmux_session` is always `None` by construction (a human
+   self-reports, AO never spawns one), so even without the explicit checks these subsystems would find nothing to act on
+   — the explicit `human_slot_ids()` checks are defense-in-depth on top of that structural fact, matching the
+   review-slot pattern's own redundancy.
+2. **A human never competes with AO's own dispatch queue.** There is no "claim the next task" path for a human slot —
+   `pick_next_task()`'s competitive per-slot selection is never invoked for one. Instead:
+   `POST /api/slots/{slot_id}/human-claim` atomically claims one SPECIFIC `task_id` (never AO's "next best" pick), gated
+   by a pre-flight verdict computed inside the SAME transaction (no check-then-claim race): the task must be neither
+   currently `dispatched_to` anyone, nor ranked within `rank_eligible_tasks()`'s FLEET-eligible preview of AO's own next
+   50 (the identical `_build_ctx`/`first_blocking_filter`/sort-key primitives `pick_next_task` itself uses, scoped to
+   `FilterScope.FLEET` only — a human isn't gated by an AO slot's model tier or craft role the way a real worker is).
+   When a human wants a task that fails this check, the escape hatch is flipping the OWNING PLAN's `assigned_vm` to `NA`
+   on disk — closed to a genuine race-free guarantee by a new `unassigned_vm` `_FILTERS` entry (`server/dispatch.py`,
+   `FilterScope.FLEET`, mirrors `gate_on_depends_on_disk`'s live-disk-read pattern exactly) — `assigned_vm` previously
+   gated only task CREATION and prune-survival, never live dispatch eligibility, leaving a real ~10min race window
+   before this fix (Phase 0 investigation finding).
+
+**Everything else is deliberate reuse, not new mechanism** — this is the load-bearing design property, and the reason
+the feature was buildable in one plan rather than a rearchitecture: `SlotRow`'s `tmux_session`/`claude_session_id`/
+`last_spawned_at` were ALREADY nullable and documented in-code as "None for a manually-pasted/non-spawned worker" before
+this plan touched anything; `POST /api/slots/{slot_id}/done` is completely UNMODIFIED — it gates purely on
+`task_row.dispatched_to == slot_id`, so a human-claimed task gets the full worker verification stack (git-diff evidence,
+plan-checkbox-flip enforcement, origin-push check, quickmerge-provenance) for free; `task_role_group()` gained explicit
+`"human"`/`"planning-human"` buckets (task-execution vs. plan-authoring time) instead of silently collapsing into the
+`"planning"` catch-all every other unclassified role gets.
+
+**What is NOT reused, and why:** usage capture. `_compute_done_task_usage` computes real numbers by scanning the
+completing slot's transcript on the AO SERVER's OWN filesystem (`<config_base>/*/projects/*/*.jsonl`) — a local file
+read, not a network call, structurally unreachable for a human's laptop transcript. The fix is client-side:
+`scripts/human_fleet/ao-usage-push.py` imports `deepseek_usage.scan_session_usage()` DIRECTLY (no reimplementation)
+against the confirmed local default (`~/.claude/projects/<cwd-slug>/<session-id>.jsonl` — Claude Code's own default,
+`CLAUDE_CONFIG_DIR` unset, independent of the launching terminal) and pushes RAW TOKEN COUNTS to a new
+`POST /api/slots/{slot_id}/human-usage` endpoint, which prices spend SERVER-SIDE via `model_pricing.price_usage()` —
+never trusting a client-computed dollar figure. A real edge case surfaced testing this against a live transcript: Claude
+Code emits genuine `model: "<synthetic>"` internal bookkeeping turns with all-zero usage that `scan_session_usage()`
+correctly includes (matching AO's own existing worker-capture behaviour) — filtered client-side so an all-zero group is
+never pushed as noise.
+
+**A future liveness/dispatch change must not silently regress either guarantee above** — if you touch
+`WorkerLivenessWatchdog`/`AutoSpawn`/`WorkerLivenessKicker`'s liveness checks or `dispatch._FILTERS`, re-verify a human
+slot still can't be killed and still can't be dispatched to competitively, the same way
+`test_every_context_lifecycle_ target_has_slot_row` above guards main's own structural guarantee.
