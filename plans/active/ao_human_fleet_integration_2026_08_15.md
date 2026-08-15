@@ -279,6 +279,18 @@ investigation confirmed are both achievable with existing primitives:
   by review. **Phase 3 fully done. Only Phase 4 remains: per-operator JWT issuance (real credential minting — this is
   where the loop should slow down and be deliberate, not rush), the real end-to-end run per operator, and the durable
   codex doc.**
+- **2026-08-15, tick 8 (autonomous, main session)**: Shipped the codex doc — `unified-trading-pm@9786794390` — a new
+  "Human slots" section in `agent-orchestrator-worker-liveness.md` covering both hard guarantees, what's reused vs.
+  genuinely new, and a standing instruction for future liveness/dispatch changes. Found and fixed 2 pre-existing
+  dangling references to an archived doc while editing that file (unrelated to this plan — fixed per the "a doc that
+  misled you is a finding" rule). **Remaining Phase 4 items are deliberately NOT actioned autonomously**: minting a real
+  30-day worker-role JWT and then claiming/completing a REAL backlog task through this brand-new path is a real step up
+  in consequence from everything else this plan shipped (all of it tested via unit tests + safe read-only probes against
+  production) — surfacing this to the operator directly rather than deciding alone, per ASK > PARK (the operator is
+  actively reachable in this session, re-invoking `/autonomous` each tick, not genuinely away). Harsh's half of Phase 4
+  (JWT issuance/setup on his own machine) is a genuine physical impossibility from this session regardless of any
+  decision here. **Plan is functionally complete pending the operator's own Phase 4 execution** — every prerequisite,
+  script, endpoint, and doc it needs is shipped and tested.
 
 ## Todos
 
@@ -410,8 +422,10 @@ investigation confirmed are both achievable with existing primitives:
       heartbeat → done, and confirm dashboard visibility (Human Fleet page) and a real usage row (Phase 2's
       scan-and-push companion). Done when: both operators' first human-claimed task shows up correctly in the plan
       dashboard with non-zero usage attribution.
-- [ ] [INFRA] P3. **Document the human-slot contract as a durable codex SSOT** — extend
-      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (or a new sibling doc if scope doesn't fit) with
-      the human-slot exemption, self-report/pre-flight-check contract, and the `assigned_vm` escape hatch, so a future
-      AO change to liveness/dispatch logic doesn't silently regress the human-slot guarantees. Done when: the doc is
-      shipped and linked from this plan's `related:`.
+- [x] 20. ✅ [INFRA] P3. **Document the human-slot contract as a durable codex SSOT** — new "Human slots" section
+      appended to `/codex/04-architecture/agent-orchestrator-worker-liveness.md` covering both hard guarantees
+      (never-killable, never-competing), what's reused vs. genuinely new, and a standing instruction that a future
+      liveness/dispatch change must re-verify both. `related:`/`referenced_by` cross-linked both directions. Found +
+      fixed 2 pre-existing dangling references to an archived doc while in this file (unrelated to this plan, fixed per
+      the "a doc that misled you is a finding" rule rather than left for the next reader). Evidence:
+      unified-trading-pm@9786794390.
