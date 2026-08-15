@@ -171,3 +171,32 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
   `origin/live-defi-rollout`. Todo 3 (P2 live re-verify) remains open — needs a real post-fix multi-cycle
   `gcloud logging read` to confirm the resume actually closes the gap in production, not something to fake from a
   unit test.
+- **data_engineering (slot-24) 2026-08-15T21:58Z**: was independently dispatched the same todo 1 (dispatch race — both
+  slots picked it up before either flip landed) and had already reproduced it live before a fresh re-read surfaced
+  slot-6/slot-5's entries above; not duplicating the flip, but the SECOND independent live occurrence found here is
+  new evidence worth keeping — it confirms the failure mode is trigger-agnostic (matters for todo 3's scope).
+  **Second live occurrence, DIFFERENT trigger than slot-5's (deploy rollout, not autoscaling) and a DIFFERENT
+  orphaned service (`features-calendar-service`, not multi-timeframe)**: watched sweep
+  `rollup-run-366530a48656490cbbf8478f8ec0ebea` (started 21:00:36Z, running on the PRE-checkpoint-fix revision
+  `-00480-v7t`) renew cleanly after each service — instruments-service (21:08:20Z), `market-tick-data-service`
+  (timeout, 21:15:20Z), `market-data-processing-service` (timeout, 21:22:20Z), `features-delta-one-service` (timeout,
+  21:29:21Z), `features-volatility-service` (success, 21:36:03Z), `features-onchain-service` (21:40:57Z),
+  `features-sports-service` (21:44:31Z) — then went completely silent while `features-calendar-service` (#8) was in
+  flight. At 21:46:20-21:47:27Z, `gcloud logging read` showed a live `DEPLOYMENT_ROLLOUT`
+  (`"Starting new instance. Reason: DEPLOYMENT_ROLLOUT..."`, new revision `-00481-hwh` created 21:46:21Z) tear down
+  the `-00480` instance mid-request (`"Shutting down user disabled instance"` + `"Shutting down API..."` x2 +
+  `"Event logging closed"`) — calendar-service never got a chance to renew or fail-log, matching candidate 1 exactly
+  (zero log output for the whole stall, vs. candidate 2's expected `killpg`/`timed out after Ns` line within its own
+  budget). A SECOND deploy-kill followed almost immediately (`-00482-gzx` created 21:55:23Z, instance killed again at
+  21:56:13Z — only 9s after boot) confirming this was an active CI/CD rollout window, not a one-off (`gcloud builds
+  list` showed ~20 builds landing across the fleet in the same ~21:32-21:55Z span — this service's long-lived
+  synchronous sweep request is at recurring risk from ANY frequent-redeploy window, not just this one incident). As
+  of 21:58:25Z no new sweep had started; the dead-held lock (last renewal 21:44:31Z, TTL 40min → expires ~22:24:31Z)
+  means the 22:00Z and 22:20Z scheduler ticks will both still see it held and skip, so calendar-service onward —
+  calendar, multi-timeframe, cross-instrument, commodity, ml-service (again), strategy, execution — get zero chance
+  to run until ~22:40Z at the earliest, ~56min after the last successful renewal: same order of magnitude as the
+  original ~50min finding, via a different trigger. Did not confirm whether `-00481`/`-00482` already carry the
+  checkpoint-resume fix (`26470d4b91`) — `gcloud run revisions describe` only gives an image digest, and correlating
+  it to a commit needs the Cloud Build trigger history, which is genuinely todo 3's job (a real post-fix multi-cycle
+  trace), not something to shortcut here. No code changed this pass; released the task as already-resolved rather
+  than re-flip an already-flipped checkbox.
