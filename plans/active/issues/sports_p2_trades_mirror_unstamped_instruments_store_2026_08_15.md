@@ -16,7 +16,11 @@ repos: [instruments-service, market-tick-data-service]
 scope: [engineer]
 tags: [sports, migration, canonicalisation, manifest, cross-bucket, trades, odds]
 related:
-  [/plans/active/sports_taxonomy_p2_migration_2026_08_08.md, /codex/02-data/four-surface-reconciliation-procedure.md]
+  [
+    /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md,
+  ]
 created: "2026-08-15"
 last_updated: 2026-08-15
 parent_epic: sports_master
@@ -81,14 +85,18 @@ merge that helper exists for). Findings corroborate + refresh this doc's origina
 **Verdict: LIVE PRODUCER, not a stale historical mirror.** The sports odds_api writer is still actively stamping
 `data_type=trades`/`TRADES` on new captures into this surface as of today. This matches the KNOWN PHASED-STATE CAVEAT
 `manifest_swap_trades_to_odds_2026_08_12.py` already documented for the sibling tick-bucket surface: writers keep
-emitting the old token until P3 (`sports_taxonomy_p3_consumers_2026_08_08`) flips them — that plan is the tracked scope
-for the writer-side fix, not duplicated here. Consequently a one-time metadata relabel is not durable by itself (new
-`trades` rows will keep appearing until P3 lands), but it is still the correct immediate action — same posture already
-accepted for the tick-bucket sibling script — so the relabel was drafted + locally validated (synthetic in-memory frame,
-no GCS calls) this session: `instruments-service/scripts/restamp_sports_is_bucket_trades_mirror_to_odds_2026_08_15.py`.
-Execution against prod needs a dedicated VM launch (15.7M-row manifest, matches the already-executed 19-token
-casing-restamp's own VM-launch requirement on this exact bucket) — split to the new `[OPERATOR]` todo below rather than
-run inline on the shared host, per the memory-bounding + heavy-I/O HARD RULES.
+emitting the old token until the writer itself is flipped. **Correction (2026-08-15, later same day)**:
+`sports_taxonomy_p3_consumers_2026_08_08` does NOT actually own the writer-side fix — confirmed via a full read, its
+todos are panel/ML/arb/catalogue/Betfair consumer wiring only, no `venue_fetch.py`/`_build_sports_shard_path()` todo
+anywhere in it. The writer-side fix is tracked in the new
+`/plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` instead — that plan is the tracked
+scope, not duplicated here. Consequently a one-time metadata relabel is not durable by itself (new `trades` rows will
+keep appearing until P3 lands), but it is still the correct immediate action — same posture already accepted for the
+tick-bucket sibling script — so the relabel was drafted + locally validated (synthetic in-memory frame, no GCS calls)
+this session: `instruments-service/scripts/restamp_sports_is_bucket_trades_mirror_to_odds_2026_08_15.py`. Execution
+against prod needs a dedicated VM launch (15.7M-row manifest, matches the already-executed 19-token casing-restamp's own
+VM-launch requirement on this exact bucket) — split to the new `[OPERATOR]` todo below rather than run inline on the
+shared host, per the memory-bounding + heavy-I/O HARD RULES.
 
 - [x] ✅ [DATA] P2. Census the `instruments-store-sports-prd` manifest's `trades`/`TRADES` rows' `capture_status`/
       `venue`/`date` distribution, confirm whether they are stale historical mirrors of already-migrated tick-bucket
@@ -111,7 +119,9 @@ run inline on the shared host, per the memory-bounding + heavy-I/O HARD RULES.
       (merged `_index/availability_index.parquet` + every non-empty `_index/per_vm/*.parquet` shard), no GCS object
       touched, §3a n/a. Reuse (or extend) the `sports-19token-restamp` VM-launcher category. After apply: re-run
       `census_sports_is_bucket_trades_mirror_2026_08_15.py`; 0 remaining `trades`/`TRADES` closes the todo above.
-      **KNOWN PHASED-STATE CAVEAT**: the live odds_api writer keeps stamping `data_type=trades` on new captures until P3
-      (`sports_taxonomy_p3_consumers_2026_08_08`) flips it to the canonical token — a re-run after P3 lands may be
+      **KNOWN PHASED-STATE CAVEAT**: the live odds_api writer keeps stamping `data_type=trades` on new captures until
+      the writer itself is flipped — tracked in
+      `/plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` (NOT
+      `sports_taxonomy_p3_consumers_2026_08_08`, corrected above) — a re-run after that plan's Phase 0 lands may be
       needed if fresh `trades` rows reappear (same caveat already accepted for the sibling tick-bucket restamp,
       `manifest_swap_trades_to_odds_2026_08_12.py`).

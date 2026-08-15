@@ -20,6 +20,7 @@ related:
     sports_odds_api_scattered_multiyear_gaps_2026_07_27,
     sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25,
     sports_taxonomy_p2_migration_2026_08_08,
+    sports_odds_writer_flip_and_trades_path_retirement_2026_08_15,
   ]
 parent_epic: sports_master
 source: interactive-session
