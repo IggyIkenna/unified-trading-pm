@@ -230,3 +230,17 @@ Mechanical, bounded remediation — not a design/judgment call:
   rather than reactively repairing it) — that tooling is shared fleet-wide, and a change to it is exactly the kind of
   cross-cutting, SSOT-level call CLAUDE.md reserves for an explicit operator decision, not a mid-poll-tick patch. Left
   as an explicit open todo below rather than actioned.
+
+- **Resolved 2026-08-15 (cicd escalation agt-f4b815, slot 19) — same recurrence, this time via the `ldr_qg_failure` path
+  (promote PR #3180, wall `ldr_main_qg_failure`).** Corpus count had climbed to 2118 (baseline 1639, +479).
+  Hand-repaired every currently-flagged file via `fix_prosewrap_padding.py` (content-preserving, `git diff -w` empty
+  confirmed) and lowered the baseline to 329 — `unified-trading-pm@<pending>`. **6 files were deliberately excluded**
+  from this pass because they are already over the hard 1000-line plan cap (`check_line_caps.sh`) and staging them at
+  all (even a whitespace-only diff) trips that separate hard gate: `data_completion_defi_2026_07_15.md` (1033L),
+  `data_pipeline_check_mdps_features_2026_07_20.md` (1002L), `data_pipeline_reconciliation_skill_2026_07_20.md` (1003L),
+  `github_actions_operator_gated_followups_2026_07_17.md` (1006L),
+  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` (1003L), and
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (1001L, which also independently trips `check_reference_paths`
+  on a pre-existing dangling reference to a `predictions_other_bucket_and_ui_drilldown` doc that no longer resolves).
+  Those 6 files' prosewrap debt (329 lines total) remains in the baseline — split them below the line cap first, then
+  repair + re-lower the baseline in the same pass.

@@ -351,7 +351,7 @@ campaigns, this session:
       own Cloud Build trigger history), (3) re-run
       `gcloud run jobs describe uts-prod-dp-exit-code-monitor ... --format="value(metadata.labels.'run.googleapis.com/lastUpdatedTime')"`
       and confirm it is AFTER the deployment-api rebuild, (4) only then
-      `gcloud scheduler jobs resume uts-prod-dp-exit-code-monitor-cron --project=central-element-323112     --location=asia-northeast1 --account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`,
+      `gcloud scheduler jobs resume uts-prod-dp-exit-code-monitor-cron --project=central-element-323112 --location=asia-northeast1 --account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`,
       (5) watch its next 1-2 hourly firings —
       `gcloud compute instances list --filter="name~'^mdps-' AND status=RUNNING"` should stay near 26-31, not climb.
 - [ ] [SCRIPT] P2. `scripts/recovery/relaunch_stalled_vm.py`'s `RelaunchStalledVm` budget is tempdir-local (not
@@ -392,11 +392,11 @@ campaigns, this session:
       `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text (not just this doc's own paraphrase) to confirm vs.
       definitively refute whether those specific four dispatch events were themselves triggered by this watchdog bug
       rather than genuine SPOT reclaim — the correlation section above is strong but circumstantial.
-- [ ] [SCRIPT] P2. `launch-vm-zombie-watchdog.sh`'s UAC/UTL source-tarball `pip install`s pipe through
-      `tail -3 ||     true` (lines ~205-214), silently truncating and swallowing a real build failure — confirmed this
-      caused one relaunch attempt to boot into a broken, protection-providing-nothing state (`ModuleNotFoundError` on
-      the eventual deployment-service install) with no loud failure signal until the very end. Should fail loudly (or at
-      minimum log the FULL captured output, not just `tail -3`) on a non-zero pip exit instead of `|| true`.
+- [ ] [SCRIPT] P2. `launch-vm-zombie-watchdog.sh`'s UAC/UTL source-tarball `pip install`s pipe through `tail -3 || true`
+      (lines ~205-214), silently truncating and swallowing a real build failure — confirmed this caused one relaunch
+      attempt to boot into a broken, protection-providing-nothing state (`ModuleNotFoundError` on the eventual
+      deployment-service install) with no loud failure signal until the very end. Should fail loudly (or at minimum log
+      the FULL captured output, not just `tail -3`) on a non-zero pip exit instead of `|| true`.
 
 ## Progress Log
 

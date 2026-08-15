@@ -210,10 +210,10 @@ issue's scope); flagged as a follow-up todo below.
       200-sample extrapolation), 959 (6.69%) have NO non-blank-timeframe sibling under their coarse
       (date,venue,league_id,data_type,service_name) key — deleting THOSE would be destructive, contradicting this doc's
       original "NON-destructive" claim for that subset. Refined finding:
-      `league_id=LA_LIGA_2,     service_name=market-data-processing-service` accounts for 872/959 (91%) of no-sibling
-      rows, and — cross-checked against the blast-radius breakdown — LA_LIGA_2's phantom-population count is ALSO
-      exactly 872, meaning 100% of LA_LIGA_2's phantom rows lack a sibling (not the 92% the 200-row sample suggested).
-      The remaining 87 no-sibling rows spread thinly across ~20 other minor leagues (SOCCER_RUSSIA_PREMIER_LEAGUE 22,
+      `league_id=LA_LIGA_2, service_name=market-data-processing-service` accounts for 872/959 (91%) of no-sibling rows,
+      and — cross-checked against the blast-radius breakdown — LA_LIGA_2's phantom-population count is ALSO exactly 872,
+      meaning 100% of LA_LIGA_2's phantom rows lack a sibling (not the 92% the 200-row sample suggested). The remaining
+      87 no-sibling rows spread thinly across ~20 other minor leagues (SOCCER_RUSSIA_PREMIER_LEAGUE 22,
       SOCCER_AUSTRALIA_ALEAGUE 12, SOCCER_SWITZERLAND_SUPERLEAGUE 9, ... all ≤9 each), ALL on
       `market-data-processing-service`, none observed on IS. This 100% correlation for LA_LIGA_2 is strong (not yet
       confirmed) evidence for the "single-horizon-bucket league" hypothesis over "a second, different bug" — a random

@@ -425,8 +425,8 @@ source: >-
       diagnosed below (`TestShellcheckClean.test_shellcheck_no_errors`, `tests/unit/test_vm_zombie_watchdog.py`, ~180
       parametrized per-script `shellcheck` subprocess calls flaking under concurrent gate load — SIGPIPE, the same
       anti-pattern `test_script_syntax_validation` fixed 2026-08-14): batched into ONE
-      `shellcheck --severity=error     <all scripts>` subprocess call (shellcheck accepts multiple file args natively,
-      no wrapper loop needed). Unlike slot-3's commit (`2512a92b`, GATED — stayed local to their clone, never reached
+      `shellcheck --severity=error <all scripts>` subprocess call (shellcheck accepts multiple file args natively, no
+      wrapper loop needed). Unlike slot-3's commit (`2512a92b`, GATED — stayed local to their clone, never reached
       origin after repeated host-contention QG kills), this run's Pass-1 `quality-gates.sh` completed clean (527s,
       sentinel matched HEAD) on the first attempt and shipped via quickmerge with no rebase —
       `post-push ancestry verified` against `origin/live-defi-rollout`.
@@ -565,7 +565,7 @@ source: >-
       reference (auto-generated, self-corrects). Repointed the 3 real remaining active referrers
       (`tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` — also had stale CONTENT, corrected in place;
       `mdps_features_deadcode_consolidation_2026_07_20.md`; this doc's own frontmatter + Source citation above) +
-      `git     mv`'d the doc to `plans/archive/2026_08/issues/`. New finding filed separately, out of scope here:
+      `git mv`'d the doc to `plans/archive/2026_08/issues/`. New finding filed separately, out of scope here:
       `plans/active/issues/launch_ml_training_vm_codex_claims_deleted_but_live_2026_08_15.md`. See the archived doc's
       own Progress Log for full detail.
 

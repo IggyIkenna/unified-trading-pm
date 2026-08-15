@@ -133,6 +133,14 @@ repos:
           bash -c 'HOOK="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." &&
           pwd)}/unified-trading-pm/scripts/hooks/prettier-autostage.sh"; [ -f "$HOOK" ] || exit 0; bash "$HOOK" "$@"' --
         language: system
+        # require_serial: the hook internally runs `git add` per re-staged file (see
+        # scripts/hooks/prettier-autostage.sh) — without this, a large staged file count makes
+        # prek split the file list into multiple PARALLEL invocations of this same hook, and
+        # those invocations race on .git/index.lock (repeatedly observed 2026-08-15: "fatal:
+        # Unable to create '.git/index.lock': File exists" mid-commit, corrupting the very
+        # prosewrap-padding fix this hook was supposed to help land). Serializing costs nothing
+        # here since the hook itself is already fast per-file; correctness > marginal speed.
+        require_serial: true
         types_or: [ts, tsx, javascript, jsx, json, markdown, yaml]
 
   # Secret scanning — gitleaks (catches GCP SA keys, GitHub PATs, API keys)

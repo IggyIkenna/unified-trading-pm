@@ -71,8 +71,8 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       auto-regenerated files every time — `plans/active/INDEX.md`, `workspace-manifest.json`,
       `workspace-constraints.toml`, `uv.lock`, `quality_gates/adapter_contract_baseline.yaml` — plus dozens of plan
       `.md` files with 1-9 line frontmatter/status diffs. This is the signature of hygiene-sweep/regen tooling running
-      mid-`git pull       --rebase --autostash`, not hand-authored irreplaceable prose; these files regenerate on every
-      sweep and the stashed snapshot is stale-by-construction days later. - **Bulk archival deletions (stash@{9},
+      mid-`git pull --rebase --autostash`, not hand-authored irreplaceable prose; these files regenerate on every sweep
+      and the stashed snapshot is stale-by-construction days later. - **Bulk archival deletions (stash@{9},
       stash@{10}):** 14 files were mid-archival-delete in the working tree (`D` status) when the autostash fired — e.g.
       `plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md`,
       `plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md`. Checked all 14 by name against
@@ -182,7 +182,7 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 - [ ] [OPERATOR] P3. **[BLOCKED on the re-audit — do not run as written]** Run the mechanical stash drop for slots 1, 2,
       3 (same blocked-for-agents situation as the `.tabs/4` todo above — the judgment-call review is done, only the
       mechanical drop remains):
-      `     cd .tabs/1/unified-trading-pm && for i in $(seq 1 45); do git stash drop stash@{0}; done     cd .tabs/2/unified-trading-pm && for i in $(seq 1 10); do git stash drop stash@{0}; done     cd .tabs/3/unified-trading-pm && for i in $(seq 1 33); do git stash drop stash@{0}; done     `
+      `cd .tabs/1/unified-trading-pm && for i in $(seq 1 45); do git stash drop stash@{0}; done cd .tabs/2/unified-trading-pm && for i in $(seq 1 10); do git stash drop stash@{0}; done cd .tabs/3/unified-trading-pm && for i in $(seq 1 33); do git stash drop stash@{0}; done`
       Confirm each with `git stash list` (should print nothing). Note: `slot 3`'s checkout is the SAME repo as, but a
       DIFFERENT clone from, the original slot-3 checkout this doc was originally filed against in 2026-07-26 (which had
       26 entries then) — this pass audited the CURRENT slot-3 clone's 33 entries as they stand today, not a re-check of
@@ -387,17 +387,17 @@ codex write-up.
       in scope. Emitted at the END of the run, not in the header block, because `summary:` quotes the real counts.
 
       **Two corrections to this todo's own premises, both measured 2026-08-12.** (1) The claim that the surface is
-          enforced is FALSE — a frontmatter-less doc there is not review-blocking; `check_frontmatter_schema` skips it
-          entirely (stripping the frontmatter moved the corpus 1995 → 1994 docs and still printed "zero violations"). The
-          real cost is INVISIBILITY to the documented L0→L4 retrieval model, which finds docs by grepping L1 facets: 3 of
-          the 6 reports in that directory were unfindable by `rg -l '^doc_type: issue'`. (2) The "either/or" was wrong —
-          BOTH happen. The three tracked reports were hand-frontmattered; the two untracked ones (`Mac-20260811`,
-          `Mac-20260812`, both slot 3's) have no frontmatter and were never committed.
+              enforced is FALSE — a frontmatter-less doc there is not review-blocking; `check_frontmatter_schema` skips it
+              entirely (stripping the frontmatter moved the corpus 1995 → 1994 docs and still printed "zero violations"). The
+              real cost is INVISIBILITY to the documented L0→L4 retrieval model, which finds docs by grepping L1 facets: 3 of
+              the 6 reports in that directory were unfindable by `rg -l '^doc_type: issue'`. (2) The "either/or" was wrong —
+              BOTH happen. The three tracked reports were hand-frontmattered; the two untracked ones (`Mac-20260811`,
+              `Mac-20260812`, both slot 3's) have no frontmatter and were never committed.
 
-          **Trap worth keeping**: adding frontmatter naively would have CORRUPTED every report. The summary table was
-          spliced in at a fixed `head -n 7` / `tail -n +8` offset, which any header-length change silently breaks. Replaced
-          with a marker-anchored `awk` substitution that hard-fails if the marker is missing, rather than emitting a report
-          with no summary.
+              **Trap worth keeping**: adding frontmatter naively would have CORRUPTED every report. The summary table was
+              spliced in at a fixed `head -n 7` / `tail -n +8` offset, which any header-length change silently breaks. Replaced
+              with a marker-anchored `awk` substitution that hard-fails if the marker is missing, rather than emitting a report
+              with no summary.
 
 - [x] ✅ [SCRIPT] P3. **Default `--host` label is now slot-aware.** — unified-trading-pm@2b4bee96d3. Derives
       `<hostname -s>-slot<N>` by sourcing `scripts/hooks/slot-identity-lib.sh` and reusing its `…/.tabs/<N>/<repo>` path

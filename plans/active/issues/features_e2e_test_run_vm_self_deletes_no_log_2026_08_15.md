@@ -169,18 +169,18 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       GCP IAM change, not code)
 
           **PROVEN 2026-08-15 (slot 5, infra craft) — the fix works, todo DONE.** Picked up todo 2 below (dispatched
-                  independently by the backlog) and found todo 1 already in-flight; continued monitoring its verification VM
-                  instead of duplicating work. `features-e2e-tradfi-20260815-100817-679e08` progressed through the FULL real
-                  lifecycle for the first time across 4 total attempts on this launch shape: `EXIT_STATUS=RUNNING` written at
-                  ~10:14Z (the early sentinel `vm-exec-with-gcs-tee.sh` writes at start — never written on any of the 3 prior
-                  failures), then `run.log` appeared, then `EXIT_STATUS=0` at 10:15:07Z with a clean `DEPLOYMENT_COMPLETED
-                  exit_code=0` — the VM ran its full command and self-deleted normally, not the silent self-delete-with-zero-objects
-                  crash this whole doc tracks. Confirms the `uts-test-sa` write-access gap really was the sole cause of the
-                  self-delete/no-log symptom. **Independently corroborated 2026-08-15 (slot-6, infra craft)** via
-                  `gcs_describe_object`/`gcs_read_object_with_generation` on the same VM: `run.log` = 27,656 bytes
-                  (`last_modified=2026-08-15T10:15:16Z`), `EXIT_STATUS` = `b'0\n'` (generation `1786788913139745`) — matches
-                  slot-5's finding exactly; see the SCRIPT P2 todo below for a related poll-loop bug this cross-check also
-                  surfaced.
+              independently by the backlog) and found todo 1 already in-flight; continued monitoring its verification VM
+              instead of duplicating work. `features-e2e-tradfi-20260815-100817-679e08` progressed through the FULL real
+              lifecycle for the first time across 4 total attempts on this launch shape: `EXIT_STATUS=RUNNING` written at
+              ~10:14Z (the early sentinel `vm-exec-with-gcs-tee.sh` writes at start — never written on any of the 3 prior
+              failures), then `run.log` appeared, then `EXIT_STATUS=0` at 10:15:07Z with a clean `DEPLOYMENT_COMPLETED
+              exit_code=0` — the VM ran its full command and self-deleted normally, not the silent self-delete-with-zero-objects
+              crash this whole doc tracks. Confirms the `uts-test-sa` write-access gap really was the sole cause of the
+              self-delete/no-log symptom. **Independently corroborated 2026-08-15 (slot-6, infra craft)** via
+              `gcs_describe_object`/`gcs_read_object_with_generation` on the same VM: `run.log` = 27,656 bytes
+              (`last_modified=2026-08-15T10:15:16Z`), `EXIT_STATUS` = `b'0\n'` (generation `1786788913139745`) — matches
+              slot-5's finding exactly; see the SCRIPT P2 todo below for a related poll-loop bug this cross-check also
+              surfaced.
 
 - [x] ✅ [INFRA] P1. If the IAM hypothesis is refuted, get real evidence of what actually kills the VM in its first
       ~30-60s of boot — **N/A, not executed: the hypothesis was CONFIRMED (todo 1 above), not refuted**, so this

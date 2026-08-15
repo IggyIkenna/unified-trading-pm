@@ -84,9 +84,9 @@ resolved_by:
       VM, the risk was always shared-host RAM, not wall-clock. **Result:
       `=== CF-21 verified-delete: 0 deletable, 1080 blocked ===`.** Cross-checked via a column-projected streaming read
       of the report (no new whole-corpus walk): all 1,080 candidates are
-      `venue=CURVE/chain=ETHEREUM/     instrument_type=pool/data_type=dex_pool_state`, spread across 38 distinct days in
+      `venue=CURVE/chain=ETHEREUM/ instrument_type=pool/data_type=dex_pool_state`, spread across 38 distinct days in
       2021-01/02. Block reasons split between `crc32c MISMATCH — content differs` (legacy + canonical both exist, NOT
-      byte-identical) and `canonical     twin NOT captured/resolvable` (no twin at all) — **unlike the cefi/tradfi
+      byte-identical) and `canonical twin NOT captured/resolvable` (no twin at all) — **unlike the cefi/tradfi
       precedents** (where the legacy objects had simply vanished by the time their dry-runs ran), these defi objects
       genuinely still exist today and are correctly identified as NOT safe duplicates; nothing was deleted, nothing was
       at risk. Per the delete-safety protocol, Part 5 failing alone (twin-coverage 0%, not the required 100%) gates the
@@ -122,7 +122,7 @@ resolved_by:
       this early, pre-v9 CURVE data legitimately superseded/incomplete and safe to leave as permanent `no-migrate-first`
       legacy-only data (matching the sports `sports_reference_v2/` precedent's Option-(a) ruling in
       `sports_legacy_duplicate_triage_2026_07_22.md` todo 7). Sample a few crc32c-mismatched pairs (e.g.
-      `day=2021-01-17/asset_group=defi/venue=CURVE/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_state/     0x890f4e345b1daed0367a877a1612f86a1f86985f.parquet`)
+      `day=2021-01-17/asset_group=defi/venue=CURVE/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_state/ 0x890f4e345b1daed0367a877a1612f86a1f86985f.parquet`)
       to compare actual row content, not just crc32c presence — content divergence alone doesn't say which side (if
       either) is more complete. No delete decision follows automatically from either answer; this is a data-completeness
       investigation, not a re-litigation of todo 1's correctly-gated delete. (repo: instruments-service)

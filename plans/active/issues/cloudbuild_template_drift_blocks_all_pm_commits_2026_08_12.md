@@ -126,21 +126,21 @@ Two remedies exist and both were declined deliberately:
       unified-trading-pm@2b4bee96d3.
 
       The same `check_cloudbuild_template_drift.py` PM already ran fleet-wide is now also run scoped to the repo being
-                      gated (`--repo`), as `base-service.sh` STEP 5.108 (17 consumer repos) and `base-ui.sh` `[5.108]` (the 2 UI repos —
-                      `deployment-ui` has no `.venv`, so it uses the graceful python-probe of the adjacent DeFi step). No new rule: same
-                      baseline file, same never-raise semantics, only the detection POINT moves. Both directions are now caught at
-                      introduction — a CONSUMER edit by the consumer's own gate, a TEMPLATE edit by PM's fleet-wide run.
+              gated (`--repo`), as `base-service.sh` STEP 5.108 (17 consumer repos) and `base-ui.sh` `[5.108]` (the 2 UI repos —
+              `deployment-ui` has no `.venv`, so it uses the graceful python-probe of the adjacent DeFi step). No new rule: same
+              baseline file, same never-raise semantics, only the detection POINT moves. Both directions are now caught at
+              introduction — a CONSUMER edit by the consumer's own gate, a TEMPLATE edit by PM's fleet-wide run.
 
-                      **Verified, not assumed** — (1) all 19 consumers measured at-or-below baseline BEFORE wiring, so this could not
-                      replace one fleet-wide block with another; (2) the real incident reproduced in a scratch workspace by re-injecting
-                      the reverted `verify-auth-contract` step — same `19 > 16`, same three markers; (3) the shell block exercised with
-                      real variables: `V=0` at baseline, `V=1` on the injected drift, `V=0` for a non-template-mapped repo (safe no-op,
-                      not a skip); (4) observed passing inside an actual PM gate run (`✅ STEP 5.108`), not only in a harness.
+              **Verified, not assumed** — (1) all 19 consumers measured at-or-below baseline BEFORE wiring, so this could not
+              replace one fleet-wide block with another; (2) the real incident reproduced in a scratch workspace by re-injecting
+              the reverted `verify-auth-contract` step — same `19 > 16`, same three markers; (3) the shell block exercised with
+              real variables: `V=0` at baseline, `V=1` on the injected drift, `V=0` for a non-template-mapped repo (safe no-op,
+              not a skip); (4) observed passing inside an actual PM gate run (`✅ STEP 5.108`), not only in a harness.
 
-                      **Evidence that this was worth doing**: three separate agents independently filed three separate issue docs for
-                      this one incident (`deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12.md`,
-                      `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, and this doc). The cost of detecting
-                      drift far from its cause is measured in duplicated diagnosis, not argued.
+              **Evidence that this was worth doing**: three separate agents independently filed three separate issue docs for
+              this one incident (`deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12.md`,
+              `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, and this doc). The cost of detecting
+              drift far from its cause is measured in duplicated diagnosis, not argued.
 
 - [x] ✅ [DOCS] P2. **THIS doc is the SSOT; the other two are superseded.** — see "Consolidation" below.
       `deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12` and
@@ -149,9 +149,9 @@ Two remedies exist and both were declined deliberately:
       content was carried across as todos below, not dropped.
 
       **Chosen on referrer count, not authorship** — this doc has 7 referrers of which FOUR are shipped code/config
-                  (`check_cloudbuild_template_drift.py`, `cloudbuild_template_drift_baseline.yaml`, `base-service.sh`,
-                  `base-ui.sh`); the other two docs have 1 and 2, all of them docs. Repointing shipped code would mean re-shipping
-                  it through the gate to fix a docs problem.
+              (`check_cloudbuild_template_drift.py`, `cloudbuild_template_drift_baseline.yaml`, `base-service.sh`,
+              `base-ui.sh`); the other two docs have 1 and 2, all of them docs. Repointing shipped code would mean re-shipping
+              it through the gate to fix a docs problem.
 
 - [x] ✅ [DOCS] P3. **`mktemp` trailing-X trap recorded in codex.** —
       `/codex/06-coding-standards/bats-hermeticity-and-gate-budget.md`, new section "An eighth defect, structurally

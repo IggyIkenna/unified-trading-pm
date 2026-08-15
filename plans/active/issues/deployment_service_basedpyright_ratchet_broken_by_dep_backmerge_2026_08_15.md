@@ -193,22 +193,22 @@ cannot find it — the fix has to be sought in the two dependency repos.
       against.
 
       **CROSS-SLOT MEASUREMENT 2026-08-15 (slot 5) — READ BEFORE SPENDING THE OPERATOR DECISION.** In slot 5's
-                  checkout the count is **1259, not 1261** — at `deployment-service@657c897b`, `unified-api-contracts@e8a55ca8`,
-                  `unified-trading-library@624b2cf607`. Reproduced **twice against two separately-created empty
-                  `BASEDPYRIGHT_CACHE_DIR`s** (same cache-contention control this doc used to establish 1261), both
-                  `1259 errors, 0 warnings, 0 notes`. Enforcement is `[ "$ERROR_COUNT" -gt "$_max_bp_errors" ]`
-                  (`scripts/quality-gates-base/base-service.sh:1368`), so exactly-1259 takes the `elif` warn branch at :1372 and
-                  **PASSES** — deployment-service shipping is not blocked from this slot. This does NOT mean slot 15 now reads
-                  1259: the two slots are independent clones with independent venvs and independent dep HEADs, and the count is
-                  the thing under dispute, so it must be re-measured there rather than assumed. What it does establish is that
-                  **1259 is reachable on a real current tree**, which supports this doc's original editable-dep-inference root
-                  cause (the count tracks dep state, with zero deployment-service `.py` changed) even though Todo 1's bisection
-                  could not pin the specific commit — a pinning failure is not evidence the premise is wrong when the count is
-                  demonstrably dep-state-dependent in both directions. **Therefore option (a) (raise the ratchet to 1261) should
-                  not be actioned yet** — it would permanently relax a gate to accommodate a condition that is already absent on
-                  another current tree, and the ratchet-only-goes-down norm exists precisely to stop that. Cheaper next step for
-                  slot 15 before escalating: `git pull --ff-only` all three editable deps, then re-measure with a fresh cache dir.
-                  Provenance: measured while landing an unrelated deployment-service change from slot 5.
+              checkout the count is **1259, not 1261** — at `deployment-service@657c897b`, `unified-api-contracts@e8a55ca8`,
+              `unified-trading-library@624b2cf607`. Reproduced **twice against two separately-created empty
+              `BASEDPYRIGHT_CACHE_DIR`s** (same cache-contention control this doc used to establish 1261), both
+              `1259 errors, 0 warnings, 0 notes`. Enforcement is `[ "$ERROR_COUNT" -gt "$_max_bp_errors" ]`
+              (`scripts/quality-gates-base/base-service.sh:1368`), so exactly-1259 takes the `elif` warn branch at :1372 and
+              **PASSES** — deployment-service shipping is not blocked from this slot. This does NOT mean slot 15 now reads
+              1259: the two slots are independent clones with independent venvs and independent dep HEADs, and the count is
+              the thing under dispute, so it must be re-measured there rather than assumed. What it does establish is that
+              **1259 is reachable on a real current tree**, which supports this doc's original editable-dep-inference root
+              cause (the count tracks dep state, with zero deployment-service `.py` changed) even though Todo 1's bisection
+              could not pin the specific commit — a pinning failure is not evidence the premise is wrong when the count is
+              demonstrably dep-state-dependent in both directions. **Therefore option (a) (raise the ratchet to 1261) should
+              not be actioned yet** — it would permanently relax a gate to accommodate a condition that is already absent on
+              another current tree, and the ratchet-only-goes-down norm exists precisely to stop that. Cheaper next step for
+              slot 15 before escalating: `git pull --ff-only` all three editable deps, then re-measure with a fresh cache dir.
+              Provenance: measured while landing an unrelated deployment-service change from slot 5.
 
 - [x] [CODE] P2. Determine whether the `bf69b2b289` "ALL QUALITY GATES PASSED" run that established the 1259 baseline
       was a live basedpyright execution or a `quality-gates.sh` content-sentinel cache HIT (`.qg_last_passed_sha` /
@@ -227,7 +227,7 @@ cannot find it — the fix has to be sought in the two dependency repos.
       — does this change the root cause?** `0aeb925f..bf69b2b289` is NOT `.py`-empty like `bf69b2b289..HEAD` is — it's
       exactly the revocation-release identity fix from `dp_revocation_release_never_resolves_identity_2026_08_15.md`
       (`meta_watchers.py` + `cli.py` + test file). Checked directly:
-      `basedpyright deployment_service/data_pipeline_monitors/meta_watchers.py     deployment_service/data_pipeline_monitors/cli.py`
+      `basedpyright deployment_service/data_pipeline_monitors/meta_watchers.py deployment_service/data_pipeline_monitors/cli.py`
       → 6 errors, **all** in `cli.py:399-411` (pre-existing `CloudSchedulerClient`/`reportAny` typing, nowhere near the
       diff's touched lines 639/699), **zero** in `meta_watchers.py`. The revocation-release fix is basedpyright-clean —
       it is not the source of the 1259→1261 gap. **Exact live-verified count at `0aeb925f` — not recoverable, noted as a
