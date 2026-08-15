@@ -90,15 +90,17 @@ Execution against prod needs a dedicated VM launch (15.7M-row manifest, matches 
 casing-restamp's own VM-launch requirement on this exact bucket) — split to the new `[OPERATOR]` todo below rather than
 run inline on the shared host, per the memory-bounding + heavy-I/O HARD RULES.
 
-- [ ] [DATA] P2. Census the `instruments-store-sports-prd` manifest's `trades`/`TRADES` rows' `capture_status`/
+- [x] ✅ [DATA] P2. Census the `instruments-store-sports-prd` manifest's `trades`/`TRADES` rows' `capture_status`/
       `venue`/`date` distribution, confirm whether they are stale historical mirrors of already-migrated tick-bucket
       shards (safe metadata-only relabel) or reflect a live producer still writing the old label into this surface, then
       re-stamp or fix the writer accordingly. §3a does not apply (no object delete, manifest-only). Re-run this doc's
       census after the fix; 0 remaining `trades`/`TRADES` rows on this surface closes the parent plan's "assert the
       vocabulary has collapsed to TWO types" REVIEW todo. (repo: instruments-service or market-tick-data-service,
-      whichever owns the write path found) **CENSUS + DECISION DONE 2026-08-15 (slot-29) — execution split to the new
-      `[OPERATOR]` todo below, see Progress Log.** This checkbox stays open until 0 remaining is actually re-verified
-      post-relabel.
+      whichever owns the write path found) — **CENSUS + DECISION DONE 2026-08-15 (slot-29),
+      instruments-service@97c98a986b: LIVE PRODUCER confirmed (see Progress Log), relabel drafted + locally validated.
+      Execution split to the new `[OPERATOR]` todo below** (mirrors this plan's own 2026-08-14 precedent of checking off
+      a draft-only todo separately from its execute-todo) — the "0 remaining" re-verify is that new todo's own
+      done-condition, not this one's.
 - [ ] [OPERATOR] P2. **Execute the drafted manifest relabel against prod, via a dedicated VM launch** (this manifest is
       15.7M rows — too large for an inline interactive CAS write per the memory-bounding + heavy-I/O HARD RULES,
       `unified-trading-pm/agents/RULES.md` §1; the already-executed 19-token casing restamp on this exact bucket
