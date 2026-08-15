@@ -168,32 +168,85 @@ axis; both are network-selection flags.
 `BACKTEST` · `PAPER`. Note the ruling said "batch" — the canonical term is `BACKTEST`, and there is a fourth mode
 (`MANUAL`) the ruling did not mention.
 
-**The design question, and why it is not mechanical.** Reconciliation compares the internal book against _independent
-venue truth_. That independence is what makes a match meaningful. Per mode:
+> **⚠️ CORRECTED by operator ruling 2026-08-15.** My first pass framed reconciliation as ONE comparison (internal book
+> vs venue truth) and asked "does each mode have venue truth?" — concluding `BACKTEST` was degenerate. That framing was
+> wrong, and the corrected model is below. The original is preserved as a lesson: the mistake was inventing a model
+> instead of reading `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`, which already specifies the
+> real one.
 
-| Mode       | Is there independent venue truth to read?                                                                                                                            |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LIVE`     | Yes — mainnet venue API / chain RPC.                                                                                                                                 |
-| `PAPER`    | **Yes** — CeFi paper accounts are real venue-side accounts (Binance testnet, IBKR paper TWS ports 7497/4002, already known to `routing.py`). Independently readable. |
-| `BACKTEST` | **No** — the "venue" is the simulator. Reading from it makes reconciliation compare the book against itself.                                                         |
-| `MANUAL`   | Same as `LIVE` (real venue), but instruction origin differs — likely not a reader distinction at all.                                                                |
+### The reconciliation lattice (existing, and it already says this)
 
-**So the axis is meaningful for LIVE/PAPER and degenerate for BACKTEST**, and the existing `testnet: bool` is the
-two-state shadow of it. The dangerous outcome to avoid: a `BACKTEST` reader that returns simulator state, producing a
-reconciliation that **always agrees, detects nothing, and reports green** — the same fabricated-agreement failure class
-as a zero-token adapter reporting zero balances.
+Reconciliation is not one comparison — it is a decomposition into two ORTHOGONAL legs that stack:
 
-`reconciliation_engine.py` currently has **no mode guard at all** — it publishes `RISK_ALERTS` regardless of mode.
+```
+live − batch  =  (paper − batch)  +  (live − paper)
+```
 
-**Proposed shape** (needs operator confirmation before a refactor touching every adapter):
+- **`paper − batch` (the determinism leg)** — proves the system does in a LIVE LOOP what it does in a BATCH LOOP. Same
+  matching assumptions on both sides, so any difference is a loop-mechanics bug. This is the ε=0 spine.
+- **`live − paper` (the execution leg)** — with the loop proven identical, the remaining delta IS execution alpha:
+  purely a test of the execution/fill assumptions.
 
-1. `BasePositionAdapter` gains an explicit `operational_mode: OperationalMode`, replacing per-family `testnet` /
-   `fork_mode` flags as the SSOT for endpoint selection.
-2. `LIVE` → mainnet endpoints; `PAPER` → venue paper/testnet endpoints (real, independent).
-3. `BACKTEST` → **no external adapter is constructed**. Reconciliation in backtest either skips, or compares against the
-   backtest ledger with an explicit non-independent marker so a green result cannot be mistaken for evidence.
-4. Only then is SIT invariant 2 expressible, and it should assert a reader for `LIVE` and `PAPER` — asserting one for
-   `BACKTEST` would be asserting the tautology exists.
+**Batch is therefore not reconciled against a venue at all — it is the REFERENCE that paper is proven against.** My
+"tautological" objection only applies to reconciling batch against ITSELF, which nothing proposes.
+
+Both legs are already implemented and REACHABLE: `batch-live-reconciliation-service` `engine/orchestrator.py:175` calls
+`run_stage3b` (paper-vs-live) and `:196` calls `run_stage3c` (batch-vs-paper), as a T+1 pipeline. A rare positive
+contrast case in this doc.
+
+### The corrected mode model (operator, 2026-08-15)
+
+**Modes are `batch` | `paper` | `live`.** Standardise the wording on **batch** (not `BACKTEST`).
+
+**`paper` has a TESTNET SUB-MODE — testnet is a mode WITHIN paper, not a peer of it:**
+
+| paper sub-mode | What the venue side is                                                                            | Independent truth? |
+| -------------- | ------------------------------------------------------------------------------------------------- | ------------------ |
+| testnet ON     | a real venue-side account (Binance testnet, IBKR paper TWS 7497/4002) reachable by real API calls | **Yes**            |
+| testnet OFF    | simulated matching — and it is **the same matching batch uses**                                   | **No**             |
+
+Testnet-off is the common case, because not every venue offers a testnet to send API calls against, and even where one
+exists it often cannot hold the balances we would really have had. So paper degrades to matching — which is correct and
+by design, since paper and batch are REQUIRED to match trade-for-trade.
+
+**`MANUAL` is NOT a reader mode — it is a deployment topology.** Its purpose is a SECOND execution instance on the same
+deployment trust, so that if the automated execution-service is down or restarting, operator-driven open/close
+instructions still have a path. It is redundancy, not a mode of reading positions, and it should be removed from any
+mode axis. (`ManualExecutionMode` is a real UAC type consumed by `manual_instruction_api`.)
+
+**All three run SIMULTANEOUSLY** — T+1 backfills and replays for batch, alongside inline live and paper feeding each
+other. So mode CANNOT be a service-level config: one deployment carries all three concurrently, and mode must be
+resolved **per strategy-instance / slot**.
+
+### Corrected proposed shape
+
+1. Mode is a per-instance/slot property, never a service-global. `BasePositionAdapter` gains it explicitly; it is
+   resolved per adapter construction, not read from process config.
+2. `live` → mainnet endpoints. `paper` → testnet endpoints when the venue HAS a testnet and it is enabled, else the
+   shared simulated matcher. `batch` → the batch ledger, which is the reference leg (a legitimate read, not a
+   tautology).
+3. The existing per-family `testnet: bool` / `fork_mode` flags become the paper sub-mode selector rather than a parallel
+   axis.
+4. `reconciliation_engine.py` has **no mode guard today** — it publishes `RISK_ALERTS` regardless. It must know WHICH
+   LEG it is evaluating, because a paper-testnet-off comparison against batch is a determinism check, while a
+   paper-testnet-on comparison against live is an execution check, and they have different meanings on failure.
+5. SIT invariant 2 becomes expressible once mode is per-instance: assert a reader exists for each mode a slot actually
+   runs in.
+
+### CLOSE-ALL RULING (operator, 2026-08-15) — migrate onto `/manual/instruction`
+
+Not a new `/api/orders`. Verified: `/manual/instruction` is the DIRECT submission path (`submit_manual_instruction`),
+while `/manual/pending` is the separate approval-gated one ("require explicit operator approval before execution", 202).
+So routing close-all through `/manual/instruction` does NOT put a human in the loop on an emergency flatten — consistent
+with the kill-switch rule that protective arming is always autonomous.
+
+The stronger argument: **one path means the emergency flatten is the same code humans exercise routinely**, so it is
+continuously proven. An endpoint used only in a crisis is one that is never tested — exactly why this 404 sat latent. It
+also composes with `MANUAL` being a redundant deployment: the flatten path is then the one designed to survive the
+automated execution-service being unavailable.
+
+The real work is **request-shape mapping** (close-all sends `{venue, instrument_id, side, …}`; the manual API takes its
+own model) plus an HTTP-level contract test — the thing whose absence let this survive.
 
 ## How to verify a reachability claim (method, so this is repeatable)
 
