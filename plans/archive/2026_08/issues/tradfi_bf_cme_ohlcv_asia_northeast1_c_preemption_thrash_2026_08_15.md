@@ -17,7 +17,7 @@ summary: |
   preemption-specific `RelaunchPreemptedVm` actuator — the ONE path that actually resumes from checkpoint — largely
   unable to reach these VMs before its own sweep dies. No `DP_VM_PREEMPTED`/`DP_VM_PREEMPTED_RECOVERED` event was found
   in Cloud Logging for this shard's 13 preemptions in 3 days.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, cross-cutting]
 stage: [meta]
@@ -59,6 +59,15 @@ context_scope:
     /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-15** — all 6 todos resolved. Two independent fixes landed: (1) round-robin zone-rotation for the
+> CME OHLCV launcher (`deployment-service@1877346c9e`) to address the `asia-northeast1-c` spot-contention thrash; (2)
+> the atom-format mismatch in the preflight skip filter that let already-captured CME dates keep re-fetching
+> (`market-tick-data-service@65dc99a5ff`) — `_run_preflight_availability_check` was keying captured atoms off the
+> manifest's per-contract dated `instrument_id`, while the launcher's `--instrument-ids` pass root parent symbols; a new
+> `tradfi_root_parent_symbol_atom`/`with_root_parent_symbol_aliases` bridge closes the gap, with regression coverage in
+> `tests/unit/engine/test_tradfi_manifest_shard.py` + `tests/unit/test_known_dead_shard_gate.py`. No new codex contract
+> is established beyond what these tests + the fix's docstrings already record — the fix is narrow and self-contained.
 
 # tradfi-bf-cme-ohlcv-1m thrashing in asia-northeast1-c — checkpoint intact per-VM, campaign progress regressed
 
@@ -298,7 +307,7 @@ separate alerting-code defect this doc needs to duplicate-track.
       2022-01-03 CME/ETH ohlcv_1m record actually carries), or a rejection inside `_is_preflight_source_evidence`. NOT
       verified within this todo's bounded scope (reading `tick_data_handler.py`'s call site, as scoped) — flagged for
       the next investigator via the revised P2 todo below.
-- [ ] [SCRIPT] P2. REVISED 2026-08-15 (see resolved todo above — the original "freshness-scoping" framing was based on
+- [x] [SCRIPT] P2. REVISED 2026-08-15 (see resolved todo above — the original "freshness-scoping" framing was based on
       an incorrect premise; both `tick_data_handler.py`'s handler-level gate and `_run_preflight_availability_check`'s
       atom-set build are now confirmed NOT to be coarse per-date checks). Read `_process_venue`'s consumption of
       `state.preflight_captured_atoms` (`market_tick_data_service/engine/orchestrator/__init__.py`) and compare its
@@ -307,6 +316,18 @@ separate alerting-code defect this doc needs to duplicate-track.
       stored instrument_id/underlying) or a source-evidence rejection (`_is_preflight_source_evidence`) is silently
       defeating the skip for already-captured CME dates. Once the actual mechanism is confirmed, fix it and add a
       regression test asserting an already-captured CME (date, root) atom is never re-fetched on a subsequent relaunch.
+      **RESOLVED 2026-08-15 — market-tick-data-service@65dc99a5ff.** Confirmed the mechanism: an atom-format mismatch,
+      not a source-evidence rejection. `_run_preflight_availability_check` builds `preflight_captured_atoms` from each
+      manifest row's per-contract dated canonical `instrument_id` (e.g. `CME:FUTURE:SP500-USD@LIN-20221216`), but the
+      CME OHLCV launcher's `--instrument-ids` atoms are root parent symbols (e.g. `ES.FUT`) — the two never matched, so
+      the skip filter never recognized an already-captured date as covered. Added
+      `tradfi_root_parent_symbol_atom`/`with_root_parent_symbol_aliases`
+      (`market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py`) to bridge a captured dated-derivative
+      instrument_id back to its root-parent-symbol atom, and wired the alias expansion into `known_dead_shard_gate.py`'s
+      `_apply_preflight_skip_filter`. Regression coverage: `tests/unit/engine/test_tradfi_manifest_shard.py` (7 new
+      tests for the atom-bridging helpers) + `tests/unit/test_known_dead_shard_gate.py` (3 end-to-end skip-filter tests)
+      — all passing in the shipped `quality-gates.sh` run (10821 passed). Landed on `live-defi-rollout`,
+      ancestry-verified against origin.
 - [x] [SCRIPT] P2. Wire the existing round-robin zone-rotation capability
       (`deployment_service/backends/services/vm_lifecycle.py`'s `_zone_index` / `deployment_service/backends/vm.py`, and
       the simpler 2-zone fallback pattern already live in `scripts/vm/launch-prediction-live.sh:164`) into the TradFi
