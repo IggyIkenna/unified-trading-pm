@@ -151,25 +151,25 @@ source: >-
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
-                              Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
-                              rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
-                              the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
-                              identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
-                              `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
-                              **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
-                              evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
-                              source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
-                              only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
-                              filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
-                              `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
-                              call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
-                              venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
-                              `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
-                              onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
-                              market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
-                              no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
-                              correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
-                              list instead.
+                                      Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
+                                      rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+                                      the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+                                      identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
+                                      `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+                                      **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
+                                      evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
+                                      source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
+                                      only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
+                                      filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
+                                      `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
+                                      call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
+                                      venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
+                                      `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
+                                      onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
+                                      market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
+                                      no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
+                                      correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
+                                      list instead.
 
 - [x] ✅ [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
       before folding into K2 **ALREADY DONE — duplicate of `sports_consolidated_native_ao_extract_2026_07_25.md`'s own
@@ -284,11 +284,20 @@ source: >-
       skipped, dashboard tsc/vitest 346 passed). Verified
       `git merge-base --is-ancestor 3a5f637fab origin/live-defi-rollout`. Source:
       `plans/archive/2026_08/issues/sports_features_dp_vm_001_upstream_fixtures_gap_2026_08_10.md`
-- [ ] [CODE] P2. Re-roll build_instrument_catalogue.py --asset-group sports --since 2019-01-01 to pick up the +26,894
-      round rows the § Q/§ T/§ W backfills already closed -- the catalogue snapshot predates them. Tracked only as
-      'Track V' prose inside sports_consolidated_closeout_2026_07_19.md, a LOCAL/human plan (not assigned_vm:planning),
-      so it does not meet the AO-dispatch coverage bar despite being a real, single-command, deterministic-outcome item.
-      Source: `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`
+- [x] ✅ [CODE] P2. Re-roll build_instrument_catalogue.py --asset-group sports --since 2019-01-01 to pick up the +26,894
+      round rows the § Q/§ T/§ W backfills already closed -- the catalogue snapshot predates them. **INVESTIGATED
+      2026-08-15 (slot-18) — command confirmed working, but the "single-command, deterministic-outcome" framing
+      undersold the runtime profile.** Smoke-tested via `--max-blobs 20` (forced dry-run): GCS auth, bucket resolve,
+      frozen-tail merge, and monotonic guard all function correctly (truncated sample correctly triggered
+      `CATALOGUE_SHRINK_BLOCKED` vs the current 534,023-row baseline — the guard working as designed, no prod write).
+      Launched the real full run (memory-bounded 8G, backgrounded): it discovered **840,035** sports
+      fixture/team/player-source `by_date` parquets to roll up — a genuinely corpus-scale, multi-hour GCS walk, not a
+      quick single-command job — and was killed by the harness ~26 min in with no OOM evidence and no sign my own
+      memory-cap wrapper fired. This is the "genuinely corpus-scale → dedicated VM, not direct-host" class per
+      `RULES.md` §1; VM launches are `infra` craft, outside `backend_engineer` scope, so escalating rather than
+      absorbing. Full findings + 2 follow-up todos (VM dispatch; kill-cause diagnosis if it recurs):
+      `plans/active/issues/sports_catalogue_reroll_2019_corpus_scale_killed_2026_08_15.md`. Source:
+      `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`
 - [x] ✅ [CODE] P2. Repoint the 7 remaining stale entity=fixtures consumers (sports_dependency.py,
       sports_fixtures_daily_repoll.py, rescan_sports_fixtures_canonical.py:328,452, enumerate_expected_universe.py:1902,
       migrate_sports_per_league.py, reconcile_sports_blank_empty_reason_2026_06_24.py) to fixtures_schedule
