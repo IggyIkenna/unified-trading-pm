@@ -788,6 +788,17 @@ report_parked_wip() {
     done
 }
 
+# Factored out of refresh_agent_claim_heartbeat() so tests can inject the liveness answer
+# directly (pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md P2 todo: cover the
+# common alive/dead cases WITHOUT a real tmux server — a test can `source` this script then
+# redefine this one function before calling refresh_agent_claim_heartbeat). Exact-match `=`
+# target matters here (a bare `-t orch-slot-1` would prefix-match `orch-slot-10`); a genuine
+# integration test still exercises this against a real tmux server to prove that behaviour.
+_claim_heartbeat_session_alive() {
+    local tmux_session="$1"
+    command -v tmux >/dev/null 2>&1 && tmux has-session -t "=${tmux_session}" 2>/dev/null
+}
+
 refresh_agent_claim_heartbeat() {
     local slot_id="$1" slot_dir="$2" claim_file tmux_session
     claim_file="${slot_dir}.agent-claim"
@@ -803,7 +814,7 @@ except Exception:
         log_quiet "[claim-heartbeat:skip] slot ${slot_id} — claim present but unparseable/no tmux_session field"
         return 0
     fi
-    if command -v tmux >/dev/null 2>&1 && tmux has-session -t "=${tmux_session}" 2>/dev/null; then
+    if _claim_heartbeat_session_alive "${tmux_session}"; then
         if touch "${claim_file}" 2>/dev/null; then
             log "[claim-heartbeat] slot ${slot_id} — refreshed (tmux session ${tmux_session} alive)"
         fi
