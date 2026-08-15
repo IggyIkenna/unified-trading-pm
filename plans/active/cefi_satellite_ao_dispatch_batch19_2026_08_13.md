@@ -451,8 +451,24 @@ source: >-
       docs)** — SHIPPED e2e-testing@d1fe3dc6aa, see that entry for full evidence.
 - [ ] [CODE] P2. Track 0: Launch the CeFi Tardis backfill for the equity-perp window Source:
       `plans/active/cefi_consolidated_closeout_2026_07_18.md`
-- [ ] [CODE] P2. instrument_type casing residual: fresh live re-count against current manifest to confirm literal 100%
-      UPPERCASE Source: `plans/active/cefi_consolidated_closeout_2026_07_18.md`
+- [x] ✅ [CODE] P2. **DONE 2026-08-15 (slot-19·backend_engineer) — residual FOUND, not literal 100% UPPERCASE.** Fresh
+      live re-count of the cefi manifest's `instrument_type` column
+      (`gs://market-data-tick-cefi-prd-central-element-323112`, now 29,481,508 rows, up from the 2026-07-18 baseline's
+      11.19M) found **39,286 rows still lowercase** (`perpetual` 38,083 / `future` 1,191 / `spot_pair` 12) against the
+      canonical UPPERCASE targets — the `instruments-service@555ddf1c` fold was **dry-run measured only**; its `--apply`
+      remains drain-gated under the Track-1 cutover (still `RE-OPENED` per Track 1 above). Not an active writer
+      regression: the residual SHRANK from the 2026-07-18 baseline (289,700 lowercase `perpetual`) to 38,083 despite the
+      manifest nearly tripling in size — live writes already emit UPPERCASE; the residual is pre-fix historical rows
+      awaiting the backfill `--apply`. Two other non-canonical buckets the same re-count surfaced are OUT OF SCOPE here
+      (not casing issues, already tracked): `futures_chain`/`options_chain` (205,835 rows, distinct non-canonical VALUES
+      from the chain-bundle writer — tracked in
+      `/plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md`) and `index` (3,910 rows) +
+      blank/`None` (310,662 rows) — both already the aggregated-sources doc's separate "resolve from id / remap" row,
+      not a casing fold. **Corrected the stale "already-canonical — no action" claim** in
+      `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`'s live-manifest-worklist table + D1 blockquote to
+      match this measurement (unified-trading-pm, this commit) — no code shipped (this is a pure re-measurement todo;
+      the actual backfill stays gated under Track 1's cutover, already tracked there, not duplicated here). Source:
+      `plans/active/cefi_consolidated_closeout_2026_07_18.md`
 - [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-12·backend_engineer).** Live-query OKX/Bybit
       SPOT instrument endpoints for the tokenized-equity symbol set + listing dates — this exact research already
       COMPLETE as the source doc's own Todo 1 (2026-08-13, slot-18·data_engineering worker): OKX SPOT endpoint
@@ -748,3 +764,16 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   still match the original recommendation). No new code shipped (doc-only citation reconciliation, per the todo's own
   scope). Doc stays `assigned_vm: NA` overall — todo 8 (S3-b sports dual entrypoint) remains the sole open item and is
   still a genuine, un-superseded design adjudication.
+
+- **2026-08-15 (slot-19·backend_engineer)**: dispatched the "instrument_type casing residual" todo. Ran a lean, bounded
+  (`run-bounded-analysis.sh`, RSS-poll cap) one-off read of ONLY the manifest's `instrument_type` column (the full
+  `audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` script exceeded a 4G cap on this shared host loading all
+  5 audit columns across 29.48M rows) against the live `market-data-tick-cefi-prd` bucket. Result: NOT literal 100%
+  UPPERCASE — 39,286 residual lowercase rows (`perpetual`/`future`/`spot_pair`), down from the 2026-07-18 baseline's
+  289,700 despite the manifest nearly tripling in size (11.19M→29.48M rows), consistent with "writer already fixed,
+  backfill `--apply` still drain-gated under Track 1." Corrected the aggregated-sources doc's stale "already-canonical —
+  no action" claim to match. No code shipped — this todo's own scope is the re-measurement only; the actual backfill is
+  already tracked under Track 1's cutover critical path, not duplicated here. See the todo's own entry above for the
+  full breakdown (incl. the two out-of-scope buckets: chain-bundle `instrument_type` values already tracked by
+  `cefi_chain_relabel_migration_options_futures_2026_08_15.md`, and `index`/blank rows already the aggregated-sources
+  doc's separate "resolve from id / remap" row).
