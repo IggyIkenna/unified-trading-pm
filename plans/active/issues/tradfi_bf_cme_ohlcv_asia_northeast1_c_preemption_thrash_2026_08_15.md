@@ -307,7 +307,7 @@ separate alerting-code defect this doc needs to duplicate-track.
       stored instrument_id/underlying) or a source-evidence rejection (`_is_preflight_source_evidence`) is silently
       defeating the skip for already-captured CME dates. Once the actual mechanism is confirmed, fix it and add a
       regression test asserting an already-captured CME (date, root) atom is never re-fetched on a subsequent relaunch.
-- [ ] [SCRIPT] P2. Wire the existing round-robin zone-rotation capability
+- [x] [SCRIPT] P2. Wire the existing round-robin zone-rotation capability
       (`deployment_service/backends/services/vm_lifecycle.py`'s `_zone_index` / `deployment_service/backends/vm.py`, and
       the simpler 2-zone fallback pattern already live in `scripts/vm/launch-prediction-live.sh:164`) into the TradFi
       CME OHLCV launcher (`_tradfi-ohlcv-launcher-lib.sh`'s hardcoded `TRADFI_OHLCV_ZONE`) and into `wave_launcher.py`'s
@@ -315,7 +315,22 @@ separate alerting-code defect this doc needs to duplicate-track.
       already existing elsewhere in the codebase; this is an adoption gap, not a build-from-scratch gap. Second
       independent multi-day `asia-northeast1-c` storm in <2 weeks makes the case for adoption stronger than a one-off.
       **Scope per operator instruction (below)**: rotate through `asia-northeast1-a`/`-b`/`-c` only (same-region, no
-      cross-region); TradFi CME OHLCV launcher family only, not a fleet-wide adoption.
+      cross-region); TradFi CME OHLCV launcher family only, not a fleet-wide adoption. **RESOLVED 2026-08-15 —
+      deployment-service@1877346c9e.** `_tradfi-ohlcv-launcher-lib.sh` now round-robins each `ohlcv_create_vm` launch
+      across a `TRADFI_OHLCV_ZONE_POOL` (default `asia-northeast1-{a,b,c}`, overridable via `TRADFI_OHLCV_ZONES`; the
+      legacy `TRADFI_OHLCV_ZONE` env still pins a single zone for back-compat); `wave_launcher.py`'s `launch()` seeds
+      each dispatch's bash subprocess with `TRADFI_OHLCV_ZONE_START_INDEX=<wave position>` so consecutive dispatches in
+      one wave tick also spread across the pool instead of every subprocess restarting the rotation at index 0. Also
+      widened `ohlcv_check_singleton_lock`'s fleet-cap scan and the per-shard duplicate-VM check to
+      `--zones=<the whole pool CSV>` instead of one zone — otherwise rotating launches would undercount the running
+      fleet and blind the shard-collision check to a sibling already running in a different pool zone (the same failure
+      class `dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md` fixed for the single-zone case). Verified via
+      `--dry-run` (5 CME root-groups correctly cycled `a,b,c,a,b`) after catching and fixing a real bug in review: the
+      first implementation captured the rotation function's result via `zone="$(ohlcv_next_zone)"`, which bash runs in a
+      subshell — the index increment never propagated back, so every VM silently got the same pool[0] zone. Fixed by
+      having the function set a global instead. `bash -n` + `python3 -m py_compile` clean; deployment-service Pass-1
+      `quality-gates.sh` green on this exact SHA (626s, sentinel `fbb5d5917b2fb4f4941e235308c30a8f0c100a97`); shipped
+      via quickmerge --agent, verified `deployment-service@1877346c9e` is an ancestor of `origin/live-defi-rollout`.
 - [x] [SCRIPT] P2. Decide the FULL scope of standing zone-diversification for TradFi OHLCV specifically — **RESOLVED
       2026-08-15, direct operator instruction delivered via AO task dispatch
       `tradfi_bf_cme_ohlcv_asia_northeast1_c_preemption_thrash-69ae9511a358--ruling`** ("not complicated — loop through
