@@ -125,8 +125,8 @@ rather than a dedicated VM launch, per proportionality.
       (same methodology as the original 4-surface reconciliation, different code path than the swap script's own
       self-check): **0 `trades` rows in the sports manifest, period** — trivially satisfies "0 rows with `attempted_at`
       after the fix deploy time" since none remain at all.
-- [ ] [OPERATOR] P0. **REOPENED 2026-08-15 (slot-19): the live writer is still emitting `data_type=trades` in PRODUCTION
-      as of `attempted_at` up to 2026-08-15T10:49:54Z — after both the P0 code fix
+- [x] ✅ [OPERATOR] P0. **REOPENED 2026-08-15 (slot-19): the live writer is still emitting `data_type=trades` in
+      PRODUCTION as of `attempted_at` up to 2026-08-15T10:49:54Z — after both the P0 code fix
       (`market-tick-data-service@28e2eb36d8` + `63728200`) and the P1 restamp/swap above completed.** A fresh census
       (same `read_availability_index_safe` methodology) found **1,604 NEW `trades` rows**, all `date=2026-08-15`, all
       `attempted_at` between 09:18:01Z and 10:49:54Z, spread across 32 sports venues (BETFAIR_EX_UK, SKYBET, BETFRED_UK,
@@ -152,6 +152,36 @@ rather than a dedicated VM launch, per proportionality.
       pure whack-a-mole — exactly the mistake this issue's own P1 already diagnosed once for the first 3,229-row
       population). **Did NOT re-run the restamp this turn** — it would immediately go stale against the still-writing
       process. **Did NOT restart the VM** — no validated procedure + co-located blast radius + no VM identity in hand.
+      **RESOLVED 2026-08-15 (slot-19): operator answered `BLK-dc9ed5f8` authorizing Option A (redeploy).** Deleted the
+      stale VM (`mtds-live-sports-odds-api-trades-20260815-074026`), relaunched via the registered
+      `deployment-service/scripts/vm/launch-mtds-live.sh` (auto-republished all 4 stale tarballs to current HEAD).
+      **First relaunch attempt was ALSO wrong** — copied the old VM's `--shard-spec sports:ODDS_API:trades` verbatim,
+      and a fresh manifest read showed the new VM (`...-111158`) still stamping `data_type=trades` despite running the
+      FIXED code. Root-caused (not assumed): `parse_shard_spec()` in
+      `market_tick_data_service/cli/handlers/websocket_streaming_handler.py` splits `--shard-spec` into
+      `(asset_group, venue, data_type)` and threads that `data_type` straight into `LiveWebsocketRunner` — it is the
+      value actually stamped into every manifest row for the run, NOT the `shard_counts` accumulator this issue's P0 fix
+      touched (that accumulator governs a different call path). Verified `self._data_type` is dead-stored in
+      `odds_api_ws.py`'s connector (never read) and `_resolve_connector`/`is_candle_boundary_eligible` don't branch on
+      its value either, so the shard-spec's third segment is a pure manifest/routing label with no feed-selection
+      side-effect — safe to correct. Deleted the mislabeled VM (~13 min old, 1,604 `trades` rows written) and relaunched
+      a third time with `--shard-spec sports:ODDS_API:odds` (`mtds-live-sports-odds-api-odds-20260815-112335`) —
+      confirmed via direct per-VM manifest-shard read: 325/325 rows `data_type=odds`, growing clean. The live writer is
+      now genuinely fixed at the deployment-parameter level, not just the code level.
+
+- [ ] [SCRIPT] P2. **Sweep the 1,604 `trades` rows orphaned in the deleted mislabeled VM's per-VM manifest shard**
+      (`_index/per_vm/mtds-live-sports-odds-api-trades-20260815-111158.parquet`, all `date=2026-08-15`) once the sports
+      asset_group's manifest consolidator (hourly Cloud Scheduler cron,
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md`) merges that orphaned shard into the durable surfaces —
+      confirmed via dry-run at fix time that BOTH durable surfaces (merged index + frozen seed) and all `2026-08-15` GCS
+      objects were ALREADY clean (0 residual, 57/57 `already_present_verified` under `data_type=odds/` paths) — the gap
+      is purely the transient per-VM shard, exactly the "KNOWN PHASED-STATE CAVEAT"
+      `manifest_swap_trades_to_odds_2026_08_12.py`'s own docstring anticipates ("re-consolidation reintroduces trades
+      rows... run this swap again"). A bounded ~75min background monitor (slot-19, this session) is polling
+      `manifest_swap_trades_to_odds_2026_08_12.py`'s dry-run output and will auto-apply + verify once the consolidator
+      absorbs the shard; if it times out before that happens, re-run
+      `python scripts/sports/manifest_swap_trades_to_odds_2026_08_12.py --apply-prod --confirm-prod-write` by hand and
+      confirm 0 `trades` remaining.
 
 ## Progress Log
 
@@ -278,3 +308,55 @@ rather than a dedicated VM launch, per proportionality.
   identity in this session — a blind restart of a co-located, unverified-procedure production service is outside
   AO-worker scope without operator sign-off). Task NOT marked done; slot 19 continuing to hold this task pending the
   operator redeploy decision above.
+
+- **2026-08-15 (slot-19, data_engineering) — operator answered `BLK-dc9ed5f8`, redeploy executed, second latent bug
+  found+fixed en route, writer now genuinely clean.** Operator authorized Option A (redeploy the writer now, citing the
+  data-pipeline-correctness "fix in full, don't mop up around a known root cause" hard rule + the pre-live-trading
+  maintenance-restart carve-out for brief downtime). Sequence:
+  1. Deleted `mtds-live-sports-odds-api-trades-20260815-074026` (confirmed via 3-signal staleness check per
+     `agents/infra.md` STEP 0.65 — heartbeat, `run.log` tail, manifest mtide — all showed the process ALIVE but running
+     PRE-FIX code, an inverted case from what that guardrail normally guards against: verified by diffing
+     `venue_fetch.py` on the VM via SSH against local HEAD, `shard_counts[(bm_str, "trades", ...)]` on the VM vs
+     `"odds"` locally).
+  2. Relaunched via `launch-mtds-live.sh` with the old VM's own extracted metadata verbatim
+     (`--shard-spec sports:ODDS_API:trades`, same 5-league instrument-id list, `--env prod --live-source native`) —
+     `lc_verify_tarball_freshness` auto-republished all 4 stale tarballs (mtds/UAC/UTL/deployment-service) to current
+     HEAD before boot, confirmed via its own re-verify pass. New VM `...-111158` came up RUNNING, `run.log` showed real
+     manifest-write activity within ~5 min.
+  3. **Verification caught a second bug the first diagnosis missed.** Read the new VM's per-VM manifest shard directly
+     (`pandas.read_parquet` over `download_from_storage`, never `gsutil`) instead of trusting "it booted" — 1250/1250
+     rows still `data_type=trades`. SSH'd in and confirmed the DEPLOYED code on this new VM already has the P0 fix
+     (`shard_counts[(bm_str, "odds", ...)]`) — so the code-level fix from `28e2eb36d8` is not what's driving this row's
+     `data_type`. Traced the actual driver: `--shard-spec asset_group:venue:data_type` is parsed by `parse_shard_spec()`
+     and its third segment is threaded straight into `LiveWebsocketRunner(data_type=...)`, which stamps every manifest
+     row for the entire run — a CLI/deployment-parameter value, independent of the accumulator fix. Confirmed safe to
+     correct (not a feed-selection param) by reading `_resolve_connector`'s dispatch (keyed only on `venue`),
+     `odds_api_ws.py`'s `self._data_type` (write-only, never read), and `is_candle_boundary_eligible` (pure
+     enum-membership check, no crash risk either value).
+  4. Deleted the mislabeled `...-111158` VM (1,604 `trades` rows written in ~13 min) and relaunched a third time with
+     the corrected `--shard-spec sports:ODDS_API:odds` → `mtds-live-sports-odds-api-odds-20260815-112335`. Verified
+     clean: 325/325 manifest rows `data_type=odds` and growing. **Live writer is now genuinely fixed** — both the code
+     accumulator (P0, `28e2eb36d8`) AND the launch-parameter label (this turn) needed to change; fixing only the code
+     (as P0 did) was necessary but not sufficient, since the live-streaming CLI path stamps `data_type` from the
+     shard-spec string, not from the per-tick accumulator P0 touched.
+  5. **Residual sizing before restamping** (dry-run first, per this issue's own established discipline — restamping
+     against a still-broken writer is exactly the failure mode this issue exists to prevent): GCS object pass
+     (`restamp_sports_trades_to_odds_2026_08_12.py --day 2026-08-15`, dry-run then apply) found 57 objects, **0 copied /
+     57 already_present_verified** — the physical GCS write path was never broken; every `2026-08-15` object already
+     lived under `data_type=odds/`. Manifest durable-surface dry-run (`manifest_swap_trades_to_odds_2026_08_12.py`, no
+     args) showed **0 rows to relabel on both surfaces** — also already clean. The entire 1,604-row residual is confined
+     to the deleted mislabeled VM's now-orphaned per-VM shard file
+     (`_index/per_vm/mtds-live-sports-odds-api-trades-20260815-111158.parquet`, confirmed via direct read: 1,604/1,604
+     `trades`, all `date=2026-08-15`); the ORIGINAL stale VM's per-VM shard file (`...-074026.parquet`) 404s — already
+     consolidated + swept by this issue's own earlier P1 apply (3,229 relabeled). New P2 todo filed above tracking the
+     sweep once the hourly consolidator merges the orphaned shard; a bounded ~75min background monitor (this session) is
+     polling for that and will auto-apply+verify — this is the documented "KNOWN PHASED-STATE CAVEAT" the swap script's
+     own docstring anticipates, not a new defect.
+  6. **Unrelated tradfi combo-casing red** mentioned in this turn's task instruction was already found, diagnosed as
+     pre-existing (RULES.md §4b clean-tree reproduction), fixed, and shipped in the prior slot-19 session segment (see
+     the 2026-08-15 slot-19 entry above, `market-tick-data-service@6fa0dd9d`, covering
+     `test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py` +
+     `test_venue_fetch_cefi_manifest_canonicalization.py` — both asserted a stale `combo`-stays-lowercase behavior that
+     `unified_trading_library.canonical.canonicalize_manifest_instrument_type` had already correctly reversed per
+     `/plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`'s live investigation); no new
+     tradfi red found in this turn's redeploy work.
