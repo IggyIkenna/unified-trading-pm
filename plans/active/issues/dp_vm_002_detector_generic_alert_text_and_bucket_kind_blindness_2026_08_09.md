@@ -126,11 +126,25 @@ per-VM shard) actually need anything new this run?" before concluding GONE_NO_CA
 
 ## Todos
 
-- [ ] [CODE] P3. Confirm whether `exit_code_fleet_monitor.py`'s `DP_VM_GONE_NO_CAPTURE` alert text's `"(N → M)"`
+- [x] ✅ [CODE] P3. Confirm whether `exit_code_fleet_monitor.py`'s `DP_VM_GONE_NO_CAPTURE` alert text's `"(N → M)"`
       captured-count figure is genuinely interpolated per-VM or a fixed/templated string (grep `_finding_for` / wherever
       the alert `context` string is built). If fixed/templated, either wire in the real
       `captured_before`/`captured_after` values already computed in `sweep()`, or drop the misleading `"(0 → 0)"` suffix
-      from the message entirely. Repo: deployment-service.
+      from the message entirely. Repo: deployment-service. — **CONFIRMED genuinely interpolated, no fix needed
+      (2026-08-15, slot-25).** `_classify.py::finding_for`'s `DP_VM_GONE_NO_CAPTURE` branch (lines ~671-682) builds the
+      summary as an f-string reading `result.captured_before`/`result.captured_after` directly off the
+      `TerminationResult` dataclass — those fields are populated in `classify_terminated_vm` from the real
+      `captured_before`/`captured_after` args threaded through from `sweep()`'s per-VM `captured_reader()` calls (NOT a
+      constant). `tests/unit/test_data_pipeline_monitors.py` already exercises non-zero flat values
+      (`captured_reader=lambda _vm: 100`, line 1550/1604/1714) that assert a `GONE_NO_CAPTURE` verdict — those cases
+      would render `"(100 → 100)"`, not `"(0 → 0)"`, proving the string is not templated. The `"(0 → 0)"` seen
+      identically across all 23 VMs sampled in the source audit is the HONEST consequence of those specific VMs'
+      `captured_reader()` genuinely returning 0 both before and after — because `GONE_NO_CAPTURE` structurally requires
+      `captured_after <= captured_before` (a climbing count routes to CLEAN/PARTIAL_UNCONFIRMED instead), a VM whose
+      reader can't find its real shard (Finding 2's bucket-`kind`-blindness, already tracked as the next todo below)
+      will always show flat 0→0 even when real data was captured elsewhere. No code change needed for this todo — the
+      fix for the misleading reading lives entirely in Finding 2's bucket-resolution todo, not here. (repo:
+      deployment-service, investigation only)
 - [ ] [CODE] P3. Extend `cli.py::_make_captured_reader`'s bucket resolution (and its probe-fallback) to also try
       `kind="instruments-store"` and `kind="features"` when `kind="market-data"` doesn't resolve or reads 0 rows for a
       VM prefix known to write elsewhere — at minimum for the `instr-backfill-*`, `fs-backfill-*`, and
