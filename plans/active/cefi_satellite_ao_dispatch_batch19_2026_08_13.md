@@ -30,7 +30,7 @@ related:
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     /plans/archive/2026_08/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
-    /plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
+    /plans/archive/2026_08/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
   ]
 created: "2026-08-13"
@@ -504,12 +504,21 @@ source: >-
       `deployment-service@e7d17f2` reachable on `origin/live-defi-rollout` via `git merge-base --is-ancestor`, flipped
       the source doc's todo 2 to `[x]` with a CLOSED note, and updated its "Big findings" section to record option (B)
       as what actually shipped for S1-b. No new code shipped (doc-only, per the todo's own scope).
-- [ ] [CODE] P2. Archive this doc via the 6-step archival ritual
+- [x] ✅ [CODE] P2. Archive this doc via the 6-step archival ritual
       (/codex/12-agent-workflow/plan-completion-and-archival-discipline.md), repointing the 7 listed active corpus
       referrers (tradfi_satellite_ao_dispatch_batch7_2026_08_06.md, ag_closeout_audit_defi_parked_2026_08_08.md,
       mdps_features_deadcode_consolidation_2026_07_20.md, plans/active/INDEX.md, plus 3 already-repointed archive-path
       references) in the same commit Source:
-      `plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`
+      `plans/archive/2026_08/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`
+      — **DONE 2026-08-15 (slot-8·backend_engineer), unified-trading-pm (this commit).** Fresh corpus-wide grep found
+      the doc's own referrer list stale since 2026-08-09: `ag_closeout_audit_defi_parked_2026_08_08.md` has itself since
+      been archived (frozen historical record, no repoint needed) and `plans/active/INDEX.md` carries no direct
+      reference (auto-generated, self-corrects). Repointed the 3 real remaining active referrers
+      (`tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` — also had stale CONTENT, corrected in place;
+      `mdps_features_deadcode_consolidation_2026_07_20.md`; this doc's own frontmatter + Source citation above) +
+      `git     mv`'d the doc to `plans/archive/2026_08/issues/`. New finding filed separately, out of scope here:
+      `plans/active/issues/launch_ml_training_vm_codex_claims_deleted_but_live_2026_08_15.md`. See the archived doc's
+      own Progress Log for full detail.
 
 ## Deferred
 

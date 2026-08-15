@@ -18,7 +18,7 @@ summary: >-
   bug class already tracked as S1-a (`launch-prediction-features-vm.sh`) in
   `mdps_features_deadcode_consolidation_2026_07_20.md` todo 1, but that todo does not name
   `launch-prediction-pipeline-vm.sh` — a distinct file with the same defect.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -63,6 +63,13 @@ source: >-
 ---
 
 # `launch-ml-training-vm.sh` + `launch-prediction-pipeline-vm.sh` — stale post-consolidation module paths
+
+> **🟢 ARCHIVED 2026-08-15 — COMPLETE.** Both substantive todos shipped 2026-08-09 (`deployment-service@082a5eda`,
+> `deployment-service@03b10e46`, via `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch15_2026_08_09.md`). This
+> archival closes out todo 3 (the 6-step ritual itself) — every listed referrer repointed in the same commit. A new,
+> narrower finding surfaced while archiving (codex disagrees with itself on whether `launch-ml-training-vm.sh` still
+> exists at all) is tracked separately:
+> `/plans/active/issues/launch_ml_training_vm_codex_claims_deleted_but_live_2026_08_15.md`.
 
 ## What I found
 
@@ -143,7 +150,7 @@ the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all 
       `quality-gates.sh` is green. Same sibling A/B/C decision context as todo 1 above — resolved 2026-08-08, this item
       was fixed on its own merits (not a keep/delete fold-in) once verification showed no consolidated equivalent covers
       its sequencing.
-- [ ] [DOC] P3. **Archive this doc via the 6-step ritual**
+- [x] ✅ [DOC] P3. **Archive this doc via the 6-step ritual**
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) now that both substantive todos above are
       done and unlocked — this doc has 7 active corpus referrers that a genuine archival needs to repoint in the same
       commit, out of scope for a plain checkbox-reconciliation pass:
@@ -195,3 +202,19 @@ the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all 
   archived (finalize todo 2's own 6-step ritual) — repointed this doc's own todo-3 referrer-list citations for both to
   `/plans/archive/2026_08/`. Remaining open count on todo 3 unchanged (still 1 — the other 5 of 7 listed referrers are
   still active paths, not this doc's own archival to run).
+- **2026-08-15 (slot-8·backend_engineer)**: Todo 3 (this archival) DONE. Fresh corpus-wide grep found the doc's own
+  referrer list partly stale since 2026-08-09: `ag_closeout_audit_defi_parked_2026_08_08.md` has itself since been
+  archived (now `/plans/archive/2026_08/issues/`, a frozen historical record — no repoint needed), and
+  `plans/active/INDEX.md` carries no direct reference (auto-generated, self-corrects on next regen). Repointed the 3
+  real remaining active-corpus referrers in this same commit:
+  `/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (its "flagged, not batched" bullet also had stale
+  CONTENT, not just a stale path — it said both items were still gated on the sibling doc's open operator decision,
+  which was declassified 2026-08-08 and both items shipped 2026-08-09 — corrected in place),
+  `/plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md` (Progress Log path-only repoint), and
+  `/plans/active/cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (the batch that dispatched this exact archival todo —
+  its own `related:` frontmatter entry + `Source:` citation repointed to the new archive path in the same commit as its
+  own checkbox flip). New finding filed separately, out of this todo's scope:
+  `/plans/active/issues/launch_ml_training_vm_codex_claims_deleted_but_live_2026_08_15.md` (two codex docs claim
+  `launch-ml-training-vm.sh` was deleted 2026-05-20; it is live on disk and was fixed by this doc's own todo 1 four days
+  ago). `run_hygiene_sweep.sh`/line-caps not re-run standalone (doc-only change, no code); relying on the push-time prek
+  gate.

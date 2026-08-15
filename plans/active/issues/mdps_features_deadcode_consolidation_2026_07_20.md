@@ -189,8 +189,9 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   explicit test — see the annotation above the todos. Todo 8 (S3-b) correctly remains a genuine design adjudication,
   unchanged. The actual multi-file deletion + registry edit (implementing recommendation A) was not executed in this
   pass — this was a documentation-question audit, not an implementation dispatch. The sibling doc
-  `plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` (2 more
-  launchers with the same defect class) follows the same reasoning once picked up.
+  `plans/archive/2026_08/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` (2
+  more launchers with the same defect class) followed the same reasoning once picked up (resolved + archived
+  2026-08-15).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid - per the HARD RULE, `assigned_vm` flips
   WHOLE-DOC only, and todo 8 (S3-b, sports dual entrypoint) remains an explicit, un-superseded design adjudication ("Do
   NOT silently delete... operator/design adjudication") — one genuine judgment call among the 4 open items blocks the

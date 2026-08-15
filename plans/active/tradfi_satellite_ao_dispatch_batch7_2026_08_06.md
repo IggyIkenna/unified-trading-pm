@@ -338,9 +338,11 @@ whichever tranche actually owns the content, not tradfi reaching in — each is 
 - **`mdps_features_deadcode_consolidation_2026_07_20.md`** — 4 remaining items (2 broken/non-runnable VM launchers, 1
   unregistered zombie-watchdog blind spot, 1 dual-entrypoint cleanup) all gate on the SAME unresolved operator
   keep/delete/design-adjudication ask; `[cefi, defi, tradfi, sports, prediction]`.
-- **`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`** — both remaining items
-  (verify `ml_service`'s CLI surface vs. its launcher; determine launcher-consolidation overlap) explicitly fold into
-  `mdps_features_deadcode_consolidation_2026_07_20.md`'s own still-unresolved operator decision above.
+- **`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`** — **RESOLVED + ARCHIVED
+  (2026-08-15)**: both items landed independently (`deployment-service@082a5eda`, `deployment-service@03b10e46`, shipped
+  2026-08-09 via `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`) rather than folding into
+  `mdps_features_deadcode_consolidation_2026_07_20.md`'s gate as this bullet previously stated — doc moved to
+  `/plans/archive/2026_08/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`.
 - **`uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** — operator decision needed on 9 DeFi (protocol,
   data_type) pairs (wire real capture vs. roll back aspirational genesis dates) + 2 unexecuted rollback candidates + an
   unscoped `deployment-api` retirement follow-up; `[cefi, defi, tradfi]`, `instruments_master` epic.
