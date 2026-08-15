@@ -152,7 +152,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "6b4ed2e118339a38fbc5457857c44cc8b364cc9f"
+      "ldr_ci_status_sha": "c7302281d17e7c3cff1993d90ceaa5574bad7c33"
     },
     "batch-live-reconciliation-service": {
       "promotion_model": "ldr_main",
@@ -214,7 +214,7 @@
         "large_file_count": 0,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "4521c3e8c7e256fc638816f5d3cfc826c762915f"
+      "ldr_ci_status_sha": "5b17c9680bfeb91c8ed00479556df54a59f4b855"
     },
     "client-reporting-api": {
       "promotion_model": "ldr_main",
@@ -281,7 +281,7 @@
         "large_file_count": 0,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "5809e415ca18ee0169310e6fc02baaf75557e69b"
+      "ldr_ci_status_sha": "b5ae1c11bd781ee8a566970e7daaca9887821e02"
     },
     "deployment-api": {
       "promotion_model": "ldr_main",
@@ -350,7 +350,7 @@
         "coverage_pct": null,
         "warn_file_count": 17
       },
-      "ldr_ci_status_sha": "3b56d4706aa2e71a696063403777d9b4ba7240af"
+      "ldr_ci_status_sha": "b703b541f1d15b1550a617254634de821e0a486a"
     },
     "deployment-service": {
       "promotion_model": "ldr_main",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "afc594db80b982e35f2fa8fc6a542214f82f8640"
+      "ldr_ci_status_sha": "aad3a3743265d38742368ab6ca1a0cfd0e291d8b"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "d027e4d88c5963035163cf1b23093374473bd4c4"
+      "ldr_ci_status_sha": "83c511e28760f76706419662a9c81b21d77b46f9"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -544,7 +544,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "e359d81efb5343a59b84e767279836a45d2f79dc"
+      "ldr_ci_status_sha": "b7d3defa2f348ac978390fce8a1f4c549a643037"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -608,7 +608,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "55ea22c0d5fcbed73ba53ab4ebfb448bf6a1b2b0"
+      "ldr_ci_status_sha": "654d6a537134010f8282f14e345c4e332c3188b9"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -670,7 +670,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "b39356050a7980a4b5928cb1e13dda946f5bdf11"
+      "ldr_ci_status_sha": "eb62ff1efc00d59258e96eb0d1296e0679a7da02"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "e6815f632148ac8bb8583b3a009555f559c84cb0"
+      "ldr_ci_status_sha": "0f10286431e204172ca990268ea679cd65e47195"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -843,7 +843,7 @@
         "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "33bd7ab37d01651ca01b4f1ad0f1fd9e4d0ded50"
+      "ldr_ci_status_sha": "7d66e4ae272981d384209b3ab9c9864f5d20a8e2"
     },
     "market-tick-data-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "3a24ab8e5dd37184d0a22a9314ee6ea180bbf799"
+      "ldr_ci_status_sha": "86bb4f63e781fda89c3cc5d3753200f34fb64cce"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -974,7 +974,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "286fdf482519d1c4b04a7e282d5bd86254e71b15"
+      "ldr_ci_status_sha": "f160fd3f84de7da96d01cc9b1f12b5e5c2aa5566"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "242ed631fb3801737f7873df7f6d45e032b64baa"
+      "ldr_ci_status_sha": "af99cbda310e9b4f57a0239b60a20dfe86c769b5"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1196,7 +1196,7 @@
         "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "11ecee0159030f070589bf68d86ca42896b494b9"
+      "ldr_ci_status_sha": "b667b2745cc02297314e121b0913feb6bbe7a273"
     },
     "unified-api-contracts": {
       "promotion_model": "ldr_main",
@@ -1297,7 +1297,7 @@
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "04ffad098c2796a9233f63776ead9ad01f32a444"
+      "ldr_ci_status_sha": "58ff44bfd3a46700508912b9cfc69117097bc4ea"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "e83ca342dd7e4c30f8d3b367f1c81fdf9d1e8267"
+      "ldr_ci_status_sha": "e5dca505ab871e7c76d1558707e6b2c70d170b72"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "ea1af96c500cb58a8b8384d0061509cbbe9a5c62"
+      "ldr_ci_status_sha": "e3dc61cc32d860519ded0d54e43bc6d856e9a767"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
