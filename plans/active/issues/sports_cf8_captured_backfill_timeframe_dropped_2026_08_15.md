@@ -453,6 +453,25 @@ issue's scope); flagged as a follow-up todo below.
       `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`. Read each for how it calls the adapter and
       what `timeframe` value (if any) it threads into its own write call — one of these is the actual culprit.
       (repo: market-data-processing-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up — 1 of 5 candidates read, narrows the search**:
+      `reprocess_sports_odds.py` (grepped, not fully read) writes REAL per-horizon `timeframe` values — it maps
+      `horizon_name` (e.g. `"T-24h"`) straight into its `ManifestWriter.add(...)` call (`timeframe=horizon_name,`
+      at line 1226, sourced from a dict built at line 739 per the `horizon_name`→manifest-`timeframe` mapping
+      documented at line 726). **This script is very likely NOT the culprit for the FINE (per-league_id,
+      per-timeframe) rows** — its `timeframe` is never blank by construction. BUT its own sibling script
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py` documents (in its own header, not yet read in
+      full) that `reprocess_sports_odds.py` ALSO writes a **second, COARSE per-day row with NO `league_id`/
+      `timeframe` — "the aggregate" row, by design**, distinct from the FINE per-(league_id, timeframe) row. This
+      is a candidate legitimately-blank-by-design write, but from a DIFFERENT writer than the one the P3 entry
+      above already ruled out (`manifest_finalize.py`'s coarse path, which can't write this `data_type` at all) —
+      **not yet checked whether reprocess_sports_odds.py's own coarse write could be misclassified/queried as if
+      it were a fine row** (i.e., whether the audit script's `read_availability_index_safe` query conflates the
+      two row shapes). **Next, most precise step**: read `reprocess_sports_odds.py` lines ~700-760 (the coarse-row
+      write call, sibling to the line-739/1226 fine-row path already found) to confirm whether its coarse rows are
+      tagged with a `data_type` that could land in the audited `odds_horizon_bucket` population, and if so whether
+      that's legitimate-by-design (closes this P1 todo with "no bug, working as intended, audit query needs a
+      coarse/fine filter") or itself a bug. The other 4 candidate scripts remain unread. (repo:
+      market-data-processing-service)
 
 ## Progress Log
 
