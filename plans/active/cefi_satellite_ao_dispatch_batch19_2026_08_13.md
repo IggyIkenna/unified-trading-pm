@@ -385,7 +385,23 @@ source: >-
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Fix flaky shellcheck under host load in launch-expected-universe-v2-vm.sh Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Generalise the test-hermeticity guard for the pytest fake-GCS backend persistence bug Source:
+- [x] ✅ [CODE] P2. Generalise the test-hermeticity guard for the pytest fake-GCS backend persistence bug **CLOSED —
+      already-shipped in the SAME commit as the original ad-hoc fix (2026-08-15, slot-26·backend_engineer).** Read
+      `deployment-service/tests/conftest.py` directly: `_isolate_local_storage_provider_default_root` (an `autouse=True`
+      fixture in the ROOT `tests/conftest.py`, confirmed the ONLY `conftest.py` in the whole `tests/` tree via
+      `find tests -iname conftest.py`) monkeypatches
+      `unified_trading_library.cloud_interface.providers.local._default_local_storage_root` to
+      `tmp_path /     "local-storage"` for EVERY test in the suite, not just the two `sweep()` alert tests the source
+      doc's own Lesson 5 names. `git log -S"_isolate_local_storage_provider_default_root" -- tests/conftest.py` → single
+      hit, `0c38c00d` — the exact same commit the source doc cites for the "ad hoc" fix, and the fixture's own docstring
+      already states the generalisation intent verbatim ("Porting the same fixture ... closes the class for EVERY
+      deployment-service feature that writes durable state, not just those actuators"), mirroring UTL's own `@8f0d6e8f`
+      fixture rather than inventing a repo-local one. Confirmed no narrower/duplicate local-storage-root patch exists
+      elsewhere (`grep -rn '_isolate_local_storage_provider_default_root\|_default_local_storage_root'     tests/`
+      outside `conftest.py` → only a citing comment in `test_dp_recovery_actuators.py`, no second implementation). The
+      todo's own framing (still "ad hoc," needing a follow-up generalisation) was accurate at the moment the source
+      doc's Progress Log was written mid-session but was already resolved by session-end — simply never checked off. No
+      code shipped by this batch (none needed). Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Fix the pre-existing hardcoded-prod-project-ID QG violation in test_vm_launcher_scripts.py Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
@@ -537,3 +553,14 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   `market-data-processing-service@5b2701fa9f`. See the todo's own evidence line for full file/function detail. The
   source doc's checkbox stays stale for the same 1000-line hard-cap reason recorded in the entry immediately above
   (unrelated to this fix, pre-existing, needs the trim-under-cap follow-up todo first).
+
+- **2026-08-15 (slot-26·backend_engineer)**: dispatched the "Generalise the test-hermeticity guard for the pytest
+  fake-GCS backend persistence bug" todo. Read `deployment-service/tests/conftest.py` directly and found the
+  generalisation already shipped — `_isolate_local_storage_provider_default_root` is an `autouse=True` fixture in the
+  repo's ONLY `conftest.py` (confirmed via `find tests -iname conftest.py`), so it already covers every test in the
+  suite, not just the two `sweep()` alert tests the todo's own wording implies are still the only ones covered.
+  `git log -S` on the fixture name found a single introducing commit, `0c38c00d` — the SAME commit the source doc cites
+  for the original ad-hoc fix, and the fixture's own docstring already documents the generalisation intent. No
+  narrower/duplicate local-storage-root patch exists anywhere else in `tests/`. No code shipped (none needed) — checkbox
+  flipped citing the existing sha. Same 1000-line hard-cap block as the two entries above prevents touching the source
+  doc's own checkbox in this commit; it stays stale until the trim-under-cap follow-up lands.
