@@ -4,7 +4,8 @@ title: Exposure Reduction — one mandate, three triggers, one executor
 summary:
   Close-all, flatten-on-producer-silence and margin deleverage are the same operation at three points on one axis. This
   is the SSOT for unifying them onto a single UAC mandate contract and a single execution-service reducer, and the
-  migrate-then-delete order for the four fragmented implementations that exist today (three of which are unreachable).
+  migrate-then-delete order for the fragmented implementations that exist today — one of which (the margin deleverage
+  executor) has no caller at all, and none of which share a vocabulary.
 status: current
 nature: ssot
 asset_group: [cross-cutting]
@@ -38,8 +39,8 @@ code_refs:
 
 ## The problem this resolves
 
-Measured 2026-08-15. Four separate mechanisms exist for "reduce our exposure". **Three of them cannot run**, and no two
-share a vocabulary:
+Measured 2026-08-15. Five separate mechanisms touch "reduce our exposure". **No two share a vocabulary**, one cannot run
+at all, and the one that holds the position truth is co-located with the failure it is meant to survive:
 
 | Concern                                       | Where it lives                                          | Reachable today?                                                      |
 | --------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------- |
