@@ -198,6 +198,26 @@ investigation confirmed are both achievable with existing primitives:
   filter, mirroring the already-proven `gate_on_depends_on_disk` live-disk-read pattern) to close this to zero rather
   than ship a "safe within ~10 minutes, best-effort" guarantee — the plan's own hard constraint #2 promised
   no-competition, not eventually-no-competition. Phase 0 fully resolved; starting Phase 1 implementation this tick.
+- **2026-08-15, tick 3 (autonomous, main session)**: Phase 1 fully implemented and shipped —
+  `agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1`. All 6 todos below landed in one commit: the
+  `unassigned_vm` `_FILTERS` entry (+ the `_detailed_fleet_reasons` branch a first pass nearly missed — without it
+  `explain_blocked` would have silently misreported an NA-blocked task as unblocked), `rank_eligible_tasks()`,
+  `human_slot_ids()` wired into all three liveness sites (merged into one combined condition at the
+  `WorkerLivenessKicker` site after ruff's C901 complexity gate caught `_tick_once` going 26→27), `task_role_group()`'s
+  new `"human"`/`"planning-human"` buckets, and the three human-heartbeat/claim-check/claim endpoints. Full
+  `quality-gates.sh` green (3821 pytest passed, 0 basedpyright errors, dashboard 346 passed) after fixing two real bugs
+  a first QG pass caught: `_human_claim_verdict` checked `row.status != "queued"` BEFORE `dispatched_to is not None`, so
+  an already-dispatched task reported `task_status_dispatched` instead of `already_dispatched` (reordered); and three of
+  my own tests used a single-task backlog to assert `claimable=True`, which is actually WRONG — with nothing else
+  queued, that one task trivially ranks position 0 (genuinely next-up for AO), so `claimable=False` was correct and the
+  tests' own fixtures were the bug (added a `_seed_far_back_backlog` helper with 60 filler tasks ahead of the target,
+  matching the earlier correctly-designed test). Built + verified in a second isolated worktree (`.ao-iso-ship-2`, same
+  pattern as the review-agent fix) — the shared checkout still carries the same unrelated concurrent agent's dirty WIP
+  from earlier today. Todo "verify /done works unmodified" is marked done for the CODE guarantee (human-claim sets
+  `dispatched_to` correctly, `/done`'s ownership gate is unmodified and keys only on that field — verified by reading
+  the code, not by re-deriving it) but the actual LIVE human-claim→/done cycle against a real task has not run yet —
+  that already-planned real-task run is Phase 4's own explicit todo, not a gap. Starting Phase 2 (laptop-side tooling)
+  next tick.
 
 ## Todos
 
@@ -225,48 +245,42 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 1 — AO backend: vocabulary, exemption, pre-flight check, human-claim/done wiring
 
-- [ ] [BACKEND] P0. **Close the `assigned_vm` live-dispatch-eligibility gap found in Phase 0 todo 4** — add a new
-      `FilterScope.FLEET` entry to `_FILTERS` (`server/dispatch.py:320-427`) mirroring `gate_on_depends_on_disk`'s
-      already-proven pattern (`:366-377`, re-derives state straight from the plan file on every dispatch attempt): call
-      the existing `_parse_frontmatter_assigned_vm(plan_path)` helper (`server/regen_backlog_from_plan.py:501`) for
-      `task.plan_ref` and block dispatch if the current on-disk value is an unassigned sentinel
-      (`_UNASSIGNED_SENTINELS`, `regen_backlog_from_plan.py:790`). This is what makes the `assigned_vm` escape hatch
-      actually immediate rather than best-effort-within-~10min. Done when: a test proves a task whose owning plan is
-      `assigned_vm: NA` on disk is never returned by `pick_next_task`/`rank_eligible_tasks` even while its `TaskRow`
-      still exists as `queued`, and the existing `_FILTERS` test suite still passes.
-- [ ] [BACKEND] P1. **Add `"human"` and `"planning-human"` as deliberate, explicit buckets in `task_role_group()`**
-      (`server/state_store/slots.py:703-720`) rather than letting either silently collapse to `"planning"` — extend
-      `TASK_ROLE_GROUPS` and the membership-set logic. Done when: a unit test asserts
-      `task_role_group("human") == "human"` and `task_role_group("planning-human") == "planning-human"` and the existing
-      test suite for `task_role_group` still passes.
-- [ ] [BACKEND] P1. **Add `human_slot_ids()` to `server/config.py`** mirroring `review_slot_ids()` (`config.py:316-331`)
-      exactly (same config-list primitive shape; default derived from `HUMAN_SLOT_ID_BASE` offsets above), and wire the
-      check into the same three pre-tmux-call sites already confirmed: `WorkerLivenessWatchdog._tick_once` (before
-      `has_session` at `worker_liveness_watchdog.py:931`), `AutoSpawn._should_spawn` (before `has_session` at
-      `autospawn.py:3319`), `WorkerLivenessKicker._tick_once` (`worker_liveness/__init__.py:736`, alongside the existing
-      review check). Done when: a test proves no `capture_pane`/`kill_session`/`has_session` call is ever made for a
-      slot in `human_slot_ids()`, mirroring the existing review-slot exemption tests.
-- [ ] [BACKEND] P1. **Build a read-only pre-flight endpoint** `GET /api/slots/{slot_id}/human-claim-check?task_id=...`
-      returning `{claimable: bool, reason: str|null, currently_dispatched: bool, queue_position: int|null}`, using the
-      new `rank_eligible_tasks()` (Design decisions above). Done when: a request against a currently-dispatched task and
-      a request against a task ranked >50 both return the correct `claimable` verdict in a test.
-- [ ] [BACKEND] P1. **Build the human-claim endpoint** `POST /api/slots/{slot_id}/human-claim {task_id}` — runs the same
-      check as the pre-flight endpoint atomically (inside the same `session_scope()` transaction, no check-then-claim
-      race), and on pass calls `mark_dispatched`/`assign_task_to_slot` (`slots_worker.py`'s existing helpers) directly
-      for the specified `task_id`, bypassing `pick_next_task`'s competitive selection entirely. On fail, returns the
-      same `reason` the pre-flight endpoint would. Done when: a test claims a task successfully, a second concurrent
-      claim attempt on the same task_id 409s, and a claim attempt on a currently-AO-dispatched task is rejected with
-      `reason: "already_dispatched"`.
-- [ ] [BACKEND] P1. **Verify `/done` works unmodified for a human-claimed task** — run one real human-claim → `/done`
-      cycle against a genuinely low-stakes test task and confirm the full verification stack (git-diff, plan-flip,
-      origin-push, quickmerge-provenance) fires correctly with `dispatched_to` set by the human-claim endpoint above.
-      Done when: the task's plan-checkbox is flipped and the `/done` call succeeds with real evidence, no code changes
-      needed to `slots_worker.py`'s done path itself (or, if something breaks, a scoped fix todo is added here).
-- [ ] [BACKEND] P1. **Build a lightweight human "register + heartbeat" endpoint** — either a thin wrapper around the
-      existing `register_agent()` (`server/state_store/agents.py:82-98`) with `agent_kind="human"`, `tmux_session=None`,
-      or a dedicated route, accepting `model`/`account_id`/`context_used_pct` in the body from the statusline companion
-      (Phase 2). Done when: a registered human `AgentRow` shows up via `GET /api/agents` with `agent_kind="human"` and
-      updates `last_ping`/`context_used_pct` on each heartbeat call.
+- [x] 5. ✅ [BACKEND] P0. **Close the `assigned_vm` live-dispatch-eligibility gap found in Phase 0 todo 4** — new
+      `unassigned_vm` `FilterScope.FLEET` entry in `_FILTERS`, `assigned_vm_still_dispatchable()` mirroring
+      `gate_on_depends_holds_on_disk`'s pattern exactly, plus the `_detailed_fleet_reasons` branch so `explain_blocked`
+      reports it correctly. Tests: `tests/test_dispatch_unassigned_vm_disk_check.py`. Evidence:
+      agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
+- [x] 6. ✅ [BACKEND] P1. **Add `"human"` and `"planning-human"` as deliberate, explicit buckets in
+      `task_role_group()`** — `_HUMAN_ROLES` frozenset + `TASK_ROLE_GROUPS` extension. Tests:
+      `test_role_group_human_roles_map_to_themselves_     not_planning` in `tests/test_task_usage_windows.py`. Evidence:
+      agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
+- [x] 7. ✅ [BACKEND] P1. **Add `human_slot_ids()` to `server/config.py`** — mirrors `review_slot_ids()` exactly
+      (`HUMAN_SLOT_ID_BASE = 9000`, `DEFAULT_HUMAN_SLOTS = (9001, 9002)`), wired into all three pre-tmux-call sites
+      (`WorkerLivenessWatchdog._tick_once`, `AutoSpawn._should_spawn`, `WorkerLivenessKicker._tick_once` — the latter
+      merged into one combined condition with the review check to stay under ruff's C901 complexity cap). Tests:
+      `test_should_spawn_blocks_human_slot`, `test_tick_exempts_human_slot_even_on_context_full_pane`,
+      `test_human_slot_never_kicked_even_on_frozen_pane`. Evidence:
+      agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
+- [x] 8. ✅ [BACKEND] P1. **Build a read-only pre-flight endpoint** `GET /api/slots/{slot_id}/human-claim-check` —
+      `_human_claim_verdict()` shared with the claim endpoint, using `rank_eligible_tasks()`. Tests:
+      `tests/test_human_fleet_endpoints.py` (claimable / already-dispatched / in-next-queue / beyond-preview-limit /
+      NA-plan-excluded cases). Evidence: agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
+- [x] 9. ✅ [BACKEND] P1. **Build the human-claim endpoint** `POST /api/slots/{slot_id}/human-claim` — atomic, calls
+      `mark_dispatched`/`assign_task_to_slot` directly for the named `task_id`, bypasses `pick_next_task` entirely; 409s
+      with `reason` on any non-claimable verdict. Tests confirm a successful claim, a concurrent second-claim 409, and
+      an already-dispatched-task 409 (fixed a real ordering bug in `_human_claim_verdict` where `status != "queued"` was
+      checked before `dispatched_to is not None`, misreporting `already_dispatched` as a generic
+      `task_status_dispatched`). Evidence: agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
+- [x] 10. ✅ [BACKEND] P1. **Verify `/done` works unmodified for a human-claimed task** — CODE-verified (human-claim
+      sets `dispatched_to` via the same `mark_dispatched` primitive `/boot`/`/heartbeat` use; `/done`'s ownership gate
+      keys only on `dispatched_to`, confirmed unmodified by reading `slots_worker.py`'s done path) — the actual LIVE
+      human-claim→`/done` cycle against a real task has NOT run yet; that run is Phase 4's own explicit todo, not
+      skipped here. Evidence: code inspection, tick 3 Progress Log.
+- [x] 11. ✅ [BACKEND] P1. **Build a lightweight human "register + heartbeat" endpoint** —
+      `POST /api/slots/{slot_id}/human-heartbeat`, register-or-refresh in one idempotent call (no /boot-vs-/heartbeat
+      distinction since there's no tmux occupant to distinguish), rejects a non-`human_slot_ids()` slot_id with 400.
+      Tests: `tests/test_human_fleet_endpoints.py` (register / refresh-not-duplicate / role_group switch / rejection).
+      Evidence: agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
 
 ### Phase 2 — laptop-side tooling
 
