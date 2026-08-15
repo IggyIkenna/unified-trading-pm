@@ -181,7 +181,10 @@ direct testing, not documentation-reading:**
       `PACIFICA-SOLANA:PERPETUAL:`, backfill matching manifest rows (none currently exist for this venue's raw-tick
       data), and route the whole thing through `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s proof gate
       before touching any object (a rename is a write+delete pair, not a pure read — the reconciliation pass above
-      deliberately did not attempt it).
+      deliberately did not attempt it). Discovery/classification tooling already exists and is promoted —
+      `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py`
+      (`market-tick-data-service@8e69accead`) — **re-run it fresh before migrating**, do not trust its 2026-08-15 output
+      as still current.
 - [ ] [OPERATOR] P3. **New follow-up (surfaced 2026-08-15)**: decide whether to provision a Pacifica
       `wallet_private_key` (base58 Ed25519 Solana keypair — main wallet or a delegated Pacifica "API Agent Key") via
       Secret Manager and flip `execution_service.defi_execution.protocols.pacifica.PacificaConnector.supports_live` to
