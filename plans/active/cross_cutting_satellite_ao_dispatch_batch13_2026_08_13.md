@@ -322,8 +322,32 @@ source: >-
       `_core.py`, a test docstring, `_ml_training_contract.py`) — no live resource declarations or resolver calls. No
       retention check or delete action was needed or taken. Source:
       `plans/active/bucket_estate_consolidation_closeout_2026_07_24.md`
-- [ ] [CODE] P2. Confirm whether any CARRY_STAKED_BASIS/CARRY_BASIS_PERP paper run's fill-rate or slippage figures were
-      cited in an actual promotion/sizing decision, and flag for re-check if so Source:
+- [x] ✅ [CODE] P2. **CONFIRMED: NO — never cited in any actual promotion/sizing decision; nothing to flag.**
+      (2026-08-15, slot-29·infra) Four independent, converging lines of evidence: (1) **The promote workflow's frozen
+      decision artifact structurally cannot carry these figures** — `MinimalCandidateManifest.score_vector`
+      (`unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py:39-50`,
+      `GroupBMetrics`) has exactly 6 fields (`sharpe_ratio`, `calmar_ratio`, `max_drawdown_pct`, `win_rate`,
+      `backtest_days`, `total_return_pct`) — no `fill_rate`/`slippage` field exists anywhere in the schema the promote
+      endpoint freezes at decision time. (2) **The 5 pre-flight promote gates are purely operational**
+      (`/codex/04-architecture/promote-workflow-architecture.md`: Copper sandbox, venue API keys, alerting config,
+      kill-switch YAML, recon green) — none are performance metrics. (3) **The capital-sizing mechanism (portfolio
+      allocator) reads NAV/returns from PBMS**, not fill-rate/slippage (`/codex/03-services/portfolio-allocator.md` —
+      zero `fill_rate`/`slippage` mentions in the whole doc); the one sizing mechanism that DOES exist for these
+      strategies today, `/plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`'s ADV-cap
+      (`--adv-cap-pct`), sizes off Average Daily Volume, unrelated to fill-rate/slippage. (4) **No actual completed
+      promote event exists for either strategy** — grepped the whole corpus for `STRATEGY_PROMOTED_TO_PAPER`/
+      `STRATEGY_PROMOTED_TO_LIVE` co-occurring with `carry_staked_basis`/`carry_basis_perp`: zero hits (only references
+      to the May-23 promote-workflow PLAN, never a completed promotion RECORD); separately grepped for
+      operator-decided/capital-allocation language co-occurring with either strategy name: zero hits. Corroborated by
+      the source finding itself (`/plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`): as of
+      2026-08-10, live execution didn't exist yet for these `AtomicInstruction`-based strategies at all ("a strategy
+      promoted from paper today would have nothing to execute"), and the todo-6 paper-run analysis in
+      `/plans/archive/2026_08/multi_leg_execution_systems_execution_2026_08_10.md` explicitly found **no prior paper
+      equity data was even accessible** for comparison — i.e. no capital decision had meaningfully consumed a full paper
+      run's economics at all, let alone its fill-rate/slippage sub-figures specifically. **Verdict: nothing to flag for
+      re-check** — the pre-2026-08-10 fill-model overstatement is a real, already-fixed data-quality gap in the
+      paper-run RECORDS themselves, but it never propagated into a promotion or sizing DECISION because neither decision
+      mechanism ever consumed those fields. Source:
       `plans/active/cross_cutting_strategy_execution_determinism_2026_07_26.md`
 - [x] ✅ [CODE] P2. **Diagnosed: naive per-repo scoping carries a live regression risk, NOT attempted — re-sequenced
       instead.** (2026-08-15, slot-20·infra) Empirically confirmed the obvious source for a per-repo `source_dir`
