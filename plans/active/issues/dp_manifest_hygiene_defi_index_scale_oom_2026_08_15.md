@@ -141,3 +141,23 @@ Three real options, not mutually exclusive:
 - ❌ The job still OOMs on every execution (verified twice, 2026-08-15 08:39 and 08:53 UTC executions).
 - Tracked follow-up already exists in `data_pipeline_self_healing_completion_residual_2026_07_24.md`'s residual section
   — the P1 todo there points here for the full investigation trail.
+
+## Operator ruling (2026-08-15, via BLK-b06d255a, disposition: final)
+
+> **Option A** — pursue the durable streaming/DuckDB-pushdown rewrite of `detect_manifest_divergence.py`'s manifest
+> read+aggregate path, per the worker's own recommendation. This matches CLAUDE.md's Data Pipeline Correctness HARD RULE
+> (a persistent alert on a correctness-critical oracle is a bug to close in full, not to mute or defer) and DuckDB is
+> already the established pattern for this exact problem class per the referenced 2026-07-24 digest-job OOM precedent.
+> Keep both already-shipped mitigations (32Gi ceiling bump + vectorized aggregation) — real, correct, just insufficient
+> alone. Given the worker's own scoping (real design + equivalence verification against the 17-case test suite, too much
+> for a one-shot escalation under a liveness bound), this should be dispatched as a properly-scoped follow-up task/todo
+> rather than freelanced further in this escalation. Option C (investigate whether defi's manifest should be this
+> granular at write time) is worth pursuing as a SEPARATE, non-blocking investigation in parallel — do not gate A on it.
+> Option B (dedicated VM path) is not needed as the primary fix since A is the intended durable path and B would
+> silently change what daily hygiene covers as a side effect of an OOM patch, which the doc itself says should be a
+> deliberate choice, not adopted here.
+
+**Resolution**: the streaming/DuckDB rewrite (Option A) is tracked as the P1 todo in
+`data_pipeline_self_healing_completion_residual_2026_07_24.md` — dispatch it from there, do not re-open this
+investigation. Option C (defi manifest granularity) is NOT yet tracked as a separate todo — a follow-up worker/ operator
+should add it as its own `- [ ]` item (non-blocking on A) rather than fold it into A's scope.
