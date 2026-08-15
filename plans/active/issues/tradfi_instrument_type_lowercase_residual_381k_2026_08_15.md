@@ -760,13 +760,14 @@ AO-eligible follow-up:
 - **Progress Log 2026-08-15 (slot-25, post-compaction audit) — no new operator ruling; MTDS unchanged
   (`85d593bc`/`31995524` still the only two unpushed commits); PM clean; scratchpad unchanged at 44 files, nothing at
   risk. Process finding, not a data finding**: a batched multi-repo audit command produced a false-positive "IS has
-  MTDS's 2 unpushed commits" reading in **three separate consecutive windows** this session, always the same root cause
+  MTDS's 2 unpushed commits" reading in **four separate consecutive windows** this session, always the same root cause
   — a chained `cd repoA && ... && cd repoB && ...` clause where the `cd repoB` was accidentally omitted, so `repoB`'s
   section silently ran against `repoA`'s working directory and printed `repoA`'s commits as if they were `repoB`'s.
-  Visually re-reading the command for `cd` presence failed to catch this all three times. **Mitigation that actually
+  Visually re-reading the command for `cd` presence failed to catch this all four times. **Mitigation that actually
   worked**: adding an inline `pwd` immediately after each `cd`, inside the same chain, self-exposed the bug on read (the
   `=IS=` section's `pwd` printed the MTDS path, not the IS path) instead of silently misattributing. **Rule going
   forward for any batched multi-repo shell command in this workspace: always echo `pwd` right after each `cd` in the
   chain** — do not trust a written `cd` clause without a verifying `pwd` next to it. IS reconfirmed genuinely clean each
-  of the three times (empty `git status --porcelain`, empty `git log origin/live-defi-rollout..HEAD` once run in the
-  correct directory).
+  of the four times (empty `git status --porcelain`, empty `git log origin/live-defi-rollout..HEAD` once run in the
+  correct directory). This window's own audit command (Step 1 above) used the corrected `pwd`-paired form throughout and
+  produced no false-positive.
