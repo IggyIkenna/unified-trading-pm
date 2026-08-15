@@ -132,7 +132,7 @@ for its own record but is now SUPERSEDED by what actually shipped.**
       `server/routes/slots_worker.py` (`_maybe_plan_switch_reset`). Two regression tests updated/added in
       `tests/test_task_lifecycle_done_gate_resume.py`: `..._still_resets_..._at_high_context` (65% — still resets, the
       safety boundary) and `..._skips_reset_..._at_low_context` (10% — now skips, the new behavior). —
-      `agent-orchestrator@<pending-this-batch>`.
+      `agent-orchestrator@aebc1ea36a`.
 
 <details><summary>Original design-only text (superseded, preserved for record)</summary>
 
@@ -159,7 +159,7 @@ root cause) WITHOUT any new privilege grant.
       `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26` — a subprocess call inside an open write transaction
       scales lock-hold time with fleet size). Logs a separate `unexplained_death_forensics` event per slot. 11 unit
       tests in `tests/test_death_forensics.py` (mocked subprocess, no live dependency). —
-      `agent-orchestrator@<pending-this-batch>`.
+      `agent-orchestrator@aebc1ea36a`.
 
 **"Slot #18 went 'stale' — the detail blob (`silence_seconds`/`threshold_seconds` only) doesn't say what/which slot/task
 went stale, and diagnose+fix the root cause without a regression."** Live investigation (SSM) found: slot 18's account
@@ -173,7 +173,7 @@ root cause.
       `account_id`/`last_msg` (previously silence_seconds/threshold_seconds only — self-contained now, no
       cross-referencing a separate column/UI chip needed). `server/health.py`. New test
       `test_slot_stale_detail_is_self_contained` in `tests/test_health_scheduled_lifecycle_exemption.py`. —
-      `agent-orchestrator@<pending-this-batch>`.
+      `agent-orchestrator@aebc1ea36a`.
 - [x] 9. ✅ [INFRA] P1. Root-cause fix: a NEW, SEPARATE escalation counter (`_consecutive_account_blocked_ticks`, own
       tuning field `account_blocked_kick_escalation_ticks` default 8) in
       `WorkerLivenessKicker._handle_account_blocked_pane` — after N consecutive blocked-pane ticks on a slot with a real
@@ -187,7 +187,7 @@ root cause.
       just delayed by N ticks instead of immediate. `server/worker_liveness/__init__.py` + `server/config.py`. 4 new
       regression tests in `tests/test_worker_liveness.py` (alerts at threshold / doesn't alert early / dedups within an
       episode / resets on recovery) — the first of these explicitly asserts `_maybe_auto_respawn_stuck_slot` is NEVER
-      called, pinning the corrected design. — `agent-orchestrator@<pending-this-batch>`.
+      called, pinning the corrected design. — `agent-orchestrator@aebc1ea36a`.
 
 **Lesson worth carrying forward**: the account-blocked branch's existing test
 (`test_account_blocked_pane_skips_kick_and_marks_account_rate_limited`) already asserted
@@ -216,5 +216,18 @@ to draft-then-catch it.
   `scripts/orchestrator/check-ao-recent-deaths.sh`, `tests/test_context_lifecycle.py`). Pass-1 `quality-gates.sh` caught
   one real, expected test-contract update (see above) and one `ruff format` violation in `fleet_kpis.py` (fixed with a
   scoped `ruff format` on that one file, not a tree-wide reformat) before going green (3852 passed, 6 skipped; dashboard
-  360/360 passed; `tsc --noEmit` clean). Shipped via `quickmerge --agent`, landed on `live-defi-rollout`. Item 4
-  deliberately left as a design-only todo per the rationale above — not implemented this session.
+  360/360 passed; `tsc --noEmit` clean). Shipped via `quickmerge --agent`, landed on `live-defi-rollout`.
+- **2026-08-15 (same extended session, later)**: operator confirmed "let's do item 4" — discovered a DeepSeek-only
+  carve-out already existed and extended it to Claude instead (todo 6, see the corrected section above); operator then
+  asked two more root-cause questions (OOM/kill forensics, slot-18 staleness), answered + fixed live (todos 7-9). All
+  four shipped together: `agent-orchestrator@aebc1ea36a` (`server/config.py`, `server/health.py`,
+  `server/routes/slots_worker.py`, `server/tmux_pruner.py`, `server/worker_liveness/__init__.py`,
+  `server/death_forensics.py` [new], `tests/test_death_forensics.py` [new], `tests/test_health_alert_dedup.py`,
+  `tests/test_health_scheduled_lifecycle_exemption.py`, `tests/test_task_lifecycle_done_gate_resume.py`,
+  `tests/test_worker_liveness.py`). `quality-gates.sh` green (3861 passed after this batch's own fixes: an import-sort
+  lint, a regex bug in the new forensics module, a leftover duplicate assertion in a test edit, and 8 test fixtures
+  missing the `account_id` field the enriched `slot_stale` detail now reads). Plan doc itself picked up a real 3-way
+  `git stash pop` conflict mid-checkpoint — stray triple-angle-bracket-style conflict marker lines from reconciling
+  against a concurrent peer session's unrelated push, which duplicated the Item-4/root-cause sections three times over —
+  resolved by keeping the latest (sha-complete) copy and discarding the two stale ones; verified via a full-file re-read
+  before the final push, not just a marker grep.
