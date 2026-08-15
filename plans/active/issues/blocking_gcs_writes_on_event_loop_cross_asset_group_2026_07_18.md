@@ -123,23 +123,22 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 
 ## Todos
 
-- [ ] [INFRA] P2. **PARTIAL, CODE COMMITTED BUT NOT YET SHIPPED — 3 of 8 residual handlers converted (committed
-      market-tick-data-service@9a21fe0c, NOT pushed); the other 5 do NOT match the assumed
-      `for protocol: for chain: await ...` shape, corrected diagnosis below.** (2026-08-15, slot-15·infra). Re-verified
-      each of the 8 named handlers' actual structure (not inferred from the title alone, per this todo's own "per-site
-      verification, NOT a mass edit" instruction): - ✅ **Converted to `ParallelPerSymbolRunner` fan-out** (bounded by
-      `defi_max_inflight_tasks`, manifest-write ordering preserved — `evm_defi_collectors.py`'s split
-      build-tasks/apply-results phase mirrors `mtds@ff1b5d51`; `liquidations_handler.py` and
-      `liquidation_events_handler.py` fan out their existing per-shard closures directly since those already do their
-      own manifest-write + never raise): `evm_defi_collectors.py`, `liquidations_handler.py`,
-      `liquidation_events_handler.py`. - 🔴 **`dex_swaps_handler.py`** — DOES have the matching nested-loop shape
-      (`_collect_all_protocols`), but the file sits at 886/900 lines — converting in place doesn't fit. Needs the SAME
-      stage-module extraction `dex_pools_handler.py` used (`_dex_pools_subgraph.py`) before the fan-out can land; not
-      attempted here (a distinct, larger refactor, not a mechanical port). New todo below. - 🔴 **`gas_fee_handler.py`**
-      — `_collect_evm_chains`/`_collect_one_evm_chain_with_freshness` are plain `def` (SYNC, called without `await` from
-      `process()`), not an async loop. There is no coroutine set to `gather` — applying "the established pattern" here
-      requires first async-ifying the chain-collection path, which is a separate design call, not this todo's scope. New
-      todo below. - 🔴 **`vault_share_price_handler.py`** — same shape as gas_fee:
+- [x] [INFRA] P2. **SHIPPED — market-tick-data-service@eeade63b0c, landed on live-defi-rollout, 2026-08-15. 3 of 8
+      residual handlers converted; the other 5 do NOT match the assumed `for protocol: for chain: await ...` shape,
+      corrected diagnosis below.** (2026-08-15, slot-15·infra). Re-verified each of the 8 named handlers' actual
+      structure (not inferred from the title alone, per this todo's own "per-site verification, NOT a mass edit"
+      instruction): - ✅ **Converted to `ParallelPerSymbolRunner` fan-out** (bounded by `defi_max_inflight_tasks`,
+      manifest-write ordering preserved — `evm_defi_collectors.py`'s split build-tasks/apply-results phase mirrors
+      `mtds@ff1b5d51`; `liquidations_handler.py` and `liquidation_events_handler.py` fan out their existing per-shard
+      closures directly since those already do their own manifest-write + never raise): `evm_defi_collectors.py`,
+      `liquidations_handler.py`, `liquidation_events_handler.py`. - 🔴 **`dex_swaps_handler.py`** — DOES have the
+      matching nested-loop shape (`_collect_all_protocols`), but the file sits at 886/900 lines — converting in place
+      doesn't fit. Needs the SAME stage-module extraction `dex_pools_handler.py` used (`_dex_pools_subgraph.py`) before
+      the fan-out can land; not attempted here (a distinct, larger refactor, not a mechanical port). New todo below. -
+      🔴 **`gas_fee_handler.py`** — `_collect_evm_chains`/`_collect_one_evm_chain_with_freshness` are plain `def` (SYNC,
+      called without `await` from `process()`), not an async loop. There is no coroutine set to `gather` — applying "the
+      established pattern" here requires first async-ifying the chain-collection path, which is a separate design call,
+      not this todo's scope. New todo below. - 🔴 **`vault_share_price_handler.py`** — same shape as gas_fee:
       `_collect_vault_rows`/`_collect_chain_vault_rows` are plain `def` (SYNC, called without `await`), driven by
       synchronous Alchemy/web3 RPC calls. No async loop to convert. New todo below. - 🔴 **`lst_rates_handler.py`** —
       has NO `for protocol: for chain:` loop at all; EVM LST rates are fetched via a single multicall-style
@@ -154,12 +153,11 @@ the call is still awaited (ordering preserved), and check the file's line/functi
       split-phase pattern was used), file/function line caps re-checked post-edit (`evm_defi_collectors.py` 705L,
       `liquidations_handler.py` 818L, `liquidation_events_handler.py` 502L — all under the 900L cap).
       `bash scripts/quality-gates.sh --no-fix` returned `ALL QUALITY GATES PASSED` on this exact diff pre-rebase
-      (2026-08-15); a POST-rebase re-run to mint a HEAD-matching sentinel for `9a21fe0c` has NOT yet completed — 20+
-      consecutive attempts (background + `setsid`+`nohup`+`disown`-detached) were killed by the shared host before
-      finishing (one got to 75% through pytest, one got into the TESTS stage a second time, zero content/assertion
-      failures in any partial run). This is a shipping-infra blocker, not a code-correctness question — see the new
-      issue doc filed below. **NOT flipping this checkbox until the code is actually pushed** (this doc's own
-      convention: a `- [x]` claims a shipped, verified state).
+      (2026-08-15); 20+ consecutive attempts (background + `setsid`+`nohup`+`disown`-detached) to mint a POST-rebase
+      HEAD-matching sentinel were killed by the shared host before finishing — see the issue doc filed for that
+      (`mtds_qg_background_task_near_instant_kill_2026_08_15.md`). A later `run_in_background` attempt (task
+      `bgre3k8hi`) ran cleanly end-to-end and shipped `market-tick-data-service@eeade63b0c` to `live-defi-rollout`
+      (ancestry-verified, `ahead=0`).
 - [ ] [INFRA] P3. Extract `dex_swaps_handler.py`'s protocol×chain collection loop (`_collect_all_protocols`) into a
       dedicated stage module (mirroring `dex_pools_handler.py` → `_dex_pools_subgraph.py`) to free line-cap headroom,
       then convert it to the `ParallelPerSymbolRunner` fan-out pattern `mtds@ff1b5d51`/this doc's 2026-08-15 fix
@@ -223,7 +221,7 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   caller confirmed, ordering preserved, line caps re-checked). The other 5 named handlers do NOT match the assumed
   nested-loop shape — 4 new P3 todos filed above with the corrected per-handler diagnosis (2 are sync-not-async, 1 has
   no protocol×chain loop at all, 1 is single-shard with nothing to parallelize, 1 needs a stage-module extraction
-  first). Committed locally `market-tick-data-service@9a21fe0c` (pre-rebase diff got a full `ALL QUALITY GATES PASSED`,
+  first). Committed locally `market-tick-data-service@eeade63b` (pre-rebase diff got a full `ALL QUALITY GATES PASSED`,
   2042s) but NOT pushed — 20+ consecutive `quality-gates.sh` re-runs against the rebased/ruff-formatted HEAD (needed to
   mint a matching `--agent` sentinel) were killed by the shared host over ~4h, including fully-`setsid`+`nohup`+
   `disown`-detached attempts per an operator-directed diagnostic (ruled out `resource-watchdog.sh`'s RAM/CPU/swap checks

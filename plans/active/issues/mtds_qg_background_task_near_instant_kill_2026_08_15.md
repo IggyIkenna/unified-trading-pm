@@ -4,7 +4,7 @@ title:
   market-tick-data-service quality-gates.sh background runs killed near-instantly, including setsid-detached — not fully
   explained by known RAM-exhaustion class
 summary: >-
-  Shipping a verified, committed fix (market-tick-data-service@9a21fe0c) required a fresh quality-gates.sh run to mint a
+  Shipping a verified, committed fix (market-tick-data-service@eeade63b) required a fresh quality-gates.sh run to mint a
   HEAD-matching --agent sentinel. 20+ consecutive attempts across ~4h were killed — most within seconds, one even a
   trivial `sleep 180` diagnostic died within ~11s. This resembles the archived
   shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md class but main's live investigation ruled out the
@@ -122,13 +122,14 @@ reaps its own child processes.
       correct for most of ITS OWN evidence per its own 2026-08-14 cross-check addendum, but this doc's evidence suggests
       a second, distinct near-instant-kill mechanism may also be riding alongside it — mirrors that same addendum's own
       slot-8/`orphan_reap` misattribution finding). Repo: unified-trading-pm. Source: this doc.
-- [ ] [CODE] P1. Once quality-gates.sh can complete cleanly for market-tick-data-service, ship the already-committed
-      `market-tick-data-service@9a21fe0c` (3-handler `ParallelPerSymbolRunner` conversion) via the standard Pass-1 QG →
+- [x] [CODE] P1. Once quality-gates.sh can complete cleanly for market-tick-data-service, ship the already-committed
+      `market-tick-data-service@eeade63b` (3-handler `ParallelPerSymbolRunner` conversion) via the standard Pass-1 QG →
       `quickmerge --agent --files <the 3 handler files>` flow, then flip BOTH
       `plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`'s item-1 checkbox AND
       `plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s corresponding todo (line ~849) with the
       shipped SHA. Repo: market-tick-data-service + unified-trading-pm. Source: this doc + the source issue doc's own
-      Progress Log entry.
+      Progress Log entry. — **market-tick-data-service@eeade63b0c**, landed on live-defi-rollout, ancestry verified,
+      2026-08-15.
 
 ## Progress Log
 
@@ -137,4 +138,9 @@ reaps its own child processes.
   setsid attempts got further than any prior `run_in_background` attempt but still died without a clean exit — evidence
   captured above. Following main's explicit instruction ("if it doesn't complete within ~2 more attempts, stash and
   release GATED") rather than continuing to retry blind. Code stays safely committed locally at
-  `market-tick-data-service@9a21fe0c` (not a stash — an actual local commit, strictly safer); not pushed.
+  `market-tick-data-service@eeade63b` (not a stash — an actual local commit, strictly safer); not pushed.
+- 2026-08-15 (slot-15, infra): A later `run_in_background` quickmerge attempt (task `bgre3k8hi`) acquired its
+  qg-governor token after a 521s queue wait and then ran cleanly end-to-end — full Pass-1 QG green, sentinel verified,
+  pushed as `market-tick-data-service@eeade63b0c` to `live-defi-rollout` (ancestry-verified). The near-instant-kill
+  mechanism did not recur on this run; todo 3 closed. Todos 1-2 (host-level root-cause investigation) remain open — the
+  mechanism itself is still unexplained, this is just evidence it isn't 100% reproducible.
