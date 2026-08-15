@@ -213,9 +213,38 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
 - [ ] [SCRIPT] P1. Stop `*/5` executions overlapping — set the Cloud Run job's concurrency to 1 (or take a lease), so
       the relaunch budget is consulted by ONE container at a time. The empty-budget-per-container race is already
       documented in `relaunch_backfill_vm.py`; the schedule still permits it.
-- [ ] [SCRIPT] P1. Find why ~398 VMs hung mid-shutdown inside one hour (06:05-06:53 UTC 2026-08-11). A mass simultaneous
-      wedge across every asset_group points at a shared trigger — a coordinated spot-preemption wave, a metadata/agent
-      update, or the shutdown script itself blocking. Until this is understood the deletion is treatment, not cure.
+- [x] ✅ [SCRIPT] P1. **Diagnosed via available evidence (audit logs + code read) — spot-preemption wave RULED OUT;
+      shipped a hardening fix for a real, previously-unbounded gap in the self-delete path; full certainty not
+      achievable (source VMs already deleted, no serial-port logging exported to Cloud Logging for this project).**
+      deployment-service@4b01cccd3b (2026-08-15, slot-26·infra). Evidence, in order:
+      (1) Pulled every `compute.instances.preempted` Admin Activity log entry for 05:30-07:30Z 2026-08-11 (153 entries /
+      76 distinct instances) and diffed against the 393-name reaped-VM list: **zero overlap** — none of the wedged VMs
+      were preempted. Rules out "coordinated spot-preemption wave" as the shared trigger. (2) Pulled every
+      `v1.compute.instances.delete` Admin Activity log entry for the same window: only **16 distinct instances**, all
+      succeeded (no PERMISSION_DENIED/quota errors) — i.e. the vast majority of the ~398 wedged VMs' own self-delete
+      attempt **never reached the Compute API at all** (a real denied/failed call still audit-logs; an absent call
+      doesn't). (3) Read the actual self-delete code path each family uses
+      (`vm-exec-with-gcs-tee.sh` — the standard TEE_WRAPPER path MDPS/CeFi/TradFi backfills use —, its
+      `setup-data-pipeline-vm.sh` plain-fallback twin, and `launcher_common.sh`'s `lc_log_upload_trap_block` heredoc
+      used by other launcher families): all three run `gcloud compute instances delete ... || sudo shutdown -h {now,+1}`
+      inside a detached (`nohup setsid ... & disown`) background subshell, and in all three **the `gcloud` call itself
+      had no `timeout` wrapper** — unlike every other gcloud/curl call in the same files, which are all
+      timeout/`-m`-bounded. A `gcloud` call that stalls (rather than fails fast) — plausible under a fleet-wide
+      simultaneous-completion burst (many VMs from the same 2026-08-10 launch batch converging on similar workload
+      durations, all reading the local metadata server for name/zone/OAuth token within the same narrow window) — never
+      returns, so the `||` shutdown fallback never fires either: nothing forces a bound. This is consistent with (2)'s
+      near-total absence of delete attempts, though not provable as the exact wedge mechanism without the deleted VMs'
+      own serial output (this GCP project does not export serial-port logging to Cloud Logging — checked, zero
+      `serialport`-named logs exist — so that direct evidence is gone). Separately: the observed "stuck at
+      `Stopping rsyslog/polkit/multipathd`" symptom is a guest-OS-level systemd shutdown hang *after* a shutdown was
+      already initiated (not a script hang) — its root cause (plausibly host-side congestion from hundreds of VMs in
+      the same zone attempting shutdown within the same ~50min window) needs host/hypervisor-level telemetry this
+      investigation does not have access to; not resolved here. **Fix shipped**: wrapped all three
+      `gcloud compute instances delete` self-delete calls in `timeout 60`, and added `-m 5` to the previously-unbounded
+      metadata-server curls feeding them (`VM_SHUTDOWN_ON_COMPLETION`/name/zone reads) — so a stalled call now always
+      falls through to the `shutdown` fallback within a bounded time instead of potentially hanging forever. This closes
+      the one concrete, reproducible gap the evidence points to; it does not certify the systemd-level hang is fixed.
+      Source: this doc.
 - [ ] [SCRIPT] P1. Make a VM that has begun shutting down actually go away: the shutdown path must end in an instance
       DELETE (or a watchdog must reap instances whose guest has been in shutdown for more than N minutes), so a hung
       unit can never leave a billing instance behind.
