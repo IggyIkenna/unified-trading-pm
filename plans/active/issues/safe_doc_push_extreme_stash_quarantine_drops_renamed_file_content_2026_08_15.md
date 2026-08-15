@@ -209,7 +209,11 @@ tracked-but-missing shape.
       root-caused further this session (workaround found and used successfully: `git reset` before invoking the
       script if you already ran `git mv` yourself). Needs the same isolated-scratch-repo reproduction discipline this
       doc's own P1 fix used, specifically exercising `git mv` (not `rm`+`git add`) as the pre-staging step, across a
-      stash-quarantine cycle. Repo: unified-trading-pm.
+      stash-quarantine cycle. Repo: unified-trading-pm. — **investigated 2026-08-15 (slot-23, infra): could NOT
+      reproduce against current code after 3 faithful attempts, incl. one forcing a genuine rebase + a control run
+      against the PRE-slot-14-fix script — see Progress Log for the full evidence.** Leading hypothesis: the live
+      repro predated slot-14's fix reaching that checkout. Not marking this done — no fix made, and the mechanism is
+      not conclusively root-caused either way, only unreproduced.
 - [x] ✅ [SCRIPT] P2. Once fixed, consider lowering the "24 entries is extreme" bar or adding a lighter-weight
       protect-and-restore path that doesn't require a full stash round-trip for the common case (few named files,
       most of the pile pre-existing and unrelated) — the current design pays the highest-risk code path exactly when
@@ -341,3 +345,38 @@ tracked-but-missing shape.
   original P2-only dispatch. Merged without further code changes — this task's own fix (slot-14's
   `stage_named_files()` + this session's `sdp_recover_named_from_any_stash()`) is unaffected by and does not
   address slot-2's finding either way.
+- **2026-08-15 (slot-23, infra)**: Dispatched against this doc's original P1 fix todo (todo 2); found it already
+  ✅ landed (slot-14) by the time of fresh-pull — no competing implementation attempted (discarded my own
+  in-flight `_sdp_goneless_for_add`-based fix, textually equivalent in mechanism to slot-14's per-file staging but
+  superseded before it reached a commit; see `git log` for the discarded diff if ever needed — nothing was lost,
+  it never left this session's local index). Turned attention to slot-2's still-open residual-gap todo instead.
+  Reproduced the exact described shape three separate ways, all against a real local origin+clone (no mocking):
+  (a) slot-19's own `repro-safe-doc-push-extreme-stash-rename-drop.sh` harness (10 stash entries, `git mv` before
+  invocation) — lands cleanly, both SDP_ISOLATED modes; (b) a custom repro forcing a genuine
+  `autostash_rebase_reconcile` (a concurrent peer pushes a commit touching a file this checkout also has
+  uncommitted-dirty, so the merge-pull hits "would be overwritten" and falls back to `--rebase --autostash`) —
+  lands cleanly, `reassert_renames()` fires and the push succeeds; (c) the same forced-rebase shape but with the
+  peer's edit on a DIFFERENT line of the same multi-line sibling file (non-overlapping, so the rebase auto-resolves
+  instead of aborting on a real conflict) — lands cleanly. Then ran (b) and (c) again against the script checked
+  out at `7e03ff2f01^` (the commit immediately BEFORE slot-14's fix, confirmed via `git log -- scripts/dev/
+  safe-doc-push.sh`) as a control for whether the OLD code reproduces slot-2's failure-then-`git-reset`-workaround
+  pattern: it did NOT fail — it also landed cleanly on the first attempt. This suggests the mechanism is narrower
+  than either this doc or slot-2's finding assumed: an autostash pop that lands on a MOVED HEAD (any divergence
+  forcing a real rebase, not only one that touches the rename source's own content — contra this doc's earlier
+  "corrupts a RENAME" analysis) appears to decompose a clean R100 staged pair into a genuine tracked-but-missing
+  shape before the staging step ever runs, which even the bare pre-fix `git add` already handled correctly. The
+  goneless (no-index-entry) shape this whole issue is about therefore seems to require a rebase-FREE first attempt
+  specifically — exactly what both repro harnesses in this corpus already exercise, and exactly what green results
+  everywhere. Could not identify what differed in slot-2's live session; did not have access to their actual
+  checkout state at the time. Leading hypothesis (circumstantial, not proven): their finding is dated "session
+  resumption," and a long-running session that last fresh-pulled before slot-14's fix landed (21:49 UTC) would
+  still run the old code without an explicit re-pull — which would fully explain both their failure (pre-fix
+  bare `git add`, rebase-free first attempt, exactly this issue's original root cause) and their `git reset`
+  workaround succeeding (post-reset, `old` becomes plain tracked-but-missing, which the OLD code handles fine too,
+  independent of any fix). Left the residual-gap todo open and unchecked (see its own updated annotation above) —
+  this is a "could not reproduce," not a "confirmed absent," verdict. Full regression sweep re-run against the
+  fully reconciled current file: this session's new `tests/test_safe_doc_push_rename_source_goneless_add.bats`
+  (3/3, end-to-end low-stash-pile coverage, updated to correctly attribute the landed fix to `stage_named_files()`
+  rather than this session's own superseded approach), both `repro-safe-doc-push-extreme-stash-rename-{drop,loss}.sh`
+  harnesses (NO DROP / NO LOSS), and the full `tests/test_safe_doc_push_*.bats` suite (51/51) — all green, no
+  regressions.
