@@ -145,11 +145,25 @@ per-VM shard) actually need anything new this run?" before concluding GONE_NO_CA
       will always show flat 0→0 even when real data was captured elsewhere. No code change needed for this todo — the
       fix for the misleading reading lives entirely in Finding 2's bucket-resolution todo, not here. (repo:
       deployment-service, investigation only)
-- [ ] [CODE] P3. Extend `cli.py::_make_captured_reader`'s bucket resolution (and its probe-fallback) to also try
+- [x] ✅ [CODE] P3. Extend `cli.py::_make_captured_reader`'s bucket resolution (and its probe-fallback) to also try
       `kind="instruments-store"` and `kind="features"` when `kind="market-data"` doesn't resolve or reads 0 rows for a
       VM prefix known to write elsewhere — at minimum for the `instr-backfill-*`, `fs-backfill-*`, and
       `features-<family>-<ag>-*` prefix families confirmed in this doc's summary. Add a regression test per prefix
-      family proving the reader now finds the correct bucket. Repo: deployment-service.
+      family proving the reader now finds the correct bucket. Repo: deployment-service. — **ALREADY LANDED
+      (2026-08-15, slot-27), no new code needed.** Found the fix already implemented in
+      `_captured_reader.py::make_captured_reader`/`_shard_buckets`/`_probe_all` (split out of `cli.py` 2026-08-10,
+      re-exported as `cli._make_captured_reader`) — `_SHARD_BUCKET_KINDS = ("market-data", "instruments-store",
+      "features")` plus the flat `features-sports` fallback key are already probed when the primary market-data
+      bucket doesn't resolve or the shard isn't found there. `tests/unit/test_data_pipeline_monitors_cli.py` already
+      carries a regression test per prefix family:
+      `test_captured_reader_probes_instruments_store_when_market_data_blob_absent` (instr-backfill-\*),
+      `test_captured_reader_probes_instruments_store_for_fs_backfill_prefix` (fs-backfill-\*),
+      `test_captured_reader_probes_features_bucket_for_features_family_prefix` (features-<family>-<ag>-\*), plus
+      `test_captured_reader_prefers_primary_bucket_blob_when_present` proving the probe-fallback doesn't fire when
+      the primary bucket already has the shard. All 5 captured-reader tests pass on HEAD. Traced to commit
+      `0c38c00d` ("fix(dp-monitors): race-free relaunch state, alert-accuracy quartet, windowed attempted_failed
+      ratio, test hermeticity") — a bundled fix commit that implemented this exact finding without linking back to
+      this issue doc's todo. No code change required; checkbox flip only. (repo: deployment-service)
 - [ ] [DATA] P3. One-off: pull the raw escalation payload + `_finding_for()` code path for
       `mdps-features-live-cefi-20260807-001235`'s specific `DP_VM_GONE_NO_CAPTURE` firing (escalation_queue local
       `sqlite3 -readonly`, co-located on-VM session — see the archived source doc's Access note for how) and determine
@@ -161,3 +175,7 @@ per-VM shard) actually need anything new this run?" before concluding GONE_NO_CA
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **slot-27 (data_engineering) 2026-08-15**: bucket-kind-blindness todo flipped — verified the fix + a regression
+  test per prefix family already landed at deployment-service@0c38c00d; all 5 captured-reader tests pass on HEAD. No
+  new code shipped. Remaining open todo in this doc: the finding-3 one-off `mdps-features-live-cefi-*` investigation
+  (DATA, not this task's scope).
