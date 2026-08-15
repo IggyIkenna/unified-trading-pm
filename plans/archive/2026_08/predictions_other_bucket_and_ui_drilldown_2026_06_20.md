@@ -4,7 +4,7 @@ title: Predictions synthetic OTHER canonical-question-group bucket + deployment-
 summary:
   Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to
   deployment-ui for predictions data.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [meta]
@@ -25,8 +25,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-last_updated: 2026-06-27
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+last_updated: 2026-08-15
 locked_by:
 locked_since:
 supersedes:
@@ -43,6 +42,12 @@ context_scope:
     deployment-ui/src/components/HierarchicalShardDrilldown.tsx,
   ]
 ---
+
+> **ARCHIVED 2026-08-15** — 0 open todos (11/11 done, verified 2026-08-09), unlocked (the corpus-wide
+> `locked_by: live-defi-rollout` placeholder was cleared per the operator's 2026-08-15 Option-B ruling in
+> `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`). Every active-corpus
+> referrer re-pointed to this file's new path (`/plans/archive/2026_08/`). superseded_by: N/A (self-contained, work
+> complete).
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
 > restructure (L0 umbrellas had accumulated ~30+ stale May-07 inline todos that `regen_backlog_from_plan.py` never

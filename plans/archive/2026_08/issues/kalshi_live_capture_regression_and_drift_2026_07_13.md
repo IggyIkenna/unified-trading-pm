@@ -17,9 +17,8 @@ summary:
   `subtitle`/`liquidity`/`yes_bid`/`yes_ask`/`no_bid` fields + a `result` type mismatch (null→string), and
   `kalshi/market_lookup` returning HTTP 404 (ENDPOINT_BROKEN) — tracked across an open, un-triaged GitHub issue chain
   that has grown from 11 to 23 failing endpoints since May."
-status: open
+status: resolved
 nature: notes
-archive_exempt: true # resolved incident record — 0 open todos as of 2026-08-10 (plan_reconciler); archive deferred until the grace-window referrers are re-pointable (see Progress Log)
 asset_group: [prediction]
 stage: [data]
 repos: [e2e-testing, market-tick-data-service, unified-api-contracts, execution-service]
@@ -29,7 +28,7 @@ related:
   [
     /plans/epics/predictions_master.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
     /plans/archive/2026_07/work_split_2026_05_22_ikenna.md,
   ]
@@ -55,6 +54,12 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **ARCHIVED 2026-08-15** — 0 open todos since 2026-08-10 (plan_reconciler flip of the sole remaining item, verified via
+> `execution-service@577b9a884`). `archive_exempt: true` was set 2026-08-10 only because 5 active referrers were inside
+> the 12h grace window and couldn't be re-pointed yet; today (2026-08-15) is past that window — this pass re-pointed
+> every active-corpus referrer to this file's new path (`/plans/archive/2026_08/issues/`) and completed the standard
+> archival ritual. superseded_by: N/A (self-contained incident record, work complete).
 
 > **🟢 RELAUNCHED — STALL RESOLVED (2026-07-27/28).** Live Kalshi/Polymarket prediction tick capture was confirmed
 > genuinely down for ~29 days (last real day `2026-06-28`, no producer VM or Cloud Run service running anywhere in the

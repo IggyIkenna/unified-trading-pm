@@ -60,7 +60,7 @@ source: >-
 context_scope:
   [
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     deployment-api/deployment_api/routes/data_status/_catalogue.py,
     instruments-service/scripts/measure_honest_coverage.py,
   ]

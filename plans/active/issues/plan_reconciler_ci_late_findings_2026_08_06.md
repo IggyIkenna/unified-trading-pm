@@ -132,12 +132,10 @@ failure (75 orphans vs 69 baseline).
 
 ## P3 — Cosmetic / cross-reference fixes
 
-- [ ] [DOC] P3. DEFERRED (low-value, archived-doc cosmetic) — **`ci_satellite_ao_dispatch_batch1_2026_07_26.md:859`** —
-      D1 row hands checker-registration to "the finalize plan's todo 2", but the finalize plan carries it as todo 1
-      (`batch1_finalize` L72, L119-120: "D1 is discharged by todo 1 above"). Fix: "todo 2" → "todo 1". Re-verified
-      2026-08-09: both `batch1` and `batch1_finalize` are now ARCHIVED (`plans/archive/2026_08/`) — editing an archived
-      doc for an internal off-by-one text reference is not worth a dedicated pass; left open but not extracted this
-      round.
+- [x] [DOC] P3. ✅ **Fixed 2026-08-15** — `ci_satellite_ao_dispatch_batch1_2026_07_26.md:866` D1 row said checker-
+      registration "moved to the finalize plan's todo 2"; the finalize plan actually discharges it via todo 1
+      (`batch1_finalize` L72, L119-120: "D1 is discharged by todo 1 above"). Corrected "todo 2" → "todo 1" in the
+      archived doc directly (pure text fix, no content-judgment involved).
 - [ ] [DOC] P3. NOT AO-ELIGIBLE (judgment call) —
       **`mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`** — title + frontmatter summary assert
       xdist-worker-leak mechanism; body (L239-241, L121-126) records mechanism was never confirmed and reproduces under

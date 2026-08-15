@@ -8,7 +8,7 @@ summary: >-
   actionable set. Given the operator's 2026-08-06 finding that unsharded full runs die mid-flight 7/8 attempts and take
   13.5h to complete, this run prioritizes genuine adversarially-verified coverage over false completeness and reports
   exact coverage achieved.
-status: open
+status: archived
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -25,8 +25,8 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: review
 assigned_vm: planning
 execution_scope: orchestrator-agent
-locked_by: plan_reconciler
-locked_since: "2026-08-08"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by:
@@ -43,6 +43,15 @@ depends_on: []
 ---
 
 # plan_reconciler run — 2026-08-08 (agt-2add8d, whole-corpus `all`)
+
+> **✅ ARCHIVED 2026-08-15** — all 6 remaining open `[OPERATOR]` codex-drift checkboxes independently verified fixed by
+> later sessions (2026-08-09 through 2026-08-14) and flipped `[x]` with current-content evidence citations in this same
+> archival pass (RelaunchPreemptedVm carve-out, quality-gates.md "(planned)" tag removal, archival-discipline rule now
+> living in the codex doc itself, pipeline-mode-partition M4 `[LANDED]` correction, honest-coverage-model cefi
+> 79.55%→94.52% refresh, and the bucket_estate_consolidation_closeout plan's own §3a self-correction). 0 genuinely open
+> items remained. `locked_by: plan_reconciler` (stale since 2026-08-08, no continuation activity — the role graduated to
+> steady-state direct-push 2026-08-09 per `agents/plan_reconciler.md`) cleared as part of this archival. Successor: none
+> — this was a point-in-time findings doc, superseded in practice by each subsequent daily `plan_reconciler` run.
 
 ## Scope + method
 
@@ -196,13 +205,16 @@ The codex-alignment spot-check hunter checked the 12 highest-traffic codex docs 
 plans; 9 of 12 showed drift (codex-side stale in most cases). Per plan_reconciler's own rule, a codex/SSOT edit is only
 ever applied after an explicit operator ruling — filed here, not edited:
 
-- [ ] [OPERATOR] P2. `/codex/05-infrastructure/vm-launcher-runbook.md:564` claims a preempted backfill VM is
-      "auto-relaunched by `RelaunchPreemptedVm`" — but `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s
-      Progress Log shows the cefi sharded-backfill launcher died 5× in 8 days with ZERO automatic relaunch each time
-      (already escalated to the operator separately). Codex overstates a capability that doesn't exist for this
-      launcher.
-- [ ] [OPERATOR] P3. `/codex/06-coding-standards/quality-gates.md:3248` calls the RAM-pressure abort-monitor "(planned)"
-      — it shipped 2026-07-27 (`761edd205`), 11+ days ago (`qg_host_adaptive_resource_governor_2026_07_14.md`).
+- [x] ✅ [OPERATOR] P2. **VERIFIED FIXED (plan_reconciler resolution audit, 2026-08-15)**:
+      `/codex/05-infrastructure/vm-launcher-runbook.md` now carries the carve-out (lines 626-630): "**Not universal**:
+      the cefi sharded backfill launcher specifically has NO working auto-relaunch — measured 5 preemptions across 8
+      days, 0 automatic relaunches each time, requiring manual `[INFRA]` relaunch every time (corrected 2026-08-09 per
+      `plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`). Verify `RelaunchPreemptedVm`
+      actually covers a given launcher before citing this section as proof it self-heals." Codex no longer overstates
+      the capability.
+- [x] ✅ [OPERATOR] P3. **VERIFIED FIXED (plan_reconciler resolution audit, 2026-08-15)**:
+      `/codex/06-coding-standards/quality-gates.md:3374` now reads "the runtime abort-monitor (shipped 2026-07-27,
+      `761edd205`) matters most there" — the stale "(planned)" tag is gone.
 - [x] ✅ [DOCS] P3. `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documented
       exactly 3 conflict-check surfaces; a measured 4th real surface slipped through. **Fixed**:
       unified-trading-pm@c2083029dc ("docs(codex): add 4th conflict-check surface for draft satellite batches") — the
@@ -218,19 +230,28 @@ ever applied after an explicit operator ruling — filed here, not edited:
       verbatim — the installer was widened hourly→every-2h on 2026-07-30, before this finding was filed. Corrected in
       `unified-trading-pm@717a17bdfa`. Separately, `plan_reconciler` itself graduated to STEADY STATE (direct push, no
       review PR) 2026-08-09 — see `agents/plan_reconciler.md`.
-- [ ] [OPERATOR] P3. `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` self-declares
-      `authoritative_for` the archival ritual, but the real "never combine flip+`git mv`" rule lives only in
-      `agents/RULES.md`; 10+ plans miscite the source.
-- [ ] [OPERATOR] P3. `/codex/02-data/pipeline-mode-partition.md:252-254` still tags the M4 live read-path resolver
-      `[GATED — rides M1-BREAKING]` though M1 landed and M4 itself was verified shipped 2026-07-12 — the adjacent M1 tag
-      was fixed 2026-08-04 but M4's was missed in the same edit.
-- [ ] [OPERATOR] P3. `/codex/02-data/honest-coverage-model.md` CK3 table shows cefi Layer-1 at a superseded 79.55%
-      figure (07-03, superseded 07-07 and again 07-12) — other asset_group rows got updated 2026-07-28, cefi's didn't.
-- [ ] [OPERATOR] P3. `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3/§3a — PLAN-side staleness, codex is
-      fine here: `bucket_estate_consolidation_closeout_2026_07_24.md` repeatedly quotes only half the delete rule and
-      declares an `ml-models-store` delete "categorically human-only" without ever running the §3a
-      fresh-retention-seconds check. No incorrect action has occurred (independently blocked by an unrelated IAM gap
-      too) — flagging the plan's mischaracterization, not a codex fix.
+- [x] ✅ [OPERATOR] P3. **VERIFIED FIXED (plan_reconciler resolution audit, 2026-08-15)**:
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md:117` now carries the rule itself — "### Never
+      combine the checkbox flip with the `git mv` archival in ONE commit — CROSS-REPO (mode 2) only (2026-07-30
+      incident; migrated here 2026-08-09; narrowed 2026-08-10)". The rule is no longer exclusive to
+      `agents/RULES.md:204` — the codex doc's `authoritative_for` claim now holds.
+- [x] ✅ [OPERATOR] P3. **VERIFIED FIXED (plan_reconciler resolution audit, 2026-08-15)**:
+      `/codex/02-data/pipeline-mode-partition.md` § M4 now reads "The live read-path resolver
+      `select_for_mode(consumer_mode, available_modes)` lives in **batch-live-reconciliation-service** — **[LANDED]**,
+      not gated (corrected 2026-08-09: M1-BREAKING shipped 2026-06-30 and M4 itself was independently verified shipped
+      2026-07-12; the stale `[GATED — rides M1-BREAKING]` tag outlived both)." The stale gated tag is gone.
+- [x] ✅ [OPERATOR] P3. **VERIFIED FIXED (plan_reconciler resolution audit, 2026-08-15)**:
+      `/codex/02-data/honest-coverage-model.md` CK3 table (line ~726) now shows cefi Layer-1 at **94.52% — refreshed
+      2026-08-14**, read directly from `gs://central-element-323112-honest-coverage/2026-08-12/coverage.json`, matching
+      every other AG row's live-refresh framing. The old 79.55% figure survives only as explicitly-labeled history
+      ("Historical: the 2026-06-29 06:00 UTC certification measured cefi 65.91%/defi 69.44% ... cefi to 79.55% via the
+      reconciliation dialect folds"), not as the current table value.
+- [x] ✅ [OPERATOR] P3. **VERIFIED FIXED (plan_reconciler resolution audit, 2026-08-15)**: no codex fix was needed (the
+      finding itself said so) — confirmed the PLAN-side mischaracterization has since been self-corrected.
+      `plans/active/bucket_estate_consolidation_closeout_2026_07_24.md:368-373` now explicitly quotes this exact
+      critique ("`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a ... 'categorically human-only'
+      overstates the codex rule ... the next agent to pick this up should run the §3a check before executing") and its
+      2026-08-12 Progress Log entry (line 430+) confirms the `ml-models-store` bucket is now gone entirely.
 - [x] ✅ [DOC] P3. **RULED 2026-08-09 (operator): "Override grace — fix it now."** Operator explicitly overrode the
       grace-protection window for this mechanical fix rather than waiting for it to clear naturally. Corrected
       `/codex/08-workflows/ci-cd-flow.md`'s "Version Bump Flow (Semver Agent)" section (the "Compute" table row + the

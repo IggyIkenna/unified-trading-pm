@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, ao-dispatch, close-out, batch-1, satellite-docs, quickmerge, github-actions, cloud-build]
 related:
   [
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/08-workflows/ci-cd-flow.md,
@@ -63,7 +63,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/quality-gates.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -599,7 +599,7 @@ concurrent workers do not collide on this file.
       (`ip-172-31-5-118`) `github-glue-runner.slice` is `inactive`, `MemoryCurrent=[not set]`, zero glue units loaded,
       no `/opt/github-glue*` dir — the self-hosted deployment was retired (51 orphaned units archived
       2026-08-08T13:05Z, per `/plans/archive/issues/ao_observability_and_deploy_hygiene_gaps_2026_08_08.md`), and PM's
-      workflows were separately reverted to `ubuntu-latest` (`/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`
+      workflows were separately reverted to `ubuntu-latest` (`/plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md`
       todo 24, PM now public so GH-hosted billing is unmetered — $0
       for a different reason than self-hosting). Not credentials-blocked; the VM-load check is moot, not unreachable.
       Re-measure fresh only if the glue deployment is ever actually completed. Source:
@@ -729,10 +729,10 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
 - [x] ✅ [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
       session's shipped-but-CI-unconfirmed commits actually went green on GitHub's own `quality-gates-v2` (local QG
       passing alone doesn't satisfy the workspace's real-CI-signal rule): `instruments-service@76eba912` + `@4c05f2d3`,
-      `alerting-service@bd6aebb`, `market-data-processing-service@afcf984`, `ml-service@cc732d8`,
+      `alerting-service@bd6aebb`, `market-data-processing-service@1726bdf`, `ml-service@cc732d8`,
       `strategy-service@9c499721`, `agent-orchestrator@64365ad`, `agent-orchestrator@b9d6190`. **DONE 2026-08-02** —
       queried `gh api repos/IggyIkenna/<repo>/actions/runs?head_sha=<full-sha>` per commit (resolved short→full SHAs
-      locally first): only 2/8 were directly confirmed green AT SHIP TIME — `market-data-processing-service@afcf984`
+      locally first): only 2/8 were directly confirmed green AT SHIP TIME — `market-data-processing-service@1726bdf`
       (run 30519065941, success) and `ml-service@cc732d8` (run 30519086798, success). The other 6 were NOT green at ship
       time: `instruments-service@76eba912` (run 30476566006, real `failure`), `instruments-service@4c05f2d3` (8 runs,
       mix of `startup_failure`×6/real `failure`×2, never `success`), `strategy-service@9c499721` (run 30519091690, real
@@ -863,7 +863,7 @@ future batch's re-triage; the rest need direct operator/human action or elapsed 
 
 | id  | Item                                                                                                                                                  | Competing claim it collided with                                                                                                           |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| D1  | Wire the 3 new QG checkers into PM `scripts/quality-gates.sh`                                                                                         | Todos 2, 6, 7 all need the same registration line → moved to the finalize plan's todo 2                                                    |
+| D1  | Wire the 3 new QG checkers into PM `scripts/quality-gates.sh`                                                                                         | Todos 2, 6, 7 all need the same registration line → moved to the finalize plan's todo 1                                                    |
 | D2  | `digest-drift-sweep` non-convergence + `ubuntu-latest` fan-out (the part costing money)                                                               | Same file as todo 3; `post_cutover` § F4 claims it while `digest_drift_sweep_…` owns the mechanism analysis — **PARKED with the operator** |
 | D3  | 5 further `scripts/quickmerge.sh` claims (see below)                                                                                                  | Todo 1 owns the file this batch; concurrent same-file todos are forbidden                                                                  |
 | D4  | Delete redundant `scripts/dev/hooks/pre-push-strict-quickmerge.sh` + repoint referrers                                                                | Referrers include `quickmerge.sh` (todo 1) and `/codex/08-workflows/ci-cd-flow.md` (todo 17)                                               |

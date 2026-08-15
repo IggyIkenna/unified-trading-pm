@@ -89,12 +89,21 @@ before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and `/codex/
 
 Key deployment/user-management UI surfaces and their required layers:
 
-| Surface                           | Layer | Regression guard path                         |
-| --------------------------------- | ----- | --------------------------------------------- |
-| Deployment-ui route loads         | L2    | `tests/smoke/routes.spec.ts`                  |
-| Data-status panel honest-coverage | L2    | `tests/smoke/routes.spec.ts`                  |
-| User-management form / auth flow  | L3a   | `tests/playbooks/auth_flow.spec.ts`           |
-| Deployment lifecycle widget       | L1.5  | `tests/widgets/deployment-lifecycle.test.tsx` |
+| Surface                           | Layer | Regression guard path        |
+| --------------------------------- | ----- | ---------------------------- |
+| Deployment-ui route loads         | L2    | `tests/smoke/routes.spec.ts` |
+| Data-status panel honest-coverage | L2    | `tests/smoke/routes.spec.ts` |
+
+> **2 rows removed 2026-08-15 (plan_reconciler doc-drift #1 fix,
+> `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`):** "User-management form / auth flow" →
+> `tests/playbooks/auth_flow.spec.ts` — the user-management-ui surface itself was dropped 2026-07-12 (see "Owns" note
+> above; no `user-management-ui` repo exists in the workspace, verified via `ls`), so the row was moot, not just
+> path-stale. "Deployment lifecycle widget" → `tests/widgets/deployment-lifecycle.test.tsx` — verified via `ls`:
+> `deployment-ui/tests/widgets/` does not exist, and `/codex/06-coding-standards/ui-testing-layers.md`'s own "Testing
+> Ownership by Surface" table documents `deployment-ui` as not having an L1.5 widget-harness layer at all (it's a
+> separate React Router + Vite app, not the Next.js app that section's L1.5 rules target). If deployment-lifecycle
+> widget coverage is a real, wanted gap, it needs its own scoped follow-up todo — not a standing contract row citing a
+> file that was never real.
 
 ## Codex SSOTs
 

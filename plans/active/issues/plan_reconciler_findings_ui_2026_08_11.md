@@ -22,7 +22,7 @@ related:
     /plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md,
   ]
 created: "2026-08-11"
-last_updated: "2026-08-11"
+last_updated: "2026-08-15"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -130,7 +130,10 @@ include multiline-frontmatter ui-tagged docs.
       `asset_group:\n  [ui]` docs missed by same-line grep (e.g.
       `data_status_tab_and_downloads_remediation_2026_06_16.md`,
       `deployment_registry_firestore_migration_2026_07_14.md`) — the 9 same-line matches this run found undercount the
-      real tranche.
+      real tranche. **Still open as of 2026-08-15 (plan_reconciler reconciliation session)** — checked for a newer `ui`
+      plan_reconciler findings doc that might have picked this up: none exists (`plan_reconciler_findings_ui_*` in
+      `plans/active/issues/` still tops out at this 2026-08-11 doc; no later dated file found). Ordinary open work, not
+      re-scoped or re-assigned this pass.
 
 ## Deferred to next run
 
@@ -144,3 +147,6 @@ include multiline-frontmatter ui-tagged docs.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **2026-08-15 (operator-ruling application session)**: this doc's own `## Todos` item (multiline-frontmatter ui
+  inventory expansion) left open/ordinary-work — checked for a newer ui-tranche `/plan-reconcile` findings doc that
+  might have picked it up; none exists as of this date. No other changes made to this doc's substance.

@@ -88,23 +88,14 @@ context_scope:
 
 # Sports/predictions live-mode activation readiness — scoped chain + gates
 
-> **🟡 SCOPE OVERLAP — read `sports_consolidated_closeout_2026_07_19.md` before acting on either doc (found during the
-> 2026-07-23 plan-reconciliation audit; this plan was an orphan, never linked to the closeout despite the overlap).**
-> This plan scopes new live MTDS/prediction connector infrastructure for sports/prediction with **zero visibility** into
-> the closeout's active cross-AG `asset_group=prediction` bleed bug (rows meant for `prediction` writing into sports'
-> instruments index) — a real correctness defect in the exact data path this plan's Todo 2/3 would build new live
-> ingestion on top of. **UPDATE 2026-07-25 (was: "fixed and verified ... ruled GO ... gated on confirming durable" — the
-> durability check has since FAILED, not just pending):** the closeout's 2026-07-23 root-cause sweep initially fixed and
-> verified the bleed bug (`market-tick-data-service@a7ff45f9`, manifest-bucket root cause `@299ef540`), but a 2026-07-24
-> RE-TRIAGE ROUND 3 (`plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md:133`) found the exact
-> same 11,727 bleed rows back in the sports instruments index despite the earlier "VERIFY PASSED: 0 remaining" claim —
-> the fix did NOT hold durably. `status` was reverted to `open` in
-> `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`, and this plan's go-live pre-req is now a
-> **hard BLOCKER**, not an unconfirmed pre-req — do not proceed past it until ROUND 4 (root-cause the manifest
-> consolidator's reassertion mechanism + ship a durable fix, verified across a real consolidation cycle) lands. **Do not
-> resolve this conflict unilaterally from this document alone** — check the closeout's current Track sections (Track X /
-> the 2026-07-24 re-triage + decision-record sections) for the latest state before treating either doc's status as
-> final.
+> **🟢 UPDATE 2026-08-15 (plan_reconciler) — RESOLVED, the hard BLOCKER is CLEARED.** The prior update on this banner
+> (dated 2026-07-25) recorded a durability failure: a 2026-07-24 re-triage round found the same 11,727 bleed rows back
+> in the sports instruments index after an earlier "VERIFY PASSED: 0 remaining" claim, and escalated this plan's go-live
+> pre-req to a hard BLOCKER pending a ROUND 4 durable fix. That issue doc,
+> `/plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`, is now
+> `status: resolved` with 0 prediction-bleed rows re-verified (confirmed 2026-08-07). This plan's go-live pre-req is no
+> longer blocked on the cross-AG bleed finding — see the remaining readiness-ladder gates below (raw sports capture, the
+> arb same-operator guard, the venue/data_type taxonomy migration) for what is still outstanding.
 
 > **🟡 Operator ruling 2026-07-29:** continue to hold the live go-ahead (readiness ladder incomplete — Todo 6 below
 > stays open/held), but ensure concrete build specs exist and are linked for every missing piece — see the 4 corrected
@@ -245,25 +236,25 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       market-tick-data-service, unified-api-contracts)
 
       **UNBLOCKED 2026-08-07 (operator)**: the quota-exhaustion blocker is resolved — "now we have 15m credits on the
-          api key so all good unblocked." Root cause of the 4-days-to-exhaustion still not independently tracked as its own
-          finding (unchanged from the note above). **Checkbox NOT flipped** — this todo's own done-when additionally
-          requires "a fresh poll cycle succeeding against the live key in production, not just a direct-API-call
-          verification," which has not been independently confirmed here; the api_football second-source half also remains
-          STRUCK/not-pursued. Whoever next touches this doc should re-verify a live poll cycle before closing.
+                      api key so all good unblocked." Root cause of the 4-days-to-exhaustion still not independently tracked as its own
+                      finding (unchanged from the note above). **Checkbox NOT flipped** — this todo's own done-when additionally
+                      requires "a fresh poll cycle succeeding against the live key in production, not just a direct-API-call
+                      verification," which has not been independently confirmed here; the api_football second-source half also remains
+                      STRUCK/not-pursued. Whoever next touches this doc should re-verify a live poll cycle before closing.
 
-          **na-eligibility-audit 2026-08-07 — UNRESOLVED TENSION, flagging not closing**: found
-          `/plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md` already `status: complete`,
-          archived 2026-08-04 — "All 8 todos complete; the final remaining todo (Live-ODDS quota/second-source) was verified
-          done 2026-08-03 (live VM healthy, api_football half struck per `BLK-b969f5f0`)," with that doc's own Progress Log
-          (2026-08-03, slot 7) citing a live-verified poll cycle: "found `mtds-live-sports-odds-api-trades-20260803-172841`
-          already RUNNING ... 35+ min of clean run.log with zero ERROR/401/OUT_OF_USAGE_CREDITS." This predates (by 3-4
-          days) the operator's 2026-08-07 UNBLOCKED note directly above, which describes resolving a quota-exhaustion
-          blocker as though still open at that later date — unclear whether this is a SECOND, later quota exhaustion (the
-          key ran dry again after 08-03/04) or a delayed answer to an already-self-resolved question. Did not independently
-          re-verify a live poll cycle to break the tie (recovering an interrupted prior run's uncommitted WIP from a
-          git-stash conflict, not doing fresh sports-tranche analysis). **Leaving checkbox open per the operator's explicit
-          instruction above** rather than closing on the archived doc's older evidence — next sports-tranche pass should
-          re-verify a live poll cycle now and resolve this explicitly either way.
+                      **na-eligibility-audit 2026-08-07 — UNRESOLVED TENSION, flagging not closing**: found
+                      `/plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md` already `status: complete`,
+                      archived 2026-08-04 — "All 8 todos complete; the final remaining todo (Live-ODDS quota/second-source) was verified
+                      done 2026-08-03 (live VM healthy, api_football half struck per `BLK-b969f5f0`)," with that doc's own Progress Log
+                      (2026-08-03, slot 7) citing a live-verified poll cycle: "found `mtds-live-sports-odds-api-trades-20260803-172841`
+                      already RUNNING ... 35+ min of clean run.log with zero ERROR/401/OUT_OF_USAGE_CREDITS." This predates (by 3-4
+                      days) the operator's 2026-08-07 UNBLOCKED note directly above, which describes resolving a quota-exhaustion
+                      blocker as though still open at that later date — unclear whether this is a SECOND, later quota exhaustion (the
+                      key ran dry again after 08-03/04) or a delayed answer to an already-self-resolved question. Did not independently
+                      re-verify a live poll cycle to break the tie (recovering an interrupted prior run's uncommitted WIP from a
+                      git-stash conflict, not doing fresh sports-tranche analysis). **Leaving checkbox open per the operator's explicit
+                      instruction above** rather than closing on the archived doc's older evidence — next sports-tranche pass should
+                      re-verify a live poll cycle now and resolve this explicitly either way.
 
 - [x] ✅ [INFRA] P3. **CORRECTED 2026-07-29 (was: "build `launch-mtds-live-sports.sh` +
       `launch-mdps-features-live-sports.sh`" — 2 new per-asset-group scripts from scratch)** — `launch-mtds-live.sh`

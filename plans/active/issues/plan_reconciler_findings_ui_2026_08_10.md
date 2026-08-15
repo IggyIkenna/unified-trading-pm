@@ -22,7 +22,7 @@ related:
     /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-15"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -87,10 +87,14 @@ context_scope:
    2026-07-17" as the current blocker; `deployment_registry_firestore_p3_cutover_2026_07_14.md`'s own 2026-08-08
    remeasurement (2,351 docs, 557 stale `running`, reaper gap — NOT empty) supersedes it. Updated the cell to cite
    current numbers. Commit `2e85d2348a`.
-3. **[ROUTED — see Filed]** `deployment_registry_firestore_migration_2026_07_14.md` ("Fully autonomous — no operator
+3. **[x] [FIXED 2026-08-15]** `deployment_registry_firestore_migration_2026_07_14.md` ("Fully autonomous — no operator
    gates" for the P3 GCS delete) vs. `deployment_registry_firestore_p3_cutover_2026_07_14.md` ("🔴 BLOCKED... GCS DELETE
-   HELD UNTIL OPERATOR CONFIRMS", "operator-supervised"). Authority question on an irreversible delete — evidence cannot
-   settle which framing governs. Asked via `/blocked`.
+   HELD UNTIL OPERATOR CONFIRMS", "operator-supervised"). **Operator ruling: fully autonomous is correct** — the
+   `..._p3_cutover_2026_07_14.md` banner was the stale side (it already contradicted its own dispatch-note above it,
+   "Fully autonomous — NO operator gates"). Replaced the banner with a corrected framing that keeps the real, still-
+   unmet 4-item GO/NO-GO data-precondition checklist in force (technical HALT unchanged) while removing the "operator
+   confirms" authority framing. Documentation-only — no GCS object touched, no delete triggered. Commit: pending (this
+   reconciliation session).
 4. **[REFUTED — stale citation, no action]** Line-683 `artifact_pipeline_observability_2026_07_17.md` prose-open-item
    claim (from a 2026-08-08 `ag_closeout_auditor` finding cited in this doc's own history) — already fixed the SAME day
    by na-eligibility-audit (split into a real checkbox, now at line ~694-699), before this run started. The citing
@@ -104,29 +108,46 @@ context_scope:
 
 ## Doc-drift
 
-1. **[ROUTED]** `plans/epics/deployment_and_user_management_master.md` — 2 stale UI-Verification-Contract table rows:
-   (a) `tests/playbooks/auth_flow.spec.ts` for the user-management-ui surface that was dropped 2026-07-12 per this SAME
-   doc's own "Owns" section (live-verified: file doesn't exist); (b) `tests/widgets/deployment-lifecycle.test.tsx` — no
-   `tests/widgets/` directory exists in deployment-ui at all, and the codex SSOT (`ui-testing-layers.md`) itself
-   documents deployment-ui as not having an L1.5 widget-harness layer — ambiguous whether this row should be deleted
-   (never-applicable) or tracked as a real gap. **Not fixed**: this epic carries `locked_by: live-defi-rollout` (the
-   same placeholder pattern filed corpus-wide below) — stayed consistent with my own not-yet-ruled treatment of that
-   value and left the doc untouched.
+1. **[x] [FIXED 2026-08-15]** `plans/epics/deployment_and_user_management_master.md` — 2 stale UI-Verification-Contract
+   table rows: (a) `tests/playbooks/auth_flow.spec.ts` for the user-management-ui surface that was dropped 2026-07-12
+   per this SAME doc's own "Owns" section (live-verified: file doesn't exist); (b)
+   `tests/widgets/deployment-lifecycle.test.tsx` — no `tests/widgets/` directory exists in deployment-ui at all, and the
+   codex SSOT (`ui-testing-layers.md`) itself documents deployment-ui as not having an L1.5 widget-harness layer.
+   **Operator ruling (2026-08-15): `locked_by: live-defi-rollout` on this epic is the corpus-wide placeholder-lock bug
+   (root-caused in `issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`), not a real lock — safe
+   to edit despite the field being set.** Removed both stale rows, added a footnote explaining why (surface dropped / no
+   L1.5 widget-harness layer for deployment-ui, per verified `ls` + the codex SSOT's own ownership table). Commit:
+   pending (this reconciliation session).
 2. **[ROUTED]** `/codex/03-deployment/data-status-ui-surface.md` — behavioral drift beyond the mechanical path fix
    applied below: (a) the 404-on-missing-date contract doesn't mention the 14-day fallback-lookback behavior shipped
    2026-07-15; (b) the "Top-level keys" table omits 2 additive response fields shipped 2026-07-17
    (`requested_date`/`resolved_date`). Both need newly-composed documentation prose, not a pure substitution — outside
    the mechanical codex-staleness carve-out (STEP 5.f2 requires a single unambiguous substitution, no invented content).
-   Asked via `/blocked`.
-3. **[ROUTED]** `/codex/06-coding-standards/ui-testing-layers.md` + 2 sibling codex docs
+   Asked via `/blocked`. **[x] [RESOLVED — fixed by `unified-trading-pm@bfd94b8d0c`, 2026-08-12]**: that commit ("fix 5
+   doc_drift findings from blocked-question triage (batch 1/3)") added the 14-day
+   `_HONEST_COVERAGE_FALLBACK_LOOKBACK_DAYS` fallback-lookback prose and the `requested_date`/`resolved_date`
+   additive-provenance-fields prose to this doc's API-endpoint section — both confirmed present on a fresh read of the
+   live doc during this 2026-08-15 reconciliation session.
+3. **[x] [FIXED 2026-08-15]** `/codex/06-coding-standards/ui-testing-layers.md` + 2 sibling codex docs
    (`/codex/14-customer-journeys/testing/README.md`, `test-matrix.md`) — corpus-wide stale UI test-path convention:
    `tests/playbooks/**` should be `tests/e2e/playbooks/**` (per hunter's git-log check, this was wrong from inception,
    not a later drift); `lib/registry/route-manifest.ts` doesn't exist in `unified-trading-system-ui`;
    `tests/smoke/routes.spec.ts` naming doesn't match that repo's real `*.smoke.spec.ts` convention (it DOES exist
    correctly in deployment-ui — the drift is specific to the doc's Next.js worked example). Load-bearing: this is the
    literal source of the `regression: tests/playbooks/...` evidence-tag convention `plans/PLAN_FORMAT.md` § 9 requires
-   on every UI plan tick. Big blast radius (3 codex docs, none fully read by me this run) — did not attempt a multi-doc
-   surgical fix without independent verification of each. Asked via `/blocked`.
+   on every UI plan tick. **Operator ruling (2026-08-15): approved, correct to verified-current paths.** Re-verified
+   every claim independently via `ls`/`find` in `unified-trading-system-ui` (not hunter-trusted) before applying:
+   confirmed `tests/e2e/playbooks/` is real and `tests/playbooks/` doesn't exist; confirmed `lib/registry/` has no
+   `route-manifest.ts`; confirmed `tests/smoke/` uses the `*.smoke.spec.ts` naming convention with no `routes.spec.ts`
+   file. Applied the `tests/playbooks/**` → `tests/e2e/playbooks/**` path fix corpus-wide across all 3 docs (5 sites in
+   `ui-testing-layers.md`: Layer 3a "Where it lives", Playwright Projects table, Plan-Level Enforcement table ×2, plus
+   the README.md tree/comments/prose and test-matrix.md's staging-future path). For the route-manifest.ts /
+   routes.spec.ts absence in `unified-trading-system-ui` specifically, added verified-current annotations marking those
+   sections as the aspirational/illustrative Next.js pattern (real and live only in `deployment-ui`) rather than
+   inventing a substitute file path. Also flagged (not fixed — out of this pass's verified scope) that
+   `testing/README.md`'s finer scaffolding structure (per-playbook filenames, `helpers/` subdirectory) doesn't fully
+   match the live `tests/e2e/playbooks/` directory listing — needs its own closer-read pass. Commit: pending (this
+   reconciliation session).
 4. **[FLAG ONLY, cannot fix]** `cursor-configs/skills/plan-reconcile/SKILL.md:559` + `agents/plan_reconciler.md:297`
    both still describe opus as this skill's own automatic dispatch default ("spawns the worker (opus / effort max /
    thinking on)"; "you are opus/max") — contradicts CLAUDE.md's 2026-08-07/08-08 ruling (opus-required = ZERO
@@ -184,11 +205,18 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
    flagged, zero resolution). 3 options proposed (A: treat the literal value as equivalent to unlocked; B: one-time
    corpus sweep clearing the bad value; C: manual per-doc). Asked via `/blocked`. Commit `50f079ecfe`.
 2. Contradiction #3 above (GCS-delete autonomy vs. operator-gate framing) — asked via `/blocked`, no separate issue doc
-   (small enough to resolve inline once ruled — will apply directly to both docs on answer).
-3. Doc-drift #2 above (data-status-ui-surface.md behavioral drift, needs new prose) — asked via `/blocked`.
-4. Doc-drift #3 above (ui-testing-layers.md corpus-wide stale test-path convention) — asked via `/blocked`.
+   (small enough to resolve inline once ruled — will apply directly to both docs on answer). **RESOLVED 2026-08-15** —
+   see Contradiction #3 above.
+3. Doc-drift #2 above (data-status-ui-surface.md behavioral drift, needs new prose) — asked via `/blocked`. **RESOLVED
+   2026-08-15** — see Doc-drift #2 above (self-resolved by an unrelated commit before the ruling was needed).
+4. Doc-drift #3 above (ui-testing-layers.md corpus-wide stale test-path convention) — asked via `/blocked`. **RESOLVED
+   2026-08-15** — see Doc-drift #3 above.
 5. Doc-drift #1 above (epic's 2 stale verification-contract rows, entangled with the locked_by lock) — folded into the
-   locked_by question's context, not a separate ask (resolves once that lock question is ruled).
+   locked_by question's context, not a separate ask (resolves once that lock question is ruled). **RESOLVED 2026-08-15**
+   — see Doc-drift #1 above (operator confirmed the `locked_by` value is the corpus-wide placeholder bug, safe to edit;
+   the corpus-wide `locked_by` question itself, items 1-2 in
+   `issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, remains separately open for the other 95
+   docs).
 6. `plans/active/ui_consolidated_closeout_2026_07_30.md` Todo 6 ("First `/ag-closeout-audit ui` + `/plan-reconcile ui`
    runs...") — will flip at STEP 7 flush citing this run's own dispatch (both skills have now run on this tranche at
    least once; `/ag-closeout-audit ui` ×4, `/plan-reconcile ui` ×2 counting 2026-08-07). **RESOLVED (2026-08-10,
@@ -232,21 +260,26 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
       push-instead-of-poll; archiving emitted `lifecycle-events`/resource samples to a durable event log; `run.log`
       whole-file-overwrite efficiency via GCS compose/rotation) — each is explicitly named as "separate, own plan" in
       that doc's own text but none has a tracking plan/issue doc. Needs a human call on whether/when each becomes its
-      own plan, not a mechanical fix. From Filed item 7.
+      own plan, not a mechanical fix. From Filed item 7. **NEEDS SCOPING — not yet a tracked plan (flagged 2026-08-15,
+      plan_reconciler reconciliation session — still stays open, no dedicated plan drafted this pass; out of this
+      session's mandate to author one).**
 - [ ] [OPERATOR] P2. **Define "the agreed window" soak duration in
       `plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md`** — its `[REVIEW] P1` "Soak" todo (line 111)
       and the preceding `[BACKEND] P1` todo both reference "the agreed window" with no duration ever stated anywhere in
       the doc; the soak can't be run to a defined done-when without it. Currently moot while the phase is HALTED on an
       earlier precondition (dual-write-soak precondition not yet met, per that doc's own Progress Log), but needs
-      resolving before Phase 3 can proceed once unblocked. From Filed item 8.
-- [ ] [DOC] P3. **Add the missing cross-file conflict-check to
-      `plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md` todo 1** — it reconciles
-      `artifact_pipeline_observability_2026_07_17.md`'s checkboxes against batch 3's work but its conflict-check doesn't
-      name `plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (line 280, still open), which
+      resolving before Phase 3 can proceed once unblocked. From Filed item 8. **Still moot as of 2026-08-15
+      (plan_reconciler reconciliation session) — re-checked `..._p3_cutover_2026_07_14.md`'s Progress Log fresh: the
+      4-item GO/NO-GO data-precondition checklist (unrelated to this todo, see the doc's now-corrected banner) is still
+      not fully met, so Phase 3 has not reached the soak step yet. Stays open, not force-flipped.**
+- [x] [DOC] P3. **DONE 2026-08-15 (plan_reconciler reconciliation session).** Add the missing cross-file conflict-check
+      to `plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md` todo 1 — it reconciles
+      `artifact_pipeline_observability_2026_07_17.md`'s checkboxes against batch 3's work but its conflict-check didn't
+      name `plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (line ~280, still open), which
       touches the SAME source doc's checkboxes for batch 1's work. Both finalize plans are `status: active` and
-      `assigned_vm: planning` today — a real same-file dispatch collision risk if both are ever worked concurrently. Add
-      a one-line note to batch3_finalize's todo 1 (or a `sequential`/conflict note) naming batch1_finalize todo 4
-      explicitly. From Filed item 9.
+      `assigned_vm: planning` today — a real same-file dispatch collision risk if both are ever worked concurrently.
+      Added a "Same-file dispatch-collision note" to batch3_finalize's todo 1, explicitly naming `batch1_finalize`
+      todo 4. From Filed item 9.
 
 ## Archive candidates (operator review)
 
@@ -339,3 +372,23 @@ staged batch before commit).
   corpus-wide is out of this ui-scoped run's mandate, but it directly blocks a ui-tranche archival decision. Fan-out
   hunters dispatched next for fresh contradiction/hygiene/AO-readiness/ codex-alignment coverage.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **2026-08-15 (operator-ruling application session)**: applied 2 operator rulings received on this doc's routed
+  questions, plus the resolved doc-drift item and the auto-fixable cross-reference todo. **Contradiction #3**
+  (GCS-delete autonomy): operator ruled fully-autonomous is correct; replaced `..._p3_cutover_2026_07_14.md`'s "OPERATOR
+  CONFIRMS" banner with a corrected framing (data-precondition HALT preserved unchanged, only the authority framing
+  fixed) — documentation-only, no GCS object touched. **Doc-drift #1** (epic stale table rows): operator confirmed the
+  epic's `locked_by: live-defi-rollout` is the corpus-wide placeholder bug, not a real lock, safe to edit; removed both
+  stale rows with an explanatory footnote. **Doc-drift #3** (ui-testing-layers.md + 2 siblings): operator approved
+  correcting to verified-current paths; re-verified every claim independently via `ls`/`find` before applying (did not
+  trust the findings doc's claims blindly) — `tests/playbooks/**` → `tests/e2e/playbooks/**` corpus-wide (5 sites across
+  the 3 docs), `lib/registry/route-manifest.ts`/`tests/smoke/routes.spec.ts` absence in `unified-trading-system-ui`
+  annotated as aspirational/illustrative rather than invented-path-substituted. **Doc-drift #2**
+  (data-status-ui-surface.md behavioral drift): confirmed already fixed by `unified-trading-pm@bfd94b8d0c` (2026-08-12)
+  — 14-day fallback-lookback
+  - `requested_date`/`resolved_date` prose both present on a fresh read; flipped to resolved. **Todos item 3**
+    (batch1/batch3-finalize same-file collision note): added the cross-reference note to batch3_finalize todo 1; flipped
+    done. **Todos items 1-2** (orphaned successors scoping / soak-window duration): left open per the operator's
+    minor-items ruling — annotated item 1 with a "NEEDS SCOPING" flag (no plan drafted, out of this session's mandate)
+    and item 2 with a fresh re-confirmation that it's still moot (Phase 3's GO/NO-GO checklist still unmet). No git
+    add/commit/push performed by this session — edits only, per this session's own instructions (someone else commits
+    centrally afterward).

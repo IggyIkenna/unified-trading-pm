@@ -61,7 +61,7 @@ related:
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
-    /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
@@ -354,11 +354,12 @@ fixture-linked before MVP backfill.
     - **[INFRA] P1.** Launch the historical prediction re-backfill under the widened catalogue — **RULED 2026-07-28, GO
       (sharded SPOT VMs, full 2025-03-14→today range, no partial-window shortcut)**, retagged away from
       `[BLOCKED-OPERATOR-DECISION]`; see that doc's Todos section for the full mandate
-  - [`plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`](/plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md)
-    — **1 open** (corrected 2026-07-31, `/ag-closeout-audit prediction` — was stale "3 prose follow-ups", all 3 resolved
-    since; live-verified via direct checkbox read). **[DATA] P2.** Verify the Kalshi execution-service paper-order flow
-    end-to-end — the same deliverable as `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6's second leg,
-    itself currently `BLOCKED-OPERATOR-DECISION` (gated on the same credential/host question, see that plan).
+  - [`plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`](/plans/archive/2026_08/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md)
+    — **0 open** (RESOLVED + archived 2026-08-15, plan_reconciler). The sole open item (verify the Kalshi
+    execution-service paper-order flow end-to-end) was covered by
+    `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5, shipped `execution-service@577b9a884` 2026-08-09
+    (verified ancestor of `origin/live-defi-rollout`; non-live mocked verification per the operator's 2026-08-06 ruling)
+    — the `BLOCKED-OPERATOR-DECISION` framing was stale, that gate cleared with the same ship.
   - [`plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`](/plans/archive/2026_08/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md)
     — **added to this index 2026-07-31** (`/ag-closeout-audit prediction` Finding 3 fix). **RESOLVED + archived
     2026-08-09** (0 open) — covered by `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5
@@ -465,10 +466,8 @@ fixture-linked before MVP backfill.
     - **[SCRIPT] P2.** cqg partition-completeness — recent-window catalogue re-enumeration
     - **[DATA] P3.** 1,454 prediction `_index` rows still at schema v4 (vs 192,713 at v9; DISCOVERED 2026-06-23)
 - **UI / bucket**:
-  - [`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`](/plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)
-    - [VERIFY]**[UI] P0.** After the writer + UI ship: re-walk the deployment-ui prediction panel; POLYMARKET drill-down
-    - **[SCRIPT] P1.** Phase 5 — canonical-groups backfill (30+ groups beyond the initial 9). Full list in the archived
-    - **[SCRIPT] P2.** Prediction sentinel fan-out for `prediction_canonical_question_group` empty rows
+  - [`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`](/plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)
+    — **0 open** (11/11 done, RESOLVED + archived 2026-08-15).
 - **ML / arb (downstream, gated)**:
   - [`plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md`](/plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md)
     - **[SCRIPT] P0.** Run ml-training Model 2A walk-forward against the Group-D-validated feature matrix (BLOCKED-ON)

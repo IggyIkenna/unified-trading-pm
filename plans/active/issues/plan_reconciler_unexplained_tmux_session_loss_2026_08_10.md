@@ -162,3 +162,11 @@ would detect this failure mode regardless of root cause.
 
 **Evidence quality**: Code-path analysis only — no production log/DB access. Operator should verify account-id
 clustering hypothesis against production DB.
+
+### 2026-08-15 — /plan-reconcile follow-up note
+
+Related doc `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` most likely explains (not
+proves — the forensic evidence needed to confirm it was itself lost, per this doc's own Finding 1) this specific
+incident's mechanism: a shared ambient tmux socket combined with a bare `kill-server` issued from any process/slot,
+which would tear down sibling sessions with no per-session trace. This is offered as the most plausible mechanism given
+the evidence gap already documented above, not as a definitive resolution of this doc's UNDETERMINED root cause.

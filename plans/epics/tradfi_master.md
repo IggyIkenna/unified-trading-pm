@@ -194,7 +194,7 @@ Covers:
   GCS purge," implying the purge was still pending — that clause was written in the SAME commit as the "PURGED
   2026-07-21" sentence above and contradicted it; the purge is in fact the gated GCS purge referenced, it EXECUTED
   (RUN_TS=20260720-193849), and a live bounded prefix-scoped check 2026-08-09 confirms 0 `batch_massive` objects remain
-  (see `plans/active/issues/plan_reconciler_findings_2026_08_08.md` Progress Log). `batch_massive`
+  (see `plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_08.md` Progress Log). `batch_massive`
   `PipelineMode`/`possible_manifest` READ recognition is now safe to drop from code (tracked separately, not yet done as
   of this edit) — matching `/codex/02-data/canonical-cutover-register.md`
   §4/`/codex/02-data/reconciliation-finding-taxonomy.md` AE-4 (CLOSED). The `tradfi_massive_dual_source` child plan is
