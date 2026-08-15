@@ -58,15 +58,22 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
 
 ## ⚠️ P0 — checkbox contradicts an explicit operator instruction not to flip it
 
-- [ ] [DATA] P0. **`plans/active/lst_rate_honest_coverage_2026_07_21.md:116`** — todo "Regenerate catalogue + expected
-      universe" is checked `[x]`, but the SAME item's own body (lines 127-130) carries a later, dated correction: "RULED
-      2026-08-12 (/plan-reconcile, operator interactive): a literal regen-script run IS required before this closes —
-      invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
+- [x] ✅ [DATA] P0. **`plans/active/lst_rate_honest_coverage_2026_07_21.md:116`** — todo "Regenerate catalogue +
+      expected universe" is checked `[x]`, but the SAME item's own body (lines 127-130) carries a later, dated
+      correction: "RULED 2026-08-12 (/plan-reconcile, operator interactive): a literal regen-script run IS required
+      before this closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
       `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
       infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`." NOT auto-fixable — a worker must verify
       against real infra whether the regen script has run since, then either supply the missing evidence or flip the
       checkbox back to `[ ]` per the doc's own instruction. This is the single highest-severity finding of the whole
-      sweep: a live mis-route risk on a data-correctness gate.
+      sweep: a live mis-route risk on a data-correctness gate. **RESOLVED (2026-08-15, /plan-reconcile defi verification
+      pass)**: re-read the live doc — the checkbox is already `[ ]`, not `[x]`. A prior 2026-08-15 pass had already
+      live-checked `gcs_describe_object` on both script outputs (catalogue regenerated 04:34:25Z with the new AAVE/
+      CHAINLINK cells present, but `enumerate_expected_universe.py`'s output still stale from 2026-07-03) and reverted
+      the checkbox back to `[ ]` per the doc's own instruction — see `lst_rate_honest_coverage_2026_07_21.md`'s own
+      "REVERTED to `[ ]` (2026-08-15, /plan-reconcile, operator interactive)" entry. The contradiction this finding
+      flagged no longer exists; the todo stays genuinely open (enumerator still needs to run) but the mis-route risk is
+      gone.
 
 ## P1 — live operational/data-correctness risks
 
@@ -263,13 +270,24 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
 
 ## P2 — needs operator ruling / judgment call (not mechanically resolvable)
 
-- [ ] [OPERATOR] P2. `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:470-473` — todo asks to move
-      `market_metadata` off an axis (2 named options), but current code has evolved to a THIRD resolution
+- [x] ✅ [OPERATOR] P2. `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:470-473` — todo asks to
+      move `market_metadata` off an axis (2 named options), but current code has evolved to a THIRD resolution
       (`expected_count_per_day: "indeterminate"`) matching neither literal option. Needs re-wording or
-      closure-by-citation.
-- [ ] [OPERATOR] P2. `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md:178-190` open P1 todo's premise
-      was invalidated by the SAME doc's own later Progress Log — but a same-day sibling doc gives a MORE PRECISE,
-      partially-contradicting correction. Two docs not fully reconciled. Needs human to re-scope/close.
+      closure-by-citation. **RESOLVED (2026-08-15, /plan-reconcile defi verification pass)**: the requested action
+      already happened — the source todo carries an **"INVESTIGATED (2026-08-15, /plan-reconcile, operator interactive)
+      — stays open, reworded framing only"** entry documenting the 3rd resolution
+      (`deployment_api/services/data_status/mtds_meta.py:162-176`'s `indeterminate` marker mitigates the symptom but
+      doesn't resolve either of the todo's 2 named options) and explicitly noting the todo "stays open and unchanged in
+      intent." The re-wording/closure-by-citation this finding asked for is done; the underlying todo intentionally
+      stays open (operator-gated design choice, not a hygiene gap).
+- [x] ✅ [OPERATOR] P2. `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md:178-190` open P1 todo's
+      premise was invalidated by the SAME doc's own later Progress Log — but a same-day sibling doc gives a MORE
+      PRECISE, partially-contradicting correction. Two docs not fully reconciled. Needs human to re-scope/close.
+      **RESOLVED 2026-08-15 (sports-tranche plan-reconcile pass)**: re-checked the source doc directly — the todo
+      already carries a **"CLOSED (2026-08-15, /plan-reconcile, operator interactive)"** note redirecting to the 2
+      sibling plans that now own the split (`sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` for the
+      raw-tick GCS path surface, `sports_odds_api_data_type_casing_standardization_2026_08_15.md` for the manifest
+      capture-record surface), and the checkbox itself is already `[x]`. No further reconciliation needed.
 - [ ] [OPERATOR] P2. `carry_staked_basis_funding_scan_experiment_2026_06_16.md` — 2 blocks of literal unresolved git
       conflict markers were found in the WORKING TREE by an independent sweep agent; already resolved by this session
       directly (confirmed HEAD was always clean — working-tree-only artifact, not corpus corruption). No further action
@@ -315,9 +333,13 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       premise moot, `check_line_caps.sh` is scoped to `plans/active/`+`plans/epics/` only) and fixed the reference
       directly in the archived copy + 4 more pre-existing dangling refs the same archived doc carried.
       `unified-trading-pm@e83ca342dd`.
-- [ ] [DOCS] P3. `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md:185-195` — 2 of 3 ag_closeout_audit
-      slug-collision pairs (cefi, prediction) already resolved via `_r2` split; only tradfi pair remains. Bonus:
-      `check_create_only_archive_commits.py`'s `ALLOWED_DUPLICATE_STEMS` still lists all 3, 2 are now vestigial.
+- [x] ✅ [DOCS] P3. `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md:185-195` — 2 of 3 ag_closeout_audit
+      slug-collision pairs (cefi, prediction) already resolved via `_r2` split; only tradfi pair remained. Bonus:
+      `check_create_only_archive_commits.py`'s `ALLOWED_DUPLICATE_STEMS` still listed all 3, 2 were vestigial. **DONE
+      2026-08-15** (tradfi-tranche `/plan-reconcile` pass): archived tradfi's active Round-2 doc to
+      `/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md`, repointed its 4 frontmatter
+      referrers, and removed the `tradfi` stem from `ALLOWED_DUPLICATE_STEMS` — only `INDEX.md` remains on the list.
+      `unified-trading-pm` (this commit).
 - [x] ✅ [DOCS] P3. `deployment_registry_firestore_migration_2026_07_14.md:66-69,126` still frames the P3 halt as
       operator-gated, contradicting the sibling doc's 2026-08-15 fix (this session) that corrected the SAME framing
       elsewhere. Reword to match, fix a stale banner-color reference too. **DONE 2026-08-15**: reworded both spots to
