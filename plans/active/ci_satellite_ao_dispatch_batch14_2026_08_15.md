@@ -101,12 +101,24 @@ source: >-
       `sit_failure` (no head-branch QG poll, deliberately unlike `ldr_qg_failure`); 5 new regression tests in
       `tests/test_escalation.py` mirroring the `ldr_qg_failure` merge-state coverage; QG green.
 
-- [ ] [BACKEND] P2. **Pin the Tier-A `ci_status` gate's push-time UAC re-verification to the exact commit the PR
+- [x] ✅ [BACKEND] P2. **Pin the Tier-A `ci_status` gate's push-time UAC re-verification to the exact commit the PR
       validated against**, instead of content-first re-resolving UAC at HEAD — the design call this doc's remaining todo
       describes (Suggested resolution path #3). Source:
       `plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`. Gate: a push-time
       re-verification against a UAC ref that has moved since PR validation no longer produces a spurious
-      `ci_status=FAILING`; existing deadlock-reproduction scenario from the source doc no longer occurs.
+      `ci_status=FAILING`; existing deadlock-reproduction scenario from the source doc no longer occurs. —
+      `unified-trading-ci@e76a821`: added a `dep-pin/<repo>` commit-status write at PR-time (records the exact
+      unified-api-contracts/unified-trading-library commit `python-quality-gates-v2.yml`'s content-first clone resolved
+      for that PR) and a push-time read (on a `push:[main]`/`push:[staging]` triggered by a merged `promote/*` PR, look
+      up that PR's recorded pin and clone deps at that exact commit instead of re-resolving at current
+      `live-defi-rollout` HEAD). A lookup miss (non-promote push, missing status) falls through unchanged to the
+      existing content-first behaviour — no regression on the common path. `actionlint` clean; `yaml.safe_load` clean;
+      no local `quality-gates.sh` in `unified-trading-ci` (100% workflow YAML, no Python) — shipped via the repo's
+      documented direct-push path (no `scripts/quickmerge.sh` present; pre-commit hooks incl. conventional-commit +
+      branch-drift + quickmerge-provenance all passed) to both `main` (the ref every caller repo's `uses:` pins) and
+      `live-defi-rollout` (kept in sync, matching the repo's pre-existing convention). Full deadlock-reproduction re-run
+      needs a live promote-PR cycle, not reproducible in this session — the fix's correctness was verified by
+      design/code-review + lint, not an end-to-end live rerun.
 
 - [ ] [INFRA] P2. **Add a `git stash list` pre/post sanity check** around `quickmerge.sh`'s and `safe-doc-push.sh`'s
       `git pull --rebase --autostash` step, to detect (and abort/warn on) a foreign-stash-pop race rather than silently
