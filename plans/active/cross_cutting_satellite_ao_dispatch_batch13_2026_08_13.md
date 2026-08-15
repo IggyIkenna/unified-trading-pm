@@ -680,8 +680,20 @@ source: >-
       explicitly gates that on "every todo above is `[x]`", and 6 P0/P1 `[DATA]`/`[QG]` todos in that doc remain open
       (write-path, data parquets, manifest, downstream, sequencing, QG-wiring-into-MTDS/MDPS) — archival is out of this
       bounded doc-update todo's scope. Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
-- [ ] [CODE] P2. Flip the named stale/self-contradictory checkboxes (instruments_mtds_subset: N9c, N5r/N6r) once
-      verified against current code Source: `plans/active/instruments_completion_tracker_2026_07_06.md`
+- [x] ✅ [CODE] P2. **VERIFIED — both checkboxes already correctly flipped in their live successor doc; nothing stale to
+      flip.** (2026-08-15, slot-4·infra) The archived `instruments_mtds_subset_consistency_remediation_2026_06_17.md` is
+      a pure provenance-redirect table (its own body confirms every N-numbered finding's content migrated to
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`, L124-131) — so "instruments_mtds_subset"'s
+      real current home for these items is that residuals doc, not the archived file. There: **N9c** is `[x]` ✅
+      RESOLVED 2026-06-18 (verified `mtds@6b9f4b5` v9-column-population applied to all 5 AGs, independently re-confirmed
+      for sports 2026-06-19) — matches current code, no contradiction. **N5r/N6r** is `[x]` ✅ EXTRACTED 2026-08-09 →
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`, where it is itself `[x]` ✅ (code sub-steps a+b
+      shipped `market-tick-data-service@978a49fa`+`@8175ec7a`; remaining VM-only execution sub-steps c-e tracked
+      separately in `plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`) — a legitimate
+      extraction-closure, not a stale/self-contradictory state. Both checkboxes already match current code; no flip
+      needed. (The sibling "migrate-first 4 AGs" / `instruments_catalogue_incremental_rollup` clauses of the source
+      ADMIN todo are outside this batch todo's named scope — not checked here.) Source:
+      `plans/active/instruments_completion_tracker_2026_07_06.md`
 - [ ] [CODE] P2. Add cbETH as COINBASE-ETHEREUM to the DeFi LST universe (full new-venue registration) Source:
       `plans/active/instruments_foundation_completeness_2026_06_24.md`
 - [ ] [CODE] P2. Retirement completeness (§8) sweep -- verify every named pollutant (tradfi ICE/CBOE/VIX-cash,
