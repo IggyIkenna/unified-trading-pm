@@ -17,11 +17,11 @@ scope: [engineer, admin]
 tags: [backfill, manifest, cefi, data-correctness, irreversible-delete, vm-scale, operator-gated]
 related:
   [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
     /plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 last_updated: 2026-08-03 # Phase B executed for real, see its todo for evidence — the summary/banner above describes

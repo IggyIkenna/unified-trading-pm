@@ -53,6 +53,18 @@
 # PRE_COMMIT_LINES check the marker-append branch uses: since ADDED<=DELETED, pre-commit line count
 # (lines - ADDED + DELETED) is always >= the current (already-over-cap) line count.
 #
+# A FOURTH DOCUMENTED EXCEPTION (operator ruling 2026-08-15, BLK-d942f2f7, unified-trading-pm
+# promote_qg_failure PR #3197): a staged diff to an already-over-cap doc that is byte-identical
+# modulo whitespace (`git diff --cached -w -- <file>` empty) is allowed through in SCOPED mode.
+# Root problem this closes: the corpus-wide prosewrap-padding gate (check_prosewrap_padding.sh,
+# also a shrinking ratchet that can never regress) sometimes needs its repair script
+# (fix_prosewrap_padding.py) run against a doc that happens to already be over the line-cap for
+# unrelated reasons -- the repair only de-indents existing lines, never adds/removes/reorders
+# content, so it cannot make the line-cap violation any worse, but the marker-append and
+# link-repoint exceptions above don't cover it (no path-token substitution, and a de-indent can
+# show up as ADDED>0/DELETED>0 with no bearing on either exception's shape). Strictly safer than
+# the link-repoint exception: content is byte-identical, not merely a bounded path substitution.
+#
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
 # plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
@@ -153,7 +165,45 @@ for f in "${TARGETS[@]}"; do
   if [ "$lines" -gt "$PLAN_HARD_CAP" ]; then
     SMALL_MARKER_APPEND=""
     LINK_REPOINT_EDIT=""
+    WHITESPACE_ONLY_REPAIR=""
     if [ -n "$SCOPED" ]; then
+      # Whitespace-only-repair exception (operator ruling 2026-08-15,
+      # BLK-d942f2f7, unified-trading-pm promote_qg_failure PR #3197): a staged diff to an
+      # already-over-cap doc that is byte-identical modulo whitespace (`git diff --cached -w`
+      # empty) is allowed through -- e.g. the fix_prosewrap_padding.py repair, which only
+      # de-indents existing lines and never adds/removes/reorders content. Strictly safer than
+      # the link-repoint exception below (zero semantic content change, not just a bounded
+      # path-token substitution), so no ADDED<=DELETED / path-normalization reasoning is needed --
+      # a pure-whitespace diff can never grow the file's line count either.
+      if [ -z "$(git -C "$PM_DIR" diff --cached -w -- "$f" 2>/dev/null)" ]; then
+        WHITESPACE_ONLY_REPAIR="1"
+      else
+        # Combined whitespace + link-repoint case: a single file can need BOTH the
+        # prosewrap de-indent repair AND an unrelated archival path-repoint in the
+        # same commit (the reference-path gate applies to a staged file's full
+        # content, not just its diff, so the path fix can't be deferred to a later
+        # commit while the file is being touched at all). Neither exception alone
+        # covers the union. Every changed (+/-) line, after normalizing path
+        # segments AND stripping all whitespace, must match between removed/added --
+        # strictly a superset of what each exception already tolerates alone.
+        # NOTE: whitespace is stripped PER-LINE via sed, never via `tr -d` on the whole
+        # multi-line stream -- `tr` would delete the newlines too, merging every line
+        # into one blob and destroying line-by-line correspondence (caught live,
+        # BLK-d942f2f7 follow-up). The path-token regex also tolerates an OPTIONAL
+        # leading slash (`/?plans/...`) since this exception exists precisely to also
+        # cover repointing a corpus bare-filename-reference violation (no leading
+        # slash) to the leading-slash canonical form in the same edit.
+        RAW_DIFF_WS="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null || true)"
+        REMOVED_WS_PATH="$(echo "$RAW_DIFF_WS" | grep -E '^-[^-]' | sed -E 's/^-//' \
+          | sed -E 's#/?plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' \
+          | sed -E 's/[[:space:]]+//g' | sort)"
+        ADDED_WS_PATH="$(echo "$RAW_DIFF_WS" | grep -E '^\+[^+]' | sed -E 's/^\+//' \
+          | sed -E 's#/?plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' \
+          | sed -E 's/[[:space:]]+//g' | sort)"
+        if [ -n "$REMOVED_WS_PATH" ] && [ "$REMOVED_WS_PATH" = "$ADDED_WS_PATH" ]; then
+          WHITESPACE_ONLY_REPAIR="1"
+        fi
+      fi
       # Small-marker-append exception (see policy comment above): only when this diff is a bounded,
       # non-checkbox append to a doc ALREADY over cap before this commit.
       DIFF_NUMSTAT="$(git -C "$PM_DIR" diff --cached --numstat -- "$f" 2>/dev/null || true)"
@@ -184,7 +234,9 @@ for f in "${TARGETS[@]}"; do
         fi
       fi
     fi
-    if [ -n "$SMALL_MARKER_APPEND" ]; then
+    if [ -n "$WHITESPACE_ONLY_REPAIR" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — whitespace-only repair, \`git diff -w\` empty, operator ruling 2026-08-15)"
+    elif [ -n "$SMALL_MARKER_APPEND" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
     elif [ -n "$LINK_REPOINT_EDIT" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded same-line link-repoint edit only, operator ruling 2026-08-09)"
