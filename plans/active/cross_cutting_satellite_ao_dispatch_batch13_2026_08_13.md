@@ -187,8 +187,21 @@ source: >-
       `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. UAC generated-artifact churn: gitignore + git rm --cached openapi/ui-reference-data.json /
       capability-manifest.json (unified-api-contracts) Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P2. All 18 MDPS adapters' process_to_candles(df, ...) -> Polars adapter-protocol seam
-      (market-data-processing-service) Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. **Diagnosed: mis-scoped for single-task AO dispatch, NOT attempted — corrected classification
+      instead.** (2026-08-15, slot-31·infra) Concrete file-by-file scope survey of all 18
+      `market_data_processing_service/app/adapters/*` files implementing `process_to_candles`, their 4 production caller
+      sites, and `base_adapter.py`'s shared pandas helpers confirmed this is an atomic, single-PR migration (the
+      ABC/Protocol boundary can't be half-converted across 18 polymorphic adapters) with 5 of 18 files
+      (cefi/trades_adapter.py, cefi/book_snapshot_adapter.py, cefi/liquidations_adapter.py,
+      sports/bucket_assignment_adapter.py, tradfi/ohlcv_passthrough.py) needing genuine groupby-based
+      feature-engineering rewrites on live candle-production code — the same scope already operator-deferred twice under
+      two archived predecessor plans, with a prior combined estimate of 2.0 calibrated AI-days, never a 1-hour task. Per
+      CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" rule, did not attempt the migration; filed
+      the full survey + recommended a dedicated design/execution effort (mirroring the sibling engine-internal
+      conversion's benchmarked-verification pattern) as a new todo in `mtds_file_size_refactor_2026_06_08.md` (the
+      item's designated SSOT owner) instead. Source issue:
+      `plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`
+      (market-data-processing-service). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. Run PM bash scripts/quality-gates.sh to confirm the plan + codex update pass (unified-trading-pm)
       Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. Retry the tradfi attempted_failed cells (13 cells / ~12.5k rows) surfaced by the digest Source:
