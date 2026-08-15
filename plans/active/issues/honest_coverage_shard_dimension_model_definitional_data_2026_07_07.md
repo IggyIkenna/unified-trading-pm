@@ -471,6 +471,19 @@ longer has its own download button.
       (`mtds.py:143-215,182-196,618-623`) onto the `reference_scope`-based model — either drop it from
       `PREDICTION_DATA_TYPE_META` entirely (per UAC's own "not separate" disclaimer) or route its presence-tracking
       through the genesis/day-scope catalogue mechanism instead.
+
+      **INVESTIGATED (2026-08-15, /plan-reconcile, operator interactive) — stays open, reworded framing only.** Code
+          does carry a 3rd mechanism not in the todo's original 2 options: `deployment_api/services/data_status/mtds_meta.py:162-176`
+          sets `market_metadata`'s `expected_count_per_day: "indeterminate"` (comment: "mark as indeterminate so the UI
+          shows the captured count without a synthetic denominator"). But `mtds.py:178-195` still unions `market_metadata`
+          into `expected_dts` with the identical 6-dim `shard_dim` tuple as `trades`/`fills` — it never actually moved off
+          the axis. `expected_count_per_day` is read nowhere except its own definition + one assertion test
+          (`test_data_status_service.py:2707-2718`) — display-only metadata, not wired into denominator/axis control flow.
+          This mitigates the SYMPTOM (a fake per-day denominator) but does not resolve either of this todo's 2 named
+          options (drop from `PREDICTION_DATA_TYPE_META`, or route through the genesis/day-scope catalogue). Todo stays
+          open and unchanged in intent; noting the existing partial mitigation so a future pass doesn't mistake it for
+          done.
+
 - [x] ✅ [VERIFY] P2. **NOT closed here — genuinely contested, actively being investigated concurrently as of
       2026-07-29/30, left open rather than force a premature verdict.** Two independent investigations this session
       reached DIFFERENT conclusions: one found `corporate_action_confirmed`/`earnings_result` (POLYGON) registered with

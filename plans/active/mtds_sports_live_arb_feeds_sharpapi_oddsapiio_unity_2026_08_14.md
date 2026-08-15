@@ -175,7 +175,7 @@ diverging matcher on the same problem.
 
 ### P1 — batch/live data_type symmetry gap (found 2026-08-14 during P0 recovery)
 
-- [ ] [DATA] P1. Resolve the `ODDS_API` venue's batch/live `data_type` mismatch — the batch adapter
+- [x] ✅ [DATA] P1. Resolve the `ODDS_API` venue's batch/live `data_type` mismatch — the batch adapter
       (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:759`) writes `data_type="ODDS"`,
       but the live shard (`sports:ODDS_API:trades`) uses `data_type="trades"` because `"ODDS"` crashes
       `live_pipeline_mode_for_venue`: UAC's `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]`
@@ -188,6 +188,16 @@ diverging matcher on the same problem.
       source=odds_api instead of falling through to the data_type-only `SPORTS_DATA_TYPE_TO_SOURCE` lookup, or (b)
       rename the live shard's `data_type` and get the batch adapter to match it — state which and cite the resolved
       shard identity used by both sides.
+
+      **CLOSED (2026-08-15, /plan-reconcile, operator interactive) — redirected to the 2 sibling plans that already
+          fully own this split.** This mismatch spans 2 distinct write surfaces, each with its own dedicated, already-shipped-or-active
+          plan: `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` owns the raw tick GCS path surface
+          (`venue_fetch.py`'s hardcoded `trades` literal → `odds`, retiring 382K+ historical rows);
+          `sports_odds_api_data_type_casing_standardization_2026_08_15.md` owns the manifest capture-record surface
+          (`odds_api_adapter.py`'s row-dict `"data_type": "ODDS"` → lowercase `odds`, ~17K rows). Both converge on the
+          same final value (`odds`), explicitly scoped as non-overlapping in the first doc's own text — not a
+          contradiction between the two, just two different surfaces of the same rename. Closing this instance here rather
+          than duplicating tracked work in a 3rd place.
 
 ### P1 — the three providers
 
