@@ -370,6 +370,35 @@ issue's scope); flagged as a follow-up todo below.
       isolate the exact call site), (c) confirming venue=ODDS_API specifically routes through this path (vs. the
       ~12 uppercase-bookmaker venues sharing the same blank shape per the archived IS doc — may be the same cause or
       a second one). Do not assume confirmed without doing (a)-(c). (repo: market-data-processing-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up (b) partial progress on the P1 todo above**: `_normalise_timeframe()`
+      (`canonical_writer_shaping.py:232-240`, now read in full) is a trivial passthrough — it only special-cases
+      `"24h"` → `"1d"` and returns every other token, including `"horizon"`, unchanged. **This disproves the P1
+      todo's leading hypothesis**: `_normalise_timeframe` does NOT blank `"horizon"`. `CandleOutput`
+      (`unified_api_contracts.internal`) also carries no `timeframe` field at all — every constructor call site
+      (`base_adapter.py::_make_empty_candle_output`/`_make_zero_activity_candle_output`, and
+      `SportsBucketAssignmentAdapter.process_to_candles`'s real return) omits it, confirming `timeframe` is threaded
+      alongside `candles_df` by the caller, not carried inside it. **New candidate mechanism found**: the caller
+      chain is `live_workers_chain.py::_process_all_timeframes` (line 356) → for each `timeframe` in
+      `sorted_tfs = sorted(valid_tfs, ...)` where `valid_tfs = adapter.get_valid_output_timeframes(timeframes)`
+      (`base_adapter.py:164-174`) → `_write_or_record_empty_timeframe(timeframe=timeframe, ...)` (line 542, body
+      unread past line 569). `get_valid_output_timeframes` filters via
+      `TIMEFRAME_SECONDS.get(tf, 0) >= base_secs` — **an unrecognized token defaults to 0 seconds**, and the code's
+      own comment at that line names this exact defaulting shape as the "confirmed root cause of the 2026-08-12
+      liquidations 1d re-derive silent no-op" (a prior, different-timeframe instance of the same class of bug).
+      `"horizon"` is very likely not a `TIMEFRAME_SECONDS` key. **Still open, precise next steps**: (i) confirm
+      whether `"horizon"` is actually absent from `TIMEFRAME_SECONDS` (definition/import origin not yet located —
+      a plain-text grep for its assignment came back empty in this pass, so it's probably re-exported from a shared
+      constants module); (ii) read `get_base_granularity()`'s default (`base_adapter.py:155`, not yet read) —
+      `SportsBucketAssignmentAdapter` does not override it, so it inherits whatever the base default returns, which
+      determines whether `0 >= base_secs` passes or fails for `"horizon"`; if it fails, `"horizon"` is filtered out
+      of `valid_tfs` entirely and `_process_all_timeframes` returns early with zero candles written — **this needs
+      reconciling against the observed non-empty blank-timeframe row population** (a total-drop wouldn't produce a
+      blank-but-present row, so either this filter isn't the actual mechanism, or `base_secs` also resolves to 0 and
+      `"horizon"` passes through this filter intact — in which case the string `"horizon"` reaches
+      `_write_or_record_empty_timeframe` un-blanked, meaning the blanking happens somewhere in that function's
+      unread body (`live_workers_chain.py:542-569+`) or in the canonical-writer call it eventually makes); (iii)
+      read that unread body next. Do not assume confirmed without doing (i)-(iii). (repo:
+      market-data-processing-service)
 
 ## Progress Log
 
