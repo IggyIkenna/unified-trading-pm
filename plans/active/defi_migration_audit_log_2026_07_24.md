@@ -819,6 +819,9 @@ speed-note (both deferred optimisations, non-blocking).
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: the "DELETE duplicate/legacy DeFi orphan buckets"
+  todo — **verify the unique-gap migration landed first, then execute** — extracted to
+  `defi_operator_ruling_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added dex_swaps_handler.py/canonical_write.py,
   the real handler + writer touched by the open P1 bucket-redirect todo.

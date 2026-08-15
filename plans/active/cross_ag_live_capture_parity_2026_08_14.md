@@ -341,7 +341,13 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
 
 ## Progress Log
 
-_(append dated entries here)_
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: three open items ruled via AskUserQuestion. (1)
+  `phoenix_ws.py` — **delete as dead code** — extracted to `defi_operator_ruling_ao_dispatch_2026_08_15.md`
+  (`assigned_vm: planning`), but that plan's own todo 1 flags a contradiction found AFTER this ruling: this doc's own
+  line 383-385 notes `uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` independently found `PHOENIX-SOLANA` IS
+  present in `ALL_DEFI_VENUES` — reconcile before deleting, don't delete on this ruling alone. (2) DeFi live capture
+  scope — **operator approved building the ~40 BLOCKED-BUILD pollers** — phased-scoping todo extracted to the same
+  dispatch plan. (3) `_index/*.bak*` retention — **leave as-is indefinitely** — no dispatch, status quo stands.
 
 - **2026-08-14**: Findings A and B (both todos each) DONE. Finding A: cefi factory fallthrough fixed
   (market-tick-data-service@44db26bce0) + manifest audit found zero mis-stamped rows (bug was live but never exercised —

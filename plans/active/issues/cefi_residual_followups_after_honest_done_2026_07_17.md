@@ -580,6 +580,11 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: two open items ruled via AskUserQuestion. (1) The
+  586 marker-less catalogue rows — **check decision #4's exact scope first, then decompose or file a fresh question** —
+  extracted to `cefi_residual_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`). (2) The ~4.5M-file corpus-wide
+  instrument_id backfill (scope grew ~100x past original estimate) — **operator proceeded as originally authorized**,
+  overriding the "pause for a fresh estimate" recommendation — same dispatch plan.
 - **2026-07-18 (slot-3, /autonomous) — CUTOVER STAGED; drain+`--apply`+content GATED on a QUIET cefi fleet (a concurrent
   pipeline-check sweep is active).** Everything reversible is done + verified; only the irreversible core remains, and
   it needs a writer-free window.

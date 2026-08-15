@@ -716,6 +716,11 @@ content post-line-cap-split.
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: the legacy-twin GCS deletes todo — **execute for
+  defi/prediction now (tradfi already tracked separately, cefi already done); sports explicitly excluded pending a fresh
+  re-check** — operator specifically asked for the sports twin-coverage numbers to be re-measured ("looking more solid
+  now"), not assumed. Both extracted to
+  `legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- this doc self-declares "HUMAN TRACKER
   -- operator-owned (`assigned_vm: NA`, NOT auto-dispatched)" in its own header; it points at source plans/issues rather
   than being itself executable, and several open items remain genuine judgment work (Stage-3 Layer-1 re-measure

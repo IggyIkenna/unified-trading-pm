@@ -299,6 +299,11 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: two open items ruled via AskUserQuestion. (1) The
+  787-object GCS rename+backfill migration — **re-run discovery fresh, then migrate** — extracted to
+  `pacifica_solana_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`). (2) The `wallet_private_key` provisioning to
+  flip `supports_live` — **deferred, needs explicit human sign-off** — stays here, not dispatched; this is a
+  live-capital/wallet-key action, exactly CLAUDE.md's human-only class.
 - **2026-08-15 (post-completion follow-up — both remaining open items addressed as far as safely possible)** — Operator
   asked to ship the "3 things worth knowing" fixes after a `/pre-compact` checkpoint. Item 3 (sub-agent corrections) was
   already resolved during the original build. The two genuinely open items:

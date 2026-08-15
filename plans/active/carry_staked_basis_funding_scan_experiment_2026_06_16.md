@@ -205,14 +205,14 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
       today. **Repo: market-tick-data-service + deployment-service.**
 
       **SUPERSEDED-IN-PLACE (plan_reconciler 2026-08-10).** The backfill VM this todo asked for ran and partially
-                                      completed (see the 2026-06-16 log entries below).
+                                              completed (see the 2026-06-16 log entries below).
 
-                                      Aave V3 wrote for Arbitrum/Avalanche/Base. ETH coverage is spotty (429-throttled).
+                                              Aave V3 wrote for Arbitrum/Avalanche/Base. ETH coverage is spotty (429-throttled).
 
-                                      Remaining scope is narrower now. It is tracked by the "Complete Aave-Ethereum lending backfill" todo under
-                                      "Open data gaps (part 2)" below (same gap, refined after the first run's real result).
+                                              Remaining scope is narrower now. It is tracked by the "Complete Aave-Ethereum lending backfill" todo under
+                                              "Open data gaps (part 2)" below (same gap, refined after the first run's real result).
 
-                                      Leaving this checkbox open since the work is genuinely not done. Do not dispatch both todos independently.
+                                              Leaving this checkbox open since the work is genuinely not done. Do not dispatch both todos independently.
 
 - **2026-06-16** — 🟢 **VM RUNNING — Aave + lending-indices backfill** `mtds-lending-indices-20260616-225256`
   (e2-standard-4, asia-northeast1-c). Verdict from investigation: Aave V3 is a **config-run, not new code** — `aave_v3`
@@ -656,25 +656,25 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 
       **NOT FLIPPING, clarifying only (plan_reconciler 2026-08-10).** The e2e-testing/harness half is verified done.
 
-                                      Shipped commit `e2e-testing@6e2ffb8`. Confirmed live today in `drift_funding_reader.py` and
-                                      `install_driftpy_venv.sh`.
+                                              Shipped commit `e2e-testing@6e2ffb8`. Confirmed live today in `drift_funding_reader.py` and
+                                              `install_driftpy_venv.sh`.
 
-                                      This matches item 7 of the carry-venue-live-integration-reference codex doc, which already carries its own
-                                      DONE-for-e2e marker.
+                                              This matches item 7 of the carry-venue-live-integration-reference codex doc, which already carries its own
+                                              DONE-for-e2e marker.
 
-                                      This todo's own `Repo:` tag also names "mtds drift handler" — the same scope as the next todo below
-                                      (Production Drift funding in MTDS).
+                                              This todo's own `Repo:` tag also names "mtds drift handler" — the same scope as the next todo below
+                                              (Production Drift funding in MTDS).
 
-                                      It is genuinely unclear whether this duplicates that todo or tracks something narrower. That is a merge/close
-                                      call, not an evidence-checkable fact, so both stay open. Routed in this run's findings doc.
+                                              It is genuinely unclear whether this duplicates that todo or tracks something narrower. That is a merge/close
+                                              call, not an evidence-checkable fact, so both stay open. Routed in this run's findings doc.
 
-                                      **Operator ruling (plan_reconciler cross-cutting Item E, 2026-08-15, see
-                                      `operator_ruling_record_plan_reconcile_session_2026_08_15.md` item 7): NOT a duplicate — keep both todos
-                                      open, do not merge.** This STRATEGY todo is the strategy-consumption half (on-chain Solana-RPC read via
-                                      the held credentials, wired into the strategy layer); the MTDS todo above (Production Drift funding in
-                                      MTDS) is the data-ingestion half (the isolated-venv reader that canonizes Drift funding into
-                                      `derivative_ticker`). This todo CONSUMES that todo's output — sequence the on-chain wiring here against the
-                                      MTDS handler's canonical output path once it lands, rather than re-deriving funding independently.
+                                              **Operator ruling (plan_reconciler cross-cutting Item E, 2026-08-15, see
+                                              `operator_ruling_record_plan_reconcile_session_2026_08_15.md` item 7): NOT a duplicate — keep both todos
+                                              open, do not merge.** This STRATEGY todo is the strategy-consumption half (on-chain Solana-RPC read via
+                                              the held credentials, wired into the strategy layer); the MTDS todo above (Production Drift funding in
+                                              MTDS) is the data-ingestion half (the isolated-venv reader that canonizes Drift funding into
+                                              `derivative_ticker`). This todo CONSUMES that todo's output — sequence the on-chain wiring here against the
+                                              MTDS handler's canonical output path once it lands, rather than re-deriving funding independently.
 
 - [ ] [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN + use
       the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
@@ -815,6 +815,13 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: three open items ruled via AskUserQuestion. (1)
+  Drift canonical venue inclusion into `derivative_ticker` — **rejected, Drift stays out** — honors the 2026-07-16
+  removal ruling in `VENUE_COLLATERAL_MATRIX` as still controlling; do not re-add in any capacity without a fresh
+  explicit decision. (2) The 5 new venues (Gate/KuCoin/Bitget/Kraken/MEXC) for `perp_funding_cadence`/`venue_collateral`
+  — **deferred**, no registry change made. (3) Which doc owns the legacy-bucket/`category=defi` path-key fix — **the
+  dedicated bucket-naming SSOT remediation doc is the designated owner**, not this experiment-scoped plan; this doc's
+  own copy of the item should defer/point to that doc rather than being independently dispatched.
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
   frontmatter, body byte-identical): KEEP-NA, valid — exploratory operator-driven research journal; remaining todos are
   strategy-design judgment plus cost-gated data asks (the Tardis universe expansion explicitly says 'confirm
