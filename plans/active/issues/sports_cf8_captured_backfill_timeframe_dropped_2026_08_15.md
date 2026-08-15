@@ -316,13 +316,60 @@ issue's scope); flagged as a follow-up todo below.
       launched VM/Cloud Run job — see
       `/plans/archive/2026_08/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`
       for that evidence trail. (repo: market-tick-data-service)
-- [ ] [DATA] P3. **Confirm population composition** before fully closing the "safe to leave" verdict above: verify the
+- [x] [DATA] P3. **Confirm population composition** before fully closing the "safe to leave" verdict above: verify the
       899,508-row IS population and 14,982-row MDPS population sampled for the zero-sibling finding are exclusively
       `data_type="odds"` rows (the structurally-blank-by-design population), not partially mixed with
       `data_type="odds_horizon_bucket"` rows written by a different path — a mixed population would need the
       `odds_horizon_bucket` subset re-examined separately since that data_type's timeframe is NOT structurally blank
       by design. Low urgency: mechanism confidence is already high and no destructive action is pending on this.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) — ✅ **DONE 2026-08-15/16 — RESULT OVERTURNS P2's "blank-by-design, safe to
+      leave" conclusion, does NOT confirm it.** Both populations are, by construction of the very audits that
+      measured them, **100% `data_type="odds_horizon_bucket"`, never `data_type="odds"`**: (a) the archived IS-side
+      doc (`/plans/archive/2026_08/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`)
+      states its own measurement plainly in its title and body — "`data_type=odds_horizon_bucket` on IS: 1,070,440
+      rows total, 899,508 (84.03%) blank-timeframe" — the 899,508-row population was never anything but
+      `odds_horizon_bucket`; (b) the MDPS 14,982-row out-of-window population was produced by
+      `audit_sports_captured_phantom_timeframe_2026_08_16.py`, which queries
+      `read_availability_index_safe(_BUCKET, ..., filters=[("data_type", "==", "odds_horizon_bucket")])` (line 109)
+      BEFORE ever slicing into in-window/out-of-window — every row in that population is `odds_horizon_bucket` by
+      construction of the query itself, not by later inspection. **This directly falsifies P2's mechanism**: P2's
+      cited write path (`manifest_finalize.py::_write_shard_counts_to_manifest`, lines 430-497) is gated on
+      `if itype_key == "odds" and data_type_key == "odds":` (confirmed by direct read, 2026-08-16) — it can only ever
+      write `data_type="odds"` rows; it categorically cannot produce a `data_type="odds_horizon_bucket"` row, blank
+      or otherwise. Whatever P2's write path explains, it is not these two populations. Full-file grep of
+      `manifest_finalize.py` (852 lines) confirms **zero** references to `odds_horizon_bucket` anywhere in it — this
+      file does not write that data_type at all. **P2's todo above is corrected accordingly** (its own text is left
+      intact per this doc's history-preservation convention; this entry is the correction of record). The real
+      `odds_horizon_bucket` writer is `market-data-processing-service`'s `SportsBucketAssignmentAdapter`
+      (`market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py:687`, confirmed by direct
+      read) — it builds `CandleOutput` objects per horizon bucket but does not itself call `ManifestWriter.add()` in
+      that file; the actual manifest `timeframe=` write happens in a caller, not yet traced to completion (see new
+      P1 todo below — this is now a genuinely separate, still-open root-cause chase, not resolved by this pass).
+      **Practical consequence**: the "no cleanup action warranted" disposition on P2 above is **NO LONGER
+      confirmed-safe** — it rested on a mechanism that provably does not apply to either audited population. This
+      does not mean the ~914,490 rows (899,508 IS + 14,982 MDPS) ARE unsafe to leave — no destructive action is
+      newly indicated by this finding either — but the stated justification for leaving them alone is wrong and the
+      disposition is genuinely open again pending the real root cause. Per this workspace's big-finding rule
+      (data-correctness, cross-repo doc/SSOT contradiction), flagged to the operator in-chat this session. (repo:
+      market-tick-data-service, market-data-processing-service, unified-trading-pm)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up to the P3 correction above**: find the ACTUAL root cause of blank
+      `timeframe` on `data_type=odds_horizon_bucket` rows (899,508 IS + 14,982 MDPS, both 100% venue=ODDS_API,
+      0-sibling). P2's candidate mechanism is now disproven (see P3 above). Lead evidence gathered this pass, not yet
+      confirmed: `SportsBucketAssignmentAdapter.supported_timeframes = ["horizon"]`
+      (`bucket_assignment_adapter.py:706`) — the adapter's declared timeframe token is the literal string
+      `"horizon"`, not a per-row bucket name (`T-6h` etc, which lives in `horizon_idx`/`horizon_name` INSIDE the
+      output, not as the top-level `timeframe=` the manifest write presumably uses). MDPS's
+      `canonical_writer.py`/`canonical_writer_stamping.py` thread a `timeframe:` parameter through every write via
+      `_normalise_timeframe()` (defined `canonical_writer_shaping.py:232`, not yet read) — if that function does not
+      recognize `"horizon"` as a valid timeframe token (it appears calibrated for `"1m"`/`"15m"`/`"1h"`/`"1d"`-style
+      values per its docstrings), it may normalise to blank, which would produce exactly the observed shape (100%
+      blank timeframe, no code path has ever written non-blank). **NOT YET CONFIRMED** — needs (a) reading
+      `_normalise_timeframe`'s implementation, (b) tracing the actual caller that invokes
+      `SportsBucketAssignmentAdapter` and passes its `timeframe=` argument through to `canonical_writer.py`
+      (candidates already found this pass: `live_workers_chain.py`, `canonical_writer.py` itself — grep did not
+      isolate the exact call site), (c) confirming venue=ODDS_API specifically routes through this path (vs. the
+      ~12 uppercase-bookmaker venues sharing the same blank shape per the archived IS doc — may be the same cause or
+      a second one). Do not assume confirmed without doing (a)-(c). (repo: market-data-processing-service)
 
 ## Progress Log
 
@@ -655,3 +702,23 @@ issue's scope); flagged as a follow-up todo below.
   zero-sibling populations are exclusively `data_type="odds"` (not mixed with `odds_horizon_bucket`) before treating
   the "safe to leave, do not delete" conclusion as fully closed. No code changed — this was pure investigation; no
   cleanup action is scoped or warranted by this finding.
+- **data_engineering slot-2, 2026-08-16 (P3 DONE — overturns P2, not confirms it; big finding, operator notified)**:
+  ran the P3 confirmation and got the opposite of the expected result. Both audited populations (899,508 IS-side,
+  14,982 MDPS out-of-window) are, by construction of the very audits that measured them, 100%
+  `data_type="odds_horizon_bucket"` — never `data_type="odds"`. Confirmed two independent ways: the archived IS doc's
+  own title/body state the 899,508-row count as an `odds_horizon_bucket`-filtered measurement directly; the MDPS
+  14,982-row population came from a script that filters `data_type == "odds_horizon_bucket"` (line 109) before ever
+  computing the out-of-window slice. Direct-read of P2's cited write path
+  (`manifest_finalize.py::_write_shard_counts_to_manifest`) confirms it is gated on
+  `if itype_key == "odds" and data_type_key == "odds":` — it cannot write `odds_horizon_bucket` rows at all, and a
+  full-file grep confirms zero references to that data_type anywhere in the 852-line file. P2's mechanism is
+  therefore proven not to explain either audited population; the "blank-by-design, safe to leave" verdict rested on
+  a write path that never touched the rows in question. Traced the REAL `odds_horizon_bucket` writer to
+  `market-data-processing-service`'s `SportsBucketAssignmentAdapter`
+  (`bucket_assignment_adapter.py:687`) and found a plausible (not yet confirmed) lead: its
+  `supported_timeframes = ["horizon"]` is a literal, non-standard timeframe token that may not survive
+  `canonical_writer_shaping.py`'s `_normalise_timeframe()` (not yet read) — filed as a new P1 todo with the full
+  evidence trail so the next session can pick it up without re-deriving any of this. Did not attempt any write —
+  pure read-only investigation across `market-tick-data-service`, `market-data-processing-service`, and this doc.
+  Per the big-finding HARD RULE (data-correctness, cross-repo, contradicts a previously-recorded "safe to leave"
+  conclusion), notified the operator directly in-chat this session rather than only filing the todo.
