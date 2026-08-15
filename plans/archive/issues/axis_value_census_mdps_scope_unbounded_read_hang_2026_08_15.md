@@ -15,7 +15,7 @@ summary: >-
   this endpoint (e.g. the deployment-ui `AxisValueCensus` panel, or any future automated census run) would hit the same
   multi-minute-plus hang / likely HTTP request timeout every time this endpoint is called for the MDPS candle-layer
   scope.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [data]
@@ -36,7 +36,7 @@ source:
     non-canonical values",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-14 (backend_engineer)
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -52,6 +52,12 @@ priority: P2
 ---
 
 # axis-value-census MDPS scope: push service_name into the read filter instead of a post-read pandas filter
+
+> **✅ ARCHIVED 2026-08-15** — all 3 todos done: the MDPS-scope `service_name` pushdown filter shipped
+> (`deployment-api@82b0469a7e`, cleaned up `deployment-api@23cad17909`), the reader's filter-vs-backfill-ordering
+> question was confirmed safe for that fix, and the separately-tracked general reader gap (legacy-optional filter
+> columns silently skipped instead of backfill-defaulted) is fixed at `unified-trading-library@e218fa748e`. 0 open
+> todos, unlocked.
 
 ## What I found
 
