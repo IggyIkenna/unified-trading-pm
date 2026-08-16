@@ -375,6 +375,30 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   wall-clock time is uncertain (multi-hour, exceeds this task's `est_hours: 1.0`). Re-verification stays this same open
   Follow-up below.
 
+- **slot-23 2026-08-16** (coverage_floor_registries_no_cross_propagation-5ad673d1aad8): Re-checked ~5h after the
+  2026-08-15 7-shard launch. The specific fleet named in the Follow-up is now genuinely GONE — `gcloud compute
+  instances list --filter="name~'hyperliquid'"` returns 19 VMs, but NONE match the old naming
+  (`cefi-hyperliquid-2023-<VM_START_DATE>-20260815-224433`); the old run-id is absent fleet-wide. This satisfies the
+  todo's own "(or is confirmed no longer in the fleet)" branch. A bounded, column-projected manifest probe of the
+  exact window (`venue==HYPERLIQUID`, `date` 2023-06-14..2023-12-31) shows the gap is still genuinely open and
+  essentially unchanged from slot-18's numbers: `book_snapshot_5` 8,312 captured / 27,341 empty_confirmed / 8,516
+  expected_unattempted (flat); `derivative_ticker` 8,534 captured / 26,884 empty_confirmed / 8,930
+  expected_unattempted (flat) — consistent with the old fleet having been reaped/superseded before finishing rather
+  than completing cleanly (no `DEPLOYMENT_COMPLETED` ever landed for that run-id).
+
+  **New discovery**: a much larger, UNRELATED fleet (19 VMs, `cefi-hyperliquid-{2023,2024,2025,2026}-20260816-*`,
+  `VM_TASK=cefi-hl-aster-backfill`) is already running, launched today ~2026-08-16T02:00-03:00Z — not by this task,
+  and not logged in this doc, this task's own Progress Log, or the parent tracking doc
+  (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`, checked — its own Progress Log has no entry after the 2026-08-12
+  lock-clear/archive-pending note, and it now has 0 open todos + `archive_exempt: true`, i.e. no longer an active
+  tracking home for this fleet). Inspected one 2023-year VM's metadata directly
+  (`gcloud compute instances describe cefi-hyperliquid-2023-20260816-020053`): `VM_START_DATE=2023-01-01
+  VM_END_DATE=2023-12-31 VM_DATA_TYPES=trades;book_snapshot_5;derivative_ticker VM_FORCE=false` — a full-year,
+  idempotent/resumable run whose range fully contains this todo's 2023-06-14..2023-12-31 gap window. No new VM launch
+  needed from this task — the gap is already being worked by this newer fleet. Re-pointed the open Follow-up below at
+  this fleet instead of the now-dead 2026-08-15 one. Skipped `reason_code: GATED` again — the done-condition still
+  isn't met (fleet still running, multi-hour remaining, exceeds this task's `est_hours: 1.0`).
+
 ## Follow-ups
 
 - [x] ✅ [INFRA] P3. **Relaunched 2026-08-15 (slot-6)** — **Relaunch `cefi-hyperliquid-2023-*` backfill.** Confirmed
@@ -394,10 +418,14 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       rather than absorbed here. Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Repo: deployment-service —
       VM launch only, no code shipped.
 
-- [ ] [DATA] P3. Re-verify HYPERLIQUID captured-row coverage for the 2023-06-14..2023-12-31 window once the 7-shard
-      `cefi-hyperliquid-*` fleet launched 2026-08-15 (slot-6, above) reaches `DEPLOYMENT_COMPLETED exit_code=0` (or is
-      confirmed no longer in the fleet). Live-probe `book_snapshot_5`/`derivative_ticker` `capture_status` over the
-      window (bounded, column-projected manifest read, no corpus walk) — expect 0 remaining `expected_unattempted`
+- [ ] [DATA] P3. **RE-POINTED 2026-08-16 (slot-23)** — the 2026-08-15 7-shard fleet this todo originally named is
+      confirmed no longer in the fleet (0/7 match by name); re-verify HYPERLIQUID captured-row coverage for the
+      2023-06-14..2023-12-31 window once the NEW, broader `cefi-hyperliquid-{2023,2024,2025,2026}-20260816-*` fleet
+      (19 VMs, `VM_TASK=cefi-hl-aster-backfill`, full-year ranges each covering `trades;book_snapshot_5;
+      derivative_ticker`, `VM_FORCE=false` idempotent — see slot-23's 2026-08-16 Progress Log entry above) reaches
+      `DEPLOYMENT_COMPLETED exit_code=0` for its 2023-year VM(s) (or is confirmed no longer in the fleet). Live-probe
+      `book_snapshot_5`/`derivative_ticker` `capture_status` over the window (bounded, column-projected manifest
+      read, no corpus walk) — expect 0 remaining `expected_unattempted`
       cells; if any remain, diagnose whether the run stopped early again (preemption) vs. genuine source absence.
       Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Repo: market-tick-data-service / deployment-service.
 
