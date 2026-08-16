@@ -640,14 +640,45 @@ load," so part of this 151.39s may be additional load beyond what that measureme
 way. The direction of the finding — STEP 5.64 is a major, previously-underweighted load-sensitive cost center — is
 clear regardless of exact multiplier precision.
 
-- [ ] [INFRA] P3. `check_pm_script_path_refs.py` (STEP 5.64) is disproportionately load-sensitive under real concurrent
+- [x] ✅ [INFRA] P3. `check_pm_script_path_refs.py` (STEP 5.64) is disproportionately load-sensitive under real concurrent
       AO load (151.39s/40% of a planning-vm profiler run vs. ~18-26s idle/lightly-contended — see "Results table 4"
       above) despite the 2026-08-08 substring-pre-filter optimization. Investigate the mechanism (e.g. does the check
       re-read the corpus from disk repeatedly and lose to I/O contention, or is it purely CPU-bound and just losing more
       scheduler time-slices on an oversubscribed host — the single-core taskset pin in this measurement should already
       rule out cross-core contention as the explanation, worth confirming directly) and propose/implement a further fix.
       Done-when: root cause named + either a fix shipped with a before/after profiler number, or a documented reason no
-      further fix is worthwhile. (repo: unified-trading-pm)
+      further fix is worthwhile. **DONE 2026-08-16 (slot-11) — root cause named: host-wide I/O + memory-pressure
+      contention, not the script's own CPU cost; documented reason no script-level fix is worthwhile.** Investigation
+      (this same real-load moment on the planning-vm, load average ~19-23 on 16 cores, 19-20 concurrent
+      `quality-gates.sh` procs, 5.5-5.6 GiB swap in use throughout): (1) the script's actual scan surface is small — only
+      425 files / 16 MB (`scripts/workflow-templates/**`, `.github/workflows/**`, `scripts/**/*.sh`), NOT the "thousands
+      of markdown files" the 2026-07-31 Progress Log entry assumed — confirmed via a direct glob count, so a
+      full-corpus-scan theory is ruled out by construction. (2) Ran the checker standalone 3× right now under this same
+      real contended host: **0.07s, 0.08s, 0.38s wall** (`/usr/bin/time -f`), consistent with the 2026-08-08 cProfile
+      finding of **0.087s of actual CPU work** — the algorithm itself is nowhere near 151s even under today's real load.
+      (3) A 4th run under `/usr/bin/time -v` (also right now, same load) hit **3.64s wall** with **0 major page faults,
+      only 15.5 MB peak RSS** — the process itself never touched swap or blocked on major I/O; the variance is coming
+      from OUTSIDE the process. (4) `vmstat 1 5` sampled during the same window shows the actual mechanism directly:
+      **io-wait 26-59%** and **7-20 processes in uninterruptible-sleep (`b` column)** every single second, plus ongoing
+      swap traffic (`si`/`so` both nonzero) — the host's shared disk/memory subsystem is saturated by the OTHER ~19
+      concurrent `quality-gates.sh` processes (pytest, basedpyright, etc.) fighting for the same I/O queue and page
+      cache, not by this checker doing real work. **Confirms the todo's own hypothesis directly**: the single-core
+      `taskset` pin in the original profiler run correctly rules out CPU-scheduling contention (this script barely uses
+      CPU), but does nothing to isolate I/O-queue or memory-page contention, which are host-wide resources shared across
+      every core regardless of pinning — that's why a 0.087s-CPU script can show a 151s wall-clock outlier: it's not
+      running slowly, it's waiting (fork/exec page-in, `read_text()` syscalls, `Path.exists()` stats) behind ~19 siblings
+      also contending for a saturated disk/memory subsystem at that exact moment. **Documented reason no further
+      script-level fix is worthwhile**: the script is already near the CPU-cost floor (0.087s per 2026-08-08's
+      substring-pre-filter optimization, confirmed again today); further shrinking its already-tiny I/O footprint (425
+      small files, ~16 MB) cannot meaningfully reduce its exposure to a saturated shared-host I/O/memory subsystem — the
+      actual lever is host-wide memory/IO governance (already tracked separately: CLAUDE.md's "Bound memory BEFORE
+      running any heavy script" rule + the resource-based QG concurrency admission model + the recurring
+      shared-host-RAM-exhaustion incident class), not a per-check optimization. Single-sample caveat applies the same way
+      it did to every other measurement in this doc (this is one investigation window, not a controlled trial) — but the
+      qualitative finding (I/O-wait + swap-active + blocked-process-count, all elevated, alongside a near-zero-CPU
+      checker) is direct, first-hand evidence of the mechanism, not an inference from wall-clock deltas alone. No code
+      change shipped — the fix belongs at the host-resource layer, out of this script's scope. — unified-trading-pm@(this
+      commit)
 
 - [x] ✅ [INFRA] P3. Run `profile_qg_resources.py` directly on the planning-vm during real concurrent AO load
       (single-core-pinned, immune to which-variant-ran-when) to get a load-drift-free per-phase breakdown that validates
@@ -692,11 +723,10 @@ clear regardless of exact multiplier precision.
       face value). One new tracked follow-up todo added (planning-vm profiler run) rather than leaving the gap as prose.
       — unified-trading-pm@(this commit)
 
-## Deferred work after 2026-08-10
+## Deferred work after 2026-08-16
 
-| Item                                                                        | State / why deferred                                                                                                                                                                                 | Blocked on                                     |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Deeper fix for `check_pm_script_path_refs.py`'s load-sensitivity (P3, new) | **Not done** — new todo added 2026-08-16 after the planning-vm profiler run found STEP 5.64 costing 151.39s/40% of total (~6-8x its idle/lightly-contended cost) despite the 2026-08-08 pre-filter opt | Nobody — pick it up any time (AO-dispatchable) |
+| Item                                                                        | State / why deferred                                                                                                                                                                              | Blocked on                              |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot) | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)      | Nobody — trivial fix, just not yet done        |
 
 **Previously deferred, now done 2026-08-09**: `check_pm_script_path_refs.py` optimization (done 2026-08-08,
@@ -705,12 +735,13 @@ clear regardless of exact multiplier precision.
 captured, contention-delta analysis written).
 
 **Previously deferred, now done 2026-08-16**: planning-vm `profile_qg_resources.py` run (the last of the original 15
-todos) — see "Results table 4" above; surfaced one new P3 follow-up (STEP 5.64 load-sensitivity), tracked in the
-Deferred-work row above rather than left as prose.
+todos) — see "Results table 4" above; surfaced one new P3 follow-up (STEP 5.64 load-sensitivity), which is now ALSO
+done (same session) — root cause named via direct `vmstat`/`time -v` evidence (host-wide I/O + memory-pressure
+contention, not the script's own CPU cost; no script-level fix warranted) — see the flipped todo above.
 
-**Recommended next item**: this doc now has 1 open `[ ]` (the new STEP 5.64 follow-up) — not yet zero-open-todos, so
-the gated finalize doc (`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`) still stays
-blocked until that new item is resolved or explicitly deferred/archived-anyway by a future pass.
+**Recommended next item**: every todo in this doc is now `[x]` — zero open items. The gated finalize doc
+(`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`) is unblocked as of this session — that
+doc's own gate condition (this plan reaching zero open todos) is now satisfied.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 
@@ -821,3 +852,21 @@ blocked until that new item is resolved or explicitly deferred/archived-anyway b
   on planning-vm under load, for a load-drift-free confirmation) rather than leaving it as prose, per the
   findings-triage hard rule. Todo (line ~543, "[DOC] P2. Compare the two tables...") flipped `[x]`. No code change —
   doc-only (analysis of already-recorded data). — unified-trading-pm@(this commit)
+- **2026-08-16 (slot-11, AO-dispatched, `quality_gates_quickmerge_timing_baseline-d697049a9378`)**: closed the last open
+  todo — `check_pm_script_path_refs.py` (STEP 5.64) load-sensitivity investigation, on this same slot (the planning-vm).
+  Root cause named via direct measurement, not inference: (1) glob-counted the checker's actual scan surface — 425
+  files/16 MB (workflow templates + `.github/workflows` + `scripts/**/*.sh`), ruling out the "thousands of markdown
+  files" full-corpus theory the 2026-07-31 entry assumed. (2) Ran the checker standalone 4× under today's real load
+  (load avg ~19-23/16 cores, 19-20 concurrent `quality-gates.sh` procs, 5.5-5.6 GiB swap in use) — 0.07s/0.08s/0.38s
+  wall via `/usr/bin/time -f`, and a 4th run under `/usr/bin/time -v` at 3.64s wall but **0 major page faults, 15.5 MB
+  peak RSS** — the process itself never blocks on I/O. (3) `vmstat 1 5` sampled the same window: io-wait 26-59% and
+  7-20 processes in uninterruptible sleep (`b` column) every second, plus active swap traffic — direct evidence the
+  151.39s outlier came from the shared host's I/O/memory subsystem being saturated by ~19 sibling `quality-gates.sh`
+  processes, not from this checker's own algorithm (already at a 0.087s CPU floor per the 2026-08-08 optimization).
+  Confirms the todo's own hypothesis: the profiler's single-core `taskset` pin rules out CPU-scheduling contention but
+  not I/O-queue/memory-page contention, which are host-wide and unaffected by core pinning. Documented reason no
+  further script-level fix is worthwhile (already near CPU floor; the lever is host-wide memory/IO governance, tracked
+  separately in CLAUDE.md's memory-bounding rule + the resource-based QG concurrency admission model) — no code change
+  shipped. Todo flipped `[x]`; Deferred-work table updated (removed the now-closed row, dated to 2026-08-16). **This
+  doc now has zero open `- [ ]` todos** — the gated finalize doc's gate condition is satisfied. — unified-trading-pm@(this
+  commit)
