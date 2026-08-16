@@ -150,10 +150,10 @@ in production** (Elysium plan § H.12), so stubbing the remainder is continuing 
       an advertised name" is a stub that fails informatively, saying this archetype is not part of this package.
 - [x] [AGENT] P2. ✅ **RULED 2026-08-16: collateral/margin eligibility for the two carry archetypes freezes, same
       treatment as `UniverseService`.** A cross-repo extraction audit traced this precisely (the audit's cited source
-      doc, strategy-service's `EXTRACTION_AUDIT.md`, does not exist anywhere in the repo — working tree or git history,
-      confirmed 2026-08-16, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log; the dependent
-      claim held up on independent spot-check: `staked_basis.py:119-121,361-369` does call
-      `accepted_perp_collateral`/`get_collateral_haircut`/`venue_accepts_collateral`): `staked_basis.py`'s
+      doc, strategy-service's `EXTRACTION_AUDIT.md`, sat unpushed in the author's local working tree at the time an
+      earlier same-day check correctly found it missing from the repo — now landed at `strategy-service@efa1525813`;
+      the dependent claim also held up on independent spot-check regardless: `staked_basis.py:119-121,361-369` does
+      call `accepted_perp_collateral`/`get_collateral_haircut`/`venue_accepts_collateral`): `staked_basis.py`'s
       per-tick structure derivation (`LST_AS_MARGIN` vs `USDC_MARGIN_BUFFERED`) calls UAC's live
       `accepted_perp_collateral`/`get_collateral_haircut`/`venue_accepts_collateral` — distinct from and in addition to
       `UniverseService`'s own already-frozen ADV/eligibility filtering at line 101-103 above. Freezing this too (ship the
@@ -263,20 +263,24 @@ these gate readiness to carve, not the carve-out's own content.
       independent question.** Rationale: so that updating the carve-out later doesn't mean re-deriving a frozen
       snapshot against a moving, eagerly-coupled main-system target — if `factory.py`'s archetype registration is
       already lazy/scoped by the time the carve-out exists, keeping it in sync with main-system changes stays
-      cheap. **Scope note, so this isn't treated as free**: the cited source doc (strategy-service's `EXTRACTION_AUDIT.md`)
-      does not exist anywhere in the repo (working tree or git history — confirmed 2026-08-16, see
-      `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log). Its dependent claim held up on
-      independent spot-check anyway: this refactor doesn't stop at strategy-service — the two real archetypes' live
-      collateral calls mean a genuinely lazy service also needs an equivalent UAC-side refactor
-      (`unified_api_contracts`'s `internal`/`registry` `__init__.py` eagerly loads ~240k lines regardless), which
-      has fleet-wide blast radius, not a local one. Both approaches are now wanted together, not compared as
-      alternatives — this raises total pre-ship scope above what §A2's "well-bounded" note assumed when it was
-      written, and is worth the operator seeing stated plainly rather than absorbed silently.
-- [x] [AGENT] P2. ✅ **Dropped the remaining dead `EXTRACTION_AUDIT.md` citations in this plan** — all 4 remaining
-      occurrences (§A2 ruling ~line 151, wizard-correction ~line 306, Progress Log ~line 367, plus the §A5 P0
-      prerequisite fixed earlier) now state the file does not exist anywhere in strategy-service (working tree or git
-      history; confirmed 2026-08-16, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log).
-      Each dependent claim was spot-checked against the actual code before rewriting its citation, not just
+      cheap. **Tracked as a real, already-existing plan**:
+      [lazy_scoped_loading_refactor_2026_08_16](/plans/active/lazy_scoped_loading_refactor_2026_08_16.md), which
+      independently mirrors this same finding (its own summary states the identical scope conclusion — a lazy
+      `factory.py` alone doesn't solve it, UAC needs an equivalent refactor too, fleet-wide blast radius, SIT needs
+      no changes). **Scope note, so this isn't treated as free**: this refactor doesn't stop at strategy-service —
+      the two real archetypes' live collateral calls mean a genuinely lazy service also needs an equivalent
+      UAC-side refactor (`unified_api_contracts`'s `internal`/`registry` `__init__.py` eagerly loads ~240k lines
+      regardless), which has fleet-wide blast radius, not a local one. Both approaches are now wanted together, not
+      compared as alternatives — this raises total pre-ship scope above what §A2's "well-bounded" note assumed
+      when it was written, and is worth the operator seeing stated plainly rather than absorbed silently.
+- [x] [AGENT] P2. ✅ **`EXTRACTION_AUDIT.md` citations corrected twice in one day — now landed, cite the commit.**
+      An earlier same-day pass correctly found the file missing from strategy-service's repo (it existed only in
+      the citing author's local working tree, blocked behind an unrelated dirty dependency) and rewrote all 4
+      occurrences (§A2 ruling ~line 151, this prerequisite, wizard-correction ~line 306, Progress Log ~line 367) to
+      say so — good, verified work. It has since landed at `strategy-service@efa1525813` once the blocker cleared.
+      Each occurrence updated again in the same edit to cite the landed commit rather than either "exists" or
+      "doesn't exist" as an unqualified claim. Each dependent claim was spot-checked against the actual code before
+      rewriting its citation both times, not just
       stripped: `staked_basis.py:119-121,361-369` does call `accepted_perp_collateral`/`get_collateral_haircut`/
       `venue_accepts_collateral` (§A2 claim confirmed); `restriction_profile_router.py` is confirmed exactly 153
       lines (wizard-correction claim confirmed). Both held up independently of the missing source doc.
@@ -310,8 +314,9 @@ different capability rather than the same one withheld.
       as "no risk management" — local guard-rails and overlays ship; cross-client portfolio governance does not.
 - [x] [AGENT] P2. ✅ **CORRECTED 2026-08-16 — the wizard doesn't live in strategy-service, and its real
       restriction graph isn't wizard-specific.** Per the extraction audit — the cited source doc, strategy-service's
-      `EXTRACTION_AUDIT.md`, does not exist anywhere in the repo (working tree or git history, confirmed 2026-08-16);
-      the dependent claim held up on spot-check (`restriction_profile_router.py` confirmed 153 lines) —:
+      `EXTRACTION_AUDIT.md`, now landed at `strategy-service@efa1525813` (it existed only locally, blocked behind an
+      unrelated dirty dependency, at the time an earlier same-day check correctly found it missing);
+      the dependent claim held up on spot-check regardless (`restriction_profile_router.py` confirmed 153 lines):
       the interactive wizard's UI is in `unified-trading-system-ui`, its manifest generator in `unified-trading-pm`,
       and the real restriction GRAPH (`capability_manifest.py`) in UAC. The only wizard-adjacent code in
       strategy-service is a 153-line router (`api/restriction_profile_router.py`) resolving persona/demo-account UI
@@ -372,9 +377,10 @@ The reduced implementation is a fact about the package. Let the fact do the work
   beneath it is static, mock or inert. Flagged the book-level-overlay resolution as the most consequential open
   decision, since it determines whether the carved strategy has a working risk profile or an un-overlaid one.
 - **2026-08-16** — Interactive session ran a full cross-repo extraction audit ahead of a docs-cleanup pass on
-  strategy-service (writeup cited at the time as strategy-service's `EXTRACTION_AUDIT.md`, internal-only — that file
-  does not exist anywhere in the repo, working tree or git history, confirmed 2026-08-16; the claims below held up on
-  independent spot-check anyway, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log). Measured,
+  strategy-service (writeup: strategy-service's `EXTRACTION_AUDIT.md`, internal-only — landed later the same day
+  at `strategy-service@efa1525813`, after sitting blocked in the author's local working tree behind an unrelated
+  dirty dependency; a same-day check correctly flagged it missing before the blocker cleared, and the claims below
+  held up on independent spot-check regardless). Measured,
   not assumed: capability wizard is NOT in strategy-service and the plan's "backing restriction graph
   is exactly the reconciliation IP withheld" framing (§B above) overstates a 153-line UI feature-gate router that calls
   no venue/collateral registry — trivial to stub. SIT has zero coupling to `factory.py`'s registry either way.
