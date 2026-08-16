@@ -303,6 +303,19 @@ context_scope:
   account-count/cost assumptions. Source: same doc.
 - **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: address the DeepSeek
   wallet balance top-up recurrence. Source: same doc.
+- [x] ✅ [SCRIPT] P1. **DONE — 2026-08-16 (slot 9, infra worker, `ao_satellite_ao_dispatch_batch21` item 3).**
+  Re-ran `/na-eligibility-audit` Phase 0 (`generate_na_doc_tranche_inventory.py --tranche all --json`) for a
+  clean steady-state benchmark. Total corpus 449 `assigned_vm: NA` docs / 1,516 open todos across the 9
+  tranches; incremental-skip (unchanged since a prior dated verdict marker) removed 125 docs, leaving 324
+  docs / in-scope-todo counts below in scope for a fresh Phase-1 classification pass. Per-tranche
+  (docs total/in-scope, todos total/in-scope): ao 67/56, 244/206; cefi 52/12, 181/33; ci 44/42, 107/78;
+  cross-cutting 115/101, 492/392; defi 60/19, 267/112; infra 58/53, 200/165; prediction 26/18, 89/50; sports
+  52/42, 168/118; tradfi 42/10, 97/34; ui 15/14, 35/34. A full Phase-1 hunter fan-out (10-agent-capped,
+  read-every-doc-end-to-end classification) over the 324 in-scope docs was NOT run this session — out of
+  scope for a single bounded dispatch at this size (the proven precedent run was multi-hour/multi-session);
+  the Phase-0 numbers above are the requested steady-state benchmark. Full Phase-1 re-classification remains
+  open work for a future scheduled `na-eligibility-auditor.timer` fire or a dedicated multi-session dispatch.
+  Cited into `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s Progress Log. Source: this todo.
 
 ## Track 3 — Boot / context / session hygiene
 

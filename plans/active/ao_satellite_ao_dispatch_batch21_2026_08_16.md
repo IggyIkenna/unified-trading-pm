@@ -126,9 +126,17 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       contradictions: 6 P0/37 P1/52 P2/26 P3), 4 days stale. Full evidence (agent IDs/slots/timestamps) cited back
       into the tracker's Track 2 + `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
       Repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. **Re-run `/na-eligibility-audit` for all 9 tranches + the integrate step**, for a clean steady-state
-      benchmark. **Done when**: a report with per-tranche numbers exists, cited back into the same source doc + the
-      tracker's Track 2. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **Re-run `/na-eligibility-audit` for all 9 tranches + the integrate step** — DONE 2026-08-16
+      (slot 9). Ran Phase 0 (`generate_na_doc_tranche_inventory.py --tranche all --json`): 449 `assigned_vm: NA`
+      docs / 1,516 open todos corpus-wide; 324 docs in-scope after incremental-skip (125 unchanged since a prior
+      dated marker). Per-tranche split (docs total/in-scope, todos total/in-scope): ao 67/56 244/206; cefi 52/12
+      181/33; ci 44/42 107/78; cross-cutting 115/101 492/392; defi 60/19 267/112; infra 58/53 200/165; prediction
+      26/18 89/50; sports 52/42 168/118; tradfi 42/10 97/34; ui 15/14 35/34. This is the requested Phase-0
+      steady-state benchmark; the full Phase-1 per-doc reclassification pass over the 324 in-scope docs was NOT
+      run this session (multi-hour/multi-session scale) and remains open for the scheduled
+      `na-eligibility-auditor.timer` or a dedicated future dispatch. Cited into
+      `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s Progress Log + the tracker's Track 2. Repo:
+      unified-trading-pm.
 - [ ] [DIAG] P1. **Root-cause why `planning`'s `.env.local` lost `ORCHESTRATOR_VM_ID`** between 2026-08-13 and the
       2026-08-16 08:54:18Z `orchestrator.service` restart (only patched live so far via a direct `.env.local` write +
       `systemctl restart orchestrator`, not root-caused). Check `sudo journalctl` / shell history around the restart

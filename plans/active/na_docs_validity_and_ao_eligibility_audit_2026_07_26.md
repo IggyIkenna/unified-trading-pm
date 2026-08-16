@@ -759,3 +759,14 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   default ("plan-destination defaults to AO-dispatched") does not override an earlier specific, dated ruling. Not
   re-litigated; no new precedent from the accumulated set (IAM self-service, D16, S5.1, escalation-N, reversibility-
   qualified deletes, Option B retirement, DeepSeek/Slack credentials) touches any of the 13 open items.
+- **na-eligibility-audit 2026-08-16 (slot 9, `ao_satellite_ao_dispatch_batch21` item 3, corpus-wide Phase 0
+  steady-state benchmark)**: Ran `generate_na_doc_tranche_inventory.py --tranche all --json` fresh across the
+  whole `assigned_vm: NA` corpus. Corpus-wide: 449 docs / 1,516 open todos; incremental-skip (unchanged since a
+  prior dated marker) = 125 docs, leaving 324 in-scope docs for a fresh Phase-1 classification pass. Per-tranche
+  (docs total/in-scope, todos total/in-scope): ao 67/56, 244/206; cefi 52/12, 181/33; ci 44/42, 107/78;
+  cross-cutting 115/101, 492/392; defi 60/19, 267/112; infra 58/53, 200/165; prediction 26/18, 89/50; sports
+  52/42, 168/118; tradfi 42/10, 97/34; ui 15/14, 35/34. This session did NOT run the full Phase-1 hunter
+  fan-out (324-doc read-every-doc-end-to-end classification is multi-hour/multi-session scale per the proven
+  precedent) — it is a Phase-0-only benchmark, not a fresh full verdict pass. This doc's own 13-open-item count is
+  unaffected (still round11/round-10-scoped, unchanged, see the two entries above). Cited into the tracker's
+  Track 2.
