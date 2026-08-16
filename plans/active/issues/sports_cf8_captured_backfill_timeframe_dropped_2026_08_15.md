@@ -635,6 +635,16 @@ issue's scope); flagged as a follow-up todo below.
       may carry a clue the manifest row itself doesn't, since the manifest and the underlying shard file are
       written by the same process but the object metadata layer hasn't been inspected at all yet this entire
       investigation. (repo: market-tick-data-service)
+- [ ] [DATA] P2. **NEW, 2026-08-16 — GCS-path angle BLOCKED; redirect filed; no new root cause.** Manifest has NO
+      `path`/`gcs_path` column (`_V8_COLUMNS`, UTL `_read_index.py:488-569`); rebuilding a real object path needs
+      `build_canonical_candle_object_path`/`registry.py:362`, itself requiring `timeframe` — circular for these
+      rows. **Next**: a bounded per-shard prefix LIST (not a corpus walk) on one known captured/blank-timeframe
+      row, to check whether ANY real object exists (none = these `captured` rows have no backing data). Also ruled
+      out a 3rd coarse-write site (`reprocess_sports_odds.py:1210-1217`, captured branch, omits timeframe/
+      league_id) vs. the 652/14,330 split (~line 484-493) — shape matches neither bucket. This pass's narrow query
+      (4 `empty_confirmed`/MDPS rows at `2026-05-05T22:07`) vs. the doc's 326 `captured`/MDPS rows for "the same
+      cluster" — different status, NOT reconciled. `MTDSShardManifestRecorder.record_captured()` (line 561-568)
+      remains the correct, untouched lead. (repo: market-tick-data-service, market-data-processing-service, UTL)
 
 ## Progress Log
 
