@@ -6,7 +6,7 @@ summary: >-
   orphaned_never_touched (0 covering plans), 1 not_covered (batch9 completed-todo cites but drafts nothing), 3
   orphaned_partial_coverage (batch9/10 cover some but not all open items), 1 informational tag-finding (2 docs mistagged
   [defi] instead of [ui]). ~5 AO-eligible candidates identified for next scheduled batch (batch11).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -24,7 +24,7 @@ created: 2026-08-07
 parent_epic: defi_master
 assigned_vm: NA
 priority: P3
-last_updated: 2026-08-07
+last_updated: 2026-08-16
 source: >-
   ag_closeout_auditor scheduled run 2026-08-07 (tranche=defi, slot 7, DISPATCH_ID=agt-6f12db)
 resolved_by:
@@ -161,18 +161,16 @@ companion finalize plan archived 2026-08-11
 > doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
 > plan's own todo 17 once the work lands — do not flip them early.
 
-- [ ] [DOC] P3. **Retag `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`** from `[defi]` to `[ui]`
-      or `[cross-cutting]` (Finding 2) — repos `[unified-api-contracts, unified-trading-system-ui]`, content is
-      strategy-archetype subsystem DRIFT venue cleanup (cross-cutting architecture), not defi-specific. Verified
-      2026-08-10: still tagged `[defi]`, and — unlike its Finding-2 sibling
-      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` — NOT listed in
-      `ui_consolidated_closeout_2026_07_30.md`'s corpus-wide retag todo, so it is genuinely untracked anywhere. Quick
-      fix: retag + re-run `check_ag_closeout_linkage.py`.
-- [ ] [DATA] P3. **Investigate raising `defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`'s per-date subprocess
-      timeout** from 1800s for DeFi years with 10K+ instruments (Finding 3, item 2) — confirmed 2026-08-10 this remains
-      the doc's sole open item (its `[DATA] P2` relaunch item is already `[x]`) and is confirmed NOT covered by
-      `defi_satellite_ao_dispatch_batch11_2026_08_09.md` (batch11's own "Not extracted this batch" section explicitly
-      lists this doc as outside its 18-doc scope). Include in the next scheduled defi batch.
+- [x] ✅ [DOC] P3. **Retag `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`** from `[defi]` to `[ui]`
+      or `[cross-cutting]` (Finding 2) — RESOLVED 2026-08-16: retagged `[defi] → [ui]` by slot 4 (data_engineering) per
+      `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 6 (see that doc's own commit + this target doc's
+      2026-08-16 Progress Log entry). `related:` also updated there to point into `ui_consolidated_closeout_2026_07_30.md`.
+- [x] ✅ [DATA] P3. **Investigate raising `defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`'s per-date subprocess
+      timeout** from 1800s for DeFi years with 10K+ instruments (Finding 3, item 2) — RESOLVED/relocated 2026-08-10:
+      the target doc's own P3 todo was converted to a non-ingestable pointer and duplicate-tracked as a real `- [ ]`
+      checkbox in `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`) instead —
+      confirmed live 2026-08-16 (target doc carries `archive_exempt: true` pending that batch's own closure, not yet
+      re-triaged, but this finding's own action — get it onto a dispatchable todo somewhere — is done).
 
 **Already resolved (Finding 1)**: `defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`'s DIAG todo completed 2026-08-07
 (verdict: total data loss for the 3 failed cron dates) and the doc is now fully archived
@@ -240,3 +238,12 @@ auto-resolved (2026-08-11, docs archived). Finding 2 is a tag correction, not a 
   call, not a deterministic outcome. Todo 2 ("investigate raising ... per-date subprocess timeout") is explicit
   investigation/design work by its own verb, exactly the class this audit's own instructions flag as correctly staying
   NA even when freshly formalized. Doc stays NA.
+- **ag_closeout_auditor 2026-08-16** (tranche=defi, slot 19, dispatch agt-952290 — reconcile-prior-parked-docs-first
+  pass): re-checked both remaining open items live before running a fresh Phase 0-2 pass. Todo 1 resolved externally
+  (a sibling process, `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08-10` todo 6, retagged the target doc to
+  `[ui]` today). Todo 2 confirmed already relocated to a dispatchable todo (2026-08-10). Both flipped `[x]`. All 6
+  findings in this doc are now resolved (Findings 1/4/5/6 archived earlier; Finding 2's other half already tracked in
+  `ui_consolidated_closeout_2026_07_30.md`; Finding 3 item 1 done, item 2 now confirmed relocated). Doc now carries 0
+  open todos, unlocked, `status: resolved` — archiving per the 6-step ritual alongside its sibling
+  `ag_closeout_audit_defi_parked_2026_08_06.md`; referrers fixed in the same push
+  (`defi_satellite_ao_dispatch_batch11_2026_08_09.md`, `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`).

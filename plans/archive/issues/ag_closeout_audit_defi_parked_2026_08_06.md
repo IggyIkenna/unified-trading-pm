@@ -27,7 +27,7 @@ summary: >-
   too_large_or_risky / 4 time_gated / 1 genuinely_human_only, plus batch9's 2 unchanged BLOCKED-OPERATOR-DECISION
   items). One genuine parked finding (mtds_pipeline_check orphan) + one informational cross-tranche note (stale "0 open
   todos" claims) recorded below — ledger: 2 findings, 2 entries.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -49,7 +49,7 @@ related:
   ]
 created: "2026-08-06"
 author: unknown
-last_updated: "2026-08-06"
+last_updated: "2026-08-16"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: local-only
@@ -166,13 +166,12 @@ operator ruling.
 > doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
 > plan's own todo 17 once the work lands — do not flip them early.
 
-- [ ] [DOC] P3. **Fix stale "0 open todos" claim for `phantom_audit_estate_coverage_gap_2026_07_10.md` in
-      `tradfi_consolidated_closeout_2026_07_18.md`** (Finding 2/informational) — line 745 there still reads "— 0 open
-      todos (closed/archived/record-only)," but the doc actually carries 1 open `[SCRIPT] P2` todo (widen the phantom
-      audit to the full ~47-bucket kind×AG matrix). Verified 2026-08-10: still stale. Not defi's write (primary-owner
-      rule — the fix belongs to the tradfi tranche); flagging for its next `/ag-closeout-audit`/`/plan-reconcile` pass.
-      Note: the cefi closeout no longer references this doc at all (already resolved or removed there), only tradfi's
-      citation is stale.
+- [x] ✅ [DOC] P3. **Fix stale "0 open todos" claim for `phantom_audit_estate_coverage_gap_2026_07_10.md` in
+      `tradfi_consolidated_closeout_2026_07_18.md`** (Finding 2/informational) — RESOLVED, verified 2026-08-16: line
+      745 there now reads "— 1 open (re-verified 2026-08-16): **[SCRIPT] P2.** Widen the phantom audit to the full
+      ~47-bucket kind×AG matrix..." — no longer stale (`phantom_audit_estate_coverage_gap_2026_07_10.md` independently
+      re-confirmed to still carry exactly 1 open `[SCRIPT] P2` checkbox, matching). Fixed by the tradfi tranche's own
+      process, not defi's write, per the primary-owner rule this finding always deferred to.
 
 **Already resolved (Finding 1)**: `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` was
 root-caused, fixed, and archived 2026-08-09
@@ -226,3 +225,13 @@ OOM (rc=137) on a dedicated VM, not the original shared-host kill mystery; no ac
   (tradfi) per the doc's own stated primary-owner note, but that does not block AO-dispatch — it is still a bounded,
   worker-executable edit, just not one `defi`'s own audit process would perform unilaterally mid-run.
   `unified-trading-pm@<pending — see session push>`.
+- **ag_closeout_auditor 2026-08-16** (tranche=defi, slot 19, dispatch agt-952290 — reconcile-prior-parked-docs-first
+  pass, per the skill's 2026-08-15 rule): re-checked this doc's sole remaining open item live before running a fresh
+  Phase 0-2 pass. `tradfi_consolidated_closeout_2026_07_18.md:745` now correctly reads "1 open" (independently
+  re-verified against `phantom_audit_estate_coverage_gap_2026_07_10.md`'s live checkbox count — still exactly 1).
+  Todo flipped `[x]`. Doc now carries 0 open todos, unlocked, `status: resolved` — archiving per the 6-step ritual
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): referrers fixed in the same push
+  (`defi_satellite_ao_dispatch_batch11_2026_08_09.md`, `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`,
+  and this doc's own sibling `ag_closeout_audit_defi_parked_2026_08_07.md`, archived alongside it this same run); no
+  codex-alignment change needed (routine audit-report resolution, not a new contract). No new findings this run beyond
+  the reconciliation above — see the fresh Phase 0-2 report for today's run, filed separately.

@@ -432,9 +432,9 @@ item here.
 - `plans/active/defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md` — all 6 open todos are the scoping pass itself
   (exact date list, cell shapes, sizing, backfill-vs-relabel classification); none is a bounded fact yet, per the doc's
   own dispatch-scope-eligibility self-assessment.
-- `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md`,
-  `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md`,
-  `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md` — audit-report docs, 0 own `- [ ]` checkboxes
+- `plans/archive/issues/ag_closeout_audit_defi_parked_2026_08_06.md`,
+  `plans/archive/issues/ag_closeout_audit_defi_parked_2026_08_07.md`,
+  `plans/archive/2026_08/issues/ag_closeout_audit_defi_parked_2026_08_08.md` — audit-report docs, 0 own `- [ ]` checkboxes
   (findings tables only); the batch11 candidates they themselves name (e.g.
   `defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`,
   `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`, since archived 2026-08-09 — all 12 todos closed,
