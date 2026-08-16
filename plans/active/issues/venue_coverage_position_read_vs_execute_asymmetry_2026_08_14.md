@@ -857,6 +857,32 @@ issue's P0 in progress, not a new bug. Leaving the token_wrapping.py fix uncommi
 (verified correct + ruff-format-stable + citation-checker-clean) until this stabilizes; it isn't at risk (local-only,
 not shared state) and will ship cleanly once the invariant settles.
 
+## Live-flap observation — 2026-08-16 (slot-29, second symptom of the same in-flight Symbiotic wiring)
+
+Continuing to try to ship the unrelated `archetype_feature_groups.py` UAC SSOT module (main plan L228,
+`venue_readiness_and_registry_hardening_2026_08_16.md`) — this issue's blocking invariant
+(`test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`) is now **RESOLVED** as of
+`unified-api-contracts@09318066` (`feat: register Symbiotic wstETH DefaultCollateral vault in UAC LST SSOT (composite
+key)`) — a standalone `bash scripts/quality-gates.sh --no-fix` run against that exact SHA passed clean (`ALL QUALITY
+GATES PASSED`, sentinel `.qg_last_passed_sha=09318066a3a3be33b7a1e11aa952e7b9aa4dc5de`).
+
+However, by the time `quickmerge.sh`'s own re-gate ran a few minutes later, `origin/live-defi-rollout` had advanced
+3 more commits via the automated promote/backmerge pipeline (`09318066` → `90f11f43` merge-from-main →
+`2bdc894e` promote(LDR→main) → `76adc2bc` ci-routing) — and against `76adc2bc`, a **different, adjacent** test now
+fails: `tests/unit/test_lst_token_addresses.py::test_every_registered_symbol_is_a_declared_lst_token` —
+`AssertionError: ETHEREUM/wstETH-symbiotic is not declared in LST_VENUE_TO_TOKENS`. Reproduced standalone
+(`pytest tests/unit/test_lst_token_addresses.py::test_every_registered_symbol_is_a_declared_lst_token -x -q`), so this
+is a real, current-HEAD failure, not a quickmerge race artifact. `LST_TOKEN_ADDRESS_BY_CHAIN` gained a
+`wstETH-symbiotic` entry but the corresponding `LST_VENUE_TO_TOKENS` venue declaration didn't land with it — same
+signature as the venue-coverage-cascade flapping above: the Symbiotic wiring is still being actively, concurrently
+edited by another slot/session, this time in the LST-registry half rather than the execution-dispatch half.
+
+Per the standing operator ruling (never hand-edit the contested ratchet-baseline file or wire karak/pendle/symbiotic
+myself) and this issue's own precedent, **not fixing `LST_VENUE_TO_TOKENS` myself** — it's the same forbidden zone,
+just a different file. `archetype_feature_groups.py` remains uncommitted, code-complete, verified independently correct
+(3 files, `.tabs/29/unified-api-contracts`), blocked on this tree-wide gate, not on anything in those files. Will retry
+the quickmerge on a later pass once this settles.
+
 ## Context scout
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
