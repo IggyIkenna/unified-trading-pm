@@ -7,7 +7,7 @@ summary: >-
   found 18 rows where only 9 distinct `(instrument_id, bm_time, price, point)` ticks exist — every tick appears
   exactly twice. This was ONE cell, found incidentally, not from a scoped audit — scope (how many cells/days
   affected, whether downstream consumers already dedupe on read) is unmeasured.
-status: open
+status: resolved
 assigned_vm: planning
 nature: issue
 asset_group: [sports]
@@ -15,10 +15,14 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [sports, data-quality, canonical, duplicate-rows]
-related: [/plans/archive/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md]
+related:
+  [
+    /plans/archive/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md,
+    /plans/active/issues/sports_canonical_batch_odds_api_duplicate_rows_writer_rootcause_2026_08_16.md,
+  ]
 parent_epic: sports_master
 priority: P3
-resolved_by:
+resolved_by: sports_canonical_batch_odds_api_duplicate_rows_writer_rootcause_2026_08_16
 locked_by:
 created: 2026-08-16
 author: slot-23
@@ -56,16 +60,25 @@ ruled cosmetic.
 
 ## Recommended decision
 
-- [ ] [DATA] P3. **Scope the duplication**: sample N canonical `batch_odds_api` cells across days/venues (bounded,
+- [x] ✅ [DATA] P3. **Scope the duplication**: sample N canonical `batch_odds_api` cells across days/venues (bounded,
       not a whole-corpus walk — reuse the `_canonical_day_venue_prefix`/`_existing_odds_cell_paths` helpers already
       in `verify_bare_league_legacy_orphan_content_2026_08_16.py` /
       `fold_divergent_bare_league_legacy_orphans_2026_08_16.py`) and measure what fraction of cells/rows carry an
       exact-duplicate tick key. If near-zero outside the one measured cell, downgrade/close as a one-off write
       artifact. If systemic, root-cause the writer (retry-without-idempotency-check? overlapping capture windows?)
       and file the fix as its own scoped follow-up — do NOT silently dedupe canonical in-place from this issue doc;
-      that needs its own delete-safety-protocol-scoped write. (repo: market-tick-data-service)
+      that needs its own delete-safety-protocol-scoped write. (repo: market-tick-data-service) —
+      market-tick-data-service@96f7a8f657 (script) + measured live 2026-08-16: 40-day bounded sample,
+      `cells_total=6410 cells_with_dupes=264 (4.12%) rows_total=1178395 rows_duplicate=3432 (0.29%)`, affected
+      days spread across every sampled year 2021-2026 — **systemic, not one-off**. Root-cause/fix filed as
+      `/plans/active/issues/sports_canonical_batch_odds_api_duplicate_rows_writer_rootcause_2026_08_16.md` per this
+      todo's own instruction.
 
 ## Progress Log
 
 - **2026-08-16 (slot-23)**: Filed as an incidental finding from the sibling orphan-purge issue's todo 3 work — not
   investigated further this session (out of that todo's own scope).
+- **2026-08-16 (slot-23)**: Ran the bounded 40-day scoping measurement (todo 1) — confirmed systemic (4.12% of
+  cells, 0.29% of rows, spread 2021-2026). Filed the root-cause/fix follow-up
+  (`sports_canonical_batch_odds_api_duplicate_rows_writer_rootcause_2026_08_16.md`) and closing this issue —
+  todo 1 was its sole open item and is done; archiving.
