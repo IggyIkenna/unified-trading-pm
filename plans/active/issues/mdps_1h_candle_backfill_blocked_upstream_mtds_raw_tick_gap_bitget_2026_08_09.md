@@ -211,3 +211,15 @@ the raw-tick manifest before re-running, rather than assuming a fixed completion
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **slot 7, 2026-08-16**: Checked todo 3's gate ("once the BITGET-FUTURES raw ticks land") before re-running the MDPS
+  candle backfill — **NOT yet met.** Direct manifest read (`read_availability_index_safe`,
+  `market-data-tick-cefi-prd-central-element-323112`, filters `venue=BITGET-FUTURES data_type=trades
+  date=2026-04-14..2026-04-19`) shows a partial mix, not a completed capture: ~24% `captured` (168-175 rows/day), ~21%
+  `empty_confirmed`, but still ~55% (461-470 rows/day) `expected_unattempted`. The chronological Tardis catch-up sweep
+  that's supposed to eventually reach this window (`cefi-queue-heavy-binancefutu-x17-*` — the original
+  `-20260809-083733` run was REAPED; a relaunch `-20260815-220349` has been RUNNING since 2026-08-15 22:03 UTC) is
+  currently only at `last_completed_date=2020-03-23` per its own `PROGRESS.json` — years of chronological backlog
+  remain before it reaches 2026-04. No other in-flight VM targets this window: `mdps-backfill-cefi-20260815-181733`
+  (currently RUNNING) is a different scope entirely (`data_types=liquidations`, `2020-01-01..2026-01-31`). Skipped this
+  task as GATED (not blocked) rather than re-dispatching immediately — re-check once the sweep's chronological progress
+  is materially closer to 2026-04 before re-attempting todo 3.
