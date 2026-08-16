@@ -170,8 +170,9 @@ source: >-
       just a missing feature, if ever actually invoked. Done-when: either a real `VENUE_WALLET_CAPABILITIES` entry
       + working rail is added for KALSHI, or the exclusion is confirmed intentional (e.g. "Kalshi funds via its
       own bank/ACH UI, no in-system rail by design") and documented in `transfer-architecture.md`.
-- [ ] [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 above as its own tracked todo** in this
-      file — never as prose only, same discipline the steps 1-5 and step 9 sweeps above already followed.
+- [x] ✅ [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 — done 2026-08-16.** Fulfilled by
+      the 3 gap todos added above during the steps 6-8 sweep (live position stub, missing archetype/slot wiring,
+      execution not routing through `InstructionActionV2`) — none left as prose only.
 - [x] ✅ [BACKEND] P0. **Confirm the parent plan's hard rules held — done 2026-08-16, trivially satisfied.** This
       batch's steps 1-9 sweep was investigation/documentation only — zero code was changed in
       instruments-service, market-tick-data-service, features-service, strategy-service, or execution-service, so
