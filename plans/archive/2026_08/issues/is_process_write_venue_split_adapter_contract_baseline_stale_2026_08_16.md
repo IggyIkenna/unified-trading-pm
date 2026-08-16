@@ -5,7 +5,7 @@ summary: >-
   A same-day legit refactor split process_write.py into two files without regenerating
   adapter_contract_baseline.yaml, causing check_adapter_contract_regression to false-positive-fail
   instruments-service's quality-gates.sh for every change until the baseline is regenerated.
-status: open
+status: complete
 nature: issue
 asset_group: [tradfi, cefi, defi]
 stage: [data]
@@ -17,7 +17,7 @@ created: "2026-08-16"
 assigned_vm: planning
 parent_epic: instruments_master
 priority: P1
-resolved_by:
+resolved_by: unified-trading-pm@1ae436fa1a
 locked_by:
 source: >-
   Discovered while shipping tradfi_satellite_ao_dispatch_batch9_2026_08_09.md todo 1 (unrelated new script,
@@ -30,6 +30,12 @@ depends_on: []
 ---
 
 # instruments-service process_write.py split leaves adapter_contract_baseline stale
+
+> **📦 ARCHIVED 2026-08-16.** Sole top-level todo `[x]`, zero open, `locked_by` empty — archived per the 6-step
+> ritual in `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Baseline regenerated
+> (`unified-trading-pm@1ae436fa1a`); instruments-service's full `quality-gates.sh` verified green post-fix. No new
+> lasting contract emerged — `check_adapter_contract_regression.py`'s existing `--regenerate-baseline` docstring
+> already covers this exact "legit refactor intentionally changes counts" case; no separate codex doc needed.
 
 ## What I found
 
@@ -71,10 +77,11 @@ committing the updated baseline.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Regenerate `adapter_contract_baseline.yaml` for instruments-service post the
+- [x] ✅ [SCRIPT] P1. Regenerate `adapter_contract_baseline.yaml` for instruments-service post the
       `process_write.py`→`process_write_venue.py` split (commit `b421ea77`), verifying both files' contract-call
       counts are captured and no genuine call was lost — confirm `quality-gates.sh` on instruments-service is green
-      after. Repo: unified-trading-pm (baseline file) + instruments-service (verify). Source: this doc.
+      after. Repo: unified-trading-pm (baseline file) + instruments-service (verify). Source: this doc. —
+      unified-trading-pm@1ae436fa1a
 
 ## Progress Log
 
@@ -92,3 +99,12 @@ committing the updated baseline.
   root-cause). Not re-declaring a duplicate repo-blocker (this doc's is already open); noting here as corroborating
   evidence that the blast radius extends beyond instruments-service itself to any repo whose QG suite runs this
   cross-repo check. Confirms this is genuinely fleet-wide, not instruments-service-local.
+- 2026-08-16 (worker, slot-3): fixed. Ran `check_adapter_contract_regression.py --workspace-root . --regenerate-baseline`
+  from the slot workspace root (full corpus walk across all present sibling repos) — `process_write.py` now baselines
+  at 6, new `process_write_venue.py` at 9 (15 total, no loss vs. the stale 14). Diffed the full regenerated baseline
+  before committing: every OTHER changed entry was an increase or a brand-new file (ordinary fleet drift since the
+  baseline was last regenerated — new adapters like `pacifica.py`, new MTDS oracle-collection handlers, etc.), no
+  unexplained decreases. Shipped `unified-trading-pm@1ae436fa1a` (Pass-1 `quality-gates.sh` green, sentinel-verified,
+  landed via quickmerge after a sentinel-invalid re-gate from a peer push). Verified fix: instruments-service's own
+  full `quality-gates.sh` now passes end-to-end, with STEP 5.70 "IS-MTDS CONTRACT INTEGRITY" reporting
+  `[check_adapter_contract_regression] OK — 375 baselined file(s) at or above minimum.`
