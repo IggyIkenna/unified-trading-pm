@@ -153,10 +153,25 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
       campaign). Remaining gap: `strace` is present on the VM image but `py-spy`/`gdb` are NOT — a live hang capture
       would need `pip install py-spy` at hang time (extra step/delay) or fall back to `strace -p <pid>`. Still gated on
       the opportunistic "must catch it mid-tick" timing, not on access anymore.
-- **[SCRIPT] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-09,
-  satellite-batch-extraction pass) — audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have
-  explicit connect/read timeouts, and add them if missing. Tracked there (`assigned_vm: planning`), not duplicated here;
-  that batch's finalize sibling reconciles this checkbox once it lands.**
+- [x] ✅ [SCRIPT] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-09,
+      satellite-batch-extraction pass) — audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have
+      explicit connect/read timeouts, and add them if missing. **NEGATIVE-RESULT AUDIT (batch11 todo 1, 2026-08-09,
+      slot-18)** — every real outbound `odds_api` HTTP call site already declares an explicit timeout; no code changes
+      needed. Evidence:
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:56-65`
+      (`_make_session()`) sets `kwargs.setdefault("timeout", BACKFILL_HTTP_TIMEOUT)` (line 63) on every
+      freshly-constructed `aiohttp.ClientSession` (line 64), where `BACKFILL_HTTP_TIMEOUT`
+      (`market_tick_data_service/_http_timeouts.py:11`) = `aiohttp.ClientTimeout(sock_connect=15, sock_read=60,
+      total=120)`. All 5 real outbound calls in this adapter (`fetch_sports`:278, `get_markets`:348, `get_prices`:390,
+      `_discover_fixtures`:603, the historical fetch in `_run_league_fetch_loop`:859) obtain their session either
+      directly via a fresh `_make_session()` call or via the shared session `_fetch_all_leagues` opens at :557 (itself a
+      fresh `_make_session()` construction) — no call path bypasses the default. Sibling live connector
+      `market_tick_data_service/live/connectors/odds_api_ws.py:309` (`_fetch_sport_odds`) passes an explicit
+      per-request `timeout=aiohttp.ClientTimeout(total=30)`. Full citation:
+      `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` Progress Log entry "2026-08-09 (todo 1 — odds_api
+      HTTP timeout audit, slot-18)". Tracked there (`assigned_vm: planning`), not duplicated here; this checkbox
+      reconciled by `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo 1. No repo touched, nothing
+      shipped via quickmerge (negative-result audit).
 - [x] ✅ [SCRIPT] P1. **Third occurrence confirmed 2026-08-08T08:27Z (`smallchunk4`)** — pattern is now real, not
       coincidence (consistent ~16-21 min silent gap across 3 independent VMs/leagues/RSS values). Per this todo's own
       original gate, this crosses into needing a real decision rather than another quiet relaunch: relaunched once more
@@ -545,3 +560,10 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   investigated further this session** — if this pattern recurs on the relaunch (rapid RSS growth in a similar
   chunk/league), it's worth escalating as a genuine memory-leak candidate in the corrected pipeline, distinct from this
   doc's original silent-hang mechanism.
+
+- **2026-08-16 (batch11-finalize reconciliation, slot-15)**: flipped the `[SCRIPT] P3` timeout-audit checkbox above with
+  the negative-result citation from `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
+  (confirmed `[x]` there, evidence dated 2026-08-09). Per
+  `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo 1's scope: this doc's other 2 open todos (todo 1 —
+  catch a live hang before the silent window elapses; todo 4 — `PREFIX_IDLE_THRESHOLDS` tuning, still explicitly gated on
+  an unconfirmed root cause) are genuinely open work and left untouched — doc stays `status: open`, not archived.

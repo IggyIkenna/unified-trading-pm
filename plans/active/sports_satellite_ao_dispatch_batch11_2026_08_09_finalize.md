@@ -55,12 +55,16 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P3. Reconcile `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` — once batch-11 todo 1
+- [x] ✅ [DATA] P3. Reconcile `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` — once batch-11 todo 1
       (odds_api HTTP client timeout audit+fix) lands, flip that doc's `[SCRIPT] P3` timeout-audit checkbox with the
       cited evidence (file:line + commit, or the negative-result citation); the doc's other 2 open todos (opportunistic
       live-hang catch, threshold-tuning gated on this audit's finding) stay open/untouched — do not archive the doc, it
       still has genuinely open work. Source: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`. Done
-      when: the `[SCRIPT] P3` checkbox is flipped with evidence and the doc's remaining open todos are unaffected.
+      when: the `[SCRIPT] P3` checkbox is flipped with evidence and the doc's remaining open todos are unaffected. —
+      **DONE (2026-08-16, slot-15)**: flipped with the negative-result citation (file:line evidence transcribed inline);
+      doc's other 2 open todos (live-hang catch, threshold tuning) confirmed untouched — doc stays `status: open`, not
+      archived. See `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`'s own Progress Log for the
+      reconciliation entry.
 - [x] ✅ [DATA] P3. Reconcile `sports_odds_feature_naming_canonicalization_2026_07_21.md` — once batch-11 todo 2
       (FSS↔ml-service↔strategy-service parity test) lands, flip that doc's `[REVIEW] P3` todo 7 checkbox with the cited
       test file(s) + commit; the doc's remaining `[REVIEW] P3` todo 8 (cross-reference against the
