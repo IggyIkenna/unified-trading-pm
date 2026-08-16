@@ -77,10 +77,30 @@ open scope silently stranded outside every active todo (the P2 purge todo that f
 
 Split the 1,814 objects into the two classes above and resolve each:
 
-- [ ] [DATA] P3. **Classify the 1,814 orphan objects: bare/no-`league=` duplicate (safe-to-drop noise) vs. a real
+- [x] ✅ [DATA] P3. **Classify the 1,814 orphan objects: bare/no-`league=` duplicate (safe-to-drop noise) vs. a real
       per-league cell (potentially irreplaceable).** Read the object's own `league=` path segment (bare = empty value) —
       reuse `purge_league_legacy_objects_2026_08_15.py`'s `skipped_no_manifest_twin` counter/report to get the exact
-      object list, no new whole-corpus walk. Report the split. (repo: market-tick-data-service)
+      object list, no new whole-corpus walk. Report the split. (repo: market-tick-data-service) — **DONE
+      2026-08-16, live-measured, not sampled**: shipped `classify_league_legacy_orphan_objects_2026_08_16.py`
+      (`market-tick-data-service@ae1f27a4af`), which re-derives the manifest-level twin join LIVE (never trusts a
+      prior run's counters) then re-lists the exact same candidate-date prefixes
+      `purge_league_legacy_objects_2026_08_15.py` already scopes (2,128 candidate dates, one targeted prefix listing
+      per date — no new whole-corpus walk) and reads each surviving object's own `league=` path segment. **Result:
+      1,814/1,814 orphan objects (100%) are `bare_no_league` — 0 are `per_league_cell`.** Every remaining object's
+      `league=` segment is empty (e.g.
+      `gs://market-data-tick-sports-prd-central-element-323112/raw_tick_data/by_date/day=2020-06-06/pipeline_mode=batch_footystats/asset_group=sports/venue=ODDS_API/instrument_type=/data_type=odds/ticks_migrated_20260505T152043Z.parquet`,
+      no `league=` sub-partition at all). Full per-object report (uri/date/league/size/disposition, one JSON line
+      each) written this session; not checked in (regeneratable from the script, one-off scratch artifact). **This
+      resolves the open question in this doc's own summary**: the population is NOT a mix needing per-pair triage —
+      it is uniformly the bare/no-`league=` duplicate class `merge_migrated_odds_into_canonical_2026_07_17.py`'s
+      docstring already predicted, consistent with every per-league object that DID have a canonical twin having
+      already been purged by the P2 run (a bare row has no `league_id` to key a twin against by construction, so it
+      always lands in the orphan set regardless of content). **Consequence for todo 3 below**: with 0 measured
+      `per_league_cell` objects, there is no genuine per-league cell to fold via a
+      `merge_migrated_odds_into_canonical_2026_07_17.py`-style migration — that todo appears MOOT on this evidence,
+      but is left unflipped here (out of this todo's own scope) for its own dispatch to close on this citation. Todo
+      2 (content-verify the bare duplicates before any purge) remains the real next step, now scoped to a fully
+      enumerated, non-mixed 1,814-object population.
 - [ ] [DATA] P3. **For the bare/no-`league=` duplicates**: confirm via content read (row-key comparison against the SAME
       day's other legacy per-league objects, not just filename shape) that they are truly redundant copies before any
       delete — Part 2 of the delete-safety proof still applies even to an apparent duplicate. If confirmed redundant,
@@ -95,4 +115,8 @@ Split the 1,814 objects into the two classes above and resolve each:
 
 - **2026-08-15 (slot-11)** — Filed on close of the P2 purge todo. No investigation done yet beyond what the purge
   script's own dry-run/apply reports already surfaced (object count, byte total, exclusion reason).
+- **2026-08-16 (slot-27)** — Todo 1 done: shipped + live-ran `classify_league_legacy_orphan_objects_2026_08_16.py`
+  (`market-tick-data-service@ae1f27a4af`). Measured split: **1,814/1,814 bare_no_league, 0 per_league_cell** — the
+  entire orphan population is the bare/no-`league=` duplicate class, none are genuine irreplaceable per-league cells.
+  Todo 3 looks moot on this evidence (nothing to fold); left for its own dispatch to close.
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
