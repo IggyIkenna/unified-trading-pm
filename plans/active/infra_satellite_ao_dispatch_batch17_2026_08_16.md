@@ -179,23 +179,32 @@ follow-up batch once the operator rules (see `## Deferred`).
       pointers in place" rule). **Done when**: the source issue doc no longer states tier (1) as live open work. Repo:
       unified-trading-pm.
 
-- [ ] [SCRIPT] P2. **Migrate group A (15 launchers) to `lc_gcloud_create` — no SPOT/metadata-from-file blockers, safe to
-      migrate under the CURRENT wrapper signature.** Files (all in `deployment-service/scripts/vm/`):
+- [x] ✅ [SCRIPT] P2. **Migrate group A (14 of the listed 15 launchers) to `lc_gcloud_create` — no SPOT/metadata-from-file
+      blockers, safe to migrate under the CURRENT wrapper signature.** Migrated (all in `deployment-service/scripts/vm/`):
       `launch-aster-forward-poll.sh`, `launch-batch-live-recon-cron-vm.sh`, `launch-blank-reason-recon-vm.sh`,
       `launch-bucket-rsync-vm.sh`, `launch-cefi-forward-poll.sh`, `launch-cefi-migration-vm.sh`,
-      `launch-cefi-mvp-reclassify-vm.sh`, `launch-cefi-onchain-forward-poll.sh`, `launch-dashboard-vm.sh`,
+      `launch-cefi-mvp-reclassify-vm.sh`, `launch-cefi-onchain-forward-poll.sh`,
       `launch-defi-forward-poll.sh`, `launch-defi-manifest-force-consolidate-vm.sh`,
       `launch-defi-pool-instrument-type-restamp-vm.sh`, `launch-features-cross-cutting.sh`,
-      `launch-fill-missing-player-stats-vm.sh`, `launch-fixtures-recovery-vm.sh`. Per file: replace the raw
-      `gcloud compute instances create` block with a `lc_gcloud_create "$VM_NAME" "$PROJECT" "$ZONE" "$MACHINE_TYPE"
-      "$DISK_GB" "$METADATA_STR" "$LABELS_STR" "$SERVICE_ACCOUNT"` call (pattern shipped at
-      `deployment-service@6998cc228` for the first-batch 3 launchers — mirror it exactly, including the
-      `! DRY_RUN` → `export LC_DRY_RUN` gating and dropping any now-redundant `managed-by=deployment-service` label the
-      caller set manually). Re-verify each file has neither `provisioning-model=SPOT` nor `metadata-from-file` before
-      touching it (this todo's own file list was filtered on that basis 2026-08-16 — re-check for drift since). Run
-      `bash scripts/quality-gates.sh`; ship via quickmerge. **Done when**: all 15 files call `lc_gcloud_create` (verify
-      `grep -L lc_gcloud_create <files>` returns empty), QG green, `--dry-run`/`LC_DRY_RUN=true` smoke on at least 2
-      sampled launchers confirms unchanged CLI surface. Repo: deployment-service.
+      `launch-fill-missing-player-stats-vm.sh`, `launch-fixtures-recovery-vm.sh`. **`launch-dashboard-vm.sh` EXCLUDED —
+      finding, not a skip**: it calls `gcloud compute instances create-with-container` (container-based deploy, with
+      `--container-image`/`--container-env`/`--container-restart-policy`/`--tags`), a different gcloud subcommand
+      `lc_gcloud_create` cannot express at all (the wrapper only issues `gcloud compute instances create`). It only
+      matched this todo's `grep -l "gcloud compute instances create"` corpus scan as a SUBSTRING false-positive
+      (`create-with-container` contains the literal string `create`) — not a genuine raw-create launcher, so the
+      corpus's "149 raw-create launchers" / "45 directly migratable" counts in this plan's summary/table are each off
+      by one (148 / 44 real raw-`instances create` callers). Migrating it would need a new
+      `lc_gcloud_create_with_container` wrapper (out of scope for this todo — flagging for a future todo if a
+      container-VM launcher guard is wanted). Each migrated file replaced its raw `gcloud compute instances create`
+      block with `lc_gcloud_create "$VM_NAME" "$PROJECT" "$ZONE" "$MACHINE_TYPE" "$DISK_GB" "$METADATA_STR"
+      "$LABELS_STR" "$SERVICE_ACCOUNT"`, mirroring `deployment-service@6998cc228`'s pattern (`! DRY_RUN` →
+      `export LC_DRY_RUN` gating, dropped the now-redundant manual `managed-by=deployment-service` label and the
+      unsupported `--boot-disk-type` flag). Also fixed a duplicated `lc_verify_tarball_freshness` block in
+      `launch-aster-forward-poll.sh` and a stale dry-run echo string in `launch-defi-forward-poll.sh`.
+      **Done**: `grep -L lc_gcloud_create <14 files>` returns empty; `bash -n` clean on all 14; `--dry-run`/
+      `LC_DRY_RUN=true` smoke on 3 sampled launchers (aster-forward-poll, cefi-forward-poll, blank-reason-recon)
+      confirmed unchanged VM name/metadata/labels/service-account; `quality-gates.sh` green (270s). Shipped
+      — deployment-service@e766d26445. Repo: deployment-service.
 
 - [ ] [SCRIPT] P2. **Migrate group B (15 launchers) to `lc_gcloud_create`** — same pattern and done-when as group A.
       Files: `launch-fixtures-truthset-audit-vm.sh`, `launch-funding-ensemble-paper-cron-vm.sh`,
@@ -248,3 +257,11 @@ exactly what this plan's own rules section says to avoid.
   `launch-funding-ensemble-paper-cron-vm.sh`, was already in the dispatched "Migrate group B" task's file list —
   pinged slot 17 (Group B's owner) directly via `/api/slots/17/message` to exclude it, rather than editing their
   live-dispatched todo out from under them.
+- **infra 2026-08-16 (slot 16)**: shipped group A — 14 of the listed 15 files migrated to `lc_gcloud_create`
+  (deployment-service@e766d26445), QG green. Found `launch-dashboard-vm.sh` is not actually a raw-create launcher —
+  it calls `gcloud compute instances create-with-container`, a distinct gcloud subcommand the wrapper can't express;
+  it only matched the corpus's `grep -l "gcloud compute instances create"` scan as a substring false-positive. Left
+  it unmigrated (see the flipped checkbox above for the full finding) — this means the plan summary's "149
+  raw-create" / "45 directly migratable" corpus counts are each off by one real file (148 / 44). Did not correct the
+  summary/table numbers here since that risks racing group B/C's own in-flight edits to the same doc; flagging for
+  whoever runs todo "Update follow-up + Progress Log" (or a future corpus re-measurement) to fold in.
