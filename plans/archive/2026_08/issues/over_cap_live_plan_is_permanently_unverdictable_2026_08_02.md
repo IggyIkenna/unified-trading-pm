@@ -18,7 +18,7 @@ summary: >-
   checkbox.
 status: closed
 nature: issue
-asset_group: [defi, cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

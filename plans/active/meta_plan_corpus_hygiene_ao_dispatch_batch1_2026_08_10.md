@@ -169,14 +169,32 @@ Two independent causes, both now fixed:
       retains `cross-cutting`. Per this plan's scope discipline, the parked doc itself
       (`ag_closeout_audit_cross_cutting_parked_2026_08_08.md`) was NOT edited — its own checkbox reconciliation is
       todo 17's job alone.
-- [ ] [DOCS] P3. **Retag the 5 remaining 2026-08-01/08-06 cross-cutting mistags** (all in `/plans/active/issues/`):
+- [x] ✅ [DOCS] P3. **Retag the 5 remaining 2026-08-01/08-06 cross-cutting mistags** (all in `/plans/active/issues/`):
       `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` → `[ao]`;
       `gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md` → `[infrastructure]`;
       `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` → `[infrastructure]`;
       `unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md` → `[ui]`;
       `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` `[defi, cross-cutting]` → `[ci]` or
       `[infrastructure]` (owner TBD by content — pick one and say why). **Done when**: all 5 carry a single real tranche
-      tag.
+      tag. — Executed 2026-08-16 (slot 11). This task carried `already_in_progress: true` on boot: 4 of the 5 retags
+      were already sitting in this worktree as UNCOMMITTED WIP from an earlier interrupted run of this same task
+      (`checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` → `[ao]`,
+      `gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md` → `[infrastructure]`,
+      `unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md` → `[ui]`,
+      `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` → `[infrastructure]` — a defensible pick of the
+      two named candidates since its content is a `plans/plan-hygiene` line-cap-gate policy finding
+      (`scripts/plan-hygiene/check_line_caps.sh`), not a CI/CD pipeline/workflow-template matter, so `infrastructure`
+      fits better than `ci`, the tag this batch's own todo 3 already reserved for actual CI-pipeline content) — verified
+      each against `git diff` (all 5 confirmed correct vs. this plan's target, none left dual-tagged) and shipped in
+      this same commit. The 5th, `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`, was already
+      `[infrastructure]` at HEAD (no working-tree diff) — genuinely fixed by a real prior `/ag-closeout-audit
+      cross-cutting` run per its own frontmatter comment, confirmed 2026-08-10. All 5 verified frontmatter-clean:
+      `docspec.py --check` 0 hard violations on all 5 (archived docs checked with `--doc-type issue` override).
+      `check_ag_closeout_linkage --only` on the retagged pair caught 2 NEW orphans (a doc retagged to a new AG needs a
+      path — `related:` link or a closeout-doc body mention — to that AG's consolidated-closeout family, which the
+      pre-existing WIP hadn't added): fixed by adding `related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]`
+      to the `gcp_service_accounts_registry_diverged…` doc and appending `/plans/active/ui_consolidated_closeout_2026_07_30.md`
+      to the `unified_trading_system_ui_block_list…` doc's existing `related:` list — re-check now 0 new orphans.
 - [ ] [DOCS] P3. **Resolve the `[ci, cross-cutting]` dual-tag on
       `/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** to a single owner.
       Two prior audits (2026-08-09 Finding 4, 2026-08-10 Finding 2) both read the content as closer to
@@ -387,3 +405,20 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   `/plans/archive/2026_08/issues/ag_closeout_all_vs_sharded_mutual_blindness_2026_08_10.md`.
 
   No code shipped (read-only diagnostic). Plan flip only — unified-trading-pm@<this-commit>.
+- **2026-08-16 (slot 11, infra, task `meta_plan_corpus_hygiene_ao_dispatch_batch1-a65c90e56bde`) — todo 5 (5 remaining
+  cross-cutting mistags) executed.** Boot reported `already_in_progress: true` for this exact task; 4 of the 5 target
+  retags were already sitting as UNCOMMITTED working-tree WIP from an earlier interrupted run of this same task —
+  `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` → `[ao]`,
+  `gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md` → `[infrastructure]`,
+  `unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md` → `[ui]`,
+  `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` → `[infrastructure]` (a line-cap-gate/plan-hygiene
+  policy finding fits `infrastructure` better than `ci`, which this batch's own todo 3 already used for actual
+  CI-pipeline/workflow content) — verified each against `git diff` HEAD (all 4 confirmed matching this plan's target,
+  none left dual-tagged) and shipped in this commit. The 5th, `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`,
+  was already `[infrastructure]` at HEAD with no working-tree diff — genuinely retagged by a real prior
+  `/ag-closeout-audit cross-cutting` run per its own frontmatter comment (2026-08-10). `docspec.py --check` clean (0
+  hard) on all 5 (archived docs checked with `--doc-type issue`). `check_ag_closeout_linkage --only` caught 2 new
+  orphans on the retagged pair (`gcp_service_accounts_registry_diverged…` -> `[infrastructure]`,
+  `unified_trading_system_ui_block_list…` -> `[ui]`) since a new AG needs a `related:` path to its closeout family —
+  fixed by adding `related:` links to `infra_consolidated_closeout_2026_07_25.md` and
+  `ui_consolidated_closeout_2026_07_30.md` respectively; re-check 0 new orphans.
