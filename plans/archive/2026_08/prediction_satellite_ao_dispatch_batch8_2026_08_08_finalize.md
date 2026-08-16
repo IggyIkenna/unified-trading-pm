@@ -80,7 +80,7 @@ context_scope:
       `ag_closeout_audit_prediction_parked_2026_08_08.md`'s `related:`). **Done when**: both files are in
       `plans/archive/2026_08/`, `regenerate_active_plan_inventory.py` shows 0 orphaned referrers, and
       `check_ag_closeout_linkage.py --tranche prediction` is still green. — DONE 2026-08-16,
-      `unified-trading-pm@<pending>`.
+      `unified-trading-pm@a24526be30`.
 
 ## Progress Log
 
@@ -123,4 +123,4 @@ context_scope:
   filenames as-is in historical Progress Log entries (describing past state, not live paths) — same precedent as the
   todo-1 entry above. Regenerated `plans/active/INDEX.md` via `regenerate_active_plan_index.py` (both entries now
   correctly absent from the active index) and re-ran `regenerate_active_plan_inventory.py` (0 orphaned referrers) +
-  `check_ag_closeout_linkage.py --tranche prediction` (green). Shipped: `unified-trading-pm@<pending>`.
+  `check_ag_closeout_linkage.py --tranche prediction` (green). Shipped: `unified-trading-pm@a24526be30`.
