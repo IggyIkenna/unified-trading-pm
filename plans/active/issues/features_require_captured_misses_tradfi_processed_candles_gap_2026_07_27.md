@@ -310,8 +310,42 @@ input gap didn't change.
 
 ## Follow-ups (new, 2026-08-16)
 
-- [ ] [DATA] P3. Once `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`'s COMBO
-      chain-bundle-candle silent-zero-output gap is fixed (repo: market-data-processing-service), re-run
-      `/data-pipeline-check-features --family delta_one --asset-group TRADFI` once more to check whether the
-      `LookbackValidator` 0/741-candle failure for `CME:COMBO:{GC,SI,ZC,ZL,ZM}` clears — this is the genuine
-      force+skip proof this doc's original todos were gated on. Not actionable until that sibling doc's fix lands.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-14, data_engineering) — root-caused + fixed a DIFFERENT bug than the
+      sibling doc's COMBO gap; that gap was ALREADY resolved.** Before re-running, verified directly against live
+      GCS + the availability manifest (bounded single-prefix reads, not a corpus walk): real `processed_candles`
+      objects for CME COMBO `ohlcv_1m` on 2026-08-06 for every flagged underlying (`GC/SI/ZC/ZL/ZM`) already exist,
+      and the manifest carries matching `capture_status=captured` rows (chain-bundle rows, `instrument_id=None`) —
+      so `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`'s COMBO gap
+      was NOT the blocker anymore. Re-ran the real VM anyway (`features-e2e-tradfi-20260816-010221-1efb38` /
+      `-010602-1efb38`) and reproduced the
+      IDENTICAL `LookbackValidator` `0/741` failure for all 5 underlyings despite the confirmed-present data —
+      proving a SEPARATE, still-live bug. Root cause: `LookbackValidator._build_captured_index`
+      (`features-service/features_service/delta_one/app/core/dependency_checker.py`) called `.astype(str)` on the
+      manifest `instrument_id` column BEFORE checking for nulls — a chain-bundle row's real `None` became the
+      literal string `"None"`, which never matched the `(venue, "")` fallback key
+      `_count_candles_for_lookback` looks up, so genuinely captured bundle data silently counted as zero candles.
+      Fixed: `features-service@c997516c3f` — `fillna("")` before the `str` cast. New regression test
+      (`TestCountCandlesBlankInstrumentId::test_none_instrument_id_credited_for_cme_combo`) reproduces the real
+      `None` shape (the existing tests only fabricated the `""` sentinel, which never exercised the bug); confirmed
+      it fails pre-fix (`('CME', 'None')` in the index, not `('CME', '')`) and passes post-fix. Full
+      `quality-gates.sh` green. **Re-ran the real VM a third time with the fix live**
+      (`features-e2e-tradfi-20260816-015304-1efb38`, full run.log) — confirmed via the VM's own log:
+      `Lookback validation PASSED: 25/25 instruments OK` (was `25/25 instruments have insufficient candles` /
+      `0/741` for every underlying before the fix). **This todo's exact gate — the `LookbackValidator` 0/741-candle
+      failure — is CONFIRMED CLEARED.** The VM then failed LATER, at a different, genuinely new gate (candle
+      pre-load during actual feature compute, not lookback validation) — tracked as its own follow-up below rather
+      than chased down here (different code path, out of this todo's scope).
+
+- [ ] [DATA] P2. **NEW 2026-08-16.** With the `LookbackValidator` gate now clear (see todo above), the same VM run
+      (`features-e2e-tradfi-20260816-015304-1efb38`) hit a DIFFERENT, later failure during actual feature compute:
+      every one of 19 `delta_one` feature groups failed (`orchestrator_returned_false`), with repeated
+      `No pre-loaded candles for CME:combo:/CME:COMBO:/CME:FUTURE:/CME:futures_chain:/CME:options_chain:/
+      CBOE:FUTURE:VIX/CBOE:futures_chain: at 1h/24h — skipping` and summary lines `Loaded range candles for 0/7
+      instruments (1m)` / `(1h)` (19 occurrences each). This is upstream of `LookbackValidator` (a different
+      candle-loading mechanism inside the per-feature-group compute path, discovering only 7 instruments — not the
+      25 `LookbackValidator` discovers) — not yet root-caused. Repo: features-service (delta_one compute/candle-load
+      path) — investigate why the compute-time candle loader finds 0/7 for these CME instruments at 1h/24h when
+      `LookbackValidator`'s own 1m-timeframe manifest read (same day, same underlyings) now succeeds. Evidence: VM
+      run.log for `features-e2e-tradfi-20260816-015304-1efb38` (`vm-logs/…/run.log` in
+      `deployment-scripts-central-element-323112`), `EXIT_STATUS=1`, `DEPLOYMENT_FAILED`. This is now the blocker for
+      the genuine delta_one:TRADFI force+skip proof this doc's original todos were gated on.
