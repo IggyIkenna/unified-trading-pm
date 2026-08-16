@@ -451,19 +451,13 @@ fixture-linked before MVP backfill.
   - [`plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`](/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
     - **[SCRIPT] P1.** Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet — CONFIRMED)
   - [`plans/active/prediction_live_clob_depth_capture_2026_07_24.md`](/plans/active/prediction_live_clob_depth_capture_2026_07_24.md)
-    - **[DATA] P2.** Verify END-TO-END depth-history retention — the RAW live book store is rolling-latest-window
+    (2026-08-16: 0 open todos — `archive_exempt: true` since 2026-08-10, deferred to a dedicated
+    `/archive-candidates-audit` pass for the complex referrer graph, not archived here)
   - [`plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`](/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md)
-    (9 open + 2 in-progress — listed in full, not over the >8 cap threshold)
-    - **[SCRIPT] P0.** Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it
-    - **[DESIGN] P1.** Fixture-pairing RESIDUAL — registry-resolution + mapping-population + arb wiring (nested under
-      the in-progress fixture-pairing parent; parser itself already shipped UAC@3effe2fc)
-    - **[SCRIPT] P1.** e2e-testing/instruments-service — series-scoped historical backfill — DEEP CORPUS DONE
+    (2026-08-16: re-verified — only 1 genuine open item remains, the rest of this list's prior entries have since
+    shipped/closed)
     - **[OPS] P2.** Tarball-overwrite race: a concurrent fleet `create-code-tarballs` (from a clone behind LDR) clobbers
-    - **[UAC] P2.** Politics/geo cross-venue canonicalization — Kalshi Politics (2049 series: electoral-college)
-    - **[DESIGN] P2.** Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group
-    - **[DATA] P2.** Residual lowercase `venue=kalshi` + blank/UNKNOWN venue rows in the prediction `_index` manifest
-    - **[SCRIPT] P2.** cqg partition-completeness — recent-window catalogue re-enumeration
-    - **[DATA] P3.** 1,454 prediction `_index` rows still at schema v4 (vs 192,713 at v9; DISCOVERED 2026-06-23)
+      a freshly-rebuilt GCS tarball/setup-script before a new VM's boot-fetch — not yet promoted to a batch todo
 - **UI / bucket**:
   - [`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`](/plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)
     — **0 open** (11/11 done, RESOLVED + archived 2026-08-15).

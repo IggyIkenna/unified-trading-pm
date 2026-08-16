@@ -50,7 +50,7 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,

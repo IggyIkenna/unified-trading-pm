@@ -41,7 +41,7 @@ related_plans:
   - ../active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md
   - ../active/prediction_phase_e_football_arb_live_2026_07_24.md
   - ../active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
-  - ../active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md
+  - ../archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md
@@ -951,10 +951,10 @@ honest-coverage UI (split from prediction_consolidated_closeout_2026_07_18)
 **status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Prediction satellite AO batch 4 — the
 un-triaged A3-relocated sibling-doc gap (cross-venue-arb + live-clob-depth)
 
-### [`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize`](../active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
+### [`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize`](../archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
 
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: Prediction satellite AO batch 4 — finalize
-(reconcile sibling source docs + resolve deferrals + archive)
+**status**: resolved (archived 2026-08-16) · **estimate**: 0.16 cal AI-days (class: infra) **title**: Prediction
+satellite AO batch 4 — finalize (reconcile sibling source docs + resolve deferrals + archive)
 
 ### [`prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize`](../active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md)
 
