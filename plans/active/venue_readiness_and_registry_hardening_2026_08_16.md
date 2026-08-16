@@ -272,7 +272,7 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
       Three layers; UAC is the dominant one with fleet-wide blast radius. Referenced by carve-out §A5 P0 #2.
 - [x] [AGENT] P0. ✅ **W2 — registry SSOT hardening.** Forked to
       [`/plans/active/registry_ssot_hardening_2026_08_16.md`](/plans/active/registry_ssot_hardening_2026_08_16.md) —
-      unified-trading-pm@(pending push). A same-pattern grep sweep across all 7 umbrella repos, done at authoring
+      unified-trading-pm@a8465760e5. A same-pattern grep sweep across all 7 umbrella repos, done at authoring
       time, found 4 of 5 concerns (adapter keys, instrument types, data types, error-code classification) already
       single-SSOT with zero per-service redefinitions; the child plan's real open scope is a same-repo
       `VenueCapability*` naming-overlap resolution plus an error-code coverage audit.
