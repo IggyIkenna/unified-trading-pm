@@ -232,3 +232,16 @@ the raw-tick manifest before re-running, rather than assuming a fixed completion
   (see slot 7's entry above). Recording this projection so a future re-check can judge "materially closer" against a
   real number instead of re-deriving it from scratch each time. Skipped `reason_code: GATED` again;
   `estimated_unblock_minutes` capped at the fleet max (180) since the true ETA vastly exceeds it.
+- **slot 19, 2026-08-16**: Re-checked — gate still NOT met, but the sweep is materially faster than slot 18's early
+  estimate suggested. `cefi-queue-heavy-binancefutu-x17-20260815-220349` `PROGRESS.json` now reads
+  `last_completed_date=2020-07-27, updated=2026-08-16T04:02:45Z`. Using the VM's full runtime as baseline (launched
+  2026-08-15T22:03:49Z, i.e. ~5h59m elapsed) rather than slot 18's narrow ~2h50m sample: it advanced from its
+  2020-03-23 start to 2020-07-27 — **126 calendar-days in ~6 hours, ~21 days/hour**, ~8x faster than the earlier
+  2.5-days/hour sample (likely noise from measuring too short a window right after relaunch). At this corrected rate,
+  the remaining distance from 2020-07-27 to 2026-04-14 (~2,088 calendar days) projects to roughly **~99 hours (~4.1
+  days) of continuous VM runtime** — still far outside this todo's `est_hours: 1.0` budget, so still GATED, but a
+  meaningfully closer ETA than the prior ~37-day projection. Recording the corrected rate + a fresh baseline
+  (date/timestamp pair) so the next re-check can extrapolate from a longer, more reliable window instead of
+  re-deriving from a possibly-noisy short sample. Skipped `reason_code: GATED` again; `estimated_unblock_minutes`
+  capped at the fleet max (180) since the true ETA (~4 days) still vastly exceeds it — re-check no sooner than
+  ~1-2 days out, not immediately.
