@@ -88,6 +88,10 @@ context_scope:
 > - **[DATA] P2.** Register PACIFICA-SOLANA (265) in the fail-hard quarantine set.
 
 - **Venue-specific canonicalisation residuals**:
+  - [`plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md`](/plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md)
+    — 0 open todos (status: complete — the original `active/issues/` doc was removed 2026-08-16 by a na-eligibility-audit
+    cefi-tranche pass; corrected here, this dangling reference is what that audit's own "5 KEEP-NA-stale citation
+    corrections" pass missed for this specific referrer).
   - [`plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`](/plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md)
     — 0 open todos (archived 2026-07-26, record-only).
   - [`plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](/plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md)
@@ -121,7 +125,7 @@ context_scope:
     - 5. **[REVIEW] P2.** Once 2-4 ship, re-run MTDS's full `quality-gates.sh` to confirm this ripple is the only
          blocker.
   - [`plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md`](/plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md)
-    — 0 open todos (complete/archived 2026-07-26, `execution-service@9a09edf`).
+    — 0 open todos (complete/archived 2026-07-26, `execution-service@1267290`).
     - **[BACKEND] P2.** Re-key bare "COINBASE" → "COINBASE-SPOT" in
       `execution_cost_estimator.py`/`sor.py`/`venue_mapping.py`/`expected_start_dates.yaml`.
     - **[BACKEND] P3.** Grep `trade_handler.py`/`serializer.py` for bare COINBASE usage; re-key if lookup, leave if
