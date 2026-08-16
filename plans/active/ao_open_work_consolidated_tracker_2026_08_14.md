@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycle, dispatch]
 related:
   [
-    /plans/active/issues/ao_fleet_regression_triad_2026_08_16.md,
+    /plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md,
     /plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md,
@@ -214,17 +214,17 @@ context_scope:
       orphans or a false-positive reap of legitimately-working processes is undetermined. Fleet paused down to 4
       backlog slots (20/21/22/24) + ci_escalation (32/33) for controlled diagnosis (operator directive) — MUST be
       resumed once fixed, do not leave at reduced capacity. Source:
-      `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 2 — full evidence, suspect commit list,
+      `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 2 — full evidence, suspect commit list,
       restore command).
 - [ ] [BACKEND] P1. Scheduled-task/CI-escalation "reserved" slot sets (`config.py::scheduled_task_reserved_slot_ids`/
       `ci_escalation_reserved_slot_ids`) are computed dynamically per-call from the current live roster, never
       pinned — the dispatch-gate's reserve set and the scheduler's own target-pick can diverge whenever the roster
       shifts between the two independent computations, contradicting the "fixed slots" behavior the operator
-      expects. Source: `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 1).
+      expects. Source: `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 1).
 - [ ] [UI] P2. Dashboard's human-fleet "ikenna" row (slot 9001) shows a single STALE badge that reads as the
       operator's overall presence, but structurally only reflects one opt-in registration — unrelated to the
       operator's actual concurrent interactive tab/worktree sessions, which the human-fleet model has no visibility
-      into at all. Source: `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 3).
+      into at all. Source: `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 3).
 
 ## Track 2 — Scheduled jobs, benchmarking, model/provider routing
 
