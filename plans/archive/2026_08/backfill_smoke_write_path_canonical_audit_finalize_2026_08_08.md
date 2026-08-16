@@ -65,6 +65,10 @@ superseded_by:
 > Authored `status: active` (not `draft`) per the established no-double-gate precedent — the gate mechanism already
 > machine-holds this plan regardless of the source doc's own status.
 
+> **✅ ARCHIVED 2026-08-16** (plan_reconciler, Phase -1 reconciliation of `plan_reconciler_findings_tradfi_2026_08_16.md`
+> todo 4) — both todos `[x]` since 2026-08-10 (6 days overdue), `archive_exempt` never dropped per its own codex-cited
+> convention. This pass drops it and completes the archival.
+
 ## Todos
 
 - [x] ✅ [REVIEW] P2. **Verify the doc-comment correction shipped as specified, re-checking against the actual code

@@ -37,7 +37,7 @@ assigned_role: data_engineering
 effort: xhigh
 context_scope:
   [
-    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
+    /plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
@@ -91,7 +91,8 @@ source:
       at archival, not dropped (consolidator cron un-pause = MOOT/verified ENABLED; Morpho `lending_indices` live-verify
       migrated to a tracked todo in `/plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`).
       This checkbox stays `- [ ]` because the OTHER two legs are still genuinely open — verified live this pass:
-      `/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` is `status: open` with 1 open todo, and
+      `/plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md` was `status: open` with 1 open todo
+      at the time (path corrected 2026-08-16 — see citation-refresh entry below), and
       `/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md` is `status: active` with 3 open todos.
       **(2026-08-08 na-eligibility-audit citation refresh)**: `tradfi_backfill_oom_remediation_2026_06_24.md` is now
       `assigned_vm: planning` (already actively AO-dispatched, a stronger duplication claim than "just still open");
@@ -102,6 +103,10 @@ source:
       measures **0 open todos** (still `status: open`, not yet archived by its own owner — not this doc's action to
       take), a stronger claim than "actively dispatched." `consolidator_throughput_backlog_monitor_2026_07_09.md` still
       has 2 open todos, unchanged — that leg keeps this checkbox open as an umbrella pointer.
+      **(2026-08-16 plan_reconciler Phase -1 citation refresh, same day)**: `tradfi_backfill_oom_remediation_2026_06_24.md`
+      has now been archived (`plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md`) — the
+      leading-slash reference above is repointed. Does not change this checkbox's verdict: the umbrella pointer stays
+      open on the `consolidator_throughput_backlog_monitor_2026_07_09.md` leg alone (2 open todos, unchanged).
 - [x] ✅ [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) —
       add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
       deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;

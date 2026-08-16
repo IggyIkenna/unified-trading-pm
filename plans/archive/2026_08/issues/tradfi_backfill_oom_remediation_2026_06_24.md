@@ -44,6 +44,11 @@ context_scope:
   ]
 ---
 
+> **✅ ARCHIVED 2026-08-16** (plan_reconciler, Phase -1 reconciliation of `plan_reconciler_findings_tradfi_2026_08_16.md`
+> todo 3) — all 13 todos `[x]`, `locked_by` empty, confirmed outside the 12h grace window via direct `git log` check.
+> The `archive_exempt: true` bridge (2026-08-12) explicitly deferred this exact archival to "a separate follow-on
+> pass"; this is that pass.
+
 ## What I found
 
 The 2026-06-24 `tradfi-bf-*` OHLCV backfill stalls flagged as `DP_VM_STALL` were **NOT** the databento chunk-decode hang

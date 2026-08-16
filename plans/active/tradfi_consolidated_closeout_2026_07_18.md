@@ -539,10 +539,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[CODE] P2.** Consider an `aiodns`/`AsyncResolver` for aiohttp sessions
   - [`plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md`](/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md)
-    - **[INFRA] P2.** After the next deployment-service image rebuild, drop the runtime `TRADFI_OHLCV_MACHINE` env
-      override
-    - **[TRADFI] P2.** memray the ~15 GB per-date transient footprint
+  - [`plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md`](/plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md)
+    — 0 open todos (archived 2026-08-16, plan_reconciler Phase -1; the 2 items below were both already `[x]` at
+    archival time — env-override drop confirmed 2026-07-14/07-25, memray done 2026-07-27)
   - [`plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md`](/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md)
     - **[REVIEW] P1.** Local verify now; Cloud Build deploy DEFERRED (operator 2026-07-10 — local-dev-only)
     - **[BACKEND] P1.** Per-run output-production verdict endpoint (the seam deployments links to)

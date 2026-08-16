@@ -29,7 +29,7 @@ related:
   - /codex/05-infrastructure/deployment-observability.md
   - /codex/05-infrastructure/vm-launcher-runbook.md
   - /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md
-  - /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md
+  - /plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md
   - /plans/active/tradfi_consolidated_closeout_2026_07_18.md
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
@@ -40,7 +40,7 @@ locked_since:
 context_scope:
   [
     /codex/05-infrastructure/deployment-observability.md,
-    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
+    /plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
     deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh,
   ]
 source: >-
