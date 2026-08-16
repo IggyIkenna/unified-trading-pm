@@ -36,6 +36,7 @@ resolved_by:
 locked_by:
 source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
+archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 context_scope:
   [
     /codex/04-architecture/tier-and-import-architecture.md,
@@ -690,9 +691,12 @@ run SEQUENTIALLY, not in parallel:
       cases) PLUS a real-corpus regression test (`test_real_corpus_is_currently_contained`) that is now the ongoing CI
       gate catching this class of drift automatically going forward. Both repos' `quality-gates.sh --no-fix` green;
       pushed + verified reachable on `origin/live-defi-rollout` (`git merge-base --is-ancestor` both shas).
-- [ ] [BACKEND] P2. **NEW finding 2026-07-28, redirected here from `mvp_scope_resolver_code_read_2026_07_24.md`'s P2
-      todo — MVP_SCOPE catalog enforcement is blocked on a MISSING catalog-identity precondition, not just a missing
-      filter.** That doc's own audit (2026-07-26) found strategy-service's catalog never restricts itself to UAC's
+- **[BACKEND] P2. CANCELLED — extracted 2026-08-16 (na-eligibility-audit) → `/plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md` (+ finalize)** — the
+      scope/sequencing decision this item was blocked on was ruled 2026-08-16 (build for all ~26-29 archetypes now, see
+      this doc's own 2026-08-16 Progress Log entry); the resulting AO-dispatchable work is tracked there, not here.
+      Original finding 2026-07-28, redirected here from `mvp_scope_resolver_code_read_2026_07_24.md`'s P2
+      todo — MVP_SCOPE catalog enforcement was blocked on a MISSING catalog-identity precondition, not just a missing
+      filter. That doc's own audit (2026-07-26) found strategy-service's catalog never restricts itself to UAC's
       canonical `MVP_SCOPE` (`unified_api_contracts.canonical.crosscutting._mvp_scope_predicate.is_mvp`) and asked for
       an `is_mvp(...)` post-filter inside/after `catalog.py`'s `specs_for_archetype()` — the SAME shape as this doc's
       own Layer-2 design sketch (Finding 1) and Layer-3 `_curtailment_reason_for_spec`/`_VENUE_IDENTITY_KEYS` mechanism.
@@ -888,3 +892,4 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   design calls (dispatch-scope-eligibility rule: "figure out how X should look" is a human decision, not a checkable
   worker todo), not blocked by any infra/credential/process precedent this round settled. No satellite-extraction
   candidate found. Doc stays `assigned_vm: NA` (KEEP-NA valid, round11). Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-16** [body-hash:6bb357488f3768d0]: KEEP-NA-STALE (already-duplicated), applied — 891-line issue doc, almost entirely shipped/checked off across Phases 0-5. Sole remaining open item (the MVP_SCOPE catalog-identity precondition, line ~693) was flagged in-doc as blocked on a scope/sequencing decision; this doc's own 2026-08-16 Progress Log entry records that ruling landing today (build for all ~26-29 archetypes now) and the resulting work extracted to /plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md (+ finalize, both confirmed live on disk: assigned_vm:planning, status:active, correct Source: citation). Converted the stale open checkbox to a citation marker this run (was never flipped despite the extraction already existing). Doc now has 0 open checkboxes remaining.

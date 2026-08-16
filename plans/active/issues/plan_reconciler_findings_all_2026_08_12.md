@@ -374,7 +374,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       "DEFAULT-RULED" label presents an undecided design call as settled. **DONE (verified 2026-08-16)**: superseded by
       an explicit "CONFIRMED 2026-08-12 (/plan-reconcile, operator interactive)" ruling on the same todo, no longer just
       a standing-policy default.
-- [x] ✅ [REVIEW] P3. (P3) plans/active/issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md:134 — checkbox [x]
+- [x] ✅ [REVIEW] P3. (P3) plans/archive/2026_08/issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md:134 (archived 2026-08-16) — checkbox [x]
       vs body text "Still open"/"Left `- [ ]`" (later Progress Log resolved for real). **DONE (verified 2026-08-16)**:
       the stale "Still open" text is struck through with a "CORRECTED 2026-08-12 (/plan-reconcile)" annotation — already
       fixed.

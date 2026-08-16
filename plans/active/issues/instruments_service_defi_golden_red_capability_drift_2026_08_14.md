@@ -50,6 +50,7 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 context_scope:
   [
     instruments-service/scripts/regenerate_expected_universe_golden.py,
@@ -129,14 +130,21 @@ full unscoped output.
 
 ## Todos
 
-- [ ] [DATA] P1. **Audit + lockstep-regen the defi expected-universe golden** — confirm the accumulated diff (AAVE_V3
-      rewards `unified-api-contracts@6a001ea4` + MORPHO/SPARK/oracle_prices/lst_rates/dex_pool_state additions) is
-      intentional/settled, then run `regenerate_expected_universe_golden.py` and commit ONLY
-      `tests/unit/scripts/goldens/expected_universe/defi.json` (revert every other file the script also rewrites).
-      Unblocks fleet-wide `instruments-service` quickmerge. SSOT: this doc + the 08-05 precedent.
-- [ ] [SCRIPT] P3. **Scope `regenerate_expected_universe_golden.py` to `--asset-group=<ag>`** (or add an explicit
-      warning banner) so a future operator regenerating one asset group's golden can't silently also rewrite an
-      unrelated asset group carrying its own open `[OPERATOR]`-gated xfail (as `tradfi.json` nearly was here).
+- **[DATA] P1. CANCELLED — extracted 2026-08-16 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch14_2026_08_16.md`
+      (status: draft, pending operator approval)** — conflict-check found this exact audit+regen already drafted
+      there verbatim (todo "Reconcile + regenerate the defi expected-universe golden; scope the regen tool
+      per-asset-group", which explicitly covers both this item and the item below); do not re-extract or
+      re-dispatch until that batch either activates+completes or is abandoned. Original item: confirm the
+      accumulated diff (AAVE_V3 rewards `unified-api-contracts@6a001ea4` + MORPHO/SPARK/oracle_prices/lst_rates/
+      dex_pool_state additions) is intentional/settled, then run `regenerate_expected_universe_golden.py` and
+      commit ONLY `tests/unit/scripts/goldens/expected_universe/defi.json` (revert every other file the script
+      also rewrites). Unblocks fleet-wide `instruments-service` quickmerge. SSOT: this doc + the 08-05 precedent.
+- **[SCRIPT] P3. CANCELLED — extracted 2026-08-16 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch14_2026_08_16.md`
+      (status: draft, pending operator approval)** — same batch14 todo as above also covers this item ("scope the
+      regen tool per-asset-group"); do not re-extract. Original item: scope `regenerate_expected_universe_golden.py`
+      to `--asset-group=<ag>` (or add an explicit warning banner) so a future operator regenerating one asset
+      group's golden can't silently also rewrite an unrelated asset group carrying its own open `[OPERATOR]`-gated
+      xfail (as `tradfi.json` nearly was here).
 
 ## Progress Log
 
@@ -151,3 +159,4 @@ full unscoped output.
   census-script commit stays local-only (`instruments-service@3fbcf108`, ahead=1) until this clears — the actual
   valuable output of that work (the 15.9M-row census numbers + risk analysis) is already durably shipped separately via
   `unified-trading-pm@974700fc98`, so nothing load-bearing is at risk from the script itself waiting.
+- **na-eligibility-audit 2026-08-16** [body-hash:39615222d716b35a]: KEEP-NA-STALE (already-duplicated), applied — both open todos (audit+regen the golden; scope the regen tool per-asset-group) are covered verbatim by ONE todo in defi_satellite_ao_dispatch_batch14_2026_08_16.md (status: draft). Original Phase-1 classifier proposed a per-todo RECLASSIFY-split on todo 2 alone, but the batch14 conflict supersedes that — converted both checkboxes to citation markers rather than reclassifying/extracting (would open a second dispatch path once batch14 activates). Doc stays NA, 0 open checkboxes remaining.

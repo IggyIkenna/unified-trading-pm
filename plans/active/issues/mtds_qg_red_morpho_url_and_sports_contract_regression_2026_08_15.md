@@ -24,6 +24,7 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 context_scope:
   [
     /codex/04-architecture/shard-level-failure-isolation.md,
@@ -79,8 +80,12 @@ caused by my diff) via `git log -1 -- <file>` on each flagged file, both showing
 
 ## Todos
 
-- [ ] [CODE] P1. Route `market_tick_data_service/cli/handlers/_oracle_prices_constants.py:556`'s `_MORPHO_BLUE_API_URL`
-      literal through `get_evm_protocol_rest_url("morpho")` from `unified_api_contracts.registry` instead of the bare
+- **[CODE] P1. CANCELLED — extracted 2026-08-16 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch14_2026_08_16.md`
+      (status: draft, pending operator approval)** — conflict-check found this exact fix already drafted there
+      verbatim (todo "Route MTDS's hardcoded Morpho URL through the UAC registry"); do not re-extract or re-dispatch
+      until that batch either activates+completes or is abandoned. Original item: route
+      `market_tick_data_service/cli/handlers/_oracle_prices_constants.py:556`'s `_MORPHO_BLUE_API_URL` literal
+      through `get_evm_protocol_rest_url("morpho")` from `unified_api_contracts.registry` instead of the bare
       `https://blue-api.morpho.org/graphql` string. Repo: market-tick-data-service.
 - [x] ✅ [CODE] P1. **RESOLVED — verified live 2026-08-15.** Re-ran the actual scanner
       (`python3 unified-trading-pm/scripts/quality_gates/check_adapter_contract_regression.py --workspace-root <ws>`)
@@ -106,3 +111,4 @@ caused by my diff) via `git log -1 -- <file>` on each flagged file, both showing
   already shipped + verified via live scanner re-run); flipped that todo. The morpho-URL todo remains open and unrelated
   — `sports_honest_coverage_gap_closure_2026_08_14.md`'s "shipped, tested" claim was about the sports fix only and is
   confirmed accurate.
+- **na-eligibility-audit 2026-08-16** [body-hash:9cc73d463ea1fac2]: KEEP-NA-STALE (already-duplicated), applied — sole open todo (route the hardcoded Morpho URL through the UAC registry) is verbatim-duplicated in defi_satellite_ao_dispatch_batch14_2026_08_16.md (status: draft). Converted the checkbox to a citation marker rather than reclassifying (would open a second dispatch path once batch14 activates). Doc stays NA, 0 open checkboxes remaining.

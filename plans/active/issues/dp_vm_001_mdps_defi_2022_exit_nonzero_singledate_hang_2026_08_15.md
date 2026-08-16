@@ -157,3 +157,4 @@ date (`2022-12-13`) that actually needs it.
   DP-VM-001's routing table (non-OOM → page) and RB-INFRA-RELAUNCH's stand-down guidance (don't race an
   already-converging actuator), did NOT relaunch. Filed this issue doc with the diagnosed root cause (a step beyond the
   two 2026-08-14 precedent docs, which explicitly deferred `run.log` reading) and paged the operator via `/blocked`.
+- **na-eligibility-audit 2026-08-16** [body-hash:f2354324a1a4ef7f]: KEEP-NA, valid — Live operational escalation doc (filed 2026-08-15), no prior na-eligibility-audit marker present, correctly in scope for a fresh read. Both todos verified via grep (count=2, matches Phase-0).

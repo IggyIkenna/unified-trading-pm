@@ -865,3 +865,4 @@ tarball once; always check the launcher's own freshness warning output, and if s
   evidence-backed close only, not a full re-read) — next incremental run re-verifies fresh since content changed today.
 - **2026-08-08 (doc-hygiene)**: Corrected Phase 5 #1's table row — cited doc's credential item is the-odds-api.com
   (sports, cleared 2026-08-03/07), not Tardis; this item's real OOM blocker was fixed 2026-07-26. In-place, still 998L.
+- **na-eligibility-audit 2026-08-16** [body-hash:c84fdaab8684f1c1]: KEEP-NA, valid — 868-line plan (self-reported at 998L as of 2026-08-08, near the 1000L hard cap -- flagged repeatedly by na-eligibility-audit 2026-08-03/2026-08-07 as requiring marker-only edits going forward), personally read end-to-end across both pages.

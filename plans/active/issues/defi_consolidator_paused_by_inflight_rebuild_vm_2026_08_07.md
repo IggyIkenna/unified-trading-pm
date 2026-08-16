@@ -180,3 +180,4 @@ this is inference from timing + the workspace's own documented operational contr
   lock defense, `CONSOLIDATOR_DOWN` genuinely cleared). Closed the alert-clearing half; the rebuild-completion half was
   never this doc's to track and is correctly owned by `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3
   item. 1 todo remains open (todo 3, operator/design-gated Slack-routing question) — doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-16** [body-hash:c9c0e4e2998c0916]: KEEP-NA, valid — Todos 1-2 are already closed with hard, live-verified evidence (Cloud Audit Log correlation of the scheduler pause to the in-flight rebuild VM;.

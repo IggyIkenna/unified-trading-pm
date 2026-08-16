@@ -208,3 +208,4 @@ concrete, currently-failing symptom; the classification question is the census a
 > historical gap — an operator/design decision, not resolved here' — never converted to a `- [ ]` todo; the 2
 > `[DIAG] P2` checkboxes are closed but secondary (na-eligibility-audit 2026-08-02/04 re-affirms the (a)/(b)/(c)
 > decision is genuine NA judgment work).
+- **na-eligibility-audit 2026-08-16** [body-hash:0faa56d9ca7a1d04]: KEEP-NA-STALE (already-duplicated), re-confirmed -- sole open todo (re-emit 567 GCS-present/manifest-absent KALSHI_PERP/POLYMARKET_PERP rows) is an exact duplicate of an already-dispatched, still-open todo in defi_satellite_ao_dispatch_batch2_2026_07_26.md:307 (live-verified today still unchecked, correct Source: citation back to this doc). This docs own in-place 2026-08-07 Duplicate-claim note already warns against reclassifying. No action needed.

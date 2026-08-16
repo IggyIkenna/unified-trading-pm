@@ -245,3 +245,4 @@ context_scope:
   re-registered `dex_pools` rows is the short-term fix; the durable fix belongs with the POOL-recurrence root-cause
   tracking. Not executing either here (bounded task scope: pool/rate_indices/dex_pool_fees retirement + rollup + panel
   check).
+- **na-eligibility-audit 2026-08-16** [body-hash:a72416208cabee9e]: KEEP-NA, valid — The sole open todo (dex_swaps -> dex_pool_swaps real content migration, NOT a safe rename per a live-run DIAG that found up to 84% legacy-only content on some venue/chain pairs) has been repeatedly corroborated too_large_or_risky across four prior touchpoints (2026-08-04 x2, na-eligibility-audit 2026-08-07, round11-sweep 2026-08-09) as genuinely judgment-heavy: it requires root-causing an unexplained recent multi-venue gap cluster plus a full five-part delete-safety proof before any GCS-level change.

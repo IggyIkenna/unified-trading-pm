@@ -145,3 +145,4 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
   original... binary" section states plainly this is a design call `task_template.md`'s dispatch-scope-eligibility rule
   reserves for a human, not something a worker can determine from the code alone. No RECLASSIFY or satellite-extraction
   applies — there is only the one item, and it is not bounded. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-16** [body-hash:fe02c3b6ddf2195d]: KEEP-NA, valid — The one prior todo (registering CoinbaseCbEthAdapter) is already closed with concrete evidence (regression tests added, full local suite green modulo two confirmed pre-existing unrelated failures).

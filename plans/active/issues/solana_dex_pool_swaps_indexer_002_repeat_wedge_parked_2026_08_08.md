@@ -157,3 +157,4 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
   via the fleet-wide TmuxPruner crash-loop, durably parked. 4 open todos -- todo 1's named prerequisite
   (`review_slot1_tmuxpruner...`'s root-cause todo) is now done, unblocking investigation; todo 3 is an explicit
   `[OPERATOR]` unpark decision with no ruling yet; todo 4 depends on todo 3. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-16** [body-hash:9beeb273044eb7c1]: KEEP-NA, valid — This is a resolved live-incident doc (agent-orchestrator fleet-wide crash-loop wedging one task across 4 slots on 2026-08-08, root-caused and durably parked).

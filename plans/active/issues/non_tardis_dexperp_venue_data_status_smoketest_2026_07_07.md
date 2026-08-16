@@ -571,3 +571,4 @@ Two secondary findings:
   here would open a second dispatch path), and the HYPERLIQUID k-prefix item is still a genuine coin-case-convention
   design call, untouched by any round11 precedent. No satellite-extraction candidate found. Doc stays `assigned_vm: NA`
   (KEEP-NA valid, round11).
+- **na-eligibility-audit 2026-08-16** [body-hash:7009da2197650f78]: KEEP-NA, valid — Single open [FIX] P3 todo remaining out of a 570-line, originally-extensive todo list (all other items resolved/dispatched-elsewhere with commit-sha evidence): HYPERLIQUID k-prefix coin case-sensitivity bug -- `kPEPE`/`kBONK`/`kSHIB` requested via the ALL-catalogue path get `.upper()`-cased to `KPEPE` etc.

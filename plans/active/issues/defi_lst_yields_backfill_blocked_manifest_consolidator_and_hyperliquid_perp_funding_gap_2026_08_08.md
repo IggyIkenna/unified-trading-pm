@@ -36,6 +36,7 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 locked_by:
 locked_since:
 resolved_by:
@@ -142,10 +143,13 @@ Missing: market-tick-data-service-perp
       `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`**: that gap is a different data_type
       (`perp_daily_ctx`, not `perp_funding`) over a non-overlapping later window (2026-06-02-onward vs this doc's
       2026-04-01..2026-05-31) — not the same root cause, as the doc's own note suspected.
-- [ ] [DATA] P3. **Once both gaps above are resolved (or a clean date range is identified), re-run
-      `backfill_lst_yields_30day.sh`** (now bug-fixed, `features-service@00b399d7a`) — either over the original
-      2026-04-20→2026-05-19 window if the gaps clear, or over a re-scoped clean window if they don't. Cite the manifest
-      fill-ratio check's final output as done-when evidence. Repo: features-service.
+- **[DATA] P3. CANCELLED — extracted 2026-08-16 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch14_2026_08_16.md`
+      (status: draft, pending operator approval)** — conflict-check found this exact re-run already drafted there
+      verbatim (todo "Re-run the LST yields 30-day backfill"); do not re-extract or re-dispatch until that batch
+      either activates+completes or is abandoned. Original item: once both gaps above are resolved (or a clean date
+      range is identified), re-run `backfill_lst_yields_30day.sh` (now bug-fixed, `features-service@00b399d7a`) —
+      either over the original 2026-04-20→2026-05-19 window if the gaps clear, or over a re-scoped clean window if
+      they don't. Cite the manifest fill-ratio check's final output as done-when evidence. Repo: features-service.
 
 ## Progress Log
 
@@ -182,3 +186,4 @@ Missing: market-tick-data-service-perp
   on the perp_funding side; the manifest-consolidator staleness class from Todo 1 may still need a fresh live check
   before re-running it (not re-verified here). Evidence: script output above; full quality-gates.sh green on the shipped
   SHA.
+- **na-eligibility-audit 2026-08-16** [body-hash:3f114e9828f6de1c]: KEEP-NA-STALE (already-duplicated), applied — todo 3 (re-run backfill_lst_yields_30day.sh) is verbatim-duplicated in defi_satellite_ao_dispatch_batch14_2026_08_16.md (status: draft). Todos 1-2 already [x] done. Converted todo 3s checkbox to a citation marker rather than reclassifying (would open a second dispatch path once batch14 activates). Doc stays NA, 0 open checkboxes remaining.

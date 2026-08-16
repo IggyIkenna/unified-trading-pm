@@ -216,3 +216,4 @@ the parent plan's Track 7 culled-venue ruling.
   oracle_prices 08-03), dex_pool_swaps mid-flight (`mtds-dex-swaps-backfill`, 63k+ rows/shard). Todo 1's
   backfill-to-100% not yet reached — checkbox stays `[ ]` (genuine remaining work, not orphaned).
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+- **na-eligibility-audit 2026-08-16** [body-hash:ccfb9f96b88be407]: KEEP-NA, valid — Forked from defi_consolidated_closeout_2026_07_18.md's Track 5, machine-gated via depends_on:[defi_consolidated_closeout_2026_07_18] + gate_on_depends:true (doc's own banner: this holds every task in THIS plan until the parent's ENTIRE remaining scope is done).

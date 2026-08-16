@@ -49,3 +49,4 @@ already exists and is wired, it just cannot execute against live infra without t
 - [ ] [OPERATOR] P3. Provision a Tenderly fork RPC endpoint + API key (and confirm Aave V3 pool read/write access
       through it) for `execution-service` CI, then un-skip `test_tenderly_fork_full_cycle` and verify it passes against
       the live fork.
+- **na-eligibility-audit 2026-08-16** [body-hash:4939ad84f015af58]: KEEP-NA, valid — Single open todo requires provisioning a live Tenderly fork RPC endpoint + API key (with confirmed Aave V3 pool read/write access) to un-skip `test_tenderly_fork_full_cycle` — no such credential exists in the workspace's ambient GSM/CI secret set, and this cannot be self-served by an agent.

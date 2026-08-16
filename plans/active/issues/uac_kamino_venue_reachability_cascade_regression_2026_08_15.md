@@ -92,3 +92,4 @@ reading would have forced a rushed wiring fix during an unrelated ship.
 - [ ] [AGENT] P2. **Close this doc once `morpho` and `kamino` leave the baseline** — and per the
       ratchet convention, remove each in the SAME change that wires its dispatcher path, never as
       a separate cleanup.
+- **na-eligibility-audit 2026-08-16** [body-hash:01a99120392fffec]: KEEP-NA, valid — This is a resolved CI-incident doc: the fleet-wide unified-api-contracts quality-gates.sh block (kamino DeFi venue failing the execution-service venue-coverage-cascade invariant) was fixed via the sanctioned remediation-2 path (added kamino to the reachability baseline with a measured root-cause note) on 2026-08-15, verified green (991s quality-gates.sh run) on 2026-08-16 — the doc explicitly states 'this issue is closed as a CI incident, not as a capability gap.' The sole remaining open todo (line 92, '[AGENT] P2.
