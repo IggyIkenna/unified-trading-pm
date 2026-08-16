@@ -19,7 +19,7 @@ summary: |
   (PREDICTIONS) + 35,278 (ODDS) = 105,370 rows — accounting for ~99.7% of the 105,651-row live
   pending_fetch total across the three data_types. No code fix needed; the fix is re-running
   already-proven-safe existing tooling with --apply.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -36,12 +36,12 @@ related:
   ]
 created: 2026-07-27
 author: unknown
-last_updated: 2026-08-07
+last_updated: 2026-08-16
 parent_epic: sports_master
 priority: P2
 source: sports_satellite_ao_dispatch_batch4-001 (data_engineering slot re-check, 2026-07-27)
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-5 (data_engineering craft, 2026-08-16) — [DIAG] P3 re-verify confirmed pending_fetch=0 for all 15 target leagues, entity_coverage gate holding in production
 locked_by:
 context_scope:
   [
@@ -341,12 +341,26 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
       `cloudbuild=84e0a3ca-81f3-481a-a658-63589bbfb340` SUCCESS. `expected-universe-v2-sports` Cloud Run job uses
       `:latest` — next scheduled run at 01:30 UTC will pull the updated image. **Re-verification over ≥2 consecutive
       days NOT yet done** (requires calendar time post-deploy) — tracked as new [DIAG] P3 todo below.
-- [ ] [DIAG] P3. Re-verify `(footystats, MATCHES/PREDICTIONS/ODDS)` `pending_fetch` for the 15 target leagues
+- [x] ✅ [DIAG] P3. Re-verify `(footystats, MATCHES/PREDICTIONS/ODDS)` `pending_fetch` for the 15 target leagues
       (CHILE_PRIMERA, K_LEAGUE_1, LIGA_MX, ARGENTINA_PRIMERA + 11 PREDICTIONS cup/lower-division leagues) over ≥2
       consecutive days post-2026-08-07 image rebuild — confirming `entity_coverage` gate now fires in production
       (`EXPECTED_NO_PROVIDER_COVERAGE` rows appear for the excluded leagues, `pending_fetch` stops growing). **Done
       when**: ≥2 daily enumerator runs (at 01:30 UTC) both show 0 new `pending_fetch` rows for the target leagues; or a
-      genuine residual is found and re-triaged. (repo: instruments-service, read-only manifest analysis).
+      genuine residual is found and re-triaged. (repo: instruments-service, read-only manifest analysis). — ✅ **DONE
+      2026-08-16 (slot-5)**. The fix HOLDS. Live single-walk read of `_index/availability_index.parquet` (slim columns,
+      `run-bounded-analysis.sh` 28G cap) scoped to `(source=footystats, data_type in {MATCHES,PREDICTIONS,ODDS},
+      league_id in <15 target leagues>)`: `pending_fetch` (`expected_unattempted`) = **0** across all 3 data_types for
+      all 15 leagues, both counting ALL time and specifically rows `written_at >= 2026-08-07T20:54:20Z` (the image
+      rebuild timestamp) — 0 either way, not just 0-since-rebuild. `EXPECTED_NO_PROVIDER_COVERAGE` rows total 78,516 for
+      these leagues and the daily enumerator (01:30 UTC) is actively writing fresh ones through **2026-08-15** (9 daily
+      runs post-rebuild, well past the ≥2-consecutive-day bar) — confirming the `entity_coverage` gate is genuinely
+      firing in production, not just historically typed. Note: the 4 original MATCHES/PREDICTIONS/ODDS leagues
+      (ARGENTINA_PRIMERA/CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX) show their last `EXPECTED_NO_PROVIDER_COVERAGE` write at
+      2026-08-08 while the 11 PREDICTIONS-only cup/lower-division leagues continue through 2026-08-15 — not a
+      regression (both groups show `pending_fetch=0` identically); the 4-league group appears to have exhausted its
+      near-term enumeration window (their history + short-horizon fixture calendar was already fully typed by 08-08),
+      while the cup leagues' broader off-day placeholder pattern keeps generating fresh dates daily. No genuine residual
+      found — closing this doc's last open todo.
 
 > **2026-08-06 archive-candidate audit**: The [x] [DIAG] P3 todo is a clear checkbox-vs-prose contradiction: its body
 > confirms the shipped fix is NOT holding in production, that the deployed Cloud Run image predates the fix, and
@@ -354,3 +368,21 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
 > Progress Log restates 'file a new [INFRA]/[CODE] todo'.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **2026-08-16 (slot-5, data_engineering craft, [DIAG] P3 re-verify)**: closed this doc's last open todo — see the
+  todo's own DONE note above for the full evidence. Summary: `pending_fetch` is genuinely 0 for all 15 target leagues
+  across MATCHES/PREDICTIONS/ODDS, and `EXPECTED_NO_PROVIDER_COVERAGE` rows are being freshly written by the daily
+  01:30 UTC enumerator through 2026-08-15 (9 days post the 2026-08-07 image rebuild) — the `entity_coverage` gate is
+  confirmed holding in production, not just in the unit tests / one-time typing-pass apply. Flipped this doc's
+  frontmatter `status: open` → `status: resolved` (every actionable todo is now `[x]`). Read-only manifest analysis,
+  no code changes this session — the read-only helper script used
+  (`instruments-service/scripts/verify_footystats_15league_pending_fetch_2026_08_16.py`) was deleted immediately
+  after this run per its own `Delete-when` lifecycle marker (script-homes.md: one-offs are temporary). Cross-referenced the resolution in the sibling
+  `footystats_matches_predictions_fetch_gaps_2026_07_08.md`'s Progress Log (its own todo #4 cited this doc as the
+  remaining blocker) — did not flip that doc's todo #4 myself (its own scope also includes a VM-redispatch decision
+  and a cross-plan flip into an archived plan, both outside this task's assigned scope).
+
+> **📦 ARCHIVED 2026-08-16 — RESOLVED.** All actionable todos are `[x]`, unlocked. The `[DIAG] P3` production
+> hold-verification confirmed `pending_fetch=0` for all 15 target leagues across footystats MATCHES/PREDICTIONS/ODDS,
+> with the `entity_coverage` gate actively firing in production through 2026-08-15. Successor: none (self-contained
+> diagnostic confirmation; no follow-up work generated). See this doc's own Progress Log above for full evidence.
