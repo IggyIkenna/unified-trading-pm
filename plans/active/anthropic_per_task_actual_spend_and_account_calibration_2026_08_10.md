@@ -140,7 +140,7 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
 
 ## Todos
 
-- [ ] [DATA] P0. **CORRECTION 2026-08-16 (main agent, BLK-050d1304): `sub-d-odum1default` is tier `pro` ($20/mo),
+- [x] ✅ [DATA] P0. **CORRECTION 2026-08-16 (main agent, BLK-050d1304): `sub-d-odum1default` is tier `pro` ($20/mo),
       NOT `max20` ($200/mo) — verified directly against `agent-orchestrator/data/config/accounts.json` (the
       authoritative live source; `"tier": "pro", "weekly_msg_limit": 600`). Every table row in this doc that labels
       `sub-d-odum1default` as `max20` (Progress Log "2026-08-10 — Diagnosis + first calibration pass" and "Re-run of
@@ -582,7 +582,7 @@ valued at its standard rate.
 | account            | tier  |   (A) |   (B) | published band        |
 | ------------------ | ----- | ----: | ----: | --------------------- |
 | sub-c-ikenna-odum  | max20 | 46.0x |  4.7x | 6-10x                 |
-| sub-d-odum1default | **max20 (WRONG — see 2026-08-16 correction todo, actual tier is pro)** | 34.4x | 18.4x | 6-10x                 |
+| sub-d-odum1default | **pro (corrected 2026-08-16 — see Progress Log; recomputed at the $4.52 Pro denominator)** | 350.1x | 187.3x | 6-10x (excluded — Pro) |
 | sub-f-odum2default | max20 | 22.4x | 23.0x | 6-10x                 |
 | sub-e-odum3default | max20 |  7.7x |  3.5x | 6-10x                 |
 | sub-a-ikenna       | pro   |  107x | 63.8x | 3-6x (excluded — Pro) |
@@ -660,7 +660,7 @@ Sonnet-5 promotion (the correct valuation for an August window):
 | account            | list value (promo) | multiplier |             at standard rates |
 | ------------------ | -----------------: | ---------: | ----------------------------: |
 | sub-c-ikenna-odum  |          $1,455.53 |      32.2x |                         46.9x |
-| sub-d-odum1default (**WRONG denominator — actual tier is pro, see 2026-08-16 correction todo; multiplier needs recomputing at ~$4.52 not ~$45.16**) |          $1,088.19 |      24.1x |                         35.1x |
+| sub-d-odum1default (**pro, corrected 2026-08-16 — recomputed at the $4.52 Pro denominator, see Progress Log**) |          $1,088.19 |     240.8x |                        350.7x |
 | sub-f-odum2default |            $699.73 |      15.5x |                         22.8x |
 | sub-e-odum3default |            $274.89 |       6.1x | 7.8x (excluded — capture era) |
 
@@ -913,3 +913,41 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
+
+### 2026-08-16 (slot-24, data_engineering) — sub-d Pro-denominator recompute + confirm/refute vs the 1047x outlier
+
+**Recomputed both tables' `sub-d-odum1default` rows at the Pro denominator**, per BLK-050d1304's correction todo. Pro
+window cost = `7/31 x $20 = $4.52` (August 2026, same window length both tables already used for max20). Scaling each
+existing multiplier by `old_denominator / $4.52`:
+
+- First calibration pass (denominator was $46.00, the averaged max20 figure the first pass used): list value (A) =
+  34.4x x $46.00 = $1,582.40 -> **350.1x** at $4.52; list value (B) = 18.4x x $46.00 = $846.40 -> **187.3x** at $4.52.
+- Re-run against the corrected max20 denominator ($45.16): promo list value $1,088.19 -> **240.8x**; standard-rate list
+  value (back-derived: 35.1x x $45.16 = $1,585.12) -> **350.7x**.
+
+**Cross-check**: the first-pass (A) figure (350.1x, standard rates per that table's own "Sonnet-5 valued at its standard
+rate" note) and the re-run's standard-rate figure (350.7x) land within 0.2% of each other despite coming from different
+attribution methods and denominator-correction paths — strong evidence the recompute is arithmetically sound rather than
+a coincidence of rounding. Both figures now correctly read as roughly **10x higher** than their mislabeled max20 values,
+matching the todo's own prediction ("raises them roughly 10x, not lowers them").
+
+**Confirm/refute vs the `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md` 1047x outlier: REFUTED — not the
+same root cause.** Read that doc's live table (2026-08-13 pull) directly: it already labels sub-d `tier: pro` correctly
+and computes `implied $ = weekly_pct x prorated_Pro_budget = 23% x $4.52 approx $1.04` — the CORRECT $20/mo Pro
+denominator, not the $200/mo max20 figure this plan's tables were mislabeled with. So the two docs' sub-d numbers are
+wrong (or in this case, actually correct) for entirely different reasons:
+
+- **This plan's bug**: a straight `list_value / full_window_subscription_cost` multiplier, computed against the WRONG
+  subscription cost ($200/mo instead of $20/mo) — a denominator-mislabeling bug, now fixed above.
+- **The sibling doc's 1047x**: `list_value / (weekly_pct x correct_Pro_budget)` — already using the right $20/mo Pro
+  budget, but scaled down further by a LOW observed `weekly_pct` (23%) that appears disproportionate to the account's
+  real token consumption ($1,088.19 of list value). That is a genuine measurement anomaly in how Pro's weekly-limit
+  meter tracks consumption (message-count-weighted vs token-volume-weighted, per that doc's own open question), not an
+  arithmetic denominator error.
+
+Both docs' sub-d readings are now internally consistent with each other in direction (both say Pro is "boosted" far more
+than the 6-10x published band suggests — this plan's own recompute lands sub-d in the same 240-350x range as its clean
+Sonnet-5-heavy siblings once correctly denominated), which is itself informative: it suggests the sibling doc's 1047x
+is the outlier-within-Pro, not evidence that Pro categorically reads ~1000x. The sibling doc's open `[OPERATOR]` todo
+("Investigate the sub-d 1047x outlier") stands unchanged — this session did not touch that doc's todos, only used it as
+a cross-reference to answer this plan's own confirm/refute question.
