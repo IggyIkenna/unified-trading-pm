@@ -1,0 +1,170 @@
+---
+doc_type: issue
+title: "plan_reconciler defi-tranche run findings — 2026-08-16 (dispatch agt-1a88e0, slot 6)"
+summary: >-
+  Daily deep reconciliation pass over the defi topic tranche (130 active docs). Deep-reconciled a data-correctness
+  bucket-delete-safety thread across 4 docs, fixed a self-contradicting checkbox connected to an unresolved POOL-row
+  recurrence incident, archived one HARD-RULE-violating unarchived-done doc, converted 2 zero-checkbox docs to tracked
+  todos, and applied several same-day missed-flips found by a 7-hunter fan-out. Run in progress — this doc is the
+  live journal, appended to as checkpoints land.
+status: open
+nature: issue
+asset_group: [defi]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [plan_reconciler, defi, reconciliation, checkpoint]
+related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
+created: "2026-08-16"
+author: plan_reconciler
+source: "agt-1a88e0"
+locked_by: plan_reconciler-agt-1a88e0
+priority: P2
+assigned_vm: NA
+execution_scope: local-only
+parent_epic: defi_master
+resolved_by:
+depends_on: []
+---
+
+# plan_reconciler defi-tranche findings — 2026-08-16
+
+Dispatch `agt-1a88e0`, slot 6, tranche `defi`. **Note on boot config**: `PM_REPO_PATH` in this dispatch's boot message
+pointed at the root PM clone (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`), not the slot clone —
+contradicts the explicit root-read-only guardrail in `agents/RULES.md`/`agents/plan_reconciler.md`. All work in this run
+used the slot clone (`.tabs/6/unified-trading-pm`) instead; flagging this as a dispatch-generator bug worth a fix (likely
+in `agent-orchestrator/server`'s boot-message construction) so future dispatches don't get a literal root path.
+
+## Coverage
+
+- STEP1: FF-pulled every repo in the slot (one repo, `unified-api-contracts`, not FF-clean — pre-existing dirty
+  `registry/__init__.py`, flagged, not touched — out of this tranche's scope).
+- Tranche inventory: 130 active docs (`generate_tranche_doc_inventory.py --tranche defi`).
+- Fanned out 7 parallel read-only hunters (batches A-G) covering all 126 docs not already deep-reconciled inline —
+  every doc read in full by exactly one hunter. Hunters returned 50+ candidates across contradictions, missed-flips,
+  zero-checkbox docs, AO-dispatch-readiness issues, and dangling refs.
+
+## Flips verified (applied this run)
+
+1. `data_completion_defi_2026_07_15.md` — C0 parent todo flipped `[ ]`→`[x]`: all 7 of its own stated sub-todos
+   (C0-PROVISION, C0a-C0f) were independently confirmed `[x]` by direct read.
+2. `defi_migration_audit_log_2026_07_24.md` — 2 todos annotated/rescoped (not flipped, corrected in place): the
+   "VERIFY-then-MIGRATE unique orphan gaps" todo (downgraded P1→P2, marked BLOCKED not done — source buckets deleted)
+   and the "DELETE duplicate/legacy DeFi orphan buckets" todo (rescoped — `market-data-tick-defi{,-prd}` removed, it's
+   the PERMANENT canonical bucket, not legacy; `solana-defi`/`evm-defi` already deleted 2026-07-10, nothing left to
+   delete there either). See Contradictions #1 below for the full evidence chain.
+3. `defi_migration_audit_log_2026_07_24.md` — aggregator-routes 9th-migrator-spec todo: added a CAVEAT (do not
+   `--apply`, destination bucket unprovisioned) + a new `[OPERATOR] P1` follow-up todo.
+4. `defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md` — converted its prose "Recommended decision"
+   into tracked checkboxes reflecting current resolution state (zero-checkbox-doc sweep); downgraded priority P2→P3
+   (3 of 4 items now resolved).
+5. `defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md` — flipped its `[OPERATOR] P1` "re-scope the
+   delete list" todo to `[x]`, citing the fix applied in item 2 above.
+6. `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` — REOPENED (`[x]`→`[ ]`) the POOL-instrument_type-fold P3
+   todo: the doc's own later-appended text already says the "0 remaining" DONE claim is STALE/CONTRADICTED (7.9M rows
+   recurred), but the checkbox itself was never aligned to that reality. See Contradictions #2.
+7. `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md` — added a `> **SUPERSEDED 2026-08-14**` banner to the
+   PACIFICA-decommission decision: the operator reversed this 2026-08-14 ("jupiter and pacifica please"), confirmed
+   live in `/codex/04-architecture/solana-defi-coverage.md`; the doc carried no banner reflecting the reversal (an
+   unbannered supersession). Also fixed its `context_scope` path to the archived location (item 8).
+8. `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` — **ARCHIVED** via `git mv` to
+   `plans/archive/2026_08/issues/` (all 9 todos + 2 follow-ups `[x]`, unlocked, `archive_exempt: true` note said "will
+   archive in immediate follow-up" dated 2026-08-10 — 6 days overdue, a HARD RULE violation per CLAUDE.md "A plan with
+   every todo done + unlocked MUST be archived immediately"). Fixed its one genuine path-form referrer (item 7 above);
+   4 other referrers are historical bare-name prose mentions, left as-is (not misleading, don't need a live path).
+
+## Zero-checkbox docs found → converted to tracked todos
+
+1. `defi_pool_uppercase_recurrence_after_fold_2026_08_11.md` (P1, `assigned_vm: planning`) — converted its
+   "Recommended decision" (4 items) into real checkboxes. 2 of the 4 were ALREADY resolved in the doc's own "What I
+   found" section (struck through) but never reflected in "Recommended decision" — flipped those `[x]` too; 2 remain
+   genuinely open (GCS-object sampling + the final retirement decision). This is the doc tracking the recurrence
+   connected to Flip #6 above.
+2. `dp_vm_001_mdps_defi_2026_lock_ttl_staleness_budget_mismatch_2026_08_15.md` (P1, `assigned_vm: NA`) — converted its
+   "Recommended decision" (Option A/B) into 2 tracked todos.
+
+## Contradictions (confirmed)
+
+1. **[P0, data-correctness] A DELETE todo's target list included the live production canonical bucket.**
+   `defi_migration_audit_log_2026_07_24.md`'s "DELETE duplicate/legacy DeFi orphan buckets" todo listed
+   `market-data-tick-defi{,-prd}` as a legacy-delete candidate. Two independent live-verified investigations
+   (`defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md` and, more thoroughly,
+   `defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md`, slot 22, live-GCS-verified) already
+   confirmed this bucket is PERMANENT canonical — every DeFi handler converges on it since the 2026-07-10..07-16 bucket
+   estate cleanup. Fresh-confirmed again this turn via `deployment-service/configs/cloud-providers.yaml`. FIXED (Flip
+   #2). Was NOT yet executed (operator sign-off gate existed), but a future worker reading the todo literally could
+   have destroyed the live DeFi tick-data store. Also: `solana-defi{,-prd}`/`evm-defi{,-prd}` are themselves already
+   DELETED (2026-07-10) — nothing left there to delete either; the Aave/marinade "unique gap" data may have been lost
+   in that deletion with no audit trail confirming it was checked first — this specific sub-question is ALREADY
+   tracked as its own `[OPERATOR] P2` todo in `defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md`
+   (Cloud-Logging admin-activity check needed) — not re-filed here, just cross-linked.
+
+2. **[P0, data-correctness, UNRESOLVED] `instrument_type=POOL` (uppercase) manifest rows regrew from 0 to 7.9M after a
+   verified-clean fold, mechanism still unknown — and a related `dex_swaps` migration-completion claim conflicts with
+   a fresh live count by an order of magnitude.** `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s P3 todo
+   claimed "0 POOL rows remain" (2026-08-05, verified via full corpus scan). `defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`
+   (2026-08-11) found 7,930,863 such rows. Two obvious mechanisms (live-writer regression, manifest-rebuild
+   re-emitting stale casing) were directly ruled out by code read — root cause remains open. Checkbox realigned (Flip
+   #6), zero-checkbox doc converted to todos (item 1 above) so the remaining DIAG/SCRIPT work is now dispatchable.
+   **Related, NOT independently verified this run** (routing only, per Calibration's "no new measurement" rule):
+   hunter batch B separately found `dex_swaps` migration-completion claims conflicting by ~3.26M rows across 4 docs
+   (`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`, `defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md`,
+   `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`,
+   `defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md`) — none cross-reference each other. Given both threads
+   involve the SAME manifest-consolidator/rebuild machinery and the SAME bucket, they may share a root cause. Routed
+   to STEP 6 (below) rather than resolved — would require fresh live GCS/manifest reads beyond doc reconciliation.
+
+3. **[P2, doc-hygiene] `market-data-tick-defi-prd`'s aggregator-routes 9th migrator spec shipped code targeting an
+   unprovisioned bucket.** The 2026-08-08 decision to keep `aggregator-routes` a dedicated bucket cited `gas-fees`/
+   `liquidations` as precedent — but both had ALREADY been retired to the shared bucket by the time that decision was
+   made (07-10/07-12 vs 08-08). Fixed (Flip #3).
+
+4. **[P1, unbannered supersession] PACIFICA-SOLANA decommission decision superseded by a later operator reversal, no
+   banner.** Fixed (Flip #7); confirmed live in `/codex/04-architecture/solana-defi-coverage.md`.
+
+## Doc-drift / routed to STEP 6 (not auto-fixed — needs either fresh live investigation or operator awareness)
+
+- **Contradiction #2's `dex_swaps` cross-doc row-count conflict** — genuinely needs a fresh live manifest read to
+  adjudicate, which is out of scope for doc reconciliation alone. Recommend: (a) the 4 docs get cross-linked to each
+  other so the next worker on any one of them sees the others, (b) a dedicated data-engineering investigation
+  (not this reconciler) re-measures the live `dex_swaps` captured-row count and reconciles against all 4 claims.
+- **`defi_manifest_index_catastrophic_shrink_2026_08_16.md`'s "159M→138K catastrophic shrink" claim** (hunter batch C)
+  looks like it may conflate two distinct bucket KINDS (`instruments-store-defi-prd` vs `market-data-tick-defi-prd`)
+  — the doc's own `[OPERATOR] P0` "halt the consolidator" order is premised on this comparison. Not independently
+  re-verified this run (would require a fresh live bucket-identity check). Flagging for operator/next-pass attention
+  given the severity (a live P0 halt-order may be based on a bucket mix-up) — **NOT resolved, NOT auto-fixed**.
+- **`defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e)** — a ready-to-fire 133M-row prod write
+  against the bucket the 159M figure actually belongs to, relying on the same consolidator machinery
+  `defi_manifest_index_catastrophic_shrink_2026_08_16.md` suspects may be defective. Worth operator awareness before
+  it fires; not independently adjudicated this run.
+- **`defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md`** (hunter batch B) claims an "undocumented"
+  scheduler pause, but the pause + its resume-gate ARE already tracked in `defi_consolidated_closeout_2026_07_18.md`
+  Track 8 (a wrong-vocabulary grep miss, not a real gap) — and the new doc's own proposed safety re-check
+  (`mtds-<op>-backfill` VM-name pattern) would not catch the actual gating VM
+  (`canonical-migration-defi-rebuild-*`). Not fixed this run (would need to rewrite the new doc's safety-check
+  methodology) — flagged for next pass or operator attention before anyone resumes those schedulers based on the new
+  doc's check alone.
+
+## Refuted (dropped by verify)
+
+- Hunter batch A's finding #8 ("a prior plan_reconciler pass today introduced a wrong `/issues/`-segment path") —
+  checked live against the current file (`defi_cefi_venue_chain_axis_contamination_2026_07_28.md:424`): the path is
+  already correct, no `/issues/` segment present. Either the hunter misread it or it was already fixed by the time of
+  this check. Not applied.
+
+## Coverage / hunter tally
+
+- 7 hunters, 126 docs (+4 already deep-reconciled inline = 130/130 tranche docs read in full).
+- Candidates returned: ~15 contradictions/self-contradictions, ~10 missed-flip candidates, 2 zero-checkbox docs
+  (both converted), ~10 AO-dispatch-readiness issues, ~12 dangling-ref/hedge-pointer findings, ~20 other notable
+  findings (stale frontmatter, stale progress-table counts, a `sequential: true` violation, a checkbox with zero
+  completion evidence, non-standard checkbox markers, etc).
+- This checkpoint covers the highest-confidence/highest-severity subset. Remaining lower-priority items (see hunter
+  reports) continue in the next checkpoint(s) of this same run.
+
+## Plans not reached (yet — continuing this run)
+
+Deferred to next checkpoint: the ~8 remaining same-day/clear missed-flips (mdps_features stale gates ×2, track01
+same-day rulings ×2, batch6/9-finalize stale claims, solana_dex_pool_swaps_indexer_002 todo 4), dangling-ref fixes
+(`instruments_docs_audit_outstanding_items_2026_07_08.md` ×6, `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`
+hedge-pointer citation), the elysium progress-table stale-count fix, and assorted P2/P3 frontmatter/cosmetic items.

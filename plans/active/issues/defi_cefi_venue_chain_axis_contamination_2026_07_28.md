@@ -410,7 +410,9 @@ in this read-only audit pass (time-bounded scope).
       shipped chain-allowlist fix (`instruments-service@f651ff8b`) — no further architecture change needed. Decided
       using this doc's own new evidence per the autonomous-dispatch "decide, don't ask" rule (documented record of
       intent: this doc's own P2(b) investigation), not a fresh guess.
-- [x] ✅ [DATA] P3. **DONE 2026-08-05 — `market-tick-data-service@87e9e100` + live manifest fold executed, 0 POOL rows
+- [ ] [DATA] P3. **REOPENED 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0) — the DONE claim below is
+      CONTRADICTED by this same item's own STALE annotation further down; aligning the checkbox to reality.** Original
+      claim: **DONE 2026-08-05 — `market-tick-data-service@87e9e100` + live manifest fold executed, 0 POOL rows
       remain.** Fold historical `instrument_type=POOL` (uppercase) defi manifest rows to canonical lowercase `pool`.
       Script `scripts/one_offs/fold_pool_instrument_type_casing_2026_08_05.py` (committed
       `market-tick-data-service@87e9e100`) — 2-pass cell-classification design: Pass 1 classifies every legacy POOL

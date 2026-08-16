@@ -150,6 +150,26 @@ Before todo 2 (or 3/4) attempts another retirement:
 No irreversible action taken or proposed here — this is a manifest-status-flip-adjacent investigation gap, not a GCS
 delete, but the same evidentiary bar applies given real financial data is at stake.
 
+## Todos
+
+- [x] ✅ [DIAG] P1. Confirm the rebuild VM's actual deployed code content (commit_sha) — rule in/out a stale snapshot.
+      **RESOLVED 2026-08-12 (slot 5, data_engineering), RULED OUT** — see "What I found" item 4 above:
+      `git log 3f5cc6e4..HEAD` shows no revert of the `parse_hive_path` lowercasing fix; a floating tarball built from
+      whatever HEAD was checked out in that window could not have shipped pre-N6a code.
+- [x] ✅ [DIAG] P1. Confirm whether the rebuild is full-replace or upsert-onto-existing. **RESOLVED 2026-08-12 (slot 32,
+      data_engineering): UPSERT-onto-existing-index, NOT full-replace** — see "What I found" item 4 above; narrows the
+      recurrence window to the 08-05→08-10 pre-rebuild gap (the 7.9M uppercase rows were already present by 2026-08-10
+      and passed through the rebuild untouched).
+- [ ] [DIAG] P1. Sample a handful of the 7,930,863 uppercase rows' underlying GCS objects directly
+      (`gcs_describe_object`/`list_blobs` under `instrument_type=POOL/`) to settle whether they're a manifest-column-only
+      artifact (as the 2026-08-05 fold assumed) or genuinely reflect physical objects at an uppercase path — the latter
+      would need the Part-5 "legacy COPIED not MOVED" migration treatment
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5), not a manifest-only patch.
+- [ ] [SCRIPT] P1. Only once the DIAG todo above lands, decide whether
+      `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2's retirement can proceed safely, or
+      whether the underlying pipeline needs a durable fix first so this doesn't recur a third time. Also re-close
+      `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s now-reopened P3 todo once resolved.
+
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).

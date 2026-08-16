@@ -73,8 +73,11 @@ context_scope:
       B0/C0 seed-chain framing (shard key is now the symbolic `canonical_instrument_id`, not this consolidator chain).
       Do not flip that condition off the completion of THIS todo; see Track 5's unpark note instead.
 
-- [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
-      2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
+- [x] ✅ [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
+      2026-06-01)**. **FLIPPED 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: by this todo's own
+      stated definition ("Remaining = the C0a–C0f VM-cutover sub-todos below"), every one of C0-PROVISION/C0a/C0b/C0c/
+      C0d/C0e/C0f is `[x]` — verified by direct read, not inference. **Two-tool lineage (system-first)**: Phase-1.8
+      `migrate_defi_canonical.py` already did
       VENUE-CHAIN→flat (C3), data_type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical
       instrument_id — that step is DONE; the current dedicated-bucket objects are in the flat
       `day=/category=defi/venue={FLAT}/chain=/…` form.

@@ -39,7 +39,7 @@ author:
   sub-agent (Claude Code session, dispatched via
   /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md's REDIRECT todo)
 parent_epic: defi_master
-priority: P2
+priority: P3
 assigned_vm: NA
 execution_scope: local-only
 estimate_class: research
@@ -137,13 +137,36 @@ provisioning SSOT.
 
 ## Recommended decision
 
-1. **The REDIRECT todo (this dispatch)**: mark resolved-as-moot in `defi_migration_audit_log_2026_07_24.md` — no code
-   change needed, evidenced by this issue doc. (Handled by
-   `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` todo 1's evidence-reconciliation
-   pass — cite this issue doc there.)
-2. **Gas-fees manifest-rebuild-scope + delete-after-migration + aggregator-routes-9th-spec todos**: need a human/
-   judgment re-read against the current bucket architecture before further dispatch — recommend the next
-   `/na-eligibility-audit` or `/ag-closeout-audit` defi-tranche pass (or a direct operator ruling) either strikes them
-   as moot or rewrites them against the single-bucket model. Left as `assigned_vm: NA` here rather than resolved, since
-   striking a still-open P1 todo needs the doc owner's confirmation, not a unilateral edit from an unrelated dispatch.
-3. No GCS/bucket state change is proposed or required by this issue doc itself — purely a doc-accuracy finding.
+- [x] [DOCS] P1. **The REDIRECT todo (this dispatch)**: mark resolved-as-moot in `defi_migration_audit_log_2026_07_24.md`
+      — no code change needed, evidenced by this issue doc. **DONE (pre-existing, verified 2026-08-16)** — the parent
+      doc's REDIRECT todo already carries a `RESOLVED-AS-MOOT 2026-08-14` marker citing this issue doc.
+- [x] [DATA] P1. **The delete-after-migration todo's target list was wrong** — it listed `market-data-tick-defi{,-prd}`
+      as a legacy delete candidate, but that is the PERMANENT canonical bucket every live DeFi handler writes to.
+      **FIXED 2026-08-16 (plan_reconciler defi tranche, dispatch agt-1a88e0)**: removed it from the delete list in
+      `defi_migration_audit_log_2026_07_24.md`, evidence cited inline there (fresh-confirmed: `market-data` is a live
+      provisioned `kind` in `deployment-service/configs/cloud-providers.yaml`).
+- [x] [OPERATOR] P1. **The aggregator-routes-9th-spec todo ships code targeting an unprovisioned bucket.** **FLAGGED
+      2026-08-16 (plan_reconciler defi tranche)**: added a CAVEAT to the DONE todo in
+      `defi_migration_audit_log_2026_07_24.md` (do not `--apply` until resolved) plus a new `[OPERATOR] P1` follow-up
+      todo there recommending folding aggregator-routes into the shared bucket like the other 8/8 DeFi data_types
+      (fresh-confirmed: `aggregator-routes`/`aggregator_routes` has ZERO entries in the cloud-providers.yaml SSOT).
+- [ ] [DOCS] P3. **Gas-fees manifest-rebuild-scope todo** — lower priority, left open: already marked `[x]` DONE in the
+      parent doc (the `--bucket` tool capability genuinely shipped, `mtds@01fda7ce`) with no live-risk exposure (no
+      pending `--apply` gated on it specifically) — but its motivating scope (rebuilding manifests over 7 dedicated
+      `-prd-` buckets) likely shares the same staleness as the other 2 items above, since `gas-fees`'s own dedicated
+      bucket kind was ALSO removed 2026-07-12. Not a data-correctness or live-risk item; a future pass can fold this
+      into the parent doc's own text once someone has bandwidth.
+- [x] [DOCS] P3. No GCS/bucket state change is proposed or required by this issue doc itself — purely a doc-accuracy
+      finding. Confirmed still true — no bucket mutation was made by any of the fixes above, only doc corrections.
+
+## Progress Log
+
+- **2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: converted this doc's prose "Recommended decision"
+  section into tracked checkboxes (Phase 2 zero-checkbox-doc sweep). Applied items 2-3 directly to
+  `defi_migration_audit_log_2026_07_24.md` rather than parking for a future `/na-eligibility-audit`/`/ag-closeout-audit`
+  pass as originally recommended — the evidence was independently provable this turn via a fresh
+  `deployment-service/configs/cloud-providers.yaml` read (Phase 4 Calibration: "if a claim is countable, count it"), and
+  the delete-todo miscorrection was an active landmine (its original scope would have targeted the live production DeFi
+  tick-data bucket for deletion) worth fixing immediately rather than deferring further. Left the gas-fees
+  manifest-rebuild-scope todo open as P3 (no live risk, already `[x]` DONE upstream, informational staleness only).
+  Downgraded this doc's frontmatter `priority` P2→P3 to match: 3 of 4 items now resolved, the remainder is low-risk.

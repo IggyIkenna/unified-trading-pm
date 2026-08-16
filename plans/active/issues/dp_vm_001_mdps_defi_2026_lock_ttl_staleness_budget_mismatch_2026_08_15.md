@@ -156,8 +156,24 @@ Either requires re-checking `defi_consolidator_paused_by_inflight_rebuild_vm_202
 they're the SAME budget-mismatch class (they predate this session's TTL-override discovery) and can be closed
 together once the real fix lands.
 
+## Todos
+
+- [ ] [BACKEND] P1. Align the staleness-alert budget every consumer applies to `market-data-tick-defi-prd`'s manifest
+      freshness with its `CONSOLIDATOR_LOCK_TTL_SECONDS=9000` override — either (A, recommended) raise the
+      staleness-alert budget for this bucket to `>= 9000s` across every consumer (the MDPS preflight check, the fleet
+      CONSOLIDATOR_DOWN monitor, and any other reader of `availability_index.parquet` freshness), or (B) if 9000s is no
+      longer needed for this bucket's current shard volume, lower `CONSOLIDATOR_LOCK_TTL_SECONDS` back toward the 300s
+      default and re-verify merges still complete within it. Repos: deployment-service, unified-trading-library.
+- [ ] [DATA] P2. Re-check `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` and
+      `defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md` for
+      whether they're the SAME budget-mismatch class (both predate this doc's TTL-override discovery) — close together
+      with the fix above if so.
+
 ## Progress Log
 
 - 2026-08-15: Filed by escalation agt-24861c (slot 30). Diagnosed root cause live (scheduler/job/lock/env, GCS SDK
   reads only). Paged operator per DP-VM-001 non-OOM routing table + boot directive. Not fixed inline (cross-cutting
   budget decision, out of one-shot scope).
+- **2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: converted this doc's prose "Recommended decision"
+  into tracked checkboxes (Phase 2 zero-checkbox-doc sweep) — it previously contributed zero dispatchable work despite
+  `assigned_vm: planning`.

@@ -519,7 +519,7 @@ P1 redirect todo below.)
       DeFi arb/carry net-of-gas is wired (execution `estimate_gas` for gas_units × the gas_fees price); if missing, the
       gas data is collected but unused for profitability. Repos: strategy-service / execution-service. parent_epic:
       defi_master. Provenance: slot-2 gas-fees audit 2026-06-08.
-- [ ] [DATA] P1. **VERIFY-then-MIGRATE the UNIQUE orphan gaps into the canonical dedicated buckets BEFORE any legacy
+- [ ] [DATA] P2. **VERIFY-then-MIGRATE the UNIQUE orphan gaps into the canonical dedicated buckets BEFORE any legacy
       delete** (else data loss on the irreversible cutover): (a) `evm-defi-prd` Aave V3 **`2022-03-12…2022-10-31`**
       range → backfill into `lending-indices-` (confirm absent there first via cf_manifest_audit); (b) `solana-defi-prd`
       **`marinade`** (mSOL LST) → confirm absent in `lst-rates-`, migrate if unique; (c) `market-data-tick-defi-prd`
@@ -527,6 +527,18 @@ P1 redirect todo below.)
       `dex-pools-`/`lending-indices-` (sampled ORCA/RAYDIUM are; KAMINO/lending unconfirmed), migrate if unique. Repo:
       market-tick-data-service (`scripts/migrate_defi_full_v9_canonical.py` could add these as extra source specs, OR a
       one-off backfill). Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 orphan audit 2026-06-08.
+      **UPDATE 2026-08-16 (plan_reconciler defi tranche, dispatch agt-1a88e0) — downgraded P1→P2, NOT flipped done: this
+      is now BLOCKED, not merely unstarted** — see
+      `/plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md`'s Session-2 findings
+      (2026-08-15, slot 22, live-GCS-verified). **(c) RESOLVED-AS-MOOT**: the legacy top-level `dex_pools/`/
+      `lending_indices/` prefixes have zero objects today, and the KAMINO/SOLEND `lending_indices` data this line
+      flagged as "unique, needs migrating" was independently found FABRICATED and already retired 2026-07-30 — nothing
+      real left to migrate. **(a)/(b) NOT ACTIONABLE, not merely unverified**: `evm-defi-prd` and `solana-defi-prd`
+      were themselves deleted in the 2026-07-10 bucket-estate cleanup — the source data this line asks to "confirm
+      absent then migrate" no longer exists to read from. Whether real unique Aave/marinade data was lost in that
+      deletion is an open data-correctness question, tracked as its own `[OPERATOR] P2` todo in the issue doc above
+      (needs a GCP Cloud-Logging admin-activity check on the 07-10 deletion) — do NOT re-attempt this migration from
+      this line, the operator todo is the live thread now.
 - [x] ✅ [SCRIPT] P1. **RESOLVED-AS-MOOT 2026-08-14 (reconciled via
       `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`) — the redirect target no longer
       exists.** The "dedicated migrated-bucket" architecture this todo describes was RETIRED by a later decision
@@ -556,6 +568,26 @@ P1 redirect todo below.)
       confirm the source path shape, dry-run then `--apply`, rebuild the manifest over the migrated objects (same
       post-apply step already established for the other 8 dedicated buckets). Repo: market-tick-data-service. Owner:
       vm-defi. parent_epic: mtds_mdps_master.
+      **CAVEAT (verified 2026-08-16, plan_reconciler defi tranche, dispatch agt-1a88e0)**: the 2026-08-08 decision above
+      cited `gas-fees`/`liquidations` as precedent for a dedicated `aggregator-routes-prd` bucket, but by 2026-08-08 both
+      cited precedents were ALREADY retired — `liquidations` REMOVED 2026-07-10, `gas-fees` REMOVED 2026-07-12 (see
+      `deployment-service/configs/cloud-providers.yaml` inline removal notes; fresh-confirmed this turn: `market-data` IS
+      a live provisioned `kind` in that yaml, `aggregator-routes`/`aggregator_routes` has ZERO entries). Every other
+      DeFi data_type (8/8) now converges on the single shared `market-data`/`tick-data` bucket kind, differentiated by
+      `data_type=` path segment — full evidence in
+      `/plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`. This P2 todo's CODE
+      shipped correctly (the migrator spec exists), but its destination `aggregator-routes-prd-{pid}` is not a
+      provisioned bucket under the current architecture — `migrate_defi_full_v9_canonical.py:325` hardcodes the dest
+      name and bypasses `resolve_bucket_name`/yaml entirely, so `--apply` would either fail or silently create an
+      unmanaged bucket outside IAM/lifecycle policy. **Do NOT run `--apply` for this spec** until the follow-up below
+      resolves.
+- [ ] [OPERATOR] P1. **Resolve aggregator-routes' bucket target before the 9th migrator spec is ever `--apply`'d** (see
+      CAVEAT above). Recommendation: fold `aggregator-routes` into the shared `market-data`/`tick-data` bucket like the
+      other 8/8 DeFi data_types (consistent with the estate-cleanup precedent that superseded the 2026-08-08 decision),
+      rather than provisioning a 10th standalone bucket kind. If a genuine reason exists to keep it dedicated (e.g. a
+      retention/access-control requirement none of the other 8 had), register a proper `BucketSpec` in
+      `deployment-service/configs/cloud-providers.yaml` first. Repos: deployment-service, market-tick-data-service.
+      parent_epic: mtds_mdps_master. Provenance: plan_reconciler defi tranche 2026-08-16.
 - [x] ✅ [MTDS] P0. **M-COORD-7 — 41 coarse `pipeline_mode="batch"` OBJECT-PATH literals in DeFi handlers (batch≠live
       regression + STEP-5.85 ship-blocker) — FIXED (mtds@57242af5, slot-2 2026-06-08).** Filed by slot-4 while shipping
       the sports fix: mtds STEP 5.85 hard-failed on 41 pre-existing coarse `pipeline_mode="batch"` literals in 25 DeFi
@@ -572,13 +604,26 @@ P1 redirect todo below.)
       DRIFT, ASTER, GMX, PACIFICA)→`batch_hyperliquid`; oracle CHAINLINK→`batch_chainlink`, PYTH→`batch_pyth_hermes`).
       **1359 tests green; 0 coarse literals; basedpyright clean.** Repo: market-tick-data-service. parent_epic:
       mtds_mdps_master. Provenance: slot-4 M-COORD-7 → slot-2 fix 2026-06-08.
-- [ ] [DATA] P1. **DELETE the duplicate/legacy DeFi orphan buckets AFTER (1) migration GREEN + (2) the unique-gap
-      migrations above complete + (3) the redirects land + (4) a final cf_manifest_audit confirms 0 unique rows
-      remain**: `market-data-tick-defi{,-prd}` · `solana-defi{,-prd}` · `evm-defi{,-prd}` (post unique-gap migration) ·
-      the 4 empty `*-test-*` DeFi buckets (delete now — 0 objects). Use `gcs_delete_object` / bucket lifecycle, NOT
-      `gsutil` per-object. Snapshot each `_index` to `_index/snapshots/pre_delete_<date>.parquet` first (rollback).
-      Owner: vm-defi (operator sign-off on the bucket deletes — destructive). parent_epic: manifest_master. Provenance:
-      slot-2 orphan audit 2026-06-08.
+- [ ] [DATA] P2. **DELETE the 4 empty `*-test-*` DeFi buckets (0 objects) — the only part of this todo still
+      straightforwardly actionable.** Use `gcs_delete_object` / bucket lifecycle, NOT `gsutil` per-object. Owner:
+      vm-defi (operator sign-off on the bucket deletes — destructive). parent_epic: manifest_master. Provenance: slot-2
+      orphan audit 2026-06-08.
+      **RESCOPED 2026-08-16 (plan_reconciler defi tranche, dispatch agt-1a88e0) — this todo originally also listed
+      `market-data-tick-defi{,-prd}` · `solana-defi{,-prd}` · `evm-defi{,-prd}` "post unique-gap migration"; all three
+      are now resolved or superseded, full evidence in
+      `/plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md` (2026-08-15, slot 22,
+      live-GCS-verified) which supersedes this todo's original scope:**
+      - `market-data-tick-defi{,-prd}` — REMOVED from any delete list: it is the PERMANENT canonical DeFi tick-data
+        bucket every live handler writes to today (2026-07-10..07-16 bucket estate cleanup), not a legacy duplicate.
+        Deleting it as originally scoped would have destroyed the live production DeFi tick-data store.
+      - `solana-defi{,-prd}` / `evm-defi{,-prd}` — ALREADY DELETED in the 2026-07-10 estate cleanup (confirmed via live
+        `list_buckets()`, 2026-08-15); there is nothing left for THIS todo to delete. Two of the three "unique gap"
+        sub-items this todo gated on: (c) KAMINO DEX pools + Solana `lending_indices` — RESOLVED-AS-MOOT, the data was
+        independently found FABRICATED and already retired 2026-07-30. (a)/(b) Aave V3 2022-03-12..2022-10-31 +
+        `marinade` mSOL — **UNRESOLVED, NOT actionable by a worker**: source buckets are gone, no audit-trail record
+        confirms these ranges were migrated or re-verified before the 07-10 deletion — a possible data-loss gap,
+        tracked as its own `[OPERATOR] P2` todo in the issue doc above (Cloud-Logging admin-activity check needed).
+        This is the genuinely open thread from this todo; the delete-action framing itself no longer applies.
 - [ ] [UAC] [SCRIPT] P2. **Solana DeFi source = actual names (folds the prior P2 + the live-handler Solana stamp).**
       Once Solana writes land in the dedicated buckets (redirect above), the migrator/rebuild + live handlers must stamp
       the ACTUAL Solana source, not the chain-agnostic `onchain_subgraph`: add Solana venue overrides to UTL

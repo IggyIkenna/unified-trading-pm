@@ -57,7 +57,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
     unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md,
+    /plans/archive/2026_08/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md,
   ]
 execution_scope: local-only
 model_tier: sonnet-doable
@@ -313,6 +313,13 @@ Two secondary findings:
       for now". PACIFICA remains fully removed (no MVP, no scaffold; the 07-18 keep-MVP answer is retracted), locked by
       `DECOMMISSIONED_VENUE_BASES` + the stays-removed test @a7ff8417. LIGHTER-ZKSYNC keeps MVP (live_capable honestly
       False, batch scaffold real). Original flag retained below.
+      > **SUPERSEDED 2026-08-14 (operator reversal, verbatim: "jupiter and pacifica please")** — this decommission
+      > decision no longer holds. PACIFICA-SOLANA was re-integrated 2026-08-14/15 after real API testing resolved every
+      > gate; confirmed live in `/codex/04-architecture/solana-defi-coverage.md:61,159`
+      > ("🟢 REVERSAL (2026-08-14, operator ruling)... LIVE — re-integrated 2026-08-14/15") and
+      > `/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md:453-461`
+      > (`unified-trading-pm@a26085fadb`). Kept below for historical record only — do not treat PACIFICA as
+      > decommissioned based on this entry. Found by plan_reconciler, defi tranche, 2026-08-16 (dispatch agt-1a88e0).
 - [x] [DECISION-history] P1. ~~PARTIALLY DECIDED + SSOT CONTRADICTION FLAGGED (2026-07-18).~~ Operator answered "keep
       MVP + BLOCKED-CREDENTIALS scaffold" for PACIFICA-SOLANA + LIGHTER-ZKSYNC. Applied for **LIGHTER-ZKSYNC** (it
       exists): `live_capable` flipped honestly to False (batch scaffold preserved) — `unified-api-contracts@a7ff8417`.
