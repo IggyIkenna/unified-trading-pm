@@ -279,7 +279,7 @@ findings.
       prove >page-size universes are no longer truncated (footystats 700-match date; SFI 150-championship list +
       250-match present-day + 2 pagination-parser units). Full quality-gates.sh green (exit 0, 173s first run / 35s
       content-sentinel re-run), quickmerge landed + ancestry-verified on origin/live-defi-rollout.
-- [ ] [SCRIPT] P3. **Market-tick-data-service prediction/transfer bounded max-page loops — same cap-exhaustion-warning
+- [x] ✅ [SCRIPT] P3. **Market-tick-data-service prediction/transfer bounded max-page loops — same cap-exhaustion-warning
       gap as this session's Kalshi/Polymarket fix, lower priority given confirmed call-graph usage.**
       `market_interface/clients/alchemy_transfers_client.py::get_all_transfers` already got a warning-only fix this
       session (no attempted_failed plumbing exists in this client).
@@ -290,7 +290,15 @@ findings.
       Kalshi/Polymarket trades-fetch implementation distinct from the ones fixed this session, since the parent audit's
       file paths for these overlapped with the ones already patched. Repo: market-tick-data-service. Done when: a fresh
       grep confirms whether a distinct MTDS-side implementation exists; if so, apply the same `for/else` cap-exhaustion
-      → `attempted_failed` pattern; if it's the same file already fixed, close this as duplicate.
+      → `attempted_failed` pattern; if it's the same file already fixed, close this as duplicate. — CLOSED AS DUPLICATE
+      (2026-08-16): fresh grep of `market_tick_data_service/market_interface/adapters/prediction/{kalshi_adapter,
+      polymarket_adapter}.py` confirms both ALREADY carry the `for/else` cap-exhaustion → `attempted_failed` pattern
+      (`_log_page_cap_exhausted()` helper, cursor-based pagination, CF-11 routing) — `git log` on both files shows the
+      most recent touch is `c6b9113b fix(defi): CF-11 swallow-fixes in manifest recorder, liquidations GraphQL,
+      polymarket catalogue`, i.e. these ARE the same-session fix this todo asked to re-confirm, not a distinct
+      unfixed implementation. `market_interface/clients/alchemy_transfers_client.py` also confirmed to already carry
+      its warning-only mitigation (2 `logger.warning` cap-exhaustion sites, no `attempted_failed` plumbing — matches
+      the todo's own note that none exists for this client). No code change needed; no new implementation to ship.
 - [ ] [SCRIPT] P3. **`_umi_extended.py` candle-window pagination — currently safe, latent risk if call graph changes.**
       `market_tick_data_service/adapters/_umi_extended.py::_extended_candle_params` logs a truncation warning and clips
       to `_EXTENDED_CANDLE_PAGE_CAP=2800` bars but issues only ONE request (never chunks) when `needed` exceeds the cap
@@ -351,6 +359,10 @@ findings.
 - 2026-08-16 (slot 25, data_engineering): shipped the Morpho Blue skip-pagination-verification todo — see the todo's
   own evidence line above for detail. instruments-service@c9b7943f, QG green (123-126s), quickmerge landed +
   ancestry-verified on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-16 (slot 10, data_engineering): closed the MTDS prediction/transfer bounded max-page-loops todo as
+  duplicate — see the todo's own evidence line above for detail. No code shipped (nothing to fix; both files already
+  carry the CF-11 fix from a prior session). 2 todos remain open in this doc (`_umi_extended.py` candle-window
+  chunking, `UniswapV3Adapter` aliased-field `AttributeError`).
 
 ## Codex SSOTs
 
