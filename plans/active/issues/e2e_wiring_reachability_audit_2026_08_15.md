@@ -601,6 +601,66 @@ Tracked here so a ruling cannot land in one place and rot in four others.
 | **Already dispatched — DO NOT REGRESS** | `execution-service@37bfaeed0` (real Uniswap/Lido/Jupiter live dispatch, V2InstructionRouter DELETED, Jito connector, Solana signing fix), `strategy-service@926be710` (per-venue per-mode capability axis + `TradingMode`), `@99a93fea` (shadow-SSOT 15/15), `unified-api-contracts@57a0dc9d`/`144b8880` (mSOL + EVM-scoped checksum). Chunk A's re-audit must MEASURE current state, not replay the pre-37bfaeed0 findings. |
 | **Existing ratchet**                    | `unified-api-contracts/tests/data/execution_service_venue_reachability_baseline.json` ALREADY tracks venue reachability. EXTEND it — do not build a parallel gate.                                                                                                                                                                                                                                                           |
 
+## RE-TRIAGE against the 2026-08-16 carve-out scope rulings
+
+**Read this before picking up any todo in this document.** The carve-out scope was narrowed sharply on 2026-08-16
+(`/plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md` §§A3–A5), and most of this doc's findings were
+written BEFORE that narrowing. They are not wrong, but many are no longer on the critical path.
+
+**The contracted scope is now**: BTC/ETH/SOL · **CEX only, exactly four venues** (Bybit, Deribit, Binance, OKX) ·
+**ETH staking via Lido only**. Explicitly out: all Solana DeFi/DEX (Jupiter perps, Kamino borrow, Marinade),
+Hyperliquid, Aster, every other on-chain venue. Tardis data excluded entirely. DeFi data reduces to Lido rate +
+gas fees. Two real archetypes: `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS` (`CARRY_FUNDING_DISPERSION` ruled out).
+
+### A — GATES THE CARVE-OUT (do these first)
+
+| Item                                                                 | Why it gates                                                     |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **Lazy-loading refactor, all three layers**                          | §A5 P0. Must land BEFORE/alongside the carve-out, else every later update re-derives a frozen snapshot against a moving eager target |
+| E2E completeness: 2 archetypes × 4 CEX venues + Lido, batch/live/paper | §A5 P0. Stronger than "code exists" — the pipeline must run and the data must back it |
+| close-all → `/manual/instruction` + HTTP contract test                | Safety, scope-independent. The emergency flatten path 404s today |
+| Audit coverage beyond manual; attempted-action states                | Regulatory (MiFID), scope-independent                            |
+| Reconciliation pause · virtual persistent-delta entry · soft-delete   | Same — operator-entry safety, applies to any scope               |
+
+**The lazy-loading refactor is three layers, not one** (from `strategy-service/EXTRACTION_AUDIT.md`):
+
+1. `strategy-service/…/factory.py` — eagerly registers every archetype engine across every family. Register only what
+   a deployment needs.
+2. **`unified-api-contracts` — the dominant blocker.** `registry/__init__.py` (1,270 L) and `internal/__init__.py`
+   (2,708 L) eagerly import essentially the whole package: `from unified_api_contracts.internal import
+   StrategyArchetype` pulls ~240k lines, with DeFi content interleaved with CeFi/TradFi/sports in flat enums and
+   dicts. A lazy `factory.py` does NOT fix this — the live collateral calls still import UAC. **Fleet-wide blast
+   radius**, not local.
+3. `execution-service/algorithms/algorithms.py` — eagerly imports all 7 algorithms. Cheapest of the three: the repo
+   already has the lazy pattern in `adapters/algorithm_factory.py` and `custody/factory.py`.
+
+SIT needs no changes for this (audit § "SIT — no coupling").
+
+### B — REAL, but MAIN-SYSTEM only (does NOT gate the carve-out)
+
+Production still trades these; they are simply outside the contracted universe, so they must not be allowed to block
+a send. Marinade / Kamino / Jupiter caller-graph reachability · the 4 bespoke readers (morpho health factor, pendle
+maturity, symbiotic + karak withdrawal queues) · vault-share config surface (yearn/beefy/convex/idle) · Kelp rsETH and
+ether.fi eETH genesis citations · LST address SSOT entries beyond stETH · Hyperliquid and Aster coverage.
+
+> **Do not delete these todos or mark them done.** They are correctly tracked; they are just not carve-out-gating.
+> Re-reading them as "moot" is the error to avoid — the main system runs on them.
+
+### C — CHEAP AND STILL WORTH IT (detectors, review debt)
+
+Reachability gate · `check_pytest_unit_dir_coverage.py` fix · SIT invariants 2 and 4 (1+3 landed, review them) ·
+the review backlog, of which **`cc3e07e0c`'s cited contract addresses remain the highest-value item** — the Lido stETH
+address is now in the contracted scope, so an error there propagates into the one staking route the client actually
+receives.
+
+### What this re-triage changes about priority
+
+The previous ordering put DeFi read/execute coverage first. Under the narrowed scope, **the lazy-loading refactor is
+the new head of the queue** — it is an explicit operator P0, it has fleet-wide blast radius, and every day the
+carve-out is built against an eagerly-coupled main system raises the cost of keeping it in sync later. The §A5 note is
+explicit that both prerequisites are wanted *together*, not compared as alternatives, and that this raises total
+pre-ship scope above what §A2 assumed.
+
 ## The walkthrough artefact — provenance and editing rules (2026-08-16)
 
 `/codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html` is the target-state, collapsible tour
