@@ -17,7 +17,7 @@ summary: >-
   delta_one/prediction read as genuinely EMPTY corpora (0 manifest cells AND 0 objects walked, verified via matching
   bucket names to delta_one's own real data in the same buckets) rather than a bucket-resolution bug — those
   families/cells simply have no production data captured yet.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, sports]
 stage: [data]
@@ -32,7 +32,7 @@ related:
   ]
 created: "2026-08-03"
 author: unknown
-last_updated: "2026-08-06"
+last_updated: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,7 +46,7 @@ source: >-
   Surfaced 2026-08-03 (slot 2) running the first real-GCS-data validation of feature_orphan_sweep.py
   (features-service@9fb37033) via 10 real Tier-2 SPOT VMs, launched through the new launch-feature-orphan-sweep-vm.sh
   (deployment-service@ca8967f + @3b9255c).
-resolved_by:
+resolved_by: slot-18, 2026-08-16
 locked_by:
 locked_since:
 context_scope:
@@ -58,6 +58,13 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-16 (slot 18).** All 6 todos closed, 0 open. Both real orphan gaps (onchain/defi 783 objects,
+> sports/sports 67,077 objects) backfilled + re-swept clean; the sports `C_manifest_infra` classification confirmed
+> genuinely inert (horizon-schema sidecars); the calendar phantom-captured anomaly root-caused as a one-time historical
+> artifact (not a live writer defect) and both fix halves shipped; the 2026-08-04 calendar manifest-completeness gap
+> closed; the last remaining item — the stale `_legacy_seed.parquet` phantom rows resurrected by the per-VM-shard
+> fallback — reconciled via `features-service@131cb346`.
 
 # features-service manifest coverage gap — onchain 45% / sports 35% orphan, calendar phantom-captured
 
@@ -196,7 +203,7 @@ not something an AO worker should guess at.
       harden `_write_success_manifest` so a swallowed recording failure is at least visible (metric / log event) instead
       of silent. Repo: features-service. — features-service@6f4fdb46 + QG ✅ sentinel=6f4fdb46; dry-run confirmed both
       cells already empty_confirmed; metric hardening shipped; correction script idempotent.
-- [ ] 6. [SCRIPT] P3. **Reconcile the stale `_legacy_seed.parquet` phantom rows** — the per-VM seed
+- [x] ✅ 6. [SCRIPT] P3. **Reconcile the stale `_legacy_seed.parquet` phantom rows** — the per-VM seed
       (`_index/per_vm/_legacy_seed.parquet`) still carries the 2 phantom `captured` time_features rows (2026-07-04/05,
       written 2026-07-27). The consolidated index is correct (`empty_confirmed`), but `read_availability_index`'s
       fallback to per-VM shards when the consolidated blob is >120s stale resurrects them (verified live:
@@ -204,7 +211,14 @@ not something an AO worker should guess at.
       2026-08-05 corrections landed only in the consolidated index, not the per-VM shard the fallback reads. Fix: write
       `record_empty` superseding rows into a per-VM shard (or refresh the seed); the 2026-07-15 legacy-seed taint guard
       (`_merge_shard_frames`) ensures a newer untainted `empty_confirmed` row beats the stale seed's captured row. Repo:
-      features-service.
+      features-service. — **DONE 2026-08-16 (slot-18) — features-service@131cb346.** New
+      `scripts/reconcile_legacy_seed_phantom_rows_2026_08_16.py`: live-read confirmed both phantom rows still
+      `captured` in `_index/per_vm/_legacy_seed.parquet`; wrote `record_empty` superseding rows via
+      `ManifestWriter(per_vm_shards=True)` into a FRESH per-VM shard (never rewriting the tainted seed in place) —
+      the 2026-07-15 legacy-seed taint guard strips the seed's rank boost so the new untainted rows win the recency
+      tie-break for the same (date, feature_group) key. Verified by reading back the exact shard this run wrote:
+      both keys land `empty_confirmed`. Dry-run by default, idempotent, `--apply` to commit — mirrors the
+      2026-08-05 sibling script's contract. Repo: features-service.
 
 ## Progress Log
 
