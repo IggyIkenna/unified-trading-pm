@@ -38,7 +38,15 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 drift_direction: advance-code
-depends_on: []
+depends_on:
+  [
+    defi_venue_e2e_batch1_2026_08_16,
+    cefi_venue_e2e_batch1_2026_08_16,
+    tradfi_venue_e2e_batch1_2026_08_16,
+    sports_venue_e2e_batch1_2026_08_16,
+    prediction_venue_e2e_batch1_2026_08_16,
+  ]
+gate_on_depends: true
 estimate_class: infra
 estimate_baseline_ai_days: 20.0
 estimate_calibrated_ai_days: 16.0
@@ -130,23 +138,26 @@ ruling, and it is what stops the sweep manufacturing green.
       `ARCHETYPE_FEATURE_GROUPS` today, so most rows have no consumer to wire toward yet — a scope gap tracked by the
       archetype-declaration backlog, not blocking this sweep. Full row export: `--csv PATH` flag on the script. **Fork
       per-asset-group dispatch batches (P0, below) is now the next actionable item.**
-- [ ] [BACKEND] P0. **Fork per-asset-group dispatch batches** rather than one giant plan — cefi, defi, tradfi,
-      sports, prediction. Independent same-priority todos touching different files run concurrently by default; a
-      single plan spanning all AGs would serialise or breach the line cap. Each batch gets its own
-      `<ag>_venue_e2e_batchN_<date>.md` + gated finalize pair, following the established satellite-dispatch pattern.
-- [ ] [BACKEND] P0. **Steps 1-5 per unit — declaration through features.** Declared in the UAC capability record;
-      instruments-service resolves instruments with coverage windows; MTDS captures every declared data type and the
-      manifest reconciles; a live adapter exists for every batch adapter (never the reverse); the venue's data
-      reaches the feature groups that consume it.
-- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution.** A position adapter resolves in batch, live AND
-      paper (the per-mode capability axis, not one boolean); the venue is declared in the archetype/slot catalogues
-      that can legitimately trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit
-      — compared by ACTION, not by venue name.
-- [ ] [BACKEND] P0. **Step 9 per unit — transfers.** Every applicable `BusTransferType` has a working rail for the
-      venue, instruments-service through execution-service. Transfers are the leg most often assumed rather than
-      verified, and the one the carve-out counterparty depends on most directly.
-- [ ] [BACKEND] P1. **Record every gap as a tracked todo in its AG batch**, never as prose. A gap found and described
-      but not tracked is the false-progress failure this workspace names explicitly.
+- [x] ✅ [BACKEND] P0. **Fork per-asset-group dispatch batches — done 2026-08-16.** SHIPPED —
+      `unified-trading-pm@<pending-sha>`. 5 fresh carve-out batch plans + gated finalize pairs authored, per the
+      operator-selected "per contract-step-group" decomposition (steps 1-5 / 6-8 / 9 / gap-tracking / hard-rule
+      confirmation as separate todos, each scoped to one AG's rows):
+      [defi_venue_e2e_batch1_2026_08_16](/plans/active/defi_venue_e2e_batch1_2026_08_16.md) (200 rows),
+      [cefi_venue_e2e_batch1_2026_08_16](/plans/active/cefi_venue_e2e_batch1_2026_08_16.md) (70 rows),
+      [sports_venue_e2e_batch1_2026_08_16](/plans/active/sports_venue_e2e_batch1_2026_08_16.md) (31 rows),
+      [tradfi_venue_e2e_batch1_2026_08_16](/plans/active/tradfi_venue_e2e_batch1_2026_08_16.md) (16 rows),
+      [prediction_venue_e2e_batch1_2026_08_16](/plans/active/prediction_venue_e2e_batch1_2026_08_16.md) (4 rows).
+      The four Method todos below are now digest pointers, not dispatchable work (task_template.md §3 finding H) —
+      the real work moved into the 5 batches. This plan's own `depends_on` + `gate_on_depends: true` now gates its
+      Definition of done section on all 5 finishing.
+- **[BACKEND] P0. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Steps
+  1-5 per unit — declaration through features. Forked into each AG batch's own todo #1.
+- **[BACKEND] P0. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Steps
+  6-8 per unit — strategy and execution. Forked into each AG batch's own todo #2.
+- **[BACKEND] P0. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Step
+  9 per unit — transfers. Forked into each AG batch's own todo #3.
+- **[BACKEND] P1. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Record
+  every gap as a tracked todo in its AG batch. Forked into each AG batch's own todo #4.
 
 ## Hard rules this sweep must not violate
 
@@ -174,6 +185,15 @@ ruling, and it is what stops the sweep manufacturing green.
 hard rules and the AG-batch fork structure are settled and reviewable; held out of ingestion because the universe
 denominator does not exist yet. `status: draft` is the correct lever here — `depends_on` documents ordering but does
 not gate dispatch, so it alone would not have stopped an AO worker picking this up against an undefined set.
+
+**2026-08-16 — forked per-asset-group dispatch batches.** SHIPPED — `unified-trading-pm@<pending-sha>`. Authored 5
+fresh carve-out AG batch plans + gated finalize pairs (defi 200 rows / cefi 70 / sports 31 / tradfi 16 /
+prediction 4), following the operator-selected "per contract-step-group" decomposition (5 todos each: steps 1-5,
+steps 6-8, step 9 transfers, gap-tracking, hard-rule confirmation). Converted this plan's own Method-section
+per-step todos to digest pointers (task_template.md §3 finding H) since the real dispatchable work now lives in the
+5 batches; added `depends_on` + `gate_on_depends: true` on those 5 batch slugs so this plan's Definition of done
+section machine-holds until all 5 report done. Next actionable item: the 5 AG batch plans themselves (each
+independently dispatchable — different files, no ordering constraint between them).
 
 **2026-08-16 — denominator resolved, flipped to `active`.** SHIPPED —
 `unified-api-contracts@e7ee398117` (new `scripts/generate_venue_universe_denominator.py`),
