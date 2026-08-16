@@ -802,3 +802,15 @@ automator still alive, re-launch if session teardown killed it.
     task immediately re-dispatching to the next heartbeat. Next worker should re-verify VM health + chain-automator
     liveness (same durability caveat — session-bound background process) and re-run the census.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **2026-08-16 (slot-2, data_engineering, "docs only, no writes" session)**: Flagging, not fixing — found while
+  sweeping sports-domain issue docs for orphaned findings. This doc's last substantive progress entry is
+  2026-08-11 ~18:35Z (slot 23), reporting STANDINGS VM `af-backfill-20260811-162726` at ~57% with 4 more entities
+  still queued behind it; only a `context-scout` metadata touch (2026-08-14) has landed since — **no worker has
+  checked in on this task in 5 days**, and the doc's own text already documents that the chain automator
+  (`run-af-residual-completion-chain.sh`) is session-bound and dies on every teardown, requiring a fresh
+  `run_in_background` re-launch each time a new slot picks the task up. Did NOT query live VM state this session
+  (`gcloud`/GCS reads on production infra are out of scope under the standing "docs only, no writes" constraint,
+  which bars production queries broadly, not just writes) — so it is unknown whether the STANDINGS VM/chain
+  completed, stalled, or was abandoned. Flagging for the next session with infra-query scope: re-check
+  `af-backfill-*` VM state and the chain automator's liveness before assuming this task is still genuinely
+  in-flight rather than silently stalled.
