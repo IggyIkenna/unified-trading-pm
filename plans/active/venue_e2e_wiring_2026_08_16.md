@@ -4,11 +4,11 @@ title: Venue e2e wiring — instruments-service through execution-service, per v
 summary: >-
   W4 of the venue-readiness umbrella and its largest workstream. Walk the Venue Readiness Contract steps 1-9 for
   every venue in the universe, instruments-service through execution-service, including transfers and feature-group
-  availability, so no venue reads as supported while some leg of the chain cannot serve it. Held at status draft
-  deliberately: the contract is settled but the DENOMINATOR is not — "every venue in our universe" has no
-  machine-readable definition yet, and dispatching a per-venue sweep without one produces confident coverage claims
-  over an unknown set. Flip to active once the universe todo in the umbrella lands.
-status: draft
+  availability, so no venue reads as supported while some leg of the chain cannot serve it. Flipped to active
+  2026-08-16: the denominator blocker resolved — real denominator is (venue, data_type) pairs, 353 across 192
+  declared venues, from `VENUE_DATA_TYPE_CAPABILITIES` via
+  `unified-api-contracts/scripts/generate_venue_universe_denominator.py`.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, features, strategy, execution]
@@ -87,16 +87,18 @@ per-leg plans above each prove their own leg; nothing today proves a venue is wi
 `venue_capability_route_axis` already did the parity measurement that produced the 40-undeclared-venue fact table,
 so the universe work is *reconciling* against that, not deriving from scratch.
 
-## Why this is `status: draft`
+## Universe denominator — resolved 2026-08-16, plan flipped to `active`
 
-The Venue Readiness Contract is settled and the operator's rulings landed 2026-08-16. What is NOT settled is the
-**denominator**. "Every venue in our universe" has no machine-readable definition: 158 capture venues across 84
-families is the current measured figure, but the contract applies per **(venue × data type)**, so the real unit
-count is unknown. A per-venue sweep dispatched against an undefined set produces exactly the failure this workspace
-bans — a coverage claim that exceeds its measurement.
-
-**Flip to `active` when** the umbrella's `[AGENT] P0 "Define the universe precisely for W4/W5"` todo lands with a
-derived list and a stated denominator. That is the only blocker; nothing else here waits on anyone.
+The Venue Readiness Contract is settled and the operator's rulings landed 2026-08-16. The denominator blocker that
+held this plan at `status: draft` is now resolved: "158 capture venues across 84 families" was a stale one-off
+manual tally (`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md:62-65`) with no producing script —
+do not cite it again. The contract applies per **(venue × data type)**, and that pair count IS the real unit count:
+**192 declared venues, 353 (venue, data_type) pairs**, from `VENUE_DATA_TYPE_CAPABILITIES` in
+`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2564`, reproducible via
+`unified-api-contracts/scripts/generate_venue_universe_denominator.py` (re-run it — the count moves as either
+registry changes, it is not a constant). 8 `ALL_DEFI_VENUES` entries (5 Alchemy gas-fee-oracle spellings +
+Fluid/Sushiswap-Arbitrum) have no capability declaration yet and are excluded from the denominator until one is
+added — tracked as its own P1 todo in the umbrella plan, not a blocker here.
 
 ## The three failure modes this closes
 
@@ -114,8 +116,10 @@ Each unit walks contract steps 1-9 and records a verdict per step with evidence.
 contributes "unverified", never a pass** — this is the binding consequence of the operator's DERIVED-readiness
 ruling, and it is what stops the sweep manufacturing green.
 
-- [ ] [BACKEND] P0. **Derive the work list** from the universe definition once it exists: one row per
-      (venue × data type), with its declared archetype consumers. This is the plan's real todo list; the batches
+- [ ] [BACKEND] P0. **Derive the work list** from the now-resolved universe definition: one row per
+      (venue × data type) — 353 rows across 192 venues per
+      `unified-api-contracts/scripts/generate_venue_universe_denominator.py`, minus the 8 DeFi venues still pending
+      capability declaration — with its declared archetype consumers. This is the plan's real todo list; the batches
       below fork from it.
 - [ ] [BACKEND] P0. **Fork per-asset-group dispatch batches** rather than one giant plan — cefi, defi, tradfi,
       sports, prediction. Independent same-priority todos touching different files run concurrently by default; a
@@ -161,3 +165,10 @@ ruling, and it is what stops the sweep manufacturing green.
 hard rules and the AG-batch fork structure are settled and reviewable; held out of ingestion because the universe
 denominator does not exist yet. `status: draft` is the correct lever here — `depends_on` documents ordering but does
 not gate dispatch, so it alone would not have stopped an AO worker picking this up against an undefined set.
+
+**2026-08-16 — denominator resolved, flipped to `active`.** SHIPPED —
+`unified-api-contracts@e7ee398117` (new `scripts/generate_venue_universe_denominator.py`),
+`unified-trading-pm@<this commit>` (this flip + the umbrella plan's todo). Real denominator: 192 declared venues,
+353 (venue, data_type) pairs from `VENUE_DATA_TYPE_CAPABILITIES`. The "158/84" figure was a stale manual tally,
+superseded — see the section above. 8 DeFi venues remain undeclared (tracked as a P1 todo in the umbrella, not a
+blocker here). "Derive the work list" (P0, above) is now the next actionable item.

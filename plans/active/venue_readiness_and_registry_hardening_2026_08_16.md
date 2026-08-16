@@ -511,9 +511,29 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
       **Open sub-questions this ruling does NOT settle** (fold into the W3 child, do not re-ask the operator): the
       schema mechanism, and what precisely the gate checks to prove no in-service hardcoding crept back. Existing
       pattern to extend: [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
-- [ ] [AGENT] P0. **Define the universe precisely for W4/W5.** "Every venue in our universe" needs a machine-readable
-      list before it can be swept — 158 capture venues across 84 families is the current measured figure, but the
-      readiness contract applies per (venue × data type), so state the real denominator and where it is derived from.
+- [x] [AGENT] P0. ✅ **Define the universe precisely for W4/W5 — RESOLVED 2026-08-16: the real denominator is
+      (venue, data_type) pairs, not venue count, and the "158 venues / 84 families" figure is a stale one-off manual
+      tally (`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md:62-65`, 2026-08-14) with no producing
+      script — already independently found to not hold (a 151-183 range measured 2026-08-16 in
+      `nick_ai_platform_disclosure_artifact_2026_08_16.md` § PRE-AUDIT MEASUREMENTS §1) — superseded, do not cite it
+      again.** SSOT for the pair count is `VENUE_DATA_TYPE_CAPABILITIES` in
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2564` — each venue's own
+      `.data_types` field, flattened to pairs, IS the readiness-contract denominator per the design ruling above (P0
+      2 lines up). Measured 2026-08-16 via the new script below:
+      **192 declared venues, 353 (venue, data_type) pairs.** DeFi coverage: 127 of `ALL_DEFI_VENUES`'s 135 canonical
+      venues already have a capability declaration (union with `VENUE_DATA_TYPE_CAPABILITIES` = 200 venues); the
+      remaining 8 have none and are excluded from the denominator until declared (new todo below). Made reproducible,
+      not a one-off number, via
+      `unified-api-contracts/scripts/generate_venue_universe_denominator.py` — re-run it, the count moves every time
+      either registry changes. **W4/W5 are now unblocked.** SHIPPED —
+      `unified-api-contracts@e7ee398117`.
+- [ ] [AGENT] P1. **Declare capability for the 8 undeclared DeFi venues found by the denominator script.**
+      `ALCHEMY-{ARBITRUM,BASE,ETHEREUM,OPTIMISM,POLYGON}` (gas-fee oracle spellings) and
+      `FLUID-ARBITRUM`/`SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` are registered in `ALL_DEFI_VENUES` but have no
+      entry in `VENUE_DATA_TYPE_CAPABILITIES`, so they're invisible to the (venue, data_type) denominator and to
+      `generate_venue_consumability_report.py`'s step-17 sweep. Add capability records for each (data_types per the
+      MTDS sub-bucket that already backfills them — gas-fees for the Alchemy spellings, dex-swaps/dex-pools for
+      Fluid/Sushiswap) so the denominator and the consumability report both see them.
 - [x] ✅ [AGENT] P1. **Readiness state — RULED 2026-08-16 (operator): DERIVED from the contract steps.** Not declared,
       and not a hybrid. A declared state rots, and a stale `LIVE-READY` is precisely the claim-exceeds-measurement
       failure this workspace bans. **The binding consequence**: every contract step must become genuinely
@@ -771,12 +791,14 @@ RULED and W3 as resolved (folded into an existing plan, no new plan needed). Rew
 | --- | --- | --- |
 | "Consolidate `venue_universe` into a clean UAC SSOT" (P2, L265) | Not started | Natural fit for W4 once its own blocker (below) clears; not needed for the shipped "at least one archetype" reading of step 17 |
 | W3 "service-config abstraction" child plan | ✅ Resolved, no new plan | Folded into `/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` § D delta |
-| W4 "venue e2e wiring" child plan | Forked (`status: draft`) | Blocked on its own P0 "Define the universe precisely for W4/W5" (L411) — AGENT-owned, not operator-gated |
-| W5 "smoke-test bar" child plan | Not forked yet | Blocked on the same universe-definition task as W4 |
+| W4 "venue e2e wiring" child plan | Forked (`status: draft`) | ✅ Unblocked 2026-08-16 — "Define the universe precisely for W4/W5" resolved, see § "Design rulings needed before the mechanical children dispatch" above |
+| W5 "smoke-test bar" child plan | Not forked yet | ✅ Unblocked 2026-08-16 — same resolution as W4 |
 | "Error-code SSOT shape" design ruling (L321) | ✅ RULED 2026-08-16 | Extend `classify_venue_error()` into a (venue, code) registry — see L397-403 |
 | "Config-abstraction target shape" design ruling (L325) | ✅ RULED 2026-08-16 | One `config.py` per service, domain-split only when cap-forced — see L404-410 |
+| "Declare capability for the 8 undeclared DeFi venues" (P1, new) | Not started | Actionable now — Alchemy gas-fee-oracle spellings + Fluid/Sushiswap-Arbitrum need `VENUE_DATA_TYPE_CAPABILITIES` entries |
 
-**Recommended next item**: the CANONICAL ORTHOGONALITY audits (P0/P0/P1, below) — the STRATEGY CONSUMABILITY section
-is fully closed (declare→check→report→fix all shipped), and neither remaining operator ruling blocks it. "Define the
-universe precisely for W4/W5" (L411, AGENT-owned) is the other actionable item and can run independently/concurrently
-— it touches a different file set (venue-universe enumeration vs. data-type/venue-identity vocabulary).
+**Recommended next item**: **W4 "venue e2e wiring"** (`venue_e2e_wiring_2026_08_16.md`) — its universe-definition
+blocker is resolved (192 declared venues / 353 (venue, data_type) pairs is the real denominator, per
+`unified-api-contracts/scripts/generate_venue_universe_denominator.py`), so the per-venue mechanical sweep can now
+dispatch. The CANONICAL ORTHOGONALITY audits (P0/P0/P1, below) and the 8-venue DeFi capability gap (P1, new row
+above) remain independently actionable and can run concurrently — different file sets, no conflict.
