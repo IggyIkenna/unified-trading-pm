@@ -34,7 +34,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     /plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
-    /plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md,
+    /plans/archive/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md,
     /plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -139,24 +139,31 @@ pass (not a delta) per this dispatch's autonomous-mode instructions.
       permanently. `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s checkbox flipped citing this
       evidence (same commit). Source: `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`.
 
-- [ ] [DATA] P3. **Register TradFi ETF SchemaContract coverage and fix TradFi OPTION's caller-scoping crash — one
-      combined todo (same underlying finding, same source doc, sequential sub-steps).** (1) `instrument_type=ETF` has
-      ZERO SchemaContract coverage at any timeframe in `unified_api_contracts/internal/schemas/_candle_contracts.py`
-      despite `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("tradfi","etf")]` explicitly listing
-      `ohlcv_1m`/`ohlcv_15m`/`ohlcv_24h`/`trades`/`tbbo`/`mbp_10` as valid (MVP TradFi scope: BlackRock spot ETFs
-      IBIT/ETHA on NASDAQ) — confirm the correct per-instrument schema shape (same shape as `future`/`equity`, or a
-      dedicated one) by comparing to how those adjacent instrument_types are already registered, then register ETF
-      accordingly. (2) `instrument_type=OPTION` (the leaf grain, distinct from the already-working `options_chain`
-      per-underlying bundle) is `frozenset()` in the same registry and crashes — this is NOT a registration gap, it is
-      very likely the same caller-scoping class of bug already fixed for COMBO/futures_chain
-      (`market-data-processing-service@de8ea9f`'s `related_data_types` mechanism) — confirm via the same investigation
-      pattern against `market-data-processing-service/.../app/adapters/tradfi/ohlcv_passthrough.py` and fix if
-      confirmed. Repos: unified-api-contracts (ETF registration), market-data-processing-service (OPTION
-      caller-scoping). **Done when**: ETF has registered SchemaContract coverage for its full valid data_type list with
-      a passing regression test, the OPTION caller-scoping root cause is confirmed and fixed (or, if the investigation
-      finds it's NOT the same bug class, that finding is recorded with a follow-up scoped), a live re-run shows candles
-      for both instrument_types, and `quality-gates.sh` is green. Source:
-      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
+- [x] ✅ [DATA] P3. **Register TradFi ETF SchemaContract coverage and fix TradFi OPTION's caller-scoping crash — one
+      combined todo (same underlying finding, same source doc, sequential sub-steps).** **DONE 2026-08-16 (slot-9,
+      data_engineering) — both fixes already shipped on `origin/live-defi-rollout` before this dispatch; verified, not
+      re-implemented.** (1) ETF SchemaContract coverage: `unified-api-contracts@0228afe5` registered
+      `("tradfi","etf","trades")`/`("tradfi","etf","ohlcv_1m")` in `contracts.py`;
+      `unified-api-contracts@2fbe8278` registered the re-aggregated `ohlcv_5m/15m/1h/4h/1d` + the `ohlcv_24h` alias in
+      `_candle_contracts.py`. `ohlcv_1s`/`tbbo`/`mbp_10` are deliberately NOT registered — mirroring the adjacent
+      `equity` instrument_type's own precedent (Databento's DBEQ.BASIC dataset doesn't emit those grains for
+      equities/ETFs; registering ahead of captured evidence would be speculative), documented inline at
+      `contracts.py:435-441`. (2) OPTION caller-scoping crash: confirmed the SAME caller-scoping class as
+      COMBO/futures_chain (`market-data-processing-service@de8ea9f`) — `market-data-processing-service@2b2cc58e` added
+      `instrument_type=option` to `orchestration_scanner._INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES`, scoping
+      `ohlcv_15m`/`ohlcv_24h` requests away from the OPTION leaf up-front instead of crashing downstream (root-caused
+      against the 34 `instrument_type='OPTION'` "No SchemaContract registered" lines in
+      `mdps-backfill-tradfi-20260803-104812`'s run.log) — regression tests
+      `test_option_leaf_blob_excluded_from_ohlcv_15m`/`_ohlcv_24h` in `tests/unit/test_orchestration_scanner.py`. Both
+      commits landed same-day on this same slot; `quality-gates.sh` was green at commit time (per-repo commit
+      boundary). The source issue doc was already archived 2026-08-16 (slot 9) once these were its last open todos —
+      see `data_completion_tradfi_2026_07_15.md`'s Progress Log entry. **Live re-run verification is tracked as a
+      SEPARATE, already-existing P3 todo** in `data_completion_tradfi_2026_07_15.md` ("Live re-verification sweep,
+      deferred from the now-archived ... issue doc", citing the same 3 commits incl. `2b2cc58e`/`0228afe5`) — not
+      re-drafted here per the AO-dispatch conflict-check protocol (§3,
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`): a second independent
+      verification run would duplicate that already-tracked one. Source:
+      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (archived).
 
 - [ ] [DATA] P3. **Investigate the pre-existing malformed `"ticks"` instrument_id surfaced by the delta_one pre-flight
       instrument scanner during TRADFI processing.** The 2026-08-05 TRADFI delta_one re-run's pre-flight scanner picked
@@ -290,6 +297,13 @@ mirroring the batch1-7 finalize pattern.
   unset. Dispatching.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
+- **2026-08-16 (slot-9, data_engineering)**: dispatched todo 2 (ETF SchemaContract + OPTION caller-scoping). Found both
+  fixes already shipped on `origin/live-defi-rollout` by an earlier session on this same slot today
+  (`unified-api-contracts@0228afe5`/`@2fbe8278`, `market-data-processing-service@2b2cc58e`, regression tests present),
+  and the source issue doc already archived. Verified (did not re-implement) and flipped the checkbox citing the 3
+  commits; the live-re-run verification is already tracked as its own P3 todo in `data_completion_tradfi_2026_07_15.md`
+  — not duplicated here per the conflict-check protocol. No code changes this session.
 
 ## Codex SSOTs
 
