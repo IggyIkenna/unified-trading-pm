@@ -374,7 +374,18 @@ backfill off this item before then — cite that ruling doc, not this checkbox, 
     2026-07-19/21). parent_epic: mtds_mdps_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
     2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [INFRA] P1. **UNGATED 2026-08-10** — the billing-suspension gate is resolved (live-reverified that day, 3 real
+- [ ] [INFRA] P1. **STALE FINDING — CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): a scheduler for
+      `build_instrument_catalogue.py` DOES now exist — do NOT wire a new one without first reading
+      `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`.** That doc confirms
+      `lifecycle-catalogue-regen-tradfi-daily` (Cloud Scheduler, `CreateJob`'d 2026-06-11 — 4 days after this todo's
+      2026-06-07 finding below) has been live-verified driving `build_instrument_catalogue.py`'s tradfi rebuild since,
+      and was resumed after a maintenance pause (via `resume_after_maintenance`, not a raw `gcloud resume`) as part of
+      `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` todo 14. Dispatching this todo's original instruction
+      ("wire the scheduler") as-is risks creating a DUPLICATE scheduler that could bypass that doc's build-time
+      exclusion filter (4 legs deliberately excluded — venue=ICE, venue=CBOE AND instrument_type IN (OPTION,SPOT_PAIR),
+      2 VIX-cash INDEX ids) and re-introduce the G1-pollution incident that doc exists to prevent. Before acting on
+      anything below: confirm current scheduler state via that doc, not this one.
+      **UNGATED 2026-08-10** — the billing-suspension gate is resolved (live-reverified that day, 3 real
       Databento calls across all 3 core datasets, see tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md).
       **UNBLOCKED 2026-08-10** — the databento account-level billing-suspension gate is lifted (live
       `metadata.list_datasets()` verification succeeded, no auth/suspended error; see
@@ -383,7 +394,8 @@ backfill off this item before then — cite that ruling doc, not this checkbox, 
       /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~ — this todo is itself still gated
       on the Databento IS reference-capture restore below (gate-b re-feed): that re-feed is now dispatchable (Databento
       is reachable again) but has NOT yet been RUN, so this scheduler item stays open, not newly unblocked in practice.
-      **Wire the tradfi `build_instrument_catalogue.py` daily rollup scheduler (GATED on gate-b capture restore).**
+      **Original finding (STALE, see correction above), kept for history — wire the tradfi
+      `build_instrument_catalogue.py` daily rollup scheduler (GATED on gate-b capture restore).**
       FINDING (slot-6 2026-06-07): the G1 lifecycle producer `build_instrument_catalogue.py` has **NO terraform
       scheduler for ANY asset group** (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` [INFRA] P1 "Trigger on
       every instruments update" is still `[ ]`, owner vm-cross-cutting). The two TFs that DO exist —

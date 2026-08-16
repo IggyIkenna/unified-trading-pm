@@ -72,9 +72,11 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 12 — 2026-08-10 (residual gap, sharded re-run)
 
-**status: draft — the safety rail.** Not ingested/dispatched until an operator reviews and flips this to `active`. Only
-1 source doc, 2 todos — deliberately thin; this batch exists to close a specific, verified gap, not to re-litigate
-slot-25's already-thorough batch11.
+**status: active — reviewed and dispatched (see frontmatter).** CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi,
+agt-a74a6a): this body banner still read `status: draft`, contradicting the frontmatter's `status: active` and the
+fact that todo 1 already shipped (`UAC@a65c2fa9`, `MTDS@fe000178`) — the operator review this banner describes has
+already happened. Only 1 source doc, 2 todos — deliberately thin; this batch exists to close a specific, verified gap,
+not to re-litigate slot-25's already-thorough batch11.
 
 ## Todos
 

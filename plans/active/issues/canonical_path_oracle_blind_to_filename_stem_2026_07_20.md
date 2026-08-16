@@ -180,10 +180,13 @@ cefi hyphenated-venue regression).
 
 ### 5.1 Scope limitation (deliberate)
 
-`ID_FORM` is checked for **cefi + tradfi only**. `defi` / `prediction` / `sports` ids route through the passthrough and
-domain-specific builders (pool addresses, condition ids, fixture ids) whose grammar is not `VENUE:ITYPE:BASE-QUOTE`;
-applying the regex there would manufacture false violations. **A clean `ID_FORM` result for those AGs means "not
-checked", not "verified canonical."** Widening `_ID_FORM_CHECKED_ASSET_GROUPS` requires a declared id grammar first.
+`ID_FORM` is checked for **cefi + defi** (widened from cefi-only 2026-08-11, `unified-api-contracts@502ef57e` — see §7)
+**+ tradfi**. `prediction` / `sports` ids route through the passthrough and domain-specific builders (pool addresses,
+condition ids, fixture ids) whose grammar is not `VENUE:ITYPE:BASE-QUOTE`; applying the regex there would manufacture
+false violations. **A clean `ID_FORM` result for those AGs means "not checked", not "verified canonical."** Widening
+`_ID_FORM_CHECKED_ASSET_GROUPS` further requires a declared id grammar first (correction 2026-08-16, plan_reconciler,
+tranche=tradfi, agt-a74a6a — this section previously said "cefi + tradfi only" and was never updated when §7's DeFi
+widening shipped).
 
 ## 6. CALLER AUDIT — every production caller, across all repos
 
@@ -300,7 +303,11 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       `(OKX-FUTURES, FUTURE, batch_tardis)`: 224. This is NOT covered by § 7 item 2's `build_instrument_id` colon-guard
       (that guard only fires on a symbol carrying an embedded `:`; a bare symbol like `AAOI` has none, so it
       mints/passes through un-wrapped). Root cause not investigated this session (out of the bounded "restate the
-      verdict" scope) — tracked as a new todo below. - [ ] [SERVICE] P2. Root-cause + fix the batch-side
+      verdict" scope) — tracked as a new todo below.
+
+- [ ] [SERVICE] P2. **STRUCTURAL FIX 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): this checkbox was
+      previously embedded mid-line inside the DONE item above, invisible to line-anchored todo parsers (incl. AO
+      backlog generation) — moved onto its own line, no content change.** Root-cause + fix the batch-side
       bare-wire-symbol id defect found above (EXTENDED-STARKNET/perpetual, OKX-FUTURES/FUTURE, DERIBIT/FUTURE via
       `batch_tardis`/`batch_extended`) — likely a catalogue-miss fallback in the MTDS batch writer path that, unlike the
       colon-embedded case `build_instrument_id` now guards (§ 7 item 2), never wraps a colon-less symbol into
@@ -404,3 +411,9 @@ own tests pass (178 passed across the four canonical-path test modules).
   incident record tracking a cross-repo data-correctness fix; the sibling design doc's 3 implementation todos are still
   in-flight, and this doc is referenced by multiple codex SSOTs + skill files. Archival is correct once the sibling
   doc's implementation todos land and the codex references stabilize — not before.
+- **2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a) — correction**: the 2026-08-11 "all §7 todos are now `[x]`"
+  claim above was inaccurate — the §7 bare-wire-symbol `[SERVICE] P2` todo (created 2026-07-27) was genuinely still
+  open the whole time, just embedded mid-line inside a DONE item's narrative text where it was invisible to a
+  line-anchored checkbox scan. Fixed the formatting (own-line, see §7) so it's now visible to
+  `regen_backlog_from_plan.py` and future audits; not archive-ready until that item closes too, but `archive_exempt:
+  true` causes no harm either way since the doc genuinely still has an open item now.

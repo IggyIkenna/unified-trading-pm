@@ -1,8 +1,9 @@
 ---
 doc_type: issue
 title: >-
-  TradFi CME instrument_type=FUTURE manifest rows (non-chain-bundle) also show a blank-instrument_id population — 20,254
-  rows, static since 2026-08-07, distinct root cause from the chain-bundle fix
+  TradFi CME instrument_type=FUTURE manifest rows (non-chain-bundle) also show a blank-instrument_id population —
+  originally measured 20,254 rows on 2026-08-09, ACTIVELY GROWING since (see Progress Log for current count),
+  distinct root cause from the chain-bundle fix
 summary: >-
   While executing `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` todo 1 (backfilling blank `instrument_id` on CME
   `futures_chain`/`options_chain` chain-bundle OHLCV manifest rows, `market-tick-data-service@63cff354`), a live
@@ -13,8 +14,12 @@ summary: >-
   (7,956) / ES (3,089). This is NOT the same defect the chain-bundle fix addresses (`_resolve_chain_bundle_manifest_id`
   only applies to `is_derivative=True` futures_chain/options_chain shards) and `_resolve_chain_bundle_manifest_id`
   cannot resolve these rows (confirmed: the resolver requires `itype` to be `futures_chain` or `options_chain`, not
-  `FUTURE`). Population is STATIC (no rows written after 2026-08-07 as of this session, 2026-08-09) — a closed
-  historical backlog, not an actively-growing live bug.
+  `FUTURE`). **CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a)**: the original "population is
+  STATIC... a closed historical backlog, not an actively-growing live bug" claim below was WRONG — the population grew
+  substantially in the days after this doc was filed and continued growing after that (see Progress Log for the
+  measured counts); this is a live, actively-growing gap, not a closed backlog. Original 2026-08-09 claim (stale, kept
+  for history): "Population is STATIC (no rows written after 2026-08-07 as of this session, 2026-08-09) — a closed
+  historical backlog, not an actively-growing live bug."
 status: open
 nature: issue
 asset_group: [tradfi]
@@ -24,7 +29,7 @@ scope: [engineer]
 tags: [tradfi, manifest, data-correctness, cme, instrument_id, blank-id]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
   ]
 created: "2026-08-09"

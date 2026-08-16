@@ -127,6 +127,18 @@ again with no further diagnosis.
 **Recommendation: A** — three same-shape non-OOM tradfi pages in 48h is a pattern, not noise; a root-cause pass on the
 launcher/adapter is cheaper than repeatedly burning the daily relaunch bound on VMs that keep exiting the same way.
 
+## Todos
+
+<!-- Converted from prose 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a) — this doc had zero `- [ ]`/`- [x]`
+     checkboxes despite real remaining work (invisible to backlog generation / archive-candidate detection). -->
+
+- [ ] [OPERATOR] P1. Pull `run.log` for `mdps-tradfi-2023-20260815-040118` from its GCS log path and diagnose the
+      `exit_code=1` root cause (per "Recommended decision" above, option A). Done when: root cause identified and
+      either fixed before the next scheduled tradfi-2023 backfill attempt, or a targeted follow-up is filed.
+- [ ] [DEVOPS] P2. Cross-check the `mdps-tradfi-`/`tradfi-bf-` launcher/adapter code path for a systemic non-OOM
+      failure mode — this is the THIRD same-shape relaunch-bound-page doc in 48h (see `related:` for the other two).
+      Done when: either a shared root cause is confirmed and fixed, or the 3 occurrences are confirmed independent.
+
 ## Progress Log
 
 - 2026-08-15: Filed by slot-10 data_pipeline_failure escalation worker (escalation agt-5801ea). Confirmed VM absent

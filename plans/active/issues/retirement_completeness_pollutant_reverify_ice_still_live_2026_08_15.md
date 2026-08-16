@@ -131,7 +131,9 @@ I'm filing rather than escalating past what the evidence supports.
       the same rows.
 - [ ] [CODE] P3. Audit the surfaces leg (catalogue API / `/data-status` / UI) for any residual
       ICE/CBOE-VIX-cash/BARCHART display — not checked this session.
-- [x] Cefi "equity-perp singles" — confirmed non-issue, no follow-up needed.
+- [x] [DIAG] P3. Cefi "equity-perp singles" — confirmed non-issue, no follow-up needed. (Tag+priority added 2026-08-16,
+      plan_reconciler, tranche=tradfi, agt-a74a6a — was missing the `[TAG] Pn.` format every other todo in this corpus
+      follows; no content change.)
 
 ## Progress Log
 

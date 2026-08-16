@@ -339,9 +339,10 @@ context_scope:
       `tradfi_v9_stage1_finish`; the Massive-dependent gate-b/coverage-gap/dual-source paragraphs re-scoped or marked
       obsolete.
 
-### B.5 — Candle namespace quarantine backlog (`processed_candles/`, SEPARATE from Surfaces A-D above — different
+### B.5 — Candle namespace quarantine backlog (`processed_candles/`, SEPARATE from Surfaces A-D above — different bucket prefix, different script, different defect class: unresolvable leaf ids, not id-format canonicalization)
 
-### bucket prefix, different script, different defect class: unresolvable leaf ids, not id-format canonicalization)
+<!-- Structural fix 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): heading was mangled across 2 physical
+     `###` lines with an unclosed paren orphaning a floating `)` — merged onto one line, no content change. -->
 
 > Folded in 2026-07-23 (operator directive: "human plan for tradfi under tradfi consolidated plan which exists already")
 > from `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3. That doc's P6-P8 canonical-**path** migration
@@ -525,8 +526,13 @@ jittered sleep between attempts so different tries land at different phases rela
   of this script's scope** (see the script's own "DESIGN DECISION" docstring section). Remaining 3 shards were
   progressing identically (100% already_canonical) as of this checkpoint — check for the same pattern; if it holds, this
   whole pass is a clean confirmation, not a fix, and the REAL remaining content gap is the derivatives, not cash.
-  - `- [ ] [DATA] P1. The true legacy-content population (FUTURE/OPTION per-contract chain-bundle content) still needs its own rewrite pass — `rewrite_tradfi_content_id_2026_07_21.py`'s worklist filter (`underlying`blank/null) deliberately excludes chain bundles. Scope a follow-up worklist keyed on`underlying`NOT blank +`instrument_type
-    in {futures_chain, options_chain}` before declaring tradfi content-canonical.`
+  - [x] ✅ [DATA] P1. The true legacy-content population (FUTURE/OPTION per-contract chain-bundle content) still needs
+    its own rewrite pass — `rewrite_tradfi_content_id_2026_07_21.py`'s worklist filter (`underlying` blank/null)
+    deliberately excludes chain bundles. Scope a follow-up worklist keyed on `underlying` NOT blank + `instrument_type
+    in {futures_chain, options_chain}` before declaring tradfi content-canonical. **FLIPPED 2026-08-16 (plan_reconciler,
+    tranche=tradfi, agt-a74a6a)** — stale artifact from earlier in this doc's own narrative: this exact worklist scope
+    is what Phase B (top of this doc) documents as already built, launched at scale, and gate-closed
+    (`checked=961 canonical=961 violations=0`).
 - `canonical-migration-tradfi-<ts>-shard{0..19}of20` (existing category, REBUNDLE — reuses the already-proven 3-pass
   migrate+rebundle+recover chain rather than a new one) — launched as of this checkpoint, satisfies the REBUNDLE todo
   (112,839 per-contract `options_chain` rows) using existing infra, no new code needed.
@@ -701,7 +707,14 @@ questions when a decision is needed. Ran it. Findings:
   Content inspection (reading one sample file's actual MBO/depth column structure) was blocked by the raw Ubuntu image
   lacking `pip`/`venv` packages (`apt-get install python3-pip` reported "no installation candidate" — needs
   `apt-get update` first or the `uv`-based install path the production launchers use) — not yet completed.
-  - `- [ ] [DATA] P2. Finish the CME monolith investigation: fix the pip/venv bootstrap on the investigation VM (or relaunch through the proper setup-data-pipeline-vm.sh path instead of a raw metadata startup-script), reconcile the 30-vs-107 count discrepancy, inspect real content structure, THEN design the migration tool. Clean up the investigation VM when done (not part of the tracked fleet).`
+  - [x] ✅ [DATA] P2. Finish the CME monolith investigation: fix the pip/venv bootstrap on the investigation VM (or
+    relaunch through the proper setup-data-pipeline-vm.sh path instead of a raw metadata startup-script), reconcile the
+    30-vs-107 count discrepancy, inspect real content structure, THEN design the migration tool. Clean up the
+    investigation VM when done (not part of the tracked fleet). **FLIPPED 2026-08-16 (plan_reconciler, tranche=tradfi,
+    agt-a74a6a)** — the very next section (2026-07-22 continuation, below) documents the bootstrap fixed ("trivial once
+    diagnosed"), the count discrepancy investigated (dangerous hypothesis ruled out; not fully reconciled but
+    deliberately closed as not worth further P2 time), content inspected, and VM cleaned up; the "design the migration
+    tool" clause has its own separate checkbox already done ("TOOL DONE 2026-07-26 (mtds@02284f8e)").
 
 ### 2026-07-22 continuation — CME monolith investigation: bootstrap fixed, count reconciled (unresolved), content inspected, VM cleaned up
 

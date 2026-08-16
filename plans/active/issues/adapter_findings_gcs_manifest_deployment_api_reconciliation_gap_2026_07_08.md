@@ -216,8 +216,10 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       expected-universe-derived numbers (denominators, expected cells) refresh within ≤24h automatically. No flag needed
       in future fixes' rollout plans beyond noting the ≤24h expected-universe lag if a fix specifically depends on that
       artifact.
-- [x] [VERIFY] P2. **[already covered by plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md, see that doc
-      for execution]** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers** — good candidates: the
+- [x] [VERIFY] P2. **CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): the pointer below to an
+      archived doc is misleading — the full execution write-up (Findings A/B/C) is actually IN THIS DOC's own Progress
+      Log (2026-07-31/08-01 entries below), which is more complete than the archived doc.** Spot-check 2-3 more
+      findings from the smoke-test doc across all 3 layers** — good candidates: the
       DERIBIT live-vs-batch FUTURE misclassification (does deployment-ui show a FUTURE count that matches the real GCS
       row count, or does the live-WS mislabel bleed into the manifest?), and HUOBI-SPOT's missing-from-venue-universe
       gap (does deployment-ui even have a HUOBI-SPOT row to look wrong, or does the venue not appear in the UI's venue
