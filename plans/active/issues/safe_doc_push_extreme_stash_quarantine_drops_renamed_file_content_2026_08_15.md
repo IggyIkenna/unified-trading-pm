@@ -393,3 +393,33 @@ tracked-but-missing shape.
   rebase-free harnesses, so the corpus now has three independently-triggered reconcile shapes covered instead of
   one. No further code change made. Landed: `unified-trading-pm@5ce3cf95f9` (the new repro script, via quickmerge,
   QG green).
+- **2026-08-16 (slot-20, infra)**: Hit the residual-gap shape live again (todo 3) while archiving
+  `prod_mutation_evidence_artifact_gap_2026_08_03.md` via a same-commit flip+`git mv` — caller-pre-staged rename
+  (already `git commit`'d, in fact, not just staged), then `safe-doc-push.sh "<msg>" --files "<old> <new> <other>"`.
+  **This directly refutes slot-23/slot-17's "stale pre-fix code" hypothesis for at least this instance**: this
+  session had `git pull --rebase --autostash origin live-defi-rollout`'d immediately before invoking the script (a
+  few tool-calls earlier in the same turn), so the checked-out `safe-doc-push.sh` was current, not stale — yet the
+  failure still reproduced. The failure SIGNATURE is also new/different from both this doc's original report and the
+  residual-gap todo's own description: no "pathspec did not match" error at all. Instead: `🔧 recovered
+  plans/active/issues/<old-path>.md from stash@{0} -- it was missing from disk AND the index` (the script's own
+  `sdp_recover_named_from_any_stash()` safety net, pass-2/pass-3's addition — see slot-25's pass-2 note above)
+  resurrected the STALE PRE-EDIT content of the rename's OLD path (verified via `diff` against the correctly-flipped
+  content at the new archive path: the recovered file had `status: open`, the un-ticked `- [ ]` checkbox, and none of
+  the archived-banner/Progress-Log additions — i.e. a real, older snapshot from some earlier stash entry, not garbage)
+  as an UNTRACKED file — which then collided with the retry loop's own rebase/checkout attempt: `error: The following
+  untracked working tree files would be overwritten by checkout: plans/active/issues/<old-path>.md ... Aborting ...
+  could not detach HEAD` (exit code 3). So `sdp_recover_named_from_any_stash()` — the very safety net pass-2 added
+  specifically to stop a genuine content-loss case — appears to itself have a false-positive trigger: it decided the
+  OLD path of an ALREADY-COMMITTED rename was "missing and needs recovery" and pulled a stale copy back from an
+  unrelated stash entry, then that resurrected untracked file blocked the script's own subsequent branch-switch.
+  Recovery was straightforward and no work was lost: confirmed via byte-diff that the resurrected file was strictly
+  older/superseded content (not newer WIP), `rm`'d it, then did a plain `git pull --rebase --autostash` + `git push
+  origin HEAD:live-defi-rollout` directly (the already-committed rename needed no re-staging) — landed clean,
+  verified via `git merge-base --is-ancestor` against origin. Did not attempt a fix or a fresh isolated repro this
+  session (out of this task's own scope); flagging here as a fifth data point against the "caller pre-staged git mv"
+  trigger shape, and as a specific new lead for whoever next investigates: check whether
+  `sdp_recover_named_from_any_stash()`'s "missing from disk AND index" check can be fooled by an ALREADY-COMMITTED
+  (not just already-staged) rename's old path, which is `missing from disk AND index` by definition and by design,
+  the same false-positive shape pass-2's own fix had to correct once already for the mid-loop-staged case (see the
+  "rename-source exclusion fix" in slot-25's pass-2 note) — this may be that same exclusion not covering the
+  already-committed case, a distinct code path from the one pass-2 fixed.
