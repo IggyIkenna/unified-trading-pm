@@ -79,6 +79,10 @@ is deliberately thin; reported honestly rather than padded.
       anywhere for the dropped Brent/Gasoil/DX-futures/softs population, and no `futures_contracts.parquet` exists
       under any `venue=ICE` directory. Fresh `gcs_bucket_soft_delete_retention_seconds` cited:
       `instruments-store-tradfi-prd-central-element-323112` → **604800s** (7 days, meets the §3a threshold).
+      Evidence: gcs-op=row-count-verify(prod/catalog.parquet: 920943 total rows, 0 venue==ICE-dropped rows;
+      delimited-listing sweep of 2664 by-day partitions found 4 residual venue=ICE dirs, all content-verified
+      raw_symbol==DX-Y.NYB/instrument_type==INDEX — the protected DXY exception, zero rows for the dropped
+      population; no physical delete performed since nothing qualified).
       Formalized as a re-runnable verification/purge script
       (`scripts/purge_tradfi_ice_dropped_universe_parquets_2026_08_16.py`, mirrors
       `purge_tradfi_ice_qualifier_rows_2026_08_09.py`'s mechanics) rather than a one-off manual check, so any future

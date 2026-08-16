@@ -601,6 +601,121 @@ Tracked here so a ruling cannot land in one place and rot in four others.
 | **Already dispatched — DO NOT REGRESS** | `execution-service@37bfaeed0` (real Uniswap/Lido/Jupiter live dispatch, V2InstructionRouter DELETED, Jito connector, Solana signing fix), `strategy-service@926be710` (per-venue per-mode capability axis + `TradingMode`), `@99a93fea` (shadow-SSOT 15/15), `unified-api-contracts@57a0dc9d`/`144b8880` (mSOL + EVM-scoped checksum). Chunk A's re-audit must MEASURE current state, not replay the pre-37bfaeed0 findings. |
 | **Existing ratchet**                    | `unified-api-contracts/tests/data/execution_service_venue_reachability_baseline.json` ALREADY tracks venue reachability. EXTEND it — do not build a parallel gate.                                                                                                                                                                                                                                                           |
 
+## RE-TRIAGE against the 2026-08-16 carve-out scope rulings
+
+**Read this before picking up any todo in this document.** The carve-out scope was narrowed sharply on 2026-08-16
+(`/plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md` §§A3–A5), and most of this doc's findings were
+written BEFORE that narrowing. They are not wrong, but many are no longer on the critical path.
+
+**The contracted scope is now**: BTC/ETH/SOL · **CEX only, exactly four venues** (Bybit, Deribit, Binance, OKX) ·
+**ETH staking via Lido only**. Explicitly out: all Solana DeFi/DEX (Jupiter perps, Kamino borrow, Marinade),
+Hyperliquid, Aster, every other on-chain venue. Tardis data excluded entirely. DeFi data reduces to Lido rate +
+gas fees. Two real archetypes: `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS` (`CARRY_FUNDING_DISPERSION` ruled out).
+
+### A — GATES THE CARVE-OUT (do these first)
+
+| Item                                                                 | Why it gates                                                     |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **Lazy-loading refactor, all three layers**                          | §A5 P0. Must land BEFORE/alongside the carve-out, else every later update re-derives a frozen snapshot against a moving eager target |
+| E2E completeness: 2 archetypes × 4 CEX venues + Lido, batch/live/paper | §A5 P0. Stronger than "code exists" — the pipeline must run and the data must back it |
+| close-all → `/manual/instruction` + HTTP contract test                | Safety, scope-independent. The emergency flatten path 404s today |
+| Audit coverage beyond manual; attempted-action states                | Regulatory (MiFID), scope-independent                            |
+| Reconciliation pause · virtual persistent-delta entry · soft-delete   | Same — operator-entry safety, applies to any scope               |
+
+**The lazy-loading refactor is three layers, not one** (from `strategy-service/EXTRACTION_AUDIT.md`):
+
+1. `strategy-service/…/factory.py` — eagerly registers every archetype engine across every family. Register only what
+   a deployment needs.
+2. **`unified-api-contracts` — the dominant blocker.** `registry/__init__.py` (1,270 L) and `internal/__init__.py`
+   (2,708 L) eagerly import essentially the whole package: `from unified_api_contracts.internal import
+   StrategyArchetype` pulls ~240k lines, with DeFi content interleaved with CeFi/TradFi/sports in flat enums and
+   dicts. A lazy `factory.py` does NOT fix this — the live collateral calls still import UAC. **Fleet-wide blast
+   radius**, not local.
+3. `execution-service/algorithms/algorithms.py` — eagerly imports all 7 algorithms. Cheapest of the three: the repo
+   already has the lazy pattern in `adapters/algorithm_factory.py` and `custody/factory.py`.
+
+SIT needs no changes for this (audit § "SIT — no coupling").
+
+### B — REAL, but MAIN-SYSTEM only (does NOT gate the carve-out)
+
+Production still trades these; they are simply outside the contracted universe, so they must not be allowed to block
+a send. Marinade / Kamino / Jupiter caller-graph reachability · the 4 bespoke readers (morpho health factor, pendle
+maturity, symbiotic + karak withdrawal queues) · vault-share config surface (yearn/beefy/convex/idle) · Kelp rsETH and
+ether.fi eETH genesis citations · LST address SSOT entries beyond stETH · Hyperliquid and Aster coverage.
+
+> **Do not delete these todos or mark them done.** They are correctly tracked; they are just not carve-out-gating.
+> Re-reading them as "moot" is the error to avoid — the main system runs on them.
+
+### C — CHEAP AND STILL WORTH IT (detectors, review debt)
+
+Reachability gate · `check_pytest_unit_dir_coverage.py` fix · SIT invariants 2 and 4 (1+3 landed, review them) ·
+the review backlog, of which **`cc3e07e0c`'s cited contract addresses remain the highest-value item** — the Lido stETH
+address is now in the contracted scope, so an error there propagates into the one staking route the client actually
+receives.
+
+### What this re-triage changes about priority
+
+The previous ordering put DeFi read/execute coverage first. Under the narrowed scope, **the lazy-loading refactor is
+the new head of the queue** — it is an explicit operator P0, it has fleet-wide blast radius, and every day the
+carve-out is built against an eagerly-coupled main system raises the cost of keeping it in sync later. The §A5 note is
+explicit that both prerequisites are wanted *together*, not compared as alternatives, and that this raises total
+pre-ship scope above what §A2 assumed.
+
+## The walkthrough artefact — provenance and editing rules (2026-08-16)
+
+`/codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html` is the target-state, collapsible tour
+of strategy-service. Committed 2026-08-16; published to a private artefact URL that redeploys on republish.
+
+**It is a normal HTML file — edit it directly.** It was originally ASSEMBLED by concatenating parts in a session
+scratchpad, but those parts are gone and are not needed: the committed file is complete and self-contained. Do not go
+looking for a build step.
+
+**The design system is inherited, not invented.** It reuses `strategy-service-deep-dive.html`'s `<style>` block
+verbatim — same gold-on-navy tokens, serif body, `.sec-head` / `.keypoints` / `.callout` / `.code` components. The ONLY
+addition is the `.st` status mark (live / partial / planned), built from the existing `--good` / `--warn` / `--crit`
+tokens. Extend it with those components rather than new CSS: an earlier draft used `<ul class="keypoints">` and
+rendered as a broken grid, because that component expects `div > b + span`.
+
+**Two content rules that are not stylistic:**
+
+1. **Status means REACHABLE, not built.** A section earns `live` only when something on a production path calls it —
+   the whole point of the document. A status upgraded because "the code exists and passes tests" makes it worthless.
+2. **Do NOT name ClearLoop.** There is no ClearLoop code path — zero source hits across all 26 repos; what exists is
+   `execution_service/custody/copper.py` and a `COPPER_MPC` signing surface. A client-facing draft already claimed it
+   once and was corrected (`/codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md`)
+   — a technical reader greps for a named integration. Describe the Copper leg; leave ClearLoop to Copper's own naming.
+
+> **⚠️ `/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` is at 997 of its 1000-line
+> HARD cap.** It gained the § I work-surface inventory on 2026-08-16 and has ~3 lines of headroom. The next substantive
+> addition WILL breach the gate and block the commit. Split or compress it deliberately, rather than discovering this
+> mid-push with something urgent to record.
+
+## Lessons — 2026-08-16 (session 5)
+
+- **A sequential `sed` rename chain cascades.** Renumbering `s12→s14, s13→s15, s14→s16 …` in ASCENDING order re-matched
+  already-renamed ids and produced `s18 s17 s18 s17 s18`. Substitute in DESCENDING order so a new value can never be
+  matched by a later rule, and verify by printing the whole id list rather than spot-checking one.
+- **A repeated `Edit` can land twice and duplicate a whole block.** ~130 lines appeared twice in this doc; I only
+  noticed because a later Edit failed with "found 2 matches". Count section headings before pushing an edited doc.
+- **But count HEADINGS (`^## `), not substrings.** My own uniqueness check reported a section "duplicated" when the
+  second hit was a cross-reference LINK to it. A substring count answers a different question than "does this heading
+  appear twice" — the same measure-the-right-property error this whole document is about, committed inside the check
+  built to prevent it.
+- **`git checkout <ref> -- <file>` + `cp` from a backup is only as good as the backup.** A backup taken AFTER an
+  aborted rebase carried a conflict marker on line 1, which broke the `---` frontmatter delimiter, and prettier then
+  reflowed the entire YAML block into prose. Recovery is to discard the local copy and re-author from origin — never to
+  repair a file you cannot fully see.
+- **A word-level "is my copy a superset?" check does not detect structural corruption.** Zero words unique to origin
+  proved the CONTENT was a superset while the file carried a stray merge marker and mangled frontmatter. Word-equality and
+  structural validity are different properties; the plan-hygiene gate caught what my check could not.
+- **Writing ABOUT merge markers trips the merge-marker gate.** These very lessons quoted the literal seven-character
+  sequence inside backticks; the plan-discipline checker matched the prose and rejected the commit twice. Describe the
+  mechanism in words, never paste the token.
+- **This doc has now been mangled FOUR times by one mechanism** — concurrent edit → `safe-doc-push` reconcile →
+  prettier reflows the conflicted text and jumbles markers mid-sentence, so a line-anchored grep reads clean while markers
+  are present. It is a hot doc edited by three concurrent sessions. Splitting or locking it would fix this; more
+  careful editing has not.
+
 ## How to verify a reachability claim (method, so this is repeatable)
 
 1. **Find the production entry points** — `rg 'FastAPI\(|APIRouter\(|def main\('`, excluding tests.
