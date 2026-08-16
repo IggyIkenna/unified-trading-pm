@@ -541,7 +541,8 @@ issue's scope); flagged as a follow-up todo below.
       `manifest_finalize.py`) — a repo-wide grep for `odds_horizon_bucket` writers under
       `market-tick-data-service/` (not yet run) is the precise next step, not another MDPS-side read. **Continued
       2026-08-16** in `sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` (split at cap): WS ruled OUT,
-      `_write_captured_rows()` reopened, scoped check not yet run. (repo: market-tick-data-service)
+      `_write_captured_rows()` RE-FALSIFIED by a tighter scoped check (0/200, older-written_at ordering) — mechanism
+      still genuinely unknown; git-blame is the next lead. (repo: market-tick-data-service)
 - [ ] [DATA] P1. **NEW, 2026-08-15 (later pass) — repo-wide MTDS script search run, exhausted with a negative
       result; narrowed to one unconfirmed structural candidate.** All 24 MTDS files referencing
       `odds_horizon_bucket` (`grep -rl`) were triaged by write-call presence, then each real candidate checked:

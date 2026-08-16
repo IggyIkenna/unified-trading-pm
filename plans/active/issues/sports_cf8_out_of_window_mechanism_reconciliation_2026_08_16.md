@@ -2,8 +2,8 @@
 doc_type: issue
 title:
   "CF-8 out-of-window (14,982-row) blank-timeframe `odds_horizon_bucket` population — live-WS-shard hypothesis RULED
-  OUT; `_write_captured_rows()` hypothesis back in contention but directly contradicts an already-recorded 0/200
-  sibling-check falsification — split from the parent doc at its 999-line cap, not yet reconciled"
+  OUT; `_write_captured_rows()` hypothesis RE-FALSIFIED by a tighter scoped check (2026-08-16) — mechanism still
+  genuinely unknown; split from the parent doc at its 999-line cap"
 summary: >-
   Split from `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` (at its 999-line hard cap) to continue the
   root-cause chase for the 14,982-row out-of-window blank-`timeframe` `odds_horizon_bucket` population. A dispatched
@@ -11,7 +11,8 @@ summary: >-
   BLOCKED-CREDENTIALS — zero ticks structurally possible — and has no `data_type` gating regardless). It also proposed
   `_write_captured_rows()` (fixed at `market-tick-data-service@e0b34e77fd`, 2026-08-15) as the mechanism, matching the
   row-count/service_name/date-cluster signature. But the parent doc's own already-recorded correction pass explicitly
-  falsified this exact hypothesis via a 0/200 sibling check. This doc reconciles the contradiction — not yet resolved.
+  falsified this exact hypothesis via a 0/200 sibling check. A tighter, ordering-aware scoped check (2026-08-16)
+  RE-FALSIFIES it — the mechanism for this population remains genuinely unknown; see the Result section below.
 status: open
 resolved_by:
 nature: issue
@@ -123,13 +124,19 @@ Not yet run this pass (batching/turn budget) — filed as the next actionable to
 
 ## Todos
 
-- [ ] [DATA] P1. Run the scoped sibling check above (2 narrow written_at windows, older-timestamp ordering constraint)
+- [x] [DATA] P1. Run the scoped sibling check above (2 narrow written_at windows, older-timestamp ordering constraint)
       against the live MTDS canonical via `read_availability_index_safe` — resolves the `_write_captured_rows()`
-      reconciliation either way. (repo: market-tick-data-service)
-- [ ] [DATA] P3. Git-blame `_rebuild_sports_write.py` and its callers (`rebuild_sports_manifest_v9.py`,
+      reconciliation either way. **DONE 2026-08-16**: 0/200 (2026-07-13 cluster) have an older real-timeframe
+      sibling; 2026-05-05 cluster window returned 0 blank-timeframe MTDS rows. `_write_captured_rows()`
+      RE-FALSIFIED. See Result section above. (repo: market-tick-data-service)
+- [ ] [DATA] P1. Git-blame `_rebuild_sports_write.py` and its callers (`rebuild_sports_manifest_v9.py`,
       the 2026-07-14 targeted-backfill script) as of 2026-07-13 and 2026-05-05 to confirm/refute whether `captured_df`
-      carried real per-timeframe values at those points in history — only needed if the sibling check in the todo above
-      comes back negative. (repo: market-tick-data-service)
+      carried real per-timeframe values at those points in history — **now unblocked**, the sibling check above came
+      back negative, this is the next lead. (repo: market-tick-data-service)
+- [ ] [DATA] P2. Reconcile why the scoped check found 0 blank-timeframe MTDS rows in the exact
+      `[2026-05-05T22:07:00, 2026-05-05T22:07:59]` window against the parent doc's own stated 326-row figure for this
+      cluster — check `service_name`/`capture_status`/second-level bounds used by the original count.
+      (repo: market-tick-data-service)
 - [ ] [DOC] P3. Fix the stale `market_tick_data_service/live/websocket_streaming_handler.py` path reference in
       `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` (if present) to the confirmed real location
       `market_tick_data_service/cli/handlers/websocket_streaming_handler.py`. (repo: unified-trading-pm)
@@ -144,3 +151,12 @@ the agent's "CONFIRMED" verdict on `_write_captured_rows()` was NOT taken at fac
 hypothesis the parent doc's own correction pass already falsified. Live-WS-shard branch closed with high confidence
 (multiple independent, non-contradicting lines of evidence). `_write_captured_rows()` branch reopened but left
 genuinely unresolved, with a concrete, scoped next check identified rather than a re-guess in either direction.
+
+### 2026-08-16 — scoped check run, `_write_captured_rows()` RE-FALSIFIED
+
+Ran todo #1's scoped check (background, `read_availability_index_safe` + groupby-indexed older-sibling lookup —
+the naive per-row version had timed out at 3 minutes in the foreground earlier, rewritten before this run). Result:
+0/200 sampled 2026-07-13-cluster rows have an older real-timeframe sibling even under the stricter ordering
+constraint; the 2026-05-05 cluster window returned zero blank-timeframe MTDS rows at all (new discrepancy, filed as
+a todo, not yet explained). `_write_captured_rows()` is confirmed NOT the mechanism for this population — the
+parent doc's original falsification was correct. Git-blame (todo #2) is now the live next lead.
