@@ -212,10 +212,15 @@ Two independent causes, both now fixed:
       (`sportradar_credential_ask_2026_08_09.md`, unrelated file, baseline drift predating this task) — no new orphan
       from this retag, and the doc is `plans/archive/**` (closed record, outside the gated/linkage corpus per
       `doc-frontmatter-schema.md` §1) so no closeout-family `related:` link is needed.
-- [ ] [DOCS] P3. **Retag `/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
+- [x] ✅ [DOCS] P3. **Retag `/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
       from `[defi]` to `[ui]` or `[cross-cutting]` by content — its `repos:` is
       `[unified-api-contracts, unified-trading-system-ui]` and the content is strategy-archetype DRIFT venue cleanup,
-      not defi-specific. Carried unactioned since 2026-08-07. **Done when**: retagged, reasoning in the Progress Log.
+      not defi-specific. Carried unactioned since 2026-08-07. **Done when**: retagged, reasoning in the Progress Log. —
+      Retagged `[defi]` → `[ui]`. The UAC-source portion was already resolved (2026-07-16 follow-up + 2026-07-26
+      false-positive triage); the sole remaining open todo is exclusively `unified-trading-system-ui` registry-resync
+      work (`ui-reference-data.json`, its generator, an E2E fixture), so `[ui]` fits better than `[cross-cutting]`
+      (single-repo-primary, not genuinely multi-domain). Added `related:` link to
+      `ui_consolidated_closeout_2026_07_30.md`. Full reasoning in the target doc's own Progress Log.
 - [ ] [DOCS] P3. **Fix the stale "0 open todos" claim in `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`**
       (~line 745): it states `phantom_audit_estate_coverage_gap_2026_07_10.md` has "0 open todos
       (closed/archived/record-only)" but that doc carries 1 open `[SCRIPT] P2` (widen the phantom audit to the full
