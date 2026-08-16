@@ -676,10 +676,14 @@ batch)
   `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
 - **ui**:
   [`deployment_api_prod_disable_auth_true_2026_08_06.md`](/plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md)
-  (⚠️ live P1 unauthenticated-prod-endpoint exposure, all 4 fix steps still open as of 2026-08-08 — 2 days stale),
-  [`unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`](/plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md)
-  (very likely already resolved on `main`, needs verify-and-archive not a fresh fix) — evidence:
-  `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` findings 4/carry-3.
+  (⚠️ was live P1 unauthenticated-prod-endpoint exposure as of 2026-08-08 — **RESOLVED, plan_reconciler agt-8fc5a6
+  2026-08-16**: all 4 fix-steps shipped + independently live-reverified via the successor P0 plan
+  `deployment_api_unauthenticated_prod_p0_2026_08_10.md`; this doc's own checkboxes flipped with evidence, full
+  archival still pending its finalize plan's own review),
+  [`unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`](/plans/archive/2026_08/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md)
+  (was "very likely already resolved on `main`, needs verify-and-archive" — **ARCHIVED, plan_reconciler agt-8fc5a6
+  2026-08-16**, verified + moved) — evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` findings
+  4/carry-3.
 - **meta** (genuinely process-spanning, no single owning tranche):
   [`governance_sweep_deferred_followups_2026_08_06.md`](/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md).
 - **Ambiguous, dual-tagged `[defi, cross-cutting]`** (real owner `ci` or `infrastructure`, needs whichever tranche's

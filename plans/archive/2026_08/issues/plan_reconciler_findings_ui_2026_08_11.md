@@ -6,7 +6,7 @@ summary: >-
   docs are <12h old (all touched by a single mechanical SHA-fix commit 603557f5ce 4h ago), leaving only 2 FREE docs
   (batch3 + batch3_finalize from 2026-08-09). Focused on the 2 writeable docs + read-only contradiction/
   done-but-unchecked sweep over grace docs.
-status: open
+status: resolved
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -125,15 +125,14 @@ include multiline-frontmatter ui-tagged docs.
 
 ## Todos
 
-- [ ] [DOC] P3. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Expand the ui-tranche doc
-      inventory (the corpus derivation this run and its predecessors used) to include multiline-frontmatter
-      `asset_group:\n  [ui]` docs missed by same-line grep (e.g.
-      `data_status_tab_and_downloads_remediation_2026_06_16.md`,
-      `deployment_registry_firestore_migration_2026_07_14.md`) — the 9 same-line matches this run found undercount the
-      real tranche. **Still open as of 2026-08-15 (plan_reconciler reconciliation session)** — checked for a newer `ui`
-      plan_reconciler findings doc that might have picked this up: none exists (`plan_reconciler_findings_ui_*` in
-      `plans/active/issues/` still tops out at this 2026-08-11 doc; no later dated file found). Ordinary open work, not
-      re-scoped or re-assigned this pass.
+- [x] ✅ [DOC] P3. **DONE 2026-08-16 (plan_reconciler agt-8fc5a6).** Expand the ui-tranche doc inventory to include
+      multiline-frontmatter `asset_group:\n  [ui]` docs missed by same-line grep. Shipped via
+      `ui_satellite_ao_dispatch_batch4_2026_08_13.md` todo 11 — `scripts/plan-hygiene/generate_tranche_doc_inventory.py`
+      (`unified-trading-pm@b2e3e5f8fe`), reuses `docspec.py`'s PyYAML frontmatter parser, immune to the same-line-grep
+      blindspot by construction. Verified independently live this session: `--tranche ui` returns 25 docs (incl. both
+      named examples, `data_status_tab_and_downloads_remediation_2026_06_16.md` and
+      `deployment_registry_firestore_migration_2026_07_14.md`), wired into both `/plan-reconcile`'s topic-scoped-run
+      section and `/ag-closeout-audit`'s AG-primary-doc-inventory step.
 
 ## Deferred to next run
 
@@ -150,3 +149,15 @@ include multiline-frontmatter ui-tagged docs.
 - **2026-08-15 (operator-ruling application session)**: this doc's own `## Todos` item (multiline-frontmatter ui
   inventory expansion) left open/ordinary-work — checked for a newer ui-tranche `/plan-reconcile` findings doc that
   might have picked it up; none exists as of this date. No other changes made to this doc's substance.
+- **plan_reconciler agt-8fc5a6, 2026-08-16 — ARCHIVED (Phase -1 self-reconciliation).** The `## Todos` item flipped
+  `[x]` (tooling now exists, verified live). Re-checked the 4 "Deferred to next run" items: (1) multiline-frontmatter
+  inventory — resolved, same fix as the todo above; (2) "contradiction sweep across all ui-tagged docs once grace
+  window clears" — this session's own fan-out over all 25 ui-tranche docs (0 grace-blocked) IS that sweep; (3) batch3
+  todo 3 adjudication — resolved this session with fresh evidence (confirmed genuinely still open, not moot — see
+  `ui_satellite_ao_dispatch_batch3_2026_08_09.md`'s own todo 3 annotation); (4) the 4 items routed to the operator by
+  `agt-ec1688` — resolved per this session's read of `plan_reconciler_findings_ui_2026_08_10.md` (3 of 4 fully done, 1
+  ruling-resolved with execution still pending on a different, non-ui-tranche doc). Zero genuinely-open items remain.
+  `status: open` → `resolved`. Archiving via the 6-step ritual (unlocked, non-grace, 0 open todos) — 1 formatted
+  referrer found + repointed (`ui_satellite_ao_dispatch_batch4_2026_08_13.md`'s `related:` list); 2 other mentions
+  (`ui_satellite_ao_dispatch_batch3_2026_08_09.md`, `plan_reconciler_findings_all_2026_08_12.md`) are bare-filename
+  historical-record prose, not the leading-slash formatted convention, left as-is.

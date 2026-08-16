@@ -27,6 +27,9 @@ summary: >-
   `DEPLOYMENT_API_KEY` (a not-yet-created GH secret) is unset — which works today only because of this gap, and will
   start requiring a real key the moment it's closed (no code change needed on the listener side when that happens).
 status: open
+archive_exempt: true # 0-open-todos 2026-08-16 (plan_reconciler agt-8fc5a6): all 4 fix-steps shipped + live-reverified,
+  # but full archival (independent re-verification ritual + corpus-referrer repoint) is explicitly owned by
+  # deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md's own todos 1-3 (still open) — not preempted here.
 resolved_by:
 nature: issue
 asset_group: [ui]
@@ -151,13 +154,29 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
       other `UnifiedCloudConfig.environment` consumer would be broken by either choice. Investigated (2026-08-10
       plan_reconciler entry: grepped all 7 consumers, recommended shape A) and decided+shipped via the successor P0 plan
       `deployment_api_unauthenticated_prod_p0_2026_08_10.md` step 1 — `UTL@336f2b3b6c` + `deployment-api@d0eebac4e6`.
-- [ ] [BACKEND] P1. Issue a real deployment-api API key (GSM secret), wire it into the prod Cloud Run service's env, and
-      populate a `DEPLOYMENT_API_KEY` GH secret on every repo whose CI calls deployment-api server-to-server (starting
-      with `deployment-service`'s `service-deployed-listener.yml`).
-- [ ] [BACKEND] P1. Audit every current caller of `_authenticated_router` routes (deployment-ui, other CI workflows,
-      manual usage) for whether they already send a credential; fix any that don't before enforcing.
-- [ ] [BACKEND] P1. Flip the guard/env so `DISABLE_AUTH=true` is actually rejected in prod, verify the service still
-      boots with the real key wired in, and confirm a request with no credential now gets 401.
+- [x] ✅ [BACKEND] P1. **DONE — shipped + verified live via the successor P0 plan's step 2.** Issue a real deployment-api
+      API key (GSM secret), wire it into the prod Cloud Run service's env, and populate a `DEPLOYMENT_API_KEY` GH secret
+      on every repo whose CI calls deployment-api server-to-server. `deployment-api@fc01906159` (GSM secret
+      `deployment-api-api-key`, wired via `cloudbuild.yaml` `--update-secrets`; `DEPLOYMENT_API_KEY` populated on
+      `deployment-service`). **Re-verified independently live 2026-08-16 (plan_reconciler agt-8fc5a6)**:
+      `gcloud run services describe uts-shared-deployment-api` shows `API_KEY` bound via `secretKeyRef` to
+      `deployment-api-api-key`. Full evidence: `deployment_api_unauthenticated_prod_p0_2026_08_10.md` todo 2.
+- [x] ✅ [BACKEND] P1. **DONE — shipped via the successor P0 plan's step 3.** Audit every current caller of
+      `_authenticated_router` routes; fix any that don't send a credential before enforcing. Full 8-caller inventory
+      (repo scan across 26 slot repos + live Cloud Run request logs) recorded in
+      `deployment_api_unauthenticated_prod_p0_2026_08_10.md`'s "## Caller inventory (todo 3)" section — 4
+      credential-less callers fixed (`client-reporting-api`, `resource-watchdog.sh`, agent-orchestrator MCP proxy, the
+      cost-snapshot scheduler), 1 partially fixed (deployment-ui console, tracked as its own residual). Verified
+      2026-08-16 (plan_reconciler agt-8fc5a6) by reading that doc's caller-inventory table in full.
+- [x] ✅ [BACKEND] P1. **DONE — shipped + verified live via the successor P0 plan's step 4.** Flip the guard/env so
+      `DISABLE_AUTH=true` is actually rejected in prod; verify the service boots with the real key; confirm a
+      credential-less request now gets 401. `DISABLE_AUTH=false` flipped 2026-08-10 (revision `00510-fmp`, later
+      `00514-9tq`); credential-less `GET /api/services` → 401, valid `X-API-Key` → 200. **Re-verified independently
+      live 2026-08-16 (plan_reconciler agt-8fc5a6)**: `gcloud run services describe uts-shared-deployment-api` shows
+      `DISABLE_AUTH: 'false'` currently set. Note: the finalize plan
+      (`deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md`) still owns this doc's FULL archival
+      (independent re-verification ritual + corpus-referrer repoint, its own todos 1-3, still open) — not done here,
+      this is only the checkbox reconciliation these 3 items' own HARD evidence warrants.
 
 ## Progress Log
 

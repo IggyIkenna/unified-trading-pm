@@ -127,6 +127,14 @@ context_scope:
 > unticked pending that separate doc's resolution — this is evidence-backed "genuinely still blocked," not a stale
 > unrun-check.
 
+> **🟢 CORRECTION (plan_reconciler agt-8fc5a6, 2026-08-16) — the 2 banners above are now STALE; all 3 UI items are
+> unblocked and checked.** A fresh full `pw:L2` re-run on 2026-08-14 (`--workers=1`, 450/450 passed) closed the
+> Fleet-Git nav regression the 🟡 banner cites, found + fixed inline one new unrelated blocker
+> (stale `capability_tab.spec.ts` manifest-count assertions, deployment-ui@`d95f1934ef`), and all 3 items below (venue
+> filter, duplicate-panel collapse, pagination selector) are `[x]` with that evidence — see each item's own 2026-08-14
+> Progress note. Leaving both banners in place as historical record (append-don't-replace convention) rather than
+> editing them — this correction is the pointer a reader should trust over their "stay unticked" framing.
+
 ## Phase A (TIER 1 cleanup) — Scope + venue-filter correctness
 
 - [x] ✅ [CODE] P1. **instruments-service "out of scope" — PROPER fix** — DONE deployment-api@`8710152`: new
@@ -183,6 +191,14 @@ context_scope:
       still need a backend `limit` bump to be client-pageable — follow-on if wanted. **2026-08-14: fresh full `pw:L2`
       re-run exits 0 — 450/450 passed** (same evidence as the two items above). — deployment-ui `[UI]` | pw:L2 ✓ |
       regression: `tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`
+- [ ] [UI] P3. **ADDED 2026-08-16 (plan_reconciler agt-8fc5a6, zero-checkbox conversion).** **Denominator-freshness /
+      coverage-% staleness trust annotation** — real, still-open work explicitly hand-off'd in prose from
+      `consolidator_throughput_backlog_monitor_2026_07_09.md` ("(4) Denominator-freshness trust-annotation HANDED to
+      Ikenna (data-status tab)", 2026-07-10) but never converted into a tracked checkbox anywhere in the corpus
+      (confirmed via a fresh grep of all 4 ui-tranche data-status docs for "denominator": zero other hits). Add a UI
+      trust/staleness indicator on this tab showing how fresh the denominator (coverage-%) computation is, mirroring
+      the annotation pattern the consolidator backlog monitor already ships. No design/implementation done here —
+      routing the prose hand-off into a real todo per the workspace's "every follow-up is a todo, never prose" rule.
 - [x] ✅ [UI] P3. **DONE, verified 2026-08-15 (/plan-reconcile).** **Rollup-difference clarity** (audit §F, by-design):
       optional small UI note/tooltip explaining IS is a per-venue/day reference bundle (no data_type axis) vs MTDS's
       5-axis market-data shards — so the structurally different drilldown reads as intentional, not broken. —

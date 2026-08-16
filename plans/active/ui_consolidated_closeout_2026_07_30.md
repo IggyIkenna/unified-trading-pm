@@ -185,8 +185,21 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
       piggyback on the infra-tranche's `lc_gcloud_create` migration, not fork a parallel effort. A future ui-tranche
       audit must re-measure the infra migration's progress before re-assessing bounded-ness (see
       `/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md`).
-- [ ] [REVIEW] P1. Track 4 close-out: nav-surface operator decisions made; smoke-gate failures fixed with `pw:L2 ✓`
-      evidence; mock/live parity restored on all 12 drifted endpoints; SIGABRT crash-loop root-caused.
+- [x] ✅ [REVIEW] P1. Track 4 close-out: nav-surface operator decisions made; smoke-gate failures fixed with `pw:L2 ✓`
+      evidence; mock/live parity restored on all 12 drifted endpoints; SIGABRT crash-loop root-caused. **DONE, verified
+      by plan_reconciler agt-8fc5a6 2026-08-16** — all 5 Track 4 Sources confirmed archived with `status: resolved`
+      (read in full this session): `deployment_ui_nav_consolidation_2026_07_17.md`,
+      `deployment_ui_l2_smoke_gate_red_2026_07_17.md`, `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
+      `deployment_api_live_mock_parity_2026_07_17.md`, `deployment_api_sigabrt_crash_loop_2026_07_24.md` — each already
+      cited with its archived path directly in this doc's own Track 4 Sources list above.
+- [ ] [REVIEW] P2. **Re-run `/ag-closeout-audit ui` against the corrected doc-discovery tooling.** The standing
+      orphan-count baseline (8 orphaned of 14, tracked in this doc's Progress Log since 2026-08-08) was computed via
+      same-line-grep discovery, which `ui_satellite_ao_dispatch_batch4_2026_08_13.md` todo 11 proved undercounts the
+      real tranche (`scripts/plan-hygiene/generate_tranche_doc_inventory.py`, `unified-trading-pm@b2e3e5f8fe`, verified
+      live this session: `--tranche ui` returns 25 docs vs 9-15 from the old same-line grep). Every prior
+      `/ag-closeout-audit ui`/`/plan-reconcile ui` orphan/candidate count in this doc's Progress Log predates that fix
+      and should be treated as a stale denominator, not a current baseline. **Flagged by plan_reconciler agt-8fc5a6
+      2026-08-16** — re-running the audit is `/ag-closeout-audit`'s own job, not done here.
 - [ ] [REVIEW] P2. **Corpus-wide `ui` retag audit still owed** — this session's 17-doc retag was a bounded discovery
       pass (repos:-grep + content spot-check), not an exhaustive sweep. Mirror
       `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s methodology: grep the full corpus for

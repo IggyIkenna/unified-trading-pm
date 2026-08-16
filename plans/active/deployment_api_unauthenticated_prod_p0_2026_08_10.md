@@ -303,13 +303,15 @@ cause an outage).
       rejecting at boot, plus the two non-prod/non-disabled combinations still booting clean — so this done-when is
       now continuously proven by the test suite, not a one-time manual check. Full deployment-api `quality-gates.sh`
       green (14/14 in `test_auth.py`). (repo: deployment-api)
-- [ ] [INFRA] P1. **Update the RUNNING resource-watchdog on the orchestrator VM to the fixed script** (the repo's
+- [ ] [OPERATOR] P1. **Update the RUNNING resource-watchdog on the orchestrator VM to the fixed script** (the repo's
       `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.sh` sends `X-API-Key` from a GSM runtime
       fetch; the installed `/usr/local/bin/resource-watchdog.sh` predates the fix and sends no key → post-flip 401 on
       `POST /api/fleet/watchdog/kill-events`). Requires root/systemd (sudo unavailable in worker containers): copy the
       repo version to `/usr/local/bin/`, `systemctl restart resource-watchdog`. Kill events are fire-and-forget
       notifications (local kill unaffected) but the deployment-api notification is dropped until this lands. **Done
-      when**: a watchdog kill-event POST returns 200. (repo: unified-trading-pm, deployment-api)
+      when**: a watchdog kill-event POST returns 200. (repo: unified-trading-pm, deployment-api) **Retagged
+      `[INFRA]`→`[OPERATOR]` 2026-08-16 (plan_reconciler agt-8fc5a6)** — this todo's own text confirms no AO worker
+      container has the sudo/root access it requires; `[INFRA]` routes to a worker that cannot complete it.
 
 ## Codex SSOTs
 

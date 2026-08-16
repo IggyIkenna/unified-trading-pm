@@ -23,7 +23,7 @@ related:
     /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
     /plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md,
     /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
-    /plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_ui_2026_08_11.md,
   ]
 created: "2026-08-13"
 last_updated: "2026-08-13"
@@ -128,7 +128,11 @@ source: >-
       are coordinated/sequenced if ever worked concurrently. Source:
       `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`
 - [x] ✅ [CODE] P2. Port the manual-trigger action into the new /ops/artifacts page; remove CloudBuildsTab from the
-      per-service tab bar + DeployConsole; delete CloudBuildsTab.tsx (Phase 4) — deployment-ui@9d5ad0d105. Added a
+      per-service tab bar + DeployConsole; delete CloudBuildsTab.tsx (Phase 4) — deployment-ui@b3300a71a7 **(corrected
+      2026-08-16 by plan_reconciler agt-8fc5a6 — this line previously cited `9d5ad0d105`, which is a same-topic
+      follow-up mock-API bugfix, not the port itself; verified via `git log`: `b3300a71a7` is
+      "feat(ui): port manual-trigger build action into /ops/artifacts Pipeline tab, retire CloudBuildsTab", matching
+      this todo's own text and `artifact_pipeline_observability_2026_07_17.md`'s citation of the same commit)**. Added a
       "Trigger build" popover to the Pipeline view's toolbar (service/branch picker → `triggerCloudBuild`, lazy-loads
       `getCloudBuildTriggers` on open, refreshes the builds table on success); removed the "Builds" tab from HomeShell's
       per-service tab bar and DeployConsole's "Build history" view; deleted `CloudBuildsTab.tsx` (no shim). Found +

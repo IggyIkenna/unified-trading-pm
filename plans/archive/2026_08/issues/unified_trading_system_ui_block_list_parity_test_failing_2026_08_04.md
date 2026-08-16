@@ -6,9 +6,8 @@ summary: >-
   unified-trading-system-ui came back red). The failure is a genuine, pre-existing application-level test
   (__tests__/scripts/block-list-parity.test.ts) unrelated to the runner migration — confirmed the job ran on a
   GitHub-hosted runner, not the self-hosted glue fleet, so this is not an infra/runner problem.
-status: open
+status: resolved
 nature: issue
-archive_exempt: true
 asset_group: [ui]
 stage: [meta]
 repos: [unified-trading-system-ui]
@@ -110,3 +109,14 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
   the archival deadlock this doc's `archive_exempt: true` cites is resolved; text-only correction per Item N's scope
   (`plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`) — did not re-verify the deadlock doc's
   other conditions or unset `archive_exempt` here (left to that doc's own operator-decision-gated resolution path).
+- **plan_reconciler agt-8fc5a6, 2026-08-16**: independently re-verified the deadlock doc's OTHER conditions the
+  2026-08-14 entry above left unchecked — read `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`
+  in full: `status: resolved`, both its own remediation todos `[x]` DONE 2026-08-09, operator-ruled option (a) shipped
+  (`unified-trading-pm@d765b4cfb1`, `check_line_caps.sh`'s SCOPED-mode carve-out). The archival deadlock this doc's
+  `archive_exempt: true` existed for is fully closed on both conditions. Unset `archive_exempt: true`, flipped
+  `status: open` → `resolved` (matching the already-populated `resolved_by:` field, itself unchanged since 2026-08-09).
+  Archiving to `plans/archive/2026_08/issues/` (0 open todos, unlocked, non-grace) — see this doc's own git-mv commit.
+  Corpus referrers repointed: `cross_cutting_consolidated_closeout_2026_07_25.md:680` (markdown link) and
+  `ag_closeout_audit_cross_cutting_parked_2026_08_06.md:87` (`related:` entry) were the only 2 leading-slash formatted
+  references in the active corpus (a handful of other docs mention this filename in bare-backtick Progress-Log prose
+  only — not subject to the reference-path convention, left as historical record).

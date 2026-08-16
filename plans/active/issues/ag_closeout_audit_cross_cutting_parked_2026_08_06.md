@@ -84,7 +84,7 @@ context_scope:
   [
     /plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md,
     /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
-    /plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md,
+    /plans/archive/2026_08/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md,
     /plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
