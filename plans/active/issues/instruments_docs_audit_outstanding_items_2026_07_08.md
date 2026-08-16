@@ -618,6 +618,15 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
 
 ## Todos
 
+- [ ] [BACKEND] P0. **D7 — wire the `sports-odds-ready` dead trigger** (added 2026-08-16, plan_reconciler — D7 above
+      had no tracked owner anywhere in the corpus despite being P0 since 2026-07-29). Either (A) MTDS's live sink emits
+      `sports-odds-ready` after flushing the canonical odds snapshot to GCS, per the documented-but-never-built design
+      in `e2e-testing/scripts/sports/LIVE_PUBSUB_README.md:23,110-121` — add a real publisher (the canonical
+      `InternalPubSubTopic` enum currently has no `SPORTS_ODDS_READY` member; `sports-odds-ready` exists only as a raw
+      terraform string), or (B) retire the terraform-provisioned subscriber
+      (`features-service/features_service/sports/app/pubsub/subscriber.py:76`) if this trigger path is no longer
+      wanted. Currently: sports live feature computation via this specific trigger silently never fires. Done when:
+      either a publisher ships and the subscriber receives real messages, or the dead subscriber/topic is removed.
 - [ ] [REVIEW] P1. **Track the remaining corpus-wide outstanding items** — this doc's sections B-F list dozens of
       still-open items as plain prose/bullets, never checkboxes (e.g. B1-B6 canonical-id migration, C2-C8 DeFi
       adapter/coverage gaps, D1-D9 prediction/sports wiring gaps, F1-F3 data-ops follow-ups); see those sections for the
