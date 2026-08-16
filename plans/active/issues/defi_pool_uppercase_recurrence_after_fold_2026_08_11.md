@@ -202,7 +202,7 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       2026-08-16 (slot 22, infra), CONFIRMED manifest-column-only artifact (0/20 fresh + 0/30 from the 2026-08-12
       sibling-plan run found any uppercase-pathed physical object; no Part-5 migration needed) — but ALSO found a
       SECOND recurrence: captured `instrument_type=POOL` regrew from 0 (post-2026-08-12-retirement) to 1,641,333
-      (measured today) — see "What I found" item 5.** market-tick-data-service@a1424bcc (script:
+      (measured today) — see "What I found" item 5.** market-tick-data-service@dc008dcf (script:
       `scripts/one_offs/sample_pool_uppercase_gcs_objects_2026_08_16.py`).
 - [ ] [SCRIPT] P1. Only once the DIAG todo above lands, decide whether
       `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2's retirement can proceed safely, or
