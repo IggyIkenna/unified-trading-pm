@@ -659,12 +659,15 @@ def _write_firestore_promotion_lag(
         from google.cloud import (  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
             firestore,
         )
+    except ImportError:  # Firestore client library unavailable → best-effort no-op
+        return
 
+    try:
         client = firestore.Client(project=project_id)
         for repo, lags in repo_lags.items():
             doc_ref = client.collection("repo_state").document(repo)
             doc_ref.set({"promotion_lag": {"lags": lags, "checked_at": now_iso}}, merge=True)
-    except (ImportError, GoogleAPICallError):  # Firestore unavailable → best-effort write
+    except GoogleAPICallError:  # Firestore unavailable → best-effort write
         pass
 
 
