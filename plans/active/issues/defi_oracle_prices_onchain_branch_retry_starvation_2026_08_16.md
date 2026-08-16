@@ -138,14 +138,32 @@ type-check finding, always on infrastructure:
    10944 items collected). Do not use this flag for market-tick-data-service; it changes
    something about the test-run environment setup beyond just the queue throttle.
 4. **`PYTEST_WORKERS=3` also did not help** — same `OSError: cannot send (already closed?)`
-   xdist-worker-crash pattern from test 1 onward. Unclear if this is a real xdist
-   incompatibility under the current host conditions or coincidental — NOT yet root-caused,
-   flagged here rather than guessed at further.
+   xdist-worker-crash pattern from test 1 onward. Originally suspected as a
+   `PYTEST_WORKERS=3`-specific incompatibility.
 5. Host `load average` fluctuated 2.1–7.3 (15-min avg) across the ~4h window on this 8-core
    box, consistent with many concurrent agent-orchestrator slots (`ps aux` showed 8-12+
    concurrent `claude --dangerously-skip-permissions` sessions plus their own
    quality-gates.sh/pytest/basedpyright children) — genuine fleet-wide oversubscription,
    not specific to this repo or this worker.
+6. **CORRECTION to item 4, found on a later attempt (post-`/pre-compact`, same session):**
+   the mass-`E`-from-item-1 crash is **NOT specific to `PYTEST_WORKERS=3`**. A subsequent
+   attempt with NO override (default single-worker config — log literally shows
+   `created: 1/1 worker`, `1 worker [5518 items]`) produced the **identical** mass-`E`
+   pattern (`E` from 1% through at least 60% before I killed it at 238s elapsed, no other
+   MTDS QG contenders running, load average only 4.03). This rules out `PYTEST_WORKERS=3`
+   as the trigger — whatever is breaking xdist worker setup/comms is present under the
+   plain default invocation too. I killed the run before it reached pytest's own error
+   summary (wanted to stop burning the contended governor slot further), so the underlying
+   exception is still not captured — only the `OSError: cannot send (already closed?)`
+   signature from the earlier `PYTEST_WORKERS=3` run is confirmed; whether the default-config
+   run hits the exact same exception is unconfirmed but the black-box symptom (mass
+   per-test `E`, not `F`, from test 1 onward — i.e. a setup/collection-time error, not
+   real assertion failures) is identical. **This elevates the finding**: it is not a
+   tuning-flag interaction, it looks like a standing MTDS test-environment fault (possibly
+   a broken/unavailable shared fixture dependency, e.g. a mocked service or socket the
+   `--allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket` sandbox depends on) that may
+   be affecting every worker currently trying to run MTDS's suite, not just this session's
+   attempts.
 
 **None of this reflects a defect in the shipped fix.** The diff was proven correct by a
 clean full QG pass before contention began; every subsequent failure was either (a) queue
@@ -164,6 +182,15 @@ staged).
       need a different execution surface (e.g., dispatch to a VM, per
       `/codex/05-infrastructure/vm-launcher-runbook.md`, rather than an interactive slot's
       Bash tool).
+- [ ] [OPERATOR] P1. **Investigate item 6 — MTDS `pytest -n 1` mass per-test `E` from test 1
+      under DEFAULT config (no env overrides)**, distinct from and more severe than item 1:
+      this looks like it could be a standing, currently-broken MTDS test-environment fault
+      (not this session's tuning), which would silently poison EVERY worker's QG attempt on
+      this repo, not just DP-FETCH-009's ship. Recommend a clean, uncontended, single-worker
+      `bash scripts/quality-gates.sh --no-fix` run to completion (do not kill it early) to
+      capture the actual exception from pytest's own error summary — this session killed its
+      only default-config repro at 238s/60% to free the governor slot, before the traceback
+      printed.
 - [ ] [CODE] P1. **Ship `market-tick-data-service@f122c610` (or its rebased equivalent) via
       `quickmerge --agent --files 'market_tick_data_service/cli/handlers/_oracle_prices_freshness.py
       tests/unit/test_oracle_prices_handler_skip.py'`** once MTDS's QG-governor slot has a
@@ -202,3 +229,14 @@ staged).
   finding as a possible standing platform issue. MTDS commit NOT yet pushed as of writing —
   next session/dispatch: retry the ship from a quieter window, or escalate item 1 to a VM
   if interactive slots can't hold multi-minute QG runs reliably.
+- **2026-08-16, slot-5 (same session, post-`/pre-compact`)**: one further ship attempt
+  (standard config, no env overrides, `qg-governor` confirmed clean admission after a 59s
+  queue) reproduced the SAME mass-`E`-from-test-1 pattern previously seen only with
+  `PYTEST_WORKERS=3` — this time under plain `1/1 worker` default config. Killed at
+  238s/~60% (no other MTDS QG contenders running, load average 4.03 — genuinely low) to
+  stop burning the contended governor slot before capturing the traceback. Added item 6 +
+  a second `[OPERATOR]` todo: this now reads as a possible standing MTDS test-environment
+  fault independent of any tuning flag, not a `PYTEST_WORKERS=3`-specific issue as item 4
+  originally concluded. MTDS commit (`f122c610`, message-identified) still local-only,
+  unpushed, as of end of session — see item 6 and the second `[OPERATOR]` todo for the
+  recommended next diagnostic before the next ship retry.
