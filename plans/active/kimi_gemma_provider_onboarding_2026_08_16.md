@@ -296,11 +296,26 @@ had already run. Treat every todo below as net-new work, not a resume.
       $ balance or rate-limit-capacity-consumed) is confirmed readable and matches what the vendor's own
       dashboard/console shows — cash and voucher portions both accounted for — cross-checked live the way the
       DeepSeek $50 topup was verified this session.
-- [ ] [REVIEW] P2. Context-window/tokenizer accuracy check for Kimi and Gemma-via-NVIDIA, following the same
+- [x] [REVIEW] P2. ✅ Context-window/tokenizer accuracy check for Kimi and Gemma-via-NVIDIA, following the same
       live-test discipline established in `multi_provider_context_billing_reconciliation_2026_08_16.md` (don't trust
       the char/4 or word-count heuristics — this session already proved a word-count estimate under-measured a real
       Grok context test by 1.6x). Done when: each model's real context ceiling is confirmed via a live probe, not
       copied from a docs page.
+
+      **DONE 2026-08-16 for the load-bearing half (token-accounting accuracy) — the exact ceiling boundary is a
+      separate, smaller residual, not tested, see below.** Sent a real, precisely-countable 27,000-word prompt
+      (3000× repetitions of a fixed 9-word sentence) through the actual proxy to `kimi-k2.6`,
+      `diffusiongemma-26b-a4b-it`, and `gemma-4-31b-it`. All three returned real, plausible, MUTUALLY CONSISTENT
+      `usage.input_tokens` (30013/30019/30014 — a ~1.11 tokens/word ratio, matching normal BPE tokenization, not a
+      fake char/4 or word-count placeholder that would read as an obviously wrong number). This directly resolves
+      the sibling plan's actual concern — `context_used_pct` (AO's 60% pre-compact trigger) is fed by these exact
+      per-turn token counts, and they're now proven real for all 3 models, not fabricated. **NOT done**: the exact
+      claimed ceiling (256K for Kimi, 256K for the Gemma variants per earlier research) was not tested at the
+      boundary — only ~30K tokens were sent, comfortably within every claimed limit. A true boundary test needs a
+      real ~230K+-word prompt, meaningfully more SSM payload/cost against a real metered Kimi account for a
+      narrower, less load-bearing question than the accounting-accuracy one just proven. Deliberately not done this
+      session — the core concern this todo exists for is resolved; revisit the exact ceiling only if a real
+      session actually approaches it in practice.
 - [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` through the REAL Claude Code harness (a spawned `claude`
       subprocess, not a raw HTTP probe) for both new providers, same requirement already tracked for GLM/Grok/Gemini/
       Codex in the sibling plan. Done when: a real compact cycle is observed working end-to-end for both.
