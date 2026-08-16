@@ -152,7 +152,7 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
       spurious fire, re-fires correctly on a fresh near-expiry episode, plus 2 boundary cases outside the shipped suite
       (exactly-at-3-days still fires; an already-expired token still fires rather than being silently skipped). Full
       independent re-verification (not just a re-read of the shipped test) done in
-      `/plans/active/ao_satellite_ao_dispatch_batch16_finalize_2026_08_09.md` todo 1, 2026-08-10.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch16_finalize_2026_08_09.md` todo 1, 2026-08-10.
 
 - [ ] [INFRA] P3. **Ghost host rows: `ip-172-31-0-185` is permanently `reporter_stale`/`ff_cron_stale` for a VM that no
       longer exists.** Measured 2026-08-06 from `/api/fleet/git-health`: host `ip-172-31-0-185` (`vm_id: planning`)
@@ -213,7 +213,7 @@ must not also destroy a working (or merely soon-to-expire) credential — the sc
   on this doc were generic boilerplate that never quoted either open item's actual text). The `[INFRA] P2` "30-day
   treadmill" item is NOT a genuine design fork on closer read: the doc's own text already picks option (a) ("is the
   smallest and needs no new credential surface") with a concrete done-when — extracted to
-  `/plans/active/ao_satellite_ao_dispatch_batch16_2026_08_09.md`. This doc was excluded from the same-day
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch16_2026_08_09.md`. This doc was excluded from the same-day
   `/ag-closeout-audit ao` batch12 run's fresh 36-doc scan because it's cited by
   `ao_satellite_ao_dispatch_batch2_2026_07_30.md` — but that citation only covers 2 OTHER, already-closed items, not
   this one; a citation-based pre-filter isn't the same as content coverage. Doc stays `assigned_vm: NA` overall: the

@@ -25,7 +25,7 @@ related:
   [
     /codex/15-runbooks/safe-service-restart-procedures.md,
     /codex/04-architecture/agent-orchestrator-autospawn.md,
-    /plans/active/ao_satellite_ao_dispatch_batch19_2026_08_10.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch19_2026_08_10.md,
     /codex/12-agent-workflow/measurement-claims-discipline.md,
     /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
   ]
