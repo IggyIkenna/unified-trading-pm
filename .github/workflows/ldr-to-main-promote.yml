@@ -33,6 +33,10 @@ on:
     # because content genuinely regressed but because the drain bot's own cadence outran CI. 30min gives each
     # attempt real room to either pass or genuinely fail before being superseded — accepted SLA cost for fewer
     # wasted CI runs + a cleaner #ci-failures signal (operator decision, ci_alert_failure_resolution_linkage doc).
+    # THIS SCHEDULE ALONE DOES NOT SET THE EFFECTIVE CADENCE — scripts/orchestrator/
+    # ldr-to-main-promote-heartbeat.timer on the orchestrator VM directly dispatches this
+    # workflow via `gh workflow run` every tick regardless of this cron. Change BOTH together,
+    # always (found the hard way 2026-08-16 — see that timer's own header comment).
     - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
@@ -193,9 +197,35 @@ jobs:
           [ -n "${GH_PAT_FOR_ARM:-}" ] || GH_PAT_FOR_ARM="$GH_TOKEN" # fail-safe: never empty-token a gh call
           LDR_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
           if [ -z "$LDR_SHA" ] || [ "$LDR_SHA" = "null" ]; then
-            echo "WARN: could not resolve live-defi-rollout tip — skipping this tick (retry in 15m)"
+            echo "WARN: could not resolve live-defi-rollout tip — skipping this tick (retry in 30m)"
             { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+
+          # ── Last-known-green substitution (2026-08-16, operator design) ──────────────────
+          # Don't blindly promote whatever the raw tip is. If LDR's OWN push-triggered
+          # quality-gates-v2 run for LDR_SHA already has a TERMINAL red conclusion (failure/
+          # cancelled), cutting a promote-PR against it is doomed before it starts: nothing
+          # changed to fix the red state, so that CI run is pure waste and pure #ci-failures
+          # noise. Walk back to the most recent DIFFERENT sha with a green push-triggered run
+          # and promote THAT instead — main keeps advancing with verified-good content instead
+          # of stalling completely while LDR is red, and a promote-PR failing on a sha that
+          # already passed THIS exact walk becomes a genuinely rare, actionable signal (LDR-push
+          # CI diverged from promote-PR CI on identical content) rather than routine noise.
+          # "No run yet" (a very fresh push) is NOT treated as red — proceed with the raw tip.
+          _TIP_CONCLUSION=$(gh api "repos/$OWNER/$REPO/actions/workflows/quality-gates-v2.yml/runs?event=push&per_page=5" \
+            --jq ".workflow_runs[] | select(.head_sha==\"$LDR_SHA\") | .conclusion" 2>/dev/null | head -1 || echo "")
+          if [ "$_TIP_CONCLUSION" = "failure" ] || [ "$_TIP_CONCLUSION" = "cancelled" ]; then
+            echo "⚠️  LDR tip ${LDR_SHA:0:8}'s own push-CI is terminally ${_TIP_CONCLUSION} — looking for the last green sha instead of promoting known-red content"
+            _GREEN_SHA=$(gh api "repos/$OWNER/$REPO/actions/workflows/quality-gates-v2.yml/runs?event=push&per_page=50" --jq '
+              [ .workflow_runs[] | select(.conclusion=="success") ] | sort_by(.created_at) | reverse | .[0].head_sha // empty
+            ' 2>/dev/null || echo "")
+            if [ -n "$_GREEN_SHA" ] && [ "$_GREEN_SHA" != "null" ] && [ "$_GREEN_SHA" != "$LDR_SHA" ]; then
+              echo "  → substituting last green sha ${_GREEN_SHA:0:8} for red tip ${LDR_SHA:0:8}"
+              LDR_SHA="$_GREEN_SHA"
+            else
+              echo "  → no distinct green sha found in recent history — falling back to the raw (red) tip; that promote-PR will genuinely fail, which is correct/expected here"
+            fi
           fi
           PROMOTE_HEAD="promote/$REPO/${LDR_SHA:0:12}"
 
@@ -222,14 +252,18 @@ jobs:
             # ── trees are byte-identical (the bug that empty-promote-looped ldr-to-staging 375×/ ──
             # ── day). PM was shielded only because main-backmerge's merge-commit advances the    ──
             # ── merge-base — make the gate exact, not incidentally-correct.                      ──
-            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            # Compare against $LDR_SHA (the sha we're actually about to promote — may be an
+            # older last-known-green substitution, NOT necessarily the live branch tip) rather
+            # than the literal "live-defi-rollout" ref, so this drift check stays consistent
+            # with what PROMOTE_HEAD was actually built from above.
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/$LDR_SHA" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
             MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
             if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
               echo "✅ main tree == LDR tree (content-identical; any ahead_by gap is squash-accounting noise) — nothing to drain"
               { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            FILES=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.files | length' 2>/dev/null || echo "0")
+            FILES=$(gh api "repos/$OWNER/$REPO/compare/main...$LDR_SHA" --jq '.files | length' 2>/dev/null || echo "0")
             if [ -z "$FILES" ] || [ "$FILES" = "0" ]; then
               echo "✅ main is content-current with LDR (0 changed files) — nothing to drain"
               { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
@@ -474,7 +508,7 @@ jobs:
               # ao_worker_context_lifecycle_gap_2026_07_25.md / ao_fleet_throughput_incident_2026_07_25.md finding
               # (2026-07-25): a genuine quality-gates-v2 FAILURE on this promote PR previously had NO escalation
               # path at all — every other wall type here (dirty/conflict) escalates via main-backmerge-to-ldr, but
-              # a real test/typecheck/lint failure just sat until the next */15 tick superseded the PR with a
+              # a real test/typecheck/lint failure just sat until the next */30 tick superseded the PR with a
               # fresh attempt from a (hopefully by-then-different) LDR tip, silently re-trying the SAME failure
               # indefinitely with no one ever notified to fix the root cause. Purely additive — does not alter any
               # existing branch above; only fires when the v2 run for this exact head SHA CONCLUDED as a failure
@@ -487,7 +521,7 @@ jobs:
               if [ "${V2_FAILED:-0}" != "0" ] && [ "$DRY_RUN" != "true" ]; then
                 V2_RUN_URL=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
                   --json headSha,conclusion,url --jq "[.[]|select(.headSha==\"$HEAD_SHA\" and .conclusion==\"failure\")][0].url" 2>/dev/null || echo "unknown")
-                CTX="LDR->main promote PR #$PR_NUM (head ${HEAD_SHA:0:8}) blocked on a genuine quality-gates-v2 FAILURE, not a conflict. Run: ${V2_RUN_URL}. This promote PR will be superseded by a fresh attempt on the next */15 tick unless the underlying failure is fixed on live-defi-rollout."
+                CTX="LDR->main promote PR #$PR_NUM (head ${HEAD_SHA:0:8}) blocked on a genuine quality-gates-v2 FAILURE, not a conflict. Run: ${V2_RUN_URL}. This promote PR will be superseded by a fresh attempt on the next */30 tick unless the underlying failure is fixed on live-defi-rollout."
                 PAYLOAD=$(jq -n --arg ctx "$CTX" --arg pr "$PR_NUM" \
                   '{event_type:"escalate-to-orchestrator",client_payload:{repo:"unified-trading-pm",pr_number:$pr,wall_type:"ldr_main_qg_failure",context:$ctx,authoring_slot:"ldr-to-main-promote"}}')
                 printf '%s' "$PAYLOAD" | GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/unified-trading-pm/dispatches" --input - \
@@ -502,7 +536,7 @@ jobs:
             # re-`dirty`s on the manifest FASTER than it can merge. The main→LDR back-merge resolver
             # (main-backmerge-to-ldr, Guard 2) fixes this — but it runs on a SEPARATE */20 tick, so the PR
             # re-diverges within ~1-3 min of each back-merge → the drain never lands. Fix: run the SAME
-            # Guard-2 reconcile INLINE here on every */15 drain tick (collapse the race window to one run):
+            # Guard-2 reconcile INLINE here on every */30 drain tick (collapse the race window to one run):
             # merge origin/main into LDR, resolve the manifest conflict via reconcile_manifest_backmerge.py
             # (CI fields → main; both-bumped version-surface → semver-max), push to LDR → the PR goes clean
             # → arm auto-merge same run. Manifest-only conflicts are auto-resolved here; a non-manifest /
@@ -521,7 +555,7 @@ jobs:
                   echo "  inline reconcile: clean merge of main→LDR pushed — PR will go clean"
                   ACTION="reconciled"
                 else
-                  echo "  WARN: clean-merge push rejected (LDR moved) — next */15 tick retries"
+                  echo "  WARN: clean-merge push rejected (LDR moved) — next */30 tick retries"
                   ACTION="reconcile_race"
                 fi
               else
@@ -540,7 +574,7 @@ jobs:
                       echo "  inline Guard-2 reconcile pushed to LDR → PR goes clean"
                       ACTION="reconciled"
                     else
-                      echo "  WARN: reconcile push rejected (LDR moved) — next */15 tick retries"
+                      echo "  WARN: reconcile push rejected (LDR moved) — next */30 tick retries"
                       git merge --abort 2>/dev/null || true
                       ACTION="reconcile_race"
                     fi
@@ -588,7 +622,7 @@ jobs:
           case "$ACTION" in
             conflict_escalated | dirty_nonmanifest)
               if [ "$DRY_RUN" != "true" ]; then
-                CTX="LDR->main promote PR #$PR_NUM ($PR) is DIRTY on a GENUINE conflict (action=$ACTION), not a checker crash. The inline forward-drain reconcile could not auto-resolve it — either a non-CI workspace-manifest.json conflict (e.g. published_packages version/published_at bumped on both main and live-defi-rollout) or a conflict outside workspace-manifest.json entirely. This blocks the ENTIRE LDR->main drain until a human resolves the conflict (reconcile the manifest / merge main into live-defi-rollout by hand); every subsequent */15 tick just supersedes this PR with a fresh attempt against the SAME unresolved conflict."
+                CTX="LDR->main promote PR #$PR_NUM ($PR) is DIRTY on a GENUINE conflict (action=$ACTION), not a checker crash. The inline forward-drain reconcile could not auto-resolve it — either a non-CI workspace-manifest.json conflict (e.g. published_packages version/published_at bumped on both main and live-defi-rollout) or a conflict outside workspace-manifest.json entirely. This blocks the ENTIRE LDR->main drain until a human resolves the conflict (reconcile the manifest / merge main into live-defi-rollout by hand); every subsequent */30 tick just supersedes this PR with a fresh attempt against the SAME unresolved conflict."
                 PAYLOAD=$(jq -n --arg ctx "$CTX" --arg pr "$PR_NUM" \
                   '{event_type:"escalate-to-orchestrator",client_payload:{repo:"unified-trading-pm",pr_number:$pr,wall_type:"ldr_main_dirty_conflict",context:$ctx,authoring_slot:"ldr-to-main-promote"}}')
                 printf '%s' "$PAYLOAD" | GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/unified-trading-pm/dispatches" --input - \
@@ -614,7 +648,7 @@ jobs:
         PM LDR→main auto-drain bot: auto-merge ARM FAILED for ${{ needs.promote-ldr-to-main.outputs.pr }} — PR exists +
         provenance-clean but needs a MANUAL `gh pr merge --auto` (or plain merge once green); check repo
         `allow_auto_merge` + branch protection. SSOT: ldr-to-main-promote.yml.
-      # Standing condition on a `*/15` cron — without a dedup_key a stuck arm-failed PR re-paged
+      # Standing condition on a `*/30` cron — without a dedup_key a stuck arm-failed PR re-paged
       # every 15 min (ci_monitor_recovery_bookend_residual_gaps finding 1). This workflow promotes
       # only unified-trading-pm itself, so the key is stable without needing a repo suffix.
       dedup_key: ldr-main-arm-failed-pm
