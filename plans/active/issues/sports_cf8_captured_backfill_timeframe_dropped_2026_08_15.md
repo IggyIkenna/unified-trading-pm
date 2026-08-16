@@ -287,22 +287,18 @@ issue's scope); flagged as a follow-up todo below.
       Finding 1/2 + service_name-dedup history), and the maintenance-window direct-invocation gap below is still open —
       operator direction was docs-only this turn; hold the actual backfill for a dedicated, reviewed maintenance window.
       (repo: market-tick-data-service)
-- [ ] [INFRA] P2. **DESIGN PROPOSED 2026-08-16 (not built/reviewed/executed)**: close the maintenance-window gap: a
-      direct `gcloud run jobs execute <job-name>` bypasses `scheduler_maintenance.py`'s pause entirely (it only pauses
-      the Cloud Scheduler trigger, not the Cloud Run job itself). Consider either (a) `--wait`-based collision
-      detection/warning when a caller runs `gcloud run jobs execute` against a job with a live maintenance window
-      (would need the launcher script or a wrapper to check `maintenance_status()` first), or (b) documenting the
-      direct-execution path as "ALSO check `--status` before running" in the same places the scheduler pause/resume
-      guidance already lives. **Cross-referenced 2026-08-16**: the primitive this needs already exists —
-      `unified-trading-library@4ddc59c9`'s `maintenance_window` module (`acquire`/`read`/`release_maintenance_window`,
-      CAS-based, TTL-expiring) + `deployment-service@1090c3e`'s `scheduler_maintenance.py --status` CLI (see the
-      sibling `sports_cf8_available_at_backfill_regression_2026_07_13.md` doc's P2 todo, shipped 2026-07-14) — option
-      (a) is already built for the SCHEDULER pause path, just not wired to the direct-`gcloud run jobs execute` path.
-      Cheapest close: a thin wrapper (or a check inside the VM-launcher scripts that call `gcloud run jobs execute`)
-      calling `read_maintenance_window()` first and refusing/warning on a live foreign window unless `--force`,
-      mirroring `resume_after_maintenance()`'s own `MaintenanceWindowActiveError` refusal. Not implemented this
-      session (design-only) — needs review before building, given this exact collision class has recurred 3x. (repo:
-      deployment-service or unified-trading-pm docs)
+- [x] [INFRA] P2. **Built+shipped 2026-08-16**: closed the maintenance-window gap — a direct `gcloud run jobs execute
+      <job-name>` bypassed `scheduler_maintenance.py`'s pause entirely (it only paused the Cloud Scheduler trigger, not
+      the Cloud Run job itself). Shipped `deployment_service/data_pipeline_monitors/guarded_job_execute.py`: a thin
+      wrapper (`guarded_execute()` + `python -m ...guarded_job_execute` CLI) that calls `read_maintenance_window()`
+      first and refuses (rc=1, `gcloud` never invoked) on a live foreign window unless `--force`, mirroring
+      `resume_after_maintenance()`'s own refusal contract and acquire-before-act ordering; forced execution during a
+      live window still logs at WARNING for audit-trail visibility. 9 unit tests (`tests/unit/test_guarded_job_execute.py`,
+      in-memory `_FakeStorage` + injected `CommandRunner` fake — no real GCS/gcloud). Full `quality-gates.sh` green
+      (592s). Deliberately NOT retrofitted into existing ad-hoc backfill/launcher scripts — that adoption is a separate
+      follow-up (which scripts switch and when is an operator/infra-owner decision), matching
+      `scheduler_maintenance.py`'s own stated scope boundary. Evidence: `deployment-service@ef06c8e76f`. (repo:
+      deployment-service)
 - [x] [DATA] P2. **Root cause FOUND, 2026-08-15 (slot-2)**: blank-`timeframe` ODDS_API rows are **blank-by-design, not
       a bug**. The live per-date manifest writer `_write_shard_counts_to_manifest`
       (`market_tick_data_service/engine/orchestrator/manifest_finalize.py:323`, invoked from `_write_date_manifest`
@@ -975,3 +971,15 @@ issue's scope); flagged as a follow-up todo below.
   pure read-only investigation across `market-tick-data-service`, `market-data-processing-service`, and this doc.
   Per the big-finding HARD RULE (data-correctness, cross-repo, contradicts a previously-recorded "safe to leave"
   conclusion), notified the operator directly in-chat this session rather than only filing the todo.
+- **data_engineering slot-2, 2026-08-16 (INFRA P2 DONE — maintenance-window guard shipped)**: built and shipped
+  `deployment_service/data_pipeline_monitors/guarded_job_execute.py`, the manual-`gcloud run jobs execute` guard
+  designed (not built) in the todo above's prior entry. Two quality-gate fixes along the way: dropped two invalid
+  `# noqa` directives (`RUF100` — `TID251`/`S603` aren't enabled in this repo's ruff config) and fixed 10
+  `reportAny` basedpyright errors in `_cli()`'s `argparse.Namespace` access via the `cast("object", args.x)` pattern
+  already used by `scheduler_maintenance.py`'s own `_cli`; isolation-verified the pre-fix 1269-error count was
+  entirely these two new files against a pre-existing 1259-error/zero-slack baseline. Full `quality-gates.sh` green
+  (592s). Shipped `deployment-service@ef06c8e76f` via quickmerge (lands on `live-defi-rollout`). Deliberately did NOT
+  retrofit existing ad-hoc backfill/launcher scripts to call it (separate follow-up, operator/infra-owner routing
+  decision) — matches `scheduler_maintenance.py`'s own stated scope boundary. Did not touch either production
+  backfill (line ~276, line ~284-ish) or the P1 `odds_horizon_bucket` timeframe-normalisation lead from the entry
+  above — both remain open, operator scope unchanged this turn (still "docs/infra only, no writes").
