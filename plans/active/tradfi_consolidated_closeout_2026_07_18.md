@@ -891,3 +891,10 @@ operator activation.
   confirmed (live grep). NOT an ARCHIVE candidate: `archive_exempt: true`, tranche aggregated-reference umbrella /
   `check_ag_closeout_linkage.py` linkage anchor with still-open dependent children gating its archival.
   `assigned_vm` unchanged.
+- **`check_ag_closeout_linkage.py` linkage fix (2026-08-16)**: 3 single-AG `[tradfi]` docs had accumulated since the
+  last linkage sweep with no mention here, tripping the ratchet (3 orphans vs baseline 0) — noted separately, not
+  content this closeout plan otherwise tracks:
+  `cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md` (CBOE venue-level discovery floor
+  blocking real pre-2020 history on the Yahoo Treasury-INDEX series) and the
+  `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` / `tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md`
+  AO-dispatch pair. Content itself unreviewed by this entry — this fixes the linkage gap only.
