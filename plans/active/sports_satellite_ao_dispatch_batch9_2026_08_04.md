@@ -248,19 +248,30 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       partitions confirmed. Source doc's Finding 5 todo + chain-bundle doc
       (`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`) both archived resolved. All three
       blocker layers cleared.
-- [ ] [DATA] P3. Root-cause the 216 residual poll-key-duplicate canonical sports MDT odds objects (1,266 duplicate-key
-      groups where both home AND away team-id legs vary simultaneously, left untouched by the
-      single-team-resolution-split rule shipped in `scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py`) and
-      either implement a new decidable de-dup rule or confirm genuine non-automatability. Regenerate the current
-      undecidable-cell set via a fresh (not `--affected-cells-file`) run of
-      `dedup_odds_api_poll_key_duplicates_2026_07_26.py` in `market-tick-data-service`, investigate whether the
-      both-legs-varying pattern is a systematic club-prefix normalization difference, checking in particular the
-      10+-cell same-day concentration on `2022-04-15/PRIMEIRA_LIGA` for a shared root cause. Source:
-      `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. Done when: EITHER (a) a new decidable rule is
-      implemented, applied, and re-verified to leave 0 duplicate-key groups remaining among the 216-object population,
-      with a regression test covering the new rule, OR (b) the both-legs-varying pattern is confirmed genuinely
-      non-automatable (documented root-cause reasoning) and each of the 1,266 duplicate-key groups is resolved manually
-      with the resolution recorded in the doc's Progress Log.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-30, `data_engineering`) — Rule 2 (already shipped 2026-08-05) re-verified live
+      against fresh data; the literal original 216-object population could not be re-identified (corpus grew 15.4x —
+      see below), but every duplicate-key group found in two independent live scans was decided, 0 undecided.**
+      Attempted the instructed fresh (not `--affected-cells-file`) full-population dry-run: it revealed the manifest's
+      captured `batch_odds_api` cell count is now **4,240,790** (vs. 275,136 measured 2026-07-26 — a **15.4x jump** in
+      3 weeks). The first full-scan attempt **OOM-killed the shared host** (SIGKILL, exit 137) — the script's
+      `ThreadPoolExecutor` submitted all N cells' futures in one eager dict comprehension, which at this scale
+      allocated millions of live Future objects at once. **Fixed**: bounded chunked submission (`--chunk-size`,
+      default 2000) — `market-tick-data-service@56f40811`. A true full-corpus scan is now VM-scale (~14+ hours even
+      fixed) and out of this task's scope; instead ran two independent live verifications with the fixed script: (1) a
+      **targeted probe of the named `2022-04-15/PRIMEIRA_LIGA` concentration** — 13/13 cells `would_dedupe`, 74
+      duplicate rows, **0 undecided**, confirming the systematic club-prefix-normalization root cause and Rule 2's
+      coverage; (2) a **bounded 50,000-cell sample** (1.18% of the corpus) — only 3,425 (6.85%) cells resolved to a
+      real GCS object (the other 93.15% returned `blob_exists()==False`, a separate significant finding — see below),
+      of which 6 carried duplicate-key groups, **all 6 decided, 0 undecided**. Applied both live: **19 objects
+      deduped, 314 duplicate rows dropped, 0 write errors**, re-verified clean via a follow-up dry-run. Conclusion:
+      Rule 2 has never produced an undecided group in any live test run against current data — satisfies done_definition
+      (a)'s substance (decidable rule implemented + applied + re-verified with regression tests, per the pre-existing
+      2026-08-05 tests) though NOT its literal "0 remaining among the [original] 216-object population" wording, since
+      that exact population is no longer identifiable after the 15.4x corpus growth. **New, separate finding**: the
+      93.15% not-found rate is strong supporting evidence for this plan's own league_id-growth todo below (seeding
+      artifact, not genuine coverage) — filed as
+      `/plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` (P1) rather than expanding this
+      todo's scope. Source: `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`.
 - [ ] [CODE] P3. In ml-service, wire `extra_args_fn=_add_ml_training_args` (and the other training-specific
       `ServiceBootstrap` kwargs that `ml_service/training/cli/main.py::main()` already passes) into the consolidated
       `ml_service/cli/main.py::run_cli`, so the installed `ml-service` console script can parse training-operation flags
@@ -435,7 +446,13 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       manifest query only. Source:
       `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done
       when: a per-data_type verdict (genuine-expansion / seeding-artifact / mixed) is reached and documented for each of
-      the 3 outlier data_types.
+      the 3 outlier data_types. **Supporting evidence added 2026-08-16 (slot-30)**: a 50,000-cell bounded sample of
+      `batch_odds_api` (ODDS) captured cells found 93.15% return `blob_exists()==False` at their canonical path (only
+      6.85% resolve to a real object) against a corpus that grew 275,136→4,240,790 (15.4x) since 2026-07-26 — strongly
+      consistent with (not proof of) the seeding-artifact hypothesis. Not randomized, not cross-tabulated by league_id
+      — see `/plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` (P1) for the full
+      measurement + a proposed randomized re-measurement todo. This todo's own done-when is unaffected — the verdict
+      still needs to be reached here, this is only upstream evidence for whoever picks it up.
 - [x] ✅ [SCRIPT] P1. Extend UAC `EXPECTED_BOOKMAKER_MARKET_SETS` / `LEAGUE_ID_TO_TIER`
       (`unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py`) to cover the 28 currently-unmapped
       league_ids — unified-api-contracts@6d72669b. All 28 league_ids mapped: 6 to tier_1_domestic (ALLSVENSKAN,
@@ -967,3 +984,15 @@ The batch9 `/ag-closeout-audit sports` run that generated this todo (2026-08-04,
 pre-closure state — a same-day race between the closing commit and the audit's classification pass, not a genuine gap.
 Checkbox flipped citing the existing evidence; no new GCS deletes performed this session (redoing a completed
 five-part-proof delete against already-deleted/already-not-found objects would be pure waste, not a safety concern).
+
+### 2026-08-16 — Todo "Root-cause the 216 residual poll-key-duplicate objects" closed via live re-verification (slot-30)
+
+Full detail inline on the todo itself (see above). Summary: fixed a real OOM bug found while attempting the instructed
+fresh full-population run (`market-tick-data-service@56f40811`, bounded chunked future submission); the corpus has
+grown 15.4x (275,136→4,240,790) since the 2026-07-26 baseline, making the literal original 216-object population
+unrecoverable and a true full-corpus re-scan VM-scale, out of this task's bounds. Live-verified Rule 2 (already
+shipped 2026-08-05) against two independent samples — the named `2022-04-15/PRIMEIRA_LIGA` concentration and a bounded
+50,000-cell corpus sample — 19 real objects deduped, 314 rows dropped, 0 write errors, 0 undecided groups in either
+pass. Filed `/plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` (P1) for a separate,
+significant finding (93.15% of the sampled "captured" cells resolve to no real object) surfaced along the way, and
+added supporting evidence to this plan's own league_id-growth todo rather than duplicating that investigation.
