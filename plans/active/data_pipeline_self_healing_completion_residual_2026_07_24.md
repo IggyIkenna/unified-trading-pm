@@ -314,6 +314,16 @@ context_scope:
 
 ## Progress Log
 
+- **data_pipeline_failure escalation agt-fc531b, 2026-08-16 (slot 33)**: re-confirmed the P1 todo above is still live,
+  not stale. `uts-prod-dp-manifest-hygiene-changed` fired a fresh DP-WATCHER-006/DP_CLOUD_RUN_JOB_FAILED CRITICAL page
+  (this escalation, dispatched ~527m after a 2026-08-16 08:02:53Z failure). Verified live via
+  `gcloud run jobs executions list` — same OOM signature ("The configured memory limit was reached") on EVERY completed
+  execution since the archived investigation: 2026-08-15 08:41/08:56, 2026-08-16 08:02, 2026-08-16 17:29. No new
+  diagnosis needed — root cause + the operator's Option-A ruling (BLK-b06d255a, 2026-08-15, in the archived issue) both
+  still apply verbatim; the durable fix is this same P1 todo, still unclaimed. Not re-freelancing the DuckDB rewrite
+  here per that same ruling ("dispatched as a properly-scoped follow-up task/todo rather than freelanced further in this
+  escalation"). No code changed this session — doc-only recurrence note so the next reader/dispatcher sees this is an
+  ACTIVE daily-firing alert, not a resolved-and-forgotten one.
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-checked the parked conflict -- it has RESOLVED:
   batch2's `[PERF] P2` execution vehicle LANDED (e2e-testing@5d7f53a + @edd12c6, both verified ancestors of LDR) so this
   doc's twin todo was flipped `[x]` as KEEP-NA-STALE, open todos 7 -> 6. Doc STAYS NA (remaining 6 are
