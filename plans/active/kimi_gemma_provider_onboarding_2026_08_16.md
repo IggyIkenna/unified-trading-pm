@@ -107,11 +107,18 @@ had already run. Treat every todo below as net-new work, not a resume.
 
 - [ ] [OPERATOR] P0. Reconcile the Kimi re-add against the 2026-08-03/08-06 rejection ruling above — narrowed by the
       operator's direct answer (2026-08-16, see Why): the basis is Moonshot's flat-rate "max plan" capacity, not
-      per-token price parity. Pull (1) real current per-token $/1M input/output/cache rates for k2.5/k2.6/k3 for
-      completeness, and (2) the max plan's real terms — price, capacity ceiling (requests/tokens per period), and
-      whether it's a hard quota or metered-$-convertible. Confirm no DeepSeek equivalent actually exists (don't
-      assume — check DeepSeek's current plan page too). Done when: this plan's Progress Log records the max plan's
-      real terms plus the per-token table, both cited to a live source, before any account is registered.
+      per-token price parity. The archived doc's own per-token numbers (2026-08-06, cite before trusting stale):
+      Kimi K3 $3/$15 per 1M in/out (dominated by Claude Sonnet 5's $2/$10 intro); Kimi K2.6 $0.95/$4.00 per 1M
+      in/out, 80.2% SWE-bench, 262K context (above DeepSeek on price, below on benchmark+context); **K2.5 was never
+      evaluated** — no prior number exists, get one fresh. **DeepSeek's "no flat-rate plan" side confirmed
+      2026-08-16** (WebSearch, deepseek.ai/pricing): DeepSeek is pure pay-per-token, "no monthly subscriptions on
+      the API," now moving to peak/off-peak billing as of today 16:00 UTC — no flat-rate/max-plan equivalent exists
+      to compare against, so that half of the reconciliation is closed. Remaining: (1) re-verify K3/K2.6 rates
+      haven't moved since 08-06 and get a real K2.5 number, (2) get Moonshot's max plan's real terms — price,
+      capacity ceiling, hard-quota-vs-metered-convertible, and whether it's usable via API at all (not just their
+      chat UI) — this last point is the load-bearing one for the whole reconciliation and must not be assumed.
+      Done when: this plan's Progress Log records the max plan's real terms plus the refreshed per-token table,
+      both cited to a live source, before any account is registered.
 - [ ] [OPERATOR] P0. Get Moonshot (Kimi) API credentials from the operator — start on Moonshot's cheapest/basic plan
       tier (mirrors the GLM-Lite / ChatGPT-Plus / Gemini-free staging pattern from the prior four providers). Store
       in GSM as `moonshot-api-key` (+ `moonshot-management-key` if a separate balance/usage-read scope exists, per
@@ -128,14 +135,16 @@ had already run. Treat every todo below as net-new work, not a resume.
       call, record real context-window size, and real published $/1M input/output/cache-read/cache-write rates.
       Done when: a real API response backs every model's context-window and pricing claim recorded in
       `model_pricing.py`, cited by response, not by docs page.
-- [ ] [INFRA] P1. Live-verify Gemma's real available NIM models — the operator's relayed note names two candidates
-      (`google/diffusiongemma-26b-a4b-it` and a `google/gemma-4-31b`-shaped ID) with a stated tradeoff
-      (DiffusionGemma faster but weaker at reasoning/coding per NVIDIA's own benchmark table). Confirm both exist via
-      a real authenticated call, record real context-window size and rate-limit numbers (NVIDIA's own docs claim
-      "unlimited prototyping" — get the REAL enforced per-minute/per-day ceiling by testing against it, the same way
-      Grok 4.6's 500K context ceiling was proven hard-enforced rather than trusted from docs). Done when: both models
-      are confirmed live, and at least one real rate-limit ceiling is measured, not assumed from NVIDIA's marketing
-      language.
+- [ ] [INFRA] P1. Live-verify Gemma's real available NIM models — operator explicit direction (2026-08-16): **try
+      different Gemmas**, not just the two informally-named candidates (`google/diffusiongemma-26b-a4b-it` and a
+      `google/gemma-4-31b`-shaped ID). Enumerate NVIDIA's REAL Gemma-family catalog on build.nvidia.com (Gemma 2/3/4,
+      CodeGemma, any diffusion variant) rather than assuming those two informal names are the complete or even
+      correctly-spelled set. For each real candidate found: confirm it exists via a real authenticated call, record
+      real context-window size and rate-limit numbers (NVIDIA's own docs claim "unlimited prototyping" — get the
+      REAL enforced per-minute/per-day ceiling by testing against it, the same way Grok 4.6's 500K context ceiling
+      was proven hard-enforced rather than trusted from docs). Done when: every real Gemma variant NVIDIA NIM
+      actually hosts is confirmed live (not just the original two guesses), and at least one real rate-limit ceiling
+      is measured, not assumed from NVIDIA's marketing language.
 - [ ] [INFRA] P1. Determine both vendors' native API shape and pick the integration pattern: Moonshot's API is
       OpenAI-chat-completions-shaped (needs the same LiteLLM Anthropic-passthrough proxy pattern as Grok/Gemini,
       `grok_gemini_translation_proxy_2026_08_14.md`) unless live testing finds otherwise; NVIDIA NIM's endpoint is
