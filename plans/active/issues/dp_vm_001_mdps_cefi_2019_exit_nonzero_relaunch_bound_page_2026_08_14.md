@@ -104,7 +104,9 @@ guidance both point the same direction: stop and page.
 
 - [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `mdps-cefi-2019-20260810-043116`'s shard (cefi/2019 MDPS candles) per
       the recommended decision above; the `mdps-cefi-` family relaunch bound is already exhausted for today.
-- [ ] [BACKEND] P2. Pull + read `run.log` for `mdps-cefi-2019-20260810-043116` via
+- [x] [BACKEND] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 2. Original text: Pull + read `run.log` for
+      `mdps-cefi-2019-20260810-043116` via
       `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess) to
       diagnose the `exit_code=1` root cause; fix at the root if it's a code defect (missing `timeout=`, an unhandled
       exception class, etc.) rather than treating it as a one-off.
@@ -119,3 +121,4 @@ guidance both point the same direction: stop and page.
   bound, and the `mdps-cefi-` family was additionally reported already at its `≤2/day` relaunch bound — did not
   relaunch. Filed this issue doc and paged the operator via `/blocked` per the escalation's explicit instruction. No
   code changed this session.
+- **na-eligibility-audit 2026-08-16** [body-hash:b0c9395683099ac8]: RECLASSIFY-SPLIT — extracted bounded item(s) 2 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 1 item remains genuinely NA ([OPERATOR] P1 relaunch-vs-wait decision). Doc stays assigned_vm: NA.

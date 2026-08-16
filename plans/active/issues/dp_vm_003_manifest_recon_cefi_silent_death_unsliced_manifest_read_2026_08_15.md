@@ -52,7 +52,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /plans/archive/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md,
     /plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md,
-    /plans/active/issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md,
+    /plans/archive/issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md,
   ]
 context_scope:
   [
@@ -150,7 +150,9 @@ was never previously flagged as at-risk for this same unsliced read.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Thread a slim `columns=` list through `reconcile_phantom_manifest_rows_all.py`'s
+- [x] [SCRIPT] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 3. Original text: Thread a slim `columns=` list
+      through `reconcile_phantom_manifest_rows_all.py`'s
       `merge_canonical_with_outstanding_shards(storage_client, bucket_name, str(cfg["index"]))` call
       (`reconcile_phantom_manifest_rows_all.py:1719`) for the `--unphantom-only` mode specifically — enumerate exactly
       the columns that mode's reverse-revalidation logic (and the dedup-merge base columns
@@ -204,3 +206,4 @@ was never previously flagged as at-risk for this same unsliced read.
   found and nothing to unphantom. Manifest is clean." — flipped this doc's todo #3 and
   `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. The `columns=` slim-read todo above remains
   open — a genuine efficiency fix, not required to close batch6's todo now that a correctly-sized VM proved sufficient.
+- **na-eligibility-audit 2026-08-16** [body-hash:ff4d339f25828573]: RECLASSIFY-SPLIT — extracted bounded item(s) 3 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 1 item remains genuinely NA ([OPERATOR] P3 launcher-registry auto-recovery-binding decision). Doc stays assigned_vm: NA.

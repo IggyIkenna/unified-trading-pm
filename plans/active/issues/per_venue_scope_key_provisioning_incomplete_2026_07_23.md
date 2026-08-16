@@ -151,7 +151,8 @@ All three are real design/priority calls, not something determinable from code o
       scope split. The decision to do this is no longer open; only the credential-creation ACTION remains, and only the
       operator's own Bybit exchange login can perform it (no cloud identity or automation can create a new exchange-side
       API key) — that is why the tag stays `[HUMAN]` rather than moving to an AO execution tag.
-- [ ] [SCRIPT] P2. **MTDS's own key-reload preflight
+- [x] [SCRIPT] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 8. Original text: **MTDS's own key-reload preflight
       (`unified_trading_library.startup_validation.validate_api_keys_for_venues`, called via
       `api_key_reloader.py`/`tick_data_handler.py._start_key_reloader`) has NO fallback to the unscoped `bybit-api-key`
       — unlike `execution-service`'s already-shipped fallback (item above).** Found 2026-08-14 launching the CeFi Tardis
@@ -251,3 +252,4 @@ All three are real design/priority calls, not something determinable from code o
   human/operator-gated** (Bybit key creation `[HUMAN P1]`, OKX/Hyperliquid scope-separation design `[BACKEND P2]` gated
   on an unresolved design call, Upbit/Kraken/Bitfinex/Bitget provisioning `[HUMAN P3]`) — unchanged by this Aster
   shipment.
+- **na-eligibility-audit 2026-08-16** [body-hash:65255e7671dec15f]: RECLASSIFY-SPLIT — extracted bounded item(s) 8 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 3 items remain genuinely NA (2 [HUMAN] exchange-login-only credential/priority calls, 1 [BACKEND] P2 design call gated on an unresolved per-venue mechanism choice). Doc stays assigned_vm: NA.

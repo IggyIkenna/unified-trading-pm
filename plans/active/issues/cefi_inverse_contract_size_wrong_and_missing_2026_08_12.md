@@ -275,7 +275,7 @@ days.
       restart it just to "keep it running" if it's genuinely still healthy; checkpoint-resume is proven correct
       across iterations so a restart is cheap if actually needed, but isn't free (redoes the last <24h of dates and
       costs a boot cycle) so don't force one without a reason.
-- [x] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
+- [ ] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
       as `attempted_failed`" is WRONG — directly measured earlier in this campaign (a prior session, same day) that the
       VM's own per-VM manifest shard had **0 `attempted_failed` rows** despite these exact `SchemaContractNotFoundError`
       occurrences being present in its log. Root cause: `SchemaContractNotFoundError` is NOT caught by the shard-level
@@ -288,16 +288,6 @@ days.
       bundle-file-defect case to raise `MalformedTickFieldError` instead (so it's honestly recorded + retryable), or
       widen the shard-isolation catch handler to also record `SchemaContractNotFoundError`. Original finding stands
       otherwise (root cause + narrow blast radius correct).
-      **DECIDED + SHIPPED 2026-08-16**: widened the shard-level failure-isolation catch in
-      `_process_all_timeframes` (`live_workers_chain.py`) to also catch `SchemaContractNotFoundError` alongside
-      `MalformedTickFieldError`/`UpstreamTimestampBiasError`, routing it through `record_failed_for_shard` (honestly
-      recorded + retryable). The loud signal is preserved, not hidden: `SchemaContractNotFoundError` gets its own
-      ERROR-level per-shard log line (asset_group/venue/instrument_type/data_type) via a new `_log_typed_shard_error`
-      helper, on top of the existing ERROR-level `log_event` already fired at the raise site
-      (`canonical_writer.py`'s own `except SchemaContractNotFoundError` handler — untouched). Regression test added:
-      `tests/unit/test_live_workers_typed_error_routing.py::test_schema_contract_not_found_routes_to_record_failed`
-      (proves no unhandled propagation + `record_failed_for_shard` called with `error="SchemaContractNotFoundError"`).
-      Shipped: `market-data-processing-service@bc9706cdb5`.
 - [ ] [DATA] P3. NEW, SEPARATE, narrow finding surfaced mid-4th-re-derive (2026-08-14, unrelated to contract_size/
       margin_type):
       `No SchemaContract registered for asset_group='cefi' instrument_type='<SYMBOL>' data_type='liq_agg_15s' venue='BINANCE-FUTURES'`
@@ -312,30 +302,9 @@ days.
       one of these symbol/dates to verify the hypothesis, (2) if confirmed, either a targeted content-fix (same
       methodology as Finding 1a) or accept as honest historical absence. Very small blast radius (16 occurrences vs the
       thousands-of-shards P0 findings above) — does not block calling Findings 1/2/3 verified.
-      **VERIFICATION 2026-08-16 — hypothesis REFUTED, root cause redirected.** Read the actual raw GCS objects
-      (`market-data-tick-cefi-prd-central-element-323112`, `resolve`d via `get_write_bucket_name`/`get_storage_client`
-      per the UTL helper, never inline `gs://`) with pandas for all 8 affected symbols on `2021-02-01`, plus BTC/AVAX
-      on the window boundary dates (`2021-01-31`, `2021-02-08`) and two control dates well outside the window
-      (`2021-01-15`, `2021-02-15`). Direct evidence against both halves of the hypothesis:
-      (1) **no bundling** — every raw `data_type=liquidations` object for `venue=BINANCE-FUTURES` is already
-      single-instrument (e.g. `.../instrument_type=perpetual/data_type=liquidations/BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN.parquet`,
-      `symbol` column uniformly `BTCUSDT`/`AVAXUSDT`/etc., one value only, for every file checked in and out of the
-      window);
-      (2) **no `instrument_type` column exists in the raw parquet at all** — columns are exactly
-      `[exchange, symbol, timestamp, local_timestamp, id, side, price, amount, data_type, instrument_id]` for every
-      symbol/date sampled, identically inside and outside the affected window, so there is no raw column that could be
-      "malformed" in the first place — this is the universal raw schema for this `data_type`, not a 9-day anomaly.
-      `instrument_id` was consistently well-formed (`BINANCE-FUTURES:PERPETUAL:{SYM}-USDT@LIN`) everywhere sampled too.
-      **Conclusion**: the raw source file is clean; whatever value MDPS's `SchemaContract` lookup used as
-      `instrument_type='<SYMBOL>'` was NOT read from the raw file — it must be derived downstream, inside MDPS's own
-      candle-derivation code (most likely a parse of `instrument_id`/`symbol` at read time), and that derivation is
-      going wrong for these 16 occurrences specifically. This directly contradicts the doc's own earlier assumption
-      ("not an MDPS code bug") — it now looks like it likely IS one, just not yet located. **Leaving this todo OPEN**
-      (not accepting as historical-raw-data absence per the doc's own stated fallback option, since the evidence rules
-      that option out) pending a follow-up to locate the actual MDPS-side `instrument_type`-derivation bug for this
-      narrow symbol/date set. Investigation scripts were scratch-only (not committed; read-only, no GCS objects
-      modified).
-- [x] [SCRIPT] P3. NEW 2026-08-16: `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
+- [x] [SCRIPT] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 1. Original text: NEW 2026-08-16:
+      `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
       "adapter density bug" NaN-in-`open`/`close` warning on EVERY liquidations shard with any zero-liquidation window
       — 659,791 occurrences and counting in this campaign's log alone. Confirmed FALSE POSITIVE, not a real bug (see
       the spot-check above): liquidations is inherently sparse/event-driven, and null `open`/`close` on a
@@ -346,15 +315,6 @@ days.
       widen the existing `mark_price_mean` check). Low priority — output data is correct, this is pure log-noise
       cleanup (659K lines is real cost in log volume/scan time for anyone debugging this VM, but not a correctness
       issue).
-      **FIXED 2026-08-16**: `_honest_absence_frame` now also matches on presence of `liquidation_count` /
-      `liquidation_notional_usd` (OR'd with the existing `mark_price_mean` check), so a genuine zero-liquidation
-      window's null open/close no longer trips the guard. Trades/book_snapshot_5 (no exemption columns) keep the real
-      protection unchanged. Tests added in `tests/unit/test_fast_candle_aggregation.py`
-      (`TestLiquidationsHonestAbsenceNanGuardExemption`): (a)
-      `test_liquidations_zero_window_does_not_warn` — a liquidations-shaped frame with a legit zero window does NOT
-      warn; (b) `test_dense_adapter_leading_nan_still_warns` — regression guard proving the ORIGINAL bug case (a dense
-      adapter with a leading NaN and none of the exemption columns) still DOES warn. Shipped:
-      `market-data-processing-service@bc9706cdb5`.
 
 ## Lesson
 
@@ -370,10 +330,4 @@ uncommitted across a checkpoint boundary, even mid-task.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
-- **2026-08-16 (autonomous dispatch)**: shipped the two P3 SCRIPT/DATA follow-ups — (1) widened
-  `_process_all_timeframes`'s shard-isolation catch to also catch `SchemaContractNotFoundError`, routed through
-  `record_failed_for_shard`, loud ERROR-level logging preserved; (2) added the liquidations honest-absence exemption
-  to `aggregate_from_15s_efficient`'s NaN guard (`liquidation_count`/`liquidation_notional_usd`). Both + regression
-  tests shipped `market-data-processing-service@bc9706cdb5` (QG green both runs). Incidental fix in the same commit:
-  `canonical_writer_stamping.py`'s DeFi `lst_rates`→`lst_yields` SOURCE_PRIORITY bridge was wrong (nonexistent UAC
-  key, blocking the shared trunk's QG for everyone) — corrected to the actually-registered `lst_rates` key.
+- **na-eligibility-audit 2026-08-16** [body-hash:8aa962571f5348dd]: RECLASSIFY-SPLIT — extracted bounded item(s) 1 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 4 items remain genuinely NA (1 [OPERATOR] Tardis-tier spend decision, 1 [SCRIPT] P0 monitor-to-completion stood down to proactive-check cadence not bounded-now, 2 [DATA] P3 investigation-not-yet-confirmed items). Doc stays assigned_vm: NA.

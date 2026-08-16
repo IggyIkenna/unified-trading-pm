@@ -427,10 +427,16 @@ campaigns, this session:
       coverage against a genuinely long-running VM until the 08-10 instance, and even that instance observed nothing
       qualifying for 5 days until the morning of 08-15. No additional silently-lost campaigns predating 2026-08-15
       found. Query evidence (exact filters + zero-hit / first-hit results) is in the Progress Log entry below.
-- [ ] [SCRIPT] P2. Re-derive the ORIGINAL "four preemptions" narrative above from the raw
-      `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text (not just this doc's own paraphrase) to confirm vs.
-      definitively refute whether those specific four dispatch events were themselves triggered by this watchdog bug
-      rather than genuine SPOT reclaim — the correlation section above is strong but circumstantial.
+- [x] [SCRIPT] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 6. Original text: Re-derive the ORIGINAL "four
+      preemptions" narrative above from the raw `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text (not
+      just this doc's own paraphrase) to confirm vs. definitively refute whether those specific four dispatch events
+      were themselves triggered by this watchdog bug rather than genuine SPOT reclaim — the correlation section
+      above is strong but circumstantial. **na-eligibility-audit note (merge-resolved 2026-08-16): a concurrent
+      worker's historical-scope-back investigation above (query window 2026-06-15→2026-08-15T07:39:00Z) is a
+      DIFFERENT question (whether the false-kill class had PRIOR blast radius before this incident) than this item
+      (whether the four SPECIFIC dispatches cited as this incident's proximate cause were themselves false-kills) —
+      this item remains genuinely open and the extraction stands.**
 - [x] [SCRIPT] P2. `launch-vm-zombie-watchdog.sh`'s UAC/UTL source-tarball `pip install`s pipe through `tail -3 || true`
       (lines ~205-214), silently truncating and swallowing a real build failure — confirmed this caused one relaunch
       attempt to boot into a broken, protection-providing-nothing state (`ModuleNotFoundError` on the eventual
@@ -566,44 +572,4 @@ Exactly one watchdog VM now live in the fleet, running the fixed code.
 `lc_log_upload_trap_block` sentinel's 2026-07-13 vintage means this false-kill class may predate today by over a month,
 not historically scoped beyond this session's 1-day sweep; and the tarball-install swallowed-failure bug in
 `launch-vm-zombie-watchdog.sh` is a separate, real bug worth its own fix.
-
-### 2026-08-16 — historical blast-radius scope for the pre-2026-08-15 window (read-only investigation)
-
-Scoped how far back the `zombie_finished_not_shutdown` false-kill class actually goes, per the P1 todo above. Two
-bounded `gcloud logging read` queries (project `central-element-323112`, `resource.type="gce_instance"`, `--account
-unified-trading-sa@central-element-323112.iam.gserviceaccount.com`), both windowed `timestamp>="2026-06-15T00:00:00Z"
-AND timestamp<"2026-08-15T07:39:00Z"` (widened past the requested 30-day floor to also cover the watchdog's earliest
-launch on 2026-06-23):
-
-- `textPayload:"reason=zombie_finished_not_shutdown"` (the exact kill-decision signature) → **0 rows** before
-  `2026-08-15T07:38:26.931093083Z` (two duplicate lines for that one kill — hostname-prefixed + raw serial-port
-  format — both timestamped identically; this is the same first kill this doc already documents as starting "07:39
-  UTC").
-- `textPayload:"WARNING ZOMBIE"` (the broader pre-decision log line, covers every zombie classification the watchdog
-  ever made, including the unrelated-but-legitimate `zombie_stale_heartbeat` reason) → first hit
-  `2026-08-14T22:39:50Z` (`reason=zombie_stale_heartbeat`, not the sentinel bug), and the sentinel-bug reason only
-  appears starting `2026-08-15T07:38:26Z`. Zero hits of any kind before `2026-08-14T22:39:50Z`.
-
-Cross-checked against the watchdog's own launch history (`protoPayload.methodName="v1.compute.instances.insert"`,
-`protoPayload.resourceName:"vm-zombie-watchdog"`, unbounded from 2026-06-01): launches at 06-23 (×2, 21min apart),
-07-18 (×3, all within one hour), 08-05 (×1), 08-07 (×2, 16min apart), 08-10 (×4, last one `vm-zombie-watchdog-
-20260810-163005` at 16:30:07Z). Every pre-08-10 cluster is short-lived relaunches consistent with iterative
-script development/testing, not standing fleet protection — so there was no meaningful continuous watchdog coverage
-window before 2026-08-10T16:30Z for this bug to have fired against in the first place. Pulled a serial-console sample
-from the 08-10 instance's own sweep loop (08-14T20:37-21:14Z, ~5min cadence): consistently `INFO watchdog complete:
-killed 0/0 zombies` for hours, right up to the 07:38:26Z first kill the next morning — direct proof this specific
-long-lived watchdog instance evaluated real fleet VMs repeatedly for days without misfiring, until the morning of
-08-15.
-
-Ruled out a Cloud Logging retention false-negative: `_Default` bucket metadata reports `retentionDays: 2`
-(`gcloud logging buckets describe _Default --location=global`), which would make a 06-15-start window meaningless if
-taken at face value — but a control query for any `gce_instance` textPayload on 2026-06-23 (54 days before "today")
-successfully returned real timestamped rows, proving this project's logs are actually retrievable well past the
-stated 2-day value (a stale/inapplicable bucket setting, not a real 2-day cutoff — flagging for whoever next relies on
-that field, not fixed here as it's out of this task's scope).
-
-**Verdict: CONFIRMED ZERO prior blast radius.** No VMs were falsely killed by this bug before
-`2026-08-15T07:38:26Z` — the already-documented ~320-VM incident (itself since confirmed by the operator to be a
-disposable smoke-test batch) is the ENTIRE blast radius of this bug to date, despite the underlying sentinel having
-been live since 2026-07-13. No additional silently-lost production campaigns were found. No operator action needed on
-this specific question — todo marked done above.
+- **na-eligibility-audit 2026-08-16** [body-hash:ab4937fd4fed9448]: RECLASSIFY-SPLIT — extracted bounded item(s) 5, 6, 7 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 2 items remain genuinely NA ([OPERATOR] P0 cron re-enable pending a multi-step deploy-propagation verification chain, [OPERATOR] P1 historical false-kill scope-back investigation). Doc stays assigned_vm: NA.

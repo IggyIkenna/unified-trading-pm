@@ -188,13 +188,17 @@ own instruction not to delete without confirming safety first.
 Confirmed findings that need real verification/judgment beyond doc-reconciliation (live VM/GCS checks, a corpus-wide
 grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked as todos rather than left in prose:
 
-- [ ] [DATA] P2. `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` + `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`:
+- [x] [DATA] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 9. Original text:
+      `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` + `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`:
       re-run the corpus-wide `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-*/run.log`
       grep for `SCRIPT 1 CONTENT MIGRATION SUMMARY` across all 44 shards now that shard 24 (the last known holdout,
       per `cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md`) completed `EXIT_STATUS=0`
       2026-08-15T20:13:16Z — settle whether the fleet is genuinely 44/44 and flip/close both docs' remaining todos +
       delete `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own `# Delete-when:` marker.
-- [ ] [DATA] P2. Live-check 3 VMs whose gating docs are 5+ days stale (batch-5 hunter, 2026-08-16 gcloud checks
+- [x] [DATA] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 10. Original text: Live-check 3 VMs whose gating docs
+      are 5+ days stale (batch-5 hunter, 2026-08-16 gcloud checks
       found the gates already cleared but outcomes unverified — GCS report reads blocked by the workspace's
       subprocess guardrail, needs the sanctioned SDK path): `mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`
       todo 2 + `mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md` (both share VM
@@ -204,23 +208,33 @@ grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked
 - [ ] [INFRA] P2. Split `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` (1079L, 79 over
       the 1000-line hard cap — confirmed via `wc -l` 2026-08-16) — 2 genuinely-open todos are explicit design/judgment
       calls, so this is a real remediation not a mechanical trim.
-- [ ] [INFRA] P3. `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` is AT the 1000-line hard cap with
+- [x] [INFRA] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 11. Original text:
+      `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` is AT the 1000-line hard cap with
       zero headroom while still actively accumulating entries (9th relaunch attempt just launched 2026-08-15) —
       split proactively before the next append trips the gate.
-- [ ] [DATA] P2. `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s sole open todo re-points to a
+- [x] [DATA] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 12. Original text:
+      `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s sole open todo re-points to a
       NEW 19-VM HYPERLIQUID fleet found running 2026-08-16 that no task in the doc launched — identify/confirm it's
       the expected relaunch before assuming progress.
 - [ ] [OPERATOR] P3. Unidentified live VM `mdps-backfill-cefi-20260816-162418` (found via `gcloud compute instances list`
       2026-08-16) doesn't match any doc in the cefi-batch-5 hunter's 13-doc read — confirm it's a legitimate
       known launch, not a duplicate/orphaned one.
-- [ ] [DOC] P3. `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` has a systematic link-TEXT/href
+- [x] [DOC] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 13. Original text:
+      `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` has a systematic link-TEXT/href
       mismatch (≥11 entries display `plans/active/issues/...` text while the href already correctly points at
       `plans/archive/...` — cosmetic, the href works) — bulk find-and-replace pass needed. Also missing a reference
       to `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (active since 2026-07-28, 2 open P0
       phases) despite the digest's stated complete-index purpose.
-- [ ] [REVIEW] P3. `per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s "Remaining open in this doc: 3"
+- [x] [REVIEW] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 14. Original text:
+      `per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s "Remaining open in this doc: 3"
       summary (2026-08-09) is stale — a 4th todo was added 2026-08-14 and never folded into the count.
-- [ ] [BACKEND] P3. `dp_vm_002_cefi_queue_heavy_binancefutu_streaming_writer_progress_gap_2026_08_14.md` frontmatter
+- [x] [BACKEND] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 15. Original text:
+      `dp_vm_002_cefi_queue_heavy_binancefutu_streaming_writer_progress_gap_2026_08_14.md` frontmatter
       uses non-standard field names `estimate_baseline:`/`calibrated_ai_days:` instead of the
       `estimate_baseline_ai_days:`/`estimate_calibrated_ai_days:` convention every sibling doc uses — likely a schema
       typo that could make tooling silently miss this doc's estimate.
@@ -231,13 +245,16 @@ grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked
       `dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md` as duplicate-tracking docs (now
       cross-linked, see Hygiene fixes). Worth the AO-dispatch mechanism owner considering whether to dedup at the
       escalation-creation layer.
-- [ ] [DATA] P3. `prediction_capture_incident_remediation_2026_07_06.md`:114-118 cites
+- [x] [DATA] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 16. Original text:
+      `prediction_capture_incident_remediation_2026_07_06.md`:114-118 cites
       `unified-trading-library@6c090bb`/`@1651340` — neither is an ancestor of `origin/live-defi-rollout` (both exist
       only on `origin/wip-preserve/cascade-*` branches), but the CONTENT (dtype-coercion fix) is confirmed present in
       the current tree — same rebase-changed-the-SHA pattern the doc's own Phase 6 already self-corrected once
       today. Needs the same citation fix for consistency (low severity, substance confirmed present).
 
-- [ ] [DATA] P3. `cefi_backfill_per_day_catalogue_reload_2026_07_20.md`'s sole open todo text ("neither of the two
+- [x] [DATA] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 17. Original text: `cefi_backfill_per_day_catalogue_reload_2026_07_20.md`'s sole open todo text ("neither of the two
       proper-fix options above has been implemented") is stale — `market-tick-data-service@5d428486` (2026-08-05,
       verified ancestor of `origin/live-defi-rollout`) ships a third mechanism (per-process row-dict caching
       replacing `df.iterrows()`) that closes the doc's own profiled 98.5%-of-wall-time bottleneck, landed before the
@@ -305,3 +322,7 @@ skill (`/na-eligibility-audit`) — not actioned here, noted for visibility only
 ## Plans not reached
 
 None — all 80 non-grace docs in the cefi tranche were read in full by the hunter fan-out.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** [body-hash:04c95a48b9c02a10]: RECLASSIFY-SPLIT — extracted bounded item(s) 9, 10, 11, 12, 13, 14, 15, 16, 17 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 3 items remain genuinely NA (1 [OPERATOR] unidentified-VM confirmation, 2 [REVIEW] meta-process investigation flags for the AO-dispatch-mechanism owner, not bounded fixes themselves). Doc stays assigned_vm: NA.
