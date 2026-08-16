@@ -223,19 +223,32 @@ Split the 1,814 objects into the two classes above and resolve each:
   (their rows were already present in canonical from run1's landed writes before it died) — proof run1's partial
   progress persisted correctly to GCS despite the unexplained kill. Run2 is the live, authoritative apply attempt
   going forward; run1's partial report/log are superseded, not needed for anything further.
+- **2026-08-16 (slot-23, continuation 4) — root cause CORRECTED, was "undetermined"**: run2 also died silently, at
+  113/280 (`journalctl` confirmed `orphan_reap sweep: slot 23 pid 3600518 age=318s KILLED`). This is the documented
+  `nohup <cmd> & echo PID` anti-pattern from
+  `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — both run1 and run2
+  were launched as `nohup … > log 2>&1 &` inside a plain Bash call, which detaches the real process from the tracked
+  session tree; the orphan_reap sweep then SIGKILLs it ~300-355s after it reparents to init. Run1's "undetermined"
+  verdict in the prior entry is corrected: it was almost certainly this same mechanism (89/280 took ~5:51 ≈ 351s,
+  inside the documented band), not an external/slot-collision kill. **Fix applied**: relaunched a third time
+  (`--report /tmp/fold_apply_2026_08_16_run3.jsonl`) using the harness's native `run_in_background: true` Bash
+  parameter directly on the long-running command — no `nohup`/`&` wrapper — which keeps the process correctly
+  parented and exempt from the orphan sweep, per that doc's already-shipped `worker.md` guidance (which this session
+  should have followed from the start). Idempotency (proven safe twice now) again makes the relaunch zero-cost.
 
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
 | Regenerate verify-report: `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16.jsonl` (read-only, **no** `--apply`/`--confirm-prod-delete`) | **Done 2026-08-16 (slot-23)** — 280/280 lines, all `disposition=no-migrate-first` (matched_rows=7,478,332, unmatched_rows=437,005, bare_rows=7,915,337) | — |
-| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16_run2.jsonl` | **In progress (run2, PID 3600518)** — run1 (PID 3435671) died silently at 89/280 with no root cause found (see Progress Log); run2 relaunched fresh, idempotency-confirmed-safe. Sanity-check run2's final totals against the dry-run's (`rows_added=428,933`, `cells_created=0`) once it reaches 280/280. | The apply write's own completion |
+| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16_run3.jsonl` | **In progress (run3, harness-backgrounded task `bz44854ny`)** — run1 (PID 3435671, 89/280) and run2 (PID 3600518, 113/280) both died to `orphan_reap` (root cause now confirmed — `nohup … &` anti-pattern, see Progress Log); run3 launched via the harness's native `run_in_background: true` (no `nohup`), which is exempt from the sweep. Sanity-check run3's final totals against the dry-run's (`rows_added=428,933`, `cells_created=0`) once it reaches 280/280. | The apply write's own completion |
 | Post-apply re-verify the 280 days now resolve `fully_redundant` | Not done | The `--apply` run above completing |
 | Purge the newly-redundant bare objects (mirror `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`'s §3a pattern: fresh `gcs_bucket_soft_delete_retention_seconds >= 604800` check same-run, `--confirm-prod-delete`) | Not done | The post-apply re-verify above |
 | Flip this todo `[x]` with the purge script's SHA + object/byte counts, then archive this doc (last open item) | Not done | The purge above |
 | `sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md` todo 1 ("Scope the duplication") | Not done, independently pickup-able | Nothing — unrelated to this chain |
 
-**Recommended next item**: let run2 (PID 3600518) finish — do not manually re-poll beyond an armed watchdog
-notification or an explicit operator status request, per the async-wait/poll-discipline HARD RULE. On completion,
+**Recommended next item**: let run3 (harness task `bz44854ny`, native `run_in_background: true`, no `nohup`) finish —
+do not manually re-poll beyond an armed watchdog notification or an explicit operator status request, per the
+async-wait/poll-discipline HARD RULE. On completion,
 sanity-check its final report against the dry-run's totals, then proceed straight to the post-apply re-verify pass,
 each step still standalone (never combine apply+purge in one process, per the same host lesson as above).

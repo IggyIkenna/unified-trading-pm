@@ -216,3 +216,21 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
   use case'). Item 2 (cross-check the archived RAM-exhaustion doc's incidents against orphan_reap journalctl signatures)
   is a real but low-materiality (P3) root-cause re-attribution judgment call; 3 prior audits (08-02, 08-06,
   round11-08-09) kept this NA consistently. No new facts found this pass.
+
+- **Independent re-occurrence (2026-08-16, slot-23)**: hit this exact anti-pattern fresh, twice in a row, on
+  `sports_league_legacy_orphan_purge_followup_2026_08_15.md` todo 3's real `--apply` fold write
+  (`market-tick-data-service/scripts/sports/fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply`).
+  Launched as `nohup … > log 2>&1 &` inside a plain Bash call: run1 (PID 3435671) died silently at 89/280
+  (`journalctl -k` showed no OOM/reboot at the time, so it was initially — wrongly — logged as "root cause
+  undetermined, possibly slot collision"); the relaunch (run2, PID 3600518) was made the SAME way and died again at
+  113/280. Only on the second death did `journalctl` get checked directly for the PID and surface
+  `orphan_reap sweep: slot 23 pid 3600518 age=318s KILLED` — confirming both were this bug, not an unexplained kill.
+  Fixed by relaunching a third time via the harness's native `run_in_background: true` Bash parameter directly on the
+  command (no `nohup`/`&`), per this doc's already-shipped `worker.md` guidance. **Lesson for future sessions**: when a
+  `nohup`-backgrounded process dies with no traceback and no OOM evidence, check `journalctl | grep orphan_reap` for
+  the PID BEFORE concluding "undetermined" — this doc's fix should have been reached for immediately, not after two
+  losses. Detail in `sports_league_legacy_orphan_purge_followup_2026_08_15.md`'s Progress Log
+  ("continuation 3"/"continuation 4" entries, 2026-08-16). Does not change this doc's own open-work verdict (still
+  primary-mitigation-shipped; the gap here was this session not following it, not a doc deficiency) — reopening item 1
+  (special-casing orphan_reap for worker-shell-parented processes as defense-in-depth) is the only thing this
+  strengthens, and it was already open.
