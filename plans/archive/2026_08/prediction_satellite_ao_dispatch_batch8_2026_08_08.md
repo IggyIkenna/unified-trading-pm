@@ -27,7 +27,7 @@ summary: >-
   CHECK exists to prevent. Conflict-checked clean (nothing else claims this exact fix — one adjacent doc merely
   cross-references it as "already independently tracked... needs an operator/committer to execute it"). `status: draft`
   — a skill-drafted AO batch is never auto-shipped; flipping to `active` to dispatch is an operator decision.
-status: active
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [meta]
@@ -37,7 +37,7 @@ tags: [prediction, ao-dispatch, close-out, batch-8, plan-hygiene, line-caps]
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
     /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
@@ -45,7 +45,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-16"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -81,6 +81,10 @@ source: >-
 ---
 
 # Prediction satellite AO batch 8 — line-cap remediation for `prediction_cross_venue_arb_and_coverage`
+
+> **📦 ARCHIVED 2026-08-16 — resolved.** Sole todo done + reconciled by
+> `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md`'s todo 1; this batch's own closeout todo (archive
+> both this doc and the finalize twin) completed the pair. See Todos + Progress Log below for full evidence.
 
 > **APPROVED 2026-08-08 (operator, interactive) — flipped `status: draft` → `active`.** Now ingested and dispatchable.
 > Drafted autonomously 2026-08-08 by the scheduled `ag_closeout_auditor` role; see `## Operator approval gate` below for

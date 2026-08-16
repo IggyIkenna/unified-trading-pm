@@ -46,8 +46,8 @@ related_plans:
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md
   - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md
-  - ../active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md
-  - ../active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
+  - ../archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08.md
+  - ../archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch11_2026_08_13.md
   - ../active/prediction_satellite_ao_dispatch_batch11_2026_08_13_finalize.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
@@ -973,14 +973,14 @@ arb detection + honest-coverage correctness
 **status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Prediction (Kalshi/Polymarket) live +
 batch CLOB depth & trades capture infrastructure
 
-### [`prediction_satellite_ao_dispatch_batch8_2026_08_08`](../active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md)
+### [`prediction_satellite_ao_dispatch_batch8_2026_08_08`](../archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08.md)
 
-**status**: active · **estimate**: 0.08 cal AI-days (class: refactor)
+**status**: resolved (archived 2026-08-16) · **estimate**: 0.08 cal AI-days (class: refactor)
 
-### [`prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
+### [`prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
 
-**status**: active · **estimate**: 0.1 cal AI-days (class: infra) **title**: Prediction satellite AO batch 8 — finalize
-(reconcile source doc + re-check deferrals + archive)
+**status**: resolved (archived 2026-08-16) · **estimate**: 0.1 cal AI-days (class: infra) **title**: Prediction satellite
+AO batch 8 — finalize (reconcile source doc + re-check deferrals + archive)
 
 ### [`predictions_ml_walk_forward_and_arb_2026_06_20`](../active/predictions_ml_walk_forward_and_arb_2026_06_20.md)
 

@@ -39,8 +39,8 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_07.md,
     /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
     /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
   ]
 created: "2026-08-08"
