@@ -469,7 +469,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/config/service_config.py:
     count: 2
   market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py:
-    count: 6
+    count: 5
   market-tick-data-service/market_tick_data_service/engine/orchestrator/_manifest_bucket.py:
     count: 3
   market-tick-data-service/market_tick_data_service/engine/orchestrator/_state.py:
