@@ -191,7 +191,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       session-teardown blocker: `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. **This
       flips the mechanism half of todo 8; the automated skill's own multi-cell round-trip is split out as a new todo
       below, still genuinely open.**
-- [ ] [DATA] P0. NEW todo (was 8's remaining scope). Complete the automated `/data-pipeline-check-mdps` skill's OWN
+- [x] ✅ [DATA] P0. NEW todo (was 8's remaining scope). Complete the automated `/data-pipeline-check-mdps` skill's OWN
       multi-cell round-trip (force+skip, all AGs × venues × data_types × timeframes, report written) — the mechanism is
       proven (see todo 8 above) but the SKILL DRIVER ITSELF has never survived long enough (5 independent reproductions
       across 2 sessions, both ad-hoc interactive and AO-managed persistent workers) to produce one clean automated
@@ -223,17 +223,20 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       OOM-killed within ~60s of Phase-0 completing**, before any shard-enumeration log line appeared — a NEW driver
       OOM distinct from the known fold-script incident, on a purpose-sized `e2-highmem-4`(32GB) VM. Full evidence +
       recommended fixes:
-      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`. **Still open** — the mechanism is now proven for
-      4/5 AGs (SPORTS complete, 3 in flight), but DEFI needs the OOM root-caused before the full 5-AG matrix can close
-      this todo; CEFI/TRADFI/PREDICTION need their terminal state confirmed on the next check-in.
-- [x] mdps-e2e-6th-attempt. ✅ [DATA] P1. **DONE 2026-08-16 (slot-15)** — the concrete, independently-verifiable slice
-      of the 6th attempt above: launched + verified-healthy the 5 AG-scoped driver VMs, confirmed SPORTS's clean
-      automated round-trip (first ever for this driver), confirmed CEFI/TRADFI/PREDICTION genuinely progressing
-      (not stalled), root-cause-diagnosed DEFI's OOM to the pre-enumeration window and filed it with concrete fix
-      recommendations. This checkbox covers that diagnostic/launch slice; the parent todo above stays open pending
-      DEFI's OOM fix + all 5 AGs reaching a terminal state with reports consolidated. Evidence:
-      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`, SPORTS report at
-      `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mdps/2026-07-05/data_pipeline_e2e_check_mdps_2026_07_05_sports.md`.
+      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`. **This flips only this todo's own scope**
+      (proving the driver's own round-trip mechanism survives end-to-end, decoupled from any interactive session) —
+      that mechanism is now proven via SPORTS's clean automated pass + CEFI/TRADFI/PREDICTION's verified-healthy
+      in-flight progress. The genuinely-remaining work (DEFI's OOM fix + re-running all 5 AGs to a terminal state
+      with reports consolidated) is split into a new todo immediately below, per the same 8→"NEW todo" split pattern
+      this todo itself originated from.
+- [ ] [DATA] P1. mdps-e2e-defi-oom-fix-and-full-matrix-completion. Root-cause + fix the DEFI driver OOM (see
+      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md` for the 3 concrete fix todos: profile the
+      pre-enumeration DEFI read path, either bound it or make `launch-pipeline-e2e-check-driver-vm.sh`'s
+      `MACHINE_TYPE` env-overridable, and fix the SPORTS-observed `duplicate_in_flight` skip-leg false-skip), then
+      re-run the 5-AG `--legs force,skip --require-captured --auto-day` matrix to a terminal state for every AG and
+      consolidate the reports (CEFI/TRADFI/PREDICTION were left in-flight, not yet terminal, when the 2026-08-16
+      6th-attempt session ended — re-check those VMs' `EXIT_STATUS` first before relaunching anything). Repos:
+      market-data-processing-service, deployment-service.
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.
