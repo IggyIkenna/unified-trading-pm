@@ -507,7 +507,7 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
     for the `trades`/`TRADES` data_type.
   - Checkbox flipped in `sports_satellite_ao_dispatch_batch12_2026_08_09.md:153` (this todo's actual tracker per the
     2026-08-12 correction below) citing this entry. Repos: market-tick-data-service (new read-only script, no
-    prod-affecting code change).
+    prod-affecting code change). **Shipped: `market-tick-data-service@cfaf2ecd13`** (QG green, landed on LDR).
 
 ## Follow-ups
 
