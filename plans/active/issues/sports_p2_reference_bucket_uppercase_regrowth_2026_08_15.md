@@ -150,3 +150,9 @@ confirm the writer stopped.
   session is scoped to "docs only, no writes" (no manifest CAS writes permitted even once the fix is confirmed live).
   GATED-skipping again — next check should also verify actual redeploy + one post-deploy write cycle before anyone
   attempts the restamp, not just the promote-to-main landing.
+- 2026-08-16 (slot-2, data_engineering, "docs only, no writes" session, second check same session): Re-checked again —
+  `b872799efa` STILL not an ancestor of `origin/main` (fresh fetch). Now 71 commits behind LDR's tip (up from 63 at the
+  prior check a few hours earlier) and `main` now 1225 commits behind LDR overall (up from 1219) — backlog continuing
+  to widen, not narrow, but still reads as sustained promote-pipeline lag under continuous LDR growth, not a stall (no
+  error signal, no stuck PR). Same conclusion as every prior check: genuinely still gated. P1 restamp remains outside
+  this session's authorization regardless. GATED-skipping again.

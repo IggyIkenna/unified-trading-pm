@@ -125,3 +125,8 @@ here.
   bypass was already fixed at `b2114d51` (2026-07-28), predating the 2026-08-10 crash by 2 weeks — ruling out that
   specific code-defect explanation, not concluding the root cause. No VM launched, no code changed, no fix attempted
   this session — pure docs-only conversion of orphaned prose into a tracked P3 todo per workspace discipline.
+- 2026-08-16 (slot-2, data_engineering, "docs only, no writes" session, second check same session): Re-checked this
+  doc's sole todo's gate — `dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md`'s
+  `lc_verify_tarball_freshness` P2 todo is still `status: open` / unchecked `- [ ]` (confirmed via grep, read-only). The
+  gate has not cleared, so this doc's own P3 todo (re-run `pipeline_e2e_check.py` force leg) remains correctly
+  un-actionable. No VM launched, no fix attempted this session.
