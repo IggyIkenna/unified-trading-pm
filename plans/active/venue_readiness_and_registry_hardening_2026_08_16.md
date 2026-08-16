@@ -233,8 +233,15 @@ across `engine/strategies/v2/` — so the composition cannot be computed in eith
 Closing that one link makes both tests mechanical rather than manual, and it is the smaller half: the expensive half,
 per-feature-group input requirements, already exists.
 
-- [ ] [AGENT] P0. **Declare archetype to feature_groups.** The missing link. Compose it with `FEATURE_REQUIRED_INPUTS`
-      to derive each archetype's full input requirement set without restating it anywhere.
+- [x] [AGENT] P0. ✅ **Declare archetype to feature_groups.** SHIPPED — `unified-api-contracts@2fa22fee9a`
+      (`archetype_feature_groups.py`, composed with `FEATURE_REQUIRED_INPUTS`). Was blocked most of 2026-08-16 by the
+      `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions` SIT invariant (16 confirmations —
+      see the issue doc's flap log); cleared once Symbiotic's dispatch wiring landed in both `defi_adapter.py` AND the
+      UAC test's own `DEFI_VENUE_TO_CONNECTOR_CLASS`/`DEFI_VENUE_TO_GATE_MARKER` maps
+      (`unified-api-contracts@09318066` → `c64a9e11c0`). Karak is NOT wired — operator decided to decommission it
+      entirely (`plans/active/issues/karak_decommission_2026_08_16.md`), so it no longer counts as a gap. Pendle has
+      zero references anywhere in `execution-service` or the UAC test's connector map — still genuinely unwired, not
+      yet tracked by its own issue doc (see L361).
 - [ ] [AGENT] P0. **Add contract step 17 as a real check, both directions.** A venue is not `BACKTESTABLE` unless at
       least one archetype's requirements are fully satisfiable from it, and every data type it provides is either
       consumed or explicitly declared unused. Declared-unused is a legitimate answer; silence is not.
