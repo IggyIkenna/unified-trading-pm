@@ -73,23 +73,43 @@ an in-flight dispatch.
 
 ## Todos
 
-- [ ] [DIAG] P2. Measure whether `footystats.py`'s `canonical_sports_is_data_type("ODDS") or "ODDS"` fallback is
-      actually hit in practice (i.e. does footystats have its own live uppercase-row population, or does the
-      canonicalization call already succeed in the overwhelming majority of cases). Not measured — this doc was a
-      scoping flag, not an audit. (repo: instruments-service)
+- [x] ✅ [DIAG] P2. Measure whether `footystats.py`'s `canonical_sports_is_data_type("ODDS") or "ODDS"` fallback is
+      actually hit in practice. **RESOLVED by static proof, no runtime measurement needed**: every one of
+      footystats.py's ~14 call sites passes the hardcoded string literal `"ODDS"`, and
+      `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM` (`unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py:303`)
+      is built as `{key: key.lower() for key in SPORTS_DATA_TYPE_TO_SOURCE}` — `"ODDS"` IS a key of
+      `SPORTS_DATA_TYPE_TO_SOURCE` (line 228: `"ODDS": "footystats"`), so it is unconditionally also a key of the
+      lowercase-form dict. `canonical_sports_is_data_type("ODDS")` therefore always returns `"odds"` (truthy) — the
+      `or "ODDS"` fallback is dead code for this call site, not merely rare. footystats.py writes lowercase `"odds"`
+      to the manifest on every call; it is NOT a live uppercase-row source. (repo: instruments-service)
 - [ ] [DIAG] P3. Determine whether `betfair_adapter.py`'s uppercase `"ODDS"` write represents a real,
       currently-accruing population or a phantom write (same class as the two already-resolved phantom-uppercase
-      populations found 2026-07-26 and 2026-08-14). (repo: market-tick-data-service)
+      populations found 2026-07-26 and 2026-08-14). **Partially narrowed, not resolved**: confirmed via static
+      analysis that `BetfairAdapter` is a live, registered adapter (`market-tick-data-service`'s
+      `market_interface/factory.py:197` — `"betfair": ("sports", BetfairAdapter)` — and wired into
+      `adapters/umi_tick_provider.py:215`), i.e. NOT dead/unregistered code the way a phantom write would typically
+      be. Confirming whether it has an actual accruing row population requires a live manifest census (row counts,
+      `attempted_at` recency) — out of scope this session under the standing "docs only, no writes" constraint,
+      which explicitly bars production queries, not just writes. (repo: market-tick-data-service)
 - [ ] [DECISION][OPERATOR] P2. Given MDPS already treats `["odds","trades","ODDS","TRADES"]` as accepted-equivalent,
       decide whether full casing unification (rewrite every uppercase writer) is the right end-state, or whether the
       ecosystem already has a working case-insensitive normalization layer that makes "there are two casings" a
       non-problem in practice — in which case the real fix is just making the few remaining exact-match consumers
       (like the odds_api-specific ones already fixed) case-tolerant, not rewriting every writer. This is a scope
       decision, not a measurement.
-- [ ] [DIAG] P3. Confirm whether `unified_api_contracts/registry/schema_spec.py:434`'s separate `data_type="ODDS"`
-      entry is a real, used, exact-match consumer — same question as the `data_type_capability.py` entry already
-      resolved for odds_api — and needs the same live-check treatment before any casing decision is made for it.
-      (repo: unified-api-contracts)
+- [x] ✅ [DIAG] P3. Confirm whether `unified_api_contracts/registry/schema_spec.py:434`'s separate `data_type="ODDS"`
+      entry is a real, used, exact-match consumer. **RESOLVED — confirmed real and live**: `find_schema()`
+      (`schema_spec.py`) is an exact-match lookup, called from `generate_instrument_catalogue.py:112` as
+      `find_schema(capability.asset_group, capability.data_type)`, where `capability` is a `DataTypeCapability`
+      entry. `data_type_capability.py`'s two SPORTS `DataTypeCapability` entries for ODDS (lines 1143 and 1159) are
+      STILL declared as uppercase `data_type="ODDS"` — unchanged, not touched by the odds_api plan's Phase 0 (that
+      plan only touched the live manifest write path, not this static capability-registry declaration). Since both
+      the capability entry and the `schema_spec.py:434` registry entry use the SAME uppercase literal, this is a
+      currently-matching, live exact-match pair — `find_schema(SPORTS, "ODDS")` succeeds today. **Consequence for
+      any future casing decision**: `data_type_capability.py`'s two ODDS entries and `schema_spec.py:434` must be
+      changed TOGETHER, in the same change — flipping one without the other would make `find_schema()` return
+      `None` for SPORTS ODDS and silently break `generate_instrument_catalogue.py`'s schema lookup. (repo:
+      unified-api-contracts)
 
 ## What NOT to assume
 
@@ -107,3 +127,15 @@ an in-flight dispatch.
   4 questions into tracked `- [ ] [DIAG]`/`[DECISION][OPERATOR]` todos with priority + repo, no content change beyond
   format. No measurement/investigation performed this session (docs-only scope) — the underlying questions remain
   unanswered, only now trackable.
+- 2026-08-16 (slot-2, data_engineering, "docs only, no writes" session, second pass): Resolved 2 of the 4 todos by
+  read-only static code analysis (no production queries, no writes to code): (1) footystats.py's uppercase fallback
+  is proven dead code — `"ODDS"` is always a key of `SPORTS_DATA_TYPE_TO_SOURCE`/`SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`
+  by construction, so `canonical_sports_is_data_type("ODDS")` always returns truthy `"odds"`; footystats.py is
+  confirmed NOT a live uppercase-row source. (2) `schema_spec.py:434`'s `data_type="ODDS"` entry is confirmed a
+  real, live, exact-match consumer — `data_type_capability.py`'s two SPORTS ODDS `DataTypeCapability` entries
+  (lines 1143, 1159) are still uppercase and feed `find_schema()` via `generate_instrument_catalogue.py:112`; both
+  must move together in any future casing change or `find_schema()` breaks. Narrowed (not resolved) the betfair_adapter
+  todo: confirmed `BetfairAdapter` is a live, registered, wired adapter (`factory.py:197`,
+  `umi_tick_provider.py:215`) — not obviously dead code — but confirming an actual accruing row population needs a
+  live manifest census, which is a production query, out of scope this session. The DECISION todo remains
+  operator-owned, untouched.
