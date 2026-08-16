@@ -19,7 +19,10 @@ import ast
 import sys
 from pathlib import Path
 
-_SKIP_DIRS = {".venv", ".venv-workspace", "build", "dist", "__pycache__", "node_modules"}
+# ".claude" excludes nested per-agent git worktrees (.claude/worktrees/<id>/) — a worktree
+# can carry an older/different snapshot of the same repo's source, producing false
+# violations for code that doesn't exist in the actual checked-out tree.
+_SKIP_DIRS = {".venv", ".venv-workspace", "build", "dist", "__pycache__", "node_modules", ".claude"}
 _DEFINITION_FILE_SUFFIX = "manifest_writer.py"
 
 

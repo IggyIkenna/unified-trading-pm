@@ -27,8 +27,10 @@ from typing import cast
 # workspace is pure walk-waste. Excluded ≠ pruned/removed: dirs stay on disk, the walk
 # just doesn't enter them. (node_modules was already filtered post-hoc; now skipped at
 # the walk level alongside the rest.)
+# ".claude" excludes nested per-agent git worktrees (.claude/worktrees/<id>/) — a worktree
+# can carry an older/different snapshot of the same repo's source.
 EXCLUDE_DIR_NAMES: frozenset[str] = frozenset(
-    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git", ".claude"}
 )
 
 try:  # noqa: fallback-import — optional; script raises ImportError at call site when missing

@@ -26,8 +26,10 @@ EXCLUDED_REPOS = {"unified-api-contracts"}
 # scan never descends into them (these hold third-party / generated code, not repo source). A
 # plain repo_path.rglob("*.py") would still enumerate every .venv file — ~14k on a big repo —
 # before discarding them per-path. (Naming: these dirs are excluded, not "pruned"/removed.)
+# ".claude" excludes nested per-agent git worktrees (.claude/worktrees/<id>/) — a worktree
+# can carry an older/different snapshot of the same repo's source.
 EXCLUDE_DIR_NAMES = frozenset(
-    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git", ".claude"}
 )
 
 
@@ -38,6 +40,7 @@ def iter_source_py(repo_path: Path) -> list[Path]:
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIR_NAMES]
         out.extend(Path(root) / fn for fn in files if fn.endswith(".py"))
     return out
+
 
 # Patterns for schema definitions
 CLASS_BASEMODEL_RE = re.compile(r"class\s+(\w+)\s*\(\s*[^)]*BaseModel\s*[^)]*\)")

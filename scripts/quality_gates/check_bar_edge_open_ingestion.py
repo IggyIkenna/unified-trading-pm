@@ -101,6 +101,12 @@ EXCLUDE_DIR_NAMES: Final[frozenset[str]] = frozenset(
         "site-packages",
         "tests",
         "test",
+        # Nested per-agent git worktrees (.claude/worktrees/<id>/) can carry an
+        # older/different snapshot of the same repo's source — scanning one
+        # produces false violations for code that doesn't exist in the actual
+        # checked-out tree (found live 2026-08-06, same class as the
+        # check_manifest_import_alignment.py / test_event_logging.py fixes).
+        ".claude",
     }
 )
 EXCLUDE_PATH_FRAGMENTS: Final[tuple[str, ...]] = ("/archive/", "/.archive/", "/_archived/", ".egg-info")
