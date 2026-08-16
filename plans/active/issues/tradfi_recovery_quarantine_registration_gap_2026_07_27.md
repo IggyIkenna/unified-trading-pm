@@ -25,6 +25,7 @@ related:
   [
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

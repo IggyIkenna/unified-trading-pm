@@ -21,7 +21,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md,
     /plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-10"
