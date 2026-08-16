@@ -4,8 +4,8 @@ title: Commit + Push + Flip Plan Checkboxes As You Ship Each Item — HARD RULE
 summary:
   SSOT for the Commit + Push + Flip HARD RULE — every shippable unit is committed + pushed (pre-commit git diff --cached
   --stat with no path arg, stage by name) AND its plan checkbox flipped in the SAME agent turn via a docs(plans) commit;
-  an unflipped item is invisible to the orchestrator and gets re-dispatched. Covers the 3-halves model, the violations
-  list, and the backfill recovery protocol.
+  an unflipped item is invisible to the orchestrator and gets re-dispatched. Covers the halves model (3 universal halves
+  + a conditional Half-4 for human-fleet-registered operators), the violations list, and the backfill recovery protocol.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -35,7 +35,7 @@ code_refs:
 > 5+7 each shipped 15+ items without flipping work-split checkboxes; daily analysis reported ~14% progress when actual
 > was ~70%. **Half-1 without Half-2 in the same agent turn is a rule violation — NOT "I'll do it later".**
 
-## The Three Halves
+## The Halves
 
 ### Half 1 — Commit + Push at Every Shippable Unit
 
@@ -91,9 +91,10 @@ git log --oneline -5
 Multi-item sessions with non-final state → `## Deferred work after <date> <session-tag>` table in plan body before
 `## Temporary states`.
 
-**The 3 halves compose**: Half-1 alone = "shipped but invisible"; Half-1+2 alone = "shipped + visible, missing context
-for next agent"; Half-1+2+3 = full handoff. Half-3 matters when item is non-final; Half-2 ALWAYS matters when item is
-final.
+**The first 3 halves compose**: Half-1 alone = "shipped but invisible"; Half-1+2 alone = "shipped + visible, missing
+context for next agent"; Half-1+2+3 = full handoff. Half-3 matters when item is non-final; Half-2 ALWAYS matters when
+item is final. **Half-4 is a separate, conditional layer** (human-fleet-registered operators only, see below) that
+composes on TOP of a completed Half-1+2, not instead of it.
 
 ### Half 4 — Human-Fleet-Registered Operators Report to AO (ao_human_fleet_integration_2026_08_15.md, Phase 6)
 

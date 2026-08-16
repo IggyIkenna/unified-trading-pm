@@ -28,7 +28,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-31
+last_updated: 2026-08-16
 context_scope:
   [
     /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
@@ -639,6 +639,20 @@ dimension is essentially empty. **Fix**: walk the ml-service model registry (per
 `ml_model` nodes + archetype→model edges. Owner: PM exporter (per-service venv import, like exec-algos/feature-groups) +
 ml-service registry.
 
+### F54 — `emit_capability_gap_todos.py` hardcodes this doc's OLD (pre-archive) active path
+
+**Status**: OPEN (discovered by docs-reconcile sweep 2026-08-16, cross-checking a stale link-label finding).
+`scripts/openapi/emit_capability_gap_todos.py:250` hardcodes
+`_PM_ROOT / "plans" / "active" / "issues" / "capability_wizard_gap_discovery_2026_06_11.md"` as its append-target —
+but that path no longer exists; the doc was archived to
+`plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md` (87KB, last modified 2026-08-15) without
+the script being updated. The next run either crashes (open-for-append on a missing file, depending on file mode) or
+silently creates a near-empty NEW file at the stale active path, forking the escalation history away from the real
+87KB tracker. **Not fixed here** — a judgment call docs-reconcile shouldn't make unilaterally: either (a) repoint the
+script to the archived path (if new auto-emitted P2 todos are still meant to land there), or (b) this doc's archival
+was premature/incomplete given a live automation still targets it, and it (or the script's target) should move back
+to an active doc. See tracked todo below.
+
 ---
 
 ## Risk-domain index (cross-cut roll-up — 2026-06-15)
@@ -678,6 +692,11 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 **Actionable now (registry / config / infra — NOT engine-frozen):**
 
+- [ ] [SCRIPT] P2. **F54 — fix `emit_capability_gap_todos.py`'s stale hardcoded path** (targets
+      `plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`, which no longer exists — the real doc is at
+      `plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md`). Decide + implement: either
+      repoint the script to the archived path, or determine the archival was premature and move the doc (or the
+      script's target) back to an active location. Target: unified-trading-pm.
 - [x] ✅ [SPEC] P1. **F28 — reconcile the two collateral-haircut SSOTs** (`venue_collateral.py` vs
       `lst_collateral_resolver.py`): pick the correct per-venue LST haircut, delete the duplicate SSOT (4 known
       conflicts: HL wstETH accept?; Bybit stETH 10% vs 15%; Deribit 7.5% vs 20%; OKX 15% vs absent). Data-correctness

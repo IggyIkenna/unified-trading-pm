@@ -161,4 +161,4 @@ option combo, and is ref pricing delta-adjusted or fixed?
 - Plan:
   [`plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md)
 - Gap tracker:
-  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md)
+  [`plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md)

@@ -10,7 +10,7 @@ tags:
 ---
 # Plans Prompts Index — SSOT for Prompts
 
-RULE: Prompts and task entry points live in `unified-trading-pm/plans/`. This rule is the SSOT for their locations.
+RULE: Prompts live in `unified-trading-pm/plans/prompts/`. This rule is the SSOT for their locations.
 
 WHY: Scattered prompts cause drift; a single index ensures agents and humans find the right entry point.
 
@@ -28,18 +28,15 @@ WHY: Scattered prompts cause drift; a single index ensures agents and humans fin
 |--------|------|
 | Sports Phase 2 | `unified-trading-pm/plans/prompts/AGENT_PROMPT_SPORTS_PHASE2.md` |
 
-## Task Entry Points
-
-| Tool | Entry Point |
-|------|-------------|
-| Cursor | `unified-trading-pm/plans/tasks/cursor/START_HERE.md` |
-| Claude Code | `unified-trading-pm/plans/tasks/claude-code/START.md` |
+> **Task Entry Points table removed 2026-08-16** (docs-reconcile finding — `plans/tasks/{cursor,claude-code}/` no
+> longer exists on disk, and no replacement path is referenced anywhere in this corpus). Task dispatch today is
+> AO role-based (`unified-trading-pm/agents/*.md` role charters, spawned via `POST /api/plan-health/dispatch` or the
+> backlog dispatcher) rather than a manually-maintained per-tool entry-point file.
 
 ## DO
 
 - Reference these paths when launching agents or assigning tasks
 - Add new prompts to `plans/prompts/` and update this index
-- Use `START_HERE.md` (Cursor) or `START.md` (Claude Code) as the task entry point
 
 ## NEVER
 
