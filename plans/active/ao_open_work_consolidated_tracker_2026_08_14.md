@@ -578,13 +578,24 @@ before touching the source doc directly._
       shipped an incomplete slice of their own in-progress feature. The fix sits harmlessly in their dirty working
       tree now, ready to ride along whenever they commit — flag this to that session/operator if `layout.tsx`'s tsc
       error resurfaces after their WIP lands, since my fix may not have survived their next save.
-- [ ] [INFRA] P2. **NVIDIA capacity-tracking layer, THEN a panel.** Unlike Gemini, no `gemini_headroom.py`-equivalent
-      exists for NVIDIA NIM yet — build the tracking layer first. Baseline researched 2026-08-16 (not yet empirically
-      confirmed against this fleet's own key): free tier is ~40 RPM, **global per-key, shared across every model**
-      (not per-model) — [decodethefuture.org](https://decodethefuture.org/en/nvidia-nim-api-pricing-limits-guide/),
-      [NVIDIA forums](https://forums.developer.nvidia.com/t/request-to-increase-rpm-limit-for-free-nvidia-nim-account/377451) —
-      upgradeable to 200 RPM on request. Done when: a headroom-tracking layer mirroring `gemini_headroom.py`'s shape
-      exists for NVIDIA, plus a panel consuming it, pw:L2-verified.
+- [x] [INFRA] P2. ✅ **NVIDIA capacity-tracking layer DONE, shipped `agent-orchestrator@0c0e527aec`.** New
+      `nvidia_headroom.py` mirrors `gemini_headroom.py`'s shape with one real structural difference: NVIDIA's two
+      registered accounts (both paused) share ONE API key with a GLOBAL per-key RPM ceiling (~40 RPM, community-
+      reported — [decodethefuture.org](https://decodethefuture.org/en/nvidia-nim-api-pricing-limits-guide/),
+      [NVIDIA forums](https://forums.developer.nvidia.com/t/request-to-increase-rpm-limit-for-free-nvidia-nim-account/377451),
+      upgradeable to 200 RPM) — so counting aggregates across every account rather than per-account like Gemini's
+      per-(project, model) ceilings. Reported honestly via `ceiling_confirmed=false`, not presented as settled fact
+      until the concurrency-baseline todo below actually measures it. **Deliberately NOT wired into autospawn.py's
+      real dispatch path** — both accounts stay paused (task-routing logic doesn't exist yet), so
+      `NVIDIA_REQUEST_SELECTED_EVENT` is dormant scaffolding, same "build now, dormant" shape as the GLM/Codex todo
+      below. New `GET /api/accounts/nvidia/capacity` route (returns one shared reading, or `None` if no NVIDIA
+      accounts registered — never a fabricated row), `NvidiaCapacityPanel.tsx` (single shared gauge listing both
+      account labels, not one row per account). Renamed the gauge/account-row CSS classes from `gemini-*` to
+      provider-agnostic `capacity-*` since both panels now share them. e2e fixture adds 2 real demo accounts
+      (`nvidia-diffusiongemma-demo`, `nvidia-gemma-4-31b-demo`, now 9 accounts — `critical-health.spec.ts`'s "ALL N"
+      hardcode updated again) with 3+2 seeded selection events proving the cross-account aggregation (5 total, not
+      two separate 3/2 rows). Full `quality-gates.sh` green, 2/2 new `nvidia-capacity.spec.ts` tests plus the wider
+      regression sweep re-run green.
 - [ ] [DATA] P2. **NVIDIA concurrency-capacity baseline — measure how many Gemma models can run concurrently before
       the shared 40 RPM ceiling breaks.** Operator observation 2026-08-16: since the ceiling is global-per-key (see
       todo above), running the 2 paused NVIDIA accounts (`nvidia-diffusiongemma`, `nvidia-gemma-4-31b-it`)
