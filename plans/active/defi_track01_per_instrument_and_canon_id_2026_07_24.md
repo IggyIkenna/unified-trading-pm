@@ -912,6 +912,16 @@ against). Moved verbatim, nothing summarized, to
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator rulings)**:
+  - **DEX-relevance TVL fallback**: RULED — no TVL-based fallback. `DEFI_FORCE_INCLUDE_POOLS` stays the sole,
+    curated gate; anything not in the allowlist stays excluded (enforce strictly, don't silently admit via a
+    threshold). No code change needed beyond what's already wired (`instruments-service@4e97a82e`).
+  - **Prediction manifest keying on `canonical_question_group`**: checked before assuming absence —
+    `plans/active/prediction_consolidated_closeout_2026_07_18.md` already exists and is active, and
+    `canonical_question_group` is already the established key across many active prediction docs (
+    `prediction_phase_ab_residuals_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`,
+    `data_completion_prediction_2026_07_15.md`, and others). This cross-AG pointer is stale — no new doc needed,
+    the ownership question is already answered.
 - **na-corpus-digest-closeout 2026-08-08**: operator ruled two of the 8 genuine judgment items interactively — (1)
   factory-address capture: option (b), RPC `factory()` lookup, AND the 206,107-row historical residual must be migrated
   (GCS objects + manifest rewritten to canonical venue+chain, non-canonical originals purged) not just fixed going
