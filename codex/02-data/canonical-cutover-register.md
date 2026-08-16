@@ -518,7 +518,7 @@ now split: shapes #3/#3b MIGRATED (4b-i COMPLETE 2026-08-06 — 3,574 legacy obj
   `market-tick-data-service@e4acf0c4` (`scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`), **COMPLETE
   2026-08-06 — 3,574 legacy `prediction_trades` objects enriched + deleted across the full 2025-03-14→2026-04-14 range,
   0 legacy objects remain** (final verification re-run over all 348 dates; see
-  `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b session-end entry). Delete executed after
+  `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b session-end entry). Delete executed after
   a fresh `gcs_bucket_soft_delete_retention_seconds()` check (604800s, reversibility-qualified).
 
 - **Shape #4** (10-segment `data_source=POLYMARKET_CLOB/.../data_type=trades/{cid}.parquet` tree under
@@ -530,7 +530,7 @@ now split: shapes #3/#3b MIGRATED (4b-i COMPLETE 2026-08-06 — 3,574 legacy obj
   content-verified via `_metadata_matches`, never a bare existence check; delete-safety Part 2 correctly refuses these).
   0 script errors, 0 unexplained anomalies.
 
-See `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and
+See `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and
 `/codex/02-data/non-canonical-path-inventory.md` row 22 for the full disposition.
 
 | asset_group | effective-from (new writes) | historical backfill state                                                                                                                                                                                   |

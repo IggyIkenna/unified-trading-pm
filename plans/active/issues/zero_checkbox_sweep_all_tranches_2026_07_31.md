@@ -106,8 +106,9 @@ and this doc is the register it writes to.
 3. `plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` — a parking register whose P0-A (a **dated**
    2026-08-15 `check_codex_doc_freshness.py` hard-gate cliff), P1-C, P1-D and P2-E findings were all prose, so a
    repo-wide commit blocker with a known arrival date was invisible to every open-todo count. Converted.
-4. `plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md` — "Recommended fix (not actioned
-   here)" prose. Converted.
+4. `plans/archive/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md` (stale path CORRECTED
+   2026-08-16, plan_reconciler — doc has since been archived) — "Recommended fix (not actioned here)" prose.
+   Converted.
 5. `plans/active/issues/sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` — numbered items 2-4 were plain
    prose; the doc's own item 5 said so. Converted to real checkboxes.
 

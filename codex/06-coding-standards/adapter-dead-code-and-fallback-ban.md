@@ -80,8 +80,10 @@ three things must hold, and an audit finding is required (not optional) whenever
 
 This rule is enforced today by the per-AG adapter audit todos tracked in each asset group's consolidated closeout plan
 (`tradfi_consolidated_closeout_2026_07_18.md`, `defi_consolidated_closeout_2026_07_18.md`,
-`cefi_consolidated_closeout_2026_07_18.md`, `prediction_consolidated_closeout_2026_07_18.md`,
-`sports_consolidated_closeout_2026_07_19.md` — see each plan's audit todo added per
+`cefi_consolidated_closeout_2026_07_18.md`, `prediction_phase_ab_residuals_2026_07_24.md` §A5 (CORRECTED 2026-08-16,
+plan_reconciler — prediction's copy relocated here in the 2026-07-24/25 phase-split, completed `[x]` 2026-07-31; was
+stale-pointed at `prediction_consolidated_closeout_2026_07_18.md`), `sports_consolidated_closeout_2026_07_19.md` — see
+each plan's audit todo added per
 `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §1), not by a standalone script. A future automated
 check (e.g. a registered-but-uncalled-in-production static analysis pass, or a runtime coverage instrumentation pass
 over a full backfill run) is out of scope for this doc — file it as its own todo against the owning plan if pursued.
