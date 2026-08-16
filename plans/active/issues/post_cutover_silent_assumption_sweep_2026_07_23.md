@@ -435,7 +435,7 @@ exists in codex. See the `[DOC] P2` item under Resolution checklist for the full
 
 ## Resolution checklist
 
-- [ ] [BACKEND] P0→**TIME-GATED (re-affirmed 2026-07-28, retagged away from `[OPERATOR]`)**. **F1 (kill-switch).** RULED
+- [ ] [BACKEND] P0. **TIME-GATED (re-affirmed 2026-07-28, retagged away from `[OPERATOR]`)**. **F1 (kill-switch).** RULED
       2026-07-28 (2026-07-28 operator-decisions pass, applying the general theme): this stays correctly DEFERRED — not
       because it is still awaiting an operator authority decision, but because execution-service genuinely does not run
       live order flow yet, so there is nothing to implement/verify a halt against yet. Retagged away from `[OPERATOR]`

@@ -152,7 +152,7 @@ launcher deletions. Other: free-text.
       **DONE (ao-dispatch batch2 2026-08-03)** — closed via
       `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:113: `e2e-testing@e117593` (file already relocated
       from features-service@7717fbee; fixed at new location), 4 citations replaced, `quality-gates.sh` green.
-- [ ] 8. [SCRIPT] P3. S3-b — sports dual entrypoint (`python -m features_service.sports` with `--tables`/sfi-progressive
+- [ ] [SCRIPT] P3. 8. S3-b — sports dual entrypoint (`python -m features_service.sports` with `--tables`/sfi-progressive
       vs `--feature-family sports`) — operator/design adjudication (fold submodule behind the family flag OR bless the
       submodule). Do NOT silently delete (breaks live sports backfills). Also the misleading "DEPRECATION NOTE" on the
       live `launch-features-sports-*` launchers.
