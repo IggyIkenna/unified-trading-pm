@@ -349,6 +349,18 @@ investigation confirmed are both achievable with existing primitives:
   workspace's own terms. Operator identity is free from the existing commit-author convention. No AO dependency, no
   new hook, no live registration needed — this can run today, entirely from git history, regardless of Phase 4's
   status.
+- **2026-08-16 (same session, deferral reversed for Ikenna)**: operator: "we need to flip it on and then start doing
+  it here" — the 2026-08-15 "stays fully dormant" ruling is superseded for Ikenna's own machine specifically (Harsh's
+  half unchanged, still a genuine physical impossibility from this session). Split Phase 4's single shared todo into
+  4 operator-scoped todos so Ikenna's now-actionable items don't get conflated with Harsh's still-deferred ones.
+  Operator also asked (a) for a CLAUDE.md hard rule + a hook so completing a task actually reports to AO
+  automatically once a slot is live, rather than relying on memory, and (b) correctly pressure-tested Phase 5 on
+  token counts: git commits carry no token data, so Phase 5's git-log classifier stays scoped to plan-vs-task
+  labeling ONLY — token/spend counts are Phase 2's already-built job (`ao-usage-push.py`, dormant only because
+  nothing has pushed real usage yet), which goes live the moment Phase 4 does. Added Phase 6 (hard-rule pointer +
+  hook design) below. **Not yet executed**: minting Ikenna's real JWT and registering against production AO is a
+  real production-state change — written up as a todo, not run in this pass; still wants one explicit go-ahead in
+  the moment it actually runs.
 
 ## Todos
 
@@ -472,19 +484,33 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 4 — per-operator setup + rollout
 
-- [ ] [OPERATOR] P1. **Operator-gated — hand to Harsh, pure verification, no coding.** Issue a long-lived worker-role
-      JWT (`issue_token(role="worker", machine="<name>-laptop")`, `server/auth.py:323-341`) and register. From the
+> **Deferral REVERSED for Ikenna, 2026-08-16 (operator, interactive session)**: the 2026-08-15 "stays fully dormant"
+> ruling is superseded for Ikenna's own machine specifically — "we need to flip it on and then start doing it here."
+> Harsh's half is untouched (still a genuine physical impossibility from this session, still pure-verification when he
+> picks it up). Split into two operator-scoped todos below so the two don't get conflated. **Actually executing
+> Ikenna's todo (minting a real JWT, registering against production AO) is a real production-state change — still
+> wants one explicit go-ahead in the moment it runs, separate from writing this todo up.**
+
+- [ ] [OPERATOR] P1. **Ikenna — issue a long-lived worker-role JWT and register (slot 9001).** From the
       `agent-orchestrator` repo root:
-      `python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)" mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token # paste the token AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name> # 9001=Ikenna, 9002=Harsh`
-      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and the operator shows up in AO's
-      `GET /api/agents`.
-- [ ] [SCRIPT] P2. **Operator-gated — hand to Harsh, pure verification, no coding.** Run one real, low-stakes task
-      end-to-end: `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable),
-      then without `--check-only` to actually claim, do the real work, commit+push, then
-      `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`. Optionally run
-      `ao-usage-push.py` afterward to confirm a usage row appears. Done when: the task shows up correctly in the "Human
-      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
-      (`GET /api/backlog/usage/windows?role_group=human`).
+      `python3 -c "from server.auth import issue_token; t,e = issue_token('ikenna', role='worker', machine='ikenna-laptop'); print(t); print('expires', e)" mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token # paste the token AO_SLOT_ID=9001 bash scripts/human_fleet/ao-register.sh ikenna`
+      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and `ikenna` shows up in AO's
+      `GET /api/agents` with `role="human"` (needs `agent-orchestrator@609e4ea377`, already shipped, or the 500 from
+      this session's own found bug reproduces live).
+- [ ] [SCRIPT] P2. **Ikenna — run one real, low-stakes task end-to-end.**
+      `AO_SLOT_ID=9001 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable), then without
+      `--check-only` to actually claim, do the real work, commit+push+flip the plan checkbox, then
+      `AO_SLOT_ID=9001 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`, then run
+      `ao-usage-push.py` to confirm a real, priced `TaskUsageRow` appears (this is what actually turns the dormant
+      Phase 2 usage/billing capability into real numbers — see Phase 5's note on token counts below). Done when: the
+      task shows up correctly in the "Human Fleet" dashboard page and
+      `GET /api/backlog/usage/windows?role_group=human` returns a real row.
+- [ ] [OPERATOR] P1. **Harsh — hand to Harsh, pure verification, no coding (unchanged from the 2026-08-15 ruling).**
+      Same steps as Ikenna's todo above, but `machine='harsh-laptop'`, `AO_SLOT_ID=9002`. Done when: `ao-register.sh`
+      returns `{"ok": true, ...}` and `harsh` shows up in AO's `GET /api/agents`.
+- [ ] [SCRIPT] P2. **Harsh — run one real, low-stakes task end-to-end (unchanged from the 2026-08-15 ruling).** Same
+      steps as Ikenna's task todo above, `AO_SLOT_ID=9002`. Done when: the task shows up correctly in the "Human
+      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it.
 - [x] 21. ✅ [INFRA] P2. **Phase 4b — preview the fully-populated dashboard via the mock demo backend, zero production
       connectivity.** Added `seed_human_slots()` to `scripts/populate_demo.py` — seeds `SlotRow`/`AgentRow`/
       `TaskUsageRow` for both reserved human slots (9001=ikenna, role_group="human", claimed task B-004; 9002=harsh,
@@ -545,3 +571,30 @@ investigation confirmed are both achievable with existing primitives:
       time, not a forced new dashboard section. Done when: running it against this session's own commits correctly
       shows 2 "tasks completed" (the two checkbox-flip commits, `12e83c4074` and the Phase 4b evidence entry) and 0
       false "plan created" mislabels.
+      **Explicitly OUT of scope: token/spend counts.** Git commits carry no token data — that was never git's job.
+      Once Phase 4 is live (above), token counts flow through the ALREADY-BUILT Phase 2 mechanism instead:
+      `ao-usage-push.py` scans that operator's OWN local `~/.claude/projects/*.jsonl` transcript and pushes
+      server-priced spend to AO, tagged `role_group="human"`/`"planning-human"` — the exact same
+      `TaskUsageWindows`/`BatchingEfficiencyPanel` panels every other slot already uses. This script never reads a
+      transcript and never needs to — it stays a pure git-log classifier, one lane only.
+
+### Phase 6 — after-flip discipline: CLAUDE.md hard rule + a hook that reports completion to AO automatically
+
+- [ ] [DOC] P2. **Add a one-line CLAUDE.md hard rule (pointer only, per this file's own size-budget/condense
+      convention) to the existing "Commit + Push + Flip" section**: once a human-fleet slot is registered (Phase 4
+      live), completing a Half-2 checkbox flip is followed by reporting it to AO
+      (`ao-done.sh <task_id> <sha> "<evidence>"`) — a "Half 3" for a human-fleet-registered operator specifically, not
+      a fleet-wide change (AO-dispatched workers already do this via their own `/done` call; this closes the gap only
+      for a human's own interactive session). Full rule text + rationale lives in a new codex doc this rule points to
+      — CLAUDE.md itself only gets the 1-line essence + pointer, per its own maintenance rule at the top of the file.
+- [ ] [SCRIPT] P2. **Design + build a Claude Code hook that auto-fires `ao-done.sh` after a detected commit+push+flip
+      sequence**, so the Phase 6 hard rule above is enforced mechanically, not by memory. Concretely: a `PostToolUse`
+      hook on the `Bash` tool, matching a successful `git push` to `unified-trading-pm` whose just-pushed commit
+      flipped a `- [ ]` → `- [x]` (the same detection Phase 5's parser already implements — reuse it, don't
+      re-derive), extracting the todo's task_id if one exists (a checkbox flip on a plan todo doesn't always
+      correspond to an AO backlog `task_id` — most won't, since most human work isn't AO-claimed; the hook fires
+      `ao-done.sh` ONLY when a `human-claim`'d task_id is actually in flight for the current slot, otherwise it's a
+      no-op, matching Phase 5's own "untracked work legitimately shows as neither" principle). Needs a design decision
+      before building: does the hook confirm with the operator before firing (safer, matches this workspace's own
+      "actions visible to others... confirm first" default) or fire silently (matches "mechanical enforcement, not
+      memory")? Recommend confirm-first for the initial build, revisit once the pattern is proven reliable.
