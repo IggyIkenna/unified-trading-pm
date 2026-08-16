@@ -125,3 +125,29 @@ whether today's specific gap (this one `2026-20260816-040430` shard) should just
   own carve-out (root-cause-diagnosed relaunch with a shipped fix) doesn't apply: there is no bug here to fix, so no
   "genuinely new information" justifies bypassing the budget.
 - Did not change `_MAX_RELAUNCH_DISPATCHES_PER_DAY` or any budget logic — that's option B above, an operator call.
+
+## Update 2026-08-16 (second occurrence, same day) — escalation agt-dc9224
+
+- A second, distinct DP-VM-008 escalation (`agt-dc9224`, dispatched by `deployment_service.data_pipeline_monitors.escalation`
+  with `wall_type=data_pipeline_failure`, `authoring_slot=dp-fleet-monitor`) reported a DIFFERENT SPOT VM,
+  `cefi-extended-starknet-2025-20260816-020053`, preempted — again with a "DO NOT RELAUNCH... cefi-extended- already hit
+  2/2 relaunch dispatches today (RB-INFRA-RELAUNCH bound)" instruction, same launcher-family/day budget bound documented
+  above.
+- Per `rb_infra_relaunch.md`'s "check for an existing open issue doc and page the operator instead of relaunching
+  again" instruction: this doc already covers the exact launcher-family (`cefi-extended-`) + date (2026-08-16) + root
+  cause (2/day `_MAX_RELAUNCH_DISPATCHES_PER_DAY` bound) — filing a second duplicate issue doc would fragment the same
+  operator decision across two docs, so appending here instead (per the workspace's append-not-overwrite rule for
+  shared docs) rather than creating a new file.
+- Live-verified (2026-08-16): `gcloud compute instances list --filter="name~'^cefi-extended-starknet'"` still shows 37
+  RUNNING instances across the 2024/2025/2026 shard-years; `gcloud compute instances list
+  --filter="name='cefi-extended-starknet-2025-20260816-020053'"` returns **zero rows** — this VM is confirmed gone, no
+  automated relaunch occurred (expected — the budget is launcher-family-wide), and no fresh-name replacement for this
+  specific shard is visible in the fleet.
+- No code fix applies here either (same root cause as the first occurrence — the budget worked exactly as designed).
+  This second occurrence is additional evidence for the operator-decision trade-off above: the `cefi-extended-`
+  launcher-family is now confirmed to have hit its 2/day budget from at least 2 DISTINCT preemption events on
+  2026-08-16 alone, reinforcing that a 37-instance concurrently-running fleet under one launcher-family prefix can
+  legitimately exceed a flat 2/day bound. Does not change the recommendation (**A**, leave as-is) — just strengthens
+  the case for the operator to weigh it.
+- Did not relaunch `cefi-extended-starknet-2025-20260816-020053`; did not change any budget logic; status stays `open`,
+  pending the same A/B operator decision above.
