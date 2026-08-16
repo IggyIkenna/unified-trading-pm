@@ -92,9 +92,14 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
       auto-discovers all 7). Measured impact is small (~13% wall-time, noise-level module delta) — the algorithms were
       never the dominant import cost; see Progress Log for the `sys.modules` breakdown pointing at UAC/google/ccxt via
       the still-eager sibling imports in `__init__.py`, out of this todo's scope.
-- [ ] [AGENT] P0. **Layer 1 (strategy-service)** — make `factory.py` register only the archetypes a deployment declares.
-      Must preserve: the coverage gate that fails on a missing schema, and the clients.yaml coverage gate. A lazy
-      registry that quietly registers nothing would pass both by accident — assert a positive count.
+- [x] [AGENT] P0. ✅ **Layer 1 (strategy-service)** — strategy-service@ffa68006da. Operator chose the lazy-values design
+      over literal deployment-scoped filtering (see Progress Log design-fork entry): `ARCHETYPE_ENGINE_REGISTRY` keeps
+      its full, static 32-archetype key set eager (both coverage gates — schema and clients.yaml — keep working
+      completely unchanged, no "assert a positive count" scaffolding needed since the key set is never filtered) but
+      resolves each engine class lazily via a `collections.abc.Mapping` subclass. QG green, functionally verified
+      (resolving one archetype imports only its own family, none of the other 9). Same caveat as Layer 3: `v2/__init__.py`
+      has its own separate, pre-existing eager-import surface unrelated to the 10 family submodules — out of this
+      todo's scope, see Progress Log.
 - [ ] [OPERATOR] P0. **Ruling before layer 2: how far does UAC's `__init__` restructure go?** Splitting
       `registry/__init__.py` and `internal/__init__.py` changes the import surface every repo in the fleet depends on.
       Options are (a) lazy submodule attributes preserving today's public paths, (b) explicit submodule imports with a
@@ -177,6 +182,50 @@ findings introduced (both baselined-warning lines pre-existed, 0 new in each). S
 **execution-service@0576039fa2**, landed on `live-defi-rollout`, `ahead=0` verified post-push. Unrelated local
 `uv.lock` drift (a `google-cloud-monitoring` dependency addition, not from this change) was deliberately left
 untouched and unshipped — not mine to stage.
+
+**2026-08-16 — Layer 1 (strategy-service) design fork, resolved with the operator before implementing.**
+`factory.py`'s todo said "register only the archetypes a deployment declares," but tracing every real consumer
+(`clients_yaml_coverage.py`, `catalog_engine_coverage.py`, `param_schema.py`) showed all three only iterate/`.get()`
+`ARCHETYPE_ENGINE_REGISTRY`'s **keys** for full-catalog coverage checks — none require the values (engine classes)
+except when resolving one specific archetype. `orchestrator.py` likewise only ever resolves one archetype per
+strategy instance via `ArchetypeEngineFactory.build()`. A true deployment-scoped filter (the literal wording) would
+need a "declared archetypes for this deployment" input that doesn't exist anywhere in this fan-out, and would force
+both coverage gates to distinguish "full catalog" from "this deployment's subset" — bigger and riskier than the todo
+implied, mirroring the Layer 3 "smallest fix isn't the real fix" pattern. Operator chose the safer option: keep the
+full, static archetype→engine **key** set eager (both coverage gates and `param_schema.py` keep working completely
+unchanged), resolve each engine **class** lazily on first access via a `collections.abc.Mapping` subclass
+(`_LazyArchetypeEngineRegistry`) backed by a static `archetype -> (module_path, class_name)` table — same shape as
+the Layer 3 fix, just as a Mapping object instead of module-level `__getattr__` since `ARCHETYPE_ENGINE_REGISTRY` is
+an importable identifier, not a module. `__contains__` is overridden explicitly — the default `Mapping` mixin
+implements containment via `__getitem__`, which would silently trigger an import on every `in` check otherwise.
+
+**Verified functionally**: importing `factory.py` alone does not pull in any of the 10 archetype-family submodules
+(`arbitrage_structural`, `carry_and_yield`, `defi_lp`, `event_driven`, `market_making`, `mev`, `ml_directional`,
+`rules_directional`, `stat_arb_pairs`, `vol_trading`); a plain `in` containment check adds none either; resolving one
+archetype (`CARRY_BASIS_PERP`) imports only its own family (`carry_and_yield` + its 12 internal submodules) and none
+of the other 9 families. Key-set count unchanged (32, matches original dict exactly — recomputed key-by-key against
+the pre-change source, not just counted). **Separate, pre-existing finding, out of this todo's scope**: importing
+`strategy_service.engine.strategies.v2.factory` at all first runs `v2/__init__.py` (Python package-import mechanics),
+which itself eagerly imports `orchestrator`, `registry`, `batch_harness`, `archetype_build_registry`,
+`archetype_slot_resolver`, `slot_label`, `shadow_deployment`, `mode_store`, `dust_router_adapter`,
+`leg_controller_adapter`, `strategy_preflight_registry`, and all 5 `archetype_slots_*` modules — none of which are
+among the 10 heavy archetype-family packages this todo targeted, so this fix is NOT functionally negated the way the
+Layer 3 execution-service fix almost was. But same caveat as Layer 3: "Layer 1 done" does not mean "v2 package import
+cost fully fixed" — `v2/__init__.py`'s own eager surface is a distinct, unaddressed concern. Quality gates run before
+shipping; see next entry for result.
+
+**2026-08-16 — Layer 1 shipped.** `bash scripts/quality-gates.sh --no-fix` on strategy-service:
+`✅ ALL QUALITY GATES PASSED (110s)`, sentinel `.qg_last_passed_sha=3bed3e9bfc3af82d3bc88a5bc007985d1fc6ad83`. A
+post-sentinel peripheral-dir ruff warning (28 pre-existing errors in `e2e-testing/scripts/defi/run_dr_drill_cutover.py`,
+unrelated unused-noqa/line-length issues) is informational-only — confirmed by the sentinel being written *before* that
+check runs, not touched by this change. Shipped via
+`quickmerge.sh --agent --files 'strategy_service/engine/strategies/v2/factory.py'` — **strategy-service@ffa68006da**,
+landed on `live-defi-rollout`, `ahead=0` verified post-push. First quickmerge invocation misfired against
+`deployment-service` (the recurring directory-persistence bug — a bash working-directory leftover from an earlier `cd`
+in the session, not an `--files` scoping issue); caught immediately via the printed repo name, no files touched, fixed
+by re-running with an explicit `cd strategy-service &&` prefix. Same pre-existing, not-mine `uv.lock` drift as
+execution-service left untouched. **W1's Layer 1 and Layer 3 are both done; Layer 2 (UAC) remains blocked on the
+open `[OPERATOR]` ruling todo above** — not started, per that todo's explicit gating.
 
 **2026-08-16 — baseline import cost measured (todo 1 done).** Fresh venvs, first import in each process, `sys.modules`
 delta + `time.perf_counter()` wall time. Numbers:
