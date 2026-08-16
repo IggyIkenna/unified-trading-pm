@@ -81,3 +81,11 @@ committing the updated baseline.
   losing them. Filed this issue doc + declared a `qg_red` repo-blocker; not fixing inline (baseline-file ownership
   is PM/gate-infra scope, outside this task's repos) per the repo-blocker protocol in
   `unified-trading-pm/agents/worker.md` § 4b.
+- 2026-08-16 (worker, slot-23, data_engineering): independently hit the same red via a DIFFERENT entry point —
+  `market-tick-data-service`'s own `quality-gates.sh` runs the cross-repo "IS-MTDS CONTRACT INTEGRITY" check, which
+  fails identically (`process_write.py: 6 contract calls < baseline 14`) and blocks Pass-1 QG for an unrelated MTDS
+  commit (`4aa781a2`, a delete-only purge script for `sports_league_legacy_orphan_purge_followup_2026_08_15.md`
+  todo 2). Confirmed on a clean instruments-service tree (no local diff, HEAD=b421ea77, matches this doc's own
+  root-cause). Not re-declaring a duplicate repo-blocker (this doc's is already open); noting here as corroborating
+  evidence that the blast radius extends beyond instruments-service itself to any repo whose QG suite runs this
+  cross-repo check. Confirms this is genuinely fleet-wide, not instruments-service-local.
