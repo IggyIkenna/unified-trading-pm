@@ -229,3 +229,13 @@ RB-04b8981e, 2 unrelated test failures: lending CLI module + Polymarket sentinel
 `/plans/archive/issues/mtds_2_preexisting_qg_failures_2026_08_05.md` + declared blocker.
 
 **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+**2026-08-16 (slot-30, `data_engineering`)** — Rule 2 re-verified live against fresh production data while working
+`sports_satellite_ao_dispatch_batch9-010` (this doc's own 216-residual follow-up). Fixed an OOM bug in
+`dedup_odds_api_poll_key_duplicates_2026_07_26.py` (`market-tick-data-service@56f40811`, bounded chunked future
+submission) surfaced by the corpus growing 275,136→4,240,790 (15.4x) captured `batch_odds_api` cells since this doc's
+2026-07-26 baseline. Live-verified Rule 2 against the named `2022-04-15/PRIMEIRA_LIGA` concentration (13/13 decided, 0
+undecided) and a 50,000-cell corpus sample (6/6 decided, 0 undecided) — 19 objects deduped, 314 rows dropped, 0 write
+errors. Full detail: `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s Progress Log +
+`/plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` (a separate finding surfaced along
+the way — 93.15% of a sampled "captured" cell population resolves to no real GCS object).
