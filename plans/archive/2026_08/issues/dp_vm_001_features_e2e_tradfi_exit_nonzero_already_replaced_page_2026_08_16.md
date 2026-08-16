@@ -18,7 +18,7 @@ summary: >-
   `RUN_TS` — is currently RUNNING: the e2e-check driver (or its scheduling cron) already re-ran this exact shard, so a
   manual relaunch here would also have raced/duplicated a live run even setting the routing question aside. This worker
   did NOT relaunch.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -64,6 +64,12 @@ source: >-
 ---
 
 # DP-VM-001 — features-e2e-tradfi-20260816-015304-1efb38 exit_code=1, non-OOM, page not relaunch (replacement already running)
+
+> **✅ ARCHIVED 2026-08-16** — triage confirms this doc's own recommendation (B: treat as superseded) applies — a
+> same-shard replacement VM (`features-e2e-tradfi-20260816-030150-1efb38`) was already confirmed RUNNING at filing
+> time and no further action was recommended. 0 open todos (doc has no Todos section — page-only, informational), not
+> locked, not superseded by a later doc. No corpus referrers found (`grep -rl` for this filename across `plans/` and
+> `codex/` returns 0 hits), so no referrer fixes needed. Archived per the standard 6-step ritual.
 
 ## What happened
 
