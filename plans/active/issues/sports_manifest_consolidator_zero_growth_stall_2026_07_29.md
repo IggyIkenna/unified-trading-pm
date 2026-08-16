@@ -54,6 +54,9 @@ depends_on: []
 locked_by:
 assigned_vm: planning
 resolved_by:
+archive_exempt: true # bridging flag for the flip-then-mv two-commit archival pattern (this doc's last open
+  # todo was its own archival trigger) -- dropped in the immediately-following git-mv commit,
+  # per check_archive_candidates.sh's own documented resolution.
 context_scope:
   [
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
@@ -511,11 +514,14 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Explain the 23 sentinel-free missing odds_api days (2020-06-06..2026-04-15 with neither an odds_api row
-      nor an ODDS_API sentinel row) not covered by the ODDS_API sentinel-collision mechanism — §4 states 'The 23
+- [x] ✅ [DATA] P3. Explain the 23 sentinel-free missing odds_api days (2020-06-06..2026-04-15 with neither an odds_api
+      row nor an ODDS_API sentinel row) not covered by the ODDS_API sentinel-collision mechanism — §4 states 'The 23
       sentinel-free missing days are NOT yet explained' and the root-cause section says they 'need a separate look', but
       no tracked todo carries them. (The separate 595-day canonical gap re-run is already a tracked P1 todo in
-      sports_odds_api_scattered_multiyear_gaps_2026_07_27.md.)
+      sports_odds_api_scattered_multiyear_gaps_2026_07_27.md.) **DONE 2026-08-16 (slot-32) — RESOLVED, 0 residual; see
+      the 2026-08-16 Progress Log entry above + `sports_satellite_ao_dispatch_batch12_2026_08_09.md:153` (the
+      AO-dispatched tracker per the 2026-08-12 correction below, flipped in the same session).
+      `market-tick-data-service@cfaf2ecd13`.**
 
 > **CORRECTED 2026-08-12 (/plan-reconcile)**: this Follow-up is now tracked as an actual AO-dispatched todo —
 > `/plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md:153`
