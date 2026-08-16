@@ -82,7 +82,16 @@ Phase -1 note on the stale "≤10 parallel" figure below).
 
 ## Contradictions
 
-(in progress)
+1. **P0** `master_data_canonicalisation_migration_catalogue_2026_06_07.md:198` (Gate-State Board, defi row, G4
+   column, `🟢 (applied 2026-06-29)`) vs `:291-296` (WAVE checklist, slot-2 DeFi G4 todo, still `- [ ]` open):
+   "**CORRECTED 2026-08-12 (/plan-reconcile)**: the 'IS v9 migration done' claim above was WRONG... GATE C... still
+   0% v9 on disk... Reopened... NOT ✅ COMPLETE." The board's own header claims "refresh at each gate promotion" but
+   was last refreshed 2026-07-12 — a month BEFORE the 2026-08-12 correction, so it never picked it up. Directly
+   verified both sides myself (read both cited line ranges in full) — genuine, currently-live contradiction (not
+   scope/time-difference: same gate, same AG, the correction explicitly says the earlier claim was wrong). **FIXED**:
+   board cell corrected `🟢 (applied 2026-06-29)` → `🟡 (REOPENED 2026-08-12 -- GATE C still 0% v9 on disk, see
+   slot-2 WAVE item below)`, matching the doc's own 🟡="gated" vocabulary used elsewhere in the same table.
+   `unified-trading-pm@<pending>`.
 
 ## Doc-drift
 
@@ -136,13 +145,38 @@ Phase -1 note on the stale "≤10 parallel" figure below).
    `/api/activity`, not `/messages` — reproduces the known Gap 2 retrieval issue live, see Phase -1 note above).
    Applied: rewrote `/codex/02-data/external-data-always-available-rule.md` step 2 per the drafted text above;
    flipped Item C `[x]` in the 2026-08-10 doc with citation. Left the master_to_live_defi cross-link untouched per
-   the ruling.
+   the ruling. Landed `unified-trading-pm@de9fa73ef8` via `safe-doc-push.sh` (host under heavy churn: 24
+   autostash/safety-snapshot entries, 17s push-slot queue wait — a systemic condition tracked in
+   `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` /
+   `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, not specific to this run). This run's own
+   content verified landed correctly. The foreign-WIP frontmatter edit restored earlier this run (see prior Progress
+   Log entry) was re-stashed by this push's own quarantine cycle — script explicitly flagged it as "recoverable, not
+   destroyed" but warned a blind re-restore now risks reverting a NEWER concurrent edit to the same 2 files (the
+   collision it names). Left stashed rather than risk mis-restoring content outside this run's scope/ownership; not
+   this tranche's work to chase further.
 
 ## Archive candidates (operator review)
 
 1. `plan_reconciler_findings_cross_cutting_2026_08_10.md` — Item C (its last open todo) flipped this run (see Filed
-   #1 / Progress Log below); doc now has 0 open todos, unlocked. ARCHIVE-READY — deferred to later in this run's
-   STEP 5 pass (referrer sweep not yet done).
+   #1 / Progress Log below); doc now has 0 open todos, unlocked. ARCHIVE-READY — 10 referrers found (mix of active +
+   archived docs) — deferred to a consolidated referrer-sweep pass later in this run's STEP 5.
+2. `plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md` — all 3 todos `[x]`, unlocked,
+   `archive_exempt: true` but the exemption is explicitly time-boxed ("keep active through the next plan-reconcile
+   cycle so the operator can review... before archival", filed 2026-08-10) — 6 days and multiple reconcile cycles
+   have since passed (confirmed via Phase -1's own doc listing). ARCHIVE-READY, exemption satisfied — 4 referrers
+   found (all in `plans/archive/**`) — deferred to the same consolidated referrer-sweep pass.
+
+## Hygiene fixes
+
+1. `plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md` — "Carried forward" list (11 items):
+   refreshed against live corpus state — 5 of 11 have since archived (annotated, no longer need retagging), 6 remain
+   active. Also corrected a self-contradiction: the `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` bullet
+   claimed "operator ruling still outstanding" while this SAME doc's own Todos section already showed it RULED
+   2026-08-06 and flipped `[x]` 2026-08-09 — never back-ported to the summary bullet. `unified-trading-pm@<pending>`.
+2. `plans/active/bucket_fold_features_2026_07_17.md` — stale "🟡 MIGRATION IN FLIGHT" banner (since 2026-07-17)
+   corrected to reflect the doc's own 2026-07-26 Progress Log ("Fold A is now 100% closed except..."); only the P3
+   Alias-sunset todo remains open. `related:` frontmatter: fixed 2 non-leading-slash paths + repointed 2 entries that
+   had moved to `plans/archive/2026_07/` (dangling refs). `unified-trading-pm@<pending>`.
 
 ## Refuted (dropped by verify)
 

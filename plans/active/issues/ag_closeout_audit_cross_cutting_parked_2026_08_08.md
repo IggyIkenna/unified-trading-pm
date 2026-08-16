@@ -223,29 +223,49 @@ markdown link (not a bare backtick filename — prettier line-wrap risk per the 
 ## Carried forward from 2026-08-01/04/06/07 — still unretagged (not re-triaged; confirmed via fresh frontmatter grep today)
 
 - **`checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`** — real owner `ao` (per
-  `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` finding 2). Day 8, still `[cross-cutting]`.
+  `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` finding 2). Day 8, still `[cross-cutting]`. **ARCHIVED since
+  (`plans/archive/2026_08/issues/`) — verified 2026-08-16 (plan_reconciler cross-cutting); no longer needs retagging.**
 - **`gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`** — real owner `infrastructure` (08-01
-  finding 4). Day 8, still `[cross-cutting]`.
+  finding 4). Day 8, still `[cross-cutting]`. **Still active as of 2026-08-16 (plan_reconciler cross-cutting
+  re-verify) — retag still not applied.**
 - **`strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`** — genuinely cross-cutting, NOT a mistag;
-  `drift_direction: needs-decision`, operator ruling still outstanding. Day 8, unruled.
+  `drift_direction: needs-decision`, operator ruling still outstanding. Day 8, unruled. **STALE (self-contradiction —
+  corrected 2026-08-16, plan_reconciler cross-cutting): this doc's OWN Todos section (below) and Progress Log already
+  show this was RULED 2026-08-06 (operator, option A) and flipped `[x]` on 2026-08-09 — this bullet was simply never
+  updated to match. The target doc has since ARCHIVED (`plans/archive/2026_08/issues/`).**
 - **`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`** — real owner `ci` (08-07 finding 1). Day
-  3, still `[cross-cutting]`.
+  3, still `[cross-cutting]`. **ARCHIVED since (`plans/archive/2026_08/issues/`) — verified 2026-08-16 (plan_reconciler
+  cross-cutting); no longer needs retagging.**
 - **`deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`** — real owner `ci`/`infrastructure`
-  (08-07 finding 3). Day 3, still `[cross-cutting]`.
+  (08-07 finding 3). Day 3, still `[cross-cutting]`. **Still active as of 2026-08-16 (plan_reconciler cross-cutting
+  re-verify) — retag still not applied.**
 - **`deployment_api_prod_disable_auth_true_2026_08_06.md`** — real owner `ui` (08-07 finding 4). ⚠️ **P1, live
   unauthenticated-prod-endpoint exposure on deployment-api, all 4 fix steps still open, now day 3 unaddressed.**
   Flagging again with the same urgency 08-07 used — this is not a routine mistag, it is a standing security hole.
+  **RETAGGED to `[ui]` + escalated to its own active P0 plan (`deployment_api_unauthenticated_prod_p0_2026_08_10.md`,
+  `assigned_vm: planning`, step 1 shipped) since 2026-08-10 — verified 2026-08-16 (plan_reconciler cross-cutting);
+  properly tracked under its own owning tranche now, no further action needed from cross-cutting.**
 - **`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`** — real owner `ci` (08-07 finding 5). Day 3, still
-  `[cross-cutting]`.
+  `[cross-cutting]`. **ARCHIVED since (`plans/archive/2026_08/issues/`) — verified 2026-08-16 (plan_reconciler
+  cross-cutting); no longer needs retagging.**
 - **`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`** — real owner `ci` (08-07 finding 6).
-  Day 3, still `[cross-cutting]`.
+  Day 3, still `[cross-cutting]`. **ARCHIVED since (`plans/archive/2026_08/issues/`) — verified 2026-08-16
+  (plan_reconciler cross-cutting); no longer needs retagging.**
 - **`shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`** — real owner `infrastructure`, KEEP-NA
-  (operator-direction-gated per 2026-08-04 na-eligibility-audit ruling). Day 5, still `[cross-cutting]`.
+  (operator-direction-gated per 2026-08-04 na-eligibility-audit ruling). Day 5, still `[cross-cutting]`. **Still active
+  as of 2026-08-16 (plan_reconciler cross-cutting re-verify).**
 - **`unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`** — real owner `ui`, very likely already
   resolved on `main` (`unified-trading-system-ui@3c2efb2c`), needs verify-and-archive not a fresh fix. Day 5, still
-  `[cross-cutting]`.
+  `[cross-cutting]`. **Still active as of 2026-08-16 (plan_reconciler cross-cutting re-verify) — the verify-and-archive
+  step this bullet asked for has still not happened.**
 - **`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`** — mistagged `[defi, cross-cutting]`, real owner
-  `ci` or `infrastructure` (ambiguous). Day 7, still dual-tagged.
+  `ci` or `infrastructure` (ambiguous). Day 7, still dual-tagged. **ARCHIVED since (`plans/archive/2026_08/issues/`) —
+  verified 2026-08-16 (plan_reconciler cross-cutting); no longer needs retagging.**
+
+**Refresh (plan_reconciler cross-cutting, 2026-08-16)**: re-verified all 11 carried-forward items against live corpus
+state. 5 of 11 have since archived (no longer need retagging); 6 remain genuinely active/open. The
+`strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` bullet's "unruled"/"outstanding" framing was a real
+self-contradiction against this same doc's own Todos/Progress-Log sections — corrected above.
 
 ## Bonus: linkage ratchet re-measured — gate now PASSES
 
