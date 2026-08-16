@@ -269,6 +269,36 @@ substitution, no HARD-STOP governance area, no new measurement.
       this one wasn't. Not archived here (out of this run's bounded scope — full archival ritual not attempted) —
       good `/archive-candidates-audit` candidate. Not locked, not grace-protected.
 
+## Exit-gate observations (STEP 5, corpus-wide — NOT self-inflicted by this run)
+
+The Phase-5 exit-gate re-run (`run_hygiene_sweep.sh --ci`) found 3 hard failures corpus-wide. Traced each to its root
+cause via the individual checker scripts (`check_reference_paths.py`, `check_ag_closeout_linkage.py`,
+`check_na_corpus_ratchet.py`); none touch a prediction-tranche doc or a file this run edited:
+
+- [ ] [REVIEW] P2. **Reference path convention — 38 dangling refs vs baseline 34 (+4).** All +4 trace to 2 TRADFI docs
+      (`tradfi_consolidated_closeout_2026_07_18.md`, `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`) newly
+      dangling-referencing `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`(+`_finalize`) — a doc that moved/was
+      archived during this run's window by a concurrent (tradfi-tranche) session, the same class of move this run's
+      own moved-doc-referrer hunter fixed for the prediction tranche. The remaining 34 dangling refs (baseline) are
+      pre-existing, scattered across `plans/ai/`, `plans/prompts/`, `plans/audit/results/archive/`, and several
+      `codex/` docs — none prediction-tranche. Not fixed here (tradfi-tranche scope, out of this run's bounds — risk
+      of collision with that tranche's own active work).
+- [ ] [REVIEW] P2. **AG-closeout linkage — 1 new orphan vs baseline 0**:
+      `plans/active/issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md` (`asset_group=[tradfi]`). Not a
+      prediction doc, not fixed here — routed to the tradfi tranche.
+- [ ] [REVIEW] P3. **`assigned_vm:NA` corpus-size ratchet — 454 docs vs baseline 432+20 buffer (+22).** This run
+      contributes exactly **+1** (this findings doc itself, `assigned_vm: NA` per the STEP-2b template — an
+      unavoidable, mandated part of every plan_reconciler run, tranche-sharded or not). The remaining +21 predates or
+      is concurrent with this run — NOT re-attributable to prediction-tranche work. Did not run `--update-baseline`
+      (would misrepresent 21 of 22 new docs as "this run's reviewed exception" when they aren't) — flagging for
+      `/na-eligibility-audit` instead, per the checker's own remedy line.
+
+**Verdict**: this run's OWN tranche work is genuinely hygiene-clean (STEP-1 sweep was 0 hard / 1 soft before any edit;
+every fix this run made was independently re-verified). The 3 exit-gate failures are corpus-wide state at the moment
+of the STEP-5 re-run in an actively multi-agent workspace, not a regression this run caused — holding this run's
+completion hostage to fixing 2 other tranches' concurrent drift would defeat the sharded-run design's own purpose
+(bounded, reliably-finishing shards, per the 2026-08-06 operator ruling this skill already documents).
+
 ## Refuted (dropped by verify)
 
 None — every hunter candidate that reached verification was either confirmed-and-fixed, confirmed-and-flagged (grace
