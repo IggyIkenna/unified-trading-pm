@@ -479,6 +479,14 @@ Condition is now confirmed stable across 7 independent checks (5 full-suite, 2 d
 resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
 hand-wire the venues or edit the SIT ratchet baseline.
 
+**2026-08-16 — still blocked, 8th confirmation, direct-cause recheck (heartbeat).** `execution-service` HEAD unchanged
+at `9af4713c` (no new commits); `grep -rin "karak\|pendle\|symbiotic" defi_adapter.py` = 0 hits, same as every prior
+check; all 3 tracking issue docs still `status: open`. Condition confirmed stable across 8 independent checks (5
+full-suite, 3 direct-cause) spanning the whole session. `unified-api-contracts` still the same 3 uncommitted files,
+`ahead=0`/`behind=0`; `unified-trading-pm` clean at `ahead=0`/`behind=0`. Resume recipe unchanged from the "3rd
+confirmation" entry above. Standing instruction remains in force: do not hand-wire the venues or edit the SIT ratchet
+baseline.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
