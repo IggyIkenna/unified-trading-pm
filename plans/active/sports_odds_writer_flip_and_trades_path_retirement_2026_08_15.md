@@ -112,33 +112,35 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
 
 ## Phase 0 -- code fix (no data touched)
 
-- [ ] [SCRIPT] P1. Register `SOURCE_PRIORITY[("sports", "odds")] = ["odds_api"]` in
-      `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` (lowercase key, placed near the existing
-      `("sports","ODDS")` entry with a comment cross-referencing this plan so the two are never confused again).
-      `get_primary_source`/`has_source_priority` do exact-case dict lookups (confirmed by reading
-      `_source_priority_core.py`) so this is additive and cannot collide with the reserved uppercase key. DoD: a unit
-      test in `unified-api-contracts/tests/unit/test_source_priority.py` asserts
-      `get_primary_source("sports", "odds") == "odds_api"` and that `("sports","ODDS")` is unchanged.
-- [ ] [SCRIPT] P1. Flip both hardcoded `instrument_type=odds/data_type=trades/` literals in
-      `venue_fetch.py::_build_sports_shard_path()` to `instrument_type=odds/data_type=odds/`. Update the function's
-      docstring and any nearby comment referencing "trades" as the shard shape. DoD: `test_venue_fetch*` (whichever test
-      module exercises this function -- confirm current name, don't assume) asserts the new path shape; no test still
-      asserts the old `data_type=trades` shape for this function specifically (cefi/tradfi/prediction `trades` tests are
-      unrelated and MUST NOT change).
-- [ ] [SCRIPT] P1. Sweep the real sports-specific consumers of the old literal (per the 2026-08-12 consumer inventory +
-      this session's own re-check) and update each to read/write/compare against `odds` instead of `trades`:
-      `sports_catalog_reader.py:133` (literal reader query), `rebuild_sports_manifest_v9.py::_source_from_row()`,
-      `sentinels.py::_resolve_pipeline_mode_for_sentinel`, `canonical_writer_stamping.py:82,101`,
-      `canonical_writer_shaping.py:214,248,787`, `dependency_checker.py:910`, deployment-api's
-      `mtds.py:258-259,312,347` + `_schema.py:108`. Confirm MDPS's `bucket_assignment_adapter.py:705` (dual-accepts
-      `trades`/`ODDS`/`TRADES` today) already accepts lowercase `odds` too, or extend it -- state which. DoD: each site
-      cited with its new behavior; a grep for the old literal in sports-scoped (not cefi/tradfi/prediction) code returns
-      zero live (non-historical-migration-script, non-test-fixture) hits.
-- [ ] [SCRIPT] P1. Decide UAC's existing `SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM`/`canonical_sports_odds_data_type()` stub
-      (`league_data.py`, built under P1, documented as deliberately unwired): wire it into the write path this plan is
-      fixing (so future renames route through one helper instead of scattered literals), or confirm this plan's direct
-      literal fixes supersede the need for it and mark the stub for removal -- state which and why. DoD: the decision is
-      recorded in this plan's Progress Log, not left implicit.
+- [x] ✅ [SCRIPT] P1. Register `SOURCE_PRIORITY[("sports", "odds")] = ["odds_api"]` — **unified-api-contracts@191321eae6**
+      (registered in `_source_priority_table.py`, the post-split location of the former `_source_priority_data.py`;
+      confirmed exact-case dict lookup means no collision with the reserved uppercase `("sports","ODDS")` key). Unit
+      test `test_sports_lowercase_odds_is_odds_api_owned_and_distinct_from_uppercase_odds` added to
+      `tests/unit/test_source_priority.py`, same commit.
+- [x] ✅ [SCRIPT] P1. Flip both hardcoded `instrument_type=odds/data_type=trades/` literals in
+      `venue_fetch.py::_build_sports_shard_path()` to `data_type=odds`, plus the live-mode twin
+      (`live/_sports_tick_path.py::sports_live_tick_blob_path`), the manifest-finalize sports discriminator, and 6
+      sentinel-emission sites — **market-tick-data-service@28e2eb36** (landed independently by an AO worker mid-session;
+      confirmed byte-identical to this session's own derivation before adopting it rather than duplicating).
+- [x] ✅ [SCRIPT] P1. Swept the real sports-specific consumers: `sports_catalog_reader.py:133`,
+      `rebuild_sports_manifest_v9.py::_source_from_row()` (kept `"trades"` alongside new `"odds"` — historical rows
+      still need it pre-Phase-3-delete), plus the 28e2eb36 commit's sentinels/manifest_finalize/venue_fetch/
+      live-writer sites. deployment-api's `mtds.py` (`_SPORTS_ODDS_DATA_TYPE` constant + docstrings) and `_schema.py`
+      (added `"odds": "odds"` identity entry alongside the `"trades": "odds"` historical entry) — shipping next.
+      `canonical_writer_stamping.py`/`canonical_writer_shaping.py`/`dependency_checker.py`/
+      `bucket_assignment_adapter.py:705` (all in `market-data-processing-service`) CONFIRMED via direct read to
+      already dual-accept `odds`/`trades` correctly — zero code changes needed there (one entry,
+      `_DATA_TYPE_TO_MDPS_PREFIX["trades"]="ohlcv"`, was actually a latent cross-asset-group bug for sports pre-flip,
+      incidentally fixed by this plan since sports now routes through the pre-existing separate `"odds"` entry
+      instead). Grep for the old literal in sports-scoped code confirmed zero live hits outside the historical
+      2026-08-12/13 migration scripts (out of scope by design).
+- [x] ✅ [SCRIPT] P1. Decision: kept `SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM`/`canonical_sports_odds_data_type()`
+      (`league_data.py`) as-is, NOT wired into the write path. Every site fixed above is a plain, locally-obvious
+      string comparison matching that site's existing style; routing ~10 call sites across 6 modules through a shared
+      cross-cutting helper would be a real refactor this plan's DoD doesn't require — the direct literal fixes already
+      achieve full correctness. The helper remains legitimately useful for future readers/migration tooling
+      normalizing mixed-vocabulary historical data (trades/ODDS/odds all present in the corpus until Phase 3), so it
+      is not marked for removal either.
 
 ## Phase 1 -- redeploy + verify (no regression)
 
