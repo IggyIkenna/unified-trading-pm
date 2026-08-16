@@ -168,3 +168,22 @@ low today; it could be worse in cells/days not sampled.
   backmerge automation, a launch that fails on tarball-freshness mid-race is not necessarily a bug — check
   whether the source repo's HEAD was actively moving during the launch window before assuming the launcher is
   broken; a bare retry after confirming HEAD stability resolved it here with zero code changes needed.
+- **2026-08-16 (slot-23)**: That dry-run VM ran cleanly for ~2263 corpus-days but crashed at day 669/2263
+  (2022-04-05) with `TypeError: Expected numeric dtype, got object instead` inside `_dup_mask`'s
+  `keys[c].round(6)`. Root cause: h2h/moneyline cells (no spread) write their `point` column as entirely
+  `None`, which pyarrow types `null()` rather than `double` — `to_pandas()` surfaces that as an `object`-dtype
+  pandas column, which `.round()` rejects outright. Confirmed via direct inspection (zero non-null values in
+  every affected cell, e.g. `day=2022-04-05/venue=BETVICTOR/league_id=BUNDESLIGA_2` and 12 siblings that same
+  day alone) that this is a legitimate all-null column, not data corruption — so
+  `pd.to_numeric(keys[c], errors="coerce")` ahead of `.round()` is a safe, exact fix (nothing real can hide
+  behind a coercion when there are no non-null values to begin with). The identical bug exists verbatim in the
+  already-shipped, already-completed bounded script
+  (`backfill_dedup_canonical_odds_api_sampled_cells_2026_08_16.py`, todo 3) — its 40-day evenly-spaced sample
+  simply never happened to land on a cell with this column shape, so it never surfaced there; left unpatched
+  since that script already ran to completion and is slated for deletion when this doc closes. Fix shipped as
+  `market-tick-data-service@ed0c4372d2` (full quality-gates green, 42s). VM self-deleted per
+  `VM_SHUTDOWN_ON_COMPLETION=true` after the crash (no orphan cost). Relaunched a clean dry-run from the floor
+  date (no partial-resume stitching — this was read-only, nothing to preserve) on-demand:
+  `canonical-migration-sports-odds-dedup-20260816-145835`, tarball confirmed fresh at `mtds@ed0c4372d204`,
+  RUNNING as of this entry. Step 3 continues; step 4 (read totals, sanity-check) still pending this run's
+  terminal state.
