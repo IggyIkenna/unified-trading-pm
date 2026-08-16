@@ -235,20 +235,39 @@ Split the 1,814 objects into the two classes above and resolve each:
   parameter directly on the long-running command — no `nohup`/`&` wrapper — which keeps the process correctly
   parented and exempt from the orphan sweep, per that doc's already-shipped `worker.md` guidance (which this session
   should have followed from the start). Idempotency (proven safe twice now) again makes the relaunch zero-cost.
+- **2026-08-16 (slot-23, continuation 5) — run3 completed 280/280, exit 0** (harness task `bz44854ny`, native
+  `run_in_background: true`, never touched by `orphan_reap`). Own totals: `cells_written=13331,
+  cells_skipped_no_new_keys=21342, cells_created=0, rows_added=356092`. **Sanity-check against the dry-run baseline**:
+  summed `rows_added` across all three runs' report jsonls (run1 89 days=49,293 + run2 113 days=22,486 + run3 280
+  days=356,092) = **427,871 cumulative, vs the dry-run's 428,933** — a 1,062-row (0.25%) gap. Checked for a real
+  problem: zero WARN/ERROR/guard-refusal lines in run3's log, zero `error`/`skipped`/non-ok `status` fields in any of
+  the three report jsonls, `rows_added` computed by the identical code path (`rep.rows_added += new_keys`) in dry-run
+  and apply — ruled out a script defect. Most plausible explanation: canonical `batch_odds_api` continued receiving
+  normal live writes in the ~40min between the dry-run and run3 finishing, so a small number of keys that were "new"
+  at dry-run time had already landed in canonical by apply time and were correctly skipped
+  (`cells_skipped_no_new_keys`) rather than double-written — this is the merge-never-overwrite guarantee working as
+  designed, not data loss. `cells_created=0` throughout confirms no spurious new objects. Proceeding on this basis.
+  Launched the post-apply re-verify (read-only) as harness task `bt03cyvxr`, same native `run_in_background: true`
+  pattern: `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report
+  /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16_postfold.jsonl` (new report filename,
+  distinct from the pre-fold baseline at `/tmp/verify_report_2026_08_16.jsonl` — that file is left untouched as the
+  dry-run-time record).
 
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
 | Regenerate verify-report: `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16.jsonl` (read-only, **no** `--apply`/`--confirm-prod-delete`) | **Done 2026-08-16 (slot-23)** — 280/280 lines, all `disposition=no-migrate-first` (matched_rows=7,478,332, unmatched_rows=437,005, bare_rows=7,915,337) | — |
-| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16_run3.jsonl` | **In progress (run3, harness-backgrounded task `bz44854ny`)** — run1 (PID 3435671, 89/280) and run2 (PID 3600518, 113/280) both died to `orphan_reap` (root cause now confirmed — `nohup … &` anti-pattern, see Progress Log); run3 launched via the harness's native `run_in_background: true` (no `nohup`), which is exempt from the sweep. Sanity-check run3's final totals against the dry-run's (`rows_added=428,933`, `cells_created=0`) once it reaches 280/280. | The apply write's own completion |
-| Post-apply re-verify the 280 days now resolve `fully_redundant` | Not done | The `--apply` run above completing |
-| Purge the newly-redundant bare objects (mirror `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`'s §3a pattern: fresh `gcs_bucket_soft_delete_retention_seconds >= 604800` check same-run, `--confirm-prod-delete`) | Not done | The post-apply re-verify above |
+| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16_run3.jsonl` | **Done 2026-08-16 (slot-23)** — run3 (harness task `bz44854ny`) reached 280/280, exit 0. Cumulative `rows_added` across all 3 runs = 427,871 vs dry-run baseline 428,933 (0.25% gap, reconciled — see Progress Log, explained by ongoing live canonical writes between dry-run and apply, no errors/guard-refusals). | — |
+| Post-apply re-verify the 280 days now resolve `fully_redundant` | **In progress (harness task `bt03cyvxr`, native `run_in_background: true`)** — read-only, writes `/tmp/verify_report_2026_08_16_postfold.jsonl`. Expect all 280 days `disposition=fully_redundant`. | The re-verify's own completion |
+| Purge the newly-redundant bare objects (mirror `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`'s §3a pattern: fresh `gcs_bucket_soft_delete_retention_seconds >= 604800` check same-run, `--confirm-prod-delete`) — invoke as `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py --verify-report /tmp/verify_report_2026_08_16_postfold.jsonl --apply --confirm-prod-delete` | Not done | The post-apply re-verify above confirming 280/280 `fully_redundant` |
 | Flip this todo `[x]` with the purge script's SHA + object/byte counts, then archive this doc (last open item) | Not done | The purge above |
 | `sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md` todo 1 ("Scope the duplication") | Not done, independently pickup-able | Nothing — unrelated to this chain |
 
-**Recommended next item**: let run3 (harness task `bz44854ny`, native `run_in_background: true`, no `nohup`) finish —
-do not manually re-poll beyond an armed watchdog notification or an explicit operator status request, per the
-async-wait/poll-discipline HARD RULE. On completion,
-sanity-check its final report against the dry-run's totals, then proceed straight to the post-apply re-verify pass,
-each step still standalone (never combine apply+purge in one process, per the same host lesson as above).
+**Recommended next item**: let the post-apply re-verify (harness task `bt03cyvxr`, native `run_in_background: true`,
+no `nohup`) finish — do not manually re-poll beyond an armed watchdog notification or an explicit operator status
+request, per the async-wait/poll-discipline HARD RULE. On completion, confirm all 280 days show
+`disposition=fully_redundant` (any `has_unique_content` day is a stop-and-investigate signal, not something to paper
+over), then run the purge script standalone against `/tmp/verify_report_2026_08_16_postfold.jsonl` — never combine
+apply+purge in one process, per the same host lesson as above (the purge script exists specifically because combining
+verify+delete in one long process is what got killed three times on 2026-08-16, per its own docstring).
