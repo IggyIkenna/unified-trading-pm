@@ -146,3 +146,14 @@ adapter, and the live WS connectors' correct `BLOCKED-CREDENTIALS` status) — c
 duplicated. Exactly 2 genuinely new gaps: 4 venues (BOVADA/NOVIG/PROPHETX/UNIBET_EU) with no stated exclusion
 reason, and MATCHBOOK having real execution wiring but no transfer rail (same class as the prediction batch's
 KALSHI finding).
+
+**2026-08-16 — re-checked the steps-6-8 gate, still blocked, no change.** Dispatched against this plan's "Steps
+6-8 per unit" P0 todo, whose done-when is "re-check once the archetype-declaration backlog moves." Re-ran
+`unified-api-contracts/scripts/generate_venue_work_list.py --csv` live (not a cached snapshot — the script's own
+docstring warns the archetype-declared/undeclared split moves fast) and confirmed all 31 sports rows still show
+`archetype_consumers=NONE` — identical to the 2026-08-16 sweep above, zero movement. No archetype has declared
+needing raw `odds` data, so steps 6-8 remain undispatchable for the whole AG. Searched
+`unified-trading-pm/plans/active/` for a plan that owns/drives the archetype-declaration backlog itself (the thing
+this todo is waiting on) — none exists; only this plan and `tradfi_venue_e2e_batch1_2026_08_16.md` cite the
+condition, neither drives it. No ETA available. Skipping this task with `reason_code: GATED` (no code shipped —
+correctly nothing to ship while blocked) rather than fabricating work or falsely flipping the checkbox.
