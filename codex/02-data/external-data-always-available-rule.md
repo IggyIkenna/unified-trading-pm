@@ -61,14 +61,22 @@ Every one of these is a violation if it leads to scope removal:
 1. **Build the adapter scaffold anyway.** Schema + UAC contract + auth shape + retry/backoff/rate-limit semantics +
    error classification (`classify_venue_error()`) + manifest emission per writegate Phase 6.x. Unit tests against mocks
    (per docs). Integration tests marked `@pytest.mark.requires_credentials` + skipped by default.
-2. **File a `pings/slot_<N>.md` operator-credential request** with exact shape:
+2. **File a credential request via `POST /api/slots/<N>/blocked`** (the ping-file mechanism — `pings/slot_<N>.md` —
+   was RETIRED; file-based orchestration was replaced by the agent-orchestrator HTTP surface, see
+   `unified-trading-pm/agents/RULES.md` § 6). Use the standard escalation shape (options + a marked recommendation,
+   per `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` § "When escalating a question to the operator"):
    ```
-   CREDENTIAL APPROVAL REQUEST — <adapter_name>
-   Vendor: <name + tier + cost estimate>
-   What I need: <API key | OAuth flow | account email + signup | hardware-2FA setup>
-   Account to use: <existing operator email | new account needed>
-   Unblocks: <list of asset_group × archetype combos + which May-23 gate>
-   Without it: integration tests skip; unit + scaffold ship + adapter is dormant
+   {
+     "task_id": "<dispatch_id>",
+     "question": "CREDENTIAL APPROVAL REQUEST — <adapter_name>. Vendor: <name + tier + cost estimate>. What I need:
+       <API key | OAuth flow | account email + signup | hardware-2FA setup>. Account to use: <existing operator
+       email | new account needed>. Unblocks: <asset_group × archetype combos + which gate>. Without it:
+       integration tests skip; unit + scaffold ship + adapter is dormant.",
+     "options": ["A: approve — <shortest safe path> [WORKER REC]", "B: use an alternative vendor: <name>"],
+     "recommendation": "A",
+     "can_continue": true,
+     "continue_on": "<what proceeds while waiting>"
+   }
    ```
 3. **Adapter stays ON the live list.** Status = `BLOCKED-CREDENTIALS`, NOT `DEFERRED` and NOT `POST-CUTOVER`. Plan-flip
    is `- [ ] [BLOCKED-CREDENTIALS — pinging operator]` not a checkbox flip.

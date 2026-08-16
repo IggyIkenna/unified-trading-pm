@@ -306,8 +306,15 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md:311` P2.1b `[x]` DONE), cross-linking
       `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` for the still-separately-open residual
       `storage.admin` drift. `unified-trading-pm@<pending local commit>`.
-- [ ] [DOC] P2. **Item C — rewrite `/codex/02-data/external-data-always-available-rule.md`** — prescribes a RETIRED
-      ping-file mechanism plus a stale cross-link to an archived doc; needs a multi-part rewrite.
+- [x] ✅ [DOC] P2. **Item C — rewrite `/codex/02-data/external-data-always-available-rule.md`** — prescribes a
+      RETIRED ping-file mechanism plus a stale cross-link to an archived doc; needs a multi-part rewrite. —
+      **DONE 2026-08-16** (plan_reconciler, cross-cutting tranche, agt-3cc834, operator-ruled via `BLK-a8e6b715`
+      option A): step 2 rewritten from the retired `pings/slot_<N>.md` mechanism to `POST /api/slots/<N>/blocked`
+      (confirmed retired per `agents/RULES.md` § 6). The doc's second claim (a stale cross-link to an archived doc)
+      could NOT be independently reproduced this run — the doc's only cross-link, `master_to_live_defi_2026_05_23.md`,
+      still resolves to an active (non-archived) file — left as-is per the operator's ruling. This doc now has 0 open
+      todos — archive-ready, see the 2026-08-16 cross-cutting findings doc's Archive candidates section.
+      `unified-trading-pm@<pending>`.
 - [x] ✅ [OPERATOR] P2. **Item D — rewrite `plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
       open `[OPERATOR]` re-install todo** (line 491) — its literal instructions now hard-fail (the script it names moved
       to `systemd --user`, refuses `sudo`), and its "not-live" premises are contradicted by dated evidence elsewhere in

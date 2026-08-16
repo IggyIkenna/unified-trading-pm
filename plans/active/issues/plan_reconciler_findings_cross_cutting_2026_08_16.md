@@ -98,11 +98,51 @@ Phase -1 note on the stale "≤10 parallel" figure below).
 
 ## Filed
 
-(in progress)
+1. **Item C from `plan_reconciler_findings_cross_cutting_2026_08_10.md`** —
+   `/codex/02-data/external-data-always-available-rule.md` step 2 (lines 64-72) still prescribes filing a
+   `pings/slot_<N>.md` operator-credential request. **Confirmed stale**: `unified-trading-pm/agents/RULES.md` § 6
+   ("Orchestrator HTTP surface — what you do NOT do anymore") explicitly states file-based orchestration
+   (`pings/slot_<N>.md`) was REPLACED by the HTTP surface — `POST /api/slots/<N>/blocked` is the current mechanism
+   (used live by this very run). **[WORKER REC] concrete replacement for step 2**:
+
+   ```
+   2. **File a credential request via `POST /api/slots/<N>/blocked`** (the ping-file mechanism -- `pings/slot_<N>.md`
+      -- was RETIRED; file-based orchestration was replaced by the agent-orchestrator HTTP surface, see
+      `unified-trading-pm/agents/RULES.md` § 6). Use the standard escalation shape (options + a marked
+      recommendation, per `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` § "When escalating a question to the
+      operator"):
+      ```
+      {
+        "task_id": "<dispatch_id>",
+        "question": "CREDENTIAL APPROVAL REQUEST -- <adapter_name>. Vendor: <name + tier + cost estimate>. What I
+          need: <API key | OAuth flow | account email + signup | hardware-2FA setup>. Account to use: <existing
+          operator email | new account needed>. Unblocks: <asset_group x archetype combos + which gate>. Without
+          it: integration tests skip; unit + scaffold ship + adapter is dormant.",
+        "options": ["A: approve -- <shortest safe path> [WORKER REC]", "B: use an alternative vendor: <name>"],
+        "recommendation": "A",
+        "can_continue": true,
+        "continue_on": "<what proceeds while waiting>"
+      }
+      ```
+   ```
+
+   **NOT independently confirmed this run**: Item C's second claim (a "stale cross-link to an archived doc") — the
+   only cross-link in the current doc body is `master_to_live_defi_2026_05_23.md` (line 75), which this run's own
+   STEP 1 observed as still `plans/active/` (a grace-window plan, not archived). Not proposing a fix for this half
+   without independent confirmation — routing as-is via `/blocked` for the operator to confirm/correct.
+   Multi-part (mechanism rewrite + an unconfirmed second claim) — does not qualify for the STEP-5.f2 mechanical
+   carve-out, routed via `/blocked` per Modes § Calibration ("blast radius" gate on any codex/CLAUDE.md edit, applies
+   regardless of trust mode). **RESOLVED 2026-08-16T18:04Z**: operator answered `BLK-a8e6b715` = **A** (via
+   `/api/activity`, not `/messages` — reproduces the known Gap 2 retrieval issue live, see Phase -1 note above).
+   Applied: rewrote `/codex/02-data/external-data-always-available-rule.md` step 2 per the drafted text above;
+   flipped Item C `[x]` in the 2026-08-10 doc with citation. Left the master_to_live_defi cross-link untouched per
+   the ruling.
 
 ## Archive candidates (operator review)
 
-(none yet)
+1. `plan_reconciler_findings_cross_cutting_2026_08_10.md` — Item C (its last open todo) flipped this run (see Filed
+   #1 / Progress Log below); doc now has 0 open todos, unlocked. ARCHIVE-READY — deferred to later in this run's
+   STEP 5 pass (referrer sweep not yet done).
 
 ## Refuted (dropped by verify)
 
@@ -128,3 +168,15 @@ Progress Log as it proceeds.
   cross-cutting 2026-08-10 doc, 2 live infra gaps + 1 stale-lock-mechanism note absorbed as run-conduct context, 1
   parallel-cap doc-drift flagged. Tranche inventory: 150 docs, 36 grace, 114 workable. Bin-packed into 10 batches.
   About to launch Wave 1 (5 batch hunters).
+- **2026-08-16T17:46Z (lock commit landed + near-miss recovered)**: `unified-trading-pm@08a5cfe934` (this doc) landed
+  via `scripts/dev/safe-doc-push.sh` under heavy fleet churn (branch moved twice in ~90s; the script's own
+  contention-hardening handled it after 2 plain-git attempts failed on branch-drift). The push run reported exit 9
+  (orphaned prek patch, a documented near-miss class per
+  `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`): a patch containing a DIFFERENT slot's
+  small in-progress edit (`drift_direction`/`depends_on` frontmatter additions to
+  `plan_reconciler_findings_prediction_2026_08_16.md` and `prosewrap_padding_baseline_climbing_recheck_2026_08_16.md`
+  — neither owned by this run) had not been restored to the working tree after this run's own prek hook cycle.
+  Verified `git status --porcelain` was otherwise clean (this run's own content intact), then `git apply --check` +
+  `git apply` restored the foreign patch to the working tree only (left uncommitted, unstaged — not this run's work
+  to commit), then removed the now-applied patch file. No content lost; flagging as a live recurrence of the known
+  class for whoever next reads that tracked issue doc.
