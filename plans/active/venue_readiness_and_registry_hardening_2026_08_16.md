@@ -399,3 +399,21 @@ archetype to feature_groups" checkbox above with the resulting `unified-api-cont
 gone (a different session's checkout, or this slot's working tree was reset), this entry has the full design to
 redo it without re-running the archetype research — the 5-archetype mapping + citations above is the complete
 answer, not just a pointer.
+
+**2026-08-16 — still blocked, 3rd confirmation, NOT a stale race.** Post-compact re-check: the committed baseline
+JSON on disk (`unified-api-contracts@88a71f8e`) currently reads `unreachable_defi_venues: ["morpho", "kamino"]`
+only — karak/pendle/symbiotic look cleared from a snapshot read. A direct standalone re-run of
+`tests/test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`
+(not a snapshot read — the actual invariant) shows they are **not** cleared:
+`new_regressions=['karak', 'pendle', 'symbiotic']`. Cross-checked against both open issue docs
+(`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`,
+`symbiotic_venue_onboarding_2026_08_16.md`) — both still carry their `- [ ]` (unchecked) P0 "wire
+Symbiotic/karak/pendle into DeFiAdapter's real dispatch" todos, consistent with the live measurement, not with the
+baseline file's snapshot. The baseline file's own description already documents this exact flip-flop happening
+twice earlier today under a concurrent session's active DeFiAdapter dispatch work and says to trust a fresh
+re-run over its own prose — this is that fresh re-run, and it confirms the gap is still open. Not retrying
+quickmerge a 3rd time against the same root cause; this is someone else's in-flight work
+(execution-service DeFiAdapter dispatch wiring), not a defect in the 3 archetype-feature-groups files. **Resume**:
+before the next quickmerge attempt, re-run the invariant test standalone first (not just a baseline-file read) —
+`cd unified-api-contracts && .venv/bin/python -m pytest tests/test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions -v`
+— only proceed to `quickmerge.sh` once that passes standalone.
