@@ -212,7 +212,7 @@ had already run. Treat every todo below as net-new work, not a resume.
       operator-side diagnosis**: check the key's status on the build.nvidia.com dashboard — whether it needs an
       activation step, or whether it's an NGC-catalog key rather than a Build-inference key (NVIDIA has more than
       one key flavor; only a Build/integrate-scoped key works against this endpoint).
-- [ ] [INFRA] P1. Determine both vendors' native API shape and pick the integration pattern: Moonshot's API is
+- [x] [INFRA] P1. ✅ Determine both vendors' native API shape and pick the integration pattern: Moonshot's API is
       OpenAI-chat-completions-shaped (needs the same LiteLLM Anthropic-passthrough proxy pattern as Grok/Gemini,
       `grok_gemini_translation_proxy_2026_08_14.md`) unless live testing finds otherwise; NVIDIA NIM's endpoint is
       explicitly OpenAI-compatible per the operator's relayed note, same expected pattern. Confirm whether the
@@ -221,20 +221,34 @@ had already run. Treat every todo below as net-new work, not a resume.
       are reachable through a proxy and a real end-to-end smoke test (a `claude` subprocess pointed at the proxy)
       returns a real completion.
 
-      **Progress 2026-08-16 — pattern confirmed, routing NOT yet proven end-to-end.** Both providers added to the
-      EXISTING `config/litellm/grok_gemini_proxy.yaml` `model_list` (`agent-orchestrator@6ede4312cb`) — no second
-      proxy instance needed, confirmed. `MOONSHOT_API_KEY`/`NVIDIA_API_KEY` added to the VM's `.env.local`, proxy
-      restarted (`litellm-grok-gemini-proxy`, active), **Grok + Gemini regression-checked and confirmed still
-      working post-restart** (`grok-4.3` and `gemini-3.5-flash-lite-proj1` both real `200` through the proxy —
-      no collateral damage from the shared-service restart). But the two NEW models both failed a real end-to-end
-      smoke test THROUGH the proxy (distinct from the earlier direct-API smoke tests, which had succeeded):
-      **Kimi (`kimi-k2.6`)**: `403 {"message":"The API you are accessing is not open","type":"permission_denied_error"}`
-      from Moonshot itself — an account/key permission-scope issue on Moonshot's side (the pay-as-you-go key may
-      lack access to this model, or need a separate enablement step), not a proxy bug. **DiffusionGemma**: `404`
-      through the proxy, even though the SAME model returned a real `200` on a direct raw API call earlier — points
-      at a LiteLLM routing bug with the nested-slash model id (`openai/google/diffusiongemma-26b-a4b-it`), not an
-      NVIDIA-side problem. Neither is fixed yet — this todo stays open until a real completion comes back through
-      the proxy for at least one Kimi model and DiffusionGemma.
+      **DONE 2026-08-16.** Both providers added to the EXISTING `config/litellm/grok_gemini_proxy.yaml` `model_list`
+      — no second proxy instance needed, confirmed. First attempt (`agent-orchestrator@6ede4312cb`) used the generic
+      `openai/<model>` bridge and both new models failed a real through-proxy smoke test (a DIFFERENT, more
+      revealing failure than the earlier direct-API tests, which had succeeded): Kimi got a real `403
+      "The API you are accessing is not open"` from Moonshot; DiffusionGemma got a real `404`. **Root cause found
+      via the proxy's own traceback, not guessed**: `openai/<model>` silently routes `/v1/messages` through
+      LiteLLM's experimental Anthropic-Messages-to-Responses-API bridge (`litellm.aresponses`), which POSTs to
+      `{api_base}/responses` — confirmed by the DiffusionGemma traceback's exact failing URL,
+      `https://integrate.api.nvidia.com/v1/responses`. Neither vendor implements OpenAI's newer Responses API, only
+      classic chat completions — NVIDIA returns a clean `404` for the unknown route, Moonshot's gateway recognizes
+      but rejects the endpoint class as `403 permission_denied`. **Fix** (`agent-orchestrator@e31f569c46`):
+      LiteLLM 1.97.0 ships DEDICATED `moonshot` and `nvidia_nim` provider modules (auto-detected from
+      `api.moonshot.ai/v1` / `integrate.api.nvidia.com/v1` in its own `get_llm_provider_logic.py`) that use the real
+      chat-completions path — switched `litellm_params.model` from `openai/kimi-k2.6` etc. to `moonshot/kimi-k2.6`
+      etc., and `openai/google/diffusiongemma-26b-a4b-it` to `nvidia_nim/google/diffusiongemma-26b-a4b-it`. **Real
+      end-to-end verification, same day**: after redeploying (VM pulled the fix, `litellm-grok-gemini-proxy`
+      restarted), a real `/v1/messages` call through the actual proxy returned genuine Anthropic-shaped completions
+      for `kimi-k2.6` (with a visible `thinking` block — confirms the reasoning-mode gotcha from earlier is real and
+      user-visible), `diffusiongemma-26b-a4b-it`, and `gemma-4-31b-it` (see below) — all three "proxy smoke test OK".
+      **Grok + Gemini regression-checked TWICE across both restarts and confirmed unaffected both times**
+      (`grok-4.3`/`gemini-3.5-flash-lite-proj1` real `200`s) — no collateral damage from the shared-service restarts.
+
+      **`google/gemma-4-31b-it`, separately resolved same day**: the original 30s-timeout hang was retested with a
+      90s timeout and came back a real `200` with `nvcf-status: fulfilled` — NVIDIA Cloud Function cold-start
+      latency on first invocation, not a dead/broken model. Registered (`agent-orchestrator@743eb681fd`) and
+      confirmed working through the proxy in the same final verification pass above — all 3 new models
+      (`kimi-k2.6`, `diffusiongemma-26b-a4b-it`, `gemma-4-31b-it`) now proven with real completions through the
+      real proxy, exceeding this todo's original "at least one Kimi model and DiffusionGemma" bar.
 - [x] [SCRIPT] P1. ✅ Register `kimi` and `nvidia` in `AccountProvider` (`server/accounts.py`), add real `RateCard`
       entries in `model_pricing.py` using the numbers from the two live-verify todos above, and wire dispatch
       eligibility into `autospawn.py`/`select_account_for_spawn()` — reuse the Gemini per-project-headroom-gate
@@ -244,18 +258,19 @@ had already run. Treat every todo below as net-new work, not a resume.
       section. Done when: `load_accounts()` parses both new accounts without error and dispatch correctly skips them
       while paused (verified by a real spawn attempt that falls through to the next eligible provider).
 
-      **DONE 2026-08-16** — `AccountProvider`/`RateCard` shipped `agent-orchestrator@6ede4312cb` (QG green: 3995
-      pytest passed, dashboard tsc/vitest clean). 4 accounts registered in the live VM `data/config/accounts.json`
-      (`kimi-k3`, `kimi-k2-6`, `kimi-k2-7-code`, `nvidia-diffusiongemma`) — k2.5 and `gemma-4-31b-it` deliberately
-      NOT registered per the live-verify todos' findings. Orchestrator restarted to sync the new `AccountRow`
-      entries, then all 4 confirmed **`"status":"disabled"`** via the real `POST /api/accounts/{id}/disable`
-      endpoint (`disable_account()`, not a raw SQL write) — `last_used_at: null` on all 4 confirms nothing dispatched
-      to them in the brief window before pausing. Labels deliberately carry no "Claude" branding (operator
-      instruction, 2026-08-16) — e.g. "Kimi K3 (Moonshot, via LiteLLM proxy)", not anything Claude-branded; this is
-      also structurally guaranteed by `effective_model_for_telemetry()`'s existing `{provider}-{variant}` override
-      for any non-`anthropic` provider. Per-model gate wiring (the `gemini_headroom.py`-style piece) is NOT done —
-      deferred to the concurrency-measurement todo below, since neither model's real rate/concurrency ceiling is
-      known yet to gate on.
+      **DONE 2026-08-16** — `AccountProvider`/`RateCard` shipped `agent-orchestrator@6ede4312cb`. 5 accounts
+      registered in the live VM `data/config/accounts.json` (`kimi-k3`, `kimi-k2-6`, `kimi-k2-7-code`,
+      `nvidia-diffusiongemma`, `nvidia-gemma-4-31b-it` — the last added in a same-day follow-up once its earlier
+      "hang" was proven to be cold-start latency, not a dead model, `agent-orchestrator@743eb681fd`) — k2.5
+      deliberately NOT registered, confirmed retired. Orchestrator restarted (twice, once per follow-up) to sync
+      the new `AccountRow` entries, all 5 confirmed **`"status":"disabled"`** via the real `POST
+      /api/accounts/{id}/disable` endpoint (`disable_account()`, not a raw SQL write) — `last_used_at: null` on
+      every one confirms nothing dispatched to them in the brief window before pausing. Labels deliberately carry
+      no "Claude" branding (operator instruction, 2026-08-16) — e.g. "Kimi K3 (Moonshot, via LiteLLM proxy)", not
+      anything Claude-branded; this is also structurally guaranteed by `effective_model_for_telemetry()`'s existing
+      `{provider}-{variant}` override for any non-`anthropic` provider. Per-model gate wiring (the
+      `gemini_headroom.py`-style piece) is NOT done — deferred to the concurrency-measurement todo below, since no
+      model's real rate/concurrency ceiling is known yet to gate on.
 - [ ] [REVIEW] P2. Wallet/balance reconciliation for both: Moonshot (metered $, confirm whether it exposes a
       balance/usage-read endpoint the way DeepSeek's `/user/balance` and Grok's `management-api.x.ai` do, or whether
       it needs the DeepSeek-style "available-balance-only" design already built) and NVIDIA NIM (free tier — likely
