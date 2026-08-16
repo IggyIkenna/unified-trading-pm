@@ -449,3 +449,4 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole item gated by dated operator
   ruling BLK-e5571ccf (2026-07-14, issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md,
   status: resolved); step 1 of 3 now has a live AO-dispatch path (batch13 todo 2) but steps 2-3 remain un-authorized.
+- **na-eligibility-audit 2026-08-16** [body-hash:97979de97c852aab]: KEEP-NA, valid — 7-todo plan, 6/7 done with hard commit-sha evidence (including two premise-corrections and a caught backlog-vs-plan-doc tracking discrepancy).

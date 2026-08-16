@@ -265,3 +265,4 @@ exposed to this class before the veto shipped.
   was independently RESOLVED 2026-08-08 (round5 note above; routine deployment-api build cadence picked up the fix), so
   the only open checkbox is item 3 (`[SCRIPT] P3`, time-gated serial-console capture, non-blocking). All other items
   `[x]`; no further action pending.
+- **na-eligibility-audit 2026-08-16** [body-hash:6844ea10790869b0]: KEEP-NA, valid — Full end-to-end read (268 lines, single Read, no offset) confirms exactly 1 real open todo, matching both the Phase-0 machine-count and my own grep.

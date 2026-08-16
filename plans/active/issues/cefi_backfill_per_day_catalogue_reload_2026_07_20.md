@@ -190,3 +190,4 @@ This profiling run was strictly read-only: zero code changes, zero GCS/manifest 
   retired" ruling (`unified-trading-pm@e0c0496ba1`, 2026-08-08) formally retires the never-built PM-reconciler
   release-tag minter, a wholly different subsystem (`post_cutover_silent_assumption_sweep_2026_07_23.md`). No
   criterion bounds the sole open item. No reclassification.
+- **na-eligibility-audit 2026-08-16** [body-hash:7537092b6116b0f1]: KEEP-NA, valid — Full end-to-end read (192 lines) confirms exactly 1 open todo, matching both the Phase-0 inventory and a fresh grep.

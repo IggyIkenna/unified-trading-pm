@@ -156,6 +156,7 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   line replaced with the verified shipping commit, `strategy-service@73aa792f` (confirmed reachable on
   `origin/live-defi-rollout` before citing). **Remaining open in this doc: 1** — the Phase-3 `[DATA] P3` stretch item
   (`book_depth.py` → Phase-1 utility wiring), an explicit judgment call, out of scope for this reconciliation pass.
+- **na-eligibility-audit 2026-08-16** [body-hash:1922aa6e7b32333a]: KEEP-NA, valid — Read the doc in full (255 lines) end-to-end, not off checkbox count. All Phase 1 (4/4 todos [x]), Phase 2 (2/2 [x]), and Phase 3's design+backend items (2/3 [x]) are done and evidenced: features-service@8608ea5d (Phase-1 ADV reade…
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 

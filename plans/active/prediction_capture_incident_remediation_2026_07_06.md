@@ -546,3 +546,4 @@ orchestrator-dispatched).
   read of that batch before touching this doc — no duplicate extraction created. Whole-doc flip stays blocked (7 items
   still genuinely parked). No reclassification here; flagging for whoever next reconciles this doc's own Phase 6
   checkbox once batch10 lands.
+- **na-eligibility-audit 2026-08-16** [body-hash:e5f5a4cafd09098c]: KEEP-NA, valid — All 7 open todos live inside Workstream B Phases 1-4 (perp-adapter demo repoint + prod cutover), every one explicitly banner-tagged `[DESCOPED-NOT-MVP 2026-07-14]` (Phases 1-3) or `[RESOLVED-BY-RULING 2026-07-14: DESCOPED — perps…

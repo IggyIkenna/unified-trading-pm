@@ -65,3 +65,7 @@ live promotion the same way `unified-trading-pm`'s `e560378a2d` did earlier in t
 - [ ] [SCRIPT] P3. Once the operator picks a path, either reprovenance each commit via
       `scripts/cicd/reprovenance_bypass.sh <sha> --push` (bless path) or re-ship equivalent content via
       `quickmerge.sh --agent --files` (re-ship path) for whichever commits are approved.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** [body-hash:34c3d23d3f97c424]: KEEP-NA, valid — Doc created today (2026-08-16) by a /ci-reconcile sweep — no staleness window exists. All 3 open todos are genuinely operator-gated judgment work, not deterministic/bounded work.

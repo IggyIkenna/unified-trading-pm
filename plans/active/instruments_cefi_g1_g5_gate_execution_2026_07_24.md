@@ -767,3 +767,4 @@ Coverage is the verification lens — every number flows through `compute_honest
   gate marker) is an operator sign-off recording, not a worker-determinable fact. Item 2 (EXTENDED's
   raise-vs-fallback CF-11 honest-absence behavior) is a genuine behavior-change design decision with manifest
   implications, not mechanically bounded by any round-11 ruling. No reclassification.
+- **na-eligibility-audit 2026-08-16** [body-hash:0dbdac10b55b4a2a]: KEEP-NA, valid — Read the full 769-line doc end-to-end (both halves) plus grep-verified the open-todo count matches the Phase-0 inventory (2).

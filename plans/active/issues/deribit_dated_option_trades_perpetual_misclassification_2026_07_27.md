@@ -251,3 +251,4 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — execution_scope: human, explicitly
   declared. Sole todo bundles an untraced root-cause investigation (no code path identified) plus a ~988GB/497-day
   reclassification migration gated on that root cause.
+- **na-eligibility-audit 2026-08-16** [body-hash:e0e6e2c3ca7c4051]: KEEP-NA, valid — Doc read in full end-to-end. Todo 1 (writer root-cause) is genuinely DONE: independently verified commit market-tick-data-service@06c07089 is an ancestor of origin/live-defi-rollout (checked pre- and post-fetch in the slot's own c…

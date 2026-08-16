@@ -584,3 +584,7 @@ landed before re-starting the investigation from scratch.
   tally (cefi+sports KEEP-NA, 2026-07-30 defi RECLASSIFY reverted). Sole open item (todo 6, batched-incremental
   record_cells() refactor) stays KEEP-NA under the bounded-outcome bar per its own correctness-sensitive framing; awaits
   the operator's explicit boundedness ruling.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** [body-hash:eb106d5b4ba9ecad]: KEEP-NA, valid — Read the doc in full (588 lines). 9 of 10 todos are [x] with hard evidence (VM run names, GCS report paths, commit SHAs — e.g.

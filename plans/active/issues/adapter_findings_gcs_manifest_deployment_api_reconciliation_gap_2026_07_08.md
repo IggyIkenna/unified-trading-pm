@@ -330,6 +330,7 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   being "manifest doesn't even track this" rather than "manifest shows a fixable wrong value") should inform that
   cadence call: a full trace won't help findings where the gap is structural non-instrumentation, those need a
   manifest/schema fix before any per-finding trace would be meaningful.
+- **na-eligibility-audit 2026-08-16** [body-hash:e6e02f855277b1dd]: KEEP-NA, valid — Read the doc in full end-to-end (243+ lines of body, all 6 todos, both Progress Log sections).
 
 ## Progress Log (na-eligibility-audit)
 

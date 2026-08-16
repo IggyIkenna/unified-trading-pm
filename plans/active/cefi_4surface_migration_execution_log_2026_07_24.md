@@ -175,6 +175,7 @@ context_scope:
   banner to a sibling doc's own live todo (citation verified). Caught a real checkbox-vs-prose trap: this doc's top
   checklist reads 0-open (already flagged as a false archive-candidate 2026-08-09), but its own 'Deferred work' table
   further down still carries this genuine open item.
+- **na-eligibility-audit 2026-08-16** [body-hash:f8c0a8a44b52b236]: KEEP-NA, valid — Read the full 950-line doc end-to-end (two Read calls, lines 1-499 and 500-950 — no gaps).
 
 ## PRE-COMPACT RESUMPTION CHECKPOINT — 2026-07-22 ~05:00Z (3rd checkpoint, post would_patch-ALL_DONE)
 

@@ -531,7 +531,7 @@ Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 2 Progre
       findings without an existing ruling filed as a new followup (not silently accepted):
       `issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`. Full evidence:
       `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5, archived).
-- [ ] [DATA] P2. **Folded in 2026-08-02 from
+- [ ] [DATA] P2. **na-eligibility-audit 2026-08-16**: extracted to `cefi_casing_residual_ao_dispatch_2026_08_16.md` (+ finalize), assigned_vm: planning, status: active -- re-verify count live there, not this checkbox. Stays open here (source doc), not yet done. Original text: **Folded in 2026-08-02 from
       `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (operator directive,
       2026-07-24).** cefi's `instrument_type` casing target is literal **100% UPPERCASE**, not the "substantially
       complete"/99.41%-snapshot framing above — the 2,982-row non-canonical residual the checkpoint todo just above
@@ -711,3 +711,4 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 - **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged — the 2 codex SSOTs and the 3 child
   plans (aggregated-sources, migration-cutover critical path, execution-log) + the noncanonical-enumeration audit script
   all still resolve and remain the right minimal reading-list for this hub/coordination doc.
+- **na-eligibility-audit 2026-08-16** [body-hash:49a4c9eb8252c6f6]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.

@@ -286,21 +286,21 @@ last_updated: 2026-08-15 # (was: 2026-06-27 -- plan-reconcile 2026-08-15: stale 
       `service_name` + `error_reason`. Prior doc
       `/plans/archive/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
       at exactly 1 row as of 2026-08-02, which is what dates the onset.
-- [ ] [DATA] P2. Resolve `margin_type` for the ~1,578 cefi liquidation instrument_ids that carry NEITHER an `@LIN` nor
+- [x] [DATA] P2. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already SHIPPED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 339-351), unified-trading-library@8142cab5ad + market-data-processing-service@6422150034 (2026-08-15, slot-11). Original text: Resolve `margin_type` for the ~1,578 cefi liquidation instrument_ids that carry NEITHER an `@LIN` nor
       an `@INV` suffix (`BINANCE-FUTURES:PERPETUAL:IP-USDC`, `BYBIT:PERPETUAL:XRPUSD`, `BYBIT:FUTURE:BTC-20250926`, …)
       from instruments-service reference data — the proper SSOT — instead of string heuristics. Surfaced by the liq_agg
       fix: the notional formula BRANCHES on margin type, so an unresolvable id must fail honestly rather than take a
       guessed branch (a wrong notional is worse than a failed shard). Until this lands, ~1% of liquidation shards stay
       `attempted_failed` with a precise unresolved-margin reason. Cross-links the same reference-data gap as
       `/plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md`.
-- [ ] [SCRIPT] P3. The write seam (`canonical_writer_shaping._inject_schema_contract_columns`) coerces ONLY
+- [x] [SCRIPT] P3. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already SHIPPED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 352-365), market-data-processing-service@5b2701fa9f (2026-08-15, slot-9), new test test_inject_schema_contract_columns_widens_every_int64_column. Original text: The write seam (`canonical_writer_shaping._inject_schema_contract_columns`) coerces ONLY
       `trade_count` int32→int64 against contract dtypes. `liquidation_count` had the identical int32 defect and was
       invisible for the life of the pipeline. Either widen the coercion to every contract-declared int64 column or
       assert at the seam that adapter dtypes match the contract, so the next adapter cannot reintroduce this class.
-- [ ] [SCRIPT] P1. Audit `UNCLASSIFIED_ADAPTER_ERROR` rows — 51% of the `trades` cell and 14% of `derivative_ticker`.
+- [x] [SCRIPT] P1. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already CLOSED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 366-386) with a negative/clean root-caused result — only 2 legacy one-off scripts emit it, no live adapter bug; no fix needed but the audit itself is done. Original text: Audit `UNCLASSIFIED_ADAPTER_ERROR` rows — 51% of the `trades` cell and 14% of `derivative_ticker`.
       The UAC enum's OWN docstring says any production occurrence is "a bug in the calling adapter", so half the trades
       cell is a self-declared bug nobody has been reading.
-- [ ] [SCRIPT] P2. `meta_watchers.check_high_attempted_failed` computes a MEANINGLESS ratio: `attempted_failed` is
+- [x] [SCRIPT] P2. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already CLOSED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 387-400) — "already-shipped elsewhere": deployment-service@96271280 + refined @0c38c00d, verified live in _attempted_failed_index.py. Original text: `meta_watchers.check_high_attempted_failed` computes a MEANINGLESS ratio: `attempted_failed` is
       counted over a TRAILING 14-DAY WINDOW (`ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14`, `deployment-service@96271280`)
       while `captured` is ALL-TIME. Every "ratio" in every DP_RUN_MOSTLY_EMPTY alert is a 14-day numerator over an
       all-time denominator. Either window both or drop the ratio.
@@ -311,7 +311,7 @@ last_updated: 2026-08-15 # (was: 2026-06-27 -- plan-reconcile 2026-08-15: stale 
       github-pool). So `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN` is NOT a one-line grant. Until
       WIF is stood up, DO NOT install the timer — a dispatched worker would spawn, fail the skill's §0 Slack read, and
       burn a slot every cycle. Ship the code, hold the installer.
-- [ ] [SCRIPT] P1. Sports reference-table exporter FABRICATES `http_status=200` `FetchEvidence` for a GCS-missing
+- [x] [SCRIPT] P1. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already SHIPPED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 401-412), features-service@656f2e10 (2026-08-15, slot-7), new _dependency_missing_gate.py. Original text: Sports reference-table exporter FABRICATES `http_status=200` `FetchEvidence` for a GCS-missing
       upstream that it classifies `SOURCE_RETURNED_ZERO`. `FetchEvidence` is the gate that makes `empty_confirmed`
       trustworthy at all — fabricating it defeats the honest-absence model at its root.
 - [x] ✅ [DATA] P2. 2026-08-10 sports reference tables were falsely recorded `empty_confirmed(SOURCE_RETURNED_ZERO)` by
@@ -336,25 +336,25 @@ last_updated: 2026-08-15 # (was: 2026-06-27 -- plan-reconcile 2026-08-15: stale 
       noting GCS has no atomic move, so the delete half still falls under the delete-safety protocol; check
       `scripts/backfill_defi_dex_pool_swaps_source_correction.py`'s deliberate "copy-not-move" rationale before
       overriding it.
-- [ ] [SCRIPT] P2. Shard the slow date in the MDPS per-date backfill so one date cannot fail a 944/944-complete run
+- [ ] [SCRIPT] P2. **na-eligibility-audit 2026-08-16 note**: conflict-checked CLEAR on its own merits, but `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` already explicitly marked this item "OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)" — a dated operator ruling, not re-litigated here. Stays NA pending that same scoping decision changing, not because it's unbounded. Original text: Shard the slow date in the MDPS per-date backfill so one date cannot fail a 944/944-complete run
       (`subprocess-per-date: date=2026-08-01 TIMED OUT after 1800s`). Operator-approved. Fix the per-date timeout /
       shard the date — NOT a bigger machine, which is what the alert's canned advice wrongly suggests.
-- [ ] [SCRIPT] P3. Rightsize the MDPS backfill VM class — `RESOURCE_SAMPLE` at failure showed `cpu=149.6%` (of 1600
+- [ ] [SCRIPT] P3. **na-eligibility-audit 2026-08-16 note**: conflict-checked CLEAR on its own merits, but `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` already explicitly marked this item "OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)" — a dated operator ruling, not re-litigated here. Stays NA pending that same scoping decision changing, not because it's unbounded. Original text: Rightsize the MDPS backfill VM class — `RESOURCE_SAMPLE` at failure showed `cpu=149.6%` (of 1600
       available) and `mem=22.1%`. Per the 2026-08-10 rightsizing HARD RULE, run `/vm-resource-rightsizing-check`.
-- [ ] [SCRIPT] P3. Empty `instrument_id` in the chain-bundle path — `live_workers_streaming.py` returns early without
+- [x] [SCRIPT] P3. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already SHIPPED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 432-441), market-data-processing-service@ef9e38b9a4. Original text: Empty `instrument_id` in the chain-bundle path — `live_workers_streaming.py` returns early without
       writing any manifest row ("writing a row keyed on an empty instrument_id would corrupt the manifest"), so the
       shard is invisible. Cross-links
       `/plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` (same axis, different
       path: MTDS failure path writes `instrument_type=""`).
-- [ ] [SCRIPT] P3. Promote `_ShardedState` out of `relaunch_backfill_vm.py` into a shared helper so the next actuator
+- [x] [SCRIPT] P3. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already CLOSED "already-satisfied" via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 442-454) — the extraction shipped as part of deployment-service@0c38c00d (2026-08-10), class is now public ShardedState. Original text: Promote `_ShardedState` out of `relaunch_backfill_vm.py` into a shared helper so the next actuator
       needing cross-execution state does not re-derive the race-free pattern. Deliberately left private during the
       original fix rather than widening scope mid-change.
-- [ ] [SCRIPT] P3. Flaky shellcheck under host load — `launch-expected-universe-v2-vm.sh` shellcheck killed by SIGPIPE
+- [x] [SCRIPT] P3. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already SHIPPED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 455-465), deployment-service@8df1bf3e20 (2026-08-15, slot-9), batched into one shellcheck subprocess call. Original text: Flaky shellcheck under host load — `launch-expected-universe-v2-vm.sh` shellcheck killed by SIGPIPE
       (`returncode == -13`) during a contended QG run; all 180 pass in isolation. Will keep producing false reds.
-- [ ] [SCRIPT] P3. Generalise the test-hermeticity guard — the pytest fake-GCS backend at `$TMPDIR/local-storage/`
+- [x] [SCRIPT] P3. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already CLOSED "already-shipped in the SAME commit as the original ad-hoc fix" (0c38c00d) via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 466-483) — _isolate_local_storage_provider_default_root is already an autouse root-conftest fixture covering the whole suite. Original text: Generalise the test-hermeticity guard — the pytest fake-GCS backend at `$TMPDIR/local-storage/`
       persists across runs, so ANY feature that starts writing durable state inherits the pass-then-fail trap closed ad
       hoc in `tests/conftest.py` this session.
-- [ ] [SCRIPT] P3. Pre-existing QG violation not owned by this session: "Hardcoded prod project ID in tests" in
+- [x] [SCRIPT] P3. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already CLOSED "STALE PREMISE — already fixed" via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 484-490) — deployment-service@c55faf2c landed after this doc was filed; zero live matches today. Original text: Pre-existing QG violation not owned by this session: "Hardcoded prod project ID in tests" in
       `tests/unit/test_vm_launcher_scripts.py` (honest-coverage VM + bucket). Non-blocking today (gate still exits 0).
 
 ## Deferred work after 2026-08-10
@@ -500,6 +500,7 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   `EXPECTED_NO_CAPTURE`, exempting it from `GONE_NO_CAPTURE`. Flipped this todo's checkbox citing the sha; also flipped
   the corresponding extraction todo in `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` in the same commit (per the
   shared conflict-check protocol §3.4, "already-shipped elsewhere, checkbox just never flipped").
+- **na-eligibility-audit 2026-08-16** [body-hash:add50697ab60b2c8]: KEEP-NA, valid (parked CONFLICT) — 10 of 12 originally-flagged RECLASSIFY_SPLIT candidates were already-shipped duplicates of `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` items (stale checkboxes now fixed with citations, per conflict-check protocol step 4 -- not a reclassification). The remaining 2 (MDPS per-date sharding, MDPS VM rightsizing) are individually bounded/CLEAR but were explicitly marked OUT-OF-SCOPE by batch19's own 2026-08-13 operator-scoping instruction -- not re-litigated here, left annotated + NA pending that scoping decision changing. Full conflict-check evidence in this run's Phase-1 classification output.
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 

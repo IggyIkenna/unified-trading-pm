@@ -196,3 +196,4 @@ as this update.
   independently re-verified WRONG and overturned before any archival action. The sole open item is a genuine dormant
   conditional tripwire ("IF a future connector change ever routes live capture through the authenticated endpoint"), not
   zero remaining work. Stays open, untouched. Do not re-flag as archivable on this same reasoning.
+- **na-eligibility-audit 2026-08-16** [body-hash:b4d8c785acfbfd96]: KEEP-NA, valid — Full end-to-end read (196 lines) confirms this doc's NA classification is still correct.
