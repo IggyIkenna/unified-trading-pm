@@ -40,7 +40,7 @@ related_plans:
   - ../active/prediction_phase_c_data_status_ui_2026_07_24.md
   - ../active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md
   - ../active/prediction_phase_e_football_arb_live_2026_07_24.md
-  - ../active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
+  - ../archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
   - ../archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md
@@ -51,6 +51,8 @@ related_plans:
   - ../active/prediction_satellite_ao_dispatch_batch11_2026_08_13.md
   - ../active/prediction_satellite_ao_dispatch_batch11_2026_08_13_finalize.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
+  - ../active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md
+  - ../active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md
 last_updated: 2026-08-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -912,10 +914,17 @@ features predict.
 
 ## Assigned active plans
 
-_18 active plans declare `parent_epic: predictions_master` in their frontmatter (batch10 + batch10_finalize archived
+_20 active plans declare `parent_epic: predictions_master` in their frontmatter (batch10 + batch10_finalize archived
 complete 2026-08-10; `predictions_other_bucket_and_ui_drilldown_2026_06_20` archived complete 2026-08-15; batch11 +
-batch11_finalize added 2026-08-15, `/plan-reconcile` fix — created 2026-08-13, missed by the last auto-population run).
-Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+batch11_finalize added 2026-08-15, `/plan-reconcile` fix — created 2026-08-13, missed by the last auto-population run;
+`batch4` re-pointed to its archive path + `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31` and
+`prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09` added 2026-08-16, `/plan-reconcile` fix — both
+predate batch11, created 2026-07-31/2026-08-09, also missed by the last auto-population run. 3 further docs
+self-declare this `parent_epic` but are NOT listed here, pending a separate ownership check: `na_audit_multi_tranche_
+shared_doc_ownership_and_draft_p0_park_2026_07_30.md`, `plan_reconciler_findings_all_2026_08_15.md` (a cross-tranche
+reconciler findings doc), `sports_satellite_ao_dispatch_batch10_2026_08_06.md` — none look like genuine
+predictions-work items at a glance, but that's unverified, not fixed here). Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -946,10 +955,11 @@ honest-coverage UI (split from prediction_consolidated_closeout_2026_07_18)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 
-### [`prediction_satellite_ao_dispatch_batch4_2026_07_26`](../active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
+### [`prediction_satellite_ao_dispatch_batch4_2026_07_26`](../archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
 
-**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Prediction satellite AO batch 4 — the
-un-triaged A3-relocated sibling-doc gap (cross-venue-arb + live-clob-depth)
+**status**: resolved (archived 2026-08-16, corrected same day by plan_reconciler — this entry's link/status were stale)
+· **estimate**: 0.32 cal AI-days (class: infra) **title**: Prediction satellite AO batch 4 — the un-triaged
+A3-relocated sibling-doc gap (cross-venue-arb + live-clob-depth)
 
 ### [`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize`](../archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
 
@@ -986,6 +996,17 @@ AO batch 8 — finalize (reconcile source doc + re-check deferrals + archive)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: Predictions ML Model 2A walk-forward +
 arb_calculator (sports_predictions_e2e predictions half)
+
+### [`mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31`](../active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)
+
+**status**: open (added 2026-08-16, `/plan-reconcile` fix — missing from this epic since creation) · **title**:
+market-tick-data-service's Kalshi/Polymarket prediction adapters carry a dead live-REST-polling interface (tested,
+never reached by production code)
+
+### [`prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09`](../active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md)
+
+**status**: open, `assigned_vm: planning` (added 2026-08-16, `/plan-reconcile` fix — missing from this epic since
+creation) · **title**: Betfair back+lay persistence todo's premise invalidated — scaffold adapter deleted as dead code
 
 ### [`prediction_satellite_ao_dispatch_batch11_2026_08_13`](../active/prediction_satellite_ao_dispatch_batch11_2026_08_13.md)
 

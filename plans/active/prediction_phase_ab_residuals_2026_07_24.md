@@ -121,9 +121,9 @@ context_scope:
 - [x] ✅ [BACKEND] P0. **DONE 2026-08-15 (plan_reconciler) — Phase 6 fully shipped.** Finish the prediction
       capture-incident remediation — harden the capture path (consolidator utf8 typing, backfill the 07-01→07-06 missed
       window) and confirm the KALSHI/POLYMARKET-PERP adapters no longer hit the wrong Kalshi host (the fake-PERPETUAL
-      cefi contamination). `prediction_capture_incident_remediation_2026_07_06.md` (9 open, but 7 of those are
-      `[DESCOPED-NOT-MVP 2026-07-14]` parked pending the perps prod-access operator ruling — only Phase 6's 2 items are
-      genuinely dispatchable). **Reconciled 2026-07-30 (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todos
+      cefi contamination). `prediction_capture_incident_remediation_2026_07_06.md` (**CORRECTED 2026-08-16
+      (plan_reconciler)**: 7 open, not 9 — Phase 6's 2 items are now `[x]` DONE 2026-08-15; all 7 remaining are
+      `[DESCOPED-NOT-MVP 2026-07-14]` parked pending the perps prod-access operator ruling). **Reconciled 2026-07-30 (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todos
       2+3, via the batch1 finalize plan) — NOT a clean close, still open.** Batch1 closed 2 items in that doc: todo 2
       quantified + root-caused the "fake-PERPETUAL contamination" question (the `KXMVE*` event family IS captured
       correctly; the REAL bug is 79% of Kalshi volume also landing in `canonical_question_group=OTHER` due to a one-line

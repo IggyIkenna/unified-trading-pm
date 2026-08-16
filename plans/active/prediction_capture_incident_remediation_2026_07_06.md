@@ -316,8 +316,12 @@ orchestrator-dispatched).
 
 ### Phase 6 — fix the Kalshi CQG-bucketing write-time bug (found by Phase 3's VERIFY, 2026-07-26)
 
-- [x] ✅ [CODE] P1. **DONE 2026-07-30 — `instruments-service@e0f7aaad` (via
-      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1).** Fix
+- [x] ✅ [CODE] P1. **DONE 2026-07-30** (via `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1).
+      **CORRECTED 2026-08-16 (plan_reconciler)**: the originally-cited `instruments-service@e0f7aaad` is NOT an
+      ancestor of `origin/live-defi-rollout` (lives only on `origin/wip-preserve/slot-5-instruments-service-diverged-...`)
+      — per `prediction_phase_ab_residuals_2026_07_24.md:153-159`'s later, more careful audit, its content landed
+      verbatim under the rebased `instruments-service@94f3ee11`, which IS a verified ancestor. The underlying work is
+      genuinely done; only the cited SHA was wrong. Fix
       `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
       (`_extract_prediction_canonical_group`): `ticker = str(row.get("instrument_key", "") or "")` passes the FULL
       `"KALSHI:PREDICTION_MARKET:{ticker}"` string into `classify_kalshi_to_canonical_group(ticker=...)` instead of the

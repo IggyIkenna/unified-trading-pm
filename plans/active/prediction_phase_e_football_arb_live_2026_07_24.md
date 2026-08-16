@@ -144,8 +144,12 @@ context_scope:
       todo's stale text). **Remaining — (3) only**: 3rd venue (bookmaker odds): generalize `build_cross_venue_mapping`
       beyond its pairwise Kalshi↔Polymarket shape, OR resolve `SportsArbDutchingEngine`'s
       `decimal_odds_<outcome>_<venue>` features per `af_fixture_id`, so live-odds ∧ Polymarket ∧ Kalshi pair on ONE
-      fixture. Also: the ONLY wired prediction-arb slots today are CRYPTO (`btc/eth/spx UP_DOWN_DAILY`) — a FOOTBALL
-      prediction-arb slot must be added. Fold: `predictions_ml_walk_forward_and_arb_2026_06_20.md`. (repos:
+      fixture. Also: **CORRECTED 2026-08-16 (plan_reconciler)** — the wired prediction-arb slots today are CRYPTO
+      (`btc/eth/spx UP_DOWN_DAILY`) plus MLB/NFL/NBA/Tennis (added via
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`, shipped 2026-08-05 — the prior "ONLY... CRYPTO" premise
+      here was stale, predating that ship despite this todo's own "verified live in code 2026-08-12" claim); still, no
+      FOOTBALL prediction-arb slot exists yet — one must be added. Cross-reference (see also, not a literal fold — the
+      two docs' "arb" concepts differ): `predictions_ml_walk_forward_and_arb_2026_06_20.md`. (repos:
       features-service, unified-api-contracts, strategy-service, e2e-testing)
 - [ ] [BACKEND] P2. **3-way arb correctness guards** — prediction-market "lay" is the NO-side complement, not a real
       exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate

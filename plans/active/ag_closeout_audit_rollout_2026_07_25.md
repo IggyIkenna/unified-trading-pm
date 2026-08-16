@@ -115,13 +115,15 @@ context_scope:
       2026-07-26" table listed "Apply recommendations across the 70-item batch," "Flip each tranche's newly-drafted
       batchN/finalize pair to active," and the "Mass flip" itself all as "Not started"; Round 8's own Deferred table
       confirms the mass-flip for cefi/defi/tradfi/prediction/sports batch/finalize pairs is still only "Partially done"
-      (tradfi re-verified active; cefi/defi/prediction/sports batches not re-verified). > **CORRECTED 2026-08-12
-      (/plan-reconcile)**: this "mass-flip all 5 AGs at once" framing is itself stale per the > doc's own audit trail —
-      na-eligibility-audit round7 (2026-08-08, line ~991) and round11 (2026-08-09, line > ~1000) both find cefi has
-      since moved to incremental scheduled-timer batches (batch10+), not a manual > all-5-AGs mass-flip, and both
-      recommend a dedicated cross-cutting close+archive pass rather than continuing to > track this as a live todo. Not
-      archived here — that dedicated pass is out of this single-item's scope; content > left as-is below, this
-      annotation exists so the next reader doesn't re-litigate the same staleness.
+      (tradfi re-verified active; cefi/defi/prediction/sports batches not re-verified). **CORRECTED 2026-08-12
+      (/plan-reconcile)**: this "mass-flip all 5 AGs at once" framing is itself stale per the doc's own audit trail —
+      na-eligibility-audit round7 (2026-08-08, line ~991) and round11 (2026-08-09, line ~1000) both find cefi has
+      since moved to incremental scheduled-timer batches (batch10+), not a manual all-5-AGs mass-flip, and both
+      recommend a dedicated cross-cutting close+archive pass rather than continuing to track this as a live todo. Not
+      archived here — that dedicated pass is out of this single-item's scope; content left as-is below, this
+      annotation exists so the next reader doesn't re-litigate the same staleness. **STILL UNACTIONED 2026-08-16
+      (plan_reconciler)**: the recommended dedicated cross-cutting close+archive pass has still not been created —
+      routed to the cross-cutting tranche's own reconciliation pass, not fixed here (out of prediction-tranche scope).
 
 ## Progress Log
 
