@@ -139,17 +139,39 @@ Not urgent (static, not actively growing) but real and unaddressed.
       tests added, `market-tick-data-service@bd6233b4`, see Progress Log 2026-08-09 (slot-25). Backfill of the 20,254
       pre-existing blank-id rows + live-manifest re-verification split into todo below (requires downloading+classifying
       per-object row content, not a path-parser change — out of this todo's scope).
-- [ ] [DATA] P3. **REOPENED 2026-08-12 (/plan-reconcile) — checkbox overstated completion relative to this todo's own
+- [x] [DATA] P3. **REOPENED 2026-08-12 (/plan-reconcile) — checkbox overstated completion relative to this todo's own
       Done-when.** Fix the root-cause `continuous_future` → `FUTURE` conflation in
       `canonicalize_manifest_instrument_type()`** — `unified-trading-library@74fe04fd98`,
       `instruments-service@de6c820956`. Removed `continuous_future` and `combo` from `_MANIFEST_ITYPE_CANONICAL`, added
-      both to `_BUNDLE_GRAIN_EXCLUDED`. **Follow-up (still outstanding)**: re-run `rebuild_tradfi_manifest.py` in MTDS
-      to regenerate the manifest — the live manifest still carries the old values until that rebuild runs (per this
-      doc's own Progress Log 2026-08-10, slot-21: "the live manifest still carries the old values until the next
-      `rebuild_tradfi_manifest.py` run"). The code fix shipped; the operational rebuild+recount step has not. Repos:
-      unified-trading-library, market-tick-data-service, market-tick-data-service (rebuild). **Done when**: rebuild
-      re-run, live manifest recount shows 0 `instrument_type=FUTURE` rows with populated `underlying` + null
-      `instrument_id`.
+      both to `_BUNDLE_GRAIN_EXCLUDED`. **Rebuild re-run 2026-08-16 (slot-6)**: `tradfi-manifest-rebuild` VM
+      (`canonical-migration-tradfi-manifest-rebuild-20260816-033111`, full/`--apply`, `--chunk-days 30`, full
+      2020-01-01..2026-08-16 corpus) completed clean — exit=0, 964.5s elapsed, 1,398,429 total shards across 81 chunks,
+      **0 unparseable**. Verified DIRECTLY against the fresh per-VM shard
+      (`_index/per_vm/canonical-migration-tradfi-manifest-rebuild-20260816-033111.parquet`): **0** CME rows with
+      `instrument_type=FUTURE` + populated `underlying` + blank `instrument_id` (the writer-side fix is confirmed
+      correct — `combo`=245,713 / `futures_chain`=152,291 / `options_chain`=9,427 rows now correctly bundle-grain
+      typed instead of misfiled under `FUTURE`). ✅ — the code fix + rebuild both verified working as designed.
+      **Done-when narrowed to what a rebuild can actually achieve** (see the new retire todo below for the remaining
+      "0 stale rows in the LIVE CONSOLIDATED manifest" half — a rebuild alone cannot satisfy that, see Progress Log).
+- [ ] [OPERATOR] [DATA] P2. **NEW 2026-08-16 (slot-6) — retire the 880,933 pre-fix stale `instrument_type=FUTURE`
+      rows from the LIVE CONSOLIDATED manifest** (`market-data-tick-tradfi-prd-central-element-323112/_index/
+      availability_index.parquet`). Root cause (confirmed 2026-08-16, see Progress Log): `ManifestWriter`
+      per-VM-shard writes + the manifest consolidator's merge are ADDITIVE, keyed on the full row_key including
+      `instrument_type` — a freshly-rebuilt row with the CORRECT type (`combo`/`futures_chain`/`options_chain`) lands
+      under a DIFFERENT key than the old stale `FUTURE`-typed row for the same `(date, venue, underlying, data_type)`,
+      so the rebuild adds correct rows ALONGSIDE the stale ones rather than superseding them. A rebuild re-run can
+      never retire a misclassified row filed under a stale key — only a dedicated delete/retire pass can. This is a
+      **prod-bucket manifest DELETE of ~881K rows** — per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3 (human-only hard stops) / §3a
+      (reversibility-qualified agent-autonomous path), needs either operator sign-off or a reversibility-qualified
+      justification (check `gcs_bucket_soft_delete_retention_seconds` on this bucket) before any agent executes it
+      autonomously. **Not the same tool as `tradfi-manifest-retire`** (that category targets a DIFFERENT, older
+      per-contract-manifest-registration retire — `recover_tradfi_chain_manifest_registration_2026_07_22.py` — not
+      this population). Repo: market-tick-data-service (needs a new dedicated retire script, content-verified: confirm
+      each candidate stale row's `(date, venue, underlying, data_type)` key has a live correctly-typed counterpart
+      before dropping it — 649/76,454 combos in the 2026-08-10 census had NO `futures_chain` counterpart at all, so a
+      blind blanket drop is unsafe). **Done when**: live manifest recount shows 0 `instrument_type=FUTURE` rows with
+      populated `underlying` + null `instrument_id` (the ORIGINAL Done-when this issue was filed against).
 
 ## Progress Log
 
@@ -276,3 +298,30 @@ Not urgent (static, not actively growing) but real and unaddressed.
   **Follow-up**: re-run `rebuild_tradfi_manifest.py` in MTDS to regenerate the manifest. The rebuild script's
   `BUNDLED_ITYPES` already includes `continuous_future` and `combo` (agrees with consolidator) — no MTDS code change
   needed, just the rebuild run.
+
+- **slot-6 worker 2026-08-16** (rebuild re-run, todo 3 + new retire todo): Launched the already-registered
+  `tradfi-manifest-rebuild` canonical-migration category (added 2026-08-15, previously wired but never executed) —
+  dry-run first (`canonical-migration-tradfi-manifest-rebuild-20260816-031519`, SPOT-preempted after ~7min mid-scan,
+  harmless since dry-run writes nothing; validated 0 unparseable across 43/81 chunks before preemption), then the real
+  `full`/`--apply` run **on-demand** (`canonical-migration-tradfi-manifest-rebuild-20260816-033111`, avoiding a repeat
+  SPOT preemption on the completion-critical pass — this script has no per-chunk resume checkpoint, so a mid-run
+  preemption would have restarted from chunk 1). **Full run completed clean**: exit=0, 964.5s elapsed, 1,398,429 total
+  shards / 81 chunks / 0 unparseable / 508 distinct venues / 2,080 distinct dates. Verified directly against the fresh
+  per-VM shard (before consolidator merge): 0 CME `instrument_type=FUTURE` rows with populated `underlying` + blank
+  `instrument_id` — confirms the `@74fe04fd98`/`@de6c820956` canonicalizer fix is working correctly at the writer
+  level (`combo`=245,713 / `futures_chain`=152,291 / `options_chain`=9,427 rows now correctly typed).
+  **NEW FINDING — the rebuild alone cannot close this issue's Done-when**: re-checked the LIVE CONSOLIDATED manifest
+  (`read_availability_index_safe`, `venue=CME`+`instrument_type=FUTURE` filter) after the consolidator's `*/1`
+  per-minute cycle had time to merge (`market-data-{tradfi,defi,prediction,sports}` are NOT in the 12
+  hourly-overridden categories, confirmed via `/codex/05-infrastructure/manifest-consolidator-ssot.md`) — still
+  **880,933** stale rows, byte-identical to the pre-rebuild count, even though a fresh `written_at=2026-08-16T03:36`
+  row is now present in the index (proving the consolidator DID run and DID merge my shard). Root cause:
+  `ManifestWriter`/consolidator merges are ADDITIVE, keyed on the full row_key INCLUDING `instrument_type` — a
+  correctly-retyped row (`combo`/`futures_chain`/`options_chain`) lands under a structurally DIFFERENT key than the
+  stale `FUTURE`-typed row for the same `(date, venue, underlying, data_type)`, so the rebuild adds the correct rows
+  ALONGSIDE the stale ones rather than superseding them. **No amount of re-running the rebuild will ever retire these
+  rows** — only a dedicated delete/retire pass keyed on the stale rows' OWN row_key can. Split the remaining scope into
+  a new `[OPERATOR]`-tagged todo below (a ~881K-row prod-bucket manifest DELETE needs delete-safety sign-off, not a
+  P3 worker's unilateral call) rather than leave the reopened checkbox in the same overstated state that triggered
+  this REOPENED banner originally — the rebuild's own scope (writer-fix verification) IS genuinely done; the
+  live-manifest-recount half is a distinct, larger, gated piece of work.
