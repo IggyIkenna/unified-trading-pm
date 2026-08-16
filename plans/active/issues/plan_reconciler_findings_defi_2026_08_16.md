@@ -25,6 +25,7 @@ execution_scope: local-only
 parent_epic: defi_master
 resolved_by:
 depends_on: []
+drift_direction: advance-code
 ---
 
 # plan_reconciler defi-tranche findings — 2026-08-16
