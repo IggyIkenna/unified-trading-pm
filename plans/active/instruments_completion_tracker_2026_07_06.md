@@ -256,10 +256,12 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       `instruments-service@2fa3877` — new public `filter_manifest_to_expected(ag, df)` applies the MVP cut at READ TIME
       inside `measure_honest_coverage._compute_coverage` for cefi, ZERO manifest mutation (Layer-1 keeps the unfiltered
       df so stray_tuples stay visible); 11 new + 21 existing tests green.
-  - **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Fix
-    `_fetch_earliest_funding_date` (instruments-service `cefi/aster.py`) to exclude synthetic pre-launch placeholder
-    funding rows before deriving `available_from_datetime`. See the batch doc for the full scoped todo; do not
-    duplicate-dispatch from here.
+  - [x] ✅ [CODE] P1. **DONE 2026-08-09/16 (batch2 reconciliation)** — Fixed `_fetch_earliest_funding_date`
+    (instruments-service `cefi/aster.py`) to exclude synthetic pre-launch placeholder funding rows —
+    `instruments-service@c4969441`. Now pages ascending through `fundingRate` history (up to 8 pages), skips flat
+    `0.0001` synthetic placeholder rows, returns the first genuine entry (falls back to venue launch date if none
+    found). 4 new regression tests. Was: EXTRACTED 2026-08-09 →
+    `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
   - [ ] [DATA] P1. Reconcile ASTER's `trades` genesis cross-registry contradiction (2021-08-30 in
         `expected_start_dates.yaml` vs. 2023-07-22 everywhere else) — see GAP 4 in
         `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`. Do before any pre-funding-genesis trades
@@ -389,9 +391,13 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s own Phase C todo list — that plan, not this checkbox,
       is where tradfi Layer-1 certification now lives. Leaving unchecked: the item's own Gate ("Certify per-AG Layer-1")
       is worded all-5-AG and tradfi is not yet certified.
-- **[REVIEW] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Reconcile ASTER's
-  two disagreeing missing-date counts (manifest cell-presence view says 0 missing; live turbo API says 11 missing/1,071
-  expected for the same venue+window). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-09/16 (batch2 reconciliation)** — Reconciled ASTER's two disagreeing
+  missing-date counts — `instruments-service@7dbe85e1` (docstring disambiguation, not a data fix). RESOLVED: a
+  methodology/scope difference between two structurally different manifests (reference-data catalogue freshness vs.
+  real market-data capture), not a bug in either path's arithmetic — confirmed by
+  `/codex/02-data/honest-coverage-model.md`'s Layer-1/Layer-2 split. **Recommendation: trust the 11-missing/1,071-
+  expected turbo/MTDS count** for any Stage-3 re-measure. Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
 - [x] ✅ [CODE] P1. Close `honest_coverage_v2` remaining (build_expected done in 2a; UI drill-down → Stage 6). **DONE —
       reconciled 2026-07-28 against `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete, own
       todo `[x]`, CLOSED 2026-07-06 task 008).** Phase 1 `build_expected` consolidation flipped in
@@ -471,10 +477,13 @@ reconciling + signing off, not redoing.)_
       per the digest's literal wording — the NASDAQ/NYSE mis-class SPOT_PAIR (318 rows) and 12 cefi-singles EQUITY rows
       mentioned in the sibling gate-execution doc's fuller list were NOT part of what this item asked/approved, left
       untouched pending a separate explicit ask.
-- **[INFRA] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Add a build-time
-  exclusion filter to `build_instrument_catalogue.py`'s `build_catalogue_dataframe` for
-  `venue=ICE`/`venue=CBOE`-options/the 2 VIX-cash `INDEX` ids — makes an already-executed one-off purge permanent. See
-  the batch doc for the full scoped todo; do not duplicate-dispatch from here. Repo: instruments-service.
+- [x] ✅ [INFRA] P1. **DONE 2026-08-09/16 (batch2 reconciliation)** — Added a build-time exclusion filter to
+  `build_instrument_catalogue.py`'s `build_catalogue_dataframe` — `instruments-service@22a5f197`. New
+  `_is_retired_tradfi_catalogue_row()` predicate excludes `venue=ICE`, `venue=CBOE AND instrument_type IN
+  (OPTION, SPOT_PAIR)`, and the 2 VIX-cash `INDEX` ids from every future catalogue rebuild, making the earlier
+  one-off purge permanent. Live-verified against the purge snapshot: 53,623 rows, byte-identical to the purge's own
+  stated total. 2 new regression tests. Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived). Repo: instruments-service.
 - [x] ✅ [DESIGN] P1. defi completeness **oracle** design. **DONE — reconciled 2026-07-28 against
       `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,
       2026-07-06).** Design SSOT landed at `/codex/02-data/defi-completeness-oracle.md` (`unified-trading-pm@650c2b881`)
@@ -526,11 +535,13 @@ reconciling + signing off, not redoing.)_
       `VM_SHUTDOWN_ON_COMPLETION=true`, fires `--operation deribit-options-chain --mode batch --asset-group CEFI` with
       today's UTC date; registered in the VM-prefix registry (`deribit-opts-fwd-` → `VmPrefixSpec`, EPHEMERAL_BATCH,
       distinct from the historical `opt-deribit-` Tardis batch prefix).
-- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Systemic
-  unregistered-handler audit, widen-scope-to-adapter-factory-layer remainder (the original operations-dispatcher scope
-  already shipped `market-tick-data-service@015abaf5`/`@efd658c8`; the RENZO/RADIANT/EULER_V2 adapter-factory-layer gap,
-  tracked in `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`, is what remains open). See the batch doc
-  for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-09/16 (batch2 reconciliation)** — Systemic unregistered-handler audit widened
+  to the adapter-factory layer — `market-tick-data-service@f21ae1eb`. Diffed all 28 exported DeFi adapter classes
+  against `VENUE_REGISTRY`: registered the sole built-but-unwired one, `CoinbaseCbEthAdapter` (as `"coinbase_cbeth"`),
+  with 2 new regression tests. **Widened finding** (6 sibling LST adapters registered-but-never-invoked, real capture
+  runs through a separate on-chain-ABI mechanism) filed as an operator design-call issue doc, not fixed here:
+  `/plans/active/issues/defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md`. Was: EXTRACTED
+  2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
 - [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_live_clob_depth_capture_2026_07_24`, successor
       to `prediction_venue_perps_and_live_clob_depth_2026_06_20` which was split + archived 2026-07-24; live=0 today)
 

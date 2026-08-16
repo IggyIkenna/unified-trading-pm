@@ -173,10 +173,13 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
 - [ ] [DATA] P1. **C-source RIDER (CF-4)** — re-consolidate the `source` column into the instruments `_index`
       (multi-source `FIXTURES` = 2 rows); folds the `data_source_provenance` instruments-side re-consolidation (no
       separate walk). (MIGRATED FROM: same.)
-- **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** C-reasons (CF-5) —
-  instruments writers emit typed `EmptyConfirmedReason` (non-sports AGs); fetch-failure → `attempted_failed` not
-  `empty_confirmed` (CF-11 swallow sweep). See the batch doc for the full scoped todo; do not duplicate-dispatch from
-  here. (MIGRATED FROM: same.)
+- [x] ✅ [CODE] P1. **DONE 2026-08-09/16 (batch2 reconciliation)** — C-reasons (CF-5): typed `EmptyConfirmedReason`
+  + fetch-failure routing — `instruments-service@096bc564`. Fixed 2 bug classes: (1) `non_trading_day_reason()`
+  returned bare string literals instead of `EmptyConfirmedReason` members (fixed the root def + all call sites); (2)
+  DeFi live-mode monotonicity-blocked venues were stamped `non_error_venues` BEFORE the block check ran, permanently
+  excluding them from `attempted_failed` routing — fixed. 2 new regression test files; QG's own `no_blank_empty_reason`
+  check now passes cleanly. Was: EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`
+  (archived). (MIGRATED FROM: same.)
 - [ ] [DATA] P0. **E3** — confirm instruments writer drained; snapshot each `_index`. (MIGRATED FROM: same.)
 - [ ] [DATA] P0. **E4** — dry-VM → timing → optimise → run (small: 30k/20k/493 rows; no fire-and-forget). (MIGRATED
       FROM: same.)
@@ -210,12 +213,12 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `weather.py:179/285/376/459/518`) are documented fail-open patterns for per-shard failure isolation — the
       architecture's SSOT rule (`/codex/04-architecture/shard-level-failure-isolation.md`). `:7673` was already
       confirmed NOT a bug (safe fallback). Repo: instruments-service. (MIGRATED FROM: same.)
-- **[REVIEW] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Residual bar-edge
-  fallback-to-open — the source doc's own text below claims a fix was committed locally (SHA does not resolve to a real
-  commit in this checkout — unverified, do not cite it further) and blocked from quickmerge by a pre-existing IS QG
-  failure (`test_sports_fixture_stamps_canonical_instrument_id`, repo-blocker RB-d3bb9020); the batch doc's todo
-  re-verifies from scratch rather than trusting that claim. See the batch doc for the full scoped todo; do not
-  duplicate-dispatch from here. Repo: instruments-service. (MIGRATED FROM: same.)
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-09/16 (batch2 reconciliation)** — Residual bar-edge fallback-to-open —
+  `instruments-service@9b91297f`. Confirmed the previously-claimed `20a92886` SHA does not resolve to a real commit;
+  freshly implemented + committed (raises on unsupported timeframe instead of silently falling to the open edge, in
+  `ccxt_adapter.py` and sibling adapters); `quality-gates.sh` green, sentinel matches. Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived). Repo: instruments-service. (MIGRATED FROM:
+  same.)
 - [x] ✅ [MTDS] P2. **De-duplicate the IS venue universe** — make the cefi/tradfi/prediction fetch path read UAC
       `VENUES_BY_ASSET_GROUP` instead of hardcoded mirrors. **SHIPPED by `instrument_universe_registry_consolidation`
       Phase 1 — `instruments-service@4da6fe8`** (verified live 2026-06-30): `_CEFI_VENUES`/`_TRADFI_VENUES` DELETED from
@@ -226,10 +229,11 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       KEPT** — defi is operator-decided EXEMPT from set-equality (registry-consolidation Decision D / A6), with a UAC
       drift-guard (`VENUES_BY_ASSET_GROUP[defi] == get_venues_for_asset_groups(["DEFI"])`). The stale
       `orchestrator.py:1028` line ref no longer holds those mirrors. (MIGRATED FROM: same.)
-- **[CODE] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** MTDS prefix-map
-  mirror → read UAC `VENUE_PREFIX_TO_PROTOCOL` directly (swap the hand-mirror in `_instruments_metadata.py` for the UAC
-  import) + fix the stale UI comment naming the deleted `CANONICAL_VENUE_TO_ADAPTER`. See the batch doc for the full
-  scoped todo; do not duplicate-dispatch from here. Repo: market-tick-data-service (+ UI comment).
+- [x] ✅ [CODE] P3. **DONE 2026-08-09/16 (batch2 reconciliation)** — MTDS prefix-map mirror swapped for the direct
+  UAC import — `market-tick-data-service@b5310181` (import already on origin from a prior session),
+  `unified-trading-system-ui@813d79eab1` (stale UI comment `CANONICAL_VENUE_TO_ADAPTER`→`VENUE_TO_ADAPTER_KEY`). Was:
+  EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived). Repo:
+  market-tick-data-service (+ UI comment).
 - [x] ✅ [MTDS] P2. **Replace `os.environ["DEPLOYMENT_ENV"]="test"` runtime mutation** (`orchestrator.py:8033-8041`,
       `sports_dependency.py:90-98`) with an explicit `env=` param to `resolve_bucket_name` (thread-safety). DONE via
       orchestrator split (`instruments-service@cb51c98a0`). The old `orchestrator.py:8033-8041` block was removed;
@@ -268,10 +272,12 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       MTDS `engine/orchestrator.py` (4,219L) split tracked in M-2 — same filename, different repo; do not conflate.**
       (MIGRATED FROM: same.) — instruments-service@cb51c98a0: split into `engine/orchestrator/` package (22 focused
       modules + thin `__init__`).
-- **[SCRIPT] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Script-tier
-  cloud-agnostic sweep — ~60 scripts' direct `google.cloud`/`boto3` imports, ~30 inline legacy bucket literals, and the
-  hardcoded `/tmp/` in `enumerate_expected_universe.py`. See the batch doc for the full scoped todo; do not
-  duplicate-dispatch from here. Repo: instruments-service. (MIGRATED FROM: same.)
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-11/16 (batch2 reconciliation) — verification-only, no code change needed.**
+  Script-tier cloud-agnostic sweep — live grep found 0 real `google.cloud`/`boto3` import statements in
+  `instruments-service/scripts/`; all 3 QG bucket-literal checkers pass clean at baseline; `enumerate_expected_universe.py`
+  has no hardcoded `/tmp/` (its `_scratch_dir()` already resolves via `INSTRUMENTS_SCRATCH_DIR` or `~/.cache`). The
+  "~60"/"~30" figures were stale. Was: EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`
+  (archived). Repo: instruments-service. (MIGRATED FROM: same.)
 - [x] ✅ [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** — ALREADY DELETED (verified 2026-08-05, slot
       11). `reference_data/catalogue/catalogue_builder.py` not found anywhere in the IS tree; `CatalogueBuilder` and
       `refresh_catalogue` have zero grep hits in the current `engine/orchestrator/` package. The live path is
