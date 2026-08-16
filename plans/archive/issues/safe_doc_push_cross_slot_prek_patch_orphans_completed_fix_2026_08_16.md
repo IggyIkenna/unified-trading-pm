@@ -13,7 +13,7 @@ summary: >-
   applied it and immediately moved it into a named stash (`d7c6b862ebce96bde257bb58b6fd9a17d829d414`) rather than
   committing it under the wrong slot's attribution or leaving it in a cache dir that could be evicted. This doc is the
   findings-closure required before slot-16's own task's `/done` (worker.md §4.5) plus the recovery record.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [safe-doc-push, prek, data-loss-near-miss, cross-slot, plan-hygiene, recovery]
 related:
   [
-    /plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
@@ -40,16 +40,26 @@ source: >-
   slot-16 (infra), discovered mid-task while shipping an unrelated plan retag via `scripts/dev/safe-doc-push.sh`,
   2026-08-16T04:24-04:30Z.
 author: slot-16
-resolved_by:
+resolved_by: unified-trading-pm@c3bb4dbcd1
 locked_by:
 locked_since:
 context_scope:
   [
     scripts/dev/safe-doc-push.sh,
-    /plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-16** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence in `resolved_by:` (unified-trading-pm@c3bb4dbcd1) — slot-14's own
+> session independently completed and shipped the recovered fix minutes after this doc's patch snapshot was taken,
+> mooting todo 1's stash-pop-and-reship plan (see that todo's own note). Single-repo case (plan-of-record in this
+> same worktree), so the checkbox flip and this `git mv` land in the same commit per the 2026-08-10-narrowed
+> same-commit-flip+archival sanction.
 
 # safe-doc-push orphaned prek patch: recovered a completed cross-slot fix, root cause still open
 
@@ -71,10 +81,10 @@ this session:
 
 - `scripts/dev/safe-doc-push.sh` (+50/-6): a new `rebase_failure_is_content_conflict()` classifier in
   `autostash_rebase_reconcile`, closing the exact bug class described in
-  `/plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` — a non-content rebase
+  `/plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` — a non-content rebase
   failure (e.g. the literal git usage error "Cannot rebase onto multiple branches", `index.lock`) used to be treated as
   a genuine content conflict and hard-exit 3; now it's classified and retried instead.
-- `plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` (+31/-3): the doc's own
+- `plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` (+31/-3): the doc's own
   todo 1 flipped `[x]`, plus a **"slot-14 (infra) 2026-08-16 — root-caused + fixed"** Progress Log entry describing 5
   empirically-reproduced scenarios, the actual root cause, the fix, and a new regression suite
   `tests/test_safe_doc_push_rebase_failure_classification.bats` (claimed 6/6 passing, sibling suite re-run 9/9 green,
@@ -135,16 +145,20 @@ pins (5 named test cases + a `bash -n` check).
 
 ## Todos
 
-- [ ] [INFRA] P2. **Ship the recovered fix.** Pop stash `d7c6b862ebce96bde257bb58b6fd9a17d829d414` (verify it's still
-      the expected 2-file diff before popping — a lot of other slots also push safety-snapshot stashes to this same
-      list), locate or rewrite `tests/test_safe_doc_push_rebase_failure_classification.bats` per this doc's "What's
-      still missing" section, run the full `quality-gates.sh` (this is a `scripts/dev/` code change, not a pure
-      doc/plan-flip), and ship via `quickmerge --agent --files 'scripts/dev/safe-doc-push.sh
-      plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md
-      tests/test_safe_doc_push_rebase_failure_classification.bats'`. Commit message MUST credit the recovery lineage
-      (cite this issue doc + the original slot-14 authorship) rather than presenting it as new work. **Done when**: the
-      fix is live on `origin/live-defi-rollout`, QG green, and the stash is dropped only after the push is verified
-      landed (`git merge-base --is-ancestor`).
+- [x] ✅ [INFRA] P2. **Ship the recovered fix.** — MOOT, achieved independently: slot-14's own session (the same
+      session this content was recovered FROM) completed and shipped this exact fix on its own, minutes after the
+      cross-slot patch snapshot was captured — `unified-trading-pm@c3bb4dbcd1`
+      (`git merge-base --is-ancestor c3bb4dbcd1 origin/live-defi-rollout` → true, confirmed by slot-14 2026-08-16),
+      including the `tests/test_safe_doc_push_rebase_failure_classification.bats` regression suite this doc's own
+      "What's still missing" section flagged as absent — it existed all along in slot-14's own worktree, just not yet
+      `git add`ed at the moment the shared `~/.cache/prek` cache snapshotted it. The recovered stash
+      `d7c6b862ebce96bde257bb58b6fd9a17d829d414` (in slot-16's own local clone, not reachable from slot-14's) now holds
+      a stale, already-superseded mid-flight snapshot of the same work — popping and re-shipping it would create a
+      duplicate/conflicting commit against content already on origin. **No further shipping action needed for this
+      todo.** Cleanup (safe, not urgent): whoever still holds slot-16's clone (or main/operator) can `git stash drop
+      d7c6b862ebce96bde257bb58b6fd9a17d829d414` — its content is confirmed redundant, not lost work; the 2 original
+      `~/.cache/prek/patches/` files this doc's "What slot-16 did" step 5 preserved are the same story and equally
+      safe to clear once someone with host access confirms them against `c3bb4dbcd1`.
 - [x] ✅ [INFRA] P2. **Root-cause whether this is a genuine cross-slot PREK_HOME leak** (a residual gap in
       `unified-trading-pm@62d1a42613`'s isolation fix) or a same-slot-16-inherited-WIP explanation that doesn't
       actually implicate cross-slot leakage (e.g. check whether slot 16's own recent session history ever ran

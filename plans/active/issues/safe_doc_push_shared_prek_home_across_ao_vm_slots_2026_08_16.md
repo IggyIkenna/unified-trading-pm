@@ -28,8 +28,8 @@ scope: [engineer, admin]
 tags: [safe-doc-push, prek, cross-slot, host-gate, root-cause, agent-orchestrator]
 related:
   [
-    /plans/active/issues/safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
-    /plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
   ]
 created: 2026-08-16
@@ -54,7 +54,7 @@ depends_on: []
 context_scope:
   [
     scripts/dev/safe-doc-push.sh,
-    /plans/active/issues/safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
   ]
 ---
 
