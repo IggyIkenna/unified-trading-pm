@@ -263,13 +263,31 @@ input gap didn't change.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Track the pre-existing 'ticks' malformed instrument_id surfaced during the 2026-08-05 TRADFI delta_one
-      re-run (the instrument scanner picked up a data_type name, not a real instrument) — the 2026-08-05 Progress Log
-      says it is 'a separate, pre-existing bug... not blocking this shard's proof but worth tracking as a low-priority
-      issue', a prose-only follow-up.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 — root-caused and fixed, not just tracked.** Track the pre-existing 'ticks'
+      malformed instrument_id surfaced during the 2026-08-05 TRADFI delta_one re-run — features-service@6d2ad5dc89
+      (+ tests). Root cause: NOT a data_type name mislabeled as an instrument (the 2026-08-05 guess was wrong) — every
+      instrument in a chain-bundle candle shard (UAC `build_tradfi_partition_path`/`build_cefi_partition_path` v6
+      layout: `.../underlying={U}/quote={Q}/margin={M}/ticks.parquet`) shares the SAME literal `ticks.parquet` leaf
+      filename by design, with the real per-instrument identity in the `underlying=` path segment.
+      `LookbackValidator._list_instrument_ids_for_prefix` took the filename stem as the instrument_id, collapsing every
+      distinct TRADFI future/combo instrument (CL, ES, VIX, 6A, ...) down to the single string `"ticks"` — confirmed
+      live via a read-only GCS listing of `market-data-tick-tradfi-prd-central-element-323112` for 2026-08-03/08-04:
+      every processed-candle blob for `instrument_type=FUTURE`/`COMBO` ends in `underlying={X}/ticks.parquet`. Fixed by
+      reconstructing `venue:instrument_type:underlying` from the path segments when the leaf is the generic `ticks`
+      placeholder (new `_chain_bundle_instrument_id.instrument_id_from_candle_blob_name`, split out to stay under the
+      900-line file cap); non-chain per-symbol shards are unaffected (filename stem still used directly). 3 new
+      regression tests in `tests/delta_one/unit/test_lookback_validation.py`
+      (`TestDiscoverInstrumentsChainBundleTicksLeaf`). Full `quality-gates.sh` green (18418 passed).
+- [ ] [DATA] P3. Re-run `/data-pipeline-check-features --family delta_one --asset-group TRADFI` (features-service) once
+      TRADFI MDPS candles exist for at least one real trading day, to get the genuine force+skip proof this doc's
+      original todos were gated on. Not actionable today — every TRADFI MDPS candle manifest row checked 2026-06-01 to
+      2026-08-05 was `empty_confirmed`, never `captured` (see the 2026-08-05 Progress Log entry); this todo is blocked
+      on the upstream TRADFI candle backfill actually landing real captured rows, not on any features-service code
+      change. Converted from the 2026-08-06 archive-candidate audit's prose note (never previously a tracked todo).
 
-> **2026-08-06 archive-candidate audit**: Both todos are [x] and the two-layer fix is confirmed working
+> **2026-08-06 archive-candidate audit**: Both original todos are [x] and the two-layer fix is confirmed working
 > (features-service@1b272676 + @ecd548b8, re-run CONFIRMED 2026-08-05; the honest-empty TRADFI path is now correctly
-> skipped). But the genuine force+skip proof remains gated on upstream TRADFI MDPS candle backfill, and the 'ticks'
-> malformed instrument_id is explicitly flagged in prose as 'worth tracking as a low-priority issue' — a follow-up that
-> was never made a tracked todo.
+> skipped). The genuine force+skip proof remaining gated on upstream TRADFI MDPS candle backfill is now tracked as the
+> todo above (was prose-only here before 2026-08-16). The 'ticks' malformed instrument_id follow-up is DONE (2026-08-16,
+> see above) — root cause was a chain-bundle candle-path parsing bug, not a data_type-name mislabel as the 2026-08-05
+> Progress Log guessed.

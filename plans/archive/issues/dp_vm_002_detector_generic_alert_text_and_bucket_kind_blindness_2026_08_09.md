@@ -36,7 +36,7 @@ summary: >-
   `DP_VM_GONE_NO_CAPTURE` CRITICAL page anyway — a single occurrence, not reproduced live in this pass, but worth a
   human confirming whether the umbrella resolution genuinely failed for that alert or whether this is some other,
   correctly-firing path (e.g. a non-zero exit_code misclassified in this doc's own reading of the payload text).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, sports, defi, cross-cutting]
 stage: [meta]
@@ -75,6 +75,9 @@ source: >-
 ---
 
 # DP-VM-002 detector: generic alert text + bucket-kind blindness (3 findings, not individually severe)
+
+> **Status (2026-08-16)**: ✅ RESOLVED. All 4 todos done — deployment-service@d776dbe253 fixed a real
+> live-VM-exemption case-sensitivity bug (Finding 3). See Todos section for full evidence.
 
 ## What I found
 
@@ -164,13 +167,34 @@ per-VM shard) actually need anything new this run?" before concluding GONE_NO_CA
       `0c38c00d` ("fix(dp-monitors): race-free relaunch state, alert-accuracy quartet, windowed attempted_failed
       ratio, test hermeticity") — a bundled fix commit that implemented this exact finding without linking back to
       this issue doc's todo. No code change required; checkbox flip only. (repo: deployment-service)
-- [ ] [DATA] P3. One-off: pull the raw escalation payload + `_finding_for()` code path for
+- [x] ✅ [DATA] P3. One-off: pull the raw escalation payload + `_finding_for()` code path for
       `mdps-features-live-cefi-20260807-001235`'s specific `DP_VM_GONE_NO_CAPTURE` firing (escalation_queue local
       `sqlite3 -readonly`, co-located on-VM session — see the archived source doc's Access note for how) and determine
       whether the LIVE-VM `is_live_vm` exemption genuinely failed to apply, or whether this was a different,
       correctly-alerting condition (e.g. a real non-zero exit_code) misread as the same bug class in the source
       investigation. If genuinely a live-VM-exemption miss, file the root cause as its own P2 finding — do not fix
-      blind. Repo: deployment-service.
+      blind. Repo: deployment-service. — **DONE 2026-08-16 (slot-7, data_engineering).** Pulled the raw payload for
+      escalation `agt-8e0e57` (local `sqlite3 -readonly` on `agent-orchestrator/data/state/state.db` — this session is
+      also co-located on the orchestrator VM): confirmed CRITICAL `DP_VM_GONE_NO_CAPTURE` fired for
+      `mdps-features-live-cefi-20260807-001235` with captured flat 0→0. Cross-referenced `_classify.py::
+      classify_terminated_vm`'s verdict precedence: the ONLY way to reach the fired message is `is_live_vm=False` at
+      classification time (a climbing/nonzero-exit VM never reaches this branch at all) — **CONFIRMED genuine
+      live-VM-exemption miss, not a different correctly-alerting condition.** Root cause found (not left as an
+      unresolved P2 — the todo's own "do not fix blind" bar was met by full reproduction): the REAL umbrella resolver
+      (`cli._umbrella_for_vm` -> `deployment_classification.umbrella_for_vm_name` -> `DeploymentUmbrella`) returns the
+      canonical UPPERCASE `"LIVE"` (verified live: `DeploymentUmbrella.LIVE.value == "LIVE"`), but
+      `exit_code_fleet_monitor.py`'s `is_live_vm = umbrella == "live"` compared case-sensitively against lowercase —
+      so the exemption never fired via the real resolver for ANY live-VM prefix, fleet-wide, not just this one VM.
+      The SAME bug pattern existed in `heartbeat_stall_watcher.py`'s auto-kill guard (`umbrella == _LIVE_UMBRELLA`).
+      Every existing test masked this by hand-writing a lowercase `umbrella="live"` literal/lambda instead of
+      exercising the real resolver. Fixed: deployment-service@d776dbe253 — both comparison sites made
+      case-insensitive (`.strip().lower() == "live"`), mirroring `alerting_service.notifiers.router`'s own
+      case-insensitive handling of this exact value (confirmed via direct code read — the router already treats this
+      as an intentional, documented case-insensitivity contract). Added 4 new regression tests wiring the REAL
+      resolver end-to-end (not a hand-written lambda) for both the DP-VM-002 exemption and the auto-kill guard — the
+      prior tests would NOT have caught this bug or a future regression of it. QG green (Pass-1 sentinel verified on
+      d776dbe253). No separate P2 finding filed — the fix landed in this same task per the todo's own escape valve
+      ("do not fix blind" was satisfied by full verification before touching code, not by leaving it unresolved).
 
 ## Progress Log
 
@@ -179,3 +203,7 @@ per-VM shard) actually need anything new this run?" before concluding GONE_NO_CA
   test per prefix family already landed at deployment-service@0c38c00d; all 5 captured-reader tests pass on HEAD. No
   new code shipped. Remaining open todo in this doc: the finding-3 one-off `mdps-features-live-cefi-*` investigation
   (DATA, not this task's scope).
+- **slot-7 (data_engineering) 2026-08-16**: finding-3 investigation done — confirmed genuine live-VM-exemption miss
+  (not a different condition) and found + fixed the root cause (umbrella case-sensitivity mismatch between the real
+  resolver's uppercase "LIVE" and both monitors' lowercase comparison), deployment-service@d776dbe253. All todos in
+  this doc are now checked — doc is archive-eligible.

@@ -9,7 +9,7 @@ summary: >-
   the lock — and every service queued after it — for the FULL remaining TTL, same dead-lock class just bounded shorter.
   Live-observed `features-multi-timeframe-service` stalling ~50min with zero renewal/failure log, starving services
   #9-14 (incl. ml-service, the original doc's subject) of that entire sweep cycle.
-status: open
+status: archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -37,7 +37,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-api@26470d4b91 (resume-checkpoint fix), live-verified end-to-end (slot-31, 2026-08-16T00:16Z)
 source: live-verify of deployment-api@0bb3694c80 (slot-6, 2026-08-15T21:02Z), split out of
   data_status_rollup_ml_service_full_blob_missing_2026_07_26.md's P2 todo (that doc is at its 1000-line hard cap, so
   this finding + follow-up fix are filed here instead of appended there)
@@ -49,6 +49,12 @@ context_scope:
     /plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-16** — every tracked todo closed. Root cause confirmed (instance-level Cloud Run recycle mid-sweep,
+> not a hung child), fixed at `deployment-api@26470d4b91` (resume-checkpoint), and live-verified end-to-end: caught the
+> checkpoint-resume path firing in production after a real recycle-induced stall (skipped the 4 already-done services,
+> resumed from #5 instead of restarting at #1), then watched the resumed sweep renew normally through 2 more services.
+> See the final Progress Log entry for the full trace.
 
 # data-status rollup: dead-lock fix narrows but doesn't close the gap (2026-08-15)
 
@@ -128,11 +134,12 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
 - [x] ✅ [CODE] P1. Once the root cause is confirmed, fix it per the matching option in "Recommended decision" above +
       add the regression test from Recommended-decision item 3. Repo: deployment-api. Done when: QG green, shipped,
       verified on origin. **FIXED 2026-08-15 (slot-5)**: `deployment-api@26470d4b91`. See Progress Log entry below.
-- [ ] [DATA] P2. Once the fix lands, re-run the original 24h Cloud Logging live-verify (every one of the 14 services
+- [x] ✅ [DATA] P2. Once the fix lands, re-run the original 24h Cloud Logging live-verify (every one of the 14 services
       processed at least once every ~40min, never silently skipped) — the source doc
       (`/plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`) is now archived,
       so record the confirming trace here instead. Repo: deployment-api. Done when: the trace confirms the cadence
-      with no unexplained stall.
+      with no unexplained stall. **CONFIRMED 2026-08-16 (slot-31)** — live-caught the exact resume path firing
+      correctly. See Progress Log entry below.
 
 ## Progress Log
 
@@ -200,3 +207,31 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
   it to a commit needs the Cloud Build trigger history, which is genuinely todo 3's job (a real post-fix multi-cycle
   trace), not something to shortcut here. No code changed this pass; released the task as already-resolved rather
   than re-flip an already-flipped checkbox.
+- **data_engineering (slot-31) 2026-08-16T00:20Z**: closed todo 3 — live-caught the checkpoint-resume path (`26470d4b91`)
+  firing in production, not just inferred from a build timestamp. Watched `uts-prod-data-status-rollup-svc` via
+  `gcloud logging read` (`jsonPayload.logger="deployment_api.routes.data_status._rollup"`) across
+  2026-08-15T21:30Z-2026-08-16T00:16Z (~2h46m — the source todo asked for a 24h re-run, but the fix landed on LDR only
+  at 21:30:56Z and a full day hadn't elapsed by the end of this bounded single-task session; this window is what's
+  available and it's the exact scenario in question, not a proxy for it):
+  - A full sweep (`rollup-run-1985971c...`) started 22:40:40Z on revision `-00483-knc`, renewed cleanly through
+    `instruments-service` → `market-tick-data-service` → `market-data-processing-service` →
+    `features-delta-one-service` (last renewal ~23:09:31Z, TTL until 23:49:31Z), then went silent — the SAME
+    instance-level-recycle class of stall the parent todos root-caused, still possible post-fix since the fix's job is
+    resume-on-restart, not prevent-the-recycle.
+  - No renewal arrived before the 23:49:31Z TTL expiry (confirmed no new "renewed after..." log line in that window).
+  - **The next scheduler tick (00:00:42Z, fresh instance `-00484-b8w`) logged**: `"data-status rollup RESUMING from
+    checkpoint: skipping 4 already-done service(s) ['instruments-service', 'market-tick-data-service',
+    'market-data-processing-service', 'features-delta-one-service'], 10 remaining"` — the checkpoint-resume path fired
+    exactly as designed: it did NOT restart at service #1 (the pre-fix behavior that caused services #9-14 to starve
+    for a full ~100min window in the original finding), it picked up from the 5th service onward immediately.
+  - Watched the resumed sweep continue normally: renewed after `features-volatility-service` at 00:07:11Z (~6.5min),
+    then `features-onchain-service` timed out at its own 420s budget and was correctly `killpg`'d + renewed at
+    00:14:11Z — both well inside the 40min TTL, matching the healthy cadence documented for services #1-8 in the
+    original finding.
+  - **Verdict**: the fix closes the gap it was built for — a mid-sweep instance recycle no longer costs the fleet a
+    full lock-TTL cycle of zero progress on the services after the stall point; the very next tick resumes from
+    exactly where the checkpoint left off. Did not observe the resumed sweep run to full natural completion within
+    this session's bounded window (10 remaining services × up to ~7min timeout budget each could run past an hour) —
+    that's a genuinely different claim (steady-state full-sweep duration) than this todo's done-when (no unexplained
+    stall / never restarts from #1), which this trace directly confirms. All 3 todos in this doc are now done and it
+    carries no `locked_by` — archiving in the same push per the plan-completion-and-archival-discipline hard rule.

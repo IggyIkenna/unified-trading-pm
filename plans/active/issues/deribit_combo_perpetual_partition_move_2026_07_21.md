@@ -709,3 +709,59 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
   fixed first without re-scoping via GCS, could miss the newly accumulated wrong-partition duplicates entirely.
   Continuing this session to build the GCS-driven re-census next Half 1/2 to establish a trustworthy current count
   before scheduling the actual full-batch move.
+
+- **2026-08-16** (slot 24, data_engineering, task `deribit_combo_perpetual_partition_move-3c27da745321`) — Executed the
+  `[DATA] P2` VM-launch todo above (the `--sweep-stale-rows` count, not the re-census work in the entry directly
+  above — that is a separate, still-open thread this task does not touch). Went to add a `cefi-deribit-combo-sweep`
+  category to `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` and discovered mid-edit (via a
+  `quickmerge` behind-by-1 block on that exact file) that **another slot had, in parallel, already shipped an
+  equivalent category** — `cefi-deribit-sweep`, `deployment-service@22f5a0e2`, same script, same issue-doc citation,
+  proper `GCP_PROJECT_ID`/`DEPLOYMENT_ENV`/`CLOUD_PROVIDER`/`UNIFIED_ENVIRONMENT`/`CLOUD_MOCK_MODE` env wiring
+  (mirroring `_cefi_eu_twin_apply_cmd`'s pattern). Discarded my own redundant edit (`git checkout --`), pulled clean,
+  and used the upstream category instead of shipping a duplicate. Launched the dry-run:
+  `canonical-migration-cefi-deribit-sweep-20260816-001205` (RUNNING, asia-northeast1-c) — then discovered via
+  `gcloud compute instances list` that the SAME other slot had already launched its own dry-run VM 3.5 minutes earlier
+  (`...-000842`, also RUNNING) — i.e. two slots are independently executing this same P2 todo concurrently. Attempted
+  to delete my redundant VM to avoid duplicate spend; **blocked by a PreToolUse guardrail hook
+  (`block_destructive_commands.py`) that forbids `gcloud compute instances delete` on any `canonical-migration-*` VM
+  for autonomous workers unconditionally** (no override even when the deleting agent is confident it's their own
+  just-launched duplicate — the hook can't distinguish that from an accident by reading the command, and requires the
+  3-signal liveness check / human execution per `data_engineering.md` STEP 0.55). Left both VMs running — cost is
+  small (SPOT e2-standard-8, dry/read-only, self-resolving) and not worth an operator escalation. Armed a background
+  watchdog (`run_in_background`, no `nohup`/`disown` this time — see lesson below) polling both VMs'
+  `vm-logs/<vm>/run.log` via `unified_trading_library.cloud_interface.get_storage_client()` every 60s for up to
+  ~25 min, watching for `Swept`/`Traceback`/`EXIT_CODE` terminal markers. **Not yet resolved at segment end** — the
+  dry-run had not reached a terminal state when this entry was written; P2/P3 remain open, genuinely blocked on
+  elapsed VM time, not on any decision or missing input.
+
+  **Lessons for whoever picks this up next:**
+  1. `gsutil`/direct `google.cloud` subprocess calls are hook-blocked even for reads — use
+     `unified_trading_library.cloud_interface.get_storage_client()`, whose `list_blobs(bucket, prefix=...)` returns
+     `BlobMetadata` objects with a `.last_modified` field (not `.updated`), and which also exposes
+     `.blob_exists(bucket, blob)` / `.download_bytes(bucket, blob)` for direct log-content polling.
+  2. **Never `nohup ... & disown` a background monitor inside a `run_in_background: true` Bash call** — the outer
+     wrapper returns instantly once the inner process is disowned, so the harness reports the task "completed" within
+     seconds even though the real polling loop is still alive as an orphan the harness can no longer notify on. Just
+     let the tool's own `run_in_background` track the blocking loop directly (no `nohup`/`disown`) to get a real
+     completion notification.
+  3. `canonical-migration-*` VM deletes are unconditionally guardrail-blocked for autonomous agents — a confirmed
+     just-launched duplicate cannot be self-cleaned; either tolerate the (small, SPOT, dry-run) cost or escalate to
+     the operator, there is no autonomous path.
+  4. On a hot, frequently-touched shared file like `launch-canonical-migration-vm.sh`, expect concurrent duplicate
+     dispatch of the same plan todo across slots — a `quickmerge` behind-by-1 block on the exact file being edited is
+     a strong signal to `git diff HEAD origin/<branch> -- <path>` before assuming a normal unrelated-drift conflict;
+     it may be someone else finishing the same task.
+
+## Deferred work after 2026-08-16
+
+| Item | State / why deferred | Blocked on |
+| --- | --- | --- |
+| `[DATA] P2` — get the real `--sweep-stale-rows --dry-run` row count from a VM | Cannot be done yet | Elapsed VM time — two dry-run VMs (`...-000842`, `...-001205`) are running now; check `vm-logs/canonical-migration-cefi-deribit-sweep-*/run.log` for a `Swept`/`EXIT_CODE` terminal line, then read the printed candidate count |
+| `[DATA] P3` — flip the sweep checkbox with the real row count | Cannot be done yet | Depends on P2 above completing first |
+| Full GCS-driven re-census (2026-08-15 entry above) | Not done | Separate, older, still-open thread on the main partition-move population (not the stale-row sweep) — unrelated to tonight's VM work, next session's Half 1/2 per that entry |
+
+**Recommended next item**: once either VM's `run.log` shows a terminal line, read the printed dry-run count. If
+non-zero, launch `cefi-deribit-sweep ... full` (the same category, `full` mode) to `--apply`, then flip the P3
+checkbox at line ~528 with the VM name + row count as evidence. If zero, flip P3 directly with "0 stale rows found,
+VM-verified" as the evidence and archive-check whether this issue doc's remaining open item is only the unrelated
+re-census thread.
