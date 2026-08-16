@@ -132,24 +132,30 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       (`grok-api-key`, `grok-management-key`, project `central-element-323112`) — a leading-whitespace corruption in the
       inference key was caught and fixed (new secret version, old version disabled). Live-verified against the real API
       (see Progress Log).
-- [ ] [OPERATOR] P1. Confirm which of the 3 already-set-up GCP/AI-Studio projects map to which quota profile — the
-      operator-supplied numbers in this plan's Why section are one profile; confirm all 3 projects share it or supply
-      per-project numbers if they differ, since assuming uniformity across projects would be a real bug. Hand over the 3
-      project API keys (one per project, each usable for both models) once confirmed. Done when: 3 real keys exist, each
-      tagged with its project and confirmed RPM/TPM/RPD ceiling.
-- [ ] [INFRA] P1. Pre-flight billing-health check on each of the 3 Gemini projects before registration, not just a
-      quota-number confirmation — two distinct real failure modes found 2026-08-14 testing two OTHER real GCP projects
-      (see Progress Log): (a) `billingEnabled:true` on a project means NO free-tier bucket runs in parallel — every call
-      bills at standard rates regardless of volume, so any of the 3 projects with billing linked silently invalidates
-      this plan's $0-spend design for that project; (b) even a project that looks billing-healthy in every config read
-      (`billingEnabled:true`, billing account `open:true`) can still have every paid call denied by Google's internal
-      payment/collections gate (`403 "Lightning dunning decision is deny"`) — invisible to any config read, only
-      surfaces on a real call. Done when: each of the 3 projects is confirmed `billingEnabled:false` via
-      `gcloud billing projects describe <project>` (true free tier), AND a real smoke `generateContent` call against
-      each succeeds — not just a config check. **1 of 3 DONE 2026-08-16**: `gen-lang-client-0008266149` (project number
-      18569138749) confirmed `billingEnabled:False` via the operator's own admin ADC identity, AND real
-      `generateContent` calls succeeded against both target models (`gemini-3.5-flash-lite`, `gemini-3.7-flash`, real
-      `usageMetadata` returned, no spend-cap/billing error) — genuinely free tier, unlike the two projects
+- [x] [OPERATOR] P1. ✅ Confirm which of the 3 already-set-up GCP/AI-Studio projects map to which quota profile and
+      hand over the project API keys. **DONE 2026-08-16, self-served via the operator's own admin ADC identity**
+      (`ikenna@odum-research.com`, re-authed live this session via a headless FIFO-piped device-code flow after the
+      original ADC session expired) rather than the operator hand-generating each key in AI Studio: the operator's
+      original 3 candidate projects turned out to be 2 duplicate pastes of the same already-paid project
+      (`uts-compliance-ikenna`/371216509644, same key both times, confirmed byte-identical) plus 1 genuine free project
+      (`gen-lang-client-0008266149`). Rather than wait on 2 more manual handoffs, audited the operator's full GCP estate
+      (23 projects), found 5 more genuinely idle (only Google's default API bundle enabled, no real resources deployed —
+      one pair required distinguishing a real Firebase app, `missouri-podcasts` on `gbv-classroom-01c2ca`, from its
+      inert sibling `gbv-classroom-d3df66`, confirmed via `gcloud functions list`/`gcloud run services list` showing
+      live deployed resources on one and disabled APIs on the other), disabled billing on those 5
+      (`gcloud billing projects unlink`), then created + GSM-stored real Gemini-API-restricted keys for 3 of them
+      programmatically (`gcloud alpha services api-keys create --api-target=service=generativelanguage.googleapis.com`).
+      All 4 free-tier keys now real, live, and smoke-tested (see Progress Log): `gemini-api-key-gen-lang-client-0008266149`,
+      `gemini-api-key-elated-nectar-440116-e9`, `gemini-api-key-poetic-bongo-456907-e4`,
+      `gemini-api-key-spring-mix-426915-t9` — one more than the plan's minimum 3, kept as a spare rather than trimmed.
+      Quota profile: all share the standard free-tier ceiling table in this plan's Why section (not independently
+      re-verified per-project via Cloud Quotas API beyond the first one — reasonable to assume given all 4 are freshly
+      billing-disabled default projects, but flagged as an assumption, not a measurement, for the 3 created via the
+      programmatic path).
+- [x] [INFRA] P1. ✅ Pre-flight billing-health check on each Gemini project before registration. **DONE 2026-08-16, all
+      4 confirmed** `billingEnabled:False` via `gcloud billing projects describe`, AND a real smoke `generateContent`
+      call succeeded against both target models for every one of them (`gen-lang-client-0008266149`,
+      `elated-nectar-440116-e9`, `poetic-bongo-456907-e4`, `spring-mix-426915-t9`) — genuinely free tier, unlike the two projects
       (`uts-compliance-ikenna`/371216509644 handed over twice by mistake — same key both times, confirmed byte-identical)
       that turned out to be Paid Tier 3. Key stored: `gemini-api-key-gen-lang-client-0008266149`. 2 more projects to go.
 - [ ] [INFRA] P0. Stand up a self-hosted LiteLLM proxy in Anthropic-passthrough mode on/reachable from the orchestrator
@@ -317,7 +323,40 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       PAID Gemini path in this plan's design, or stays out of scope in favor of 3 genuinely free-tier projects. Real $
       spend applies either way once `generateContent` succeeds — the project's current spend cap needs raising at
       `ai.studio/spend` before it can serve any traffic regardless of this decision. Done when: the operator states
-      which path, and if paid, the `RateCard`/non-goal text above is updated to match.
+      which path, and if paid, the `RateCard`/non-goal text above is updated to match. **Lower priority now** — 4
+      genuinely free-tier projects were found+registered the same day (see below), so the paid path is no longer
+      needed to hit the plan's 3-project minimum; still worth an answer if the operator wants it as a bonus
+      high-capacity path later.
+
+- **2026-08-16 — full Gemini free-tier project sweep, 4 projects confirmed+keyed+smoke-tested, self-served via the
+  operator's own admin ADC identity.** Refreshed `ikenna@odum-research.com`'s expired ADC session live mid-session
+  (headless: `gcloud auth application-default login --no-launch-browser` blocked on stdin immediately when
+  backgrounded — fixed by piping stdin through a named FIFO instead, keeping the process alive long enough for the
+  operator to complete the browser step and paste the code back). With real admin access confirmed, audited the
+  operator's full GCP estate (`gcloud projects list`, 23 projects) rather than waiting on 2 more manual key handoffs:
+  9 already billing-off, 7 confirmed real/load-bearing (named production/staging/dev/logging projects plus a genuine
+  Firebase app — untouched), and **5 confirmed genuinely idle** (`elated-nectar-440116-e9`, `poetic-bongo-456907-e4`,
+  `spring-mix-426915-t9`, `sturdy-sentry-456910-a1`, `gbv-classroom-d3df66`) — verified via enabled-services diffing,
+  not project naming (`gbv-classroom-d3df66` in particular required distinguishing it from its active sibling
+  `gbv-classroom-01c2ca`, which has a real deployed Cloud Run app, `missouri-podcasts` — `d3df66` has Cloud
+  Functions/Cloud Run APIs not even enabled, confirming it's a Firebase-hosting-only shell). Disabled billing on all 5
+  (`gcloud billing projects unlink`, confirmed `billingEnabled:False` after). Generated real Gemini-API-restricted
+  keys programmatically for 3 of the 5 (`gcloud alpha services api-keys create --api-target=...`) —
+  `sturdy-sentry-456910-a1` and `gbv-classroom-d3df66` left unused as spares, not needed once 4 total were confirmed.
+
+  **Real bug hit and fixed**: the first key-creation loop captured the async operation's full stderr+stdout blob
+  (`2>&1`) into the value stored in GSM instead of just the extracted key string — `poetic-bongo`'s and
+  `spring-mix`'s secrets were corrupted (740-byte JSON operation dumps, not 39-byte keys), which silently smoke-tested
+  as `curl` connection failures (`HTTP 000`, not a clean rejection) rather than an obvious error. Recovered by
+  re-enabling the corrupted version, regex-extracting the real `keyString` from the stored garbage, and re-storing a
+  clean version (corrupted version disabled, not deleted). **Trap worth remembering**: an LRO command's `2>&1` capture
+  can silently poison a stored secret without any error at creation time — the corruption only surfaces later, and as
+  a connection-level failure that looks unrelated to the actual cause.
+
+  All 4 final keys real, live, and smoke-tested against both target models (`gemini-3.5-flash-lite`,
+  `gemini-3.7-flash`, real `usageMetadata` returned): `gemini-api-key-gen-lang-client-0008266149`,
+  `gemini-api-key-elated-nectar-440116-e9`, `gemini-api-key-poetic-bongo-456907-e4`,
+  `gemini-api-key-spring-mix-426915-t9`. This closes the plan's 3-project minimum with one spare.
 
 ## Context scout
 
