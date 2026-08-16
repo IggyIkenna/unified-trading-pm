@@ -101,7 +101,7 @@ tags: [tag1, tag2]
 # Rule Title
 RULE: what to do
 WHY: rationale (often a past incident)
-CODEX: path/to/codex/ssot.md # the durable SSOT for detail
+CODEX: /codex/<section>/<doc>.md # the durable SSOT for detail
 DO: examples of correct usage
 NEVER: examples of banned patterns
 ```

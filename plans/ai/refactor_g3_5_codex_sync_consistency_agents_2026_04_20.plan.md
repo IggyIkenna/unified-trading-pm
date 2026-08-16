@@ -53,7 +53,7 @@ Target: a `playbook-consistency-agent` (part of the `plan-health-agent` family) 
 3. `codex/14-playbooks/_ssot-rules/` — all 12 rules (consistency targets)
 4. `codex/14-playbooks/experience/` — playbooks (structural grammar targets)
 5. `/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
-6. `/codex/14-playbooks/_ssot-rules/01-briefing-structure-grammar.md` — 9-section grammar
+6. `/codex/14-customer-journeys/_ssot-rules/01-grammar.md` — 9-section grammar
 
 ## Out of scope
 
@@ -92,7 +92,8 @@ Target: a `playbook-consistency-agent` (part of the `plan-health-agent` family) 
 
 ### Phase E — QG + documentation
 
-- [ ] [AGENT] P0. Codex doc `/codex/14-playbooks/_ssot-rules/_consistency-agent-guide.md` — describes the agent, how to
+- [ ] [AGENT] P0. Codex doc `_consistency-agent-guide.md` under `codex/14-playbooks/_ssot-rules/` (never created —
+      dangling ref, see reference_path_convention_2026_07_23.md) — describes the agent, how to
       add a check, how to interpret reports.
 - [ ] [SCRIPT] P0. `cd unified-trading-pm && bash scripts/quality-gates.sh`
 
@@ -103,7 +104,7 @@ Target: a `playbook-consistency-agent` (part of the `plan-health-agent` family) 
 - `unified-trading-pm/scripts/agents/tests/test_playbook_consistency_agent.py` — NEW
 - `unified-trading-pm/.github/workflows/playbook-consistency-agent.yml` — NEW
 - `codex/14-playbooks/_ssot-rules/_consistency-checks.yaml` — NEW
-- `/codex/14-playbooks/_ssot-rules/_consistency-agent-guide.md` — NEW
+- `_consistency-agent-guide.md` under `codex/14-playbooks/_ssot-rules/` — NEW (never created)
 
 ## Execution DAG
 

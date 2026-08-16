@@ -19,7 +19,7 @@ related:
   [
     /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md,
+    /plans/archive/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: 2026-08-15

@@ -144,7 +144,8 @@ end-state).
 - We move to per-month parquet rollup (parent-doc Phase 1) and the manifest needs more frequent regeneration.
 
 **For this plan today**: assume Phase 2 doesn't exist. Just run the UTL Phase-1 rebuild once manually. Document the
-follow-up plan stub at `unified-trading-pm/plans/ai/manifest_regenerator_via_bq_2026_05.plan.md` during Unit F closeout
+follow-up plan stub named `manifest_regenerator_via_bq_2026_05.plan.md` under `plans/ai/` (never created — dangling
+ref, see reference_path_convention_2026_07_23.md) during Unit F closeout
 — empty skeleton with the spec above + a note pointing at the stale `candles_cefi_v2` table to investigate.
 
 **What this plan does today**
@@ -548,7 +549,7 @@ After A + B + (E baseline) land:
   baseline.
 - `/codex/02-data/per-asset-group-bucket-layouts.md`: confirm the file matches reality — it does, per the listing I did
   2026-04-29. No edit needed unless drift surfaces.
-- Follow-up plan stub `unified-trading-pm/plans/ai/watchlist_from_instruments_2026_04_30.plan.md` — empty skeleton
+- Follow-up plan stub `unified-trading-pm/plans/ai/watchlist_from_instruments_2026_04_29.plan.md` — empty skeleton
   noting we'll source the watchlist from instruments-service once the chart path is live.
 
 ---

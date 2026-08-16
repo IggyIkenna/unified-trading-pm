@@ -17,7 +17,7 @@ tags: [strategy, capability-wizard, ci-regen, client-lite, successor-plan, docsp
 related:
   [
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
@@ -50,7 +50,7 @@ context_scope:
     /plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
     scripts/openapi/generate-unified-openapi.sh,
     "unified-trading-system-ui/app/(public)/questionnaire/",
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
   ]
 ---

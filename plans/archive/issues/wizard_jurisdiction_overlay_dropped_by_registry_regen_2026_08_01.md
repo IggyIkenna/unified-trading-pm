@@ -17,7 +17,7 @@ tags: [ui, wizard, jurisdiction, registry-regen, ci-regen, playwright, smoke]
 related:
   [
     /plans/archive/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md,
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md,
   ]
 created: 2026-08-01
@@ -37,7 +37,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     unified-trading-pm/scripts/openapi/generate_ui_reference_data.py,
     unified-api-contracts/unified_api_contracts/internal/architecture_v2/jurisdiction_overlay.py,
     unified-trading-system-ui/lib/registry/jurisdiction-overlay.ts,

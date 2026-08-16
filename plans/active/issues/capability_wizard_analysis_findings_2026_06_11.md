@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [strategy, ssot-audit, registry, execution, ui, uac, data-correctness]
 related:
   [
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     ../../archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
   ]
 created: 2026-06-11
@@ -31,7 +31,7 @@ depends_on: []
 last_updated: 2026-07-31
 context_scope:
   [
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
     execution-service/execution_service/trade_execution/adapters,
     unified-api-contracts/unified_api_contracts/internal/architecture_v2,

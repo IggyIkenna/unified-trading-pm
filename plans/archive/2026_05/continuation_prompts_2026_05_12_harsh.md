@@ -315,7 +315,7 @@ PM@`d3b7e8d7`). Status-line first to ack.
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
   2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 7
-  3. unified-trading-pm/plans/active/mock_data_pipeline_benchmarking_2026_05_10.md
+  3. unified-trading-pm/plans/archive/mock_data_pipeline_benchmarking_2026_05_10.md
 
 Agent-tag: harsh-mock-data-benchmarking-tab.
 

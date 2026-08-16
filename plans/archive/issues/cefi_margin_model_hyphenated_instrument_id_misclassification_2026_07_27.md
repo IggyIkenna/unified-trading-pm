@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [cefi, margin, risk, correctness, bug]
 related:
   [
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-27"

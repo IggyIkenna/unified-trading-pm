@@ -41,7 +41,7 @@ superseded_by:
 archive_exempt:
 context_scope:
   [
-    /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
+    /plans/archive/2026_08/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
     unified-api-contracts/unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py,
     features-service/features_service/sports/exporters/odds_features_exporter.py,
     ml-service/ml_service/training/app/core/sports_feature_loader.py,
@@ -126,7 +126,7 @@ evidence. Summary of what each site currently uses:
 - [x] [DATA] P1. ✅ **RETAGGED 2026-07-28 (stale-tag audit — already decided, `[OPERATOR]` never removed). DECIDED
       2026-07-23 — new deliberate naming, not adopted from any single existing convention.** Operator ruling
       (BLK-a1ce4719, see this doc's own "## Operator ruling" section above and
-      `/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`): design fresh, and migrate the
+      `/plans/archive/2026_08/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`): design fresh, and migrate the
       underlying data + manifest (not just rename call sites) so every one of the 3 real consumers' actual needs is
       satisfied, including the per-venue decimal-odds shape `SportsArbDutchingEngine` needs that **features-service does
       not currently compute at all** (FSS's `ODDS_COLUMNS` — read in full, 180 fields,

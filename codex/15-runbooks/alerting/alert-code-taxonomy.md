@@ -306,14 +306,15 @@ wildcard-halt-all-archetypes for safety (over-broad halt is the safe default, mi
 semantics in [scope_key resolution](#scope_key-resolution)).
 
 Recovery from an `ARCHETYPE` kill-switch halt requires either (a) the underlying alert condition clearing (model server
-recovers, inference success rate restores) OR (b) operator manual DART override per the kill-switch runbook
-(`unified-trading-pm/codex/15-runbooks/alerting/kill_switch_ml_model_failure.md`). The execution-service halt-pump
-subscribes to the bus event + drains in-flight orders before halting; positions are NOT auto-flattened (operator decides
-flatten vs hold-and-monitor).
+recovers, inference success rate restores) OR (b) operator manual DART override per the kill-switch runbook (a
+`kill_switch_ml_model_failure.md` runbook under `codex/15-runbooks/alerting/` — never created, dangling ref, see
+reference_path_convention_2026_07_23.md). The execution-service halt-pump subscribes to the bus event + drains in-flight
+orders before halting; positions are NOT auto-flattened (operator decides flatten vs hold-and-monitor).
 
 ### Cross-references for ML category
 
-- Plan: [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
+- Plan:
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
   Phase 1.B + Phase 1.B-ML covers the 6 codes, threshold registry seeds, and routing rules.
 - ML-monitoring producer surface: lives in `ml-inference-service/ml_inference_service/monitoring/` (drift detector,
   staleness clock, latency sampler) — emits alerts through `alerting-service` via PubSub `defi_alerts` topic.
@@ -324,7 +325,8 @@ flatten vs hold-and-monitor).
 
 ### Reference plan + codex
 
-- Plan: [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
+- Plan:
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
   Migrated-issues §"Kill-switch publisher hook" + Phase 8 rehearsal extension.
 - Code: `alerting-service/alerting_service/notifiers/router.py` — `_publish_kill_switch_event` /
   `_find_kill_switch_rule` / `_resolve_scope_key` helpers.
@@ -412,7 +414,7 @@ Synthetic-allowed alerts NEVER route to PagerDuty + the production on-call Teleg
 ### Cross-references (synthetic-data filter)
 
 - **Plan**:
-  [`mock_data_pipeline_benchmarking_2026_05_10`](../../../plans/active/mock_data_pipeline_benchmarking_2026_05_10.md) —
+  [`mock_data_pipeline_benchmarking_2026_05_10`](../../../plans/archive/mock_data_pipeline_benchmarking_2026_05_10.md) —
   defines the synthetic-data taxonomy.
 - **UAC**: slot 6 `synthetic-data generator taxonomy + per-asset_group registry` at UAC@`d47b232`.
 - **Rehearsal seam**: [`rehearsal-procedure.md`](./rehearsal-procedure.md) § "rehearsal=true tag" — first concrete

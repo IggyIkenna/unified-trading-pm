@@ -119,7 +119,7 @@ thinking_tier: max | high | medium | mechanical | off | none # optional — exte
 last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout | NA
 locked_since: YYYY-MM-DD
-context_scope: [/codex/path/to/ssot.md, plans/active/related-doc.md] # elective minimal reading-list; see doc-frontmatter-schema.md — populate this YOURSELF at authoring time (task_template.md §2a), don't just leave it for the next /context-scout sweep
+context_scope: [/codex/<section>/<ssot-doc>.md, /plans/active/<related-doc>.md] # elective minimal reading-list; see doc-frontmatter-schema.md — populate this YOURSELF at authoring time (task_template.md §2a), don't just leave it for the next /context-scout sweep
 depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering + gates archival
 supersedes: [old-plan-slug] # list of plans made obsolete by this one
 superseded_by: [new-plan-slug] # list of plans that replaced this one
