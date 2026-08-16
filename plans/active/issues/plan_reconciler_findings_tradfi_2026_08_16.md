@@ -37,43 +37,91 @@ Dispatch `agt-a74a6a`, slot 31, tranche `tradfi`. Corpus: 86 docs / 2,755,415 by
 
 ## Todos (follow-ups from this run, not executed here — see "Filed" section below for full context)
 
-- [ ] [DOC] P2. **Archive `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`** — verified 9/9 todos `[x]`,
-      unlocked; `archive_exempt: true` bridge explicitly deferred to a separate follow-on pass. Run the 6-step ritual.
-- [ ] [DOC] P2. **Archive `tradfi_recovery_quarantine_registration_gap_2026_07_27.md`** — verified 4/4 todos `[x]`,
-      unlocked, `locked_by` cleared 2026-08-12; same deferred-bridge pattern. Run the 6-step ritual.
-- [ ] [DOC] P2. **Archive `tradfi_backfill_oom_remediation_2026_06_24.md`** — verified all todos `[x]` as of
-      2026-08-16, confirmed outside the 12h grace window via direct `git log` check at time of this run. Run the
-      6-step ritual.
-- [ ] [DOC] P2. **Archive `backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md`** — verified 2/2 todos
+> **Phase -1 reconciliation pass (2026-08-16, same-day follow-up)** — all 9 items below re-checked against fresh state.
+> 5 executed this pass (4 archivals + 1 mechanical text correction); 2 partially executed (item 5: correction done,
+> archival deferred — referrer sweep too large to safely rush; item 8: 3/7 done, 4/7 grace-blocked); 1 blocked by a
+> NEW pre-existing finding (item 6: the target doc is over its own 1000L hard line-cap, so ANY commit touching it —
+> incl. this tag-only fix — is hook-rejected until it's split); 1 genuinely grace-blocked (item 7); 1 codex-gated,
+> correctly not auto-applied per the skill's codex-edit carve-out (item 9), flagged to the operator instead. See the
+> per-item notes below and the new "## Phase -1 reconciliation" section at the end of this doc for full evidence.
+
+- [x] ✅ [DOC] P2. **Archive `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`** — verified 9/9 todos `[x]`,
+      unlocked; `archive_exempt: true` bridge explicitly deferred to a separate follow-on pass. **RESOLVED before this
+      pass reached it** — confirmed already archived (by na-eligibility-audit, per its own banner) at
+      `plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`; spot-checked its ~23 corpus
+      referrers, every structured leading-slash reference already repoints to the archived path (only prose/bare-name
+      fact-citations remain, correct per the fact-vs-path convention). No action needed.
+- [x] ✅ [DOC] P2. **Archive `tradfi_recovery_quarantine_registration_gap_2026_07_27.md`** — verified 4/4 todos `[x]`,
+      unlocked, `locked_by` cleared 2026-08-12; same deferred-bridge pattern. **DONE 2026-08-16 (plan_reconciler
+      Phase -1)**: 6-step ritual run, archived to `plans/archive/2026_08/issues/`; only referrers found were prose/bare
+      mentions (no structured refs to repoint).
+- [x] ✅ [DOC] P2. **Archive `tradfi_backfill_oom_remediation_2026_06_24.md`** — verified all todos `[x]` as of
+      2026-08-16, confirmed outside the 12h grace window via direct `git log` check at time of this run. **DONE
+      2026-08-16 (plan_reconciler Phase -1)**: 6-step ritual run, archived to `plans/archive/2026_08/issues/`; 2
+      structured referrers repointed (`tradfi_vm_resource_utilization_downsize_2026_08_10.md` ×2,
+      `tradfi_backfill_throughput_followups_2026_07_24.md` ×1).
+- [x] ✅ [DOC] P2. **Archive `backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md`** — verified 2/2 todos
       `[x]` since 2026-08-10 (6 days overdue at time of this run), `archive_exempt` never dropped per its own
-      codex-cited convention. Run the 6-step ritual.
+      codex-cited convention. **DONE 2026-08-16 (plan_reconciler Phase -1)**: 6-step ritual run, archived to
+      `plans/archive/2026_08/`; `INDEX.md` + `infrastructure_master.md` referrers left for their own regen tooling
+      (machine-generated, established precedent from this doc's own earlier "Hygiene fixes" section); a
+      Progress-Log-only historical mention in `defi_satellite_ao_dispatch_batch11_2026_08_09.md` left untouched
+      (fact-vs-path convention).
 - [ ] [DATA] P2. **Correct the stale Massive-purge section in `tradfi_canonical_path_migration_design_2026_07_19.md`,
       then archive it.** Doc body (steps 5-6 / hard-stops list) still frames the 1.47M-object Massive purge as
       future-gated; `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3 confirms it EXECUTED 2026-07-20/21
       (1,701,422 objects → 0, 0 collateral) and names this doc as the source design doc. All todos already `[x]`,
-      `archive_exempt: true` bridge pending this correction + a follow-on pass.
+      `archive_exempt: true` bridge pending this correction + a follow-on pass. **HALF-DONE 2026-08-16 (plan_reconciler
+      Phase -1): the text correction is DONE** (Sequencing step 6 + Hard-stops list corrected in place, evidence cited
+      inline). **Archival deliberately DEFERRED, not this pass** — this doc has 35+ corpus referrers (vs. the other 3
+      docs' single-digit counts), at least 2 of them (`tradfi_consolidated_closeout_2026_07_18.md`,
+      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`) inside the 12h grace window at the time of this pass — a
+      rushed referrer sweep across that many active docs risks leaving dangling refs, which is worse than leaving the
+      doc active a while longer. Genuinely still open, real work — leave for a dedicated referrer-sweep pass.
 - [ ] [SERVICE] P3. **Fix the missing `[OPERATOR]` tag on 2 open todos in
       `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** (lines ~975, ~983 as of this run — SPOT vs
       on-demand VM cost/reliability question, raised twice in Progress Log across 6 consecutive gated-skip dispatches,
       never formally escalated). Tag-only fix; the underlying design question itself stays genuinely open pending an
-      operator ruling.
+      operator ruling. **BLOCKED 2026-08-16 (plan_reconciler Phase -1) — NEW finding, not the originally-scoped
+      issue.** Drafted the tag-fix edit (both todos → `[DATA→OPERATOR]`), but the pre-commit hook rejected it:
+      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` is 1010L, already OVER its own 1000L hard
+      line-cap BEFORE this edit (my edit would only have pushed it further over) — `check_line_caps.sh` blocks any
+      commit touching an over-cap doc regardless of whether the edit adds or removes lines. Reverted the edit
+      (uncommitted, cleanly — nothing landed). Per the skill's own "line-cap-blocked-done is a distinct sub-case" rule
+      (Phase 2), this is now a **split finding**, operator-gated (splitting a 1000+-line doc is a planning decision,
+      not a mechanical fix) — not something this pass can force through. Genuinely still open.
 - [ ] [DOCS] P3. **Fix the residual reference-path ratchet regression from this run's archivals** (baseline 34,
       currently 38 — 2 of the original 6 were fixed same-run) — `tradfi_consolidated_closeout_2026_07_18.md` (×2) and
       `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (×2) still reference the now-archived
       `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`(+`_finalize`); both source docs were inside the 12h grace
-      window during this run. Repoint to `/plans/archive/2026_08/...` once grace clears.
+      window during this run. Repoint to `/plans/archive/2026_08/...` once grace clears. **STILL OPEN 2026-08-16
+      (plan_reconciler Phase -1)**: re-checked — both docs are STILL inside the 12h grace window as of this pass
+      (`tradfi_consolidated_closeout_2026_07_18.md` last touched 5 min before this check; `..._batch8...` ~3.5h
+      before), one apparently mid-edit by a concurrent session right now. Genuinely grace-blocked, not a judgment call
+      — leave for the next pass that finds them clear.
 - [ ] [DOCS] P3. **Bump stale `last_updated` frontmatter on 7 tradfi-tranche docs** found during this run (identical
       pattern — na-eligibility-audit/context-scout passes don't bump the field): `ag_closeout_audit_rollout_2026_07_25.md`,
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`, `instruments_remaining_work_audit_2026_07_10.md`,
       `tradfi_manifest_content_recovery_completion_2026_07_24.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`,
       `estate_orphan_assessment_2026_07_21.md`, `strategy_ml_orphan_coverage_design_gaps_2026_08_03.md` — a mechanical
-      tooling fix (bump-on-audit-touch) is likely higher-leverage than 7 hand-edits.
+      tooling fix (bump-on-audit-touch) is likely higher-leverage than 7 hand-edits. **3/7 DONE 2026-08-16
+      (plan_reconciler Phase -1)**: `instruments_remaining_work_audit_2026_07_10.md`,
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md`, `strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`
+      bumped to their real last-git-touched date (all confirmed outside the 12h grace window). **4/7 left untouched —
+      confirmed INSIDE the 12h grace window at time of this pass** (`ag_closeout_audit_rollout_2026_07_25.md`,
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`, `estate_orphan_assessment_2026_07_21.md` all touched
+      ~40 min before this check; `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` ~3h20m before) — genuinely
+      grace-blocked, not skipped by choice.
 - [ ] [DOCS] P3. **File 4 codex-alignment corrections** identified this run (new content needed, not a pure
       substitution, so not auto-applied per the mechanical carve-out): `/codex/02-data/tradfi-databento-sourcing-ssot.md`
       (2 gaps — stale CBOE-floor-fix status + silent on `EXCHANGE_CODE_TO_NAME`), `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`
       (missing a 3rd billing-waste failure-mode class), `/codex/05-infrastructure/manifest-consolidator-ssot.md` (no
       warning that rebuild scripts resurrect retired-venue manifest rows), `/codex/05-infrastructure/data-pipeline-alerts.md`
-      (no detector for intended-pause-then-silently-resumed, confirmed recurred twice).
+      (no detector for intended-pause-then-silently-resumed, confirmed recurred twice). **STILL OPEN 2026-08-16
+      (plan_reconciler Phase -1) — deliberately NOT applied.** These are codex SSOT edits; per the skill's Modes
+      section, the ONE carve-out that stays gated regardless of trust mode is any edit to `codex/**`, because new
+      content (not a pure substitution) requires new judgment about wording/scope, not just a fact-check. Flagged to
+      the operator in this pass's final report per the task's instructions instead of applied.
 
 ## Phase -1 — prior findings reconciliation
 
@@ -246,3 +294,34 @@ out of scope), plus 2 NEW ones this run's own archival work caused, both underst
   2 docs. This is a genuine, temporary, self-explaining ratchet regression, not an oversight — flagging honestly
   rather than claiming a clean exit gate. Recommend the next `all` or `tradfi` pass (or whichever session next
   legitimately touches those 2 docs) repoints these 4 refs to close the gap.
+
+## Phase -1 reconciliation (2026-08-16, same-day follow-up pass)
+
+Re-checked all 9 Todos above against fresh state (`git pull --ff-only` first). Verdicts, per the skill's Phase -1
+routing (RESOLVED / STILL-OPEN AUTO-FIXABLE / STILL-OPEN NEEDS-CODEX-RULING / STILL-OPEN ORDINARY-WORK):
+
+1. Archive `tradfi_mvp_of_mvp_...` — **RESOLVED**, already archived (na-eligibility-audit), referrers already correct.
+2. Archive `tradfi_recovery_quarantine_registration_gap_2026_07_27.md` — **AUTO-FIXED**: archived.
+3. Archive `tradfi_backfill_oom_remediation_2026_06_24.md` — **AUTO-FIXED**: archived, 3 structured referrers repointed.
+4. Archive `backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md` — **AUTO-FIXED**: archived.
+5. Correct + archive `tradfi_canonical_path_migration_design_2026_07_19.md` — **PARTIALLY AUTO-FIXED**: text correction
+   applied (evidence: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3, `RUN_TS=20260720-193849`,
+   1,701,422→0); archival itself is **STILL-OPEN ORDINARY-WORK** — 35+ referrers, 2 in the grace window at check time,
+   a rushed sweep risks dangling refs.
+6. `[OPERATOR]` tag fix on `uac_data_type_validity_...` — **BLOCKED, NEW finding — STILL-OPEN ORDINARY-WORK (split
+   required)**: the tag-fix edit was drafted and then reverted uncommitted after the pre-commit hook rejected it — the
+   target doc is 1010L, already over its own 1000L hard line-cap BEFORE this edit, and `check_line_caps.sh` blocks
+   ANY commit touching an over-cap doc. Per the skill's own "line-cap-blocked-done" rule this is now a split finding,
+   operator-gated (splitting a 1000+-line doc is a planning decision) — not mechanically fixable this pass.
+7. Reference-path ratchet regression (4 refs) — **STILL-OPEN ORDINARY-WORK, grace-blocked** — re-checked fresh, both
+   source docs still inside grace at this pass's check time too (one apparently mid-edit by a concurrent session).
+8. `last_updated` bump on 7 docs — **3/7 AUTO-FIXED** (outside grace); **4/7 STILL-OPEN, grace-blocked** (all touched
+   within the last ~40min-3h20min at check time, several likely by a concurrent na-eligibility-audit-style pass).
+9. 4 codex-alignment corrections — **STILL-OPEN NEEDS-CODEX-RULING** — per the skill's codex-edit carve-out (new
+   content, not a pure substitution, stays gated regardless of trust mode), NOT applied this pass. Flagged to the
+   operator per the calling task's instructions (see final chat report) rather than edited.
+
+**Doc disposition**: 3 genuinely open items remain (6 split-blocked/NEW finding, 7 grace-blocked, 9 codex-gated) plus
+2 half-done items with real remaining work (5 archival-deferred, 8 partial-grace-blocked) — this findings doc is NOT
+fully resolved and stays
+`status: open` in `plans/active/issues/`, not archived.

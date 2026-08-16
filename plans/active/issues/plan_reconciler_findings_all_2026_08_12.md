@@ -400,8 +400,11 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       what looks like the same EXTENDED-STARKNET backfill without cross-referencing. **MOOT (verified 2026-08-15)**: doc
       now has 0 open todos (all 38 `[x]`) — `archive_exempt: true` bridge (2026-08-12 placeholder-clearing), archival
       deferred to a separate follow-on pass per that ruling's explicit scope; not archived here.
-- [ ] [REVIEW] P3. (P3) plans/active/data_completion_to_100_all_ag_2026_06_21.md:61-66 — self-removal-instruction banner
-      still present after its own stated removal condition
+- [x] ✅ [REVIEW] P3. (P3) plans/active/data_completion_to_100_all_ag_2026_06_21.md:61-66 — self-removal-instruction
+      banner still present after its own stated removal condition. **DONE (verified 2026-08-16, /plan-reconcile Phase
+      -1)**: the banner at that location has since been superseded by a live, dated `🟢 VM RUNNING` banner (2026-08-15)
+      describing the actual current EXTENDED-STARKNET backfill — the doc's own text states the prior banner was
+      corrected in place, not left dangling; no self-removal-instruction artifact remains.
 - [x] ✅ [REVIEW] P3. (P3) plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md:27-28 —
       inconsistent execution_scope pairing with assigned_vm:NA vs corpus convention. **DONE (verified 2026-08-16)**:
       `execution_scope: local-only` already carries a `CORRECTED 2026-08-12 (/plan-reconcile)` note aligning it with the
@@ -418,10 +421,11 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       P3 as "Opus/high", propagating the same stale claim. **DONE (verified 2026-08-16)**: P3's row in the phase-index
       table now reads `Sonnet / high` — already fixed (P1/P2's historical "Opus" entries are archived-phase records,
       not a live claim).
-- [ ] [REVIEW] P3. (P3) plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md — bogus lock predates doc
-      creation. **CHECKED 2026-08-16**: still genuinely open — `locked_by: live-defi-rollout` / `locked_since:
-      2026-05-21` remain set against `created: 2026-07-28` (impossible ordering); this doc was NOT swept by the
-      2026-08-12 corpus-wide `locked_by` placeholder-clearing bridge — left open for that follow-on pass.
+- [x] ✅ [REVIEW] P3. (P3) plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md — bogus lock predates doc
+      creation. **DONE (re-verified 2026-08-16, /plan-reconcile Phase -1)**: `locked_by:` and `locked_since:` are now
+      both blank in the live frontmatter — the corpus-wide placeholder-clearing bridge has since reached this doc too
+      (a subsequent sweep after the 2026-08-12 one this finding referenced); the impossible-ordering contradiction no
+      longer exists.
 - [ ] [REVIEW] P3. (P2) plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md — Deferred section claims a
       doc is still operator-gated; its own finalize twin shows it was reclassified NA→planning the same day,
       self-flagged but never corrected. Not re-verified this pass (broad 64-doc Deferred list, needs a targeted
@@ -506,11 +510,11 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       DELETE + index rebuild todo, cites an operator ruling but not inline. **DONE (verified 2026-08-16)**: the DIAG P3
       todo in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` already states inline "Both items were operator-RULED
       AO-ready on 2026-07-28" — fixed.
-- [ ] [DOC] P3. (codex-drift) plans/active/defi_consolidated_closeout_2026_07_18.md:260 — flags 2 codex docs as stale on
-      venue-vs-chain segment order, unresolved 3+ weeks, no tracked follow-up. **CHECKED 2026-08-16**: the venue-before-
-      chain claim itself already carries a `CORRECTED 2026-08-12 (/plan-reconcile)` note that one of the two cited docs
-      (`GCS_PATHS.md`) doesn't even exist in codex and the other is not actually stale — the underlying "2 codex docs
-      stale" premise is resolved. Left open only if a residual doc-drift follow-up todo is still warranted; likely moot.
+- [x] ✅ [DOC] P3. (codex-drift) plans/active/defi_consolidated_closeout_2026_07_18.md:260 — flags 2 codex docs as stale
+      on venue-vs-chain segment order, unresolved 3+ weeks, no tracked follow-up. **DONE (re-verified 2026-08-16,
+      /plan-reconcile Phase -1)**: the cited `CORRECTED 2026-08-12 (/plan-reconcile)` annotation at that exact location
+      states in its own words "No further codex correction needed; this doc's own 3+-week-unresolved flag can be
+      dropped" — confirmed moot, no residual follow-up todo warranted.
 - [x] ✅ [REVIEW] P3. (ao-readiness) plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md — missing
       definition-of-done. **DONE (verified 2026-08-16)**: doc's own text now cites a sibling `assigned_vm: planning`
       doc carrying a measured done-when condition for this work — fixed.
@@ -564,9 +568,13 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       2026-08-16)**: confirmed accurate — the doc's own "2026-07-14 update" Conclusion already documents this exact gap
       (`features-onchain` isn't a key in `t1_batch_scheduler.tf`'s service map) and rolls it into the sole P0 todo's
       multi-repo scope; genuinely out of scope for a one-line fix, correctly left open.
-- [ ] [REVIEW] P3. (ao-readiness) plans/archive/issues/lighter_tardis_writerless_route_hang_2026_07_28.md —
-      AO-dispatched but explicitly needs a human design decision among 3 options (now RESOLVED 2026-08-12 — operator
-      ruling picked option 2, implemented @unified-trading-library@b3afeb8c4; doc archived)
+- [x] ✅ [REVIEW] P3. (ao-readiness) plans/archive/issues/lighter_tardis_writerless_route_hang_2026_07_28.md —
+      AO-dispatched but explicitly needs a human design decision among 3 options. **DONE (re-verified 2026-08-16,
+      /plan-reconcile Phase -1)**: operator RULED 2026-08-12 (option 2), implemented
+      `unified-trading-library@b3afeb8c4` (QG green, quickmerge-verified on origin); doc's own frontmatter confirms
+      `status: resolved`, all todos `[x]`, physically archived at
+      `plans/archive/issues/lighter_tardis_writerless_route_hang_2026_07_28.md` — the checkbox itself was simply never
+      flipped to match despite the item's own parenthetical already stating the resolution; fixed here.
 - [x] ✅ [DOC] P3. (codex-drift) plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md —
       already self-tracked. **DONE (verified 2026-08-16)**: the core codex-drift issue is resolved (guard applied
       2026-08-11, all three symlinks removed, per the doc's own summary); the doc's sole remaining open todo is an
@@ -722,3 +730,16 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   to track the remaining lower-severity backlog per the "no silent caps" rule — the raw 46-batch hunter output (~236
   total findings across categories) existed only in an ephemeral session scratchpad and would have been lost without
   this doc.
+
+- **2026-08-16 (/plan-reconcile Phase -1, dedicated pass)**: re-checked every remaining open item in this doc against
+  fresh state. Most of Section 3's backlog had already been individually re-verified earlier the same day by a
+  concurrent session (dated "(checked/verified 2026-08-16)" annotations throughout) and correctly left open as real
+  ordinary work, judgment calls, or low-severity historical noise — not re-litigated again here. Found and flipped 4
+  additional items whose underlying claim was already resolved but the checkbox never matched: the
+  `data_completion_to_100_all_ag_2026_06_21.md` self-removal banner (superseded by a live 2026-08-15 banner), the
+  `deepseek_claude_blended_provider_routing_2026_07_28.md` bogus-lock finding (`locked_by`/`locked_since` now
+  confirmed blank), the `defi_consolidated_closeout_2026_07_18.md` codex-drift item (the doc's own cited annotation
+  already says "no further correction needed... flag can be dropped"), and the `lighter_tardis_writerless_route_hang`
+  item (doc confirmed archived + fix shipped, checkbox simply never flipped). 24 items remain genuinely open — real
+  unfinished work / judgment calls / corpus-wide disagreements not resolvable by this pass — left untouched. Doc NOT
+  archived (still has open items).

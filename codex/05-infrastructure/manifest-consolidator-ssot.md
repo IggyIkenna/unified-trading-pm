@@ -528,6 +528,66 @@ degrading reads (operator direction 2026-06-01; plan `manifest_consolidator_live
   the fleet in is real per-launcher scoping work (which bucket is the "AG-relevant" one for a given VM_TASK isn't
   always a single formula the way MTDS-download's is), tracked as a follow-up, not done blind in one pass (rule 11 —
   a gate change must be proven safe for the population it touches before it ships).
+  that raises if the heartbeat is stale past `MANIFEST_CONSOLIDATED_STALENESS_SEC` while other-VM shards exist. Callers:
+  `unified_trading_library/manifest_writer/_read_index.py` (every manifest READ re-checks this — so a caller that reads
+  the manifest repeatedly, e.g. MDPS's per-date `dependency_checker`, gets this check on every read as a side effect,
+  not as a designed periodic mechanism), `manifest_consolidator.py`, `monitors/consolidator_liveness.py`. **CORRECTED
+  2026-08-16** — the prior text here said the shell preflight in `setup-data-pipeline-vm.sh`
+  (`deployment-service@7add531`) "should wrap this instead of spinning their own `gsutil` stat"; that never happened and
+  was misleading readers into treating it as an outstanding oversight. It is a DELIBERATE divergence, not a gap: the
+  shell preflight (§5b there) reimplements the same staleness read via `gcloud storage objects describe` because it
+  runs in a lightweight bash loop for the VM's whole life (see next bullet) and a Python cold-start every tick would be
+  wasteful — it stays functionally equivalent to `assert_consolidator_healthy`'s check (same budget semantics, same
+  "stale past budget = fail"), just implemented shell-native. Do not re-flag this as a TODO without re-reading this
+  paragraph.
+- **Periodic re-check during a long-running VM's own execution — NOT just a one-time preflight (shipped 2026-08-16,
+  `deployment-service` `vm-exec-with-gcs-tee.sh` + `setup-data-pipeline-vm.sh`, manifest_consolidator_and_lifecycle\_
+  cost_optimization_2026_08_16.md)**. Before this, `setup-data-pipeline-vm.sh`'s §5b "OOM preflight" only ran ONCE at
+  boot — a consolidator that was healthy at launch could die hours into a multi-hour backfill with the VM never
+  noticing, writing per-VM shards nobody would ever consolidate for the rest of its run (operator finding: "ensure VMs
+  exit if their consolidator is down for the AG relevant to them, to avoid VMs not knowing what their completion status
+  should be"). The shared VM-side wrapper `vm-exec-with-gcs-tee.sh` (used by `_launch_with_tee`, the seam nearly every
+  launcher routes through) now runs an opt-in background watchdog, gated on `CONSOLIDATOR_WATCHDOG_BUCKET` being set: it
+  re-reads the same bucket's `_index/availability_index.parquet` staleness every `CONSOLIDATOR_WATCHDOG_INTERVAL_SEC`
+  (default 900s) for the wrapped command's ENTIRE lifetime and, on breach past `CONSOLIDATOR_WATCHDOG_BUDGET_SEC`
+  (default 86400s, mirrors `MANIFEST_CONSOLIDATED_STALENESS_SEC`), SIGTERMs (SIGKILL after a 5s grace) the wrapped task
+  and forces the VM's terminal exit code to **78** — the same code the one-time preflight already used for this exact
+  condition, so both signal identically regardless of WHEN the staleness was caught. This is a loud-fail HARD exit
+  (matches this doc's own "Liveness + health contract" default below — a stale consolidator is an incident, not a
+  degraded read); it deliberately does NOT consult `MANIFEST_ALLOW_STALE_FALLBACK` (that flag only gates the READER's
+  per-VM-shard fallback merge, never this preflight/watchdog class of check). `setup-data-pipeline-vm.sh` wires this
+  automatically (exports `CONSOLIDATOR_WATCHDOG_BUCKET`/`_BUDGET_SEC`) for the SAME population its §5b preflight already
+  covers — `VM_SERVICE=market_tick_data_service && VM_OPERATION=download` (non-test), i.e. the MTDS download backfill
+  launcher family (~20 launchers: gas-fees, dex-pools, dex-swaps, liquidations, oracle-prices, perp-funding, lst-rates,
+  position-data, pyth-archive, risk-params, solana-defi, solana-gas, sports-odds, vault-share-price, prediction,
+  eigenlayer-rewards, flash-loan-events, bridge-events, liquidation-events, and the base MTDS launcher).
+  **Extended 2026-08-16 (same-day follow-up)** to five more families via a NEW §5c block (deliberately separate from
+  §5b — extends only the periodic watchdog export, not the one-time boot OOM preflight, which stays MTDS-only for its
+  own narrower per-VM-shard-count OOM rationale) and a shared bash resolver function
+  (`_resolve_extended_consolidator_bucket`, keyed on the ground-truth 18-job set in
+  `manifest_consolidator_scheduler.tf`'s locals, not a re-guessed formula): `instruments_service` (any
+  VM_OPERATION — ~49 launchers, incl. most sports fixture/enrichment launchers, which route through
+  instruments-service — `instruments-store-{ag}-{env}-{project}`, all 5 asset_groups covered);
+  `market_data_processing_service` (reuses the IDENTICAL `market-data-tick-{ag}-{env}-{project}` bucket MTDS-download
+  already covers, since MDPS candle derivation reads+writes that same bucket); `features_service`
+  (`features-{ag}-{env}-{project}`, cefi/defi/tradfi/sports/calendar — **prediction excluded**, `features-prediction`
+  has no consolidator job); `strategy_service` (one flat `strategy-store-{env}-{project}` bucket for every asset_group
+  **except prediction** — `strategy-store-prediction` has no consolidator job); `execution_service` (one
+  unconditional single-root `execution-store-{env}-{project}` bucket, every asset_group via a path prefix). **Still
+  NOT extended** (documented exclusions, not a silent gap): `ml_service` (VM_TASK is the generic "features-backfill"
+  dispatch with an arbitrary `VM_BACKFILL_CMD` — which of `ml-store`'s 5 object-key prefixes a given invocation writes
+  isn't derivable from VM_SERVICE/VM_ASSET_GROUP alone, and only `ml-training-artifacts` ever had a consolidator);
+  `deployment_service`/`batch_live_reconciliation_service`/`wallet_treasury`/`client_reporting`/`alerting_service`/
+  `chaos-drill`/`dr-drill-cutover`/`qg_snapshot` (target deployment-state/portfolio-state/recon/audit buckets, none of
+  which have a consolidator — portfolio-state confirmed "none" above); compound-VM_SERVICE launchers (e.g.
+  `launch-mdps-features-live.sh`, `launch-prediction-pipeline-vm.sh` — write more than one covered bucket per run,
+  `CONSOLIDATOR_WATCHDOG_BUCKET` only supports a single target); bespoke `*_daily_cron` VM_SERVICE literals
+  (`cefi_fwd_daily_cron`, `tradfi_fwd_daily_cron`, etc. — genuine per-launcher work to confirm their real write target);
+  and continuous/live launchers (`mtds-live*`, `*-forward-poll`, `prediction-live`, `perp-clob-live` — a different,
+  self-relaunching execution shape than the bounded-backfill population this mechanism was proven against). Tests:
+  `deployment-service/tests/unit/test_consolidator_watchdog_vm_wiring.py`'s `TestSetupScriptWiresExtendedFamilies`.
+  SSOT for the remaining gap: `plans/active/manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`'s
+  Progress Log.
 - **Liveness watchdog** — `unified_trading_library.monitors.consolidator_liveness.ConsolidatorLivenessMonitor` +
   `check_buckets()` + CLI (`python -m unified_trading_library.monitors.consolidator_liveness --buckets a,b`). Per bucket
   it reads the heartbeat age and emits `CONSOLIDATOR_DOWN` (ERROR) when it misses > N cycles (default 5 × 60s),

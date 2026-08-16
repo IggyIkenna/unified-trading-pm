@@ -6,10 +6,12 @@ summary: >-
   prior `plan_reconciler_findings_ao_*.md` existed). Fanned 81 non-grace docs across 5 parallel hunters (100% coverage),
   adversarially verified every candidate (including catching one hunter's fabricated evidence — a real commit existed
   but was mis-attributed to the wrong repo), archived 8 verified-done docs (6 satellite dispatch batch+finalize pairs +
-  2 standalone issue docs), applied 15 evidence-backed fixes across 13 more docs, and routes 1 genuine factual dispute
-  (subscription-tier contradiction) to the operator — everything else resolved directly. One asked question remains
-  open (see `## Filed`); this run stays `locked_by` until it resolves per STEP 8.
-status: open
+  2 standalone issue docs), applied 15 evidence-backed fixes across 13 more docs, and routed 1 genuine factual dispute
+  (subscription-tier contradiction) to the operator via `/blocked` (`BLK-050d1304`). **RESOLVED 2026-08-16** (separate
+  `/plan-reconcile` Phase -1 pass): the operator answered (`answer=A`) and the fix was already applied directly to the
+  target doc by a different session working around the same broken `/messages` retrieval channel this run itself hit
+  — see `## Filed` for the full citation chain. This doc reached 0 open items and has been archived.
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -31,8 +33,8 @@ estimate_calibrated_ai_days: 0.72
 assigned_role: review
 assigned_vm: NA
 execution_scope: local-only
-locked_by: "plan_reconciler (agt-3eb42b) since 2026-08-16T16:17:25Z"
-locked_since: "2026-08-16T16:17:25Z"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by:
@@ -47,6 +49,11 @@ depends_on: []
 ---
 
 # plan_reconciler — ao tranche sweep, 2026-08-16
+
+> **✅ ARCHIVED 2026-08-16 (/plan-reconcile Phase -1 reconciliation)** — 0 open items: the sole remaining blocker
+> (`BLK-050d1304`, the subscription-tier factual dispute) is RESOLVED — operator answered, fix already applied and
+> verified reachable on `origin/live-defi-rollout` (see `## Filed`). `locked_by:` was dead (no live AO dispatch, no
+> commit in ~4h25m) and has been cleared. 2 corpus referrers with a leading-slash path repointed in the same pass.
 
 **How to use this doc**: every finding below is tracked as it is verified/applied — this is a live progress journal, not
 a post-hoc report.
@@ -145,17 +152,27 @@ archivals above).
 
 ## Filed (1 asked, 1 durable)
 
-- **[OPERATOR] P0 — ASKED via `/blocked`, this turn.** `anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`
-  classifies account `sub-d-odum1default` as tier `max20` (feeding a calibration table);
+- **[OPERATOR] P0 — ASKED via `/blocked` (`BLK-050d1304`), this run — RESOLVED 2026-08-16 (separate /plan-reconcile
+  Phase -1 pass).** `anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md` classifies account
+  `sub-d-odum1default` as tier `max20` (feeding a calibration table);
   `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md` classifies the SAME account as `Pro`, citing a direct
   `accounts.json` check — and has an OPEN `[OPERATOR] P1` todo investigating a "1047x outlier" built on that premise.
   This run attempted independent verification and could NOT: `accounts.json` is operator-edited static config
-  (`agent-orchestrator/server/accounts.py:1`) not present in this git checkout (confirmed via `find`), so this is a
-  genuine unresolved factual question, not a preference call trust-mode's carve-out covers. If Doc A's classification
-  is right, Doc B's live operator-facing investigation is chasing the wrong hypothesis. Options presented: (A) Pro is
-  correct (Doc B's `accounts.json`-sourced claim) — recommended, since it cites the more direct/authoritative source;
-  (B) max20 is correct (Doc A) — re-derive Doc B's calibration table; (C) something else (account was migrated
-  between tiers, both were right at different times). `can_continue: true` — not blocking the rest of this run.
+  (`agent-orchestrator/server/accounts.py:1`) not present in this git checkout (confirmed via `find`), so this was a
+  genuine unresolved factual question, not a preference call trust-mode's carve-out covers. Options presented: (A)
+  Pro is correct (Doc B's `accounts.json`-sourced claim) — recommended; (B) max20 is correct (Doc A); (C) something
+  else (account migrated tiers).
+  **Resolution chain, fully verified this pass**: (1) the operator answered `answer=A` — confirmed via
+  `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`'s own 2026-08-16 Progress Log entry, which cites
+  `/api/activity`'s `blocked_answered` event at 17:06:04 UTC for `BLK-050d1304`. (2) The fix was already APPLIED —
+  `unified-trading-pm@766e1cd052` (17:09:37 UTC, "correct stale max20 tier label for sub-d-odum1default... verified
+  pro via accounts.json... BLK-050d1304"), landed by a different session ("main orchestrator-level agent") working
+  around the same broken `/messages` retrieval channel this run's own `plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`
+  documents — confirmed reachable on `origin/live-defi-rollout` (`git merge-base --is-ancestor`). A same-day follow-up
+  (`unified-trading-pm@9e80b8b53d`, 18:29:16Z) recomputed the affected calibration-table rows at the corrected Pro
+  denominator. Option A (Pro is correct) is CONFIRMED — the target doc's own todo is flipped `[x]` with the
+  `accounts.json` citation (`"tier": "pro", "weekly_msg_limit": 600"`). Neither target doc needed further edits from
+  this pass — both are already current.
 - **Sequential-gate dispatch-ordering pattern** (2 confirmed instances: batch14-finalize, batch8-finalize) — filed as
   a `- [ ]` todo on `ao_consolidated_closeout_2026_08_12.md` (the current `ao`-tranche coordinator) rather than a new
   standalone doc, since it's exactly the kind of cross-doc pattern that coordinator's own re-triage todo should catch.
@@ -217,3 +234,27 @@ already the kind of thing the standing hygiene sweep tracks.
   this worker can read, or a fresh session/operator applying it directly to the 2 affected docs
   (`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`,
   `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`).
+- **2026-08-16T21:42Z (separate /plan-reconcile Phase -1 reconciliation pass — this doc's own blocker resolved,
+  lock cleared, doc archived)**: exactly the "fresh session... applying it directly" path named above. Verified
+  (not assumed) via `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`'s own 2026-08-16 Progress Log entry (a
+  DIFFERENT investigation that independently hit the same channel gap and traced the resolution): the operator's
+  `answer=A` landed as a `blocked_answered` `/api/activity` event at 17:06:04 UTC, and a "main orchestrator-level
+  agent" applied it directly — `unified-trading-pm@766e1cd052` (17:09:37 UTC) + a same-day recompute follow-up
+  (`unified-trading-pm@9e80b8b53d`, 18:29:16Z), both confirmed ancestors of `origin/live-defi-rollout`. See the
+  updated `## Filed` entry above for the full chain. Also confirmed via a live AO backlog check
+  (`check-ao-backlog-status.sh agt-3eb42b`) that this doc's own dispatch is not among current
+  queued/dispatched/blocked tasks, and no commit has landed against this doc since 17:11:03Z (~4h25m before this
+  pass) — the lock is genuinely dead by the same 3-part liveness bar prior sessions have used (no live tmux session /
+  no recent commits / not in the live AO backlog). Lock cleared. With the Filed P0 item resolved, this doc has 0
+  remaining open items (Contradictions' 2 sequential-gate instances were already filed as a durable todo on
+  `ao_consolidated_closeout_2026_08_12.md`; `gate_on_depends_wiring_gap...` is a pointer for the next toucher, not an
+  open item of this doc) — archived via the standard 6-step ritual, flat `plans/archive/issues/` destination per
+  `archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`'s same-day ruling. 2 corpus
+  referrers carrying a leading-slash path to this doc (`plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`,
+  `plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`, both in their `related:` frontmatter)
+  repointed in the same pass. **Separately noted, not fixed here** (real engineering work, outside `plans/**`, already
+  tracked as its own `[BACKEND] P1` todo in `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`): the SAME
+  2026-08-16 investigation also found a genuinely distinct bug — a duplicate same-day `ao`-tranche dispatch
+  (`agt-053eab`, slot 7) spawned while this run (`agt-3eb42b`, slot 28) was still alive, because the dispatcher has
+  no pre-dispatch check for an existing live `locked_by:` on the target tranche+date. Already correctly tracked
+  elsewhere; not this doc's open item.

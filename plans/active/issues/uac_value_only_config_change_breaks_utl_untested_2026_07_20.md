@@ -41,6 +41,7 @@ source:
   [
     "discovered 2026-07-20 while root-causing the overnight T0 FAILURE + CI REGRESSION alerts on unified-trading-library",
   ]
+archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 resolved_by:
@@ -338,17 +339,20 @@ nothing: it is architecturally cached against exactly the input that changed.
       priority-list reorder flagged, unchanged not flagged, non-allowlisted constant untouched); 25/25 tests green, full
       `quality-gates.sh` green. **Still blocked on [A]** for the re-dispatch to actually fire (this todo's own scope was
       the signal itself, not the dispatch wiring — see [A]'s "What sign-off actually gates").
-- [ ] [OPERATOR] P2. ~~Add a `quality-gate-run` listener + fix `poll_level`~~ **SUPERSEDED** — verified a no-op while
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-16 (plan_reconciler Phase -1, per
+      `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md` todo 1,
+      `unified-trading-pm@d01cd9ad41`: `check_todo_regression.sh`'s `_check_one()` now recognizes this exact bold
+      non-checkbox `CANCELLED` bullet pattern and no longer counts a conversion as a checkbox "loss" — the format
+      conflict this item's own note flagged is resolved, so it converts cleanly now).** Add a `quality-gate-run`
+      listener + fix `poll_level` — verified a no-op while
       the content-sentinel keys on own-tree-hash (blocker 3). Reconsider only after [A]; and reconcile the v2-template
-      drift first (second loaded gun). **Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09** (kept the checkbox format
-      rather than converting to the non-checkbox `CANCELLED —` disposition bullet task_template.md describes — that
-      format conflicts with `check_todo_regression.sh`'s literal `^- \[[ xX]\]` count invariant, which has no
-      special-case for it; see the new SSOT-contradiction follow-up filed below) — found while checking this doc for
+      drift first (second loaded gun). Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09 — found while checking this doc for
       backlog-ingestion eligibility before the [A] `assigned_vm` reclassification: the prior `- [ ] [DEVOPS]` form had
       no non-dispatchable marker and would have been ingested by AO despite reading SUPERSEDED.
-- [ ] [OPERATOR] P2. ~~Make the differ set `is_breaking` on value change~~ **DO NOT** — verified to false-break the
+- **[OPERATOR] P2. CANCELLED — DO NOT 2026-08-16 (plan_reconciler Phase -1, same format-conversion basis as the item
+      above).** Make the differ set `is_breaking` on value change — verified to false-break the
       fleet on benign recalibrations (e.g. `EMISSION_LATENCY_MS_BY_SOURCE`). Use the decoupled signal in [B] instead.
-      **Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09**, same reason as the item above.
+      Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09, same reason as the item above.
 - [x] ✅ [OPERATOR] P2. **EXTRACTED 2026-08-02** (operator ruling on
       `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 18, option A) to
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — this doc's main P0/P1 chain stays `locked_by`/operator-gated as

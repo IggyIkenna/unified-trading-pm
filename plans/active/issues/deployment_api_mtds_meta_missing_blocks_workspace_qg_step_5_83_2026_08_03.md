@@ -145,7 +145,7 @@ without knowing what it is). No further action was taken on `deployment-api` —
       shipped clean via quickmerge — `execution-service@d75c99a0`.
 - [x] ✅ 2. [INFRA] P2. N/A — `mtds_meta.py` was never actually renamed/removed upstream (see todo 1); this conditional
       baseline-regeneration step does not apply.
-- [ ] 3. [INFRA] P3. Consider whether STEP 5.83 should validate against a canonical/fresh state (e.g.
+- [ ] [INFRA] P3. 3. Consider whether STEP 5.83 should validate against a canonical/fresh state (e.g.
       `git show origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
       sibling checkouts on a shared multi-tenant host — so one host's checkout drift doesn't block shipping from every
       OTHER repo on that same host. Cross-reference

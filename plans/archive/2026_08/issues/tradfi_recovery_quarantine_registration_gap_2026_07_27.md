@@ -52,6 +52,10 @@ context_scope:
   ]
 ---
 
+> **✅ ARCHIVED 2026-08-16** (plan_reconciler, Phase -1 reconciliation of `plan_reconciler_findings_tradfi_2026_08_16.md`
+> todo 2) — all 4 todos `[x]`, `locked_by` empty. The `archive_exempt: true` bridge (2026-08-12) explicitly deferred
+> this exact archival to "a separate follow-on pass"; this is that pass.
+
 # TradFi garbage-underlying recovery: 428 recovered rows unregistered + stale quarantine ground truth
 
 ## What I found

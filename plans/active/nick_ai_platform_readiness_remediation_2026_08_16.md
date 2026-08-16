@@ -130,12 +130,21 @@ helper, not a hand-rolled copy.
       venue filter) → 200, `transfer-encoding: chunked`, 670,695-byte parquet, read back via `pd.read_parquet` as
       13,141 real rows across all 23 venues; unmatched venue → 404. All against live prod data (cefi, day=2026-08-16),
       not a unit-test mock.
-- [ ] [BACKEND] P0. **market-tick-data-service: build the external market-data surface.** Same auth pattern. Two
-      endpoints: an availability query (what's captured for a given asset_group/venue/data_type — reuse the real
-      `coverage.json`/manifest read path the honest-coverage machinery already uses, never re-implement it) and a
-      delivery endpoint covering both daily batch parquet and a streaming leg (reuse the UTL `EventTransport` facade
-      for streaming — `unified_trading_library.streaming.event_facade` — never a bespoke transport). Done-when: both
-      endpoints work behind the same auth dependency, `quality-gates.sh --no-fix` green + a live curl, cited.
+- [ ] [BACKEND] P0. BLOCKED-ON:mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16 — **market-tick-data-service:
+      build the external market-data surface.** Same auth pattern. Two endpoints: an availability query (what's
+      captured for a given asset_group/venue/data_type — reuse the real `coverage.json`/manifest read path the
+      honest-coverage machinery already uses, never re-implement it) and a delivery endpoint covering both daily
+      batch parquet and a streaming leg (reuse the UTL `EventTransport` facade for streaming —
+      `unified_trading_library.streaming.event_facade` — never a bespoke transport). Done-when: both endpoints work
+      behind the same auth dependency, `quality-gates.sh --no-fix` green + a live curl, cited. **Code is written and
+      independently gate-verified green from the correct checkout — genuinely blocked on shipping, not on
+      implementation.** A fleet-wide STEP 5.70 (adapter-contract-call baseline) regression landed on
+      `live-defi-rollout` HEAD via a different, unrelated concurrent session's commit
+      (`market-tick-data-service@bd07cfc3`, slot-4) — blocks EVERY market-tick-data-service quickmerge right now, not
+      just this one. See
+      [`/plans/active/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md`](/plans/active/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md)
+      for full evidence; whoever resolves it (confirm-and-regen-baseline, or restore the missing call site) unblocks
+      this todo — no rework needed here once that clears.
 - [x] [BACKEND] P0. **execution-service: build the external instruction-submission surface.** Same auth pattern. One
       endpoint accepting a `StrategyInstructionEnvelope` (already-real schema —
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py`, class
@@ -237,45 +246,111 @@ tradfi sub-agent's pre-audit read conflated these; correct that reading here, do
 
 ## W4 — Per-AG BACKTESTABLE blockers
 
-- [ ] [AGENT] P1. **CeFi: close the wallet-capability + error-classification gaps.** Measured (audit): only 7/25
-      venues have a `VENUE_WALLET_CAPABILITIES`-family entry under their canonical name (step 9, transfers) — file
-      candidates: `unified-api-contracts/unified_api_contracts/internal/domain/execution_service/transfer_types.py`
-      and `.../defi/wallet_config.py` (confirm which is the real cefi-scoped registry as this todo's first step, cite
-      it). ~14/25 venues have no dedicated classification in `VENUE_ERRORS_CEFI`
-      (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/cefi.py`, step 10). Both are
-      enumerable against the existing 25-venue UAC declaration — add the missing entries, sourced from each venue's
-      own API docs where available, `unverified` (not invented) where not. Done-when: both registries cover 25/25
-      venues (or each remaining gap is cited with why — no venue-specific docs found), `quality-gates.sh --no-fix`
-      green.
-- [ ] [AGENT] P1. **Sports: fix the mock-only live config + resolve the step-8 registry contradiction.**
-      `deployment-api/deployment_api/routes/sports_venues.py` returns `"live_not_configured"` verbatim in live mode
-      (step 11, FAIL) — wire it to real config, matching the pattern other asset groups' venue-credential endpoints
-      already use. Separately: `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py` declares
-      `NO_ADAPTER_YET` for nearly every sports bookmaker while `execution-service/execution_service/sports_execution/`
-      has 5 real adapters (betfair.py, matchbook.py, kalshi.py, polymarket_clob.py) wired through a real
-      `SportsExecutionRouter` (`execution-service/execution_service/sports_execution/routing.py`). **Determine which
-      side is stale and fix it at the source** — do not reconcile in a doc. Done-when: the UAC registry and
-      execution-service's real dispatch map agree, cited with the specific commits on both repos,
-      `quality-gates.sh --no-fix` green on both.
-- [ ] [AGENT] P2. **Sports: confirm or add the back/lay action mapping (W5).** The audit could not find `back`/`lay`
-      mapped to `InstructionActionV2` or `AccountActionV2`
-      (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py`) — plausibly
-      `TradeInstruction` with a `side` field, unconfirmed. Either confirm the existing mapping and document it inline
-      (a code comment citing where back/lay actually route), or add it if genuinely missing. The artifact's central
-      claim — one instruction vocabulary spans every asset class — must be true, not assumed. Done-when: a concrete
-      code citation (existing or newly added) shows back/lay resolving to a real `InstructionActionV2` member,
-      `quality-gates.sh --no-fix` green if code changed.
-- [ ] [AGENT] P1. **Prediction: wire Polymarket into the existing matching engine for paper mode.** Per the operator's
-      2026-08-16 ruling (simulate via our own matching engine, per the readiness contract's own fallback wording) —
-      **not a from-scratch simulator.** Polymarket's own captured data is real CLOB depth, not a coarse odds
-      snapshot: `book_snapshot_5` carries real bid/ask JSON arrays up to 50 levels (audit, confirmed). Step 1: check
-      whether execution-service's existing paper/backtest matching engine already accepts a `book_snapshot_5`-shaped
-      input for any venue (the fidelity-tier vocabulary above suggests it should, since `L1_MBP`/`L2_MBP` tiers are
-      already modeled) — if so, this is a wiring task (add Polymarket to whatever venue-dispatch map the matching
-      engine reads), not new matching-engine code. If a genuine gap exists once checked, scope exactly what's missing
-      before writing it — do not assume the size of this task before step 1 is done. Done-when: a paper-mode
-      Polymarket instruction produces a real fill through the matching engine (not a mock), with the fidelity tier it
-      ran at cited, `quality-gates.sh --no-fix` green.
+- [x] [AGENT] P1. ✅ **CeFi: close the wallet-capability + error-classification gaps.** —
+      `unified-api-contracts@a0e6f3b9e7`. Confirmed `transfer_types.py::VENUE_WALLET_CAPABILITIES` is the real
+      cefi-scoped registry (its downstream consumer, `defi/wallet_config.py`, cites it 3x as the SSOT venue-name
+      source and carries no per-venue capability data of its own — it's custody/wallet-provisioning config).
+      Both registries now cover 25/25 canonical cefi venues (`VENUES_BY_ASSET_GROUP["cefi"]`), verified via a direct
+      Python import against the real call-site-derived family mapping (bitfinex_native.py/bitget_native.py default
+      `venue=` to the bare family string — confirmed by direct read of execution-service, not assumed; 0 missing on
+      both axes). Fixed 2 pre-existing stale, non-canonical keys in `VENUE_WALLET_CAPABILITIES` in the same pass
+      (bare `"OKX"` — removed from the venue universe 2026-08-04 — and `"BYBIT-FUTURES"` — never a declared venue,
+      Bybit's UTA covers spot+derivatives under `"BYBIT"` alone) rather than leaving them as unreachable dead keys.
+      Added 16 new wallet-capability entries + 6 new error-classification families (`bitfinex`/`bitget`/
+      `coinbase_cde` in `cefi.py`; `pacifica`/`extended`/`lighter` in `onchain_perps.py`, matching the existing
+      HYPERLIQUID/ASTER on-chain-CLOB placement convention rather than duplicating into cefi.py). Sourced from real
+      material: ccxt's vendored per-exchange exception tables (bitfinex/bitget — a maintained mirror of each
+      exchange's own documented codes) and each adapter's own real `_classify_*_error()` normalization function
+      (coinbase_cde/pacifica/extended/lighter — direct-read-confirmed). One genuine `unverified` gap flagged inline:
+      `EXTENDED-STARKNET`'s `custody_provider` left empty rather than asserting "copper" — StarkNet's Cairo-VM/
+      STARK-curve signing differs from every other ON_CHAIN entry's secp256k1/EVM curve, and Copper's public
+      supported-chain list was not confirmed to cover it; no real-fund custody assignment invented without a direct
+      check. `quality-gates.sh --no-fix` green (272s, sentinel `3f1e133f759842c16e9975d69cdb403a147c316b` == HEAD at
+      ship time).
+- [x] [AGENT] P1. ✅ **Sports: fix the mock-only live config + resolve the step-8 registry contradiction.** Both
+      halves done. Mock-config half: `deployment-api@8239f10a77` (prior session, see Progress Log entry above).
+      Step-8 registry-contradiction half: `unified-api-contracts@96ef3e173f`. Confirmed the contradiction directly
+      (read both sides, not the prior session's summary): `VENUE_TO_ADAPTER_KEY`'s `NO_ADAPTER_YET` sentinels for
+      BETFAIR_EX_UK/BETFAIR_EX_EU/MATCHBOOK/PINNACLE/etc. are CORRECT and NOT stale — that registry is specifically
+      the URDI/instruments-service REFERENCE-DATA axis (own docstring: "instruments-service owns the key→class
+      instantiation table"), a different service and question from execution capability, and IS genuinely has no
+      reference-data adapter for these MTDS-owned odds venues. The actually-stale side was `is_venue_executable()`
+      itself: the 2026-08-08 sports-taxonomy-P1 operator ruling
+      (`sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`, cited in `market_data_categories.py`'s own comment)
+      explicitly ordered it to become "a SEPARATE executable predicate" from the data axis, but its body was left as
+      a bare passthrough of `VENUE_TO_ADAPTER_KEY` — it never actually diverged. Fixed by adding
+      `SPORTS_EXECUTION_ADAPTER_VENUES` (a new, verified frozenset naming the exactly-4 bookmaker families with a
+      real, wired execution-service adapter — confirmed via direct directory listing of
+      `execution_service/sports_execution/adapters/exchanges/` + `routing.py::SportsExecutionRouter._build_adapter`:
+      betfair.py → BETFAIR_EX_UK/BETFAIR_EX_EU only, betfair.py's real BACK/LAY logic is Exchange-product-specific —
+      Sportsbook/BETFAIR_SB_UK has no such API and is deliberately excluded; matchbook.py → MATCHBOOK; kalshi.py →
+      KALSHI; polymarket_clob.py → POLYMARKET. SMARKETS is cited as a design target in strategy-service's
+      `MarketMakingEventSettledEngine` source comment (`archetype_leg_spec_seeds.py`) but has NO real adapter file
+      today, confirmed by direct listing — deliberately excluded) and making `is_venue_executable()` check it OR the
+      data axis. Also fixed the now-provably-wrong same-day comment in `market_data_categories.py` that asserted
+      "None has a real IS/URDI execution adapter" for the whole 22-bookmaker block including MATCHBOOK — a doc that
+      misled this session, corrected in the same commit per the findings-triage HARD RULE. Did NOT touch
+      execution-service (read-only per task scope — its dispatch map was already correct, nothing to fix there).
+      `quality-gates.sh --no-fix` green on unified-api-contracts (255s, sentinel
+      `a0e6f3b9e779fed7f15aa329d6c92d0e9c18ec21` == HEAD at ship time).
+- [x] [AGENT] P2. ✅ **Sports: confirm or add the back/lay action mapping (W5).** —
+      `unified-api-contracts@4753c4bbcd`. Confirmed by direct read: back/lay is NOT `TradeInstruction.side` (that
+      class has no `side` field — it has `direction: Literal["LONG","SHORT","FLAT"]`, a plausible but NOT the
+      verified path) and is NOT a member of `InstructionActionV2` or `AccountActionV2` directly. The real, concrete,
+      already-existing resolution: back/lay is modeled as two DISTINCT instrument-type variants
+      (`instrument_type="BET_BACK"`/`"BET_LAY"`, informal string labels, not real `InstrumentType` enum members) of
+      the SAME `InstructionActionV2.QUOTE` action, per the two `CompatibilityEntry` rows already declared in
+      `schemas.py`'s `COMPATIBILITY_SEED` for the `MARKET_MAKING_EVENT_SETTLED` archetype — strategy-service's
+      `MarketMakingEventSettledEngine` (cited in UAC's own `archetype_leg_spec_seeds.py`) emits "2x QuoteInstruction
+      BET_BACK+BET_LAY" per market. Concretized downstream in `CanonicalSportsOrder.bet_side: str  # BACK | LAY`
+      (`unified_api_contracts/internal/domain/sports/execution.py`), set from execution-service's real Betfair
+      adapter's own `side: str` parameter (`sports_execution/adapters/exchanges/betfair_order_mapping.py::place_order`
+      — read directly, confirmed real, not mocked). Added citation comments at both the `COMPATIBILITY_SEED` BET_BACK/
+      BET_LAY rows and the `bet_side` field pointing at each other + the real engine, closing the audit's "plausibly
+      ... unconfirmed" gap with a concrete, bidirectional code citation — no schema change needed, the mapping was
+      already correct, just undocumented. `quality-gates.sh --no-fix` green (208s, sentinel
+      `96ef3e173f951ffa51add1711d7b5bed04c18412` == HEAD at ship time).
+- [x] [AGENT] P1. ✅ Done 2026-08-16 — `execution-service@0e1b7b98dd`. **Prediction: wire Polymarket into the existing
+      matching engine for paper mode.** Step 1 confirmed this was a WIRING task, not a new-engine task: a real,
+      working depth-walked matching-engine path already exists for CeFi
+      (`execution_service/providers/matching_engine.py::MatchingEngineExecutionProvider` +
+      `execution_service/providers/l2_depth_provider.py::L2DepthProvider`, proven by pre-existing
+      `tests/unit/providers/test_matching_engine_provider.py`) — `_execute_l2`/`walk_book_for_fill` are already
+      venue-agnostic, and the JSON bid/ask-array row parser (`L2DepthProvider._row_to_snapshot`/`_parse_level_list`)
+      already handles Polymarket's real `book_snapshot_5` wire format (JSON arrays of `[price, size]`) byte-for-byte
+      unchanged — proven directly by a new test feeding it real Polymarket-shaped JSON strings. The ONLY genuine gap
+      was `L2DepthProvider`'s GCS-prefix resolution being hardcoded to the CeFi Binance-ETH-PERP MVP shape (no
+      `asset_group` parameter existed at all). Closed it: `L2DepthProvider.load_date()`/`_l2_candidate_prefixes()`
+      now accept `asset_group="prediction"`, resolving the real UAC canonical path
+      (`asset_group=prediction/venue=POLYMARKET/instrument_type=prediction_market/data_type=book_snapshot_5/
+      {condition_id}.parquet`) via `unified_api_contracts.gcs_paths.candidate_parquet_paths` — CeFi's default path is
+      byte-for-byte unchanged (regression test asserts this). Also wired the actual PRODUCTION consumer,
+      `execution_service/engine/handlers/prediction_handler.py::PredictionBetHandler`, which previously computed
+      every backtest/paper fill via a flat `benchmark_price + 10bps` heuristic regardless of real book data (the
+      "from-scratch simulator" fallback the operator's ruling said not to use) — it now prefers a genuine
+      `walk_book_for_fill` VWAP fill via a shared `L2DepthProvider` for POLYMARKET, falling back to the flat-spread
+      heuristic only on honest absence of loaded book data (unwired venue — KALSHI deliberately excluded, its
+      `book_snapshot_5` is measured far thinner in the pre-audit — or no snapshot loaded for that timestamp).
+      **Fidelity tier: `BookType.L2_MBP`** — cited from two independent real registries, not assumed:
+      `unified_api_contracts.registry.venue_granularity.get_granularity("POLYMARKET", "prediction_market",
+      "book_snapshot_5")` (manifest-sourced 2026-08-16, `source="manifest"`) and
+      `execution_service.matching_engine.engine.MatchingEngine.get_book_type_for_asset_group("prediction")`, which
+      independently agree. Real-fill evidence (non-mock): a large BUY against an injected real 3-level Polymarket ask
+      book (`[[0.65,200],[0.66,150],[0.67,100]]`) walks 2+ levels and fills strictly above the best ask (VWAP, not a
+      flat markup); a small BUY fills at the exact best-ask price with `levels_walked==1` — both proven through the
+      real `PredictionBetHandler.execute()` → `walk_book_for_fill()` path, not a mocked interface.
+      **Precisely-scoped remaining gap (not fixed here, out of this task's bounded scope)**: `ExecutionInstruction`
+      has no `side` field, so the real-depth fill only walks the ASK side (BUY the named outcome's shares, mirroring
+      `PolymarketAdapter.place_bet`'s BACK→BUY convention) — a SELL/LAY leg needs a side signal added to
+      `ExecutionInstruction` first, a separate schema change. Also cross-referencing
+      `/plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`: this
+      Prediction wiring does NOT touch `ManualOperationHandler`/`LiveOrchestrator`/`ExecutionOrchestrator` at all —
+      `PredictionBetHandler` is a fully separate dispatch path (`OperationType.PREDICTION_BET` via
+      `HandlerRegistry`), so that issue's protocol-mismatch landmine was not in this task's path, confirmed by
+      direct read rather than assumed. 4 new/extended tests (9 total across the two touched test files) +
+      `quality-gates.sh --no-fix` full run GREEN (185s, sentinel `23ab0a25991d7da68b6dc8486e6af2d850be1a59` == HEAD
+      at ship time; one method-size-cap fix needed after first run — split `execute()`'s two result-building
+      branches into `_book_fill_result`/`_flat_spread_fallback_result` helpers).
 - **DeFi — no new todo.** See the "Two findings" section above; the pause is already correctly diagnosed and gated
   in `/plans/active/defi_consolidated_closeout_2026_07_18.md` Track 8. Nothing to add here.
 
@@ -297,6 +372,26 @@ path, mark `BLOCKED-CREDENTIALS` where it can't run · do not edit the artifact 
 before they reach a client document.
 
 ## Progress Log
+
+**2026-08-16 — W4-CeFi, W4-Sports step-8 (UAC half), and W5 shipped (interactive sub-agent, `unified-api-contracts`
+only, per the dispatch prompt's repo scope).** Executed 3 bounded todos, shipped as 3 separate quickmerges (one QG
+sweep covered items 1-2's diffs together sequentially; item 3's own small diff got its own fast green re-run) —
+`unified-api-contracts@a0e6f3b9e7` (W4-CeFi), `@96ef3e173f` (W4-Sports step-8), `@4753c4bbcd` (W5). Full evidence in
+each checkbox above; summary of the one genuinely investigative finding: the step-8 "registry contradiction" the
+prior session flagged was NOT what it looked like — `VENUE_TO_ADAPTER_KEY`'s `NO_ADAPTER_YET` sentinels for the
+sports bookmakers are correct (that registry is the URDI/instruments-service reference-data axis, not execution);
+the real bug was `is_venue_executable()` never actually implementing the "separate executable predicate" the
+2026-08-08 operator ruling ordered — it was still a bare passthrough of the data-axis sentinel. Fixed at the root
+(new `SPORTS_EXECUTION_ADAPTER_VENUES` frozenset + `is_venue_executable()` now ORs both axes) rather than editing
+`VENUE_TO_ADAPTER_KEY` itself, which would have broken the URDI resolution path for venues with no real
+reference-data adapter class (execution-service adapters live in a completely different factory/service than
+instruments-service's URDI adapters — plugging an execution-service adapter name into `VENUE_TO_ADAPTER_KEY` would
+have made `get_adapter_for_canonical_venue()` try to instantiate a nonexistent class). Also found and fixed (same
+commit) a stale same-day comment in `market_data_categories.py` that asserted zero real execution adapters for the
+whole 22-bookmaker block, which was wrong for MATCHBOOK. Did not touch execution-service anywhere (read-only per
+task scope) — confirmed its real dispatch map (`SportsExecutionRouter`) needed no fix, only UAC's stale predicate
+did. No blockers hit on any of the 3 items; all done-when criteria met with live, direct-read-verified evidence, not
+assumed from the prior session's summary.
 
 **2026-08-16 — W3 granularity registry shipped.** `unified-api-contracts@693e823adb`. Built the step-13 granularity
 declaration as a NEW additive registry (`venue_granularity.py` + `venue_granularity_seed.py`) rather than mutating
@@ -415,3 +510,20 @@ schema-unify (`pa.unify_schemas(..., promote_options="permissive")`) — re-veri
 just wider precision) and correct (13,141 rows / 23 venues round-tripped) before shipping. `quality-gates.sh --no-fix`
 green. Shipped via quickmerge, landed LDR `instruments-service@2fcf7a19`. No blockers hit — the UTL auth module
 imported cleanly and the internal bucket/storage primitives were reachable exactly as described.
+
+**2026-08-16 — W4 Prediction Polymarket matching-engine wiring done, `execution-service@0e1b7b98dd`.** Investigated
+first per the todo's own instruction: found a real, working, venue-agnostic depth-walked matching-engine path already
+existed for CeFi (`MatchingEngineExecutionProvider` + `L2DepthProvider` + `walk_book_for_fill`), and its JSON
+bid/ask-array row parser already handled Polymarket's real `book_snapshot_5` wire format unchanged — so this was
+purely a wiring task, confirmed rather than assumed. Closed the one real gap (`L2DepthProvider`'s GCS-prefix
+resolution was hardcoded CeFi-only, no `asset_group` param existed) and wired the actual production consumer
+(`PredictionBetHandler`, which previously used a flat-markup heuristic for every backtest fill — the exact
+"from-scratch simulator" pattern the operator's ruling said to avoid) to prefer a real depth-walked fill for
+POLYMARKET. Fidelity tier `L2_MBP` cited from two independent real UAC/matching-engine registries, not assumed. Cross-
+checked the `execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md` landmine directly —
+confirmed by reading the code that `PredictionBetHandler` is a fully separate dispatch path from
+`ManualOperationHandler`/`LiveOrchestrator`, so that issue was not encountered. Hit one dirty-deps quickmerge block
+mid-session (a concurrent peer session's live WIP in `unified-api-contracts`, mtime <30s — correctly left untouched
+per the liveness-gated protocol, waited via a background poll for it to clear rather than forcing a direct push) —
+retried quickmerge once the dep went clean and it landed normally. Full evidence + the precisely-scoped SELL/LAY gap
+(no `side` field on `ExecutionInstruction` yet) are in the W4 checkbox above.

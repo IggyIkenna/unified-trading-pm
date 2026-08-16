@@ -394,7 +394,7 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       applied.** Operator (or a future session with stash-drop authority) should run
       `git stash drop 'stash@{1}'` in `unified-api-contracts` to clear it — verify first via
       `git stash show -p stash@{1}` that it's still this exact stale content before dropping.
-- [ ] [OPERATOR] P0. **REAL ROOT CAUSE FOUND 2026-08-16, supersedes the "silent-hang, unroot-caused" framing below —
+- [x] ✅ [OPERATOR] P0. **REAL ROOT CAUSE FOUND 2026-08-16, supersedes the "silent-hang, unroot-caused" framing below —
       `mtds-backfill-odds-1` is NOT hanging.** SSH'd into the VM directly (`gcloud compute ssh ... --tunnel-through-iap`)
       at 18:24Z, 1.5h after its startup script reported `exit status 0`: no MTDS python process running, load avg
       0.00, and `/home/ikennaigboaka/logs/mtds-backfill.log` (708 bytes, last written 16:57:28Z — i.e. within seconds
@@ -441,6 +441,36 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       terminal and cleaning up after itself — a second, smaller gap alongside the main self-deadlock, both rolling up
       into the same root cause and the same operator decision above. Pushed a notification to the operator flagging
       the ongoing billing waste; still did not touch the hold marker or the VM myself.
+      **RESOLVED 2026-08-16T22:19Z (`pls fix it /autonomous` — operator authority granted for this todo).**
+      Three changes, all shipped:
+      (1) `deployment-service@119fd0e8a0` — the launcher's default `VM_NAME` is now `mtds-backfill-odds-<timestamp>`
+      (was the fixed `mtds-backfill-odds-1`), matching `launch-openmeteo-backfill-vm.sh`'s existing convention;
+      confirmed safe against `odds-api-concurrency-guard.sh`'s cap (it matches by the `^mtds-backfill-odds-` PREFIX,
+      not exact name — non-`-1`-suffixed names were already normal history for this launcher). Same commit fixes the
+      no-self-terminate sub-finding: `vm-exec-with-gcs-tee.sh`'s admission-hold path did a bare `exit 75` that
+      skipped the self-delete block entirely (it lives ~400 lines later, unconditionally on the metadata flag) —
+      extracted self-delete into `_self_delete_if_configured()`, called from both the admission-hold exit and the
+      original end-of-script path.
+      (2) **Hardening, per operator ask ("can we harden so it doesnt happen again")** —
+      `deployment-service@80123c3ccc`: the actual structural bug was that `admission_blocked()`
+      (`revocation_gate.py`) checked hold-marker EXISTENCE only, no TTL — so the self-deadlock this todo diagnosed
+      (a held VM can never produce the "resolved" signal the reconcile sweep needs, since admission blocks it before
+      it runs anything) could recur for ANY future alert against ANY target, not just this one VM name. Added a 24h
+      TTL (`_HOLD_TTL_MINUTES`, matching the existing `_MAINTENANCE_TTL_MINUTES` precedent in
+      `revocation_actuator.py` for the identical class of problem) — a hold now self-expires within a bounded window
+      regardless of whether the reconcile sweep's positive-signal path ever fires. A missing/malformed
+      `requested_at` also collapses to expired (same fail-open direction as `_read_marker`'s existing "malformed
+      collapses to absent"), so a corrupt marker can't become a NEW permanent-deadlock vector. Fixed 3 existing tests
+      that were unknowingly relying on the old "blocks forever" behavior (missing `requested_at` in their fixtures)
+      and added 3 new tests covering the TTL boundary, expiry, and missing-timestamp cases. QG green both commits.
+      (3) **Live cleanup + verified fix**: deleted the confirmed-dead idle instance (`mtds-backfill-odds-1`, RUNNING
+      but zero MTDS process for 4.3h+), cleared the stale `vm-census/admission-hold/mtds-backfill-odds-1.json`
+      marker (moot now given the timestamped-name fix, cleared for hygiene), relaunched as
+      `mtds-backfill-odds-20260816-230355`. **Confirmed via GCS log, not just `gcloud` status**: past the admission
+      check, real Odds API data flowing (`Odds API batch complete: date=2020-06-06 ... rows=0`, then
+      `SPORTS Tier-2 sentinel fan-out: provider=ODDS_API date=2020-06-06 rows=1173`), manifest shards updating,
+      moving through subsequent dates — the 278-day gap backfill is genuinely running now, not just OS-level
+      RUNNING. Loop continues monitoring it same as weather.
 - [x] ✅ [DATA] P2. **Weather VM relaunched 2026-08-16** — confirmed the prior VM (`weather-backfill-20260815-011036`)
       was SPOT-preempted (`exit_code=125`, `completed_at=2026-08-15T16:10:03Z`, per its deployment record). Relaunched
       as `weather-backfill-20260816-192237` with the same date range (`2024-01-03 2026-08-02`); verified via SSH the

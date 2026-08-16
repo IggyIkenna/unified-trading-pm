@@ -326,3 +326,13 @@ None — all 80 non-grace docs in the cefi tranche were read in full by the hunt
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-16** [body-hash:04c95a48b9c02a10]: RECLASSIFY-SPLIT — extracted bounded item(s) 9, 10, 11, 12, 13, 14, 15, 16, 17 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 3 items remain genuinely NA (1 [OPERATOR] unidentified-VM confirmation, 2 [REVIEW] meta-process investigation flags for the AO-dispatch-mechanism owner, not bounded fixes themselves). Doc stays assigned_vm: NA.
+- **plan_reconciler Phase -1 reconciliation, 2026-08-16 (same-day follow-up pass)**: re-checked every remaining open
+  item against fresh state. `[INFRA] P2` line-cap split (`cefi_book_snapshot5_...`) — re-verified: doc is 1079L,
+  2 open todos are genuine design/judgment calls per the doc's own text, no mechanical trim available — **STILL-OPEN
+  ORDINARY-WORK**, correctly not auto-fixable. `[OPERATOR] P3` unidentified VM `mdps-backfill-cefi-20260816-162418` —
+  no live `gcloud` access from this pass to re-confirm; correctly tagged `[OPERATOR]` already, left as-is —
+  **STILL-OPEN, operator-gated**. Both `[REVIEW] P3` meta-process investigation flags (AO-dispatch duplicate-escalation
+  shape; `dp_vm_00N_*` shared-root-cause hypothesis) — genuine open investigations outside this tranche's write scope,
+  not doc-hygiene gaps — **STILL-OPEN ORDINARY-WORK**. No RESOLVED/AUTO-FIXABLE items found this pass (the na-
+  eligibility-audit pass earlier the same day already extracted every bounded item). Doc stays `status: open`,
+  `assigned_vm: NA` — not archived (4 genuine open items remain).

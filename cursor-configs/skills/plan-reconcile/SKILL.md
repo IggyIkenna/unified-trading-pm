@@ -645,7 +645,9 @@ hourly cadence because a whole-corpus run MEASURED 4175s (69.6min) on 2026-07-30
 past the 15-min inter-job stagger the hourly schedule assumed; the unit's `TimeoutStartSec` went 2450 → 6000 in the same
 change. If a run ever needs more than ~2h, shard it by tranche (this skill already supports that) rather than growing
 one monolithic run's budget again. The timer POSTs `{"mode": "reconcile"}` to `/api/plan-health/dispatch`, which spawns
-the worker (opus / effort max / thinking on) on a free Max-plan slot. The autonomous contract above (no pauses, auto-fix
+the worker (**sonnet-5, effort max, extended thinking** on a free Max-plan slot — corrected 2026-08-16, was stale
+"opus" since before CLAUDE.md's 2026-08-07/08-08 ruling that opus-required is ZERO categories and manual-only; matches
+`agents/plan_reconciler.md`'s own current frontmatter and this skill's own boot session). The autonomous contract above (no pauses, auto-fix
 only, park rulings, notify on big findings) is exactly the non-interactive behaviour that daily worker runs under. This
 skill (`/plan-reconcile`) stays directly invocable interactively any time — the timer is additive, not a replacement for
 an on-demand run.

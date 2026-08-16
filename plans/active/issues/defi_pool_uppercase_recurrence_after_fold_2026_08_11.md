@@ -278,13 +278,26 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       touching any of them — some may be additional, not-yet-found path-construction sites with the SAME bug
       (unverified this session), not all are the row-content/manifest-column use this todo assumes. (repo:
       market-data-processing-service)
-- [ ] [DIAG] P1. Verify `_prune_consolidated_shards` (`manifest_consolidator.py:1893`) is actually keeping the defi
-      bucket's per-VM-shard backlog drained, not silently falling behind — list `_index/per_vm/` for the defi tick
-      bucket, check the oldest shard's age against the canonical's last-merge marker, and confirm `deleted` counts
-      in recent consolidator run logs are non-zero when a backlog exists. If shards are backlogged, that is the
-      same captured-outranks resurrection risk documented in "What I found" item 6's last bullet, applying to any
-      stale per-VM shard, not just the legacy seed. (repo: unified-trading-library, or wherever the defi
-      consolidator's live Cloud Run schedule is defined — confirm which before filing further)
+- [x] ✅ [DIAG] P1. Verify `_prune_consolidated_shards` (`manifest_consolidator.py:1893`) is actually keeping the defi
+      bucket's per-VM-shard backlog drained, not silently falling behind — **RESOLVED 2026-08-16 (slot 5,
+      ui_developer) — CONFIRMED FALLING BEHIND at this snapshot.** Live GCS state check (script
+      `unified-trading-library/scripts/check_defi_consolidator_prune_backlog.py`, `state` mode — one bounded
+      prefix-list of `_index/per_vm/`, single-walk-safe) against `market-data-tick-defi-prd-central-element-323112`:
+      21 total per-VM shards; canonical's real merge-cutoff marker (`consolidator_content_write_at`) =
+      2026-08-16T20:06:42Z; **9/21 shards have `mtime <= marker - 5s`** (provably already merged into canonical per
+      the same cutoff `_prune_consolidated_shards` itself uses) **yet are still present** — the oldest,
+      `mtds-oracle-prices-backfill-c202.parquet`, was 2.68h old at read time. Ruled out the two obvious causes: the
+      Cloud Run job (`uts-prod-manifest-consolidator-market-data-defi`) has no `CONSOLIDATOR_PRUNE_SHARDS=false`
+      override (defaults enabled) and no `CONSOLIDATOR_PRUNE_MAX_PER_CYCLE` override (defaults 2000, far above the
+      9-shard backlog, so not a per-cycle cap); its service account (`unified-trading-sa@...`) holds project-level
+      `roles/storage.admin`, so this is not an IAM delete-permission gap either. Root cause NOT identified this
+      session — see the new gated todo below. **Not fully verified**: the `logs` mode (meant to confirm `deleted`
+      counts in recent consolidator run logs) hit a persistent, apparently fleet-wide Cloud Logging read-quota
+      exhaustion (`ReadRequestsPerMinutePerProject`/`PerUser`, limit 60/min) on every attempt this session (5
+      retries, ~10+ min) — never got a single successful log read, so the "logs show 0 deletes despite an eligible
+      backlog" half of the original ask is UNCONFIRMED, not ruled out. The live GCS state evidence above already
+      stands on its own (it doesn't depend on log data) and is sufficient to confirm the backlog is real.
+      unified-trading-library@95f29a3958 (script committed this session).
 - [ ] [SCRIPT] P1. GATED on the `[BACKEND]` fix above landing + being confirmed live (a fresh candle write for a new
       day producing a lowercase-pathed object, not just a code review) — only THEN retry
       `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2's retirement (still also gated on that
@@ -303,6 +316,25 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       uppercase type token (§3b applies fleet-wide, not defi-only) and `canonical_writer.py` is shared cross-
       asset-group code (this session confirmed a tradfi-specific branch in the SAME function, `:266`). NOT verified
       this session — flagging as a plausible, unchecked risk per CLAIM ≤ MEASUREMENT, not a confirmed finding.
+- [ ] [DIAG] P2. Root-cause WHY `_prune_consolidated_shards` left 9/21 defi market-data per-VM shards un-drained
+      past their provable merge cutoff (see the resolved DIAG todo above) — config (`CONSOLIDATOR_PRUNE_SHARDS`/
+      `_MAX_PER_CYCLE`) and IAM delete permission are both already ruled out. Candidates not yet checked: an
+      exception in `_delete_one`'s per-shard delete swallowed as a skip (its `except Exception` only counts
+      `NotFound`/`404` as success — a `PreconditionFailed` from a concurrent rewrite is a legitimate skip-and-retry-
+      next-cycle, but a different, unexpected exception type would ALSO silently skip with nothing logged besides
+      the WARNING for the outer listing failure, which is a different code path); or the `state`-mode snapshot
+      simply caught the bucket mid-cycle (shards land continuously; a from-a-slightly-earlier merge's already-
+      completed prune pass may not have run again yet at read time — re-check with 2-3 snapshots spaced ~10-15 min
+      apart, past the defi cadence's own ~31-32min real-merge interval, before concluding this is a persistent
+      stall rather than normal in-cycle lag). Once root-caused, re-close per the same "captured-outranks
+      resurrection risk" concern documented in "What I found" item 6's last bullet. (repo: unified-trading-library)
+- [ ] [DIAG] P3. Retry this doc's `logs`-mode Cloud Logging check (script
+      `unified-trading-library/scripts/check_defi_consolidator_prune_backlog.py logs --project
+      central-element-323112`) once the shared `ReadRequestsPerMinutePerProject`/`PerUser` (60/min) Cloud Logging
+      quota that blocked every attempt in the 2026-08-16 session (5 retries, ~10+ min, zero successful reads) is not
+      under contention — confirm whether the `ManifestConsolidator: pruned N consolidated per-VM shard(s)` INFO
+      line has appeared at all in the job's recent run history, which would date how long the backlog above has
+      been accumulating. (repo: unified-trading-library)
 
 ## Progress Log
 
@@ -327,3 +359,12 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   at-scale data-correctness finding per CLAUDE.md's "big finding" rule — surfacing it prominently here (doc priority
   P0, new fix todo P0) since no direct operator-notification channel is documented for this worker role beyond the
   tracked plan itself.
+- **2026-08-16 (slot 5, ui_developer)**: resolved the `[DIAG]` `_prune_consolidated_shards` todo. Live GCS
+  state check (new script `unified-trading-library/scripts/check_defi_consolidator_prune_backlog.py`, `state`
+  mode) against the defi market-data bucket found 9/21 per-VM shards provably past the canonical's real
+  merge-cutoff marker yet still present — CONFIRMS prune is falling behind at this snapshot. Config (prune
+  disabled / per-cycle cap) and IAM delete permission both ruled out as the cause. The companion `logs` mode
+  (meant to confirm `deleted` counts in the job's own run history) was blocked by a persistent, fleet-wide Cloud
+  Logging read-quota exhaustion for the whole session — filed as a separate P3 follow-up rather than block this
+  todo on it, since the state-mode evidence stands alone. Filed 2 new follow-up todos (root-cause the stall;
+  retry the logs check once quota clears) — see Todos list.

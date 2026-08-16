@@ -4,8 +4,8 @@ title: "Plan reconciler — CI tranche late-arriving hunter findings (agt-a304c9
 summary:
   "9 findings (2 P0, 2 P1, 3 P2, 2 P3) from contradiction + mechanical hunters that completed after /done. Verified and
   filed."
-status: open
-resolved_by:
+status: resolved
+resolved_by: plan_reconciler Phase -1, 2026-08-16
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -43,6 +43,9 @@ depends_on: []
 ---
 
 # Late-arriving hunter findings — CI tranche reconciliation 2026-08-06
+
+> **RESOLVED + ARCHIVED 2026-08-16** — all 9 findings (14 tracked todos) closed. Last item (mtds title/summary
+> editorial rewrite) closed via a Trust-Mode won't-fix ruling. See Progress Log.
 
 The contradiction/epic-cluster hunter and mechanical/zero-checkbox hunter returned findings after the run had already
 signaled `/done`. All verified and filed here. **9 findings across 4 priority levels.**
@@ -136,17 +139,32 @@ failure (75 orphans vs 69 baseline).
       registration "moved to the finalize plan's todo 2"; the finalize plan actually discharges it via todo 1
       (`batch1_finalize` L72, L119-120: "D1 is discharged by todo 1 above"). Corrected "todo 2" → "todo 1" in the
       archived doc directly (pure text fix, no content-judgment involved).
-- [ ] [DOC] P3. NOT AO-ELIGIBLE (judgment call) —
+- [x] [DOC] P3. ✅ **RESOLVED 2026-08-16 (plan_reconciler Phase -1, trust-mode ruling — won't-fix) —**
       **`mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`** — title + frontmatter summary assert
       xdist-worker-leak mechanism; body (L239-241, L121-126) records mechanism was never confirmed and reproduces under
-      serial execution. Re-read 2026-08-09: the title already hedges ("appears to leak"), and rewriting it to precisely
-      reflect a still-under-investigation mechanism (xdist-ordering vs. serial- reproducing) is an editorial
-      characterization call, not a deterministic grep-and-fix — left open, not extracted.
+      serial execution. Re-read 2026-08-09/10/15/16 by four independent audits, all converging on the same verdict:
+      the title already hedges ("appears to leak"), the doc is `status: resolved` and archived (a historical record,
+      not a live surface anyone acts on), and a precision rewrite of an already-adequately-hedged archived title is an
+      editorial preference call with no single provably-correct answer, not a deterministic grep-and-fix. Applying the
+      unanimous prior recommendation directly under Trust Mode rather than re-parking it a 5th time: closing as
+      won't-fix, no edit made to the archived doc itself.
 - [x] [DOC] P3. ✅ **Already resolved (archived).**
       `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` is now at `plans/archive/issues/` —
       grace expired and the archive already happened.
 
 ## Progress Log
+
+- **plan_reconciler Phase -1, 2026-08-16**: re-checked the sole remaining open item (mtds title/summary editorial
+  rewrite) against fresh state — 4th independent audit to re-confirm the same "editorial judgment call, not a
+  deterministic fix" verdict (2026-08-09, 08-10, 08-15, now 08-16). Applied the unanimous prior recommendation
+  directly under Trust Mode: closed as won't-fix (see checkbox above), rather than re-parking it a 5th time. All 9
+  findings (14 tracked todos) now `[x]`. Archiving per the 6-step ritual (`doc_type: issue` → flat
+  `plans/archive/issues/`): repointed the 1 active corpus referrer
+  (`plans/active/issues/ag_closeout_audit_ci_parked_2026_08_16.md`, itself dated today but its own last commit is
+  2h49m stale/finished — safe to edit); archived-doc-to-archived-doc referrers (7 found, all already under
+  `plans/archive/`) left untouched as frozen historical text, per this corpus's established precedent (e.g.
+  `plan_reconciler_findings_ui_2026_08_16.md`'s own archival pass). No codex-alignment update needed — this doc
+  established no new contract, only routine hygiene fixes already reflected in their respective SSOTs.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 

@@ -146,7 +146,7 @@ because the health check surfaced a genuine, previously-undiagnosed bug.
       post-apply. Repo: deployment-service. Evidence: `gcloud run jobs describe honest-coverage-daily-launcher
       --region=asia-northeast1 --project=central-element-323112 --format="value(spec.template.spec.template.spec.timeoutSeconds)"`
       → `1500`.
-- [ ] 3. [REVIEW] P2. Confirm tomorrow's (2026-08-17 00:30 UTC) `honest-coverage-daily-launcher` execution reports
+- [ ] [REVIEW] P2. 3. Confirm tomorrow's (2026-08-17 00:30 UTC) `honest-coverage-daily-launcher` execution reports
       `Completed/True` — the fix in todo 2 can only be verified against a fresh scheduled run, not retroactively
       (today's 2026-08-16 execution already ran, pre-fix, and still shows `Completed/False` even though its
       underlying VM succeeded — see finding 1/2 above). Done-when:

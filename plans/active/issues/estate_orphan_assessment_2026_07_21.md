@@ -341,7 +341,7 @@ operator-notified 2026-07-21.
       `plans/active/prediction_live_clob_depth_capture_2026_07_24.md`,
       `plans/active/tradfi_consolidated_closeout_2026_07_18.md` (all independently track this same cross-cutting
       `GcsEventSink` fix; see those docs for execution).
-- [ ] 6. [CODE] P2. **Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call**
+- [ ] [CODE] P2. 6. **Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call**
       (`instruments-service/scripts/backfill_orphan_class_e.py::main()`) — found 2026-07-22 the hard way: prediction's
       `--apply` run was SPOT-preempted at ~33% (1,031,000/3,137,183) and lost 100% of its progress, because
       `record_cells()` (the actual `record_captured` manifest write) only runs ONCE, after the ENTIRE `to_convert` list

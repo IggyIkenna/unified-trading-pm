@@ -38,6 +38,7 @@ source:
     docs directly via scripts/quality_gates/check_codex_doc_freshness.py",
   ]
 resolved_by:
+archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 context_scope:
@@ -187,7 +188,13 @@ reading. All three name their replacement, so the machine already has everything
       retired-with-successor, but were still inside the 90d window so they had never surfaced as violations. They would
       have expired later and cost another round of the same pointless review. That is the argument for fixing the rule
       rather than the 3 instances: the instance list was never the real population.
-- [ ] [DEVOPS] P3. **Decide the endgame for the 3 retired docs above, independent of the gate change.** A `superseded`
+- [x] ✅ [DEVOPS] P3. **RESOLVED — DONE, satisfied by pre-existing state (plan_reconciler Phase -1, 2026-08-16).** All 3
+      docs already carry a body-level SUPERSEDED banner pointing at their successor: `/codex/02-data/data-catalogue-schema.md:28`
+      ("SUPERSEDED 2026-07-20"), `/codex/05-infrastructure/ui-dependency-matrix.md:38` and
+      `.../ui-functionality-requirements.md:39` ("SUPERSEDED 2026-05-13") — these banners predate this issue doc's own
+      filing (2026-08-11/12), so the ask is satisfied by existing state, not new work. Independently re-confirmed by
+      `ci_satellite_ao_dispatch_batch13_2026_08_13.md:83-87` (2026-08-14, identical conclusion). Was: **Decide the
+      endgame for the 3 retired docs above, independent of the gate change.** A `superseded`
       doc that still sits on a cutover-critical surface is discoverable by grep and can mislead an agent into
       implementing against it. Options: SUPERSEDED banner at the top pointing at the replacement (the workspace's stated
       convention), or archival off the scanned surface. All three name a replacement, so the successor is always
@@ -215,7 +222,12 @@ distinct failure classes into one ambiguous verdict), not a data/path bug, so it
 `yaml.safe_load` the block) to see the REAL exception — the ratchet's own message will send you looking for a missing
 delimiter that was never missing.
 
-- [ ] [SCRIPT] P3. **Distinguish "no-frontmatter" from "frontmatter present but failed to parse" in
+- [x] ✅ [SCRIPT] P3. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** `unified-trading-pm@a68d8b716d`
+      (ancestor of HEAD): `check_codex_doc_freshness.py` now has `FrontmatterParseError`; `_parse_frontmatter()` raises
+      it with the underlying `yaml.YAMLError` message on present-but-unparseable frontmatter; `_check_doc`/`main()` emit
+      `yaml-parse-error` with detail instead of the misleading `no-frontmatter` — genuinely-absent frontmatter still
+      returns `None`/`no-frontmatter`. Independently re-confirmed by `ci_satellite_ao_dispatch_batch13_2026_08_13.md:88-95`
+      (40/40 unit tests, 14 new). Was: **Distinguish "no-frontmatter" from "frontmatter present but failed to parse" in
       `check_codex_doc_freshness.py`.** Give `_parse_frontmatter()` a way to signal which case occurred (e.g. return a
       sentinel/raise a typed exception the caller catches, or a `(fm, reason)` tuple) so `_check_parsed()` can emit a
       distinct violation reason (`"yaml-parse-error"` with the caught exception's message as `detail`) instead of

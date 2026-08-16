@@ -17,8 +17,9 @@ tags: [manifest, bucket, canonicalisation, hygiene, epic-extraction]
 related:
   [
     /plans/epics/manifest_master.md,
-    /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
+    /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-15"
 last_updated: 2026-08-15
@@ -39,7 +40,7 @@ depends_on: []
 context_scope:
   [
     /plans/epics/manifest_master.md,
-    /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
+    /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 locked_by:

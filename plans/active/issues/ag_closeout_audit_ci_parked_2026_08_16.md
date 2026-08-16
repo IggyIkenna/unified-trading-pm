@@ -32,7 +32,7 @@ related:
     /plans/active/issues/ci_alert_failure_resolution_linkage_2026_08_16.md,
     /plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md,
     /plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md,
-    /plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
+    /plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
     /plans/active/issues/plan_reconciler_findings_ci_2026_08_16.md,
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
     /plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
@@ -136,9 +136,9 @@ live covering docs). Full per-doc reasoning in the Workflow journal
   isn't discoverable any other way). **No new action** — already correctly tagged in its own doc; relaying directly
   since no ci-tranche AO-dispatch plan will ever surface an `[OPERATOR]` ask on the operator's behalf: **operator, can
   you confirm or correct the transcribed ruling at line 77 of this doc?**
-- **`plan_reconciler_ci_late_findings_2026_08_06.md`** — 1 open item (of 14 total tracked; 13 already closed, no
-  dated section reopens any), a title/summary editorial rewrite explicitly self-labeled "NOT AO-ELIGIBLE (judgment
-  call)" in-doc. **No new action** — already correctly NA-scoped.
+- **`plan_reconciler_ci_late_findings_2026_08_06.md`** — **RESOLVED + ARCHIVED 2026-08-16 (plan_reconciler Phase -1)**:
+  the 14th (last-open) item, a title/summary editorial rewrite, was closed via a trust-mode won't-fix ruling
+  (unanimous across 4 independent audits); doc now at `/plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md`.
 - **`plan_reconciler_findings_ci_2026_08_16.md`** — filed today by a `/plan-reconcile` dispatch (slot 9, `agt-4f7ad9`)
   as a candidate ledger awaiting its own not-yet-run STEP-4 adversarial verification (9 flip candidates, 8
   contradictions, 11 codex-drift findings, 4 archive candidates, misc hygiene — zero checkboxes, all prose-form).

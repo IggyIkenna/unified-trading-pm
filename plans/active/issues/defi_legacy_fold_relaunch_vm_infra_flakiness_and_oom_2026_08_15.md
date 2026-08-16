@@ -159,6 +159,16 @@ precondition-satisfied but not yet executed to completion. Per `/codex/15-runboo
 
 ## Progress Log
 
+- **2026-08-16 (plan_reconciler, defi-tranche Phase -1) — cross-link, not independently re-verified**: hunter batch B
+  of the 2026-08-16 defi-tranche `/plan-reconcile` run found `dex_swaps` migration-completion claims conflicting by
+  ~3.26M rows across 4 docs that don't cross-reference each other, this one included:
+  `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`,
+  `/plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`,
+  `/plans/active/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md`. Both this doc's VM-infra failures AND the
+  cross-doc row-count conflict involve the same manifest-consolidator/rebuild machinery and the same bucket — they may
+  share a root cause. Added per `plan_reconciler_findings_defi_2026_08_16.md`'s Contradiction #2 recommendation so a
+  worker on any one of these 4 docs sees the others; the row-count conflict itself is NOT resolved here (needs a fresh
+  live manifest read, out of scope for this cross-link).
 - **2026-08-15 (AO-dispatched satellite batch worker, slot 20)**: verified consolidator freshness live, attempted the
   relaunch twice, root-caused attempt 2's OOM, shipped the worker-count fix. Filed this doc per the findings-closure
   hard rule since the underlying relaunch is not yet complete and both failure signatures are worth tracking separately

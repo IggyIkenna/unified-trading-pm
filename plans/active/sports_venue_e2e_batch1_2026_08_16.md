@@ -70,29 +70,79 @@ source: >-
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Steps 1-5 per unit — declaration through features**, across sports's 31 (venue, data_type)
-      rows. Declared in the UAC capability record; instruments-service resolves instruments with coverage windows;
-      MTDS captures every declared data type and the manifest reconciles; a live adapter exists for every batch
-      adapter; the venue's data reaches the feature groups that consume it. Done-when: every row has a stated
-      per-step verdict (pass/fail/unverified — never silently absent), with any gap recorded as a tracked todo per
-      the P1 item below.
-- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across the same 31 rows. A position adapter
-      resolves in batch, live AND paper; the venue is declared in the archetype/slot catalogues that can legitimately
-      trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit. **Do not assume
-      orphan status from asset_group** — `ARCHETYPE_FEATURE_GROUPS` spans every AG today (40/60 declared as of
-      2026-08-16, moving fast; e.g. `MARKET_MAKING_EVENT_SETTLED`/`ARBITRAGE_SPORTS_DUTCHING` are sports-relevant,
-      not DeFi-only), so a prior "expect NONE" claim here was wrong and has been corrected — re-run
-      `generate_venue_work_list.py` and read each row's own `archetype_consumers` column. Only a row that STILL
-      shows `NONE` after that live check cannot pass this step; record those specific rows as
-      `BLOCKED-ON:archetype-declaration-backlog`, never assume for the whole AG. Done-when: same per-row verdict
-      discipline.
-- [ ] [BACKEND] P0. **Step 9 per unit — transfers**, across the same 31 rows. Every applicable `BusTransferType`
-      has a working rail, instruments-service through execution-service. Done-when: same per-row verdict discipline.
-- [ ] [BACKEND] P1. **Record every gap found across steps 1-9 above as its own tracked todo** in this file (or a
-      dated same-AG follow-up doc if adding them here would breach the line cap) — never as prose only.
-- [ ] [BACKEND] P0. **Confirm the parent plan's hard rules held across steps 1-3 above**: strategy-service never
-      read MTDS directly; execution fails closed on granularity (`refuse_unservable`, never silently clamped);
-      credentials gated RUNNING not BUILDING; no new service-to-service dependency was introduced. Done-when: a
-      clean `quality-gates.sh` run across every repo touched by this batch.
+- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@1c9fe64ae2`.
+      3 parallel research passes across instruments-service, market-tick-data-service, features-service (step 5
+      trivially checked, see below).
+      **Step 2 (instrument resolution) — architecturally different from every other AG, PASS once re-framed.**
+      Sports odds venues are NOT in instruments-service at all — `venue_core.py:475-537`'s
+      `get_venues_for_asset_groups()` returns a completely disjoint SPORTS list (data providers like
+      `API_FOOTBALL`/`FOOTYSTATS`), by deliberate design ("Decision C", operator 2026-06-29, cited in-code): odds
+      venues resolve via UAC's `_odds_api_maps.py` directly into MTDS, never through IS's `InstrumentRecord`. All
+      31 sampled venues are present in that mapping with a `start_date` — PASS under the real architecture, not a
+      gap that the IS-centric framing in this todo's own text implied.
+      **Steps 3-4 (batch/live) — 23/31 covered by the shared `OddsApiAdapter`**
+      (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py`, `REQUESTED_ODDS_API_
+      BOOKMAKERS`, folding `LADBROKES`/`BET888SPORT` vendor-spelling aliases via `SPORTS_VENUE_FOLD`). Live: same
+      23-key coverage via REST poll + dedicated `odds_api_ws.py`/`betfair_ws.py` WSFeedConnectors — but both are
+      correctly, explicitly marked `BLOCKED-CREDENTIALS` in-code (Odds-API Starter tier / Betfair app-key not
+      provisioned) — the build exists, only credentials are missing, exactly the workspace's "gate RUNNING never
+      BUILDING" rule already satisfied, not a new gap. **8/31 not covered**, in 3 distinct categories: (a)
+      `BETMGM`/`BETOPENLY`/`BETWAY` — deliberately excluded with a cited reason ("4-6% price diff vs OddsPapi",
+      `odds_api_adapter.py:88`), not a gap; (b) `ONEXBET` — has a separate adapter but confirmed unreachable dead
+      code, already flagged by a prior audit (`sports_handler.py`'s own comment, `registry.py`'s STATUS note), not
+      a new gap; (c) **`BOVADA`/`NOVIG`/`PROPHETX`/`UNIBET_EU` — genuinely uncovered with no stated reason found**,
+      tracked as a new gap todo below.
+      **Step 5 (feature consumption) — all 31 rows show `archetype_consumers=NONE`.** No archetype has declared
+      needing raw `odds` data at all — a genuine undeclared-scope gap identical in kind to tradfi's 12 NONE rows,
+      `BLOCKED-ON:archetype-declaration-backlog` for the whole AG, not investigated further (nothing declared to
+      check implementation against).
+- [ ] [BACKEND] P1. **Gap: `BOVADA`/`NOVIG`/`PROPHETX`/`UNIBET_EU` have no batch or live odds capture at all**,
+      unlike the 3 explicitly-excluded (price-diff QA) or the 1 confirmed-dead-code (ONEXBET) venues — no cited
+      reason found for these 4 (`market_tick_data_service/market_interface/adapters/sports/
+      odds_api_adapter.py:REQUESTED_ODDS_API_BOOKMAKERS`). Done-when: either these 4 are added to the shared
+      collector's bookmaker scope, or the exclusion is confirmed intentional with a cited reason (mirroring the
+      `BETMGM`/`BETOPENLY`/`BETWAY` pattern).
+- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across sports's 31 rows. **All 31 stay
+      `BLOCKED-ON:archetype-declaration-backlog`** per the step-5 result above — nothing in this todo is
+      dispatchable until at least one archetype declares needing `odds`. Re-check once the archetype-declaration
+      backlog moves.
+- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@1c9fe64ae2`.
+      Cross-checked 3 independent SSOTs (`SportsHandler.SUPPORTED_VENUES`, `sports_factory.py`'s
+      `_LIVE_VENUE_CONFIGS`, UAC's `SPORTS_*_VENUES` constants): real, wired bet-placement adapters exist for
+      exactly 4 venues system-wide (`betfair`, `matchbook`, `kalshi`, `polymarket`), none of the other 27 odds-
+      sourcing-only venues have any execution capability at all.
+      **30/31 — NOT-APPLICABLE.** Odds-sourcing only, confirmed absent from every execution-service venue
+      registry (the 3 `BETFAIR_*` regional keys in this AG's list don't match the wired bare `"BETFAIR"` key
+      either — a real venue, just not one of these 31's literal spellings).
+      **`MATCHBOOK` — genuine FAIL, not NA.** Has real, wired live execution capability but zero
+      `VENUE_WALLET_CAPABILITIES` entry and zero transfer-code references anywhere in
+      `execution-service/execution_service/engine/transfers/` — no funding rail exists despite live trading
+      capability existing. Tracked as its own gap todo below.
+- [ ] [BACKEND] P1. **Gap: `MATCHBOOK` has real, wired execution capability but no transfer rail at all** —
+      absent from `VENUE_WALLET_CAPABILITIES`
+      (`unified-api-contracts/unified_api_contracts/internal/domain/execution_service/transfer_types.py`) and
+      from every transfer-code path in `execution-service/execution_service/engine/transfers/`. Same class of gap
+      as the prediction batch's KALSHI finding — a live-money correctness risk if trading is ever actually run
+      against this venue with no way to fund/withdraw. Done-when: a real `VENUE_WALLET_CAPABILITIES` entry +
+      working rail is added, or confirmed intentional with a cited reason.
+- [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16.** 2 genuinely new gaps tracked above
+      (uncovered odds venues, MATCHBOOK's missing transfer rail); 3 other apparent gaps (price-diff exclusion,
+      ONEXBET dead code, BLOCKED-CREDENTIALS live connectors) confirmed already correctly handled/documented
+      in-code, not duplicated as new todos.
+- [x] ✅ [BACKEND] P0. **Confirm the parent plan's hard rules held — done 2026-08-16, trivially satisfied.** This
+      batch's steps 1-5 and step 9 sweep was investigation/documentation only — zero code was changed in any
+      touched repo.
 
 ## Progress Log
+
+**2026-08-16 — full contract sweep done, 2 new gaps found, sports is architecturally distinct.** SHIPPED —
+`unified-trading-pm@1c9fe64ae2`. 3 parallel research passes. Key structural finding: sports odds venues never
+resolve through instruments-service at all (a deliberate, documented 2026-06-29 decision — disjoint from every
+other AG's step-2 pattern), and all 31 rows show `archetype_consumers=NONE` (no archetype has declared needing
+raw `odds` data), so steps 5-8 are trivially `BLOCKED-ON:archetype-declaration-backlog` for the whole AG — no
+implementation investigation needed there, unlike prediction/tradfi's partial-NONE rows. Of the 8/31 venues with
+no batch/live capture, 6 turned out to be already-documented decisions (3 price-diff-QA exclusions, 1 dead-code
+adapter, and the live WS connectors' correct `BLOCKED-CREDENTIALS` status) — checked before filing, not
+duplicated. Exactly 2 genuinely new gaps: 4 venues (BOVADA/NOVIG/PROPHETX/UNIBET_EU) with no stated exclusion
+reason, and MATCHBOOK having real execution wiring but no transfer rail (same class as the prediction batch's
+KALSHI finding).

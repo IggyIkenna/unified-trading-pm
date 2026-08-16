@@ -206,14 +206,20 @@ historical debris from two scripts that disagreed, not an active bug.
    full old→canonical manifest + re-proves 0 orphans on the LIVE walk.
 4. Databento-backfill the 571 Massive-only shards; verify.
 5. **[GATE]** Operator go → run migration on a VM (copy→verify→delete), quarantine garbage/corrupt loudly.
-6. **[GATE]** Operator go → purge Massive (1.47M objects).
+6. **[GATE]** Operator go → purge Massive (1.47M objects). **✅ EXECUTED 2026-07-20/21** (corrected 2026-08-16,
+   plan_reconciler Phase -1 — this step sat stale/future-gated for 4 weeks after landing):
+   `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3 confirms `RUN_TS=20260720-193849`,
+   **1,701,422 objects → 0, 0 collateral** (operator Option C, subscription terminated, accepted permanent loss). This
+   doc is the codex-cited source design doc for that purge.
 7. Rebuild manifest/availability_index (single-walk, consolidator paused) + regen catalogue (MVP re-stamp).
 8. Post-migration audit: re-walk → 0 legacy shapes + 0 orphans + count reconciles. Then re-run backfills → Phase D gate.
 
 ## Hard-stops (operator-only)
 
-Massive 1.47M-object delete · legacy-object delete after copy · any prod-bucket delete. Non-destructive prep + dry-run +
-canonical-shape code changes proceed autonomously.
+Legacy-object delete after copy · any prod-bucket delete. Non-destructive prep + dry-run + canonical-shape code changes
+proceed autonomously. **The Massive 1.47M-object delete listed here as a future hard-stop already executed 2026-07-20/21
+(see step 6 above) — corrected 2026-08-16, plan_reconciler Phase -1; any future prod-bucket delete still needs a fresh
+operator go, this doc's own hard-stop framing was simply stale on this ALREADY-COMPLETED one.**
 
 ## Progress log
 

@@ -28,8 +28,8 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: review
 assigned_vm: NA
 execution_scope: local-only
-locked_by: agt-2be768
-locked_since: "2026-08-16T17:30:00Z"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by:
@@ -80,3 +80,27 @@ should be pointing sharded workers at their slot clone.
   1× instruments_master, 2× small-epic combined batches. Full 101-doc coverage, each doc read by exactly one hunter.
 
 ## Plans not reached
+
+## Progress Log
+
+- **2026-08-16 (plan_reconciler /plan-reconcile Phase -1, separate dispatch reconciling this doc against fresh
+  state)**: this run (`agt-2be768`, slot 10) died after Phase 0 (inventory only — Coverage section above) and before
+  Wave-1's hunter findings were ever aggregated back; every findings section above (Flips/Contradictions/Doc-drift/
+  Hygiene/Codex corrections/Filed/Archive candidates/Refuted) is genuinely empty, not a formatting artifact. No live
+  AO dispatch to slot 10 remains (fleet-wide backlog check: 0 tasks dispatched to slot 10; last commit to this doc
+  was 2026-08-16T17:36:08Z, ~4h before this check) — confirmed dead via the same evidence class (git-log gap + AO
+  dispatch-status cross-reference) as `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`'s Option A precedent
+  (2026-08-15 operator ruling: a dead dispatch's own self-lock auto-clears without a human step) — `locked_by:`
+  cleared above.
+  - **Independent cross-corroboration**: the same-day `ag_closeout_audit_sports_parked_2026_08_16.md` (a sibling
+    skill's run, `agt-6704de`/slot 24) independently found this exact same doc dead-locked and flagged it under its
+    own "Special finding" section, recommending "re-running `/plan-reconcile sports` to conclude it, not folding
+    into this skill's batch" — matches this Phase -1 verdict exactly, from a fully independent run.
+  - **Not archived**: unlike the defi/prediction findings docs from the same day, this doc holds ZERO recorded
+    findings (open or closed) — it never got far enough to produce any. Archiving it would misrepresent the sports
+    tranche as reconciled when it was not; leaving it open, unlocked, with this note is the accurate disposition.
+  - **STILL-OPEN, real remaining work**: the sports tranche itself was never actually reconciled by this dispatch —
+    a fresh `/plan-reconcile sports` (or `/plan-reconcile all`) run is needed to do the work this doc's title
+    promises. This will happen via the standing weekly/daily AO `plan-reconciler.timer` cadence; not manually
+    re-triggered here (never `gh workflow run`/manual-dispatch a shared reconciler slot, per async-wait discipline)
+    — flagging for operator awareness that today's sports-tranche daily shard produced nothing.

@@ -97,7 +97,7 @@ repeated here.
 
 ## Todos
 
-- [ ] 1. [INFRA] P3. Root-cause fix is capacity-side, not another per-repo timeout raise — track landing of
+- [ ] [INFRA] P3. 1. Root-cause fix is capacity-side, not another per-repo timeout raise — track landing of
       `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phase 2-3 (the single `glue`
       runner per repo is the structural bottleneck: both `deployment-service` and `features-service` confirmed to have
       exactly ONE online runner, `glue-ip-172-31-5-118-1`, serialising `main`+LDR verification runs). Once landed,
@@ -113,7 +113,7 @@ repeated here.
       `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition principle (fire on
       change/RESOLVED, never every tick while nothing changed). Operator decision, not something a one-shot
       wall-clearing session should self-implement. — **DONE 2026-08-08, `a351d0d`** — same fix as parent doc todo 3.
-- [ ] 3. [INFRA] P3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
+- [ ] [INFRA] P3. 3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
       land, re-check whether this entire doc-chain (3 docs, ~30+ occurrences across 7+ repos) self-resolves — if the
       ledger coordination fix genuinely closes the class, archive all three docs together rather than leaving them open
       indefinitely as "still waiting."

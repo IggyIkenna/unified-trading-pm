@@ -57,8 +57,8 @@ context_scope:
 > open todos (verified 2026-08-15 — this was already true 2026-08-12: last todo, P2.1b, closed 2026-08-08 via
 > `deployment-service@f514b6a0`), `locked_by:` was already empty. `archive_exempt: true` dropped, `status: archived`,
 > moved to `plans/archive/2026_08/`. Reconciled via
-> `/plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` Item B. Corpus referrers with a literal
-> path to the old `plans/active/` location repointed in the same pass.
+> `/plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` Item B (itself archived 2026-08-16).
+> Corpus referrers with a literal path to the old `plans/active/` location repointed in the same pass.
 
 ## What I found
 

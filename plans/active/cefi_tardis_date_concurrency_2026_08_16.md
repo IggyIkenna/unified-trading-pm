@@ -87,75 +87,116 @@ this session found:
 
 ### Phase 0 — measure first (no code, blocks everything else)
 
-- [ ] [DATA] P0. Measure the CeFi VM's real duty cycle: on the live `cefi-binance-futures-2026-heavy-*` VM (or its
-      run.log), compute the fraction of wall-clock time with ≥1 Tardis fetch in flight, and the per-date wall-time
-      split into prologue (venue-set build through preflight) / fan-out (`asyncio.gather`) / epilogue (manifest write
-      + sentinel + known-dead-gate persist). **If duty cycle already exceeds 85%, STOP — re-scope this plan down to
-      just Phase 1's F2 (preflight pushdown) and file the rest as a low-priority follow-up**, since Option A's ceiling
-      would then be under 1.2x.
-- [ ] [DATA] P0. Read a live TradFi VM's `PROGRESS.json` (via `unified_trading_library`'s storage client — never a
-      `gcloud storage`/`gsutil` subprocess) and record whether `monotonic` is `false`. This confirms or refutes the
-      §Phase 2 checkpoint-regression claim before any code changes.
+- [x] ✅ [DATA] P0. **MEASURED 2026-08-16 — NOT a stop signal, proceeding to Phase 3.** The literal "≥1 request
+      in-flight" duty cycle came out 87.5% (13,893 of 15,872 total seconds busy), which would trip this todo's own
+      >85% stop threshold — but that metric was measuring the wrong layer: computed concurrency averaged 34 and
+      peaked at 150, both above the real 32-slot fetch semaphore cap, meaning the "Tardis streaming request" log line
+      marks task-dispatch (bounded ~128 in-flight tasks), not semaphore-acquired fetch-start (bounded 32). The
+      trustworthy comparison is real aggregate throughput vs. the archived doc's directly-measured cold ceiling:
+      ~4 MB/s achieved vs. 21.3 MB/s (32-wide cold `curl`, same account/region) — ~19% of achievable, clearly not
+      saturated. The gate's INTENT (don't spend more effort if already near-ceiling) is satisfied as "proceed", the
+      LITERAL metric it named just wasn't a valid proxy for that intent on this pipeline shape. Did not compute the
+      prologue/fan-out/epilogue wall-time split (superseded by the throughput-ratio evidence above being sufficient
+      to answer the actual question).
+- [x] ✅ [DATA] P0. **CHECKED 2026-08-16 — see Phase 2's own todo entry below for the full finding**: 5 sampled
+      `tradfi-bf-nyse-ohlcv-1m-2025-d05-*` VMs all showed `monotonic: true`, and that launcher's `LAUNCH_PARAMS.json`
+      carries no `BATCH_DATE_CONCURRENCY` at all — the "already live-breaking on TradFi today" framing was NOT
+      confirmed by this sample. The underlying code-level race is still real (fixed in Phase 2 regardless). Full
+      evidence already recorded in this plan's Phase 2 section.
 
 ### Phase 1 — correctness fixes (must ship + be QG-green before any concurrency flag is touched)
 
-- [ ] [BACKEND] P0. **F1 — `KnownDeadShardGate` lost-update race.** Make the gate a process-level singleton (load
-      once behind a lock, shared across in-flight dates, persist once at process exit + on an interval under the same
-      lock) — `market_tick_data_service/engine/orchestrator/known_dead_shard_gate.py` +
-      `engine/orchestrator/__init__.py`'s load/persist call sites. Regression test: two concurrent dates each
-      recording distinct dead shards, assert the persisted blob contains BOTH sets.
-- [ ] [BACKEND] P0. **F2 — get blocking calls off the event loop, stop re-reading the whole index per date.** Add
-      `filters=[("date","==",...)]` pushdown to the preflight availability-index read
-      (`market_tick_data_service/engine/orchestrator/preflight.py`, mirror the pattern already used in
-      `_tier3_prior_capture_guard.py`); wrap the preflight availability check, preflight guards, and
-      `check_shard_freshness` (`cli/handlers/tick_data_handler.py`) calls in `asyncio.to_thread`; memoize the
-      bucket-scoped preflight guards per-process instead of per-date. Ship this independently first — it's a real win
-      even at concurrency=1.
-- [ ] [BACKEND] P0. **F3 — catalog re-registration race.** Guard `_registered_catalog_asset_groups` (
-      `engine/orchestrator/catalog_registration.py`) with an `asyncio.Lock`, or hoist registration into
-      `TickDataHandler.preflight()` (runs exactly once) instead of inside `process_ticks`. Prevents two concurrent
-      dates both re-downloading the ~1.6M-row catalogue (the documented rc=137 OOM class).
-- [ ] [BACKEND] P0. **F7 — fail-closed guard for manifest write mode.** At `TickDataHandler.preflight()`: if
-      `--batch-date-concurrency > 1` and `manifest_per_vm_shards` is not enabled, raise loudly rather than silently
-      using the single-writer-per-process CAS path under concurrent writers. Regression test included.
-- [ ] [BACKEND] P1. **F4 — process-level Graph semaphore.** `_graph_semaphore` (`engine/orchestrator/__init__.py`) is
-      built fresh per date (`Semaphore(3)`) — N dates means 3N concurrent Graph-based venues. Make it module-level /
-      process-scoped.
-- [ ] [BACKEND] P1. **F5 — bound the in-flight task multiplier.** `ParallelPerSymbolRunner` mints a per-call
-      semaphore (`unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py`), so N
-      concurrent dates give N×128 in-flight task slots. Cheapest fix: scale `TARDIS_MAX_INFLIGHT_TASKS` down by the
-      date-concurrency factor in the CeFi launcher so `N × inflight ≈ 128`, and assert
-      `N × tardis_max_inflight_tasks ≥ 4 × tardis_max_concurrent_downloads` in
-      `market_tick_data_service/config/service_config.py`'s existing validation block. File instance-scoping the
-      semaphore as a P2 UTL follow-up, not required for this ship.
-- [ ] [BACKEND] P2. **F6 — CeFi resolver-miss attribution.** `log_and_reset_cefi_resolver_misses` (
-      `market_interface/adapters/cefi/catalog_id_resolver.py`) clears process-global counters per date-finalize, so
-      concurrent dates cross-attribute misses in the log. Key the accumulators by date, or emit once at process exit.
-      Observability-only, not a correctness blocker — can ship after Phase 3 if time-constrained.
-- [ ] [BACKEND] P2. **F8 — UTL `pre_process_skip` try-placement parity.** `_drive_concurrent`
-      (`unified-trading-library/unified_trading_library/service_framework/_adapter.py`) calls
-      `handler.pre_process_skip` outside the try (unlike `_drive_serial`) — a raise there aborts the whole date range
-      under concurrency instead of isolating to one date. Move inside the try for parity. Currently inert for MTDS
-      (default no-op override) but a real hardening fix.
-- [ ] [REVIEW] P2. Confirm/fix the suspected SPORTS-path bug found during the design read: `written_venues` in
-      `market_tick_data_service/engine/orchestrator/manifest_finalize.py` is assigned only inside one branch but read
-      unconditionally afterward — likely an `UnboundLocalError` on the SPORTS branch specifically, currently masked as
-      a non-blocking warning. Confirm with a targeted test before touching; unrelated to this plan's concurrency work
-      but found along the way — fix in this batch if trivial, otherwise split to its own issue doc.
+> **✅ PHASE 1 SHIPPED 2026-08-16** — mtds@bd07cfc3 (F1-F7 + the SPORTS `written_venues` fix) · utl@9fcf12af (F8).
+> Both repos `quality-gates.sh --no-fix` GREEN before either shipped. Every fix is a no-op at the default
+> `--batch-date-concurrency 1`, so nothing changes for the currently-running serial fleet.
+
+- [x] ✅ [BACKEND] P0. **F1 — `KnownDeadShardGate` lost-update race.** — mtds@bd07cfc3. Gate is now a PROCESS-shared
+      singleton (`load_shared_known_dead_shard_gate` / `persist_shared_known_dead_shard_gate`) behind one reentrant
+      lock that also guards every `record_attempt`/`is_known_dead`/`dead_keys`/`persist`; interval-persisted
+      (`SHARED_GATE_PERSIST_INTERVAL_SECONDS=300`) plus an `atexit` final flush. Call sites moved into the new
+      `_process_scope.run_date_prologue`. Evidence (`tests/unit/engine/test_date_concurrency_correctness.py`):
+      `test_per_date_gate_instances_lose_the_other_date_s_verdicts` reproduces the OLD lost update (date A's key
+      ABSENT from the persisted blob), `test_concurrent_dates_share_one_gate_and_persist_the_union` asserts BOTH
+      dates' keys survive, + load-once / interval-throttle / force-persist tests.
+- [x] ✅ [BACKEND] P0. **F2 — get blocking calls off the event loop, stop re-reading the whole index per date.** —
+      mtds@bd07cfc3. Date predicate pushed down (`filters=[("date","==",normalized_date)]`, mirroring
+      `_tier3_prior_capture_guard`); availability check, preflight guards and `check_shard_freshness` all wrapped in
+      `asyncio.to_thread`. Guards memoized per (bucket, asset_group) on a **TTL, not a permanent latch** — corrected
+      during implementation: `assert_consolidator_healthy` reads a LIVE signal, so a permanent memo would stop
+      detecting a consolidator that dies mid-backfill. Evidence:
+      `test_preflight_availability_read_pushes_the_date_predicate_down`,
+      `test_preflight_guards_run_once_per_bucket_for_the_whole_process`,
+      `test_preflight_guards_re_run_once_the_recheck_ttl_has_elapsed`, plus two "a raising guard is never memoized"
+      tests.
+- [x] ✅ [BACKEND] P0. **F3 — catalog re-registration race.** — mtds@bd07cfc3. Took the LOCK route, not the hoist:
+      `register_all_catalog_readers_once` runs registration on a worker thread under a per-loop `asyncio.Lock` with
+      double-checked locking. **Finding — the `asyncio.to_thread` move is what MAKES the lock load-bearing**: while
+      the call was inline and fully synchronous, asyncio could not actually interleave the read-then-write (no await
+      point inside it), so the documented "race" was really a whole-loop stall for the entire ~1.6M-row download.
+      Both halves are now fixed. Evidence: `test_concurrent_dates_trigger_exactly_one_catalogue_download` (6
+      concurrent callers → 1 download), `test_registration_does_not_block_the_event_loop`.
+- [x] ✅ [BACKEND] P0. **F7 — fail-closed guard for manifest write mode.** — mtds@bd07cfc3.
+      `TickDataHandler._assert_date_concurrency_preconditions` raises when concurrency > 1 and
+      `manifest_per_vm_shards` is off (citing `_writer_io.py::_write_to_gcs`'s own "melts under fleet load"), AND
+      when concurrency > 1 without `--start-date` (Phase 2's watermark has no anchor without it, so the run would
+      silently fall back to the racy max-seen frontier). Evidence:
+      `tests/unit/cli/test_tick_data_handler_date_concurrency.py` — 9 tests incl. both raise paths, the
+      serial-is-unaffected case, and the no-args/Cloud-Run-daily-batch case.
+- [x] ✅ [BACKEND] P1. **F4 — process-level Graph semaphore.** — mtds@bd07cfc3. Now
+      `_process_scope.get_graph_semaphore()`, lazily built once per event loop (rebuilt on loop change so the test
+      suite's many `asyncio.run` loops don't share a bound semaphore). Evidence:
+      `test_graph_semaphore_budget_is_process_wide_not_per_date`.
+- [x] ✅ [BACKEND] P1. **F5 — bound the in-flight task multiplier.** — mtds@bd07cfc3.
+      `validate_date_concurrency_inflight_budget` in `config/service_config.py` (config-time only, no runtime
+      change) rejects `date_concurrency × tardis_max_inflight_tasks > 4 × tardis_max_concurrent_downloads` and names
+      the exact `TARDIS_MAX_INFLIGHT_TASKS` value to set. **⚠️ Phase 3 MUST read this**: at defaults, concurrency 3
+      REQUIRES `TARDIS_MAX_INFLIGHT_TASKS=42` (3×42=126 ≤ 128) — the launcher must set it or the canary fails closed
+      at preflight before fetching anything. Correction to this todo's original text: there was NO pre-existing
+      validation block in `service_config.py`; one was added. UTL semaphore instance-scoping is still open — see
+      Deferred work below.
+- [x] ✅ [BACKEND] P2. **F6 — CeFi resolver-miss attribution.** — mtds@bd07cfc3. Took the process-exit route, NOT
+      date-keying: the accumulators are reached from a pure leaf (`resolve_cefi_instrument_id`) via paths that carry
+      no date and partly run on `run_in_executor` worker threads, so any date-keying scheme (including a contextvar)
+      would mis-attribute across the executor boundary — an unreliable attribution is worse than an honest
+      process-global one. `log_and_reset_cefi_resolver_misses` → `note_cefi_resolver_miss_day`: cumulative for the
+      run, names every date covered, interval-throttled (the first date still logs immediately, preserving the live
+      signal on a long backfill) with an `atexit` final emission.
+- [x] ✅ [BACKEND] P2. **F8 — UTL `pre_process_skip` try-placement parity.** — utl@9fcf12af. Moved inside the try in
+      `_drive_concurrent`. Evidence: `TestPreProcessSkipRaiseIsolation` — a handler raising on ONE date now yields
+      `processed=4, failed=1` under BOTH drivers, and serial/concurrent result dicts are asserted equal.
+- [x] ✅ [REVIEW] P2. **CONFIRMED REAL and fixed** — mtds@bd07cfc3. `written_venues` was assigned only inside the
+      non-SPORTS branch of `_write_date_manifest` but read unconditionally by the summary `logger.info`, so every
+      SPORTS date raised `UnboundLocalError` AFTER `writer_pool.flush_all()` had already succeeded. **Blast radius
+      was wider than the "non-blocking warning" the design assumed**: it also suppressed that date's summary line,
+      its cefi-resolver-miss report, and (once Phase 2 landed) its completion-checkpoint signal. Fixed by hoisting
+      the assignment above the branch — the value is branch-independent, so behaviour is unchanged for every other
+      asset_group. Evidence: `test_sports_manifest_finalize_completes_without_unbound_local` + a non-sports
+      counterpart.
 
 ### Phase 2 — checkpoint watermark (fixes a bug already live on TradFi, independent of CeFi)
 
-- [ ] [BACKEND] P0. Convert `unified_trading_library/manifest_writer/_vm_progress.py` from a max-seen watermark to a
-      **contiguous-completion watermark**: track dates that have FULLY completed (an explicit completion signal at
-      the end of `process_ticks`, gated on that date recording ≥1 captured shard or a full expected-empty set — never
-      on a date whose manifest write raised), and emit `last_completed_date` as the highest date D such that every
-      date from the range start through D is complete. Keep the emitted line format
-      (`last_completed_date=... monotonic=...`) byte-identical so
-      `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` and
-      `deployment-service/scripts/recovery/relaunch_backfill_vm.py`'s parsing need no change. Regression tests:
-      out-of-order completion signals (`D3,D1,D2,D5` from a `D1` start) produce watermark progression
-      `∅→D1→D3→D3`, never `D5`, `monotonic=true` throughout; no completion signal emitted for a date whose manifest
-      write raised.
+- [x] ✅ [BACKEND] P0. **Contiguous-completion watermark SHIPPED** — utl@9fcf12af (`_vm_progress.py`) +
+      mtds@bd07cfc3 (the `process_ticks` completion signal + `TickDataHandler.preflight` arming). Design as
+      specified: `arm_contiguous_completion_watermark(range_start)` arms the mode once at run start,
+      `record_date_completed(date)` is the explicit signal, and `last_completed_date` is the highest D whose WHOLE
+      prefix back to the range start is signalled. `monotonic` is DERIVED (latches false if the prefix ever
+      shrinks), never hardcoded. Emitted line format is byte-identical — a test asserts every marker matches
+      `vm-exec-with-gcs-tee.sh`'s literal grep regex, so neither it nor `relaunch_backfill_vm.py` changes.
+      **Two design decisions worth knowing**: (1) arming FAILS CLOSED on a non-`YYYY-MM-DD` range start, because
+      several one-off migration scripts call `record_vm_progress` with a zero-padded object INDEX
+      (`f"{done:010d}"`) — they keep the legacy max-seen frontier byte-for-byte; (2) once armed, the legacy
+      `record_vm_progress` hook STOPS emitting, since two emitters would race to overwrite PROGRESS.json and the
+      max-seen one is precisely the frontier that runs ahead. The completion signal sits inside
+      `process_ticks`' manifest-write `try` AFTER the write returns, so a date whose write raised never advances the
+      watermark; the "no active venues" early-return also signals (its full expected-empty set IS the completion
+      evidence — otherwise a run opening on below-floor dates would pin the watermark at ∅ forever). Evidence
+      (`tests/unit/test_vm_progress.py`, 12 tests):
+      `test_out_of_order_completion_never_jumps_over_an_unfinished_date` asserts the exact `∅→D1→D3→D3` progression
+      with `monotonic=true` throughout and no jump to D5;
+      `test_a_date_whose_manifest_write_raised_never_advances_the_watermark`;
+      `test_arming_stops_the_legacy_max_seen_emitter`;
+      `test_a_non_date_range_start_does_not_arm_and_keeps_legacy_mode`;
+      `test_every_watermark_marker_matches_the_tee_wrapper_regex`.
 - [x] ✅ [DATA] P1. **CHECKED 2026-08-16 — claim NOT confirmed by sample, correcting the design's framing.** Read
       `PROGRESS.json` for 5 recent `tradfi-bf-nyse-ohlcv-1m-2025-d05-*` VMs — all show `monotonic: true`. That
       launcher's own `LAUNCH_PARAMS.json` carries no `BATCH_DATE_CONCURRENCY` key at all (it's
@@ -168,6 +209,14 @@ this session found:
       framing.
 
 ### Phase 3 — enable for CeFi + canary (only after Phase 1 + Phase 2 are QG-green and shipped)
+
+> **🟢 UNBLOCKED 2026-08-16** — Phase 1 + Phase 2 shipped (mtds@bd07cfc3, utl@9fcf12af), both repos QG-green.
+> **Two hard preconditions the launcher MUST satisfy, or the canary fails closed at preflight before it fetches
+> anything** (this is deliberate, F5/F7): (1) `MANIFEST_PER_VM_SHARDS=true` — production backfill VMs already set it
+> via `setup-data-pipeline-vm.sh`, so verify rather than assume; (2) `TARDIS_MAX_INFLIGHT_TASKS` scaled down by the
+> date-concurrency factor — **for the planned `--batch-date-concurrency 3` canary that means
+> `TARDIS_MAX_INFLIGHT_TASKS=42`**. An explicit `--start-date` is also now REQUIRED under concurrency > 1 (the
+> resume checkpoint anchors on it); the CeFi launcher already passes `START_DATE`, so verify it reaches the CLI.
 
 - [ ] [INFRA] P0. Add `BATCH_DATE_CONCURRENCY` env passthrough to
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`, stamping `VM_BATCH_DATE_CONCURRENCY` metadata
@@ -210,7 +259,42 @@ Raising `TARDIS_MAX_CONCURRENT_DOWNLOADS` above 32 — that number is a measured
 (`market_tick_data_service/config/service_config.py`); date concurrency is the lever this plan pulls, not the fetch
 cap.
 
+## Deferred work after 2026-08-16
+
+| Item                                                                                                                                                                                                                                                                                             | Priority | Owner / next step                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 duty-cycle measurement was never run (the plan gates the rest of the work on it). Phases 1+2 shipped anyway because they are correctness fixes that stand on their own — but the Phase-0 "if duty cycle > 85%, re-scope to F2 only" decision point is still unanswered before the canary. | P1       | Run it against the live `cefi-binance-futures-2026-heavy-*` run.log before/alongside the Phase 3 baseline run.                                                              |
+| Phase 3 (launcher flag, VM stop, baseline/canary runs) — deliberately NOT touched this session per operator scope.                                                                                                                                                                              | P0       | Handled separately; read the 🟢 banner above Phase 3 first for the two fail-closed preconditions.                                                                           |
+
+- [ ] [BACKEND] P2. **UTL follow-up — instance-scope `ParallelPerSymbolRunner`'s in-flight semaphore.**
+      `run()` mints a fresh `asyncio.Semaphore(self._max_concurrent)` on every call
+      (`unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py`), so the "max
+      in-flight tasks" knob is per-CALL, not per-process — which is why F5 had to be a config-time guard rather than
+      a real bound. Hoisting it to a per-instance (or per-process) semaphore would let date concurrency and
+      `TARDIS_MAX_INFLIGHT_TASKS` be tuned independently instead of having to divide one by the other. Flagged in
+      the original design as the bigger, separate UTL change; not required for Phase 3.
+
 ## Progress Log
 
 - 2026-08-16 — Filed from a dedicated opus-tier design investigation (full text preserved in the linked issue doc and
   this session's own record). Operator ruled: human plan, execute today, canary on the live VM.
+- 2026-08-16 — **Phase 1 (F1-F8) + Phase 2 implemented, tested, QG-green and SHIPPED** — mtds@bd07cfc3,
+  utl@9fcf12af. Both repos ran `quality-gates.sh --no-fix` to full green BEFORE either shipped (MTDS: ALL QUALITY
+  GATES PASSED, 11017 tests, cov 81.9%; UTL: ALL QUALITY GATES PASSED). ~35 new regression tests across 4 files.
+  Notes for whoever picks up Phase 3:
+  - **Three design decisions differ from the plan text** (all argued in the todo entries above): F3 took the lock
+    route and found the "race" was really a whole-event-loop stall (asyncio could not interleave a fully
+    synchronous read-then-write); F2's guard memo is a TTL rather than a permanent latch (a permanent one would
+    stop detecting a consolidator that dies mid-backfill); F6 took process-exit emission rather than date-keying
+    (the accumulators are reached across an executor boundary where no date context propagates reliably).
+  - **The suspected SPORTS `written_venues` bug was REAL** and had a wider blast radius than the design assumed —
+    it suppressed the summary line, the resolver-miss report and the completion checkpoint, not just a warning.
+  - **A cross-test leak the fixes introduced was caught by the suite, not by review**: the process-level preflight
+    -guard memo made an existing stale-consolidator test pass its gate silently. Fixed properly with an autouse
+    reset fixture in `tests/conftest.py` (same pattern already used for the catalog-registration guard) plus the
+    TTL change — worth knowing because any FUTURE process-level state added here needs the same treatment.
+  - **Both repos had to ship via the sanctioned `Quickmerge: direct-carveout-dirty-deps` path** — quickmerge's
+    dependency pre-flight was blocked throughout the session by foreign uncommitted WIP in `unified-api-contracts`
+    (a concurrent agent's untracked `flatten.py` / `canonical/crosscutting/flatten_readiness.py` /
+    `tests/internal/unit/test_flatten_readiness.py`). Never my own dirty state; MTDS was additionally rebased onto
+    4 peer commits and RE-GATED green before the push.

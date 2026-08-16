@@ -30,6 +30,7 @@ source: >-
   Surfaced while shipping an unrelated operator-approved fix (DP-FETCH-009 detector, interactive session, 2026-08-08) —
   quickmerge's re-gate step failed on a pre-existing basedpyright ratchet violation in files the fix never touched.
 resolved_by:
+archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 depends_on: []
 context_scope:
@@ -83,7 +84,11 @@ false positives worth a targeted `# type: ignore`-equivalent per this repo's own
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix or properly annotate the ~23 basedpyright errors in `sports_trigger_evaluation.py`,
+- [x] ✅ [BACKEND] P1. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** `deployment-service@71871454`
+      (ancestor of HEAD/LDR) fixed all 4 named files, ratchet 1295→1259; `scripts/quality-gates.sh:134` confirms
+      `BASEDPYRIGHT_MAX_ERRORS=1259` live. Independently re-confirmed by `ci_satellite_ao_dispatch_batch13_2026_08_13.md`
+      (2026-08-14, fresh standalone basedpyright run → 0 errors on the 4 files). Was: Fix or properly annotate the ~23
+      basedpyright errors in `sports_trigger_evaluation.py`,
       `sports_trigger_periodic.py`, `sports_trigger_scheduler.py`, `sports_trigger_state.py` so
       `BASEDPYRIGHT_MAX_ERRORS` drops back to ≤1293. Unblocks all future deployment-service ships, including the
       DP-FETCH-009 fix parked in a working tree pending this (see Progress Log for exact file diffs still sitting

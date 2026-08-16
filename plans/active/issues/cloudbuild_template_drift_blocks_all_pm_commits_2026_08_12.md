@@ -41,7 +41,11 @@ supersedes:
     deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12,
     cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12,
   ]
-resolved_by: deployment-api@b928d173b5
+resolved_by:
+  "deployment-api@b928d173b5, deployment-api@e7dde8a675, deployment-api@d47546e9da, unified-trading-pm@2b4bee96d3,
+  unified-trading-pm@95dd1ded4f, unified-trading-pm@3ec88291e2 (corrected 2026-08-16, plan_reconciler Phase -1 —
+  was a single-sha citation understating the fix, which spans 6 commits across 2 repos)"
+archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 context_scope:
@@ -189,7 +193,12 @@ Two remedies exist and both were declined deliberately:
       ratchet has already absorbed into the baseline". Measured — deployment-api is 16 (== baseline) both before and
       after — see the new todo below.
 
-- [ ] [SCRIPT] P1. **Substitutions are INVISIBLE to the drift ratchet, and a rollout would silently drop three
+- [x] ✅ [SCRIPT] P1. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** `unified-trading-pm@3ec88291e2`
+      (ancestor of HEAD) adds `find_dropped_substitution_keys()` in `scripts/propagation/rollout-cloudbuild.py` as a
+      SEPARATE guard used only by `--apply`'s write path (deliberately not folded into `_cloudbuild_markers()`, exactly
+      as required to avoid raising the never-raise ratchet), with 166 new lines of tests. Independently re-confirmed by
+      `ci_satellite_ao_dispatch_batch13_2026_08_13.md:272-290`. This zeroes out this doc's open todos. Was:
+      **Substitutions are INVISIBLE to the drift ratchet, and a rollout would silently drop three
       production values.** Measured 2026-08-12 while reconciling `_RUN_INIMAGE_QG`: changing that substitution moved the
       drift count not at all (16 → 16), because `_cloudbuild_markers()` in `scripts/propagation/rollout-cloudbuild.py`
       walks only `data["steps"]` — collecting step ids, `secretEnv`, `availableSecrets`, and step args. It never reads

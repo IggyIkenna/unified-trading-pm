@@ -266,9 +266,15 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `plans/archive/2026_08/`, every corpus referrer's path fixed — the paired execution plan +
       `RUNTIME_TOPOLOGY_DECISIONS.md` + 3 family docs); the paired execution plan itself left `active` (real open work
       confirmed, untouched). `unified-trading-pm@01cf658dc9`.
-- [ ] [DATA] P2. `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` — possible (not confirmed) that the
+- [x] ✅ [DATA] P2. `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` — possible (not confirmed) that the
       [OPERATOR] P1 "decide immediate unblock" todo is already satisfied (08-10 00:37 success referenced as established
-      fact in a later entry) but no citable sha/GCS check exists. Needs a live check before flipping.
+      fact in a later entry) but no citable sha/GCS check exists. **DONE (verified 2026-08-16, /plan-reconcile Phase
+      -1)**: re-read the target doc directly — the `[OPERATOR] P1` todo is itself already `[x]` with its own dated
+      entry ("Resolved as of 2026-08-15 — moot. The daily cron has been writing fresh `coverage.json` successfully
+      with the default machine type for several days now (bucket shows 08-01, 08-02, 08-04, 08-05, 08-09, 08-10,
+      08-12, 08-14, 08-15 — no gap since 08-12)"), and the doc carries `archive_exempt: true` deliberately (0 open
+      todos, kept for 9 live cross-referrers' link stability per its own 2026-08-15 Progress Log entry) — confirmed
+      genuinely resolved, not just claimed.
 
 ## P2 — needs operator ruling / judgment call (not mechanically resolvable)
 
@@ -376,6 +382,11 @@ top of that.
 - **STALE (corrected 2026-08-16, plan_reconciler cross-cutting)**: accurate when written, but 30+ items in the body
   above now carry dated DONE/APPLIED entries with commit citations from subsequent sessions — check each item's own
   body text for current status rather than trusting this line.
+- **2026-08-16 (/plan-reconcile Phase -1, dedicated pass)**: re-checked every remaining open item. Flipped the
+  `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` P2 item (confirmed resolved with hard evidence, see
+  its own entry above). One item remains genuinely open: the systemic stale-`last_updated` P3 hygiene finding (real,
+  low-priority, needs a corpus-wide script fix rather than a per-doc edit — out of scope for this pass). Doc NOT
+  archived (1 item still open).
 - Historical-reconcile batches 5-10 (from the SEPARATE earlier pass this same session, reconciling prior dated findings
   docs) were partially committed (batches 1-4 landed) — batches 5-10 (prediction/sports/ui/08-08-archive/
   meta-docs/locked_by-sweep) still need their commits, IF the edits from that earlier apply-agent pass survived the

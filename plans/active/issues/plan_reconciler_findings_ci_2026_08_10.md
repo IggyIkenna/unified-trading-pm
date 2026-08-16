@@ -220,19 +220,25 @@ too, per Phase-5.9(a)'s routed==parked reconciliation. **9 items filed** (8 sent
 discovered afterward, item 9 below — the blocked-question mechanism itself, so not something that could have been
 included in its own call):
 
-- [ ] [DOC] P1. **`pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md` is 1004L, OVER the 1000L hard
+- [x] ✅ [DOC] P1. **`pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md` is 1004L, OVER the 1000L hard
       cap** (confirmed via `check_line_caps.sh` directly — the periodic sweep misses this doc because it globs
       `plans/active/*.md` but not `plans/active/issues/*.md`, per hunter batch 2). Needs a split (`continued4`) or an
       explicit ruling that the sweep gap is acceptable. Part of blocked-question Q1. **CONFIRMED WORSE as of
       2026-08-15**: now 1013L, split still not executed — needs the same extraction pattern as other over-cap docs.
+      **RESOLVED 2026-08-16** — split via a Trust-Mode line-cap action in the `ci`-tranche 2026-08-16
+      `/plan-reconcile` run: 1013L → 145L (independently re-verified via `wc -l`, well under the 1000L cap), evidence
+      `unified-trading-pm@f835f7fcc4` ("ci-tranche line-cap splits under Trust Mode") per
+      `/plans/active/issues/plan_reconciler_findings_ci_2026_08_16.md`.
 - [x] ✅ [DOC] P1. **`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` is 998L**, 2 lines of headroom,
       already breached its cap twice before (per its own Progress Log) — blocks even a small stale-content correction
       (the "6 protected repos" fix above, see Contradictions #3) from landing safely. Needs a split/extraction pass.
       Part of blocked-question Q1. **RESOLVED**: line-cap split done via `unified-trading-pm@e3ca94b668`, doc now 824L.
-- [ ] [DOC] P1. **`github_actions_operator_gated_followups_2026_07_17.md` is exactly 1000L**, zero headroom — blocks the
+- [x] ✅ [DOC] P1. **`github_actions_operator_gated_followups_2026_07_17.md` is exactly 1000L**, zero headroom — blocks the
       forward-pointer fix above (see Doc-drift) from landing safely. Needs a split/extraction pass. Part of
       blocked-question Q1. **CONFIRMED WORSE as of 2026-08-15**: now 1006L, split still not executed — needs the same
-      extraction pattern as other over-cap docs.
+      extraction pattern as other over-cap docs. **RESOLVED 2026-08-16** — split via the same Trust-Mode line-cap
+      action: 1006-1007L → 738L (independently re-verified via `wc -l`), evidence `unified-trading-pm@f835f7fcc4` per
+      `/plans/active/issues/plan_reconciler_findings_ci_2026_08_16.md`.
 - [x] ✅ [DOC] P2. **`credential_ask_orphan_checker_ping_format_stale_2026_07_27.md` is `assigned_vm: planning` but its
       sole open todo fails the dispatch-scope-eligibility bounded-outcome test** (it's an open design/naming decision —
       "consider whether an IAM-permission gap should get a distinct marker" — not a worker-checkable fact; hunter batch
@@ -276,17 +282,17 @@ included in its own call):
 
 ## Deferred work after 2026-08-10
 
-| Item                                                         | State              | Blocked on                                                       |
-| ------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------- |
-| `pytest_timeout_60s_flaky_under_contention_continued2` split | **Operator-owned** | split/extraction decision (line-cap at 1004L, over hard cap)     |
-| `fleet_wide_qg_self_hosted_runner_capacity_crisis` split     | **Operator-owned** | split/extraction decision (998L, 2 lines of headroom)            |
-| `github_actions_operator_gated_followups` split              | **Operator-owned** | split/extraction decision (exactly 1000L, zero headroom)         |
-| `credential_ask_orphan_checker` AO-scope fix                 | **Operator-owned** | a design/naming decision only a human can make                   |
-| `ci_pipeline_speed_and_cost_redesign` "5→3 glue" re-check    | **Not done**       | real work — arithmetic re-verification across 2 docs, nobody yet |
-| AWS Cost Explorer extraction into next ci batch              | **Not done**       | real work — needs a batch-authoring pass, 9 days overdue         |
-| Unlock `plan_reconciler_findings_ci_2026_08_09.md`           | **Operator-owned** | unlock authority (dead-session lock, HARD-STOP per rules)        |
-| `pm_bats_tests` definition-of-done scoping                   | **Not done**       | real work — small scoping decision, nobody yet                   |
-| Blocked-question retrieval gap investigation                 | **Operator-owned** | needs dashboard-side visibility this worker doesn't have         |
+| Item                                                          | State                 | Blocked on                                                     |
+| --------------------------------------------------------------| --------------------- | --------------------------------------------------------------- |
+| `pytest_timeout_60s_flaky_under_contention_continued2` split  | **DONE 2026-08-16**   | resolved — see Filed item above (now 145L)                     |
+| `fleet_wide_qg_self_hosted_runner_capacity_crisis` split      | **DONE 2026-08-15**   | resolved — see Filed item above (now 824L)                     |
+| `github_actions_operator_gated_followups` split               | **DONE 2026-08-16**   | resolved — see Filed item above (now 738L)                     |
+| `credential_ask_orphan_checker` AO-scope fix                  | **DONE 2026-08-15**   | resolved — doc archived, see Filed item above                  |
+| `ci_pipeline_speed_and_cost_redesign` "5→3 glue" re-check     | **DONE 2026-08-15**   | resolved — see Filed item above (confirmed moot)                |
+| AWS Cost Explorer extraction into next ci batch               | **DONE 2026-08-14**   | resolved — see Filed item above (extracted+executed)            |
+| Unlock `plan_reconciler_findings_ci_2026_08_09.md`             | **DONE 2026-08-15**   | resolved — doc archived, lock cleared, see Filed item above    |
+| `pm_bats_tests` definition-of-done scoping                    | **DONE**              | resolved — see Filed item above                                 |
+| Blocked-question retrieval gap investigation                  | **Still open**        | needs dashboard-side visibility this worker doesn't have; genuine remaining work, not this doc's to resolve |
 
 **Recommended NEXT item**: the 3 line-cap-blocked splits (rows 1-3) are the highest-leverage — each unblocks an
 already-drafted, already-verified correction that's just sitting blocked on doc size, and
@@ -299,6 +305,13 @@ outstanding and worse (1013L / 1006L respectively); Filed-9 (blocked-question re
 AO-dashboard-side check. The corpus-wide `locked_by` placeholder ruling (Option B) is recorded on the master ticket,
 `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, applied by a separate clearing
 pass, not this doc.
+
+**2026-08-16 update (plan_reconciler Phase -1)**: Filed-1 and Filed-3 (the 2 remaining line-cap splits) RESOLVED —
+both landed via the `ci`-tranche 2026-08-16 `/plan-reconcile` run's Trust-Mode line-cap action, independently
+re-verified via direct `wc -l` this pass (145L and 738L respectively, both well under the 1000L cap). **Only Filed-9
+(blocked-question answer-retrieval gap) remains genuinely open** — re-checked the corpus fresh, no resolution found;
+this needs AO-dashboard-side visibility this worker doesn't have, so it stays open rather than being force-closed.
+This doc is NOT archived (1 genuinely open item remains) but is otherwise fully reconciled against current state.
 
 ## Archive candidates (operator review)
 

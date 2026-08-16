@@ -121,7 +121,14 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
 - [ ] [SCRIPT] P3. Consider whether `rollout-workflow-templates.sh` (or a wrapping CI job) could roll out to EVERY repo
       in one atomic pass when the SSOT changes, rather than relying on individual slots to notice + fix per-repo drift
       reactively when their own unrelated commit trips the gate. This would remove the "N slots independently re-fixing
-      the same drift" failure mode entirely.
+      the same drift" failure mode entirely. **NOTE added 2026-08-16 (plan_reconciler Phase -1):** the blast radius this
+      question was written against has shrunk substantially since — `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`
+      (status: active, last_updated 2026-08-14) is 10 of 11 todos done, converting most of the fleet's byte-identical,
+      full-copy-propagated workflow files into thin `workflow_call` stubs hosted once in `unified-trading-ci` — the
+      exact class of file whose N-repos-drift-simultaneously failure mode motivated this question. With most of that
+      content now centrally hosted and callers thin, re-assess whether this P3 item is still worth pursuing at its
+      original fleet-wide-rollout scope, or should close/downgrade — not a mechanical fix, left open for that
+      reassessment rather than force-closed.
 - [ ] [DATA] P3. If another workflow-template-parity failure recurs on `agent-orchestrator` (or any other repo) during a
       future rollout, check `git log --oneline -15 -- .github/workflows/<file>.yml` in the affected repo FIRST to
       distinguish "stale SSOT drift" (one clean fix suffices) from "an active multi-actor migration is still landing

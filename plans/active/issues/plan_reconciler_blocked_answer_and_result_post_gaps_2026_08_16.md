@@ -36,7 +36,7 @@ tags:
 related:
   [
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
-    /plans/active/issues/plan_reconciler_findings_ao_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_ao_2026_08_16.md,
     /agents/plan_reconciler.md,
   ]
 created: "2026-08-16"
@@ -192,3 +192,22 @@ worker's ability to read it back via the AO HTTP surface.
   change the outcome. The remaining path is the one already named in `plan_reconciler_findings_ao_2026_08_16.md`'s
   Progress Log: a fresh session or the operator applying the answer directly to the 2 affected docs, or a
   [BACKEND]-scoped fix to todo 1/2 above followed by a re-check.
+
+- **2026-08-16 (/plan-reconcile Phase -1, dedicated pass)**: root-caused Gap 1 by reading the live
+  `agent-orchestrator` auth code directly (not trusting `agents/plan_reconciler.md`'s claim or this finding's
+  reproduction alone, per the todo's own instruction). `POST /api/plan-health/result`
+  (`server/routes/agents.py:583-599`) gates on `auth.verify_internal_secret(x_orchestrator_secret)`
+  (`server/auth.py:613-633`) — that function's body is a plain `secrets.compare_digest` against the shared
+  `ORCHESTRATOR_INTERNAL_SECRET`, returning `False` unconditionally on any missing/empty `provided` value; it takes no
+  `Request` object and has no loopback-IP/trusted-local bypass of any kind. The loopback-trust concept DOES exist
+  elsewhere in `auth.py` (the JWT-claims path's `trusted_loopback`/`ALLOW_ANONYMOUS` logic used by the dashboard/worker
+  Bearer-token routes), but it is not wired into this specific internal-secret check at all — the two auth mechanisms
+  are structurally separate. Conclusion: `agents/plan_reconciler.md`'s documented loopback-trust behavior for this
+  endpoint does not exist in the current code — it was either never implemented for this call path or removed without
+  the doc being updated. This does not resolve the todo (the fix-vs-correct-the-doc choice is still a real decision,
+  and implementing an auth-behavior change to a live orchestrator security path is out of scope for this
+  doc-reconciliation pass), but it removes the "read the code" step for whoever picks this up next — the exact
+  file:line evidence is now in this doc. Gap 2/3 (blocked-answer retrieval, audit-others) re-read but not
+  independently re-investigated this pass — the existing Progress Log entries above already represent live,
+  multi-session investigation with no new lead available from a doc-only re-check; still genuinely open. Doc NOT
+  archived (3 items still open).

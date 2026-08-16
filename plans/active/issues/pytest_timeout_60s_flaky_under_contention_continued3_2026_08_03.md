@@ -42,7 +42,8 @@ related:
   ]
 created: 2026-08-03
 author: unknown
-last_updated: 2026-08-04T13:00Z
+last_updated: 2026-08-09 # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale ~5 days behind the doc's own
+  # most recent (na-eligibility-audit 2026-08-09) Progress Log entry
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -84,7 +85,7 @@ here.
 
 ## Todos
 
-- [ ] 1. [INFRA] P3. Root-cause fix is capacity-side, not another per-repo timeout raise — track landing of
+- [ ] [INFRA] P3. 1. Root-cause fix is capacity-side, not another per-repo timeout raise — track landing of
       `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phase 2-3 (carried forward
       unchanged from the parent doc-chain; still open per `continued2`'s own last check — a brief runner-idle window was
       observed once but did not hold). Once landed AND sustained (not a momentary idle blip), re-test whether
@@ -103,7 +104,7 @@ here.
       `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 6; not re-implemented separately here). Note: option (b)'s
       PR-merge/HEAD-advancement-at-dispatch-time refinement was not built — option (a) alone was operator-ruled; not a
       gap left open by this fix.
-- [ ] 3. [INFRA] P3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
+- [ ] [INFRA] P3. 3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
       land and hold, re-check whether this entire doc-chain (4 docs now, 30+ occurrences across 8+ repos) self-resolves
       — if so, archive all four docs together rather than leaving them open indefinitely as "still waiting."
 

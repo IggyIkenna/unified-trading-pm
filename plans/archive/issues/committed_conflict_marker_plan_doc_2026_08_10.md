@@ -14,7 +14,7 @@ summary: >-
   three slots but ALL append Progress-Log entries + flip checkboxes in the SAME plan doc, violating the workspace rule
   "concurrent todos MUST touch different files". (Marker strings are referenced here as "seven-`>`/`<`" to avoid
   tripping the same conflict-marker gate this doc describes.)
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -41,8 +41,7 @@ assigned_role: cicd
 drift_direction: none
 depends_on: []
 locked_by:
-archive_exempt: true
-resolved_by:
+resolved_by: unified-trading-pm (this doc's own todos, all 3 already [x])
 source:
   [
     "Found live 2026-08-10 while slot 18 shipped `multi_leg_execution_systems_audit_2026_08_10.md` todo 5: the plan file
@@ -56,6 +55,13 @@ context_scope:
     /plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-16 (/plan-reconcile Phase -1 reconciliation)** — all 3 todos `[x]`, unlocked. The
+> `archive_exempt: true` time-box ("keep active through the next plan-reconcile cycle so the operator can review...
+> before archival", filed 2026-08-10) is satisfied: 6+ days and multiple `/plan-reconcile` cycles have passed with no
+> objection (confirmed via the 2026-08-16 cross-cutting findings doc's Archive-candidates section, which flagged this
+> doc ARCHIVE-READY but deferred execution to a dedicated pass — this is that pass). Exemption dropped per the
+> archival ritual ("moot once archived, drop as routine hygiene").
 
 # Committed conflict markers reached LDR in a plan doc — hygiene gate did not fire
 
