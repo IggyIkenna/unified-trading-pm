@@ -62,10 +62,13 @@ source:
   - "Live DB probe 2026-07-17T13:57Z (/var/lib/orchestrator/state.db) — the l2_book finding below."
 ---
 
-> **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
-> [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
-> (operator-session local plan; verified-live classification table there). Do NOT start work from this doc alone — flip
-> items in the plan and mirror them here. This doc stays the detail/evidence record.
+> **🟢 EXECUTION CONSOLIDATED 2026-07-17, banner repointed 2026-08-16 (/plan-reconcile)** — the original coordinator
+> [`ao_open_issues_consolidated_close_out_2026_07_17`](../../archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md)
+> is now ARCHIVED; this doc's open items route through the CURRENT `ao`-tranche coordinator,
+> [`ao_consolidated_closeout_2026_08_12`](../ao_consolidated_closeout_2026_08_12.md) (its own open todo 1, "re-triage
+> the 115 inherited `[ao]` docs," is the mechanism that will eventually resolve this doc's ownership). Do NOT start work
+> from this doc alone — flip items in the current coordinator and mirror them here. This doc stays the detail/evidence
+> record.
 
 # AO residuals after `ao_dispatch_hardening` archived
 

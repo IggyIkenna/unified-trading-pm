@@ -13,9 +13,11 @@ summary: >-
   dashboard widget mirroring the existing DeepSeek one. Captured here in full rather than left in chat, per this
   workspace's session-checkpoint discipline. **2026-08-13**: plan destination confirmed human-driven, and the
   data-source open question resolved — no API exists for the %-of-weekly-limit signal, it requires a new tmux
-  `/usage`-driving sampler (see dedicated sections below). Critical-path implementation work (the sampler) has NOT yet
-  been built — this doc still tracks an unimplemented initiative, now with a concrete architecture instead of open
-  questions.
+  `/usage`-driving sampler (see dedicated sections below). **Corrected 2026-08-16 (/plan-reconcile)**: the sampler
+  described above was superseded same-day (2026-08-13) by a simpler capture path — both usage-capture halves already
+  existed, nothing needed building — and "Claude Wallet Reconciliation" shipped to production the same day
+  (`agent-orchestrator@616450ffac` + `@7a38b4bb06`), with real per-account boost multipliers live. This doc's remaining
+  open todos are follow-on calibration/investigation work, not the originally-scoped sampler build.
 status: open
 nature: issue
 asset_group: [ao]
