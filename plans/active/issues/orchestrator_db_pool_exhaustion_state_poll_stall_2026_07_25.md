@@ -148,11 +148,12 @@ re-triggers AutoSpawn's spawn-in-txn on restart).
       request succeeds promptly — recovery proven. `quality-gates.sh` green (2779 passed, 2 skipped) on this SHA. This
       is the formal proof only; the leak-vs-concurrency VERDICT itself (sustained concurrency over the 15-conn ceiling,
       not a leak) was already recorded via occurrence #6/#7 above.
-- [ ] [BACKEND] P2. Make the liveness/health signal DB-aware (or add a separate readiness probe the unit/monitor can
-      watch): a cheap `SELECT 1` with a short timeout so pool starvation surfaces as unhealthy and the existing
-      auto-restart path can fire. Keep `/health` cheap for the LB, but expose DB-backed readiness for the self-heal
-      trigger. Cross-ref `/codex/04-architecture/autonomous-recovery-matrix.md` (add "DB pool exhaustion → restart" to
-      the matrix if protective-arming-autonomous applies).
+- [x] ✅ [BACKEND] P2. **DONE — verified 2026-08-16 (/ag-closeout-audit ao).** `agent-orchestrator@3b4a329` ships
+      `ReadinessWatchdog` (`server/readiness_watchdog.py`), mirroring `DiskSpaceCanary`'s shape: polls the same
+      `select(1)` probe `/api/readiness` already runs, every 30s; after 5 consecutive failures (~2.5min) calls
+      `os._exit(1)` so `orchestrator.service`'s `Restart=on-failure` fires — exactly the DB-aware readiness signal
+      this todo asked for. New `notify_readiness_watchdog_restart` Slack alert. Independently verified live: the
+      commit exists on `origin/live-defi-rollout`.
 - [ ] [BACKEND] P3. Right-size / harden the pool for the known concurrency: raise `pool_size`/`max_overflow` to cover
       peak concurrent slot git-status + poll fan-in, and/or lower `pool_timeout` so a starved request fails fast (loud)
       instead of hanging 30s (silent). Consider batching/serialising the per-slot git-status writes so N slots don't
