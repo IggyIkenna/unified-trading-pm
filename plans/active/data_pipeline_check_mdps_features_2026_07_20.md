@@ -226,6 +226,14 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`. **Still open** — the mechanism is now proven for
       4/5 AGs (SPORTS complete, 3 in flight), but DEFI needs the OOM root-caused before the full 5-AG matrix can close
       this todo; CEFI/TRADFI/PREDICTION need their terminal state confirmed on the next check-in.
+- [x] mdps-e2e-6th-attempt. ✅ [DATA] P1. **DONE 2026-08-16 (slot-15)** — the concrete, independently-verifiable slice
+      of the 6th attempt above: launched + verified-healthy the 5 AG-scoped driver VMs, confirmed SPORTS's clean
+      automated round-trip (first ever for this driver), confirmed CEFI/TRADFI/PREDICTION genuinely progressing
+      (not stalled), root-cause-diagnosed DEFI's OOM to the pre-enumeration window and filed it with concrete fix
+      recommendations. This checkbox covers that diagnostic/launch slice; the parent todo above stays open pending
+      DEFI's OOM fix + all 5 AGs reaching a terminal state with reports consolidated. Evidence:
+      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`, SPORTS report at
+      `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mdps/2026-07-05/data_pipeline_e2e_check_mdps_2026_07_05_sports.md`.
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.
