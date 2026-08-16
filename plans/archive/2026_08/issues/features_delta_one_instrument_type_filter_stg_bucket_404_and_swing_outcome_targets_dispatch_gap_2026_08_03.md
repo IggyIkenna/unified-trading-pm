@@ -21,7 +21,7 @@ summary: >-
   it IS registered in `calculators/__init__.py`'s module-level dict — a distinct, smaller dispatch-wiring gap
   (temporal/economic_events are correctly, intentionally absent per that function's own comment; swing_outcome_targets
   is not documented as intentionally excluded).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -64,9 +64,11 @@ context_scope:
     features-service/features_service/delta_one/app/core/data_loader.py,
     /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
-resolved_by:
-archive_exempt: true
+resolved_by: features-service@ade519c6ac
 ---
+
+> **🟢 RESOLVED 2026-08-16**: all 4 fix-path todos + the Follow-ups todo are done. Archived —
+> see the Progress Log for the final citation (features-service@461bb0c8, @ade519c6ac).
 
 # features-service delta_one: `-stg-` instruments-store 404 (5th site) + swing_outcome_targets dispatch gap
 

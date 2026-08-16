@@ -36,7 +36,7 @@ related:
     /plans/active/issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md,
     /plans/active/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md,
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
-    /plans/active/issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md,
+    /plans/archive/2026_08/issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
