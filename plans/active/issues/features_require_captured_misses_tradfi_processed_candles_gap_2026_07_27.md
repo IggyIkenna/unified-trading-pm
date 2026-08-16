@@ -349,3 +349,68 @@ input gap didn't change.
       run.log for `features-e2e-tradfi-20260816-015304-1efb38` (`vm-logs/…/run.log` in
       `deployment-scripts-central-element-323112`), `EXIT_STATUS=1`, `DEPLOYMENT_FAILED`. This is now the blocker for
       the genuine delta_one:TRADFI force+skip proof this doc's original todos were gated on.
+
+      **ROOT-CAUSED 2026-08-16 (slot-33, data_engineering) — TWO distinct, converging mechanisms, both confirmed
+      against live code + live GCS, neither fixed yet.** Independently re-ran the same check
+      (`features-e2e-tradfi-20260816-022550-1efb38`, day=2026-08-16→auto-slid to 2026-08-06, before finding this
+      todo's own entry above already existed — reconciling here rather than duplicating): confirmed the identical
+      symptom (`Lookback validation PASSED: 25/25 instruments OK` then `Manifest discovery: 7 captured instruments`
+      then every one of 19 feature groups fails with `No pre-loaded candles for CME:combo:/CME:COMBO:/CME:FUTURE:/
+      CME:futures_chain:/CME:options_chain:/CBOE:futures_chain:/CBOE:FUTURE:VIX` — 0/7 instruments ever load any
+      candle at any date/timeframe, including the well-formed `CBOE:FUTURE:VIX` id). Traced both the 7-vs-25
+      instrument-count divergence AND the 0/7 load failure to their exact source:
+
+      1. **Divergent instrument-discovery mechanisms** (the 7-vs-25 count gap): `LookbackValidator` discovers its 25
+         instruments via a GCS blob-NAME listing + reconstruction (the already-fixed `_chain_bundle_instrument_id`
+         helper). The actual compute-time loader instead calls `DataLoader.get_available_instruments()` →
+         `unified_trading_library.feature_service_base.manifest_discovery.get_captured_instruments()` →
+         `compose_instrument_ids()` (`unified-trading-library/unified_trading_library/feature_service_base/manifest_discovery.py:167-237`),
+         which is MANIFEST-ROW-based, not blob-listing-based. Per that function's own docstring (lines 172-180), a
+         manifest row with a blank/aggregate `instrument_id` (which chain-bundle candle rows genuinely have,
+         confirmed live: `capture_status=captured` rows for CME COMBO carry `instrument_id=None`) is deliberately
+         synthesized as `"{venue}:{instrument_type}:"` (empty final segment) rather than dropped — this is WHY the
+         discovered list contains malformed entries like `CME:COMBO:`/`CME:FUTURE:`/`CME:futures_chain:` instead of
+         the 25 real per-underlying ids LookbackValidator finds. The manifest simply never carries per-underlying
+         granularity for TradFi chain-bundle-grain rows (by design — see the sibling doc's own "row_key instrument_id
+         omission for aggregated shards" fix); only a blob-listing reconstruction (as LookbackValidator now does) can
+         recover the real per-underlying identity.
+      2. **`_resolve_blob_paths`/`_canonical_candle_blob_paths` blob-naming assumption is TOO NARROW** (why even the
+         well-formed `CBOE:FUTURE:VIX` id — NOT blank/malformed — still loads 0 candles):
+         `features-service/features_service/delta_one/app/core/data_loader.py:521,547-549` gates the
+         `underlying={U}/ticks.parquet` filename convention on `_is_chain_bundle_instrument(instrument_id)`, which is
+         true only for `instrument_type ∈ {combo, futures_chain, options_chain}` — for every other type (incl. plain
+         `FUTURE`) it falls to `tail = f"{instrument_id}.parquet"` (e.g. `CBOE:FUTURE:VIX.parquet`). **Live GCS
+         listing directly contradicts this assumption**: `market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-08-06/`
+         shows `instrument_type=FUTURE/venue=CME/underlying=GOLD/ticks.parquet`,
+         `.../underlying=COPPER/ticks.parquet`, etc. — i.e. **plain FUTURE-type TradFi candles ALSO use the
+         `underlying=/ticks.parquet` convention**, not just COMBO/futures_chain/options_chain. So
+         `_canonical_candle_blob_paths` never even tries the shape that actually exists on disk for ANY TradFi
+         instrument, chain-bundle or not — every `blob_exists()` probe misses, hence 0/7 (and would be 0/25 even with
+         fix #1 applied on its own).
+
+      **Fix direction (not applied — needs its own scoped todo + tests + live re-verification, out of THIS check-only
+      todo's estimate)**: (a) broaden `_canonical_candle_blob_paths` to ALWAYS also try the
+      `underlying=/ticks.parquet` candidate when an underlying is extractable, regardless of `_is_chain_bundle_instrument`
+      — additive to the existing candidate list (never removes the `{instrument_id}.parquet` candidate CEFI/DEFI/PREDICTION
+      currently rely on), so this is low-blast-radius; (b) separately, `DataLoader.get_available_instruments()` needs a
+      blob-listing-based discovery path (mirroring `LookbackValidator`'s already-fixed reconstruction, or reusing
+      `_extend_with_derivative_scan`'s existing per-instrument listing fallback but invoked at DISCOVERY time, not just
+      per-candidate-path time) for chain-bundle-grain manifest rows, since (a) alone can't help an already-blank
+      `CME:COMBO:` id find a real underlying. Confirms this is now the genuine remaining blocker — see the new P2 todo
+      below for the tracked fix.
+
+- [ ] [DATA] P2. **NEW 2026-08-16 (slot-33).** Fix the two root causes identified above (both in the "NEW 2026-08-16"
+      todo's follow-through, not duplicated here): (a) `features-service/features_service/delta_one/app/core/data_loader.py`
+      — broaden `_canonical_candle_blob_paths`'s `underlying=/ticks.parquet` candidate to apply regardless of
+      `_is_chain_bundle_instrument`, additive to the existing `{instrument_id}.parquet` candidate; (b) give
+      `DataLoader.get_available_instruments()` (or the shared UTL `get_captured_instruments`/`compose_instrument_ids`)
+      a blob-listing-based fallback to recover real per-underlying instrument identity for chain-bundle manifest rows
+      whose `instrument_id` is blank/aggregate, mirroring `LookbackValidator`'s already-shipped
+      `_chain_bundle_instrument_id.instrument_id_from_candle_blob_name` reconstruction. **Done when**: a live
+      `features-e2e-tradfi-*` VM force-leg run for `delta_one:TRADFI` loads real candle data for the CME
+      COMBO/FUTURE/futures_chain/options_chain underlyings and at least one feature group succeeds (not
+      `orchestrator_returned_false` for all 19). Repo: features-service (+ unified-trading-library if the discovery
+      fallback lands there). Evidence for the root cause: `features-e2e-tradfi-20260816-022550-1efb38` run.log
+      (`vm-logs/…/run.log` in `deployment-scripts-central-element-323112`); live GCS listing of
+      `market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-08-06/` (60-object
+      sample, `instrument_type=FUTURE` confirmed under `underlying=/ticks.parquet`).
