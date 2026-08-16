@@ -23,13 +23,14 @@ tags: [tradfi, volatility, spot-price, perp, code-gap, feature-gap, fx-underlyin
 related: [/plans/active/data_pipeline_check_mdps_features_2026_07_20.md]
 created: 2026-08-06
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
+effort: max
 drift_direction: advance-code
 locked_by:
 locked_since:
@@ -181,3 +182,9 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   (6C), `CME:FUTURE:EUR-USD@LIN-20200113` (6E), `CME:FUTURE:JPY-USD@LIN-20200113` (6J). Todo 1's format text updated
   above with this confirmation. Todo 1 itself stays open (the actual `_resolve_spot_perp` code change + mapping-table
   implementation is separate, unblocked, in-scope work) and todo 2 stays sequenced behind it.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, whole-doc → planning.**
+  Todo 1 (the code fix, this doc's own former operator-gate) independently confirmed `[x]` DONE via plan_reconciler
+  2026-08-16 (`features-service@a46681c84a`). Remaining todo 2 (relaunch `launch-features-vm.sh FAMILY=volatility
+  ASSET_GROUP=TRADFI`, record real throughput) is now a bounded, mechanical relaunch+measure action — no design call
+  left. Conflict-checked clean (no other active doc claims this relaunch). `assigned_vm: NA → planning`,
+  `execution_scope → orchestrator-agent`, `effort: max` added (`assigned_role: data_engineering` already correct).

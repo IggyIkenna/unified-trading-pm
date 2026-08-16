@@ -33,13 +33,15 @@ related:
   ]
 parent_epic: tradfi_master
 source: "/backfill-monitor smoke-test diagnosis, 2026-08-12 interactive session, KRW/USD MVP cell"
-assigned_vm: NA
+assigned_vm: planning
 created: 2026-08-12
 resolved_by:
 locked_by:
 locked_since:
 priority: P2
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: data_engineering
+effort: max
 drift_direction: advance-code
 depends_on: []
 context_scope:
@@ -135,3 +137,10 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
   `unified-api-contracts` was still dirty with the same foreign WIP as before; shipped via the documented
   `Quickmerge: direct-carveout-dirty-deps` direct-push path instead of waiting further. Content-verified landed on
   `origin/live-defi-rollout` (`ahead=0`, no diff).
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, whole-doc → planning.**
+  Conflict-checked clean (no active parent_epic=tradfi_master claim, no sibling batch, no draft satellite overlap). Sole
+  remaining todo (P3: check whether the same `batch_yahoo`/`batch_databento` mislabel affects the other 11 FX pairs,
+  using the already-shipped+proven restamp script as a direct template) is bounded/deterministic — no open design call.
+  `assigned_vm: NA → planning`, `execution_scope → orchestrator-agent`, `assigned_role: data_engineering` added,
+  `effort: max` added. Issue doc — no finalize-plan companion required (`check_finalize_plan_coverage.py` only globs
+  `plans/active/*.md`).

@@ -128,3 +128,17 @@ protocol asks to be investigated before being waved off.
       already-vanished pattern BEFORE trusting a future dry-run's twin-coverage number for them — a stale report
       reporting "still there" when the objects are already gone would silently under-count, and one reporting "gone"
       when they're still there would silently over-count; this session only checked tradfi.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA — conflict-check PARKED, not
+  reclassified.** Todo P1 is `[x]` (mechanism confirmed unrecoverable). Remaining todo P2 ("spot-check whether the
+  defi/pred legacy-twin-delete candidate sets show the same already-vanished pattern") reads as bounded on its own, but
+  conflict-checking against `parent_epic: tradfi_master`'s sibling corpus surfaced
+  `/plans/active/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md` — a LATER
+  (2026-08-15), all-todos-done doc that already ran defi/prediction/sports legacy-twin dry-run investigation
+  (twin-coverage 0% for both defi and prediction). Genuinely ambiguous whether that doc's existing dry-run already
+  answers "were any of the defi/pred candidates already-vanished before any tracked delete touched them" specifically,
+  or whether that's a distinct question its own investigation never asked. Per the shared conflict-check protocol —
+  **PARKING as BLOCKED-OPERATOR-DECISION** rather than guessing which side is right: does the 2026-08-15 doc's dry-run
+  already cover this, or does P2 still need a fresh, targeted check? `assigned_vm` unchanged.
