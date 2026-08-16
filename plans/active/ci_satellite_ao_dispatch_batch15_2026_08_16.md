@@ -72,13 +72,30 @@ source: >-
 
 ## Todos — bounded new work
 
-- [ ] [INFRA] P2. **Build the na-corpus/governor baseline-freshness daily promotion job**: a scheduled job that
-      promotes each run's observed peak-RSS into the committed `qg_resource_baseline.json`, plus fires the Slack alert
-      when a run's observed peak exceeds the committed baseline by >20%. This is governor Trigger 3, left unwired by
-      batch13 (which wired triggers 1-2: RSS-cap overrun, host-RAM abort). Source:
-      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (line ~233). Gate: baseline file updates daily
-      from real observed peaks; a synthetic >20%-over-baseline run produces a real Slack alert via the same
-      `_qg_governor_slack_alert()` mechanism batch13 built.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-16 (slot 21) — shipped in this same commit.** Build the na-corpus/governor
+      baseline-freshness daily promotion job: a scheduled job that promotes each run's observed peak-RSS into the
+      committed `qg_resource_baseline.json`, plus fires the Slack alert when a run's observed peak exceeds the
+      committed baseline by >20%. This is governor Trigger 3, left unwired by batch13 (which wired triggers 1-2:
+      RSS-cap overrun, host-RAM abort). Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
+      (line ~233, flipped `[x]` alongside this todo). Gate: baseline file updates daily from real observed peaks; a
+      synthetic >20%-over-baseline run produces a real Slack alert via the same `_qg_governor_slack_alert()`
+      mechanism batch13 built.
+      **Implementation**: `scripts/dev/measure-qg-baseline.sh` gained an anomaly guard (new
+      `scripts/dev/qg_baseline_merge.py`, extracted from its former inline python heredoc for testability) — a
+      freshly measured peak >=`QG_BASELINE_ANOMALY_PCT` (default 20) percent above the committed value for
+      (repo, env) is NOT silently promoted; it calls the existing `_qg_governor_slack_alert()` (WARNING,
+      `qg-baseline-stale:<repo>:<env>` dedup key) and leaves the baseline untouched. `--force` bypasses the guard
+      for a deliberate manual re-baseline (the OTHER open todo below). Wired to run daily via
+      `scripts/orchestrator/qg-baseline-daily-promote.{sh,service,timer}` +
+      `install_qg_baseline_daily_promote.sh` (03:11 UTC, env=vm, jobs=3, mirrors the existing
+      `ldr-to-main-promote-heartbeat` systemd-timer pattern — a GH Actions workflow was rejected: this needs the
+      full multi-repo `.tabs/<N>`-shaped workspace `measure-qg-baseline.sh` already assumes, which a bare
+      `ubuntu-latest`/glue-runner single-repo checkout doesn't have). Gate verified synthetically:
+      `scripts/dev/test-qg-baseline-anomaly-guard.sh`, 12/12 assertions pass (no-prior-entry, within-threshold,
+      over-threshold->ANOMALY-not-promoted, `--force` bypass, a drop is never anomalous, exact-boundary inclusive).
+      **Not yet installed on the orchestrator VM** — `install_qg_baseline_daily_promote.sh` is `[OPERATOR]`-run
+      (writes `/etc/systemd/system`, needs root on the `planning` VM), same posture as its sibling installers; the
+      first live daily tick is still pending.
 
 - [ ] [INFRA] P2. **Re-baseline `qg_resource_baseline.json`** — committed values are measured 3.6-5.5x stale versus
       current cgroup peaks. Source: `plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`
@@ -268,3 +285,12 @@ source: >-
   with commit evidence, verified live (145L / 738L). Full delta-audit results (7 confirmed orphans, none AO-eligible
   enough to warrant a fresh batch16 yet, plus 2 asset_group mistags belonging to the `infra` tranche, not `ci`) written
   to `plans/active/issues/ag_closeout_audit_ci_parked_2026_08_16.md`.
+- **2026-08-16 (slot 21, AO-dispatched worker).** Shipped item 1 (na-corpus/governor baseline-freshness daily
+  promotion job, governor Trigger 3): anomaly-guarded `scripts/dev/measure-qg-baseline.sh` (new
+  `scripts/dev/qg_baseline_merge.py` + `--force` flag), the daily systemd-timer job
+  (`scripts/orchestrator/qg-baseline-daily-promote.{sh,service,timer}` +
+  `install_qg_baseline_daily_promote.sh`), and its unit tests
+  (`scripts/dev/test-qg-baseline-anomaly-guard.sh`, 12/12 pass). Flipped this item and the mirrored todo in
+  `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`. The daily timer is not yet installed on the
+  orchestrator VM — that install step is `[OPERATOR]`-run by design (root + `/etc/systemd/system`), same as its
+  sibling installers (`ldr-to-main-promote-heartbeat`, `reap-stale-blockers`).
