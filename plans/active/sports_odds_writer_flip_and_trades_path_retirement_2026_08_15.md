@@ -307,3 +307,20 @@ conflict markers first) via `run_in_background` with an explicit `cd <repo> &&` 
 script (inline `cd ... && command` composition in a single Bash tool call silently dropped the `cd` roughly 8 times
 this session -- always use a script file, never compose it inline). Once both land, flip todo 3 fully done, write the
 Definition-of-Done confirmation, then move to Phase 1.
+
+**2026-08-16 ~12:47 re-check (post-compact resume)**: `unified-trading-library`'s CI-workflow diff is now confirmed
+genuinely stalled (~3.5h old, byte-identical to the first observation, zero further changes -- past the "dead claim"
+threshold), so re-ran both ship scripts. Both pre-flight audits still FAILED, but on a NEW blocker this time:
+`unified-api-contracts` now also has uncommitted changes (`flatten.py`, `flatten_readiness.py`,
+`tests/internal/unit/test_flatten_readiness.py`) confirmed via mtime as ~45s old at observation time -- a genuinely
+LIVE, actively-being-written session on an unrelated feature (a "flatten readiness" capability, nothing to do with
+this plan). `deployment-service`'s untracked `test_registry_id_closed_set.py` is unchanged (still the same file from
+the first observation, still stale). Per the liveness-gated inherited-dirty-WIP rule, a live claim (mtime <120s) is a
+hard PROTECT, not an inherit-and-commit -- did not touch it, and did not touch the stale `unified-trading-library`
+files either since committing another repo's unrelated CI/registry content on my own authority (without knowing it's
+finished/tested) is the same class of overreach already declined once this session (see the DP-registry revert above)
+-- fleet-wide CI-workflow files are especially high blast-radius to commit blind. Both MTDS and deployment-api Phase 0
+shipments remain genuinely blocked on OTHER sessions' state, not on anything this session can safely resolve alone.
+No further ship attempts will be made until a fresh check shows both `unified-trading-library` AND
+`unified-api-contracts` clean (or their respective owning sessions land their own work). Next resume: re-run the same
+mtime check on all three blocker paths before retrying the ship scripts -- do not loop-retry on unchanged state.
