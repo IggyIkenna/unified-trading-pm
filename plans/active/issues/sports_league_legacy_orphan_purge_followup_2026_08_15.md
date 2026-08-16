@@ -106,7 +106,7 @@ Split the 1,814 objects into the two classes above and resolve each:
       delete — Part 2 of the delete-safety proof still applies even to an apparent duplicate. If confirmed redundant,
       purge via the same §3a fresh-check pattern as `purge_league_legacy_objects_2026_08_15.py`. (repo:
       market-tick-data-service) — **DONE 2026-08-16 (slot-23) — market-tick-data-service@2471d18f (verify) +
-      @caf81cfd (delete-only purge).** Content-verify (row key `(instrument_id, bm_time, price, point)`, live-probed
+      @cbd21be68 (delete-only purge, landed).** Content-verify (row key `(instrument_id, bm_time, price, point)`, live-probed
       against a sample match to confirm exact schema alignment) was run across all 1,814 `bare_no_league` objects,
       comparing every bare row against the live canonical `batch_odds_api` rows for the same day (scoped to only the
       bookmaker venues present in the bare object — no whole-corpus walk). **The original "almost certainly pure
@@ -153,7 +153,10 @@ Split the 1,814 objects into the two classes above and resolve each:
   soft-delete retention 604800s cleared); left the 280 divergent-content objects untouched. Rescoped todo 3 to
   investigate + fold the 280-day divergence (was previously framed around todo 1's "genuine per-league cells" axis,
   which is a different, already-empty population). `market-tick-data-service@2471d18f` (verify script),
-  `@caf81cfd` (delete-only purge, built after the combined verify+apply path was externally killed 3× mid-run;
+  `@cbd21be68` (delete-only purge, built after the combined verify+apply path was externally killed 3× mid-run;
   note this SHA superseded an earlier `4aa781a2` citation after a `git pull --rebase --autostash` rewrote the
-  already-committed-but-unpushed purge-script commit).
+  already-committed-but-unpushed purge-script commit, and THAT `caf81cfd` citation was itself superseded a second
+  time by `cbd21be68` when Pass-2 quickmerge hit a push-rejection and auto-rebased onto origin's tip before
+  landing — recurring pattern: cite a purge-script SHA only after `git rev-list --count origin/<branch>..HEAD`
+  confirms it as the actual pushed/ancestor commit, not the pre-push local SHA).
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
