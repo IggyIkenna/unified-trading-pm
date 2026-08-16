@@ -39,6 +39,13 @@ run_snippet_in_slot() {
     cd "$fake_cwd" || exit 1
     _SDP_SELF="${REPO_ROOT}/scripts/dev/safe-doc-push.sh"
     export HOME="$home"
+    # Hermeticity: a caller (e.g. quickmerge.sh, which legitimately exports its own
+    # PREK_HOME for slot-scoping) may already have PREK_HOME set in the environment this
+    # bats process inherited -- the snippet's own `if [[ -z "${PREK_HOME:-}" ]]` guard
+    # would then skip recomputation and this simulated invocation would silently return
+    # the INHERITED value instead of computing fresh, defeating the isolation this helper
+    # promises (see file header). Force a clean slate per invocation.
+    unset PREK_HOME
     # shellcheck disable=SC1090
     source "$SNIPPET"
     printf '%s' "${PREK_HOME:-}"
@@ -112,6 +119,7 @@ run_snippet_in_slot() {
     cd '$fake_cwd' || exit 1
     _SDP_SELF='${REPO_ROOT}/scripts/dev/safe-doc-push.sh'
     export HOME='$home'
+    unset PREK_HOME
     source '$SNIPPET'
     printf '%s' \"\${PREK_HOME:-}\"
   "
@@ -165,6 +173,7 @@ run_snippet_in_slot() {
     cd '$fake_cwd_14' || exit 1
     _QM_SELF='${REPO_ROOT}/scripts/quickmerge.sh'
     export HOME='$home'
+    unset PREK_HOME
     source '$qm_snippet'
     printf '%s' \"\${PREK_HOME:-}\"
   "
@@ -174,6 +183,7 @@ run_snippet_in_slot() {
     cd '$fake_cwd_16' || exit 1
     _QM_SELF='${REPO_ROOT}/scripts/quickmerge.sh'
     export HOME='$home'
+    unset PREK_HOME
     source '$qm_snippet'
     printf '%s' \"\${PREK_HOME:-}\"
   "
