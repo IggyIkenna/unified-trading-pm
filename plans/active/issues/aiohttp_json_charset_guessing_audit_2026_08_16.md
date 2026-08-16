@@ -96,3 +96,19 @@ does not cover this encoding gap) once the sweep shows how many repos/call-sites
   `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`'s P3 todo — the sports-scoped fix is shipped
   (instruments-service@5f2f3ca619), this doc tracks the deliberately out-of-scope fleet-wide sweep for the same
   anti-pattern.
+
+- **slot-29 (data_engineering) 2026-08-16**: Worked the todo's market-tick-data-service half. Grepped the repo for
+  `\.json\(content_type=None` and found 5 call sites missing `encoding=`:
+  `market_interface/adapters/sports/sportradar_adapter.py`, `market_interface/adapters/tradfi/{ecb_adapter,
+  ofr_adapter}.py`, `cli/handlers/solana_defi_amm.py` (3 sites), `cli/handlers/_solana_defi_fetch.py` (1 site). Pinned
+  `encoding="utf-8"` on all 5, mirroring the sports fix exactly. `quality-gates.sh` PASSED (613s; full pytest suite
+  10912 passed / 0 failed / 28 skipped / 1 xpassed). Committed locally as `market-tick-data-service@7ffa995c`; shipping
+  via `quickmerge.sh` was still in flight at session end (re-gating after a peer's HEAD move on
+  `live-defi-rollout`, queued behind the host-wide QG governor) — **not yet confirmed pushed to origin**, so the todo
+  checkbox below is deliberately left unflipped. Also checked instruments-service's side of this todo: all 5 of its
+  `resp.json(content_type=None)` sites (the original sports fix) already pin `encoding="utf-8"`, and a full-repo grep
+  found no other call sites in cefi/defi/tradfi/prediction adapter families — **instruments-service's side is already
+  fully done**, so once `7ffa995c` lands on origin this todo is fully closeable across both repos, not partial. Next
+  session: confirm `market-tick-data-service@7ffa995c` (or its post-rebase SHA) is on `origin/live-defi-rollout`
+  (`git fetch && git rev-list --count origin/live-defi-rollout..HEAD` = 0), then flip the todo to `- [x] ✅` with that
+  SHA as evidence — no further code changes needed.

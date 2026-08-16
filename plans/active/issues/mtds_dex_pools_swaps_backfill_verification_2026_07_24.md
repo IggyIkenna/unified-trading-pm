@@ -612,6 +612,36 @@ rule (see Progress Log entry below for the observed outcome).
   next dispatch to re-check. No code changes — read-only GCS + VM status verification only. Repo:
   market-tick-data-service (verify).
 
+- **2026-08-16 (slot-29) — `/pre-compact` checkpoint**: this session also worked an unrelated `infrastructure_master`
+  P3 follow-up (`aiohttp_json_charset_guessing_audit_2026_08_16.md`, no content relation to this dex-pools initiative
+  beyond sharing the session) — fixed 5 aiohttp `resp.json(content_type=None)` call sites in market-tick-data-service
+  to pin `encoding="utf-8"`, `quality-gates.sh` PASSED (10912 tests passed / 0 failed), committed locally as
+  `market-tick-data-service@7ffa995c`. `quickmerge.sh` was still in flight (re-gating, host QG governor queue) at
+  session end — not yet confirmed on origin. See that issue doc's own Progress Log for full detail; noted here only so
+  a reader of this doc knows the session's remaining tool-call budget went there, not further into this dex-pools
+  monitoring work. **Safe to compact: YES** for this doc's own content — the slot-29 dex-pools entry above
+  (2026-05-25→2026-06-02 progress check, ~43% by date-count) was already committed+pushed as
+  `unified-trading-pm@e23fade567` before this checkpoint; nothing new for THIS initiative was found or changed in this
+  checkpoint.
+
+  **Goalposts (Step 8b) — this doc's own initiative is still open, umbrella goal**: the `mtds-dex-pools-backfill` VM
+  (trader_joe_v2, `2026-04-13→2026-07-24`, launched 2026-08-16T02:25:12Z) runs to completion with `dex_pool_state`
+  fully filled across that range for all 4 protocols, AND `dex_pool_swaps` gaps for TRADER_JOE_V2/VELODROME_V2 get
+  their dedicated historical backfill — only then does `defi_consolidated_closeout_2026_07_18.md`'s parent "verify the
+  mtds-dex-pools/dex-swaps backfill VMs" todo (this doc's origin) actually close. Open todos across this doc (all in
+  `## Follow-ups` below, none blocked on credentials/VM/operator — all actionable now or by waiting on the running VM):
+  1. `[DATA] P2` (line ~659, "IN PROGRESS 2026-08-16 slot 30") — continue monitoring the running VM; next check should
+     use short spaced foreground `gcs_describe_object`/`gcs_read_object_range` checks on `run.log` (NOT a background-bash
+     monitor — proven unreliable/externally-killed at least 3x across this doc's sessions), silence >15-20min ⇒ treat as
+     dead and relaunch (idempotent per-day skip, do not replay from `--start`).
+  2. `[SCRIPT] P3` (line ~683) — `PROGRESS.json`'s `last_completed_date` field is a static echo of `--end-date`, not a
+     live per-day marker; either make it live or rename it (e.g. `requested_end_date`) so it stops misleading readers.
+  3. `[DATA] P2` (line ~691) — functionally the same "continue monitoring to completion" ask as #1 (both open from the
+     slot-30/slot-4 handoff chain); resolve both together with the same evidence, don't duplicate the check.
+  No closing action beyond these 3 — once the VM's range is confirmed complete (an 18-date GCS spot-check or a genuine
+  `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` line) and #2's rename ships, this doc itself becomes
+  archivable and its parent `defi_consolidated_closeout_2026_07_18.md` todo can close.
+
 ## Follow-ups
 
 - [x] ✅ [BACKEND] P2. Fix the VELODROME_V2/OPTIMISM dex_pool_swaps persistent "bad indexers" condition
