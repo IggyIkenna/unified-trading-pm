@@ -164,6 +164,31 @@ type-check finding, always on infrastructure:
    `--allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket` sandbox depends on) that may
    be affecting every worker currently trying to run MTDS's suite, not just this session's
    attempts.
+7. **CONFIRMED, root-caused, and already resolved upstream — item 6 was a real fault, not a
+   truncation artifact.** A run launched via the harness's native `run_in_background: true`
+   (no `nohup`, so immune to item 1's `orphan_reap` kill) survived to a genuine terminal
+   state (failed, exit 1, ~90k-line log) instead of being cut off, and the mass-`E` pattern
+   persisted unbroken from 1% through completion — this alone rules out truncation. The
+   `ERRORS` section (finally captured, since the run wasn't killed) reads:
+   `ImportError: cannot import name 'DataTypeConfig' from 'unified_api_contracts.registry'`.
+   Root cause: `unified-api-contracts@7aa3143e` (2026-08-16 04:19 UTC, a DIFFERENT slot,
+   commit message `refactor(registry): delete confirmed-dead DataTypeConfig + passthrough
+   re-exports`) deleted the class believing it unused — but missed a cross-repo consumer:
+   `market-tick-data-service/market_tick_data_service/market_interface/models/venue_config.py`
+   re-exported it as a pure passthrough (`from unified_api_contracts.registry import
+   DataTypeConfig` + an `__all__` entry, no internal use). Since MTDS installs UAC via
+   editable path (`pyproject.toml` `[tool.uv.sources.unified-api-contracts] path =
+   "../unified-api-contracts"`), every MTDS test-collection run against current UAC HEAD hit
+   this import at collection time — fleet-wide blast radius, not specific to this slot or
+   session, entirely unrelated to the oracle_prices diff. **Already independently fixed**:
+   `market-tick-data-service@08aae3da` (`refactor(models): delete confirmed-dead
+   DataTypeConfig passthrough re-export`) landed on `live-defi-rollout` before this session's
+   next `git pull --rebase`, so it was pulled in for free — confirmed dead in MTDS too (grep
+   showed no other consumer imports `DataTypeConfig` from `venue_config`, only the module
+   wholesale, for other symbols). No ship action needed for this sub-issue; noted here only
+   because it fully explains items 4/6 and confirms the `orphan_reap` fix (item 1) works as
+   designed — the correctly-parented run ran to completion and produced an honest, actionable
+   result instead of being silently killed.
 
 **None of this reflects a defect in the shipped fix.** The diff was proven correct by a
 clean full QG pass before contention began; every subsequent failure was either (a) queue
@@ -188,25 +213,25 @@ staged).
       long-running command directly via the Bash tool's native `run_in_background: true`
       parameter, with no `nohup`/`&`/`setsid`/`disown` wrapper — the harness's own
       backgrounding keeps the process correctly parented so `orphan_reap` doesn't reap it.
-- [x] ✅ [SCRIPT] P1. **~~Investigate item 6~~ — reclassified, now self-actionable (was
-      wrongly marked OPERATOR-only).** With item 1's death mechanism identified as
-      `orphan_reap` reaping a `nohup`-detached process (not a hard session cap), a clean run
-      no longer requires operator infra changes — it requires this session to stop using
-      `nohup`/`setsid`/`disown` and launch `bash scripts/quality-gates.sh --no-fix` directly
-      via the Bash tool's native `run_in_background: true`. Retrying now on that basis; see
-      Progress Log for the outcome. If the mass-`E` pattern persists under a run that
-      genuinely survives past 315s uninterrupted, that confirms it as a real, independent
-      MTDS test-environment fault (not a truncation artifact) and this reopens as `[CODE] P1`
-      against MTDS itself.
-- [ ] [CODE] P1. **Ship `market-tick-data-service@f122c610` (or its rebased equivalent) via
+- [x] ✅ [SCRIPT] P1. **~~Investigate item 6~~ — resolved, confirmed real (not a truncation
+      artifact) via item 7.** A correctly-parented run (native `run_in_background: true`, no
+      `nohup`) survived to a genuine terminal state and reproduced the identical mass-`E`
+      pattern through completion; the captured `ERRORS` section identified the exact cause
+      (`unified-api-contracts@7aa3143e` deleted `DataTypeConfig`, a live MTDS cross-repo
+      consumer via passthrough re-export) — already independently fixed upstream
+      (`market-tick-data-service@08aae3da`) and pulled in via this session's next rebase. See
+      item 7 for full detail. Unrelated to the oracle_prices diff; no further action needed
+      on this sub-issue.
+- [ ] [CODE] P1. **Ship `market-tick-data-service@3e1c813f` (rebased equivalent of the
+      originally-committed `f122c610`; message unchanged: `fix(defi): retry-starved
+      oracle_prices on-chain branches (DP-FETCH-009, agt-95ede4)`) via
       `quickmerge --agent --files 'market_tick_data_service/cli/handlers/_oracle_prices_freshness.py
-      tests/unit/test_oracle_prices_handler_skip.py'`** once MTDS's QG-governor slot has a
-      clear window (check `ps aux | grep -c "quality-gates.sh.*market-tick-data-service"`
-      before launching — 0 contenders is the best moment) — or from a VM if item 1 above
-      concludes interactive slots can't reliably hold a multi-minute QG run right now. If
-      slot 5's local commit is gone, reapply the ~94-line diff described in "The fix"
-      section above (both files named, both changes summarized in enough detail to
-      reconstruct without re-reading the original source).
+      tests/unit/test_oracle_prices_handler_skip.py'`** — a fresh `quality-gates.sh --no-fix`
+      run (task `b4g3akk96`, launched natively backgrounded post-rebase, i.e. against the
+      NOW-FIXED tree with item 7's `DataTypeConfig` break already resolved) is in flight as of
+      this update; if it passes, ship immediately. If slot 5's local commit is gone, reapply
+      the ~94-line diff described in "The fix" section above (both files named, both changes
+      summarized in enough detail to reconstruct without re-reading the original source).
 - [ ] [CODE] P3. **Root-cause item 4** (`PYTEST_WORKERS=3` xdist crash) if it reproduces
       independently of item 2/3 — may be a real, previously-unknown xdist-under-load
       fragility worth its own fix, but wasn't isolated cleanly here (confounded with the
@@ -247,3 +272,17 @@ staged).
   originally concluded. MTDS commit (`f122c610`, message-identified) still local-only,
   unpushed, as of end of session — see item 6 and the second `[OPERATOR]` todo for the
   recommended next diagnostic before the next ship retry.
+- **2026-08-16, slot-5 (same session, next `/pre-compact` cycle)**: the natively-backgrounded
+  QG run (task `bwbc73w0r`) survived past the `orphan_reap` kill window and reached a genuine
+  terminal state (failed, exit 1) — confirming the item-1 fix holds under real load. Read the
+  full ~90k-line log: root cause of item 6's mass-`E` pattern was
+  `ImportError: cannot import name 'DataTypeConfig' from 'unified_api_contracts.registry'`, a
+  same-day cross-repo break from a different slot's `unified-api-contracts@7aa3143e`
+  ("delete confirmed-dead `DataTypeConfig`") that missed MTDS's passthrough consumer
+  (`venue_config.py`). Fixed it locally (drop the dead re-export), then discovered on
+  `git pull --rebase --autostash` that `market-tick-data-service@08aae3da` already carried
+  the identical fix upstream — local edit collapsed to a no-op, nothing to ship for this
+  sub-issue. Wrote item 7 with the full diagnosis. Relaunched `quality-gates.sh --no-fix`
+  natively backgrounded (task `b4g3akk96`) against the now-current, unbroken tree to verify
+  the actual oracle_prices fix (rebased to `3e1c813f`); outcome pending as of this entry —
+  next session/cycle: check `b4g3akk96`'s result and ship via quickmerge if green.
