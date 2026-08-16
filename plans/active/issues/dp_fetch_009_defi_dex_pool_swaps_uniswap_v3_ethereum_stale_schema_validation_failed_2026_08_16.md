@@ -137,10 +137,11 @@ count/ratio).
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Given the index's scale (~159M rows), run the
       sizing/apply pass on a dedicated VM per the heavy-I/O HARD RULE, not the shared host. Repo:
       market-tick-data-service.
-- [ ] [DATA] P3. If DP-FETCH-009 re-fires for `defi/dex_pool_swaps` after this session's re-capture + before todo 2
+- [x] [DATA] P3. If DP-FETCH-009 re-fires for `defi/dex_pool_swaps` after this session's re-capture + before todo 2
       lands, confirm first whether it is these SAME 13 already-remediated dates re-aging into the trailing window
       (expected, self-resolves) vs. a genuinely NEW failing date/venue before treating it as a new incident. Repo:
-      market-tick-data-service.
+      market-tick-data-service. **DONE this session** — see Progress Log 2026-08-16 (agt-c971d7) entry: confirmed
+      re-fire is the SAME known issue, not a new incident.
 
 ## Progress Log
 
@@ -180,3 +181,26 @@ count/ratio).
   one-shot fix per the heavy-I/O-needs-a-VM HARD RULE). `market-tick-data-service` worktree left clean
   (`git status` — nothing to commit, no uncommitted changes; only GCS writes + manifest ADDs, no local file
   changes).
+
+- **2026-08-16 (data_pipeline_failure escalation agt-c971d7, slot 20)**: Re-fire of the same DP-FETCH-009
+  finding dispatched to a second slot (asset_group=defi, data_type=dex_pool_swaps, 14036 attempted_failed of
+  8472925 attempted; "13382 attempted_failed row(s) in the last 1d" — this "fresh in last 1d" figure is
+  IDENTICAL to the one in the original filing above). Read RULES.md + SUB_AGENT_MANDATORY_RULES.md +
+  `/codex/05-infrastructure/data-pipeline-alerts.md`; pre-task grep of `plans/active/issues/` found this SAME
+  doc (filed minutes earlier by agt-d2c3cc/slot 26). Read it in full per the pre-task conflict-check HARD RULE
+  instead of re-diagnosing from scratch. Confirmed via count comparison (no bounded parquet re-read needed —
+  the prior investigation already OOM'd twice at >6-column projections and the numbers are decisive on their
+  own): `attempted_failed` is EXACTLY 14036 in both filings (would have been HIGHER than 14036 if any new
+  failure had landed since), while total `attempted` grew 8471219→8472925 (+1706, consistent with ordinary
+  ongoing captures elsewhere in the defi corpus, not new failures in this cell) — this is the SAME 13 stale
+  UNISWAP_V3/ETHEREUM SCHEMA_VALIDATION_FAILED dates (2025-01-09..21) still sitting in the 14-day
+  `ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS` window (their `attempted_at` spans 2026-08-10..16, so they don't age
+  out until ~08-24) and NOT yet purged (todo 2 below still open) — expected per this doc's own todo 3
+  prediction, not a new incident. `market-tick-data-service` repo confirmed unchanged since the prior
+  investigation (`git log` HEAD `d3435040`, no new commits on the dex-swap write path) — ruling out a code
+  regression as the source of a "new" failure. Also matches the documented DP-FETCH-009/`DP_RUN_MOSTLY_EMPTY`
+  wiring caveat in `data-pipeline-alerts.md` (60s default alert-dedup TTL does not bridge a slower detector
+  cadence unless the event is in `_RECURRING_ALERT_COOLDOWNS`) — plausibly the mechanism behind two escalation
+  workers being dispatched for what is effectively one underlying condition. No code fix needed (none exists to
+  make — confirmed by the prior investigation's live re-verification). No new issue doc filed (would duplicate
+  this one). Checked off todo 3. `market-tick-data-service` and `unified-trading-pm` worktrees left clean.
