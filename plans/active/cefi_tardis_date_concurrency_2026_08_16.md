@@ -156,9 +156,16 @@ this session found:
       out-of-order completion signals (`D3,D1,D2,D5` from a `D1` start) produce watermark progression
       `∅→D1→D3→D3`, never `D5`, `monotonic=true` throughout; no completion signal emitted for a date whose manifest
       write raised.
-- [ ] [DATA] P1. Once Phase 0's TradFi `PROGRESS.json` read confirms `monotonic=false` in production, notify the
-      TradFi backfill owners this is a live SPOT-recovery degradation on their fleet TODAY, independent of this
-      plan's CeFi work — cite this plan + `_vm_progress.py`.
+- [x] ✅ [DATA] P1. **CHECKED 2026-08-16 — claim NOT confirmed by sample, correcting the design's framing.** Read
+      `PROGRESS.json` for 5 recent `tradfi-bf-nyse-ohlcv-1m-2025-d05-*` VMs — all show `monotonic: true`. That
+      launcher's own `LAUNCH_PARAMS.json` carries no `BATCH_DATE_CONCURRENCY` key at all (it's
+      `launch-tradfi-bf-nyse-ohlcv-1m.sh`, not necessarily the same launcher the design cited,
+      `_tradfi-ohlcv-launcher-lib.sh`). The underlying code-level race in `_vm_progress.py` (max-seen watermark, not
+      contiguous-completion) is still real and confirmed by direct code read — Phase 2's fix is still worth doing —
+      but "already actively breaking on the live TradFi fleet today" is NOT confirmed by this sample and should not
+      be asserted as fact. Did not chase further given this session's scope; whoever picks up Phase 2 should find an
+      actual `_tradfi-ohlcv-launcher-lib.sh`-launched VM (if one exists) before re-asserting the live-regression
+      framing.
 
 ### Phase 3 — enable for CeFi + canary (only after Phase 1 + Phase 2 are QG-green and shipped)
 
