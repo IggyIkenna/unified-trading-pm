@@ -10,13 +10,28 @@ summary: >-
   is bounded, symbol-referenced AGENT work. `sequential: true` because several todos have a real chain (route the
   live feed, then switch the archetypes onto it, then extend the data model) — a deliberate choice given the
   correctness stakes (this is live liquidation-risk gating), not a reflexive default.
+  EXPANDED 2026-08-16 (operator) to own the GENERAL class this plan's original findings were three instances of:
+  reference / registry / config information embedded inside a specific code path, reachable by one archetype, when
+  many need the same fact. Adds the four-destination decision rule (service config via the reloader / UAC / UTL /
+  a centralized domain module) and the audit that applies it across the 69 measured candidates.
 status: active
 nature: process
-asset_group: [defi]
+asset_group: [defi, cross-cutting]
 stage: [execution]
-repos: [strategy-service, execution-service, features-service, unified-api-contracts]
+repos:
+  [strategy-service, execution-service, features-service, unified-api-contracts, unified-trading-library]
 scope: [engineer]
-tags: [defi, risk, centralization, health-factor, venue-eligibility, config-loader, architecture]
+tags:
+  [
+    defi,
+    risk,
+    centralization,
+    health-factor,
+    venue-eligibility,
+    config-loader,
+    architecture,
+    reference-data-centralization,
+  ]
 related:
   [
     /plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md,
@@ -106,6 +121,63 @@ Full findings, root cause, and evidence for every todo below live in the three s
 - [ ] [BACKEND] P3. Update
       [defi-position-risk-centralization](/codex/04-architecture/defi-position-risk-centralization.md) from
       "not yet complete" to reflect the landed state, once the earlier BACKEND todos land.
+
+## THE GENERAL CLASS — reference data living inside a code path (operator ruling 2026-08-16)
+
+The three findings above are instances, not the problem. The problem is **reference / registry / config information
+embedded in a specific code path**, so a fact many archetypes need is reachable by one.
+
+**The exemplar.** `_STAKING_PROTOCOL_CHAIN` in
+`strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:163` maps 8 staking
+protocols to their chain. Every archetype touching a staked token needs that fact; only this file has it. Its
+neighbour `_ALLOWED_CHAINS` (line 159) is the same smell. **Measured scale**: 69 module-level reference-shaped
+constants under `strategy_service/engine/strategies/` — this is a class, not a one-off.
+
+**Partially-existing SSOT, measured 2026-08-16.** UAC already has `VENUE_CHAIN_MAP`
+(`unified-api-contracts/unified_api_contracts/registry/venue_constants.py:907`), which by name carries lido, etherfi
+and symbiotic — **3 of the 8**. Absent: rocketpool, coinbase_staking, eigenlayer, jito, marinade. So the strategy
+file did not duplicate UAC, it **extended** venue→chain knowledge locally instead of upstreaming it. Note the two
+are not obviously the same registry: UAC's is commented "DeFi smart order routing: shared wallet" and feeds
+`SHARED_WALLET_GROUPS` — same axis, different purpose. Resolving that overlap is tracked in W2
+([registry_ssot_hardening_2026_08_16](/plans/active/registry_ssot_hardening_2026_08_16.md)); this plan consumes that
+answer rather than pre-empting it.
+
+> **MEASUREMENT TRAP, recorded because it nearly produced a false finding here.** Probing UAC for these 8 with
+> lowercase string literals (`"lido"`) returns ABSENT for all 8 — the map is keyed by CONSTANTS (`LIDO`, `ETHERFI`),
+> not literals. That false-clean read says "UAC has nothing, keep the local dict." Probe the vocabulary the WRITER
+> emits, per `/codex/02-data/four-surface-reconciliation-procedure.md`.
+
+### The four destinations — apply in this order, first match wins
+
+| # | Destination | When | Mechanism |
+| - | ----------- | ---- | --------- |
+| 1 | **UAC** | Another service needs the same fact, or it is contract/reference data (venues, chains, tokens, instrument types, adapter keys). | A registry module. Venue lists and adapter keys are already UAC data by standing rule. |
+| 2 | **Service config** | Operator/client-tunable, or it changes without a code release. | A `config.py`-style module, **always via the config reloader** (never a bare module constant); split across files by domain ONLY where the line cap forces it, per the W3 ruling. |
+| 3 | **UTL** | A generic mechanism rather than domain data — the fact is about HOW, not WHICH. | A shared library module. |
+| 4 | **Centralized domain module** | Genuinely code-derived / engine-style, but needed by many archetypes in that domain. | One module in that domain every archetype calls — the same shape `liquidation_proximity_circuit.py` was meant to be. |
+
+**Staying in place is a valid outcome** — but only for a constant that is genuinely local to one archetype's own
+logic and that no second archetype could ever want. That must be stated, not assumed by inaction.
+
+- [ ] [BACKEND] P1. **Inventory and classify all 69 candidates.** For each module-level reference-shaped constant
+      under `strategy_service/engine/strategies/`, record: symbol, file:line, what fact it encodes, how many
+      archetypes need that fact, whether an SSOT already exists (probing the WRITER's vocabulary, not literals), and
+      the destination the table above selects. Output a table in this plan, one row per constant. Done-when: every
+      one of the 69 has a row and a named destination, including "stays local" with its justification.
+- [ ] [BACKEND] P1. **Migrate the unambiguous ones** — every candidate where the table selects exactly one
+      destination and an SSOT already exists to receive it. Delete the local constant in the same change (no shims,
+      per the workspace rule). Done-when: the local definition is gone and its consumers resolve through the SSOT.
+- [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — any candidate where two destinations are defensible, or where
+      migrating means merging two registries that may be legitimately orthogonal (the `VENUE_CHAIN_MAP` case above is
+      the type specimen). Escalate as a list with a recommendation each, not one at a time.
+- [ ] [BACKEND] P1. **Fix the exemplar.** Resolve `_STAKING_PROTOCOL_CHAIN` and `_ALLOWED_CHAINS` in
+      `staked_basis.py` onto whatever W2 rules for venue→chain, adding the 5 protocols UAC currently lacks
+      (rocketpool, coinbase_staking, eigenlayer, jito, marinade) to the SSOT rather than to a strategy file.
+      Done-when: `staked_basis.py` declares neither constant and every staking archetype reads the same source.
+- [ ] [BACKEND] P2. **Gate the regression.** A check that fails when a new module-level reference-shaped constant
+      naming venues/chains/tokens/protocols appears under `engine/strategies/`. Baseline it at the post-migration
+      count and ratchet DOWN only, per the workspace's shrinking-baseline convention — a hard zero would block
+      legitimately-local constants.
 
 ## Progress Log
 

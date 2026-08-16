@@ -158,6 +158,29 @@ needs a coverage audit (not a dedup).
       must stay distinct (e.g. it mixes execution ops with account-structure features like `SUBACCOUNT`/`DARK_POOL`
       that `VenueCapability` doesn't cover) is recorded here — resolve before or at the point `VenueCapabilityV2`
       gets its first real instance, not before.
+- [ ] [BACKEND] P1. **Resolve the venue→chain SSOT overlap — a SIXTH concern, found 2026-08-16 and not covered by
+      the Measured Baseline sweep above.** The sweep looked for redefinitions of five named concepts; this one hid
+      because the local copy carries a different NAME, so a name-keyed grep could never surface it.
+      - **UAC has**: `VENUE_CHAIN_MAP` (`unified-api-contracts/unified_api_contracts/registry/venue_constants.py:907`),
+        commented "DeFi smart order routing: shared wallet", feeding `SHARED_WALLET_GROUPS`.
+      - **strategy-service also has**: `_STAKING_PROTOCOL_CHAIN`
+        (`strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:163`), 8 protocols → chain, plus
+        `_ALLOWED_CHAINS` at line 159.
+      - **Measured overlap**: UAC carries lido, etherfi, symbiotic by name — **3 of the 8**. Absent from UAC:
+        rocketpool, coinbase_staking, eigenlayer, jito, marinade. So this is **not a duplicate — it is a local
+        EXTENSION** of venue→chain knowledge that was never upstreamed. That is the more damaging shape: every other
+        archetype needing a staked token's chain cannot see these 5.
+      - **The real question, and why it is not an automatic merge**: both encode (venue → chain), but UAC's exists
+        for wallet grouping and the strategy one for staking-protocol lookup. Same axis, different purpose — exactly
+        the situation todo 1 resolved as "genuinely orthogonal, all three survive." Decide on the same basis:
+        one registry with the union of entries, or two orthogonal ones with a stated reason. Do NOT assume merge.
+      - **Done-when**: a verdict is recorded here; if merged, the 5 missing protocols land in the UAC SSOT and
+        `staked_basis.py` declares neither constant. Consumed by
+        [strategy_service_centralization_fixes_2026_08_16](/plans/active/strategy_service_centralization_fixes_2026_08_16.md),
+        whose "fix the exemplar" todo waits on this answer.
+      - **Method note (cost a false finding here)**: probing UAC for these 8 with lowercase literals (`"lido"`)
+        returns ABSENT for all 8 — the map is keyed by CONSTANTS (`LIDO`, `ETHERFI`), not literals. Probe the
+        vocabulary the WRITER emits, per `/codex/02-data/four-surface-reconciliation-procedure.md`.
 - [x] [BACKEND] P3. **Design a namespace-tagged key for Bybit's REST-vs-WS error-code collision.** ✅ Done 2026-08-16 —
       `unified-api-contracts@552ca4e987`. Design review measured the real blast radius first: `classify_venue_error()`
       is called from 24+ files across execution-service alone (plus MTDS and others) — all positional
