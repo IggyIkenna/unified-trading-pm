@@ -33,7 +33,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
-    /plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
+    /plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
     /plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md,
     /plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md,

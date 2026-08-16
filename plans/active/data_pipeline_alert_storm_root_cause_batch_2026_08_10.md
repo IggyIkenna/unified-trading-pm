@@ -39,7 +39,7 @@ tags: [data-pipeline-alerts, alert-storm, root-cause, dp-vm-008, adapter-routing
 related:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+    /plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
     /plans/active/issues/mtds_backfill_odds_smallchunk10_relaunch_budget_bug_and_oom_2026_08_09.md,
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md,
@@ -235,7 +235,7 @@ last_updated: 2026-08-15 # (was: 2026-06-27 -- plan-reconcile 2026-08-15: stale 
       errors, unrelated to zero-rows. `NO_RAW_TICK_DATA_FOR_SHARD` (6,630, 0.6%, matches this hypothesis) is 100% MDPS.
       No dated "2026-08-02" doc found; the matching ruling in code is dated 2026-07-27 (`batch_workers.py`). **Verdict:
       NOT inflating — matches a settled precedent**, re-verified for TradFi in
-      `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (5+ re-checks through
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (5+ re-checks through
       2026-08-10). MDPS makes no live vendor call, so it has no `FetchEvidence` for the `SOURCE_RETURNED_ZERO` gate
       `record_empty` requires — `record_failed` is the deliberate interim. Cefi cross-reference confirms it: MTDS's own
       row for a sampled shard reads `expected_unattempted`; MDPS's row for the identical key reads `attempted_failed` —

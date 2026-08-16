@@ -294,7 +294,7 @@ input gap didn't change.
       `deployment-scripts-central-element-323112`), `EXIT_STATUS=1` both legs. **Likely root cause, already tracked
       elsewhere — not re-investigated here (craft-scope: this task is a re-run/report, not an MDPS deep-dive)**: this
       matches the CME combo/chain-bundle candle silent-zero-output gap already under active investigation in
-      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (`status: open`, `assigned_vm: planning`) —
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (`status: open`, `assigned_vm: planning`) —
       that doc's own findings describe COMBO chain-bundle candles silently producing zero output despite confirmed real
       raw-tick input; the 200-day lookback zero-count found here for the same COMBO underlyings (GC/SI/ZC/ZL/ZM) is
       consistent with, and may be the same defect surfacing through, a different validator. No features-service code
@@ -310,7 +310,7 @@ input gap didn't change.
 
 ## Follow-ups (new, 2026-08-16)
 
-- [ ] [DATA] P3. Once `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`'s COMBO
+- [ ] [DATA] P3. Once `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`'s COMBO
       chain-bundle-candle silent-zero-output gap is fixed (repo: market-data-processing-service), re-run
       `/data-pipeline-check-features --family delta_one --asset-group TRADFI` once more to check whether the
       `LookbackValidator` 0/741-candle failure for `CME:COMBO:{GC,SI,ZC,ZL,ZM}` clears — this is the genuine

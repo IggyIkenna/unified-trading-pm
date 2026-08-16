@@ -459,7 +459,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       written conditionally ("may have flagged") — see the new todo added this run
 - [ ] [DOC] P3. (codex-drift) plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md — this
       codex SSOT staleness already has a tracked fix (added this run)
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md —
+- [ ] [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md —
       bundled ready-and-blocked halves in one todo
 - [ ] [REVIEW] P3. (ao-readiness)
       plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md —

@@ -274,7 +274,7 @@ Newly found this pass:
 
 ## Deferred — self-dispatched already (don't duplicate; flagging a staleness/visibility gap instead)
 
-- **`mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`'s item 2** (ETF/OPTION SchemaContract registration
+- **`(archived) mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`'s item 2** (ETF/OPTION SchemaContract registration
   gap) was blocked on a P2 mechanism-(a) fix that shipped 2026-08-03 — the blocking annotation was never refreshed and
   now reads stale. This doc is `assigned_vm: planning` + `status: open` (self-dispatched, `sequential: true`) — no new
   batch todo needed, but worth flagging that its own item 1 (`[OPERATOR]` P2, still genuinely unresolved) may be

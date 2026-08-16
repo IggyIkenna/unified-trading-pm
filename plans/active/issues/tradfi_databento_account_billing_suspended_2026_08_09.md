@@ -135,7 +135,7 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       is done.** Deliberately NOT done in the same edit as the resolution above — a `git grep` found 9 referrer files
       citing this doc's path (`data_completion_tradfi_2026_07_15.md`,
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
-      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`,
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`,
       `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`,
       `issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`,
       `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`,

@@ -827,17 +827,17 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       parts (1)+(2) are correctly fixed and deployed. **However, BOTH verification runs still show `Candles: 0` for
       every date processed** (confirmed via the post-run manifest-consolidator pass:
       `rows_added: 0, verdict: "empty", no_op: true`) — two NEW, orthogonal blockers were found live, filed as
-      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`: (a) NASDAQ/NYSE equity writes are REJECTED
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`: (a) NASDAQ/NYSE equity writes are REJECTED
       at the manifest validation gate (`record_empty(reason=SOURCE_RETURNED_ZERO)` called without the required
       `FetchEvidence` — 6,650 rejections across both runs, on regular trading Mondays, not weekends); (b) CME
       combo/chain-bundle candles silently produce ZERO output despite confirmed real raw-tick input being read (no
       WARNING, no ERROR, no candle file — a genuine silent-failure gap, worse than (a)). **CITATION
       (na-eligibility-audit 2026-08-02, tradfi tranche)**: part (b)'s root-cause instrumentation is already an open todo
       in `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (`status: active`, `assigned_vm: planning`), citing
-      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` as Source — track there going forward.
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` as Source — track there going forward.
       **CITATION CORRECTION (na-eligibility-audit 2026-08-06, tradfi tranche)**: the batch5 tracker above is since
       `status: complete` (archived, 0 open todos — its extraction todo landed); the live tracker for the 15m/24h work is
-      now the issue doc itself, `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`
+      now the issue doc itself, `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`
       (`assigned_vm: planning` + `status: open`, self-dispatched, 2 open todos) — cite there going forward. Parts (a),
       (3), and (4) remain untracked by any active batch (genuine open, judgment-laden diagnosis work). Neither blocker
       is caused by, or fixable within, the row_key/source fix deployed here — both are new root-cause targets tracked in
@@ -851,6 +851,14 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       ohlcv_15m/24h rows (any status) for 2026-07-13 through 07-15, consistent with this gap. Repo:
       market-data-processing-service + unified-api-contracts/instruments-service (seeding). Provenance: this Progress
       Log.
+
+      **ISSUE DOC ARCHIVED 2026-08-16 (slot 9, data_engineering)** — the issue doc reached 0 open todos (the
+      OPTION-half caller-scoping fix, `market-data-processing-service@2b2cc58ef3`, was its last one) and archived to
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` per the standard
+      6-step ritual. Parts (a)/(3)/(4) above remain genuinely open (untracked by any active batch) — cite THIS todo
+      going forward, not the archived issue doc. The deferred live-re-verification follow-up is tracked as a new
+      todo appended at the end of this doc's Progress Log (a mid-Progress-Log checkbox has no trailing todo-block
+      boundary here to stop it from swallowing later entries' unrelated markers, so it must sit last).
 
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 14 open todos read end-to-end. The doc
   is a genuine mix and cannot flip as a whole: 5 are explicitly operator- or credential-gated (the `altdata`
@@ -890,7 +898,7 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   dedicated VM (attempted + aborted on the shared host 2026-07-30). Citation correction (line ~768): the ohlcv_15m/24h
   part-(b) tracker citation is stale — `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` is now `status: complete`
   (archived, 0 open todos); the live tracker is the issue doc itself,
-  `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`, now `assigned_vm: planning` + `status: open`
+  `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`, now `assigned_vm: planning` + `status: open`
   (self-dispatched, 2 open todos). `assigned_vm` unchanged.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries) -- M-1 coordinator, 3
   tradfi/manifest/cutover codex SSOTs, and the 2 live tradfi scripts remain accurate.
@@ -961,3 +969,15 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   billing-restoration citations resolve to `tradfi_databento_account_billing_suspended_2026_08_09.md`, already
   summarized inline in this doc's own Progress Log; kept the existing 6-entry set (M-1 coordinator + 3 codex SSOTs + 2
   source scripts) rather than adding a 7th, since the issue doc's key facts are already inline here.
+
+- [ ] [SCRIPT] P3. **Live re-verification sweep, deferred from the now-archived
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` issue doc
+      (2026-08-16).** Three narrow fixes shipped there but were never confirmed against a fresh live backfill run:
+      (1) `ohlcv_24h` SchemaContract alias for future/equity/options_chain/index (`unified-api-contracts@079d48ff`) —
+      confirm a `--data-types ohlcv_24h` request no longer crashes for those instrument_types; (2) ETF
+      `ohlcv_1m`/`trades` SchemaContract registration (`unified-api-contracts@0228afe52a`) — confirm a fresh request
+      for those data_types on ETF instruments writes successfully; (3) `instrument_type=option` leaf exclusion from
+      `ohlcv_15m`/`ohlcv_24h` orchestration scans (`market-data-processing-service@2b2cc58ef3`) — confirm the 34
+      `instrument_type='OPTION'` "No SchemaContract registered" crash lines no longer appear. Low cost each — fold
+      all 3 into ONE `--data-types "ohlcv_15m ohlcv_24h ohlcv_1m trades"` verification run over CME/NASDAQ/NYSE
+      rather than three separate VM launches. Repo: market-data-processing-service.
