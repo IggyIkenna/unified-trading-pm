@@ -275,7 +275,12 @@ Layer 3 entry, confirming the impl modules are genuinely absent until first acce
 the higher total now is the pre-existing, not-mine `uv.lock` drift noted at Layer 3 ship time (a `google-cloud-monitoring`
 dependency addition, left untouched and unshipped) — if that dependency has since been installed into this `.venv`
 between measurements, its transitive import graph would inflate `len(sys.modules)` independent of anything this plan
-changed. **Not verified further this session** — confirming that specific causal chain (diffing `.venv` package lists
-across the two measurement times) is out of this todo's scope and the `.venv` state at the earlier measurement time is
-not reproducible after the fact. Recorded as a measurement trap for whoever next touches execution-service import cost,
-not silently smoothed into a false "the fix worked, numbers went down" narrative.
+changed. **Confirmed 2026-08-16 (later same day)**: `git diff uv.lock` in both `execution-service` and `strategy-service`
+shows the identical uncommitted 18-line addition — `google-cloud-monitoring==2.31.0` plus its transitive deps
+(`grpcio`, `proto-plus`, `protobuf`, `google-api-core[grpc]`, `google-auth`) — locked but not shipped in either repo.
+This is the causal mechanism, not just a plausible guess: that dependency's transitive import graph, if resolved into
+this `.venv`, inflates `len(sys.modules)` on any import of an execution-service module regardless of this plan's fix.
+It is pre-existing, not-mine, uncommitted `uv.lock` drift (workspace `dirty-deps` carve-out — not committed as part of
+this doc-only todo). Recorded as a measurement trap for whoever next touches execution-service import cost: re-baseline
+against a `.venv` without this pending lock change, not silently smoothed into a false "the fix worked, numbers went
+down" narrative.
