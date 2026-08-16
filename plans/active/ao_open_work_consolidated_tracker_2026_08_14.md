@@ -19,6 +19,10 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycle, dispatch]
 related:
   [
+    /plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md,
+    /plans/active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md,
+    /plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md,
+    /plans/active/task_template.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
@@ -92,6 +96,7 @@ context_scope:
 4. **Infra / VM / host hygiene** → Track 4
 5. **Dashboard e2e flakiness** → Track 5
 6. **Archival + reconciliation bookkeeping** → Track 6
+7. **AO-plan operator-item purity (task_template.md §3 finding Y)** → Track 7
 
 ---
 
@@ -375,9 +380,11 @@ context_scope:
       fleet-wide stale/drift totals. Verified 2026-08-15 (reconciliation sweep, this session, same day as the shipping
       commit). Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` — flip its
       checkbox too.
-- [ ] [OPERATOR] P2. Run the dry-run + live-apply steps for the content-derived-task-id migration against ~1,728 legacy
-      positional ids (minting itself already shipped and live). Source:
-      `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (tracked live in
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-16 (interactive session, operator-approved quiet moment — only 1 task actively
+      dispatched fleet-wide).** Dry-run + live-apply both completed cleanly against the content-derived-task-id
+      migration: 2037 rows renamed, hazard-2 gate 0 unexplained across 673 references, 0 dispatched rows touched,
+      `REFUSING to reset` count 0 immediately post-apply. Full evidence in the source doc's own flipped checkboxes.
+      Source: `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (tracked live in
       `/plans/active/content_derived_backlog_task_ids_2026_08_08.md`, do not duplicate there).
 - [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@c6d43ac`** (2026-08-14).
       `worktree_clean_check/_ahead_push.py::push_or_preserve_ahead_commits` (lines 262-283): on a rejected push,
@@ -519,8 +526,44 @@ before touching the source doc directly._
 
 ---
 
+## Track 7 — AO-plan operator-item purity (per `task_template.md` §3 finding Y)
+
+**Merged in 2026-08-16** from `ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md`'s own
+`orchestrator_master` group todo — that sweep now covers only the other 9 non-ao epic groups; this Track is the
+single owner for the ao-topic slice, so the two docs never re-process the same corpus blind to each other. Per
+finding Y: any `assigned_vm: planning` AO plan carrying a genuine `[OPERATOR]`/`BLOCKED-<TOKEN>` item interleaved
+with plain dispatchable todos gets that item forked into a companion `assigned_vm: NA` doc, cross-linked, so the AO
+plan can reach zero-open-todos and archive independently.
+
+- [ ] [PM] P2. **Run the Track-A/B classification pass** (`task_template.md` §3 finding Y's 3-step process) across
+      every `orchestrator_master`-scoped `assigned_vm: planning` plan. One concrete seed finding already surfaced
+      this session (2026-08-16 AO-corpus dedup audit, live-verified against the agent-orchestrator backlog): the
+      Anthropic per-task calibration run
+      (`plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`, live backlog id
+      `...-8719bc760e62`, currently `status=blocked`) is tagged `[OPERATOR]` but is actually read-only/fully
+      AO-dispatchable — only the *interpretation* of the result needs a human. That's a mis-tag to correct
+      (finding Y's step 1: "if mis-tagged, untag it instead of forking it out"), not a fork candidate. Classify the
+      rest of the `orchestrator_master` population the same way before assuming another one needs forking.
+- [ ] [PM] P2. **Resolve the `batch14` DeepSeek-credential-fix conflict** — live-verified 2026-08-16: the env-file
+      GSM-indirection todo (`ao_satellite_ao_dispatch_batch14_2026_08_09.md`, live backlog id `...-791d3e7d35b7`) is
+      `status=queued` right now — genuinely still open, NOT done despite an earlier (incorrect) claim that it landed
+      2026-08-12. It sits on a topic the tracker's own Notes below call fully CANCELLED/out-of-tracker-scope
+      (`deepseek_claude_blended_provider_routing_2026_07_28.md`). Since this specific todo is real, live, queued
+      work with nobody owning it, either (a) dispatch it normally (it's a plain `[INFRA]` todo, not `[OPERATOR]`,
+      and the live backlog already has it queued and ready), or (b) if the DeepSeek-cancellation ruling was meant to
+      cover this too, explicitly cancel it with a citation — don't leave it silently queued-but-orphaned.
+
+---
+
 ## Notes
 
+- **7 of the still-open Track 1/2/4 items extracted into `ao_satellite_ao_dispatch_batch21_2026_08_16.md`
+  (2026-08-16, operator request)** — the bounded, conflict-clear, non-operator-gated items (context-signal re-run,
+  `/plan-reconcile` + `/na-eligibility-audit` benchmark re-runs, `ORCHESTRATOR_VM_ID` env-var-loss root-cause, swap-peak
+  root-cause, two disk-cleanup audits). Its gated `batch21_finalize` reconciles evidence back into this tracker's own
+  checkboxes once done — do not flip them manually in the meantime. See that batch plan's "Why this plan exists"
+  section for the full list of items deliberately NOT extracted (design fork, `[OPERATOR]`-tagged migration, an
+  item gated on a separate NA hold, and one deferred into the finalize plan itself) and why.
 - **Not archivable until `depends_on` clears (operator direction, 2026-08-16).** This tracker's own 12 remaining open
   items are pointers, not the real work — the real work lives in the source docs each item cites. `depends_on` above
   names every distinct source doc still carrying a genuinely-open item as of the 2026-08-15 final reconciliation pass:

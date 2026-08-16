@@ -158,7 +158,7 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Point at the actual incident doc/conversation for "compact runs but the next turn resends the
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-16 (operator confirmed this no longer occurs).** Was: Point at the actual incident doc/conversation for "compact runs but the next turn resends the
       full pre-compact history as if it hadn't shrunk" — this session's grep found the 2026-08-04 unsupported-binary
       incident (a different failure mode, already fixed, generic) but not this one. Done when: either the real
       incident is located and its fix's generality (provider-specific vs. generic) is confirmed, or the operator

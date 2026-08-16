@@ -201,13 +201,16 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       meter. Read-only. **Live run deferred**: the per-account output must be pasted into the Progress Log, and there is
       no post-reset window to measure until Wednesday. Code is on origin/live-defi-rollout; the script, its 186-line
       test suite, and the PricingPlan/MeterSample/MeasuredValue types all landed in c40d847ac6.
-- [ ] [OPERATOR] P1. **Run the calibration across every `weekly_pct=100` account and record the measured multipliers,
-      explicitly excluding `sub-a-ikenna`.** That account is tier `pro`, not `max20` (operator ruling 2026-08-10: it
-      switched to Pro and would confuse the Max calibration). Safe-idempotent justification for the `[OPERATOR]` tag:
-      the run is strictly read-only (SQLite `mode=ro` + transcript reads), writes nothing, and launches no VM — it is
-      tagged `[OPERATOR]` only because interpreting whether a measured multiplier is credible is a judgment call, not
-      because the action is risky. **Done when**: a measured multiplier per max20 account is recorded here with its
-      window, and any account whose two attribution methods still disagree by >20% is named as unresolved.
+- [ ] [SCRIPT] P1. **UNTAGGED from `[OPERATOR]` 2026-08-16** (`task_template.md` §3 finding Y triage, Track 7 of
+      `ao_open_work_consolidated_tracker_2026_08_14.md` — mis-tag, not a fork candidate): **Run the calibration
+      across every `weekly_pct=100` account and record the measured multipliers, explicitly excluding
+      `sub-a-ikenna`.** That account is tier `pro`, not `max20` (operator ruling 2026-08-10: it switched to Pro and
+      would confuse the Max calibration). The run is strictly read-only (SQLite `mode=ro` + transcript reads), writes
+      nothing, and launches no VM — the prior `[OPERATOR]` tag was reflexive, not backed by genuine ambiguity per
+      finding U's 3-part test (no business/spend judgment, no credential-only access, no delete). **Done when**: a
+      measured multiplier per max20 account is recorded here with its window, and any account whose two attribution
+      methods still disagree by >20% is named as unresolved — flag that disagreement for a human read, but the run
+      itself is fully AO-dispatchable.
 - [ ] [BACKEND] P1. **Attribute cost by PROPORTIONAL ALLOCATION of the real subscription cost, not by dividing list
       value by a stored multiplier constant.** Formula:
       `task_cost = window_subscription_cost x (task_list_value / total_list_value_in_window)`. This always sums to
@@ -331,7 +334,10 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       `(timestamp, accountUuid, emailAddress)` from `~/.claude.json`'s `oauthAccount` is the only way to EVIDENCE that
       the laptop never logged into `sub-a` or `sub-e`, which is exactly what the reservation-verification todo needs to
       check rather than assume. No longer time-critical because nothing is being lost hour by hour: the windows that
-      matter start Wednesday. **Done when**: the log exists and covers the first post-reset window.
+      matter start Wednesday. **Script now exists (2026-08-16)**: `scripts/dev/log-laptop-login-identity.py` —
+      operator runs `python3 scripts/dev/log-laptop-login-identity.py` on the laptop itself (appends only on identity
+      change, idempotent no-op otherwise); log lands at `~/.claude/laptop_login_identity_log.jsonl`. **Done when**: the
+      log exists and covers the first post-reset window.
 - [ ] [BACKEND] P1. **Report `max(measured)` as the defensible floor for PRE-reservation windows — but stop calling
       post-reservation windows lower bounds, because they are not.** Amended 2026-08-10 evening. The original reasoning
       still holds for history: `sub-c` was a laptop login on 2026-08-02, the `~/.claude-accounts/*.env` absence never

@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [template, format, canonical, agent-task, plan-authoring]
 related: [/plans/archive/2026_07/ao_dispatch_correctness_regen_reconcile_2026_07_07.md, /plans/PLAN_FORMAT.md]
 created: "2026-02-25"
-last_updated: 2026-07-24 # was: 2026-07-23 — corrected 2026-07-24, added §3 findings L/M (markdown structural well-formedness, internal self-consistency) surfaced by an adversarial verification pass on data_pipeline_e2e_milestones_gate_2026_07_24.md's 64-todo distribution; prior entry: corrected 2026-07-23, plan_quality_four_line_defense_architecture_2026_07_23.md line-1 todo: added §3 rules for findings D/E/F/G/C (section-shorthand, ambiguous verbs, delete-risk tagging, definition-of-done, stale-checkbox pre-check) surfaced by an adversarial AO-dispatch-readiness review of sports_consolidated_closeout_2026_07_19.md
+last_updated: 2026-08-16 # was: 2026-07-24 — corrected 2026-08-16, added §3 finding Y (AO-dispatched plans must not carry an operator-gated item in the same file as their dispatchable todos — split it out) per operator directive after a corpus sweep found dozens of assigned_vm:planning plans with a [OPERATOR]/BLOCKED-<TOKEN> item interleaved with plain todos, silently blocking the plan's own archival; prior entry: corrected 2026-07-24, added §3 findings L/M (markdown structural well-formedness, internal self-consistency) surfaced by an adversarial verification pass on data_pipeline_e2e_milestones_gate_2026_07_24.md's 64-todo distribution; earlier: corrected 2026-07-23, plan_quality_four_line_defense_architecture_2026_07_23.md line-1 todo: added §3 rules for findings D/E/F/G/C (section-shorthand, ambiguous verbs, delete-risk tagging, definition-of-done, stale-checkbox pre-check) surfaced by an adversarial AO-dispatch-readiness review of sports_consolidated_closeout_2026_07_19.md
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -169,6 +169,14 @@ version.
 > naming a mechanism but no file/symbol ("move the loader off its PATH-PREFIX read") guarantees an exploratory Grep
 > before any edit is possible; one naming the exact function/table does not. Same principle as `context_scope` (§2a) —
 > front-load the context a worker would otherwise have to go discover. SSOT + the runtime-hook half of this:
+> `/codex/06-coding-standards/tool-call-batching.md`.
+
+> **Why specificity here isn't just correctness** (`tool_call_batching_authoring_gap_2026_08_14`): the symbol-not-
+> line-number rule, the literal-action-verb rule, and the definition-of-done rule below exist for plan durability and
+> dispatch-correctness — but they're also what determines how many round-trips a worker needs before it can act. A
+> todo naming a mechanism but no file/symbol ("move the loader off its PATH-PREFIX read") guarantees an exploratory
+> Grep before any edit is possible; one naming the exact function/table does not. Same principle as `context_scope`
+> (§2a) — front-load the context a worker would otherwise have to go discover. SSOT + the runtime-hook half of this:
 > `/codex/06-coding-standards/tool-call-batching.md`.
 
 - Every todo: `- [ ] [TAG] P0. <description>` (open) → `- [x] N. ✅ [TAG] P0. <desc> — <repo>@<sha> + evidence` (done).
@@ -415,6 +423,34 @@ version.
     worker knows exactly where to look before re-deriving anything. Example brief using the convention:
     `- [ ] [DATA] P2. Resume scripts/some_migration.py --apply --report gs://my-bucket/_ops/checkpoints/my-migration-task-007.jsonl (idempotent per-cell; pull this checkpoint first — do not restart from day 0). Repo: some-service. Done-when: all N shards report 0 anomalies.`
 
+- **An AO-dispatched plan must not carry an operator-gated item in the same file as its dispatchable todos — split
+  it out** _(finding Y, 2026-08-16, operator directive: sweeping the PM repo's plan corpus found dozens of
+  `assigned_vm: planning` plans where a `[OPERATOR]`/`BLOCKED-<TOKEN>`-tagged item — credential setup, a live-trading
+  go-ahead, a data-completeness sign-off, an account/vendor signup, a design/investigation judgment call, or a
+  post-audit human conflict-resolution ruling — sat interleaved with plain, worker-dispatchable todos in the same
+  plan. Mechanically this doesn't block ingestion (§3's ingestion-gate family already excludes those lines from the
+  backlog), but it DOES block the plan's own archival — the archive-eligibility rule (`PLAN_FORMAT.md`, "every todo is
+  `- [x]`") means a plan sits open forever waiting on the one human-gated line even after every dispatchable todo is
+  long done, and it makes the AO backlog look "blocked" to anyone skimming the corpus for real remaining automatable
+  work)._ When authoring or splitting a plan destined for `assigned_vm: planning`: any todo that is genuinely
+  `[OPERATOR]`-worthy under finding U's three-part test (business/spend judgment with no data-derivable answer,
+  a credential/access only a human holds, or a whole-bucket-destroy / failed-reversibility-check delete), any
+  `BLOCKED-CREDENTIALS`/`BLOCKED-OPERATOR-DECISION`/`BLOCKED-UPSTREAM-OUTAGE` item, or an open-ended
+  design/investigation/human-conflict-resolution call (finding S: scope-unclear stays non-dispatchable until named)
+  does **not** live in the AO plan's own file. Instead:
+  - **If the AO plan is a fresh carve-out**: simply don't extract that item — leave it on its NA/human source doc
+    (exactly what batch21's "explicitly excluded" section above does), or route it to a standing NA tracker.
+  - **If an existing AO plan already has one mixed in**: fork it out into a companion `assigned_vm: NA` doc (a
+    sibling `<slug>_operator_items_<date>.md`, or fold into an existing NA tracker for the same topic) and cross-link
+    both directions via `related:`; the ordinary `depends_on`/`gate_on_depends` machinery is NOT the right tool here
+    (that gates DISPATCH, and an operator item was never dispatchable in the first place) — a plain `related:` pointer
+    is enough, since the two docs' archival is now correctly independent.
+  - The **exception**: a genuine cross-plan ordering constraint (the AO work truly cannot start/finish before the
+    operator item resolves) still needs `depends_on` + `gate_on_depends: true` on whichever side is downstream — this
+    finding governs FILE placement of the item itself, not real dependency wiring, which stays as documented above.
+  - Applies going forward at authoring time; the existing corpus is remediated by a dedicated retroactive sweep
+    (`/plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md`), not by this rule alone.
+
 ---
 
 ## 4. AO-DISPATCHED plans — STRICT rules
@@ -608,3 +644,10 @@ start.**
   task-id-keyed checkpoint convention addition). Still the plan-authoring template/guide itself, still 0 tracked `- [ ]`
   todos. Structurally never AO-dispatchable and never archivable while it remains the live authoring SSOT.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **2026-08-16 (interactive session, operator directive)**: Added §3 finding Y — an AO-dispatched plan must not carry
+  an `[OPERATOR]`/`BLOCKED-<TOKEN>`-tagged (or otherwise operator-gated/judgment-call) item in the same file as its
+  worker-dispatchable todos; split it into a companion `assigned_vm: NA` doc instead. Prompted by an operator request
+  to audit the PM plan corpus and stop archival-blocking interleaving — a sample of ~30 `assigned_vm: planning` plans
+  found ~12 with a genuine `[OPERATOR]` item mixed into an otherwise-dispatchable file. Companion retroactive sweep:
+  `/plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md` (assigned_vm: NA, per operator
+  direction — the sweep itself is human-judgment classification work, not bounded AO-dispatch work).

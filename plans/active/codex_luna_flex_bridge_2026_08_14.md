@@ -143,11 +143,10 @@ template, minus the third-party dependency).
       volume observed) and the operator decides to scale. Done when: the ChatGPT account shows Pro active and the quota
       tracking todo's ceiling numbers are remeasured against the new tier — same auth artifact, no other code change
       expected.
-- [ ] [OPERATOR] P2. Name which existing Claude seat(s), if any, to shut down to offset the new Codex spend once it's
-      scaled past Plus — genuine business/value judgment with no data-derivable answer (real seat list isn't visible
-      from this checkout; the committed `accounts.mock.json` is example-only). Not urgent at the $20/mo Plus starting
-      tier. Done when: the seat(s) are named and the corresponding `accounts.json` entries are removed/disabled, or the
-      operator confirms no seat cut is needed at the validated spend level.
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-16 (operator, owns this decision independently).** Was: name which
+      existing Claude seat(s), if any, to shut down to offset the new Codex spend once it's scaled past Plus. Operator
+      confirmed this is their own independent call, not something to surface as a pending ask — no further follow-up
+      here unless they raise it themselves.
 - [x] [INFRA] P0. ✅ Build `codex_bridge_server.py` and deploy it as a real running service. **DONE 2026-08-16** —
       systemd unit `codex-bridge.service` (127.0.0.1:8769, new — no scaffolding existed for this one, unlike
       litellm) + `openai-codex` added as a real dependency (was deliberately lazy/optional while undeployed).

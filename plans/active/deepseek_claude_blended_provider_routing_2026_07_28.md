@@ -33,8 +33,8 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-05
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 source:
@@ -467,6 +467,14 @@ default from an external reference.
       `deepseek_route_fraction` 0.8→0.9 — `agent-orchestrator@d18e6830cbabd402345fe6bacb071fe24bb2e01e`.
 - [x] [OPERATOR] P2. ✅ Top up the `deepseek-v4-pro` balance ($0.34 as of 2026-08-04T14:05Z). — Done: confirmed $4.84
       live via `/api/accounts` at 2026-08-04T14:33Z.
+- [ ] [BACKEND] P2. **CORRECTED 2026-08-16 (operator) — NOT a real funding shortfall, a balance-display/query bug.**
+      `deepseek-v4-pro` and `deepseek-v4-flash` share ONE billing account — the variant split exists only to track
+      which model id did which task, not to partition funds. The account IS topped up; the $0 shown under `pro`
+      specifically is a per-variant balance CHECK/DISPLAY bug that doesn't query the actual shared balance. Re-tagged
+      from `[OPERATOR]` (no top-up decision needed) to a bounded bug-fix: root-cause why the `pro`-variant balance
+      check/probe reports $0 for an account that is genuinely funded (likely reading a per-key or per-variant balance
+      view instead of the shared account-level one), and fix it to reflect the real shared balance. Original text
+      preserved below for context.
 - [ ] [OPERATOR] P2. **Recurrence, found 2026-08-09 (slot 30, while re-sourcing the token below): `deepseek-v4-pro`
       balance is back to
       $0 — a live `claude -p` auth probe under this account returned `API Error: 402 Insufficient

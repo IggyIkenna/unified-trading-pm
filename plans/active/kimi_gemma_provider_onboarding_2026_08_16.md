@@ -151,6 +151,19 @@ had already run. Treat every todo below as net-new work, not a resume.
       in GSM as `moonshot-api-key`; a real authenticated call against `kimi-k2.6` returned HTTP 200 (see Progress
       Log — the response itself surfaced a real reasoning-token gotcha, not a credential problem). No separate
       management/balance-read key found or needed yet — revisit only if a balance-reconciliation todo needs one.
+**Research update 2026-08-16** (interactive session, live web check): Moonshot's own official API docs
+      (`platform.kimi.ai/docs/pricing`) cover ONLY metered per-token API billing (K3, K2.7 Code, etc.) — zero
+      mention anywhere of Moderato/Vivace membership tiers or any "boost" benefit for API rate limits/quota.
+      Third-party aggregators (deepinfra, nxcode, kimik2ai — not authoritative, cited only as corroboration)
+      consistently describe Vivace ($199/mo, the highest published consumer tier) as chat/coding-agent-swarm/
+      browser-automation focused, and state explicitly: "the consumer chat product, Kimi Code membership, and API
+      platform have separate billing, and a chat subscription does not automatically fund API calls." This
+      strengthens (does not fully confirm) the doc's own suspicion that membership tiers are CLI/chat-only,
+      separate from the metered API this integration actually uses. Not fully resolved — Moonshot's own docs are
+      simply silent on the linkage rather than explicitly ruling it out, and the waitlisted "boost" tier specifically
+      isn't documented publicly anywhere found. Still needs either direct Moonshot support contact or the waitlist
+      tier activating so it can be tested empirically, per the todo below.
+
 - [ ] [OPERATOR] P3. **New, operator 2026-08-16**: track the Moonshot membership-plan waitlist the operator joined
       (a "10-30x boost" tier over pay-as-you-go, per the operator). ETA unknown — this is a waitlist, not a
       purchase. When it activates: (1) get its real terms (price, what the boost actually means — rate-limit

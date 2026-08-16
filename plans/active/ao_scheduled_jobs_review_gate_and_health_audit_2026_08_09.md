@@ -74,50 +74,46 @@ blind force-merge — that's Track A below. Given this exact failure class (unsh
 review-gate-starves-escalation) could easily exist in AO's other 7 scheduled jobs and nobody has checked, Track B audits
 each one.
 
-## Track A — drain the 25 stuck plan_reconciler PRs
+## Track A — drain the 25 stuck plan_reconciler PRs — CLOSED OUT 2026-08-16
 
-For each: `gh pr checkout <n>`, `git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`, resolve
-conflicts by re-reading both sides (the PR's finding vs. whatever landed on `live-defi-rollout` since) — if the PR's
-content is stale/superseded by later work, close it and delete the branch (zero blast radius, per the agent's own PR
-description); if still valid, re-verify the finding against current corpus state before pushing the rebase and merging.
-Done-when for each: PR is either MERGED (content re-verified correct post-rebase) or CLOSED (with a one-line reason —
-superseded / stale / duplicate).
+**Verified 2026-08-16** (interactive session, live check): `gh pr list --state open --search "head:plan_reconciler"`
+against `IggyIkenna/unified-trading-pm` returns **zero** open results — every one of the 25 branches below is terminal
+(confirmed CLOSED). Individual spot-checks on #1998, #2327, #2522, #2653 confirmed CLOSED directly via `gh pr view`.
+**Caveat**: this pass confirmed the terminal/non-open STATE for all 25, not each PR's individual disposition reason
+(superseded vs. stale vs. duplicate) — that per-PR narrative wasn't re-derived. If a specific PR's reason is ever
+needed, `gh pr view <n> --comments` against the closed branch. The doc's own done-when ("PR is either MERGED or
+CLOSED") is satisfied for all 25 on the CLOSED branch.
 
-- [ ] [REVIEW] P1. Triage PR #1998 (`plan_reconciler/workflow-undefined`, opened 2026-08-02, 54 files changed) —
-      **anomalous, needs extra scrutiny before anything else in this track**: the branch name itself shows a `$TRANCHE`
-      substitution bug (literal "undefined"), and its file scope is far wider than any other run in this batch (every
-      other PR touches only its own findings doc or a small cluster). Read the PR diff in full before deciding whether
-      to rebase or close — do not treat it as routine.
-- [ ] [REVIEW] P2. Triage PR #2327 (`plan_reconciler/agt-4fdce1`, opened 2026-08-06).
-- [ ] [REVIEW] P2. Triage PR #2395 (`plan_reconciler/agt-d4d31f`, opened 2026-08-06).
-- [ ] [REVIEW] P2. Triage PR #2397 (`plan_reconciler/agt-24f4b0`, opened 2026-08-06).
-- [ ] [REVIEW] P2. Triage PR #2398 (`plan_reconciler/agt-bf8439`, opened 2026-08-06).
-- [ ] [REVIEW] P2. Triage PR #2399 (`plan_reconciler/agt-65e60a`, opened 2026-08-06).
-- [ ] [REVIEW] P2. Triage PR #2401 (`plan_reconciler/agt-903867`, opened 2026-08-06).
-- [ ] [REVIEW] P2. Triage PR #2402 (`plan_reconciler/agt-6c6359`, opened 2026-08-06).
-- [ ] [REVIEW] P2. Triage PR #2413 (`plan_reconciler/agt-ec6642`, opened 2026-08-07).
-- [ ] [REVIEW] P2. Triage PR #2415 (`plan_reconciler/agt-a2268a`, opened 2026-08-07).
-- [ ] [REVIEW] P2. Triage PR #2416 (`plan_reconciler/agt-cf1afa`, opened 2026-08-07).
-- [ ] [REVIEW] P2. Triage PR #2418 (`plan_reconciler/agt-c6e8c7`, opened 2026-08-07).
-- [ ] [REVIEW] P2. Triage PR #2419 (`plan_reconciler/agt-e7f024`, opened 2026-08-07).
-- [ ] [REVIEW] P2. Triage PR #2420 (`plan_reconciler/agt-985cf1`, opened 2026-08-07).
-- [ ] [REVIEW] P2. Triage PR #2423 (`plan_reconciler/agt-6eb8c5`, opened 2026-08-07).
-- [ ] [REVIEW] P2. Triage PR #2522 (`plan_reconciler/agt-2add8d`, opened 2026-08-08 — whole-corpus `all` run; note its
-      findings doc content is already independently merged onto `live-defi-rollout` via a different path, so this PR is
-      very likely pure duplicate — verify and close if so, don't re-merge the same content twice).
-- [ ] [REVIEW] P2. Triage PR #2630 (`plan_reconciler/agt-8af81b`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2631 (`plan_reconciler/agt-1a9b86`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2644 (`plan_reconciler/agt-2d9a32`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2645 (`plan_reconciler/agt-c3a27f`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2647 (`plan_reconciler/agt-fe4564`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2649 (`plan_reconciler/agt-c80749`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2650 (`plan_reconciler/agt-733350`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2652 (`plan_reconciler/agt-a3e83c`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Triage PR #2653 (`plan_reconciler/agt-a398c9`, opened 2026-08-09).
-- [ ] [REVIEW] P2. Once all 25 above are resolved (merged or closed), re-run
-      `gh pr list --state open --search "head:plan_reconciler"` and confirm zero remain (except any opened fresh by a
-      new run in the interim, which is expected/fine now that steady state pushes directly and shouldn't itself open
-      PRs) — record the final count in this plan's Progress Log.
+- [x] ✅ [REVIEW] P1. Triage PR #1998 (`plan_reconciler/workflow-undefined`, opened 2026-08-02, 54 files changed) —
+      CLOSED, confirmed 2026-08-16 (live `gh pr view` check).
+- [x] ✅ [REVIEW] P2. Triage PR #2327 (`plan_reconciler/agt-4fdce1`, opened 2026-08-06) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2395 (`plan_reconciler/agt-d4d31f`, opened 2026-08-06) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2397 (`plan_reconciler/agt-24f4b0`, opened 2026-08-06) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2398 (`plan_reconciler/agt-bf8439`, opened 2026-08-06) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2399 (`plan_reconciler/agt-65e60a`, opened 2026-08-06) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2401 (`plan_reconciler/agt-903867`, opened 2026-08-06) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2402 (`plan_reconciler/agt-6c6359`, opened 2026-08-06) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2413 (`plan_reconciler/agt-ec6642`, opened 2026-08-07) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2415 (`plan_reconciler/agt-a2268a`, opened 2026-08-07) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2416 (`plan_reconciler/agt-cf1afa`, opened 2026-08-07) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2418 (`plan_reconciler/agt-c6e8c7`, opened 2026-08-07) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2419 (`plan_reconciler/agt-e7f024`, opened 2026-08-07) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2420 (`plan_reconciler/agt-985cf1`, opened 2026-08-07) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2423 (`plan_reconciler/agt-6eb8c5`, opened 2026-08-07) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2522 (`plan_reconciler/agt-2add8d`, opened 2026-08-08 — whole-corpus `all` run) —
+      CLOSED, confirmed 2026-08-16; consistent with the doc's own prediction that this was a pure duplicate of content
+      already merged via a different path.
+- [x] ✅ [REVIEW] P2. Triage PR #2630 (`plan_reconciler/agt-8af81b`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2631 (`plan_reconciler/agt-1a9b86`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2644 (`plan_reconciler/agt-2d9a32`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2645 (`plan_reconciler/agt-c3a27f`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2647 (`plan_reconciler/agt-fe4564`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2649 (`plan_reconciler/agt-c80749`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2650 (`plan_reconciler/agt-733350`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2652 (`plan_reconciler/agt-a3e83c`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Triage PR #2653 (`plan_reconciler/agt-a398c9`, opened 2026-08-09) — CLOSED, confirmed 2026-08-16.
+- [x] ✅ [REVIEW] P2. Re-ran `gh pr list --state open --search "head:plan_reconciler"` 2026-08-16 — **zero open PRs
+      remain.** Final count: 0.
 
 ## Track B — audit the other 7 scheduled jobs for the same failure class
 
@@ -158,6 +154,13 @@ reliability/escalation shape, not re-running its normal audit content.
   exact scope. Track A's 25-PR list and Track B's 7-job list both pulled live from `gh pr list` / the installer-script
   directory listing this same session, immediately before authoring.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — first audit pass on this doc.
+- **2026-08-16 (interactive session, operator directive)**: Track A's 26 todos flipped `[x]` after live verification
+  (`gh pr list --state open --search "head:plan_reconciler"` returns zero; individual spot-checks on #1998/#2327/#2522/
+  #2653 confirmed CLOSED) found all 25 PRs already terminal — this doc's own findings were STALE (the underlying work
+  had already resolved, checkboxes just never flipped), not a live remaining backlog. Track B (7 job audits + synthesis,
+  8 todos) remains genuinely open — this doc stays `active`, not archived. Discovered as part of a broader AO-corpus
+  dedup audit that also confirmed via the live agent-orchestrator backlog (`check-ao-backlog-status.sh`) that this doc
+  correctly shows zero live backlog rows (`assigned_vm: NA`, never ingested — matches its own frontmatter).
   Its own `source:` frontmatter and body state it was authored "following the operator's explicit 'human plan' ruling on
   this exact scope" — a citable dated ruling on citation alone. Independently, every open todo is genuine per-item human
   judgment (Track A: rebase-and-re-verify vs. close-as-superseded per PR, 25 individual calls; Track B: a 7-job
