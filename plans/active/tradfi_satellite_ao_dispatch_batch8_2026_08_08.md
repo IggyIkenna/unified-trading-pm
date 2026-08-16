@@ -165,18 +165,22 @@ pass (not a delta) per this dispatch's autonomous-mode instructions.
       verification run would duplicate that already-tracked one. Source:
       `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (archived).
 
-- [ ] [DATA] P3. **Investigate the pre-existing malformed `"ticks"` instrument_id surfaced by the delta_one pre-flight
-      instrument scanner during TRADFI processing.** The 2026-08-05 TRADFI delta_one re-run's pre-flight scanner picked
-      up a literal data_type name (`"ticks"`) where a real instrument_id was expected — flagged in the source doc's
-      Progress Log as "a separate, pre-existing bug... not blocking [the force+skip] proof but worth tracking as a
-      low-priority issue," never promoted to its own tracked item. Trace where this malformed id enters the scanner's
-      input (likely a bundle/shard-path parsing artifact, similar in shape to other TradFi bundle-filename leak defects
-      already fixed elsewhere in the corpus) and fix it, or if root-causing needs more than this todo's bounded scope,
-      record the specific mechanism found so a follow-up can be scoped precisely. Repo: features-service. **Done when**:
-      the malformed-id's origin is identified and documented with file:line evidence, either fixed with a regression
-      test or (if out of bounded scope) handed off as a precisely-scoped follow-up item, and the source doc's Follow-ups
-      checkbox is flipped citing the outcome. Source:
-      `features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-4, data_engineering) — already root-caused, fixed, and tested by an earlier
+      session on this same slot today; verified, not re-implemented.** Investigated the malformed `"ticks"`
+      instrument_id: root cause is every instrument in a chain-bundle candle shard (CME COMBO/futures_chain/
+      options_chain, UAC `build_tradfi_partition_path`/`build_cefi_partition_path` v6 layout) sharing the SAME literal
+      `ticks.parquet` leaf filename by design, with the real per-instrument identity in the `underlying=` path segment
+      — `LookbackValidator._list_instrument_ids_for_prefix` (now `_chain_bundle_instrument_id.py`, split out for the
+      file-size gate) took the filename stem directly, collapsing every distinct underlying to `"ticks"`. Fixed by
+      `instrument_id_from_candle_blob_name()` reconstructing `venue:instrument_type:underlying` from the path segments
+      when the leaf is the generic `ticks` placeholder
+      (`features-service/features_service/delta_one/app/core/_chain_bundle_instrument_id.py:15-46`). Evidence:
+      `features-service@6d2ad5dc89` confirmed on `origin/live-defi-rollout`
+      (`git merge-base --is-ancestor 6d2ad5dc89 HEAD` → ancestor); regression coverage
+      `TestDiscoverInstrumentsChainBundleTicksLeaf` in `tests/delta_one/unit/test_lookback_validation.py:112`. The
+      source doc's own Follow-ups checkbox was already flipped 2026-08-16 citing this exact commit — no further edit
+      needed there. Repo: features-service. Source:
+      `features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` (archived).
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 
@@ -303,6 +307,14 @@ mirroring the batch1-7 finalize pattern.
   (`unified-api-contracts@0228afe5`/`@2fbe8278`, `market-data-processing-service@2b2cc58e`, regression tests present),
   and the source issue doc already archived. Verified (did not re-implement) and flipped the checkbox citing the 3
   commits; the live-re-run verification is already tracked as its own P3 todo in `data_completion_tradfi_2026_07_15.md`
+
+- **2026-08-16 (slot-4, data_engineering)**: dispatched todo 3 (malformed `"ticks"` instrument_id investigation). Found
+  the fix already shipped on `origin/live-defi-rollout` by an earlier session on this same slot today
+  (`features-service@6d2ad5dc89`, regression test `TestDiscoverInstrumentsChainBundleTicksLeaf` present), and the
+  source doc's Follow-ups checkbox already flipped citing that commit. Verified (did not re-implement) and flipped
+  this plan's own checkbox citing the same commit + file:line evidence. All 3 batch8 todos are now `[x]` — the
+  companion `tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md` (gated on this plan via `depends_on`) owns
+  the reconciliation-then-archive step; not archiving this plan directly here.
   — not duplicated here per the conflict-check protocol. No code changes this session.
 
 ## Codex SSOTs
