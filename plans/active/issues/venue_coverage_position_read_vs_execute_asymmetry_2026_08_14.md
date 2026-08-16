@@ -26,6 +26,8 @@ related:
     /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
     /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
+    /plans/active/issues/karak_decommission_2026_08_16.md,
+    /plans/active/issues/pendle_venue_onboarding_2026_08_16.md,
   ]
 created: 2026-08-14
 resolved_by:
@@ -207,6 +209,14 @@ Rocket Pool, Solblaze, Symbiotic, Jito Restaking, Karak, Idle, WETH, Bridge, CCT
 genuinely live" measurement (the P0 todo above) described connector-internal capability, correctly, but it is not the
 same property as connector-reachability, and this session's original "✅ real" archetype-table marks for Marinade/
 Kamino/Jupiter conflated the two.
+
+> **Update 2026-08-16 — three names in that list have since diverged from "needs wiring."** **Karak**: the operator
+> decided to decommission it entirely rather than wire it — its hardcoded vault address resolves to zero deployed
+> bytecode on-chain; see `/plans/active/issues/karak_decommission_2026_08_16.md`, which supersedes this list's
+> "wire it" framing for Karak specifically. **Symbiotic**: wired into `DeFiAdapter`'s real dispatch the same day
+> (`/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md`) — no longer belongs on this "never instantiated"
+> list, kept here only as the historical baseline this audit measured. **Pendle** remains genuinely unwired and now
+> has its own dedicated doc: `/plans/active/issues/pendle_venue_onboarding_2026_08_16.md`.
 
 **Two additional, narrower gaps found by reading the archetype docs against the connector method surfaces:**
 

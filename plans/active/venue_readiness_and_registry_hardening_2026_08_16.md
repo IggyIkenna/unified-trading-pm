@@ -374,16 +374,17 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
       knowledge** — verified by doing it for one venue end to end and recording where the contract was ambiguous.
 - [ ] [AGENT] P1. **The carve-out's §A5 prerequisites are satisfied for the contracted scope** — the four CEX venues
       and Lido at `LIVE-READY`, which is the intersection of this plan and the carve-out's.
-- [ ] [AGENT] P2. **Cross-link the karak remediation-direction split + author pendle's own issue doc.**
-      `plans/active/issues/karak_decommission_2026_08_16.md` (delete: wrong contract address, a Veda/BoringVault
-      wrapper misidentified as real Karak) and `plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
-      (wire karak into `DeFiAdapter`'s real dispatch, among other simulation-only venues) give karak opposite
-      remediation directions and do not cross-reference each other — a reader of the older doc would wire up a
-      connector the newer doc says to delete. Add a pointer either direction. Separately: pendle has no dedicated
-      remediation doc — it is currently only an incidental mention inside 7 other issue docs (including both above),
-      none of which own its `test_execution_service_venue_coverage_cascade_invariant.py` reachability gap the way
-      karak/symbiotic have dedicated docs. Author one, or fold pendle's fix into whichever doc ends up owning
-      the DeFiAdapter dispatch wiring.
+- [x] [AGENT] P2. ✅ **Cross-link the karak remediation-direction split + author pendle's own issue doc.** SHIPPED —
+      `unified-trading-pm@<pending>`. Added a bidirectional pointer between `karak_decommission_2026_08_16.md`
+      (delete direction) and `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (its "20 never-
+      instantiated connectors" list, which had listed Karak as needing wiring) — each now explicitly states the
+      decommission decision supersedes the wire-it framing for Karak. Authored
+      `plans/active/issues/pendle_venue_onboarding_2026_08_16.md`: Pendle is a real registered venue (UAC
+      `venue_adapter_keys.py`/`capability_declarations/_defi.py`, YIELD class) with a working simulation-only
+      connector, zero `DeFiAdapter` dispatch wiring, zero UAC `DEFI_VENUE_TO_CONNECTOR_CLASS` entry — confirmed a
+      latent, not active, SIT-invariant gap (no strategy archetype currently declares it in `venue_universe`, so it
+      wasn't in the failing set that blocked L228). Both older docs' `related:` frontmatter updated to cross-link
+      all three.
 
 ## Progress Log
 

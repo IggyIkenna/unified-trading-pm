@@ -75,6 +75,12 @@ context_scope:
 - **Operator ruling, 2026-08-16**: decommission Karak entirely rather than rebuild — do not leave a half-correct,
   wrong-address connector in the tree (same "complete-looking uncalled/broken component" defect class this
   workspace has already spent several sessions closing, per `e2e_wiring_reachability_audit_2026_08_15.md`).
+- **Cross-doc conflict, resolved 2026-08-16 (this note)**:
+  `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (authored 2026-08-14, two
+  days before this decision) lists Karak among the 20 protocol connectors it says need wiring into real dispatch
+  (its "never instantiated anywhere" list). That direction is SUPERSEDED by this doc for Karak specifically — do
+  not wire Karak per that doc's framing; delete it per this doc instead. That doc now carries a pointer back here so
+  a reader hitting Karak in its list does not wire up a connector this doc says to remove.
 
 ## Scope — every reference found (full-workspace grep, 2026-08-16)
 
