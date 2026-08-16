@@ -50,7 +50,7 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/04-architecture/cross-venue-prediction-arb-detection.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,

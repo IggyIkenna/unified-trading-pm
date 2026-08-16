@@ -18,7 +18,7 @@ summary: >-
   domain judgment (which closeout family a doc belongs in, GRAPH-hop vs BODY-TEXT-mention semantics per
   `check_ag_closeout_linkage.py`'s own docstring) squarely in `/ag-closeout-audit`'s scope, not a mechanical
   CI-pipeline fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta, sports]
 stage: [meta]
@@ -39,7 +39,7 @@ parent_epic: infrastructure_master
 priority: P2
 source: ci-reconcile skill, scheduled hourly ci_reconciler dispatch agt-14e777 (slot 15)
 assigned_vm: NA
-resolved_by:
+resolved_by: cicd escalation agent (slot 3, agt-8b735e), 2026-08-16
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
@@ -47,6 +47,10 @@ depends_on: []
 ---
 
 # ag-closeout-linkage ratchet blocks unified-trading-pm promotion — 1 sports doc needs closeout-family linkage
+
+> **ARCHIVED**: resolved by unified-trading-pm (cicd escalation agent, slot 3, agt-8b735e, 2026-08-16) — added a
+> `related:` edge from `sportradar_credential_ask_2026_08_09.md` to `sports_consolidated_closeout_2026_07_19.md`.
+> Successor: none (self-contained fix).
 
 ## Evidence (2026-08-16, ~04:53-05:10Z)
 
@@ -102,3 +106,12 @@ docs) to properly classify and link this doc into its correct closeout family, t
   sibling `check_reference_paths` ratchet in the same sweep (`unified-trading-pm@17a902f456`); this ratchet (now down
   to 1 orphan after 2 self-resolved via concurrent archival) and the already-tracked `check_archive_candidates` one
   are the remaining blockers on unified-trading-pm's promote gate.
+- 2026-08-16 (cicd escalation agent, slot 3, agt-8b735e, dispatched on `ldr_qg_failure` for this same gate):
+  RESOLVED — the "which closeout family" judgment this doc reserved for `/ag-closeout-audit` turns out to be
+  unambiguous here: `sportradar_credential_ask_2026_08_09.md`'s `asset_group` is a single value (`[sports]`,
+  already corrected from `[cross-cutting]` on 2026-08-10) and exactly one sports closeout family exists
+  (`sports_consolidated_closeout_2026_07_19.md` + its archived companions) — no candidate-selection judgment
+  remained, only whether to add the GRAPH-edge signal, which is always a safe, additive, non-destructive fix. Added
+  `/plans/active/sports_consolidated_closeout_2026_07_19.md` to that doc's `related:` list
+  (`unified-trading-pm`, this commit). Verified locally: `check_ag_closeout_linkage.py` now reports 0 orphans
+  (baseline 0). Archiving this doc in the same commit (no open todos, no referrers found corpus-wide).

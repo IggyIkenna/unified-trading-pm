@@ -25,6 +25,7 @@ scope: [engineer, admin]
 tags: [credential-ask, sportradar, sports, blocked-credentials, external-data-always-available]
 related:
   [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/02-data/external-data-always-available-rule.md,
@@ -119,3 +120,8 @@ already-credentialed Odds-API/footystats path). Once provisioned:
   (`market-tick-data-service@<see plan-flip commit>`) closing the "unit tests for the adapter now" half of the Step-4
   requirement — previously this adapter's ONLY test coverage was credential-gated and never ran.
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
+- 2026-08-16 (cicd escalation agent, slot 3, agt-8b735e): `check_ag_closeout_linkage.py` flagged this doc as an
+  orphan (`asset_group=[sports]`, no path to its closeout family) — blocking `unified-trading-pm`'s
+  `live-defi-rollout` gate (see `plans/archive/2026_08/issues/ag_closeout_linkage_ratchet_blocks_pm_promote_2026_08_16.md`).
+  Added `/plans/active/sports_consolidated_closeout_2026_07_19.md` to `related:` above — the single unambiguous
+  sports closeout family for this doc's `asset_group`. No content change.
