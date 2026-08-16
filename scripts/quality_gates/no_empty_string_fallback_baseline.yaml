@@ -18,13 +18,14 @@
 #
 # SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
 # plans/active/issues/instruments_service_empty_string_fallback_baseline_breach_2026_07_14.md.
-note: Seeded 2026-07-08 — mtds_empty_string_fallback_codex_gate_blocking_pushes fleet audit (QG STEP 5.101).
+note: Seeded 2026-07-08 — mtds_empty_string_fallback_codex_gate_blocking_pushes fleet
+  audit (QG STEP 5.101).
 repos:
   .:
     count: 2367
   agent-orchestrator:
-    commit: 9a68cd290dd1bdc70516702637ebb9d19395ce3f
-    count: 25
+    commit: 1af50054cf99b24cb9339b352a75092ce6a06797
+    count: 21
   alerting-service:
     count: 0
   batch-live-reconciliation-service:
