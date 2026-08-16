@@ -156,8 +156,21 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
 | 15  | **Trigger frequency**    | Strategy-service tick cadence and MDPS derivation cadence are consistent with the declared granularity — nothing triggers faster than its data. |
 | 16  | **Matching class**       | The achievable fidelity tier, declared. Execution REFUSES a richer tier rather than approximating one.                                          |
 
-- [ ] [AGENT] P0. **Gate the normalisation rule.** Add a check that fails if strategy-service imports
-      market-tick-data-service. It holds today by convention only; the gate makes it durable and costs almost nothing.
+- [x] [AGENT] P0. ✅ Done 2026-08-16 — unified-trading-pm@\<pending-sha\>. **Gate the normalisation rule.** Add a
+      check that fails if strategy-service imports market-tick-data-service. It holds today by convention only; the
+      gate makes it durable and costs almost nothing. Implementation: `scripts/validation/check-no-service-deps.py`
+      already ran a fleet-wide raw-cross-service-import scan (WARN-only, ~39 pre-existing tracked violations across
+      other pairs, per the utl_reuse_phase9 note in that file) — hard-failing it fleet-wide would have broken those
+      repos' gates. Added a narrow `_HARD_FAILED_PAIRS` set containing exactly
+      `("strategy-service", "market-tick-data-service")`; every other pair stays WARN-only, unaffected. Verified
+      2026-08-16 the pair had zero pre-existing hits (confirmed above at line 133), so hard-failing carries no
+      baseline-remediation cost. `base-service.sh` wires this script into every service's `quality-gates.sh`
+      automatically (QG-INFRA carve-out path), so strategy-service picks it up with no per-repo change. Added 2 unit
+      tests (`tests/unit/test_check_no_service_deps.py::TestMainHardFailedNormalisationRule`) confirming (a)
+      strategy-service importing MTDS hard-fails with `[FAIL]` + "normalisation rule" in the message, and (b) an
+      unrelated pair (features-service importing MTDS) stays `[WARN]`-only. Full suite 31/31 passed
+      (`.venv/bin/python3 -m pytest tests/unit/test_check_no_service_deps.py -q`); full `quality-gates.sh --no-fix`
+      exit 0.
 - [ ] [OPERATOR] P0. **Where does the granularity declaration live?** Keyed per (venue x instrument-type x data-type),
       must express exceptions at that granularity, read by both MDPS and execution-service. Most likely an extension of
       the UAC venue capability record rather than a new registry — but that is a shape call, and it should be made

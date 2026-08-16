@@ -145,6 +145,17 @@ _EXCLUDED_DIR_NAMES: frozenset[str] = frozenset(
     {".venv", "venv", "node_modules", "build", "dist", "__pycache__", ".git"}
 )
 
+# (current, other_repo) pairs whose raw cross-service import is HARD-FAILED rather than
+# WARN-only, unlike the general fleet scan below. strategy-service -> market-tick-data-service
+# is the "normalisation rule" (2026-08-16 operator ruling,
+# /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md): strategy-service must
+# read market data only through features-service / market-data-processing-service, so it always
+# receives a normalised candle-like shape — never MTDS directly. Verified 2026-08-16: zero
+# pre-existing hits for this pair, so hard-failing it carries no baseline-remediation cost
+# (unlike the general raw-import scan, which stays WARN-only pending the ~39-violation
+# fleet-wide remediation pass tracked separately).
+_HARD_FAILED_PAIRS: frozenset[tuple[str, str]] = frozenset({("strategy-service", "market-tick-data-service")})
+
 
 def _service_package_name(repo_name: str) -> str:
     """Map a dash-cased repo name (manifest key) to its importable python package name."""
@@ -233,12 +244,21 @@ def main() -> int:
     # own) and is tracked as a follow-up, not silently skipped.
     other_service_packages = {_service_package_name(name): name for name in service_repos if name != current}
     for file, lineno, other_repo in sorted(find_raw_service_imports(project_root, other_service_packages)):
-        print(
-            f"[WARN] Service '{current}' raw-imports service '{other_repo}':"
-            f" {file}:{lineno}. If new, use messaging per runtime topology (runtime-topology.yaml)"
-            " instead — if intentional/tracked debt, this is informational only for now.",
-            file=sys.stderr,
-        )
+        if (current, other_repo) in _HARD_FAILED_PAIRS:
+            print(
+                f"[FAIL] Service '{current}' must not import service '{other_repo}' directly"
+                f" (normalisation rule): {file}:{lineno}. Read market data through"
+                " features-service or market-data-processing-service instead.",
+                file=sys.stderr,
+            )
+            violations_found = True
+        else:
+            print(
+                f"[WARN] Service '{current}' raw-imports service '{other_repo}':"
+                f" {file}:{lineno}. If new, use messaging per runtime topology (runtime-topology.yaml)"
+                " instead — if intentional/tracked debt, this is informational only for now.",
+                file=sys.stderr,
+            )
 
     return 1 if violations_found else 0
 
