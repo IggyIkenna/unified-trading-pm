@@ -302,6 +302,29 @@ days.
       one of these symbol/dates to verify the hypothesis, (2) if confirmed, either a targeted content-fix (same
       methodology as Finding 1a) or accept as honest historical absence. Very small blast radius (16 occurrences vs the
       thousands-of-shards P0 findings above) — does not block calling Findings 1/2/3 verified.
+      **VERIFICATION 2026-08-16 — hypothesis REFUTED, root cause redirected.** Read the actual raw GCS objects
+      (`market-data-tick-cefi-prd-central-element-323112`, `resolve`d via `get_write_bucket_name`/`get_storage_client`
+      per the UTL helper, never inline `gs://`) with pandas for all 8 affected symbols on `2021-02-01`, plus BTC/AVAX
+      on the window boundary dates (`2021-01-31`, `2021-02-08`) and two control dates well outside the window
+      (`2021-01-15`, `2021-02-15`). Direct evidence against both halves of the hypothesis:
+      (1) **no bundling** — every raw `data_type=liquidations` object for `venue=BINANCE-FUTURES` is already
+      single-instrument (e.g. `.../instrument_type=perpetual/data_type=liquidations/BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN.parquet`,
+      `symbol` column uniformly `BTCUSDT`/`AVAXUSDT`/etc., one value only, for every file checked in and out of the
+      window);
+      (2) **no `instrument_type` column exists in the raw parquet at all** — columns are exactly
+      `[exchange, symbol, timestamp, local_timestamp, id, side, price, amount, data_type, instrument_id]` for every
+      symbol/date sampled, identically inside and outside the affected window, so there is no raw column that could be
+      "malformed" in the first place — this is the universal raw schema for this `data_type`, not a 9-day anomaly.
+      `instrument_id` was consistently well-formed (`BINANCE-FUTURES:PERPETUAL:{SYM}-USDT@LIN`) everywhere sampled too.
+      **Conclusion**: the raw source file is clean; whatever value MDPS's `SchemaContract` lookup used as
+      `instrument_type='<SYMBOL>'` was NOT read from the raw file — it must be derived downstream, inside MDPS's own
+      candle-derivation code (most likely a parse of `instrument_id`/`symbol` at read time), and that derivation is
+      going wrong for these 16 occurrences specifically. This directly contradicts the doc's own earlier assumption
+      ("not an MDPS code bug") — it now looks like it likely IS one, just not yet located. **Leaving this todo OPEN**
+      (not accepting as historical-raw-data absence per the doc's own stated fallback option, since the evidence rules
+      that option out) pending a follow-up to locate the actual MDPS-side `instrument_type`-derivation bug for this
+      narrow symbol/date set. Investigation scripts were scratch-only (not committed; read-only, no GCS objects
+      modified).
 - [ ] [SCRIPT] P3. NEW 2026-08-16: `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
       "adapter density bug" NaN-in-`open`/`close` warning on EVERY liquidations shard with any zero-liquidation window
       — 659,791 occurrences and counting in this campaign's log alone. Confirmed FALSE POSITIVE, not a real bug (see
