@@ -153,7 +153,7 @@ drift_direction: advance-code
       slot 25 ran the full-corpus enumeration across every adapter in both repos and shipped the highest-confidence
       fixes (2 CRITICAL RPC-error-swallow bugs, a Lighter pagination defect, 5 mechanical Graph skip-cursor additions, 3
       cap-exhaustion-warning additions), filing the remainder as tracked todos in
-      `/plans/active/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md`; slot 32 shipped that issue doc's
+      `/plans/archive/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md`; slot 32 shipped that issue doc's
       item 1 (Polymarket top-2000-by-volume cap, `instruments-service@57c71bd4f`). This session independently re-audited
       (converging on the same candidate set) and shipped that issue doc's item 2 (Betfair `listMarketCatalogue` top-1000
       cap, `instruments-service@b8668094` — event-type-scoped pagination via live `listEventTypes` enumeration +
@@ -673,7 +673,7 @@ drift_direction: advance-code
   unflipped until BOTH repos ship, per this batch's own done_definition. Next: once QG passes, `quickmerge`
   deployment-api, verify ancestry, flip this item's checkbox with both SHAs, `/done`.
 - **2026-08-09 (silent-cap audit item, slot 33)**: picked up the same P0 todo already independently worked by slots 25
-  (full audit + fix pass, filed `/plans/active/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md`) and 32
+  (full audit + fix pass, filed `/plans/archive/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md`) and 32
   (shipped that issue doc's Polymarket item mid-session — hit a `git pull --rebase --autostash` conflict on
   `adapter.py`/`markets.py` when fast-forwarding; reconciled by adopting slot 32's version (superior: 10000-page safety
   ceiling + a `>2000-market` regression test vs. my smaller/less-tested version) rather than duplicating. Independently
