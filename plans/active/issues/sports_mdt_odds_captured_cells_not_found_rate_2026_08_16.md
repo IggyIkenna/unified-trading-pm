@@ -58,6 +58,16 @@ depends_on: []
 
 # Sports MDT odds "captured" manifest cells — 93.15% sample not_found rate at canonical path
 
+> **⚠️ CORRECTION (2026-08-16, slot-4, todo 1 resolution).** The randomized re-measurement todo 1 asked for CONFIRMED
+> the not_found rate is population-representative (87.8%, not a sampling artifact) but DISCONFIRMED the premise
+> linking it to the "51→384" league_id growth: `batch_odds_api`'s own distinct `league_id` count is FLAT at 40 across
+> both the 2025 H1 and 2026 H1 windows (0 new). The league_id growth is a DIFFERENT manifest entirely (the
+> instruments-service reference-data catalogue, already closed GENUINE_EXPANSION 2026-08-05,
+> `instruments-service@7fc96c90`) — not this MTDS tick-data manifest. The REAL root cause: 86.4% of this manifest's
+> captured population carries `data_type=odds_horizon_bucket`, a data_type with no raw vendor source by design, whose
+> manifest rows have no backing parquet by construction — an ACTIVE writer bug (still writing as of 2026-08-15), not a
+> seeding artifact. Full detail in todo 1 below and the Progress Log.
+
 ## What I found
 
 Working `sports_satellite_ao_dispatch_batch9-010`'s explicit instruction ("regenerate the current undecidable-cell set
@@ -170,6 +180,75 @@ itself (why so many new league_id rows exist).
       twin. Source: this doc's now-resolved P1 todos above. Done when: operator sign-off is recorded, the dry-run
       count + snapshot exist, the apply run completes with 0 errors, and a re-measurement confirms the not_found rate
       has dropped substantially (or the residual is explained).
+**Update 2026-08-16 (todo 1 resolution)**: the link to the league_id-growth todo assumed above did NOT hold — see the
+correction banner at the top of this doc. The not_found population's root cause IS now identified
+(`data_type=odds_horizon_bucket` mislabeling, an active writer bug), and the remediation path is the 3 todos added
+below (stop the writer, relabel the existing population, investigate the coincident `odds` capture stall).
+
+- [x] ✅ [DIAG] P1. **DONE 2026-08-16 (slot-4).** Re-ran as a genuine randomized sample: `df.sample(n=50000,
+      random_state=20260816)` over the full captured `batch_odds_api` population (4,281,228 cells; single bounded
+      `read_availability_index_safe` read filtered to `pipeline_mode=batch_odds_api, capture_status=captured` at the
+      parquet level, no new GCS walk). **Confirmed population-representative: 43,900/50,000 (87.8%) not_found** —
+      close to (slightly below) the original biased 93.15% estimate, so the finding was real, not a sampling artifact.
+      **Pre-growth/post-growth split as originally framed does NOT apply to this manifest**: distinct `league_id`
+      count in `batch_odds_api` is FLAT at 40 in both the 2025-01-01..2025-06-30 and 2026-01-01..2026-06-30 windows (0
+      new league_ids). The "51→384" growth this todo assumed drives the not_found rate lives in a DIFFERENT
+      manifest/bucket (`instruments-store-sports-prd-*`, the instruments-service reference-data catalogue's ODDS
+      entity — already closed GENUINE_EXPANSION, high confidence, `instruments-service@7fc96c90`), not this MTDS
+      tick-data manifest.
+      **Root cause identified instead** (via a targeted GCS prefix spot-check, not a new corpus walk): 3,700,051 of
+      4,281,228 captured cells (86.4%) carry `data_type=odds_horizon_bucket` — a data_type with NO registered raw
+      vendor source (UAC `SOURCE_PRIORITY[('sports','ODDS_HORIZON_BUCKET')]` names only the MDPS-derived source; see
+      the already-open `pipeline_e2e_check.py` enumeration todo in `sports_satellite_ao_dispatch_batch9_2026_08_04.md`
+      — that todo is about a diagnostic script's enumeration; THIS finding is that the production writer itself is
+      still emitting the bad rows). Spot-checking 5 `odds_horizon_bucket` not_found cells against their exact GCS
+      prefix confirmed the real objects at that (date, venue, league_id) location exist under
+      `data_type=odds`/`data_type=trades`, never `data_type=odds_horizon_bucket` — the one sampled cell with
+      `data_type=odds` resolved cleanly (`found=True`). 86.4% ≈ the measured 87.8% not_found rate — this single
+      mislabeling explains essentially the entire phenomenon. The `odds_horizon_bucket` rows span 2020-06-06 through
+      **2026-08-15 (yesterday)** — an ACTIVE, ONGOING writer bug, not a one-time historical artifact.
+      **Second, separate observation**: real `data_type=odds` captures stop at **2026-07-26** (527,541 rows total,
+      same date as this doc's original "3 weeks prior" baseline) — genuine raw odds capture may have gone silent
+      exactly when `odds_horizon_bucket` volume started exploding. Filed as its own todo below, not yet root-caused.
+      **Verdict: NOT a league_id-seeding artifact.** The not_found rate is a `data_type` mis-write (an honest-absence
+      Class 2/3-shaped violation per `honest-absence-downstream-handling.md` — `capture_status=captured` recorded for
+      a data_type that structurally cannot have a backing raw parquet under this pipeline_mode), unrelated to the
+      catalogue-side league_id count growth. Evidence: `market-tick-data-service@2dec315fd0`
+      (`scripts/measure_odds_api_not_found_rate_randomized_2026_08_16.py`); full spot-check transcript in this
+      session's Progress Log entry below. Source: this doc + `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s
+      league_id-growth todo (now known to be unrelated to this finding).
+- [ ] [CODE] P0. **ACTIVE BUG — stop the writer.** Find and fix the `market-tick-data-service` call site(s) writing
+      manifest rows with `pipeline_mode=batch_odds_api`, `data_type=odds_horizon_bucket`, `capture_status=captured` —
+      per UAC `SOURCE_PRIORITY[('sports','ODDS_HORIZON_BUCKET')]` this data_type has no raw vendor source at all
+      (it's MDPS-derived, belongs under a different pipeline_mode), so no code path should ever call
+      `record_captured` for it here. Confirmed still writing as of 2026-08-15 (yesterday) — every day this ships,
+      more phantom `captured` rows land. Cross-check whether this is the SAME call site the already-open
+      `pipeline_e2e_check.py` enumeration todo (`sports_satellite_ao_dispatch_batch9_2026_08_04.md`, sourced from
+      `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`) already names, or a distinct production write path
+      feeding it. Source: this doc's todo 1 finding (2026-08-16). Done when: the writer no longer emits
+      `capture_status=captured` for `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket)`, a regression test
+      covers it, and a fresh manifest read after the fix ships shows zero NEW rows in that combination past the fix's
+      deploy timestamp.
+- [ ] [DATA] P1. Once the writer-fix todo above ships, propose (do not execute without operator sign-off — this is a
+      manifest-row-level correctness fix touching ~3.7M existing rows) a scoped relabel plan for the EXISTING
+      `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` population: determine
+      the correct `capture_status` (likely `attempted_failed` or a dedicated reclassification, per
+      `honest-absence-downstream-handling.md` — NOT a blind bulk relabel; some rows may coincide with a real object
+      once the `fixture_id`-scoped path variant is checked too, per the spot-check's PINNACLE/WILLIAMHILL 2026 rows),
+      analogous to prior manifest-row correction precedents (e.g.
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL from the canonical"). Source:
+      this doc's todo 1 finding (2026-08-16).
+      Done when: a concrete, reviewed relabel plan exists covering the ~3.7M-row population, or a sampled re-check
+      confirms the population is NOT uniformly a false-status case and the plan is scoped to the actual affected
+      subset.
+- [ ] [DIAG] P2. Investigate whether real sports `odds` data_type capture (`pipeline_mode=batch_odds_api,
+      data_type=odds`) went silent starting 2026-07-26 — the last `date` value across all 527,541 `data_type=odds`
+      captured cells is 2026-07-26, with zero rows since, exactly coinciding with when this doc's original 15.4x
+      row-count-growth baseline was measured. Determine whether this is a genuine capture outage (needs a live-service
+      check + relaunch) or an expected data-source change (e.g. all odds now routed through a differently-named
+      data_type). Source: this doc's todo 1 finding (2026-08-16). Done when: a written verdict states whether real
+      odds capture is currently live or stalled, with evidence (a live service log/health check or a fresh manifest
+      read showing post-2026-07-26 `data_type=odds` rows), and if stalled, a follow-up todo is filed to restore it.
 
 ## Progress Log
 
@@ -189,3 +268,21 @@ these are stale duplicate manifest rows left over from the rekey, not lost data.
 `attempted_failed` relabel to a row-REMOVAL plan (the twin already carries the real data). New `[OPERATOR]` execution
 todo filed, gated on sign-off. Script:
 `market-tick-data-service/scripts/measure_odds_not_found_rate_randomized_2026_08_16.py` (read-only, safe to re-run).
+**2026-08-16 (slot-4, review-role worker, todo 1)** — closed todo 1. Wrote
+`market-tick-data-service/scripts/measure_odds_api_not_found_rate_randomized_2026_08_16.py`
+(`market-tick-data-service@2dec315fd0`), a genuine `df.sample(n=50000, random_state=20260816)` over the full captured
+`batch_odds_api` population (4,281,228 cells as of this run, up from 4,240,790 two days ago), read via
+`read_availability_index_safe` with a parquet-level `(pipeline_mode, capture_status)` filter — single bounded read, no
+new GCS walk. Result: 43,900/50,000 (87.8%) not_found, confirming the finding is population-representative.
+Pre/post-growth cross-tab as originally framed came back N/A: `batch_odds_api`'s distinct `league_id` count is flat at
+40 across both H1-2025 and H1-2026 (0 new) — the league_id growth this todo assumed drives the not_found rate lives in
+a completely different bucket/manifest (`instruments-store-sports-prd-*`, already closed GENUINE_EXPANSION
+2026-08-05). Root-caused instead via a targeted 5-cell GCS prefix listing (not a corpus walk):
+`data_type("odds_horizon_bucket")` — 3,700,051/4,281,228 (86.4%) of the population — has no raw vendor source (UAC
+`SOURCE_PRIORITY` names only the MDPS-derived source) and no backing parquet was ever written for it under
+`pipeline_mode=batch_odds_api`; the real objects at the same (date, venue, league_id) prefix sit under
+`data_type=odds`/`data_type=trades`. Rows span through 2026-08-15 (yesterday) — an active, ongoing writer bug. Also
+noticed real `data_type=odds` captures stop dead at 2026-07-26 (527,541 rows, zero since) — filed as a separate P2
+diag todo, not yet explained. Replaced todo 2 (which was gated on the disproven league_id-growth link) with 3 new
+todos: [CODE] P0 stop-the-writer, [DATA] P1 relabel-the-existing-population, [DIAG] P2 the odds-capture-stall
+question. Verdict recorded: NOT a league_id-seeding artifact.

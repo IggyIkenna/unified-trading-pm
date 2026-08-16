@@ -440,21 +440,21 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done
       when: for each of cefi/defi/tradfi/prediction, the per-data_type cell-seeding ratio + the zero-vs-nonzero split is
       measured and reported, with no manifest writes.
-- [x] ✅ [DIAG] P3. **DONE 2026-08-16 (slot-9, `data_engineering`) — ODDS verdict reached: seeding artifact, since
-      largely self-corrected.** Randomized measurement (`market-tick-data-service/scripts/
-      measure_odds_not_found_rate_randomized_2026_08_16.py`) found current distinct ODDS league_id count is only
-      **68** (down from the 384 peak measured 2026-07-27) — the `canonicalize_sports_league_id_schema_2026_06_24.py
-      --drop-out-of-universe --apply` re-key run (2026-08-04, already landed elsewhere in this plan) has already
-      consolidated the league_id space back down close to the 51 H1-2025 baseline, confirming the 51→384 growth WAS
-      predominantly duplicate/near-duplicate league_id seeding, not genuine coverage expansion — now substantially
-      remediated. A bounded twin-check additionally found 98.67% of the not_found `captured` cells this growth left
-      behind have a `captured` twin under the canonical league_id for the same (date, venue, data_type) — i.e. the
-      real data was correctly re-captured; only stale duplicate manifest rows remain, now proposed for removal (see
-      `/plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md`, both P1 todos flipped, new
-      `[OPERATOR]` execution todo filed there). FIXTURES/FIXTURES_OUTCOMES verdicts NOT independently re-measured in
-      this pass (out of this todo's ODDS-triggering scope) — if the same rekey mechanism applies to their
-      88→924/88→926 growth, that is unverified and would need its own read-only manifest check before assuming the
-      same self-correction holds.
+- [x] ✅ [DIAG] P3. **DONE 2026-08-16 (slot-9) — SUPERSEDED, see slot-4 correction below**: seeding-artifact
+      theory. Corrected: `batch_odds_api` not_found is unrelated to league_id growth — see entry below.
+- [x] ✅ [DIAG] P3. **DONE-ELSEWHERE, pre-dates this batch9 dispatch (2026-08-05, `instruments-service@7fc96c90`).**
+      `scripts/sports_league_id_growth_investigation_2026_08_05.py` (confirmed still valid 2026-08-16, slot-4) already
+      ran the full analysis. **Verdict: GENUINE COVERAGE EXPANSION, not an artifact**, for all 3 data_types — corrected
+      distinct-league_id growth (original 88→924 figures were manifest ROW COUNTS, not distinct league_ids): FIXTURES
+      88→438 (4.98x), FIXTURES_OUTCOMES 88→439 (4.99x), ODDS 50→383 (7.66x); consistent with control data_types; 70%+
+      of new leagues have actual captured data. No new work needed.
+      **Correction (2026-08-16, slot-4)**: the "Supporting evidence added 2026-08-16 (slot-30)" note below is WRONG —
+      the 93.15%/87.8% `batch_odds_api` not_found rate is unrelated to this league_id growth (a randomized
+      re-measurement found `batch_odds_api`'s own league_id count is FLAT at 40, 0 new). Real root cause:
+      `data_type=odds_horizon_bucket` (86.4% of the captured population) has no raw vendor source — an active writer
+      bug. Full detail:
+      `/plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` (correction banner + todo 1).
+      Source: `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`.
 - [x] ✅ [SCRIPT] P1. Extend UAC `EXPECTED_BOOKMAKER_MARKET_SETS` / `LEAGUE_ID_TO_TIER`
       (`unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py`) to cover the 28 currently-unmapped
       league_ids — unified-api-contracts@6d72669b. All 28 league_ids mapped: 6 to tier_1_domestic (ALLSVENSKAN,
