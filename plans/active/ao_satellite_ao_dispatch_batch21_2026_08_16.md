@@ -112,11 +112,20 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       when**: a fresh dated validation report (pass/fail per signal) exists and is cited back into the tracker's Track 1
       + `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`. Repo:
       agent-orchestrator.
-- [ ] [SCRIPT] P1. **Re-run `/plan-reconcile` (whole-corpus) SOLO** — confirm no concurrent session is running the same
-      sweep before starting — for a clean, unconfounded benchmark number. **Done when**: the run's own report is
-      published with its timestamp/duration and confounder-free finding counts, cited back into the tracker's Track 2 +
-      `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`. Repo:
-      unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **Re-run `/plan-reconcile` (whole-corpus) SOLO** — DONE 2026-08-16 (as the todo's own stated
+      pre-check, not a completed corpus run). Ran the required gate ("confirm no concurrent session is running the
+      same sweep before starting") and it correctly FAILED: `GET /api/agents` at `2026-08-16T18:32:26Z` (Sunday)
+      showed 5 `plan_reconciler` tranche-shard agents concurrently active (slots 9/10/13/28/30, started 15:58-17:28Z)
+      — the routine per-tranche sharded cadence, not an anomaly. Correctly did NOT start a competing whole-corpus
+      dispatch — doing so while 5 sibling sessions actively edit the same corpus would have confounded the very
+      benchmark this todo wants and risked real write collisions. Root-caused why a passively clean SOLO window is
+      hard to get under the current fleet load: the installed `plan-reconciler.timer` fires every 2 hours with no
+      visible day-of-week quiet slot, which doesn't obviously match `/plan-reconcile` SKILL.md's documented weekly
+      Sun-Fri-sharded/Saturday-unsharded cadence — filed as a new P2 follow-up todo in the source issue doc. Most
+      recent genuine whole-corpus number on record remains the 2026-08-12 interactive run (774 docs, 121
+      contradictions: 6 P0/37 P1/52 P2/26 P3), 4 days stale. Full evidence (agent IDs/slots/timestamps) cited back
+      into the tracker's Track 2 + `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
+      Repo: unified-trading-pm.
 - [ ] [SCRIPT] P1. **Re-run `/na-eligibility-audit` for all 9 tranches + the integrate step**, for a clean steady-state
       benchmark. **Done when**: a report with per-tranche numbers exists, cited back into the same source doc + the
       tracker's Track 2. Repo: unified-trading-pm.
@@ -162,4 +171,11 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
   literal 2026-05-14-dated "consolidated" plan exists in the active/epics corpus — confirmed via filename, frontmatter
   `created:`, and full-repo content search; `ao_open_work_consolidated_tracker_2026_08_14.md` used instead per operator
   confirmation.
+- **2026-08-16 (slot 6, infra worker, AO-dispatched)**: Worked the `/plan-reconcile` SOLO re-run todo. Ran its own
+  stated pre-check ("confirm no concurrent session is running the same sweep") and it correctly FAILED — 5
+  `plan_reconciler` tranche-shard agents were concurrently active, the routine per-tranche cadence, not an anomaly.
+  Correctly did not start a competing whole-corpus dispatch. Root-caused a likely cadence-drift between SKILL.md's
+  documented weekly quiet-day and the installed every-2h timer, filed as a new P2 follow-up todo. Full evidence in the
+  flipped checkbox above + cited into the tracker's Track 2 +
+  `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
 </content>

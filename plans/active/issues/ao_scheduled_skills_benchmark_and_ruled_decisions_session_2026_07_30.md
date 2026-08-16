@@ -234,6 +234,39 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       satellite-batch session, giving genuine SOLO isolation this ad hoc approach could only partially achieve. This
       todo's own bar (measure the skill's real unconfounded per-unit cost, not confound overhead) is met by the numbers
       above; closing DONE rather than leaving open pending a disproportionate full run.
+- **2026-08-16 follow-up (batch21 satellite todo re-ask, `ao_satellite_ao_dispatch_batch21_2026_08_16.md`) — SOLO
+  pre-check correctly FAILED; no run started, none should have been.** This re-ask's own new gate ("confirm no
+  concurrent session is running the same sweep before starting") was run for real: `GET /api/agents` at
+  `2026-08-16T18:32:26Z` (Sunday) showed **5 `plan_reconciler` agents concurrently active** — `agt-23fdbb`/slot-30
+  (started 16:02Z), `agt-2be768`/slot-10 (17:22Z), `agt-3eb42b`/slot-28 (15:58Z), `agt-4f7ad9`/slot-9 (17:21Z),
+  `agt-f37a0c`/slot-13 (17:28Z) — corroborated by today's own commit log carrying `docs(plans):` reconciliation
+  messages for the defi/sports/cross-cutting/ui/ci/prediction/cefi/tradfi/ao tranches, i.e. this is the routine
+  per-tranche sharded cadence, not a one-off anomaly. **Root cause of why a passively clean SOLO window is hard to
+  get**: the installed `plan-reconciler.timer` (`agent-orchestrator/scripts/install-plan-reconciler-timer.sh`) fires
+  `OnCalendar=*-*-* 0/2:${FIRE_MINUTE}:00 UTC` — every 2 hours, every day, with no dedicated unsharded/quiet slot
+  visible in the installed OnCalendar spec itself. This doesn't obviously match `/plan-reconcile` SKILL.md's own
+  documented weekly cadence ("Sun-Fri: one sharded dispatch per tranche per day... Saturday: ONE unsharded `all` run,
+  per-tranche shards do NOT fire that day") — unverified this pass whether that day-of-week branch actually lives
+  inside the dispatched job's own logic (plausible) or was never wired into the installed timer (also plausible); see
+  the new follow-up todo below. **Correctly did NOT start a competing whole-corpus dispatch** — doing so while 5
+  sibling sessions actively edit the same corpus would itself confound the very benchmark this todo wants, and risks
+  real write collisions on shared docs (exactly the hazard the "SOLO" requirement exists to avoid). **Most recent real
+  whole-corpus number on record** (not fresh, but the most recent genuine `all`-mode pass):
+  `plan_reconciler_findings_all_2026_08_12.md` — 2026-08-12 interactive/operator-directed run, 774 docs (278 active
+  plans + 468 issues + 28 epics), 46 size-balanced hunter batches, 121 contradictions (6 P0/37 P1/52 P2/26 P3), 18
+  done-but-unchecked, 25 zero-checkbox, 56 AO-readiness, 16 codex-drift findings — 4 days stale as of this check, and
+  that doc is itself still being actively re-verified piecemeal by today's sharded runs (multiple "verified
+  2026-08-16" entries already present in it as of this check).
+- [ ] [SCRIPT] P2. **New finding 2026-08-16 (from the batch21 plan-reconcile re-ask above)**: verify whether
+      `/plan-reconcile` SKILL.md's documented weekly Sun-Fri-sharded/Saturday-unsharded cadence is actually
+      implemented anywhere (the dispatched job logic, not the timer unit) — the installed
+      `agent-orchestrator/scripts/install-plan-reconciler-timer.sh` OnCalendar spec (`*-*-* 0/2:${FIRE_MINUTE}:00
+      UTC`) fires every 2 hours with no visible day-of-week gate at the timer level, so either (a) the day-of-week
+      branch lives in the dispatched job and just wasn't inspected this pass, or (b) the documented weekly quiet-day
+      design was never wired into the installed job and every 2-hourly fire is sharded, meaning a genuinely clean SOLO
+      whole-corpus run can currently only happen via a manual operator-paused window. **Done when**: the actual branch
+      is located (or confirmed absent) and, if absent, either implemented or SKILL.md corrected to match reality.
+      Repo: agent-orchestrator (timer/dispatch logic) or unified-trading-pm (SKILL.md, if it's the doc that's stale).
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean STEADY-STATE benchmark —
       today's run was a cold start (0 of any tranche's docs carried a prior verdict marker), so the ~13-27min/tranche
       numbers are a ceiling, not steady-state. Should be dramatically cheaper now that markers exist from today's run.

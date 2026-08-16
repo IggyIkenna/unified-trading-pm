@@ -261,7 +261,13 @@ context_scope:
       linger enabled for ubuntu, live `systemd --user` instance running (PID 1111), and actively firing — confirmed real
       log output from `CIReconcileLoop`/`AutoParkReconciler`/`BlockedQueueReconciler` started 2026-08-15 09:08:32.
       Source: same doc.
-- [ ] [SCRIPT] P1. Re-run `/plan-reconcile` (whole-corpus) SOLO for a clean, unconfounded benchmark number. Source:
+- [x] [SCRIPT] P1. **ATTEMPTED 2026-08-16 (batch21 satellite todo) — SOLO pre-check correctly FAILED, no run
+      started.** 5 concurrent `plan_reconciler` tranche-shard agents were active at check time (18:32:26Z Sunday) —
+      confirmed the routine per-tranche cadence, not an anomaly; starting a competing whole-corpus dispatch would have
+      confounded the benchmark and risked corpus write-collisions, so none was started. Root cause + full evidence + a
+      new follow-up todo (cadence-drift between SKILL.md's documented weekly quiet-day and the installed every-2h
+      timer) filed in Source. Most recent real whole-corpus number remains the 2026-08-12 interactive run (774 docs,
+      121 contradictions) — 4 days stale. Source:
       `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean steady-state benchmark.
       Source: same doc.
