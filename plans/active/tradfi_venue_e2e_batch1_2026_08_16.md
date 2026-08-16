@@ -98,15 +98,60 @@ source: >-
       calculator is asset-group-aware (a tradfi-appropriate baseline, or a per-AG baseline config) and a fresh run
       shows non-empty features for at least one tradfi venue, or the exclusion is confirmed intentional
       (ARBITRAGE_PRICE_DISPERSION genuinely doesn't apply to tradfi) with a cited reason.
-- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across tradfi's 16 rows. **Gated by the
-      step-5 result above**: only CBOE/CME/NASDAQ/NYSE `ohlcv_1m` have any real feature output today (via the
-      PASSING feature_groups, not `cross_venue_spreads`), the other 12 rows stay `BLOCKED-ON:
-      archetype-declaration-backlog`. Scope this todo to those 4 rows: does a position adapter resolve in
-      batch/live/paper; are these venues declared in the archetype/slot catalogues for
-      `ML_DIRECTIONAL_CONTINUOUS`/`RULES_DIRECTIONAL_CONTINUOUS`/`TSMOM_BTC_CTA`/`STAT_ARB_*`/`VOL_CROSS_ASSET_
-      SPREAD`/`VOL_DISPERSION`; does an execution adaptor handle every `InstructionActionV2` those archetypes
-      emit — per the prediction batch's finding, verify real routing, not just a declared mapping. Done-when: a
-      real per-row verdict, plus `BLOCKED-ON` markers for the other 12 rows.
+- [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — strategy and execution — done 2026-08-16.** Investigation only,
+      zero code changed. Real per-row verdict for the 4 CBOE/CME/NASDAQ/NYSE `ohlcv_1m` rows in scope (the other
+      12 stay `BLOCKED-ON:archetype-declaration-backlog`, unchanged from steps 1-5):
+      - **CME — PARTIAL.** 8 real slots declared with `venue="cme"`: `ML_DIRECTIONAL_CONTINUOUS@cme-{es,nq,cl,
+        gc}-1d` + `RULES_DIRECTIONAL_CONTINUOUS@cme-{es,nq,cl,gc}-1d` (`target_universe/catalog_directional.py`),
+        plus 5 more in `archetype_slots_tradfi.py` (OIL/NG_COMMODITY_REGIME, OIL_ML_DIRECTIONAL, FX/
+        OIL_MEAN_REVERSION). BATCH/PAPER(sim) position reads PASS — `get_position_adapter()` routes BATCH/
+        PAPER(testnet=False) to the venue-agnostic `LedgerPositionAdapter` regardless of venue string. **LIVE/
+        PAPER(real) position reads FAIL — genuinely new gap, tracked as its own todo below**: `strategy-service/
+        strategy_service/position/position_interface/factory.py::get_position_adapter()` has no match arm for
+        `"cme"` (only `"ibkr"` is registered in `_get_other_adapter`), so a live/paper(testnet) position read
+        for any `venue="cme"` slot raises `ValueError: Unknown venue: 'cme'`. Execution: `CMEAdapter` IS
+        registered (`execution-service` factory, `TRADFI_VENUES`) and implements `place_order`/`cancel_order`
+        (TRADE/CANCEL are the only `InstructionActionV2` members these archetypes emit) via `IbkrTradFiAdapter`
+        — but real LIVE/PAPER order placement is **already tracked** as structurally blocked: UAC capability
+        declarations mark `place_order supported=False` for all 6 tradfi venues pending end-to-end
+        backfill=paper=live proof (cited directly in `ibkr_tradfi.py`'s own docstring →
+        `tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` +
+        `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 1 — no duplicate todo filed here). Sim mode
+        (`mode="sim"`) is unaffected and works today. TSMOM_BTC_CTA/STAT_ARB_\*/VOL_CROSS_ASSET_SPREAD/
+        VOL_DISPERSION: zero catalogue rows declare CME — TSMOM_BTC_CTA is CeFi-perp-only (binance/okx/
+        hyperliquid), STAT_ARB_\* only ever uses the generic `"ibkr"` venue token, and VOL_CROSS_ASSET_SPREAD/
+        VOL_DISPERSION have **zero `TARGET_UNIVERSE` rows for any venue at all** (engine + param schema exist,
+        nothing materializes them into a tradeable slot) — not a CME-specific gap.
+      - **CBOE — BLOCKED-ON:archetype-declaration-backlog.** Not declared under any of the 6 target archetypes
+        anywhere in the catalogue (`archetype_slots_*.py` + `target_universe/catalog_*.py` greped clean) — CBOE
+        only appears under `VOL_TRADING_OPTIONS` (SPX options) and `CARRY_BASIS_DATED` (cboe-cme basis), neither
+        in scope. Matches the step-5 finding that CBOE `ohlcv_1m`'s real feature consumers
+        (technical_indicators/momentum/oscillators/regime_detection) don't currently drive a directional/
+        stat-arb/tsmom/vol-cross-asset slot. Execution: `CBOEAdapter` exists (`execution-service` factory) but
+        nothing routes to it under these 6 archetypes today — moot until a slot is declared.
+      - **NASDAQ / NYSE — UNVERIFIED (not a pass), real gap surfaced.** Neither venue token is ever declared
+        literally in any of the 6 target archetypes — equities route through the generic `venue="ibkr"` token
+        instead (`SPY`/`QQQ`/`IWM` in `catalog_directional.py`; `XLF`/`XLE`/`XLV`/`XLY`/`XLI` sector ETFs under
+        `STAT_ARB_CROSS_SECTIONAL` in `catalog_trading.py`). Position adapter: `"ibkr"` DOES resolve live
+        (`factory.py` `case "ibkr": return IBKRPositionAdapter(...)`) — the one tradfi token that actually
+        works in LIVE mode. Execution: **unverified, not traced this pass** — `execution-service`'s factory
+        keys per-exchange (`NASDAQAdapter`/`NYSEAdapter` under `TRADFI_VENUES`), but strategy-service never
+        emits a literal `"nasdaq"`/`"nyse"` venue string, only `"ibkr"`; how (or whether) an `"ibkr"`-tagged
+        instruction is routed to the correct per-exchange execution adapter (presumably via the instrument's
+        own listing-exchange metadata, not the strategy's venue string) was not traced — reporting unverified
+        per the operator's DERIVED-readiness ruling rather than assuming pass.
+- [ ] [BACKEND] P1. **Gap: tradfi archetype slots declare `venue="cme"` but `get_position_adapter()` has no
+      `"cme"` match arm** (`strategy-service/strategy_service/position/position_interface/factory.py`
+      `_get_other_adapter` only matches `"ibkr"`) — every LIVE/PAPER(real) position read for the 8 real CME
+      slots (`ML_DIRECTIONAL_CONTINUOUS`/`RULES_DIRECTIONAL_CONTINUOUS`@cme-{es,nq,cl,gc} +
+      `archetype_slots_tradfi.py`'s 5 CME-venue slots) raises `ValueError: Unknown venue: 'cme'`; the same gap
+      applies to `"cboe"`/`"nasdaq"`/`"nyse"` if a slot is ever declared with those literal tokens instead of
+      the generic `"ibkr"` one. BATCH/PAPER(sim) is unaffected (ledger-backed, venue-agnostic). Done-when: either
+      `get_position_adapter` gains match arms for `cme`/`cboe`/`nasdaq`/`nyse`/`ice`/`fx` that route to
+      `IBKRPositionAdapter` (mirroring `execution-service`'s `TRADFI_VENUES` set), or the catalogue's CME slots
+      are corrected to `venue="ibkr"` (matching the equities-slot convention) with a cited reason for why CME
+      futures need their own token if execution-side does route per-exchange. Checked via grep before filing —
+      no existing plan/issue doc covers this (confirmed clean 2026-08-16).
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@48f83481ce`.
       TradFi transfers are architecturally broker-scoped, not per-exchange:
       `execution_service/trade_execution/adapters/ibkr_tradfi.py:47` — "Execution routes through IBKR" for
@@ -126,6 +171,18 @@ source: >-
       touched repo, so none of the 4 hard rules could have been violated by this batch's own work.
 
 ## Progress Log
+
+**2026-08-16 — steps 6-8 done, 1 new gap found.** Investigation only, zero code changed. Real per-row verdict for
+the 4 in-scope rows (CBOE/CME/NASDAQ/NYSE `ohlcv_1m`): CME PARTIAL (8 real ML_DIRECTIONAL_CONTINUOUS/
+RULES_DIRECTIONAL_CONTINUOUS slots, batch/sim-paper position reads work, live/real-paper position reads FAIL on
+a genuinely new gap — `get_position_adapter()` has no `"cme"` match arm, only `"ibkr"` — now its own P1 todo
+above; live/paper order placement itself was already tracked as blocked); CBOE BLOCKED-ON:
+archetype-declaration-backlog (not declared under any of the 6 target archetypes); NASDAQ/NYSE UNVERIFIED (both
+route through the generic `"ibkr"` venue token, which DOES resolve live for position reads, but the
+`"ibkr"`-to-per-exchange-execution-adapter routing was not traced this pass). TSMOM_BTC_CTA/STAT_ARB_*/
+VOL_CROSS_ASSET_SPREAD/VOL_DISPERSION: no catalogue rows touch any of the 4 in-scope venues (VOL_CROSS_ASSET_
+SPREAD/VOL_DISPERSION have zero `TARGET_UNIVERSE` rows at all, for any venue). Checked corpus for the new gap
+before filing — confirmed genuinely untracked.
 
 **2026-08-16 — full contract sweep done, 1 new gap found, 2 candidate gaps confirmed already tracked.** SHIPPED
 — `unified-trading-pm@48f83481ce`. 4 parallel research passes covered steps 2/3-4/5/9 across all 8 tradfi
