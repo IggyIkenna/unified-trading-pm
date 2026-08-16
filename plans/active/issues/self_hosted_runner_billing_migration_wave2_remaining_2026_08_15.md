@@ -125,6 +125,61 @@ depends_on: []
       superseded, zero live callers) or fix the path + target dir if someone believes it's still needed — operator call,
       not mine to make unilaterally. Repo: unified-trading-pm.
 
+## Session 2 update (2026-08-16) — all 7 repos shipped + verified; billing investigation opened new scope
+
+All of todos 1-9 above are DONE (stale as written — superseded by this section, not re-edited line-by-line to avoid
+churn). Verified on origin: `instruments-service@ebc2cf9c60` (had to re-ship — the earlier `dc7de60a73` "sibling
+commits" claim in the "Already landed" section above was WRONG, the fix sat uncommitted in a local working tree for
+~24h and never actually reached origin until this session caught it via a live CI runner-assignment check),
+`unified-api-contracts@9ed9cdce`, `market-data-processing-service@fdad5edce4`, `unified-trading-library@fead8ba1e7`,
+`deployment-service@63de08635a`, `trading-agent-service@a11a405430`, `deployment-api@98bdafc78d`. Both codex docs
+landed at `unified-trading-pm@9456bfc183`. Live CI runner-assignment verified (`glue-ip-172-31-3-59-1`, not
+`ubuntu-latest`) for 6/7 directly; instruments-service verified via identical file content + a cache-skipped dispatch
+(re-verify on its next real push).
+
+**New scope opened by the operator's "why hasn't billing dropped" question**: `quality-gates-v2.yml` was only ONE of
+11-16 workflow files per repo. Full-fleet CI-volume audit (all 90+ private repos, run counts since 2026-08-15) found:
+
+- [x] [SCRIPT] P1. Add `self_hosted_runner_labels: '["self-hosted","glue"]'` to `update-dependency-version.yml`,
+      `semver-agent.yml`, `main-backmerge-to-ldr.yml` caller stubs across all 7 wave-2 repos — the reusable-workflow
+      callee in `unified-trading-ci` already supports the input (same mechanism as quality-gates-v2.yml); the always-on
+      7 repos already had this, wave-2 never did. Fires 5-9x/day per repo per workflow. Edits applied to all 7 repos;
+      shipped: unified-api-contracts BLOCKED (see below). Repo: all 7 wave-2.
+- [ ] [OPERATOR] P1. Ship BLOCKED on `unified-api-contracts` by a genuinely pre-existing, unrelated test failure —
+      `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions` fails with/without this session's
+      diff (confirmed via stash test). Traces to live, actively-dated 2026-08-16 work:
+      `/plans/active/issues/karak_decommission_2026_08_16.md`,
+      `/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md`. Two identical consecutive quickmerge failures —
+      not mine to fix (domain wiring decision) or bypass. Retry once that work lands. Once unified-api-contracts clears,
+      unified-trading-library + deployment-service + trading-agent-service + deployment-api need the same 3-workflow
+      ship (edits already applied locally to all 4, just uncommitted). Repo: unified-api-contracts (blocker),
+      unified-trading-library, deployment-service, trading-agent-service, deployment-api (downstream).
+- [ ] [SCRIPT] P2. `image-build-gate.yml` fires 10-13x/day per repo on `ubuntu-latest` — its callee
+      (`unified-trading-ci/.github/workflows/image-build-validate.yml`) has NO `self_hosted_runner_labels` input at
+      all (unlike the other reusable workflows), so this needs real work: add the
+      `${{ inputs.self_hosted_runner_labels != '' && fromJSON(...) || 'ubuntu-latest' }}` pattern (already used
+      elsewhere in that same repo) to its 3 `runs-on:` sites, then add the input to every caller's
+      `image-build-gate.yml` stub (managed via `scripts/workflow-templates/image-build-gate.yml` +
+      `rollout-workflow-templates.sh`, so a template-level fix propagates fleet-wide). Higher blast radius than the
+      other fixes: `unified-trading-ci` is public and fleet-critical — verify on a representative consumer + across
+      branches before considering done (rule 11 territory). Confirmed still charges the CALLING repo's billing despite
+      living in a public repo — GH Actions bills the caller, not the workflow-definition host. Repo: unified-trading-ci
+      + template rollout to all callers.
+- [x] [OPERATOR] P1. `basis-strategy` — `agent-monitor.yml` cron fired every 5 minutes (288 runs/day) running a demo
+      script that just checks for `agent-a-progress.txt`/`agent-b-progress.txt` (files that don't exist) — dead test
+      scaffolding, not real automation, confirmed running on `ubuntu-latest`. **Archived 2026-08-16** (operator
+      decision) — stops the billing immediately, fully reversible (`gh repo edit --unarchive`, org-owner only), code/
+      history preserved. **Operator note: check back in on this repo once the strategy work is more mature** — may be
+      worth reactivating (or extracting whatever real signal `agent-monitor.yml` was meant to provide into the real
+      fleet's monitoring, rather than resurrecting the 5-min cron as-is). Repo: basis-strategy.
+- [ ] [OPERATOR] P1. `agent-orchestrator-fork-bak` — `tab-mirror-to-ldr.yml` `*/15min` cron (96 runs/day) is a live
+      DUPLICATE of agent-orchestrator's own real tab-mirror automation, running on what looks like an abandoned backup
+      fork, on `ubuntu-latest`. **Operator wants this repo permanently DELETED** (not archived) — attempted via
+      `gh repo delete IggyIkenna/agent-orchestrator-fork-bak --yes`, blocked: current token lacks the `delete_repo`
+      OAuth scope, which needs an interactive `gh auth refresh -h github.com -s delete_repo` (cannot be completed in a
+      non-interactive session). Operator needs to either run that refresh + hand off, or delete directly via GitHub UI
+      (Settings → Danger Zone). Until then this repo is STILL LIVE and billing. Repo: agent-orchestrator-fork-bak.
+
 ## Sequencing note
 
 Every remaining ship in this doc depends on `unified-api-contracts` having a clean working tree (path-dependency
