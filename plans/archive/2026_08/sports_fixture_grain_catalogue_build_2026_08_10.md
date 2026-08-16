@@ -123,8 +123,8 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
       catalogue (honest absence, not an error), (c) `expected_unattempted` is correctly seeded per-fixture. **Done
       when**: the function exists, is called from `build_instrument_catalogue()` for `asset_group == "sports"`
       (alongside — not replacing — the existing league-grain call), and `quality-gates.sh` is green.
-- [x] ✅ [CODE] P3. **Wire the reference-data adapters into the sports catalogue build.** — Investigated + documented
-      decision (no code change) in Progress Log below (2026-08-16). Verdict: the manifest/
+- [x] ✅ [CODE] P3. **Wire the reference-data adapters into the sports catalogue build.** — unified-trading-pm@660c71ed39
+      Investigated + documented decision (no code change) in Progress Log below (2026-08-16). Verdict: the manifest/
       by_date-snapshot-only path (no direct live `adapter.get_instruments()` call from `build_instrument_catalogue.py`)
       IS the intended SSOT, and API-Football is already effectively wired via the snapshot rollup path — confirmed by
       a real prod GCS read (544,768 total sports catalogue rows: fixture=432,829, player=104,381, team=7,200,
