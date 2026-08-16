@@ -137,37 +137,11 @@ context_scope:
     - 2. **[DATA] P0.** Make a run whose every write failed EXIT NON-ZERO (fix the "N success/0 failed" summary to count
       written, not processed).
     - 3. **[DATA] P1.** Sweep the OTHER candle data_types for the same class of contract drift before the backfill.
-  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md)
-    (status: active — all 16 open todos are P0/P1, none to cap)
-    - 1. **[DATA] P0.** Rebuild code tarballs for the 4 already-shipped repos (canonical-shape writer/reader changes
-         live on VM images).
-    - 2. **[DATA] P0.** VERIFY on `-test-` via `/data-pipeline-check-mdps` that the writer emits the canonical shape —
-         gate before any prod-data executor.
-    - 3. **[DATA] P0.** VERIFY readers dual-read correctly against both canonical and legacy-flat prefixes via
-         `candle_read_prefixes`.
-    - 4. **[SCRIPT] P0.** Run the sanctioned Tier-2 spot-VM single-walk census for a precise per-AG object count +
-         dup-shape + empty-stem inventory.
-    - 5. **[SCRIPT] P0.** Build the migration executor (P5) — idempotent, sharded, enumeration-file-driven,
-         `--apply`-gated, checkpointed.
-    - 6. **[SCRIPT] P0.** Implement the path transform in the executor (backward-add `instrument_type=`, keep SOURCE
-         `data_type`, tf-normalise).
-    - 7. **[SCRIPT] P0.** Implement DEDUP in the executor for the split-brain candle layout (~2x inflation on
-         cefi/tradfi/prediction).
-    - 8. **[SCRIPT] P0.** Implement PURGE of empty-stem objects (rewrite to `ticks.parquet` or delete if unrecoverable).
-    - 9. **[SCRIPT] P0.** Implement QUARANTINE for unresolvable legacy TradFi `E1AF0_*_migrated_*` leaf ids (never
-         guess).
-    - 10. **[SCRIPT] P0.** Wire manifest re-record to the SOURCE-keyed row into the executor pass so skip-if-fresh is
-          correct post-migration.
-    - 11. **[SCRIPT] P0.** Upgrade the executor's pre-delete verification from SIZE-only to crc32c checksum.
-    - 12. **[DATA] P0.** Extend `launch-canonical-migration-vm.sh` for this migration's per-AG SPOT fleet launch (≤2-3h
-          target).
-    - 13. **[DATA] P1.** P6 drain+snapshot: coordinate with the running `canonical-migration-cefi-wp*` raw_tick VMs
-          before candle migration writes.
-    - 14. **[DATA] P0.** P7 per-AG SPOT migration apply, in order defi→prediction→cefi→tradfi.
-    - 15. **[DATA] P0.** P8 verify/reconcile: 4-surface reconciliation + extend the UAC canonical-path-violations oracle
-          to `processed_candles/`.
-    - 16. **[DATA] P1.** Root-cause + close the candle object↔manifest disconnect so skip-if-fresh can be trusted
-          post-migration.
+  - [`plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md)
+    — **ARCHIVED 2026-07-28** (0 open todos, all 17 `[x]` — writer/reader lockstep shipped; own frontmatter reads
+    `status: complete`). **STALE-DIGEST FIX (plan_reconciler, cefi tranche, 2026-08-16)**: this entry previously
+    listed "status: active — all 16 open todos are P0/P1" (link text also still pointed at the pre-archival
+    `plans/active/` path) — both were already 8+ days stale relative to this digest's own `last_updated: 2026-08-02`.
   - [`plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`](/plans/archive/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md)
     — filed as a tracked follow-up to root-cause during the candle_canonical_path_migration_execution_2026_07_24.md work
     above (two consecutive `--force` writes for the identical CEFI:BINANCE-FUTURES shard landed at two different object
@@ -178,14 +152,13 @@ context_scope:
   - [`plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`](/plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md`](/plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md)
-    (status: active)
-    - **[DATA] P2.** Extend MDPS's candle-building orchestration to cover
-      `batch_aster`/`batch_hyperliquid`/`batch_lighter_api`/`batch_extended` raw trades.
-    - **[DATA] P2.** Backfill historical candles for these 4 venues' existing raw trade history.
-    - **[BACKEND] P2.** Design + implement strategy-side consumption of the ADV signal (position-size cap, min-history
-      gate).
+    (status: active — 1 open, 3 done since this digest's 2026-08-02 last_updated)
     - **[DATA] P3.** (stretch) Consider wiring `book_depth.py`'s `adv_30d_usd` input to the same Phase-1 utility with
       `window_days=30`.
+    - **STALE-DIGEST FIX (plan_reconciler, cefi tranche, 2026-08-16)**: the 3 other items previously listed here
+      (MDPS candle-coverage extension, historical backfill, strategy-side ADV consumption) are `[x]` DONE in the
+      source doc — coverage extension 2026-07-26, ADV consumption ruled 2026-08-08 + shipped
+      `strategy-service@73aa792f` 2026-08-09 (verified ancestor of `origin/live-defi-rollout`).
   - [`plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md`](/plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md)
     — 0 open todos (status: resolved, archived). **2026-07-28 stale-citation drop**: the prior BLOCKED-OPERATOR-DECISION
     "RE-RUN G4 from a clean slate" bullet is stale — the archived doc's own copy of this todo is checked `[x]` and its
@@ -374,19 +347,11 @@ context_scope:
     - NEW todo. **[SCRIPT] P1.** Implement R1 bounded-concurrent `_run_date_as_subprocess` dispatch.
     - NEW todo. **[DATA] P0.** Real-VM re-measure of end-to-end per-instrument-day rate after the read-path fix.
     - +6 more P2 — see file for the rest.
-  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
-    - 1. **[DATA] P1.** instruments-service: canonicalise the `instrument_availability` write using the sink PREFIX
-         mechanism, NOT the partition dict.
-    - 2. **[DATA] P1.** market-tick-data-service: rule on and fix the cefi chain tail — `partitioned_writer.py:291-293`
-         populates `quote_asset`/`margin_type` for tradfi only.
-    - 3. **[DOCS] P2.** instruments-service + market-tick-data-service: correct the three in-repo comments that assert
-         the IS live writer emits the hive layout.
-    - 4. **[SCRIPT] P2.** unified-trading-pm: add a Phase-0 `-test-` assertion on the resolved WRITE bucket to
-         `data-pipeline-check-mdps`/`data-pipeline-check-features`.
-    - 5. **[DOCS] P2.** unified-trading-pm: add an explicit "never pass `--allow-live-prod-writes`" prohibition to
-         `data-pipeline-check-mtds/SKILL.md`.
-    - 6. **[DATA] P3.** instruments-service: decide whether `market_lifecycle`/`futures_contracts` are in the canonical
-         shard grammar's scope.
+  - [`plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
+    — **ARCHIVED 2026-08-10** (0 open todos, all 6 `[x]`). **STALE-DIGEST FIX (plan_reconciler, cefi tranche,
+    2026-08-16)**: this entry previously listed all 6 items as open (link text also still pointed at the
+    pre-archival `plans/active/issues/` path) — the source doc had already shipped + archived by 2026-08-10, 8 days
+    after this digest's own `last_updated: 2026-08-02`.
   - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`](/plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md)

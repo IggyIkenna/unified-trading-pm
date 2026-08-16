@@ -67,7 +67,59 @@ from scratch.
 
 ## Contradictions
 
-(pending)
+Batch 1 hunter (ae7265d23dc82f85c) surfaced 4 confirmed contradictions, all rooted in
+`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` (an 886-line human-maintained discoverability index,
+`last_updated: 2026-08-02`) lagging real state by 8-25 days. Adversarially verified inline (file-existence checks,
+todo-count greps, `git merge-base --is-ancestor` on cited commits) before applying. All 4 CONFIRMED and fixed:
+
+1. **[P1]** doc listed `backfill_smoke_write_path_canonical_audit_2026_07_20.md` as having 6 open todos (+ stale
+   `plans/active/issues/` link text). Verified: archived 2026-08-10, all 6 `[x]` (`grep -c '\[x\]'` = 6, `\[ \]` = 0).
+   **Fixed**: collapsed digest entry to an ARCHIVED annotation, corrected link path.
+2. **[P2]** doc listed `aster_and_cefi_rolling_adv_feature_2026_07_21.md` with 4 open items. Verified: only the
+   `[DATA] P3` stretch item (`book_depth.py` wiring) is open — MDPS coverage extension done 2026-07-26, ADV
+   consumption ruled 2026-08-08 + shipped `strategy-service@73aa792f` 2026-08-09 (ancestry verified against
+   `origin/live-defi-rollout`). **Fixed**: digest entry now shows only the 1 genuinely-open item.
+3. **[P2]** Intra-doc self-contradiction in `aster_and_cefi_rolling_adv_feature_2026_07_21.md` itself: its own
+   "Deferred work after 2026-07-21" table said Phase 2 + Phase 3 "Not started", and the Phase 3 heading said
+   "implementation not yet started", while the checkboxes in both Phase sections were already `[x]` (Phase 3 shipped
+   2026-08-09, one day after the heading text was last touched). **Fixed**: heading + both table rows corrected to
+   DONE with dates/commit citations; the genuinely-open `book_depth.py` stretch row left unchanged.
+4. **[P3]** doc listed `candle_canonical_path_migration_execution_2026_07_24.md` as "status: active — 16 open
+   todos" (+ stale `plans/active/` link text, though href already pointed at archive). Verified: archived
+   2026-07-28, all 17 `[x]`, own frontmatter `status: complete`. **Fixed**: collapsed to an ARCHIVED annotation.
+
+Evidence commands: `grep -cE '^\s*[-*] \[x\]'` / `\[ \]'` on both archived targets;
+`git -C ../strategy-service merge-base --is-ancestor 73aa792f origin/live-defi-rollout` (exit 0);
+`git -C ../features-service merge-base --is-ancestor 8608ea5d origin/live-defi-rollout` (exit 0).
+
+Also noted by the hunter, not yet independently verified — **mechanical flag, not yet fixed**: the same digest doc
+has a systematic link-TEXT/href mismatch pattern (≥11 entries display a `plans/active/...` text with an href already
+correctly pointing at `plans/archive/...` — the href works, only the display text is stale) — P3/cosmetic, deferred
+to a dedicated bulk pass rather than fixed inline here. Also flagged: `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`
+(active since 2026-07-28, 2 open P0 phases) is never referenced anywhere in this digest despite the digest's stated
+purpose — P2 coverage gap, not yet fixed.
+
+Hunter also flagged a 25-day-old `[INFRA] P1` item in `cefi_4surface_migration_execution_log_2026_07_24.md` (a
+`slot-cron-ff-pull.sh`-suspected silent hard-reset that discarded a locally-committed-but-unpushed fix) as possibly
+untracked elsewhere. Checked (`rg -il slot-cron-ff-pull` across plans/+codex/): this failure CLASS (silent work loss
+on shared checkouts via stash/autostash/FF-pull mechanisms) is already an actively-tracked cross-cutting infra
+initiative — `plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md`,
+`autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`,
+`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` (the same class this session's own
+safe-doc-push run hit an orphaned-patch instance of, see the Observed note below). Not treated as a fresh standalone
+finding; the specific 2026-07-22 incident's own item stays open in its source doc, which is outside this pass's
+write scope (infra tranche, not cefi).
+
+## Observed (out of scope — infra tranche, noted for corpus health)
+
+This run's own `safe-doc-push.sh` invocation (commit `fa9c28d33a`) hit an orphaned prek patch warning (exit 9) —
+`/home/ubuntu/.cache/prek/patches/1786898552667-4183571.patch`, containing edits to 3 `tradfi_satellite_ao_dispatch_batch7/8_*`
+docs from a concurrent session. Checked: this run's own working tree was clean (nothing of mine at risk), and the
+patch's target paths no longer exist at their expected location (`git apply --check` fails with "No such file or
+directory"), consistent with the owning tradfi-tranche session having already moved past this state (e.g. its own
+subsequent archival). Not independently pursued further (out of cefi-tranche scope, and the general failure class is
+the same already-tracked FF-pull/autostash initiative noted above) — left the patch file in place per the script's
+own instruction not to delete without confirming safety first.
 
 ## Doc-drift
 
