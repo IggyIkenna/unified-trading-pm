@@ -36,7 +36,7 @@ summary: >-
   `DP_VM_GONE_NO_CAPTURE` CRITICAL page anyway — a single occurrence, not reproduced live in this pass, but worth a
   human confirming whether the umbrella resolution genuinely failed for that alert or whether this is some other,
   correctly-firing path (e.g. a non-zero exit_code misclassified in this doc's own reading of the payload text).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, sports, defi, cross-cutting]
 stage: [meta]
@@ -60,7 +60,6 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
-archive_exempt: true # bridge for the cross-repo flip/mv two-commit split — dropped in the immediately-following archival commit; see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md
 resolved_by:
 locked_since:
 context_scope:
@@ -76,6 +75,9 @@ source: >-
 ---
 
 # DP-VM-002 detector: generic alert text + bucket-kind blindness (3 findings, not individually severe)
+
+> **Status (2026-08-16)**: ✅ RESOLVED. All 4 todos done — deployment-service@d776dbe253 fixed a real
+> live-VM-exemption case-sensitivity bug (Finding 3). See Todos section for full evidence.
 
 ## What I found
 
