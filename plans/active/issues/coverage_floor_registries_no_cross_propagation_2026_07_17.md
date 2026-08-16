@@ -353,6 +353,28 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   more wall-clock time than this task's `est_hours: 1.0` budget. Re-verification of final coverage stays this same
   open Follow-up below (still `[ ]`) for the next dispatch once the fleet completes.
 
+- **slot-18 2026-08-16** (coverage_floor_registries_no_cross_propagation-5ad673d1aad8): Re-checked the 7-shard fleet
+  ~1h40m after launch. `gcloud compute instances list --filter="name~'hyperliquid'"` only returned 5/7 (likely a
+  listing/pagination quirk, not evidence of termination — see below). Went past the consolidated manifest index this
+  time and read each shard's OWN `vm-logs/<vm>/{EXIT_STATUS,PROGRESS.json,run.log}` directly via
+  `get_storage_client()`/`download_from_storage()` (bucket `deployment-scripts-central-element-323112`): **all 7
+  shards confirmed alive** with `EXIT_STATUS=RUNNING` and genuinely advancing, monotonic `PROGRESS.json.last_completed_date`
+  (2023-06-14 shard → day 2023-06-29; 2023-07-14 → 2023-07-27; 2023-08-13 → 2023-08-24; 2023-09-12 → 2023-09-22;
+  2023-10-12 → 2023-10-20; 2023-11-11 → 2023-11-12; 2023-12-11 → 2023-12-12), each with `run.log` tails showing real,
+  fresh (within the last few minutes) `HyperliquidS3Downloader`/`OnchainPerpBatch`/`ManifestWriter` captured-row lines
+  — not just the heartbeat sidecar ticking (worker.md's known false-liveness trap; explicitly ruled out here). A
+  same-session probe of the CONSOLIDATED `availability_index.parquet` for the window showed near-zero movement vs.
+  slot-25's 2026-08-15 numbers (book_snapshot_5 `expected_unattempted` flat at 8,516; derivative_ticker flat at 8,930)
+  — this is NOT a stall: per-VM shard writes land in `_index/per_vm/*.parquet` and only reach the consolidated index
+  on the separate manifest-consolidator's own cadence (Cloud Run/Batch-Fargate, not this fleet), so the consolidated
+  index lags live per-VM progress by design. Recording this clarification so a future re-check doesn't re-diagnose the
+  same false stall. Fleet still short of `DEPLOYMENT_COMPLETED exit_code=0` for every shard (none reached it; slowest
+  shard — 2023-12-11 — is only 2/20 days into its slice, notably slower than the earlier shards, likely due to more
+  404'd/discontinued-archive days requiring per-instrument probing with no payoff). Skipped `reason_code: GATED` (not
+  `/blocked`) — this todo's own done-condition (fleet complete or confirmed gone) genuinely isn't met yet, and remaining
+  wall-clock time is uncertain (multi-hour, exceeds this task's `est_hours: 1.0`). Re-verification stays this same open
+  Follow-up below.
+
 ## Follow-ups
 
 - [x] ✅ [INFRA] P3. **Relaunched 2026-08-15 (slot-6)** — **Relaunch `cefi-hyperliquid-2023-*` backfill.** Confirmed
