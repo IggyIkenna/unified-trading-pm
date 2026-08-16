@@ -87,14 +87,19 @@ depends_on: []
       window) gates only NEW symbol tasks — in-flight large-symbol downloads continue consuming memory past the OOM
       point of no return. 64GB gives ≥2× worst-case headroom. Also tracked a follow-up below to make the memory-pressure
       mechanism more effective (UTL code change is a separate scope from this launcher change).
-- [ ] [DATA] P3. **Improve `ParallelPerSymbolRunner` memory-pressure mechanism** — the current 75% threshold + 30s pause
+- [x] ✅ [DATA] P3. **Improve `ParallelPerSymbolRunner` memory-pressure mechanism** — the current 75% threshold + 30s pause
       only gates NEW symbol tasks. In-flight tasks past the `_await_resume()` checkpoint continue consuming memory, and
       by the time the second warning fires at ~96% RAM the kernel OOM killer has already decided. Options: (a) lower the
       warning threshold from 75% to 60%, (b) require memory to actually DROP below threshold before resuming (not just a
       time-based pause), (c) add a global semaphore that blocks ALL task acquisition (including semaphore waiters) when
       memory is above threshold. Repo: unified-trading-library (`parallel_per_symbol_runner.py` +
       `resource_profiler.py`). This follow-up is tracked here because it was discovered during the cefi-fwd root-cause
-      analysis but the UTL code change is a separate scope from the launcher machine-type fix.
+      analysis but the UTL code change is a separate scope from the launcher machine-type fix. **Done**:
+      `unified-trading-library@283fb01685` (slot 33, 2026-08-16) — implemented option (b). `_await_resume()` now gates
+      on BOTH the pause-duration timer AND (when a profiler is wired) the profiler's latest sample reading back below
+      its own `memory_warning_percent` (newly exposed as a public property so the two thresholds can't drift apart);
+      falls back to the legacy timer-only behaviour when no profiler is wired or it hasn't sampled yet. Unit tests
+      added covering the memory-gated resume and the no-sample fallback.
 
 ## Progress Log
 
@@ -138,3 +143,9 @@ depends_on: []
   produced two more no-op re-checks within ~24h on a launcher with no fixed cadence — a longer cooldown should cut
   redundant polling until the campaign actually re-dispatches this launcher.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **data_engineering (slot 33) 2026-08-16**: Shipped the `ParallelPerSymbolRunner` memory-pressure follow-up —
+  `unified-trading-library@283fb01685`. Chose option (b) from the todo's option list: resume now requires a fresh
+  `ResourceProfiler` sample to read back below `memory_warning_percent`, not just the fixed `pause_duration_sec`
+  timer elapsing. Added `ResourceProfiler.memory_warning_percent` as a public property (previously private-only) so
+  the runner reads the SAME threshold the profiler fires warnings on instead of a separately-configured value that
+  could drift. Backward-compatible: behaviour is unchanged when no profiler is wired or it hasn't sampled yet.
