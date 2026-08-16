@@ -233,6 +233,24 @@ had already run. Treat every todo below as net-new work, not a resume.
 - [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` through the REAL Claude Code harness (a spawned `claude`
       subprocess, not a raw HTTP probe) for both new providers, same requirement already tracked for GLM/Grok/Gemini/
       Codex in the sibling plan. Done when: a real compact cycle is observed working end-to-end for both.
+- [ ] [INFRA] P1. **New, operator 2026-08-16**: measure each new provider's real MAX-CONCURRENT-REQUESTS ceiling
+      (distinct from RPM/RPD/TPM rate limits already covered above) and feed it into AO's dispatch model as a new
+      gating axis. Confirmed by code check (2026-08-16): AO's only existing concurrency concept is
+      `tuning.autospawn_max_concurrent_spawns` (`server/autospawn.py`, default 6) — a GLOBAL fleet-wide cap on
+      simultaneous spawns, with no per-provider/per-model/per-account concurrency ceiling anywhere (not in
+      `gemini_headroom.py`'s per-project RPM/TPM/RPD gate, not in DeepSeek/Grok's metered-$ gates). Many vendor APIs
+      enforce a real max-simultaneous-in-flight-requests limit that is a SEPARATE constraint from per-minute rate
+      (hitting it returns a distinct error, e.g. a 429/concurrency-specific code, not the same one as an RPM
+      breach) — for a free/cheap tier (NVIDIA NIM, Moonshot's basic plan) this ceiling could be very low (e.g.
+      single digits) and would silently degrade to serialized/failed requests under AO's normal fleet parallelism
+      if undiscovered. Live-test by firing several genuinely concurrent requests at each new provider and observing
+      where failures start, not by reading docs alone. **Flag, not scoped to this plan**: the same per-model
+      concurrency gap likely exists for the four already-onboarded providers (DeepSeek/GLM/Grok/Gemini/Codex) too —
+      out of scope to retrofit here, but worth a follow-up todo in
+      `multi_provider_context_billing_reconciliation_2026_08_16.md` or its own plan once this todo proves the
+      pattern is real. Done when: a real measured concurrency ceiling exists for both Kimi and Gemma-via-NVIDIA, and
+      `select_account_for_spawn()`/the headroom-gate wiring (todo above) accounts for it alongside the rate-limit
+      gate, not just the global spawn cap.
 - [ ] [DATA] P3. Once `multi_provider_context_billing_reconciliation_2026_08_16.md`'s unified per-task billing
       schema is designed, extend it to cover Kimi and NVIDIA/Gemma rather than building a second parallel schema —
       cross-link, don't duplicate. Done when: both providers have a concrete field mapping in that schema (tracked
