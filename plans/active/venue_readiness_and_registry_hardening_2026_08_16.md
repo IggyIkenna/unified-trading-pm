@@ -335,15 +335,82 @@ delete prod data on its own authority.
 | 18  | **Data-type consumability** | Every data type this venue emits is consumed by at least one feature group or archetype, or is explicitly declared unused.        |
 | 19  | **Canonical orthogonality** | The data type belongs to the minimal orthogonal set — no near-duplicate exists, or the merge is recorded in the cutover register. |
 
-- [ ] [AGENT] P0. **Audit the data-type vocabulary for near-duplicates.** Output: a proposed minimal orthogonal set,
-      each near-duplicate pair named with its superset/subset relationship stated. Proposal only — the merge follows the
-      rename rule and the purge follows delete-safety.
-- [ ] [AGENT] P0. **Audit for orphaned data types** — captured but consumed by nothing. Each resolves to a missing
-      strategy, a merge candidate, or an explicit declared-unused. Never left silent.
+- [x] [AGENT] P0. ✅ **Audit the data-type vocabulary for near-duplicates.** Findings below. Proposal only — the merge
+      follows the rename rule and the purge follows delete-safety.
+- [x] [AGENT] P0. ✅ **Audit for orphaned data types** — captured but consumed by nothing. Findings below.
 - [ ] [AGENT] P1. **Audit venue identities for duplicates** — the same effective venue represented twice. Same
       treatment: propose, migrate consumers in one change, register the cutover, route the purge through delete-safety.
-- [ ] [OPERATOR] P0. **Sign off each proposed merge before migration.** Merging two data types rewrites paths, manifest
-      rows and consumer bindings at once, and the purge is a prod delete. Both sides are operator-gated.
+- [ ] [OPERATOR] P0. **Sign off each proposed merge before migration** (the two near-duplicate/orphan candidates below
+      that need a decision, not the ones already ruled). Merging two data types rewrites paths, manifest rows and
+      consumer bindings at once, and the purge is a prod delete. Both sides are operator-gated.
+
+### Audit findings (2026-08-16) — data-type vocabulary, 31 venue-emitted types
+
+Method: enumerated `VENUE_DATA_TYPE_CAPABILITIES` (`unified_api_contracts/registry/market_data_categories.py` +
+`defi_venue_capabilities.py`) as the target vocabulary (31 distinct `data_type` strings — narrower than the 60-item
+`ALL_DATA_TYPES`/`DATA_TYPES_BY_ASSET_GROUP` union; the 29-item delta is a separate, not-yet-audited observation, noted
+at the end, not folded into these results). Cross-checked consumption against `required_inputs.py`'s
+`FEATURE_REQUIRED_INPUTS`, `archetype_feature_groups.py`'s `ARCHETYPE_FEATURE_GROUPS`, and repo-wide literal-string
+greps across `features-service`/`strategy-service`/`ml-service` — a 0-grep-hit result was cross-checked against the
+actual writer existing before being called orphaned, per this workspace's claim-vs-measurement rule.
+
+**Near-duplicates:**
+
+- **`book_snapshot` vs `book_snapshot_5` (cefi) — real duplicate, already a documented legacy alias, not a new bug.**
+  `book_snapshot_5` is the canonical venue-emitted name; `book_snapshot` (bare) is called out verbatim as a "legacy
+  alias" in `availability_semantics.py:133` and `_source_priority_table.py:171-177`. **The gap this audit surfaces**:
+  every CeFi feature_group in `required_inputs.py` (`microstructure`, `book_depth_bands`, `liquidity_walls`,
+  `liquidation_clusters`, `flow_interaction`, `order_flow_inference`, `composite_sr`) is keyed on the legacy bare name,
+  not the canonical one — `book_snapshot_5` has zero cefi `required_inputs.py` entries (only `prediction` uses the
+  canonical name literally). Needs an operator call: rename the `required_inputs.py` keys to the canonical name, or
+  declare the bare alias itself canonical for cefi and fix the doc comments instead.
+- **`funding_rate` vs `perp_funding` (cefi) — investigated, RULED NOT a duplicate, no action.** Different endpoints,
+  different semantics (continuous Tardis-fed field vs. realized periodic settlement), and this codebase already has a
+  169-day cross-source parity measurement on record (`market_data_categories.py` HYPERLIQUID comment, ~L101-111: only
+  60.7% of 2,640 overlapping rows matched within 2e-5, worst divergence 1.2e-3) that disproved an earlier
+  "byte-identical" assumption. Keep both.
+- **`vault_share_price` vs `lst_rates` (defi, MAKER-ETHEREUM cell only) — not a vocabulary-level duplicate, one
+  already-tracked cell-level instance.** Both names are correct for other venues. `defi_venue_capabilities.py`
+  (L284-295) already documents MAKER-ETHEREUM's capture moved to `lst_rates_handler.py` (same `convertToAssets()` call)
+  and calls `vault_share_price` there "an orphaned, non-producing duplicate" — pre-existing finding, already tracked in
+  `vault_share_price_handler_capture_gap_since_2026_06_22.md`. No new action.
+- **AMBIGUOUS — flag for operator judgment**: `("defi","swap")`, `("defi","fx_rate")`, `("defi","liquidity")`,
+  `("defi","market_state")`, `("defi","vault_state")`, `("defi","solana_defi")` are registered in
+  `AVAILABILITY_AT_SEMANTICS` with zero matching `VENUE_DATA_TYPE_CAPABILITIES` entry and zero writer/feature-group
+  reference found — they read like a superseded early generic-defi naming scheme (`swap`→`dex_pool_swaps`,
+  `market_state`→`dex_pool_state`, `vault_state`→`vault_share_price`/`vault_apy`/`vault_tvl`). Not exhaustively ruled
+  out as scaffolding for a not-yet-migrated path. Needs an operator call: dead-code delete or keep as reserved.
+
+**Orphaned data types (captured + tracked, zero feature_group/archetype consumer found anywhere in the workspace):**
+
+`governance_events`, `mev_events`, `position_data`, `token_transfers`, `bridge_events` (all defi, real MTDS writers,
+tracked by manifest/data-status/deployment-api, zero reads in `features-service`/`strategy-service`/
+`required_inputs.py`), and `rewards` (raw AAVE_V3 `RewardsController` emissions, distinct from `eigenlayer_rewards` —
+`required_inputs.py`'s `"rewards"` feature_group actually consumes `eigenlayer_rewards`, not `rewards`; the
+`features-service` `eigen_rewards_calculator.py:53` comment confirms this directly: *"replaces a stale ... 'rewards'
+guess that never matched anything on disk"*). Six confirmed orphans, each resolves to: declare explicitly unused, wire
+a real consumer, or merge/purge — operator sign-off required per the todo above before any action.
+
+**Ambiguous, needs a closer look (not yet ruled either way):**
+
+- `flash_loan_events` — declared consumed via `required_inputs.py`'s `flash_loan_availability` feature_group (real UAC
+  registration) and has a real writer, but zero `features-service` calculator literally reads it. Looks aspirational/
+  not-yet-implemented rather than genuinely orphaned — verify whether `flash_loan_availability` computes anything today
+  before classifying.
+- `staking_yields` — not in `required_inputs.py`, zero `features-service` hits, but IS read by
+  `ml-service/ml_service/training/app/core/feature_query_support.py`. Real ML-training consumer; whether that satisfies
+  "consumed by a feature group" per step 18's wording is a scope question, not a fact question.
+
+**Secondary observation, not folded into the above**: 29 of the 60 `ALL_DATA_TYPES` union have no
+`VENUE_DATA_TYPE_CAPABILITIES` entry at all (`gas_fees`, `tbbo`, `mbp_10`, `perp_trades`, `perp_daily_ctx`,
+`perp_mark_price`, `native_staking_rates`, `utilization`, `flash_loan_availability`, `vault_apy`, `vault_tvl`, 7
+`swaps_ohlcv_*` MDPS-processed types, `corporate_action_confirmed`, `earnings_result`, `macro_result`,
+`volatility_index`, `ohlcv_15m`, `arbitrage_opportunity`, `odds_horizon_bucket`, `trades_inplay`,
+`prediction_canonical_question_group`, `market_lifecycle`). Some are confirmed real via in-code comments explaining an
+alternate capture mechanism (e.g. `gas_fees` via bare `ALCHEMY`); others (`tbbo`/`mbp_10`/`ohlcv_15m`) are explicitly
+commented as currently-unreachable/deferred. Out of scope for this pass (target vocabulary was the venue-emitted 31,
+per the ruling's own "a venue produces X" framing) — a follow-up audit item, not added as a new todo here since it
+needs its own P-tag and scoping decision first.
 
 ## Workstreams — each forks to its own child plan
 
