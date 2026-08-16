@@ -36,7 +36,7 @@ tags:
 related:
   [
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
-    /plans/active/issues/plan_reconciler_findings_ao_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_ao_2026_08_16.md,
     /agents/plan_reconciler.md,
   ]
 created: "2026-08-16"
