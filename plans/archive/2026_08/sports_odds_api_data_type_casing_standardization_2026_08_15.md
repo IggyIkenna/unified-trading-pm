@@ -7,7 +7,7 @@ summary:
   'odds'. Operator decision (2026-08-15): standardize on lowercase everywhere — fix the writer AND migrate ~17K
   historical rows. This is a real GCS rename migration, not a metadata edit, in a class that has already caused one
   documented incident (K1/K2 casing revert) — phased, with the risky step operator-gated."
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -51,6 +51,12 @@ context_scope:
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
   ]
 ---
+
+> **🟢 COMPLETE 2026-08-16.** Phase 0 shipped (`market-tick-data-service@324cbb59dd`,
+> `unified-api-contracts@3c6d38fe82`, corrected further at `unified-api-contracts@73c7c29666`). Phase 1's live-check
+> found ZERO uppercase rows anywhere — the founding "~17K rows need migration" premise was a stale, never-verified
+> estimate. Phases 2-3 (the actual GCS migration) CANCELLED as moot. See Phase 1's Progress Log entry for the full
+> finding and the "Final report" section at the bottom for the completion summary.
 
 # Standardize odds_api's data_type casing to lowercase "odds"
 

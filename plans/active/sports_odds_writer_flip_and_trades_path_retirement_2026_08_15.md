@@ -21,7 +21,7 @@ related:
   [
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
-    /plans/active/sports_odds_api_data_type_casing_standardization_2026_08_15.md,
+    /plans/archive/2026_08/sports_odds_api_data_type_casing_standardization_2026_08_15.md,
     /plans/active/issues/sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md,
     /plans/active/mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md,
     /codex/02-data/sports-data-types-catalog.md,
