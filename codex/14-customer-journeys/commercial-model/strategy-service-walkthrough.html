@@ -1,0 +1,1098 @@
+<title>Strategy Service Walkthrough</title>
+
+<style>
+  :root {
+    --ground: #f6f7fa; --surface: #ffffff; --surface-2: #eef1f7; --surface-3: #e4e9f2;
+    --ink: #0c1424; --ink-2: #3b475f; --ink-3: #6b7794;
+    --rule: #d8deea; --rule-strong: #b6c1d6;
+    --accent: #8c6d14; --accent-wash: rgba(140, 109, 20, 0.09);
+    --g-data: #107c5f; --g-exec: #3b62c4; --g-post: #a38112;
+    --g-data-wash: rgba(16, 124, 95, 0.09); --g-exec-wash: rgba(59, 98, 196, 0.1); --g-post-wash: rgba(163, 129, 18, 0.11);
+    --good: #0f7a4e; --warn: #96660a; --crit: #ad2f24;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", ui-serif, Georgia, serif;
+    --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --shell: 1200px; --prose: 74ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0a0f1e; --surface: #131c33; --surface-2: #1b2745; --surface-3: #223056;
+      --ink: #edf1fa; --ink-2: #b4c0d8; --ink-3: #8492af; --rule: #23304f; --rule-strong: #3a4b74;
+      --accent: #d4af37; --accent-wash: rgba(212, 175, 55, 0.12);
+      --g-data: #15907a; --g-exec: #4c7fda; --g-post: #ae8c24;
+      --g-data-wash: rgba(21, 144, 122, 0.16); --g-exec-wash: rgba(76, 127, 218, 0.18); --g-post-wash: rgba(174, 140, 36, 0.17);
+      --good: #3fc98d; --warn: #dfb143; --crit: #ef7d6f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0a0f1e; --surface: #131c33; --surface-2: #1b2745; --surface-3: #223056;
+    --ink: #edf1fa; --ink-2: #b4c0d8; --ink-3: #8492af; --rule: #23304f; --rule-strong: #3a4b74;
+    --accent: #d4af37; --accent-wash: rgba(212, 175, 55, 0.12);
+    --g-data: #15907a; --g-exec: #4c7fda; --g-post: #ae8c24;
+    --g-data-wash: rgba(21, 144, 122, 0.16); --g-exec-wash: rgba(76, 127, 218, 0.18); --g-post-wash: rgba(174, 140, 36, 0.17);
+    --good: #3fc98d; --warn: #dfb143; --crit: #ef7d6f;
+  }
+  body { background: var(--ground); color: var(--ink); font-family: var(--serif); font-size: 17.5px; line-height: 1.62; -webkit-font-smoothing: antialiased; }
+  .shell { max-width: var(--shell); margin: 0 auto; padding: 0 32px 96px; }
+  p, ul, ol { max-width: var(--prose); } p { margin: 0 0 1.05em; }
+  ul, ol { margin: 0 0 1.15em; padding-left: 1.35em; } li { margin-bottom: 0.45em; } li::marker { color: var(--ink-3); }
+  a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code, .mono { font-family: var(--mono); font-size: 0.845em; }
+  code { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 3px; padding: 0.08em 0.34em; white-space: nowrap; }
+
+  .masthead { border-bottom: 1px solid var(--rule-strong); padding: 56px 0 34px; margin-bottom: 12px; }
+  .eyebrow { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 26px; }
+  .eyebrow .mark { color: var(--accent); letter-spacing: 0.2em; } .eyebrow .sep { color: var(--rule-strong); }
+  .eyebrow .conf { border: 1px solid var(--accent); color: var(--accent); background: var(--accent-wash); border-radius: 3px; padding: 3px 9px; letter-spacing: 0.13em; }
+  h1 { font-size: clamp(2.3rem, 5vw, 3.5rem); line-height: 1.05; font-weight: 400; letter-spacing: -0.018em; text-wrap: balance; margin: 0 0 0.5em; max-width: 25ch; }
+  h1 .light { color: var(--ink-3); font-style: italic; }
+  .standfirst { font-size: 1.16rem; line-height: 1.56; color: var(--ink-2); max-width: 64ch; margin-bottom: 26px; }
+  .factbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(136px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+  .factbar div { background: var(--surface); padding: 13px 15px; }
+  .factbar dt { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px; }
+  .factbar dd { margin: 0; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; line-height: 1.4; }
+
+  .contents { margin: 38px 0 0; border-top: 1px solid var(--rule); padding-top: 22px; }
+  .contents h2 { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.17em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
+  .contents ol { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 2px 28px; }
+  .contents li { margin: 0; }
+  .contents a { display: flex; gap: 12px; align-items: baseline; padding: 7px 0; text-decoration: none; border-bottom: 1px solid var(--rule); }
+  .contents a:hover, .contents a:hover .ttl { color: var(--accent); }
+  .contents .num { font-family: var(--mono); font-size: 11px; color: var(--accent); min-width: 1.6em; }
+  .contents .ttl { font-size: 0.93rem; color: var(--ink-2); }
+
+  section { padding-top: 72px; scroll-margin-top: 24px; }
+  .sec-head { display: flex; gap: 16px; align-items: baseline; border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 24px; }
+  .sec-head .num { font-family: var(--mono); font-size: 12px; color: var(--accent); padding-top: 0.55em; }
+  .sec-head h2 { font-size: clamp(1.5rem, 3vw, 2.05rem); font-weight: 400; line-height: 1.14; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
+  h3 { font-family: var(--sans); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); margin: 2.2em 0 0.85em; }
+  .lede { font-size: 1.07rem; color: var(--ink-2); max-width: 66ch; }
+
+  .keypoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; margin: 22px 0 26px; max-width: none; }
+  .keypoints > div { background: var(--surface); padding: 13px 16px 14px; }
+  .keypoints b { font-family: var(--sans); font-size: 11.5px; font-weight: 700; color: var(--ink); display: block; margin-bottom: 4px; }
+  .keypoints span { font-family: var(--sans); font-size: 12px; line-height: 1.45; color: var(--ink-3); display: block; }
+
+  details.sec-body { max-width: none; margin: 0; }
+  details.sec-body > summary { display: flex; gap: 11px; align-items: baseline; list-style: none; cursor: pointer; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); transition: border-color 0.12s ease, color 0.12s ease; }
+  details.sec-body > summary::-webkit-details-marker { display: none; }
+  details.sec-body > summary::before { content: "Open"; font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); background: var(--accent-wash); border-radius: 3px; padding: 2px 7px; flex: none; line-height: 1.35; }
+  details.sec-body[open] > summary::before { content: "Close"; }
+  details.sec-body > summary::after { content: "▾"; margin-left: auto; color: var(--ink-3); font-size: 11px; }
+  details.sec-body[open] > summary::after { content: "▴"; }
+  details.sec-body > summary:hover { border-color: var(--rule-strong); color: var(--ink); }
+  details.sec-body[open] > summary { margin-bottom: 10px; }
+  @media (prefers-reduced-motion: reduce) { details.sec-body > summary { transition: none; } }
+
+  details.ref { max-width: none; border: 1px solid var(--rule); border-radius: 5px; margin: 22px 0; overflow: hidden; }
+  details.ref > summary { padding: 13px 18px; background: var(--surface-2); display: flex; gap: 10px; align-items: baseline; list-style: none; cursor: pointer; font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); }
+  details.ref > summary::-webkit-details-marker { display: none; }
+  details.ref > summary::before { content: "＋"; font-family: var(--mono); font-size: 12px; color: var(--accent); flex: none; line-height: 1; }
+  details.ref[open] > summary::before { content: "－"; }
+  details.ref[open] > summary { border-bottom: 1px solid var(--rule); }
+  details.ref > summary:hover { color: var(--accent); }
+  details.ref > summary .tag-ref { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3); margin-left: auto; flex: none; }
+  details.ref > .plate, details.ref > .code { margin: 0; border: none; border-radius: 0; }
+
+  .plate { margin: 24px 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  .plate-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; padding: 12px 18px; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+  .plate-head .label { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-3); }
+  .plate-head .note { font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); }
+  .plate-body { padding: 18px; } .scroll-x { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 13px; line-height: 1.45; }
+  th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 10px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--rule-strong); white-space: nowrap; }
+  td:last-child, th:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  td .mono { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+  .grp { border-left: 3px solid var(--rule); padding-left: 11px; }
+  .grp-data { border-left-color: var(--g-data); } .grp-exec { border-left-color: var(--g-exec); } .grp-post { border-left-color: var(--g-post); }
+
+  .code { font-family: var(--mono); font-size: 12.5px; line-height: 1.62; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 4px; padding: 16px 18px; margin: 20px 0; overflow-x: auto; white-space: pre; color: var(--ink-2); max-width: none; }
+  .code b { color: var(--ink); font-weight: 600; }
+  .code i { color: var(--ink-3); font-style: normal; }
+  .code .k { color: var(--g-exec); font-weight: 600; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; margin: 26px 0; }
+  .stat { background: var(--surface); padding: 17px 18px 15px; }
+  .stat .v { font-family: var(--serif); font-size: 1.8rem; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; display: block; }
+  .stat .k { font-family: var(--sans); font-size: 11px; line-height: 1.42; color: var(--ink-3); display: block; margin-top: 8px; }
+  .stat .u { font-size: 0.6em; color: var(--ink-3); }
+
+  .callout { border-left: 3px solid var(--accent); background: var(--accent-wash); padding: 16px 20px; margin: 24px 0; border-radius: 0 4px 4px 0; max-width: 84ch; }
+  .callout p { max-width: none; } .callout p:last-child { margin-bottom: 0; }
+  .callout .tag { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 7px; }
+
+  figure { margin: 24px 0; } figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
+  figcaption { font-family: var(--sans); font-size: 12.5px; line-height: 1.5; color: var(--ink-3); margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); max-width: 96ch; }
+  figcaption b { color: var(--ink-2); font-weight: 600; }
+
+  footer { margin-top: 80px; border-top: 2px solid var(--ink); padding-top: 22px; font-family: var(--sans); font-size: 12px; color: var(--ink-3); line-height: 1.6; }
+  footer .who { color: var(--ink-2); font-weight: 600; }
+
+  @media print { body { background: #fff; color: #000; font-size: 10.5pt; } section { padding-top: 26px; break-inside: avoid; } .plate, figure, table, .code { break-inside: avoid; } .contents { display: none; } details { display: block; } details > summary { display: none; } }
+</style>
+<style>
+  /* Extends the deep-dive system: status marks only, from its existing tokens. */
+  .st { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+        padding: 2px 7px; border-radius: 3px; white-space: nowrap; border: 1px solid currentColor; }
+  .st-live { color: var(--good); background: var(--g-data-wash); }
+  .st-part { color: var(--warn); background: var(--g-post-wash); }
+  .st-plan { color: var(--crit); background: var(--accent-wash); }
+  .sec-head .st { align-self: center; margin-left: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; font-family: var(--sans);
+            font-size: 12px; color: var(--ink-3); margin: 22px 0 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .new { font-family: var(--sans); font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+         color: var(--g-exec); border: 1px solid var(--g-exec); background: var(--g-exec-wash);
+         border-radius: 3px; padding: 1px 5px; margin-left: 7px; white-space: nowrap; }
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <div class="eyebrow">
+      <span class="mark">ODUM RESEARCH</span>
+      <span class="sep">/</span>
+      <span>Strategy service — codebase walkthrough</span>
+      <span class="sep">/</span>
+      <span>Target state</span>
+      <span class="conf">Internal draft</span>
+    </div>
+
+    <h1>Strategy service <span class="light">— contracts, configuration, and what is actually reachable</span></h1>
+
+    <p class="standfirst">
+      A reading guide to the repository. Every contract below is the real declaration, not a paraphrase. Sections open
+      to full detail, and each carries a status against one test — whether something on a production path actually
+      calls it.
+    </p>
+
+    <div class="legend">
+      <span><b class="st st-live">live</b> shipped and reachable</span>
+      <span><b class="st st-part">partial</b> built, reachable for some cases</span>
+      <span><b class="st st-plan">planned</b> specified, not yet built</span>
+      <span><b class="new">new</b> added since the last edition</span>
+    </div>
+  </header>
+
+  <nav class="contents">
+    <h2>Contents — every section opens to full detail</h2>
+    <ol>
+      <li><a href="#s1"><span class="num">01</span><span class="ttl">What this service is, and what it isn't</span></a></li>
+      <li><a href="#s2"><span class="num">02</span><span class="ttl">Strategy identity: families, archetypes, slots</span></a></li>
+      <li><a href="#s3"><span class="num">03</span><span class="ttl">The instruction contract, in full</span></a></li>
+      <li><a href="#s4"><span class="num">04</span><span class="ttl">Configuration surface and the wizard</span></a></li>
+      <li><a href="#s5"><span class="num">05</span><span class="ttl">Batch, paper and live — the mode axis</span></a></li>
+      <li><a href="#s6"><span class="num">06</span><span class="ttl">Venue coverage: three surfaces, tracked apart</span></a></li>
+      <li><a href="#s7"><span class="num">07</span><span class="ttl">Reading positions back</span></a></li>
+      <li><a href="#s8"><span class="num">08</span><span class="ttl">How a strategy picks: coins, venues, funding</span></a></li>
+      <li><a href="#s9"><span class="num">09</span><span class="ttl">Reconciliation — the engines and the scenarios</span></a></li>
+      <li><a href="#s10"><span class="num">10</span><span class="ttl">The execution seam and its config loop</span></a></li>
+      <li><a href="#s11"><span class="num">11</span><span class="ttl">Transfers, custody and client isolation</span></a></li>
+      <li><a href="#s12"><span class="num">12</span><span class="ttl">Risk: drawdown, leverage, delta, position caps</span></a></li>
+      <li><a href="#s13"><span class="num">13</span><span class="ttl">Auto-resolution and escalation</span></a></li>
+      <li><a href="#s14"><span class="num">14</span><span class="ttl">Orders and the audit record</span></a></li>
+      <li><a href="#s15"><span class="num">15</span><span class="ttl">PnL, ledgers and the high-water mark</span></a></li>
+      <li><a href="#s16"><span class="num">16</span><span class="ttl">Backtest fidelity</span></a></li>
+      <li><a href="#s17"><span class="num">17</span><span class="ttl">How this is kept honest</span></a></li>
+      <li><a href="#s18"><span class="num">18</span><span class="ttl">What is still open</span></a></li>
+    </ol>
+  </nav>
+  <section id="s1">
+    <div class="sec-head"><span class="num">01</span><h2>What this service is, and what it isn't</h2></div>
+    <p class="lede">
+      This service decides. It consumes features and market state, evaluates archetypes each tick, sizes and hedges,
+      and emits typed instructions. It does not connect to venues, work orders, or move funds — those are execution
+      concerns, reached through the contract in §03.
+    </p>
+    <div class="keypoints">
+      <div><b>It decides</b><span>Archetype evaluation, sizing, hedge ratios, risk vetoes, position monitoring, PnL attribution</span></div>
+      <div><b>It does not execute</b><span>No order working, no signing. It emits intent; execution service realises it</span></div>
+      <div><b>One code path</b><span>The same strategy code runs unchanged in batch, paper and live — nothing in it knows which mode it is in</span></div>
+    </div>
+    <details class="sec-body" open>
+      <summary>Layout, and why the separation is load-bearing</summary>
+      <div class="stat-row">
+        <div class="stat"><span class="v">60</span><span class="k">Archetypes declared</span></div>
+        <div class="stat"><span class="v">32</span><span class="k">Factory-registered</span></div>
+        <div class="stat"><span class="v">9</span><span class="k">Instruction types</span></div>
+        <div class="stat"><span class="v">158</span><span class="k">Venues in capture</span></div>
+        <div class="stat"><span class="v">84</span><span class="k">Venue families</span></div>
+      </div>
+      <div class="code"><b>engine/</b>            archetype implementations + the V2 orchestrator that ticks them
+<b>configs/</b>           one document per strategy instance, plus per-family defaults
+<b>position/</b>          position monitor, treasury monitor, reconciliation, NAV, margin health
+<b>risk/</b>              pre-trade risk gates and limit evaluation
+<b>pnl/</b>               attribution — decision vs execution vs funding
+<b>transfer_coordinator</b>  sweeps, gas reserves, per-client transfer planning
+<b>close_all/</b>         per-archetype ordered unwind plans</div>
+      <p>
+        Because a strategy never names an algorithm, execution can be improved — new venues, better order working,
+        different fill models — without touching a single strategy. The reverse also holds: a new archetype inherits
+        every execution capability that already exists.
+      </p>
+      <p>
+        The gap between 60 declared archetypes and 32 registered is deliberate. An archetype is a named idea; it
+        becomes runnable only when a catalogue builder emits concrete slots for it. Counting declarations as
+        capabilities would overstate what the system can run today.
+      </p>
+      <div class="callout">
+        <span class="tag">How to read the status marks</span>
+        <p>
+          <b>Live</b> means something on a production path calls it — not that the code exists and passes its tests.
+          Those are different claims, and only the first earns the mark.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s2">
+    <div class="sec-head"><span class="num">02</span><h2>Strategy identity: families, archetypes, slots</h2><b class="st st-live">live</b></div>
+    <p class="lede">
+      Every instruction carries a full identity block. This is what lets a fill in a client report be traced back to
+      the exact strategy build and configuration that produced it.
+    </p>
+    <details class="sec-body">
+      <summary>The identity declaration, and how a slot label is built</summary>
+      <div class="code"><span class="k">class</span> <b>StrategyInstanceIdentity</b>:
+    family: StrategyFamily                <i># CARRY, DISPERSION, VOL_TRADING, …</i>
+    archetype_id: StrategyArchetype       <i># the specific archetype within the family</i>
+    archetype_build_version: str          <i># which build of the archetype produced this</i>
+    strategy_instance_id: str             <i># this running instance</i>
+    slot_version: int = 1
+    config_hash: str                      <i># content hash of the config that produced it</i>
+    config_version: int
+    client_id: str                        <i># every instruction is client-scoped</i>
+    share_class: ShareClass
+    env: Literal["prod", "paper", "canary", "dev"] = "prod"
+    holding_wallet: str | None = None
+    wallet_id: str = ""</div>
+      <p>
+        <b>config_hash</b> is the one to notice. Because it travels on every instruction, the exact configuration in
+        force when a decision was made is recoverable afterwards — a change to a parameter is visible in the
+        instruction stream, not just in a deployment log.
+      </p>
+      <h3>The slot label</h3>
+      <div class="code">CARRY_STAKED_BASIS@lido-uniswapv3-deribit-…-v2-prod
+│                  │    │           │        │   │
+archetype          │    spot venue  │        │   environment
+                   staking          │        slot version
+                                    hedge venue</div>
+      <p>
+        Because the label already encodes the archetype, one archetype can run many simultaneous instances across
+        different venues without ambiguity. That is why configuration, wallet binding and execution policy all key on
+        <b>(client_id, slot_label)</b> — a bare strategy name cannot distinguish two instances of the same archetype on
+        different venues, and that is the normal case rather than the exception.
+      </p>
+      <h3>Families</h3>
+      <div class="keypoints">
+        <div><b>Carry</b><span>Funding, basis and staking-yield differentials, including staked-basis and recursive-staked structures</span></div>
+        <div><b>Dispersion</b><span>Cross-venue divergence in funding or price for the same economic exposure</span></div>
+        <div><b>Volatility</b><span>Options structures built on a resolved at-the-money straddle</span></div>
+        <div><b>Liquidity provision</b><span>AMM and concentrated-liquidity positions</span></div>
+        <div><b>Event-driven</b><span>Liquidation capture and similar bounded opportunities</span></div>
+      </div>
+    </details>
+  </section>
+
+  <section id="s3">
+    <div class="sec-head"><span class="num">03</span><h2>The instruction contract, in full</h2><b class="st st-live">live</b></div>
+    <p class="lede">
+      This is the seam an external strategy would have to satisfy. Every instruction inherits one envelope; the action
+      subclasses add only what that action needs.
+    </p>
+    <details class="sec-body" open>
+      <summary>The envelope every instruction carries</summary>
+      <div class="code"><span class="k">class</span> <b>StrategyInstructionEnvelope</b>:
+    instruction_id: str
+    emitted_at_utc: datetime              <i># when the strategy decided</i>
+    identity: StrategyInstanceIdentity    <i># §02 — full provenance</i>
+
+    urgency: Urgency = Urgency.MEDIUM     <i># aggressive vs passive, stated as intent</i>
+    deadline_utc: datetime | None = None
+    execution_policy_ref: str | None = None
+
+    eligible_venues: list[str] = []       <i># a set, not a choice</i>
+    venue_constraints: dict[str, VenueConstraints] = {}
+    venue_routing_mode: VenueRoutingMode = SOR_AT_EXECUTION
+    target_venue: str | None = None       <i># only when routing is pinned</i>
+    chain: str | None = None
+
+    reference_price: Decimal | None = None
+    reference_price_mark_mode: ReferencePriceMarkMode = STATIC_AT_SEND
+
+    received_at_utc: datetime | None = None   <i># stamped by execution on receipt</i>
+    sent_at_utc: datetime | None = None       <i># stamped when sent to venue</i>
+
+    attestations: dict[str, str] = {}
+    correlation_id: str | None = None</div>
+      <div class="callout">
+        <span class="tag">Three fields worth dwelling on</span>
+        <p>
+          <b>urgency</b> states intent, never mechanism — it survives a change of venue, of market conditions, and of
+          the execution stack itself. <b>eligible_venues</b> plus a routing mode hands venue choice to execution rather
+          than fixing it at decision time. And the <b>received/sent</b> pair makes latency measurable: decision to
+          receipt is queue time, receipt to send is execution's own processing.
+        </p>
+      </div>
+    </details>
+    <details class="sec-body">
+      <summary>The nine action types, with their real fields</summary>
+      <div class="code"><span class="k">class</span> <b>TradeInstruction</b>(StrategyInstructionEnvelope):
+    target_position_units: Decimal        <i># a TARGET, not a delta — idempotent by design</i>
+    target_instrument: str
+    direction: Literal["LONG", "SHORT", "FLAT"] | None = None
+    max_price / min_price: Decimal | None
+    stop_loss_price / take_profit_price: Decimal | None
+
+<span class="k">class</span> <b>SwapInstruction</b>(StrategyInstructionEnvelope):
+    in_asset: str
+    out_asset: str
+    in_amount: Decimal
+    min_out_amount: Decimal               <i># slippage bound expressed as an outcome</i>
+    route_hint: str | None = None
+    mev_policy_ref: str | None = None
+
+<span class="k">class</span> <b>LendInstruction</b>(StrategyInstructionEnvelope):
+    protocol: str
+    asset: str
+    target_supplied_amount: Decimal       <i># again a target, not a delta</i>
+    min_apy_bps: int | None = None
+
+<span class="k">class</span> <b>BorrowInstruction</b>(StrategyInstructionEnvelope):
+    protocol: str
+    asset: str
+    target_debt_amount: Decimal
+    max_borrow_apy_bps: int | None = None
+    collateral_health_min: Decimal | None = None   <i># refuse if it would breach</i>
+
+<span class="k">class</span> <b>StakeInstruction</b>(StrategyInstructionEnvelope):
+    protocol: str
+    asset: str
+    target_staked_amount: Decimal
+    lst_asset: str | None = None          <i># the receipt token expected back</i>
+
+<span class="k">class</span> <b>UnstakeInstruction</b>(StrategyInstructionEnvelope):
+    protocol: str
+    asset: str
+    amount: Decimal
+    exit_queue_ok: bool = True            <i># may this sit in a withdrawal queue?</i>
+
+<span class="k">class</span> <b>QuoteInstruction</b>(StrategyInstructionEnvelope):
+    instrument: str
+    reference_price: Decimal              <i># narrows the envelope's optional to required</i>
+
+<span class="k">class</span> <b>AtomicInstruction</b>(StrategyInstructionEnvelope):
+    <i># multiple legs that must succeed or fail together</i>
+
+<span class="k">class</span> <b>CancelInstruction</b>(StrategyInstructionEnvelope):
+    <i># withdraw a previously emitted instruction</i></div>
+      <div class="callout">
+        <span class="tag">Targets, not deltas</span>
+        <p>
+          Trade, lend, borrow and stake all express a <b>target</b> state rather than an increment. Re-sending the same
+          instruction is therefore idempotent: it cannot double a position if a response was lost, which is what makes
+          the contract safe to retry across a service restart.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s4">
+    <div class="sec-head"><span class="num">04</span><h2>Configuration surface and the wizard</h2><b class="st st-part">partial</b></div>
+    <p class="lede">
+      Every archetype declares its parameters in a schema registry rather than in free-form configuration, so the
+      wizard can render a validated form for a new parameter without anyone editing a user interface.
+    </p>
+    <details class="sec-body">
+      <summary>What a parameter declares</summary>
+      <div class="code"><span class="k">class</span> <b>ParamSpec</b>:
+    section: str          <i># reference_price | pnl | analytics | risk</i>
+    wired: bool           <i># does anything actually READ this?</i>
+    key_template: str     <i># where the value lands in the config document</i>
+    enum_source: str      <i># the registry a choice is drawn from</i></div>
+      <div class="callout">
+        <span class="tag">Why <code>wired</code> exists</span>
+        <p>
+          A configuration surface showing parameters nothing reads is worse than one that omits them: it invites an
+          operator to tune something with no effect, and to believe the result. Making the state explicit turns a
+          silent no-op into a visible one.
+        </p>
+      </div>
+      <p>
+        <b>enum_source</b> is what stops option lists drifting. A venue choice is drawn from the venue registry rather
+        than a hand-maintained list, so a venue that leaves the system cannot remain selectable.
+      </p>
+      <h3>How configuration reaches a running instance</h3>
+      <p>
+        Configuration is stored per instance and hashed; the hash travels on every instruction (§02). Changing a
+        parameter produces a new <b>config_hash</b> and <b>config_version</b>, so two fills with different behaviour
+        are distinguishable after the fact without consulting a deployment history.
+      </p>
+      <p>
+        The governing sections separate what a strategy owns from what it merely references. Execution behaviour is
+        deliberately not among them — that belongs to the policy binding in §09.
+      </p>
+    </details>
+  </section>
+
+  <section id="s5">
+    <div class="sec-head"><span class="num">05</span><h2>Batch, paper and live — the mode axis</h2><b class="st st-live">live</b><b class="new">new</b></div>
+    <p class="lede">
+      All three run simultaneously: batch replays on a next-day cadence alongside paper and live running inline. Mode
+      is a property of a strategy instance, never a service-wide setting.
+    </p>
+    <details class="sec-body">
+      <summary>The declared modes, and why testnet sits inside paper</summary>
+      <div class="code"><span class="k">class</span> <b>TradingMode</b>:
+    BATCH = "BATCH"       <i># historical replay — the reference the others prove against</i>
+    PAPER = "PAPER"       <i># the live loop, no client capital at risk</i>
+    LIVE  = "LIVE"        <i># real capital, real venues</i></div>
+      <h3>Testnet is a sub-mode of paper, not a peer of it</h3>
+      <p>
+        Where a venue offers a testnet, paper trades against a real venue-side account and has an independent position
+        to reconcile against. Where it does not — the common case, since many venues have no testnet and those that do
+        often cannot hold realistic balances — paper falls back to simulated matching, using <em>the same matcher batch
+        uses</em>.
+      </p>
+      <div class="callout">
+        <span class="tag">Not an implementation detail</span>
+        <p>
+          That identity is required rather than incidental: it is exactly what makes the determinism proof in §08
+          meaningful. If paper and batch matched differently, a difference between them would be uninterpretable.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s6">
+    <div class="sec-head"><span class="num">06</span><h2>Venue coverage: three surfaces, tracked apart</h2><b class="st st-part">partial</b><b class="new">new</b></div>
+    <p class="lede">
+      A venue counts as supported only when three separate things are true. The system now tracks them independently
+      rather than assuming one implies the others — and reports coverage per surface, never as one number.
+    </p>
+    <details class="sec-body">
+      <summary>The capability declaration, and the asymmetry that motivates it</summary>
+      <div class="code"><span class="k">class</span> <b>PositionReadModeAvailability</b>:
+    batch: PositionReadModeStatus = "none"
+    live:  PositionReadModeStatus = "none"
+    paper: PositionReadModeStatus = "none"
+
+<span class="k">def</span> <b>position_read_mode_availability</b>(venue: str) -> PositionReadModeAvailability</div>
+      <p>
+        Per venue, per mode. A venue readable in batch but not live is now a visible fact rather than an assumption,
+        which is what a cross-repo check can assert against.
+      </p>
+      <div class="callout">
+        <span class="tag">The asymmetry that matters</span>
+        <p>
+          Being able to act without being able to see is strictly worse than the reverse: the instruction lands, the
+          position changes, and nothing can confirm it or detect drift afterwards. That is why the read side gets its
+          own capability axis rather than being inferred from execution support.
+        </p>
+      </div>
+      <h3>Centralised venues</h3>
+      <p>
+        Broad by construction — the exchange adapter is generic over any supported exchange identifier, so most
+        centralised venues are reachable without a dedicated module. Dedicated adapters exist only where
+        authentication is bespoke.
+      </p>
+      <h3>On-chain venues</h3>
+      <p>
+        Not generic, and where the remaining work sits. Connectors exist ahead of the paths that call them, and the
+        wiring is being closed venue by venue — which is why this section reads <b>partial</b> rather than live.
+      </p>
+    </details>
+  </section>
+
+  <section id="s7">
+    <div class="sec-head"><span class="num">07</span><h2>Reading positions back</h2><b class="st st-part">partial</b><b class="new">new</b></div>
+    <p class="lede">
+      Position reading is the exchange side of reconciliation, and it is read-only by contract — the adapters expose
+      balances, positions and account snapshots, and have no order-placing or signing surface at all.
+    </p>
+    <details class="sec-body">
+      <summary>The read-only contract, and the registry that drives resolution</summary>
+      <div class="code"><span class="k">class</span> <b>BasePositionAdapter</b>(ABC):
+    get_balances()             <i># what we hold</i>
+    get_positions()            <i># open exposure</i>
+    get_account_snapshot()     <i># margin, equity, health</i>
+    get_normalized_positions()
+    venue_name
+
+<i># No create_order. No send_transaction. No withdraw.
+# The `sign` occurrences are HMAC REQUEST signing for authenticated
+# reads, not transaction signing.</i></div>
+      <h3>Registry-driven, so it cannot silently fall behind</h3>
+      <div class="code"><span class="k">def</span> <b>lst_token_address</b>(symbol: str, chain: str = "ETHEREUM") -> str | None
+<span class="k">def</span> <b>lst_token_addresses_for_venue</b>(venue: str, chain: str = "ETHEREUM") -> dict[str, str]</div>
+      <p>
+        A venue becomes readable when its token address is added to the shared registry, with no change to the
+        resolver. A venue with no known address is simply not routed — and resolution fails loudly on an unknown venue
+        rather than returning an empty reader.
+      </p>
+      <div class="callout">
+        <span class="tag">Why an empty reader would be worse than an error</span>
+        <p>
+          A reader reporting zero for an unsupported venue would reconcile cleanly against an empty book and hide a
+          real holding. The same rule applies one level down: a venue is never routed to a reader with no tokens to
+          read.
+        </p>
+      </div>
+      <p>
+        Protocols whose position is genuinely stateful — lending health factors, fixed-maturity instruments,
+        concentrated-liquidity ranges, restaking withdrawal queues — need bespoke readers, because a plain token
+        balance would <em>misrepresent</em> them rather than merely miss them. Those are specified and not yet built.
+      </p>
+    </details>
+  </section>
+
+  <section id="s8">
+    <div class="sec-head"><span class="num">08</span><h2>How a strategy picks: coins, venues, funding</h2><b class="st st-live">live</b></div>
+    <p class="lede">
+      A staked-basis or basis strategy is not one trade — it is a choice among many possible (coin × spot venue ×
+      hedge venue × staking protocol) combinations. This is how that choice is made and re-made.
+    </p>
+    <details class="sec-body">
+      <summary>The selectable axes, the capability gate, and the liquidity filter</summary>
+      <h3>Each axis is enumerated, not hardcoded</h3>
+      <div class="code"><i># A carry-staked-basis slot is a point in this space:</i>
+staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
+
+<i># spot_venue is a FIRST-CLASS selectable axis — the USDC→native SWAP leg
+# can route to a centralised spot venue or an on-chain aggregator,
+# chosen on liquidity rather than fixed at design time.</i></div>
+      <p>
+        The catalogue builder emits one slot per viable combination, so adding a venue or an LST expands the
+        opportunity set without new strategy code. Each emitted slot carries its own label (§02), so two combinations
+        of the same archetype are separately configurable, separately funded, and separately killable.
+      </p>
+      <h3>The capability gate comes first</h3>
+      <div class="code"><b>venue_supports_perp_funding</b>(venue)      <i># can this venue hedge at all?</i>
+<b>perp_hedge_candidate_venues</b>(...)        <i># only those that can</i></div>
+      <p>
+        A venue that cannot carry the hedge leg is excluded before any economics are considered. This ordering matters:
+        ranking first and filtering second would let an attractive-looking funding rate produce a slot that cannot
+        actually be hedged.
+      </p>
+      <h3>Then liquidity, then economics</h3>
+      <p>
+        Where the candidate pool is broad — a basis or funding-dispersion book drawing on thirty-plus perp-listed coins
+        across ten venues — the universe is filtered by <b>measured average daily volume</b> to a tractable top-N before
+        economics are evaluated. Liquidity is the binding constraint there, so it is applied as a filter rather than a
+        tie-break.
+      </p>
+      <div class="callout">
+        <span class="tag">Where ranking is deliberately NOT used</span>
+        <p>
+          Staked-basis is not liquidity-ranked. Its universe is a small curated set — a handful of liquid staking
+          tokens, each crossed with the venues that accept them as collateral. That is a <em>capability</em> question,
+          not a liquidity-ranking one, and treating it as the latter would invent choice where none exists.
+        </p>
+      </div>
+      <h3>Funding, and why it is re-evaluated rather than fixed</h3>
+      <p>
+        Funding rates move, and the venue paying best today may not tomorrow. Selection is therefore re-derived on a
+        dated basis rather than pinned at slot creation, and the resolution is a pure function of its inputs — the same
+        inputs produce the same universe, which is what lets a backtest rerun reproduce a live day's choices exactly
+        (§09).
+      </p>
+    </details>
+  </section>
+
+  <section id="s9">
+    <div class="sec-head"><span class="num">09</span><h2>Reconciliation — the engines and the scenarios</h2><b class="st st-live">live</b></div>
+    <p class="lede">
+      Reconciliation is not one comparison. Nine engines cover different surfaces and different moments, and their
+      output can arm a circuit breaker rather than merely log.
+    </p>
+    <details class="sec-body" open>
+      <summary>The two legs of performance reconciliation</summary>
+      <div class="code">live − batch  =  (paper − batch)  +  (live − paper)
+                  └── determinism ──┘   └── execution ──┘</div>
+      <div class="keypoints">
+        <div><b>paper − batch</b><span>Proves the live loop does what the batch loop does. Same matcher both sides, so any difference is a loop bug. Expected: exactly zero</span></div>
+        <div><b>live − paper</b><span>With the loop proven identical, what remains is execution quality alone</span></div>
+      </div>
+      <div class="callout">
+        <span class="tag">Why not compare live against batch directly</span>
+        <p>
+          It blends the two effects, and a loop bug becomes indistinguishable from poor execution. Isolating the
+          determinism leg first is what gives the second number meaning. Paper over a window must equal a batch rerun
+          trade for trade — not close, equal — because once a tolerance is allowed it can absorb a real bug
+          indefinitely.
+        </p>
+      </div>
+    </details>
+    <details class="sec-body">
+      <summary>The engines, by surface</summary>
+      <div class="code"><b>reconciliation_engine</b>          positions: internal fill-state vs venue-reported
+<b>balance_reconciliation_engine</b>  balances per venue and wallet
+<b>fee_reconciliation_engine</b>      fees charged vs fees expected
+<b>pnl_reconciliation_engine</b>      attributed PnL vs realised
+<b>transfer_reconciler</b>            transfers instructed vs settled
+<b>startup_reconciler</b>             full reconciliation BEFORE the service accepts data
+<b>correction_dispatcher</b>          bounded automatic correction
+<b>reconciler_breaker_bridge</b>      reconciler output → alert + kill-switch arming</div>
+      <p>
+        Fee and transfer reconciliation matter more than they sound: a fee schedule that silently changed, or a
+        transfer that left one venue and never arrived at the other, both show up as slow PnL drift that no position
+        check would catch.
+      </p>
+    </details>
+    <details class="sec-body">
+      <summary>Four scenarios, and what happens in each</summary>
+      <h3>1. Steady state</h3>
+      <p>
+        The internal book is compared continuously against what each venue reports. A discrepancy is surfaced with its
+        size in quantity, in USD value, and as a percentage — so a threshold means the same thing across a
+        thousand-dollar and a million-dollar position.
+      </p>
+      <div class="code"><span class="k">class</span> <b>ReconciliationSnapshot</b>:
+    internal_quantity: Decimal     <i># what our book says</i>
+    exchange_quantity: Decimal     <i># what the venue says</i>
+    discrepancy: Decimal
+    discrepancy_value: Decimal     <i># USD, so a threshold is comparable across assets</i>
+    discrepancy_pct: Decimal</div>
+      <h3>2. Material discrepancy</h3>
+      <p>
+        Above threshold, a correction can be dispatched automatically — but only through three independent gates: an
+        explicit enable flag, a percentage threshold, and a maximum correctable quantity. All three must pass. The
+        quantity cap is the important one: it stops a bad reading from producing a correspondingly large trade.
+      </p>
+      <h3>3. Service restart</h3>
+      <p>
+        On startup the service fetches all positions directly from venue REST APIs — <em>bypassing local cache</em> —
+        and reconciles before it will accept new data. Critical discrepancies are surfaced first, and the result is
+        returned to the caller so startup can be refused rather than proceeding on a book that may be stale.
+      </p>
+      <div class="callout">
+        <span class="tag">Why bypass the cache</span>
+        <p>
+          A restart is exactly when the cache is least trustworthy — it may predate whatever caused the restart.
+          Reconciling against it would confirm the wrong state and report success.
+        </p>
+      </div>
+      <h3>4. Reconciler failure becomes a circuit breaker</h3>
+      <p>
+        Four state-surface reconcilers — position, balance, custody and on-chain — feed a bridge that raises an alert
+        <em>and arms the kill switch</em>. Reconciliation is therefore not only a reporting function: a book that
+        cannot be trusted stops trading rather than continuing to trade on it.
+      </p>
+    </details>
+  </section>
+  <section id="s10">
+    <div class="sec-head"><span class="num">10</span><h2>The execution seam and its config loop</h2><b class="st st-live">live</b></div>
+    <p class="lede">
+      Execution turns an instruction into orders. What matters from the strategy side is what it optimises for, and
+      what governs its behaviour per client.
+    </p>
+    <details class="sec-body">
+      <summary>What it optimises for, and how behaviour is bound per client</summary>
+      <div class="keypoints">
+        <div><b>Fill the target</b><span>Within the bounds the instruction stated</span></div>
+        <div><b>Close the gap</b><span>Between the reference price the strategy supplied and the price achieved</span></div>
+        <div><b>Respect urgency</b><span>Trading immediacy against market impact in the direction asked for</span></div>
+        <div><b>Fail loudly</b><span>Rather than partially, so a half-executed intent is visible instead of silent</span></div>
+      </div>
+      <h3>The configuration loop</h3>
+      <div class="code">bindings: dict[str, str]
+    <i># "{client_id}:{slot_label}"  ->  policy_ref ("policy_id@vN")</i></div>
+      <p>
+        Execution behaviour is bound per <b>(client, slot)</b> — the same identity strategies and wallets use. The
+        binding resolves to a policy artefact loaded from object storage and hot-reloaded, so changing how a client's
+        strategy executes needs neither a restart nor a change to strategy code.
+      </p>
+      <p>
+        The artefact is content-hashed and versioned, so the exact behaviour in force at any moment is identifiable
+        after the fact. Resolution is first-match-wins with a default-deny: an instruction matching no rule does not
+        quietly proceed on a guess.
+      </p>
+      <div class="callout">
+        <span class="tag">Deliberately not described here</span>
+        <p>
+          The rules inside a policy, the thresholds they test, and the algorithms they select. Those belong to
+          execution service, and a strategy is designed never to need them — which is precisely why the strategy side
+          can be read and understood on its own.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s11">
+    <div class="sec-head"><span class="num">11</span><h2>Transfers, custody and client isolation</h2><b class="st st-part">partial</b></div>
+    <p class="lede">
+      Capital movement is a first-class instruction type, not a side effect. This is the surface that touches an
+      allocator's own custody arrangements, so it is specified in full.
+    </p>
+    <details class="sec-body" open>
+      <summary>The thirteen transfer types and the three rails</summary>
+      <div class="code"><span class="k">class</span> <b>BusTransferType</b>:            <i># rail it dispatches to</i>
+    CEX_WITHDRAW      <i># CEFI    — withdrawal from a centralised venue</i>
+    CEX_DEPOSIT       <i># ON_CHAIN — funding a venue from a wallet</i>
+    SUBACCOUNT_MOVE   <i># CEFI    — between subaccounts on one venue</i>
+    DEFI_DEPOSIT      <i># ON_CHAIN</i>
+    DEFI_WITHDRAW     <i># ON_CHAIN</i>
+    BRIDGE            <i># ON_CHAIN — across chains</i>
+    ON_CHAIN          <i># ON_CHAIN — wallet to wallet</i>
+    CUSTODY_TRANSFER  <i># ON_CHAIN — into or out of custody</i>
+    WRAP_UNWRAP       <i># ON_CHAIN</i>
+    SWEEP             <i># ON_CHAIN — dust consolidation</i>
+    REBALANCE         <i># ON_CHAIN — between our own wallets</i>
+    UNITY_WALLET_OP   <i># OTHER</i>
+    IBKR_FUND_MOVE    <i># OTHER</i></div>
+      <p>
+        The rail is not cosmetic — it decides which mechanism carries the transfer, and therefore what can fail and how
+        it is confirmed. Note that <b>CEX_WITHDRAW</b> is a CeFi-rail operation while <b>CEX_DEPOSIT</b> is on-chain:
+        the same venue, opposite directions, genuinely different machinery.
+      </p>
+    </details>
+    <details class="sec-body">
+      <summary>Custody: signing surfaces, and where an allocator's arrangement plugs in</summary>
+      <div class="code"><span class="k">class</span> <b>SigningSurface</b>:
+    LOCAL_KEY              <i># development only</i>
+    CLOUD_KMS_ENCRYPTED    <i># key never leaves the KMS boundary</i>
+    COPPER_MPC             <i># Copper multi-party computation custody</i>
+    FIREBLOCKS_MPC         <i># Fireblocks multi-party computation custody</i>
+    MOCK                   <i># tests</i></div>
+      <p>
+        Custody is a <b>per-wallet</b> property, not a global setting, so a client can hold some wallets under an MPC
+        custodian and others directly without the strategy layer knowing or caring. The signing surface is resolved at
+        the point of signing; the strategy that emitted the instruction never sees it.
+      </p>
+      <div class="callout">
+        <span class="tag">What this means for an allocator</span>
+        <p>
+          If assets sit with a custodian, the integration point is the signing surface and the wallet mapping — not the
+          strategy. Adding a custodian is a wallet-configuration change, and every existing archetype inherits it
+          without modification.
+        </p>
+      </div>
+      <h3>Treasury versus trading wallets</h3>
+      <div class="code"><span class="k">class</span> <b>ShareClassWalletMapping</b>:
+    <i># per share class: the treasury wallet, plus trading wallets</i>
+
+<span class="k">class</span> <b>TradingWalletConfig</b>:
+    <i># keyed by (client_id, slot_label) — a wallet belongs to ONE
+    # strategy instance, so exposure is attributable and a slot can be
+    # funded, drained or killed without touching its siblings</i></div>
+      <p>
+        The treasury wallet holds the share class's base currency; trading wallets are working capital handed to a
+        specific strategy slot. The split is what makes per-slot funding decisions possible — and what stops a
+        misbehaving strategy from reaching the rest of the book.
+      </p>
+      <div class="callout">
+        <span class="tag">Enforced in code, not by convention</span>
+        <p>
+          <b>Funds never move between clients.</b> Every transfer is scoped to one client, and an attempt to cross that
+          boundary raises rather than executing. Each client also runs in its own isolated process — so a
+          cross-client transfer is not merely rejected, it has no path to be expressed.
+        </p>
+      </div>
+    </details>
+    <details class="sec-body">
+      <summary>Manual, automated, and how much goes to each venue</summary>
+      <h3>Automated movement</h3>
+      <div class="keypoints">
+        <div><b>Dust consolidation</b><span>Balances below a threshold are swept back to the main wallet rather than stranded across venues</span></div>
+        <div><b>Gas top-up</b><span>On-chain wallets are kept funded so they can always transact</span></div>
+        <div><b>The gas floor</b><span>A sweep never takes a wallet below its reserve — a wallet without gas cannot act, including to close a position</span></div>
+        <div><b>Rebalance</b><span>Between our own wallets, on the on-chain rail, scoped to one client</span></div>
+      </div>
+      <h3>How much goes to each venue</h3>
+      <p>
+        Venue allocation follows the slots that are actually running. Because a trading wallet is bound to one
+        <b>(client, slot)</b>, and each slot names its spot and hedge venues (§08), the required balance per venue is a
+        consequence of the enabled slot set rather than a separate allocation model to be kept in sync with it.
+      </p>
+      <p>
+        Position and margin health are monitored per venue, so a venue approaching a margin constraint is visible
+        before it forces a liquidation — and topping it up is a transfer instruction like any other, subject to the
+        same client scoping.
+      </p>
+      <h3>Manual movement</h3>
+      <p>
+        Operator-initiated transfers use the same instruction types and the same rails as automated ones. That is
+        deliberate: a manual transfer is not a bypass, so it reconciles, audits and appears in attribution exactly as
+        an automated one does.
+      </p>
+    </details>
+  </section>
+
+  <section id="s12">
+    <div class="sec-head"><span class="num">12</span><h2>Risk: drawdown, leverage, delta, position caps</h2><b class="st st-part">partial</b></div>
+    <p class="lede">
+      Risk rules sit between a strategy's intent and its execution. A rule that fires can warn, or block the
+      instruction and emit a rejection event — so a blocked instruction is a recorded fact, not a silence.
+    </p>
+    <details class="sec-body" open>
+      <summary>The limits, and the two-tier warn/breach model</summary>
+      <div class="code"><i># per client, per slot</i>
+max_leverage              <i># hard cap</i>
+max_leverage_warning      <i># fires before the cap, while action is still cheap</i>
+max_drawdown_pct          <i># hard cap</i>
+max_drawdown_warning_pct  <i># early tier</i>
+max_position_usd          <i># notional ceiling per position</i></div>
+      <div class="callout">
+        <span class="tag">Why every limit has a warning tier</span>
+        <p>
+          A single hard threshold gives you no time: you are either fine or already in breach, and the corrective
+          trade must then happen at the worst moment. The warning tier exists so exposure can be reduced while the
+          market is still orderly — the breach tier is the backstop, not the plan.
+        </p>
+      </div>
+      <h3>Delta neutrality</h3>
+      <p>
+        For strategies that are meant to be market-neutral, residual delta is tracked as a <b>composite</b> across
+        every leg and venue, and evaluated as drift against the share class's base-currency target. Neutrality is
+        therefore a measured property of the whole book rather than an assumption inherited from the strategy's
+        design.
+      </p>
+      <p>
+        A carry position is only carry while it stays hedged. Drift is what turns it into a directional position
+        nobody chose, which is why the delta composite is monitored continuously rather than checked at entry.
+      </p>
+      <h3>Hedging to minimise added leverage</h3>
+      <p>
+        When exposure must be reduced, the preferred correction is the one that adds least leverage — reducing the
+        existing position where possible rather than opening an offsetting one. Two trades can produce the same net
+        delta while leaving very different gross exposure and margin requirement behind, and the cheaper-looking
+        trade is often the one that increases fragility.
+      </p>
+      <h3>Position caps</h3>
+      <p>
+        Notional ceilings apply per position and per slot, so a single archetype cannot consume the book. Combined
+        with per-slot trading wallets (§11), the cap is enforced by construction as well as by rule: a slot cannot
+        trade capital it was never given.
+      </p>
+    </details>
+    <details class="sec-body">
+      <summary>Kill switches: scoped, and direction-aware</summary>
+      <div class="code"><span class="k">class</span> <b>KillSwitchId</b>:
+    KILL_ALL_LIVE                              <i># everything, immediately</i>
+    KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS      <i># one archetype, all clients</i>
+    KILL_PER_ARCHETYPE_ARBITRAGE_PRICE_DISPERSION
+    KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS
+    KILL_PER_VENUE_BYBIT                       <i># one venue, all strategies</i>
+    …</div>
+      <p>
+        Scope matters: a venue in trouble should not require halting strategies that never touch it, and an archetype
+        behaving badly should not require halting a venue other archetypes depend on. Granular switches mean the
+        response can be proportionate, which makes it far more likely to be used early.
+      </p>
+      <div class="callout">
+        <span class="tag">The asymmetry is the point</span>
+        <p>
+          <b>Protective arming is autonomous; resuming is human-only.</b> An automated system should be able to stop
+          itself and should not be able to restart itself. Every automatic recovery path is scoped to move only in the
+          safe direction.
+        </p>
+      </div>
+      <h3>Emergency flatten is a plan, not a loop</h3>
+      <div class="code"><i># carry_staked_basis unwind order:</i>
+1. cancel resting perp orders on the hedge venue
+2. unwind the on-chain leg
+3. repay borrow where the position is leveraged
+<i># venue-priority: hedge first (CeFi), then DeFi unwind</i></div>
+      <p>
+        Unwinding in the wrong order can leave an account under-collateralised part-way through the sequence — closing
+        a hedge before repaying the borrow it protects is how a controlled exit becomes a liquidation. The plan is
+        therefore per-archetype and venue-scoped rather than a generic loop over positions.
+      </p>
+    </details>
+  </section>
+
+  <section id="s13">
+    <div class="sec-head"><span class="num">13</span><h2>Auto-resolution and escalation</h2><b class="st st-live">live</b><b class="new">new</b></div>
+    <p class="lede">
+      When a dependency fails, the response is graduated rather than binary. Each failure maps to an action and an
+      escalation target, so most problems resolve without a human and the ones that reach a human are the ones that
+      should.
+    </p>
+    <details class="sec-body">
+      <summary>The action ladder and the escalation ladder</summary>
+      <div class="code"><span class="k">class</span> <b>DependentAction</b>:      <i># least to most severe</i>
+    NONE
+    SELF_RETRY        <i># transient — try again</i>
+    SELF_RESTART      <i># this service is wedged</i>
+    SELF_DRAIN        <i># stop taking new work, finish what is in flight</i>
+    DEPS_HOLD         <i># hold dependents back</i>
+    DEPS_DRAIN        <i># drain dependents too</i>
+    FLEET_HALT        <i># stop the fleet</i>
+    KILL_SWITCH       <i># arm protection (§12)</i>
+
+<span class="k">class</span> <b>EscalationTarget</b>:
+    AUTO              <i># resolved without notifying anyone</i>
+    AGENT             <i># an automated operator picks it up</i>
+    AGENT_URGENT
+    HUMAN             <i># wallet keys, credentials, and every manual_unkill resume</i></div>
+      <p>
+        The two ladders are independent: a severe action can still be automatic (arming a kill switch), and a mild
+        condition can still need a human (anything touching credentials). Pairing them per failure mode is what stops
+        the system either over-escalating routine faults or quietly self-healing something that warranted attention.
+      </p>
+      <div class="callout">
+        <span class="tag">The rule that anchors it</span>
+        <p>
+          <em>Protective arming is autonomous; <code>manual_unkill</code> resume is human-only.</em> The ladder can
+          always move toward safety on its own, and never away from it.
+        </p>
+      </div>
+      <h3>Draining rather than stopping</h3>
+      <p>
+        <b>SELF_DRAIN</b> and <b>DEPS_DRAIN</b> matter more than they look. Stopping abruptly leaves in-flight orders
+        in an unknown state; draining refuses new work while letting what is already committed complete, so the book
+        is in a known condition when the service does stop — which is exactly what the startup reconciler (§09) then
+        checks against.
+      </p>
+    </details>
+  </section>
+  <section id="s14">
+    <div class="sec-head"><span class="num">14</span><h2>Orders and the audit record</h2><b class="st st-part">partial</b><b class="new">new</b></div>
+    <p class="lede">
+      Positions, trades, fills, orders and the strategy instructions that caused them are one class of private record:
+      the entry is immutable, and the actions taken on it are auditable.
+    </p>
+    <details class="sec-body">
+      <summary>Append-only records, and why attempts are recorded too</summary>
+      <p>
+        Audit entries are append-only objects with a validated schema. Records are never edited in place and never
+        removed — a withdrawal is a status change plus an audited action, so both the original entry and the fact of
+        its removal survive.
+      </p>
+      <h3>Attempts count, not only outcomes</h3>
+      <p>
+        A cancel that races a fill must be distinguishable from a cancel after confirmation. Both may end in the same
+        final state, but only one is an attempt to intervene while the order was still in flight — and that
+        distinction is precisely what an audit is asked for after the fact.
+      </p>
+      <div class="callout">
+        <span class="tag">Marked partial deliberately</span>
+        <p>
+          The immutable primitive exists and is used by the manual path. Extending it across automated orders, fills
+          and instructions — and adding vocabulary for attempted actions — is specified and open.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s15">
+    <div class="sec-head"><span class="num">15</span><h2>PnL, ledgers and the high-water mark</h2><b class="st st-live">live</b></div>
+    <p class="lede">
+      Performance is attributed across parallel ledgers rather than collapsed into one number, so the source of a
+      difference is identifiable rather than inferred.
+    </p>
+    <details class="sec-body">
+      <summary>Parallel ledgers, flow-adjusted marks, attribution dimensions</summary>
+      <p>
+        The same window can be viewed as it actually filled, as it would have filled at the reference price, and as the
+        batch rerun produced it — which turns "execution cost us X" into a measured quantity rather than an estimate.
+      </p>
+      <h3>The high-water mark is never raw equity</h3>
+      <p>
+        A mark computed on raw equity moves when a client deposits or withdraws, which has nothing to do with
+        performance. The mark is computed on a flow-adjusted basis instead, so subscriptions and redemptions neither
+        create nor erase a fee position.
+      </p>
+      <h3>Attribution dimensions</h3>
+      <p>
+        PnL decomposes by venue, account, client, instrument and strategy slot — the same identity from §02, which is
+        what lets a number in a client report be traced back to the instructions that produced it.
+      </p>
+    </details>
+  </section>
+
+  <section id="s16">
+    <div class="sec-head"><span class="num">16</span><h2>Backtest fidelity</h2><b class="st st-live">live</b></div>
+    <p class="lede">
+      A backtest is only as honest as its fill assumptions. Fidelity is explicit: the system knows what data quality a
+      given instrument and period had, and never claims a better fill model than the data supports.
+    </p>
+    <details class="sec-body">
+      <summary>The tiers, the clamp direction, and the benchmark mode</summary>
+      <div class="code"><span class="k">class</span> <b>ExecutionFidelityTier</b>:
+    OHLC_BAR          = 1    <i># open/high/low/close only</i>
+    CANDLE_BOOK_COLS  = 2    <i># bars with book-derived columns</i>
+    L2_TICK           = 3    <i># full depth and trades</i>
+
+<span class="k">def</span> <b>clamp_tier</b>(requested, available)   <i># clamps DOWN only, never up</i></div>
+      <div class="callout">
+        <span class="tag">The clamp direction is the safeguard</span>
+        <p>
+          A request for a richer model than the data supports is degraded to what is defensible, never upgraded. An
+          optimistic fill model flatters a backtest in exactly the way that is hardest to notice.
+        </p>
+      </div>
+      <h3>Graceful fallback</h3>
+      <p>
+        Where finer data exists it is used; where it does not, the model steps down a tier rather than refusing to run.
+        An instrument with no tick history is still testable, with its fills marked as the coarser estimate they are.
+      </p>
+      <h3>The benchmark comparison</h3>
+      <p>
+        A separate mode replaces execution entirely, filling every instruction at the strategy's own reference price.
+        The difference between that and a realistic fill isolates execution's contribution from the strategy's — the
+        same decomposition as §08, applied inside a single backtest.
+      </p>
+    </details>
+  </section>
+
+  <section id="s17">
+    <div class="sec-head"><span class="num">17</span><h2>How this is kept honest</h2><b class="st st-live">live</b><b class="new">new</b></div>
+    <p class="lede">
+      The checks below are why the status marks in this document can be trusted. Each exists because something went
+      wrong once.
+    </p>
+    <details class="sec-body">
+      <summary>The gates, and the single pattern behind most of them</summary>
+      <div class="keypoints">
+        <div><b>Reachability baseline</b><span>Stops a venue being counted as supported when nothing on a production path calls its adaptor</span></div>
+        <div><b>Live-capability declaration</b><span>A connector must declare a real write path before it may be asked for one</span></div>
+        <div><b>Single-source registries</b><span>Stops the same contract address existing twice and drifting, where a wrong value reads the wrong token and silently mis-reconciles</span></div>
+        <div><b>Cross-repo invariants</b><span>Stop one service gaining a venue the other lacks</span></div>
+        <div><b>Schema coverage</b><span>Stops an archetype shipping without a declared parameter schema</span></div>
+        <div><b>Shrinking baselines</b><span>Known-imperfect patterns are counted, and the count may fall but never rise</span></div>
+      </div>
+      <div class="code"><span class="k">class</span> <b>BaseConnector</b>:
+    supports_live: bool = False    <i># fail-closed: simulation-only until proven otherwise</i>
+
+    <i># is_live=True on a connector that has not declared supports_live
+    # raises SimulationOnlyConnectorError rather than returning a fill
+    # that never happened.</i></div>
+      <div class="callout">
+        <span class="tag">The pattern behind most of them</span>
+        <p>
+          Code that exists, passes its tests, and is called by nothing is the defect this codebase has produced most
+          often. These checks ask <em>does anything call it</em>, which is a different question from <em>does it
+          work</em> — and the second never catches the first.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s18">
+    <div class="sec-head"><span class="num">18</span><h2>What is still open</h2><b class="st st-plan">planned</b></div>
+    <p class="lede">
+      Stated plainly, because the distinction between built and reachable is the whole point of this walkthrough.
+    </p>
+    <details class="sec-body" open>
+      <summary>Open work, by area</summary>
+      <div class="keypoints">
+        <div><b>On-chain execution</b><span>Connectors exist ahead of the paths that call them; wiring is being closed venue by venue</span></div>
+        <div><b>Position reading</b><span>Bespoke readers for stateful protocols — health factors, maturities, liquidity ranges, withdrawal queues</span></div>
+        <div><b>Emergency flatten</b><span>Re-pointing onto the manual instruction surface, with a contract test across the service boundary</span></div>
+        <div><b>Audit</b><span>Extending the immutable record from the manual path to automated orders, fills and instructions</span></div>
+        <div><b>Cross-repo invariants</b><span>Venue-parity checks that fail the build rather than being verified by hand</span></div>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    <p class="lede">
+      Target-state walkthrough — internal draft. Status reflects what is reachable on a production path, not what
+      exists in the repository. Where the two differ, this document says so.
+    </p>
+  </footer>
+</div>
