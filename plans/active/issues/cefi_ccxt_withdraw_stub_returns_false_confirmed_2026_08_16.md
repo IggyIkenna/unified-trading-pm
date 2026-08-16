@@ -115,20 +115,43 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
 - [x] ✅ [BACKEND] P0. **Confirm real-world reachability — done 2026-08-16. Verdict: DEAD-CODE-TODAY.** Full
       evidence chain recorded above. De-escalates this from "active incident" to "must-fix-before-live-trading-
       cutover" — real bug, currently inert.
-- [ ] [BACKEND] P0. **Wire the real `exchange.withdraw()` CCXT call** in `LiveCcxtTransferAdapter`, AND wire
-      `HandlerRegistry`/`TransferCoordinator` to actually construct/route to it via `create_transfer_adapter()`
-      (per the reachability finding, the adapter fix alone is not sufficient — the dispatch wiring gap must close
-      too). Same error-handling rigor as the rest of the transfer dispatch code (fail loud, never silently
-      succeed). Until this lands, treat CEX withdrawals as NOT a real capability, regardless of `OperationalMode`.
-      Done-when: a real withdrawal executes through the live dispatch path (not a direct unit-test construction)
-      and is verified against the exchange's own confirmation.
+- [x] ✅ [BACKEND] P0. **Wire the real `exchange.withdraw()` CCXT call — done 2026-08-16.** SHIPPED —
+      `execution-service@b9ddcd9193` (+ docstring fix `execution-service@868185565f`).
+      `LiveCcxtTransferAdapter.execute_withdrawal()` now calls the real `exchange.withdraw()` (ccxt) and
+      classifies `InsufficientFunds`/`InvalidAddress`/`NetworkError`/`BaseError` into a proper FAILED
+      `TransferResult` instead of always returning CONFIRMED. Separately, `TransferHandler._execute_cex_withdrawal`
+      never checked `adapter_result.error` at all — fixed to fail loud (this was a second, independent bug: even a
+      correctly-FAILED adapter result was silently turned into a COMPLETED_SUCCESS `ExecutionResult`).
+      `HandlerRegistry` now accepts `transfer_adapter=` and injects it into `TransferHandler` for
+      `OperationType.TRANSFER`, closing the "never constructs a live adapter" gap.
+      **Done-when, honestly assessed**: "executes through the live dispatch path, not a direct unit-test
+      construction" — satisfied (`HandlerRegistry(transfer_adapter=...).get_handler(OperationType.TRANSFER)` →
+      `.execute()`, tested in `test_handler_registry.py::test_end_to_end_dispatch_calls_real_ccxt_withdraw`).
+      "Verified against the exchange's own confirmation" — satisfied ONLY against a mocked CCXT exchange
+      (`AsyncMock`), never a real venue account. **Deliberately did not attempt a real live-money withdrawal** —
+      moving real funds without operator authorization/credentials is outside what an autonomous worker should do;
+      this is the workspace's own "credentials gate RUNNING, never BUILDING" pattern, not a shortfall. See the new
+      P1 todo below for what remains before this is actually usable in production.
+- [ ] [BACKEND] P1. **Thread a real adapter into `HandlerRegistry` at actual service bootstrap** — the fix above
+      makes `HandlerRegistry` CAPABLE of using a real adapter, but no existing call site constructs
+      `InstructionRouter`/`HandlerRegistry` with one: `InstructionRouter.__init__` only accepts `config`, and
+      nothing in execution-service currently builds `create_transfer_adapter(mode, exchanges, ...)` from a live
+      `OperationalMode` + `ApiKeyReloader`-sourced CCXT exchanges and passes it through. Done-when: a real bootstrap
+      call site exists (or an existing one is identified and wired), the connection is exercised end-to-end against
+      a REAL exchange sandbox/testnet account (not a mock), and the result is verified against that exchange's own
+      confirmation — this is the remaining, genuinely live-credentialed half of the original done-when.
 - [ ] [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** if it had
       ever been reachable — done-when: a cited answer, yes or no, with evidence.
 - [ ] [BACKEND] P2. **`TransferCoordinator`'s missing `CEX_WITHDRAW` handler-map entry is itself worth fixing**
       independent of the adapter-wiring fix above — a caller that DOES construct a `TransferCoordinator` directly
       (bypassing `HandlerRegistry`) would hit a `KeyError`, not a clean error. Done-when: `CEX_WITHDRAW` has a
       registered handler (or the missing-key case fails loud with a clear message) in
-      `transfer_coordinator.py:148-150`.
+      `transfer_coordinator.py:148-150`. **Partial finding, 2026-08-16**: `_get_handler` already raises a clear,
+      named `KeyError` today ("No handler registered for transfer_type=... Wire execution-service protocol adapters
+      in TransferCoordinator.__init__.") — the "fails loud with a clear message" half of this done-when may already
+      be satisfied; still needs a decision on whether a real handler should be registered too (its module docstring
+      claimed CEX_WITHDRAW routed through `execution_service.adapters.order_adapter`, which has NO withdraw
+      function at all — corrected in `execution-service@868185565f`, was misleading, not a real routing target).
 
 ## Progress Log
 
@@ -139,3 +162,8 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
   see the new section above. De-escalated from "active incident, unknown blast radius" to "real, tracked,
   must-fix-before-live-trading-cutover bug with zero current blast radius." Still P0 given it blocks the
   live-trading cutover, not downgraded further.
+- **2026-08-16 (slot 12)**: Shipped the CCXT withdraw() wiring + the independent TransferHandler fail-loud bug +
+  HandlerRegistry adapter injection — `execution-service@b9ddcd9193` + `execution-service@868185565f`. Full
+  `quality-gates.sh` green on execution-service both commits. Added the bootstrap-wiring P1 follow-up above since
+  no production call site yet threads a real adapter through; real live-exchange verification was deliberately not
+  attempted this session (no operator authorization to move real funds).
