@@ -67,16 +67,32 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 distinct source docs.** For each of
-      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`'s now-done todos, flip or update the corresponding checkbox in
-      its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-8 commit(s) that shipped
-      it — verify the actual shipped commit exists before citing it. For every source doc: after reconciling, re-check
-      whether it now has 0 open items (checkbox and prose). Only flip a doc's `status` to `resolved` if it genuinely
-      reaches 0 open items, and never touch a doc carrying a non-empty `locked_by`. Note
-      `features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` will NOT reach 0 open items even if
-      its todo 3 (item 1, malformed ticks) ships clean — its item 2 (force+skip proof) stays open, time-gated on
-      upstream MDPS backfill; do not flip that doc's status. **Done when**: all 3 source docs are reconciled with
-      verified evidence, and any doc that genuinely reaches 0 open items is flipped to `status: resolved`.
+- [x] ✅ [REVIEW] P1. **Reconcile all 3 distinct source docs.** **DONE 2026-08-16 (slot 5, review) — all 3 already
+      reconciled by the workers who shipped each batch8 todo (each cited "same commit"/"same session" inline in
+      batch8's own now-done todo text); this pass independently VERIFIED each, not re-did the reconciliation:**
+      1. `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` (`plans/active/`, `locked_by` empty) —
+         checkbox already flipped citing "DONE 2026-08-09 (slot-9, data_engineering) via
+         `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` todo 1" (a data-only GCS `--apply`, no code commit to
+         verify). Correctly does NOT reach 0 open items — a standing P3 `- [ ]` reconciliation todo (re-run after
+         every future catalogue roll-up cycle) is explicitly perpetual/recurring, not a one-shot closeable item.
+         `status` correctly stays `active` — not flipped, per this todo's own instruction not to close a doc that
+         doesn't genuinely reach 0 open items.
+      2. `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` — already archived
+         (`plans/archive/2026_08/issues/`), `status: resolved`, `resolved_by: slot-9, 2026-08-16`, archive banner
+         present. Cited commit `market-data-processing-service@2b2cc58e` verified as an ancestor of
+         `origin/live-defi-rollout` this session.
+      3. `features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` — already archived
+         (`plans/archive/issues/`), `status: resolved`, `resolved_by: features-service@4caac95e38 (live-VM
+         confirmed 2026-08-16, slot-32, features-e2e-tradfi-20260816-030150-1efb38)`. **This finalize todo's own
+         caution above (written 2026-08-08) is now STALE, not a live concern**: by 2026-08-16 the previously
+         time-gated item-2 force+skip proof itself cleared (upstream MDPS candle backfill arrived + 2 further
+         root-caused bugs were fixed same-day — chain-bundle instrument-id blob-listing fallback + candle-blob-path
+         gating), so the doc genuinely reached 0 open items and archived correctly, not prematurely. Cited commits
+         `features-service@6d2ad5dc89` and `@4caac95e38` both verified as ancestors of `origin/live-defi-rollout`
+         this session (`git merge-base --is-ancestor`, all 3 repos, all 5 cited SHAs across the 3 docs confirmed
+         present on origin). All 3 docs' `locked_by` confirmed empty (none touched a locked doc). **Done when**: met
+         — all 3 source docs reconciled with verified evidence; doc 1 correctly NOT flipped to resolved (genuine open
+         standing todo), docs 2+3 correctly already resolved+archived.
 
 - [ ] [REVIEW] P1. **Re-check batch8's own Deferred/Flagged sections now that time has passed.** For the too-large-
       or-risky items, the operator-gated items, the conflict-gated item, the already-in-flight item, the
@@ -107,6 +123,14 @@ context_scope:
 
 - **2026-08-08 (ag_closeout_auditor, slot 6)**: created alongside batch8, same run.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-16 (slot 5, review)**: todo 1 (reconcile all 3 source docs) DONE — verified, not re-done; all 3 source docs
+  were already reconciled by the workers who shipped batch8's 3 todos. Independently confirmed all 5 cited commit SHAs
+  across `unified-api-contracts`, `market-data-processing-service`, and `features-service` are real ancestors of
+  `origin/live-defi-rollout`. Doc 1 (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`) correctly stays
+  `active` (genuine open standing P3 todo). Docs 2+3 correctly already `resolved`+archived. See todo 1's own entry for
+  full detail, incl. why this todo's original 2026-08-08 caution about doc 3 not reaching 0 open items is now stale
+  (its time-gate cleared 2026-08-16). Next: todo 2 (re-check Deferred/Flagged sections) is next in this sequential
+  plan.
 
 ## Codex SSOTs
 
