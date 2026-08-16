@@ -331,9 +331,17 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - [x] ✅ [SCRIPT] P3. **Shipped per-category timing instrumentation** — `manifest.py`'s isolated-serial dispatch now
       `logger.info`s `elapsed_s` per category (was only per-service aggregate). Full original scope (3 live
       measurements, override decision) NOT done — split below, needs prod deploy first. `deployment-api@b1e0f0cb92`.
-- [ ] [SCRIPT] P3. **Read the shipped per-category timing logs (≥3 rollup cycles, once deployed) for
-      features-delta-one-service/features-onchain-service; decide `_CHILD_JOIN_TIMEOUT_OVERRIDES_S`** — do not
-      blind-bump. onchain already root-caused 2026-08-14 (structural, no override) so this mainly targets delta-one.
+- [ ] [SCRIPT] P3. **Read the shipped per-category timing logs (≥3 rollup cycles) for features-delta-one-service;
+      decide `_CHILD_JOIN_TIMEOUT_OVERRIDES_S`** — do not blind-bump. onchain already root-caused 2026-08-14
+      (structural, no override needed) so this targets delta-one only. **GATED as of 2026-08-16T02:00Z (slot
+      6, verified live)**: instrumentation IS shipped (`deployment-api@b1e0f0cb92`/`ffa7910`, prod revision
+      `uts-prod-data-status-rollup-svc-00485-kln` deployed 2026-08-16T00:32:57Z, fires generically for every
+      service — not instruments-service-only) but the rollup's per-day checkpoint had already marked
+      delta-one/onchain "done" from their PRE-deploy 420s-timeout failures (2026-08-15T23:09:31Z /
+      2026-08-16T00:14:11Z resp., both before the 00:32:57Z deploy) — so today's remaining cycles keep
+      SKIPPING both via checkpoint resume. Zero `"manifest category timing"` log lines exist yet for either
+      service (verified via `gcloud logging read` over a 6h window). Not actionable until the checkpoint
+      clears (next UTC day) and ≥3 clean post-deploy cycles accumulate — re-check after 2026-08-17T00:00Z UTC.
       (repo: deployment-api)
 - [x] ✅ [SCRIPT] P2. **Checked `type_understat_eu_no_provider_coverage.py` — NOT the same pattern, no action needed.**
       Dry-run (2026-08-07T22:18Z) confirms understat's 25 rows are `reason=EXPECTED_NO_FIXTURE`, dates 2026-08-05→
