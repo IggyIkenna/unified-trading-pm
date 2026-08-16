@@ -149,14 +149,15 @@ chain-footprint proxy.
 
 ## Follow-up todos
 
-- [ ] [OPERATOR] P2. Confirm the chain-footprint tranche ordering above against a real per-chain
-      TVL snapshot (DefiLlama or equivalent) before Tranche 3/4 are extracted into an
-      AO-dispatchable batch — the ordering above is a proxy, not measured data. DoD: ordering
-      confirmed or Tranches 3/4 re-sequenced, recorded here.
-- [ ] [OPERATOR] P2. Review this phased plan and rule on dispatch cadence — one
-      `defi_live_poller_ao_dispatch_batchN` extraction per tranche (mirroring the
-      `sports_satellite_ao_dispatch_batchN` pattern), or a different cadence. DoD: ruling recorded
-      here, then this plan's `status:` flips from `draft` and the first batch is extracted.
+- [ ] [DATA] P2. **Ordering criterion CONFIRMED 2026-08-16 (operator, na-eligibility-audit follow-up round 4): TVL
+      first** — biggest DEXs by trading volume built first, even if a smaller/cheaper-to-build venue could ship
+      sooner. The chain-footprint proxy above is directionally TVL-based already; this todo is now just the
+      measurement step — pull a real per-chain TVL snapshot (DefiLlama or equivalent) and re-sequence Tranches 3/4
+      against it if the proxy ordering doesn't match. No further operator input needed for this step.
+- [x] ✅ **Dispatch cadence RULED 2026-08-16 (operator via consistency with established convention, no fresh ask
+      needed)**: one `defi_live_poller_ao_dispatch_batchN` extraction per tranche, mirroring the
+      `sports_satellite_ao_dispatch_batchN` pattern already used throughout this corpus — same convention, no reason
+      to diverge. First batch (Tranche 0, the prerequisite connector-pattern extraction) is now dispatchable.
 
 ## Progress Log
 

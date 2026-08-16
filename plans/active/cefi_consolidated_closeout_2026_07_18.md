@@ -621,6 +621,10 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 3, operator ruling)**: the instrument_type casing residual
+  (line 523, 2,982 non-canonical rows) — **re-count fresh, then apply** — extracted to
+  `cefi_casing_residual_ao_dispatch_2026_08_16.md` (`assigned_vm: planning`).
+
 > **Full day-by-day Progress Log + DELTA checkpoints** live in
 > [`cefi_4surface_migration_execution_log_2026_07_24.md`](/plans/active/cefi_4surface_migration_execution_log_2026_07_24.md)
 > — read that file for the complete narrative (PRE-COMPACT checkpoints, DELTA session updates, deferred-work tables)

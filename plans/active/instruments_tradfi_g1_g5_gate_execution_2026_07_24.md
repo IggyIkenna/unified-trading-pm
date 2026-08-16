@@ -646,6 +646,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 3, operator ruling)**: the residual catalogue-leg purge
+  (NASDAQ/NYSE SPOT_PAIR mis-classification 318 rows + 12 cefi-singles EQUITY/EQUITY-USD rows), not covered by the
+  already-granted 4-leg go-ahead — **operator extended the go-ahead to this residual 2-leg set** — extracted to
+  `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` (`assigned_vm: planning`).
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 8 open todos read end-to-end (7 top-
   level + 1 nested under the G1 checklist). Three are genuinely gated and keep the doc NA: G1 retirement is "OPERATOR-
   CONFIRM before purge", the surviving ICE-futures half of the BLOCKED-CREDENTIALS finding needs a paid ICE/OPRA

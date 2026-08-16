@@ -149,3 +149,11 @@ class of failure repeatedly.
   `dp_vm_001_mdps_tradfi_2023_...` sibling doc hit yesterday. Per the role's 2-min-no-answer rule, stopped polling —
   this doc is the durable page artifact; a later operator answer (if it lands out-of-band) should be appended here
   rather than assumed lost.
+- 2026-08-16 (later same day): a sixth same-shape occurrence (`mdps-tradfi-2021-20260816-040255`, escalation
+  agt-ef6b00, slot 20) pulled the full `run.log` this doc's own todo asked for — see
+  `/plans/active/issues/dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md`. Root-caused to
+  a STALE `market-data-processing-service` tarball (a floating/unpinned launch fetched a build that predated the
+  long-since-landed `2dcccb85` ohlcv adapter registrations; the tarball has since been rebuilt fresh). Offered as the
+  leading hypothesis for this doc's own `mdps-tradfi-2025` occurrence too, not yet directly confirmed for it
+  specifically — that new doc's own follow-up todo covers checking this and the other sibling VMs before their
+  `vm-logs/` GCS objects age out of the 14-day retention window.

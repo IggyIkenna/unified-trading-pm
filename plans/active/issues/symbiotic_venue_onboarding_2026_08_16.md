@@ -134,10 +134,10 @@ fabrication-by-construction, same principle as the sports 2020-06 floor
       MTDS and execution-service are no longer "pending Phase 3+4"; update to reflect the real shipped state (and
       re-check its ✅ PRODUCTION bar — manifest ≥99% coverage — before marking it fully done; per gap #5, this is
       likely still 🟢 CODE-SHIPPED-AWAITING-BACKFILL-VERIFICATION, not ✅ PRODUCTION, until #6 below is checked).
-- [ ] [AGENT] P0. **Fix the wrong `DEFAULT_COLLATERAL_WSTETH` address** in
+- [x] [AGENT] P0. **Fix the wrong `DEFAULT_COLLATERAL_WSTETH` address** in
       `execution_service/defi_execution/protocols/symbiotic.py` to `0xC329400492C6ff2438472D4651Ad17389fCb843a`,
       citing this issue doc as provenance (matching the `# DERIVED from <source>` citation convention every other
-      address in that file uses).
+      address in that file uses). — execution-service@70ac877f6a, QG green.
 - [ ] [AGENT] P0. **Wire Symbiotic into `DeFiAdapter`'s real dispatch** (the reachability gap) — add a
       `symbiotic_connector` parameter + a `"SYMBIOTIC"` venue-gate marker in the STAKE handler (mirrors
       `LIDO-ETHEREUM`'s gating in `_execute_staking`), matching `symbiotic.py`'s existing

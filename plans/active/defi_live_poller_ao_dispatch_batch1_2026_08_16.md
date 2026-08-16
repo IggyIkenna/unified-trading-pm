@@ -1,0 +1,60 @@
+---
+doc_type: plan
+title: DeFi live-poller Tranche 0 — connector-pattern extraction
+summary: >-
+  First AO-dispatch batch from defi_live_poller_phased_build_2026_08_15.md, operator-approved
+  2026-08-16 (dispatch cadence: one batch per tranche, mirroring sports_satellite_ao_dispatch).
+  Extracts the two proven live-connector patterns (subgraph-polling, on-chain-liquidation) into
+  reusable config-driven base classes, the prerequisite that unlocks Tranches 1-4 (39 venues) at
+  N-config-rows-not-N-hand-written-files cost.
+status: active
+nature: process
+asset_group: [defi]
+stage: [data]
+repos: [market-tick-data-service]
+scope: [engineer]
+tags: [defi, live-capture, connector-pattern]
+related:
+  [/plans/active/defi_live_poller_phased_build_2026_08_15.md]
+created: "2026-08-16"
+last_updated: "2026-08-16"
+parent_epic: defi_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 3
+estimate_calibrated_ai_days: 2.4
+assigned_role: backend_engineer
+effort: max
+drift_direction: advance-code
+depends_on: []
+supersedes:
+superseded_by:
+source: "na-eligibility-audit follow-up Q&A round 4, 2026-08-16 (dispatch cadence ruling)"
+locked_by:
+context_scope: [/plans/active/defi_live_poller_phased_build_2026_08_15.md]
+locked_since:
+resolved_by:
+---
+
+# DeFi live-poller Tranche 0 — connector-pattern extraction
+
+## Todos
+
+- [ ] [DATA] P2. Extract `SubgraphPollingConnector`, a config-driven `WSFeedConnector` parameterized by
+      `(protocol, chain, subgraph_id, swap_query_template, pool_query_template)`, generalizing
+      `dex_swap_uniswap_v3_ws.py`'s implementation. DoD: `UNISWAP_V3-ETHEREUM` re-implemented on top of the new base
+      class with zero behavior change (regression: existing unit tests still pass unmodified). (repo:
+      market-tick-data-service)
+- [ ] [DATA] P2. Extract `OnChainLiquidationPoller`, a config-driven `WSFeedConnector` parameterized by
+      `(protocol, chain, rpc_resolver_key, contract_address, event_topic, log_parser)`, generalizing
+      `aave_liquidations_ethereum_ws.py`'s implementation. DoD: `AAVE_V3-ETHEREUM` re-implemented on top of the new
+      base class with zero behavior change. (repo: market-tick-data-service)
+
+## Progress Log
+
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 4, operator ruling on dispatch cadence)**: extracted from
+  `defi_live_poller_phased_build_2026_08_15.md` Tranche 0. Tranches 1-4 (39 venues) stay in the parent plan pending
+  the TVL-snapshot re-verification of tranche ordering — do not extract those until this batch's base classes land
+  and that ordering is confirmed against real DefiLlama data.

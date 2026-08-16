@@ -139,3 +139,32 @@ low today; it could be worse in cells/days not sampled.
   check totals vs. this doc's "low-thousands" extrapolation → VM apply launch → verify apply==dry-run → close
   this doc's todo 4 with evidence → archive this doc) are NOT yet started. Todo 4 stays unchecked until the
   full campaign (steps 3-6) actually completes with verified totals — step 1 alone does not satisfy it.
+- **2026-08-16 (slot-23)**: Step 2 shipped as `deployment-service@a52d431be1`, but it was INCOMPLETE — the first
+  VM dry-run attempt (`sports-odds-dedup 2020-06-06 2026-08-16 dry`) failed immediately with
+  `Unknown category: sports-odds-dedup`. Root cause: `launch-canonical-migration-vm.sh` validates the category
+  in TWO independent places — `_script_for()`'s internal case (wired correctly) AND a separate top-level
+  argument-dispatch `case $ASSET_GROUP in cefi|defi|...|sports-19token-restamp|...) _launch ...` pipe-list
+  (~line 3006) that gates entry into `_launch` at all. The original wiring only touched the first three points
+  (`_script_for()`, the dry/apply category list, the `_ag="SPORTS"` override list) and missed this fourth one —
+  a genuine gap in the approved local plan's 3-point wiring design, not caught until actually invoking the
+  launcher. Fixed by adding `sports-odds-dedup` to the top-level pipe-list; quality-gates re-run in progress,
+  not yet shipped as of this entry. Once green: ship the fix, then re-attempt the dry-run launch (step 3).
+  Lesson for any future launcher-category addition to this specific script: check BOTH dispatch points, not
+  just `_script_for()`.
+- **2026-08-16 (slot-23)**: Fix shipped as `deployment-service@ce40fb8948` (full quality-gates green, 266s). First
+  dry-run retry (`sports-odds-dedup 2020-06-06 2026-08-16 dry`) got past the `Unknown category` error (confirming
+  the fix worked) but hit a NEW, unrelated failure: `lc_verify_tarball_freshness` aborted with
+  `ERROR: auto-republish completed but tarball(s) still stale ... market-tick-data-service`. Root cause: a
+  genuine transient race, not a launcher bug — the always-running `main-backmerge-to-ldr` cron advanced MTDS's
+  `live-defi-rollout` HEAD mid-launch (observed moving `517d375852ea` → `4e833630a066` → back to `517d3758` via a
+  merge commit, all within the ~60s launch window), so the tarball built at one sha no longer matched HEAD by the
+  time the launcher re-verified freshness. The launcher correctly aborted rather than deploying an inconsistent
+  tarball. Confirmed MTDS was clean and HEAD-stable before retrying. Second retry succeeded cleanly (`tarball
+  fresh` on all 4 repos, no republish needed): VM `canonical-migration-sports-odds-dedup-20260816-134243` created
+  and RUNNING (asia-northeast1-c, e2-standard-8, **not preemptible** — on-demand as the plan requires), mode=dry.
+  Step 3 of the local execution plan is now genuinely in progress — monitoring to terminal state next, then read
+  totals and sanity-check against this doc's "low-thousands of affected cells" extrapolation before proceeding to
+  the apply/full launch (step 5, already pre-authorized). Lesson: on a shared checkout with always-running
+  backmerge automation, a launch that fails on tarball-freshness mid-race is not necessarily a bug — check
+  whether the source repo's HEAD was actively moving during the launch window before assuming the launcher is
+  broken; a bare retry after confirming HEAD stability resolved it here with zero code changes needed.

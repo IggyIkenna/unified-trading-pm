@@ -610,8 +610,8 @@ investigation confirmed are both achievable with existing primitives:
       parent to detect flips, grouped by commit-author operator. Surface as a small addition to the existing Human
       Fleet dashboard page (`dashboard/src/HumanFleet.tsx`) OR as a standalone CLI/report — operator's call at build
       time, not a forced new dashboard section. Done when: running it against this session's own commits correctly
-      shows 2 "tasks completed" (the two checkbox-flip commits, `12e83c4074` and the Phase 4b evidence entry) and 0
-      false "plan created" mislabels.
+      correctly distinguishes real checkbox-flip commits from plan-authoring ones — see the actual spot-check result
+      in the shipped-evidence entry below, which corrects an inaccurate pre-verification guess made here.
       **Explicitly OUT of scope: token/spend counts.** Git commits carry no token data — that was never git's job.
       Once Phase 4 is live (above), token counts flow through the ALREADY-BUILT Phase 2 mechanism instead:
       `ao-usage-push.py` scans that operator's OWN local `~/.claude/projects/*.jsonl` transcript and pushes
@@ -621,11 +621,17 @@ investigation confirmed are both achievable with existing primitives:
       Shipped as `scripts/plan-hygiene/plan_task_activity.py` — classifies every `unified-trading-pm` commit touching
       `plans/` by comparing checkbox counts against its parent (`min(old_open - new_open, new_done - old_done) > 0` =
       a real flip, not just noise from an unrelated done-item addition landing in the same commit); operator identity
-      from commit-author email domain (`gmail.com` -> ikenna, `odum-research.com` -> harsh). Run against real history
-      (`--since 2026-08-15`, 677 commits at run time): correctly distinguished `TASK COMPLETED` vs `plan updated` for
-      this session's own commits (spot-checked directly). Standalone CLI as scoped (`--json` for machine use); the
-      dashboard-page option was left undone as explicitly optional in the original design. Evidence:
-      `unified-trading-pm@baf8fd3762`.
+      from commit-author email domain (`gmail.com` -> ikenna, `odum-research.com` -> harsh). Spot-checked against 4
+      real commits from this session: `2873fd7c4f` correctly `task_completed` (a genuine open-`[ ]`-committed →
+      done-`[x]`-committed transition, git-visible); `633f048465`/`60a951793c` correctly `plan_updated` (added new
+      open todos, flipped nothing). **One real, explained miss**: `12e83c4074` shows `plan_updated`, not
+      `task_completed` — because that todo (Phase 4b) was AUTHORED already-`[x]` in the same edit that first added
+      it, so no separate open-`[ ]` version was ever committed to git for this heuristic to see decrease; from git's
+      own history there IS no open->done transition to detect, so `plan_updated` is the defensible call, not a bug —
+      but it does mean the earlier "Done when" guess above (asserting this exact commit would show `task_completed`)
+      was wrong, made before actually spot-checking. Corrected here per measurement-claims discipline rather than
+      left standing. Standalone CLI as scoped (`--json` for machine use); the dashboard-page option was left undone
+      as explicitly optional in the original design. Evidence: `unified-trading-pm@baf8fd3762`.
 
 ### Phase 6 — after-flip discipline: CLAUDE.md hard rule + a hook that reports completion to AO automatically
 

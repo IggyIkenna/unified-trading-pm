@@ -506,3 +506,32 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
     (the classification is already correct; the proximate VM-overlap condition has already cleared; the only
     candidate code smell found has zero behavioral effect). No code/report changes; this Progress Log entry is the
     only change this turn.
+
+- **2026-08-16 (slot 22, data_pipeline_failure escalation `agt-b6c337`, DP-FETCH-009, 3rd occurrence — confirmed
+  duplicate dispatch of the same underlying alert slot 10 just resolved above)**: Dispatched off a
+  `check_high_attempted_failed` page for `asset_group=cefi data_type=book_snapshot_5` (8,002 `attempted_failed` cells
+  of 172,799 attempted; 2,260 fresh in the last 1d) — the same 2,260-fresh-row population slot 10's entry immediately
+  above already root-caused (numbers match to within manifest-write drift: 173,333→172,799 attempted).
+  - Re-queried the live cefi manifest independently (fresh `download_bytes` + column-pruned read of
+    `_index/availability_index.parquet`, not slot 10's cached numbers): of 295,973 total `book_snapshot_5`
+    `attempted_failed` rows corpus-wide, **0 rows have `written_at` in the last 1h/2h/4h/8h** — the max `written_at`
+    across the entire population is still **2026-08-16T04:34:26Z**, identical to slot 10's finding, at a check time of
+    2026-08-16T14:21Z (**~9h50m with zero new writes**). The `error_reason="Tardis HTTP 403 code=274
+    concurrent-IP-lock"` slice (5,765 rows corpus-wide) shows the same max `written_at` — confirms this is not a
+    live, ongoing failure; it stopped writing hours before this dispatch even started.
+  - `gcloud compute instances list --filter="status=RUNNING"` shows exactly **ONE** Tardis-consuming VM
+    (`cefi-queue-heavy-binancefutu-x17-20260815-220349`) — the concurrency cap is respected, no active violation.
+  - **Conclusion**: identical disposition to slot 10's — stale/self-resolved, not an active pipeline break, no code
+    fix needed (classification is correct; the transient VM-overlap condition cleared hours ago). No code changes
+    shipped this turn.
+  - **Flagging the redispatch itself as the residual gap** (adjacent finding, not fixed here — out of a one-shot
+    escalation worker's scope to safely edit the alerting-service dedup/cooldown code): `DP_RUN_MOSTLY_EMPTY`
+    (which DP-FETCH-009 reuses per `data-pipeline-alerts.md`'s registry note) has a 1800s (30-min) cooldown entry in
+    `_RECURRING_ALERT_COOLDOWNS`, which should have suppressed a re-page for a condition that stopped writing at
+    04:34Z — this is the 3rd escalation dispatch for what is functionally the SAME already-diagnosed finding within
+    one day (2026-08-09 ASTER occurrence, 2026-08-16 slot-10 Tardis occurrence, 2026-08-16 slot-22/this one). Slot
+    10's entry above already flagged the detector's freshness signal as misleading for `written_at`-refreshed-without-
+    new-fetch populations; this adds a second data point (the cooldown/dedup layer also isn't preventing the SAME
+    stale finding from re-paging a fresh escalation slot hours later). Worth a `/data-pipeline-alerts-reconcile` pass
+    on the DP-FETCH-009/`DP_RUN_MOSTLY_EMPTY` cooldown-vs-detector-cadence relationship if this recurs a 4th time. No
+    code/report changes; this Progress Log entry is the only change this turn.
