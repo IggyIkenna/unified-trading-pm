@@ -139,7 +139,7 @@ ruling, and it is what stops the sweep manufacturing green.
       archetype-declaration backlog, not blocking this sweep. Full row export: `--csv PATH` flag on the script. **Fork
       per-asset-group dispatch batches (P0, below) is now the next actionable item.**
 - [x] ✅ [BACKEND] P0. **Fork per-asset-group dispatch batches — done 2026-08-16.** SHIPPED —
-      `unified-trading-pm@<pending-sha>`. 5 fresh carve-out batch plans + gated finalize pairs authored, per the
+      `unified-trading-pm@613c5f2f96`. 5 fresh carve-out batch plans + gated finalize pairs authored, per the
       operator-selected "per contract-step-group" decomposition (steps 1-5 / 6-8 / 9 / gap-tracking / hard-rule
       confirmation as separate todos, each scoped to one AG's rows):
       [defi_venue_e2e_batch1_2026_08_16](/plans/active/defi_venue_e2e_batch1_2026_08_16.md) (200 rows),
@@ -186,7 +186,7 @@ hard rules and the AG-batch fork structure are settled and reviewable; held out 
 denominator does not exist yet. `status: draft` is the correct lever here — `depends_on` documents ordering but does
 not gate dispatch, so it alone would not have stopped an AO worker picking this up against an undefined set.
 
-**2026-08-16 — forked per-asset-group dispatch batches.** SHIPPED — `unified-trading-pm@<pending-sha>`. Authored 5
+**2026-08-16 — forked per-asset-group dispatch batches.** SHIPPED — `unified-trading-pm@613c5f2f96`. Authored 5
 fresh carve-out AG batch plans + gated finalize pairs (defi 200 rows / cefi 70 / sports 31 / tradfi 16 /
 prediction 4), following the operator-selected "per contract-step-group" decomposition (5 todos each: steps 1-5,
 steps 6-8, step 9 transfers, gap-tracking, hard-rule confirmation). Converted this plan's own Method-section
