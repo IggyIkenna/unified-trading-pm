@@ -125,15 +125,70 @@ the IaC config; the third is a Cloud Run job module removal.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **RE-SCOPED 2026-08-09 — the plan has grown far beyond "3 destroys" since this todo was written.**
-      A fresh `ENV=prod bash tofu.sh plan` now shows **36 to add, 17 to change, 4 to destroy** (real drift accumulated
-      from active development since 2026-08-07, not a sign of anything wrong). Full analysis in the Progress Log entry
-      below. A full raw-plan read (not just the categorized summary) found one specific in-place update that should be
-      excluded or confirmed before apply: `module.data_pipeline_meta_watchers_job` would be shrunk from its currently
-      LIVE `cpu=8/memory=32Gi` down to the committed IaC's `cpu=4/memory=16Gi` — see the second Progress Log entry below
-      for why this looks like an un-backported live capacity fix, not safe routine drift. Awaiting explicit operator
-      go-ahead given the scale change from what was originally reviewed — do NOT delegate to AO, still a prod infra
-      apply with destructive changes.
+- [x] ✅ [INFRA] P1. **RESOLVED 2026-08-16 (interactive session, operator go-ahead given directly in-session for the
+      apply itself) — deployment-service@ (this session's commit, see evidence below).** A full week had passed since
+      the 2026-08-09 analysis; re-ran the full diligence from scratch per that entry's own warning ("re-run fresh, this
+      analysis is a point-in-time read"). Fresh `ENV=prod bash tofu.sh plan -no-color` showed the plan had shrunk
+      dramatically on its own (**8 to add, 12 to change, 0 to destroy** — down from 36/17/4): the 2 Secret IAM destroys
+      (`t1_batch_gh_pat_accessor`, `t1_batch_slack_webhook_accessor`) and the `token-transfers` replacement destroys
+      were ALL already gone from both state and live by the time of this pass (live-confirmed via
+      `gcloud secrets get-iam-policy GH_PAT`/`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` — `uts-prod-batch-sa` has neither
+      grant live, matching 0-destroy) — resolved by other work between 2026-08-09 and today, not by this session.
+      Full raw-plan read (every `will be created`/`updated in-place` block, not the summary) found the
+      `data_pipeline_meta_watchers_job` `.tf` was **already fixed** (cpu=8/memory=32Gi, matching live) by the time of
+      this pass, but found **two NEW instances of the identical failure class** the 2026-08-09 analysis first
+      identified (live capacity/cadence fix never backported to the committed `.tf`):
+      1. `dp_exit_code_monitor_cron` schedule: committed `*/5 * * * *` vs LIVE `0 * * * *` (hourly,
+         `userUpdateTime` 2026-08-15) — live was throttled to stop a documented overlap-storm
+         (`dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`); applying the committed `*/5` would have
+         reintroduced it. Fixed the `.tf` to `0 * * * *` with a dated comment
+         (`data_pipeline_fleet_monitor_scheduler.tf`).
+      2. `dp_manifest_hygiene_full_job` cpu/memory: committed `4vCPU/16Gi` vs LIVE `8vCPU/32Gi` — its twin
+         `dp_manifest_hygiene_changed_job` (same script, same defi 6.75GB index) has an extensive documented 2026-08-15
+         OOM-fix trail ending in "the 32Gi bump stays as headroom... do NOT revert it," which applies identically
+         here. Fixed the `.tf` to `8`/`32Gi` with a dated comment (`data_pipeline_audit_scheduler.tf`).
+      A third finding, `cost_snapshot_cron`'s planned removal of its `X-API-Key` header, was investigated further:
+      confirmed live `DISABLE_AUTH=false` on `uts-shared-deployment-api` (auth now enforced, per the sibling
+      `deployment_api_prod_disable_auth_true_2026_08_06.md` fix shipping the same day) and confirmed
+      `costs.router` sits behind `verify_any_auth` (`deployment_api/firebase_auth.py`), which accepts ONLY
+      `X-API-Key` or a genuine Firebase ID token — a Cloud Scheduler OIDC service-account token satisfies neither, so
+      removing the header would silently 401 this cron every 12h. Excluded via `-target`/`-exclude`, not applied —
+      the right fix (re-add the header sourced from a proper secret reference, not a hardcoded literal) needs its own
+      small pass, tracked below.
+      Also hit mid-apply: the already-tracked, still-open
+      `deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md` (two module blocks fighting over the
+      same 2 live jobs' labels) reappeared exactly as that doc describes — excluded, not touched, per that doc's own
+      "needs an explicit canonical-definition call" framing. And a THIRD live-vs-committed cpu/memory gap
+      (`manifest_consolidator_job["market-data-cefi"]`, 8/32Gi vs the committed default 4/16Gi, plus TTL/stall-cycle/
+      timeout deltas) was found and excluded — while excluding it, discovered a **parallel session was already
+      live-fixing this exact resource** (uncommitted `manifest_consolidator_scheduler.tf`, mtime matching this
+      session's timeframe, citing the same market-data-cefi corpus-growth root cause) — left entirely untouched per
+      the multi-agent-safety "live claim → PROTECT" rule; not part of this resolution.
+      **Applied** (`ENV=prod bash tofu.sh apply`, 3 passes to work through 2 apply-time-only failures: a pre-existing
+      >499-char Cloud Scheduler description on `defi_collect_cron["risk-params"]` — RE2 limit, fixed in `.tf`; and 3
+      new `google_monitoring_alert_policy.cloud_run_service_crash_loop` creates 404ing on
+      `run.googleapis.com/container/restart_count` not yet queryable for those 3 services — retried 3x over ~30min,
+      still 404ing, left as a non-blocking follow-up, not a safety concern, purely additive monitoring). **Landed**:
+      all 5 `expected_universe_v2_job[*]` rolling-window refreshes, both `instruments_*_t1_recon_job` label syncs,
+      `defi_collect_cron["lending-indices"/"risk-params"]` description syncs, the `dp_drilldown_reconciliation`
+      job+cron create, `alerting_paging_cron` create, `agent-recovery-actions` pubsub topic+subscription create.
+      **Live-verified**: `tofu plan` for every applied resource now shows 0 diff (confirmed via 2 further full-repo
+      plan runs post-apply); `data_pipeline_meta_watchers_job` confirmed 0-diff throughout (matches live 32Gi/cpu8).
+      Follow-ups tracked below, not left implicit.
+      - [ ] [INFRA] P2. Retry the 3 `google_monitoring_alert_policy.cloud_run_service_crash_loop` creates
+            (`central-market-data-tardis-loader`, `market-data-query-service`, `uts-prod-data-status-rollup-svc`) —
+            `ENV=prod bash tofu.sh apply -target='google_monitoring_alert_policy.cloud_run_service_crash_loop'` once
+            the `run.googleapis.com/container/restart_count` metric is queryable for these 3 services (still 404ing as
+            of 2026-08-16 22:20 UTC after 3 retries over ~30min — may need longer than GCP's stated "up to 10
+            minutes", or may need at least one real restart event to index). Repo: deployment-service.
+      - [ ] [INFRA] P3. Re-add `cost_snapshot_cron`'s `X-API-Key` header (`cost_snapshot_scheduler.tf`) sourced from a
+            proper Secret Manager reference (never a hardcoded literal in `.tf` — the live value is currently a raw
+            string on the scheduler job, not yet in Secret Manager) — now load-bearing since `DISABLE_AUTH=false`
+            went live; without it the 12h cost-snapshot cron 401s silently and `/ops/costs` serves an
+            increasingly-stale cache. Repo: deployment-service.
+      - [ ] [INFRA] P3. Resolve `deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md` (own doc,
+            not duplicated here) — still open, still oscillating labels between two module definitions on every
+            untargeted apply.
 
 ## Progress Log
 

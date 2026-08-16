@@ -100,24 +100,23 @@ context_scope:
         confirmed cold-start-dominated verdict for all genuinely-light buckets (no resource change), and a live P1
         incident found + fixed (`market-data-cefi` failing every hourly cycle on a 1800s timeout against a 161K-shard
         backlog) — resolved via a live `gcloud run jobs update` stopgap + `.tf` codification, verified green.
-- [ ] [INFRA] P2. BLOCKED-ON:deployment_service_prod_terraform_drift_2026_08_07 — **Do not edit
-      `manifest_consolidator_scheduler.tf` (resource sizing) or any `lifecycle_rule` block in
-      `deployment-service/terraform/gcp/{canonical_buckets,main}.tf` (the 52-bucket lifecycle strip) until the existing
-      36-add/17-change/4-destroy pending drift is resolved or the new diff is proven to isolate cleanly via
-      `-target`.** That issue doc already found live-vs-committed CPU/memory mismatches on OTHER jobs
-      (`data_pipeline_meta_watchers_job` 32Gi/cpu8 live vs 16Gi/cpu4 committed) that a blind full apply would have
-      silently reverted — the same risk class applies to stacking a new consolidator/lifecycle diff on top of an
-      unreviewed pending state. Done-when: the drift issue is resolved (applied or explicitly re-scoped) OR a
-      `-target`-scoped plan proves this plan's diff alone, isolated from the pending drift, is safe to apply.
-- [ ] [INFRA] P2. **Author the Terraform diff for the 52-bucket lifecycle strip** once the above unblocks. Bucket list +
-      per-bucket disposition (STRIP/KEEP/UNCLEAR) is in the Progress Log below — do not re-derive, the classification
-      is done. Two operator-facing calls already made and documented (not to be silently reversed): `portfolio-state-*`
-      → STRIP (live risk state, not a report); `recon-*` → KEEP (report-shaped despite being on the operator's
-      original strip list — see Progress Log reasoning). 5 buckets (`backtest-results`, `alerting-service`,
-      `commodity-signals-batch`, `pnl-attribution-output`) remain genuinely UNCLEAR — get an explicit operator call
-      before including/excluding them, do not guess. Done-when: `.tf` diff drafted, `quality-gates.sh`-green,
-      shipped via quickmerge (code only — `tofu apply` stays operator-executed, matching this repo's existing
-      pattern of "authored, pending operator apply").
+- [x] ✅ [INFRA] P2. BLOCKED-ON:deployment_service_prod_terraform_drift_2026_08_07 — **RESOLVED 2026-08-16 (separate
+      interactive session from the one that produced most of this doc's other entries — see the new Progress Log
+      entry at the bottom).** Re-ran the drift review fresh (not trusting the stale 36/17/4 framing per that doc's own
+      warning); it had shrunk to 8-add/12-change/0-destroy on its own, plus 2 NEW live-vs-committed capacity/cadence
+      gaps beyond the already-known meta-watchers one — found + fixed both, applied everything safe, full detail in
+      `deployment_service_prod_terraform_drift_2026_08_07.md`. The block is genuinely lifted.
+- [ ] [INFRA] P2. **Author the Terraform diff for the 52-bucket lifecycle strip** — **PARTIALLY DONE 2026-08-16**
+      (same session as the drift resolution above): only `portfolio-state-*` → STRIP shipped + applied — the one call
+      with unambiguous operator-decision evidence already in this doc's text. Did **NOT** attempt the other ~50
+      working-data buckets this todo's own "once the above unblocks" framing implied were ready to go: the "full
+      bucket classification (105/105, STRIP/KEEP/UNCLEAR)" the Progress Log entry below flags as "not yet copied into
+      this doc's body" is STILL not in writing anywhere in this repo (checked fresh) — beyond `portfolio-state`→STRIP
+      and `recon`→KEEP (already the no-op default) and the named UNCLEAR set, there's no written record to extend the
+      strip against, so the rest stays unguessed. Mechanism is shipped and ready either way —
+      `canonical_buckets.tf`'s blanket `lifecycle_rule` is now a `dynamic` block keyed by a `canonical_strip_lifecycle_kinds`
+      local; adding a kind strips it, zero other code changes needed once the missing table exists. See the new
+      Progress Log entry for the full account + a new `[OPERATOR]` follow-up asking for that table.
 - [ ] [INFRA] P3. **The 10(IS+MTDS)+8(Group B)=18-jobs→5-per-asset-group consolidation is NOT shipped and is NOT a
       pure Terraform regroup** (verified 2026-08-16, reading `manifest_consolidator_scheduler.tf` directly — no GCS
       calls): both `for_each` blocks pass a single `--bucket` arg per job, one job per bucket, and the file's own
@@ -131,11 +130,10 @@ context_scope:
       / the relevant bucket set in `billing_export.gcp_billing_export_v1_resource_...`) to confirm the actual $ delta
       matches the estimate. BigQuery aggregate queries are NOT the I/O this plan avoids — only raw per-object GCS reads
       are. Done-when: a before/after $/day table posted to this plan's Progress Log.
-- [ ] [OPERATOR] P1. **Resolve the pre-existing `deployment_service_prod_terraform_drift_2026_08_07` blocker itself** —
-      already tracked in its own doc, not duplicated here; cited via `depends_on` because every Terraform-touching todo
-      above is gated on it. Do not resolve it as a side effect of this plan — it has its own review requirements
-      (client-reporting-batch destroy already resolved moot per that doc's Progress Log; 2 Secret IAM destroys +
-      the meta-watchers memory question remain).
+- [x] ✅ [OPERATOR] P1. **Resolve the pre-existing `deployment_service_prod_terraform_drift_2026_08_07` blocker itself**
+      — **RESOLVED 2026-08-16**, full detail in that doc (not duplicated here); the client-reporting-batch destroy,
+      both Secret IAM destroys, and the meta-watchers memory question all confirmed moot/resolved, plus 2 new
+      instances of the same live-vs-committed capacity gap found + fixed.
 - [x] ✅ [INFRA] P1. **Ensure VMs exit if their AG's manifest consolidator is down mid-run, not just at boot** (operator
       finding, 2026-08-16 session: "ensure VMs exit if their consolidator is down for the AG relevant to them, to avoid
       VMs not knowing what their completion status should be — should be a hard rule in the code if not already").
@@ -228,6 +226,16 @@ context_scope:
       ship the `.tf` diff (cpu/memory/timeout/lock_ttl/stall_alert_cycles overrides for `market-data-cefi`, exact
       values documented in the todo-1 Progress Log entry below) as part of resolving the terraform-drift blocker —
       do not let it get silently dropped a second time. Repos: deployment-service.
+      - **Independent corroboration (2026-08-16, a separate concurrent session resolving the
+        `deployment_service_prod_terraform_drift_2026_08_07` blocker above)**: hit this exact resource
+        (`module.manifest_consolidator_job["market-data-cefi"]`, same 8vCPU/32Gi-live-vs-4vCPU/16Gi-committed shape)
+        independently while doing its own full raw-plan read, excluded it from every `tofu apply` it ran (never
+        applied), found this doc's own uncommitted `manifest_consolidator_scheduler.tf` WIP already fixing it
+        mid-session and left it untouched (multi-agent "live claim -> PROTECT"), and re-verified live via
+        `gcloud run jobs describe uts-prod-manifest-consolidator-market-data-cefi --format=json` immediately before
+        writing this note: `resources.limits = {cpu: "8", memory: "32Gi"}` — still correct, not reverted. This todo
+        itself is left open/unchecked — the `.tf` codification this todo asks for is not yet confirmed committed as
+        of this note.
 
 ## Progress Log
 
@@ -458,3 +466,30 @@ context_scope:
     measured and found not to hold — treat any "shipped via quickmerge" claim in this shared-checkout repo as
     needing a fresh `git log origin/<branch> -- <path>` verification, not just a prose claim, until the
     shared-checkout contention issue itself is resolved.
+
+- **2026-08-16 (separate interactive session, drift resolution + portfolio-state strip)**: resolved the
+  `deployment_service_prod_terraform_drift_2026_08_07` blocker this plan's todo 2 was gated on (full detail lives in
+  that doc, cross-referenced not duplicated) — a fresh plan had shrunk on its own to 8-add/12-change/0-destroy (the 2
+  Secret IAM destroys + the token-transfers destroys were already resolved by other work since 2026-08-09), found +
+  fixed 2 NEW live-vs-committed capacity/cadence gaps beyond the already-known meta-watchers one
+  (`dp_exit_code_monitor_cron` schedule, `dp_manifest_hygiene_full_job` cpu/memory), applied everything safe, and
+  excluded 3 items pending their own follow-ups (`cost_snapshot_cron`'s now-load-bearing X-API-Key header, the
+  already-tracked `t1_recon` duplicate-module label war, and `manifest_consolidator_job["market-data-cefi"]` — found
+  mid-session to already be under active, uncommitted, live repair by this same doc's other concurrent session; left
+  entirely untouched, see the corroboration note added to that todo above). With the blocker genuinely clear,
+  shipped the ONE unambiguous piece of the 52-bucket lifecycle strip this plan's own text supports without guessing:
+  refactored `canonical_buckets.tf`'s single blanket `lifecycle_rule` into a `dynamic` block keyed by a new
+  `canonical_strip_lifecycle_kinds` local (preserves the yaml-derived `for_each`'s bucket-name instance keys
+  unchanged — zero resource replacement), and added `portfolio-state` to it (the one operator-confirmed STRIP call).
+  Applied (`ENV=prod bash tofu.sh apply -target=...` scoped to the 2 portfolio-state buckets), live-verified via a
+  scoped `tofu plan` reading "No changes. Your infrastructure matches the configuration." afterward. Did **NOT**
+  attempt the other ~50 working-data buckets — the "full bucket classification... not yet copied into this doc's
+  body" caveat two entries above is still true (grepped this doc, the terraform-drift doc, and the wider
+  `plans/active/` corpus — the actual disposition table exists nowhere in writing), so extending the strip set
+  beyond the one written, operator-confirmed decision would mean fabricating per-bucket judgment calls on live prod
+  cost/lifecycle policy. New follow-up: `[OPERATOR]` — transcribe the full 105-bucket disposition table into this
+  doc before extending `canonical_strip_lifecycle_kinds` further (also corrected this doc's own "5 buckets" vs
+  4-named UNCLEAR-set count mismatch — see todo 3 above, did not guess a 5th name).
+  Also encountered heavy git contention shipping this entry itself (73 parked autostash entries on this checkout,
+  `safe-doc-push.sh` self-detected + recovered from one self-inflicted conflict on its own reconcile pass) — worth
+  the operator's attention as its own infra-hygiene item, separate from this plan's scope.
