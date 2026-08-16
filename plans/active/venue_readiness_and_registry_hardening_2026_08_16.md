@@ -465,6 +465,20 @@ durable), so if no further Progress Log entry appears after this one, the wakeup
 session ended before it could; re-arm manually if picking this up fresh. `unified-api-contracts` still 3 uncommitted
 files, `ahead=0`/`behind=0`; `unified-trading-pm` clean.
 
+**2026-08-16 — still blocked, 7th confirmation (full-suite + direct-cause, both fresh).** Two independent checks this
+pass, both consistent: (1) a background full `unified-api-contracts` QG suite run (180.77s) reproduces the identical
+single failure — `1 failed, 13246 passed, 678 skipped, 5 xfailed` — with
+`test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`
+as the sole failure, nothing else red; (2) a fresh direct-cause recheck: `execution-service` HEAD unchanged at
+`9af4713c` (no new commits), `grep -rin "karak\|pendle\|symbiotic" defi_adapter.py` = 0 hits, all 3 tracking issue docs
+still `status: open`. Also during this pass, `unified-trading-pm` fast-forwarded one commit behind
+(`dd6ddfb80b` → `7d1ac5c51a`) — a different slot's unrelated doc-only commit
+(`docs(plans): pause aster relaunch-budget-scaling ruling...`, slot-1) — pulled in cleanly via `--ff-only`, touches
+none of this plan's files. `unified-api-contracts` still exactly the same 3 uncommitted files, `ahead=0`/`behind=0`.
+Condition is now confirmed stable across 7 independent checks (5 full-suite, 2 direct-cause) spanning the whole session;
+resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
+hand-wire the venues or edit the SIT ratchet baseline.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
