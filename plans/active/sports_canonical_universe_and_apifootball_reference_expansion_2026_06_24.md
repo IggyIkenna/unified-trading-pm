@@ -564,6 +564,11 @@ materialized.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 9, operator ruling)**: the SEGUNDA_DIVISION→LA_LIGA_2
+  league-alias dispatch anomaly inside the 74.3% twin-coverage gap (measured 2026-08-10) is being investigated
+  SEPARATELY from Big Finding #3's league-vocabulary contamination, not assumed to share the same root cause.
+  Extracted to `/plans/active/sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16.md`
+  (+ finalize) for AO dispatch.
 - **2026-06-24 — [A] code fixes ROLLED OUT to the running backfill (operator-requested).** Rebuilt the VM code tarballs
   (instruments-service@b0750369 + UAC@13ff387d, both carrying tasks 1-4) and **relaunched all 5 `sports-ref-v3-*`
   backfill VMs** (delete+recreate via `launch-sports-instruments-reference-vm.sh`). All 5 RUNNING on fresh instances

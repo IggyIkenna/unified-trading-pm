@@ -201,6 +201,15 @@ against a batch rerun of the same window.
 
 ## Progress Log
 
+### 2026-08-16 — na-eligibility-audit follow-up Q&A round 9
+
+Operator asked to dispatch a full venue-to-execution-route enumeration. Found the bounded task already exists
+verbatim as the P1 "Build the venue-to-execution-route resolver" todo above (DoD: every canonical sports venue
+resolves exactly one of direct/broker/wired-stub, unroutable raises). Not extracted to a separate AO-dispatch
+plan — this doc is `Track: LOCAL / human plan` (hand to a Sonnet-5 worker directly) by explicit design, same as
+its sibling `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md`; the todo is already
+dispatch-ready in place.
+
 ### 2026-08-14 — P0 delta established
 
 Read `e2e-testing/scripts/sports/live_arb_scanner.py` in full (3,136 lines; every `def` catalogued via

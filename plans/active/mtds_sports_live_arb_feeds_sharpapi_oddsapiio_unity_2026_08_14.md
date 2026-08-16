@@ -259,6 +259,11 @@ sports cell that we actually have a provider for.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 9)**: confirmed — the operator scope ruling quoted
+  verbatim at the top of this doc (2026-08-14: SharpAPI vs Unity vs Betfair, union not intersection, live-only)
+  IS the final venue/provider-preference list; no drift found. This doc is deliberately `Track: LOCAL / human
+  plan` (hand to a Sonnet-5 worker directly, not AO backlog dispatch) — not extracted to an AO-dispatch plan,
+  per its own explicit tagging.
 - 2026-08-14: Closed all three P0 "fix the live sports path that is already broken" todos in one session. Root cause of
   the 10-day zero-capture outage: `LiveWebsocketRunner.record_tick()` exact-matched tick instrument_ids against the
   original subscription set only, silently dropping every tick from `OddsApiWSFeedConnector` (a fan-out poller whose
