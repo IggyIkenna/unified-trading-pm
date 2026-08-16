@@ -226,7 +226,7 @@ existing `underlying=M6A`/`M6B`/`M6C`/`M6E`/`M6J`/`M6N`/`M6S`/`M2K`/`MCL`/`MGC`/
 `MICRO-<ROOT>` form. The 8 treasury/soft-commodity naming-style codes need NO migration — `tradfi_symbology.py` already
 had the adopted values live, only the non-live `tradfi_instrument_universe.py` copy changed.
 
-- [ ] [DATA] P1-OPERATOR-DECISION. **CONFIRMED — this mismatch is NOT CME-only; it also hits CBOE/VX (2026-07-27).**
+- [ ] [DATA] [OPERATOR-DECISION] P1. **CONFIRMED — this mismatch is NOT CME-only; it also hits CBOE/VX (2026-07-27).**
       Re-verifying `tradfi_phase_d_terminal_gate_2026_07_24.md`'s "still in-flight" CBOE force+skip check
       (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
       2026-07-24 12:43 UTC against `mtds-code@0205eaab` — the build that added `CBOE → "VIX"` to

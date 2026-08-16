@@ -118,7 +118,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
       escalation pointed to (`qg_governor_glue_runner_ledger_coordination_2026_08_03.md`) has since landed, been
       live-validated, and archived (see `_continued2` sibling doc's 2026-08-03 ~21:50Z entry). Re-checking this one
       stale run today would not change anything downstream.
-- [ ] 2. [INFRA] P3. If todo 1 confirms the fix, consider whether other repos in the parent doc's `repos:` list with
+- [ ] [INFRA] P3. 2. If todo 1 confirms the fix, consider whether other repos in the parent doc's `repos:` list with
       recurring (not just single) unified-trading-api-style sustained-red occurrences would benefit from the same
       repo-local `PYTEST_TIMEOUT` raise, rather than relying solely on retries. Not done proactively here — scope
       bounded to the one escalation this doc was filed under. **na-eligibility-audit 2026-08-03 note**:
@@ -811,7 +811,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   or not yet observed green — a sustained non-self-clearing red, not a still-in-flight wait, matching the bar this doc's
   todo 1 sets for the repo-local mitigation (already applied to `unified-trading-api`, `features-service`,
   `deployment-service`). Confirmed execution-service's `PYRIGHT_TIMEOUT=300` override already existed (from an earlier,
-  unrelated fix) but `PYTEST_TIMEOUT` did not. Applied the identical sanctioned mitigation: `execution-service@7803a634`
+  unrelated fix) but `PYTEST_TIMEOUT` did not. Applied the identical sanctioned mitigation: `execution-service@9ffd7029`
   adds `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` to `scripts/quality-gates.sh`. Verified green via quickmerge's own Pass-1
   QG (`✅ ALL QUALITY GATES PASSED`, 197s, all steps green) — decisive confirmation no code/test defect. Shipped via
   `quickmerge --agent --files 'scripts/quality-gates.sh'`, confirmed on `origin/live-defi-rollout` via
