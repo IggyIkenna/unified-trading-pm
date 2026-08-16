@@ -208,7 +208,12 @@ context_scope:
       relabeling action needed; nothing left to diagnose on this axis. **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
+- [ ] [DATA] P0. **STATUS 2026-08-16 (slot-5, data_engineering)**: this exact item was extracted for AO dispatch
+      to `plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` and its verify step was RUN there —
+      full evidence + result (NOT GREEN, CF-8 RED, delete correctly withheld) on that doc's own checkbox; not
+      duplicated here. This item stays open (still un-checked) pending CF-8 clearing — see that doc for the
+      current state, do not re-run the verify independently of it. E7 Verify: `cf_manifest_audit_2026_06_01.py
+      market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
       data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in
       `tradfi_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy
       `market-data-tick-tradfi` permanently** + **bulk-delete the 12 `day-*` hyphen 0-row-placeholder prefixes** in

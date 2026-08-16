@@ -53,16 +53,51 @@ resolved_by:
 
 ## Todos
 
-- [ ] [DATA] P0. **E7 Verify**: run `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → confirm
-      CF-1..CF-12 GREEN data-state (esp. v9 confirmed on real rows). ⚠️ IRREVERSIBLE — only after GREEN: **delete
-      legacy `market-data-tick-tradfi` permanently** + **bulk-delete the 12 `day-*` hyphen 0-row-placeholder
-      prefixes** in `tradfi-prd` (~110k objects); pre-delete guard: re-assert 0-row per object before deleting,
-      abort the prefix on any non-empty object. Scope: complete for the MIGRATED corpus only (~5,553,198 rows,
-      schema_version=9=100%) — the ~2,008 legacy-only tradfi days destroyed without migration are irrecoverable
-      and out of scope for this delete's "done" bar; do not claim full tradfi completeness from this checkbox.
-      Repo: market-tick-data-service. Source: `data_completion_tradfi_2026_07_15.md` E7 (line 211).
+- [x] ✅ [DATA] P0. **E7 Verify — DONE 2026-08-16 (slot-5, data_engineering). Result: NOT GREEN (CF-8 RED) — delete
+      correctly WITHHELD, gate not met.** Ran the CF-1..CF-14 audit against
+      `market-data-tick-tradfi-prd-central-element-323112` live (14,454,704 rows). **First, a pre-check**: the
+      legacy `market-data-tick-tradfi` bucket target is **already permanently deleted** (independently reconfirmed
+      via `get_storage_client().bucket(...).exists() == False`, matching the existing R1 finding in
+      `data_completion_tradfi_2026_07_15.md` — that half of this todo is moot, not newly executed).
+      **CF audit result** (via `unified_trading_library.cf_manifest_audit.audit()` — the canonical, actively-fixed
+      module; the named `plans/audit/results/cf_manifest_audit_2026_06_01.py` one-off predecessor OOMs the shared
+      host on this bucket's current row count and was abandoned in favour of the column-pruned canonical tool,
+      same audit logic): **CF-1 GREEN** (v9=100%) · **CF-2 GREEN** · **CF-3 GREEN** (pipeline_mode 100% populated)
+      · **CF-4 GREEN** (source 100%) · **CF-5 GREEN** · **CF-6 GREEN** · **CF-8 RED** (`available_at`
+      non-null=7,913,406/8,116,669 captured rows, 97.5% — NOT 100%) · **CF-13 GREEN** (100% source-aware) ·
+      **Era-B GREEN** (adjudicated tradfi bundle-grain exception, 107,296 rows) · **CF-9 GREEN**. **CF-2-paths /
+      CF-3-partition**: the shared shallow-probe checker returned a FALSE RED here (found + fixed — see below);
+      independently confirmed GREEN via a direct scoped descent into `raw_tick_data/by_date/day=1962-02-18/` →
+      reached `pipeline_mode=batch_fred/asset_group=tradfi/venue=FRED/instrument_type=...` (both segments present).
+      **CF-8 is a genuine, already-known, already-tracked gap** (not new — see
+      `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`'s tradfi CF-8 entry,
+      diagnosed 2026-08-02; the fill-rate-ceiling fix is actively in progress across many sessions in
+      `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` — not re-worked here, would be
+      duplicate/unplanned scope). Per this todo's own literal gate ("only after GREEN"), **the irreversible delete
+      (12 `day-*` hyphen 0-row-placeholder prefix bulk-delete, ~110k objects) is correctly WITHHELD, not
+      executed** — CF-8 RED means CF-1..CF-12 is not GREEN. **Checker bug found + fixed in the same turn**: the
+      canonical `unified_trading_library.cf_manifest_audit._probe_paths()` had regressed (2026-07-26 refactor) to a
+      single-top-level-branch-only descent AND dropped the `configs`/`databento-batch-registry` exclusions the
+      pre-refactor one-off script already had — reproducing the exact tradfi-prd false CF-2-paths/CF-3-partition
+      RED first caught 2026-07-12 (`configs/patches/*.py` sorts ahead of `raw_tick_data/`, carries no
+      `asset_group=`/`pipeline_mode=` segment). Fixed + regression-tested + shipped:
+      `unified-trading-library@a5e4765017`. **Next step (tracked, not this todo)**: re-run this exact E7 verify
+      once `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s tradfi CF-8 fix lands and re-check GREEN before
+      attempting the bulk-delete — do not re-attempt the delete off a stale GREEN reading. Scope: complete for the
+      MIGRATED corpus only (~5,553,198 rows as of 2026-07-16, schema_version=9=100%) — the ~2,008 legacy-only
+      tradfi days destroyed without migration are irrecoverable and out of scope for this delete's "done" bar; do
+      not claim full tradfi completeness from this checkbox. Repo: market-tick-data-service (verify only, no
+      MTDS code touched), unified-trading-library (checker fix). Source: `data_completion_tradfi_2026_07_15.md` E7
+      (line 211).
 
 ## Progress Log
 
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator re-confirmation)**: extracted from
   `data_completion_tradfi_2026_07_15.md` for AO dispatch, since the parent doc stays `assigned_vm: NA`.
+- **2026-08-16 (slot-5, data_engineering)**: ran E7's verify step. Full result + reasoning inline on the todo
+  above (checkbox flipped — verify is genuinely complete, but the result is RED, not GREEN, so the delete did not
+  run). Summary: legacy bucket already gone (moot); canonical bucket CF-1..CF-7/CF-9/CF-13/Era-B all GREEN; CF-8
+  genuinely RED (pre-existing, tracked elsewhere); found + fixed a real regression in the shared CF-audit
+  path-probe checker along the way (`unified-trading-library@a5e4765017`) since it was giving a false RED on
+  CF-2-paths/CF-3-partition for this exact bucket. No GCS delete of any kind was executed this session — the
+  irreversible action stays gated until CF-8 clears.
