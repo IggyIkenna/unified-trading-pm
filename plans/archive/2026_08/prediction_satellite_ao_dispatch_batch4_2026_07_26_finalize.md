@@ -7,7 +7,7 @@ summary: >-
   (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`),
   re-checks the gated `[OPERATOR]` walk/backfill deferrals for whether their gate cleared, and archives any sibling doc
   whose remaining work is fully closed. `status: draft` until batch4 itself is operator-approved and dispatched.
-status: active
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-30"
+last_updated: "2026-08-16"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,9 +53,10 @@ context_scope:
 
 # Prediction satellite AO batch 4 — finalize
 
-> **Status: draft — NOT dispatched.** Gated (`gate_on_depends: true`) behind
-> `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. It will not dispatch until batch4 is flipped `active` by the
-> operator AND every batch4 dispatched todo is done. Do NOT flip this to `active` independently of batch4.
+> **📦 ARCHIVED 2026-08-16 — resolved.** All 3 todos done: sibling source docs reconciled, gated `[OPERATOR]`
+> deferrals re-checked, and the final archive-check confirmed no sibling doc is left half-reconciled (parked doc
+> already archived, `prediction_live_clob_depth_capture` already `archive_exempt`, `prediction_cross_venue_arb`
+> has one genuine dated residual). Closeout digest corrected. See Todos + Progress Log below for full evidence.
 
 ## Todos
 
@@ -76,15 +77,21 @@ context_scope:
       either promoted to a ready `[OPERATOR]` todo (with re-measured live counts) or left deferred with a dated reason;
       recorded in this plan's Progress Log.
 
-- [ ] [DATA] P3. **Archive fully-closed sibling docs + update the closeout digest.** For each of the 3 A3-relocated
-      sibling docs (`prediction_cross_venue_arb_and_coverage`, `prediction_live_clob_depth_capture`,
-      `prediction_perps_kalshi_polymarket_parked`): if every open item is now either shipped, promoted to a live
-      `[OPERATOR]`/batch todo, or a confirmed non-batchable (upstream/design/operator) residual, run the 6-step archival
-      ritual and move it to `plans/archive/2026_07/`; otherwise leave it active with the residual clearly scoped. Update
-      `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated source docs" digest to reflect any archival. Repo:
-      unified-trading-pm. **Done when**: each sibling doc is either archived (with the ritual completed + digest
-      updated) or has a one-line dated residual note explaining why it stays active; no sibling doc is left in a
-      half-reconciled state.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot 30).** Re-verified all 3 A3-relocated sibling docs — none archived this
+      session, each already has (or now has) a clear dated reason to stay where it is, so the "no half-reconciled
+      state" bar is met without an archival:
+      - `prediction_perps_kalshi_polymarket_parked` — already archived (`plans/archive/2026_07/`), confirmed still
+        there, no action needed.
+      - `prediction_live_clob_depth_capture_2026_07_24.md` — 0 open todos, but already `archive_exempt: true`
+        (2026-08-10, "complex referrer graph — deferred to `/archive-candidates-audit`"). Respected that standing
+        decision rather than archiving ad-hoc here; did not re-litigate it.
+      - `prediction_cross_venue_arb_and_coverage_2026_07_24.md` — re-verified only 1 genuine open item remains (the
+        `[OPS] P2` tarball-overwrite-race residual, deployment-service) — not shipped, not yet promoted to a batch
+        todo, open-ended enough to need its own scoping pass first. Added a dated confirmation note in-doc; stays
+        `active`.
+      Updated `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated source docs" digest — it was materially
+      STALE (listing 9 items under cross_venue_arb and a since-closed item under live_clob_depth that had all since
+      shipped/closed); corrected both entries to the current real state. Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -126,6 +133,12 @@ context_scope:
   filed as batch5 candidate. **Deferral (b)** — POLYMARKET re-enum + `book_snapshot_5` backfill: gate cleared; re-tagged
   off `[OPERATOR]` 2026-07-28; **promoted to ready `[DATA]` candidate** — batch5 or standalone plan, AO-dispatchable, no
   remaining gates. Batch4 Deferred entry updated.
+- **2026-08-16 (slot-30, data_engineering, task `…finalize-003`) — P3 archive-check DONE, all 3 todos now closed.**
+  See the flipped P3 checkbox above for the full per-sibling verdict. None of the 3 siblings were archived this
+  session (parked doc already archived long ago; live_clob_depth already `archive_exempt`; cross_venue_arb has one
+  genuine open residual) — every one already meets or now meets the "dated residual note" bar, so nothing is left
+  half-reconciled. Corrected the closeout digest's stale per-sibling item lists to match current reality. With all
+  3 todos done and this doc unlocked, archiving it in this same commit per the standard 6-step ritual.
 
 ## Deferred work — migrated to:
 
