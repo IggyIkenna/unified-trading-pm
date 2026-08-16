@@ -130,3 +130,13 @@ here.
   `lc_verify_tarball_freshness` P2 todo is still `status: open` / unchecked `- [ ]` (confirmed via grep, read-only). The
   gate has not cleared, so this doc's own P3 todo (re-run `pipeline_e2e_check.py` force leg) remains correctly
   un-actionable. No VM launched, no fix attempted this session.
+- 2026-08-16 (slot-2, data_engineering, "docs only, no writes" session, third check same session): **Gate cleared** —
+  `dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md`'s P2 (`lc_verify_tarball_freshness` auto mode)
+  and P3 (final "still stale" error message) todos both flipped `- [x] ✅` via a foreign session's
+  `c6ab276b40` ("docs(plans): flip P2+P3 tarball-freshness race todos", evidence: `deployment-service@fb55e8ac35`),
+  confirmed via read-only grep. This doc's sole P3 todo (re-run
+  `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`
+  on a fresh VM) is now **actionable-now** for the first time — but the re-run itself is a VM launch (real infra
+  spend), which is outside this "docs only, no writes" session's scope. Not executed this session; flagging as the
+  top-priority next action for the next session with infra-write authorization. No VM launched, no code changed this
+  session.
