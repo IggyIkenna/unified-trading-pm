@@ -134,3 +134,7 @@ guidance both point the same direction: stop and page.
   non-OOM exit codes are a PAGE case regardless of relaunch-count bound, and the `mdps-tradfi-` family was additionally
   reported already at its `≤2/day` relaunch bound — did not relaunch. Filed this issue doc and paged the operator via
   `/blocked` per the escalation's explicit instruction. No code changed this session.
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Sole open todo is an
+  explicit [OPERATOR] relaunch-vs-wait judgment call (family relaunch bound exhausted, shard criticality unknown to
+  a worker). Genuinely operator-gated. assigned_vm unchanged.

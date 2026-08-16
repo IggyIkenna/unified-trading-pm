@@ -343,3 +343,6 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   canonical-id audit, governance-sweep-deferred-followups tracker, the databento symbology.py source path, the
   cross-asset-canonical-target SSOT, and the tradfi canonical-path-migration design doc) still resolve and remain the
   right minimal set for this doc's sole standing reconciliation todo.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Sole open todo is a
+  perpetual standing reconciliation ("after each future roll-up cycle"), not a one-shot bounded AO dispatch. Nothing
+  to reclassify. `assigned_vm` unchanged.

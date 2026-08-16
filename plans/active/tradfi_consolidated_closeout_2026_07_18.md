@@ -887,3 +887,7 @@ operator activation.
   `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` the 08-09 marker flagged-but-declined-to-correct (over-cap
   budget concern) -- doc is 881 lines, well under the 1000-line hard cap, so a 1-line correction is safe; corrected
   above to the real count (3). `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** 0 open todos
+  confirmed (live grep). NOT an ARCHIVE candidate: `archive_exempt: true`, tranche aggregated-reference umbrella /
+  `check_ag_closeout_linkage.py` linkage anchor with still-open dependent children gating its archival.
+  `assigned_vm` unchanged.

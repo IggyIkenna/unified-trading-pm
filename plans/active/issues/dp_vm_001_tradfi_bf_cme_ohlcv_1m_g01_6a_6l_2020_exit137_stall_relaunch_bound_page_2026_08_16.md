@@ -139,3 +139,7 @@ poison instrument/date range in that group/chain/year combination) rather than a
   fleet — the live fleet shows only a separate, already-in-flight relaunch wave (different timestamps, different
   shards) for the family. Per RB-INFRA-RELAUNCH, did not relaunch. Filed this issue doc and paging the operator via
   `/blocked` per the escalation's explicit instruction. No code changed this session.
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 1 is an explicit
+  [OPERATOR] relaunch-vs-wait judgment call. Todo 2 offers branching candidate hypotheses, not yet a committed bounded
+  action. Genuinely operator-gated. assigned_vm unchanged.

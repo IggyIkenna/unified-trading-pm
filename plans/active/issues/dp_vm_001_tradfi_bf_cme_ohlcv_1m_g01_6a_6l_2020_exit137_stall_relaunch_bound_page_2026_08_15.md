@@ -142,5 +142,8 @@ this could be a systemic issue in the launcher/capture path rather than two unre
   Confirmed via `gcloud compute instances list --filter="name~tradfi-bf-cme-ohlcv-1m"` the VM is no longer in the live
   fleet (0 rows). Per RB-INFRA-RELAUNCH, both the OOM and stall actuator classes share the identical
   `≤2/(vm-prefix, day)` bound, and the family was already reported at that bound today — did not relaunch. Filed this
-  issue doc and paging the operator via `/blocked` per the escalation's explicit instruction. No code changed this
+  issue doc and paging the operator via `/blocked` per the escalation's explicit instruction. **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 1 is an explicit
+[OPERATOR] relaunch-vs-wait judgment call. Genuinely operator-gated. assigned_vm unchanged.
+
+No code changed this
   session.
