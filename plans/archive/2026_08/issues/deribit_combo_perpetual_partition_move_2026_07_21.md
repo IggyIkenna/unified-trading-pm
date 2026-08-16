@@ -585,6 +585,37 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
 
 ## Progress Log
 
+- **2026-08-16** (slot 24, data_engineering, task `deribit_combo_perpetual_partition_move-3c27da745321`, session
+  continuation, appended AFTER archival) — Working the same P2/P3 todos concurrently with slot 25 (above), independently
+  hit a genuinely confusing signal worth recording for anyone who finds the extra `cefi-deribit-sweep` VM launches in
+  this window: a dry-run on `e2-standard-16` (`-003410`) found **799** confirmed-phantom rows; a `full`/--apply run on
+  the SAME machine type (`-015054`) then OOM'd (`EXIT_CODE=137`) in the write-back path's unpruned second
+  `merge_canonical_with_outstanding_shards` read — genuinely heavier than the pruned identification read, so shipped
+  `deployment-service@5d68306b10` bumping `full` mode to `e2-highmem-16`. A relaunched `full` run (`-022203`,
+  `e2-highmem-16`) then completed cleanly but its identification pass reported **0** candidates — directly contradicting
+  the 799 just found minutes earlier on the same live data. A dedicated re-run dry-run (`-023633`, back on
+  `e2-standard-16`) OOM'd outright. At the time, this read as "`e2-standard-16` is unreliable, don't trust ANY of its
+  outputs" — shipped a second fix, `deployment-service@1d78d15ca8`, bumping BOTH modes to `e2-highmem-16` (a real,
+  worthwhile fix regardless of what follows: the `-023633` OOM is a genuine crash, independent of the explanation
+  below). Relaunched dry-run on the fix (`-032825`, `e2-highmem-16`) and it ALSO reported 0, clean, `EXIT_CODE=0`.
+  **Resolution, found only after reading slot 25's entry below**: not a reliability artifact at all — a genuine
+  concurrent RACE. `-014110` (launched by neither this session nor slot 25's, explicit caller-supplied
+  `MACHINE_TYPE=e2-highmem-16`, timestamped `01:41:10`, i.e. mid-window of this session's `-003410` dry-run which ran
+  ~00:38–01:48) ran `--apply` directly and actually deleted the 799 rows. `-003410`'s 799-row read landed BEFORE
+  `-014110`'s delete completed (genuinely 799 candidates at that moment); every read AFTER `-014110` finished
+  (`-022203`, `-032825`) correctly found 0, because the rows were, by then, genuinely gone. No manifest corruption, no
+  bad read — three-way concurrent dispatch of the same plan todo (a recurring pattern this doc already documents
+  multiple times) produced a mid-flight state change that looked like instability but wasn't. **Net effect of this
+  session**: the row-count conclusion below (799 removed) is unaffected and independently corroborated by this
+  session's own `-003410` read; `deployment-service@5d68306b10` + `@1d78d15ca8` are real, useful, already-landed
+  defensive fixes (both `cefi-deribit-sweep` modes now default to `e2-highmem-16`, since `e2-standard-16` DID
+  genuinely OOM once, race or no race) that reduce the odds of a future worker hitting the same false-alarm chase.
+  Filed no new todo — the fix is already shipped and the doc's actual open work is done. Lesson for future readers of
+  this doc's already-extensive "concurrent duplicate VM launch" history: **before treating a contradicting VM result as
+  a data/reliability bug, check `gcloud compute instances list` / recent deployment archives for a sibling VM that may
+  have mutated the same state mid-investigation** — this doc's own established pattern (see the 2026-08-11 slot-7
+  entry) predicts exactly this shape of false alarm.
+
 - **2026-08-16** (slot 25, data_engineering, task `deribit_combo_perpetual_partition_move-378e657e1117`) — Resumed
   this task (`already_in_progress` on `/boot`) and found the outstanding `[DATA] P2`/`P3` work already completed by a
   VM this session did not launch: `canonical-migration-cefi-deribit-sweep-20260816-014110` (`e2-highmem-16`,
