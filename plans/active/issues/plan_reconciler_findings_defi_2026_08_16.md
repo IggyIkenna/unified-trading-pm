@@ -133,10 +133,22 @@ in `agent-orchestrator/server`'s boot-message construction) so future dispatches
   — the doc's own `[OPERATOR] P0` "halt the consolidator" order is premised on this comparison. Not independently
   re-verified this run (would require a fresh live bucket-identity check). Flagging for operator/next-pass attention
   given the severity (a live P0 halt-order may be based on a bucket mix-up) — **NOT resolved, NOT auto-fixed**.
+  **UPDATE 2026-08-16 (slot-32, data_engineering root-cause task `defi_manifest_index_catastrophic_shrink-a4d9f031deba`)
+  — CONFIRMED, this hunch was correct.** Pulled 40h of Cloud Run execution logs for
+  `uts-prod-manifest-consolidator-instruments-defi` — `instruments-store-defi-prd-central-element-323112`'s canonical
+  index has been stably ~138,468-138,612 rows the whole window, never larger. Live `gcs_describe_object` confirms
+  `market-data-tick-defi-prd-central-element-323112` (the bucket the 159M/6.8GiB figure actually describes) is fully
+  intact: 7,147,986,304 bytes, actively growing, last written 2026-08-16T18:03Z. No data loss occurred; the
+  consolidator's merge logic behaved correctly throughout. Full evidence + retraction in
+  `defi_manifest_index_catastrophic_shrink_2026_08_16.md`'s banner + "Root cause investigation" section (now
+  `status: resolved`, all 4 recommended-decision todos resolved as moot/covered).
 - **`defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e)** — a ready-to-fire 133M-row prod write
   against the bucket the 159M figure actually belongs to, relying on the same consolidator machinery
   `defi_manifest_index_catastrophic_shrink_2026_08_16.md` suspects may be defective. Worth operator awareness before
   it fires; not independently adjudicated this run.
+  **UPDATE 2026-08-16 (slot-32)** — the consolidator machinery is now CONFIRMED not defective (see the update above);
+  the "may be defective" premise is cleared, so this todo no longer needs to wait on that question. Not otherwise
+  re-adjudicated by this update — the todo's own content/timing is unrelated to this specific concern.
 - **`defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md`** (hunter batch B) claims an "undocumented"
   scheduler pause, but the pause + its resume-gate ARE already tracked in `defi_consolidated_closeout_2026_07_18.md`
   Track 8 (a wrong-vocabulary grep miss, not a real gap) — and the new doc's own proposed safety re-check
