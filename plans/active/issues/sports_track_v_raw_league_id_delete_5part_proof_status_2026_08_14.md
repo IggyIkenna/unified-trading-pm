@@ -241,13 +241,16 @@ already caught once.
       rows reindexed to `expected`'s final column set (post-union) before hashing, or switch the presence check to the
       same natural-key-subset method `verify_stale_raw_league_id_content_2026_08_14.py` already uses. Add a regression
       test with mismatched source/existing schemas (mirrors this session's real case).
-- [ ] [DATA][OPERATOR] P3. **Gating condition MET 2026-08-16 (slot 30)**: fresh full-range
-      (`2020-06-06..2026-08-16`) `dry`-mode re-verify shows **144,276/144,276 PASS, 0 FAIL fleet-wide** — Parts
-      1/2/5 now cleanly pass with no known-outstanding gap (see Progress Log entry below for the run detail).
-      BLOCKED ONLY on explicit re-authorization now (this is a NEW gate per this doc's own text, not automatic) —
-      once granted, launch the SAME `sports-league-id-delete` category in `full` mode
-      (`--apply-prod --confirm-prod-write`) to execute the actual delete, per finding T's carve-out — re-query
-      `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value inline.
+- [ ] [DATA] P3. **AUTHORIZED 2026-08-16 (operator, na-eligibility-audit follow-up)**: the fresh full-range
+      (`2020-06-06..2026-08-16`) `dry`-mode re-verify (144,276/144,276 PASS, 0 FAIL — see Progress Log entry below)
+      cleared the gating condition. Operator authorized executing the delete. **Before firing `--apply-prod`,
+      the dispatched worker must first confirm the re-verified 144,276 count covers the FULL 275,136-object
+      candidate population this todo targets** (the two numbers don't match 1:1 as recorded — resolve whether
+      144,276 is a subset, a different unit of count, or the population itself shrank since the original 2026-07-22
+      275,136 figure, and say which before proceeding). Once that's confirmed, launch the same
+      `sports-league-id-delete` category in `full` mode (`--apply-prod --confirm-prod-write`) per finding T's
+      carve-out — re-query `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value
+      inline.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
       `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same
       commit) — see that plan's Progress Log / todo annotation.
