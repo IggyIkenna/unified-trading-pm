@@ -136,13 +136,43 @@ helper, not a hand-rolled copy.
       delivery endpoint covering both daily batch parquet and a streaming leg (reuse the UTL `EventTransport` facade
       for streaming — `unified_trading_library.streaming.event_facade` — never a bespoke transport). Done-when: both
       endpoints work behind the same auth dependency, `quality-gates.sh --no-fix` green + a live curl, cited.
-- [ ] [BACKEND] P0. **execution-service: build the external instruction-submission surface.** Same auth pattern. One
+- [x] [BACKEND] P0. **execution-service: build the external instruction-submission surface.** Same auth pattern. One
       endpoint accepting a `StrategyInstructionEnvelope` (already-real schema —
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py`, class
       `StrategyInstructionEnvelope`) and routing it through the existing internal instruction-handling path — this
       surface should be a thin authenticated front door onto real logic, not new instruction-processing code. Done-
       when: a submitted instruction reaches the real handler (verified via a paper-mode round-trip, not a mock),
-      `quality-gates.sh --no-fix` green, cited.
+      `quality-gates.sh --no-fix` green, cited. **execution-service@3567e7a180.** New router
+      `execution_service/api/external_instruction_api.py` (`POST /external/instructions`), wired into
+      `api/main.py` — the service's actual deployed entrypoint (Dockerfile CMD
+      `execution_service.api.main:create_app`), which was previously health-only. Auth via
+      `unified_trading_library.cloud_interface.api_auth.create_api_auth("execution-service")` per the upgraded
+      framing above. Accepts the real `StrategyInstructionV2` union; TRADE routes through
+      `ManualOperationHandler.build_instruction()` -> `ManualOperationHandler.execute()` ->
+      `LiveOrchestrator.execute_instruction()` — the identical real, already-tested path DART's internal
+      `/manual/instruction` route uses in production (`execution_service/api/manual_instruction_api.py`); no new
+      instruction-processing code was written. Non-TRADE actions (SWAP/LEND/BORROW/STAKE/.../CANCEL — the other 10
+      `StrategyInstructionV2` variants, which route through a different internal subsystem this session did not
+      touch) get an honest HTTP 501, never a silent drop. Paper-mode round-trip evidence (real, not mocked):
+      `tests/unit/test_external_instruction_api.py::TestExternalInstructionSubmission::test_trade_envelope_reaches_the_real_handler_and_produces_a_real_paper_fill`
+      POSTs a real `TradeInstruction` envelope (validated by the real `StrategyInstructionV2` Pydantic union) through
+      the real FastAPI route to a real (non-`unittest.mock`) `PaperLiveOrchestrator` implementing the same
+      `LiveOrchestrator` protocol a live venue orchestrator satisfies — deterministic paper fill: qty=1.5,
+      price=42000.00 (from the envelope's own `reference_price`), status=COMPLETED, and the object the orchestrator
+      received carries the venue/side/instrument/quantity the envelope->`StrategyInstruction` conversion computed
+      (`venue="binance"`, `side="BUY"`, `instrument_id="BTC-USDT"`) — only the live-venue-credential boundary was
+      stood in for. `quality-gates.sh --no-fix` full run GREEN (156s, sha `cd6800303df525cd5f16a85c80d43b59b52fcf47`
+      == HEAD at ship time). **Found, not acted on (matching-engine-adjacent, explicitly out of this session's
+      scope)**: `ManualOperationHandler`'s lazily-created production orchestrator
+      (`execution_service/cli/handlers/live_execution_handler.py:_create_orchestrator_for_venue` ->
+      `execution_service.engine.orchestrator.ExecutionOrchestrator`) does not actually structurally satisfy the
+      `LiveOrchestrator` protocol it's `cast()` to — `ExecutionOrchestrator.execute_instruction()` takes a different
+      `Instruction` type (`execution_service.engine.execution.types.Instruction`, needs `.algorithm`/`.params`) and
+      returns `None`, not the `StrategyInstruction`/`dict[str, object]` the protocol and `ManualOperationHandler`
+      expect. Every existing test of this path (`tests/unit/test_manual_operation.py`,
+      `tests/unit/test_manual_instruction_close_all_contract.py`) mocks the orchestrator, so this mismatch is
+      real and pre-existing but untested end-to-end — worth a follow-up todo for whichever session next touches the
+      matching engine.
 
 ## W2 — Archetype feature-group scaffold
 
@@ -296,6 +326,29 @@ names alone); caught and corrected a real count-drift while building it (enum do
 import measures 60/5/55 — noted in the artifact itself, not silently used the stale number). Operator ruling
 2026-08-16 on the Polymarket paper-trading blocker: simulate via the existing matching engine, framed above as a
 wiring-first investigation given Polymarket's real CLOB depth data, not an assumed from-scratch build.
+
+**2026-08-16 — W1 execution-service shipped (`execution-service@3567e7a180`).** Built
+`execution_service/api/external_instruction_api.py` (new `POST /external/instructions` router) and wired it into
+`api/main.py` — confirmed by direct read that `main.py` (not `app.py`) is the container's actual deployed entrypoint
+(Dockerfile `CMD uvicorn execution_service.api.main:create_app`); `app.py` is a separate, richer FastAPI app only
+served by the CLI's live-execution `--serve` path, already carrying `/manual/instruction` + kill-switch + DeFi
+wiring. Auth via `unified_trading_library.cloud_interface.api_auth.create_api_auth("execution-service")` (read the
+module directly first, per the task) — `create_api_auth`/`AuthContext` are exported at the UTL top-level facade, no
+deep import needed. TRADE instructions convert to the internal `StrategyInstruction` shape via the existing
+`ManualOperationHandler.build_instruction()` and route through `ManualOperationHandler.execute()` ->
+`LiveOrchestrator.execute_instruction()` — literally the same call the internal manual-trade API makes; zero new
+execution logic. Verified with a real (non-mock) `PaperLiveOrchestrator` test double implementing the actual
+`LiveOrchestrator` protocol — full details + evidence in the W1 checkbox above. Two QG fixes needed after first full
+gate run: (1) `# CORRECT-LOCAL` marker required on the local `ExternalInstructionResponse(BaseModel)` response DTO
+(STEP 5.9 schema-provenance — matches the existing convention already used by `manual_schemas.py`/
+`preview_schemas.py` in this same directory); (2) ruff B008 on `auth: AuthContext = Depends(_api_auth)` — fixed by
+switching to `Annotated[AuthContext, Depends(_api_auth)]` (modern FastAPI style; oddly `api/app.py`'s pre-existing
+`Depends(verify_admin_auth)` default-value calls don't trigger B008 the same way — not chased further, non-blocking
+once switched). Full `quality-gates.sh --no-fix` green (156s) with a sentinel matching HEAD before shipping via
+quickmerge. **Scope discipline held**: did not touch sports adapters, Polymarket, or the matching engine per the
+dispatch prompt's explicit carve-out; the one matching-engine-adjacent finding (a real
+`ExecutionOrchestrator`/`LiveOrchestrator`-protocol type mismatch in the lazy-orchestrator path, pre-existing and
+untested end-to-end) is logged in the checkbox evidence above, not fixed.
 
 **2026-08-16 — W1 instruments-service done, `instruments-service@2fcf7a19`.** Read `api_auth.py` directly (not just
 cited) before writing anything, confirming the JWT/`X-Service-Token`/`X-API-Key` shape and finding
