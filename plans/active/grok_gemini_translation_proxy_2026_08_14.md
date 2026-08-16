@@ -146,7 +146,12 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       payment/collections gate (`403 "Lightning dunning decision is deny"`) — invisible to any config read, only
       surfaces on a real call. Done when: each of the 3 projects is confirmed `billingEnabled:false` via
       `gcloud billing projects describe <project>` (true free tier), AND a real smoke `generateContent` call against
-      each succeeds — not just a config check.
+      each succeeds — not just a config check. **1 of 3 DONE 2026-08-16**: `gen-lang-client-0008266149` (project number
+      18569138749) confirmed `billingEnabled:False` via the operator's own admin ADC identity, AND real
+      `generateContent` calls succeeded against both target models (`gemini-3.5-flash-lite`, `gemini-3.7-flash`, real
+      `usageMetadata` returned, no spend-cap/billing error) — genuinely free tier, unlike the two projects
+      (`uts-compliance-ikenna`/371216509644 handed over twice by mistake — same key both times, confirmed byte-identical)
+      that turned out to be Paid Tier 3. Key stored: `gemini-api-key-gen-lang-client-0008266149`. 2 more projects to go.
 - [ ] [INFRA] P0. Stand up a self-hosted LiteLLM proxy in Anthropic-passthrough mode on/reachable from the orchestrator
       VM (same "must run where workers spawn" requirement flagged in the ruled-out OmniRoute doc — not the operator's
       laptop). Configure Grok (2 models) and Gemini (6 accounts) as backends. Done when: a manual

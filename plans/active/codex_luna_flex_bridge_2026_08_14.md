@@ -133,10 +133,12 @@ template, minus the third-party dependency).
       succeeded**: `codex exec` returned "OK" for a genuine prompt, 2,745 tokens billed, session id recorded. One
       finding to fold into the tier tracking: it defaulted to model `gpt-5.6-sol`, not `luna` — GPT-5.6 has three
       effort presets (Sol/Terra/Luna per this plan's own 7-day usage-grounding numbers) and the bridge will need `-m`
-      to pin Luna explicitly, the default won't do it. **Still unconfirmed**: whether the account is on Plus (the
-      staged target) or already Pro — operator said "im on pro" in a message that also carried unrelated Gemini
-      credentials, ambiguous whether that confirms the ChatGPT tier or was cross-talk; the upgrade-to-Pro todo below
-      stays open pending a direct answer, don't assume it's already satisfied.
+      to pin Luna explicitly, the default won't do it. **RESOLVED 2026-08-16**: operator shared the actual ChatGPT
+      "Upgrade your plan" screen — "Your current plan" badge is on **Plus**, not Pro (the earlier "im on pro" line was
+      cross-talk about Gemini's Tier 3, confirmed by this screenshot). Staged-start target was already correct;
+      no action needed. Bonus finding: Pro's price is a single tier with a 5x/20x usage toggle ($100/mo at 5x,
+      presumably $200/mo at 20x) — resolves the earlier research ambiguity between "$100 Pro" and "$200 Pro" sources,
+      it's one product with a selectable multiplier, not two different tiers.
 - [ ] [OPERATOR] P3. Upgrade ChatGPT Plus → Pro once the bridge is validated (smoke-test gate passed, real dispatch
       volume observed) and the operator decides to scale. Done when: the ChatGPT account shows Pro active and the quota
       tracking todo's ceiling numbers are remeasured against the new tier — same auth artifact, no other code change
