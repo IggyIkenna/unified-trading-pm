@@ -17,13 +17,17 @@ summary:
   previously tracked."
 status: open
 nature: notes
-asset_group: [ao, infrastructure]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, git-health, base-checkout, dirty-state, operator-decision]
 related:
-  [/codex/05-infrastructure/per-tab-worktrees.md, /plans/archive/2026_08/ao_satellite_ao_dispatch_batch19_2026_08_10.md]
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch19_2026_08_10.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
 context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh]
 created: 2026-08-11
 last_updated: 2026-08-11
