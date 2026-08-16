@@ -46,8 +46,7 @@ execution:
   {
     owner: deployment-platform,
     cadence: per VM-launcher add/change,
-    verifier:
-      bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in
+    verifier: bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in
       deployment-service/scripts/vm/launch-*.sh,
     last_executed: 2026-05-17 (slot-8 frontmatter codification),
   }
@@ -719,6 +718,18 @@ same-session live read.
   follow-up plan for the remaining ~136 launchers is tracked as an open P3 todo. See
   `/plans/archive/2026_08/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md` for the full incident +
   resolution state, or the live migration work at `/plans/active/infra_satellite_ao_dispatch_batch17_2026_08_16.md`.
+- **`lc_gcloud_create` now supports SPOT provisioning** (added 2026-08-16, batch-17 todo 1, operator ruling — SPOT
+  everywhere by default, non-SPOT tracked as an exception): optional 9th/10th positional args
+  `provisioning_model`/`instance_termination_action` (e.g. `"SPOT"`/`"DELETE"`, the standard flag set from
+  `spot-vms-for-backfill.md`), backward compatible — omitting both reproduces the prior on-demand-only invocation
+  byte-for-byte (regression-tested, `TestSpotProvisioningParams` in
+  `deployment-service/tests/unit/test_vm_launcher_scripts.py`). This unblocks migrating the 79 SPOT-provisioning raw-
+  create launchers once they're drafted as a follow-up batch — the wrapper itself is no longer the blocker. Verified
+  the two standing guarantees this change could plausibly have broken, both still hold and are now regression-tested:
+  (1) preemption-recovery resume-from-PROGRESS is unaffected — `RelaunchPreemptedVm` replays captured launch params
+  independently of this wrapper change; (2) the idempotent-skip-existing-without-`--force` singleton-check contract
+  (`lc_singleton_check`/`lc_metadata_singleton_check`) still refuses a duplicate launch against a RUNNING shard and
+  still permits relaunch once a shard is no longer RUNNING (`TestSpotIdempotentSkipExisting`).
 
 ## References
 
