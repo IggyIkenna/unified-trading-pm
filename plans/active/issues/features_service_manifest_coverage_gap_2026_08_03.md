@@ -17,7 +17,7 @@ summary: >-
   delta_one/prediction read as genuinely EMPTY corpora (0 manifest cells AND 0 objects walked, verified via matching
   bucket names to delta_one's own real data in the same buckets) rather than a bucket-resolution bug — those
   families/cells simply have no production data captured yet.
-status: resolved
+status: open
 nature: issue
 asset_group: [defi, sports]
 stage: [data]
@@ -58,13 +58,6 @@ context_scope:
   ]
 depends_on: []
 ---
-
-> **🗄️ ARCHIVED 2026-08-16 (slot 18).** All 6 todos closed, 0 open. Both real orphan gaps (onchain/defi 783 objects,
-> sports/sports 67,077 objects) backfilled + re-swept clean; the sports `C_manifest_infra` classification confirmed
-> genuinely inert (horizon-schema sidecars); the calendar phantom-captured anomaly root-caused as a one-time historical
-> artifact (not a live writer defect) and both fix halves shipped; the 2026-08-04 calendar manifest-completeness gap
-> closed; the last remaining item — the stale `_legacy_seed.parquet` phantom rows resurrected by the per-VM-shard
-> fallback — reconciled via `features-service@131cb346`.
 
 # features-service manifest coverage gap — onchain 45% / sports 35% orphan, calendar phantom-captured
 
