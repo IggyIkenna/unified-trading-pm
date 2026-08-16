@@ -1,7 +1,6 @@
 ---
 name: data-pipeline-check-is
-description:
-  Run the instruments-service data-pipeline end-to-end smoke check for one operator-given day — Phase 0
+description: Run the instruments-service data-pipeline end-to-end smoke check for one operator-given day — Phase 0
   provisions/verifies the `-test-` buckets, Phase 1 proves force-refetch + skip-if-fresh for every MVP (asset_group,
   venue) shard, Phase 2 proves the live/MVP leg, then writes + prints the report path. Never invents `--day` — it must
   come from the operator. Composes with `/autonomous`'s no-pause contract — under `/autonomous`, loop to the next
@@ -42,6 +41,26 @@ fix shipped as `market-tick-data-service@687abd54`).
 
 For THROUGHPUT measurement pitfalls (this check cannot measure throughput — it is boot-dominated), see the matching
 section in the `data-pipeline-check-mtds` skill.
+
+## Canonical-oracle audit (2026-08-16)
+
+Per `/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
+skill:
+
+- **Oracle routing**: N/A, not a gap. IS writes reference/catalogue data (`instrument_availability/by_date/…`), never
+  `raw_tick_data/by_date/…` — the UAC `canonical_path_violations()` oracle's clause 1 requires that exact prefix and
+  returns a single blanket violation for anything else (`/codex/02-data/four-surface-reconciliation-procedure.md` §4).
+  Same class as the sports REFERENCE-bucket carve-out (§4.2) — routing IS's writes through the oracle would be a 100%
+  false-positive, not a real check. IS correctly has no canonical-shape leg of its own (line 203); shape verification
+  for the shards IS touches happens via MTDS's canonical leg + the plan's separate Phase B catalogue self-verify.
+- **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: N/A for filename-id-form and data_type —
+  IS's shard atom is `(asset_group, venue, day)` only (no instrument-level or data_type axis exists in this checker).
+  `venue` values come from the UAC MVP predicate (`is_mvp()`) but are not independently value-checked against a
+  canonical venue enum by this skill — **declared unchecked**, not verified.
+- **Banner** (§ "Read the VM run.log as ground truth", added 2026-07-18): **re-verified 2026-08-16, still accurate** —
+  the CEFI raw→canonical migration remains genuinely incomplete
+  (`plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`). Kept
+  as-is; re-date if that migration completes.
 
 ## 0. `--day` is REQUIRED — never synthesize one
 

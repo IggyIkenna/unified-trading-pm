@@ -34,6 +34,25 @@ is a genuine, complete proof (like `data-pipeline-check-is`). `check_exists` **f
 > The **primary** skip proof in this driver is therefore the object **fingerprint** (etag+crc32c+updated+size) being
 > unchanged between the force and skip legs; the log line is a secondary signal.
 
+## Canonical-oracle audit (2026-08-16)
+
+Per `/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
+skill:
+
+- **Oracle routing**: N/A, not a gap — same oracle-exempt class as MDPS. Every features path family
+  (`delta_one/…`, `volatility/by_date/…`, `mtf/…`, etc.) lives outside `raw_tick_data/by_date/…`, so
+  `canonical_path_violations()` would return a blanket false-positive violation for all of them
+  (`/codex/02-data/four-surface-reconciliation-procedure.md` §4 clause 1). The `--legs …,canonical` leg correctly
+  checks each family's own writer template instead — no gap, exemption reason now recorded here (was previously
+  implicit).
+- **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: the canonical leg checks that the
+  `{instrument_id}`/`{instrument}` filename segment EXISTS under the right per-family prefix, but does **not**
+  independently validate the filename stem's ID-FORM grammar — **declared unchecked** for id-form. `instrument_type=`/
+  `venue=`/`chain=` path segments do not exist in the features templates shown above (`feature_group`/`timeframe`/
+  `day` are the keys instead) — **N/A**, these axes don't apply to this write shape. `data_type` is likewise not a
+  features path segment (`feature_group` substitutes) — **N/A**.
+- **Banner**: none present in this skill — nothing to re-date or remove.
+
 ## 0. `--day` is REQUIRED — never synthesize one
 
 If the invoking prompt doesn't carry an explicit `--day YYYY-MM-DD`, **stop and ask the operator** — do not default to

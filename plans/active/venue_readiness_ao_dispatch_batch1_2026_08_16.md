@@ -98,15 +98,33 @@ those stay local by construction and are deliberately absent.
       `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md`'s already-closed todo of the same shape;
       this batch1 item was authored 2026-08-16 without cross-checking that doc. No code change needed — flipping
       only.
-- [ ] [DATA] P0. **Audit the four `/data-pipeline-check-*` skills against current canonical expectations.** Measured
-      2026-08-16: ZERO of the four call `canonical_path_violations()` — the UAC MACHINE ORACLE that must never be
-      re-implemented — and two (`data-pipeline-check-is` line 25, `data-pipeline-check-mtds` line 255) carry their own
-      banners saying their pass/fail is "actively misleading" while the raw→canonical migration is in flight, dated
-      2026-07-18 and 2026-07-20. Three canonical-changing dispatches landed 2026-08-16 alone, so the drift is active.
-      Per skill: route the canonical leg through the oracle or record why it cannot; check the filename instrument_id
-      and the `instrument_type`/`data_type`/`venue`/`chain` VALUES separately (the oracle is path-structure-only and
-      value-blind) or declare them unchecked; re-date or remove each banner. Done-when: all four are audited with a
-      per-skill verdict. Parent: `/plans/active/venue_smoke_test_bar_2026_08_16.md`.
+- [x] [DATA] P0. ✅ **Audit the four `/data-pipeline-check-*` skills against current canonical expectations.** —
+      `unified-trading-pm@<pending-sha>`. Per-skill verdict added as a "Canonical-oracle audit (2026-08-16)" section
+      in each `SKILL.md`: **IS** — oracle N/A (writes reference data under `instrument_availability/…`, outside the
+      oracle's `raw_tick_data/by_date/` scope, same class as the sports reference-bucket carve-out); no instrument/
+      data_type axis exists in its shard atom, so filename id-form/data_type are N/A and venue values are declared
+      unchecked. **MTDS** — **real gap found**: its `canonical` leg is TRADFI-ONLY (a bespoke
+      `assert_tradfi_derivative_ids_canonical` regex), never the oracle, even though MTDS's write target
+      (`raw_tick_data/by_date/…`) IS the oracle's covered prefix and the oracle has covered CEFI/DEFI filename
+      id-form since `unified-api-contracts@d40c5d7d`/`@1cd27478` (2026-07-20/23) — every non-TRADFI shard gets zero
+      canonical-shape checking today; tracked as the new todo directly below rather than fixed inline (real code
+      change to a shipping checker). **MDPS** — oracle N/A by design (candle namespace is oracle-EXEMPT per the
+      four-surface doc's own header; its hand-rolled Option-A-template leg is the CORRECT approach), now documented
+      inline; filename id-form and independent venue/chain/instrument_type value-checks declared unchecked.
+      **features** — same oracle-exempt class as MDPS (its path families never live under `raw_tick_data/`); filename
+      id-form declared unchecked, `instrument_type`/`venue`/`chain`/`data_type` axes N/A (don't exist in the features
+      path grammar). Both misleading-pass/fail banners (IS, MTDS) re-verified 2026-08-16 as still accurate — the CEFI
+      raw→canonical migration remains genuinely incomplete — and kept as-is with a re-verification note rather than
+      removed. Parent: `/plans/active/venue_smoke_test_bar_2026_08_16.md`.
+- [ ] [DATA] P1. **Extend `data-pipeline-check-mtds`'s `canonical` leg to route CEFI/DEFI shards through the UAC
+      oracle `canonical_path_violations()`**, not just TradFi's bespoke id-form regex. Found by the audit todo above.
+      The oracle now covers path-structure for every asset_group and filename id-form for `{tradfi, cefi, defi}`
+      (`unified-api-contracts@d40c5d7d`/`@1cd27478`, 2026-07-20/23) — MTDS's `--legs …,canonical` leg
+      (`market-tick-data-service/scripts/pipeline_e2e_check.py`) still gates on `asset_group == TRADFI` and records
+      every other shard `skipped/canonical_shape_check_is_tradfi_only`, so CEFI/DEFI raw-tick writes get zero
+      canonical-shape verification from this checker. Done-when: a CEFI or DEFI shard with a deliberately
+      non-canonical path/filename fails the `canonical` leg (negative-control proof, same discipline as the SIT
+      invariants above), and a genuinely canonical shard still passes. Repo: market-tick-data-service.
 - [ ] [DOC] P2. **Fix the venue-coverage issue doc's stale frontmatter.** Its `summary` still says "~30 DeFi
       protocols" while the body carries the corrected figure. Done-when: frontmatter and body agree, sourced from the
       body's measured number, not re-counted.
@@ -126,3 +144,12 @@ local parents. `sequential: false` because each todo touches a disjoint file set
 Deliberately EXCLUDED as already-dispatched: the 69-constant reference-data inventory, which already sits in
 `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` (`assigned_vm: planning`, active) and would have
 been a duplicate here.
+
+**2026-08-16 — skills-canonical-audit todo done, one new follow-up todo added.** Audited all four
+`/data-pipeline-check-*` skills against `canonical_path_violations()` and the four-surface reconciliation procedure;
+verdict recorded in each `SKILL.md`. Three of four (IS, MDPS, features) correctly do NOT route through the oracle —
+their write targets fall outside its `raw_tick_data/by_date/` scope, same class as the documented sports
+reference-bucket exemption — and that reasoning was previously implicit/undocumented, now stated inline. MTDS is the
+one genuine gap: its write target IS oracle-covered and the oracle has covered CEFI/DEFI id-form since 2026-07-20/23,
+but its `canonical` leg stayed TradFi-only. Added a new `[DATA] P1` todo to fix that (real code change, not a doc
+audit) rather than absorbing it into this todo per findings-triage.
