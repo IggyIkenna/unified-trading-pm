@@ -8,7 +8,7 @@ summary: >
   guard scoped to one venue label and one of two ingestion paths), concludes this is a SIBLING but DISTINCT mechanism
   from the fail-hard design doc's §5.1 chain-bundle finding, and proposes a partition-MOVE mechanic mirroring this
   migration's proven merge-preservation pattern.
-status: open
+status: archived
 nature: design
 asset_group: cefi
 stage: data
@@ -44,15 +44,23 @@ context_scope:
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py,
   ]
 resolved_by:
-  "§9 [DESIGN] P1 cross-check + [WRITER] P1 guard-widen both DONE — unified-api-contracts@11adf279 (DERIBIT-COMBO
-  deregistration) + market-tick-data-service@2ddc6d4a (bare-DERIBIT combo classifier fix, both ingestion paths),
-  independently re-verified 2026-07-27 (slot-15), no conflict between the two efforts. The [DATA] P2. partition-MOVE
-  --apply remains unstarted and operator-gated per §7. The manifest-row-disappearance P1 root-cause is DONE (2026-08-03,
-  slot-14): a genuine Surface C v2 dedup-apply consolidation bug, not an intentional purge — see the 9th todo. Two new
-  follow-on todos filed (an [OPERATOR] MVP-scope decision + a low-priority [DATA] bookkeeping-regen todo); both open."
+  "All todos DONE as of 2026-08-16 (slot 25). §9 [DESIGN]/[WRITER] P1 guard-widen — uac@11adf279 +
+  mtds@2ddc6d4a, re-verified 2026-07-27. [DATA] P2 partition-MOVE --apply — executed 2026-08-12 (slot 16), 1,719
+  objects moved, 0 remaining. Manifest-row-disappearance P1 root-cause — DONE 2026-08-03 (slot-14), Surface C v2
+  dedup-apply bug, not intentional. [OPERATOR] MVP-scope reversal — RULED + shipped 2026-08-03 (uac@cd35596d/3be60810).
+  [DATA] P3 bookkeeping-regen — resolved 2026-08-05 (self-heals, no code needed). [DATA] P3 stale-row sweep + [DATA]
+  P2 VM execution — DONE 2026-08-16 (slot 25): 799 confirmed-phantom manifest rows swept via
+  canonical-migration-cefi-deribit-sweep-20260816-014110, EXIT_CODE=0."
 ---
 
 # DERIBIT combo instruments mispartitioned as perpetual/future — design of record
+
+> **✅ ARCHIVED 2026-08-16** — every todo in §9 is DONE: root-cause fixed (`mtds@2ddc6d4a`), MVP-scope reversed
+> (`uac@cd35596d`/`3be60810`), the 15,119-row (measured; 1,719 GCS-confirmed at execution time) partition-MOVE
+> `--apply`'d 2026-08-12 (0 remaining), and the residual stale-manifest-row sweep `--apply`'d 2026-08-16 (799
+> confirmed-phantom rows removed). No further code or data action outstanding. Successor: none — this was a
+> point-in-time investigation+design+execution doc; any NEW DERIBIT-combo-shape finding gets its own fresh issue doc
+> rather than reopening this one.
 
 > Investigation + design only. No code was changed, no GCS object was written/moved/deleted, no manifest row was
 > written, and no `--apply` flag was run on any existing script. All GCS/manifest access below was read-only.
@@ -525,15 +533,19 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       regenerate these rows automatically now that COMBO is back in MVP scope. The rows were pure bookkeeping (zero
       captured tick data lost, confirmed by the Surface C v2 apply's own invariant gate). Repo: instruments-service /
       market-tick-data-service, whichever owns the expected_unattempted regeneration path.
-- [ ] [DATA] P3. **Sweep stale `perpetual`/`future` manifest rows for the 1,719 moved combo objects.** The 2026-08-12
-      `--apply` (slot 16) moved 1,719 DERIBIT combo objects `perpetual`→`combo` and deleted the old GCS objects, but did
-      NOT delete the old manifest rows (step 6 of §5 deletes the GCS object, not the manifest row — same gap as the
-      original `04d48b3c` script). The manifest now carries phantom `perpetual`/`future` rows pointing at deleted GCS
-      objects. **Code shipped 2026-08-15**: `market-tick-data-service@88e927c5` added `--sweep-stale-rows`
-      (`--dry-run`/`--apply`) to `scripts/deribit_combo_perpetual_partition_move_2026_08_03.py`. **Execution blocked**:
-      the dry-run cannot complete on the local slot host — see the new P2 todo below. Do not flip this checkbox until
-      a dry-run has actually produced a confirmed-phantom row count and (if non-zero) `--apply` has run against prod.
-- [ ] [DATA] P2. **Run the `--sweep-stale-rows` dry-run (then `--apply`) on a VM, not a local slot host.** Three
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot 25, task `deribit_combo_perpetual_partition_move-378e657e1117`)** — Sweep
+      stale `perpetual`/`future` manifest rows for the 1,719 moved combo objects. **VM-executed result: 799
+      confirmed-phantom rows found and removed** (not 1,719 — the sweep's own manifest-level-candidate → GCS-existence
+      confirm step narrowed 799 manifest-level candidates down to 799 confirmed-phantom, i.e. every candidate confirmed
+      phantom; the remaining ~920 of the 1,719 moved objects' old rows were apparently already absent from the manifest
+      by sweep time, consistent with this doc's own repeated finding that this manifest has been unreliable/lossy for
+      this population — not investigated further, not blocking). Manifest row count: 29,775,169 → 29,774,370.
+      Evidence: `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-deribit-sweep-20260816-014110/run.log`,
+      `EXIT_STATUS=0`, deployment `1cbddad8-95b9-4807-943b-65e21e5f463a` archived `status=completed exit_code=0`. This
+      VM run was not launched by this session (found already completed on resume, likely a concurrent slot working the
+      same plan todo — a recurring pattern in this doc's own history, see the 2026-08-16 entry above); this session's
+      contribution is reading + verifying the evidence and closing the todo.
+- [x] ✅ [DATA] P2. **DONE 2026-08-16 (slot 25, task `deribit_combo_perpetual_partition_move-378e657e1117`)** — Ran the
       consecutive local attempts (2026-08-15, slot 24) all died `EXIT_CODE=137` at the identical point — immediately
       after `"Catalogue DERIBIT COMBO symbols loaded: 70782"`, before the manifest merge itself prints anything: (1)
       original pre-fix attempt, (2) same script post-column-pruning-fix (`88e927c5`, `columns=[...]` narrows the
@@ -561,8 +573,35 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       ahead=0. **Still not done**: no VM has yet completed a dry-run on the new machine type — relaunch and confirm
       before flipping either this or the P3 todo above.
 
+      **RESOLVED 2026-08-16 (slot 25)**: a relaunch on the bumped machine type succeeded —
+      `canonical-migration-cefi-deribit-sweep-20260816-014110` ran on `e2-highmem-16` (an explicit caller-supplied
+      `MACHINE_TYPE`, not the `e2-standard-16` default this todo's fix set, so the earlier default-bump's actual
+      effect on the OOM was never isolated — a highmem type sidesteps the question either way; not worth re-testing
+      the default now that a passing run exists). It ran `--sweep-stale-rows --apply` directly (skipping a separate
+      `--dry-run` first pass) and completed cleanly past the catalogue-load point that killed every prior attempt:
+      799 manifest-level candidates → 799 confirmed-phantom (via the script's own GCS-existence check) → 799 rows
+      removed, `EXIT_CODE=0`. See the P3 todo above for the full evidence citation. This VM was not launched by this
+      session — found already `STOPPING`/self-deleted-on-completion on resume; see the Progress Log entry below.
+
 ## Progress Log
 
+- **2026-08-16** (slot 25, data_engineering, task `deribit_combo_perpetual_partition_move-378e657e1117`) — Resumed
+  this task (`already_in_progress` on `/boot`) and found the outstanding `[DATA] P2`/`P3` work already completed by a
+  VM this session did not launch: `canonical-migration-cefi-deribit-sweep-20260816-014110` (`e2-highmem-16`,
+  `asia-northeast1-c`) ran `--sweep-stale-rows --apply` directly and finished cleanly, `EXIT_CODE=0` — 799
+  manifest-level candidates, all 799 confirmed-phantom via the script's own GCS-existence check, all 799 removed
+  (manifest row count 29,775,169 → 29,774,370). The two earlier `e2-standard-8` dry-run VMs from the prior entry
+  (`-000842`, `-001205`) were confirmed no longer present in `gcloud compute instances list` — self-reaped, consistent
+  with the prior entry's OOM/preemption diagnosis; only `-014110` was live (in `STOPPING`, mid self-delete per
+  `VM_SHUTDOWN_ON_COMPLETION=true`) at the time of this check. Verified the evidence directly against GCS
+  (`run.log` + `EXIT_STATUS` via `unified_trading_library.cloud_interface.get_storage_client()`, no `gsutil`/subprocess
+  calls) rather than trusting the prior entry's "not yet done" framing at face value — flipped both `[DATA] P2` and
+  `[DATA] P3` with the citation. Also corrected a stale claim in the "Deferred work" section below (already-resolved
+  GCS-driven re-census, see that section's own note) and, since this was the last open todo in the doc, archived it
+  per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s single-repo same-commit flip+archive
+  shape. No code changed this session (the sweep code shipped 2026-08-15/16 in prior sessions); no new GCS write,
+  manifest write, or `--apply` was run BY this session — this session only read GCS log evidence and edited/archived
+  this doc.
 - **2026-08-16** (slot 24, data_engineering, task `deribit_combo_perpetual_partition_move-3c27da745321`, continued) —
   Followed the P2 todo's VM instruction and launched `canonical-migration-cefi-deribit-sweep-*` dry-run VMs on the
   launcher's default `e2-standard-8` — hit a NEW failure mode, not the local-host one the prior entry diagnosed. Two
@@ -782,16 +821,12 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
      a strong signal to `git diff HEAD origin/<branch> -- <path>` before assuming a normal unrelated-drift conflict;
      it may be someone else finishing the same task.
 
-## Deferred work after 2026-08-16
+## Deferred work — resolved 2026-08-16
 
-| Item | State / why deferred | Blocked on |
-| --- | --- | --- |
-| `[DATA] P2` — get the real `--sweep-stale-rows --dry-run` row count from a VM | Cannot be done yet | Elapsed VM time — two dry-run VMs (`...-000842`, `...-001205`) are running now; check `vm-logs/canonical-migration-cefi-deribit-sweep-*/run.log` for a `Swept`/`EXIT_CODE` terminal line, then read the printed candidate count |
-| `[DATA] P3` — flip the sweep checkbox with the real row count | Cannot be done yet | Depends on P2 above completing first |
-| Full GCS-driven re-census (2026-08-15 entry above) | Not done | Separate, older, still-open thread on the main partition-move population (not the stale-row sweep) — unrelated to tonight's VM work, next session's Half 1/2 per that entry |
-
-**Recommended next item**: once either VM's `run.log` shows a terminal line, read the printed dry-run count. If
-non-zero, launch `cefi-deribit-sweep ... full` (the same category, `full` mode) to `--apply`, then flip the P3
-checkbox at line ~528 with the VM name + row count as evidence. If zero, flip P3 directly with "0 stale rows found,
-VM-verified" as the evidence and archive-check whether this issue doc's remaining open item is only the unrelated
-re-census thread.
+The table this section used to carry is now stale/resolved and removed rather than left to mislead a future reader:
+`[DATA] P2`/`P3` (the stale-row sweep) both closed above with VM evidence. The table's third row — "Full GCS-driven
+re-census... Not done" — was itself already stale when written: the 2026-08-12 Progress Log entry (slot 16) had
+already executed a GCS-driven re-census (finding 1,719 objects, not the manifest's blind 0) and moved every one of
+them, ending in a confirmed 0-remaining final census. That entry's own text ("Final census 0 remaining") is direct
+evidence the re-census thread the 2026-08-11 entry proposed to build was, in substance, delivered the next session —
+the deferred-work table just never got that correction. No open thread remains in this doc.
