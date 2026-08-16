@@ -179,7 +179,7 @@ sweep, historical):
   AO-dispatch surface; its own Progress Log recorded a watcher session actively polling the singleton lock and launching
   as of 2026-08-07T~04:46Z — if that watcher is still running, it will now fail every attempt until billing is
   restored). **RETAGGED 2026-08-09 (was stale — flagged by two separate sessions as needing this fix, now applied): this
-  specific gate is LIFTED.** `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (same day,
+  specific gate is LIFTED.** `/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (same day,
   same author) recorded a live Databento API verification (`metadata.list_datasets` + a real `ES.FUT ohlcv-1m` pull,
   both succeeded) that lifted this gate specifically for its in-scope list — which includes S&P 500 futures+options.
   Live evidence since: 2 real `tradfi-bf-es-opt-*` launches on 2026-08-09 both fetched genuine Databento data (confirmed

@@ -220,3 +220,4 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   `--feature-family sports` vs bless the submodule) — none found; `launch-features-sports-backfill-vm.sh`'s DEPRECATION
   NOTE is unchanged since 2026-05-08. Doc's remaining-open count stays 2, but todo 2 is now evidence-annotated and ready
   for a mechanical citation-only close in batch13.
+- **na-eligibility-audit 2026-08-16** [body-hash:bbdf20638a45ebde]: KEEP-NA, valid — 7 of 8 todos are already [x] with hard commit-SHA evidence (todos 1-3 = the original three "big finding" S1 items, closed via deployment-service@4150c6c2 / @c79f984c / @e7d17f2 across three separate reconciliation passes 2026-08-0…

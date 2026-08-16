@@ -91,3 +91,9 @@ completion" in any live sense.
       current prod, and either launch/resume the backfill toward the 1962-1970 floor or correct whatever doc claims
       "self-sufficient to completion" if that claim is simply wrong. Follow
       `/codex/05-infrastructure/vm-launcher-runbook.md` if a VM launch is the right next step.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Both todos are
+  open-ended, unscoped investigations explicitly flagged (not root-caused) by the filing session itself. First audit
+  pass, no established ruling to defer to. `assigned_vm` unchanged.

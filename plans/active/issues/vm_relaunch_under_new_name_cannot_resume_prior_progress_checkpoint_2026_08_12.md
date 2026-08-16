@@ -103,7 +103,9 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
       (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s P2: `max_in_flight_bytes` is permanently `None`, a
       no-op) — enabling concurrency before that lands would knowingly reproduce the OOM history already documented there
       for the sibling sports/odds_api launcher. Fix that P2 first, then revisit concurrency as a throughput win.
-- [ ] [CODE] P3. **NEW (found 2026-08-15).** `launch-cefi-sharded-backfill.sh`'s year-scoping env var is a real footgun:
+- [x] [CODE] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 18. Original text: **NEW (found 2026-08-15).**
+      `launch-cefi-sharded-backfill.sh`'s year-scoping env var is a real footgun:
       the script's OWN usage comment (line 677) documents `YEARS="2024"` as the override, and internally assigns
       `YEARS_OVERRIDE="${YEARS:-}"` (line 681) — but `YEARS_OVERRIDE` is also the name of that internal working
       variable, so a caller who (reasonably) exports `YEARS_OVERRIDE=2026` directly gets it silently stomped back to
@@ -166,3 +168,4 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
      `deployment-service`'s unrelated foreign WIP for the launch itself (never touched its content). Confirmed running:
      `cefi-binance-futures-2026-heavy-20260816-182747`, `LAUNCH_PARAMS.json` shows the correct
      `ONLY=BINANCE-FUTURES:2026:heavy SINGLE_VM_QUEUE=0` scoping resuming from the real `2026-04-13` checkpoint.
+- **na-eligibility-audit 2026-08-16** [body-hash:0f97d90c7099d331]: RECLASSIFY-SPLIT — extracted bounded item(s) 18 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 1 item remains genuinely NA ([INFRA] P2 cross-VM checkpoint-discovery design — a real architecture change, not a bounded fix). Doc stays assigned_vm: NA.

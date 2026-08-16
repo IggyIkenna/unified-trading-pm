@@ -170,3 +170,4 @@ context_scope:
   a single-tranche sweep's authority — not actioned here, still recommend a dedicated cross-cutting close + archive
   pass. Doc stays NA.
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-16** [body-hash:e4af03c8ebd9199d]: KEEP-NA, valid — Full 172-line doc read end-to-end (matches wc -l; grep -nE '^[[:space:]]*[-*] \[ \]' confirms exactly 1 open todo, matching Phase-0's count).

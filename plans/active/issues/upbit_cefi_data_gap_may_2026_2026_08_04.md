@@ -23,12 +23,13 @@ created: "2026-08-04"
 author: slot-6 (data_engineering)
 source:
   - cefi_consolidated_native_ao_extract_2026_07_25.md (Todo 6 — UPBIT live-wiring confirm)
-assigned_vm: NA
+assigned_vm: planning
 parent_epic: cefi_master
 resolved_by:
 locked_by:
 priority: P1
 execution_scope: orchestrator-agent
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 context_scope:
@@ -116,24 +117,33 @@ Neither explains the May-25+ gap.
       Launcher config correctly includes UPBIT (`VENUES`, years 2022-2026, heavy group). **Verdict: code-level filter
       blocks all new VMs from scheduling UPBIT; the transition was a SPOT preemption of the last pre-filter VM.** —
       deployment-service@`3b635b9`, market-tick-data-service@N/A
-- [ ] [DATA][BLOCKED-CREDENTIALS] P1. **Restore UPBIT backfill — operator-gated on Tardis full-access API key.**
-      **REOPENED 2026-08-06** (BLK-0e7e0794, operator-answered): this was marked `[x]` while its own body is an
-      `[OPERATOR]` action plan, not a completion, and its evidence citation was the literal unfilled placeholder
-      `unified-trading-pm@<pending-commit>`. No Progress Log entry shows the secret being created or data resuming, and
-      UPBIT still has ZERO captured objects since 2026-05-25 (73 days) while being a codex-MVP venue. Per
-      `/codex/02-data/data-pipeline-correctness-hard-rule.md` a checked box must mean the work happened; per
-      `/codex/02-data/external-data-always-available-rule.md` this is a credential ask, NOT a descope. It stays open and
-      `BLOCKED-CREDENTIALS` until the secret exists and ≥3 recent days of UPBIT objects are verified in GCS. Original
-      body follows unchanged. Tardis HAS the data (confirmed via API by both slot-6 and slot-15), so restoration is the
-      correct path (not descope). The fix is to create the `tardis-api-key-full` secret in GCP Secret Manager
-      (`central-element-323112`) with a Tardis full-access API key. Once the secret exists, `_get_tardis_access_mode()`
-      auto-detects `full_access` mode, and UPBIT (along with BINANCE-SPOT, COINBASE-SPOT) is included in the next
-      backfill VM launch — no code change needed. **Alternative**: set the env/config override
-      `TARDIS_ACCESS_MODE=full_access` to bypass the secret check. **Launch scope** (slot-15):
-      `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh`.
-      **[OPERATOR] action**: obtain Tardis full-access API key and create the secret (or set override). After operator
-      action, relaunch and verify ≥3 recent days of objects in GCS. (No evidence citation: the todo is OPEN — the
-      previous `unified-trading-pm@<pending-commit>` placeholder was removed with the 2026-08-06 reopen.)
+- [ ] [DATA] P1. Restore UPBIT backfill: confirm/set `TARDIS_ACCESS_MODE=full_access` (or point config's
+      `secrets.full_access` at the already-verified `tardis-api-key`), check the live VM fleet for the Tardis
+      1-concurrent-VM cap, then relaunch `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash
+      launch-cefi-sharded-backfill.sh` and verify ≥3 consecutive recent days of UPBIT trade+book_snapshot_5 objects in
+      GCS (historical shape ~600-608 objects/day). Self-justified, no operator gate needed — standard idempotent
+      MVP-venue backfill launch via the existing, already-used script (`FORCE=false` semantics skip already-captured
+      dates; additive capture, not a delete).
+      **2026-08-16 na-eligibility-audit correction**: the prior credential-gap framing on this item (2026-08-06 reopen)
+      is FALSIFIED by direct measurement — `tardis-api-key-full` is still not found in Secret Manager, but the
+      existing `tardis-api-key` secret already carries full UPBIT/spot entitlement (live Tardis datasets API returned
+      HTTP 302 — authorized — for UPBIT KRW-BTC on 2026-05-20/07-20/08-10 and book_snapshot_5 on 2026-07-20; a sibling
+      doc, `cefi_hl_aster_batch_data_gaps_2026_06_22.md`, independently established the same secret is
+      `dataPlan:unlimited` and that the now-missing `-full`/`-backup` duplicates were BYTE-IDENTICAL deletions, not a
+      real capability gap). MTDS's actual fetch client (`TardisBaseClient`) already uses `tardis-api-key`
+      unconditionally with no spot-venue gate — only deployment-service's shard-scheduling filter
+      (`_get_tardis_access_mode()`) checks the (irrelevant) `tardis-api-key-full` secret NAME. No new vendor
+      credential is needed; this is worker-determinable config + relaunch + verify.
+      **Separate data-pipeline-correctness flag for the operator** (found during this same measurement, not yet
+      Progress-Log'd anywhere): live GCS shows an UNDOCUMENTED partial catch-up already happened and then silently
+      re-stalled — real UPBIT trade+book_snapshot_5 objects exist for 2026-05-25 (608), 2026-05-26 (601), and
+      2026-06-01 (613), written 2026-08-06T12:07Z→2026-08-07T02:05Z (almost certainly via the `TARDIS_ACCESS_MODE`
+      override named above, since the `-full` secret was still absent at write time) — then ZERO UPBIT objects again
+      for every date spot-checked 2026-06-15 through 2026-08-15 (12 dates), with no `cefi-upbit-*` VM (running or
+      terminated) in the current fleet and no Progress Log entry documenting either the catch-up or the re-stall. The
+      relaunch above should also confirm whether this run needs to resume from 2026-06-02 (not 2026-05-25) given the
+      partial catch-up, and the silent-stall mechanism (why the catch-up VM stopped with no alert/record) is worth its
+      own look independent of this todo.
 
 ## Progress Log
 

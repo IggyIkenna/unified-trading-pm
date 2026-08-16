@@ -354,11 +354,21 @@ campaigns, this session:
       `gcloud scheduler jobs resume uts-prod-dp-exit-code-monitor-cron --project=central-element-323112 --location=asia-northeast1 --account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`,
       (5) watch its next 1-2 hourly firings —
       `gcloud compute instances list --filter="name~'^mdps-' AND status=RUNNING"` should stay near 26-31, not climb.
-- [ ] [SCRIPT] P2. `scripts/recovery/relaunch_stalled_vm.py`'s `RelaunchStalledVm` budget is tempdir-local (not
+- [x] [SCRIPT] P2. `scripts/recovery/relaunch_stalled_vm.py`'s `RelaunchStalledVm` budget is tempdir-local (not
       `ShardedState`-durable) — the same architectural class of bug the OOM/PREEMPTED actuators had before their
       2026-08-10 fix, currently zero-blast-radius for this incident (no MDPS launcher is in
       `DEFAULT_WORKER_STALL_SAFE_LAUNCHERS`) but worth closing proactively. Migrate it to `ShardedState` mirroring
-      `RelaunchBackfillVm`/`RelaunchPreemptedVm`'s pattern.
+      `RelaunchBackfillVm`/`RelaunchPreemptedVm`'s pattern. **DONE 2026-08-16 — `deployment-service@6f2f8e02bf`**:
+      migrated `_relaunches_today`/`_stamp_relaunch` to the `ShardedState` primitive (own `/stall` namespace under
+      `vm-census/relaunch-budget`), mirroring `RelaunchBackfillVm` exactly, including its per-`(day, prefix, vm_name)`
+      idempotent claim (`SUPPRESSED`/`already_relaunched_this_vm` on an overlapping-sweep double dispatch — a bonus
+      the sibling classes already have that the old bare-count budget didn't). Regression tests added in
+      `tests/unit/test_dp_recovery_actuators.py` (`test_stalled_relaunch_budget_survives_a_fresh_container` — proves
+      the budget survives a NEW actuator instance the way a Cloud Run Job's fresh-container-per-execution model
+      requires; `test_stalled_relaunch_concurrent_stamps_do_not_lose_budget_increments`;
+      `test_stalled_relaunch_suppresses_duplicate_dispatch_for_same_vm_overlapping_sweep`), mirroring the existing
+      `RelaunchPreemptedVm` durability tests' exact pattern. Content verified present at that SHA
+      (`git show 6f2f8e02bf:scripts/recovery/relaunch_stalled_vm.py | grep -c ShardedState` = 4). QG green before ship.
 
 ### Second-wave todos (vm_zombie_watchdog false-kill, added 2026-08-15 later same day)
 
@@ -392,18 +402,61 @@ campaigns, this session:
       data-capture work was lost; no relaunch needed. Correcting the prior framing here — this was NOT "real stalled
       backfill work sitting idle," it was disposable test infrastructure. Leave any genuinely-needed backfill coverage
       to normal AO-dispatched agents working against fresh (fixed) code going forward, not a manual bulk-relaunch pass.
-- [ ] [OPERATOR] P1. `lc_log_upload_trap_block`'s RUNNING sentinel has existed since 2026-07-13 — over a month before
-      this was caught. Historically scope how far back this false-kill class goes for launchers using that wrapper (this
-      pass only swept the last 24h of Cloud Logging). May surface additional silently-lost campaigns predating today.
-- [ ] [SCRIPT] P2. Re-derive the ORIGINAL "four preemptions" narrative above from the raw
-      `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text (not just this doc's own paraphrase) to confirm vs.
-      definitively refute whether those specific four dispatch events were themselves triggered by this watchdog bug
-      rather than genuine SPOT reclaim — the correlation section above is strong but circumstantial.
-- [ ] [SCRIPT] P2. `launch-vm-zombie-watchdog.sh`'s UAC/UTL source-tarball `pip install`s pipe through `tail -3 || true`
+- [x] [SCRIPT] P1. `lc_log_upload_trap_block`'s RUNNING sentinel has existed since 2026-07-13 — over a month before this
+      was caught. Historically scoped how far back this false-kill class goes via bounded `gcloud logging read` sweeps
+      (project `central-element-323112`) over `resource.type="gce_instance"` for the exact
+      `textPayload:"reason=zombie_finished_not_shutdown"` kill signature and the broader `textPayload:"WARNING ZOMBIE"`
+      pre-kill-decision signature, across 2026-06-15→2026-08-15T07:39:00Z (covers the full `lc_log_upload_trap_block`
+      lifetime plus the watchdog's own launch history). **Result: CONFIRMED ZERO PRIOR KILLS** — both queries return
+      nothing before 2026-08-15T07:38:26Z (the literal first kill of the already-documented incident;
+      07:39 in this doc's earlier text rounds that same event). Cross-checked against the watchdog's own GCE
+      `instances.insert` audit-log history (`protoPayload.methodName="v1.compute.instances.insert"`,
+      `protoPayload.resourceName:"vm-zombie-watchdog"`): the watchdog VM was launched/relaunched 06-23 (×2, ~21min
+      apart), 07-18 (×3, all within one hour), 08-05 (×1), 08-07 (×2, ~16min apart), 08-10 (×4) — every pre-08-10 batch
+      is a cluster of short-lived relaunches consistent with script iteration/testing, not standing continuous
+      coverage. The 08-10T16:30:07Z instance (`vm-zombie-watchdog-20260810-163005`) is the first to run continuously
+      for days; its own serial-console sweep log (sampled 08-14T20:37-21:14, ~5min cadence) shows repeated
+      `INFO watchdog complete: killed 0/0 zombies` right up to 08-15T07:38:26Z, when it logged the first-ever
+      `WARNING ZOMBIE ... reason=zombie_finished_not_shutdown` and killed `mtds-oracle-prices-backfill`. Verified this
+      isn't a Cloud Logging retention artifact: a control query for generic `gce_instance` log lines on 2026-06-23
+      (the earliest watchdog launch, ~54 days before "today" 2026-08-16) successfully returned timestamped entries,
+      proving that date is inside the queryable window despite `_Default` bucket `retentionDays: 2` metadata (this
+      project's logs are evidently retained well past that stated value — noted for future queries, not re-derived
+      further here). **Conclusion: the false-kill class had zero real blast radius before 2026-08-15T07:38:26Z** — not
+      because the sentinel bug wasn't live (it was, since 07-13), but because no watchdog instance ran with continuous
+      coverage against a genuinely long-running VM until the 08-10 instance, and even that instance observed nothing
+      qualifying for 5 days until the morning of 08-15. No additional silently-lost campaigns predating 2026-08-15
+      found. Query evidence (exact filters + zero-hit / first-hit results) is in the Progress Log entry below.
+- [x] [SCRIPT] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 6. Original text: Re-derive the ORIGINAL "four
+      preemptions" narrative above from the raw `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text (not
+      just this doc's own paraphrase) to confirm vs. definitively refute whether those specific four dispatch events
+      were themselves triggered by this watchdog bug rather than genuine SPOT reclaim — the correlation section
+      above is strong but circumstantial. **na-eligibility-audit note (merge-resolved 2026-08-16): a concurrent
+      worker's historical-scope-back investigation above (query window 2026-06-15→2026-08-15T07:39:00Z) is a
+      DIFFERENT question (whether the false-kill class had PRIOR blast radius before this incident) than this item
+      (whether the four SPECIFIC dispatches cited as this incident's proximate cause were themselves false-kills) —
+      this item remains genuinely open and the extraction stands.**
+- [x] [SCRIPT] P2. `launch-vm-zombie-watchdog.sh`'s UAC/UTL source-tarball `pip install`s pipe through `tail -3 || true`
       (lines ~205-214), silently truncating and swallowing a real build failure — confirmed this caused one relaunch
       attempt to boot into a broken, protection-providing-nothing state (`ModuleNotFoundError` on the eventual
       deployment-service install) with no loud failure signal until the very end. Should fail loudly (or at minimum log
-      the FULL captured output, not just `tail -3`) on a non-zero pip exit instead of `|| true`.
+      the FULL captured output, not just `tail -3`) on a non-zero pip exit instead of `|| true`. **DONE 2026-08-16 —
+      `deployment-service@6f2f8e02bf`**: added a `pip_install_or_fail()` helper (inside the `STARTUP="..."` boot
+      script, so its on-disk source carries the `\$`/`\"` escapes needed to survive that outer double-quoting) that
+      captures pip's FULL output to a log file, tails it to the console for boot-log brevity only, then explicitly
+      checks pip's own exit code (never lets `tail`'s exit code replace it) and `exit 1`s with a `FATAL:` message +
+      the log path on failure. Wired into all three source-tarball installs (UAC/UTL/deployment-service); the
+      `google-cloud-compute`/`google-cloud-storage` PyPI install (a lower-risk, non-incident-cited install) is
+      unchanged. Regression tests in `tests/unit/test_vm_launcher_scripts.py`
+      (`TestZombieWatchdogPipInstallFailureHandling`) extract the REAL function text straight out of the script (not
+      a hand-duplicated copy), undo the one layer of `STARTUP=` escaping the same way bash itself would, swap the
+      hardcoded `/opt/watchdog-venv/bin/pip` for a fake pip (never touching real gcloud/gsutil/GCP), and prove: a
+      failing pip now exits non-zero with a `FATAL: pip install` message and does NOT continue past the failed
+      install (the exact silent-fallthrough bug); the log retains full output, not `tail -3`; a successful install is
+      unaffected. `bash -n` confirms the extracted helper is syntactically valid standalone. Content verified present
+      at that SHA (`git show 6f2f8e02bf:scripts/vm/launch-vm-zombie-watchdog.sh | grep -c pip_install_or_fail` = 4).
+      QG green before ship.
 
 ## Progress Log
 
@@ -519,3 +572,4 @@ Exactly one watchdog VM now live in the fleet, running the fixed code.
 `lc_log_upload_trap_block` sentinel's 2026-07-13 vintage means this false-kill class may predate today by over a month,
 not historically scoped beyond this session's 1-day sweep; and the tarball-install swallowed-failure bug in
 `launch-vm-zombie-watchdog.sh` is a separate, real bug worth its own fix.
+- **na-eligibility-audit 2026-08-16** [body-hash:ab4937fd4fed9448]: RECLASSIFY-SPLIT — extracted bounded item(s) 5, 6, 7 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 2 items remain genuinely NA ([OPERATOR] P0 cron re-enable pending a multi-step deploy-propagation verification chain, [OPERATOR] P1 historical false-kill scope-back investigation). Doc stays assigned_vm: NA.

@@ -24,8 +24,8 @@ related:
 created: "2026-07-24"
 last_updated: "2026-08-09"
 parent_epic: tradfi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
@@ -165,6 +165,12 @@ context_scope:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, whole-doc → planning.** Both
+  remaining todos (P1 post-full-backfill `/data-pipeline-reconciliation --asset-group tradfi` run; P3 add the 3
+  already-passing `TestIsBundledChainShardCboeCorrection` tests now that `mtds_deployment_env_race_survives_single_worker_2026_07_23.md`
+  independently re-verified `status: resolved`) are bounded/deterministic, no open design call. Conflict-checked clean.
+  `assigned_vm: NA → planning`, `execution_scope → orchestrator-agent` (`assigned_role`/`effort` already correct).
+  Companion finalize plan: `tradfi_phase_d_terminal_gate_2026_07_24_finalize_2026_08_16.md`.
 - **2026-08-15 (slot-16, backend_engineer, P0 MVP backfill readiness gate, DONE)**: verified via direct bounded manifest
   measurement rather than a fresh backfill launch — all 6 MVP cells already carry real, current, materially-complete
   `captured` coverage. Full per-cell evidence table + the 2 findings filed (checker-sampler dead-code, Yahoo-daily

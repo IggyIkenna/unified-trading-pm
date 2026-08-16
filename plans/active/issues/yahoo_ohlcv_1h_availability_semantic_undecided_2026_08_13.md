@@ -31,13 +31,14 @@ related:
 created: 2026-08-13
 last_updated: "2026-08-13"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.2
-assigned_role: data_engineer
+assigned_role: data_engineering
+effort: max
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -176,3 +177,10 @@ So the lookahead risk the original text worried about is modelled by an existing
   `..._16_fetchable_cells` and the set/count/docstring updated; (2) `TickDataHandler._resolve_source()` grew past the
   50-line method cap — extracted `_is_cboe_yahoo_only()` as its own static helper. QG green
   (`ALL QUALITY GATES PASSED`), all four files shipped together.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, whole-doc → planning.** Both
+  remaining todos are small, bounded, no-judgment-call actions confined to market-tick-data-service + one codex doc: run
+  the already-written `measure_yahoo_1h_equity_emission_latency_2026_08_14.py` during market hours, then record the
+  measured delay in `/codex/02-data/tradfi-databento-sourcing-ssot.md`. Conflict-checked clean. `assigned_vm: NA →
+  planning`, `execution_scope → orchestrator-agent`, `effort: max` added. **Also corrected `assigned_role: data_engineer
+  → data_engineering`** — the prior value was a near-miss of no registered role (registry has `data_engineering.md`,
+  not `data_engineer.md`) that would have silently mis-routed dispatch.

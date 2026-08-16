@@ -264,3 +264,4 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
   directly instead of re-running the whole check against the original `stale_repos` set. 25/25 tarball/freshness unit
   tests green (`tests/unit/test_vm_launcher_scripts.py -k "tarball or fresh"`), full `deployment-service`
   `quality-gates.sh` green (280s), shipped via quickmerge. Only the P3 `[OPERATOR]` todo remains open on this doc.
+- **na-eligibility-audit 2026-08-16** [body-hash:5e1df6c0e9a5d4cc]: KEEP-NA, valid — Doc read end-to-end (frontmatter, root-cause narrative, todos, 4 Progress Log entries 2026-08-15→2026-08-16).

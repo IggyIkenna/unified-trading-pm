@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [tradfi, cme, expected-coverage, honest-coverage, registry-drift]
 related:
   [
-    /plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
+    /plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
   ]
 created: "2026-08-16"
@@ -41,7 +41,7 @@ source: "na-eligibility-audit follow-up Q&A round 8, 2026-08-16 — operator rul
 locked_by:
 context_scope:
   [
-    /plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
+    /plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
     unified-api-contracts/unified_api_contracts/registry/expected_coverage.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     deployment-api/deployment_api/services/data_status/reference_scope.py,

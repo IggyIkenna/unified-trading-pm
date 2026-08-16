@@ -12,7 +12,7 @@ tags: [tradfi, finalize]
 related:
   [
     /plans/active/tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md,
-    /plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
+    /plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"

@@ -163,3 +163,4 @@ dangling inside a closed plan todo.
   this wiring todo or only the removal). The standing contested-revert + never-re-litigate rule governs here, not a
   fresh criteria re-derivation — a third independent signal suggesting the work is bounded does not override it. Not
   re-flipped; the operator still needs to rule on the reversion's scope. No reclassification.
+- **na-eligibility-audit 2026-08-16** [body-hash:296a282c48b53e79]: KEEP-NA, valid — Doc records a genuine, well-evidenced 2026-07-26 operator DEFERRED (not declined) ruling on UAC per-venue seed-fallback removal, with a 4-item revisit trigger.

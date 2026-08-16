@@ -68,3 +68,9 @@ carry the same wrong stamp.
 - [ ] [DIAG] P2. Trace which renamed venue(s) (`BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK`, and MATCHBOOK/
       PINNACLE's current `trades`-equivalent) absorbed the pre-clobber snapshot's rows, then re-run the attempted_at
       dry-run join against the correct current keys. (repos: market-tick-data-service)
+
+## Progress Log
+
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 10, operator ruling)**: extracted to
+  `/plans/active/sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch,
+  since this doc stays `assigned_vm: NA`.

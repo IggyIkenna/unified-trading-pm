@@ -367,3 +367,6 @@ here.
   reasoning (landing even ONE single-day smoke on this doc's sibling tracker required finding+fixing 9 distinct bugs
   across 2 repos, evidencing real multi-file engineering risk on live-dispatch-adjacent ML machinery) is not overridden
   by this pass either. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid — established ruling not
+  re-litigated (5th consecutive pass).** 6 of 7 open todos covered by the standing multi-times-reaffirmed ruling; the
+  7th stays flagged, not promoted, same reasoning. `assigned_vm` unchanged.

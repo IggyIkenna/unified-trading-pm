@@ -50,7 +50,7 @@ scope: [engineer, admin]
 tags: [tradfi, tbbo, dp-fetch-009, unclassified-adapter-error, capability-gate, classify-venue-error, databento, honest-absence]
 related:
   [
-    /plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
+    /plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
@@ -293,3 +293,9 @@ answer):**
       if Option A ships (mirrors `("tradfi","mbp_10")`) — registering it without a capability change first would be a
       hollow band-aid per `is_known_dead()`'s own re-arm-on-new-activity safety contract. (repos: deployment-service,
       market-data-processing-service, unified-api-contracts)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 4 is explicitly
+  `[OPERATOR]`-tagged; doc's own text states plainly this is "a genuine design/scope decision, not a mechanical bug."
+  Genuinely operator-gated. `assigned_vm` unchanged.

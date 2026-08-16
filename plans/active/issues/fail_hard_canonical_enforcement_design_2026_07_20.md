@@ -194,12 +194,12 @@ implementation todos on that check, since they're each independently reviewable 
       see §5b for the three resolutions. Flagged for an operator/engineering sanity check given the correctness stakes,
       but not gating dispatch of the three implementation todos below — each is independently reviewable in its own PR.
       Implementation split into the 3 new todos below, one per gap.
-- [ ] [WRITER] P2. **Implement Gap 1's resolution (§5b)**: add a row-level column-value gate for bundle-shaped writers
+- [ ] [WRITER] P2. **na-eligibility-audit 2026-08-16**: extracted verbatim to `fail_hard_canonical_enforcement_ao_dispatch_2026_08_15.md` (assigned_vm: planning, status: active, created 2026-08-16) as todo #2, currently gated behind that doc's own [REVIEW] P2 sanity-check todo. Stays open here (source doc), not yet done. Original text: **Implement Gap 1's resolution (§5b)**: add a row-level column-value gate for bundle-shaped writers
       (chain-bundle / `options_chain` lanes) that validates each row's embedded instrument_id against the
       canonical/quarantine registry before write; drop non-canonical rows to
       `record_failed(NON_CANONICAL_INSTRUMENT_ID, granularity=row)`; add `quarantined_legs: [...]` to the manifest row.
       Repo: market-tick-data-service.
-- [ ] [WRITER] P2. **Implement Gap 2's resolution (§5b)**: make the live/on-chain lane's manifest key a deterministic
+- [ ] [WRITER] P2. **na-eligibility-audit 2026-08-16**: extracted verbatim to `fail_hard_canonical_enforcement_ao_dispatch_2026_08_15.md` (assigned_vm: planning, status: active) as todo #3 (lines 57-59), same sanity-check gate as Gap 1. Stays open here (source doc), not yet done. Original text: **Implement Gap 2's resolution (§5b)**: make the live/on-chain lane's manifest key a deterministic
       function of the already-computed column value (parse it, don't re-resolve independently via
       `resolve_cefi_instrument_id()`); keep the independent resolver only as a fallback for the no-column-yet case.
       Repo: market-tick-data-service (`venue_fetch.py`, `partitioned_writer.py`).
@@ -266,3 +266,4 @@ implementation todos on that check, since they're each independently reviewable 
   proposed resolutions to all three §5 gaps (§5b), closed the `[DESIGN] P1` todo, split implementation into 3 new
   bounded todos. Not implemented — design only. Recommend a quick operator/engineering sanity check on §5b before the
   implementation todos ship, given this governs a live production correctness gate for options-chain/derivative data.
+- **na-eligibility-audit 2026-08-16** [body-hash:5c31e82a03b5597f]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.

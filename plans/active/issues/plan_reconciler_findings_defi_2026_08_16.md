@@ -219,3 +219,4 @@ operator-gated planning decision per CLAUDE.md, not a mechanical trim). The hedg
 (deployment-api PREDICTION_DATA_TYPE_META retirement — actually tracked in
 `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:472-483`) is still valid and can be reapplied
 once this doc is split.
+- **na-eligibility-audit 2026-08-16** [body-hash:6ed0e2abbbdcefbe]: KEEP-NA, valid — 0 open '- [ ]' todos confirmed via grep (matches Phase-0), but this doc is not a task-tracking plan/issue doc in the usual sense -- it is plan_reconciler's own live run-journal for today's (2026-08-16) defi-tranche dispatch (agt-1a88e0), explicitly self-described as 'Run in progress -- this doc is the live journal, appended to as checkpoints land,' and is actively locked_by: plan_reconciler-agt-1a88e0 with status: open.

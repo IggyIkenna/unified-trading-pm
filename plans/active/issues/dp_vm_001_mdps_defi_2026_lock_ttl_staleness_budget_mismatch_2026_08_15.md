@@ -177,3 +177,4 @@ together once the real fix lands.
 - **2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: converted this doc's prose "Recommended decision"
   into tracked checkboxes (Phase 2 zero-checkbox-doc sweep) — it previously contributed zero dispatchable work despite
   `assigned_vm: planning`.
+- **na-eligibility-audit 2026-08-16** [body-hash:a6972d17406fe69b]: KEEP-NA, valid — Live operational escalation doc (filed 2026-08-15), correctly in scope -- no na-eligibility-audit marker exists yet; a same-day 2026-08-16 plan_reconciler Progress Log entry only converted prose into checkboxes (Phase 2 zero-checkbox-doc sweep), it is not a na-eligibility-audit verdict marker.

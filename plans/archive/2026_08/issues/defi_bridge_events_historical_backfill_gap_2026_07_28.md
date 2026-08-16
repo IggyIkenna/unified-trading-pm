@@ -17,7 +17,7 @@ summary: >-
   mode= into assert_defi_catalog_fresh() for the 9 remaining DeFi handlers" todo, which explicitly names
   bridge_events_handler.py) — so no new fix todo is filed here, only a small follow-up verification todo once that fix
   ships.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -45,10 +45,9 @@ source: >-
   CLI support) was verified FALSE before filing — see "What I found" below.
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: na-eligibility-audit 2026-08-16 (tranche=defi) — follow-on archival pass for the 2026-08-12 archive_exempt bridge
 context_scope:
   [
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,

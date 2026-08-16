@@ -69,14 +69,15 @@ Massive-fka-Polygon.io** (`polygon` = the CHAIN).
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →
   ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index). **Ship
   scripts COMMIT FROM AN ISOLATED WORKTREE** so a peer sharing your checkout can't revert your edits (0/6→6/6 measured):
-  always-on in safe-doc-push, laptop-only in quickmerge (`--isolated`/`--no-isolated`, auto-OFF on the AO VM). They bake
-  in retry/mutex/flock/drift — never re-improvise reconcile-retry. **`ahead=0` + clean tree ≠ landed** (≡ work DESTROYED
+  always-on in safe-doc-push; **`--isolated` in quickmerge is opt-in, NOT default** (laptop-only, auto-OFF on AO) —
+  pass it once edits keep reverting under contention, that IS the fix (2026-08-16). Bakes in retry/mutex/flock/drift —
+  never re-improvise reconcile-retry. **`ahead=0` + clean tree ≠ landed** (≡ work DESTROYED
   — verify `git show HEAD:<f>`; Write+`git add` in ONE step, where every measured loss sat). Ship scripts assert it:
   **quickmerge 10 / safe-doc-push 12 (nothing of yours to ship) · 13 (pushed, change absent) = RECOVER from the printed
   ref, never plain re-run**; 11=script defect; 5=safe. SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`. **QG
-  concurrency is RESOURCE-based, not a fixed count** (default `reservation`, 2026-08-10): admission weighs measured peak
-  RSS vs live RAM + CPU under one ledger lock — just invoke `quality-gates.sh`, it queues. **Never quote a fixed cap
-  number** — those are legacy `token`-mode only; read the SSOT. Never bulk-kill a peer's `pytest`/QG. Both ship scripts
+  concurrency is RESOURCE-based** (default `reservation`, 2026-08-10): weighs peak RSS vs RAM+CPU under one ledger
+  lock — just invoke `quality-gates.sh`, it queues. **Never quote a fixed cap** — legacy `token`-mode only; see SSOT.
+  Never bulk-kill a peer's `pytest`/QG. Both ship scripts
   reconcile against origin before every commit and hard-fail on a genuine unresolvable conflict (never silently
   proceed); `check-quickmerge-provenance` catches a missing trailer at COMMIT time too (WARN-only until
   `QUICKMERGE_PROVENANCE_BLOCK=1`). SSOT: `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`.
@@ -85,7 +86,7 @@ Massive-fka-Polygon.io** (`polygon` = the CHAIN).
   `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a host via
   `scripts/dev/check-slot-commit-identity.sh [--fix]`.
 - **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging DORMANT** (per-repo
-  `promotion_model: ldr_main` toggle; standing `ldr-to-main-promote-fleet.yml` + PM's `ldr-to-main-promote.yml`, `*/15`,
+  `promotion_model: ldr_main` toggle; standing `ldr-to-main-promote-fleet.yml` + PM's `ldr-to-main-promote.yml`, `*/30`,
   auto-merge). **The LDR→main gate set is exactly THREE**: `sit-gate/fleet-green` (fleet-shared SIT signal, REQUIRED
   check on `ldr_main` repos) + `quality-gates-v2` (promote PR) + quickmerge-provenance — label-check / SIT-digest /
   dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT + REVERSIBLE (major/breaking bump or operator decision

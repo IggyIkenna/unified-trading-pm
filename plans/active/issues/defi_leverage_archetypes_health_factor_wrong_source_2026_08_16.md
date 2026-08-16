@@ -200,3 +200,4 @@ Even once wired, the centralized data model can't yet serve everything an archet
   found none — kill-switch handling and vol_trading's risk gates are correctly centralized, confirming this is a
   scoped pattern (4 files, 3 families) rather than a systemic one. Title, summary, findings and todos updated to
   the real scope in the same edit. Estimate revised from 6/4.8 AI-days to 8/6.4 to reflect the added fix surface.
+- **na-eligibility-audit 2026-08-16** [body-hash:5b28bea2cce6b9c5]: KEEP-NA, valid — Freshly filed today (2026-08-16) from an interactive session; zero prior na-eligibility-audit markers, this is its first pass. 10 open todos verified via the fence-aware grep, matching Phase-0's open_todos=10 exactly.

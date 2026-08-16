@@ -18,7 +18,7 @@ repos: [deployment-service]
 scope: [engineer, admin]
 tags: [billing-waste, vm-duplicate, tradfi, dxy, ao-outage]
 related:
-  - /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md
+  - /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md
   - /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md
 parent_epic: tradfi_master
 source: "Fleet-wide /vm-preemption-billing-waste-audit sweep, 2026-08-12, interactive session"
@@ -33,7 +33,7 @@ depends_on: []
 context_scope:
   [
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-24h.sh,
     deployment-service/scripts/wave_launcher.py,
   ]
@@ -98,11 +98,12 @@ tmux workers despite the server process being healthy.
       not concern other work.** Was: investigate why AO's central server is down. Leaving this AND the 2026-08-13
       dispatch-loop follow-up below as historical record, not re-opening either — if AO is still down past the
       operator's own expected window, that's a fresh decision point, not an automatic re-open of this todo.
-- [ ] [OPERATOR] P1. **New 2026-08-13** (superseded by the decline above, kept for record): with the server healthy but
-      zero live tmux workers, confirm whether the dispatch loop is actually attempting to spawn workers and failing
-      silently, or not attempting at all — and reconcile the `dependency_health_alerting_never_wired-376d92bc984b`
-      task's stale `status=dispatched` claim (no live session behind it) before it silently blocks that queue slot
-      indefinitely.
+- [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-16 (na-eligibility-audit, tradfi tranche) — moot, superseded by the decline
+      above.** New 2026-08-13 (superseded by the decline above, kept for record): with the server healthy but zero live
+      tmux workers, confirm whether the dispatch loop is actually attempting to spawn workers and failing silently, or
+      not attempting at all — and reconcile the `dependency_health_alerting_never_wired-376d92bc984b` task's stale
+      `status=dispatched` claim (no live session behind it) before it silently blocks that queue slot indefinitely.
+      Doc's own text already stated this was moot ("kept for record" only); closing the checkbox to match.
 - [ ] [SCRIPT] P2. Determine whether any manual-launcher-invocation path (as opposed to `wave_launcher.py`'s automated
       dispatch) has a dedup/collision check against already-running VMs for the same shard — if not, consider whether
       one is worth adding given this is the second fleet-wide duplicate-VM billing-waste incident this week (different
@@ -128,6 +129,11 @@ tmux workers despite the server process being healthy.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, stale-item closed.** 5 open
+  todos re-read end-to-end. Closed the superseded 2026-08-13 operator-question todo (doc's own text already said
+  "kept for record" only). Remaining 4 todos (design-question P2, PII-free purge/reclassify P2, done-marker P3) stay
+  genuinely open — mixed OPERATOR_QUESTION/GENUINE_WORK, no whole-doc RECLASSIFY (multiple items need judgment).
+  `assigned_vm` unchanged.
 - **2026-08-15 (slot-16, P0 MVP-backfill-readiness-gate verification pass,
   `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`)**: while verifying real manifest coverage per tradfi MVP cell,
   measured a large `attempted_failed` fraction for all 3 Yahoo-daily MVP cells (CBOE 38.9%, FX 26.5%, ICE 75.3% of total

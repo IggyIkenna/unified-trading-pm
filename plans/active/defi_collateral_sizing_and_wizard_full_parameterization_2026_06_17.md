@@ -18,7 +18,7 @@ related: []
 created: 2026-06-17
 parent_epic: strategy_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 18.0
@@ -145,8 +145,12 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 
 ## Codex SSOT updates
 
-- [ ] [DOC] P2. If collateral down-sizing ships, document the collateral-posting-mode + buffer-sizing contract in
-      `codex/04-architecture/` (margin/collateral) + the wizard param-schema in the capability-wizard codex.
+- **[DOC] P2. CANCELLED — extracted 2026-08-16 (na-eligibility-audit, per-todo RECLASSIFY-split) →
+      `defi_satellite_ao_dispatch_batch15_2026_08_16.md`** — collateral down-sizing shipped (Phase A,
+      `strategy-service@6e9164b1`, 2026-06-17), so the "if it ships" precondition is met and the remaining
+      documentation work is now bounded/AO-dispatchable. Original item: document the collateral-posting-mode +
+      buffer-sizing contract in `codex/04-architecture/` (margin/collateral) + the wizard param-schema in the
+      capability-wizard codex.
 
 ## Progress Log
 
@@ -246,3 +250,4 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   cheat-sheet precedent matches. `locked_by: live-defi-rollout` (since 2026-06-17, a branch-name artifact per this
   corpus's established pattern) not treated as a blocker. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+- **na-eligibility-audit 2026-08-16** [body-hash:f9bdb0f6bccfc5a3]: RECLASSIFY (per-todo split), applied — the codex-doc-update item (shipped-precondition now met) extracted to defi_satellite_ao_dispatch_batch15_2026_08_16.md (+ finalize, status: active). The remaining open item (wizard food-chain parameterization -- exec-algo params, risk ladder, collateral posting mode, source routing) is real cross-layer design/build work and stays NA. Also corrected a stale execution_scope: orchestrator-agent -> local-only (frontmatter mismatch vs assigned_vm: NA, unrelated to this reclassification). Doc stays assigned_vm: NA with 1 open item remaining.

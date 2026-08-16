@@ -157,3 +157,7 @@ class of failure repeatedly.
   leading hypothesis for this doc's own `mdps-tradfi-2025` occurrence too, not yet directly confirmed for it
   specifically — that new doc's own follow-up todo covers checking this and the other sibling VMs before their
   `vm-logs/` GCS objects age out of the 14-day retention window.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Sole open todo is an
+  explicit `[OPERATOR]` root-cause-and-decide judgment call; the mechanical confirm-for-2025 half is now tracked via
+  `tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` (this run's own extraction from the 2021 sibling doc).
+  `assigned_vm` unchanged.

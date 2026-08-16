@@ -307,7 +307,7 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
 
 ## Todos
 
-- [ ] [VERIFY] P2. **Open question 2 (added 2026-08-16, plan_reconciler)**: verify OKX options wiring end-to-end —
+- [x] [VERIFY] P2. STALE CHECKBOX -- na-eligibility-audit 2026-08-16, MOOT: `tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md` (filed the SAME DAY) live-verified the `tardis-api-key` secret IS genuinely resolvable (the credential gate was never actually blocking), AND bare OKX has no options-capable successor venue registered at all (deregistered 2026-08-05, no OKX-OPTIONS successor) -- there is nothing to verify against; DERIBIT is the only Tardis-registered CeFi options venue. Original text: **Open question 2 (added 2026-08-16, plan_reconciler)**: verify OKX options wiring end-to-end —
       needs a `TARDIS_API_KEY` (credential-gated). Done when: a live OKX options request succeeds using a working key,
       or the credential gap is confirmed still blocking and re-filed with a specific ask.
 - [ ] [RESEARCH] P3. **Open question 6 (added 2026-08-16, plan_reconciler)**: determine whether ODDS_API's total
@@ -690,3 +690,4 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — full 673-line read of the 59-bug
   master findings ledger; only 3 items genuinely still open, all open-ended research with no stated done-when beyond
   'investigate'.
+- **na-eligibility-audit 2026-08-16** [body-hash:bd1e6d7b79f57815]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.

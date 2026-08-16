@@ -129,7 +129,7 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       billing-gated by design, not a bug. Gate: `VENUE_DATA_TYPE_CAPABILITIES` confirmed to declare mbp_10/trades/tbbo
       as billing-gated (declared possible, not chased to full L3 history) — a pure verify, no code change. (repos:
       market-tick-data-service, unified-api-contracts) **DONE 2026-08-15 (/plan-reconcile)** — verified with live code
-      quoted in `plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md:7-9`:
+      quoted in `plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md:7-9`:
       `VENUE_DATA_TYPE_CAPABILITIES["CME"]` correctly excludes mbp_10/trades/tbbo entirely (only ohlcv_1s/ohlcv_1m
       declared), confirming no false "full-history-available" claim exists; that same verification surfaced a SEPARATE
       `expected_coverage.py` drift, tracked in that doc, not blocking this todo's own done-when.

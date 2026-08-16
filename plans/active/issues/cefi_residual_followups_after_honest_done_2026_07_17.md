@@ -777,3 +777,4 @@ pairs stay honest-unresolved (reported, never guessed).
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — full 759-line read, 6 open items
   confirmed, each requiring a real scoping/design decision before it's worker-determinable. 1 small item (VM-launcher
   FORCE default) flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE by a prior pass and reaffirmed here, not claimed on its own.
+- **na-eligibility-audit 2026-08-16** [body-hash:a06e896be162a31f]: KEEP-NA, valid — Full 780-line read (two Read calls, offset-continued) confirms exactly 5 open checkboxes, grep-verified. The doc carries an explicit dated 2026-07-17 operator ruling ("assigned_vm: NA retained ...

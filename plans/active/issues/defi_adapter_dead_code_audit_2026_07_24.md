@@ -599,3 +599,4 @@ files.
   `thegraph_ws_adapter.py` had no determinable single-venue target and the operator ruled DELETE (see that plan's "Scope
   corrections" + "Open questions"). Also refreshed `/codex/04-architecture/solana-defi-coverage.md` (JUPITER MTDS line +
   `spot_trades` → `dex_pool_swaps`).
+- **na-eligibility-audit 2026-08-16** [body-hash:5dbf499cc875fe22]: KEEP-NA, valid — DeFi adapter dead-code/runtime-fallback/duplicate-implementation audit across instruments-service, MTDS, and execution-service, carrying a top-of-doc OPERATOR-NOTIFY banner (cross-repo, data-correctness-adjacent: the governance-parameters-refresh feature's Phase-1 poller has zero production callers, so downstream Phase 3/4 silently run on hardcoded fallback constants).

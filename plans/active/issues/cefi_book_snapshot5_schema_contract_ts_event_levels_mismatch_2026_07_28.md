@@ -1077,3 +1077,4 @@ against the reproduction script.
   339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
   a564cca/6f464325/9102eb9b/1b035c52) re-verified ancestors of origin/live-defi-rollout. Numbers continue the decay
   trend (5,799→5,749). No code change, no GCS write, no VM launch. Doc over cap — 1-line close-out only.**
+- **na-eligibility-audit 2026-08-16** [body-hash:9ebb8367caa8eb2f]: KEEP-NA, valid — Full 1079-line doc read end-to-end (two Read calls covering lines 1-506 and 507-1079, matching wc -l).

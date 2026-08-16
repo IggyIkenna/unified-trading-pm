@@ -1477,6 +1477,24 @@ stash list, prek patches listing, worktree list — to `~/.cache/{sdp,qm}-forens
 detection fires. The 2026-08-12 investigation only had a hash-only summary to work from, which was not enough to
 distinguish the real mechanism from 7 tested-and-cleared candidates; this closes that gap for next time.
 
+### Extreme host contention makes `--isolated` the correct reflex, not a last resort (2026-08-16)
+
+A session shipping ~10 CI-infra files across several hours on `unified-trading-pm` hit the shared-index race (above) at
+an unusually severe intensity: `git stash list` climbed from ~72 to 86+ entries over the session as many concurrent
+slot/AO sessions shared checkouts of this extremely busy repo, and edit-to-revert latency shrank from minutes to **mere
+seconds** at the worst point. Every `--no-isolated` (default laptop) ship attempt during that window either silently
+reverted mid-flight or landed stale content; every attempt that explicitly passed `--isolated`, once the session started
+doing so, landed correctly on the first or second try — confirmed by diffing origin's actual content after each ship,
+not by trusting the script's own exit code or log line (per the measurement-claims-discipline rule: a clean exit is a
+proxy for "landed," not proof).
+
+**The operational lesson**: default-on isolation is still wrong for the reason above (venv-resolution breaks it), but
+the opt-in threshold should be lower than "only after a confirmed revert." If `git stash list` is unusually large for
+the repo, or an edit gets reverted even once in a session, stop retrying `--no-isolated` and switch to `--isolated` for
+the rest of that session's ships on that repo — don't rediscover this per-session. The forensic-snapshot mechanism
+(above) still fires either way and is worth checking after any revert, but on a repo this busy, waiting for it before
+reaching for `--isolated` just burns another failed attempt first.
+
 ### Exit codes worth recognising
 
 - **`safe-doc-push` exit 10** — retries exhausted **and** your named files no longer match what you handed the script.

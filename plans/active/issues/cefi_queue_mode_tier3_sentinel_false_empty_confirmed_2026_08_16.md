@@ -163,3 +163,4 @@ lines despite genuine fetch activity, which is what let this run silently for 17
   `git stash push`/`pop` around the tarball-build step only (never touched the content, restored immediately after,
   confirmed byte-identical via `git status` before/after) rather than force-including it via `--allow-dirty-tarball`
   or waiting indefinitely.
+- **na-eligibility-audit 2026-08-16** [body-hash:001b7452f28b77e7]: KEEP-NA, valid — Full end-to-end read (146 lines) confirms this is a same-day (2026-08-16), fully-executed incident-response issue doc, not a stale backlog item.

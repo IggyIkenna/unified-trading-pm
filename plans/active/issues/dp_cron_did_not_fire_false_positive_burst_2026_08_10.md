@@ -305,3 +305,4 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   quickmerge, landed on `live-defi-rollout` at `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`
   (ancestry-verified against origin).
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-16** [body-hash:83cc19e793382ee1]: KEEP-NA, valid — Read end-to-end. 4 of 5 todos closed across a same-day follow-up session that shipped a formal ProducerLifecycleState mechanism (classifying 6 of 8 genuinely-absent producers NOT_YET_ACTIVE per the operator's own confirmation that these are pre-live-trading placeholders) plus a real dedicated AWS EC2 liveness check replacing an earlier blanket GCP-only exclusion for the orchestrator VM.

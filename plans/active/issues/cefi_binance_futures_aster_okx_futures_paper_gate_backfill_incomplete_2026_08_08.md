@@ -535,3 +535,56 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
     stale finding from re-paging a fresh escalation slot hours later). Worth a `/data-pipeline-alerts-reconcile` pass
     on the DP-FETCH-009/`DP_RUN_MOSTLY_EMPTY` cooldown-vs-detector-cadence relationship if this recurs a 4th time. No
     code/report changes; this Progress Log entry is the only change this turn.
+
+- **2026-08-16 (slot 3, data_pipeline_failure escalation `agt-de9c44`, DP-FETCH-009, 4th occurrence today — the
+  trigger slot-22's entry above explicitly named)**: Dispatched off a `check_high_attempted_failed` page for
+  `asset_group=cefi data_type=book_snapshot_5` (18,945 `attempted_failed` cells of 181,427 attempted [trailing-window
+  figures — the detector windows its threshold check, unlike the corpus-wide numbers below]; 11,884 fresh in the last
+  1d). This IS the 4th-recurrence trigger slot-22 named — but NOT a repeat of the same stale Tardis-403 finding: a
+  fresh, independent, unfiltered query of the live manifest surfaced a THIRD, previously-uncharacterized contributor
+  that fully explains why the fresh-window count roughly quintupled since slot-22's check (2,260 → this alert's
+  11,884).
+  - Queried the live cefi manifest independently (`read_availability_index_safe(columns=[venue, data_type,
+    capture_status, error_reason, date, written_at, service_name], filters=[data_type=book_snapshot_5,
+    capture_status=attempted_failed])`, targeted row-group-pushdown read, NOT scoped to any single error_reason up
+    front): **309,279 total rows corpus-wide** (up from slot-22's 295,973 measured ~7h earlier — the +13,306 delta is
+    accounted for below, not unexplained growth). Of the 15,566 rows with `written_at` in the last 24h, **100% resolve
+    to exactly 3 error_reasons, zero unexplained**: `CORRECTIVE_MIGRATION_queue_mode_tier3_sentinel_no_prior_capture_
+    check_2026_08_16` (13,306, 85.5%), `Tardis HTTP 403 code=274 concurrent-IP-lock` (2,259, 14.5% — the SAME
+    population slot-10/slot-22 already root-caused and closed as self-resolved), and `Tardis HTTP 500` (1). Re-checked
+    recency on this same population: 0 rows with `written_at` in the last 1h/2h/4h/8h; max `written_at` across the
+    WHOLE fresh subset is 2026-08-16T04:38:33Z (~16.5h stale at this dispatch's check time, 2026-08-16T21:09Z) — not
+    currently live-writing, matching slot-10/22's own freshness finding.
+  - **The new contributor, `CORRECTIVE_MIGRATION_queue_mode_tier3_sentinel_no_prior_capture_check_2026_08_16`
+    (13,306 rows, the dominant slice), is NOT a bug — it is the intentional, self-correcting side effect of an
+    ALREADY-SHIPPED, ALREADY-CLOSED fix from a DIFFERENT issue doc filed and closed by another slot earlier the same
+    day**: `plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md` (all 3 `[CODE]
+    P0`/`[DATA] P0` todos `[x]` — verified directly, only 2 unrelated `P3` cleanup items remain open). That doc's own
+    root cause: a `SINGLE_VM_QUEUE=1` CeFi Tardis backfill's Tier-3 sentinel fan-out (`sentinels.py::_emit_tier3_for_
+    dt`) wrote `empty_confirmed` over shards with a pre-existing real `captured` row, without checking the manifest
+    first. The fix (code `market-tick-data-service@f134d16595c3e5d1761ec76a7f40041535a6f4e3` + a CAS-write manifest
+    migration script `migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py`) deliberately flips every affected
+    row `empty_confirmed → attempted_failed` **on purpose**, because `check_shard_freshness(..., retry_failed=True)`
+    (the default) then naturally re-attempts them on the next backfill pass — a real captured parquet gets correctly
+    re-discovered, a genuinely empty shard gets correctly re-confirmed empty. This population is DESIGNED to sit as
+    `attempted_failed` temporarily until re-capture completes, which independently cross-checked evidence confirms is
+    already in motion: that doc's todo 3 confirms a fresh relaunch, `cefi-binance-futures-2026-heavy-20260816-182747`
+    (2026-08-16T18:27Z, ~2.5h before this dispatch), and a separate same-day peer audit
+    (`plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_16.md` §3) independently reached the identical
+    "NOT a new problem... already-closed same-day fix" verdict for the same sentinel string on a different venue
+    slice (BYBIT-FUTURES). Three independent readings converge — high confidence this is correctly classified.
+  - **DP-FETCH-009 disposition**: no code fix needed or shipped this turn — the underlying data-correctness bug
+    (Tier-3 sentinel) is already fixed and shipped; the elevated `attempted_failed` count is the deliberate, expected,
+    self-healing output of that fix, actively resolving via an already-running relaunched VM; the remaining slice is
+    the same already-closed transient Tardis-403 finding. **This is genuinely the 4th same-day dispatch for
+    functionally the same underlying "elevated attempted_failed count, no new live bug" disposition** (2026-08-09
+    ASTER, slot-10 Tardis-403, slot-22 Tardis-403, this one) — slot-22's entry explicitly flagged a
+    `/data-pipeline-alerts-reconcile` pass as warranted once this recurred a 4th time; it has now. Not running that
+    reconcile pass myself — it targets alerting-service/deployment-service detector+cooldown code, a different
+    repo/scope than this escalation's `market-tick-data-service` target and a materially larger, differently-scoped
+    change than a one-shot data_pipeline_failure dispatch should make unreviewed; recommending it explicitly as the
+    next actionable step for whoever picks this up next (main/operator/a `/data-pipeline-alerts-reconcile` dispatch).
+    $AUTHORING_SLOT for this dispatch (`dp-fleet-monitor`) is not a numeric slot id, so the standard
+    ping-authoring-slot step is skipped per this role's own instruction (no real originator to notify; the dispatch-
+    time Slack alert already covered the FYI). No code/report changes; this Progress Log entry is the only change
+    this turn.

@@ -418,7 +418,7 @@ source: >-
           **Adjacent finding filed, not fixed here** (ambiguous registry-scope judgment call, same
           class as the already-resolved KRX/ICE/YAHOO_FINANCE precedents — out of this pure-verify
           todo's scope):
-          `plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md` — a
+          `plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md` — a
           SEPARATE registry, `expected_coverage.py::EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]["CME"]`,
           still lists `trades`/`tbbo` as expected (mbp_10 excluded there too), but
           `get_expected_data_types_for_venue` (what `venue_fetch.py` actually gates fetches on) reads
@@ -670,7 +670,7 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   false full-history-available claim), and the independent Databento billing-entitlement guard
   (`databento_subscription_allowlist.py`, L1=367d/L2=33d) is correctly wired for if/when they're restored. Filed an
   adjacent (not fixed, ambiguous-scope) finding as its own issue doc:
-  `plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md` — `expected_coverage.py`'s
+  `plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md` — `expected_coverage.py`'s
   CME list still includes trades/tbbo even though the actual MTDS fetch-gate (`VENUE_DATA_TYPE_CAPABILITIES`) excludes
   them, which may inflate deployment-api's tradfi completion-gap denominator. Full evidence in the todo's own DONE note
   above.

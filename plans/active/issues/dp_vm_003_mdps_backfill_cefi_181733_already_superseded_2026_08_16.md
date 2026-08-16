@@ -73,13 +73,13 @@ context_scope:
   ]
 created: "2026-08-16"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.1
 estimate_calibrated_ai_days: 0.1
-assigned_role: devops
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:

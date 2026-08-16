@@ -11,7 +11,7 @@ summary: >-
   documented `_extract_underlying_for_chain` regex bug (canonical-write-conventions.md lines 212-217) that captured
   "BTCUSDT" instead of "BTC". The code fix landed 2026-07-09 but historical BYBIT futures_chain data written before that
   date was never backfilled/re-shaped to the correct form.
-status: open
+status: ARCHIVED 2026-08-16 — na-eligibility-audit, all 3 todos done (backfill/reshape, duplicate-verify, operator-ruled delete of 490 confirmed dupes, all executed + verified)
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -35,7 +35,6 @@ execution_scope: local-only
 model_tier: sonnet-doable
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 resolved_by:

@@ -302,7 +302,9 @@ days.
       one of these symbol/dates to verify the hypothesis, (2) if confirmed, either a targeted content-fix (same
       methodology as Finding 1a) or accept as honest historical absence. Very small blast radius (16 occurrences vs the
       thousands-of-shards P0 findings above) — does not block calling Findings 1/2/3 verified.
-- [ ] [SCRIPT] P3. NEW 2026-08-16: `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
+- [x] [SCRIPT] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 1. Original text: NEW 2026-08-16:
+      `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
       "adapter density bug" NaN-in-`open`/`close` warning on EVERY liquidations shard with any zero-liquidation window
       — 659,791 occurrences and counting in this campaign's log alone. Confirmed FALSE POSITIVE, not a real bug (see
       the spot-check above): liquidations is inherently sparse/event-driven, and null `open`/`close` on a
@@ -328,3 +330,4 @@ uncommitted across a checkpoint boundary, even mid-task.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-16** [body-hash:8aa962571f5348dd]: RECLASSIFY-SPLIT — extracted bounded item(s) 1 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 4 items remain genuinely NA (1 [OPERATOR] Tardis-tier spend decision, 1 [SCRIPT] P0 monitor-to-completion stood down to proactive-check cadence not bounded-now, 2 [DATA] P3 investigation-not-yet-confirmed items). Doc stays assigned_vm: NA.

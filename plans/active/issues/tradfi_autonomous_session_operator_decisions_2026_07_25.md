@@ -510,3 +510,6 @@ every day narrows or closes it permanently.
   independently dispatchable, same reasoning as 08-08. This exact gap is now ALSO independently tracked as its own
   `[OPERATOR] P1` todo in `ag_closeout_audit_tradfi_parked_2026_08_10.md` (Finding 5, filed today) -- cross-referencing,
   not duplicating. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid — established ruling not
+  re-litigated (9th consecutive pass).** Sole open todo still bundles propagating 3 already-ruled items across 3
+  target files, needing decomposition before independent dispatch. `assigned_vm` unchanged.

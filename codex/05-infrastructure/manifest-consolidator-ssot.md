@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Manifest Consolidator — SSOT
-summary:
-  "Canonical reference for the manifest consolidator: GCP Cloud Run Job + Cloud Scheduler (AWS Batch Fargate +
+summary: "Canonical reference for the manifest consolidator: GCP Cloud Run Job + Cloud Scheduler (AWS Batch Fargate +
   EventBridge), one per (service_kind, asset_group), `python -m unified_trading_library.manifest_consolidator --bucket X
   --once`. Memory-bounded DuckDB merge (not pandas) with canonical-order projection + blank-capture_status drop;
   content-write-marker incremental cutoff (idle-bucket trap fix); loud-fails on stale canonical; dated-instrument
@@ -490,9 +489,45 @@ degrading reads (operator direction 2026-06-01; plan `manifest_consolidator_live
   gave the specific closer script `per_vm_shards=True` (`instruments-service@d0e4e5a3`) — see
   `/plans/archive/issues/sports_legacy_cas_shard_fallback_gate_investigation_2026_08_03.md`.
 - **Preflight gate** — `assert_consolidator_healthy(bucket)` (exported from `unified_trading_library`): a shared SSOT
-  that raises if the heartbeat is stale past `MANIFEST_CONSOLIDATED_STALENESS_SEC` while other-VM shards exist. VM
-  bootstrap / batch preflight / the shell preflight in `setup-data-pipeline-vm.sh` (`deployment-service@7add531`) should
-  wrap this instead of spinning their own `gsutil` stat.
+  that raises if the heartbeat is stale past `MANIFEST_CONSOLIDATED_STALENESS_SEC` while other-VM shards exist. Callers:
+  `unified_trading_library/manifest_writer/_read_index.py` (every manifest READ re-checks this — so a caller that reads
+  the manifest repeatedly, e.g. MDPS's per-date `dependency_checker`, gets this check on every read as a side effect,
+  not as a designed periodic mechanism), `manifest_consolidator.py`, `monitors/consolidator_liveness.py`. **CORRECTED
+  2026-08-16** — the prior text here said the shell preflight in `setup-data-pipeline-vm.sh`
+  (`deployment-service@7add531`) "should wrap this instead of spinning their own `gsutil` stat"; that never happened and
+  was misleading readers into treating it as an outstanding oversight. It is a DELIBERATE divergence, not a gap: the
+  shell preflight (§5b there) reimplements the same staleness read via `gcloud storage objects describe` because it
+  runs in a lightweight bash loop for the VM's whole life (see next bullet) and a Python cold-start every tick would be
+  wasteful — it stays functionally equivalent to `assert_consolidator_healthy`'s check (same budget semantics, same
+  "stale past budget = fail"), just implemented shell-native. Do not re-flag this as a TODO without re-reading this
+  paragraph.
+- **Periodic re-check during a long-running VM's own execution — NOT just a one-time preflight (shipped 2026-08-16,
+  `deployment-service` `vm-exec-with-gcs-tee.sh` + `setup-data-pipeline-vm.sh`, manifest_consolidator_and_lifecycle\_
+  cost_optimization_2026_08_16.md)**. Before this, `setup-data-pipeline-vm.sh`'s §5b "OOM preflight" only ran ONCE at
+  boot — a consolidator that was healthy at launch could die hours into a multi-hour backfill with the VM never
+  noticing, writing per-VM shards nobody would ever consolidate for the rest of its run (operator finding: "ensure VMs
+  exit if their consolidator is down for the AG relevant to them, to avoid VMs not knowing what their completion status
+  should be"). The shared VM-side wrapper `vm-exec-with-gcs-tee.sh` (used by `_launch_with_tee`, the seam nearly every
+  launcher routes through) now runs an opt-in background watchdog, gated on `CONSOLIDATOR_WATCHDOG_BUCKET` being set: it
+  re-reads the same bucket's `_index/availability_index.parquet` staleness every `CONSOLIDATOR_WATCHDOG_INTERVAL_SEC`
+  (default 900s) for the wrapped command's ENTIRE lifetime and, on breach past `CONSOLIDATOR_WATCHDOG_BUDGET_SEC`
+  (default 86400s, mirrors `MANIFEST_CONSOLIDATED_STALENESS_SEC`), SIGTERMs (SIGKILL after a 5s grace) the wrapped task
+  and forces the VM's terminal exit code to **78** — the same code the one-time preflight already used for this exact
+  condition, so both signal identically regardless of WHEN the staleness was caught. This is a loud-fail HARD exit
+  (matches this doc's own "Liveness + health contract" default below — a stale consolidator is an incident, not a
+  degraded read); it deliberately does NOT consult `MANIFEST_ALLOW_STALE_FALLBACK` (that flag only gates the READER's
+  per-VM-shard fallback merge, never this preflight/watchdog class of check). `setup-data-pipeline-vm.sh` wires this
+  automatically (exports `CONSOLIDATOR_WATCHDOG_BUCKET`/`_BUDGET_SEC`) for the SAME population its §5b preflight already
+  covers — `VM_SERVICE=market_tick_data_service && VM_OPERATION=download` (non-test), i.e. the MTDS download backfill
+  launcher family (~20 launchers: gas-fees, dex-pools, dex-swaps, liquidations, oracle-prices, perp-funding, lst-rates,
+  position-data, pyth-archive, risk-params, solana-defi, solana-gas, sports-odds, vault-share-price, prediction,
+  eigenlayer-rewards, flash-loan-events, bridge-events, liquidation-events, and the base MTDS launcher). **Not yet
+  extended to the other ~170 launchers** (instruments-service backfills, features backfills, sports-specific fixture/
+  enrichment launchers, etc.) — the mechanism (`CONSOLIDATOR_WATCHDOG_BUCKET` env var on `vm-exec-with-gcs-tee.sh`) is
+  fully generic and any launcher can opt in by exporting it before calling `_launch_with_tee`, but wiring the REST of
+  the fleet in is real per-launcher scoping work (which bucket is the "AG-relevant" one for a given VM_TASK isn't
+  always a single formula the way MTDS-download's is), tracked as a follow-up, not done blind in one pass (rule 11 —
+  a gate change must be proven safe for the population it touches before it ships).
 - **Liveness watchdog** — `unified_trading_library.monitors.consolidator_liveness.ConsolidatorLivenessMonitor` +
   `check_buckets()` + CLI (`python -m unified_trading_library.monitors.consolidator_liveness --buckets a,b`). Per bucket
   it reads the heartbeat age and emits `CONSOLIDATOR_DOWN` (ERROR) when it misses > N cycles (default 5 × 60s),

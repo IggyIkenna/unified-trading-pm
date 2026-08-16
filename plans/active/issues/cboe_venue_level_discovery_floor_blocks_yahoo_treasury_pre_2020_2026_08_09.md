@@ -18,8 +18,9 @@ scope: [engineer]
 tags: [tradfi, cboe, discovery-floor, honest-absence, yahoo, data-correctness]
 related:
   [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md,
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
@@ -151,3 +152,10 @@ urgency, and warrants its own scoped implementation + test pass.
   (status: draft, its own `Source:` citations name this doc's todo 1/todo 2 exactly), drafted by an earlier same-day
   `/ag-closeout-audit tradfi` pass -- see the per-checkbox citations above. Declining to flip `assigned_vm` to avoid a
   double-dispatch once batch12 activates; fix is citation-only.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA-STALE (already-duplicated),
+  re-confirmed.** Both todos' citations to `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` remain accurate (now
+  `status: active`; its todo 1 is `[x]` done, todo 2 still open). **Noted, not edited**: batch12's todo 2 text now
+  carries a 2026-08-10 operator decision narrowing the relaunch scope to `--start-floor 2018-01-01` ("2018 onward is
+  sufficient"), tighter than this doc's own todo 2 text (`--start-floor 2000-01-01`) — the batch doc is the live
+  dispatch vehicle and its narrower text controls; this doc's stale wording is citation-only pointer text, not
+  independently executed, so left as-is rather than editing a doc whose content isn't the dispatch source of truth.

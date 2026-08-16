@@ -208,7 +208,12 @@ context_scope:
       relabeling action needed; nothing left to diagnose on this axis. **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
+- [ ] [DATA] P0. **STATUS 2026-08-16 (slot-5, data_engineering)**: this exact item was extracted for AO dispatch
+      to `plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` and its verify step was RUN there —
+      full evidence + result (NOT GREEN, CF-8 RED, delete correctly withheld) on that doc's own checkbox; not
+      duplicated here. This item stays open (still un-checked) pending CF-8 clearing — see that doc for the
+      current state, do not re-run the verify independently of it. E7 Verify: `cf_manifest_audit_2026_06_01.py
+      market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
       data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in
       `tradfi_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy
       `market-data-tick-tradfi` permanently** + **bulk-delete the 12 `day-*` hyphen 0-row-placeholder prefixes** in
@@ -282,7 +287,7 @@ context_scope:
 **SCOPE GATE (round-9 combined RECLASSIFY + satellite-extraction sweep, 2026-08-09)**: the remaining "needs an actual
 fetch attempt" work this item describes — filling the NASDAQ/NYSE `expected_unattempted` remainder for years OTHER than
 2026 — is now explicitly `BLOCKED-OPERATOR-DECISION` per
-`/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s same-day ruling: immediate equities
+`/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s same-day ruling: immediate equities
 backfill work is narrowed to **year 2026 only**, with "completing the full historical equities corpus to 100%" (this
 item's 2023-2025 remainder) explicitly gated until November 2026. Do not dispatch further NASDAQ/NYSE multi-year
 backfill off this item before then — cite that ruling doc, not this checkbox, as the current gate.

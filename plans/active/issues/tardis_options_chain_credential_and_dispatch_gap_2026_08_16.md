@@ -57,8 +57,9 @@ related:
 created: 2026-08-16
 priority: P1
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: data_engineering
 sequential: false
 depends_on: []
 locked_by:

@@ -961,3 +961,4 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
   the `mvp_backfill_defi_onchain_v10` G2 gate for `lending_indices`) after an extensive incident history (adapter
   wiring, 3x VM relaunches, a GraphQL schema-drift fix, a tarball-staleness audit, a zombie-watchdog fix, a 13-round
   redispatch storm). Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-16** [body-hash:3d66938a1d9bef6a]: KEEP-NA, valid — 964-line doc read end-to-end (two-pass, initial Read truncated at line 546, completed via offset=547), including the full incident history: Morpho adapter dead-code wiring, 3 VM relaunches, a GraphQL schema-drift bug, a launch/publish tarball-staleness race that triggered a fleet-wide P0 audit, an 11+ round redispatch storm on a since-fixed consolidator-staleness precondition, and a backlog.yaml hand-edit later formally re-channeled into frontmatter (2026-07-31 operator ruling, documented in the banner).

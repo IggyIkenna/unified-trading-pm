@@ -4,11 +4,11 @@ title: Venue e2e wiring — instruments-service through execution-service, per v
 summary: >-
   W4 of the venue-readiness umbrella and its largest workstream. Walk the Venue Readiness Contract steps 1-9 for
   every venue in the universe, instruments-service through execution-service, including transfers and feature-group
-  availability, so no venue reads as supported while some leg of the chain cannot serve it. Held at status draft
-  deliberately: the contract is settled but the DENOMINATOR is not — "every venue in our universe" has no
-  machine-readable definition yet, and dispatching a per-venue sweep without one produces confident coverage claims
-  over an unknown set. Flip to active once the universe todo in the umbrella lands.
-status: draft
+  availability, so no venue reads as supported while some leg of the chain cannot serve it. Flipped to active
+  2026-08-16: the denominator blocker resolved — real denominator is (venue, data_type) pairs, 353 across 192
+  declared venues, from `VENUE_DATA_TYPE_CAPABILITIES` via
+  `unified-api-contracts/scripts/generate_venue_universe_denominator.py`.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, features, strategy, execution]
@@ -38,7 +38,15 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 drift_direction: advance-code
-depends_on: []
+depends_on:
+  [
+    defi_venue_e2e_batch1_2026_08_16,
+    cefi_venue_e2e_batch1_2026_08_16,
+    tradfi_venue_e2e_batch1_2026_08_16,
+    sports_venue_e2e_batch1_2026_08_16,
+    prediction_venue_e2e_batch1_2026_08_16,
+  ]
+gate_on_depends: true
 estimate_class: infra
 estimate_baseline_ai_days: 20.0
 estimate_calibrated_ai_days: 16.0
@@ -87,16 +95,18 @@ per-leg plans above each prove their own leg; nothing today proves a venue is wi
 `venue_capability_route_axis` already did the parity measurement that produced the 40-undeclared-venue fact table,
 so the universe work is *reconciling* against that, not deriving from scratch.
 
-## Why this is `status: draft`
+## Universe denominator — resolved 2026-08-16, plan flipped to `active`
 
-The Venue Readiness Contract is settled and the operator's rulings landed 2026-08-16. What is NOT settled is the
-**denominator**. "Every venue in our universe" has no machine-readable definition: 158 capture venues across 84
-families is the current measured figure, but the contract applies per **(venue × data type)**, so the real unit
-count is unknown. A per-venue sweep dispatched against an undefined set produces exactly the failure this workspace
-bans — a coverage claim that exceeds its measurement.
-
-**Flip to `active` when** the umbrella's `[AGENT] P0 "Define the universe precisely for W4/W5"` todo lands with a
-derived list and a stated denominator. That is the only blocker; nothing else here waits on anyone.
+The Venue Readiness Contract is settled and the operator's rulings landed 2026-08-16. The denominator blocker that
+held this plan at `status: draft` is now resolved: "158 capture venues across 84 families" was a stale one-off
+manual tally (`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md:62-65`) with no producing script —
+do not cite it again. The contract applies per **(venue × data type)**, and that pair count IS the real unit count:
+**192 declared venues, 353 (venue, data_type) pairs**, from `VENUE_DATA_TYPE_CAPABILITIES` in
+`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2564`, reproducible via
+`unified-api-contracts/scripts/generate_venue_universe_denominator.py` (re-run it — the count moves as either
+registry changes, it is not a constant). 8 `ALL_DEFI_VENUES` entries (5 Alchemy gas-fee-oracle spellings +
+Fluid/Sushiswap-Arbitrum) have no capability declaration yet and are excluded from the denominator until one is
+added — tracked as its own P1 todo in the umbrella plan, not a blocker here.
 
 ## The three failure modes this closes
 
@@ -114,26 +124,40 @@ Each unit walks contract steps 1-9 and records a verdict per step with evidence.
 contributes "unverified", never a pass** — this is the binding consequence of the operator's DERIVED-readiness
 ruling, and it is what stops the sweep manufacturing green.
 
-- [ ] [BACKEND] P0. **Derive the work list** from the universe definition once it exists: one row per
-      (venue × data type), with its declared archetype consumers. This is the plan's real todo list; the batches
-      below fork from it.
-- [ ] [BACKEND] P0. **Fork per-asset-group dispatch batches** rather than one giant plan — cefi, defi, tradfi,
-      sports, prediction. Independent same-priority todos touching different files run concurrently by default; a
-      single plan spanning all AGs would serialise or breach the line cap. Each batch gets its own
-      `<ag>_venue_e2e_batchN_<date>.md` + gated finalize pair, following the established satellite-dispatch pattern.
-- [ ] [BACKEND] P0. **Steps 1-5 per unit — declaration through features.** Declared in the UAC capability record;
-      instruments-service resolves instruments with coverage windows; MTDS captures every declared data type and the
-      manifest reconciles; a live adapter exists for every batch adapter (never the reverse); the venue's data
-      reaches the feature groups that consume it.
-- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution.** A position adapter resolves in batch, live AND
-      paper (the per-mode capability axis, not one boolean); the venue is declared in the archetype/slot catalogues
-      that can legitimately trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit
-      — compared by ACTION, not by venue name.
-- [ ] [BACKEND] P0. **Step 9 per unit — transfers.** Every applicable `BusTransferType` has a working rail for the
-      venue, instruments-service through execution-service. Transfers are the leg most often assumed rather than
-      verified, and the one the carve-out counterparty depends on most directly.
-- [ ] [BACKEND] P1. **Record every gap as a tracked todo in its AG batch**, never as prose. A gap found and described
-      but not tracked is the false-progress failure this workspace names explicitly.
+- [x] ✅ [BACKEND] P0. **Derive the work list — done 2026-08-16.** SHIPPED —
+      `unified-api-contracts@9693ff0291` (new `scripts/generate_venue_work_list.py`, permanent/re-runnable, mirrors
+      the sibling denominator/consumability scripts). One row per (venue × data type) — confirmed 353 rows across 192
+      venues, cross-checked against `generate_venue_universe_denominator.py`'s count. Per asset_group: defi 200, cefi
+      70, sports 31, tradfi 16, prediction 4, plus 32 rows `UNMAPPED` (venue absent from `VENUES_BY_ASSET_GROUP` —
+      that gap is owned by
+      [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14](/plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md),
+      not this plan). Each row carries its declared archetype consumer(s) (`NONE` if orphaned). **298/353 rows (84%)
+      have no declared archetype consumer** — consistent with, not a new finding beyond, the umbrella plan's already-
+      tracked 172/192-venue orphan measurement (§ STRATEGY CONSUMABILITY,
+      `unified-api-contracts@36a31a165f`): only 5 of 59 `StrategyArchetype` members are declared in
+      `ARCHETYPE_FEATURE_GROUPS` today, so most rows have no consumer to wire toward yet — a scope gap tracked by the
+      archetype-declaration backlog, not blocking this sweep. Full row export: `--csv PATH` flag on the script. **Fork
+      per-asset-group dispatch batches (P0, below) is now the next actionable item.**
+- [x] ✅ [BACKEND] P0. **Fork per-asset-group dispatch batches — done 2026-08-16.** SHIPPED —
+      `unified-trading-pm@613c5f2f96`. 5 fresh carve-out batch plans + gated finalize pairs authored, per the
+      operator-selected "per contract-step-group" decomposition (steps 1-5 / 6-8 / 9 / gap-tracking / hard-rule
+      confirmation as separate todos, each scoped to one AG's rows):
+      [defi_venue_e2e_batch1_2026_08_16](/plans/active/defi_venue_e2e_batch1_2026_08_16.md) (200 rows),
+      [cefi_venue_e2e_batch1_2026_08_16](/plans/active/cefi_venue_e2e_batch1_2026_08_16.md) (70 rows),
+      [sports_venue_e2e_batch1_2026_08_16](/plans/active/sports_venue_e2e_batch1_2026_08_16.md) (31 rows),
+      [tradfi_venue_e2e_batch1_2026_08_16](/plans/active/tradfi_venue_e2e_batch1_2026_08_16.md) (16 rows),
+      [prediction_venue_e2e_batch1_2026_08_16](/plans/active/prediction_venue_e2e_batch1_2026_08_16.md) (4 rows).
+      The four Method todos below are now digest pointers, not dispatchable work (task_template.md §3 finding H) —
+      the real work moved into the 5 batches. This plan's own `depends_on` + `gate_on_depends: true` now gates its
+      Definition of done section on all 5 finishing.
+- **[BACKEND] P0. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Steps
+  1-5 per unit — declaration through features. Forked into each AG batch's own todo #1.
+- **[BACKEND] P0. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Steps
+  6-8 per unit — strategy and execution. Forked into each AG batch's own todo #2.
+- **[BACKEND] P0. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Step
+  9 per unit — transfers. Forked into each AG batch's own todo #3.
+- **[BACKEND] P1. CANCELLED — SUPERSEDED 2026-08-16 (interactive session, per the 5 AG batch plans above).** Record
+  every gap as a tracked todo in its AG batch. Forked into each AG batch's own todo #4.
 
 ## Hard rules this sweep must not violate
 
@@ -161,3 +185,19 @@ ruling, and it is what stops the sweep manufacturing green.
 hard rules and the AG-batch fork structure are settled and reviewable; held out of ingestion because the universe
 denominator does not exist yet. `status: draft` is the correct lever here — `depends_on` documents ordering but does
 not gate dispatch, so it alone would not have stopped an AO worker picking this up against an undefined set.
+
+**2026-08-16 — forked per-asset-group dispatch batches.** SHIPPED — `unified-trading-pm@613c5f2f96`. Authored 5
+fresh carve-out AG batch plans + gated finalize pairs (defi 200 rows / cefi 70 / sports 31 / tradfi 16 /
+prediction 4), following the operator-selected "per contract-step-group" decomposition (5 todos each: steps 1-5,
+steps 6-8, step 9 transfers, gap-tracking, hard-rule confirmation). Converted this plan's own Method-section
+per-step todos to digest pointers (task_template.md §3 finding H) since the real dispatchable work now lives in the
+5 batches; added `depends_on` + `gate_on_depends: true` on those 5 batch slugs so this plan's Definition of done
+section machine-holds until all 5 report done. Next actionable item: the 5 AG batch plans themselves (each
+independently dispatchable — different files, no ordering constraint between them).
+
+**2026-08-16 — denominator resolved, flipped to `active`.** SHIPPED —
+`unified-api-contracts@e7ee398117` (new `scripts/generate_venue_universe_denominator.py`),
+`unified-trading-pm@<this commit>` (this flip + the umbrella plan's todo). Real denominator: 192 declared venues,
+353 (venue, data_type) pairs from `VENUE_DATA_TYPE_CAPABILITIES`. The "158/84" figure was a stale manual tally,
+superseded — see the section above. 8 DeFi venues remain undeclared (tracked as a P1 todo in the umbrella, not a
+blocker here). "Derive the work list" (P0, above) is now the next actionable item.

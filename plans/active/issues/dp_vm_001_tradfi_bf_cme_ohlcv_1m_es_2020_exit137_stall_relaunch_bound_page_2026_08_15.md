@@ -138,3 +138,7 @@ retry, not genuinely new information.
   `≤2/(vm-prefix, day)` bound, and the `tradfi-bf-cme-ohlcv-1m-` family was already reported at that bound (2/2) — did
   not relaunch. Filed this issue doc and paging the operator via `/blocked` per the escalation's explicit instruction.
   No code changed this session.
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 1 is an explicit
+  [OPERATOR] relaunch-vs-wait judgment call. Todo 2 names a candidate hypothesis but is not yet a bounded, committed
+  action. Genuinely operator-gated. assigned_vm unchanged.

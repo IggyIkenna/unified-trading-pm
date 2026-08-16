@@ -100,3 +100,4 @@ benign baseline, not part of it.
 - **2026-08-15 (interactive session, slot 3)**: Filed as a reference doc per operator instruction ("agreed make one
   human/NA not vm:planning"), preserving the session's breakdown so it survives context compaction. No mutation, no
   further action owned by this doc — follow-ups tracked in the sibling audit plan.
+- **na-eligibility-audit 2026-08-16** [body-hash:3385dde6f650c3f9]: KEEP-NA, valid — Read the full 102-line doc end-to-end. It is a pure-prose "reference" issue doc (doc_type: issue, nature: issue, tags include "reference") preserving a single session's investigation of cefi's 6.4M empty_confirmed rows -- grain de…

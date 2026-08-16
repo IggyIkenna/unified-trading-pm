@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [tradfi, scope-ruling, vm, backfill, possible-violation]
 related:
   [
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
   ]
 created: "2026-08-09"
@@ -49,7 +49,7 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     deployment-service/scripts/wave_launcher.py,
     deployment-service/terraform/gcp/wave_launcher_scheduler.tf,

@@ -166,3 +166,4 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
   ([DOCS] P3, archive-once-complete) is the exact same closing action already tracked, verbatim, as todo 2 of the active
   `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md` (gated on the implementation plan, currently 2/5 todos done).
   Flipping `assigned_vm` here would dispatch a duplicate of that finalize todo. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-16** [body-hash:af9008fe203a4904]: KEEP-NA-STALE (already-duplicated), re-confirmed -- doc unchanged since the 2026-08-09 verdict. Sole open item (line ~135, archive-this-doc trigger) is the identical closing action already tracked as todo 2 of the active solana_dex_pool_swaps_indexer_2026_08_08_finalize.md; citation already correct and current. No action needed.

@@ -26,7 +26,7 @@ summary: >-
   still billing — left for the operator/existing zombie-watchdog to decide, mirroring the 2026-08-15
   `dp_vm_001_mdps_defi_2022...` precedent's choice not to take unilateral destructive infra action on a one-shot
   escalation).
-status: open
+status: ARCHIVED 2026-08-16 — na-eligibility-audit, both todos done/moot (kill decision moot — VM already OOM-dead; py-spy-dump todo cancelled-superseded by the companion doc's real columns= fix)
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -156,15 +156,15 @@ triage.
       `mem_pct` reached 99.2% per its own deployment registry telemetry, read before archival), not merely wedged;
       correcting this doc's "NOT OOM'd" characterization above, which was based on the GCE instance `status` field
       (RUNNING) rather than in-guest memory telemetry. No manual kill needed — billing already stopped on its own.
-- [ ] [BACKEND] P3. **STALE PREMISE (plan_reconciler, cefi tranche, agt-2e82f7, 2026-08-16)**: this todo's "capture a
-      py-spy dump to identify the blocking call, then bound it with a timeout" framing assumed a HANG. The companion
-      doc (`dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md`) and this doc's own later
-      Progress Log entry both now confirm the actual mechanism was a genuine guest-level OOM (`mem_pct` 75.3%→99.2%
-      via deployment-registry telemetry), not a hang — a timeout would change how the process dies, not prevent the
-      OOM. The real fix is the companion doc's own `[SCRIPT] P2` todo (thread `columns=` through
-      `reconcile_phantom_manifest_rows_all.py:1719`'s call to avoid the full-schema unsliced read) — recommend closing
-      this todo as superseded-by-that-fix if it recurs, rather than chasing a py-spy dump for a hang that isn't the
-      cause.
+- **[BACKEND] P3. CANCELLED — SUPERSEDED 2026-08-16 (na-eligibility-audit, confirming plan_reconciler agt-2e82f7's
+  2026-08-16 STALE PREMISE finding).** This todo's "capture a py-spy dump to identify the blocking call, then bound
+  it with a timeout" framing assumed a HANG. The companion doc
+  (`dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md`) and this doc's own Progress
+  Log confirm the actual mechanism was a genuine guest-level OOM (`mem_pct` 75.3%→99.2% via deployment-registry
+  telemetry), not a hang — a py-spy dump would not have identified anything actionable. The real, live fix is the
+  companion doc's own `[SCRIPT] P2` todo (now extracted to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 3:
+  thread `columns=` through `reconcile_phantom_manifest_rows_all.py:1719`'s call to avoid the full-schema unsliced
+  read). Nothing left to complete under this todo's own framing.
 
 ## Progress Log
 

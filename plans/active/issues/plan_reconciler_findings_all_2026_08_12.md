@@ -89,7 +89,7 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       66→64 < baseline). Note: the actual code (uncommitted 2026-07-28 WIP) was subsequently confirmed unrecoverable —
       flipped on the stated data-correctness bar per the todo's own text, not on a code commit. Todo 1 in the same doc
       remains genuinely `[OPERATOR]`-blocked (real design decision needed), correctly still open.
-- [x] ✅ [REVIEW] P2. `plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` todo —
+- [x] ✅ [REVIEW] P2. `plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` todo —
       **DONE (re-verified 2026-08-16)**: doc's own 2026-08-12 Progress Log entry already reconciled the contradiction —
       live `gcloud scheduler jobs describe`/`gcloud run jobs executions list` confirm the Cloud Scheduler/Cloud Run Job
       path PAUSED since 2026-06-24 (last execution 2026-06-25), the undocumented host cron is the actual live mechanism,
@@ -374,7 +374,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       "DEFAULT-RULED" label presents an undecided design call as settled. **DONE (verified 2026-08-16)**: superseded by
       an explicit "CONFIRMED 2026-08-12 (/plan-reconcile, operator interactive)" ruling on the same todo, no longer just
       a standing-policy default.
-- [x] ✅ [REVIEW] P3. (P3) plans/active/issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md:134 — checkbox [x]
+- [x] ✅ [REVIEW] P3. (P3) plans/archive/2026_08/issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md:134 (archived 2026-08-16) — checkbox [x]
       vs body text "Still open"/"Left `- [ ]`" (later Progress Log resolved for real). **DONE (verified 2026-08-16)**:
       the stale "Still open" text is struck through with a "CORRECTED 2026-08-12 (/plan-reconcile)" annotation — already
       fixed.

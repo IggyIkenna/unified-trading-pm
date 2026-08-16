@@ -154,8 +154,9 @@ Full coverage + readiness audit, dispatched as 5 parallel per-asset-group sub-ag
 prediction; general-purpose, sonnet, `SUB_AGENT_MANDATORY_RULES.md` pasted at spawn) against the real deployment-api/
 UAC honest-coverage machinery and manifest — never re-implemented. Every figure below carries its denominator,
 measurement date, and method. Where something could not be measured, that is stated explicitly rather than
-estimated. Full per-venue/per-shard/per-cell detail (too large for this plan's line cap) lives in the dispatching
-session's sub-agent transcripts; this section is the AG-level summary the artifact should build from.
+estimated. Full per-venue/per-shard/per-cell detail (too large for this plan's line cap) lives in
+[`/plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md`](/plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md);
+this section is the AG-level summary the artifact should build from.
 
 ### 1. Venue-universe denominator — three different units, reconciled
 
@@ -326,8 +327,9 @@ itself is unbuilt work, not yet-measured existing capability. Conflating the two
 | prediction | 4 registered `SchemaContract`s (trades, book_snapshot_5, market_metadata, fills) + 1 dataclass (`market_lifecycle`, no formal contract) | `market_lifecycle`/`MARKET_LIFECYCLE` (both casings) show **zero captured rows** despite real writer code designed to populate them; `market_metadata`/`fills` have schemas but don't appear in the live capture vocabulary |
 
 Full field-level schemas (every column, type, nullability) for all 5 AGs were extracted in full by each sub-agent and
-are too large for this plan's line cap — they live in this session's dispatched-agent transcripts and should be
-pulled directly into the artifact when it's built, not re-derived.
+are too large for this plan's line cap — they live in
+[`/plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md`](/plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md)
+and should be pulled directly into the artifact when it's built, not re-derived.
 
 ### 8. Credentials / testnet position — per AG, narrative
 

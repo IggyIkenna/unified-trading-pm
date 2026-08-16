@@ -238,14 +238,14 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       MTDS routing RED-fails a named assertion. Repos: unified-api-contracts (contract test) + base-\*.sh wiring. —
       unified-api-contracts@844c5ee6b, tests/unit/test_venue_source_adapter_parity.py (408 lines, parametrised over
       registries).
-- [ ] [UAC] P1. **Databento L-floor boundary PRECISION.** PROBE databento live (`metadata.get_dataset_range` per
+- [x] [UAC] P1. STALE CHECKBOX -- na-eligibility-audit 2026-08-16: already DONE 2026-08-09 via unified-api-contracts@92a418e5 (dispatched through cefi_satellite_ao_dispatch_batch11_2026_08_09.md todo 4); measured boundary values confirmed in cefi_consolidated_closeout_2026_07_18.md lines 200-206 (L1 367d/368d metered, L2/L3 33d/34d metered, L0 5908d hard cap). Original text: **Databento L-floor boundary PRECISION.** PROBE databento live (`metadata.get_dataset_range` per
       schema + binary-search progressively-older requests until entitlement denies) to MEASURE the EXACT
       earliest-accessible date per level for OUR subscription: L0 (~16y), L1 trades/tbbo/mbp-1/bbo ("1yr" → is it
       365/366/rolling-cal-year?), L2 mbp-10 / L3 mbo ("1mo" → 28/30/31/cal-month/rolling?). Update
       `LEVEL_MAX_LOOKBACK_DAYS` / `earliest_allowed_start` / `assert_lookback_allowed`
       (databento_subscription_allowlist) + the manifest enumerator's floor-clip to the EXACT measured values. QG test:
       one day past the boundary rejected, one day inside allowed. Repo: unified-api-contracts.
-- [ ] [REFACTOR] P2. **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the
+- [ ] [REFACTOR] P2. **na-eligibility-audit 2026-08-16**: extracted verbatim TODAY to `cefi_barchart_removal_ao_dispatch_2026_08_16.md` (+ finalize), assigned_vm: planning, status: active. Stays open here (source doc), not yet done. Original text: **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the
       VIX cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via databento
       XCBF.PITCH). Per delete-deprecated-code: (1) `rg -i barchart` workspace-wide (~30 files: SOURCE*PRIORITY tradfi
       ohlcv_15m list, `SOURCE_MODE_CAPABILITY["barchart"]`, `EMISSION_LATENCY_MS_BY_SOURCE["barchart"]`,
@@ -529,6 +529,7 @@ note). No decision or code changed by this move — pure content relocation.
   strategy-design/research work or explicitly flagged as needing their own scoped build plan before AO dispatch. 7 items
   flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE as future-extraction candidates (mirrors this doc's own 2026-08-09 extraction
   pattern for 4 other items), not enough to flip the whole doc.
+- **na-eligibility-audit 2026-08-16** [body-hash:89b292f04aa54ea9]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -614,11 +615,11 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
       migrated to" section's note below (pre-dating the 2026-08-07 ruling) is correspondingly superseded — the
       basis-execution cash-twin need it describes as "still open" is now closed at daily resolution, not still needing a
       fresh operator ask.
-- [ ] [SCRIPT] P1. market-tick-data-service — capture Binance/OKX/Bybit `indexPrice` + `markPrice` + `fundingRate` for
+- [x] [SCRIPT] P1. STALE CHECKBOX -- na-eligibility-audit 2026-08-16: closed as UNNECESSARY 2026-08-15 -- the existing derivative_ticker data_type already fully populates these fields via already-wired live WS connectors, generically across each venue's whole instrument universe. See cefi_consolidated_closeout_2026_07_18.md lines 151-160 and /plans/archive/issues/cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md (unified-trading-pm@229e86f53b). Original text: market-tick-data-service — capture Binance/OKX/Bybit `indexPrice` + `markPrice` + `fundingRate` for
       the equity-perps as a first-class data_type (the venue's DISCLOSED mark — needed for basis = mark−index and for
       OFF-HOURS synthetic-mark detection where the cash tape is closed). These ride the existing CeFi
       premiumIndex/funding endpoints. Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. e2e-testing — recurring DAILY funding/basis scan across all crypto-venue equity-perps (annualized
+- [x] [SCRIPT] P2. STALE CHECKBOX -- na-eligibility-audit 2026-08-16: already DONE, SHIPPED e2e-testing@d1fe3dc6aa (scripts/cefi/equity_perp_funding_basis_scan.py + daily cron wrapper, 15 unit tests, QG green) -- see cefi_consolidated_closeout_2026_07_18.md lines 161-166. Original text: e2e-testing — recurring DAILY funding/basis scan across all crypto-venue equity-perps (annualized
       funding + perp-vs-index basis + flag market-hours vs off-hours) → opportunity-sizing report. Wire as a scheduled
       job (mirror an existing scan). Repo: e2e-testing.
 - [x] ✅ [DESIGN] P2. strategy-service — single-stock basis execution-venue gap: CME has index futures (ES/NQ for

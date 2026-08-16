@@ -138,7 +138,7 @@ capture-scope cap.
 > CBOE daily Treasury yield-curve INDEX and the FRED macro series are both operator-ruled MVP (2026-07-21 "+409
 > expansion" and 2026-08-09 respectively); only CME Treasury **bond futures** (ZN/ZB/ZF/ZT) stay out of MVP. Current
 > SSOT: `/codex/02-data/mvp-scope-canonical.md` and
-> `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
+> `/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
 
 **Backtest universe** (operator clarification 2026-05-13: **SPY NOT included** — ES futures has more trading hours; ES
 is the canonical S&P 500 surface):

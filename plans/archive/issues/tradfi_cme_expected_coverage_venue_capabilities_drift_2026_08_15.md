@@ -46,6 +46,10 @@ parent_epic: tradfi_master
 priority: P2
 ---
 
+> **✅ ARCHIVED 2026-08-16** (na-eligibility-audit, tradfi tranche) — sole todo ruled + extracted to
+> `/plans/active/tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md` (+ finalize); checkbox flip was missed
+> when that extraction landed, fixed in the same pass as this archival. 0 open todos, `locked_by` empty.
+
 # CME trades/tbbo: expected_coverage.py vs VENUE_DATA_TYPE_CAPABILITIES drift
 
 ## What I found
@@ -106,13 +110,19 @@ re-merge was never actually re-applied). Two options, either legitimate:
 
 ## Open work (tracked todos)
 
-- [ ] [DESIGN] P3. Operator/architecture decision: is `expected_coverage.py` a "currently fetchable" list (in which case
-      narrow CME to drop trades/tbbo, matching `VENUE_DATA_TYPE_CAPABILITIES`) or an "eventual target" list (in which
-      case confirm deployment-api's completion-pct math already excludes/discounts these cells correctly, or fix it if
-      not)? (repos: unified-api-contracts, deployment-api)
+- [x] ✅ [DESIGN] P3. **RULED + EXTRACTED 2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator ruling) →
+      `/plans/active/tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md` (+ finalize).** Checkbox flip was
+      missed when the Progress Log entry below was written (na-eligibility-audit 2026-08-16, dispatch agt-45ad7b,
+      caught this citing-not-flipped gap). Operator/architecture decision: is `expected_coverage.py` a "currently
+      fetchable" list (in which case narrow CME to drop trades/tbbo, matching `VENUE_DATA_TYPE_CAPABILITIES`) or an
+      "eventual target" list? **Ruled: option 1** — narrow CME to drop trades/tbbo. (repos: unified-api-contracts,
+      deployment-api)
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **ARCHIVE — 0 open todos.** The sole
+  todo's ruling + extraction was already recorded in the entry below, but the checkbox itself was never flipped to
+  cite it — fixed above. This doc now has zero open todos; running the 6-step archival ritual in the same pass.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator ruling)**: option 1 — "currently fetchable"
   list, narrow CME to drop trades/tbbo. Extracted to
   `/plans/active/tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch,

@@ -460,3 +460,4 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   — this session's value came from the operator catching things (untested premise, schema gap, StandX settlement risk)
   that a background worker executing todos alone wouldn't have surfaced.
 - **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-16** [body-hash:ec51030e15c009f5]: KEEP-NA, valid — Full end-to-end read (462 lines) confirms the doc is 26/27 todos done with hard evidence (commit SHAs across unified-api-contracts/instruments-service/market-tick-data-service/execution-service/strategy-service/unified-trading-pm,…

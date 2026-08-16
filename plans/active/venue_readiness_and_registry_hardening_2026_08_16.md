@@ -335,15 +335,118 @@ delete prod data on its own authority.
 | 18  | **Data-type consumability** | Every data type this venue emits is consumed by at least one feature group or archetype, or is explicitly declared unused.        |
 | 19  | **Canonical orthogonality** | The data type belongs to the minimal orthogonal set — no near-duplicate exists, or the merge is recorded in the cutover register. |
 
-- [ ] [AGENT] P0. **Audit the data-type vocabulary for near-duplicates.** Output: a proposed minimal orthogonal set,
-      each near-duplicate pair named with its superset/subset relationship stated. Proposal only — the merge follows the
-      rename rule and the purge follows delete-safety.
-- [ ] [AGENT] P0. **Audit for orphaned data types** — captured but consumed by nothing. Each resolves to a missing
-      strategy, a merge candidate, or an explicit declared-unused. Never left silent.
-- [ ] [AGENT] P1. **Audit venue identities for duplicates** — the same effective venue represented twice. Same
+- [x] [AGENT] P0. ✅ **Audit the data-type vocabulary for near-duplicates.** Findings below. Proposal only — the merge
+      follows the rename rule and the purge follows delete-safety.
+- [x] [AGENT] P0. ✅ **Audit for orphaned data types** — captured but consumed by nothing. Findings below.
+- [x] [AGENT] P1. ✅ **Audit venue identities for duplicates** — the same effective venue represented twice. Same
       treatment: propose, migrate consumers in one change, register the cutover, route the purge through delete-safety.
-- [ ] [OPERATOR] P0. **Sign off each proposed merge before migration.** Merging two data types rewrites paths, manifest
-      rows and consumer bindings at once, and the purge is a prod delete. Both sides are operator-gated.
+      Findings below: zero duplicates found, no merge to sign off.
+- [ ] [OPERATOR] P0. **Sign off each proposed merge before migration** (the two near-duplicate/orphan candidates below
+      that need a decision, not the ones already ruled). Merging two data types rewrites paths, manifest rows and
+      consumer bindings at once, and the purge is a prod delete. Both sides are operator-gated.
+
+### Audit findings (2026-08-16) — data-type vocabulary, 31 venue-emitted types
+
+Method: enumerated `VENUE_DATA_TYPE_CAPABILITIES` (`unified_api_contracts/registry/market_data_categories.py` +
+`defi_venue_capabilities.py`) as the target vocabulary (31 distinct `data_type` strings — narrower than the 60-item
+`ALL_DATA_TYPES`/`DATA_TYPES_BY_ASSET_GROUP` union; the 29-item delta is a separate, not-yet-audited observation, noted
+at the end, not folded into these results). Cross-checked consumption against `required_inputs.py`'s
+`FEATURE_REQUIRED_INPUTS`, `archetype_feature_groups.py`'s `ARCHETYPE_FEATURE_GROUPS`, and repo-wide literal-string
+greps across `features-service`/`strategy-service`/`ml-service` — a 0-grep-hit result was cross-checked against the
+actual writer existing before being called orphaned, per this workspace's claim-vs-measurement rule.
+
+**Near-duplicates:**
+
+- **`book_snapshot` vs `book_snapshot_5` (cefi) — real duplicate, already a documented legacy alias, not a new bug.**
+  `book_snapshot_5` is the canonical venue-emitted name; `book_snapshot` (bare) is called out verbatim as a "legacy
+  alias" in `availability_semantics.py:133` and `_source_priority_table.py:171-177`. **The gap this audit surfaces**:
+  every CeFi feature_group in `required_inputs.py` (`microstructure`, `book_depth_bands`, `liquidity_walls`,
+  `liquidation_clusters`, `flow_interaction`, `order_flow_inference`, `composite_sr`) is keyed on the legacy bare name,
+  not the canonical one — `book_snapshot_5` has zero cefi `required_inputs.py` entries (only `prediction` uses the
+  canonical name literally). Needs an operator call: rename the `required_inputs.py` keys to the canonical name, or
+  declare the bare alias itself canonical for cefi and fix the doc comments instead.
+- **`funding_rate` vs `perp_funding` (cefi) — investigated, RULED NOT a duplicate, no action.** Different endpoints,
+  different semantics (continuous Tardis-fed field vs. realized periodic settlement), and this codebase already has a
+  169-day cross-source parity measurement on record (`market_data_categories.py` HYPERLIQUID comment, ~L101-111: only
+  60.7% of 2,640 overlapping rows matched within 2e-5, worst divergence 1.2e-3) that disproved an earlier
+  "byte-identical" assumption. Keep both.
+- **`vault_share_price` vs `lst_rates` (defi, MAKER-ETHEREUM cell only) — not a vocabulary-level duplicate, one
+  already-tracked cell-level instance.** Both names are correct for other venues. `defi_venue_capabilities.py`
+  (L284-295) already documents MAKER-ETHEREUM's capture moved to `lst_rates_handler.py` (same `convertToAssets()` call)
+  and calls `vault_share_price` there "an orphaned, non-producing duplicate" — pre-existing finding, already tracked in
+  `vault_share_price_handler_capture_gap_since_2026_06_22.md`. No new action.
+- **AMBIGUOUS — flag for operator judgment**: `("defi","swap")`, `("defi","fx_rate")`, `("defi","liquidity")`,
+  `("defi","market_state")`, `("defi","vault_state")`, `("defi","solana_defi")` are registered in
+  `AVAILABILITY_AT_SEMANTICS` with zero matching `VENUE_DATA_TYPE_CAPABILITIES` entry and zero writer/feature-group
+  reference found — they read like a superseded early generic-defi naming scheme (`swap`→`dex_pool_swaps`,
+  `market_state`→`dex_pool_state`, `vault_state`→`vault_share_price`/`vault_apy`/`vault_tvl`). Not exhaustively ruled
+  out as scaffolding for a not-yet-migrated path. Needs an operator call: dead-code delete or keep as reserved.
+
+**Orphaned data types (captured + tracked, zero feature_group/archetype consumer found anywhere in the workspace):**
+
+`governance_events`, `mev_events`, `position_data`, `token_transfers`, `bridge_events` (all defi, real MTDS writers,
+tracked by manifest/data-status/deployment-api, zero reads in `features-service`/`strategy-service`/
+`required_inputs.py`), and `rewards` (raw AAVE_V3 `RewardsController` emissions, distinct from `eigenlayer_rewards` —
+`required_inputs.py`'s `"rewards"` feature_group actually consumes `eigenlayer_rewards`, not `rewards`; the
+`features-service` `eigen_rewards_calculator.py:53` comment confirms this directly: *"replaces a stale ... 'rewards'
+guess that never matched anything on disk"*). Six confirmed orphans, each resolves to: declare explicitly unused, wire
+a real consumer, or merge/purge — operator sign-off required per the todo above before any action.
+
+**Ambiguous, needs a closer look (not yet ruled either way):**
+
+- `flash_loan_events` — declared consumed via `required_inputs.py`'s `flash_loan_availability` feature_group (real UAC
+  registration) and has a real writer, but zero `features-service` calculator literally reads it. Looks aspirational/
+  not-yet-implemented rather than genuinely orphaned — verify whether `flash_loan_availability` computes anything today
+  before classifying.
+- `staking_yields` — not in `required_inputs.py`, zero `features-service` hits, but IS read by
+  `ml-service/ml_service/training/app/core/feature_query_support.py`. Real ML-training consumer; whether that satisfies
+  "consumed by a feature group" per step 18's wording is a scope question, not a fact question.
+
+**Secondary observation, not folded into the above**: 29 of the 60 `ALL_DATA_TYPES` union have no
+`VENUE_DATA_TYPE_CAPABILITIES` entry at all (`gas_fees`, `tbbo`, `mbp_10`, `perp_trades`, `perp_daily_ctx`,
+`perp_mark_price`, `native_staking_rates`, `utilization`, `flash_loan_availability`, `vault_apy`, `vault_tvl`, 7
+`swaps_ohlcv_*` MDPS-processed types, `corporate_action_confirmed`, `earnings_result`, `macro_result`,
+`volatility_index`, `ohlcv_15m`, `arbitrage_opportunity`, `odds_horizon_bucket`, `trades_inplay`,
+`prediction_canonical_question_group`, `market_lifecycle`). Some are confirmed real via in-code comments explaining an
+alternate capture mechanism (e.g. `gas_fees` via bare `ALCHEMY`); others (`tbbo`/`mbp_10`/`ohlcv_15m`) are explicitly
+commented as currently-unreachable/deferred. Out of scope for this pass (target vocabulary was the venue-emitted 31,
+per the ruling's own "a venue produces X" framing) — a follow-up audit item, not added as a new todo here since it
+needs its own P-tag and scoping decision first.
+
+### Audit findings (2026-08-16) — venue identities, 169 canonical venues
+
+Method: mirrors the data-type audit's method above. Enumerated the full canonical venue universe (`ALL_VENUES`, 169
+entries = `sorted(union of VENUES_BY_ASSET_GROUP.values())`, which already folds in DeFi's phase="live" filter) via a
+one-off scan script, and checked for (a) exact normalized-form collisions (strip `-`/`_`, uppercase — catches
+SPELLING duplicates like the already-resolved VELODROME_V2/VELODROMEV2 case), (b) bare venue names co-existing with a
+product-suffixed sibling (catches the OKX-bare-removal class of issue), and (c) overlap between the two
+deprecated/ghost-venue registries (`DEPRECATED_DEFI_GHOST_VENUE_NAMES`, `EMPTY_OR_DEPRECATED_DEFI_VENUES` in
+`unified_api_contracts/registry/capability_declarations/_defi_coverage.py`) and the live canonical set (catches a
+name flagged dead that's still counted).
+
+**Result: zero venue-identity duplicates found.** The registry has already had ~15 prior operator rulings
+systematically eliminate every duplicate-spelling pattern this scan can detect (OKX bare removed 2026-08-04,
+COINBASE bare→COINBASE-SPOT 2026-07-10, BINANCE-DELIVERY deregistered 2026-08-10, bare BETFAIR removed 2026-08-08,
+YEARN→YEARN_V3 2026-07-08, VELODROME_V2/VELODROMEV2 + TRADER_JOE_V2/TRADER_JOEV2 resolved via
+`LEGACY_DEFI_VENUE_ALIASES` — legacy glued forms are non-canonical ALIASES, not a second canonical entry — LADBROKES/
+BET888SPORT sports folds, legacy Tardis ids OKEX/CRYPTOFACILITIES folded via `CEFI_VENUE_FOLD`). This audit confirms
+none of that work has regressed and finds no NEW instance of the pattern.
+
+- **Exact normalized-form collisions**: none across all 169 venues.
+- **Bare + suffixed co-existing**: `BYBIT`/`BYBIT-SPOT`, `KALSHI`/`KALSHI-PERP`, `POLYMARKET`/`POLYMARKET-PERP` — each
+  pair investigated and ruled NOT a duplicate. The bare form and the suffixed form are two different real products
+  (bare = perpetual-futures / prediction YES-NO market, suffixed = spot / crypto-perp-CLOB respectively) — same shape
+  as the already-canonical OKX-SPOT/OKX-SWAP/OKX-FUTURES split, just using the bare string for one product instead of
+  suffixing every product. A naming-CONVENTION inconsistency (worth a style-only cleanup someday), not an identity
+  duplicate — no merge candidate, no action.
+- **Deprecated/ghost-name overlap with the live set**: `DEPRECATED_DEFI_GHOST_VENUE_NAMES` has zero overlap.
+  `EMPTY_OR_DEPRECATED_DEFI_VENUES` overlaps on `TRADER_JOE_V2-AVALANCHE` + `UNISWAP_V3-POLYGON` — investigated and
+  ruled NOT a bug: that registry is a coverage-EXPECTATION dampener (`venue_has_no_expected_defi_coverage()`,
+  docstring: "subgraph returns 0 instruments"), a different axis from canonical membership — a venue can correctly be
+  both real/canonical AND expected to have zero rows. No contradiction, no action.
+
+No merge/purge proposal follows from this audit — there is nothing for the operator to sign off here. Scan script
+destroyed after use (regenerable in minutes from `ALL_VENUES`/`VENUES_BY_ASSET_GROUP`; no open todo depends on it).
 
 ## Workstreams — each forks to its own child plan
 
@@ -408,9 +511,29 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
       **Open sub-questions this ruling does NOT settle** (fold into the W3 child, do not re-ask the operator): the
       schema mechanism, and what precisely the gate checks to prove no in-service hardcoding crept back. Existing
       pattern to extend: [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
-- [ ] [AGENT] P0. **Define the universe precisely for W4/W5.** "Every venue in our universe" needs a machine-readable
-      list before it can be swept — 158 capture venues across 84 families is the current measured figure, but the
-      readiness contract applies per (venue × data type), so state the real denominator and where it is derived from.
+- [x] [AGENT] P0. ✅ **Define the universe precisely for W4/W5 — RESOLVED 2026-08-16: the real denominator is
+      (venue, data_type) pairs, not venue count, and the "158 venues / 84 families" figure is a stale one-off manual
+      tally (`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md:62-65`, 2026-08-14) with no producing
+      script — already independently found to not hold (a 151-183 range measured 2026-08-16 in
+      `nick_ai_platform_disclosure_artifact_2026_08_16.md` § PRE-AUDIT MEASUREMENTS §1) — superseded, do not cite it
+      again.** SSOT for the pair count is `VENUE_DATA_TYPE_CAPABILITIES` in
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2564` — each venue's own
+      `.data_types` field, flattened to pairs, IS the readiness-contract denominator per the design ruling above (P0
+      2 lines up). Measured 2026-08-16 via the new script below:
+      **192 declared venues, 353 (venue, data_type) pairs.** DeFi coverage: 127 of `ALL_DEFI_VENUES`'s 135 canonical
+      venues already have a capability declaration (union with `VENUE_DATA_TYPE_CAPABILITIES` = 200 venues); the
+      remaining 8 have none and are excluded from the denominator until declared (new todo below). Made reproducible,
+      not a one-off number, via
+      `unified-api-contracts/scripts/generate_venue_universe_denominator.py` — re-run it, the count moves every time
+      either registry changes. **W4/W5 are now unblocked.** SHIPPED —
+      `unified-api-contracts@e7ee398117`.
+- [ ] [AGENT] P1. **Declare capability for the 8 undeclared DeFi venues found by the denominator script.**
+      `ALCHEMY-{ARBITRUM,BASE,ETHEREUM,OPTIMISM,POLYGON}` (gas-fee oracle spellings) and
+      `FLUID-ARBITRUM`/`SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` are registered in `ALL_DEFI_VENUES` but have no
+      entry in `VENUE_DATA_TYPE_CAPABILITIES`, so they're invisible to the (venue, data_type) denominator and to
+      `generate_venue_consumability_report.py`'s step-17 sweep. Add capability records for each (data_types per the
+      MTDS sub-bucket that already backfills them — gas-fees for the Alchemy spellings, dex-swaps/dex-pools for
+      Fluid/Sushiswap) so the denominator and the consumability report both see them.
 - [x] ✅ [AGENT] P1. **Readiness state — RULED 2026-08-16 (operator): DERIVED from the contract steps.** Not declared,
       and not a hybrid. A declared state rots, and a stale `LIVE-READY` is precisely the claim-exceeds-measurement
       failure this workspace bans. **The binding consequence**: every contract step must become genuinely
@@ -660,14 +783,22 @@ actionable P0.
 
 ## Deferred work after 2026-08-16
 
+**2026-08-16 correction**: this table previously listed W3/W4/W5 and both `[OPERATOR]` design rulings as unresolved.
+That went stale — the Workstreams section and Design-rulings section above (L354-410) already record both rulings as
+RULED and W3 as resolved (folded into an existing plan, no new plan needed). Rewritten to match current state.
+
 | Item | State | Blocked on |
 | --- | --- | --- |
-| "Consolidate `venue_universe` into a clean UAC SSOT" (P2, L265) | Not started | Natural fit for W4 once it forks; not needed for the shipped "at least one archetype" reading of step 17 |
-| W3 "service-config abstraction" child plan | Not started | Blocked on the two `[OPERATOR]` design rulings below (error-code SSOT shape, config-abstraction target shape) |
-| W4 "venue e2e wiring" child plan | Not started | Blocked on W3's design ruling settling first (same contract, sequenced) |
-| W5 "smoke-test bar" child plan | Not started | Blocked on W3/W4 |
-| "Error-code SSOT shape" design ruling (L321) | Operator-owned | Needs an explicit decision: UAC registry keyed by (venue, code) vs. `classify_venue_error()` extension vs. per-venue declaration files |
-| "Config-abstraction target shape" design ruling (L325) | Operator-owned | Needs an explicit decision: per-service vs. per-domain `config.py`, schema mechanism, gate-check shape |
+| "Consolidate `venue_universe` into a clean UAC SSOT" (P2, L265) | Not started | Natural fit for W4 once its own blocker (below) clears; not needed for the shipped "at least one archetype" reading of step 17 |
+| W3 "service-config abstraction" child plan | ✅ Resolved, no new plan | Folded into `/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` § D delta |
+| W4 "venue e2e wiring" child plan | Forked (`status: draft`) | ✅ Unblocked 2026-08-16 — "Define the universe precisely for W4/W5" resolved, see § "Design rulings needed before the mechanical children dispatch" above |
+| W5 "smoke-test bar" child plan | Not forked yet | ✅ Unblocked 2026-08-16 — same resolution as W4 |
+| "Error-code SSOT shape" design ruling (L321) | ✅ RULED 2026-08-16 | Extend `classify_venue_error()` into a (venue, code) registry — see L397-403 |
+| "Config-abstraction target shape" design ruling (L325) | ✅ RULED 2026-08-16 | One `config.py` per service, domain-split only when cap-forced — see L404-410 |
+| "Declare capability for the 8 undeclared DeFi venues" (P1, new) | Not started | Actionable now — Alchemy gas-fee-oracle spellings + Fluid/Sushiswap-Arbitrum need `VENUE_DATA_TYPE_CAPABILITIES` entries |
 
-**Recommended next item**: the CANONICAL ORTHOGONALITY audits (P0/P0/P1, below) — the STRATEGY CONSUMABILITY section
-is now fully closed (declare→check→report→fix all shipped). W3/W4/W5 still need an operator decision first.
+**Recommended next item**: **W4 "venue e2e wiring"** (`venue_e2e_wiring_2026_08_16.md`) — its universe-definition
+blocker is resolved (192 declared venues / 353 (venue, data_type) pairs is the real denominator, per
+`unified-api-contracts/scripts/generate_venue_universe_denominator.py`), so the per-venue mechanical sweep can now
+dispatch. The CANONICAL ORTHOGONALITY audits (P0/P0/P1, below) and the 8-venue DeFi capability gap (P1, new row
+above) remain independently actionable and can run concurrently — different file sets, no conflict.

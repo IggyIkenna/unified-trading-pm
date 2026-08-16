@@ -98,6 +98,10 @@ source:
       `consolidator_throughput_backlog_monitor_2026_07_09.md`'s open-todo count has drifted 3→2 (one item closed
       2026-08-07 by a concurrent audit pass in that doc's own `[ui]` tranche). Neither change affects this checkbox's
       umbrella-pointer verdict.
+      **(2026-08-16 na-eligibility-audit citation refresh)**: `tradfi_backfill_oom_remediation_2026_06_24.md` now
+      measures **0 open todos** (still `status: open`, not yet archived by its own owner — not this doc's action to
+      take), a stronger claim than "actively dispatched." `consolidator_throughput_backlog_monitor_2026_07_09.md` still
+      has 2 open todos, unchanged — that leg keeps this checkbox open as an umbrella pointer.
 - [x] ✅ [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) —
       add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
       deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;
@@ -440,6 +444,10 @@ source:
   `consolidator_throughput_backlog_monitor_2026_07_09.md`'s open-todo count drifted 3->2 since 08-07 (one item closed by
   a concurrent `[ui]`-tranche audit pass). Neither changes the umbrella-pointer verdict -- this doc's checkbox has no
   independent worker-determinable content of its own. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA-STALE-DUPLICATED, re-confirmed,
+  citation refreshed (see checkbox note above).** Sole open todo re-read end-to-end. `tradfi_backfill_oom_remediation_2026_06_24.md`
+  now measures 0 open todos (not yet archived by its owner); `consolidator_throughput_backlog_monitor_2026_07_09.md`
+  still has 2 open todos, unchanged. Checkbox correctly stays open as an umbrella pointer. `assigned_vm` unchanged.
 
 > **Moved verbatim from the parent's Progress Log (2026-07-24 line-cap split)** — this is the download/backfill-
 > throughput slice of the parent's single continuous autonomous-session narrative (ticks 14, 16, 22, the tick-26 ETA

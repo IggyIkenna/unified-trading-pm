@@ -942,6 +942,9 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 12)**: operator explicitly declined to assume "RULING
+  3" covers this specific HYPERLIQUID un-hide ask without re-checking its actual text first — deliberately NOT
+  ruled here. Stays open pending a dedicated read of RULING 3's scope against this exact ask.
 - **context-scout 2026-08-15**: populated `context_scope` (3 entries — added
   [transfer-architecture](/codex/04-architecture/transfer-architecture.md) alongside the existing two codex SSOTs) per
   `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up. Extracted the three oldest Progress
@@ -995,3 +998,4 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
   [Progress Log history](/plans/archive/2026_08/elysium_october_delivery_and_code_disclosure_readiness_progress_log_history_2026_08_15.md)
   (line-cap remediation, `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up). No open todo
   lived in the extracted text — superseded by this plan's own "State as of 2026-08-13" section above.
+- **na-eligibility-audit 2026-08-16** [body-hash:acd8e4c62bb7d4a7]: KEEP-NA, stale items (soft) — 998-line Elysium delivery/disclosure hub, read end to end. 88 open todos: 13 explicit [OPERATOR] decisions, 14 gated on those/named prerequisites, ~52 genuine build/investigate work, 9 flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (kept NA per the client-SLA/HTML-artefact operator-escalation HARD RULE governing this doc, per skill guidance that bounded is not the same test as low-risk). One soft staleness note for a future edit pass (not applied this run, low-confidence text match): section H.2s CustodyRoute-as-rail-axis todo states it supersedes an earlier section-C CustodyRoute framing — worth collapsing when next hand-edited. Not a duplicate-dispatch risk either way; doc stays NA.

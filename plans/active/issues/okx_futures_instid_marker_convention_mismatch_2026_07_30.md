@@ -163,7 +163,7 @@ reasoning above.
       instId) for subscription. The just-shipped parity test (`market-tick-data-service@d964dce4`) also uses the wrong
       `AAPL-USD_UM-310613` wire form for its AAPL parity case. All 104 xperp subscriptions silently fail at 0 rows. New
       `[DATA] P1` todo added below.
-- [ ] [OPERATOR] P1. **CORRECTED 2026-08-12 (/plan-reconcile)** — retagged `[DATA]` → `[OPERATOR]`: this todo's own text
+- [ ] [OPERATOR] P1. **na-eligibility-audit 2026-08-16**: this doc's own 2026-08-16 Progress Log entry records the operator ruling + extraction of this exact scope to `cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md` (+ finalize), assigned_vm: planning, status: active. Stays open here (source doc citation only), not yet done. Original text: **CORRECTED 2026-08-12 (/plan-reconcile)** — retagged `[DATA]` → `[OPERATOR]`: this todo's own text
       (below) says "Needs `[OPERATOR]` decision ... tagging `[OPERATOR]` until decided," and the doc's own 2026-08-09
       na-eligibility-audit entry independently confirms "genuine operator-gated design work" — the bracket tag was never
       actually updated to match. **Add `_XPERP` infix support to OKX-FUTURES wire-format handling**
@@ -232,3 +232,7 @@ reasoning above.
   wire-format todo is RULED — option (b), encode `_XPERP` in the instFamily field. Extracted to
   `/plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch, since this
   doc stays `assigned_vm: NA`. Do not re-litigate the (a)/(b)/(c) choice.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** [body-hash:204e1fba79b30ecd]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.

@@ -578,13 +578,24 @@ before touching the source doc directly._
       shipped an incomplete slice of their own in-progress feature. The fix sits harmlessly in their dirty working
       tree now, ready to ride along whenever they commit — flag this to that session/operator if `layout.tsx`'s tsc
       error resurfaces after their WIP lands, since my fix may not have survived their next save.
-- [ ] [INFRA] P2. **NVIDIA capacity-tracking layer, THEN a panel.** Unlike Gemini, no `gemini_headroom.py`-equivalent
-      exists for NVIDIA NIM yet — build the tracking layer first. Baseline researched 2026-08-16 (not yet empirically
-      confirmed against this fleet's own key): free tier is ~40 RPM, **global per-key, shared across every model**
-      (not per-model) — [decodethefuture.org](https://decodethefuture.org/en/nvidia-nim-api-pricing-limits-guide/),
-      [NVIDIA forums](https://forums.developer.nvidia.com/t/request-to-increase-rpm-limit-for-free-nvidia-nim-account/377451) —
-      upgradeable to 200 RPM on request. Done when: a headroom-tracking layer mirroring `gemini_headroom.py`'s shape
-      exists for NVIDIA, plus a panel consuming it, pw:L2-verified.
+- [x] [INFRA] P2. ✅ **NVIDIA capacity-tracking layer DONE, shipped `agent-orchestrator@0c0e527aec`.** New
+      `nvidia_headroom.py` mirrors `gemini_headroom.py`'s shape with one real structural difference: NVIDIA's two
+      registered accounts (both paused) share ONE API key with a GLOBAL per-key RPM ceiling (~40 RPM, community-
+      reported — [decodethefuture.org](https://decodethefuture.org/en/nvidia-nim-api-pricing-limits-guide/),
+      [NVIDIA forums](https://forums.developer.nvidia.com/t/request-to-increase-rpm-limit-for-free-nvidia-nim-account/377451),
+      upgradeable to 200 RPM) — so counting aggregates across every account rather than per-account like Gemini's
+      per-(project, model) ceilings. Reported honestly via `ceiling_confirmed=false`, not presented as settled fact
+      until the concurrency-baseline todo below actually measures it. **Deliberately NOT wired into autospawn.py's
+      real dispatch path** — both accounts stay paused (task-routing logic doesn't exist yet), so
+      `NVIDIA_REQUEST_SELECTED_EVENT` is dormant scaffolding, same "build now, dormant" shape as the GLM/Codex todo
+      below. New `GET /api/accounts/nvidia/capacity` route (returns one shared reading, or `None` if no NVIDIA
+      accounts registered — never a fabricated row), `NvidiaCapacityPanel.tsx` (single shared gauge listing both
+      account labels, not one row per account). Renamed the gauge/account-row CSS classes from `gemini-*` to
+      provider-agnostic `capacity-*` since both panels now share them. e2e fixture adds 2 real demo accounts
+      (`nvidia-diffusiongemma-demo`, `nvidia-gemma-4-31b-demo`, now 9 accounts — `critical-health.spec.ts`'s "ALL N"
+      hardcode updated again) with 3+2 seeded selection events proving the cross-account aggregation (5 total, not
+      two separate 3/2 rows). Full `quality-gates.sh` green, 2/2 new `nvidia-capacity.spec.ts` tests plus the wider
+      regression sweep re-run green.
 - [ ] [DATA] P2. **NVIDIA concurrency-capacity baseline — measure how many Gemma models can run concurrently before
       the shared 40 RPM ceiling breaks.** Operator observation 2026-08-16: since the ceiling is global-per-key (see
       todo above), running the 2 paused NVIDIA accounts (`nvidia-diffusiongemma`, `nvidia-gemma-4-31b-it`)
@@ -593,22 +604,26 @@ before touching the source doc directly._
       accounts, which stays off per standing instruction (task-routing logic doesn't exist yet) — do NOT unpause to
       run this. Done when: the operator green-lights a bounded live test (both accounts, ramping concurrent request
       count until 429s appear) and the real breaking point is recorded here.
-- [ ] [INFRA] P3. **GLM/Codex `boost_multiplier` plumbing — build now, dormant, per operator ruling 2026-08-16
-      ("build plumbing now, dormant" over "park until routing ships").** Real calibration needs live dispatch volume
-      (both plans' own P1 todos already say so explicitly — `deepseek_claude_blended_provider_routing_2026_07_28`'s
-      GLM quota-tracking todo, `codex_luna_flex_bridge_2026_08_14`'s Codex quota-tracking todo), and both accounts
-      stay paused until task-routing ships — so this todo is deliberately the SCAFFOLDING only: wire
-      `five_hour_pct`/`weekly_pct` capture (IF the vendor's API exposes an equivalent signal — GLM's z.ai endpoint and
-      Codex's bridge have NOT yet been checked for this; verify before assuming the Claude-header pattern transfers)
-      plus the `boost_multiplier` calc plus a dormant panel ("no data yet" until live), using the CURRENTLY-active
-      price constants (not the future-upgrade tiers both source plans already correctly document separately):
-      **GLM Lite $18/mo** (per `deepseek_claude_blended_provider_routing_2026_07_28`'s 2026-08-15 staged-tier ruling)
-      and **Codex Plus $20/mo** (operator, 2026-08-16: "codex we are on plus not pro its $20 per month. once we have
-      run some stuff we will increase to $100" — `codex_luna_flex_bridge_2026_08_14` already correctly documents Plus
-      as current and Pro/$100/$200 as the future upgrade target, so `_TIER_MONTHLY_PRICE_USD` must key off the tier
-      actually active today, not the plan's Pro-tier research figures). Zero real calibration data renders until the
-      accounts are enabled. Done when: the capture+calc+panel exist, QG-green/pw:L2-verified showing the "no data
-      yet" dormant state.
+- [x] [INFRA] P3. ✅ **GLM/Codex `boost_multiplier` plumbing DONE, shipped `agent-orchestrator@3ca72fd9b2`.** New
+      `compute_flat_rate_boost_reconciliation()` generalizes `compute_claude_wallet_reconciliation`'s EXACT calibration
+      math (real subscription cost vs metered-equivalent value of captured usage), keyed by provider
+      (`_FLAT_RATE_PROVIDER_MONTHLY_PRICE_USD = {"glm": 18.0, "codex": 20.0}`, the CURRENTLY-active tiers, not the
+      future-upgrade prices both source plans already correctly document separately) instead of Claude's tier ladder,
+      since GLM/Codex are single flat plans today. **Genuinely dormant, not a partial build**: this todo's own
+      scoping flagged that neither Z.ai's (GLM) nor OpenAI's (Codex) API has been confirmed to expose a
+      `weekly_pct`-equivalent signal the way Anthropic's `anthropic-ratelimit-unified-*` headers do — building that
+      poller would have been guessing, not plumbing, so it was deliberately NOT built. Every account currently
+      reports `boost_multiplier=None`, honestly, via the same `AccountUsageRow.weekly_pct` field the schema already
+      carries (never populated for these two providers yet) — ready to compute for real the moment a real poller
+      exists, with zero further plumbing changes needed. New `GET /api/accounts/flat-rate-boost` route,
+      `FlatRateBoostPanel.tsx` (shows the real subscription price + an explicit "no data yet — awaiting a weekly_pct
+      poller for this provider" message per account, never a fabricated number). e2e fixture adds 2 real demo
+      accounts (`glm-lite-demo`, `codex-plus-demo`, now 11 accounts — `critical-health.spec.ts`'s "ALL N" hardcode
+      updated a third time this session). Full `quality-gates.sh` green, 2/2 new `flat-rate-boost.spec.ts` tests
+      (asserting the dormant state renders correctly, not a crash) plus the wider regression sweep re-run green.
+      **Real follow-up work this deliberately does NOT do** (out of scope for "build the plumbing"): confirm whether
+      GLM's z.ai endpoint or the Codex bridge exposes any usage-fraction signal at all — a genuinely separate,
+      unscoped research task, not blocked on anything built here.
 
 ## Track 6 — Archival + reconciliation bookkeeping
 

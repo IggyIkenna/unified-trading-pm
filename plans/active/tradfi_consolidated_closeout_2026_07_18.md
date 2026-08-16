@@ -234,7 +234,7 @@ surface — Phase A1 (writer) → B (migrate `prod/catalog.parquet`) → C (widg
 
 ## MVP universe (operator-defined 2026-07-18 — the Phase-D readiness target)
 
-> **🟡 2026-08-09 scope:** `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
+> **🟡 2026-08-09 scope:** `/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
 
 - **S&P index futures** (ES) + **S&P index options**.
 - **Delta-one single-stock equities** (S&P/NASDAQ single names — already canonical on filenames; verify the id columns).
@@ -887,3 +887,14 @@ operator activation.
   `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` the 08-09 marker flagged-but-declined-to-correct (over-cap
   budget concern) -- doc is 881 lines, well under the 1000-line hard cap, so a 1-line correction is safe; corrected
   above to the real count (3). `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** 0 open todos
+  confirmed (live grep). NOT an ARCHIVE candidate: `archive_exempt: true`, tranche aggregated-reference umbrella /
+  `check_ag_closeout_linkage.py` linkage anchor with still-open dependent children gating its archival.
+  `assigned_vm` unchanged.
+- **`check_ag_closeout_linkage.py` linkage fix (2026-08-16)**: 3 single-AG `[tradfi]` docs had accumulated since the
+  last linkage sweep with no mention here, tripping the ratchet (3 orphans vs baseline 0) — noted separately, not
+  content this closeout plan otherwise tracks:
+  `cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md` (CBOE venue-level discovery floor
+  blocking real pre-2020 history on the Yahoo Treasury-INDEX series) and the
+  `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` / `tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md`
+  AO-dispatch pair. Content itself unreviewed by this entry — this fixes the linkage gap only.

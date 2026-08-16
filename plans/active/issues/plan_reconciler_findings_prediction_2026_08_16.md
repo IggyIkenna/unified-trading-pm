@@ -389,3 +389,17 @@ in this same run.
   nothing of mine at risk); scratchpad now 9 files (2 more than the prior checkpoint's count, from the STEP-5
   exit-gate diagnosis), all still regenerable sweep/digest/inventory dumps, none referenced by a committed doc,
   none promoted. Continuing the non-busy STEP-8 wait-loop; `/done` still correctly withheld.
+- **2026-08-16 (third checkpoint)** — a git-status-red nudge flagged `unified-trading-pm` behind 1 commit (distinct
+  from the separately-diagnosed `unified-trading-ci` AHEAD=3 noise on a different repo, already reported via
+  `/progress` as monitor-side/out-of-jurisdiction); fast-forward pulled `0a69048f39..34bae19d17` (6 commits, mixed
+  na-eligibility-audit/CI/docs work from other concurrent dispatches). One incoming commit (`34bae19d17`,
+  "na-eligibility-audit cefi tranche 2026-08-16") appended a verdict-marker line to
+  `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` — the exact doc `BLK-e7b0e8da` concerns: *"na-
+  eligibility-audit 2026-08-16 [body-hash:296a282c48b53e79]: KEEP-NA, valid — Doc records a genuine, well-evidenced
+  2026-07-26 operator DEFERRED (not declined) ruling on UAC per-venue seed-fallback removal, with a 4-item revisit
+  trigger."* **This is NOT an answer to `BLK-e7b0e8da`** — the na-eligibility-audit skill's mandate is
+  NA-classification validity (is this doc correctly tagged NA, is its content still true), not an authorization-chain
+  audit; it took the disputed "operator ruling" entry at face value without addressing whether the automation that
+  originally wrote/attributed that entry to the operator was authorized to do so, which is precisely
+  `BLK-e7b0e8da`'s open question. Recording this so a future session doesn't mistake a second automated pass's
+  face-value acceptance for actual resolution. `BLK-e7b0e8da` remains open; STEP-8 wait-loop continues.

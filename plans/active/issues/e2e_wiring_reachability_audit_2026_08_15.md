@@ -794,6 +794,9 @@ rendered as a broken grid, because that component expects `div > b + span`.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 12)**: the LST token address SSOT question was stale by
+  the time it was asked — already shipped (`unified-api-contracts@53a5adc7` + `@bed96aa0`, 6 reachable cited
+  addresses, `strategy-service@5b2a50ed` wired to it, reachability proven by a routing test). No further action.
 - **context-scout 2026-08-15**: populated context_scope (5 entries).
 - **session 5, 2026-08-15**: re-derived the execute-side tier table on caller-graph reachability (32 connector modules,
   6 genuinely reachable-and-live — see the new table above). Verified, not re-litigated, a concurrent same-slot
