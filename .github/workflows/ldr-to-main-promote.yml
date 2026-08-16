@@ -385,16 +385,20 @@ jobs:
             echo "  frozen-head: $PROMOTE_HEAD → ${LDR_SHA:0:12} (tree ${LDR_TREE:0:12}) — PR opens from this immutable ref"
             # Superseded-ref cleanup: when LDR advances, the previous tick's ref is stale. Close its
             # open PR and delete the ref so orphan promote/* branches don't accumulate.
-            # Asymmetric-alerting fix (2026-08-12, ci_reconcile hardening): a stale promote PR whose
-            # own quality-gates-v2 run FAILED already posted a CRITICAL Slack alert (python-quality-
-            # gates-v2's own notifier). Closing it here as superseded is the correct, automatic
-            # resolution — the fresh $PROMOTE_HEAD ref carries the up-to-date content — but until now
-            # that resolution was recorded ONLY as a GitHub PR comment, never Slack. A reader watching
-            # #ci-failures saw the CRITICAL and nothing else, with no way to tell "auto-resolved" from
-            # "still broken" without going to GitHub. SUPERSEDED_RED_PRS accumulates any closed PR
-            # that was actually red so the notify-superseded-red job below can post the missing INFO
-            # bookend — skipped entirely for the common case of closing a PR that was never red (that
-            # is routine promote-cadence churn, not something #ci-failures ever alerted on).
+            # Asymmetric-alerting fix (2026-08-12, ci_reconcile hardening; tightened 2026-08-16): a
+            # stale promote PR whose own quality-gates-v2 run FAILED *and stayed failed long enough
+            # to clear notify-qg-fail's 30min promote debounce* already posted a CRITICAL Slack alert
+            # (python-quality-gates-v2's own notifier). Closing it here as superseded is the correct,
+            # automatic resolution — the fresh $PROMOTE_HEAD ref carries the up-to-date content — but
+            # that resolution needs recording in Slack too, or a reader watching #ci-failures sees the
+            # CRITICAL and nothing else, with no way to tell "auto-resolved" from "still broken"
+            # without going to GitHub. SUPERSEDED_RED_PRS accumulates only closes that actually
+            # cleared the debounce threshold so the notify-superseded-red job below posts the missing
+            # INFO bookend ONLY when a CRITICAL genuinely preceded it — everything else (a PR that
+            # failed but was superseded before the debounce cleared, i.e. ordinary promote-cadence
+            # churn that was never escalated to Slack in the first place) is suppressed silently, per
+            # operator direction 2026-08-16: the prior version flagged any raw failing check as
+            # "was_red," which over-fired this bookend for reds that never actually reached Slack.
             SUPERSEDED_RED_PRS=""
             for _STALE_HEAD in $(gh pr list --repo "$OWNER/$REPO" --base main --state open \
                 --json headRefName \
@@ -402,9 +406,25 @@ jobs:
               _STALE_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_STALE_HEAD" \
                 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
               if [ -n "$_STALE_NUM" ] && [ "$_STALE_NUM" != "null" ]; then
-                _STALE_WAS_RED=$(gh pr view "$_STALE_NUM" --repo "$OWNER/$REPO" --json statusCheckRollup \
-                    --jq '[.statusCheckRollup[]? | select(.conclusion=="FAILURE" or .conclusion=="TIMED_OUT")] | length > 0' \
-                    2>/dev/null || echo "false")
+                # Elapsed-time gate (2026-08-16, operator finding): a raw failing-check-conclusion
+                # check over-counts "was red" relative to what actually reached Slack. notify-qg-fail
+                # only fires a CRITICAL for a promote/* PR once debounce-promote-qg-fail's
+                # duration_min hits 30 — and at PM's own ~30min promote cadence, a freshly-cut
+                # per-SHA promote PR is routinely superseded AT OR BEFORE that same 30min mark, so
+                # most cadence-race reds never actually clear the debounce and no CRITICAL was ever
+                # posted for them. Gate on the failing check's own elapsed age to approximate the
+                # same threshold, so the RESOLVED bookend below only fires for a close that really
+                # was preceded by a CRITICAL — everything else is suppressed as ordinary churn.
+                _STALE_FAIL_STARTED=$(gh pr view "$_STALE_NUM" --repo "$OWNER/$REPO" --json statusCheckRollup \
+                    --jq '[.statusCheckRollup[]? | select(.conclusion=="FAILURE" or .conclusion=="TIMED_OUT") | .startedAt] | .[0] // empty' \
+                    2>/dev/null || echo "")
+                _STALE_WAS_RED="false"
+                if [ -n "$_STALE_FAIL_STARTED" ] && [ "$_STALE_FAIL_STARTED" != "null" ]; then
+                  _STALE_FAIL_EPOCH=$(date -u -d "$_STALE_FAIL_STARTED" +%s 2>/dev/null || echo 0)
+                  _NOW_EPOCH=$(date -u +%s)
+                  _STALE_FAIL_AGE_MIN=$(( (_NOW_EPOCH - _STALE_FAIL_EPOCH) / 60 ))
+                  [ "$_STALE_FAIL_EPOCH" -gt 0 ] && [ "$_STALE_FAIL_AGE_MIN" -ge 30 ] && _STALE_WAS_RED="true"
+                fi
                 gh pr close "$_STALE_NUM" --repo "$OWNER/$REPO" \
                   --comment "Closed by the PM Option-B drain bot: superseded by a newer LDR tip (new ref: \`$PROMOTE_HEAD\`)." 2>/dev/null || true
                 echo "  closed superseded promote PR #$_STALE_NUM (head=$_STALE_HEAD, was_red=$_STALE_WAS_RED)"
