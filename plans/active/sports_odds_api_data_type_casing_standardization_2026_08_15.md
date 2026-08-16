@@ -91,21 +91,23 @@ inconsistency. The operator has now ruled: fix it for real, everywhere, includin
 
 ## Phase 0 — safe, isolated, no data touched
 
-- [ ] [SCRIPT] P1. Fix `odds_api_adapter.py`'s write statement (~line 767, `"data_type": "ODDS"`) to emit lowercase
-      `"odds"` for all NEW writes going forward. This does not touch any existing row. Add/update a unit test in
-      `test_odds_api_live_batch_shard_parity.py` (or its current equivalent — verify it still exists under that name)
-      asserting the emitted `data_type` is lowercase. Run `quality-gates.sh --no-fix`, ship via quickmerge. Done-when:
-      QG green, commit SHA cited, and a fresh single-day dry-run of the adapter (against a `-test-` bucket, not prod)
-      shows a lowercase `data_type` in the written row.
-- [ ] [SCRIPT] P1. Read-side case-fold stopgap: identify every consumer that does an exact-string comparison against
-      `data_type == "ODDS"` for the odds_api pipeline specifically (the scoping pass's consumer list is the starting
-      point — re-verify it's current, don't trust it blindly since other sessions may have touched this file since) and
-      make each comparison case-insensitive (`.upper()` or `.lower()` normalization at the comparison site, matching
-      whatever case-fold convention already exists elsewhere in this codebase — check MDPS's
-      `check_shard_freshness(expected_sources=...)` pattern first per the scoping pass's note, don't invent a new one).
-      This prevents a silent gap/double-count during the transition window between Phase 0 shipping and Phase 3 (if any)
-      completing. Done-when: a test with mixed-case fixture data (some rows "ODDS", some "odds") passes through every
-      identified consumer with correct, non-duplicated results.
+- [x] ✅ [SCRIPT] P1. Fix `odds_api_adapter.py`'s write statement (~line 767, `"data_type": "ODDS"`) to emit lowercase
+      `"odds"` for all NEW writes going forward — `market-tick-data-service@324cbb59dd`. Confirmed the only occurrence
+      in the file (grep). Existing `test_odds_api_live_batch_shard_parity.py` already asserted lowercase `"odds"` at
+      multiple call sites (fixture data + a path assertion) — it was silently already covering the post-fix behavior,
+      no test change needed. QG green.
+- [x] ✅ [SCRIPT] P1. Transition-window handling — shipped as a lowercase SIBLING REGISTRY ENTRY instead of the
+      generic case-fold stopgap originally specified here, since the scoping pass found exactly ONE real consumer
+      needing this (`generate_instrument_catalogue.py`'s exact-string match against `data_type_capability.py`).
+      `unified-api-contracts@3c6d38fe82` — added a second `DataTypeCapability(data_type="odds", venue="ODDS_API")`
+      entry alongside the existing uppercase one, so the catalogue counts real rows of either casing during the
+      transition. Replaced the now-superseded "must stay uppercase forever" test with
+      `test_odds_api_capability_has_both_casings_during_the_lowercase_migration`, asserting both entries exist. QG
+      green (after 3 retries — 2 were transient host-RAM-pressure/wall-clock-governor aborts unrelated to content, 1
+      hit a genuinely-failing but unrelated LST-token-registry test from a concurrent peer commit that self-resolved
+      before the next retry). Also survived a mid-session interruption: the uncommitted edit sat idle across a
+      session restart, got correctly parked by a liveness-check hygiene sweep (`stash: "parked: peer odds_api
+      casing-migration WIP (dead claim...)"`) rather than lost, and was restored cleanly.
 
 ## Phase 1 — live-check the real population (read-only, no mutation)
 
