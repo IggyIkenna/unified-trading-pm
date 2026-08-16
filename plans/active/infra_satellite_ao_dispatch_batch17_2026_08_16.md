@@ -124,20 +124,49 @@ follow-up batch once the operator rules (see `## Deferred`).
       unified-trading-pm (decision only). Source: `vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s tier (3),
       re-measured.
 
-- [ ] [REVIEW] P2. **Resolve the `--boot-disk-type` design fork — recommend "document default sufficient," but this is a
-      recommendation for review, not a unilateral edit.** 135 of 149 launchers pass `--boot-disk-type`, but a sample
-      check (`grep -n boot-disk-type` on `launch-defi-backfill-vm.sh` and `launch-mtds-backfill-vm.sh`) shows the near-
-      universal pattern is `--boot-disk-type="${BOOT_DISK_TYPE:-pd-balanced}"` — i.e. almost every caller just echoes
-      `pd-balanced`, which is already GCE's own default disk type (no `--boot-disk-type` flag needed to get it). A
-      reviewer should: (1) sample at least 15 of the 135 (beyond the 2 already checked here) to confirm none actually
-      relies on a non-default `BOOT_DISK_TYPE` env override in production launch scripts/cron configs; (2) if confirmed,
-      rule "document the pd-balanced default as sufficient" (no `lc_gcloud_create` param needed — the 135 launchers'
-      `--boot-disk-type` flag becomes a no-op once migrated, since they'd stop passing it) rather than adding a 9th
-      positional/param to the wrapper for a value nobody actually overrides; (3) if a genuine override user is found,
-      escalate that specific launcher's need as its own `[OPERATOR]` question rather than blocking the other ~134.
-      **Done when**: the sample is checked and a recommendation is recorded (approve "document sufficient," or name the
-      genuine override launcher(s) found). Repo: unified-trading-pm. Source:
+- [x] ✅ [REVIEW] P2. **Resolve the `--boot-disk-type` design fork — reviewed 2026-08-16 (slot 12, review craft).**
+      Ran the full corpus (140 of 149 files match `boot-disk-type`, not a 15-file sample — cheap enough to do
+      exhaustively): `grep -h boot-disk-type scripts/vm/*.sh | sort | uniq -c`. Confirmed **~124 launchers** genuinely
+      default via `${BOOT_DISK_TYPE:-pd-balanced}` (or the tradfi-ohlcv lib's `${TRADFI_OHLCV_BOOT_TYPE:-pd-balanced}`,
+      which resolves the same way) with **zero external override** anywhere in the repo
+      (`grep -rn "BOOT_DISK_TYPE=" --include='*.sh' --include='*.yml' --include='*.yaml' .` outside `scripts/vm/`, and
+      no caller of `_tradfi-ohlcv-launcher-lib.sh` sets `TRADFI_OHLCV_BOOT_TYPE` — both 0 hits) — **recommendation
+      "document pd-balanced default as sufficient" APPROVED for these ~124.**
+      **BUT found a genuine-override tier the sample-of-2 in the original todo text missed: 15 launchers HARDCODE a
+      non-default disk type** (14 × `--boot-disk-type=pd-ssd`, 1 × `--boot-disk-type=pd-standard` on
+      `launch-planning-vm.sh`) — not env-defaulted, a deliberate literal choice, and `lc_gcloud_create`
+      (`launcher_common.sh`) confirmed to never pass `--boot-disk-type` at all (0 grep hits), so migrating any of these
+      15 through the wrapper as it stands today silently drops them to GCE's bare default (pd-balanced) — a real
+      regression, not a no-op. See the new `[OPERATOR]` todo below (not resolved unilaterally, same pattern as todos
+      1/2). **Live conflict found + already flagged**: one of the 15, `launch-funding-ensemble-paper-cron-vm.sh`, is
+      also listed in todo "Migrate group B" below as a directly-migratable file — pinged slot 17 (owner of the Group B
+      task, `infra_satellite_ao_dispatch_batch17-b8c1c8dc93f6`, dispatched at time of this review) directly via
+      `/api/slots/17/message` to exclude that one file from their migration; not editing Group B's own file list here
+      since it's a live dispatched task. Repo: unified-trading-pm. Source:
       `vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s tier (2).
+
+- [ ] [OPERATOR] P2. **Resolve the pd-ssd/pd-standard genuine-override tier (15 of 149 launchers) — found during the
+      `--boot-disk-type` review 2026-08-16, not in the source issue's original 3 tiers.** These 15 hardcode a
+      non-default disk type instead of falling through the `${BOOT_DISK_TYPE:-pd-balanced}` pattern the rest of the
+      corpus uses: `launch-aave-lending-rate-validation-vm.sh`, `launch-funding-ensemble-paper-cron-vm.sh`,
+      `launch-client-reporting-cutover-vm.sh`, `launch-amm-golden-fixture-validation-vm.sh`,
+      `launch-dr-drill-cutover-vm.sh`, `launch-strategy-live-vm.sh`, `launch-defi-backtest-vm.sh`,
+      `launch-defi-paper-trading-vm.sh`, `launch-defi-recursive-borrow-vm.sh`, `launch-execution-alpha-vm.sh`,
+      `launch-disaster-drill-cron-vm.sh`, `launch-strategy-paper-vm.sh`, `launch-strategy-backtest-grid-vm.sh`,
+      `launch-wallet-treasury-cutover-vm.sh` (all `pd-ssd`), and `launch-planning-vm.sh` (`pd-standard` — the
+      orchestrator VM itself). `lc_gcloud_create` never passes `--boot-disk-type` at all (confirmed 0 grep hits in
+      `launcher_common.sh`), so migrating any of these 15 as-is silently regresses them to GCE's bare default
+      (pd-balanced) — most are live-trading/strategy/execution/DR-cutover VMs where a deliberate IOPS choice (pd-ssd)
+      or cost choice (pd-standard on the orchestrator) is plausible, not an artifact. One of the 15
+      (`launch-funding-ensemble-paper-cron-vm.sh`) is ALSO currently listed in the "Migrate group B" todo below as
+      directly-migratable — flagged directly to that task's owner (slot 17) via `/api/slots/17/message`, not resolved
+      here. Options: (a) add an optional `boot_disk_type` param to `lc_gcloud_create` (backward compatible — omit it,
+      unchanged pd-balanced-default behavior for the ~124 non-override callers) so all 15 can migrate without losing
+      their disk type; (b) carve these 15 out of this migration's scope permanently (document why in
+      `vm-launcher-runbook.md`'s Known Issues, same as a SPOT/metadata-from-file carve-out would be documented).
+      **Done when**: the operator states a decision (a/b) in this todo's own reply or the Progress Log below, same
+      closure mechanism as todos 1/2. Repo: unified-trading-pm (decision only — no code in this todo). Source: this
+      plan's own `--boot-disk-type` review (2026-08-16, slot 12).
 
 - [ ] [DOCS] P3. **Correct the source issue doc's stale "large disk / `${BOOT_DISK_SIZE%GB}` extraction" tier (1) —
       measured 0/149 launchers use that pattern.** `lc_gcloud_create`'s `disk_gb` (positional arg 5) is already a plain
@@ -194,12 +223,13 @@ follow-up batch once the operator rules (see `## Deferred`).
 
 ## Deferred
 
-The SPOT-tier (79 launchers) and metadata-from-file-tier (47 launchers) migrations are **not** drafted as todos here —
-each is blocked on its own `[OPERATOR]` ruling above (todos 1/2). Once either rules, the actual per-launcher migration
-for that tier should be drafted as a follow-up `infra_satellite_ao_dispatch_batch18+` plan (or folded into this one via
-edit, operator's call), sized the same way as groups A/B/C (disjoint ~15-file todos). Drafting them now, before the
-wrapper even supports the flags they need, would produce todos with no achievable done-when — exactly what this plan's
-own rules section says to avoid.
+The SPOT-tier (79 launchers), metadata-from-file-tier (47 launchers), and pd-ssd/pd-standard-tier (15 launchers,
+found during the 2026-08-16 `--boot-disk-type` review) migrations are **not** drafted as todos here — each is blocked
+on its own `[OPERATOR]` ruling above (todos 1/2, and the new pd-ssd/pd-standard todo). Once any rules, the actual
+per-launcher migration for that tier should be drafted as a follow-up `infra_satellite_ao_dispatch_batch18+` plan (or
+folded into this one via edit, operator's call), sized the same way as groups A/B/C (disjoint ~15-file todos). Drafting
+them now, before the wrapper even supports the flags they need, would produce todos with no achievable done-when —
+exactly what this plan's own rules section says to avoid.
 
 ## Progress Log
 
@@ -208,3 +238,13 @@ own rules section says to avoid.
   confirmed the source issue's "large disk" tier does not correspond to any real file (0/149). Drafted 3 disjoint
   15-file migration todos for the 45 launchers with no blocking gap, plus 3 OPERATOR/REVIEW todos for the genuinely open
   forks — none resolved unilaterally, per the source todo's own 2026-08-12 ao-readiness clarification.
+- **review 2026-08-16 (slot 12)**: resolved the `--boot-disk-type` review todo. Ran the full corpus instead of a
+  15-file sample (cheap: `grep -h boot-disk-type scripts/vm/*.sh | sort | uniq -c`) — confirmed ~124 launchers
+  genuinely default to `pd-balanced` with zero external override anywhere in the repo (approved "document sufficient"
+  for those), but found a genuine-override tier the original todo's 2-file spot-check missed: **15 launchers hardcode
+  a non-default disk type** (14 × `pd-ssd`, 1 × `pd-standard`), and `lc_gcloud_create` never passes `--boot-disk-type`
+  at all, so migrating any of the 15 as-is would silently regress their disk type. Filed a new `[OPERATOR]` todo for
+  that tier (mirrors todos 1/2's pattern) and updated `## Deferred`. Found + handled a live conflict: one of the 15,
+  `launch-funding-ensemble-paper-cron-vm.sh`, was already in the dispatched "Migrate group B" task's file list —
+  pinged slot 17 (Group B's owner) directly via `/api/slots/17/message` to exclude it, rather than editing their
+  live-dispatched todo out from under them.
