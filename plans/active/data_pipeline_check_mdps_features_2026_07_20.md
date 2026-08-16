@@ -209,6 +209,23 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       was never re-checked. Not attempting the multi-cell round-trip myself (out of plan_reconciler's plans/**-only
       scope) — flagging as ready for the next dispatch to attempt (would be the 6th reproduction, but the FIRST since
       the actual blocking condition resolved).
+      **6TH ATTEMPT 2026-08-16 (slot-15, data_engineering) — MIXED, real progress, still genuinely open.** Used the
+      §1a dedicated-driver-VM pattern (`launch-pipeline-e2e-check-driver-vm.sh`, one VM per AG, decoupled from any
+      interactive session — this IS the fix for the gate this todo was blocked on) and split by asset_group (fleet
+      width lever) rather than one giant unscoped run: 5 parallel driver VMs (CEFI/DEFI/TRADFI/SPORTS/PREDICTION,
+      `--day 2026-07-05 --legs force,skip --require-captured --auto-day`). **SPORTS completed cleanly —
+      first-ever clean automated round-trip for this driver** (`total=4 passed=2 failed=0 skipped=2`, report at
+      `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mdps/2026-07-05/data_pipeline_e2e_check_mdps_2026_07_05_sports.md`;
+      the 2 skips were a real but minor `duplicate_in_flight` skip-leg false-skip, tracked below). **CEFI/TRADFI/
+      PREDICTION were verified genuinely progressing** (2 independent polls ~90s apart: poll-tick counters climbing,
+      new per-cell sub-VMs launching, RSS stable 1.2-5.7GB) — multi-hour by cell count, still in flight when this
+      session ended, not stalled. **DEFI (103/222 cells, the AG this plan's DeFi-MVP-ETA goal is actually about)
+      OOM-killed within ~60s of Phase-0 completing**, before any shard-enumeration log line appeared — a NEW driver
+      OOM distinct from the known fold-script incident, on a purpose-sized `e2-highmem-4`(32GB) VM. Full evidence +
+      recommended fixes:
+      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`. **Still open** — the mechanism is now proven for
+      4/5 AGs (SPORTS complete, 3 in flight), but DEFI needs the OOM root-caused before the full 5-AG matrix can close
+      this todo; CEFI/TRADFI/PREDICTION need their terminal state confirmed on the next check-in.
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.
