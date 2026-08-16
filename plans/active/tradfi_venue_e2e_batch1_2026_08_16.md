@@ -68,7 +68,7 @@ source: >-
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`.
+- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@48f83481ce`.
       4 parallel research passes across instruments-service, market-tick-data-service, features-service.
       **Step 2 (instrument resolution) — PASS for all 8 venues**, all 16 rows: `venue_adapter_keys.py:117-139`
       routes CME/NASDAQ/NYSE/CBOE/ICE/KRX through the shared Databento adapter, FX/FRED through their own; every
@@ -107,7 +107,7 @@ source: >-
       SPREAD`/`VOL_DISPERSION`; does an execution adaptor handle every `InstructionActionV2` those archetypes
       emit — per the prediction batch's finding, verify real routing, not just a declared mapping. Done-when: a
       real per-row verdict, plus `BLOCKED-ON` markers for the other 12 rows.
-- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`.
+- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@48f83481ce`.
       TradFi transfers are architecturally broker-scoped, not per-exchange:
       `execution_service/trade_execution/adapters/ibkr_tradfi.py:47` — "Execution routes through IBKR" for
       CME/CBOE/NASDAQ/NYSE/ICE/FX (`factory.py:63 TRADFI_VENUES`); `BusTransferType.IBKR_FUND_MOVE` is the
@@ -128,7 +128,7 @@ source: >-
 ## Progress Log
 
 **2026-08-16 — full contract sweep done, 1 new gap found, 2 candidate gaps confirmed already tracked.** SHIPPED
-— `unified-trading-pm@<pending-sha>`. 4 parallel research passes covered steps 2/3-4/5/9 across all 8 tradfi
+— `unified-trading-pm@48f83481ce`. 4 parallel research passes covered steps 2/3-4/5/9 across all 8 tradfi
 venues (16 rows). TradFi is structurally healthier than prediction: instrument resolution passes cleanly for all
 8 venues, and both of the two big-looking gaps (Yahoo-interim sources lacking live connectors; the unwired
 `IBKR_FUND_MOVE` broker transfer rail) turned out to be already-tracked, known conditions elsewhere in the corpus
