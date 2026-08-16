@@ -241,9 +241,25 @@ per-feature-group input requirements, already exists.
       session cleared — someone else's in-flight `DeFiAdapter` dispatch-wiring work landed; the invariant now passes
       standalone (`test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions PASSED`, re-verified
       2026-08-16).
-- [ ] [AGENT] P0. **Add contract step 17 as a real check, both directions.** A venue is not `BACKTESTABLE` unless at
-      least one archetype's requirements are fully satisfiable from it, and every data type it provides is either
-      consumed or explicitly declared unused. Declared-unused is a legitimate answer; silence is not.
+- [x] [AGENT] P0. ✅ Shipped — `unified-api-contracts@5a74178360` ("feat: add contract step 17 real check, both
+      directions"), on `origin/live-defi-rollout`. **Add contract step 17 as a real check, both directions.** New
+      module `unified_api_contracts/internal/architecture_v2/venue_strategy_consumability.py` composes
+      `FEATURE_REQUIRED_INPUTS` + `ARCHETYPE_FEATURE_GROUPS` (no restating either): `satisfying_archetypes()` /
+      `archetype_fully_satisfiable()` implement direction (b) — at least one of the 5 confirmed archetypes' full
+      data_type requirement set is a subset of the venue's; an `UNDECLARED_ARCHETYPES` member can never satisfy this
+      (undeclared ≠ "needs nothing", so it must not silently count). `orphaned_data_types()` implements direction
+      (a) — every venue data_type not in the union of what any feature_group consumes, and not in a caller-supplied
+      `declared_unused` set, is orphaned. `contract_step_17_check()` combines both into a `Step17Result.passed` verdict.
+      12 unit tests (`tests/unit/test_venue_strategy_consumability.py`) cover: the data_type-vs-feature_group-name
+      distinction (`"lending_rates"` feature_group → `"lending_indices"` data_type, not the group's own name),
+      undeclared-archetype exclusion, orphan detection, declared-unused suppression, and the combined verdict. Exported
+      from the `architecture_v2` package `__init__.py`. Full `unified-api-contracts` `quality-gates.sh --no-fix`:
+      `✅ ALL QUALITY GATES PASSED (253s)`. **Note**: this implements the step-17 spec as promoted to the contract
+      table (row 17, above) — "at least one archetype" — not the stricter "every archetype tied to the venue" framing
+      in the motivating § STRATEGY CONSUMABILITY prose above it; that stricter direction needs a venue↔archetype
+      tie (`venue_universe`), which turned out to be per-slot comma-separated strings scattered across
+      `strategy-service/strategy_service/engine/strategies/v2/archetype_slots_*.py` (confirmed via grep this session),
+      not a clean UAC SSOT — consolidating that is separate scope, not blocking this check.
 - [ ] [AGENT] P1. **Report the unconsumed set.** Data types captured but consumed by no archetype are either a missing
       strategy or wasted capture cost. Either is worth knowing; neither is visible today.
 
@@ -612,14 +628,12 @@ actionable P0.
 
 | Item | State | Blocked on |
 | --- | --- | --- |
-| "Add contract step 17 as a real check, both directions" (line 238) | Not started | Nothing — unblocked now that the archetype→feature_groups link landed |
-| "Report the unconsumed set" (line 241) | Not started | Depends on step-17 check above landing |
+| "Report the unconsumed set" (P1) | Not started | Nothing — unblocked now that the step-17 check landed (`unified-api-contracts@5a74178360`) |
 | W3 "service-config abstraction" child plan | Not started | Blocked on the two `[OPERATOR]` design rulings below (error-code SSOT shape, config-abstraction target shape) |
 | W4 "venue e2e wiring" child plan | Not started | Blocked on W3's design ruling settling first (same contract, sequenced) |
 | W5 "smoke-test bar" child plan | Not started | Blocked on W3/W4 |
 | "Error-code SSOT shape" design ruling (L321) | Operator-owned | Needs an explicit decision: UAC registry keyed by (venue, code) vs. `classify_venue_error()` extension vs. per-venue declaration files |
 | "Config-abstraction target shape" design ruling (L325) | Operator-owned | Needs an explicit decision: per-service vs. per-domain `config.py`, schema mechanism, gate-check shape |
 
-**Recommended next item**: "Add contract step 17 as a real check, both directions" (line 238) — the P0 chain's external
-blocker cleared (see Progress Log below), so this is now the sole genuinely actionable P0 item. W3/W4/W5 still need an
-operator decision first.
+**Recommended next item**: "Report the unconsumed set" (P1) — the P0 chain (declare archetype→feature_groups → contract
+step 17) is fully shipped as of this session. W3/W4/W5 still need an operator decision first.
