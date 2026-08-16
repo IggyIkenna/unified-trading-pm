@@ -158,17 +158,17 @@ needs a coverage audit (not a dedup).
       must stay distinct (e.g. it mixes execution ops with account-structure features like `SUBACCOUNT`/`DARK_POOL`
       that `VenueCapability` doesn't cover) is recorded here — resolve before or at the point `VenueCapabilityV2`
       gets its first real instance, not before.
-- [ ] [BACKEND] P3. **Design a namespace-tagged key for Bybit's REST-vs-WS error-code collision.** Surfaced by the
-      2026-08-16 error-code coverage audit (todo above): Bybit's own docs overload 10003 and 10016 across transports
-      — REST/UTA 10003="API key invalid/wrong domain" vs WS-OE 10003="too many sessions under same UID"; REST/UTA
-      10016="server error" vs WS-OE 10016="internal error/service restarting".
-      `classify_venue_error(venue, error_code)` has no transport dimension, so
-      `unified-api-contracts@d585f448bd` mapped only the REST/UTA meaning for both codes (the WS-OE meaning is a
-      declared, not resolved, gap). Not urgent — the WS-OE meaning isn't reachable by anything today. Done-when:
-      either `classify_venue_error()` grows an optional transport/namespace parameter (with every call site updated)
-      or a `"10003:ws"`-style key convention is adopted and documented, whichever a design review picks — do not
-      silently add a second `"10003"` entry to Bybit's list, `classify_venue_error()`'s linear scan returns only the
-      first match and a duplicate key would be dead code.
+- [x] [BACKEND] P3. **Design a namespace-tagged key for Bybit's REST-vs-WS error-code collision.** ✅ Done 2026-08-16 —
+      `unified-api-contracts@552ca4e987`. Design review measured the real blast radius first: `classify_venue_error()`
+      is called from 24+ files across execution-service alone (plus MTDS and others) — all positional
+      `(venue, error_code)`, zero call sites carry transport context today. An optional transport parameter would
+      still need every future WS-OE call site updated with no present benefit, and touches repos beyond
+      unified-api-contracts. Picked the `"<code>:ws"`-suffixed key convention instead: zero signature change, zero
+      existing call-site churn, self-contained in `errors/cefi.py`. Added `"10003:ws"` (too many sessions under same
+      UID, FAIL) and `"10016:ws"` (internal error/service restarting, RECONNECT) as new Bybit map entries alongside
+      the existing plain-keyed REST/UTA entries; documented the convention both at the Bybit entries and in
+      `classify_venue_error()`'s docstring so no future venue silently duplicates a plain key. Smoke-tested via repo
+      `.venv`: REST and WS-suffixed keys for both codes resolve to distinct, correct classifications.
 
 ## Definition of done
 
@@ -319,3 +319,20 @@ Evidence: `unified-api-contracts@d585f448bd` (files: `canonical/crosscutting/err
 `ahead=0` verified post-push. Every todo in this plan is now `[x]` except the new `[BACKEND] P3` Bybit-namespace-key
 follow-up (P3, not urgent, no active bug) — this plan should be archived once that follow-up todo is either
 resolved or explicitly re-homed to a different plan/issue doc per the archival ritual's `locked_by:`/unlock rule.
+
+**2026-08-16 — `[BACKEND] P3` Bybit-namespace-key todo resolved.** Evidence: `unified-api-contracts@552ca4e987`
+(files: `canonical/crosscutting/errors/cefi.py`, `canonical/crosscutting/errors/__init__.py`). Design review measured
+real blast radius before picking an approach: `classify_venue_error()` has 24+ call sites in execution-service alone
+(plus more in MTDS and other repos), all positional `(venue, error_code)` with zero transport context available
+today — an optional transport parameter would add cross-repo churn for no present benefit. Picked the
+`"<code>:ws"`-suffixed key convention instead (zero signature change, zero existing call-site churn): added
+`"10003:ws"` and `"10016:ws"` Bybit entries alongside the existing plain REST/UTA entries, documented the convention
+at both the entries and in `classify_venue_error()`'s docstring. Smoke-tested via repo `.venv` — REST and
+WS-suffixed keys resolve to distinct correct classifications, no collision.
+
+**Correction to the prior entry's archival claim**: "every todo is `[x]` except Bybit P3" was already inaccurate when
+written — the `[BACKEND] P2` `VenueFeature`/`VenueCapability` vocabulary-overlap todo (line ~148) was open then and
+remains open now, by design: its own done-when explicitly defers resolution until `VenueCapabilityV2` gets its first
+real instance ("not before"), which hasn't happened. **This plan is therefore not yet archivable** — one todo remains,
+deliberately parked pending a future event, not blocked on anyone. No `locked_by:` is set. Next session/operator: this
+plan stays `active` until that P2 item's trigger condition is met or the item is explicitly re-homed.
