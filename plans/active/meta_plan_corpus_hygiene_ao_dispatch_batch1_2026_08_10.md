@@ -150,12 +150,25 @@ Two independent causes, both now fixed:
       (its own banner confirms), so it falls under this same todo's own "already archived — out of scope, no
       action" precedent already applied to the other 2 originally-named targets. All 3 now carry a single real
       tranche tag (or are archived, out of scope).
-- [ ] [DOCS] P3. **Retag the 12 outstanding `cross_cutting_parked_2026_08_08` findings** (its findings 1-9 and 11-13;
-      finding 10 `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` was already fixed to
-      `[infrastructure]` by the `ao` tranche's 2026-08-10 run — skip it). Read that parked doc's findings section for
-      each target's recommended owner (`ao` ×3, `ci` ×6, `infrastructure` ×3, `meta` ×1) and verify the recommendation
-      against the target's own content before applying. Targets verified still un-retagged 2026-08-10. **Done when**:
-      all 12 carry a single real tranche tag, none retains `cross-cutting`.
+- [x] ✅ [DOCS] P3. **Retag the 12 outstanding `cross_cutting_parked_2026_08_08` findings** (its findings 1-9 and
+      11-13; finding 10 `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` was already fixed
+      to `[infrastructure]` by the `ao` tranche's 2026-08-10 run — skip it). — unified-trading-pm (this same commit).
+      Live
+      re-check at execution time (2026-08-16) found findings 1-3 (`ao` ×3) and finding 5
+      (`glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`, `ci`, since archived) already
+      retagged by prior `/ag-closeout-audit ao`/`ci` runs (2026-08-09) — no action needed, tags verified correct.
+      Retagged the remaining 7: `deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md` (finding 4) →
+      `[ci]`; `glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md` (finding 6) → `[ci]`;
+      `mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md` (finding 8, archived) → `[ci]`;
+      `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md` (finding 9) → `[ci]`;
+      `claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md` (finding 11, archived, also fixed
+      scalar→list frontmatter) → `[infrastructure]`; `deployment_service_prod_terraform_drift_2026_08_07.md`
+      (finding 12) → `[infrastructure]`; `governance_sweep_deferred_followups_2026_08_06.md` (finding 13) → `[meta]`.
+      All 12 verified via `docspec.py --check` (hard=0 soft=0 each, archived docs checked with `--doc-type issue`
+      override since they're outside docspec's path-derivation). All 12 now carry a single real tranche tag, none
+      retains `cross-cutting`. Per this plan's scope discipline, the parked doc itself
+      (`ag_closeout_audit_cross_cutting_parked_2026_08_08.md`) was NOT edited — its own checkbox reconciliation is
+      todo 17's job alone.
 - [ ] [DOCS] P3. **Retag the 5 remaining 2026-08-01/08-06 cross-cutting mistags** (all in `/plans/active/issues/`):
       `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` → `[ao]`;
       `gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md` → `[infrastructure]`;

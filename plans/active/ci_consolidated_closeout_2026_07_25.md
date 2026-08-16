@@ -126,11 +126,20 @@ isolation fixed on self-hosted runners.
 `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` +
 `github_actions_cost_reduction_options_analysis_2026_07_15.md` +
 `github_actions_operator_gated_followups_2026_07_17.md` + `github_actions_staging_machinery_shutdown_2026_07_24.md` (GHA
-cost-reduction program: options analysis → redirect index → operator-gated followups → dead staging-machinery shutdown).
+cost-reduction program: options analysis → redirect index → operator-gated followups → dead staging-machinery shutdown)
+·
+[issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md](/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md)
+(deployment-api Artifact-Registry-repo-override allowlist audit + startup-time IAM capability probe; retagged `[ci]`
+2026-08-16 from a `[cross-cutting]` mistag, `/ag-closeout-audit cross-cutting` parked finding 4) ·
+[issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md)
+(two self-hosted glue-runner systemd units left inactive, stalling UAC LDR→main promotion + cascading a Tier-A CI
+outage across 11 dependent repos; retagged `[ci]` 2026-08-16 from a `[cross-cutting]` mistag, same parked-findings run,
+finding 6).
 
 **Close-out criterion**: every named workflow bug fixed + verified green on a real run (digest-sweep dispatches,
 cassette-drift-check calls a real script, token scope fixed); the GHA cost-reduction program's operator-gated followups
-closed; the deploy SA's Secret Manager access scoped down.
+closed; the deploy SA's Secret Manager access scoped down; the AR-repo-override audit + IAM probe items landed; the two
+stopped glue-runner systemd units restarted and the crash-loop watchdog extended to catch a cleanly-`inactive` unit.
 
 ## Track 3 — SIT gate / promotion-pipeline correctness · P1
 

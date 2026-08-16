@@ -23,7 +23,10 @@ summary: >-
   only flags units actively crash-looping (repeated restarts), not a unit sitting cleanly `inactive`/stopped.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 6, meta_plan_corpus_hygiene_ao_dispatch_batch1)
+  # -- was [cross-cutting]. Content is a fleet-wide self-hosted GitHub-Actions glue-runner systemd-unit outage
+  # stalling LDR->main promotion, squarely ci-tranche (CI/CD runner infra).
 stage: [meta]
 repos: [agent-orchestrator, unified-api-contracts, instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [admin, engineer]

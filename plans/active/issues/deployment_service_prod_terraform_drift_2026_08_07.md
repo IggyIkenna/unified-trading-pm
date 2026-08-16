@@ -11,7 +11,10 @@ summary:
   `client-reporting-batch` Cloud Run job — the latter requires explicit operator decision.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [infrastructure] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 12,
+  # meta_plan_corpus_hygiene_ao_dispatch_batch1) -- was [cross-cutting]. Content is a prod OpenTofu/terraform drift
+  # review for deployment-service, squarely infra-tranche (generic repo/IAM hygiene, not data-pipeline).
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]

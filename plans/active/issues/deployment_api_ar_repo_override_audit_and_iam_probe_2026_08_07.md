@@ -11,7 +11,10 @@ summary: >-
   a deferred item must migrate into a real tracked todo, not evaporate with the archived doc.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 4, meta_plan_corpus_hygiene_ao_dispatch_batch1)
+  # -- was [cross-cutting]. Content is deployment-api's Artifact-Registry-repo-name override allowlist audit + a
+  # startup-time IAM capability probe -- CI/CD deploy-chain mechanics, single-repo, squarely ci-tranche.
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
