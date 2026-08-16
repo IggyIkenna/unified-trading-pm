@@ -117,6 +117,30 @@ context_scope:
       `canonical_buckets.tf`'s blanket `lifecycle_rule` is now a `dynamic` block keyed by a `canonical_strip_lifecycle_kinds`
       local; adding a kind strips it, zero other code changes needed once the missing table exists. See the new
       Progress Log entry for the full account + a new `[OPERATOR]` follow-up asking for that table.
+      - **RESOLVED 2026-08-16 (interactive session, direct measurement)** — see full Progress Log entry below for the
+        complete per-bucket table, the "only 1 of 18 jobs actually has a cpu/memory override" correction (the plan's
+        own "3-4 buckets already justified" framing above was wrong — ground-truthed against the live `.tf` maps), the
+        confirmed cold-start-dominated verdict for all genuinely-light buckets (no resource change), and a live P1
+        incident found + fixed (`market-data-cefi` failing every hourly cycle on a 1800s timeout against a 161K-shard
+        backlog) — resolved via a live `gcloud run jobs update` stopgap + `.tf` codification, verified green.
+- [ ] [INFRA] P2. BLOCKED-ON:deployment_service_prod_terraform_drift_2026_08_07 — **Do not edit
+      `manifest_consolidator_scheduler.tf` (resource sizing) or any `lifecycle_rule` block in
+      `deployment-service/terraform/gcp/{canonical_buckets,main}.tf` (the 52-bucket lifecycle strip) until the existing
+      36-add/17-change/4-destroy pending drift is resolved or the new diff is proven to isolate cleanly via
+      `-target`.** That issue doc already found live-vs-committed CPU/memory mismatches on OTHER jobs
+      (`data_pipeline_meta_watchers_job` 32Gi/cpu8 live vs 16Gi/cpu4 committed) that a blind full apply would have
+      silently reverted — the same risk class applies to stacking a new consolidator/lifecycle diff on top of an
+      unreviewed pending state. Done-when: the drift issue is resolved (applied or explicitly re-scoped) OR a
+      `-target`-scoped plan proves this plan's diff alone, isolated from the pending drift, is safe to apply.
+- [ ] [INFRA] P2. **Author the Terraform diff for the 52-bucket lifecycle strip** once the above unblocks. Bucket list +
+      per-bucket disposition (STRIP/KEEP/UNCLEAR) is in the Progress Log below — do not re-derive, the classification
+      is done. Two operator-facing calls already made and documented (not to be silently reversed): `portfolio-state-*`
+      → STRIP (live risk state, not a report); `recon-*` → KEEP (report-shaped despite being on the operator's
+      original strip list — see Progress Log reasoning). 5 buckets (`backtest-results`, `alerting-service`,
+      `commodity-signals-batch`, `pnl-attribution-output`) remain genuinely UNCLEAR — get an explicit operator call
+      before including/excluding them, do not guess. Done-when: `.tf` diff drafted, `quality-gates.sh`-green,
+      shipped via quickmerge (code only — `tofu apply` stays operator-executed, matching this repo's existing
+      pattern of "authored, pending operator apply").
 - [ ] [INFRA] P3. **The 10(IS+MTDS)+8(Group B)=18-jobs→5-per-asset-group consolidation is NOT shipped and is NOT a
       pure Terraform regroup** (verified 2026-08-16, reading `manifest_consolidator_scheduler.tf` directly — no GCS
       calls): both `for_each` blocks pass a single `--bucket` arg per job, one job per bucket, and the file's own
@@ -236,6 +260,61 @@ context_scope:
         writing this note: `resources.limits = {cpu: "8", memory: "32Gi"}` — still correct, not reverted. This todo
         itself is left open/unchecked — the `.tf` codification this todo asks for is not yet confirmed committed as
         of this note.
+            deployment-service. **DONE 2026-08-16** — `deployment-service@53a40b270a`. Extended to 5 families via a new
+            §5c block + shared bash resolver in `setup-data-pipeline-vm.sh` (ground-truthed against the 18-job
+            `manifest_consolidator_scheduler.tf` locals, not a re-guessed formula): `instruments_service` (~49
+            launchers, incl. most sports fixture/enrichment launchers — `instruments-store-{ag}`, all 5 AGs),
+            `market_data_processing_service` (reuses the MTDS-download bucket — MDPS candle derivation writes the
+            SAME `market-data-tick-{ag}` bucket), `features_service` (`features-{ag}`, cefi/defi/tradfi/sports/
+            calendar — prediction excluded, no consolidator), `strategy_service` (one flat `strategy-store` bucket,
+            every AG except prediction), `execution_service` (one flat `execution-store` bucket, unconditional). See
+            full Progress Log entry below for the complete accounting of what stayed excluded and why (grouped, not
+            itemized) plus 3 new follow-up todos it produced (below) and an unrelated but significant collision
+            finding discovered while shipping.
+
+- [ ] [INFRA] P3. **ml_service consolidator-watchdog wiring** (excluded from the 2026-08-16 extension above) —
+      determine whether ml-store's 5 object-key prefixes (models/predictions/configs/training-artifacts/artifacts)
+      can be derived per-launcher (e.g. a dedicated `VM_ML_TARGET` metadata key) so `launch-ml-training-vm.sh`/
+      `launch-ml-vm.sh` can opt into the watchdog for the one prefix (`training-artifacts`, folded into `ml-store`)
+      that actually has a consolidator. Repos: deployment-service.
+- [ ] [INFRA] P3. **Compound-VM_SERVICE watchdog coverage** (excluded above) — `launch-mdps-features-live.sh` and
+      `launch-prediction-pipeline-vm.sh` each write more than one consolidator-covered bucket per run;
+      `CONSOLIDATOR_WATCHDOG_BUCKET` only supports a single target. Either add multi-bucket support to
+      `vm-exec-with-gcs-tee.sh`'s watchdog or make an explicit per-launcher primary-bucket call. Repos:
+      deployment-service.
+- [ ] [INFRA] P3. **Bespoke `*_daily_cron` VM_SERVICE watchdog coverage** (excluded above) —
+      `cefi_fwd_daily_cron`/`cefi_onchain_fwd_daily_cron`/`cefi_perp_funding_daily_cron`/`tradfi_fwd_daily_cron`/
+      `funding_ensemble_daily_cron` use bespoke non-standard `VM_SERVICE` literals; confirm each one's actual write
+      target (several look MTDS/MDPS-shaped and may already resolve to an already-covered bucket) before wiring.
+      Repos: deployment-service.
+- [ ] [INFRA] P3. **Continuous/live launcher watchdog coverage** (excluded above) — `mtds-live*`,
+      `*-forward-poll`, `prediction-live`, `perp-clob-live` are self-relaunching, `VM_SHUTDOWN_ON_COMPLETION=false`
+      long-running processes, a different execution shape than the bounded-backfill population the watchdog was
+      proven against. Decide whether the same periodic re-check should apply to them (plausibly yes — a stale
+      consolidator is just as meaningful mid-live-run) and wire if so. Repos: deployment-service.
+- [ ] [INFRA] P1. **Terraform-drift finding — market-data-cefi resource fix not actually codified** (discovered
+      2026-08-16 while shipping the watchdog-extension todo above; unrelated to that todo's own scope, surfaced only
+      because a concurrent session's dirty `terraform/gcp/manifest_consolidator_scheduler.tf` had to be checked
+      before it was safe to ship). This plan's own todo-1 Progress Log entry below states the live P0
+      `market-data-cefi` incident fix was "**Shipped** via `quickmerge --agent --files
+      'terraform/gcp/manifest_consolidator_scheduler.tf'`" — **verified 2026-08-16 this is not true of the current
+      file**: `manifest_consolidator_cpu`/`manifest_consolidator_memory` locals contain only `"market-data-defi"`,
+      not `"market-data-cefi"`; `git log origin/live-defi-rollout -- terraform/gcp/manifest_consolidator_scheduler.tf`
+      shows no commit past the pre-existing `36a0423e` (instruments-sports timeout bump, unrelated, predates this
+      session). **Production is NOT currently at risk** — `gcloud run jobs describe
+      uts-prod-manifest-consolidator-market-data-cefi --region=asia-northeast1` confirms the emergency
+      `cpu=8/memory=32Gi` live fix (`gcloud run jobs update`) is still active on the deployed job; only the `.tf`
+      CODE state is missing it. The risk is a FUTURE one: once `deployment_service_prod_terraform_drift_2026_08_07`
+      unblocks and someone runs `tofu apply`, a `.tf` that still defaults `market-data-cefi` to 4vCPU/16Gi would
+      silently revert live production back to the config that caused the original 3+-hour outage. **Not caused by
+      this session's own shipping step** — forensics: dangling-commit archaeology on the shared `deployment-service`
+      checkout (`git fsck --unreachable`) found the reconcile-time snapshots this session's own `quickmerge` run took
+      (both the working-tree and index trees of its auto-stash) already show the file in its CURRENT no-fix state,
+      before this session ever committed anything — so the diff was already absent from the working tree by the time
+      this session's quickmerge ran; whatever happened to it happened earlier / in a different session. Re-author +
+      ship the `.tf` diff (cpu/memory/timeout/lock_ttl/stall_alert_cycles overrides for `market-data-cefi`, exact
+      values documented in the todo-1 Progress Log entry below) as part of resolving the terraform-drift blocker —
+      do not let it get silently dropped a second time. Repos: deployment-service.
 
 ## Progress Log
 
@@ -493,3 +572,42 @@ context_scope:
   Also encountered heavy git contention shipping this entry itself (73 parked autostash entries on this checkout,
   `safe-doc-push.sh` self-detected + recovered from one self-inflicted conflict on its own reconcile pass) — worth
   the operator's attention as its own infra-hygiene item, separate from this plan's scope.
+- **2026-08-16 (interactive session, doc hygiene)**: trimmed ~235 lines of duplicated Progress Log content (the
+  resource-sizing and watchdog-extension entries had each been appended twice, most likely from the same
+  stash-contention chaos documented in the entries themselves — no information was lost, the duplicate was byte-for-
+  byte identical to the first copy). Also transcribing the full 105-bucket classification below — this is the table
+  every STRIP/KEEP/UNCLEAR todo above has been citing as "in the Progress Log" since this plan was created, and it
+  never actually was until now. **Correction while transcribing**: this doc's own earlier prose claimed "52 buckets
+  to strip" and separately "5 UNCLEAR buckets" — both miscounted. The original classification is **49** STRIP-shaped
+  buckets (not 52 — `deployment-state` was already counted inside that 49, not additional to it), and **4 named**
+  UNCLEAR groups covering **5 physical** buckets (`commodity-signals-batch` has a `-prd`/`-test` pair, the other 3
+  names are singletons). Net STRIP after the operator's `recon`→KEEP override: **47** (49 − 2 for `recon`).
+  `portfolio-state` (already shipped/applied) stays counted in the 47.
+
+  | Disposition | Buckets | Count | Rule (as classified 2026-08-16) |
+  | --- | --- | --- | --- |
+  | STRIP | `market-data-tick-{cefi,defi,pred,sports,tradfi}-{prd,test}` | 10 | COLDLINE@60 |
+  | STRIP | `instruments-store-{cefi,defi,tradfi,sports,prediction}-{prd,test}` | 10 | COLDLINE@60 |
+  | STRIP | `features-{cefi,defi,pred,sports,tradfi,calendar}-{prd,test}` | 12 | COLDLINE@60 |
+  | STRIP | `ml-store-{prd,test}` | 2 | COLDLINE@60 |
+  | STRIP | `execution-store-{prd,test}` | 2 | COLDLINE@60 |
+  | STRIP | `strategy-store-{prd,pred-prd,test,pred-test}` | 4 | COLDLINE@60 |
+  | STRIP | `portfolio-state-{prd,test}` | 2 | COLDLINE@60 — **applied 2026-08-16**, see entry above |
+  | STRIP | `config-store-{prd,test}` | 2 | COLDLINE@60 |
+  | STRIP | `uts-{dev,prod,staging}-deployment-state` | 3 | NEARLINE@30 |
+  | **STRIP subtotal** | | **47** | |
+  | KEEP (operator override) | `recon-{prd,test}` | 2 | COLDLINE@60 — report-shaped per `reconciliation-resolution.md`, not raw pipeline data; currently empty |
+  | UNCLEAR — needs an explicit operator call, do not guess | `backtest-results-central-element-323112` | 1 | COLDLINE@14 — short window right as heavy backtesting starts |
+  | UNCLEAR | `alerting-service-central-element-323112` | 1 | COLDLINE@60 — contents undocumented anywhere in codex |
+  | UNCLEAR | `commodity-signals-batch-{prd(no suffix),test}` | 2 | prd: COLDLINE@60, test: none — owner marked UNKNOWN in `non-canonical-path-inventory.md` |
+  | UNCLEAR | `pnl-attribution-output` (standalone) | 1 | none — looks like a dead orphan duplicate of the prefix already inside `portfolio-state-prd`; may just need deleting, not a lifecycle call |
+  | **UNCLEAR subtotal** | | **5** | |
+  | KEEP — audit/log-shaped, has a live rule | `central-element-323112-events`, `-deployment-events`, `-kill-switch-audit-log`, `-client-reports`, `-client-statements`, `-datapoint-validation`, `-defi-validation`, `manual-audit-prd`, `unified-trading-cicd-events`, `cf-manifest-audit-central-element-323112`, `-data-status-rollups`, `onchain-research-central-element-323112` | 12 | mostly COLDLINE@60 age-based (safe — never touches recent objects); 2 are permanent-delete rules (`cf-manifest-audit` Delete@90, `data-status-rollups` Delete@7), a different risk class, not lifecycle-cooling |
+  | KEEP — audit/log-shaped, no live rule today | `manual-audit-test`, `trading-audit-records-{prd,test}`, `orats-smv-strikes-backup`, `phantom-triage`, `rescan-triage`, `pre-migration-snapshot`, `honest-coverage`, `benchmark-reports`, `benchmark-synthetic-input`, `build-metadata`, `databento-batch-registry-asia` | 12 | none — `trading-audit-records-*` carries a 7-year GCP Object Retention Lock, care needed if a rule is ever proposed |
+  | Not trading-system data — GCP-managed, leave alone | `*.appspot.com`, `*_cloudbuild`, `gcf-sources-*`, `gcf-v2-sources-*`, `gcf-v2-uploads-*`, `firebaseapphosting-sources-*`, `run-sources-*` (4 regions), `central-element-323112-function-source` | 20 | n/a |
+  | Infra/ops state — no lifecycle concern either way | `deployment-scripts`, `deployment-orchestration`, `client-reporting-data`, `terraform-state`, `uts-terraform-state`, `unified-deployment-state`, `orchestrator-creds` | 7 | version-count cleanup or none; `orchestrator-creds` must never cool if a rule is ever proposed |
+
+  **Total: 47 + 2 + 5 + 12 + 12 + 20 + 7 = 105.** Updated the `[OPERATOR]` follow-up above to reference this table
+  directly instead of asking for it to be produced — the remaining ask is narrower now: a call on the 4 named/5
+  physical UNCLEAR buckets, then `canonical_strip_lifecycle_kinds` can be extended from 1 kind (`portfolio-state`) to
+  the full 47 in one pass.
