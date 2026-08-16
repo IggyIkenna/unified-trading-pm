@@ -18,6 +18,10 @@ summary: >-
   3 sibling defi schedulers (dex-pools/evm-defi/solana-defi) are in the same paused state,
   same last-run date, same failure -- tracked separately, out of this doc's oracle_prices scope:
   see /plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md.
+  Item 4 (PYTEST_WORKERS=3 xdist crash, orthogonal to the above) was investigated
+  independently (slot-10) and did NOT reproduce -- closed won't-fix. Still OPEN: 2 P2
+  follow-ups gated on the pre-existing backfill VM finishing before the attempted_failed
+  count can be meaningfully re-verified.
 status: open
 nature: issue
 asset_group: [defi]
@@ -241,10 +245,15 @@ staged).
       `git fetch origin live-defi-rollout` (ahead=0/behind=0 after fetch) and
       `git branch -r --contains 18e05e4b` (lists `origin/live-defi-rollout`). Lands on LDR
       trunk; drains to `main` via `ldr-to-main-promote-fleet.yml` (no action needed here).
-- [ ] [CODE] P3. **Root-cause item 4** (`PYTEST_WORKERS=3` xdist crash) if it reproduces
-      independently of item 2/3 — may be a real, previously-unknown xdist-under-load
-      fragility worth its own fix, but wasn't isolated cleanly here (confounded with the
-      same-era host contention).
+- [x] ✅ [CODE] P3. **Root-cause item 4** (`PYTEST_WORKERS=3` xdist crash) — RESOLVED,
+      did not reproduce. slot-10 (2026-08-16) re-ran `PYTEST_WORKERS=3 bash
+      scripts/quality-gates.sh --no-fix` on the now-current, unbroken tree
+      (post-`08aae3da`): **10948 passed, 28 skipped, 1 xpassed, 0 errors, 17 warnings,
+      154.36s — `✅ ALL QUALITY GATES PASSED`**. No `OSError`/`cannot send`/`already
+      closed` signature anywhere in the full log. Confirms item 7's root cause (the
+      now-fixed `unified-api-contracts` `DataTypeConfig` cross-repo import break) fully
+      explains the earlier mass-error pattern — no independent, previously-unknown
+      `PYTEST_WORKERS=3`-specific xdist fragility exists. Closed won't-fix.
 - [x] ✅ [OPERATOR] P1. **Re-enabled `uts-prod-mtds-collect-oracle-prices-cron`** (was
       `PAUSED`, last real execution 2026-07-18, no tracked justification found) —
       `gcloud scheduler jobs resume uts-prod-mtds-collect-oracle-prices-cron
@@ -385,3 +394,21 @@ staged).
   see the P2 todos above for what still needs to happen. This is a genuine partial close,
   not a full resolution; do not mark the underlying alert condition fixed until the P2
   todos are done and the manifest count is re-measured at zero/near-zero.
+- **2026-08-16, slot-10**: picked up the remaining P3 item 4 (orthogonal to slot-1's
+  re-diagnosis above — a different investigation thread on the same doc). Confirmed
+  market-tick-data-service was already clean/up-to-date locally. Ran `PYTEST_WORKERS=3
+  bash scripts/quality-gates.sh --no-fix` natively backgrounded against the current tree
+  (post-`08aae3da`, the `DataTypeConfig` fix already pulled in): completed in 154.36s,
+  10948 passed / 28 skipped / 1 xpassed / 0 errors, `✅ ALL QUALITY GATES PASSED` — the
+  xdist crash did NOT reproduce. Grepped the full 787-line log for `OSError`/`cannot
+  send`/`already closed`: the only hit is an unrelated pre-existing test name
+  (`test_cefi_ccxt_boost.py`), not a crash. Confirms item 7's diagnosis was complete: the
+  mass-`E` pattern was entirely the `DataTypeConfig` cross-repo import break, now fixed —
+  no separate xdist-under-load fragility exists. Closed item 4 won't-fix. **Doc NOT
+  archived**: while resolving a `safe-doc-push.sh` stash-pop conflict against slot-1's
+  concurrent push (both sessions edited this doc at the same time), discovered the
+  escalation is still genuinely open (2 open P2 todos gated on the pre-existing backfill VM
+  finishing + a re-verification pass; count was 1064-and-climbing per slot-1's finding, not
+  resolved) — reverted my own premature `status: resolved`/`archive_exempt: true`/
+  `resolved_by: slot-10` frontmatter edits made before I saw slot-1's concurrent update, and
+  merged both sessions' work into one doc without dropping either side's content.
