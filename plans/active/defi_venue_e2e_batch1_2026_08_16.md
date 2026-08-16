@@ -90,15 +90,41 @@ source: >-
       have a real, implemented calculator that's simply unreachable (not wired into the dispatch if/elif chain).
       `dex_pool_swaps`/`staking_yields` have no consumer implementation at all — genuinely unimplemented, not just
       unwired. 2 new gap todos below (dispatch-table gap; missing-implementation gap).
-- [ ] [BACKEND] P1. **Gap: 22 defi venues are capability-declared but have no resolvable
-      `VENUE_TO_ADAPTER_KEY` entry** (beyond the already-tracked 8-venue gap) —
-      `ACROSS-ETHEREUM`/`STARGATE-ETHEREUM`/`FLASHBOTS-ETHEREUM`/`ALCHEMY-ONCHAIN` (zero adapter class exists);
-      `METEORA-SOLANA`/`LIFINITY-SOLANA`/`PHOENIX-SOLANA` (adapter exists + registered, venue itself unwired,
-      same pattern as the already-documented `ibkr` dead-key case); chain-expansion gaps in otherwise-live
-      families (`AAVE_V3-{SCROLL,ZKSYNC}`, `COMPOUND_V3-{POLYGON,SCROLL}`, `MORPHO-{ARBITRUM,OPTIMISM,POLYGON}`,
-      `MORPHOVAULTS-ETHEREUM`, `PANCAKESWAP_V3-ARBITRUM`, `BEEFY-POLYGON`, `IDLE-POLYGON`, `YEARN_V3-OPTIMISM`,
-      `FRAX-ETHEREUM`); legacy bare-form aliases (`COMPOUND-ETHEREUM`, `UNISWAP-ETHEREUM`). Done-when: each is
-      either given a real `VENUE_TO_ADAPTER_KEY` entry or confirmed intentionally excluded with a cited reason.
+- [x] ✅ [BACKEND] P1. **Gap: 22 defi venues are capability-declared but have no resolvable
+      `VENUE_TO_ADAPTER_KEY` entry — done 2026-08-16, all 22 already carry a cited reason, no code needed.**
+      This todo's own premise was checked against the wrong file: the earlier steps-1-5 sweep read only
+      `venue_adapter_keys.py` (the resolved-adapter registry) and never cross-referenced
+      `unified-api-contracts/unified_api_contracts/registry/defi_venues.py`'s `DEFI_VENUE_PHASE` dict, where
+      every one of the 22 already carries an explicit `"pipeline"` classification under a section-header
+      comment naming the reason — verified by reading each entry's surrounding comment directly, not inferred:
+      - `ACROSS-ETHEREUM`/`STARGATE-ETHEREUM`/`FLASHBOTS-ETHEREUM`/`ALCHEMY-ONCHAIN`/`COMPOUND-ETHEREUM`/
+        `UNISWAP-ETHEREUM` — NOT "zero adapter class" or "legacy aliases" as originally characterized; they're
+        governance/MEV/bridge/gas-oracle analytics venues under "Pipeline (Ethereum analytics / governance /
+        MEV — NOT IS-producible)" / "Pipeline (Alchemy multi-chain gas-fee oracles — NOT IS-producible)".
+        `defi_venues.py`'s own `DEFI_VENUE_MTDS_ADAPTER_VERIFIED_NOT_YET_SCHEDULED` docstring additionally cites
+        per-venue MTDS-side evidence for `ALCHEMY`/`FLASHBOTS`/`ACROSS`/`STARGATE`: "STILL-BROKEN: crash-looping
+        cron or never scheduled at all, two with no SchemaContract registered" (2026-07-22 design doc).
+      - `METEORA-SOLANA`/`LIFINITY-SOLANA`/`PHOENIX-SOLANA` — already cited in `venue_adapter_keys.py` itself
+        (measurably dead upstreams, 404/522/NXDOMAIN, re-verified 2026-07-22).
+      - `AAVE_V3-{SCROLL,ZKSYNC}`, `COMPOUND_V3-SCROLL` — "Pipeline (Scroll / zkSync — NOT IS-producible)".
+      - `COMPOUND_V3-POLYGON` — "Pipeline (Polygon — NOT IS-producible)"; `venue_adapter_keys.py`'s own
+        `SUBGRAPH_IDS["compound_v3"]` additionally notes "subgraph returns 0 markets (Compound V3 not active on
+        Polygon)".
+      - `MORPHO-ARBITRUM` — checked most carefully since `venue_adapter_keys.py`'s own comment reads as if this
+        should be live ("ARBITRUM now has real major-asset liquidity... wired into morpho_adapter.py's
+        `_CHAIN_ID_BY_CHAIN`"); `defi_venues.py` has the newer, more specific ruling: "not in IS-producible set
+        despite having rows (not in `_build_defi_venues()`)" — deliberately still pipeline. Did NOT add an
+        explicit key entry here on the strength of the older comment alone; the newer citation governs.
+      - `MORPHO-OPTIMISM`/`MORPHO-POLYGON`, `YEARN_V3-OPTIMISM`, `PANCAKESWAP_V3-ARBITRUM` — each under its own
+        "Pipeline (... — NOT IS-producible)" section header.
+      - `MORPHOVAULTS-ETHEREUM`/`FRAX-ETHEREUM` — "Pipeline (Ethereum vaults / analytics — NOT IS-producible)";
+        `FRAX` additionally has the same MTDS-side "stopped dead 2026-06-21, no scheduler" citation as the
+        analytics group above.
+      - `BEEFY-POLYGON`/`IDLE-POLYGON` — "Pipeline (Polygon catalogue Phase 1A, slot 5 2026-05-11)".
+      No `VENUE_TO_ADAPTER_KEY` / `DEFI_VENUE_PHASE` edits made — every branch of the done-when ("real entry OR
+      confirmed intentionally excluded with a cited reason") already resolves to the second branch, and writing
+      speculative adapter code or forcing a phase flip against these citations would contradict already-ruled
+      decisions, not close a gap.
 - [ ] [BACKEND] P1. **Gap: features-service's onchain dispatch table is narrower than its calculator registry** —
       `oracle_prices` (`chainlink_peg_deviation_calculator.py`) and `dex_pool_state`
       (`concentrated_liquidity_il_realised_calculator.py`, `pool_invariant_drift_calculator.py`) all have real,
@@ -177,3 +203,16 @@ cross-check for future re-runs of this batch, not a substitute for the registry-
 No new gap todos added from this run: its FAIL/NONE counts are structurally consistent with the already-tracked
 gaps above (the 22-venue adapter gap, the ~13% live coverage, the narrow feature dispatch) rather than revealing a
 distinct defect class.
+
+**2026-08-16 — 22-venue adapter gap resolved, all already cited, zero code changes needed.** Investigated the
+"22 defi venues... no resolvable `VENUE_TO_ADAPTER_KEY` entry" P1 gap todo by reading `defi_venues.py`'s
+`DEFI_VENUE_PHASE` dict (not just `venue_adapter_keys.py`, which is what the originating sweep checked). Every
+one of the 22 already carries an explicit `"pipeline"` classification under a section-comment reason there —
+governance/MEV/bridge/gas-oracle analytics (not IS-producible by architecture), dead/low-liquidity/inactive
+subgraphs, or staged Phase-1A rollout. Full per-venue citation list in the flipped todo below. One near-miss
+worth flagging for future readers: `MORPHO-ARBITRUM`'s comment in `venue_adapter_keys.py` reads as if it should
+already be live (real liquidity, wired into the adapter's chain map) — `defi_venues.py` carries the newer,
+overriding citation ("not in IS-producible set despite having rows"). Deferred to the newer source rather than
+adding a key on the older comment's strength alone. No code shipped (correctly — the gap resolves via the
+already-cited-reason branch of the done-when, not a code fix); this batch's own hard-rule confirmation todo above
+already established zero code changes for steps 1-5/9, and this todo continues that pattern.
