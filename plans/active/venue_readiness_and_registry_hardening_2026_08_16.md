@@ -183,9 +183,14 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       granularity/exceptions fields themselves. `VenueCapability` (StrEnum) is a flat operation-kind vocabulary, not
       a per-data-type record — wrong shape. `VenueCapabilityV2` (BaseModel) has zero live instances anywhere — not a
       populated target to extend. This is evidence for the operator's shape call, not a decision on it.
-- [ ] [AGENT] P0. **Make execution fail closed on fidelity.** Today the tier clamps DOWN silently, which is right for a
+- [x] [AGENT] P0. **Make execution fail closed on fidelity.** Today the tier clamps DOWN silently, which is right for a
       backtest and wrong for a live/paper caller that assumed better. Decide per path — clamp-and-record versus refuse —
-      and make refusal the default when a caller explicitly requests a tier the venue cannot serve.
+      and make refusal the default when a caller explicitly requests a tier the venue cannot serve. —
+      `execution-service@88aa0f10fe`: `clamp_tier()`/`select_book_type()`/`resolve_matching_fidelity_rung()` gained a
+      `refuse_unservable: bool = False` kwarg (never a `mode ==` comparison — STEP 5.77 forbids that outside the CLI
+      seam); default preserves clamp-and-record, `refuse_unservable=True` raises `FidelityRefusedError`
+      (`ErrorCategory.DATA_QUALITY`). Mode→boolean resolution deferred to whichever future CLI entry point starts
+      passing `max_tier` (zero production callers do today). QG: `✅ ALL QUALITY GATES PASSED`.
 - [ ] [AGENT] P1. **Publish the granularity view.** Render it as a table a human can read: venue, instrument type, data
       type, granularity, achievable matching class. This is what makes "what can we actually do here" answerable without
       reading code — and it is the same table we can show a counterparty.
