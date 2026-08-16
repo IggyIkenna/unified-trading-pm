@@ -85,9 +85,13 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
 
 - [x] [AGENT] P0. ✅ **Baseline the import cost before changing anything** — measured in fresh venvs (first import,
       cold `.pyc` cache), `sys.modules` delta + wall time. Full numbers in the 2026-08-16 Progress Log entry below.
-- [ ] [AGENT] P0. **Layer 3 (execution-service) first** — convert `algorithms/algorithms.py` to lazy registration
-      following the existing `adapters/algorithm_factory.py` / `custody/factory.py` pattern in the same repo. Smallest
-      change, proven template, and it validates the approach before touching the shared dependency.
+- [x] [AGENT] P0. ✅ **Layer 3 (execution-service) first** — execution-service@0576039fa2. Converted both
+      `algorithms/algorithms.py` (PEP 562 lazy re-export) AND `execution_service/__init__.py` (package root also
+      eagerly re-exported all 7 classes — the real fix needed both files, not just the "smallest change" framing
+      originally implied; see the two Progress Log entries above). QG green, functionally verified (registry
+      auto-discovers all 7). Measured impact is small (~13% wall-time, noise-level module delta) — the algorithms were
+      never the dominant import cost; see Progress Log for the `sys.modules` breakdown pointing at UAC/google/ccxt via
+      the still-eager sibling imports in `__init__.py`, out of this todo's scope.
 - [ ] [AGENT] P0. **Layer 1 (strategy-service)** — make `factory.py` register only the archetypes a deployment declares.
       Must preserve: the coverage gate that fails on a missing schema, and the clients.yaml coverage gate. A lazy
       registry that quietly registers nothing would pass both by accident — assert a positive count.
@@ -139,6 +143,40 @@ isn't already a submodule in `sys.modules`). Zero consumers in execution-service
 visible from this checkout — editing the package root's public API surface is a bigger, more fleet-facing change than
 the todo's "smallest change" framing implied. **Not yet made this edit** — flagging before touching
 `execution_service/__init__.py`'s `__all__` surface without fleet-wide consumer visibility.
+
+**2026-08-16 — Layer 3 implemented, and the baseline delta reveals the algorithms were never the dominant cost.**
+Operator approved editing the package root despite unverified fleet-wide consumers. Changed:
+`execution_service/algorithms/algorithms.py` (PEP 562 `__getattr__`/`__dir__`, `_MODULE_BY_NAME` dispatch table) and
+`execution_service/__init__.py` (removed the 7-class eager `from ... import (...)` block, added a matching
+`__getattr__` that forwards through the now-lazy `algorithms.algorithms` module). Verified functionally: registry's
+`ExecAlgorithmRegistry.list_algorithms()` still discovers all 7 algorithms and resolves classes correctly (its
+`inspect.getmembers`-based auto-discovery works because `__dir__` still enumerates `__all__`, and `getattr()` during
+discovery is exactly what triggers each lazy load — correct behavior, deferred to first real use of the registry, not
+import time).
+
+**But the measured delta is noise-level**: `execution_service.algorithms.algorithms` baseline was
+modules_loaded=5911/wall_ms=8890.7; after the fix, modules_loaded=5892/wall_ms=7713.7 — a ~19-module, ~13% wall-time
+difference, nowhere near proportional to "7 algorithm implementations no longer eager". Root cause, measured via
+`sys.modules` top-level package breakdown after `import execution_service`: `google` (GCP SDK) 1312 modules,
+`unified_api_contracts` 903, `ccxt` 632, `unified_trading_library` 360, `execution_service` itself only 323,
+`pandas` 295, `nautilus_trader` 203. **The 7 algorithms were never the dominant cost** — `execution_service/__init__.py`
+still eagerly imports `config.loader`, `data.catalog`, `data.converter`, `data.loader`, `models`, `results.serializer`,
+`algorithms.atomic_bundle_executor` and `algorithms.sor` (unchanged, out of this todo's scope), and one or more of
+those pull in the UAC (903 modules — corroborating this plan's own Layer-2 claim independent of the missing audit
+file), GCP SDK, and ccxt graphs regardless of algorithm laziness. **This todo is done and correct as scoped** (the 7
+algorithm classes are genuinely lazy now, confirmed via `sys.modules` delta immediately after `import
+execution_service.algorithms.algorithms` alone — the impl modules do not appear in `sys.modules` until an
+algorithm-specific attribute is actually accessed), but "Layer 3 done" does not mean "execution-service import cost
+fixed" — that requires tracing which of the still-eager `__init__.py` imports pulls in UAC/google/ccxt, which is
+outside Layer 3's stated scope and not attempted here. Quality gates run before shipping; see next entry for result.
+
+**2026-08-16 — Layer 3 shipped.** `bash scripts/quality-gates.sh --no-fix` on execution-service:
+`✅ ALL QUALITY GATES PASSED (175s)`, sentinel `.qg_last_passed_sha=306318fd7a3dcdbe9341a319332e6d268a0dae37`, no new
+findings introduced (both baselined-warning lines pre-existed, 0 new in each). Shipped via
+`quickmerge.sh --agent --files 'execution_service/algorithms/algorithms.py execution_service/__init__.py'` —
+**execution-service@0576039fa2**, landed on `live-defi-rollout`, `ahead=0` verified post-push. Unrelated local
+`uv.lock` drift (a `google-cloud-monitoring` dependency addition, not from this change) was deliberately left
+untouched and unshipped — not mine to stage.
 
 **2026-08-16 — baseline import cost measured (todo 1 done).** Fresh venvs, first import in each process, `sys.modules`
 delta + `time.perf_counter()` wall time. Numbers:
