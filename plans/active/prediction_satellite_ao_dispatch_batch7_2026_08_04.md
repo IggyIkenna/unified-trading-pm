@@ -83,7 +83,8 @@ audit ran (2026-07-31) — so no prior round could plausibly have seen it.
 
 ## Todos
 
-- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-19, data_engineering)** — code-read across `market-tick-data-service`
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-19, data_engineering) — unified-trading-pm@e3ca863b9d** — code-read across
+      `market-tick-data-service`
       (write side) + `market-data-processing-service` (candle-compute read side; `features-service`/`strategy-service`/
       `execution-service`/`deployment-api`/UI checked via grep, no hits). **Verdict**: a real, non-test consumer
       exists for Kalshi `trades` only — `market-data-processing-service`'s `PredictionTradesAdapter.

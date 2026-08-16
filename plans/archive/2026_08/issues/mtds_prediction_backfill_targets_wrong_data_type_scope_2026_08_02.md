@@ -38,7 +38,7 @@ locked_by:
 priority: P3
 resolved_by: >-
   investigation-only (no code fix needed) — downstream-consumer check resolved via
-  prediction_satellite_ao_dispatch_batch7_2026_08_04.md todo 1, unified-trading-pm (this commit)
+  prediction_satellite_ao_dispatch_batch7_2026_08_04.md todo 1, unified-trading-pm@e3ca863b9d
 source: >-
   Found while closing out mtds_available_at_cross_asset_backfill-006 (slot-14, data_engineering) after the prediction
   backfill's `2025-01-01..2026-08-01` continuation (PID 153615) finally reached its terminal `Elapsed...Summary` line
