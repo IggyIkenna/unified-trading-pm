@@ -182,7 +182,10 @@ restated here.
   requires are NOT satisfied by this note or by the 2026-07-27 bucket-retention numbers cited above — the executing
   worker must re-query fresh.
 
-- [ ] [CODE] P2. **Fix `cleanup_legacy_twins.py::canonical_twin_path()` — it cannot reconstruct the canonical GCS path
+- [x] ✅ [CODE] P2. **RULED + EXTRACTED 2026-08-16 (na-eligibility-audit follow-up Q&A round 3, operator ruling) →
+      `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` (`assigned_vm: planning`).** Checkbox flip
+      was missed when the Progress Log entry below was written (na-eligibility-audit 2026-08-16, dispatch agt-45ad7b,
+      caught this citing-not-flipped gap) — fixed here. Fix `cleanup_legacy_twins.py::canonical_twin_path()` — it cannot reconstruct the canonical GCS path
       for PRE-HIVE legacy shapes, which is why Part 5's twin-coverage measures 0% for all 900 tradfi class-B candidates
       (root-caused 2026-08-09, see Progress Log entry below — a lookup-logic bug, NOT a manifest registration gap).**
       All 900 tradfi legacy-B candidates share the pre-hive shape
@@ -212,6 +215,12 @@ restated here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA-STALE (already-duplicated) —
+  citation gap fixed.** 2 open todos re-read end-to-end. The CODE P2 canonical_twin_path() fix was already ruled +
+  extracted per the entry directly below, but its checkbox was never flipped to match — fixed above (checkbox now
+  cites `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`). The DATA P1 legacy-twin-delete todo
+  stays genuinely gated (twin-coverage last measured 0%, pending the fix above landing + a fresh re-measurement).
+  Doc stays NA, now 1 open todo.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 3, operator ruling)**: given the 2026-08-09 finding below
   suggests the 0% twin-coverage measurement may itself be a `canonical_twin_path()` lookup-logic bug — **fix the
   lookup bug first, then let the existing auto-execute-on-100%-coverage rule apply** (not downgraded to

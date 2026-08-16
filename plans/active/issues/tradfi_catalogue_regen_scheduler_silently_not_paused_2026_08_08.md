@@ -241,3 +241,7 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   active, `assigned_vm: planning`) -- a 3-way convergence confirmed with
   `instruments_completion_tracker_2026_07_06.md`'s own "EXTRACTED 2026-08-09" note. Todo 2 sequenced behind todo 1; todo
   5 (standing-health-check design question) is GENUINE_WORK, not yet a committed task. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA-STALE (already-duplicated),
+  re-confirmed.** 3 open todos re-read end-to-end. Todo 1's citation to
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` remains accurate. Todo 2 stays sequenced behind it; todo 5
+  stays GENUINE_WORK. Nothing to reclassify.

@@ -386,3 +386,7 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (status: active) -- the actual dispatch vehicle. Independently
   cross-checked against `tradfi_databento_account_billing_suspended_2026_08_09.md`, which explicitly lists this doc as
   "left ungated" (reads already-captured data, no live Databento dependency). `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA-STALE (already-duplicated),
+  re-confirmed (10th consecutive pass).** 3 open todos re-read end-to-end; count reconciled (3/3). Todo 1's citation to
+  `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` remains accurate. Todo 3 (naming-drift reconcile) stays
+  conditionally-scoped; todo 4 stays sequenced after todo 1. Nothing to reclassify.

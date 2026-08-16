@@ -50,7 +50,7 @@ scope: [engineer, admin]
 tags: [tradfi, tbbo, dp-fetch-009, unclassified-adapter-error, capability-gate, classify-venue-error, databento, honest-absence]
 related:
   [
-    /plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
+    /plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
