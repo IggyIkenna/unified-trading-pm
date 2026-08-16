@@ -13,6 +13,7 @@ summary: >-
   vendor that also omits an explicit application/json charset carries the identical latent mojibake risk. Filed as a
   bounded, deterministic follow-up rather than folding into the (now-archived) sports-scoped source doc.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -83,12 +84,20 @@ does not cover this encoding gap) once the sweep shows how many repos/call-sites
 
 ## Todos
 
-- [ ] [DATA] P3. Grep instruments-service (cefi/defi/tradfi/prediction adapter families) and market-tick-data-service
+- [x] ✅ [DATA] P3. Grep instruments-service (cefi/defi/tradfi/prediction adapter families) and market-tick-data-service
       for `resp.json(content_type=None)` (or equivalent `aiohttp` response-json calls) missing an explicit
       `encoding="utf-8"`; pin it on every hit found, mirroring instruments-service@5f2f3ca619. Done when: every
       `content_type=None` JSON-decode call site across both repos either already pins `encoding="utf-8"` or has been
       fixed to do so, and `quality-gates.sh` is green in each touched repo. (repos: instruments-service,
-      market-tick-data-service)
+      market-tick-data-service) — **instruments-service**: 0 unfixed sites outside the already-shipped sports fix (5
+      sites in base.py/api_football.py/transfermarkt.py, all already pinned; full-repo grep of cefi/defi/tradfi/
+      prediction adapter families found no other `content_type=None` call sites). **market-tick-data-service@48b7a558**
+      (slot-29, landed on origin/live-defi-rollout, post-rebase SHA of the locally-committed `7ffa995c`): pinned
+      `encoding="utf-8"` on 7 sites — `sportradar_adapter.py`, `tradfi/{ecb_adapter,ofr_adapter}.py`,
+      `cli/handlers/solana_defi_amm.py` (x3), `cli/handlers/_solana_defi_fetch.py` — `quality-gates.sh` green (613s;
+      10912 passed / 0 failed / 28 skipped / 1 xpassed). Independently re-verified 2026-08-16 (slot-23): grepped every
+      `content_type=None` call site in both repos' source trees (12 total, 5 IS + 7 MTDS) — all 12 now carry
+      `encoding="utf-8"`, zero remaining gaps.
 
 ## Progress Log
 
