@@ -128,7 +128,18 @@ worker's ability to read it back via the AO HTTP surface.
       todos are all `[x]`, archived) — if so, this may be a REGRESSION of a previously-fixed bug, not a new gap; if not,
       it's a distinct failure mode in the same subsystem. Done when: the exact break point is identified (wrong
       endpoint, a real 500 in the messages handler, a delivery-side bug that never writes the row) and fixed, with a
-      regression test proving a worker can retrieve an operator's answer end-to-end.
+      regression test proving a worker can retrieve an operator's answer end-to-end. **New lead (2026-08-16,
+      plan_reconciler, 2nd post-compact investigation)**: `GET /api/state` exposes a `blocked_queue` array directly
+      (schema: `blocked_id`/`slot_id`/`task_id`/`question`/`options`/`recommendation`/`created_at`/`answered_at`/
+      `answer`/`answered_by`/`authority`/`paged_at`/`similar_ids`) — a DIFFERENT, apparently-healthy channel from the
+      broken `/api/slots/<N>/messages` (discovered via another live session's own `ps aux`-visible polling command).
+      But `BLK-050d1304` does not appear in it at all (44 entries checked, 0 matches by exact `blocked_id`), and **0 of
+      the 44 entries have any `answered_at` set**, spanning a 10-day `created_at` range — one entry's own
+      dashboard-facing option text says outright "this entry prunes on the next regen", suggesting answered entries get
+      pruned rather than retained with `answered_at` populated. If true, an answered question's content becomes
+      genuinely unrecoverable from `/api/state` too, not just `/api/slots/<N>/messages` — worth checking whether the
+      answer is durably written ANYWHERE (a dedicated history table, an audit log) before concluding the content is
+      truly gone once pruned.
 - [ ] [BACKEND] P2. **Audit whether other plan_reconciler/na-eligibility-audit runs have silently missed answers to
       still-open blocked questions**, now that this gap is confirmed live (not just suspected). Query the escalation/
       blocked-question table for any row with a recorded operator answer but no corresponding worker-side pickup, across
@@ -168,3 +179,16 @@ worker's ability to read it back via the AO HTTP surface.
   blip. `GET /api/activity?limit=10` at this same moment: grepped (not fully read — the payload was 1.2MB, one event
   carries a large embedded blob) for `BLK-050d1304`, `blocked_resolved`, `blocked_answered`, and `slot_id":28` — zero
   matches across all 10 rows. BLK-050d1304 remains fully unretrieved.
+- **2026-08-16 ~18:15 UTC (plan_reconciler, 3rd channel checked)**: found (via another live session's `ps aux`-visible
+  command) and independently queried `GET /api/state`'s `blocked_queue` array — a third, structurally different channel
+  from both `/api/slots/28/messages` and `/api/activity`. Same negative result: `BLK-050d1304` is absent, and the
+  queue's own evidence (0/44 entries answered across 10 days; one entry's option text says "prunes on next regen")
+  points to answered-and-pruned rather than a retrieval bug in this specific channel. Full detail + the schema moved to
+  todo 2 above as a concrete lead. **Conclusion**: BLK-050d1304's answer is now confirmed unretrievable across every
+  channel available to this worker (3 independent surfaces checked, not 1). Re-posting the question would not help —
+  the Claude Code harness's own mid-session notification confirms the ask→answer round-trip already worked once; the
+  confirmed-broken leg is retrieval, which a duplicate ask would hit identically. Per `agents/plan_reconciler.md` STEP
+  8, still holding — not calling `/api/slots/28/done` — but further polling of these same 3 channels is not expected to
+  change the outcome. The remaining path is the one already named in `plan_reconciler_findings_ao_2026_08_16.md`'s
+  Progress Log: a fresh session or the operator applying the answer directly to the 2 affected docs, or a
+  [BACKEND]-scoped fix to todo 1/2 above followed by a re-check.
