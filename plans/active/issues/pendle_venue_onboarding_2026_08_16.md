@@ -28,7 +28,7 @@ related:
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
     /plans/active/issues/karak_decommission_2026_08_16.md,
-    /plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md,
+    /plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md,
   ]
 created: 2026-08-16
 resolved_by:

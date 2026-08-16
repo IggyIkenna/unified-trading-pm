@@ -457,7 +457,7 @@ clean tree to reproduce identically with none of these 3 files present).
 
 **Not shipped**: `quickmerge.sh` re-gates the full repo and blocks on that same failure — `karak`/`pendle`/`symbiotic`
 DeFi-connector reachability, already tracked (`/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
-P0, `/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md` P1). The baseline file's own commit note documents
+P0, `/plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md` P1). The baseline file's own commit note documents
 this exact set flip-flopping reachable/unreachable twice already today under a concurrent session's active DeFiAdapter
 wiring work — confirmed stable (not a stale race) via two identical consecutive quickmerge re-gates minutes apart.
 Operator chose "wait and retry later" over hand-editing the contested baseline file. **Resume**: `cd

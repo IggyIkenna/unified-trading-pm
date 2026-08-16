@@ -214,7 +214,7 @@ Kamino/Jupiter conflated the two.
 > decided to decommission it entirely rather than wire it — its hardcoded vault address resolves to zero deployed
 > bytecode on-chain; see `/plans/active/issues/karak_decommission_2026_08_16.md`, which supersedes this list's
 > "wire it" framing for Karak specifically. **Symbiotic**: wired into `DeFiAdapter`'s real dispatch the same day
-> (`/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md`) — no longer belongs on this "never instantiated"
+> (`/plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md`) — no longer belongs on this "never instantiated"
 > list, kept here only as the historical baseline this audit measured. **Pendle** remains genuinely unwired and now
 > has its own dedicated doc: `/plans/active/issues/pendle_venue_onboarding_2026_08_16.md`.
 
