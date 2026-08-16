@@ -19,6 +19,7 @@ related:
     /plans/epics/manifest_master.md,
     /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-15"
 last_updated: 2026-08-15
