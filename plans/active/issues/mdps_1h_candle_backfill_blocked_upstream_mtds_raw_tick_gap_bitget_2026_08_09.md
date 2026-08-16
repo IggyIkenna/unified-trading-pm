@@ -223,3 +223,12 @@ the raw-tick manifest before re-running, rather than assuming a fixed completion
   (currently RUNNING) is a different scope entirely (`data_types=liquidations`, `2020-01-01..2026-01-31`). Skipped this
   task as GATED (not blocked) rather than re-dispatching immediately — re-check once the sweep's chronological progress
   is materially closer to 2026-04 before re-attempting todo 3.
+- **slot 18, 2026-08-16**: Re-checked ~2h50m after slot 7's probe — gate still NOT met. `cefi-queue-heavy-binancefutu-x17-20260815-220349`
+  (RUNNING) `PROGRESS.json` now shows `last_completed_date=2020-03-30`, i.e. 7 calendar-days of chronological progress
+  in ~2h50m of VM runtime (~2.5 days/hour). At that measured rate, the remaining distance from 2020-03-30 to
+  2026-04-14 (~2,205 calendar days) projects to roughly **~880 hours (~37 days) of continuous VM runtime** before the
+  sweep reaches the BITGET-FUTURES 2026-04-14..04-19 window — this todo's own `est_hours: 1.0` budget cannot close
+  that gap, and no separate scoped VM is warranted while the Tardis 1-concurrent-VM cap is already held by this sweep
+  (see slot 7's entry above). Recording this projection so a future re-check can judge "materially closer" against a
+  real number instead of re-deriving it from scratch each time. Skipped `reason_code: GATED` again;
+  `estimated_unblock_minutes` capped at the fleet max (180) since the true ETA vastly exceeds it.
