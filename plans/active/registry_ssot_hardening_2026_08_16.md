@@ -181,3 +181,93 @@ overlaps `VenueCapability`'s under inconsistent casing — tracked as a new P2 t
 this plan's Measured Baseline for the three clean verdicts (adapter keys, instrument types, data types) plus a
 pointer to todos 1 and 3 here for the capability-record and error-code-map concerns — closes the umbrella's
 contract-step-1 "Declared" citable-evidence requirement for these three concerns.
+
+**2026-08-16 — error-code coverage audit (`[DATA] P0` todo) — RESEARCH COMPLETE, 5/5 venues; consolidation + code
+changes still pending.** Per CLAIM≤MEASUREMENT, dispatched 5 parallel WebSearch/WebFetch research agents (one per
+in-scope venue) against each venue's real official docs rather than recalling "documented codes" from training
+memory. Baseline diffed against:
+`unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/{cefi.py,defi.py}` via
+`classify_venue_error()`/`VENUE_ERROR_MAP`. All 5 (Binance, Bybit, OKX, Deribit, Lido) now complete. Findings below
+(full agent outputs are in this session's transcript, not yet re-verified/applied to code — capturing the substance
+here so it survives compaction; **the remaining work is to build the required table + apply mapping changes**, not
+more research):
+
+- **Binance** (Spot REST/WS scope, 3 independent official sources cross-checked): mapped today = -1000, -1003,
+  -1006, -1013, -1021, 429/500 (400/401 are not in Binance's own enumerated HTTP list — generic/inferred). Biggest
+  gap: **-2010 NEW_ORDER_REJECTED** (generic order-placement rejection — the single most common live outcome,
+  currently unmapped) → FAIL. Also worth adding: 418 (IP auto-ban after ignoring 429 — needs long/escalating
+  backoff, not a normal retry) → RECONNECT; 409 (cancelReplace ambiguous partial success — needs order-state
+  reconciliation, not blind retry/fail); -1007 TIMEOUT (exec status unknown, same hazard class as -1006) →
+  RECONNECT/reconcile; -1002/-1022/-2014/-2015 (auth/signature/key failures) → FAIL; -2013 NO_SUCH_ORDER → FAIL;
+  -1015/403 (distinct rate-limit surfaces from -1003/429) → RETRY-with-backoff. Explicitly could NOT verify several
+  older third-party-cited margin codes (-2018→-2020, -2025, -2027→-2034, -2037/-2038, -2040/-2041) exist in the
+  current official Spot `errors.md` — do not add on memory, they may be Margin-API-only or deprecated.
+- **OKX**: mapped today = 50011, 50026, 51008, plus 50004 (labeled WS-close, but OKX's own docs define 50004 as a
+  REST timeout — **50004 is a mismatch**; the code that actually matches our WS-close intent is **64008**, itself
+  unmapped). Docs page is a JS SPA (WebFetch got fragments only) — cross-verified via ccxt's actively-maintained OKX
+  adapter as a secondary source, high confidence on codes/messages, lower confidence on completeness of the very
+  newest additions. Reachable gaps worth adding: 64008 (WS closing soon) → RECONNECT; 60015 (WS idle 30s
+  disconnect) → RECONNECT; 50001 (matching engine upgrading, routine at funding settlement) → RETRY; 50013 (system
+  busy, near-dup of mapped 50026) → RETRY; 60009 (WS login failed) → FAIL; 60014 (WS rate limit, WS analog of
+  mapped 50011) → RETRY; 51009 (order blocked, account suspended) → FAIL; 51119/51127/51131/51736/51764
+  (insufficient-balance variants distinct from mapped 51008) → FAIL; 51400/51401/51402 (cancel-target
+  not-found/already-canceled/already-completed — reachable on cancel-fill races, should be treated as no-op
+  success, not default-fail) → FAIL-as-noop; 51002 (instrument/index mismatch, config-bug signal) → FAIL+alert;
+  50102 (timestamp >30s skew) → FAIL+alert.
+- **Deribit** (docs.deribit.com/articles/errors, cross-checked vs ccxt): mapped today = 10028, 10040, 11044, 13009,
+  13010, plus 400/401/429/500 (which aren't Deribit JSON-RPC codes at all — separate HTTP transport layer). **Two
+  EXISTING mappings appear mislabeled, not just gaps** — higher-risk than an unmapped code since it drives wrong
+  retry behavior silently: **13010** is labeled "token revoked→RECONNECT" but Deribit's own docs define it as
+  `value_required` (generic bad-request/missing-param, not auth-related — reconnecting won't fix a malformed
+  request; recommend FAIL). **11044** is labeled "not enough funds→FAIL" but is actually `not_open_order` (order-
+  state error); the real not-enough-funds code, **10009**, is unmapped entirely. Recommend: reclassify 13010→FAIL,
+  add 10009→FAIL as the real insufficient-funds code (leave 11044→FAIL, just fix its semantic label if downstream
+  logic ever branches on description text). Other reachable gaps: 10004 order_not_found → FAIL; 10047
+  matching_engine_queue_full → RETRY; 10066 too_many_concurrent_requests → RETRY; 11051/13028
+  system_maintenance/temporarily_unavailable → RETRY-with-backoff; 13000-13008 credential errors → FAIL; 10041
+  settlement_in_progress → RETRY-with-backoff; 11052 subscribe_error_unsubscribed → RECONNECT (WS-specific, our
+  current 4-code set has zero WS-subscription coverage); 13888 timed_out → RETRY; -32602/-32600/-32601/-32700/-32000
+  standard JSON-RPC protocol errors → FAIL (client-side malformation, retry won't help).
+- **Lido**: real error surface is two unrelated layers — (a) off-chain REST APIs (docs.lido.fi), read-only,
+  no documented Lido-specific error-code table beyond generic HTTP convention; (b) on-chain JSON-RPC + Lido
+  contract custom errors (verified from `lidofinance/core` GitHub source: `WithdrawalQueueBase.sol`, `Lido.sol`).
+  Mapped today = 400/401/429/500, -32603, `"WITHDRAWAL_NOT_FOUND"` (our internal label — **does not literally match
+  any real Lido contract error name**; closest real analogs are `InvalidRequestId`/`RequestNotFoundOrNotFinalized`,
+  both currently unmapped, worth noting as a naming caveat not a bug). Reachable gaps (assuming withdrawal
+  status/claim checks are in scope, staking-submit is not): `InvalidRequestId`/`InvalidRequestIdRange` → FAIL;
+  `RequestNotFoundOrNotFinalized` → FAIL (reachable on every pre-finalization claim-eligibility check);
+  `RequestAlreadyClaimed` → FAIL; JSON-RPC -32000 (generic revert catch-all when a provider doesn't decode the
+  custom error) → FAIL; -32005 (Infura/Alchemy rate-limit code, RPC analog of the already-mapped REST 429) →
+  RETRY. If staking-submit (not just withdrawal) is ever in scope, also add `STAKE_LIMIT`→RETRY-with-backoff and
+  `STAKING_PAUSED`/`ZERO_DEPOSIT`→FAIL. Oracle/finalizer-only and admin/governance-only contract errors are
+  correctly out of reach for a normal client — not gaps.
+- **Bybit** (V5 API, bybit-exchange.github.io/docs/v5/error, full fetch succeeded, ~700+ codes across 20
+  categories): mapped today is entirely transport/session/auth-level (400, 401, 429, 10000, 10001, 10006, 10019,
+  33004). **Genuine doc-level ambiguity found, not our bug**: Bybit itself overloads code **10003** (REST/UTA =
+  "API key invalid/wrong domain" vs WS-OE = "too many sessions under same UID") and **10016** (REST/UTA = "server
+  error" vs WS-OE = "internal error/service restarting") — any classifier keying purely off the integer without
+  tagging REST-vs-WS origin will misclassify one of the two meanings; worth a namespace-tagged key, not just an
+  added mapping. Reachable transport-level gaps worth adding: 403 → FAIL (or RETRY only if cause is IP-rate-limit,
+  else FAIL — distinct from 429); 404 → FAIL (client-side routing bug, never transient); 10429 (WS analog of REST
+  429) → RETRY; 10018 (IP rate limit, distinct surface from key-based 10006) → RETRY-with-backoff; 10002/-1
+  (timestamp outside recv window / request expired) → FAIL-then-resync-clock; 10014 (duplicate
+  request/idempotency collision on a reused clientOrderId) → FAIL; 10404 (WS op type not found — schema drift, a
+  code bug not transient) → FAIL; 20003 (WS too-frequent-same-session, distinct from 10429/10006) → RETRY; 20006
+  (WS duplicate reqId, client bug) → FAIL. Plus a handful of explicitly-transient business-layer codes worth
+  special-casing despite the general rule below: 110079 (order processing, try again) → RETRY; 170007 (spot
+  backend timeout) → RETRY; 170032 (spot network error) → RETRY; 170149/170150 (generic create/cancel failure) →
+  RETRY-once-then-FAIL. Agent's explicit recommendation: the other ~600 business-rejection codes (110xxx
+  order/position, 170xxx spot, 176xxx/182xxx margin, loan/earn/reward/RFQ/prediction) are deterministic per-request
+  rejections (insufficient balance, invalid leverage, KYC blocks, etc.) that belong in order-response handling, not
+  this transport retry/reconnect/fail map — blindly retrying them would either loop pointlessly or risk duplicate
+  submission, so deliberately NOT itemized/added. Also flagged as a bigger structural gap than any single missing
+  code: **if the classifier has no explicit default-fallback for an unrecognized numeric code, that should be
+  added** (`FAIL` + log-unknown-code) so a genuinely novel documented code doesn't silently mis-route.
+
+**Next step**: consolidate all 5 audits above into the required "venue → documented codes → mapped? y/n" table,
+apply the recommended additions/relabels to `unified-api-contracts/.../errors/{cefi.py,defi.py}` (incl. the two
+Deribit relabels — 13010→FAIL, add 10009 as real insufficient-funds — and the OKX 50004-vs-64008 fix), decide on a
+namespace-tagged key for Bybit's 10003/10016 REST-vs-WS collision, ship code via `quickmerge.sh --agent --files
+'unified_api_contracts/canonical/crosscutting/errors/cefi.py unified_api_contracts/canonical/crosscutting/errors/defi.py'`
+scoped to the `unified-api-contracts` repo, then flip this plan's `[DATA] P0` error-code-coverage todo to `[x]`
+with evidence (table + sha) and ship this doc via `safe-doc-push.sh`.
