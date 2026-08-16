@@ -379,12 +379,13 @@ campaigns, this session:
 - [ ] [SCRIPT] P1. Once the fixed watchdog is confirmed healthy: delete the old stopped
       `vm-zombie-watchdog-20260810-163005`, and remove the `keep=true` label from `mdps-backfill-cefi-20260815-181733`
       (restores normal genuine-zombie protection for that VM once the false-positive risk is gone).
-- [ ] [OPERATOR] P0. Review + selectively relaunch the ~320 distinct VMs killed 07:39-17:29 UTC today by this bug
+- [x] [OPERATOR] P0. Review + selectively relaunch the ~320 distinct VMs killed 07:39-17:29 UTC today by this bug
       (families: `mdps-cefi`/`mdps-tradfi`/`mdps-sports`/`mdps-defi`, `instr-backfill-defi-pchk-*`,
-      `mtds-oracle-prices-backfill`, `tradfi-bf-*`, smaller counts elsewhere) — none were auto-relaunched
-      (exit-code-monitor-cron paused). Each represents a real, un-recovered data-capture gap. Too broad (320 separate
-      launch decisions across several asset groups) for a single autonomous pass to safely bulk-remediate; needs an
-      operator triage pass on which campaigns are still incomplete vs already covered by a later manual relaunch.
+      `mtds-oracle-prices-backfill`, `tradfi-bf-*`, smaller counts elsewhere) — **RESOLVED 2026-08-16 (operator
+      confirmation): this batch was a smoke-test launch, not real production backfill campaigns.** No genuine
+      data-capture work was lost; no relaunch needed. Correcting the prior framing here — this was NOT "real stalled
+      backfill work sitting idle," it was disposable test infrastructure. Leave any genuinely-needed backfill coverage
+      to normal AO-dispatched agents working against fresh (fixed) code going forward, not a manual bulk-relaunch pass.
 - [ ] [OPERATOR] P1. `lc_log_upload_trap_block`'s RUNNING sentinel has existed since 2026-07-13 — over a month before
       this was caught. Historically scope how far back this false-kill class goes for launchers using that wrapper (this
       pass only swept the last 24h of Cloud Logging). May surface additional silently-lost campaigns predating today.
