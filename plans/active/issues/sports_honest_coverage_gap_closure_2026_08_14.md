@@ -283,6 +283,19 @@ rows (confirmed deliberately out of scope).
       `<cross-session-message>` is a legitimate same-workspace channel, redid it correctly. Real gap in
       provenance-verification for mid-task corrections — see Lessons below.
 
+- [x] ✅ [SCRIPT] P1. **CORRECTION to the entry above, 2026-08-16 — the "~17K uppercase rows, must stay uppercase"
+      claim was wrong; it was never independently verified against live data.** Full investigation + fix in
+      `sports_odds_api_data_type_casing_standardization_2026_08_15.md` (Phase 1 finding). A live manifest check found
+      **ZERO rows with exact-uppercase `data_type="ODDS"` anywhere** (checked across both sports buckets, all venues,
+      not just ODDS_API) — real data has always been lowercase `odds` (1,721 rows for `venue=ODDS_API`, 899,286 for
+      the bulk empty-venue entry — both real counts, and both bigger than the old stale comments claimed). Both
+      registry entries in `data_type_capability.py` fixed to lowercase; the pinning test rewritten. The odds_api
+      adapter fix (`market-tick-data-service@a4a20fc7`) was still a real, correctly-motivated fix for the SOURCE CODE
+      (which genuinely wrote uppercase before it), it just turned out to be closing a gap that had never actually
+      shown up in captured manifest data — no GCS migration was ever needed. Lesson: "confirmed it must stay
+      uppercase" in the entry above was itself an unverified claim inherited from a stale code comment, not an
+      independent measurement — exactly the CLAIM ≤ MEASUREMENT trap this workspace's rules exist to catch.
+
 - [ ] [SCRIPT] P1. **SFI: retry the 7 dates behind the 112 `attempted_failed` rows** — 2 confirmed-retriable root
       causes, no structural gap: 79 rows (`JSONDecodeError`, 6 dates in 2022-2023, all attempted 2026-08-07) were hit by
       a truncated-JSON bug already fixed same-session by `instruments-service@ecfc2749` (2026-08-10) — genuinely

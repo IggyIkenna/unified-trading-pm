@@ -111,57 +111,49 @@ inconsistency. The operator has now ruled: fix it for real, everywhere, includin
 
 ## Phase 1 — live-check the real population (read-only, no mutation)
 
-- [ ] [DATA] P1. BLOCKED-ON:mtds-backfill-odds-1-completion — live-probe the ODDS_API-venue uppercase population in
-      `instruments-store-sports-prd-central-element-323112` / `market-data-tick-sports-prd` the same way
-      `drop_sports_odds_phantom_uppercase_2026_07_26.py` and `purge_footystats_odds_uppercase_phantom_2026_08_14.py` did
-      for their respective slices: for a representative sample (or the full set, if cheap enough) of the ~17K manifest
-      rows carrying `data_type="ODDS"` + `venue="ODDS_API"`, check whether the corresponding GCS object at the expected
-      path actually exists (`gcs_describe_object` via UTL, never raw gsutil). Do NOT wait for the VM to fully finish if
-      it would take unreasonably long — re-check its status; a "not currently running" state (completed OR cleanly
-      stopped) is sufficient to proceed, a live-writing state is not. Split the population into: (a) phantom rows
-      (manifest entry, no real GCS object) — resolvable via Phase 2; (b) real rows (manifest entry backed by a real
-      object) — needs Phase 3. Done-when: exact counts for (a) and (b), written into this plan's Progress Log, with the
-      probe script's location cited (follow the shared task-id-keyed checkpoint convention in `task_template.md` §3
-      finding X if the probe takes long enough to need resuming).
+- [x] ✅ [DATA] P1. **Live-check DONE, 2026-08-16 — finding: ZERO uppercase rows exist anywhere. The entire premise
+      behind Phases 2-3 below was a stale, never-verified estimate.** Did not wait for `mtds-backfill-odds-1` (it's
+      hitting an unrelated, likely-same-family silent-exit issue — see
+      `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`'s 2026-08-16 entry — but this check doesn't
+      need it, it examines EXISTING historical data, not new writes). Queried both candidate buckets
+      (`instruments-store-sports-prd-central-element-323112`, `market-data-tick-sports-prd-central-element-323112`)
+      directly via `download_from_storage` + pyarrow, filtering `data_type` exact-match `"ODDS"` across ALL venues, not
+      just ODDS_API: **0 rows in either bucket.** The real, current data is uniformly lowercase: `market-data-tick-
+      sports-prd`'s `venue="ODDS_API"` carries 1,721 `odds` rows (not ~17K as the old registry comment claimed) plus
+      125,253 derived `odds_horizon_bucket` rows; `instruments-store-sports-prd`'s empty-venue bulk odds carries
+      899,286 `odds` rows (not ~105K as the old comment claimed — an 8.6x undercount, also never verified). **Root
+      cause of the false "~17K uppercase" premise**: a `unified-api-contracts/data_type_capability.py` code comment
+      stated this as fact; it was propagated through this session's earlier scoping investigation (which correctly
+      verified the ADAPTER's write statement was genuinely uppercase before its own fix, but never independently
+      re-verified the actual manifest content) and then into this plan's authoring — a real CLAIM ≤ MEASUREMENT gap
+      that persisted for most of this session. **Corrective action taken in the same turn**: fixed BOTH stale registry
+      entries (`unified-api-contracts` — commit pending as of this edit) to lowercase `"odds"` with corrected,
+      live-measured row counts in their notes; replaced the now-wrong
+      `test_odds_api_capability_has_both_casings_during_the_lowercase_migration` test (which asserted a permanent
+      uppercase/lowercase split that never reflected reality) with
+      `test_odds_api_capability_is_lowercase_matching_real_manifest_data`.
+
+**CONCLUSION: Phases 2 and 3 below are MOOT — there is no phantom subset and no real subset to migrate, because there
+is no uppercase population at all.** Marking them CANCELLED rather than executing empty phases.
 
 ## Phase 2 — close the phantom subset (manifest-only, no GCS mutation)
 
-- [ ] [SCRIPT] P1. For the phantom subset sized in Phase 1: purge/reclassify the manifest rows only, mirroring
-      `purge_footystats_odds_uppercase_phantom_2026_08_14.py`'s pattern exactly (same CAS-based manifest write approach
-      used elsewhere this session for the FIXTURES_OUTCOMES backlog close). This is a manifest-content change, not a GCS
-      object delete — no `[OPERATOR]` tag needed (read-only-derived, reversibility-qualified per finding T/U in
-      `task_template.md`: the source manifest rows are quarantined/backed up before rewrite, same pattern as the
-      FIXTURES_OUTCOMES backlog script from 2026-08-14). Done-when: a fresh `read_manifest_index` pull shows zero
-      remaining phantom-uppercase-ODDS rows for the checked population, and the row count drop matches Phase 1's
-      measured phantom count exactly.
+- **[SCRIPT] P1. CANCELLED — SUPERSEDED 2026-08-16 (Phase 1 finding: zero phantom rows exist, nothing to purge).**
 
 ## Phase 3 — migrate the real subset (GCS mutation — [OPERATOR] gated)
 
-- [ ] [OPERATOR] P1. For the real subset sized in Phase 1 (if non-zero): execute a copy→content-verify→CAS-manifest-swap
-      migration from the uppercase `ODDS` path/value to lowercase `odds`, following
-      `restamp_sports_trades_to_odds_2026_08_12.py` (physical copy) + `manifest_swap_trades_to_odds_2026_08_12.py` (CAS
-      manifest swap) as the cleanest recent reusable pattern for this exact class of migration — do NOT reuse the K1/K2
-      scripts directly without re-verifying their direction logic first, given that migration's own documented reversal.
-      **[OPERATOR] tag justification**: this is genuinely the class of migration finding T/U reserves for operator
-      gating — a real, hard-to-reverse GCS object rename with a documented history of direction-confusion in this exact
-      codebase, not a reflexive caution on scale alone. Before running: (1) re-confirm `mtds-backfill-odds-1` (or its
-      successor) is not actively writing to the same path prefix, (2) re-confirm the copy direction is
-      uppercase→lowercase by reading this plan's own Phase 1 findings, not from memory, (3) dry-run against a `-test-`
-      bucket first, (4) run the real migration only after the dry-run's row-for-row content-hash verification passes.
-      Done-when: zero remaining uppercase-ODDS objects for the migrated population, a fresh manifest read shows only
-      lowercase-odds rows for this venue, and no other consumer (features/strategy/execution) shows a gap or
-      double-count across the migration window (spot-check via the case-fold stopgap from Phase 0 still being live
-      during the cutover).
+- **[OPERATOR] P1. CANCELLED — SUPERSEDED 2026-08-16 (Phase 1 finding: zero real uppercase rows exist anywhere, no
+  GCS migration needed — the K1/K2-class risk this phase was gated against never materialized because there was
+  nothing to migrate).**
 
 ## Phase 4 — cleanup
 
-- [ ] [SCRIPT] P2. Once Phase 3 is fully done and verified stable for at least one full day (no regression, no
-      case-fold-stopgap consumer actually firing on a mixed-case row anymore): the Phase 0 case-fold stopgap can be
-      removed as dead code, OR left in place permanently as defensive normalization — operator's call at that point, not
-      pre-decided here. Note the decision + reasoning in this plan's Progress Log when made.
+- [x] ✅ [SCRIPT] P2. Phase 0's case-fold approach was superseded by fixing the registry entries directly to lowercase
+      (see Phase 1 finding) rather than needing a transition-window stopgap — there was no real uppercase data for a
+      stopgap to bridge. Nothing to remove; no dead code was introduced.
 - [ ] [DOC] P2. Update `sports_honest_coverage_gap_closure_2026_08_14.md`'s odds_api section to reference this plan's
-      outcome once Phase 3 (or Phase 2, if Phase 1 found zero real rows) completes. Archive this plan per the standard
-      6-step ritual once every phase above is done or explicitly cancelled.
+      outcome (fully resolved via Phase 0 code fix + Phase 1 finding that no migration was ever needed). Archive this
+      plan per the standard 6-step ritual once this doc-update todo lands — every other todo is now done or cancelled.
 
 ## Progress Log
 
