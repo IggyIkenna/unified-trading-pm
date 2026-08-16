@@ -210,11 +210,15 @@ repos with two different causes, not one shared mechanism.
       2026-05-05 cluster with a live scoped query filtered `service_name=market-data-processing-service` (currently
       circumstantial: date/hour/data_type/structural-shape match, not a direct row-level confirmation).
       (repo: market-data-processing-service)
-- [ ] [DATA] P1. **SAFETY** — before any delete/cleanup script targets this 14,982-row population, confirm it
+- [x] [DATA] P1. **SAFETY** — before any delete/cleanup script targets this 14,982-row population, confirm it
       EXCLUDES the 326-row 2026-05-05 MDPS cluster if the coarse-summary-row hypothesis above is confirmed as
       deliberate design (pre-flight-skip marker), not a bug — deleting it would be a regression, not a cleanup.
-      Cross-check against `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py`'s actual row-selection
-      filter to see whether it already excludes this sub-cluster or would sweep it up. (repo: market-tick-data-service)
+      **DONE 2026-08-16**: read `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py` directly
+      (`_WINDOW_START="2026-08-15T11:00:00"`, `_WINDOW_END="2026-08-15T23:59:59"`, lines 90-91) — its `written_at`
+      target window is structurally disjoint from BOTH out-of-window clusters (2026-07-13T23:5x and
+      2026-05-05T22:07), which is exactly why this doc calls them "out-of-window" in the first place. The script
+      cannot touch either cluster by construction; no code change needed, no live query required to confirm this.
+      (repo: market-tick-data-service)
 - [ ] [OPERATOR] P2. Decide remediation policy for the 2026-07-13 cluster's "blank from birth" gap (real timeframe
       never captured by the old v8-index rebuild): is this "safe to leave" (same posture as the earlier P2
       `data_type=odds` conclusion), or does it warrant a real backfill recovering true timeframe from underlying
