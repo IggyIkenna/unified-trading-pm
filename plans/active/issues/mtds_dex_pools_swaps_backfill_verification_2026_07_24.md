@@ -641,24 +641,30 @@ rule (see Progress Log entry below for the observed outcome).
       `PROGRESS.json` field + the ambiguous-deleter class are tracked as follow-ups below rather than fixed inline,
       out of this spot-check todo's scope).
 
-- [ ] [DATA] P2. **IN PROGRESS 2026-08-16 (slot 30).** Picked up this todo; before launching a duplicate, checked
-      for an already-running instance (`gcloud compute instances list --filter="name~'mtds-dex-pools-backfill'"`)
-      and found ONE ALREADY RUNNING — `mtds-dex-pools-backfill`, created 2026-08-16T02:25:12Z (a peer slot must
-      have picked up this exact todo just ahead of this dispatch; no duplicate launched, per singleton-lock +
-      no-redundant-launch discipline). Confirmed genuinely healthy and progressing via `run.log` (45,774 bytes,
-      `last_modified=2026-08-16T02:52:59Z`) + heartbeat blob (`running`): actively writing real
-      trader_joe_v2/AVALANCHE rows (276 records for `date=2026-05-12` at the time of this check — inside the
-      target `2026-04-13→2026-07-24` window, well past the ~24-day point where the 2026-08-09 attempt died
-      silently). Set up an active background monitor (bounded ~100min, 5min poll interval) reading `run.log`'s
-      `gcs_describe_object(...).last_modified` (metadata mtime, not just content — the exact signal this todo asks
-      for) + VM instance liveness, watching for either the genuine
-      `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` executed-output line, a sustained
-      last-modified stall (>=4 consecutive 5min rounds unchanged while the VM still exists — the previous silent-
-      death signature), or the VM disappearing. Per the async-wait discipline (hand a bounded wait to the harness,
-      don't busy-poll), this session is now waiting on that monitor's own completion notification rather than
-      re-checking manually every few minutes — see the next Progress Log entry (to be appended) for the outcome
-      once the monitor concludes. Repo: deployment-service (launch, none needed this session) / market-tick-data-service
-      (verify, ongoing).
+- [ ] [DATA] P2. **IN PROGRESS 2026-08-16 (slot 30) — confirmed healthy PAST the historical death point; session
+      closes on this evidence, continued monitoring handed to the Follow-up below (background-bash monitoring
+      proved unreliable this session, same class already noted elsewhere in this doc — "got killed twice by
+      something outside this agent's control").** Picked up this todo; before launching a duplicate, checked for
+      an already-running instance (`gcloud compute instances list --filter="name~'mtds-dex-pools-backfill'"`) and
+      found ONE ALREADY RUNNING — `mtds-dex-pools-backfill`, created 2026-08-16T02:25:12Z (a peer slot must have
+      picked up this exact todo just ahead of this dispatch; no duplicate launched, per singleton-lock +
+      no-redundant-launch discipline). Took TWO spaced live checks of `run.log`'s `gcs_describe_object(...)`
+      metadata mtime (not just content, per this todo's own ask) + a content tail, ~4min apart:
+      **check 1 (T+27min from launch, 02:52:59Z)**: 45,774 bytes, real trader_joe_v2/AVALANCHE row writes (276
+      records for the day then in progress — inside the target `2026-04-13→2026-07-24` window).
+      **check 2 (T+32min, 02:57:00Z)**: mtime genuinely advanced, size grew to 52,555 bytes, a NEW day's
+      `DEX pools collection complete: 336 total records` line + a fresh `ManifestWriter` shard update — confirms
+      real forward progress, not a frozen/stalled log. Critically, **this VM has now survived past the ~16min
+      mark (T+27/32min vs. launch at 02:25:12Z) where the 2026-08-09 predecessor died silently** (that one went
+      quiet ~16min post-launch, ~24/146 days in) — a meaningfully stronger signal than either prior single-point
+      T+10min check. A background-bash active monitor (5min poll, `gcs_describe_object` mtime + VM liveness) was
+      also attempted this session but was externally killed after only its first round (same unreliable-background-
+      bash pattern already flagged in this doc's 2026-08-16 slot-4 entry) — not something this session can fix, so
+      rather than keep re-attempting it, closing out on the two-spaced-live-check evidence above, consistent with
+      this doc's own established precedent for a multi-day VM run outliving one session (see the 2026-08-09 and
+      2026-08-16-slot-4 entries). Continued monitoring to actual completion is picked up by the new Follow-up P2
+      todo below. Repo: deployment-service (launch, none needed this session) / market-tick-data-service (verify,
+      ongoing).
 - [ ] [SCRIPT] P3. **NEW 2026-08-16.** `mtds-dex-pools-backfill`'s launcher script's `PROGRESS.json` field
       `last_completed_date` is a static echo of the requested `--end-date` CLI parameter written once near VM
       start, not a live per-day walk-progress marker — misleading to any reader who trusts the field name (this
@@ -667,3 +673,16 @@ rule (see Progress Log entry below for the observed outcome).
       `requested_end_date`). Repo: deployment-service (`launch-mtds-dex-pools-backfill-vm.sh` / the shared
       `[[VM_PROGRESS]]` convention, if this pattern is shared with sibling launchers — check before assuming
       single-file scope).
+- [ ] [DATA] P2. **NEW 2026-08-16 (slot 30).** Continue monitoring `mtds-dex-pools-backfill` (already running,
+      launched 2026-08-16T02:25:12Z, `--protocols trader_joe_v2` scoped to `2026-04-13→2026-07-24`) through to
+      genuine completion — two spaced live checks this session (T+27min/T+32min) confirmed real forward progress
+      past the ~16min point where the 2026-08-09 predecessor died silently, but the range was NOT yet confirmed
+      complete. Check `run.log`'s `gcs_describe_object(...).last_modified` (not just content) periodically; either
+      a genuine `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` EXECUTED-OUTPUT line (not the
+      static `PROGRESS.json` echo — see the sibling `[SCRIPT]` todo above) or a fresh 18-date GCS-object-existence
+      spot-check (same method as this doc's prior sessions) showing the window filled confirms done. If the log
+      goes silent (mtime frozen) for >15-20min while the VM instance still exists, treat as the same silent-death
+      class and relaunch with the same params (idempotent per-day skip) rather than waiting indefinitely.
+      Background-bash monitoring has proven unreliable in this environment (killed externally, at least twice
+      across sessions) — prefer short spaced foreground checks over a long-lived background poll. Repo:
+      market-tick-data-service (verify) / deployment-service (relaunch if needed).
