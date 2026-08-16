@@ -159,6 +159,36 @@ in production** (Elysium plan § H.12), so stubbing the remainder is continuing 
       collateral/haircut substitution and confirm it satisfies all three engines' decision logic bit-for-bit against a
       known input — this ruling settles the *design direction*, not the implementation.
 
+## A3. Venue & asset scope — CEX-only, three assets, one staking route (operator ruling 2026-08-16)
+
+Per operator ruling and Annex A of the signed Consulting Agreement (`Elysium_x_IkeNova_contract.pdf`, executed 3
+March 2025, Doc ID `5f6491d203e91ea6c5b836c722dba886e0d1565b`): the contracted "CeFi & DeFi basis trading strategy"
+covers exactly:
+
+- **Assets**: BTC, ETH, SOL (+ their perpetuals/derivatives) — matches Annex A verbatim.
+- **Venues — CEX ONLY, exactly four**: Bybit, Deribit, Binance, OKX. Used for both spot purchase and perp
+  shorting, across all three assets. No other CEX venues. **No DEX/on-chain perp venues at all** — Hyperliquid and
+  Aster (the two live DEX-shaped perp venues in production today) are explicitly named OUT of scope; neither is in
+  the contracted universe.
+- **Staking — ETH only, via Lido (stETH)**. No Marinade, no SOL staking, no other LST protocol. "DeFi" in Annex
+  A's "CeFi & DeFi" phrasing resolves to this one staking leg, not to on-chain perp trading.
+- **Explicitly excluded as a result**: all Solana DeFi/DEX work (Jupiter perps, Kamino borrow, Marinade — see the
+  correction in `solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md`), Hyperliquid, Aster, and any
+  other on-chain venue or protocol.
+
+**Effect on §A2's archetype table**: `CARRY_BASIS_PERP` and `CARRY_STAKED_BASIS` cover this scope directly, and
+`CARRY_STAKED_BASIS` is largely already live for it — `catalog_staked_basis.py` shows `lido-deribit` (7.5%
+haircut) and `lido-bybit` (10% haircut) as verified `LST_AS_MARGIN` slots today; Binance and OKX need no new
+LST-margin integration, they resolve via the engine's existing `USDC_MARGIN_BUFFERED` fallback structure.
+`CARRY_FUNDING_DISPERSION`'s inclusion in §A2 is this plan's own voluntary-breadth choice ("shown deliberately so
+they can see how an expanded strategy correlates against the contracted pair"), not contractually required by this
+scope — worth an explicit operator confirmation on whether to keep it, given the direction of this session's
+rulings toward narrower disclosure.
+
+**Effect on the frozen-collateral-eligibility ruling above**: this sharply bounds it. The substitution only needs
+to cover stETH haircuts/acceptance on 4 named CEX venues, not the fleet-wide `VENUE_COLLATERAL_MATRIX` — a much
+smaller, mostly-already-measured surface than originally scoped.
+
 ## B. What the expansion adds, and therefore what the carve-out must account for
 
 The expansion plan changes what "real" means at the decision boundary, so the carve-out inherits it.

@@ -328,11 +328,19 @@ no change at all.**
       `BITGET-FUTURES`, `KRAKEN-FUTURES` have `VENUE_COLLATERAL_MATRIX` rows but no policy in `COLLATERAL_REGISTRY`, so
       their LTV/liquidation semantics are invisible to every registry consumer. **`ASTER` is a live funding-dispersion
       venue**, which makes it the priority of the four.
-- [ ] [AGENT] P3. **Note for whoever builds the carve-out's frozen collateral/eligibility substitution** (ruled
-      2026-08-16, `elysium_carveout_stubbed_strategy_service_2026_08_12.md` §A2): take that snapshot AFTER the three
-      todos above land, not before. `VENUE_COLLATERAL_MATRIX`/`COLLATERAL_REGISTRY` are actively incomplete/ambiguous
-      right now (no Kamino LENDING rows, four missing PERP_CEX policies, unresolved `haircut_pct` units) — freezing
-      early would bake known gaps into the carved package as if they were final.
+- [x] [AGENT] P3. ✅ **CORRECTED 2026-08-16 — this plan's work is NOT a carve-out dependency at all.** Operator
+      ruling recorded in
+      [`/plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md`](/plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md)
+      §A3: the carve-out's actual venue scope is CEX perp shorting only — Bybit, Deribit, Binance, OKX — paired
+      with Lido (stETH) staking. No DEX/on-chain perp venues, no Solana LST side, no Kamino. An earlier note here
+      (now removed) had wrongly assumed the carve-out's frozen collateral substitution should wait on this plan's
+      Jupiter/Kamino work landing. The corrected scope is already almost entirely live: `catalog_staked_basis.py`
+      shows `lido-deribit` (7.5% haircut) and `lido-bybit` (10% haircut) as verified `LST_AS_MARGIN` slots today;
+      Binance and OKX need no new LST-margin integration at all — they resolve via the existing
+      `USDC_MARGIN_BUFFERED` fallback structure the engine already implements. This plan (Jupiter perps, Kamino
+      borrow, Marinade/SOL side) is entirely orthogonal to the carve-out — pursue it or not on its own merits for
+      the firm's own book, not as carve-out-gating work.
+      edit.
 - [ ] [SCRIPT] P3. **Resolve the `haircut_pct` unit ambiguity.** The field name is identical in `CollateralAcceptance`
       (FRACTION, `0.075`) and `AssetHaircut` (WHOLE PERCENT, `7.5`), with a single ×100 conversion in
       `_ah_from_venue_collateral()`. Values agree exactly (verified 2026-08-12, all 12 shared perp rows) — this is a
