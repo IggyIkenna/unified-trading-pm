@@ -28,6 +28,7 @@ related:
   [
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/12-agent-workflow/measurement-claims-discipline.md,
+    /plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md,
   ]
 context_scope:
   - /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md
