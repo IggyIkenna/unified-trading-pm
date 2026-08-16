@@ -271,13 +271,55 @@ follow-up batch once the operator rules (see `## Deferred`).
       delimiter gaps) plus the existing pd-ssd/pd-standard todo (which already covers the 3rd file). Repo:
       deployment-service.
 
-- [ ] [SCRIPT] P2. **Migrate group C (15 launchers) to `lc_gcloud_create`** — same pattern and done-when as group A.
-      Files: `launch-perp-clob-live.sh`, `launch-perp-funding-manifest-restamp-vm.sh`,
-      `launch-prediction-forward-poll.sh`, `launch-prediction-live.sh`, `launch-rate-calibration-probe-vm.sh`,
+- [x] ✅ [SCRIPT] P2. **Migrate group C (14 of the listed 15 launchers) to `lc_gcloud_create` — 1 EXCLUDED, finding not
+      skip.** Migrated (all in `deployment-service/scripts/vm/`): `launch-perp-clob-live.sh`,
+      `launch-perp-funding-manifest-restamp-vm.sh`, `launch-prediction-forward-poll.sh`, `launch-prediction-live.sh`,
       `launch-replay-cascade.sh`, `launch-sfi-forward-poll.sh`, `launch-sport-residue-blank-venue-purge-vm.sh`,
       `launch-sports-ensemble-train-vm.sh`, `launch-sports-full-sweep-vm.sh`, `launch-tradfi-forward-poll.sh`,
       `launch-tradfi-session-stamp-vm.sh`, `launch-tradfi-session-stamps-vm.sh`, `launch-transfermarkt-forward-poll.sh`,
-      `launch-understat-forward-poll.sh`. Repo: deployment-service.
+      `launch-understat-forward-poll.sh`. **`launch-rate-calibration-probe-vm.sh` EXCLUDED — finding, not a skip**: it
+      passes `--no-address` (no public IP, deliberate hardening for this throwaway probe VM) — `lc_gcloud_create` has
+      zero support for that flag (confirmed reading its fixed flag set in `launcher_common.sh:528-611`: `--project`,
+      `--zone`, `--machine-type`, `--image-family`, `--image-project`, `--boot-disk-size`, `--scopes=cloud-platform`,
+      `--no-restart-on-failure`, optional `--service-account`, `--metadata`, `--labels` — no `--no-address` and no
+      passthrough mechanism), so migrating it would silently give the VM a public IP it never had. Same shape as
+      group A's `launch-dashboard-vm.sh` exclusion (a flag/verb the wrapper cannot express) — flagging for a future
+      todo if a `--no-address` param is wanted, not a new `[OPERATOR]` todo (a narrow single-file additive gap, not a
+      genuine design fork). Each migrated file replaced its raw `gcloud compute instances create` block with
+      `lc_gcloud_create <vm_name> <project> <zone> <machine_type> <disk_gb> <metadata_str> <labels_str>
+      <service_account>`, mirroring the group A/B pattern (`! DRY_RUN` → `export LC_DRY_RUN` gating on the launchers
+      whose own dry-run semantics actually skip VM creation; dropped the unsupported `--boot-disk-type` flag and the
+      now-redundant manual `managed-by=deployment-service` label).
+      **New finding, not previously documented in this plan or the source issue**: `launch-tradfi-session-stamp-vm.sh`'s
+      own `--dry-run` flag only ever dry-runs the *internal* migration script it launches
+      (`migrate_tradfi_ohlcv_session_stamps.py --dry-run`) — it never gated the actual VM-creation call, so
+      `--dry-run` on this launcher has ALWAYS created a real VM (a pre-existing bug, not introduced by this
+      migration; confirmed live by accidentally launching a real VM during my own `--dry-run` smoke test, see
+      Progress Log). Migrated its create call unconditionally (unchanged observable behavior) rather than silently
+      "fixing" it mid-migration; filed a dedicated follow-up todo below per operator instruction instead. Checked
+      sibling `launch-tradfi-session-stamps-vm.sh` for the same defect — NOT affected (no `--dry-run` flag exists
+      there at all; its dry/full mode is a bare positional arg).
+      **Done (for the 14 migrated)**: `bash -n` clean on all 14; `grep -L lc_gcloud_create <14 files>` returns empty;
+      `--dry-run` smoke on 2 sampled launchers (`launch-perp-clob-live.sh`, `launch-sfi-forward-poll.sh`) confirmed
+      unchanged VM name/metadata/labels/service-account; `quality-gates.sh` green (re-verified after 2 concurrent
+      rebases from sustained branch churn). Shipped — deployment-service@1794ecd1fe (rebased twice onto concurrent
+      landings before push; QG re-verified green on each rebased SHA; post-push ancestry independently confirmed).
+      The excluded file is unmodified, still raw-`gcloud compute instances create` — carried forward as a note above,
+      not a new `[OPERATOR]` todo. Repo: deployment-service.
+
+- [ ] [SCRIPT] P3. **Fix `launch-tradfi-session-stamp-vm.sh`'s `--dry-run` flag so it actually skips VM creation** —
+      found during group C's migration (2026-08-16, slot 18): the flag has ALWAYS only dry-run the *internal*
+      `migrate_tradfi_ohlcv_session_stamps.py` script, never gated the VM-creation call itself, so `--dry-run`
+      silently launches a real GCE VM (confirmed live — slot 18's own `--dry-run` smoke test accidentally created
+      `canonical-migration-tradfi-sessionstamp-20260816-031642`, RUNNING; operator-ruled leave-it-to-self-shutdown
+      per `BLK-27fa36df` rather than force-delete under the `canonical-migration-` prefix delete guardrail, rather
+      than delete it). Fix: mirror the other Pattern-1 launchers in this batch — gate the `lc_gcloud_create` call on
+      `[[ "${DRY_RUN:-false}" != "true" ]]` (or an early `exit 0` before it, matching the Pattern-A restamp/purge
+      launchers), so `--dry-run` prints the plan and exits without creating a VM. Sibling `launch-tradfi-session-
+      stamps-vm.sh` was checked and does NOT have this defect (no `--dry-run` flag at all). **Done when**:
+      `bash launch-tradfi-session-stamp-vm.sh --dry-run ...` prints a dry-run plan and does not create a real VM
+      (verify via `gcloud compute instances list --filter="name~^canonical-migration-tradfi-sessionstamp-"` showing
+      no new instance after the dry-run call). Repo: deployment-service.
 
 - [ ] [INFRA] P3. **Update `vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s follow-up todo + this plan's own
       Progress Log once groups A/B/C ship and todos 1-3 are ruled**, recording: the corrected 149-launcher baseline, the
@@ -331,3 +373,16 @@ exactly what this plan's own rules section says to avoid.
   which the wrapper's fixed positional signature has no way to express). Filed a new `[OPERATOR]` todo for both new
   gaps rather than silently migrating past them or absorbing a wrapper-code fix into this already-dispatched todo's
   scope.
+- **infra 2026-08-16 (slot 18)**: shipped group C — 14 of the listed 15 files migrated to `lc_gcloud_create`
+  (deployment-service@1794ecd1fe), QG green, `--dry-run` smoke-verified on 2 sampled launchers. Held back
+  `launch-rate-calibration-probe-vm.sh` — its `--no-address` flag has zero equivalent on `lc_gcloud_create`, a
+  narrow previously-undocumented additive gap, not a design fork (see the flipped checkbox above). Found a
+  pre-existing bug while smoke-testing: `launch-tradfi-session-stamp-vm.sh`'s `--dry-run` never actually skipped VM
+  creation — it accidentally launched a real VM (`canonical-migration-tradfi-sessionstamp-20260816-031642`) during
+  my own smoke test. Operator ruled (`BLK-27fa36df`) to leave it — it runs the migration script in `--dry-run`
+  (read-only) mode with `VM_SHUTDOWN_ON_COMPLETION=true`, so it self-terminates harmlessly; this VM is EXPLAINED,
+  not a mystery VM for the fleet watchdog. Filed a dedicated follow-up `[SCRIPT]` todo above for the fix (checked
+  sibling `launch-tradfi-session-stamps-vm.sh` for the same defect — not affected, no `--dry-run` flag exists
+  there). Also: `live-defi-rollout` was under sustained push churn during this ship — quickmerge rebased my commit
+  twice (274b858c → 575c0b28 → 1794ecd1fe), each requiring a fresh QG pass before the next push attempt; final SHA
+  independently verified as an ancestor of `origin/live-defi-rollout`.
