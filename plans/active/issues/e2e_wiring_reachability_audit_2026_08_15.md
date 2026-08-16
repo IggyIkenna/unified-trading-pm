@@ -308,8 +308,15 @@ new scope, not a wiring bug in what already exists.
       never collected in place). Baseline recalibrated against the real fleet (6 repos have confirmed genuine
       pre-existing gaps) via a hand-edit of the baseline (not `--update-baseline`, which clamps DOWN-only by design —
       this was a deliberate, reviewed re-measurement after the detection-logic change, not a silent widening).
-- [ ] [OPERATOR] P2. **Cited `LST_TOKEN_GENESIS` date for Kelp/rsETH and ether.fi/eETH** — both have cited addresses but
-      no venue declaration. That map drives coverage denominators, so an invented date corrupts them silently.
+- [x] ✅ [OPERATOR] P2. **`LST_TOKEN_GENESIS` for Kelp/rsETH and ether.fi/eETH — RULED 2026-08-16: leave DELIBERATELY
+      ABSENT until a venue actually needs them.** Not a deferral — the current state is correct by construction, and
+      `registry/lst_token_addresses.py` already says so at the point of absence: UAC declares `ETHERFI` as
+      `("weETH",)` only and has **no KELPDAO venue at all**, so an entry for eETH or rsETH would be unreachable —
+      recreating exactly the orphan class the reachability gate exists to catch. Adding an address to satisfy a
+      completeness instinct would trade a known gap for a silent one. **Revisit trigger**: the first strategy that
+      genuinely needs rsETH or eETH — at which point the venue declaration and the cited genesis land together in one
+      change, so the map never carries an entry no venue declares. The "invented date corrupts denominators" hazard
+      is thereby avoided by not creating the row, rather than by sourcing a date for a row nothing reads.
 - [ ] [AGENT] P2. **Correct client-facing disclosure artifacts still citing the pre-reachability "~16 genuinely live"
       DeFi execute figure** (e.g. the Elysium disclosure plan) to the reachability-derived **6 of 32 (19%)** — the "16"
       figure measures write-path capability, not what a production process can actually invoke, per this doc's own

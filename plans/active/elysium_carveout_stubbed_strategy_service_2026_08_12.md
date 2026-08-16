@@ -116,6 +116,16 @@ Per-interface resolution to specify. `FeatureProvider` · `PricingService` · `R
 - [ ] [AGENT] P2. **Specify `PortfolioRiskService` local guard-rails vs withheld platform risk.** `risk-guards-local`
       gives the local circuit breakers the strategy needs to be safe standalone; cross-client portfolio risk and
       governance stay platform-side.
+      **RULED 2026-08-16 (operator) — ship OUR LIVE VALUES, not conservative defaults.** Applies to drawdown control,
+      max positions, delta-neutrality bounds and least-increasing-leverage hedge selection. Rationale: maximum
+      fidelity — what they run is what we run, so behaviour matches the track record the deliverable is sold on.
+      **This overrides the recommendation made at decision time** (conservative-defaults-overridable, on fail-safe
+      and non-disclosure-of-risk-appetite grounds); recorded so the trade-off is not silently re-litigated later.
+      **Two consequences that follow and must be handled, not assumed away**: (a) shipping live values DISCLOSES our
+      risk appetite and position sizing — that is now an accepted disclosure, so it must not be treated as
+      confidential elsewhere in the carve-out; (b) a limit tuned to our balance sheet may be wrong for theirs, so
+      every shipped limit must remain config-overridable and the delivery docs must say plainly that these are OUR
+      operating values, not a recommendation calibrated to their capital.
 
 ## A2. Archetype scope — TWO real, the rest shipped as stubs (operator ruling 2026-08-12, narrowed 2026-08-16)
 
