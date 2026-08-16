@@ -28,7 +28,7 @@ related:
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-16
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -278,6 +278,31 @@ context_scope:
       `bash scripts/refresh_env_from_sm.sh` dry-run on vm-0: `add=0 replace=0 keep=7`,
       `DRY-RUN: in sync, nothing to do`, JWT included. No write performed — this item is genuinely closed, not deferred.
       Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox flipped there too.
+- [x] [BACKEND] P0. **DONE — LIVE FIX APPLIED 2026-08-16 (this session, direct SSM).** `planning`'s own
+      `orchestrator.service` (`.env.local`, `EnvironmentFile=-`) was missing `ORCHESTRATOR_VM_ID` entirely — confirmed
+      by `env` on the live `MainPID` (empty) vs. the still-running `deepseek_native_proxy_server` process (up since
+      2026-08-13, environ carried `ORCHESTRATOR_VM_ID=planning`), proving the line existed before and dropped out of
+      `.env.local` sometime between then and orchestrator.service's most recent restart (08:54:18Z today). Effect:
+      `server_url()`'s `is_standalone()` guard (the 2026-07-29 local-pilot-incident fix) fired on **every** escalation
+      dispatch fleet-wide — confirmed via `GET /api/escalations/active`: `agt-09c955` (instruments-service,
+      `cloud_build_failure`) stuck at 238 failed attempts, `agt-95ede4` (market-tick-data-service,
+      `data_pipeline_failure`) at 313 attempts / 5 re-escalations, both `last_error: "server_url unresolved: ...
+      standalone instance (vm_id='')"`. Restored `ORCHESTRATOR_VM_ID=planning` to `.env.local` (backed up first) and
+      `systemctl restart orchestrator` (`KillMode=process` — tmux workers unaffected); verified new `MainPID`'s environ
+      carries the value, `/api/backlog` returns 200, and `agt-95ede4` flipped to `status: dispatched, last_error: null`
+      on the next retry tick (~90s later) — confirmed live, not just code-read. No source doc existed for this before
+      today; tracked here per the operator's "plug into the 14th consolidated tracker, don't file a new doc" direction.
+- [ ] [DIAG] P1. **Root-cause why `.env.local` lost `ORCHESTRATOR_VM_ID` between 2026-08-13 and the 08:54:18Z
+      2026-08-16 `orchestrator.service` restart — NOT root-caused, only patched live** (see item directly above).
+      `refresh_env_from_sm.sh` is UPSERT-only by design and always backs up on `--apply` (`.env.local.bak.<epoch>`),
+      but the two existing backups on `planning` are from 2026-07-30 and 2026-08-08 — neither near the incident window
+      — so that script is not the obvious culprit as-observed; more likely a redeploy/reprovision step re-ran
+      `bootstrap_vm.sh`'s Step-5 `.env.local` overwrite-from-Secret-Manager path (correct only for a FRESH VM per that
+      script's own comment) without the identity-var upsert (`_upsert_env ORCHESTRATOR_VM_ID`) that's supposed to
+      follow it, on an already-provisioned long-lived host. Needs: `sudo journalctl` / shell history around the restart
+      window on `planning`, and confirmation whether any CI/redeploy workflow calls `bootstrap_vm.sh`'s overwrite path
+      against the already-provisioned central VM instead of `refresh_env_from_sm.sh`. Until root-caused, this can
+      silently recur on the next redeploy.
 - [x] [BACKEND] P0. **DESIGN RESOLVED 2026-08-15 (this session, operator discussion) — no longer operator-blocked, now
       bounded implementation work.** Design the dirty-worktree resolution policy (Ikenna, Slack 2026-06-12). Operator
       confirmed the revision directly in-session: keep steps 1-2 unchanged (QG-green→quickmerge /
@@ -686,3 +711,11 @@ before touching the source doc directly._
   ongoing/multi-session by the operator's own direction). **Recommended next item** if this session resumes: the
   dirty-worktree implementation (Track 4 P0, spec fully written, zero design ambiguity left) — highest-value remaining
   bounded work.
+- **2026-08-16 (operator-reported "fix these Activity [entries]", interactive session)**: dashboard Activity feed
+  showed a burst of `escalation_dispatch_initiated` → `escalation failed` pairs (slots #13-#18, ~10:35-10:38Z), each
+  citing `server_url() resolved to the PRODUCTION default ... on a standalone instance (vm_id='')`. Traced via
+  read-only SSM to `planning`'s own `orchestrator.service`: `.env.local` was missing `ORCHESTRATOR_VM_ID` outright,
+  so every escalation dispatch fleet-wide was fail-closed by the 2026-07-29 guard — not a dev/laptop instance, the
+  CENTRAL production orchestrator. Live-fixed (`ORCHESTRATOR_VM_ID=planning` restored + service restart, verified a
+  stuck escalation successfully dispatched afterward) — see the two new Track 4 items above (fix DONE, root-cause of
+  the drift still open). Per operator direction, plugged into this tracker instead of filing a new issue doc.
