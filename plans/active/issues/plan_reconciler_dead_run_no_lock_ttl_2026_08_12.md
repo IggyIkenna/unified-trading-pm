@@ -49,6 +49,8 @@ related:
     /plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md,
     /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/active/issues/plan_reconciler_findings_ao_2026_08_16.md,
+    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
   ]
 created: "2026-08-12"
 author: unknown
@@ -216,6 +218,22 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
       sports-tranche doc (`plan_reconciler_findings_sports_2026_08_10.md`), which also carried the bare
       `locked_by: plan_reconciler` / `locked_since: "2026-08-10"` format with no dispatch id before it was cleared —
       this is the same hygiene gap recurring in a THIRD dated doc, not a one-off from the original 2 defi/cefi cases.
+- [ ] [BACKEND] P1. **Pre-dispatch duplicate-tranche check — a DIFFERENT gap from this doc's dead-lock focus, found
+      live 2026-08-16.** `plan_health_dispatch_initiated` fired a SECOND same-day `tranche=ao` worker (`agt-053eab`,
+      slot 7, 17:15:16 UTC) while a FIRST `tranche=ao` worker (`agt-3eb42b`, slot 28, started 16:17:25 UTC) was still
+      ALIVE — confirmed via `/api/activity`: `forced_precompact` events for `orch-slot-28` fired at 17:14/17:18 UTC,
+      well after slot 7's own dispatch — and still held `locked_by: plan_reconciler (agt-3eb42b)` on
+      `plan_reconciler_findings_ao_2026_08_16.md`. This doc's Option A (auto-clear on `reaped-stale`) would NOT have
+      prevented this: the prior run was never dead. The dispatcher (`agent-orchestrator/server/plan_health.py`
+      `dispatch()`) has no check for an existing live `locked_by: plan_reconciler` on the target `(tranche, date)`
+      before spawning. Cost this occurrence: slot 7 spent its session investigating rather than duplicating the
+      reconciliation work (see the 2026-08-16 Progress Log entry below for what it found instead) — the NEXT
+      occurrence might not catch the collision before both workers write to the same findings-doc path.
+      **Recommended fix**: before `autospawn.do_spawn()` in `dispatch()`, check
+      `plans/active/issues/plan_reconciler_findings_<tranche>_<today>.md` for a live `locked_by:` (or an AO-side
+      `AgentRow` for a prior dispatch matching tranche+today still non-terminal) and skip/queue the new dispatch
+      instead of spawning a collision. **Done when**: a second same-day same-tranche dispatch is refused or queued
+      while a prior tranche worker's lock is confirmed live, with a test.
 
 ## Progress Log
 
@@ -250,3 +268,23 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
   reconciliation for 5 days** (2026-08-10 through 2026-08-15), not a hypothetical edge case affecting a handful of docs.
   Once the `[BACKEND] P1` follow-up lands, this class of incident should self-heal instead of requiring a human to
   notice and unlock each tranche doc individually.
+
+- **2026-08-16 — Live duplicate-dispatch instance found + cross-reference to a related-but-distinct channel gap (this
+  session, `agt-053eab`/slot 7, dispatched into the `ao` tranche while `agt-3eb42b`/slot 28 already held it — see the
+  new `[BACKEND] P1` todo above for the full evidence chain and recommended fix).** In the same investigation, also
+  found the INVERSE direction of this doc's core theme: the AO↔PM-repo lock-state blind spot cuts both ways. Slot 28's
+  own blocked-question `BLK-050d1304` was answered by the operator (`/api/activity`: `blocked_answered` event at
+  17:06:04 UTC, `answer=A`, `disposition=final`) and the fix was actually APPLIED —
+  `unified-trading-pm@766e1cd052` (17:09:37 UTC), landed by the `main` orchestrator-level agent working around the
+  same broken retrieval channel slot 28 itself filed as
+  `plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md` (grace-protected as of this check, <1h old, not
+  edited here). Slot 28's own `GET /api/slots/28/messages` still returned `{"messages":[]}` when re-checked
+  independently this session, so slot 28 likely remains `locked_by`+`status=blocked` on
+  `plan_reconciler_findings_ao_2026_08_16.md` unaware its blocker is already resolved and applied. Not fixed directly
+  here — both of slot 28's own docs were actively `locked_by`/<1h-old at check time (this doc's own 12h grace rule,
+  applied to a peer's live work out of the same caution) — left as a pointer for whoever next reads that lock stale,
+  or for slot 28 itself if a future STEP-8 poll re-reads the target docs directly rather than trusting the empty
+  `/messages` response. **No ao-tranche reconciliation work was duplicated this session** — confirmed the tranche was
+  already substantively covered (94-doc inventory, 81 non-grace docs fanned to 5 hunters, 8 docs archived, 21 docs
+  touched across 5 commits, all verified on origin) by the live sibling run before investigating further; this
+  session's own remaining time went to the two findings above instead.
