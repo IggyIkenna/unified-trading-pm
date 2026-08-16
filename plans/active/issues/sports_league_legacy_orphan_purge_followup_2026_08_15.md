@@ -206,18 +206,36 @@ Split the 1,814 objects into the two classes above and resolve each:
   fold script's dry-run (no `--apply`) against this fresh report to measure `rows_added` before writing, rather than
   trusting the `428,933` figure already in todo 3's text (that figure predates this verify-report regen and was not
   re-measured against it).
+- **2026-08-16 (slot-23, continuation 3)** — Dry-run confirmed sane (`rows_added=428,933`, `cells_created=0`,
+  zero errors across 280/280 days — matches the pre-verify-report-regen figure exactly). Launched the real
+  `--apply` write standalone in the background (`--verify-report /tmp/verify_report_2026_08_16.jsonl --report
+  /tmp/fold_apply_2026_08_16.jsonl`, PID 3435671). **Lesson — a backgrounded `nohup … &` process can still die
+  silently with no attributable cause**: this run progressed cleanly to 89/280 (`created=0` holding on every row,
+  matching the dry-run's per-row behavior exactly) then the process vanished — no Python traceback in its log, no
+  OOM entry in `journalctl -k` for the window, host uptime showed no reboot since 2026-08-09, `free -h` and `df -h`
+  both healthy at time of discovery. Root cause **undetermined** (possibly an external kill from another session
+  sharing this slot's checkout, per the earlier SLOT COLLISION WARNING this session saw — not confirmed). Since the
+  script is MERGE-only/idempotent by design (existing canonical rows always win on key collision, row-loss guard
+  refuses a would-shrink write), the safe response was to just relaunch the identical `--apply` command fresh
+  (`--report /tmp/fold_apply_2026_08_16_run2.jsonl` to avoid conflating with run1's partial 89-line output; PID
+  3600518) rather than attempt a partial-resume. **Idempotency confirmed in practice, not just by design**: run2's
+  re-processing of the same early days run1 had already completed showed `rows_added=0`/`written=0` for each
+  (their rows were already present in canonical from run1's landed writes before it died) — proof run1's partial
+  progress persisted correctly to GCS despite the unexplained kill. Run2 is the live, authoritative apply attempt
+  going forward; run1's partial report/log are superseded, not needed for anything further.
 
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
 | Regenerate verify-report: `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16.jsonl` (read-only, **no** `--apply`/`--confirm-prod-delete`) | **Done 2026-08-16 (slot-23)** — 280/280 lines, all `disposition=no-migrate-first` (matched_rows=7,478,332, unmatched_rows=437,005, bare_rows=7,915,337) | — |
-| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16.jsonl` | Dry-run (no `--apply`) launched against the regenerated verify-report to measure a fresh `rows_added` baseline before writing (the `428,933` figure quoted in todo 3's text above predates this verify-report regen — not re-verified as still accurate, so re-measuring rather than trusting it per measurement-claims discipline) | The dry-run's own completion |
-| Post-apply re-verify the 280 days now resolve `fully_redundant` | Not done | The `--apply` run above |
+| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16_run2.jsonl` | **In progress (run2, PID 3600518)** — run1 (PID 3435671) died silently at 89/280 with no root cause found (see Progress Log); run2 relaunched fresh, idempotency-confirmed-safe. Sanity-check run2's final totals against the dry-run's (`rows_added=428,933`, `cells_created=0`) once it reaches 280/280. | The apply write's own completion |
+| Post-apply re-verify the 280 days now resolve `fully_redundant` | Not done | The `--apply` run above completing |
 | Purge the newly-redundant bare objects (mirror `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`'s §3a pattern: fresh `gcs_bucket_soft_delete_retention_seconds >= 604800` check same-run, `--confirm-prod-delete`) | Not done | The post-apply re-verify above |
 | Flip this todo `[x]` with the purge script's SHA + object/byte counts, then archive this doc (last open item) | Not done | The purge above |
 | `sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md` todo 1 ("Scope the duplication") | Not done, independently pickup-able | Nothing — unrelated to this chain |
 
-**Recommended next item**: once the dry-run confirms a sane `rows_added` figure with zero errors across all 280 days,
-proceed straight to `--apply` (MERGE-only write, row-loss guard, idempotent — safe to re-run) as its own standalone
-background step, per the same host lesson noted above (don't combine steps into one process).
+**Recommended next item**: let run2 (PID 3600518) finish — do not manually re-poll beyond an armed watchdog
+notification or an explicit operator status request, per the async-wait/poll-discipline HARD RULE. On completion,
+sanity-check its final report against the dry-run's totals, then proceed straight to the post-apply re-verify pass,
+each step still standalone (never combine apply+purge in one process, per the same host lesson as above).
