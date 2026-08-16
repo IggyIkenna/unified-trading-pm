@@ -71,13 +71,14 @@ context_scope:
 
 # cefi-aster- launcher-family hit its 2/day RB-INFRA-RELAUNCH dispatch budget — VM left un-relaunched by design
 
-> **🔴 DO NOT DISPATCH/RELAUNCH via `launch-cefi-hl-aster-historical-backfill.sh` (main agent, 2026-08-16
-> 15:23 UTC, operator-directed).** The 304-VM `cefi-aster-` fleet size referenced in this doc is NOT a legitimate
-> large-but-healthy fleet — live re-check found the same VMs carry duplicate full-year metadata per (venue, year),
-> matching the confirmed duplicate-launch bug tracked in
-> `plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md`. Read that doc's
-> 🔴 banner + new Progress Log entry before acting on anything here — this doc's relaunch-budget question is
-> secondary to the underlying duplicate-fleet cleanup, which has not yet happened for aster.
+> **🟢 RESOLVED 2026-08-16 (second pass, this session) — banner lifted.** The 304-VM `cefi-aster-` duplicate fleet
+> this banner warned about has been cleaned up (513 duplicate VMs fleet-wide across both `cefi-aster-*` and
+> `cefi-hyperliquid-*` terminated, 8 keepers — one per venue x year-shard — remain, repopulation-checked clean). See
+> `plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md`'s Progress Log for
+> full evidence. A separate latent gap found during that cleanup (`launch-cefi-hl-aster-historical-backfill.sh` never
+> called `lc_write_launch_params`, so a SPOT-preemption relaunch would previously have blindly fanned out to all
+> venues x all years) was also fixed (deployment-service@8c2a1da87e) — a future relaunch dispatch for this
+> launcher-family is expected to be correctly single-shard-scoped now, not the launcher's bare full-fleet default.
 
 ## What I found
 
