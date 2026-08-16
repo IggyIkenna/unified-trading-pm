@@ -371,7 +371,7 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
 - [ ] [AGENT] P1. **The carve-out's §A5 prerequisites are satisfied for the contracted scope** — the four CEX venues
       and Lido at `LIVE-READY`, which is the intersection of this plan and the carve-out's.
 - [x] [AGENT] P2. ✅ **Cross-link the karak remediation-direction split + author pendle's own issue doc.** SHIPPED —
-      `unified-trading-pm@<pending>`. Added a bidirectional pointer between `karak_decommission_2026_08_16.md`
+      `unified-trading-pm@abf0117caa`. Added a bidirectional pointer between `karak_decommission_2026_08_16.md`
       (delete direction) and `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (its "20 never-
       instantiated connectors" list, which had listed Karak as needing wiring) — each now explicitly states the
       decommission decision supersedes the wire-it framing for Karak. Authored
