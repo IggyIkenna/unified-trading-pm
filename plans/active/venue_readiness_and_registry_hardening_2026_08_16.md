@@ -554,6 +554,27 @@ failure, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regr
 Resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
 hand-wire the venues or edit the SIT ratchet baseline.
 
+**2026-08-16 — still blocked, 15th confirmation, /heartbeat check-in — partial progress detected.**
+`execution-service`'s `defi_adapter.py` now DOES dispatch Symbiotic: `SymbioticConnector` is imported, injected, and
+`_execute_symbiotic_staking()` is wired into the venue-routing `if "SYMBIOTIC" in venue:` branch (0 hits for
+karak/pendle unchanged). This looked like it might clear the invariant, so re-ran
+`test_execution_service_venue_coverage_cascade_invariant.py` standalone in `unified-api-contracts`: still fails,
+identical `['karak', 'pendle', 'symbiotic']` signature, `1 failed, 10 passed in 0.45s`. Diagnosed why symbiotic still
+shows unreachable despite the new dispatch code: the test's own `DEFI_VENUE_TO_CONNECTOR_CLASS` map (in
+`unified-api-contracts/tests/test_execution_service_venue_coverage_cascade_invariant.py`) has no entry for
+`symbiotic`/`karak`/`pendle` at all — `unreachable_defi_venues()` short-circuits to "unreachable" the moment
+`DEFI_VENUE_TO_CONNECTOR_CLASS.get(venue)` returns `None`, before it ever checks `connector_supports_live()` or actual
+dispatch wiring. So the remaining gap is now on the **UAC test's own connector-class registry**, not (or not only) on
+execution-service's dispatch — execution-service's symbiotic wiring is real progress but insufficient alone; the map
+entry is presumably part of the same in-flight work and just hasn't landed yet. This map lives in the SIT-adjacent test
+file itself, which the standing instruction already covers ("do not hand-wire the venues or edit the SIT ratchet
+baseline") — not touching it. `karak_decommission_2026_08_16.md` still `status: open`; no dedicated pendle issue doc
+exists yet (L342 below covers authoring one). 15th identical-outcome confirmation this session (8 full-suite/quickmerge,
+7 direct-cause/targeted), though this is the first one to observe partial upstream progress rather than zero change.
+Resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
+hand-wire the venues, do not add the missing `DEFI_VENUE_TO_CONNECTOR_CLASS` entries, and do not edit the SIT ratchet
+baseline.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
