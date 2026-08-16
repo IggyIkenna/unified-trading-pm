@@ -181,11 +181,16 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
 > the ONLY open todo left in this doc. Not shipped, not yet promoted to a batch/`[OPERATOR]` todo — real, genuine
 > residual (deployment-service infra race), open-ended enough ("consider X or Y") that it needs a scoping pass
 > before it's cleanly AO-dispatchable. Doc stays `active` on this residual alone; not archived this session.
+>
+> **CORRECTED 2026-08-16 (plan_reconciler, prediction-tranche Phase -1)** — the "ONLY open todo" claim above is
+> stale: this doc also carries a `[~]` partial "Fixture-level cross-venue PAIRING" todo (2026-06-23 session, further
+> up this Progress Log) with a nested `- [ ]` "Fixture-pairing RESIDUAL — registry-resolution + mapping-population +
+> arb wiring" sub-todo that is still genuinely open. 2 open items total, not 1 — both real, neither shipped.
 
 > **Extracted 2026-08-09** — twelve fully-closed dated Progress Log sessions (2026-06-20, 2026-06-21, 2026-06-23 x3,
 > 2026-06-25 x4, 2026-06-27 x3) moved verbatim to
 > `plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md` to bring this doc back under its
-> line-count soft cap (`plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`). The
+> line-count soft cap (`plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`). The
 > 2026-06-24 session above and the 2026-06-23 fixture-linking session below were LEFT IN PLACE because each still
 > carries an open checkbox; the 2026-06-26 session was LEFT IN PLACE because a later entry in this Progress Log
 > references it by name ("this Progress Log's 2026-06-26 entry"); the tail of the 2026-06-27 (~10:10 UTC) session's own

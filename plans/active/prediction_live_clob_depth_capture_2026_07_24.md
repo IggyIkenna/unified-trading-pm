@@ -346,7 +346,7 @@ context_scope:
      prediction was never deployed/launched against `pipeline_mode=live_*` prefixes, but this verification did not
      confirm which).
   - **Filed as a big finding** (data-correctness, silent, production-live, confirmed via live GCS read) per CLAUDE.md's
-    findings-triage rule: `plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` (3
+    findings-triage rule: `plans/archive/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` (3
     actionable follow-up todos — root-cause the empty-live-scan half of #2, register or deliberately bypass the missing
     book_snapshot_5 adapter, and re-verify multi-hour accumulation once fixed).
   - **Done-when satisfied** for `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 2 (this todo's own checkbox
@@ -434,7 +434,7 @@ crypto set).
       verdict here") is now satisfied: the 2026-08-04 (slot-5) entry below records **VERDICT: FAIL** with full
       root-cause detail, and the 2026-08-04 (slot-7) entry records a completing re-verification ("no new surprise was
       found"). Follow-up remediation forked into two successor issue docs:
-      `plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` and
+      `plans/archive/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` and
       `plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`. The
       "verify" ask is complete and evidenced in-doc; checked off citing both 2026-08-04 entries + the two successor docs
       — it was left open only as a tracking anchor past its own done-when. Confirmed empirically: under

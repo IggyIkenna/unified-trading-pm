@@ -651,6 +651,17 @@ sports-tranche-owned).
       deployment gap is closed and the consolidator is self-healing. **Flagged**: sibling defi market-data cron
       (`uts-prod-manifest-consolidator-market-data-defi-cron`) is PAUSED — separate issue, not prediction-scoped.
 
+- [ ] [DESIGN] P3. **Football / per-event-recurring canonical-groups — never got its own tracked follow-up, unlike
+      its Gold/SUI/staleness siblings above.** **ADDED 2026-08-16 (plan_reconciler, prediction-tranche Phase -1)** —
+      the parent Phase-5 todo above explicitly carved this out as "genuinely out of AO-worker scope... open-ended/
+      undefined-count, not a bounded backfill — a design/scoping decision, not something a worker can determine
+      alone," but (unlike Gold backfill trigger / SUI classifier gap / manifest-consolidator staleness immediately
+      above) never got its own tracked checkbox — it was left as prose only, the exact false-progress shape CLAUDE.md's
+      HARD RULE bans ("every follow-up is a `- [ ]` todo, never prose"). **Done when**: an operator/design pass scopes
+      which Football markets (per-fixture? per-major-tournament? both?) and which "per-event-recurring beyond
+      FED/CPI" categories warrant a canonical `PREDICTION_GROUPS` entry, producing a bounded backfill todo (or an
+      explicit WON'T-DO) — this todo itself is the scoping decision, not the backfill.
+
 - [x] ✅ [INFRA] P3. **Enable BQ external tables for prediction live-depth data — `deployment-service@b94a6dd`.**
       `terraform apply -var=create_bq_external_tables=true` applied successfully: 52 BQ external tables created in
       `live_events` dataset, including `prediction_book_snapshot`, `prediction_book_snapshot_5`, `prediction_trades`.
@@ -731,7 +742,7 @@ sports-tranche-owned).
 
 ## Deferred — not AO-eligible (needs a scoping/design decision first, likely `ao`-tranche scope)
 
-- **`plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`** — two prose-only recommended
+- **`plans/archive/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`** — two prose-only recommended
   fixes (a durable, task-id-keyed checkpoint location for resumable AO scripts; a dispatcher-side
   in-flight/live-heartbeat check to stop re-assigning an already-dispatched todo to a second slot), both explicitly
   scoped by the doc's own author as "a dispatcher/process change, out of a single todo's scope" needing a design

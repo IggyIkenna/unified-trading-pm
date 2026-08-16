@@ -443,10 +443,16 @@ rather than buried in a 345-line residuals plan. C: Fold it instead into
 `/plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (2 open), the other Phase-A3 split sibling. Other:
 operator can type a custom answer.
 
-**Status**: resolved — option A. The lock is mandatory (CLAUDE.md's own text is unambiguous); sharpened the
-mechanism-fix todo in `issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md` with the real
-commit-msg-vs-pre-commit staging nuance found while scoping it, and retro-cleaned the stale `locked_by:` on the
-already-independently-verified archived doc. `unified-trading-pm@2c61a8dc4`.
+**Status**: resolved — option A, same day (2026-07-26). **CORRECTED 2026-08-16 (plan_reconciler, prediction-tranche
+Phase -1)**: the paragraph previously here was a verbatim copy-paste of entry #11's unrelated (`locked_by:`-lock)
+resolution text — this entry's actual question (fold target for the near-complete shell) was never genuinely
+reported as answered even though it WAS answered the same day it was filed. Hard evidence: the remnant's own
+archived source, `/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`, carries the
+banner "ARCHIVED 2026-07-26 — sole remaining open item (Polymarket-perp enumerator, BLOCKED-UPSTREAM) folded into
+`prediction_phase_ab_residuals_2026_07_24.md` § A3; all other 10 todos already shipped," and its own todo reads
+`[x] FOLDED 2026-07-26 into prediction_phase_ab_residuals_2026_07_24.md § A3 (still BLOCKED-UPSTREAM)`. The target
+doc's live § A3 ("Venue-perps + live CLOB depth residuals (fold)") carries the folded Polymarket-perp-enumerator
+item today — confirming Option A (the marked `[WORKER REC]`) was applied, matching this entry's own recommendation.
 
 ---
 

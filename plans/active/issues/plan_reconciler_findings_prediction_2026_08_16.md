@@ -28,8 +28,8 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: review
 assigned_vm: NA
 execution_scope: local-only
-locked_by: agt-23fdbb
-locked_since: "2026-08-16T16:20:00Z"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by:
@@ -130,26 +130,46 @@ missed flips found in the prediction tranche this run.
 
 ## Contradictions — CONFIRMED, NOT fixed (12-hour grace window — HARD LIMIT, not a judgment call)
 
-Each of these is hunter-verified with hard evidence but its fix-target file has a commit <12h old, so it is flagged
-here for the next run rather than edited this one:
+Each of these is hunter-verified with hard evidence but its fix-target file had a commit <12h old AT RUN TIME
+(2026-08-16, ~16:20-17:24Z), so it was flagged here rather than edited then. **2026-08-16 (plan_reconciler,
+prediction-tranche Phase -1, separate later dispatch)**: several hours have now passed — re-checked each target's
+grace status fresh rather than assuming still-blocked; most are now outside the 12h window and fixed below.
 
-- [ ] [DOCS] P2. `autonomous_session_operator_decisions_2026_07_25.md` entry #12 — its "Status: resolved" paragraph
-      is a verbatim copy of entry #11's (different question) resolution text; the actual fold-target decision for
-      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` was never genuinely answered.
-- [ ] [DOCS] P1. `prediction_cross_venue_arb_and_coverage_2026_07_24.md:180-183` — 2026-08-16 banner claims "the ONLY
-      open todo" but line 220 carries a second genuinely-open `[DESIGN] P1` nested todo (fixture-pairing residual)
-      that the doc's own most recent entry explicitly concludes stays unchecked. Root cause of Contradiction-fixed
-      item 3 above.
+- [x] ✅ [DOCS] P2. `autonomous_session_operator_decisions_2026_07_25.md` entry #12 — its "Status: resolved" paragraph
+      was a verbatim copy of entry #11's (different question) resolution text; the actual fold-target decision for
+      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` was never genuinely reported as answered.
+      **FIXED 2026-08-16 (Phase -1)**: target's last commit (05:48:14Z, unrelated hygiene sweep) was >12h old at
+      re-check time. Replaced the copy-pasted paragraph with the correct resolution: the fold DID happen 2026-07-26
+      (Option A, matching the entry's own `[WORKER REC]`) — hard evidence in
+      `/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s banner + its
+      `[x] FOLDED 2026-07-26 into prediction_phase_ab_residuals_2026_07_24.md § A3` todo + that target's live § A3
+      section. `unified-trading-pm@<this-commit>`.
+- [x] ✅ [DOCS] P1. `prediction_cross_venue_arb_and_coverage_2026_07_24.md:180-183` — 2026-08-16 banner claimed "the
+      ONLY open todo" but line 220 carries a second genuinely-open `[DESIGN] P1` nested todo (fixture-pairing
+      residual) that the doc's own most recent entry explicitly concludes stays unchecked. Root cause of
+      Contradiction-fixed item 3 above. **FIXED 2026-08-16 (Phase -1)**: target's last commit (05:48:14Z) was >12h
+      old at re-check time. Appended a correction to the banner naming both open items (the tarball-race todo +
+      the fixture-pairing residual). `unified-trading-pm@<this-commit>`.
 - [ ] [DOCS] P2. `prediction_live_clob_depth_capture_2026_07_24.md:470` — checkbox `[x]` "the code is correct"
       (event-time-keying), but a later same-doc CORRECTION (2026-08-04) explicitly invalidates that specific claim;
-      checkbox never reopened (may still be moot for unrelated reasons, per the doc's own hedge).
+      checkbox never reopened (may still be moot for unrelated reasons, per the doc's own hedge). **REVIEWED, NOT
+      flipped 2026-08-16 (Phase -1)**: grace window had lifted, but the doc's own inline CORRECTION paragraph already
+      carries the necessary caveat ("do not cite this note as evidence the raw path is window-safe") and explicitly
+      declines to assert whether the original launch-day-partitioning defect itself has regressed — reopening the
+      checkbox would require a fresh live-code check beyond doc reconciliation (the doc's own hedge already achieves
+      the misleading-doc fix). Left open as ORDINARY WORK, not a doc-hygiene gap.
 - [ ] [DOCS] P3. `prediction_satellite_ao_dispatch_batch6_2026_07_29.md:159` — Betfair item's tag still reads plain
       `[INFRA]` though the newest Progress Log entry (2026-08-12) shows it blocked on an external Betfair
       account-holder action (`ACCOUNT_PENDING_PASSWORD_CHANGE`) with a `/blocked` filed — no `[OPERATOR]`/`BLOCKED-*`
-      tag reflects this.
-- [ ] [DOCS] P3. Same doc, line 544 — the Football/per-event-recurring canonical-groups design question (the
+      tag reflects this. **NOT fixed 2026-08-16 (Phase -1)**: re-checked, could not locate the
+      `ACCOUNT_PENDING_PASSWORD_CHANGE` text anywhere in the current doc (grep, 0 hits) — the cited Progress Log
+      entry/detail may live in the mirrored issue doc referenced in the tag's own note instead, not independently
+      traced further this pass. Low priority (P3), left open, real remaining work.
+- [x] ✅ [DOCS] P3. Same doc, line 544 — the Football/per-event-recurring canonical-groups design question (the
       permanently-DEFERRED remainder of the Phase-5 backfill item) never got its own tracked `- [ ]` follow-up,
-      unlike its Gold/SUI/staleness siblings which did and are now `[x]`.
+      unlike its Gold/SUI/staleness siblings which did and are now `[x]`. **FIXED 2026-08-16 (Phase -1)**: added a
+      new `[DESIGN] P3` scoped follow-up todo immediately after the manifest-consolidator-staleness sibling, matching
+      the existing pattern. `unified-trading-pm@<this-commit>`.
 - [ ] [OPERATOR] P0. `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:127-130` — **flagging prominently,
       possible governance concern**: a 2026-08-16-dated entry titled "operator ruling" is attributed to
       "na-eligibility-audit follow-up" (an automated process) rather than a human operator session, resolving a scope
@@ -163,18 +183,26 @@ here for the next run rather than edited this one:
       confirmation).
 - [ ] [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — an `[OPERATOR] P1` todo
       (historically scope a false-kill class via Cloud Logging, bounded to a query task) may be mistagged — the
-      corpus's own established `[OPERATOR]` positive-test precedent suggests this could be AO-dispatchable. Not
-      reclassified (grace-protected).
-- [ ] [DOCS] P3. `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md:188` — stale reference to
+      corpus's own established `[OPERATOR]` positive-test precedent suggests this could be AO-dispatchable.
+      **RE-CHECKED 2026-08-16 (Phase -1)**: still grace-protected — target's last commit is now 20:56:37Z (a
+      na-eligibility-audit cefi-tranche pass), <1h old at re-check time. Left open, not reclassified.
+- [x] ✅ [DOCS] P3. `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md:188` — stale reference to
       `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` at its pre-archive `active/issues/` path.
-- [ ] [DOCS] P3. `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md:734` — stale reference to
+      **FIXED 2026-08-16 (Phase -1)**: this doc's frontmatter `related:` already had the correct archived path (a
+      partial prior fix); only the body-prose citation at line 193 was still stale. Repointed to
+      `plans/archive/2026_08/issues/`. `unified-trading-pm@<this-commit>`.
+- [x] ✅ [DOCS] P3. `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md:734` — stale reference to
       `prediction_trades_migration_concurrent_dispatch_2026_07_28.md` at its pre-archive `active/issues/` path.
-- [ ] [DOCS] P3. `plans/active/prediction_live_clob_depth_capture_2026_07_24.md:349,437` — 2 load-bearing citations
+      **FIXED 2026-08-16 (Phase -1)**: repointed to `plans/archive/issues/`. `unified-trading-pm@<this-commit>`.
+- [x] ✅ [DOCS] P3. `plans/active/prediction_live_clob_depth_capture_2026_07_24.md:349,437` — 2 load-bearing citations
       to `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` at its pre-archive `active/issues/`
-      path.
+      path. **FIXED 2026-08-16 (Phase -1)**: both repointed to `plans/archive/issues/`.
+      `unified-trading-pm@<this-commit>`.
 - [ ] [DOCS] P3. `plans/active/task_template.md:402` — stale reference to
       `prediction_trades_migration_concurrent_dispatch_2026_07_28.md` in a worked example; this normative-ref doc
       itself is grace-protected (33min old at run time) despite not being a prediction-tranche doc per se.
+      **RE-CHECKED 2026-08-16 (Phase -1)**: still grace-protected — target's last commit is now 17:03:07+0100
+      (16:03:07Z), ~5.5h old at re-check time (<12h). Left open, not fixed.
 
 ## Codex corrections applied
 
@@ -263,11 +291,12 @@ substitution, no HARD-STOP governance area, no new measurement.
 
 ## Archive candidates (operator review)
 
-- [ ] [REVIEW] P3. `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` — sole todo `[x]` DONE with
-      HARD evidence (verified ancestor sha via the archived `batch10_finalize`), Progress Log now updated to reflect
-      it. Equivalent sibling `is_polymarket_dead_fixture_cross_reference_2026_07_31.md` was archived on resolution;
-      this one wasn't. Not archived here (out of this run's bounded scope — full archival ritual not attempted) —
-      good `/archive-candidates-audit` candidate. Not locked, not grace-protected.
+- [x] ✅ [REVIEW] P3. `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` — **CORRECTED 2026-08-16
+      (plan_reconciler, prediction-tranche Phase -1): NOT an archive candidate.** The doc carries
+      `archive_exempt: true` in its own frontmatter (checked directly, missed by the original scan) — per the
+      archival-discipline codex SSOT, an `archive_exempt: true` doc stays in `plans/active/issues/` regardless of
+      todo-completion state. The sole todo's `[x]` DONE-with-HARD-evidence claim itself is still accurate (unchanged);
+      only the archival recommendation above was wrong. Do not route this to `/archive-candidates-audit`.
 
 ## Exit-gate observations (STEP 5, corpus-wide — NOT self-inflicted by this run)
 
@@ -403,3 +432,27 @@ in this same run.
   originally wrote/attributed that entry to the operator was authorized to do so, which is precisely
   `BLK-e7b0e8da`'s open question. Recording this so a future session doesn't mistake a second automated pass's
   face-value acceptance for actual resolution. `BLK-e7b0e8da` remains open; STEP-8 wait-loop continues.
+- **2026-08-16 (plan_reconciler /plan-reconcile Phase -1, separate later dispatch reconciling this doc against fresh
+  state)**: `agt-23fdbb`'s own last commit landed 2026-08-16T17:24:06Z (second pre-compact checkpoint); no live AO
+  dispatch to slot 30 remains (fleet-wide backlog check: 0 tasks dispatched to slot 30, `dispatched: 2-3` fleet-wide
+  total at check time, ~4h after the last commit) — confirmed dead per the same evidence class (git-log gap + AO
+  dispatch-status cross-reference) `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` uses, whose Option A
+  (2026-08-15 operator ruling) is the precedent applied here — `locked_by:` cleared above. The STEP-8 wait-loop this
+  run was stuck in is now moot (the dispatch itself is gone, not merely still waiting).
+  - Of the 8 grace-window-blocked contradiction items above, re-checked each target's commit age fresh: 5 are now
+    >12h old and were fixed in place (2 primary contradiction items + 3 of the 4 dangling-ref items), 1 was
+    reviewed-and-left (already self-hedged in-doc, real ordinary work not a doc-hygiene gap), 3 remain genuinely
+    grace-protected or otherwise correctly still-open (mdps_fleet_duplicate_relaunch_explosion — <1h old; task_
+    template.md — ~5.5h old; the Betfair-tag item — could not re-locate the cited detail, left open, low priority).
+  - Corrected the "Archive candidates" section: `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`
+    carries `archive_exempt: true` (missed by the original scan) — it is NOT an archive candidate regardless of its
+    todo-completion state; the original run's `/archive-candidates-audit` recommendation was wrong and is corrected.
+  - **`BLK-e7b0e8da` — STILL OPEN, no resolution found.** Re-checked available read-only channels (AO backlog-status
+    filter for `e7b0e8da`: 0 matches) — could not confirm an operator answer exists anywhere reachable from a dev
+    checkout. The disputed entry in `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:127-130` (an
+    unattributed "operator ruling" entry that 4 prior audit passes explicitly declined to self-resolve) remains
+    UNREVERTED and UNCONFIRMED. **NOT edited here** — grace-protected (last commit 20:50:08Z, <1h old at check time)
+    AND this is exactly the class of authority-boundary question that must not be self-resolved by whatever process
+    reads it next. **Flagging prominently for operator attention** per the same big-finding/governance-concern
+    triage this doc's original run already correctly applied — this is carried into the aggregate Phase -1 report,
+    not silently dropped.
