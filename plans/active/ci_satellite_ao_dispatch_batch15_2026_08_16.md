@@ -159,15 +159,22 @@ source: >-
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`. Gate: a deliberately
       broken consumer-QG check on a test PR is confirmed to block the merge button.
 
-- [ ] [DOC] P1. **Split `pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md`** (1013L, over the 1000L
+- [x] [DOC] P1. **Split `pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md`** (1013L, over the 1000L
       hard cap) using the established extraction pattern. Source: `plans/active/issues/plan_reconciler_findings_ci_2026_08_10.md`
       (line ~223) — operator-approved 2026-08-16 to dispatch as AO-eligible despite the doc's own "Operator-owned"
       self-tag, since the extraction pattern is already proven safe elsewhere in the corpus. Gate: doc splits cleanly
-      under 1000L per part, no content lost, `check_line_caps.sh` passes.
+      under 1000L per part, no content lost, `check_line_caps.sh` passes. **ALREADY DONE — checkbox reconciliation,
+      `/ag-closeout-audit ci` 2026-08-16 (slot 21):** shipped `unified-trading-pm@f835f7fcc4` (slot-9, dispatch
+      `agt-4f7ad9`, "ci-tranche line-cap splits under Trust Mode") ~53min BEFORE this batch was drafted — this batch's
+      Source citation pointed at the stale predecessor doc (`plan_reconciler_findings_ci_2026_08_10.md`) and missed that
+      the newer `plan_reconciler_findings_ci_2026_08_16.md`'s own Phase -1 had already done this split. Verified live:
+      doc is now 145L.
 
-- [ ] [DOC] P1. **Split `plans/active/github_actions_operator_gated_followups_2026_07_17.md`** (1006L, over the 1000L
+- [x] [DOC] P1. **Split `plans/active/github_actions_operator_gated_followups_2026_07_17.md`** (1006L, over the 1000L
       hard cap) using the same extraction pattern. Source: same reconciler doc (line ~232) — same operator approval.
-      Gate: same as above.
+      Gate: same as above. **ALREADY DONE — checkbox reconciliation, `/ag-closeout-audit ci` 2026-08-16 (slot 21):**
+      same commit `unified-trading-pm@f835f7fcc4`, same stale-Source-citation cause as above. Verified live: doc is now
+      738L.
 
 ## Todos — checkbox reconciliation only (work already done elsewhere, never flipped)
 
@@ -245,3 +252,14 @@ source: >-
   carrying open todos after batch14 shipped, plus operator rulings on the line-cap splits and the e2e-testing
   tier-DAG fix (landed directly, ahead of this batch, in
   `plans/active/issues/e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md`).
+- **2026-08-16 — `/ag-closeout-audit ci` (autonomous, scheduled, slot 21, `agt-114e5f`).** Ran a delta audit rather than
+  a full re-survey (this batch had just been drafted the same day by the interactive session above, so a fresh Phase 1
+  sweep would only re-ask the same 39 docs the same questions). Cross-referenced the full 51-doc `ci`-tranche inventory
+  against this batch + batch13 + batch13's finalize + this batch's own finalize + the consolidated closeout, leaving 9
+  docs genuinely uncited by any of the 5; classified all 9 via a 9-agent Workflow. Found and fixed in-run: the 2
+  line-cap-split todos above were already stale on arrival — `unified-trading-pm@f835f7fcc4` (slot-9, `agt-4f7ad9`)
+  shipped both splits ~53min before this batch was drafted, citing the newer `plan_reconciler_findings_ci_2026_08_16.md`
+  doc that superseded the `..._2026_08_10.md` doc this batch's Source lines still pointed at — flipped both `[x]` above
+  with commit evidence, verified live (145L / 738L). Full delta-audit results (7 confirmed orphans, none AO-eligible
+  enough to warrant a fresh batch16 yet, plus 2 asset_group mistags belonging to the `infra` tranche, not `ci`) written
+  to `plans/active/issues/ag_closeout_audit_ci_parked_2026_08_16.md`.
