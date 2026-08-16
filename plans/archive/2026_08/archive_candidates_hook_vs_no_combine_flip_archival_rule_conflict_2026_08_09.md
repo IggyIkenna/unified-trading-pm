@@ -9,8 +9,8 @@ summary:
   flip with the git mv archival in ONE commit' rule (also migrated 2026-08-09) forbids shipping the flip and the
   archival move together. Any self-archiving single-todo plan (the <X>_finalize_<date>.md pattern is the common shape)
   hits both rules simultaneously with no compliant single-commit path."
-status: open
-resolved_by:
+status: resolved
+resolved_by: "unified-trading-pm@79171795f2 (codex narrowed to mode-2) + unified-trading-pm@a231c2a80 (archive_exempt bridge shipped) — both todos verified [x] 2026-08-10, archived by plan_reconciler (agt-4f7ad9) 2026-08-16 once the gating batch12 pair confirmed archived"
 nature: issue
 asset_group: [ci, meta]
 stage: [meta]
@@ -36,13 +36,19 @@ priority: P2
 source:
   "Discovered live while executing ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md's sole [REVIEW] todo (slot 16,
   2026-08-09)."
-archive_exempt: true
 locked_by:
 drift_direction: none
 depends_on: []
 ---
 
 # check_archive_candidates hook vs. never-combine-flip-and-mv SSOT — same-day conflict
+
+> **✅ RESOLVED / ARCHIVED 2026-08-16** — both todos verified `[x]` with hard evidence (path (a) confirmed + codex
+> narrowed to mode-2, `archive_exempt: true` bridge independently shipped by a duplicate issue). Archived once the
+> wrapping `ci_satellite_ao_dispatch_batch12_2026_08_10.md` + finalize pair were confirmed archived
+> (`plans/archive/2026_08/`). **Deferred work — migrated to: none** (options (a)/(b)/(c) from the original
+> "Recommended decision" section below are fully accounted for by the two todos: (a) taken per todo 1, (c) satisfied
+> per todo 2's duplicate-issue citation; (b) was the alternative to (a) and is moot once (a) was taken).
 
 ## What I found
 
