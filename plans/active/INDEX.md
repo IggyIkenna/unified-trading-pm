@@ -16,9 +16,9 @@
 ---
 
 <!-- AUTO-INDEX-START -->
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 303 plans across 10 domains. A plan tagged with multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/` by hand._
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 302 plans across 10 domains. A plan tagged with multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/` by hand._
 
-### cefi (40)
+### cefi (39)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous, operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet — cefi, defi, tradfi, prediction — each of which already carries its own…
 - [`aster_and_cefi_rolling_adv_feature_2026_07_21`](./aster_and_cefi_rolling_adv_feature_2026_07_21.md) — Strategy code needs a rolling-N-day average-daily-volume (ADV) signal per CeFi instrument, both to cap position size as a % of ADV and to gate an instrument as "not yet tradeable" until it has a minimum history of real volume. Surfaced…
@@ -59,7 +59,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 303 plans a
 - [`pacifica_solana_perp_reintegration_2026_08_14`](./pacifica_solana_perp_reintegration_2026_08_14.md) — Re-integrate PACIFICA-SOLANA (real CLOB, hourly-settled funding rates) after the 2026-07-16 cull and its 2026-08-14 reversal — split out of the combined Jupiter+Pacifica plan once Pacifica's gates fully resolved while Jupiter's did not.…
 - [`prediction_capture_incident_remediation_2026_07_06`](./prediction_capture_incident_remediation_2026_07_06.md) — "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence: issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path — UTL…
 - [`strategy_service_expansion_overlays_config_and_wizard_2026_08_12`](./strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md) **[draft]** — Executes the expansion work the Elysium readiness audit surfaced, and it must land BEFORE the strategy-service repository is sent, because the client artefacts describe this as the design rather than as a roadmap. Three threads. (1) Place…
-- [`tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08`](./tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md) — Gated closeout for issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md — machine-held via depends_on + gate_on_depends: true until that doc's 2 remaining todos (P0 vendor-catalog request gate; P1 `--apply`…
 
 ### defi (51)
 

@@ -99,4 +99,16 @@ this task's repo). Needs a human or a dedicated diagnostic task to:
 - [ ] [ADMIN] P3. Root-cause why `.tabs/7/unified-trading-ci` is on branch `main` (tracking `origin/live-defi-rollout`)
       instead of directly on `live-defi-rollout` per Path-B topology, and whether
       `worktree_clean_check.check_slot_branch_state`'s pre-spawn guard should have caught this. Repo: agent-orchestrator
-      or unified-trading-pm (wherever the guard lives).
+      or unified-trading-pm (wherever the guard lives). **UPDATE 2026-08-16 (plan_reconciler, infra tranche,
+      `agt-f37a0c`)**: CONFIRMED FLEET-WIDE, not a slot-7/slot-12 anomaly — live-audited
+      `git rev-parse --abbrev-ref --symbolic-full-name @{u}` for `main` across every `.tabs/N/unified-trading-ci` clone
+      (33 slots): **32/33 track `origin/live-defi-rollout`; only slot 19 correctly tracks `origin/main`**. Same defect
+      independently found on slot-6 2026-08-10
+      (`/plans/archive/2026_08/issues/plan_reconciler_findings_infra_2026_08_10.md`, folded in here as the duplicate).
+      Given the near-universal spread, the root cause is almost certainly the shared provisioning path
+      (`scripts/dev/setup-tab-worktrees.sh` or equivalent) rather than a per-slot accident — worth checking whether it
+      special-cases `live-defi-rollout` as the assumed upstream for every cloned repo, which is wrong specifically for
+      `unified-trading-ci` (default branch `main`, extracted 2026-08-06). Fix is 2 parts: (a) the provisioning script,
+      so new slots get it right; (b) a one-time fleet remediation (`git branch --set-upstream-to=origin/main main` per
+      existing clone) — deliberately NOT applied by this reconciler run (bulk `.git/config` edits across 32 slots are
+      outside a single session's safe blast radius and this doc's write-scope).

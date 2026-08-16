@@ -228,33 +228,31 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       `§ "The rule"`, dropped the undefined "finding W" phrasing. Shipped via
       `infra_satellite_ao_dispatch_batch16_2026_08_13.md` (reconciled here 2026-08-15, source doc's own checkbox had
       gone stale).
-- [ ] [INFRA] P2. **`unified-trading-ci` slot-6 clone has a foreign unpushed commit + a branch-tracking
+- [x] ✅ [INFRA] P2. **`unified-trading-ci` slot-6 clone had a foreign unpushed commit + a branch-tracking
       misconfiguration** (found incidentally during a 2026-08-10 pre-compact re-audit, outside this doc's PM-corpus
-      scope — noted here rather than lost). `git log origin/main..HEAD` in the slot-6 `unified-trading-ci` checkout
-      shows 1 unpushed commit, sha `369a96d6a3`, authored `ikennaigboaka [slot-4·planning]` at 2026-08-10T05:36:11Z
-      ("fix(lint): resolve shellcheck findings in major-bump-issue-handler.yml") — **not this session's commit** (slot
-      6, not 4); left untouched per the multi-agent-safety rule against acting on another slot's unpushed work without
-      confirming liveness/intent. Separately, `git status --branch` on that checkout reports
-      `main...origin/live-defi-rollout` as the tracking ref — wrong (should track `origin/main`); plausibly because
-      `unified-trading-ci` is a brand-new repo (extracted 2026-08-06 per
-      `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md`) whose per-slot worktree setup may not
-      have run `setup-tab-worktrees.sh`'s normal tracking-branch step consistently across slots yet. Needs: (1) confirm
-      slot-4 liveness and either let them push it or recover it if the slot is dead, (2) audit whether OTHER slots'
-      `unified-trading-ci` clones have the same tracking misconfig, (3) fix at the root (worktree setup script) if
-      systemic. Whoever owns `unified-trading-ci`/worktree infra, not this tranche.
+      scope). **RECONCILED 2026-08-16 (plan_reconciler, infra tranche, agt-f37a0c)**: (1) the sha-`369a96d6a3` commit
+      genuinely landed on `origin/main` (confirmed: `git log origin/main --format='%H %s'` in slot-6's
+      `unified-trading-ci` contains it verbatim); slot-6's local copy is no longer ahead
+      (`git log origin/main..HEAD` now empty) — this specific commit is resolved, no lost work. (2) The tracking
+      misconfig root cause is CONFIRMED FLEET-WIDE, not slot-4/6-specific: live-audited
+      `git rev-parse --abbrev-ref --symbolic-full-name @{u}` for `main` across every `.tabs/N/unified-trading-ci` clone
+      (33 slots) — **32/33 track `origin/live-defi-rollout`; only slot 19 correctly tracks `origin/main`**. This is the
+      SAME defect independently discovered 2026-08-14 on slot-7
+      (`/plans/active/issues/slot7_unified_trading_ci_foreign_slot12_commit_wrong_branch_2026_08_14.md` todo 2, tagged
+      `cross-cutting`) — folded this fleet-wide evidence into that doc's todo 2 rather than duplicating a second open
+      item here; that doc is the better-scoped home (already names the right root-cause question + the
+      `worktree_clean_check.check_slot_branch_state` guard to check). Not fixed here — bulk `.git/config` tracking
+      edits across 32 slots are outside one session's safe blast radius and outside this doc's PM-corpus write-scope;
+      left to whoever picks up the cross-cutting doc's todo 2, now with fleet-wide evidence instead of a 1-slot
+      anecdote.
 
 ## Archive candidates (operator review)
 
-1. `infra_satellite_ao_dispatch_batch7_2026_08_04.md` — all 3 todos `[x]` HARD-evidenced, unlocked, archive-ready. **NOT
-   archived this run**: 3 of 5 referrers (`infra_satellite_ao_dispatch_batch11_2026_08_09.md`,
-   `ag_closeout_audit_infra_parked_2026_08_04.md`, `..._08_06.md`) are inside today's 12h grace window — archiving now
-   would leave leading-slash references dangling in docs this run cannot write. Its finalize twin's own todo 3 ("archive
-   batch7") is correctly still open pending this.
+1. `infra_satellite_ao_dispatch_batch7_2026_08_04.md` — **ARCHIVED**, confirmed 2026-08-16 present at
+   `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md` (referrer grace cleared as anticipated).
 2. `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`,
-   `ag_closeout_audit_infra_parked_2026_08_01.md`, `ag_closeout_audit_infra_parked_2026_08_07.md` — all 3 now
-   0-open-todos, unlocked, `archive_exempt: true` set this run with a Progress Log reason (same grace-locked-referrer
-   blocker as #1). All 3 should complete the 6-step archival ritual once their respective referrer docs clear grace
-   (roughly: 12-24h from this run's timestamp, 2026-08-10 ~06:00 UTC).
+   `ag_closeout_audit_infra_parked_2026_08_01.md`, `ag_closeout_audit_infra_parked_2026_08_07.md` — **ALL ARCHIVED**,
+   confirmed 2026-08-16 present under `/plans/archive/2026_08/issues/`.
 
 ## Refuted (dropped by verify)
 
