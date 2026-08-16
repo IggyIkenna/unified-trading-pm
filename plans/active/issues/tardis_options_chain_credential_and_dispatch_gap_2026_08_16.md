@@ -214,6 +214,6 @@ adapter fix.
 
 ## Follow-ups (not fixed in this pass)
 
-- [ ] [P3] `adapters/tradfi/yahoo_finance_adapter.py` has the same `get_write_bucket_name("tick-data", ...)` stale-
+- [ ] [AGENT] P3. `adapters/tradfi/yahoo_finance_adapter.py` has the same `get_write_bucket_name("tick-data", ...)` stale-
       domain bug found in `deribit_options_chain_handler.py` — unrelated to CeFi/Tardis, needs its own verification
       of Yahoo-adapter behavior before fixing. market-tick-data-service.
