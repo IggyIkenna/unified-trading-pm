@@ -43,7 +43,7 @@ estimate_calibrated_ai_days: 0.3
 drift_direction: none
 parent_epic: batch_live_symmetry_master
 depends_on: []
-last_updated: 2026-08-09
+last_updated: 2026-08-16
 locked_by:
 locked_since:
 supersedes:
@@ -454,3 +454,55 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   durable park. No new cross-reference filed — `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this
   exact bug class (now 18 touches post-park: slot 19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15,
   25, 18, 6 all bypassing the park). No code/report changes; this Progress Log entry is the only change this turn.
+
+- **2026-08-16 (slot 10, data_pipeline_failure escalation `agt-522d96`, DP-FETCH-009 root-cause, 2nd occurrence)**:
+  Dispatched off a `check_high_attempted_failed` page for `asset_group=cefi data_type=book_snapshot_5` (8,002
+  `attempted_failed` cells of 173,333 attempted; 2,260 fresh in the last 1d). This is a DIFFERENT root cause than the
+  2026-08-09 ASTER dispatch above (that population was purged 2026-08-15, see the `[INFRA] P1` todo) — extending this
+  doc rather than filing a new one since it directly involves the SAME `cefi-queue-heavy-binancefutu-x17-*` backfill VM
+  this doc already tracks.
+  - Queried the live cefi manifest (`read_availability_index_safe(columns=, filters=[data_type=book_snapshot_5,
+    capture_status=attempted_failed])`, targeted row-group-pushdown read): of the 2,260 fresh (`written_at` in the
+    last 1d) rows, **2,259 (99.96%) carry `error_reason="Tardis HTTP 403 code=274 concurrent-IP-lock"`** — spread
+    across 11 venues (OKX-SPOT 449, BINANCE-SPOT 378, OKX-FUTURES 378, OKX-SWAP 264, BINANCE-FUTURES 229, COINBASE-SPOT
+    155, BITFINEX-SPOT 155, KRAKEN-SPOT 150, KRAKEN-FUTURES 51, DERIBIT 32, BITFINEX-FUTURES 18), all shard `date` in
+    2020, `written_at` 2026-08-15T23:31Z..2026-08-16T04:34Z.
+  - **This is NOT a misclassification** — code=274 (Tardis single-concurrent-IP lock rejection) is correctly routed to
+    `attempted_failed` per `tardis_csv_transport.py`'s existing 400-path classification (only 300/140 "impossible
+    combination" codes route to `empty_confirmed`; 274 is a genuinely transient/retriable rejection, so
+    `attempted_failed` is the honest, correct manifest state — no code fix needed for the classification itself).
+  - **Traced the proximate cause**: `gcloud compute instances list --filter=status=RUNNING` at dispatch time showed
+    TWO VMs matching `tardis-concurrency-guard.sh`'s `TARDIS_VM_NAME_PATTERN` overlapping in the relevant window —
+    `mtds-backfill-cefi-20260815-181733` (started 2026-08-15T17:18Z, via `launch-mtds-backfill-vm.sh`) and
+    `cefi-queue-heavy-binancefutu-x17-20260815-220349` (started 2026-08-15T22:03:55Z, via
+    `launch-cefi-sharded-backfill.sh` — a preemption-relaunch of the SAME backfill this doc's Progress Log has tracked
+    since 2026-08-09). Both launchers correctly `source`+call `tardis_concurrency_guard`/`tardis_guard_reserve_slot`
+    (verified via grep — this is not a missing-guard bug), so if these two genuinely overlapped past a mutual guard
+    check, it is most likely the ALREADY-KNOWN, ALREADY-MITIGATED ~40s async-VM-visibility race documented in
+    `tardis-concurrency-guard.sh`'s own header (2026-07-16T00:58Z incident, closed via the RUNNING+PROVISIONING+STAGING
+    status widening) — not a fresh code defect. Did not conclusively pin the exact overlap window (`mtds-backfill-cefi`
+    had already self-terminated — `gcloud compute instances describe` returned `NOT FOUND` — by the time this dispatch
+    checked, so its exact stop time is unrecoverable from live state).
+  - **Verified self-resolved, not currently live**: re-queried the manifest for this exact `error_reason` restricted to
+    the last 2h — **0 rows**; max `written_at` for the whole population is 2026-08-16T04:34Z (~8h stale at check time,
+    2026-08-16T12:42Z). `gcloud compute instances list` confirms exactly ONE Tardis-consuming VM running right now
+    (`cefi-queue-heavy-binancefutu-x17-20260815-220349`) — the cap is currently respected, no active violation.
+  - **Noted in passing, NOT shipped (out of this escalation's confirmed-root-cause scope)**: `launch-cefi-sharded-backfill.sh`
+    has `DRY_RUN`/`FORCE`/`SINGLE_VM_QUEUE` all defaulting to the literal string `"250"` (line 81-98) — almost
+    certainly a copy-paste artifact from the correct `MAX_CONCURRENT="${MAX_CONCURRENT:-250}"` line, since every
+    downstream check on these three vars is a strict `== "1"` comparison, so `"250"` is functionally identical to any
+    other non-"1" default (confirmed via grep of every callsite) — i.e. cosmetic/confusing but NOT the cause of this
+    incident. Not fixing it here since it has zero behavioral effect and isn't this escalation's diagnosed root cause;
+    flagging for whoever next touches that launcher's readability.
+  - **Also observed (separate, NOT this alert's cause)**: at dispatch time, 304 `cefi-aster-*`/`cefi-hyperliquid-*`
+    VMs were concurrently RUNNING (via `launch-cefi-hl-aster-historical-backfill.sh`'s `SHARD_DAYS` fine-sharding,
+    `MAX_CONCURRENT=250`). Confirmed these are Tardis-CAP-EXEMPT by design (`tardis-concurrency-guard.sh`'s own
+    `TARDIS_CAP_EXEMPT_VENUES=(HYPERLIQUID ASTER EXTENDED-STARKNET COINBASE-CDE)` — HL/ASTER/LIGHTER/EXTENDED never
+    open an authenticated `datasets.tardis.dev` connection) so they do not contend for the Tardis lock and are NOT
+    implicated in this DP-FETCH-009 finding. Whether 304 concurrently-running e2-highmem-4 VMs is itself a billing-waste
+    concern is out of scope for this escalation (that's `/vm-preemption-billing-waste-audit`'s remit, not a DP-FETCH
+    finding) — not filing a separate note, flagging here only so a future reader doesn't re-walk the same red herring.
+  - **DP-FETCH-009 disposition**: stale/self-resolved, not an active pipeline break — no code fix shipped this turn
+    (the classification is already correct; the proximate VM-overlap condition has already cleared; the only
+    candidate code smell found has zero behavioral effect). No code/report changes; this Progress Log entry is the
+    only change this turn.
