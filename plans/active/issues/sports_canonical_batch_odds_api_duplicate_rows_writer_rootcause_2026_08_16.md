@@ -151,3 +151,20 @@ low today; it could be worse in cells/days not sampled.
   not yet shipped as of this entry. Once green: ship the fix, then re-attempt the dry-run launch (step 3).
   Lesson for any future launcher-category addition to this specific script: check BOTH dispatch points, not
   just `_script_for()`.
+- **2026-08-16 (slot-23)**: Fix shipped as `deployment-service@ce40fb8948` (full quality-gates green, 266s). First
+  dry-run retry (`sports-odds-dedup 2020-06-06 2026-08-16 dry`) got past the `Unknown category` error (confirming
+  the fix worked) but hit a NEW, unrelated failure: `lc_verify_tarball_freshness` aborted with
+  `ERROR: auto-republish completed but tarball(s) still stale ... market-tick-data-service`. Root cause: a
+  genuine transient race, not a launcher bug — the always-running `main-backmerge-to-ldr` cron advanced MTDS's
+  `live-defi-rollout` HEAD mid-launch (observed moving `517d375852ea` → `4e833630a066` → back to `517d3758` via a
+  merge commit, all within the ~60s launch window), so the tarball built at one sha no longer matched HEAD by the
+  time the launcher re-verified freshness. The launcher correctly aborted rather than deploying an inconsistent
+  tarball. Confirmed MTDS was clean and HEAD-stable before retrying. Second retry succeeded cleanly (`tarball
+  fresh` on all 4 repos, no republish needed): VM `canonical-migration-sports-odds-dedup-20260816-134243` created
+  and RUNNING (asia-northeast1-c, e2-standard-8, **not preemptible** — on-demand as the plan requires), mode=dry.
+  Step 3 of the local execution plan is now genuinely in progress — monitoring to terminal state next, then read
+  totals and sanity-check against this doc's "low-thousands of affected cells" extrapolation before proceeding to
+  the apply/full launch (step 5, already pre-authorized). Lesson: on a shared checkout with always-running
+  backmerge automation, a launch that fails on tarball-freshness mid-race is not necessarily a bug — check
+  whether the source repo's HEAD was actively moving during the launch window before assuming the launcher is
+  broken; a bare retry after confirming HEAD stability resolved it here with zero code changes needed.
