@@ -35,6 +35,46 @@ depends_on: []
 Dispatch `agt-a74a6a`, slot 31, tranche `tradfi`. Corpus: 86 docs / 2,755,415 bytes under `plans/active/` +
 `plans/active/issues/` tagged `asset_group: tradfi` (via `generate_tranche_doc_inventory.py --tranche tradfi`).
 
+## Todos (follow-ups from this run, not executed here — see "Filed" section below for full context)
+
+- [ ] [DOC] P2. **Archive `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`** — verified 9/9 todos `[x]`,
+      unlocked; `archive_exempt: true` bridge explicitly deferred to a separate follow-on pass. Run the 6-step ritual.
+- [ ] [DOC] P2. **Archive `tradfi_recovery_quarantine_registration_gap_2026_07_27.md`** — verified 4/4 todos `[x]`,
+      unlocked, `locked_by` cleared 2026-08-12; same deferred-bridge pattern. Run the 6-step ritual.
+- [ ] [DOC] P2. **Archive `tradfi_backfill_oom_remediation_2026_06_24.md`** — verified all todos `[x]` as of
+      2026-08-16, confirmed outside the 12h grace window via direct `git log` check at time of this run. Run the
+      6-step ritual.
+- [ ] [DOC] P2. **Archive `backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md`** — verified 2/2 todos
+      `[x]` since 2026-08-10 (6 days overdue at time of this run), `archive_exempt` never dropped per its own
+      codex-cited convention. Run the 6-step ritual.
+- [ ] [DATA] P2. **Correct the stale Massive-purge section in `tradfi_canonical_path_migration_design_2026_07_19.md`,
+      then archive it.** Doc body (steps 5-6 / hard-stops list) still frames the 1.47M-object Massive purge as
+      future-gated; `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3 confirms it EXECUTED 2026-07-20/21
+      (1,701,422 objects → 0, 0 collateral) and names this doc as the source design doc. All todos already `[x]`,
+      `archive_exempt: true` bridge pending this correction + a follow-on pass.
+- [ ] [SERVICE] P3. **Fix the missing `[OPERATOR]` tag on 2 open todos in
+      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** (lines ~975, ~983 as of this run — SPOT vs
+      on-demand VM cost/reliability question, raised twice in Progress Log across 6 consecutive gated-skip dispatches,
+      never formally escalated). Tag-only fix; the underlying design question itself stays genuinely open pending an
+      operator ruling.
+- [ ] [DOCS] P3. **Fix the residual reference-path ratchet regression from this run's archivals** (baseline 34,
+      currently 38 — 2 of the original 6 were fixed same-run) — `tradfi_consolidated_closeout_2026_07_18.md` (×2) and
+      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (×2) still reference the now-archived
+      `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`(+`_finalize`); both source docs were inside the 12h grace
+      window during this run. Repoint to `/plans/archive/2026_08/...` once grace clears.
+- [ ] [DOCS] P3. **Bump stale `last_updated` frontmatter on 7 tradfi-tranche docs** found during this run (identical
+      pattern — na-eligibility-audit/context-scout passes don't bump the field): `ag_closeout_audit_rollout_2026_07_25.md`,
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`, `instruments_remaining_work_audit_2026_07_10.md`,
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`,
+      `estate_orphan_assessment_2026_07_21.md`, `strategy_ml_orphan_coverage_design_gaps_2026_08_03.md` — a mechanical
+      tooling fix (bump-on-audit-touch) is likely higher-leverage than 7 hand-edits.
+- [ ] [DOCS] P3. **File 4 codex-alignment corrections** identified this run (new content needed, not a pure
+      substitution, so not auto-applied per the mechanical carve-out): `/codex/02-data/tradfi-databento-sourcing-ssot.md`
+      (2 gaps — stale CBOE-floor-fix status + silent on `EXCHANGE_CODE_TO_NAME`), `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`
+      (missing a 3rd billing-waste failure-mode class), `/codex/05-infrastructure/manifest-consolidator-ssot.md` (no
+      warning that rebuild scripts resurrect retired-venue manifest rows), `/codex/05-infrastructure/data-pipeline-alerts.md`
+      (no detector for intended-pause-then-silently-resumed, confirmed recurred twice).
+
 ## Phase -1 — prior findings reconciliation
 
 No `plan_reconciler_findings_tradfi_*.md` doc existed prior to this run. Checked the two most recent `all`-scope
