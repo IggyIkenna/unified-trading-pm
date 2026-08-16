@@ -851,4 +851,4 @@ family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27,
 - **context-scout 2026-08-15**: re-confirmed context_scope (2 entries) unchanged — still a genuinely code-free
   discoverability-index doc (its own body IS the reading list); the parent closeout plan + the line-cap-remediation
   source doc remain the right minimal set.
-- **na-eligibility-audit 2026-08-16** [body-hash:1d31e11bb021b50d]: KEEP-NA, valid — Read the full 851-line doc end-to-end (two Read calls covering 1-510 and 511-851).
+- **na-eligibility-audit 2026-08-16** [body-hash:299542f08529c1c3]: KEEP-NA, valid — Read the full 851-line doc end-to-end (two Read calls covering 1-510 and 511-851).
