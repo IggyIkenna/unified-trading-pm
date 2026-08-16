@@ -335,15 +335,31 @@ before).
       `reconcile_release_tags.py` healthy/tag-derived list (`market-tick-data-service:v0.112.2`), unstalled — the
       unrelated pre-existing test failure this todo was gating on no longer blocks anything, since no per-repo ship of
       THIS fix is needed anymore.
-- [ ] [DEVOPS] P2. **NEW 2026-08-09 (stale-recheck sweep) — root-cause the residual 7-repo stall.** `e2e-testing`,
-      `fund-administration-service`, `greeks-service`, `ibkr-gateway-infra`, `system-integration-tests`,
-      `trading-agent-service`, `unified-trading-api` are still `STALL`ed per `reconcile_release_tags.py --dry-run` even
-      though all 7 got this doc's patch-fallback fix shipped (see the `## Shipped` checklist) and their
-      `semver-agent.yml` runs are completing green post-fix (spot-checked 2 of 7). Determine whether this is legitimate
-      (no `SOURCE_DIR`-touching commit landed on `main` since each repo's baseline tag, so `BUMP=""` is the CORRECT
-      outcome) or a genuine gap the patch-fallback logic still misses for these specific repos. Done when: each of the 7
-      is classified either "correctly quiet" (with the commit range checked) or a new root cause is identified and
-      fixed.
+- [x] ✅ [DEVOPS] P2. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** Classified via
+      `plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13.md`'s todo (DONE 2026-08-14, slot 6): all 7 repos
+      classified "correctly quiet", verified two independent ways (a live `reconcile_release_tags.py --dry-run`
+      re-run + a per-repo `git log <baseline-tag>..origin/main -- <source_dir>/` scope check). Independently
+      re-ran `reconcile_release_tags.py --dry-run` fresh 2026-08-16: **0 STALLED** fleet-wide; all 7 named repos
+      present in the healthy/tag-derived or ahead-but-benign buckets (`unified-trading-api` 4 benign commits;
+      `system-integration-tests` has since fully cleared to tag-derived-healthy). batch13's own finalize plan never
+      reconciled this checkbox back to this doc (its reconciliation todo is itself correctly gated on batch13's own
+      last-1-of-24 remaining item) — flipped directly here instead of waiting on that gate.
+- [ ] [INFRA] P3. **NEW 2026-08-16 (plan_reconciler ci-tranche, surfaced while verifying the todo above) —
+      `e2e-testing`'s `semver-agent.yml` carries a latent `source_dir` misconfiguration.**
+      `e2e-testing/.github/workflows/semver-agent.yml:46` sets `source_dir: "e2e_testing"` (underscore), but no
+      `e2e_testing/` directory exists anywhere in that repo (real top-level dirs: `.github`, `configs`, `docs`,
+      `reports`, `scripts`, `tests`, ...) — the repo's own real source lives directly at the root / under `scripts`
+      and `tests`, not a nested `e2e_testing/` package. Practical effect: the patch-fallback's
+      `SOURCE_DIR`-touching-commit check for this repo is scoped to a directory that can never match any commit,
+      so it can only ever see `BUMP=""` regardless of what actually changed — currently masked because
+      `e2e-testing` classifies as "correctly quiet" for the unrelated reason that its `main` genuinely has no
+      unreleased commits right now (see the todo above), not because the `source_dir` scoping is correct. Was
+      flagged only as inline prose in batch13's DONE todo ("flagging for the finalize plan / a fresh issue if
+      warranted") and never became a tracked `- [ ]` anywhere in the corpus — filed here per the workspace's
+      "every follow-up is a tracked todo, never prose" hard rule. Done when: `source_dir` is corrected to the
+      repo's real source root (or removed if the default already covers it — check `semver-agent.yml`'s reusable
+      workflow default), and a synthetic same-repo commit is verified to produce a non-empty `BUMP` where it
+      previously would have been silently `""`.
 
 ## Follow-up regression #2 (2026-08-08): unified-trading-ci reusable-workflow migration silently reintroduced the char-cap bug
 

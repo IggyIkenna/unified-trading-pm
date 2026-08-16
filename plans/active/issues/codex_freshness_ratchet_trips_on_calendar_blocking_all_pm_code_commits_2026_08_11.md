@@ -187,12 +187,13 @@ reading. All three name their replacement, so the machine already has everything
       retired-with-successor, but were still inside the 90d window so they had never surfaced as violations. They would
       have expired later and cost another round of the same pointless review. That is the argument for fixing the rule
       rather than the 3 instances: the instance list was never the real population.
-- [ ] [DEVOPS] P3. **Decide the endgame for the 3 retired docs above, independent of the gate change.** A `superseded`
-      doc that still sits on a cutover-critical surface is discoverable by grep and can mislead an agent into
-      implementing against it. Options: SUPERSEDED banner at the top pointing at the replacement (the workspace's stated
-      convention), or archival off the scanned surface. All three name a replacement, so the successor is always
-      recoverable and no doc here is orphaned — this is a tidiness and grep-noise decision, not a data-loss one. Repo:
-      unified-trading-pm.
+- [x] ✅ [DEVOPS] P3. **DONE — effectively already resolved, confirmed by plan_reconciler (ci tranche) 2026-08-16.**
+      All 3 named docs already carry BOTH a `status: superseded` frontmatter field AND an inline body SUPERSEDED
+      banner naming the replacement (independently re-read all three: `data-catalogue-schema.md` → "⛔ SUPERSEDED
+      2026-07-20 (doc-reconciliation P1-09)"; `ui-dependency-matrix.md` and `ui-functionality-requirements.md` → both
+      "🟡 SUPERSEDED 2026-05-13 by ui-architecture.md") — the "SUPERSEDED banner" option this todo posed as one of two
+      endgame choices was already the live state for all three by the time this todo was re-checked, satisfying it
+      without further action.
 
 ## Update 2026-08-12 — a fourth failure mode: a genuine YAML syntax error reports as "no-frontmatter"
 
@@ -215,11 +216,7 @@ distinct failure classes into one ambiguous verdict), not a data/path bug, so it
 `yaml.safe_load` the block) to see the REAL exception — the ratchet's own message will send you looking for a missing
 delimiter that was never missing.
 
-- [ ] [SCRIPT] P3. **Distinguish "no-frontmatter" from "frontmatter present but failed to parse" in
-      `check_codex_doc_freshness.py`.** Give `_parse_frontmatter()` a way to signal which case occurred (e.g. return a
-      sentinel/raise a typed exception the caller catches, or a `(fm, reason)` tuple) so `_check_parsed()` can emit a
-      distinct violation reason (`"yaml-parse-error"` with the caught exception's message as `detail`) instead of
-      silently reusing `"no-frontmatter"` for both. Low urgency (P3) since the underlying doc-authoring bug is what
-      actually blocks a commit either way — this is purely about the diagnostic pointing the next person at the right
-      fix on the first read instead of a false "you're missing the frontmatter block entirely" lead. Repo:
-      unified-trading-pm.
+- [x] ✅ [SCRIPT] P3. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** `check_codex_doc_freshness.py`
+      now emits a distinct `"yaml-parse-error"` reason (used in the checker's violation-reporting paths), separate
+      from `"no-frontmatter"` — the module's own docstring self-cites this exact doc + "Update 2026-08-12". Shipped
+      unified-trading-pm@a68d8b716d (2026-08-13), the day after this issue's update.

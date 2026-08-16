@@ -142,11 +142,20 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
       `/usr/bin/systemctl` execution (`-w /usr/bin/systemctl -p x -k systemctl_exec`), verified `active` + rule loaded
       (`auditctl -l`). This does not explain THIS incident, but any recurrence is now attributable via
       `ausearch -k systemctl_exec`. Leaving this specific incident's trigger formally unknown rather than guessing.
-- [ ] [INFRA] P2. **Close the monitoring gap.** The glue-runner-crash-loop-watchdog only flags units actively
-      crash-looping (repeated restarts), so a runner sitting cleanly `inactive`/stopped (Restart=always suppressed by an
-      explicit stop) evades detection — exactly this incident. Extend the watchdog (or add a sibling check) to alert
-      when any expected `github-glue-runner-<repo>@glue-1.service` is `inactive`/`dead`/`failed` for > N minutes while
-      peer runners are active, so a stopped runner pages instead of silently stalling promotion for an hour. Repo:
+- [ ] [INFRA] P2. **Close the monitoring gap — PARTIALLY DONE, split confirmed by plan_reconciler (ci tranche)
+      2026-08-16.** This todo bundles two distinct asks. **(b) is DONE**: the "2026-08-05 addendum" below (wedged —
+      active-but-hung) is fully shipped via `is_wedged()` in
+      `scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh` (first commit `ab7e06d24`, hardened by
+      `c0003b9e2`/`e0901407f` + 2 further hardening commits `c80e330b3f`/`b9b69d232b`). **(a) is STILL OPEN,
+      verified genuinely unhandled** (exhaustive grep of the live script for `ActiveState`/`SubState`/state-check
+      logic found only `is_crash_looping()` (requires `SubState=auto-restart`) and `is_wedged()` (requires
+      `ActiveState=active`) — a unit that is simply cleanly `inactive`/`dead`/`failed` satisfies neither and remains
+      undetected, exactly this incident's own original signature): the glue-runner-crash-loop-watchdog only flags
+      units actively crash-looping (repeated restarts), so a runner sitting cleanly `inactive`/stopped (Restart=always
+      suppressed by an explicit stop) evades detection — exactly this incident. Extend the watchdog (or add a sibling
+      check) to alert when any expected `github-glue-runner-<repo>@glue-1.service` is `inactive`/`dead`/`failed` for
+      > N minutes while peer runners are active, so a stopped runner pages instead of silently stalling promotion for
+      an hour. Repo:
       **unified-trading-pm** (`scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh` — corrected 2026-08-06
       (/plan-reconcile ao); previously mis-pointed at agent-orchestrator, see this doc's context-scout 2026-08-06 note
       below). Target host for this watchdog's own alert logic and any live-state checks: the CI-runner VM
@@ -308,14 +317,12 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
       within the hour) and the fix shipped to `live-defi-rollout` as `879e3e109` (quickmerge's SHA-sentinel skipped a
       redundant Pass-2 QG re-run, so this added no extra host load) — draining to `main` via `ldr-to-main-promote.yml`
       on the normal ~15-30min SLA, not yet independently re-verified on `main`.
-- [ ] [INFRA] P3. **No automated deploy/sync exists for this watchdog script at all — found while fixing the item
-      above.** The live host's executed copy (`/usr/local/sbin/glue-runner-crash-loop-watchdog.sh`) was already stale
-      before today's fix, missing the 2026-08-05 unit-enumeration pattern-match fix documented in this same script's own
-      header comment (bare `grep glue` vs. the `github-glue-runner*` glob). No workflow, cron, or install script
-      references `/usr/local/sbin/glue-runner-crash-loop-watchdog.sh` (`setup-glue-runners.sh`, the closest candidate,
-      doesn't touch it) — every prior fix needed a manual SSM copy that evidently didn't happen consistently. Wire an
-      automated sync (e.g. a step in `setup-glue-runners.sh`, or a small `git pull`-and-diff timer) so a future repo fix
-      actually reaches the host instead of silently sitting uncommitted-to-production indefinitely.
+- [x] ✅ [INFRA] P3. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** Shipped
+      `scripts/self-hosted-runners/deploy-sbin-scripts.sh` + `github-glue-deploy-sync.service` +
+      `github-glue-deploy-sync.timer` (first commit `572addd34f`, 2026-08-15) — timer fires
+      `OnBootSec=3min, OnUnitActiveSec=10min, Persistent=true`, `ExecStart` runs the deploy script which syncs
+      `/usr/local/sbin/` monitor scripts (including this exact watchdog) from the glue-runner slot mirror. The
+      deploy script's own header comment self-cites this doc + "final P3 todo".
 
 ## Progress Log
 

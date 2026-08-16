@@ -143,24 +143,22 @@ gone quiet or the streak has reset." Run live from an interactive session with A
       treadmill and NOT the "different, currently-masked bug" this todo was written to rule out. No fresh investigation
       warranted. The na-eligibility gate on "once LDR goes quiet" is discharged: convergence was observed WITHOUT LDR
       going quiet.
-- [ ] [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate** — L962-979 is unreachable whenever
-      L756 returns BLOCKED, so an orphaned red promote PR survives indefinitely and is what makes the lag monitor page
-      (see the measured section). **Design constraint (do NOT skip)**: the predicate must not mass-close. Closing every
-      `headRefName != $PROMOTE_HEAD` PR early is unsafe — if `LDR_SHA` is empty from a failed API read, `PROMOTE_HEAD`
-      degrades to `promote/$REPO/` and every open promote PR mismatches. Close only a PR whose head is a strict ANCESTOR
-      of the current LDR tip AND whose required checks have already CONCLUDED failure (an immutable head with a
-      concluded red check can never merge, so no viable promotion is discarded — the case that makes a naive hoist
-      risky). Needs a test in `scripts/quality-gates-base/tests/` extracting the real function body, per the
-      `test-sit-fleet-green-auto-retrigger.sh` precedent. Repo: unified-trading-pm.
-- [ ] [DEVOPS] P2. **Fix `sit-gate-stuck-detector.yml`'s dedup key** — the cooldown should not suppress a repost when
-      the detector's own worst-repo streak count has INCREASED since the last post (i.e. include the streak count, or a
-      monotonic-worsening check, in the dedup decision alongside the flat 60-min timer). Read
-      `scripts/self-hosted-runners/hosted-baseline/notify-slack.yml`'s dedup_key/cooldown_min contract before changing
-      call sites elsewhere in the fleet. SSOT: `/codex/04-architecture/ci-alerting.md`.
-- [ ] [DEVOPS] P3. **Re-check after LDR goes quiet** — once commit velocity on `live-defi-rollout` drops (multiple
-      sessions currently shipping concurrently), confirm SIT completes an uninterrupted round and both repos' streak
-      resets to 0; if it does NOT reset even once LDR is quiet for one full round-trip window, that would indicate a
-      DIFFERENT, currently-masked bug and warrants fresh investigation (not assumed to be this same treadmill).
+- [x] ✅ [DEVOPS] P2. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** Hoisted via
+      `scripts/cicd/ldr_to_main_fleet_promote.sh`'s `_close_ancestor_failed_promote_prs()` (lines ~445-525, called at
+      line 676) — header comment at line 459 self-cites "sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md
+      todo 3". Implements exactly the stated design constraint: closes a promote PR only when its head is a strict
+      ancestor of `LDR_SHA` (never inferred from ref-name mismatch, refuses to run when `LDR_SHA` is empty) AND its
+      required check has already CONCLUDED failure.
+- [x] ✅ [DEVOPS] P2. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** Fixed via
+      `.github/workflows/sit-gate-stuck-detector.yml`: `dedup_key: sit-gate-stuck-${{ needs.check.outputs.max_streak }}`
+      (line 131) folds the streak count into the dedup identity so cooldown no longer suppresses a repost while the
+      condition worsens; a paired `sit-gate-stuck-resolved` all-clear key (line 153) closes the missing-all-clear gap
+      too. The `notify` job's own comment self-cites this exact todo.
+- [x] ✅ [DEVOPS] P3. **DONE — duplicate of the already-`[x]` todo above ("Re-check after LDR goes quiet"), confirmed
+      by plan_reconciler (ci tranche) 2026-08-16.** Same question (does the streak ever fail to reset / is there a
+      second masked bug), already answered live 2026-08-10: the streak resets on gate PASS even under sustained
+      velocity — convergence was observed WITHOUT LDR going quiet, discharging this gate directly rather than waiting
+      for a quiet window. No fresh investigation needed; this was simply never de-duped when the first copy closed.
 
 ## na-eligibility-audit verdict
 

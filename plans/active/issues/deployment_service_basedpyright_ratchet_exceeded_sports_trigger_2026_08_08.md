@@ -83,11 +83,16 @@ false positives worth a targeted `# type: ignore`-equivalent per this repo's own
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix or properly annotate the ~23 basedpyright errors in `sports_trigger_evaluation.py`,
-      `sports_trigger_periodic.py`, `sports_trigger_scheduler.py`, `sports_trigger_state.py` so
-      `BASEDPYRIGHT_MAX_ERRORS` drops back to ≤1293. Unblocks all future deployment-service ships, including the
-      DP-FETCH-009 fix parked in a working tree pending this (see Progress Log for exact file diffs still sitting
-      uncommitted, safe to re-apply).
+- [x] ✅ [BACKEND] P1. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** Fixed via
+      `deployment-service@71871454c0006cab33b633be93017b7704f8d35a` ("fix(types): resolve basedpyright
+      reportUnknown* cascade in sports_trigger_* (1295->1259, ratchet down)"), touching exactly the 4 named files +
+      `scripts/quality-gates.sh`; confirmed ancestor of `origin/live-defi-rollout`. Live-measured:
+      `BASEDPYRIGHT_MAX_ERRORS=1259` in `deployment-service/scripts/quality-gates.sh` — well under the ≤1293 target.
+      The 2026-08-08/10 na-eligibility-audit HELD verdict's race concern (vs.
+      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`'s earlier same-file-family fix) did not
+      materialize: that repo's own fix (`4e0e03d6`) landed cleanly before `71871454`'s independent, non-overlapping
+      `cast()`-based change on the same file — no conflict, sequential clean history. Unblocks the DP-FETCH-009 fix
+      referenced below.
 
 ## Progress Log
 

@@ -94,7 +94,12 @@ can't.
 
 ## Follow-ups
 
-- [ ] [DEVOPS] P2. Confirm PR #2714 merges green (QG run `31405420640`) and LDR→main catches up; then close this issue.
+- [x] ✅ [DEVOPS] P2. **DONE on newer evidence — verified by plan_reconciler (ci tranche) 2026-08-16.** PR #2714
+      itself was superseded and closed without merging (`state=CLOSED`, `mergedAt=null`, `closedAt=2026-08-10`) —
+      normal fleet-bot supersede behavior for this repeating `chore(promote): LDR → main` pattern, not a failure. The
+      underlying goal (LDR→main catching up cleanly) is independently confirmed live: 5 fresh `chore(promote)` PRs
+      merged today (2026-08-16) at a healthy ~6-14min cadence (#3289-#3293, 15:15-16:01Z). Closing on this evidence
+      rather than waiting on the specific (now-moot) PR the todo originally named.
 - [ ] [DEVOPS] P3. Consider the same doomed-run guard in `ldr-to-main-promote-fleet.yml`'s per-repo supersede path if
       the fleet bot ever shows the same wait-on-doomed-run shape (no evidence of it today — fleet PRs are per-SHA
       fresh).

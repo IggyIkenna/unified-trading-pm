@@ -41,7 +41,7 @@ supersedes:
     deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12,
     cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12,
   ]
-resolved_by: deployment-api@b928d173b5
+resolved_by: "deployment-api@b928d173b5 (revert), unified-trading-pm@2b4bee96d3 (STEP 5.108 wiring), unified-trading-pm@95dd1ded4f (marker-list + blast-radius message fixes), deployment-api@e7dde8a675 + d47546e9da (_RUN_INIMAGE_QG reconciliation), unified-trading-pm@f9dbc8a31f (GATE-INFRA carve-out), unified-trading-pm@3ec88291e2 (substitution-drop guard) -- corrected 2026-08-16 (plan_reconciler), was citing only the first commit"
 locked_by:
 locked_since:
 context_scope:
@@ -189,8 +189,16 @@ Two remedies exist and both were declined deliberately:
       ratchet has already absorbed into the baseline". Measured — deployment-api is 16 (== baseline) both before and
       after — see the new todo below.
 
-- [ ] [SCRIPT] P1. **Substitutions are INVISIBLE to the drift ratchet, and a rollout would silently drop three
-      production values.** Measured 2026-08-12 while reconciling `_RUN_INIMAGE_QG`: changing that substitution moved the
+- [x] ✅ [SCRIPT] P1. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** `find_dropped_substitution_keys()`
+      in `scripts/propagation/rollout-cloudbuild.py` (defined ~line 240, called from the `--apply` write path at line
+      413) satisfies option 2 of this todo's own done-when: `--apply` is now proven to preserve consumer-only
+      substitution keys, without touching the never-raise drift-count ratchet. Shipped
+      unified-trading-pm@3ec88291e2 (2026-08-14), 2 days after this issue. The surrounding comment self-cites this
+      exact doc. Test coverage: `tests/unit/test_rollout_cloudbuild.py` (NOT
+      `tests/unit/test_check_cloudbuild_substitutions.py`, an unrelated pre-existing checker from 2026-06-10 that
+      validates a different thing — corrected here to avoid a future misdirected read).
+
+      Measured 2026-08-12 while reconciling `_RUN_INIMAGE_QG`: changing that substitution moved the
       drift count not at all (16 → 16), because `_cloudbuild_markers()` in `scripts/propagation/rollout-cloudbuild.py`
       walks only `data["steps"]` — collecting step ids, `secretEnv`, `availableSecrets`, and step args. It never reads
       `substitutions`. So every doc describing substitution divergence as "absorbed into the baseline" is wrong: the

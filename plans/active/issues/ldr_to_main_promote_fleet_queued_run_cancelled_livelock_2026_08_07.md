@@ -227,15 +227,14 @@ sufficient.
       (the patch-fallback fix minting a real tag) — MTDS's tag mint does NOT count as proof of that fix since MTDS was
       excluded from the rollout. See `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` for the fix's own
       follow-up section once the dispatched agent lands it.
-- [~] [DEVOPS] P2. **Agent dispatched 2026-08-07 ~18:20Z.** Harden `promote-fleet-startup-failure-monitor.yml` to also
-  catch "queued, never started for an extended period" as its own failure signature — it currently reports success
-  throughout this entire incident (same class of coverage gap as `ci_failure_watcher.py`'s glue-starvation/
-  escalation-label bugs found earlier 2026-08-07).
-- [~] [DEVOPS] P2. **Agent dispatched 2026-08-07 ~18:20Z.** `glue-runner-crash-loop-watchdog`'s ">10800s active =
-  probably hung" heuristic false-positived on 4 healthy, idle, `busy:false` runners (e2e-testing, strategy-service,
-  market-tick-data-service, ml-service) during this incident's low-throughput window — add an actual CPU-time or
-  GitHub-API `busy` check before paging, not wall-clock active-duration alone. Do not restart these services; they were
-  never actually stuck.
+- [x] ✅ [DEVOPS] P2. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** Hardened via
+  `.github/workflows/promote-fleet-startup-failure-monitor.yml`: now also pages when either workflow has a run sitting
+  `status: queued` longer than `queued_threshold_min` (`workflow_dispatch.inputs.queued_threshold_min`, default 30).
+  Header comment self-cites this doc as "root incident #2".
+- [x] ✅ [DEVOPS] P2. **DONE — verified by plan_reconciler (ci tranche) 2026-08-16.** Hardened via
+  `scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh`'s `runner_busy_status()` (asks GitHub's live API
+  directly for idle/busy/absent state before paging). Header comment self-cites the exact 4-repo false-positive
+  incident this todo describes ("GITHUB-API BUSY CORROBORATION (2026-08-07)").
 - [x] ✅ [DEVOPS] P3. **Resolved 2026-08-07 ~18:26Z.** Cross-checked
       `asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md` against this incident — CONFIRMED unrelated: that
       doc describes 38 GCP Cloud Scheduler jobs (`asia-northeast1`, GCP region naming, project `central-element-323112`)
