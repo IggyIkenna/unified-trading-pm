@@ -435,9 +435,20 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       `instruments_service` workload process is actually running (PID 5401, accumulating CPU time), not just
       OS-level RUNNING. Once it completes: run `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh`
       to materialize `empty_confirmed` rows.
-- [ ] [SCRIPT] P1. **SFI still 112 `attempted_failed`, unstarted** — see the existing SFI todo above in this doc for
-      the full retry mechanism (7 dates, no new code needed, `DEPLOYMENT_ENV=prod` required). Not touched this session
-      beyond re-confirming the count is unchanged.
+- [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
+      dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
+      but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
+      the reference bucket's `_index/availability_index.parquet` (266MB) is over the 200MB legacy-write guard
+      (`/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Writers: per-VM shard mode is the ONLY sanctioned
+      standing write path" — a HARD RULE, 2026-07-15). Data landed; manifest did not update. **Second pass** re-ran all
+      7 dates with `MANIFEST_PER_VM_SHARDS=true VM_NAME=sfi-retry-cli-20260816` (the sanctioned path, not
+      `allow_oversized_legacy_write` which the SSOT explicitly discourages) — this time every date correctly wrote
+      `ManifestWriter: per-VM shard updated` (231 total shard entries by the last date, no refusals; one date hit a
+      transient timeout on a single match, auto-retried, final count 20,175 vs the first pass's 20,378 — a
+      negligible single-match variance, not a data-loss signal). **The canonical `112 attempted_failed` count will
+      drop once the standing consolidator absorbs this per-VM shard file on its next cycle** — did not force a manual
+      consolidation; that is the standing consolidator's job on its own cadence, not a CLI action to improvise.
+      Re-check `_index/latest.json`'s `last_run_at` after it advances past 2026-08-16T21:15Z to confirm absorption.
 
 ## Deferred work after 2026-08-16
 
@@ -446,7 +457,7 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
 | UAC pinning-test stash (above) | Not done — real work, quick | Nobody — pick it up first, it's the cheapest |
 | odds_api 278-day backfill (above) | Root cause NOW KNOWN (stale admission-hold, not a hang) — clearing the hold is a judgment call on a live safety mechanism | Operator decision — see the P0 item above |
 | Weather VM completion + rescan | Relaunched 2026-08-16, confirmed live — rescan script still pending until it completes | Nobody — just wait for completion |
-| SFI 7-date retry (above) | Not done — mechanically simple, just never executed | Nobody |
+| SFI 7-date retry (above) | Done 2026-08-16 — data + manifest shard both correct | Nobody — waiting only on the standing consolidator's next cycle |
 | api_football derived-entity backlog reclassification `--apply` (748,363→ now merged; the SEPARATE 72,955 genuine-gap cells from the original FIXTURES_OUTCOMES dry-run) | Operator-owned — needs a decision on the 72,955 unprovable cells, not a mechanical retry | Operator review of the original dry-run counts (see the FIXTURES_OUTCOMES todo higher in this doc) |
 | Broader multi-venue `ODDS`/`odds` casing pattern (betfair, footystats) found but explicitly out-of-scope this session | Already tracked elsewhere, not lost | See `plans/active/issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md` — a peer session already filed this independently |
 
