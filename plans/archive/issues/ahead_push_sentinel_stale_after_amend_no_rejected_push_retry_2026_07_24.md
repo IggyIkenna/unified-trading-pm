@@ -93,13 +93,12 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
 
 ## Open todos
 
-- [ ] [BACKEND] P3. Design + implement a recovery path for the rejected-push case in `push_or_preserve_ahead_commits`:
-      at minimum, either (a) re-run `_stamp_quickmerge_trailer_if_missing` + re-capture the sentinel against the NEW
-      HEAD after a rejected push so a later tick can re-verify and retry, or (b) explicitly detect this state
-      (verified-but-diverged-since-rejected-push) and surface it as a distinct, actionable signal (blocked-queue entry
-      or Slack alert) rather than silently falling out of the sweep. **Gate**: a test reproducing a rejected push (bare
-      remote already has a conflicting commit) proving the work is either automatically retried and lands, or surfaced
-      as a visible blocked condition — not silently stranded.
+- [x] ✅ [BACKEND] P3. **DONE — verified 2026-08-16 (/ag-closeout-audit ao).** `agent-orchestrator@c6d43ac4`
+      (2026-08-14) implements exactly this: `push_or_preserve_ahead_commits` now re-verifies against the new HEAD on
+      a rejected push, re-stamps the QG sentinel at that HEAD (so a later tick can retry), and emits a distinct
+      `ahead_push_rejected_and_stale` activity event — the commit message cites this doc's own filename. Regression:
+      `test_sweep_rejected_push_restamps_sentinel_and_flags_rejected`. Independently verified live: the commit exists
+      on `origin/live-defi-rollout` and its message matches this exact prescription.
 
 ## Progress Log
 

@@ -154,16 +154,12 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
       independent re-verification (not just a re-read of the shipped test) done in
       `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch16_finalize_2026_08_09.md` todo 1, 2026-08-10.
 
-- [ ] [INFRA] P3. **Ghost host rows: `ip-172-31-0-185` is permanently `reporter_stale`/`ff_cron_stale` for a VM that no
-      longer exists.** Measured 2026-08-06 from `/api/fleet/git-health`: host `ip-172-31-0-185` (`vm_id: planning`)
-      still lists 3 slots, frozen at `2026-07-25T03:32:01Z` (slot 0) and `2026-07-28T14:02:02Z` (slots 1-2), all
-      `reporter_stale=true`. `aws ec2 describe-instances --filters Name=private-ip-address,Values=172.31.0.185` returns
-      **[]** — this is the human-planning VM terminated 2026-08-03 (see CLAUDE.md § System map). Net effect: fleet
-      git-health can never read all-green, and any staleness condition keyed off these rows is a standing alert that can
-      never resolve — precisely the never-resolving-condition anti-pattern
-      `/codex/04-architecture/agent-orchestrator-alerting.md` rules against. Fix: prune or tombstone slot rows whose
-      host has no live instance (decide which, then make the fleet view reflect it); confirm no alert path fires on them
-      afterwards.
+- [x] ✅ [INFRA] P3. **DONE — verified 2026-08-16 (/ag-closeout-audit ao).** `agent-orchestrator@426e8cf5`
+      ("feat(git-health): ghost-host tombstone detection via AWS EC2 lookup") ships `server/host_tombstone.py`
+      (`is_host_tombstoned()`/`tombstoned_since()`), with `ip-172-31-0-185` hardcoded as a fail-safe floor plus a live
+      AWS EC2 existence check for future ghost hosts — resolved as tombstone-never-prune (row stays for audit trail),
+      wired into `models/git_health.py` + `routes/git_health.py:361,428` to exclude tombstoned hosts from fleet-wide
+      stale/drift totals. Independently verified live: the commit exists on `origin/live-defi-rollout`.
 
 ## Notes
 

@@ -115,11 +115,14 @@ it never reaches `origin/live-defi-rollout` on its own.
       hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min)
       instead of soft-kicking indefinitely; the daily hard-kill budget (50) is ample. SSOT:
       `/codex/04-architecture/autonomous-recovery-matrix.md`.
-- [ ] [INFRA] P2. Add a reclaim-and-push (or inherit) path for a killed/idle slot that git-health reports as
-      ahead/diverged with `unpushed_plans`: either (a) AutoSpawn prioritises re-occupying a slot with a standing
-      `drift_violation` even when the backlog is otherwise gated, tasking the fresh worker to rebase (if diverged) +
-      push the orphaned commits; or (b) a dedicated reaper that inherits the commits onto a live slot. Committed work
-      must not strand off-origin indefinitely.
+- [x] ✅ [INFRA] P2. **DONE — verified 2026-08-16 (/ag-closeout-audit ao), direct code read.**
+      `WorkerLivenessWatchdog`'s unpushed-sweep (`server/worker_liveness_watchdog.py`, ~line 1920-1960) now calls
+      `heal_dead_slot_branch_quarantine` directly for the diverged sub-case, gated only on `branch_state.should_stop`
+      and the slot already being confirmed dead (`has_session`/`_pane_is_dead`) — no dispatchable-task gate. The
+      inline code comment explicitly names this doc by filename and states the intent verbatim: "Run the same heal
+      here too, independent of any dispatchable-work gate, so it fires every tick regardless of backlog state." This
+      is option (b) — a dedicated, unconditional per-tick heal — closing the gate-dominated-backlog scenario this
+      doc's incident and its 2026-08-04/08-12 recurrences all hit.
 - [x] [INFRA] P3. ✅ **DONE — the one-shot defect is resolved (verified 2026-07-23), with one wording correction.**
       `server/worker_liveness/_git_alerts.py::maybe_alert_unpushed_plans` re-fires on a 1800s (30-min)
       `persist_throttle`-backed cooldown for as long as `unpushed_plans` stays non-empty, and its caller in

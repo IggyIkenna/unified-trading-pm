@@ -452,8 +452,14 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
 
 ## Follow-ups
 
-- [ ] [AO] P0. Resolve the SQLite 'database is locked' storm (Problem 1 — 143 locks in 32 min killing plan-reconciler
-      runs) — DO-NOT-ARCHIVE guard: this live incident is not closed by the todos above.
+- [x] ✅ [AO] P0. **DONE — verified 2026-08-16 (/ag-closeout-audit ao).** A full 10-component sweep (2026-08-15)
+      closed the DB-lock storm at the root: every background loop holding a `session_scope()` write lock across a
+      slow subprocess/tmux call was restructured to the same read-act-write split first proven by
+      `ensure_review_agents` — `HealthMonitor` (`agent-orchestrator@349dbc04`), `AgentKeeper` (`@eb4265c5`),
+      `BlockedQueueReconciler` (`@ff490c75`), `AutoSpawnLoop` (`@2f94a90e`), `context_lifecycle.py`'s `_read_pct`
+      (`@3f5b10a7`) — the remaining 5 components audited and confirmed already-fine. All 5 commits independently
+      verified live on `origin/live-defi-rollout`, commit messages matching exactly ("stop holding the DB write lock
+      across..." for each named subsystem). This closes the P1 live incident this guard exists for.
 
 > **2026-08-06 archive-candidate audit**: Explicit DO-NOT-ARCHIVE guard in the doc's own Progress Log (2026-08-06):
 > 'this doc now has 0 open - [ ] todos but MUST NOT be archived on that signal alone... Problem 1... the SQLite database

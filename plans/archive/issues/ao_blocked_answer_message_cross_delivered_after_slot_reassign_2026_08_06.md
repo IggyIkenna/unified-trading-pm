@@ -97,14 +97,11 @@ context with no way to know what question it refers to.
       reproduces the exact scenario this todo specifies. Found via na-eligibility-audit 2026-08-07 cross-checking the
       companion doc's Progress Log, which cites this same commit.
 
-- [ ] [INFRA] P3. **Resolve or flag orphaned `BlockedRow`s at reassign time.** When `reassign_slot`
-      (`routes/slots_ops.py:620-719`) or `skip-current-task` (`routes/slots_ops.py:722-835`) moves a slot off a task
-      that still has an unanswered `BlockedRow`, either (a) explicitly retire it with a distinct disposition
-      (`auto_orphaned_slot_reassigned`), consistent with how `blocked_reconcile.py`'s `classify_retirement()` already
-      handles task-terminal/doc-archived retirement, or (b) at minimum surface it on the dashboard as "orphaned — its
-      slot moved on" so an operator answering it later isn't misled into thinking the answer reaches anyone. Prefer (a)
-      if todo 1's task-id scoping already makes the answer a guaranteed no-op for the original asker — an orphaned row
-      with a guaranteed-dead delivery path is exactly what the existing retirement sweep is for.
+- [x] ✅ [INFRA] P3. **DONE — verified 2026-08-16 (/ag-closeout-audit ao).** `agent-orchestrator@3d2e3681`
+      ("fix(blocked-queue): retire orphaned BlockedRow at slot-reassign/skip-current-task time") implements option
+      (a): `retire_orphaned_blocked_rows()` is now called at both `reassign_slot` and `skip_current_task`, giving the
+      new `auto_orphaned_slot_reassigned` disposition + `blocked_retired_auto_orphaned_slot_reassigned` log event this
+      todo asked for, exactly. Independently verified live: the commit exists on `origin/live-defi-rollout`.
 
 ## Progress Log
 

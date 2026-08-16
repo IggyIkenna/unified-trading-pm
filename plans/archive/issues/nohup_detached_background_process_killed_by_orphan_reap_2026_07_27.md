@@ -163,9 +163,13 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
 - [x] ✅ [DOC] P2. Add the one-line `nohup`-avoidance callout to `unified-trading-pm/agents/RULES.md` § 2 or
       `worker.md`'s async-wait section (recommended decision 1 above). — unified-trading-pm (worker.md, added right
       after the Heartbeat section's PROGRESS guidance, 2026-07-28).
-- [ ] [SCRIPT] P3. Optional — investigate whether `agent-orchestrator/server/orphan_reap.py` should special-case a
-      worker-shell-parented background process (recommended decision 2 above). Lower priority; the RULES.md/worker.md
-      fix is the primary mitigation and now shipped; this remains open only as a defense-in-depth nice-to-have.
+- [x] ✅ [SCRIPT] P3. **DONE — verified 2026-08-16 (/ag-closeout-audit ao).** `agent-orchestrator@6ea54d88`
+      ("fix(orphan-reap): exempt worker-shell-parented detached background jobs from the orphan sweep") adds
+      `_pid_session_id`/`pid_shares_tmux_session` to `server/tmux_spawn.py`: a `nohup <cmd> & echo $!` job gets
+      reparented to PID 1 the instant its wrapping subshell exits (breaking the PPID-ancestry check), but `nohup`
+      never calls `setsid`, so the process keeps its original tmux session id — exempted by that session-id match, not
+      a blanket allowlist, so a genuinely leaked process is still reaped. Wired as an exemption into `orphan_reap.py`'s
+      sweep, with 8 new/updated tests. Independently verified live: the commit exists on `origin/live-defi-rollout`.
 - [x] ✅ [SCRIPT] P3. Cross-check `plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s
       own evidence (its logged death timestamps) against `journalctl | grep -E 'orphan_reap sweep|kill_session'` for the
       same windows — some or all of its "RAM exhaustion" occurrences may actually be this doc's `nohup`/`orphan_reap`

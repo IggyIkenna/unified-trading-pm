@@ -206,23 +206,12 @@ same silent-mid-session-archival pattern regardless of which of the two already-
       omission is most plausibly a transient artifact of that investigation session (unknown exact query mechanics, no
       live DB access to reproduce) rather than a standing code defect — closing as investigated/non-reproducible rather
       than leaving open indefinitely.
-- [ ] [BACKEND] P3. Once the reap-vs-done distinction above lands, consider whether `one_shot_complete` should
-      special-case an already-`exit_reason: "lifecycle-complete"` (or the new `"reaped-stale"`) row for a session whose
-      OWN `claude_session_id`/`tmux_session` matches the caller — i.e. treat "the row is already archived AND it is
-      genuinely mine" as an idempotent success rather than a 400, so a worker that finishes real, correct,
-      independently-verified work is never blocked from a clean sign-off purely by an unrelated prior archival race.
-      (repo: agent-orchestrator) — **Declined for this pass (2026-07-30, corpus-reduction sweep): read
-      `_done_one_off`/`find_active_agent_for_session` (`server/routes/slots_worker.py:1153-1220`,
-      `server/state_store/agents.py:203-221`) and confirmed the fix is real but NOT safely bounded without deeper
-      verification.** `tmux_session` (the only identity `find_active_agent_for_session` currently matches on) is a
-      per-SLOT name (`orch-slot-N`) reused across every worker that ever occupies that slot — a naive "archived row with
-      this tmux_session exists → treat as idempotent success" would also match a DIFFERENT, later worker's late `/done`
-      call against a slot that has since been reused, unless the match is ALSO gated on `claude_session_id` (which
-      `DoneRequest` does not currently carry — would need a request-schema change too). Getting this right needs tracing
-      the full slot-reuse lifecycle + a live-fleet check for whether `claude_session_id` is reliably available at
-      `/done` time, which is exactly the kind of `/done`-endpoint (fleet-wide, every worker, every completion) surgery
-      this corpus-reduction pass is scoped to decline rather than rush — left open for a dedicated backend-engineer
-      pass.
+- [x] ✅ [BACKEND] P3. **DONE — verified 2026-08-16 (/ag-closeout-audit ao), direct code read.** The declined design is
+      now shipped: `DoneRequest.claude_session_id` exists (`server/models/worker_api.py:275-276`, `str | None = None`)
+      and `_done_one_off` (`server/routes/slots_worker.py:1950-1952`) matches `req.claude_session_id ==
+      agent.claude_session_id` on an already-archived row, returning idempotent 200 instead of 409 — exactly the
+      identity-matching guard (gated on the additional `claude_session_id` field, per the slot-reuse hazard this
+      declined-for-now note itself named) this todo asked for.
 
 ## Current session status (informational, not part of the fix)
 

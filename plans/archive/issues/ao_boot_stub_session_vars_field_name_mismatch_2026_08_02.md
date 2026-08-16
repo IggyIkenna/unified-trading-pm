@@ -144,37 +144,18 @@ Two independent, complementary fixes — either alone helps, both together close
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `agent-orchestrator/server/prompts.py::_compose()` per recommendation 1 above: for the
-      `slot_id is not None` (non-escalation) branch, replace the generic "POST .../boot with your session vars" STEP 2
-      text with a literal curl example populated from the real `vars` dict (worktree/branch/operator/model/
-      effort/thinking/context_used_pct/account_id/slot_role/read_files), mirroring `worker.md` lines 97-112's example.
-      Done when: a fresh dispatch's boot stub shows the exact field names `BootRequest` expects, with no guessing
-      required. (repo: agent-orchestrator) — **Re-scoping assessment (2026-08-15, per
-      `plan_reconciler_findings_ao_2026_08_10.md`'s `[BACKEND] P2` finding)**: closer to additive/low-risk — this only
-      changes the STATIC TEXT `_compose()` renders (a literal curl example), not `_compose()`'s branching/control-flow
-      logic. Caveat: it is still on the fleet-wide boot-stub path every worker's FIRST message renders from, so a
-      malformed literal example (e.g. referencing a `vars` key not always populated for every role) could break every
-      future boot. Recommend re-scoping to `assigned_vm: planning` only if paired with a done-when that live-boot-diffs
-      every plan_health-family role, not blanket NA.
-- [ ] [BACKEND] P2. Fix recommendation 2: ensure the `vars` dict passed into `render()` for slot-worker roles (wherever
-      that call site lives — `server/plan_health.py`'s `mode=ag_closeout` dispatch path and any generic slot-boot spawn
-      path) uses `worktree` (not `worktree_path`) as the key, and includes the role under a `slot_role` key so
-      `_session_vars_block()` surfaces it. Done when: the rendered stub's vars block key names are a 1:1 match with
-      `BootRequest`'s field names for every field a slot worker needs to supply. (repo: agent-orchestrator) —
-      **Re-scoping assessment (2026-08-15, per `plan_reconciler_findings_ao_2026_08_10.md`'s `[BACKEND] P2` finding)**:
-      closer to additive/low-risk — a narrow dict-key rename (`worktree_path`→`worktree`, add `slot_role`) at 1-2 call
-      sites, no new branching. Comparable in shape to batch9's confirmed counter-example (`agent-orchestrator@5353b6b`
-      edited `_ONE_SHOT_ESCALATION_ROLES` in this same file, `server/prompts.py`, via normal AO dispatch with no extra
-      gating). Recommend re-scoping to `assigned_vm: planning` with a done-when asserting the rendered vars-block keys
-      are a 1:1 match with `BootRequest`'s field names.
-- [ ] [BACKEND] P3. Evaluate recommendation 3 (`extra="forbid"` on `BootRequest` and sibling worker-API request models)
-      — confirm no existing caller relies on extra-field tolerance before adding it; if clear, add it so a future
-      field-name typo 422s immediately instead of silently no-oping. (repo: agent-orchestrator) — **Re-scoping
-      assessment (2026-08-15, per `plan_reconciler_findings_ao_2026_08_10.md`'s `[BACKEND] P2` finding)**: stays closer
-      to `_compose()`-adjacent control-flow/behavior-change risk — the todo's own text requires an open investigation
-      ("confirm no existing caller relies on extra-field tolerance") before deciding to add a validation constraint that
-      would newly REJECT requests other callers may depend on tolerating; a judgment call, not a bounded outcome.
-      Recommend staying NA/human-gated as currently classified.
+- [x] ✅ [BACKEND] P1. **DONE — verified 2026-08-16 (/ag-closeout-audit ao), direct code read.**
+      `server/prompts.py::_compose()` (~line 296) now shows a literal `curl -sS -X POST {server_url}/api/slots/{slot_id}/boot`
+      example populated from the real `boot_body`, with an explicit inline note against the `worktree_path`/`role`
+      typos this doc documents. No guessing required for a fresh dispatch. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **DONE — verified 2026-08-16 (/ag-closeout-audit ao), direct code read.** `worktree_path` no
+      longer appears anywhere in `server/prompts.py`/`server/models/worker_api.py` as a live field/key — the only 2
+      remaining hits are comments documenting the historical typo. The rendered vars block/curl body now uses
+      `worktree` and surfaces `slot_role`. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P3. **DONE — verified 2026-08-16 (/ag-closeout-audit ao), direct code read.**
+      `server/models/worker_api.py:51`: `model_config = ConfigDict(extra="forbid")` is live on `BootRequest`, with an
+      inline comment citing the exact `worktree_path` silent-drop failure mode this doc describes. A future field-name
+      typo now 422s loudly instead of silently no-oping. (repo: agent-orchestrator)
 
 ## Progress Log
 

@@ -143,12 +143,15 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
       script instead of a second, divergence-prone copy of the ratio logic). Smoke-tested live against the orchestrator
       VM both paths (no-op detection + `--dry-run`), both exit 0 as expected. Full `quality-gates.sh` green (bash -n +
       shellcheck clean on the new script; no Python touched).
-- [ ] [REVIEW] P3. This is the SECOND stale-cgroup-cap incident this class has produced (2026-07-28 downsize-left-
-      cap-too-high; 2026-07-30 upsize-left-cap-too-low) — both times found by accident while investigating something
-      else, not by any monitor. Consider whether `agent-orchestrator`'s existing host-resource dashboard/alerting (the
-      same Swap tile shipped 2026-07-29, `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md`) should also
-      surface `MemoryAvailable`/cgroup-vs-host RAM mismatch directly, so a repeat doesn't again require someone to
-      stumble into `systemctl status` manually.
+- [x] ✅ [REVIEW] P3. **DONE (backend half) — verified 2026-08-16 (/ag-closeout-audit ao).**
+      `agent-orchestrator@ca6603af` ("feat(host-resources): surface cgroup-vs-host RAM mismatch") adds
+      `cgroup_memory_snapshot()` to `host_resources.py` (cgroup v2 preferred, v1 fallback), wired into `snapshot()` →
+      `HostResources` (`cgroup_available`/`cgroup_mem_pct` + raw byte fields), which `resource_history.py`'s sampler
+      already serializes wholesale — so `/ws/vm-resources` surfaces the exact `MemoryAvailable`/cgroup-vs-host mismatch
+      this todo asks about, with no further wiring needed. A dedicated dashboard UI tile is explicitly NOT built (this
+      todo's own "consider whether... should ALSO surface" — the data now IS surfaced over the WS feed; a visual tile
+      remains a genuine, separate follow-up only if the operator wants it, not this todo's stated done-when).
+      Independently verified live: the commit exists on `origin/live-defi-rollout`.
 
 ## Codex SSOTs
 
