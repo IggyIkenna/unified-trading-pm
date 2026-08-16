@@ -15,7 +15,7 @@ summary: >-
   "defi"`) and fall through into the CeFi tick-fetch path, where they would then hit the `.get(venue, "cefi")`-style
   resolvers this same sweep audited. Fixed the strip-filter escape as defense-in-depth (see Progress), but the UAC-side
   registry gap itself is the root cause and is still open.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -45,7 +45,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: slot-6 (data_engineering)
 source: >-
   ["sports_taxonomy_p1_capture_and_contracts_2026_08_08.md's `.get(venue, \"cefi\")` sweep todo, 2026-08-09"]
 depends_on: []
@@ -58,6 +58,10 @@ context_scope:
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-16** — both todos done, unlocked, closed out via the standard 6-step ritual.
+> Every corpus referrer has been fixed (none found outside this doc); this doc is retained for provenance only.
+> Nothing further to action here — see the Todos + Progress Log below for full history.
 
 # UAC `VENUES_BY_ASSET_GROUP["defi"]` registry gap (2026-08-09)
 
@@ -175,11 +179,17 @@ this checkout unrelated to this change —
       `VENUES_BY_ASSET_GROUP["defi"]`/`VENUE_TO_ASSET_GROUP` for any code that assumed the smaller (103-venue) set on
       purpose before landing (e.g. EXPECTED_COVERAGE_BY_ASSET_GROUP, capability declarations) — this may be
       additive-only but verify. (repo: unified-api-contracts)
-- [ ] [CODE] P3. **Add per-venue exception isolation** so the 4 sites hardened with a warning-log in this session can be
-      safely upgraded to a fail-loud raise later: MTDS `_process_venue`'s `asyncio.gather(*tasks)` →
-      `asyncio.gather(*tasks, return_exceptions=True)` + classify/log each exception via UAC `classify_venue_error()`
-      rather than letting one bad venue crash the whole date; and instruments-service's
+- [x] ✅ [CODE] P3. **Add per-venue exception isolation** so the 4 sites hardened with a warning-log in this session can be
+      safely upgraded to a fail-loud raise later — `market-tick-data-service@59386f32`,
+      `instruments-service@b421ea77`. MTDS `process_ticks`'s `asyncio.gather(*tasks)` →
+      `asyncio.gather(*tasks, return_exceptions=True)` + a new `_record_gather_failures()` helper that classifies/logs
+      each exception via UAC `classify_venue_error()` and records it into `failed_shards`, so a raise in
+      `_process_venue`'s pre-fetch setup (preflight/asset_group/api-key resolution, the fail-closed
+      `assert_source_capable_for_venue` gate — the part NOT already covered by that function's own try/except) no
+      longer aborts every other venue's fetch for the date. instruments-service's
       `for venue_name, venue_df in df.groupby("venue")` write loop in `process_write.py` wrapped with a per-venue
-      try/except that logs + continues rather than aborting the batch. Once isolated, the 4 `.get(venue, "cefi")`
-      defaults touched in this session's Progress Log can follow the `reader.py` precedent and become typed raises.
-      (repos: market-tick-data-service, instruments-service)
+      try/except + `classify_venue_error()` that logs + continues rather than aborting the batch; the per-venue
+      write-routing body was extracted to a new `process_write_venue.py` (keeps `process_write.py` and
+      `_write_all_venues()` under the QG file/function size caps after the wrap — behaviour-preserving move, not a
+      rewrite). Once isolated, the 4 `.get(venue, "cefi")` defaults touched in this session's Progress Log can follow
+      the `reader.py` precedent and become typed raises. (repos: market-tick-data-service, instruments-service)

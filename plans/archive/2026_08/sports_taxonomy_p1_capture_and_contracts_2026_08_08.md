@@ -31,7 +31,7 @@ related:
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
     /plans/archive/2026_08/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md,
-    /plans/active/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
+    /plans/archive/2026_08/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
     /codex/02-data/sports-data-types-catalog.md,
     /codex/02-data/sports-2020-06-data-floor.md,
@@ -515,7 +515,7 @@ achieved by exclusion, not canonicalisation.**
       prediction venues reaching it are already correctly registered, DeFi venues bypass the `.get()` entirely via the
       `manifest_chain`-truthy branch; MTDS bundle-shard site: dead code today — bundle itypes are TradFi/CeFi-only; MTDS
       general-shard site: the one genuinely-reachable site pre-fix, now closed by the strip-filter fix above). Filed
-      `/plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` for the two real follow-ups this
+      `/plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` for the two real follow-ups this
       sweep surfaced but did not fix in-scope: (1) close the UAC registry gap itself (add the 33 venues to
       `VENUES_BY_ASSET_GROUP["defi"]`), (2) add per-venue exception isolation to the two unisolated loops so these 4
       sites can later follow the `reader.py` precedent and become typed raises. Both repos' full `quality-gates.sh`

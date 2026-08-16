@@ -42,7 +42,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     /plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md,
     /plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
-    /plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
+    /plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
   ]
 supersedes:
 superseded_by:
@@ -387,7 +387,7 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
   `live/websocket_runner.py` (the prediction-stall root-cause fix target, `LiveWebsocketRunner`'s never-wired hot-reload
   path), the new prediction-stall issue doc, and the archived Finding-D gap doc. **Fingerprint cross-reference (step
   4a)**: Finding B's `PHOENIX-SOLANA` exclusion claim (`defi_venues.py:800`, deliberately excluded 2026-07-22) shares
-  the literal `PHOENIX-SOLANA` with `/plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`
+  the literal `PHOENIX-SOLANA` with `/plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`
   (open, `assigned_vm: planning`), which independently found `PHOENIX-SOLANA` IS present in `ALL_DEFI_VENUES`
   (`defi_venues.py`, 135 members) but missing from `VENUES_BY_ASSET_GROUP["defi"]` (`market_data_categories.py`, 103
   members) — one of 33 venues affected by a separate, still-open registry-gap bug. Different registries, not necessarily

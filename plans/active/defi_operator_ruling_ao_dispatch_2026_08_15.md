@@ -17,7 +17,7 @@ related:
   [
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
-    /plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
+    /plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
   ]
 created: "2026-08-15"
 last_updated: "2026-08-15"
@@ -40,7 +40,7 @@ context_scope:
   [
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
-    /plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
+    /plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 locked_since:
@@ -56,7 +56,7 @@ resolved_by:
       `VENUES_BY_ASSET_GROUP` at all" (verified live, 168-venue universe) and its REST API was deprecated 2026-05-15 —
       operator ruled 2026-08-15 to delete `phoenix_ws.py` as dead code on that basis. But that same source doc's own
       Progress Log (line 383-385) separately notes
-      `/plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` (open, `assigned_vm: planning`)
+      `/plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` (open, `assigned_vm: planning`)
       independently found `PHOENIX-SOLANA` **IS** present in `ALL_DEFI_VENUES`. These two findings directly disagree on
       whether `PHOENIX-SOLANA` exists in any UAC venue registry today. Read both docs, resolve which is current, and
       only THEN execute (or skip) the `phoenix_ws.py` deletion — do not delete blind on the operator's ruling alone,
