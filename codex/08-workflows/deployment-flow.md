@@ -47,7 +47,7 @@ code_refs:
 ## Full Pipeline: LDR → Cloud Build
 
 > **The unit of work lands on `live-defi-rollout` (LDR) and stops.** A slot ships via `quickmerge --agent --files`,
-> which commits to LDR. The **LDR→main fleet promoter** (`ldr-to-main-promote-fleet.yml`, cron `*/15`) opens a standing
+> which commits to LDR. The **LDR→main fleet promoter** (`ldr-to-main-promote-fleet.yml`, cron `*/30`) opens a standing
 > per-repo promote PR (head=LDR) and auto-merges it when all three MVP gates are green — **directly to `main`, no
 > staging hop**. `staging` is KEPT as a branch but is **DORMANT** behind a reversible per-repo toggle
 > (`promotion_model: ldr_main` in `workspace-manifest.json`; see `/codex/08-workflows/ci-cd-flow.md` § "Branch model"
@@ -70,7 +70,7 @@ code_refs:
       (Pass 1 QG wrote the sentinel on this exact SHA; Pass 2 only ships it)
 
 3. LDR→main fleet promoter picks up the new LDR HEAD
-   └─ ldr-to-main-promote-fleet.yml (cron */15) — standing per-repo promote PR (head=LDR, base=main)
+   └─ ldr-to-main-promote-fleet.yml (cron */30) — standing per-repo promote PR (head=LDR, base=main)
       GATE SET (exactly three, all must be green before auto-merge arms):
       a) sit-gate/fleet-green — fleet-shared SIT signal (full-workspace-sit.yml green?)
          → posted as a commit status on every promote-PR head, unconditionally
@@ -156,7 +156,7 @@ destination; `--to-staging` is the dormant exception path for a major/breaking b
 
 ## Gate 3 — Main Promotion + Semver Bump
 
-The LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`, cron `*/15`) opens a standing per-repo promote PR
+The LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`, cron `*/30`) opens a standing per-repo promote PR
 (head=LDR, base=main) with a **frozen per-SHA head** — it never rebases, so the gate status stays stable.
 
 **The three MVP gates** (the ONLY things that block auto-merge; see `/codex/08-workflows/ci-cd-flow.md` § "The MVP gate

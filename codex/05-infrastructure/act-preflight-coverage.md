@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: act-preflight workflow coverage
-summary:
-  Coverage matrix for which .github/workflows entries are fully exercisable under act-preflight.sh (a nektos/act
+summary: Coverage matrix for which .github/workflows entries are fully exercisable under act-preflight.sh (a nektos/act
   wrapper) vs REMOTE-ONLY — 0 FULL / 8 PARTIAL / 51 REMOTE-ONLY of 59 workspace workflows; every PM workflow reaches
   GitHub API, GCP or Slack, so act yields syntax + early-step signal only, and a workflow with no row here is
   review-blocking.
@@ -93,8 +92,8 @@ genuinely local computation runs before the remote step.
 | `image-build-validate.yml`                     | 🔴 REMOTE-ONLY | `workflow_call`; GCP + AWS registries                                  |
 | `ldr-ci-monitor.yml`                           | 🔴 REMOTE-ONLY | Scheduled; GitHub API + GCP + Slack                                    |
 | `ldr-docs-gate.yml`                            | 🟡 PARTIAL     | Doc-gate scripts run locally; Slack notify is remote                   |
-| `ldr-to-main-promote-fleet.yml`                | 🔴 REMOTE-ONLY | `*/15` fleet promote; opens + auto-merges PRs                          |
-| `ldr-to-main-promote.yml`                      | 🔴 REMOTE-ONLY | `*/15` PM promote; opens + auto-merges PRs                             |
+| `ldr-to-main-promote-fleet.yml`                | 🔴 REMOTE-ONLY | `*/30` fleet promote; opens + auto-merges PRs                          |
+| `ldr-to-main-promote.yml`                      | 🔴 REMOTE-ONLY | `*/30` PM promote; opens + auto-merges PRs                             |
 | `ldr-to-staging-promote.yml`                   | 🔴 REMOTE-ONLY | Dispatch; staging path (DORMANT by default)                            |
 | `main-backmerge-to-ldr.yml`                    | 🔴 REMOTE-ONLY | `push:[main]`; pushes the reconciled projection back to LDR            |
 | `major-bump-issue-handler.yml`                 | 🔴 REMOTE-ONLY | `issues` / `issue_comment` driven                                      |
