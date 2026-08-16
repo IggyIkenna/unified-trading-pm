@@ -46,7 +46,7 @@ context_scope:
   [
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/active/issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md,
+    /plans/archive/2026_08/issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md,
     instruments-service/instruments_service/engine/orchestrator/footystats.py,
   ]
 execution_scope: orchestrator-agent
@@ -248,6 +248,17 @@ code-fix task). A data_engineering slot with a full session budget should:
       instruments-service commit needed (data-only manifest fix, no code touched).
 
 ## Progress Log
+
+- **2026-08-16 (slot-5, cross-reference only, not this doc's own task)**: the sibling blocker
+  `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md` is now fully resolved
+  (`status: open` → `status: resolved`) — its own `[DIAG] P3` re-verify confirmed `pending_fetch` genuinely holds 0
+  for the 4-league + 11-cup-league population across MATCHES/PREDICTIONS/ODDS, with the `entity_coverage` gate
+  actively firing in production through 2026-08-15. This doc's own todo #4 ("re-verify + re-dispatch footystats
+  backfill VM") had its re-verify half satisfied by that sibling's own re-verify (same manifest, same figures); the
+  remaining half (re-dispatch a backfill VM, then flip the archived `sports_p2_history_reference_and_odds_2015_to_present`
+  item #5) was NOT executed here — out of this session's assigned scope (a different task/doc), and likely
+  unnecessary in practice since `pending_fetch=0` means there is nothing left to backfill. Left todo #4 as-is for a
+  future pass to adjudicate the VM-dispatch/archived-plan-flip decision explicitly rather than silently closing it.
 
 - **2026-07-27** — Re-checked todo #4's gate per `sports_satellite_ao_dispatch_batch4_2026_07_25.md` todo #1
   (data_engineering slot). A fresh single-walk read of `_index/availability_index.parquet`
