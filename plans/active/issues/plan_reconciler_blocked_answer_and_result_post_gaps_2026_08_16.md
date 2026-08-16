@@ -150,3 +150,10 @@ worker's ability to read it back via the AO HTTP surface.
   (ids 547096-547105); none reference `BLK-050d1304` or any blocked-question resolution for slot 28. This strengthens
   gap 2's diagnosis toward the write/delivery side (the answer never lands anywhere a worker can read) rather than a
   flaky read-side 500 — worth checking first when todo 2 below is picked up.
+- **2026-08-16 ~18:03 UTC (plan_reconciler, second post-compact retry)**: re-tried `GET /api/slots/28/messages` again
+  (twice, 3s apart) right after an unrelated quickmerge finally succeeded — **both attempts returned
+  `Internal Server Error` again**, correcting the prior entry's "looks transient" read: the 500 has now reproduced on 2
+  separate occasions across this run, not once, which reads as real recurring instability rather than a single flaky
+  blip. `GET /api/activity?limit=10` at this same moment: grepped (not fully read — the payload was 1.2MB, one event
+  carries a large embedded blob) for `BLK-050d1304`, `blocked_resolved`, `blocked_answered`, and `slot_id":28` — zero
+  matches across all 10 rows. BLK-050d1304 remains fully unretrieved.
