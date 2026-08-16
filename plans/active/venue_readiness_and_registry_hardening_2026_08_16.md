@@ -161,7 +161,15 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
 - [ ] [OPERATOR] P0. **Where does the granularity declaration live?** Keyed per (venue x instrument-type x data-type),
       must express exceptions at that granularity, read by both MDPS and execution-service. Most likely an extension of
       the UAC venue capability record rather than a new registry — but that is a shape call, and it should be made
-      before population, because population is the expensive half.
+      before population, because population is the expensive half. **Cross-reference (2026-08-16, W2 resolved)**:
+      `/plans/active/registry_ssot_hardening_2026_08_16.md` todo 1 resolved the three `VenueCapability*`-named UAC
+      types as genuinely orthogonal — no merge, all three survive. Of the three, `VenueCapabilityRecord`
+      (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2508`) is the shape closest
+      to this item's need — it is already keyed per-venue with a per-data_type `dict[str, DataTypeAvailability]`
+      value, i.e. the same (venue × data-type) axis this item needs, just missing the instrument-type axis and the
+      granularity/exceptions fields themselves. `VenueCapability` (StrEnum) is a flat operation-kind vocabulary, not
+      a per-data-type record — wrong shape. `VenueCapabilityV2` (BaseModel) has zero live instances anywhere — not a
+      populated target to extend. This is evidence for the operator's shape call, not a decision on it.
 - [ ] [AGENT] P0. **Make execution fail closed on fidelity.** Today the tier clamps DOWN silently, which is right for a
       backtest and wrong for a live/paper caller that assumed better. Decide per path — clamp-and-record versus refuse —
       and make refusal the default when a caller explicitly requests a tier the venue cannot serve.
