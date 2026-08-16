@@ -13,7 +13,7 @@ summary: >-
   before any backfill work started this session (595 missing odds_api days, same 27 named gap ranges, unchanged) despite
   VM logs showing confirmed successful processing of many of those exact dates across 3 separate VM runs this session.
   The canonical for this bucket appears to not be absorbing new content at all right now.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [sports] # corrected 2026-08-13 (/ag-closeout-audit full sweep) -- was [sports, prediction, defi, meta]. The
@@ -54,9 +54,6 @@ depends_on: []
 locked_by:
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # bridging flag for the flip-then-mv two-commit archival pattern (this doc's last open
-  # todo was its own archival trigger) -- dropped in the immediately-following git-mv commit,
-  # per check_archive_candidates.sh's own documented resolution.
 context_scope:
   [
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
@@ -68,6 +65,13 @@ context_scope:
 ---
 
 # Sports manifest consolidator: zero row growth despite active backfill writes
+
+> **🟩 RESOLVED / ARCHIVED 2026-08-16 (slot-32, data_engineering).** Every todo is now closed: the P0/P1/P2 items
+> below were already resolved through 2026-08-05; the last open item (the `[DATA] P3` "23 sentinel-free missing
+> odds_api days" Follow-up) is now also resolved — 0 residual today in both candidate sports manifest buckets, see
+> the 2026-08-16 Progress Log entry below. No successor doc; the secondary bucket-divergence finding surfaced while
+> closing it out is tracked separately at
+> `/plans/active/issues/sports_odds_api_is_bucket_coverage_lags_tick_bucket_2026_08_16.md`.
 
 > **🟩 RESOLVED 2026-07-30 (slot 3, operator-authorised live diagnostic: pause-cron + snapshot + probe). THE
 > CONSOLIDATOR IS NOT DROPPING ROWS — this doc's original premise is DISPROVEN.** Static `rows_out` with nonzero

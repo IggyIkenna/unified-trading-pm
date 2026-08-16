@@ -17,7 +17,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md,
     /plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

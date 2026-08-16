@@ -299,7 +299,8 @@ metadata-replace + mtime-bump semantics) + `::test_get_content_write_mtime_never
 > sessions before being disproven; the actual defect was upstream, in the BACKFILL's `check_shard_freshness` smart-skip
 > (which is `source`/`data_type`-blind and matches an `expected_venues` token against the `data_type` column too, so an
 > unrelated pipeline's sentinel row marks a date "fresh" forever). Full account + the 2×2 proof:
-> `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` § "Root cause (2026-07-30)".
+> `/plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` § "Root cause
+> (2026-07-30)".
 >
 > **Corollary — "the writer's log says it processed the date" is not evidence either.** Both VMs blamed in that incident
 > logged **2,139 `SKIP date=… all N venues fresh` lines and exactly ONE `Processed date=`**; the investigation had read

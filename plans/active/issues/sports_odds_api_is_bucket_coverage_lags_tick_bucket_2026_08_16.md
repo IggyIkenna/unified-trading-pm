@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [sports, odds-api, manifest, cross-bucket, mirror-sync, data-correctness, honest-coverage]
 related:
   [
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/issues/sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
@@ -106,6 +106,6 @@ specifically was not separately confirmed live vs stale here).
 
 - **2026-08-16 (slot-32, data_engineering)**: filed while investigating the "23 sentinel-free missing odds_api days"
   `[DIAG] P3` todo — see the companion addendum in
-  `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s Progress Log for that task's
+  `/plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s Progress Log for that task's
   own resolution (the 23-day residual is fully closed; this doc tracks the separate bucket-divergence finding
   surfaced along the way).

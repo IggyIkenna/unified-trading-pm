@@ -24,7 +24,7 @@ related:
   [
     /plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
