@@ -71,6 +71,14 @@ context_scope:
 
 # cefi-aster- launcher-family hit its 2/day RB-INFRA-RELAUNCH dispatch budget — VM left un-relaunched by design
 
+> **🔴 DO NOT DISPATCH/RELAUNCH via `launch-cefi-hl-aster-historical-backfill.sh` (main agent, 2026-08-16
+> 15:23 UTC, operator-directed).** The 304-VM `cefi-aster-` fleet size referenced in this doc is NOT a legitimate
+> large-but-healthy fleet — live re-check found the same VMs carry duplicate full-year metadata per (venue, year),
+> matching the confirmed duplicate-launch bug tracked in
+> `plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md`. Read that doc's
+> 🔴 banner + new Progress Log entry before acting on anything here — this doc's relaunch-budget question is
+> secondary to the underlying duplicate-fleet cleanup, which has not yet happened for aster.
+
 ## What I found
 
 - Escalation `agt-648f49` (DP-VM-008, INFO severity) reported SPOT VM `cefi-aster-2023-20260816-030139` preempted,

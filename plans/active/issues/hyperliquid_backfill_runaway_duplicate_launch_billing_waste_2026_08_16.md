@@ -58,6 +58,25 @@ context_scope:
   ]
 ---
 
+> **🔴 DO NOT DISPATCH/RELAUNCH — the "fix confirmed holding" claim below is INCOMPLETE, not wrong (main agent,
+> 2026-08-16 15:23 UTC, operator-directed).** Live `gcloud compute instances list --filter="name~'hyperliquid|cefi-
+> aster'"` shows **521 VMs RUNNING right now** (217 `cefi-hyperliquid-*`, 304 `cefi-aster-*`) — see the new Progress
+> Log entry below. Sampled VMs across years 2024/2025/2026 for BOTH venues carry identical full-year `(VM_VENUE,
+> VM_START_DATE, VM_END_DATE)` metadata with `VM_FORCE=false` — the same duplicate signature this doc already fixed
+> once for 2023. The last creation timestamp across the ENTIRE fleet (all years, both venues) is 2026-08-16T09:23:26Z
+> — matching almost exactly the 2023-only cutoff the earlier cleanup verified against, which strongly suggests the
+> P1 singleton-guard fix (`deployment-service@246fa62319`) DID stop new launches fleet-wide, but **the follow-up
+> cleanup only ever checked `--filter="name~'cefi-hyperliquid-2023'"`** and never looked at 2024/2025/2026 or at
+> `cefi-aster-*` at all — so ~520 duplicate VMs from the SAME original burst were simply never cleaned up, not a
+> fresh recurrence. Unverified either way: whether the guard actually blocks a genuinely NEW launch attempt today
+> (no such attempt has been observed since the fix landed). **Do not dispatch any task that runs
+> `launch-cefi-hl-aster-historical-backfill.sh` (or any sibling launcher for these two venues) until (a) the
+> remaining 2024/2025/2026 duplicates across both venues are cleaned up the same way 2023 was, and (b) a worker has
+> live-tested that the guard actually refuses a fresh duplicate launch attempt** — do not assume it works just
+> because nothing new has launched in ~6h. This banner applies to this doc and its two related docs
+> (`cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`, `cefi_hl_aster_vm_resource_downsize_2026_08_10.md`),
+> which carry a pointer back here.
+
 ## What I found
 
 298 `cefi-hyperliquid-2023-*` VMs are `RUNNING` right now (`gcloud compute instances list --filter="name~'hyperliquid'"`,
@@ -167,6 +186,18 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
       coverage for the 2023-06-14..2023-12-31 window (the original ask in
       `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s open Follow-up) against that single run's
       completion. (repo: market-tick-data-service / deployment-service)
+- [ ] [DATA] P0. **NEW 2026-08-16 (main agent, operator-directed) — finish the fleet cleanup (2024/2025/2026 +
+      aster, not just 2023) and live-test the guard before declaring this closed.** 521 VMs are live right now
+      (217 hyperliquid + 304 aster) with identical full-year duplicate metadata per (venue, year), same signature
+      as the original 2023 finding. The earlier "fix confirmed holding" cleanup entry below only ever checked
+      `--filter="name~'cefi-hyperliquid-2023'"` — it never looked at 2024/2025/2026 or at `cefi-aster-*` at all, so
+      this is almost certainly the SAME original burst (last fleet-wide creation timestamp 2026-08-16T09:23:26Z,
+      matching the 2023 cutoff) left uncleaned, not a fresh recurrence. Two things still needed: (1) repeat the
+      keeper-selection + batched-delete process from the 2023 cleanup for each of the 2024/2025/2026 year-shards on
+      BOTH venues (per STEP 0.65 — confirm which run to keep via GCS heartbeat/progress reads before deleting, same
+      as before); (2) actually attempt a fresh launch (or a safe dry-run of the guard check) to confirm
+      `lc_metadata_singleton_check()` genuinely refuses a duplicate rather than inferring it from 6h of silence.
+      Do NOT dispatch/relaunch this launcher for any plan until both are done, per the 🔴 banner above.
 
 ## Progress Log
 
@@ -191,3 +222,22 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   list filter: still exactly 1 VM, same name/creation-timestamp — **no repopulation observed**, confirming the P1
   singleton-guard fix (deployment-service@246fa62319) is holding live. Todo flipped to done; [DATA] P2 re-verify can
   now proceed against this single coherent keeper run.
+- **main agent 2026-08-16 15:23 UTC (operator-directed, na-eligibility-audit follow-up "500+ hyperliquid and aster
+  VMs, clearly a bug")**: re-verified live state — the operator's report is confirmed correct and this issue is
+  NOT actually resolved. `gcloud compute instances list --filter="name~'hyperliquid|cefi-aster'"` → **521 VMs
+  RUNNING**: `cefi-hyperliquid-*` breaks down as 1×2023 (the surviving keeper above) / 71×2024 / 73×2025 / 72×2026;
+  `cefi-aster-*` as 1×2023 / 3×2024 / 75×2025 / 75×2026. Sampled metadata on 3 hyperliquid-2024 VMs
+  (`cefi-hyperliquid-2024-20260816-04{0143,0158,0444}`) and 1 aster-2025 VM
+  (`cefi-aster-2025-20260816-040143`): every one carries the identical full-year `VM_START_DATE`/`VM_END_DATE` for
+  its (venue, year) with `VM_FORCE=false` — the same duplicate signature originally found for 2023. Fleet-wide most
+  recent creation timestamp (across every venue+year) is **2026-08-16T09:23:26Z**, which lines up almost exactly
+  with the 2023-only cutoff (`2026-08-16T09:23-07:00`→`02:23-07:00` local = same instant) the prior cleanup entry
+  used to declare the guard "holding" — strong evidence this is the SAME original multi-venue/multi-year burst, and
+  the earlier verification simply never widened its `gcloud` filter past `cefi-hyperliquid-2023` to notice the
+  ~520 other duplicate VMs sitting right next to the one it cleaned up. Did NOT delete anything (STEP 0.65 — a
+  human/infra-worker call is needed per venue/year on which run to keep, same as the 2023 precedent). Added a 🔴
+  stop-dispatch banner + a new P0 todo above; added matching pointer banners to the two related issue docs
+  (`cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`, `cefi_hl_aster_vm_resource_downsize_2026_08_10.md`).
+  Told the operator this is documented and shipped into the offending plans; the P0 fleet-cleanup + guard-live-test
+  todo is queued (`hyperliquid_backfill_runaway_duplicate_launch_billing_waste-93477db1b0fb`, priority 10, already
+  top of the tier-1 queue) but has not yet been picked up by a worker.

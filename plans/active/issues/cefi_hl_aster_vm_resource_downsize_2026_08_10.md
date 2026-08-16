@@ -49,6 +49,13 @@ depends_on: []
 
 # CeFi backfill VM resource audit
 
+> **🔴 DO NOT DISPATCH the P3 re-measure todo below (or any relaunch) via `launch-cefi-hl-aster-historical-backfill.sh`
+> (main agent, 2026-08-16 15:23 UTC, operator-directed).** 521 duplicate HL/ASTER backfill VMs are live right now
+> across years 2024/2025/2026 — see the 🔴 banner + Progress Log in
+> `plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md`. Any VM-count
+> "re-measurement" against this launcher right now would sample the duplicate-inflated fleet, not the legitimate
+> one — wait until that doc's cleanup + guard-live-test todo is done first.
+
 ## Launchers found and verdict
 
 | Launcher                                                | Machine (before)                                            | CPU / Memory measured                                                             | Verdict                                                                                                                   |
