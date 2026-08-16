@@ -429,6 +429,18 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       previously-suspected "silent hang" framing in `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`
       may itself need revisiting — at least this occurrence was admission-held, not hung; worth checking whether
       earlier "silent hang" occurrences in that doc were actually the same admission-hold pattern misread as a hang.
+      **Reconfirmed 2026-08-16T21:16Z, still unresolved, now with a NEW distinct sub-finding**: the VM currently
+      running under this name was created `2026-08-16T16:54:45-07:00` (a THIRD/later relaunch, ~4.3h old at check
+      time) — completely fresh, not the 2026-08-15 instance already described above. Its startup log
+      (`journalctl -u google-startup-scripts`) shows the identical signature (`Task launched PID: 4907` →
+      `=== VM setup complete ===` → nothing ever again; `ps aux` confirms no MTDS process alive) — same
+      admission-hold self-deadlock, hitting a brand-new instance immediately on boot, as expected since the hold
+      marker was never cleared. **New observation**: the VM does not self-terminate after the admission-held exit
+      (`exit 75`) — it just sits `RUNNING` at the OS level indefinitely, continuing to bill as a live SPOT instance
+      with zero work done. Whatever relaunched this (a scheduled retry job, presumably) is not treating exit 75 as
+      terminal and cleaning up after itself — a second, smaller gap alongside the main self-deadlock, both rolling up
+      into the same root cause and the same operator decision above. Pushed a notification to the operator flagging
+      the ongoing billing waste; still did not touch the hold marker or the VM myself.
 - [x] ✅ [DATA] P2. **Weather VM relaunched 2026-08-16** — confirmed the prior VM (`weather-backfill-20260815-011036`)
       was SPOT-preempted (`exit_code=125`, `completed_at=2026-08-15T16:10:03Z`, per its deployment record). Relaunched
       as `weather-backfill-20260816-192237` with the same date range (`2024-01-03 2026-08-02`); verified via SSH the
