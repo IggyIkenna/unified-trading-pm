@@ -19,7 +19,7 @@ summary: >-
   with >1 protocol). Relaunched a scoped mtds-dex-pools-backfill run (4 protocols, 2023-01-01->today) as part of this
   verification; dex_pool_swaps for trader_joe_v2/velodrome_v2 needs a code fix (schema cascade) + a dedicated historical
   backfill before the currently-running sharded fleet's 2024-10-07 start date.
-status: open
+status: complete
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -68,6 +68,13 @@ depends_on: []
 ---
 
 # mtds-dex-pools/dex-swaps 2026-07-14 backfill verification (2026-07-24)
+
+> **📦 ARCHIVED 2026-08-16.** All 17 top-level todos `[x]`, zero open, `locked_by` empty — archived per the 6-step
+> ritual in `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. The doc's own Step-8b goalposts note
+> named the `[SCRIPT] P3` `PROGRESS.json` field todo as the sole remaining blocker; it closed this session
+> (`deployment-service@843bd445e0`). No new lasting contract emerged beyond what's now documented directly in
+> `deployment_service/data_pipeline_monitors/_gcs.py`'s `read_progress_checkpoint()` docstring (the checkpoint's
+> single-shot-vs-incremental distinction + staleness caveat) — no separate codex doc needed.
 
 ## Verdict table
 
@@ -426,6 +433,16 @@ rule (see Progress Log entry below for the observed outcome).
 
 ## Progress Log
 
+- **2026-08-16 (slot-20, data_engineering)** — worked the last remaining `[SCRIPT] P3` Follow-up (the misleading
+  `PROGRESS.json` field). Root-caused: the single-shot `VM_TASK=defi-backfill` launcher branch genuinely writes
+  `last_completed_date` correctly (once, gated on real `rc=0` success) — the actual misleading mechanism is
+  singleton-`vm_name` staleness across VM incarnations, the same class already found for `EXIT_STATUS` in this doc's
+  own slot-14/slot-13 entries. Fixed via an additive `updated`-timestamp pass-through + docstring/comment
+  clarification rather than the todo's riskier rename option (5+ downstream consumers read the existing key name).
+  `deployment-service@843bd445e0`, QG green. **Per this doc's own Step-8b goalposts note, this was the sole remaining
+  blocker to archiving this issue doc** — full archival ritual not performed this session (out of this single-todo's
+  scope; a future session/todo can run the 6-step archival ritual now that both goalposts are closed).
+
 - **2026-08-03 (slot-5)** — worked the `[BACKEND] P2` TRADER_JOE_V2 `dex_pool_state` diagnose todo. Live-reproduced the
   production catalogue-filtered query directly against `gateway.thegraph.com` (real 250-row response for 2026-07-15) and
   cross-checked the manifest via a bounded `read_availability_index_safe` read — the running VM had JUST re-attempted
@@ -735,14 +752,29 @@ rule (see Progress Log entry below for the observed outcome).
       2026-08-16-slot-4 entries). Continued monitoring to actual completion is picked up by the new Follow-up P2
       todo below. Repo: deployment-service (launch, none needed this session) / market-tick-data-service (verify,
       ongoing).
-- [ ] [SCRIPT] P3. **NEW 2026-08-16.** `mtds-dex-pools-backfill`'s launcher script's `PROGRESS.json` field
-      `last_completed_date` is a static echo of the requested `--end-date` CLI parameter written once near VM
-      start, not a live per-day walk-progress marker — misleading to any reader who trusts the field name (this
-      todo's own 2026-08-09 Progress Log entry cited it as if it reflected real progress). Either make it a genuine
-      live-updating per-day marker, or rename it to something that doesn't imply completion (e.g.
-      `requested_end_date`). Repo: deployment-service (`launch-mtds-dex-pools-backfill-vm.sh` / the shared
-      `[[VM_PROGRESS]]` convention, if this pattern is shared with sibling launchers — check before assuming
-      single-file scope).
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-16 (slot-20, data_engineering) — root-caused as staleness, not a design flaw;
+      documented + fixed with an additive staleness signal, no risky field rename.** Traced the actual write path
+      (`setup-data-pipeline-vm.sh`'s generic single-shot `VM_TASK=defi-backfill` branch → `vm-exec-with-gcs-tee.sh`'s
+      `[[VM_PROGRESS]]`-marker scanner → `PROGRESS.json`): this launcher class genuinely writes the checkpoint ONCE,
+      gated on the wrapped process exiting `rc=0` with `last_completed_date=$VM_END_DATE` — an accurate "full range
+      completed" value on a real success, NOT a value fabricated at VM start. The actual misleading mechanism is that
+      `PROGRESS.json` is keyed by a reused SINGLETON `vm_name`, so a value read back for a launch that died before
+      completing can be a genuine leftover from an earlier, unrelated VM incarnation (same class as this doc's own
+      2026-08-16 slot-14/slot-13 findings about `EXIT_STATUS` staleness). Renaming the JSON key (the todo's 2nd
+      option) was rejected as disproportionate risk for a P3: `last_completed_date`/`monotonic` are read by 5+
+      consumers (`_gcs.py`, `_classify.py`, `escalation.py`, `heartbeat_stall_watcher.py`,
+      `exit_code_fleet_monitor.py`, `relaunch_backfill_vm.py`, `relaunch_stalled_vm.py`) plus their tests — a rename
+      is exactly the "entity-rename-and-split-consumer-migration" blast radius this todo's own P3 sizing doesn't
+      warrant. **Fix shipped instead**: `read_progress_checkpoint()`'s docstring now explicitly documents the
+      single-shot-vs-incremental distinction + the staleness risk; the function now passes through the checkpoint's
+      own `updated` timestamp (previously silently discarded) so a caller CAN detect "this predates the current VM's
+      own launch" — the concrete, actionable signal a misled reader was missing; added a pointer comment at the
+      marker-emission site in `setup-data-pipeline-vm.sh`; +1 new unit test
+      (`test_read_progress_checkpoint_passes_through_updated_for_staleness_check`). Checked scope per the todo's own
+      instruction: confirmed this generic single-shot marker IS shared across `VM_TASK=defi-backfill` AND
+      `VM_TASK=sports-backfill` (one shared emission site, `setup-data-pipeline-vm.sh` line ~3073) — fix applies to
+      both, no per-launcher duplication needed. QG green, all existing tests pass unmodified (the new `updated` field
+      is additive-only; no existing test fixture includes it). `deployment-service@843bd445e0`.
 - [x] ✅ [DATA] P2. **DONE 2026-08-16 (slot-13, data_engineering) — genuine completion confirmed.** Instance
       `mtds-dex-pools-backfill` no longer exists (`gcloud compute instances list` empty — self-deleted per
       `VM_SHUTDOWN_ON_COMPLETION=true`). Fetched `EXIT_STATUS` (content `"0"`, `last_modified=2026-08-16T03:55:18Z`),

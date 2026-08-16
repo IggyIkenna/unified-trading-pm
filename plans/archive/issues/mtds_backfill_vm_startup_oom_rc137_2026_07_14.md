@@ -62,7 +62,7 @@ depends_on: []
 > **Ritual step 1 (deferrals migrated, none evaporated)**: this doc's closing paragraph left one item as PROSE — "the
 > other 7 [of 9 DeFi handlers] remain verified only via the shared-mechanism code fix + unit tests, not per-handler live
 > runs." That is now a real tracked `- [ ]` todo (`[VERIFY] P3`) in
-> `/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`, which already owns post-fix
+> `/plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`, which already owns post-fix
 > OOM-recurrence verification for MTDS DeFi handlers. Its other forward pointer,
 > `bucket_estate_consolidation_to_sub100_2026_07_13.md` item 13 (the Morpho `lending_indices` backfill), is itself
 > already archived at `/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md`.

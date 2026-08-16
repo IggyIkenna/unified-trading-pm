@@ -166,7 +166,7 @@ the operator, not resolved by this run.
       `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md:68,195,338` (last touched 2026-08-06) says
       ALL DeFi capture is STOPPED, with `collect-dex-pools` gated-paused behind Track-8 and its own "RESUME the stopped
       DeFi capture VMs/crons" todo still unchecked — vs.
-      `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md:493` (dated 2026-08-05, one day
+      `plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md:493` (dated 2026-08-05, one day
       EARLIER) confirming `launch-defi-forward-poll.sh --operation collect-dex-pools` runs live via Cloud Scheduler on a
       `*/5` cadence, with zero mention of any stop-order. Neither doc cross-references the other. Affects which
       collectors are actually live — a genuine data-correctness question, not resolvable from docs alone. - **Live

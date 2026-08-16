@@ -175,7 +175,7 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       open). (D) Manifest cross-check NOT attempted: prior sessions measured ~100 KB/s GCS throughput; a full ~940 MB
       manifest download would take 2.5-4.7h — same documented network constraint as the source doc's "Why not the
       manifest" section. Object-level evidence is ground truth. Source:
-      `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
+      `plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
 
 - [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-6).** Reader fix CONFIRMED works against prod: `load_pool_metadata_for_date`
       returns 562-566 rows (morpho/ETHEREUM), 12 rows (fluid/ETHEREUM), 113 rows (kamino_lending/SOLANA) for all tested
