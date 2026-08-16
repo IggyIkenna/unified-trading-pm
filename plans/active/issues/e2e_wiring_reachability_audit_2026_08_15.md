@@ -726,6 +726,21 @@ rendered as a broken grid, because that component expects `div > b + span`.
 4. **State which property you measured.** "Write path is real" and "reachable in production" are different claims and
    this corpus has conflated them repeatedly.
 
+- [ ] [AGENT] P1. **Resolve which FastAPI app execution-service's Dockerfile actually deploys** — found 2026-08-15/16,
+      not yet chased. `execution_service/api/main.py` (a bare health-only app, `/health`+`/readiness` only) is what the
+      Dockerfile's `CMD` serves via uvicorn. `execution_service/api/app.py` — the richer app with `/manual`,
+      `/preview`, the evidence router, kill-switch, and the hyperliquid/bybit perp-hedge startup wiring
+      (`@app.on_event("startup")`) this doc and its siblings treat as "the" production reachability boundary — is a
+      DIFFERENT module. `cloudbuild.yaml` only builds/pushes the image; it does not `gcloud run deploy`, so which app
+      actually serves live traffic is resolved elsewhere (deployment-service/deployment-api), not verified this
+      session. Every reachability claim in this doc and `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
+      that treats `api/app.py`'s startup wiring as a production entry point is currently UNVERIFIED against actual
+      deployment topology — it may be entirely correct (this method matches the doc's own stated "how to verify a
+      reachability claim" method above, § step 1: `FastAPI(...)` instantiation, and app.py IS a real FastAPI
+      instantiation reachable via `python -m uvicorn` even if not the Dockerfile's default `CMD`), but the gap should
+      be closed with a direct check (`/codex/04-architecture/runtime-deployment-topology.md` §5, or a live check of
+      the deployed Cloud Run service's actual entrypoint) rather than left assumed.
+
 ## Progress Log
 
 - **context-scout 2026-08-15**: populated context_scope (5 entries).
