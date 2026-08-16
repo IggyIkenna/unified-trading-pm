@@ -12,7 +12,7 @@ summary: >-
   adapters in instruments-service, or any aiohttp-based adapter in market-tick-data-service) — any of those hitting a
   vendor that also omits an explicit application/json charset carries the identical latent mojibake risk. Filed as a
   bounded, deterministic follow-up rather than folding into the (now-archived) sports-scoped source doc.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -38,7 +38,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 source: "sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md follow-up, slot-23, 2026-08-16"
-resolved_by:
+resolved_by: "slot-23 (data_engineering) — market-tick-data-service@48b7a558, instruments-service already complete"
 locked_by:
 locked_since:
 context_scope:
@@ -50,6 +50,11 @@ context_scope:
 ---
 
 # aiohttp resp.json(content_type=None) charset-guessing audit
+
+> **📦 ARCHIVED 2026-08-16 — resolved.** The single tracked todo is done: instruments-service had 0 unfixed sites
+> outside the already-shipped sports fix; market-tick-data-service@48b7a558 pinned `encoding="utf-8"` on its 7
+> remaining sites. Independently re-verified — all 12 `content_type=None` call sites across both repos now pin the
+> encoding.
 
 ## What I found
 
@@ -83,12 +88,20 @@ does not cover this encoding gap) once the sweep shows how many repos/call-sites
 
 ## Todos
 
-- [ ] [DATA] P3. Grep instruments-service (cefi/defi/tradfi/prediction adapter families) and market-tick-data-service
+- [x] ✅ [DATA] P3. Grep instruments-service (cefi/defi/tradfi/prediction adapter families) and market-tick-data-service
       for `resp.json(content_type=None)` (or equivalent `aiohttp` response-json calls) missing an explicit
       `encoding="utf-8"`; pin it on every hit found, mirroring instruments-service@5f2f3ca619. Done when: every
       `content_type=None` JSON-decode call site across both repos either already pins `encoding="utf-8"` or has been
       fixed to do so, and `quality-gates.sh` is green in each touched repo. (repos: instruments-service,
-      market-tick-data-service)
+      market-tick-data-service) — **instruments-service**: 0 unfixed sites outside the already-shipped sports fix (5
+      sites in base.py/api_football.py/transfermarkt.py, all already pinned; full-repo grep of cefi/defi/tradfi/
+      prediction adapter families found no other `content_type=None` call sites). **market-tick-data-service@48b7a558**
+      (slot-29, landed on origin/live-defi-rollout, post-rebase SHA of the locally-committed `7ffa995c`): pinned
+      `encoding="utf-8"` on 7 sites — `sportradar_adapter.py`, `tradfi/{ecb_adapter,ofr_adapter}.py`,
+      `cli/handlers/solana_defi_amm.py` (x3), `cli/handlers/_solana_defi_fetch.py` — `quality-gates.sh` green (613s;
+      10912 passed / 0 failed / 28 skipped / 1 xpassed). Independently re-verified 2026-08-16 (slot-23): grepped every
+      `content_type=None` call site in both repos' source trees (12 total, 5 IS + 7 MTDS) — all 12 now carry
+      `encoding="utf-8"`, zero remaining gaps.
 
 ## Progress Log
 
@@ -112,3 +125,23 @@ does not cover this encoding gap) once the sweep shows how many repos/call-sites
   session: confirm `market-tick-data-service@7ffa995c` (or its post-rebase SHA) is on `origin/live-defi-rollout`
   (`git fetch && git rev-list --count origin/live-defi-rollout..HEAD` = 0), then flip the todo to `- [x] ✅` with that
   SHA as evidence — no further code changes needed.
+
+- **slot-29 (data_engineering) 2026-08-16, pre-compact checkpoint**: `market-tick-data-service@7ffa995c` still
+  unpushed — `ahead=1 behind=1` vs `origin/live-defi-rollout` (my commit not yet on origin; a peer commit landed on
+  origin after my last rebase). The shipping `quickmerge.sh` run (background task) is genuinely still in progress, not
+  stalled: it hit a second sentinel invalidation ("HEAD moved — a peer likely pushed"), auto-re-gated, and is now
+  queued 720s+ in the host-wide QG governor (`sub-cap 1 / host-wide cap 6`) — confirmed via `ps aux` that 6+ concurrent
+  `quality-gates.sh` processes are running across other slots (17/18/19/33) right now, i.e. real host contention, not a
+  hung process. Left it running rather than killing/retrying — killing a queued-but-live governor client only makes
+  contention worse for everyone. Verified the other 4 repos this session cascaded into (`unified-trading-pm`,
+  `deployment-service`, `unified-api-contracts`, `unified-trading-library`) are all `ahead=0` (fully pushed, nothing at
+  risk); `deployment-service@1d78d15c` (vm-launcher e2-highmem-16 fix) in particular was already confirmed durable, not
+  something this checkpoint needed to act on. Scratchpad's 6 `qg_mtds*.log` files are disposable QG debug output from
+  earlier attempts (the largest, `qg_mtds6.log`, stopped updating at 03:18:56Z with no live PID behind it — an
+  abandoned standalone debug run, superseded by the quickmerge job's own internal QG pass); none are referenced by any
+  committed doc. **Lesson for next session**: a `[qg-governor] queued Ns` line climbing past 10 minutes under confirmed
+  multi-slot contention is still not a failure signal — only a terminal exit code (or the task notification) is;
+  resist the urge to kill and restart, since a restart re-enters the same queue from zero. Next session (or this one on
+  wake): check the task notification/final output for `✅ Pushed <sha>` vs `QUICKMERGE_BLOCKED`; if pushed, verify
+  `rev-list --count origin/live-defi-rollout..HEAD` = 0 for market-tick-data-service, then flip the todo below with the
+  landed SHA.
