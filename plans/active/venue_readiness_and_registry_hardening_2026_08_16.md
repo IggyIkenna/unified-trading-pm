@@ -270,9 +270,12 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
 - [x] [AGENT] P0. ✅ **W1 — lazy/scoped loading.** Forked to
       [`/plans/active/lazy_scoped_loading_refactor_2026_08_16.md`](/plans/active/lazy_scoped_loading_refactor_2026_08_16.md).
       Three layers; UAC is the dominant one with fleet-wide blast radius. Referenced by carve-out §A5 P0 #2.
-- [ ] [AGENT] P0. **W2 — registry SSOT hardening.** Author the child plan. Every venue fact declared once: capability
-      record, data types, instrument types, adapter keys, error-code map. Audit for per-service copies and fold them.
-      Depends on nothing; can start immediately.
+- [x] [AGENT] P0. ✅ **W2 — registry SSOT hardening.** Forked to
+      [`/plans/active/registry_ssot_hardening_2026_08_16.md`](/plans/active/registry_ssot_hardening_2026_08_16.md) —
+      unified-trading-pm@(pending push). A same-pattern grep sweep across all 7 umbrella repos, done at authoring
+      time, found 4 of 5 concerns (adapter keys, instrument types, data types, error-code classification) already
+      single-SSOT with zero per-service redefinitions; the child plan's real open scope is a same-repo
+      `VenueCapability*` naming-overlap resolution plus an error-code coverage audit.
 - [ ] [AGENT] P0. **W3 — service-config abstraction.** Author the child plan. Per service: a `config.py`-style module
       with declared schemas, hot-reload wiring, and GCS-backed storage — every service, uniformly, so config is always
       findable in the same place. Existing pattern: [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
