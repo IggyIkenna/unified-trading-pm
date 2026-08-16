@@ -200,7 +200,7 @@ findings.
       universe fully collected), `test_get_instruments_logs_page_cap_hit` (page-budget exhaustion emits
       `ADAPTER_PAGE_CAP_HIT`), `test_get_instruments_single_page_response_still_works` (no-`pagination`-key response
       still terminates correctly). Full quality-gates.sh green (141s).
-- [ ] [SCRIPT] P3. **Dormant prediction-market hard page-count ceilings — activate-on-re-enable risk.**
+- [x] ✅ [SCRIPT] P3. **Dormant prediction-market hard page-count ceilings — activate-on-re-enable risk.**
       `instruments_service/reference_data/adapters/cefi/{kalshi_perp,polymarket_perp}.py` both define `_PAGE_LIMIT=200`,
       `_MAX_PAGES=10` (hard 2000-contract ceiling — NOT exhaustion-driven, stops even when `has_more`/cursor says more
       data exists) but are currently `_REPOINT_PENDING = True` (return `[]` before any network call) — dormant risk that
@@ -208,7 +208,13 @@ findings.
       instruments-service. Done when: `range(_MAX_PAGES)` is replaced with a genuinely cursor-exhaustion-driven loop (a
       large safety-net page count, e.g. mirroring `polymarket/clob.py`'s `_CLOB_MAX_PAGES = 10000` "safety cap against
       runaway loop" pattern which already correctly exits on the CLOB's own cursor sentinel) BEFORE either venue's
-      `_REPOINT_PENDING` flag flips to re-enable it.
+      `_REPOINT_PENDING` flag flips to re-enable it. — instruments-service@9e201ee0dd: raised `_MAX_PAGES` 10→10000 on
+      both adapters (safety-net, mirrors `clob.py`'s `_CLOB_MAX_PAGES=10000` pattern) so each loop is exhaustion-driven
+      off its own cursor/`has_more` signal, not a page-count ceiling; added a for/else cap-exhaustion warning +
+      `ADAPTER_PAGE_CAP_HIT` emission (mirrors `coinbase_cde.py`'s pattern from this same session) so genuine safety-net
+      exhaustion is loud, not silent. 4 new regression tests (2 per adapter): proves pagination past the old 10-page/
+      2000-contract ceiling (12 pages fully collected) and proves genuine safety-net exhaustion emits
+      `ADAPTER_PAGE_CAP_HIT`. Full quality-gates.sh green (202s).
 - [x] ✅ [REVIEW] P3. **Kalshi instruments-service nested series-scoped mitigation caps — verify against live API before
       trusting the current mitigation is sufficient.**
       `instruments_service/reference_data/adapters/prediction/kalshi.py`'s live snapshot already mitigates the top-2000
@@ -326,6 +332,13 @@ findings.
 - 2026-08-16 (slot 12, data_engineering): shipped the Coinbase CDE futures-universe cap todo — see the todo's own
   evidence line above for detail. instruments-service@31de8c9bd1, QG green (141s), quickmerge landed + ancestry-verified
   on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-16 (slot 31, data_engineering): shipped the dormant prediction-market hard page-count ceiling todo (KALSHI-PERP
+  / POLYMARKET-PERP) — see the todo's own evidence line above for detail. instruments-service@9e201ee0dd, QG green
+  (202s), quickmerge landed + ancestry-verified on origin/live-defi-rollout. Also fixed a mechanical
+  `xfail_skip_tracked_baseline.yaml` line-number drift (two pre-existing skip markers in the touched test files shifted
+  from the new test code inserted above them — corrected the `line:` values only, scoped to the two instruments-service
+  entries; did NOT run `--baseline-write` fleet-wide, which would have silently dropped every other repo's baselined
+  entries). Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
