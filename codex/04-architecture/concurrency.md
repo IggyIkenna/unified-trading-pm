@@ -11,7 +11,7 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [concurrency, architecture, batch-live]
-related: [README.md, /codex/04-architecture/batch-live-architecture.md]
+related: [/codex/04-architecture/README.md, /codex/04-architecture/batch-live-architecture.md]
 created: 2026-03-27
 authoritative_for: [redirect stub — concurrency model lives in 04-architecture README + batch-live-architecture.md]
 referenced_by: [/codex/04-architecture/README.md]

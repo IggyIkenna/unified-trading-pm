@@ -16,7 +16,7 @@ tags: [strategy, edge-methods, signal-sources, arbitrage, market-making, stat-ar
 related:
   [
     /codex/09-strategy/architecture-v2/axes/signal-sources.md,
-    staking-methods.md,
+    /codex/09-strategy/architecture-v2/axes/staking-methods.md,
     /codex/09-strategy/architecture-v2/axes/expression.md,
     /codex/09-strategy/architecture-v2/axes/hold-policy.md,
     ../cross-cutting/benchmark-fills.md,

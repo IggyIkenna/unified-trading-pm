@@ -857,7 +857,7 @@ tarball once; always check the launcher's own freshness warning output, and if s
 - **na-eligibility-audit 2026-08-02 (deferred marker, persisted 2026-08-07)**: KEEP-NA valid, MIXED — 1 of 6 open items
   (Phase 3 `-test-`-bucket force/skip proof) conflict-check-cleared and extracted to
   `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md`; the other 5 stay KEEP-NA valid. Marker
-  deferred per `/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`; now persisted after
+  deferred per `/plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`; now persisted after
   the marker-only carve-out was implemented (2026-08-07).
 - **na-eligibility-audit 2026-08-08**: applied 3 pre-verified stale closes (Phase 3 sample-download, Phase 6 A2 staking,
   Phase 6 recursive-staking) carried from `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 2 — doc

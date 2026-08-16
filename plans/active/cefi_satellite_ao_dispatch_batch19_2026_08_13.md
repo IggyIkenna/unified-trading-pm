@@ -295,7 +295,7 @@ source: >-
       hypothesis TESTED AND REJECTED, no code fix needed.** Read-only analysis, no code shipped (none needed): the
       reason matching this hypothesis (`NO_RAW_TICK_DATA_FOR_SHARD`, 6,630/1,064,950 = 0.6% of cefi attempted_failed) is
       100% MDPS-side and matches an already-settled TradFi precedent
-      (`issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`, 5+ re-checks) — MDPS makes no live vendor
+      (`/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`, 5+ re-checks) — MDPS makes no live vendor
       call so has no FetchEvidence for `empty_confirmed`; `record_failed` is the deliberate, correct interim, not
       inflation. The dominant bucket (`VENUE_FETCH_FAILED`, 218,038 rows, 20.5%) is 100% MTDS-side genuine vendor
       errors, unrelated to the zero-rows question. Full evidence in the source doc's own todo (same commit).

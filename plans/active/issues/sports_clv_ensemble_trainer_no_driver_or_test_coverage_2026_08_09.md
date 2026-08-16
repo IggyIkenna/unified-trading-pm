@@ -37,7 +37,7 @@ context_scope:
   [
     ml-service/ml_service/training/app/training/sports_ensemble_trainer.py,
     ml-service/ml_service/training/app/training/sports_ensemble_training_runner.py,
-    /plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md,
+    /plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 sequential: true # todo 2 (VM launch) explicitly requires todo 1's driver ("once the driver lands and is
@@ -113,7 +113,7 @@ the VM-scale run:
       **Performance delta STILL blocked on a new code bug**: the trainer crashes at the first CatBoost fit ("RMSE does
       not allow nan values in target data", all 5 VMs, exit_code=1) because partially-non-null CLV targets go straight
       into CatBoost. Fix tracked as P3 in
-      `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`.
+      `/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`.
 - [x] ✅ [CODE] P3. `ml_service/training/cli/main.py`'s `--asset-group` arg defaults to `"ALL"`, which is not a
       `MarketCategory` member — any CLI invocation of this service that omits `--asset-group` explicitly crashes at
       `ServiceRuntime.from_env_and_args` (`StartupValidationError: Invalid CLI --asset-group='ALL'`) before any handler
@@ -297,7 +297,7 @@ the VM-scale run:
   `gcloud compute instances list`) rather than let them burn several more hours of compute toward an outcome already
   conclusively known. Filed the real blocker as its own issue (cross-repo, features-service, precisely-scoped
   AO-eligible backfill — not a judgment call):
-  `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. Todo 2 above now
+  `/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. Todo 2 above now
   explicitly cites it as a hard blocker.
 
 - 2026-08-10 (slot-23): shipped todo 3 — changed `--asset-group` default from `"ALL"` to `None` in
@@ -337,12 +337,12 @@ the VM-scale run:
 
 | Item                                                                                             | State / why deferred                                                                                                | Blocked on                                                                                                        |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Backfill `odds_targets` across `2019-08-01..2026-07-31`                                          | Not done — real, scoped AO-eligible work, unclaimed                                                                 | Nobody — see `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` |
+| Backfill `odds_targets` across `2019-08-01..2026-07-31`                                          | Not done — real, scoped AO-eligible work, unclaimed                                                                 | Nobody — see `/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` |
 | Relaunch the 5 sports CLV ensemble trainer VMs (4th attempt) and report the measured delta       | Not done — depends on the backfill above; do NOT relaunch before it lands, confirmed 3× now this exact failure mode | The backfill item above                                                                                           |
 | Write measured coverage + rmse/mae/r2-per-outcome delta into this doc AND the T2H/T6H parent doc | Not done — depends on the relaunch above                                                                            | The relaunch item above                                                                                           |
 | Flip todo 2's checkbox with evidence                                                             | Not done — depends on all of the above                                                                              | The items above                                                                                                   |
 
 **Recommended next item**: pick up
-`/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`'s backfill todo
+`/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`'s backfill todo
 first — relaunching the trainer VMs again before that lands would just reproduce this exact 3-hours-burned-for-nothing
 cycle a 4th time.

@@ -37,7 +37,7 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-14
+last_updated: 2026-08-16
 locked_by:
 context_scope:
   [
@@ -354,7 +354,9 @@ consolidation).
       or risk a misapplied direct-push carve-out. **This todo's own substance (the deployment-freshness question) is now
       fully resolved AND live in production** — the digest fix shipped is what matters; who authored the commit is
       incidental given two independent investigations converged on the identical root cause and fix.
-- [ ] [DATA] P1. Once the TEAMS/STANDINGS deployment question above is resolved (either "was stale, now redeployed" or
+- [ ] [DATA] P1. **STATUS 2026-08-16**: superseded/consolidated by the `[INFRA] P1` "STALE-CHECK CORRECTION 2026-08-09"
+      todo below — that todo is now authoritative for what remains (only sub-item (3), the reviewed maintenance-window
+      execution). Kept here for the investigation trail. Once the TEAMS/STANDINGS deployment question above is resolved (either "was stale, now redeployed" or
       "a residual code bug, now fixed"), run a TARGETED re-emit pass scoped ONLY to `capture_status='captured'` rows on
       both sports surfaces (NOT a full `--force` corpus rebuild, which has already regressed data twice in this doc's
       history) — coordinate the maintenance window with the operator first per Finding 1. Expected volume: ~652K rows on

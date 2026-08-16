@@ -16,7 +16,7 @@ summary: >-
   (check_line_caps.sh exit 1 at 1019L with the marker added), reverted its edit, and extracted the one AO-eligible todo
   to defi_satellite_ao_dispatch_batch8_2026_08_02.md instead — which now has no way to annotate its own source doc's
   checkbox.
-status: open
+status: closed
 nature: issue
 asset_group: [defi, cross-cutting]
 stage: [meta]
@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-08-02
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-16"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,7 +46,7 @@ drift_direction: worsening-slowly
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-trading-pm@d4f7fab9d8
 source:
   "scheduled /na-eligibility-audit defi run 2026-08-02 (autonomous, na_eligibility_auditor) — hit while trying to write
   a Phase-0 incremental-skip verdict marker into an in-scope doc"
@@ -60,6 +60,10 @@ context_scope:
 ---
 
 # An over-cap LIVE plan cannot carry an audit verdict marker, so it is re-read forever
+
+> **ARCHIVED**: resolved by `unified-trading-pm@d4f7fab9d8` (option A carve-out shipped 2026-08-02) + this doc's own
+> final blast-radius report (2026-08-16). All 3 todos done, unlocked. Successor: none — self-contained fix, no
+> follow-up work spawned (see final Progress Log entry for why the 4 remaining over-cap docs don't need one).
 
 ## What was measured (this run, not inferred)
 
@@ -139,9 +143,10 @@ than acted on:
       `<sha>` placeholder dated "2026-08-07"; filled from `git log` on `scripts/plan-hygiene/check_line_caps.sh` — the
       small-marker-append carve-out landed in commit `d4f7fab9d8` ("docs(plans): apply operator rulings on 2026-08-02
       scheduled-audit-batch operator-decision queue..."), dated 2026-08-02, not 2026-08-07). (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. Report how wide the class is: list every `plans/active/*.md` over 1000L with ≥1 open todo (the docs
+- [x] ✅ [SCRIPT] P3. Report how wide the class is: list every `plans/active/*.md` over 1000L with ≥1 open todo (the docs
       that are currently un-verdictable), so the fix's real blast radius is a measured number rather than this doc's
-      single example. (repo: unified-trading-pm)
+      single example. **Measured 2026-08-16** — 4 docs currently qualify (see Progress Log). Both docs cited earlier in
+      this issue as examples have since shrunk under cap and dropped out of the class. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -187,3 +192,25 @@ than acted on:
   `[OPERATOR] -> [SCRIPT]"; a leftover "BLOCKED-OPERATOR-DECISION" body string in the same checkbox is stale prose, not a live re-block). All 3 remaining open todos are now worker-determinable: implement the diff-shape carve-out in `check_line_caps.sh`+ update the codex SSOT + a regression test, land the already-drafted deferred annotation, and a bounded corpus-wide report of over-cap live plans. Conflict-check cleared (no overlapping claim in`parent_epic:
   plan_hygiene_master`).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **worker (slot 10) 2026-08-16 — final todo, blast-radius report**: measured directly (not inferred) by iterating
+  `plans/active/*.md` (non-recursive, same glob as `check_line_caps.sh` full-corpus mode; `INDEX.md`/`README.md`/`_*`/
+  `*.HANDOVER.md`/`*_SUPERSEDED_*.md` excluded, matching the script), computing `wc -l` per file and counting OPEN todos
+  only (`grep -cE '^- \[ \]'` — NOT the script's own `todos=` field, which counts every `^- \[.\]` checkbox, open+closed
+  together, and would over-count). Filtered for lines>1000 AND open>=1. **4 docs currently in the class**:
+  `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (1091L, 3 open), `github_actions_operator_gated_followups_2026_07_17.md`
+  (1006L, 4 open), `artifact_pipeline_observability_2026_07_17.md` (1001L, 5 open), `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+  (1001L, 2 open). Both docs this issue originally cited as the class's motivating examples have since shrunk under the
+  1000L cap and dropped out: `lst_rate_honest_coverage_2026_07_21.md` is now 867L; `data_completion_defi_2026_07_15.md`
+  (the fourth instance logged 2026-08-04, was 1002L/50 open) is now 507L — neither needs the exception path anymore.
+  **Severity note**: the class is narrower in practice than "permanently un-verdictable" now implies, because todo 2's
+  shipped fix (option A) plus the three further operator-ruled carve-outs landed on `check_line_caps.sh` since this issue
+  opened (link-repoint 2026-08-09, whitespace-only-repair + single-todo-checkbox-flip both 2026-08-15) generalize to
+  EVERY over-cap doc, not just this issue's original example — an audit-verdict marker, a same-line link repoint, a
+  prosewrap-repair pass, and now a single real checkbox flip (one hunk, one `[ ]`→`[x]`) all pass SCOPED mode on any of
+  these 4 docs today. What remains genuinely blocked on all 4: a commit that flips >1 todo at once, or any edit that
+  grows the file / spans multiple hunks — still requires a split (option B) or promotion, on a case-by-case basis owned
+  by whichever plan/todo touches that specific doc next. No new follow-up todo filed here: fixing/splitting the 4 named
+  docs is normal per-doc plan-hygiene work for their own owning plans, not a gap this measurement task itself needs to
+  close. **All 3 todos in this issue are now done and it carries no `locked_by`** — archiving in this same commit per
+  the single-repo (mode-1) same-commit flip+archival rule
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).

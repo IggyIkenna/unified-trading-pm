@@ -100,14 +100,20 @@ estimate_calibrated_ai_days: 1.6
       physically sitting in `plans/active/` and apply the real 6-step ritual, including the referrer-update step this
       exact doc's own P3 items already partially track) — not filed as a new todo here since it's outside this specific
       item's scope and the existing dangling-reference P3 backlog below already covers the referrer-update half.
-- [ ] [DOC] P3. **62 format violations** (baseline 81 — CORRECTED 2026-08-10 by plan_reconciler infra shard, agt-716973:
-      live-ran `python3 scripts/plan-hygiene/check_reference_paths.py`, got `format: 62 (baseline 81)`, well under
-      baseline/PASS. Was stated as "109" here, ~20x stale — the number drifted down via unrelated corpus cleanup over 2+
-      weeks but this todo's text was never refreshed; see Progress Log) — bare `related:` filenames the migration could
-      not safely resolve: some are genuinely ambiguous (multiple files share the basename, e.g. `README.md` in ~35
-      places), some are genuinely dangling (target doesn't exist anywhere under `plans/` or `codex/`). Re-run the
-      checker for the live list; fix what's resolvable by hand, remove stale references, then `--update-baseline` to
-      ratchet the count down further. **Done when**: `format_count` in the baseline reaches 0.
+- [x] ✅ [DOC] P3. **DONE 2026-08-16 (slot 7) — `format_count` reached 0, baseline ratcheted 81→0.** Live-ran the
+      checker fresh: `format: 50 (baseline 81)` (drifted further down from the 62 recorded 2026-08-10 via unrelated
+      corpus cleanup). Every one of the 50 live violations turned out to be resolvable, not genuinely ambiguous — each
+      bare `related:` filename (e.g. `README.md`, `staking-methods.md`, `pnl-attribution.md`, `verdict_cefi.md`) has a
+      real file with that basename living in the SAME DIRECTORY as the citing doc (confirmed via `find plans codex
+      -name '<basename>'` for every distinct basename before touching anything — the same-directory candidate was the
+      only one that made sense as the doc's actual intent, e.g. a `09-strategy/architecture-v2/axes/*.md` doc citing a
+      sibling `staking-methods.md` in that same `axes/` folder, not the unrelated `_archived_pre_v2/sports/` copy).
+      Wrote a one-off script mirroring `check_reference_paths.py`'s own `extract_related_text`/`BARE_MD_RE` parsing
+      (handles all 3 `related:` shapes seen in the corpus: single-line `[x.md]`, multi-line bracket, and YAML `- x.md`
+      block-list) to safely rewrite each bare filename to `/​<citing-doc's-own-dir>/​<basename>.md`, gated on the
+      candidate actually existing on disk — 0 changes applied where no same-dir file existed. Result: 47 files touched,
+      0 format violations remain, `--update-baseline` ratcheted `format_count` 81→0 (existence_count untouched at 79,
+      that's the separate P3 todo below). `unified-trading-pm@<commit-pending>`.
 - [ ] [DOC] P3. **61 existence violations** (baseline 86 — CORRECTED 2026-08-10, same live run as above: was stated as
       "1,286" here, ~21x stale, same drift-without-refresh cause) — pre-existing dangling `/plans/...`/`/codex/...`
       references this migration surfaced but did not cause: codex docs describing planned-but-never-shipped content

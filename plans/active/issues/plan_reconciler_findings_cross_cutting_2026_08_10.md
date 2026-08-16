@@ -260,7 +260,7 @@ Script/tooling-level, backend_engineer scope, not a plan-doc fix:
   Progress Log entries claim a "P3 backlog todo" exists for prosewrap `--diff-base` conversion; no such checkbox exists
   anywhere in the doc. Real still-needed work has no tracked home. This doc was grace-protected when checked (touched by
   a same-tranche dispatch <12h earlier), so I could not add the missing todo myself.
-- Item L. `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` line 138 — a checked `[x]`
+- Item L. `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` line 138 — a checked `[x]`
   todo cites a literal unfilled template placeholder as its evidence sha. Underlying work is genuinely done
   (independently verified against a different doc); just needs the real sha backfilled.
 
@@ -367,7 +367,7 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: grace has lifted and the real todo already exists
       (`check_prosewrap_padding.sh --diff-base <ref>` conversion, shipped `unified-trading-pm@e89d4931e5`, 2026-08-11).
 - [x] ✅ [DOC] P3. **Item L — backfill the real sha in
-      `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`** — its checked `[x]`
+      `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`** — its checked `[x]`
       `[SCRIPT] P2` todo (~line 138) cites a literal unfilled template placeholder ("Implemented
       `unified-trading-pm@<sha>` (2026-08-07)") as its evidence sha. Verified 2026-08-10: placeholder still unfilled.
       Underlying work is genuinely done (independently verified against a different doc per the original finding) — just

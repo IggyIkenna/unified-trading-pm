@@ -30,7 +30,7 @@ context_scope:
   [
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     /plans/active/issues/sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md,
-    /plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md,
+    /plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md,
     ml-service/ml_service/training/app/core/sports_model_config.py,
     ml-service/ml_service/training/app/training/sports_ensemble_trainer.py,
   ]
@@ -125,10 +125,10 @@ doesn't reflect the actual production training pipeline, which is worse than rep
   driver work landed (`ml-service@3232e17` build, `ml-service@68a4b82` real-data fix), but the actual measured-delta
   retrain remains blocked, now on a real upstream data gap (features-service `odds_targets` export never backfilled for
   the 2019-2025 training range) rather than a driver bug. Full evidence + the backfill todo:
-  `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. No measured
+  `/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. No measured
   delta exists yet to report.
 - 2026-08-10 (slot-24, 14:12Z): the retrain-and-measure half advanced, then re-blocked. The `odds_targets` backfill (P0
-  in `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`) landed; the 5
+  in `/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`) landed; the 5
   sports CLV ensemble trainer VMs were relaunched and ran end-to-end. **Measured coverage delta**: CLV targets went 0.0%
   → **5.7% (train, 121,376) / 17.2% (val, 8,897) / 15.6% (test, 32,271)** non-null. **Performance delta not yet
   measurable**: all 5 VMs crashed at the first CatBoost fit — `RMSE does not allow nan values in target data`

@@ -13,7 +13,7 @@ summary: >-
   sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md), never backfilled historically. This is a
   pure-compute backfill (the upstream odds_horizon_bucket source data already exists for the historical dates checked) —
   not a code bug, not a credentials/access gap.
-status: open
+status: resolved
 nature: record
 asset_group: [sports]
 stage: [features]
@@ -31,7 +31,7 @@ created: 2026-08-10
 author: slot-22
 assigned_vm: planning
 source: [sports_clv_ensemble_trainer_no_driver_or_test_coverage-02f7c74d2184]
-resolved_by:
+resolved_by: slot-3 2026-08-16
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -45,6 +45,13 @@ context_scope:
     ml-service/ml_service/training/app/core/training_targets.py,
   ]
 ---
+
+> **🗄️ ARCHIVED — resolved 2026-08-16.** All recommended-decision todos done: the P0 backfill landed and was verified
+> end-to-end (coverage delta 0.0%→5.7%/17.2%/15.6% non-null), the 5 trainer VMs were relaunched and the CatBoost NaN
+> crash fixed (`ml-service@9b68494b76`), and the cosmetic `VM_TASK` mislabel fixed (`deployment-service@e3682f5fb3`).
+> The remaining rmse/mae/r2-per-outcome-per-horizon performance-delta re-run stays tracked in this doc's own `related`
+> sibling, `/plans/active/issues/sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md`'s todo 2
+> (still open there) — not orphaned by this archival.
 
 ## What I found
 
@@ -129,11 +136,18 @@ parent issue doc's Progress Log for the exact VM names / evidence.
       first CatBoost fit (`_catboost.CatBoostError: metric/loss-function RMSE does not allow nan values in target data`,
       14:08:34Z, exit_code=1, self-deleted) — partially-non-null CLV targets go straight into CatBoost's RMSE metric.
       Tracked as the new P3 todo below; re-run the 5 VMs once it lands.
-- [ ] [INFRA] P3. `launch-sports-ensemble-train-vm.sh` hardcodes `METADATA="VM_TASK=features-backfill"` — the run is a
+- [x] ✅ [INFRA] P3. `launch-sports-ensemble-train-vm.sh` hardcodes `METADATA="VM_TASK=features-backfill"` — the run is a
       training run (`VM_OPERATION=sports-ensemble-train`, and the actual log line reads `task=features-backfill` in
       PIPELINE_HEARTBEAT), so deployment-ui/vm-life classification labels these trainer VMs as features-backfill.
       Cosmetic (the real `op=sports-ensemble-train` is correct in run.log), but fix the label to
-      `VM_TASK=sports-ensemble-train` so fleet monitoring/classification reads correctly. (repo: deployment-service)
+      `VM_TASK=sports-ensemble-train` so fleet monitoring/classification reads correctly. (repo: deployment-service) —
+      **DONE 2026-08-16 (slot-3) — `deployment-service@e3682f5fb3`.** Changed the launcher's `METADATA` to
+      `VM_TASK=sports-ensemble-train` and added a dedicated `sports-ensemble-train` branch to
+      `setup-data-pipeline-vm.sh`'s VM_TASK dispatch (same generic `VM_BACKFILL_CMD` route the old
+      `features-backfill` label used, so the actual command execution is unchanged — only the label) — mirrors the
+      `measure-honest-coverage` precedent in the same file for the identical class of borrowed-label mislabeling.
+      No test suite references this launcher's VM_TASK value, so no test updates needed. Full `quality-gates.sh`
+      green.
 - [x] ✅ [CODE] P3. `SportsModel2ATrainer.train()` passes the now-partially-non-null CLV targets (5.7%/17.2%/15.6%
       non-null post-backfill) straight to CatBoost with an RMSE metric, which rejects NaN in the target — all 5 trainer
       VMs crashed identically at the first fit (`_catboost.CatBoostError` — "RMSE does not allow nan values in target

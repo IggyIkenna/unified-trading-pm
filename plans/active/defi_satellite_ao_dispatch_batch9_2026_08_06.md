@@ -381,7 +381,7 @@ over all pending draft batches) that independently spot-verified every todo belo
 - **`issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`** (split + flip 3 checkboxes on
   `lst_rate_honest_coverage_2026_07_21.md`) — **BLOCKED-OPERATOR-DECISION, already tracked elsewhere, no new park
   needed.** The split-vs-alternative-fix question is governed by
-  [`issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md)'s
+  [`issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md)'s
   own still-open `[OPERATOR] P2` todo (4 undecided options A/B/C/D). Do not draft a todo presupposing "split" (option B)
   — once the operator rules, the batch todo should follow that ruling directly. Re-verify the doc's live line count
   (992L as of this audit, SOFT not HARD) stays under 1000L before any checkbox-flip commit either way.

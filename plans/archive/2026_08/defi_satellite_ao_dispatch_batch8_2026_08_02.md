@@ -126,7 +126,7 @@ running `/na-eligibility-audit defi`. The single todo below cleared the shared c
   with 6 open todos, so the gate's staged-file mode ("a file THIS commit touches must not be over its tier's cap, full
   stop") refuses every edit to it — including the one-line extraction annotation and this skill's own verdict marker.
   Verified empirically this run (exit 1 at 1019L), then reverted. Filed as
-  [`/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md)
+  [`/plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md)
   (`[OPERATOR]`-gated policy call; the 2026-07-30 cap exception covers only ZERO-open-todo docs). **Consequence to be
   aware of if you are a future auditor**: the source's Phase-3 checkbox still reads plainly open with no citation, so it
   can look un-dispatched. It is NOT — it is this batch's todo. Do not re-extract it; check this doc first. The deferred

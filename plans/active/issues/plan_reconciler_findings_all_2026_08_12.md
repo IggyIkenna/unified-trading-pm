@@ -313,7 +313,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       — `locked_since` predates `created` by 2 months (impossible); `locked_by` is a branch name, not an owner
 - [ ] [REVIEW] P3. (P2) plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:87,96 — Phase-3 checkbox still asserts
       an opus-gating requirement the doc's own later section already retired
-- [ ] [REVIEW] P3. (P2) plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md:131-138 — todo
+- [ ] [REVIEW] P3. (P2) plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md:131-138 — todo
       2 checked "Implemented" citing a literal unresolved `<sha>` placeholder
 - [ ] [REVIEW] P3. (P2) plans/active/prediction_consolidated_closeout_2026_07_18.md:183,186 — closeout ground-truth
       stale vs phase children
@@ -459,7 +459,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       written conditionally ("may have flagged") — see the new todo added this run
 - [ ] [DOC] P3. (codex-drift) plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md — this
       codex SSOT staleness already has a tracked fix (added this run)
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md —
+- [ ] [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md —
       bundled ready-and-blocked halves in one todo
 - [ ] [REVIEW] P3. (ao-readiness)
       plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md —

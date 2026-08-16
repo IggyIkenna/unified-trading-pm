@@ -806,7 +806,7 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
           columns for corrected rows via DuckDB (same pattern the consolidator's own merge uses). Shipped
           `instruments-service@159c0ebe` (21/21 tests green). **Systemic-risk issue filed** — defi's sibling corrector
           has the same tie-break defect via a different mechanism (`attempted_at=None`), NOT verified live for defi:
-          `plans/active/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md`.
+          `/plans/archive/2026_08/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md`.
           **Verified merged (slot 14): 7/7 empty_confirmed.** — instruments-service
 
 - [x] ✅ [SCRIPT] P1. **N1b prerequisite — build the missing CEFI IS lifecycle catalogue** — DONE 2026-08-09 (slot 9).

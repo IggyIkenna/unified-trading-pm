@@ -684,7 +684,7 @@ batch)
   [`governance_sweep_deferred_followups_2026_08_06.md`](/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md).
 - **Ambiguous, dual-tagged `[defi, cross-cutting]`** (real owner `ci` or `infrastructure`, needs whichever tranche's
   audit claims it first):
-  [`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md).
+  [`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md).
 
 ### Genuinely cross-cutting, operator-gated (NOT a mistag — tracked here pending an operator ruling, not a retag)
 

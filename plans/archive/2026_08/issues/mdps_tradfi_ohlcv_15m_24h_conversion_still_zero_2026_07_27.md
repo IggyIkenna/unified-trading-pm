@@ -33,7 +33,7 @@ summary: >-
   silent-failure/no-signal gap — worse than (1) because there is no log line at all to find it by; it only surfaced by
   cross-checking `processed_candles/` GCS listing + the manifest-consolidator's own `rows_added: 0` verdict against the
   "Streaming chain bundle" evidence that real input existed.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -66,7 +66,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [tradfi_satellite_ao_dispatch_batch2-001, slot-6 live verification runs 2026-07-27]
-resolved_by:
+resolved_by: slot-9, 2026-08-16
 locked_by:
 context_scope:
   [
@@ -88,6 +88,15 @@ depends_on: []
 # tradfi_casing_100pct_redrift_2026_07_27.md precedent for this exact shape.
 sequential: true
 ---
+
+> **🟢 ARCHIVED 2026-08-16 — RESOLVED.** All todos done: the P1 record_empty/record_failed root causes, the P2 CME
+> combo/futures_chain silent-swallow + deeper mechanism-(a) filter-drop fix, the P2 re-run-verify, the ohlcv_24h
+> SchemaContract alias, the combo/futures_chain scope exclusion, the ETF SchemaContract registration, and the OPTION
+> half caller-scoping fix (`market-data-processing-service@2b2cc58ef3`, slot 9 2026-08-16) are all shipped and verified
+> ancestors of `origin/live-defi-rollout`. Three narrow "not yet re-verified live" items remain (ohlcv_24h
+> future/equity, ETF ohlcv_1m/trades, OPTION exclusion) — migrated to a real tracked todo (not left as untracked
+> prose) in `/plans/active/data_completion_tradfi_2026_07_15.md`, the P3 "Live re-verification sweep" item added
+> 2026-08-16.
 
 # What I found
 
@@ -412,7 +421,8 @@ exists. Neither finding was on any tracked plan before this verification pass.
       Repo: unified-api-contracts. Evidence: `mdps-backfill-tradfi-20260803-104812` run.log, 52 `instrument_type='ETF'`
       "No SchemaContract registered" lines.
 
-- [ ] [DATA] P3. **SPLIT 2026-08-12 (/plan-reconcile), OPTION half — now UNBLOCKED, ready to dispatch (unlike the ETF
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot 9, data_engineering) — `market-data-processing-service@2b2cc58ef3`.**
+      SPLIT 2026-08-12 (/plan-reconcile), OPTION half — now UNBLOCKED, ready to dispatch (unlike the ETF
       half above).** `("tradfi","option")` (34 errors, singular — distinct from the already-registered `options_chain`
       per-underlying bundle grain) is `frozenset()` in `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` (a LEAF grain that
       should roll up into `options_chain`, same shape as `("tradfi","combo")` vs `("tradfi","futures_chain")`) — its
@@ -461,6 +471,23 @@ reachable on `origin/live-defi-rollout`. Per this todo's own stated dependency l
 caller-scoping/mechanism-(a) class as combo/futures_chain) is now unblocked for dispatch. The ETF half remains
 separately gated — its own text above already states ETF needs a real schema-shape registration decision unrelated to
 this mechanism, not just the P2 fix.
+
+**RESOLVED 2026-08-16 (slot 9, data_engineering) — `market-data-processing-service@2b2cc58ef3`.** Confirmed the
+caller-scoping hypothesis via UAC: `("tradfi","option")` is `frozenset()` in `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`
+AND `BUNDLE_INSTRUMENT_TYPE_BY_AG_AND_LEAF[("tradfi","option")] = "options_chain"` — the per-contract OPTION leaf rolls
+up into the `options_chain` bundle grain and has no SchemaContract of its own at any timeframe, same shape as combo/
+futures_chain (not a registration gap). Extended the exact same `68f95f6c` fix in
+`market_data_processing_service/app/core/orchestration_scanner.py`: added `"option"` to
+`_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES` (was `{"combo", "futures_chain"}`, now also `"option"`) — the
+scanner now excludes `instrument_type=option` blobs from `ohlcv_15m`/`ohlcv_24h` requests up-front, preventing the
+downstream `SchemaContractNotFoundError` crash before it reaches the write path. 2 new regression tests added
+(`test_option_leaf_blob_excluded_from_ohlcv_15m`, `test_option_leaf_blob_excluded_from_ohlcv_24h`) mirroring the
+existing combo/futures_chain coverage. Full `quality-gates.sh` green (sentinel `2b2cc58ef3d3e60da49d91ee9f1f03431739f03b`
+matched committed HEAD), verified ancestor of `origin/live-defi-rollout`.
+
+**Not yet re-verified live** — no fresh VM run has confirmed the 34 `instrument_type='OPTION'` crash lines no longer
+appear for a `--data-types "ohlcv_15m ohlcv_24h"` tradfi backfill. Low cost, not urgent enough to justify a solo VM run —
+fold into the next scheduled tradfi verification pass, same disposition as the ETF half's own not-yet-re-verified note.
 
 # Progress Log
 

@@ -16,7 +16,7 @@ summary:
   /codex/12-agent-workflow/plan-completion-and-archival-discipline.md § 'The line-cap does NOT block a bounded same-line
   link-repoint' caution note). Per that doc's own guidance: 'the actual fix is to land a standalone formatting commit on
   the file first, bringing it to prettier-clean, before adding the marker.'"
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi]
 stage: [meta]
@@ -30,7 +30,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: 2026-08-12
-last_updated: 2026-08-12
+last_updated: 2026-08-16
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -45,7 +45,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm (this archival commit — link-repoint at instruments_mtds_consistency_remediation_residuals_2026_07_24.md:809)
 source: slot 11, 2026-08-12, corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize archival session
 context_scope:
   [
@@ -57,6 +57,11 @@ context_scope:
 ---
 
 # Stale referrer to an archived doc's pre-archival path — blocked on the doc's own prettier/line-cap state
+
+> **🟢 ARCHIVED 2026-08-16 — RESOLVED** (status: resolved, 0 open todos, unlocked). The referrer at
+> `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:809` now resolves to the archived doc's real path;
+> `check_reference_paths.py`'s existence-check improved 79→77 dangling refs with zero new violations. No codex-alignment
+> update needed — this was a pointer-hygiene fix, not a new contract.
 
 ## What I found
 
@@ -95,13 +100,13 @@ Two-step landing, per the codex doc's own prescribed fix:
 
 ## Todo
 
-- [ ] [DOC] P3. Land a standalone prettier-formatting commit on
+- [x] ✅ [DOC] P3. Land a standalone prettier-formatting commit on
       `plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (no content change), verify
       `check_line_caps.sh` still passes post-reformat, then repoint line ~809's citation from
       `plans/active/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md` to
       `/plans/archive/2026_08/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md` in a separate
       follow-up commit. Repo: unified-trading-pm. Done-when: the citation resolves to the archived doc and
-      `check_reference_paths.py` shows zero new broken referrers.
+      `check_reference_paths.py` shows zero new broken referrers. — unified-trading-pm (see Progress Log)
 
 ## Progress Log
 
@@ -111,3 +116,14 @@ Two-step landing, per the codex doc's own prescribed fix:
   migrated, `infrastructure_master.md`'s own link fixed) landed clean; this is the one referrer left outstanding.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+
+- **2026-08-16 (slot 28)**: step 1 turned out to already be satisfied — the 2026-08-15 prosewrap-padding repair waves
+  (`74d61e57`, `880f4447`) had already brought
+  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` to prettier-clean (`prettier --check` exit 0, zero
+  diff from `prettier --write`), so no separate formatting commit was needed. Landed step 2 directly: repointed line 809
+  from `plans/active/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md` to
+  `/plans/archive/2026_08/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md` (single-line path swap,
+  file stays at exactly 1000L, `check_line_caps.sh` scoped-check green). `check_reference_paths.py` existence-check
+  improved 79→77 dangling refs (shrinking ratchet, no new violations). Corpus grep for referrers to THIS issue doc's own
+  active-path found none, so no downstream repoint is needed for this archival. Archived same-commit per
+  `plan-completion-and-archival-discipline.md`'s single-repo (mode-1) sanctioned combined flip+archival shape.
