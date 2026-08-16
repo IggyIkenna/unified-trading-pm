@@ -158,7 +158,13 @@ pins (5 named test cases + a `bash -n` check).
       todo.** Cleanup (safe, not urgent): whoever still holds slot-16's clone (or main/operator) can `git stash drop
       d7c6b862ebce96bde257bb58b6fd9a17d829d414` — its content is confirmed redundant, not lost work; the 2 original
       `~/.cache/prek/patches/` files this doc's "What slot-16 did" step 5 preserved are the same story and equally
-      safe to clear once someone with host access confirms them against `c3bb4dbcd1`.
+      safe to clear once someone with host access confirms them against `c3bb4dbcd1`. **Slot-16 independent
+      confirmation (2026-08-16):** slot-16 was separately dispatched this same todo, built and QG-verified an
+      equivalent fix independently before discovering it already landed (`f5f500be46`/`abca647228`/`c3bb4dbcd1`);
+      discarded its own redundant local commit rather than force a duplicate through, and confirmed
+      `d7c6b862ebce96bde257bb58b6fd9a17d829d414` is indeed unreachable/stale — `git stash drop` is hard-blocked for
+      autonomous workers on this host (`block_destructive_commands.py`, no override), so it remains for an
+      operator/hygiene pass to clear.
 - [x] ✅ [INFRA] P2. **Root-cause whether this is a genuine cross-slot PREK_HOME leak** (a residual gap in
       `unified-trading-pm@62d1a42613`'s isolation fix) or a same-slot-16-inherited-WIP explanation that doesn't
       actually implicate cross-slot leakage (e.g. check whether slot 16's own recent session history ever ran
@@ -188,3 +194,25 @@ pins (5 named test cases + a `bash -n` check).
   `/plans/active/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`. Todo 1 (ship the recovered
   fix / pop the stash) remains open — out of scope for this task (a separate, larger `quality-gates.sh`+`quickmerge`
   shipping task, not a root-cause investigation).
+- **2026-08-16 (slot-16, infra) — todo 1 dispatched back to slot-16, then discovered already landed by a parallel
+  dispatch.** The backlog regen dispatched this doc's own todo 1 back to slot-16 immediately after slot-16's filing
+  task's `/done`. Slot-16 popped the recovery stash, rewrote the missing bats test file from the recovered Progress
+  Log's description (5 pinned scenarios + `bash -n` check, mirroring the sibling
+  `tests/test_safe_doc_push_failure_classification.bats` harness), ran Pass-1 `quality-gates.sh` green (sentinel
+  matched HEAD), and committed locally (`9d0efaf74c`, later rebased to `510658deaa` after a first concurrent-edit
+  conflict against slot-31's own landed todo-2 commit on THIS doc — reconciled by hand-merging both slots' edits
+  rather than overwriting). On the Pass-2 `quickmerge` attempt, hit a SECOND conflict: `origin/live-defi-rollout` had
+  moved 12 more commits ahead, including a full independent landing of the exact same fix
+  (`unified-trading-pm@f5f500be46` + `abca647228` + `c3bb4dbcd1`) — another slot had been dispatched (or redispatched)
+  this same todo and finished first. Verified via `git log` + a direct `grep` of the classifier function on origin's
+  tree that the landed fix is complete and correct, then abandoned slot-16's own now-redundant local commit
+  (`git reset --soft origin/live-defi-rollout` + a careful re-sync of the working tree to origin's exact state — no
+  destructive `reset --hard`/`checkout -- .` used against any genuine peer WIP, only against slot-16's own
+  self-inflicted stale-index artifacts, confirmed via content diff before discarding each). This todo's only remaining
+  real work was updating THIS doc's own bookkeeping to reflect the actual landed state (real SHAs, real archive path)
+  — done in this commit. **Notable secondary observation**: the working-tree noise produced by `git reset --soft`
+  jumping across 12 unseen upstream commits, and a recurrence of the SAME stray-foreign-file leak pattern (an
+  unrelated `done_gate_self_archival_orphans_dispatching_task_2026_08_16.md` diff appearing in slot-16's tree during
+  BOTH this session's quickmerge attempts) are both consistent with — but not independently new evidence for beyond
+  what slot-31 already confirmed — the cross-slot shared-`PREK_HOME` mechanism tracked in
+  `/plans/active/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`.
