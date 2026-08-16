@@ -276,6 +276,11 @@ per-feature-group input requirements, already exists.
       `odds` 31, `staking_yields` 26, `lst_rates` 19, etc.) — expected given only 5 of 59 `StrategyArchetype` members
       are declared in `ARCHETYPE_FEATURE_GROUPS` today (54 `UNDECLARED_ARCHETYPES`), so most captured data has no
       archetype to consume it yet — a scope gap, not a bug, tracked separately by the archetype-declaration backlog.
+      **Correction, 2026-08-16 (later, interactive session)**: `ARCHETYPE_FEATURE_GROUPS` moves fast — a same-day
+      re-measurement found 40/60 declared (not 5/59), spanning every asset_group (not DeFi-only), and a fresh
+      `generate_venue_consumability_report.py` run showed 30/192 fully pass + 161/192 have orphans (not 9/172). Do
+      not cite either historical figure above as current — re-run the script; this whole section moves as fast as
+      the registry does. See `venue_e2e_wiring_2026_08_16.md`'s "Derive the work list" todo for the discovery.
       **But one real bug surfaced by the report, fixed in the same change**: `required_inputs.py`'s `"lst_yields"`
       feature_group declared its required input as `data_type="lst_yields"` (self-referential) instead of
       `data_type="lst_rates"` (the raw exchange-rate ticks it's actually computed from — confirmed via

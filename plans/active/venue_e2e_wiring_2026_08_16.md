@@ -131,12 +131,16 @@ ruling, and it is what stops the sweep manufacturing green.
       70, sports 31, tradfi 16, prediction 4, plus 32 rows `UNMAPPED` (venue absent from `VENUES_BY_ASSET_GROUP` —
       that gap is owned by
       [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14](/plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md),
-      not this plan). Each row carries its declared archetype consumer(s) (`NONE` if orphaned). **298/353 rows (84%)
-      have no declared archetype consumer** — consistent with, not a new finding beyond, the umbrella plan's already-
-      tracked 172/192-venue orphan measurement (§ STRATEGY CONSUMABILITY,
-      `unified-api-contracts@36a31a165f`): only 5 of 59 `StrategyArchetype` members are declared in
-      `ARCHETYPE_FEATURE_GROUPS` today, so most rows have no consumer to wire toward yet — a scope gap tracked by the
-      archetype-declaration backlog, not blocking this sweep. Full row export: `--csv PATH` flag on the script. **Fork
+      not this plan). Each row carries its declared archetype consumer(s) (`NONE` if orphaned). **Correction,
+      same-day re-measurement**: an earlier draft of this entry claimed "298/353 rows (84%) orphaned... only 5 of 59
+      `StrategyArchetype` members declared, all DeFi" — **wrong on both counts**, caught by directly probing
+      `prediction`'s 4 rows (all 4 show real consumers, e.g. `MARKET_MAKING_PREDICTION`, not `NONE`).
+      `ARCHETYPE_FEATURE_GROUPS` moves fast (concurrent AO work keeps declaring archetypes) and spans every
+      asset_group, not DeFi-only — re-measured live: **40/60 `StrategyArchetype` members declared, 236/353 rows
+      orphaned** as of this correction, already liable to be stale by the time this is read. Do not assume a row's
+      orphan status from its asset_group — **re-run `generate_venue_work_list.py` and read the row's own
+      `archetype_consumers` column**; every AG batch plan's "expect NONE" language has been corrected to match. Full
+      row export: `--csv PATH` flag on the script. **Fork
       per-asset-group dispatch batches (P0, below) is now the next actionable item.**
 - [x] ✅ [BACKEND] P0. **Fork per-asset-group dispatch batches — done 2026-08-16.** SHIPPED —
       `unified-trading-pm@613c5f2f96`. 5 fresh carve-out batch plans + gated finalize pairs authored, per the

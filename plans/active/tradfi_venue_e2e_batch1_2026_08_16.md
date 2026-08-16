@@ -76,11 +76,14 @@ source: >-
       the P1 item below.
 - [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across the same 16 rows. A position adapter
       resolves in batch, live AND paper; the venue is declared in the archetype/slot catalogues that can legitimately
-      trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit. **Expect most or all
-      tradfi rows to show `archetype_consumers=NONE`** per `generate_venue_work_list.py` — the 5 confirmed
-      `StrategyArchetype` members today (`ARCHETYPE_FEATURE_GROUPS`) are all DeFi yield archetypes, so this step
-      cannot pass for tradfi until the archetype-declaration backlog covers a tradfi-consuming archetype; record as
-      `BLOCKED-ON:archetype-declaration-backlog`, never silently skip. Done-when: same per-row verdict discipline.
+      trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit. **Do not assume
+      orphan status from asset_group** — `ARCHETYPE_FEATURE_GROUPS` spans every AG today (40/60 declared as of
+      2026-08-16, moving fast; e.g. `CARRY_BASIS_DATED`/`VOL_*`/`ML_DIRECTIONAL_CONTINUOUS` are tradfi-relevant, not
+      DeFi-only), so a prior "expect NONE" claim here was wrong and has been corrected — re-run
+      `generate_venue_work_list.py` and read each row's own `archetype_consumers` column. Only a row that STILL
+      shows `NONE` after that live check cannot pass this step; record those specific rows as
+      `BLOCKED-ON:archetype-declaration-backlog`, never assume for the whole AG. Done-when: same per-row verdict
+      discipline.
 - [ ] [BACKEND] P0. **Step 9 per unit — transfers**, across the same 16 rows. Every applicable `BusTransferType`
       has a working rail, instruments-service through execution-service. Done-when: same per-row verdict discipline.
 - [ ] [BACKEND] P1. **Record every gap found across steps 1-9 above as its own tracked todo** in this file (or a
