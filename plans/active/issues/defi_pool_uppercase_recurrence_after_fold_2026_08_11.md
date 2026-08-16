@@ -119,8 +119,46 @@ depends_on: []
      deletes/rewrites rows its scan doesn't touch and `parse_hive_path` lowercases `instrument_type`, so the 7.9M
      uppercase rows were PRESENT pre-rebuild (by 2026-08-10) and passed through untouched — narrowing the recurrence
      window to the 08-05→08-10 pre-rebuild gap. Full evidence: the plan's Progress Log, 2026-08-12 entry.
-   - Whether physical GCS objects with a genuinely uppercase `instrument_type=POOL/` path segment exist on disk at all
-     (a `gcs_describe_object`/`list_blobs` sample under that literal prefix would settle this directly).
+   - ~~Whether physical GCS objects with a genuinely uppercase `instrument_type=POOL/` path segment exist on disk at
+     all~~ — **RESOLVED 2026-08-16 (slot 22, infra), CONFIRMED manifest-column-only artifact** — see "What I found"
+     item 5 below.
+5. **2026-08-16 (slot 22, infra) — DIAG todo done: manifest-column-only artifact CONFIRMED, no physical uppercase GCS
+   objects — AND a SECOND recurrence event found: the population has already regrown since the 2026-08-12 retirement.**
+   - **This exact probe was already run once, more thoroughly, on 2026-08-12 (slot 32, data_engineering) in the sibling
+     plan** `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 4 (now archived) — 30 sampled rows
+     across the full 2023-01-01→2026-08-05 date range, 2 pipeline_modes, 3 chains, 5 venues: **0/30 rows have any
+     object at an uppercase `instrument_type=POOL/` path; 30/30 have their object at the lowercase `instrument_type=
+     pool/` path**; a broad scan across 5 additional dates found **0 total objects anywhere containing
+     `instrument_type=POOL/`**. That entry independently reached the same conclusion this todo asked to settle — this
+     doc's own item 3 above had simply gone stale (the answer landed in the sibling plan 4 days before this todo was
+     dispatched).
+   - **Fresh independent reproduction (this session, script:
+     `market-tick-data-service/scripts/one_offs/sample_pool_uppercase_gcs_objects_2026_08_16.py`)**: sampled 20 rows
+     evenly spaced across the LIVE captured `instrument_type=POOL` population (measured 1,641,333 rows today — see
+     below), probing `gcs_describe_object` across 4 candidate path shapes × both casings (pipeline_mode-segmented,
+     bare `asset_group=defi/`, bare `category=defi/`, legacy venue-chain-glued). Result: **0/20 found any object at an
+     uppercase `POOL/` path** (matches the 2026-08-12 finding exactly); 1/20 resolved at the canonical lowercase
+     `pool/` path; 19/20 resolved at neither candidate (either genuine manifest phantoms with no physical backing at
+     all, or a 5th on-disk shape variant this script's candidate set didn't cover — in EITHER case there is still no
+     evidence of a physical *uppercase*-pathed object, so this does not change the conclusion). Combined with the more
+     exhaustive 2026-08-12 result, there is no evidence anywhere that the uppercase `POOL` rows correspond to genuinely
+     uppercase-pathed GCS objects — **the Part-5 "legacy COPIED not MOVED" migration treatment is NOT needed; this
+     stays a manifest-only fix.**
+   - **NEW, more urgent finding — a SECOND recurrence has already happened.** The 2026-08-12 retirement (todo 5 in the
+     same archived plan, `market-tick-data-service@5e456d0d`) drove captured `instrument_type=POOL` to **0** (verified
+     independently post-apply that same day). This session's fresh live query (2026-08-16, 4 days later) found
+     **1,641,333** captured `instrument_type=POOL` `dex_pool_swaps` rows present again — i.e. the population regrew
+     from 0 to 1.64M in ~4 days, the SAME recurrence pattern this issue doc was opened to track (which went 0→7.9M in
+     ~6 days the first time, 2026-08-05→2026-08-10/11). The root-cause mechanism named in this doc's own title is
+     confirmed to still be ACTIVE and UNFIXED — this is not a one-off, it is a repeating regression. Whatever writes
+     these rows was not identified by any of the checks already run (live writer ruled out, rebuild ruled out, stale
+     tarball ruled out) — the mechanism remains genuinely unknown. **This materially changes the calculus for todo
+     168's "decide whether retirement can proceed, or whether the underlying pipeline needs a durable fix first": a
+     third retirement without first finding the actual writer would almost certainly just recur a fourth time.**
+     Recommend the next worker on todo 168 prioritize identifying WHAT wrote the 1,641,333 rows between 2026-08-12 and
+     2026-08-16 (e.g. `written_at`/`service_name` provenance columns on the regrown rows, mirroring the
+     `service_name=market-data-processing-service` vs `market-tick-data-service` discrepancy slot-7 flagged as an
+     unexplored lead in the archived plan's todo-5 entry) BEFORE re-retiring.
 
 ## Why it matters
 
@@ -160,11 +198,12 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       data_engineering): UPSERT-onto-existing-index, NOT full-replace** — see "What I found" item 4 above; narrows the
       recurrence window to the 08-05→08-10 pre-rebuild gap (the 7.9M uppercase rows were already present by 2026-08-10
       and passed through the rebuild untouched).
-- [ ] [DIAG] P1. Sample a handful of the 7,930,863 uppercase rows' underlying GCS objects directly
-      (`gcs_describe_object`/`list_blobs` under `instrument_type=POOL/`) to settle whether they're a manifest-column-only
-      artifact (as the 2026-08-05 fold assumed) or genuinely reflect physical objects at an uppercase path — the latter
-      would need the Part-5 "legacy COPIED not MOVED" migration treatment
-      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5), not a manifest-only patch.
+- [x] ✅ [DIAG] P1. Sample a handful of the 7,930,863 uppercase rows' underlying GCS objects directly — **RESOLVED
+      2026-08-16 (slot 22, infra), CONFIRMED manifest-column-only artifact (0/20 fresh + 0/30 from the 2026-08-12
+      sibling-plan run found any uppercase-pathed physical object; no Part-5 migration needed) — but ALSO found a
+      SECOND recurrence: captured `instrument_type=POOL` regrew from 0 (post-2026-08-12-retirement) to 1,641,333
+      (measured today) — see "What I found" item 5.** market-tick-data-service@a1424bcc (script:
+      `scripts/one_offs/sample_pool_uppercase_gcs_objects_2026_08_16.py`).
 - [ ] [SCRIPT] P1. Only once the DIAG todo above lands, decide whether
       `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2's retirement can proceed safely, or
       whether the underlying pipeline needs a durable fix first so this doesn't recur a third time. Also re-close
@@ -173,3 +212,10 @@ delete, but the same evidentiary bar applies given real financial data is at sta
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **2026-08-16 (slot 22, infra)**: DIAG todo done — sampled 20 live captured `instrument_type=POOL` rows' GCS objects
+  directly (script `market-tick-data-service/scripts/one_offs/sample_pool_uppercase_gcs_objects_2026_08_16.py`,
+  4 path shapes × 2 casings per row). 0/20 found an uppercase-pathed physical object — confirms the more exhaustive
+  2026-08-12 sibling-plan finding (0/30). Also found the live captured `instrument_type=POOL` population has regrown
+  to 1,641,333 as of today, four days after the 2026-08-12 retirement drove it to 0 — a SECOND recurrence of this
+  doc's own tracked mechanism. See "What I found" item 5 for full detail and the recommendation for todo 168's next
+  worker.
