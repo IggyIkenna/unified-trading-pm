@@ -440,3 +440,34 @@ incidental mentions across 7 other issue docs. Neither blocks this plan's P0 dir
 tracked as the new P2 todo above ("Cross-link the karak remediation-direction split...") rather than editing two
 other active docs mid-session. This plan's own 3 files remain unchanged and correct (re-read in full this session,
 no drift); nothing here changes the resume recipe two entries above.
+
+**2026-08-16 — still blocked, 5th confirmation, pre-compact audit.** A full `unified-api-contracts` QG suite run
+(13246 passed, 1 failed, 678 skipped, 5 xfailed) reproduces the identical single failure —
+`test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`
+— nothing else red. Fifth identical confirmation today; per this session's own async-wait guidance the condition is
+stable, not flapping, and the cause is confirmed external (someone else's in-flight `DeFiAdapter` dispatch-wiring
+work for karak/pendle/symbiotic, not these 3 files). No further action taken this entry beyond logging the
+confirmation — the resume recipe from the "3rd confirmation" entry above still applies verbatim: re-run the
+invariant standalone first, only quickmerge once it passes. `unified-api-contracts` working tree unchanged
+(3 files, `ahead=0`/`behind=0` on committed history); `unified-trading-pm` clean.
+
+## Deferred work after 2026-08-16
+
+| Item | State | Blocked on |
+| --- | --- | --- |
+| Ship `archetype_feature_groups.py` + test + `__init__.py` edit (L228, `unified-api-contracts`, code complete + locally verified) | Cannot be done yet | External: `execution-service` `DeFiAdapter` dispatch wiring for karak/pendle/symbiotic — 5 identical confirmations today, someone else's in-flight work. Do not hand-edit the ratchet baseline. |
+| Flip L228 checkbox | Blocked on above | same |
+| L230 "Add contract step 17 as a real check, both directions" | Not started | Blocked on L228 landing (needs the archetype→feature_groups link to exist first) |
+| L233 "Report the unconsumed set" | Not started | Blocked on L228/L230 |
+| W3 "service-config abstraction" child plan | Not started | Blocked on the two `[OPERATOR]` design rulings below (error-code SSOT shape, config-abstraction target shape) |
+| W4 "venue e2e wiring" child plan | Not started | Blocked on W3's design ruling settling first (same contract, sequenced) |
+| W5 "smoke-test bar" child plan | Not started | Blocked on W3/W4 |
+| "Error-code SSOT shape" design ruling (L321) | Operator-owned | Needs an explicit decision: UAC registry keyed by (venue, code) vs. `classify_venue_error()` extension vs. per-venue declaration files |
+| "Config-abstraction target shape" design ruling (L325) | Operator-owned | Needs an explicit decision: per-service vs. per-domain `config.py`, schema mechanism, gate-check shape |
+| L342 "Cross-link karak remediation-direction split + author pendle's issue doc" | Not done | Real work, nobody's blocking it — next agent picking up this plan can do it directly |
+
+**Recommended next item**: none of the above is actionable by re-attempting it right now — the P0 chain (L228→230→233)
+is externally blocked, and W3/W4/W5 need an operator decision first. The one genuinely unblocked item is L342
+(cross-linking the karak docs) — cheap, no dependencies, worth doing opportunistically. Otherwise: periodically
+re-run the invariant standalone (not a baseline-file read) to detect when the external block clears, then ship L228
+immediately.
