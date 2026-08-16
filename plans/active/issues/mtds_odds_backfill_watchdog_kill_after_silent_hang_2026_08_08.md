@@ -153,7 +153,7 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
       campaign). Remaining gap: `strace` is present on the VM image but `py-spy`/`gdb` are NOT — a live hang capture
       would need `pip install py-spy` at hang time (extra step/delay) or fall back to `strace -p <pid>`. Still gated on
       the opportunistic "must catch it mid-tick" timing, not on access anymore.
-- [x] ✅ [SCRIPT] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-09,
+- [x] ✅ [SCRIPT] P3. Extracted to `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-09,
       satellite-batch-extraction pass) — audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have
       explicit connect/read timeouts, and add them if missing. **NEGATIVE-RESULT AUDIT (batch11 todo 1, 2026-08-09,
       slot-18)** — every real outbound `odds_api` HTTP call site already declares an explicit timeout; no code changes
@@ -168,7 +168,7 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
       fresh `_make_session()` construction) — no call path bypasses the default. Sibling live connector
       `market_tick_data_service/live/connectors/odds_api_ws.py:309` (`_fetch_sport_odds`) passes an explicit
       per-request `timeout=aiohttp.ClientTimeout(total=30)`. Full citation:
-      `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` Progress Log entry "2026-08-09 (todo 1 — odds_api
+      `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09.md` Progress Log entry "2026-08-09 (todo 1 — odds_api
       HTTP timeout audit, slot-18)". Tracked there (`assigned_vm: planning`), not duplicated here; this checkbox
       reconciled by `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo 1. No repo touched, nothing
       shipped via quickmerge (negative-result audit).
@@ -277,7 +277,7 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   working SSH access this session to catch a live hang — todo 1's blocker unchanged.
 
 - **satellite-batch-extraction 2026-08-09 (sports tranche)**: extracted todo 2 (`[SCRIPT] P3`, `odds_api` HTTP client
-  connect/read-timeout audit+fix) into `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
+  connect/read-timeout audit+fix) into `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
   (`assigned_vm: planning`) — this is exactly the split the 2026-08-08 `na-eligibility-audit` entry above flagged as a
   good standalone RECLASSIFY candidate but declined to split out unilaterally in that pass. Todo 1 (catch a live hang
   before the silent window elapses) and todo 4 (`PREFIX_IDLE_THRESHOLDS` tuning, explicitly gated on this audit's
@@ -562,7 +562,7 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   doc's original silent-hang mechanism.
 
 - **2026-08-16 (batch11-finalize reconciliation, slot-15)**: flipped the `[SCRIPT] P3` timeout-audit checkbox above with
-  the negative-result citation from `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
+  the negative-result citation from `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
   (confirmed `[x]` there, evidence dated 2026-08-09). Per
   `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo 1's scope: this doc's other 2 open todos (todo 1 —
   catch a live hang before the silent window elapses; todo 4 — `PREFIX_IDLE_THRESHOLDS` tuning, still explicitly gated on

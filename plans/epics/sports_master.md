@@ -58,8 +58,8 @@ related_plans:
   - ../active/sports_predictions_live_mode_activation_readiness_2026_07_21.md
   - ../active/sports_satellite_ao_dispatch_batch10_2026_08_06.md
   - ../active/sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md
-  - ../active/sports_satellite_ao_dispatch_batch11_2026_08_09.md
-  - ../active/sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
+  - ../archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09.md
+  - ../archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
   - ../active/sports_satellite_ao_dispatch_batch12_2026_08_09.md
   - ../active/sports_satellite_ao_dispatch_batch12_2026_08_09_finalize.md
   - ../active/sports_satellite_ao_dispatch_batch5_2026_07_26.md
@@ -1503,12 +1503,12 @@ hygiene + orphan-satellite reconciliation (split from the sports closeout)
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: Sports satellite AO batch 10 — finalize
 (reconcile source docs)
 
-### [`sports_satellite_ao_dispatch_batch11_2026_08_09`](../active/sports_satellite_ao_dispatch_batch11_2026_08_09.md)
+### [`sports_satellite_ao_dispatch_batch11_2026_08_09`](../archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09.md)
 
 **status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: Sports satellite AO batch 11 —
 post-RECLASSIFY-sweep residual extraction (2026-08-09)
 
-### [`sports_satellite_ao_dispatch_batch11_2026_08_09_finalize`](../active/sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
+### [`sports_satellite_ao_dispatch_batch11_2026_08_09_finalize`](../archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
 
 **status**: active · **estimate**: 0.12 cal AI-days (class: infra) **title**: Sports satellite AO batch 11 — finalize
 (reconcile source docs)

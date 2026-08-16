@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for sports_satellite_ao_dispatch_batch11_2026_08_09.md — machine-held via depends_on + gate_on_depends:
   true until both of that plan's todos are done. Mirrors the batch2-10-finalize pattern: reconcile each of the 2
   distinct source docs' checkboxes once its batch-11 todo lands, then archive both docs.
-status: active
+status: archived
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -21,7 +21,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-16"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,6 +53,13 @@ context_scope:
 
 # Sports satellite AO batch 11 — finalize (reconcile source docs)
 
+> **🟢 ARCHIVED 2026-08-16 — all 3 todos complete.** Both source-doc reconciliations done (naming-canonicalization doc
+> archived in full 2026-08-15; odds-watchdog issue doc's timeout-audit checkbox flipped with negative-result evidence
+> 2026-08-16, doc stays open with its 2 remaining genuinely-open todos) and batch-11's own 2 todos confirmed `[x]` —
+> this finalize plan + its paired batch plan
+> (`/plans/archive/2026_08/sports_satellite_ao_dispatch_batch11_2026_08_09.md`) archived together per the 6-step
+> ritual.
+
 ## Todos
 
 - [x] ✅ [DATA] P3. Reconcile `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` — once batch-11 todo 1
@@ -76,9 +83,18 @@ context_scope:
       independently resolved-by-citation on 2026-08-09 (its cross-reference target archived/resolved), so the doc
       reached ZERO open checkboxes and was archived in full this same pass (not left with one item open) — see
       `/plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md`'s own Progress Log.
-- [ ] [PROCESS] P2. Archive `sports_satellite_ao_dispatch_batch11_2026_08_09.md` + this finalize doc once both
+- [x] ✅ [PROCESS] P2. Archive `sports_satellite_ao_dispatch_batch11_2026_08_09.md` + this finalize doc once both
       reconciliations above are done and batch-11's own 2 todos are all `[x]`. Done when: both docs sit in
-      `plans/archive/2026_08/` with the archive-ritual citation.
+      `plans/archive/2026_08/` with the archive-ritual citation. — **DONE (2026-08-16, slot-15)**: both reconciliations
+      confirmed complete (todo 1 above, plus todo 2's 2026-08-15 full archival of the naming-canonicalization source
+      doc); batch-11's own 2 todos confirmed `[x]` in `sports_satellite_ao_dispatch_batch11_2026_08_09.md`. Ran the
+      6-step archival ritual: no deferred items to migrate (none found); archived-banner added to both docs;
+      no new codex contract established by this closeout (pure reconciliation, nothing to stub/update); referrers
+      repointed (`plans/epics/sports_master.md`, this doc's own citations in
+      `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`; `plans/active/INDEX.md` regenerated via
+      `scripts/plans/regenerate_active_plan_index.py`, not hand-edited); both docs `git mv`'d to
+      `plans/archive/2026_08/` in this same commit (single-repo mode-1, sanctioned same-commit flip+archival per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 ## Codex SSOTs
 
