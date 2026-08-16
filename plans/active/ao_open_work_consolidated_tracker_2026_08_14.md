@@ -532,37 +532,68 @@ before touching the source doc directly._
       provider with independent per-group collapse) plus the full relevant regression sweep re-run green
       (13/13 across provider-badge/panel-collapsible/fleet-account-column, 2/2 critical-health, 4/4 tier-editor,
       each via their correct dedicated Playwright project). Source: operator live observation, this session.
-- [x] [UI] P2. ✅ **New, operator "build the rest now" 2026-08-16 — Grok DONE, shipped `agent-orchestrator@88c838dd6a`.**
-      Real Grok wallet reconciliation: `GrokBalanceHistoryRow` (new table, mirrors `DeepSeekBalanceHistoryRow`),
-      `GrokBalancePoller` (mirrors `DeepSeekBalancePoller`, 1-min cadence, uses the already-working
-      `fetch_grok_balance()`), `compute_grok_wallet_window_reconciliation()` (real balance-diff vs real
-      `task_usage.spend_usd` WHERE `provider="grok"` — Grok needs no bespoke transcript-sweep table the way DeepSeek
-      does, since `price_usage()` already prices it correctly from the live `/done` capture), new
+- [x] [UI] P2. ✅ **Operator "build the rest now" 2026-08-16 — Grok DONE, shipped `agent-orchestrator@88c838dd6a`
+      + `agent-orchestrator@60db1a7993`.** Real Grok wallet reconciliation: `GrokBalanceHistoryRow` (new table,
+      mirrors `DeepSeekBalanceHistoryRow`), `GrokBalancePoller` (mirrors `DeepSeekBalancePoller`, 1-min cadence, uses
+      the already-working `fetch_grok_balance()`), `compute_grok_wallet_window_reconciliation()` (real balance-diff
+      vs real `task_usage.spend_usd` WHERE `provider="grok"` — Grok needs no bespoke transcript-sweep table the way
+      DeepSeek does, since `price_usage()` already prices it correctly from the live `/done` capture), new
       `GET /api/accounts/grok/wallet-reconciliation/window` route, new `GrokWalletPanel.tsx` (24h/7d toggle,
-      collapsible). Deliberately a SIMPLER v1 than DeepSeek's panel: no top-ups tracking (no pre-existing ledger to
-      reconcile against — the balance series only starts from when this poller first ran) and no
-      worker/orchestrator/review split (reports total attributed spend only — real, honest, just less finely
-      bucketed; add the split later if it proves needed). Full `quality-gates.sh` green (one real basedpyright
-      catch along the way: `TaskUsageRow.spend_usd` is nullable, unlike DeepSeek's topup amount — fixed by
-      coalescing per-row before summing, not just the final aggregate). **NOT yet pw:L2-verified** — QG-green and
-      typecheck-clean, but no Playwright regression spec written for this panel yet (see the todo below).
-      **Remaining scope from the same "build the rest now" instruction, real per-provider assessment, not
-      guessed**:
-      - **Kimi**: same shape as Grok is buildable IF Moonshot exposes a real balance-read API endpoint — unconfirmed
-        (the kimi_gemma_provider_onboarding plan's own wallet-reconciliation todo already flags this as open). Real
-        wallet baseline already known ($15 credited/$14.99978 available, from the operator's console screenshot) —
-        the gap is whether a programmatic balance READ exists, not whether the number exists.
-      - **Gemini**: NOT $-based (genuinely free tier) — the real signal is rate-limit CAPACITY consumed, which
-        `gemini_headroom.py` already tracks per-account RPM/TPM/RPD. Needs a different kind of panel (capacity
-        gauge, not a $ balance table), not a Grok-pattern clone.
-      - **NVIDIA**: same free-tier shape as Gemini, but NO capacity-tracking exists yet at all (unlike Gemini) —
-        would need building the headroom-tracking layer first, not just a panel on top of existing data.
-      - **GLM, Codex**: subscription flat-rate (like Claude), NOT metered $ like Grok/DeepSeek — needs Claude's
-        `boost_multiplier` subscription-value CALIBRATION methodology transplanted, a materially bigger design
-        effort than Grok's balance-diff approach, not a quick clone.
-      Done when: pw:L2 spec exists for GrokWalletPanel, AND each of the 4 remaining providers has either a real
-      panel shipped or an explicit, scoped follow-up todo (not a silent gap) — this todo's own text above already
-      is that scoping for the first pass; convert each bullet into its own dedicated `- [ ]` when picked up.
+      collapsible). Deliberately a SIMPLER v1 than DeepSeek's panel: no top-ups tracking, no
+      worker/orchestrator/review split (total attributed spend only). **pw:L2 gap now closed** — new
+      `grok-wallet-reconciliation.spec.ts` (2 tests: balance-at-end/attributed-spend/sampling-since render correctly;
+      the 24h→7d toggle re-fetches and keeps the same attributed spend), shipped alongside Kimi below.
+- [x] [UI] P2. ✅ **Kimi DONE, shipped `agent-orchestrator@60db1a7993`.** The prior blocker — "does Moonshot expose a
+      programmatic balance-read endpoint" — is resolved: confirmed `GET https://api.moonshot.ai/v1/users/me/balance`
+      is real (Bearer auth, `{"data":{"available_balance":...}}` shape;
+      [platform.kimi.ai/docs/api/balance](https://platform.kimi.ai/docs/api/balance)). Clones the Grok pattern
+      (`KimiBalanceHistoryRow`, `KimiBalancePoller`, `compute_kimi_wallet_window_reconciliation()`,
+      `GET /api/accounts/kimi/wallet-reconciliation/window`, `KimiWalletPanel.tsx`) with one real structural
+      difference: the three Kimi model-accounts (kimi-k3, kimi-k2.6, kimi-k2.7-code) share ONE Moonshot API key and
+      therefore one wallet — `KimiBalancePoller` samples balance ONCE per tick (not per account) under a synthetic
+      wallet identity, and `compute_kimi_wallet_window_reconciliation` sums `task_usage.spend_usd` across ALL THREE
+      accounts (`provider="kimi"`), not one. Token resolution is also structurally different from Grok/DeepSeek: no
+      Kimi `AccountDef` carries `api_key_secret_name` (the real key lives server-side in the LiteLLM proxy's own env),
+      so `kimi_balance.py` resolves GSM secret `moonshot-api-key` directly rather than per-account. **pw:L2** — new
+      `kimi-wallet-reconciliation.spec.ts` (2 tests), with a 2-different-account-ids e2e fixture that actually proves
+      the cross-account aggregation claim rather than happening to pass on a single-account case. Full
+      `quality-gates.sh` green (4003 pytest + 380 vitest + tsc clean), 16/16 relevant Playwright specs re-run green.
+- [ ] [UI] P2. **Gemini capacity panel — NOT $-based (genuinely free tier), the real signal is rate-limit CAPACITY
+      consumed.** `gemini_headroom.py` already tracks per-account RPM/TPM/RPD live — this is a UI-only build (a
+      capacity gauge, not a $ balance table), no new backend tracking needed. Fully unblocked, no operator input
+      required — operator-agreed next-easiest win, 2026-08-16. Done when: a `GeminiCapacityPanel.tsx` renders real
+      per-account RPM/TPM/RPD headroom, collapsible, pw:L2-verified.
+- [ ] [INFRA] P2. **NVIDIA capacity-tracking layer, THEN a panel.** Unlike Gemini, no `gemini_headroom.py`-equivalent
+      exists for NVIDIA NIM yet — build the tracking layer first. Baseline researched 2026-08-16 (not yet empirically
+      confirmed against this fleet's own key): free tier is ~40 RPM, **global per-key, shared across every model**
+      (not per-model) — [decodethefuture.org](https://decodethefuture.org/en/nvidia-nim-api-pricing-limits-guide/),
+      [NVIDIA forums](https://forums.developer.nvidia.com/t/request-to-increase-rpm-limit-for-free-nvidia-nim-account/377451) —
+      upgradeable to 200 RPM on request. Done when: a headroom-tracking layer mirroring `gemini_headroom.py`'s shape
+      exists for NVIDIA, plus a panel consuming it, pw:L2-verified.
+- [ ] [DATA] P2. **NVIDIA concurrency-capacity baseline — measure how many Gemma models can run concurrently before
+      the shared 40 RPM ceiling breaks.** Operator observation 2026-08-16: since the ceiling is global-per-key (see
+      todo above), running the 2 paused NVIDIA accounts (`nvidia-diffusiongemma`, `nvidia-gemma-4-31b-it`)
+      concurrently may hit it fast — worth baselining BEFORE any routing logic assumes N-way concurrency is free.
+      **Blocked on operator decision, not on missing information**: measuring this requires enabling the paused
+      accounts, which stays off per standing instruction (task-routing logic doesn't exist yet) — do NOT unpause to
+      run this. Done when: the operator green-lights a bounded live test (both accounts, ramping concurrent request
+      count until 429s appear) and the real breaking point is recorded here.
+- [ ] [INFRA] P3. **GLM/Codex `boost_multiplier` plumbing — build now, dormant, per operator ruling 2026-08-16
+      ("build plumbing now, dormant" over "park until routing ships").** Real calibration needs live dispatch volume
+      (both plans' own P1 todos already say so explicitly — `deepseek_claude_blended_provider_routing_2026_07_28`'s
+      GLM quota-tracking todo, `codex_luna_flex_bridge_2026_08_14`'s Codex quota-tracking todo), and both accounts
+      stay paused until task-routing ships — so this todo is deliberately the SCAFFOLDING only: wire
+      `five_hour_pct`/`weekly_pct` capture (IF the vendor's API exposes an equivalent signal — GLM's z.ai endpoint and
+      Codex's bridge have NOT yet been checked for this; verify before assuming the Claude-header pattern transfers)
+      plus the `boost_multiplier` calc plus a dormant panel ("no data yet" until live), using the CURRENTLY-active
+      price constants (not the future-upgrade tiers both source plans already correctly document separately):
+      **GLM Lite $18/mo** (per `deepseek_claude_blended_provider_routing_2026_07_28`'s 2026-08-15 staged-tier ruling)
+      and **Codex Plus $20/mo** (operator, 2026-08-16: "codex we are on plus not pro its $20 per month. once we have
+      run some stuff we will increase to $100" — `codex_luna_flex_bridge_2026_08_14` already correctly documents Plus
+      as current and Pro/$100/$200 as the future upgrade target, so `_TIER_MONTHLY_PRICE_USD` must key off the tier
+      actually active today, not the plan's Pro-tier research figures). Zero real calibration data renders until the
+      accounts are enabled. Done when: the capture+calc+panel exist, QG-green/pw:L2-verified showing the "no data
+      yet" dormant state.
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
