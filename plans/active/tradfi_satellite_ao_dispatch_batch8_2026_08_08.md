@@ -149,7 +149,7 @@ pass (not a delta) per this dispatch's autonomous-mode instructions.
       accordingly. (2) `instrument_type=OPTION` (the leaf grain, distinct from the already-working `options_chain`
       per-underlying bundle) is `frozenset()` in the same registry and crashes — this is NOT a registration gap, it is
       very likely the same caller-scoping class of bug already fixed for COMBO/futures_chain
-      (`market-data-processing-service@0671953`'s `related_data_types` mechanism) — confirm via the same investigation
+      (`market-data-processing-service@de8ea9f`'s `related_data_types` mechanism) — confirm via the same investigation
       pattern against `market-data-processing-service/.../app/adapters/tradfi/ohlcv_passthrough.py` and fix if
       confirmed. Repos: unified-api-contracts (ETF registration), market-data-processing-service (OPTION
       caller-scoping). **Done when**: ETF has registered SchemaContract coverage for its full valid data_type list with
