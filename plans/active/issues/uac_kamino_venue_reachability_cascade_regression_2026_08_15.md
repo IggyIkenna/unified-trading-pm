@@ -60,7 +60,35 @@ of `kamino`'s current state (not evaluated here — out of scope for the task th
 2. If `kamino` is a deliberate, tracked gap (e.g. connector scaffolded ahead of go-live), add it
    to `tests/data/execution_service_venue_reachability_baseline.json` with a note explaining why.
 
-## Status
+## Status — RESOLVED 2026-08-15 via remediation 2 (verified 2026-08-16)
 
-Open — orphaned finding, no owning plan. Route to whichever AG closeout/dispatch batch owns
-DeFi execution-service work, or resolve directly.
+**The CI block is gone.** `kamino` was added to
+`unified-api-contracts/tests/data/execution_service_venue_reachability_baseline.json`
+(`unreachable_defi_venues: ["morpho", "kamino"]`) with a note recording the measured root cause:
+`KaminoConnector` declares `supports_live = True`, but `DeFiAdapter` — the one dispatcher wired
+into `live_execution_handler.py` — has zero references to a KAMINO venue-gate marker. Genuinely
+unreachable, not a false positive from the invariant's v2 rewrite.
+
+Verified 2026-08-16: `unified-api-contracts` `quality-gates.sh` runs green (991s), so the
+fleet-wide quickmerge STAGE 3 block is cleared.
+
+**The underlying gap is still open and is tracked** — `morpho` and `kamino` both remain
+unreachable, under the P0 "wire a real dispatcher that reaches the connectors execution-service
+already has" todo in
+[`/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`](/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md).
+So this issue is closed as a CI incident, not as a capability gap.
+
+**Worth preserving — the invariant worked exactly as designed.** It was built on 2026-08-14 to
+detect "a venue we can trade and cannot reconcile", and within a day it caught a real instance
+that a human review had not. The baseline note also demonstrates the ratchet moving the right
+way: the four `uniswap_*` entries were REMOVED in the same change that wired
+`DeFiAdapter.uniswap_connector`.
+
+**Correction to a claim made elsewhere**: this baseline is not "shrink-only". Its own note says
+_"do not grow this list except by re-running the measurement and reviewing the diff"_ — growth is
+permitted with a re-measurement and review, which is what `kamino` was. A strictly shrink-only
+reading would have forced a rushed wiring fix during an unrelated ship.
+
+- [ ] [AGENT] P2. **Close this doc once `morpho` and `kamino` leave the baseline** — and per the
+      ratchet convention, remove each in the SAME change that wires its dispatcher path, never as
+      a separate cleanup.

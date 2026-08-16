@@ -1053,7 +1053,7 @@ max_position_usd          <i># notional ceiling per position</i></div>
         <div><b>Single-source registries</b><span>Stops the same contract address existing twice and drifting, where a wrong value reads the wrong token and silently mis-reconciles</span></div>
         <div><b>Cross-repo invariants</b><span>Stop one service gaining a venue the other lacks</span></div>
         <div><b>Schema coverage</b><span>Stops an archetype shipping without a declared parameter schema</span></div>
-        <div><b>Shrinking baselines</b><span>Known-imperfect patterns are counted, and the count may fall but never rise</span></div>
+        <div><b>Ratcheted baselines</b><span>Known gaps are counted and reviewed. The count falls when a gap is closed — in the same change that closes it — and grows only on a re-measurement someone reviewed</span></div>
       </div>
       <div class="code"><span class="k">class</span> <b>BaseConnector</b>:
     supports_live: bool = False    <i># fail-closed: simulation-only until proven otherwise</i>
