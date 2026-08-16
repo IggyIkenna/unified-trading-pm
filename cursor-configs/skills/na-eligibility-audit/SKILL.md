@@ -146,16 +146,18 @@ scope, grep its own body for a dated `na-eligibility-audit YYYY-MM-DD` (or the e
 `na_docs_validity_and_ao_eligibility_audit` Progress Log precedent) verdict marker. Skip a doc from Phase 1 when BOTH
 hold: (a) it carries such a marker, and (b) the doc's `last_updated` frontmatter (or, if absent, its git last-commit
 date) is NOT newer than that marker's date — nothing has changed since it was last verdicted. A doc with no marker, or
-edited since its last marker, is in scope. **Interim mitigation for date-fallback false-positives (until the
-content-hash SCRIPT ships):** when a doc enters scope only because condition (b) failed — it HAS a prior marker but its
-`last_updated`/git-date is newer — verify the actual diff before handing it to Phase 1: find the marker commit via
-`git log --oneline -- <doc-path>` to identify the SHA at or after the marker date, then run
-`git diff <marker-sha>..HEAD -- <doc-path>`. If the diff touches ONLY frontmatter fields (`context_scope:`,
-`last_updated:`, `status:`, etc.) and zero body lines, treat the doc as unchanged and skip it from Phase 1 — a
-frontmatter-only commit is not a substantive re-assessment trigger and is the confirmed false-positive class documented
-in `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`. A real body edit
-(new or changed todo text, Progress Log entry, verdict section update, or any prose change) keeps the doc in scope
-normally. This manual check is unnecessary once the content-hash SCRIPT is live. **`/context-scout`-only sub-case**: a
+edited since its last marker, is in scope. **The content-hash script has SHIPPED (re-verified 2026-08-16 via source
+read of `generate_na_doc_tranche_inventory.py`'s `body_content_hash()`/`incremental_skip` logic during a live cefi-
+tranche run)** — Phase 0.3's inventory JSON already reports an exact per-doc `incremental_skip` verdict: the
+frontmatter/marker-stripped body hash compared against the `[body-hash:…]` stored in the doc's own marker, with a
+git-history fallback for markers predating the hash extension. **Trust `incremental_skip` directly — do not hand-run
+a git-diff mitigation.** The frontmatter-only false-positive class this once targeted
+(`issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`) is resolved by
+the hash comparison, which is content-exact rather than diff-classification-based, so it is a strict superset of what
+the manual recipe caught. **Historical manual recipe** (only still relevant for a doc whose marker predates the hash
+extension AND has no git history to fall back on — an edge case the script's own fallback already handles for any doc
+with commit history): find the marker commit via `git log --oneline -- <doc-path>`, run
+`git diff <marker-sha>..HEAD -- <doc-path>`, and treat a frontmatter-only diff as unchanged. **`/context-scout`-only sub-case**: a
 body-level `/context-scout` Progress Log line (not frontmatter, not a verdict marker) previously produced the same
 false-positive class — fixed by generalizing `body_content_hash()`'s marker-stripping to a sibling-marker family; see
 `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`. **A full unscoped run** (no
