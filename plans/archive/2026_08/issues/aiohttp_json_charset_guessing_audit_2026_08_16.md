@@ -12,8 +12,7 @@ summary: >-
   adapters in instruments-service, or any aiohttp-based adapter in market-tick-data-service) — any of those hitting a
   vendor that also omits an explicit application/json charset carries the identical latent mojibake risk. Filed as a
   bounded, deterministic follow-up rather than folding into the (now-archived) sports-scoped source doc.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -39,7 +38,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 source: "sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md follow-up, slot-23, 2026-08-16"
-resolved_by:
+resolved_by: "slot-23 (data_engineering) — market-tick-data-service@48b7a558, instruments-service already complete"
 locked_by:
 locked_since:
 context_scope:
@@ -51,6 +50,11 @@ context_scope:
 ---
 
 # aiohttp resp.json(content_type=None) charset-guessing audit
+
+> **📦 ARCHIVED 2026-08-16 — resolved.** The single tracked todo is done: instruments-service had 0 unfixed sites
+> outside the already-shipped sports fix; market-tick-data-service@48b7a558 pinned `encoding="utf-8"` on its 7
+> remaining sites. Independently re-verified — all 12 `content_type=None` call sites across both repos now pin the
+> encoding.
 
 ## What I found
 
