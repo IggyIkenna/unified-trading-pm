@@ -88,6 +88,27 @@ set -uo pipefail
 # bytes, which is also strictly correct here since these comparisons only need exact-match
 # set membership, never locale-aware ordering.
 export LC_ALL=C
+
+# Every `sort -u` call in this script MUST route through here rather than being piped to
+# directly. LC_ALL=C above already eliminates the locale-crash failure mode this issue
+# documents, but a future regression (e.g. a caller that resets LC_ALL, or a `sort`
+# implementation swap) must fail LOUDLY, not degrade into the silent truncated-comparison
+# false positive this whole issue is about. Calling sort as the sole command inside this
+# function (rather than as the tail of a longer pipe) is deliberate: it isolates sort's own
+# exit code from an upstream stage's unrelated non-zero status (e.g. `grep` legitimately
+# returning 1 on "no matches", which pipefail would otherwise conflate with a real sort
+# failure if checked from the pipe's aggregate status).
+_sort_or_die() {
+  local out rc
+  out="$(sort -u)"
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo "❌ check_prosewrap_padding: sort -u failed (rc=$rc, LC_ALL=$LC_ALL) — this is the exact silent-degradation failure mode documented in plans/active/issues/prosewrap_padding_precommit_gate_locale_false_positive_2026_08_09.md; fix the environment before trusting this check's output." >&2
+    exit 2
+  fi
+  printf '%s' "$out"
+}
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BASELINE_PATH="$SCRIPT_DIR/prosewrap_padding_baseline.yaml"
@@ -178,8 +199,20 @@ if [ "${1:-}" = "--only" ]; then
 
     # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
     # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
-    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
-    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    # NOTE: sort is deliberately NOT chained directly onto the grep|sed pipe above it. grep
+    # legitimately exits 1 on "no matches" (the common case — most files have zero hits for
+    # a given detector), and pipefail's aggregate pipe status can't tell that apart from a
+    # real sort failure once both are stages of the same pipe. Capturing the pre-sort content
+    # first (tolerating grep's expected exit 1 via `|| true`), then piping ONLY `printf | sort`
+    # as its own isolated 2-stage pipe, means the $? checked below reflects sort alone
+    # (printf never fails), so a genuine sort regression fails loudly instead of being masked
+    # by — or falsely blamed on — an ordinary no-match grep.
+    cur_backtick_pre="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' || true)"
+    cur_backtick="$(printf '%s' "$cur_backtick_pre" | _sort_or_die)"
+    [ $? -eq 0 ] || exit 2
+    head_backtick_pre="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' || true)"
+    head_backtick="$(printf '%s' "$head_backtick_pre" | _sort_or_die)"
+    [ $? -eq 0 ] || exit 2
     new_backtick=""
     [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
 
@@ -195,8 +228,13 @@ if [ "${1:-}" = "--only" ]; then
     # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
     # already existed at HEAD (at any indent, flagged there or not) and merely got
     # reflowed past the threshold this pass.
-    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
-    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    # Same isolation rationale as the backtick-padding pair above — grep's expected "no
+    # matches" exit 1 must never be conflated with a real sort failure.
+    cur_overindent_pre="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' || true)"
+    cur_overindent="$(printf '%s' "$cur_overindent_pre" | _sort_or_die)"
+    [ $? -eq 0 ] || exit 2
+    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | _sort_or_die)"
+    [ $? -eq 0 ] || exit 2
     new_overindent=""
     [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
@@ -306,8 +344,10 @@ fi
 if [ -n "$DIFF_BASE" ]; then
   BASE_SIGS_FILE="$(mktemp)"
   trap 'rm -f "$BASE_SIGS_FILE"' EXIT
-  _violations_at "$DIFF_BASE" | sort -u > "$BASE_SIGS_FILE"
-  HEAD_SIGS="$(_violations_at "" | sort -u)"
+  _violations_at "$DIFF_BASE" | _sort_or_die > "$BASE_SIGS_FILE"
+  [ $? -eq 0 ] || exit 2
+  HEAD_SIGS="$(_violations_at "" | _sort_or_die)"
+  [ $? -eq 0 ] || exit 2
   NEW_SIGS="$(comm -23 <(printf '%s\n' "$HEAD_SIGS") "$BASE_SIGS_FILE" 2>/dev/null || true)"
   NEW_COUNT=0
   [ -n "$NEW_SIGS" ] && NEW_COUNT=$(printf '%s\n' "$NEW_SIGS" | grep -c .)
