@@ -168,6 +168,26 @@ follow-up batch once the operator rules (see `## Deferred`).
       closure mechanism as todos 1/2. Repo: unified-trading-pm (decision only — no code in this todo). Source: this
       plan's own `--boot-disk-type` review (2026-08-16, slot 12).
 
+- [ ] [OPERATOR] P2. **Resolve two more genuine blocking gaps found during group B's migration (2026-08-16, slot 17) —
+      neither in this plan's or the source issue's original tier list.** (1) **`;`-delimited-metadata callers**
+      (`launch-manifest-recon-all-vm.sh`, `launch-manifest-recon-apply-vm.sh` confirmed so far — likely others in group
+      C given the same `VENUES=`-can-contain-commas pattern): `lc_gcloud_create`'s internal guards
+      (`lc_verify_setup_script_freshness`, the canonicalisation-gate lookup) both use `grep -oE '[^|,]+'` to extract a
+      value from `metadata_str`, which only terminates at `,`/`|` — a caller using the `^;^...;...` gcloud
+      custom-delimiter form (no commas at all) makes both regexes capture to end-of-string, silently degrading both
+      guards to a no-op warn (traced: non-fatal, but the exact protection this whole migration effort exists to add
+      goes silently missing for these launchers). (2) **`--accelerator` (GPU) callers**
+      (`launch-ml-training-vm.sh`, `launch-ml-vm.sh`): `lc_gcloud_create`'s fixed 8-positional signature has no
+      accelerator parameter at all — migrating would silently drop GPU provisioning for any `--machine gpu` invocation.
+      Options: (a) fix `lc_verify_setup_script_freshness`/canonicalisation-gate's regexes to also stop at `;` (a small,
+      low-risk change — `[^|,;]+` — since no legitimate metadata value should contain a literal semicolon either) +
+      add an optional 9th `accelerator` positional (or a metadata-embedded convention) to `lc_gcloud_create`, then
+      migrate the 4 held-back launchers; (b) carve GPU-capable and `;`-delimited-metadata launchers out of this
+      migration's scope permanently (document both in `vm-launcher-runbook.md`'s Known Issues, same as the SPOT
+      carve-out would be). **Done when**: the operator states a decision (a/b) in this todo's own reply or the Progress
+      Log below, same closure mechanism as todos 1/2. Repo: unified-trading-pm (decision only — no code in this todo).
+      Source: this plan's own group-B migration (2026-08-16, slot 17).
+
 - [ ] [DOCS] P3. **Correct the source issue doc's stale "large disk / `${BOOT_DISK_SIZE%GB}` extraction" tier (1) —
       measured 0/149 launchers use that pattern.** `lc_gcloud_create`'s `disk_gb` (positional arg 5) is already a plain
       numeric value with no `GB` suffix to strip — a caller passing `"${BOOT_DISK_SIZE:-250GB}"` style would need to
@@ -206,14 +226,50 @@ follow-up batch once the operator rules (see `## Deferred`).
       confirmed unchanged VM name/metadata/labels/service-account; `quality-gates.sh` green (270s). Shipped
       — deployment-service@e766d26445. Repo: deployment-service.
 
-- [ ] [SCRIPT] P2. **Migrate group B (15 launchers) to `lc_gcloud_create`** — same pattern and done-when as group A.
-      Files: `launch-fixtures-truthset-audit-vm.sh`, `launch-funding-ensemble-paper-cron-vm.sh`,
-      `launch-gcs-migration-phase0-calibration.sh`, `launch-kalshi-bulk-seed-vm.sh`, `launch-manifest-recon-all-vm.sh`,
-      `launch-manifest-recon-apply-vm.sh`, `launch-mdps-features-live.sh`,
+- [x] ✅ [SCRIPT] P2. **Migrate group B (10 of the listed 15 launchers) to `lc_gcloud_create` — 5 EXCLUDED, findings not
+      skips.** Migrated (all in `deployment-service/scripts/vm/`): `launch-fixtures-truthset-audit-vm.sh`,
+      `launch-gcs-migration-phase0-calibration.sh`, `launch-kalshi-bulk-seed-vm.sh`, `launch-mdps-features-live.sh`,
       `launch-mdps-odds-horizon-bucket-restamp-vm.sh`, `launch-measure-honest-coverage-vm.sh`,
-      `launch-ml-training-vm.sh`, `launch-ml-vm.sh`, `launch-mtds-gas-fees-fleet-vm.sh`,
-      `launch-mtds-live-cefi-consolidated.sh`, `launch-mtds-live-prediction-consolidated.sh`, `launch-mtds-live.sh`.
-      Repo: deployment-service.
+      `launch-mtds-gas-fees-fleet-vm.sh`, `launch-mtds-live-cefi-consolidated.sh`,
+      `launch-mtds-live-prediction-consolidated.sh`, `launch-mtds-live.sh`. Each replaced its raw
+      `gcloud compute instances create` block with `lc_gcloud_create "$VM_NAME" "$PROJECT" "$ZONE" "$MACHINE_TYPE"
+      "$DISK_GB" "$METADATA_STR" "$LABELS_STR" "$SERVICE_ACCOUNT"`, mirroring `deployment-service@6998cc228`'s pattern
+      (`! DRY_RUN` → `export LC_DRY_RUN` gating, dropped the now-redundant manual `managed-by=deployment-service` label
+      and the unsupported `--boot-disk-type` flag — all 10 already defaulted to `${BOOT_DISK_TYPE:-pd-balanced}`, so
+      dropping it is a no-op per the review todo above's finding, not a regression).
+      **5 EXCLUDED — 3 genuinely new blocking gaps found, none in this plan's or the source issue's tier list**:
+      - `launch-manifest-recon-all-vm.sh` / `launch-manifest-recon-apply-vm.sh`: both build a `;`-delimited
+        `metadata_str` (the `^;^startup-script-url=...;VM_TASK=...` gcloud custom-delimiter form — required because
+        their `VENUES=` value can itself contain commas). `lc_gcloud_create`'s own internal guards —
+        `lc_verify_setup_script_freshness`'s `grep -oE 'startup-script-url=gs://[^|,]+'` and the canonicalisation-gate's
+        `grep -oE 'VM_ASSET_GROUP=[^|,]+'` — only ever stop at `,` or `|`. With no comma anywhere in a `;`-delimited
+        string, both regexes greedily capture to end-of-string instead of just the URL / asset-group value. Traced the
+        downstream effect (read `lc_verify_setup_script_freshness` + `lc_verify_canonicalisation_gate` in
+        `launcher_common.sh`): non-fatal in default mode (both guards degrade to a silent no-op warning rather than
+        blocking the launch — `local_path` doesn't exist → freshness check skips; the canonicalisation-gate marker
+        lookup 404s → warn-mode passes), so the VM would still launch correctly, but the exact protection this whole
+        migration exists to add would be silently absent for these 2 launchers specifically. Migrating them today would
+        make the checkbox lie about what's actually protected.
+      - `launch-ml-training-vm.sh` / `launch-ml-vm.sh`: both support `--machine gpu`, which sets
+        `ACCELERATOR="--accelerator=type=nvidia-tesla-t4,count=1"` on the `gcloud compute instances create` call.
+        `lc_gcloud_create`'s fixed 8-positional-arg signature (`launcher_common.sh:528-611`, re-confirmed via `grep -n
+        accelerator launcher_common.sh` → 0 hits) has no accelerator parameter and no passthrough mechanism — migrating
+        would silently drop GPU provisioning for any `--machine gpu` invocation (misconfigured VM, not a launch
+        failure, so it would go unnoticed until a training run either fails on missing CUDA or silently runs CPU-only).
+      - `launch-funding-ensemble-paper-cron-vm.sh`: hardcodes `--boot-disk-type=pd-ssd` unconditionally (no env/CLI
+        override) — independently found here, then confirmed already flagged by the review todo above's 2026-08-16
+        pd-ssd/pd-standard-tier finding (which separately pinged this task). `lc_gcloud_create` never sets
+        `--boot-disk-type` at all, so migrating would silently downgrade this launcher from its deliberate pd-ssd
+        choice to GCE's bare default.
+      **Done (for the 10 migrated)**: `grep -L lc_gcloud_create <10 files>` returns empty; `bash -n` clean on all 15
+      group-B files (10 migrated + 5 untouched); `--dry-run` smoke on 2 sampled launchers (`launch-fixtures-truthset-
+      audit-vm.sh`, `launch-mtds-live.sh`) confirmed unchanged VM name/metadata/labels/service-account;
+      `quality-gates.sh` green (439s). Shipped — deployment-service@21368ca7af (rebased once onto a concurrent
+      landing before push; QG re-verified green on the rebased SHA — post-push ancestry independently confirmed).
+      The 5 excluded files are unmodified,
+      still raw-`gcloud compute instances create` — carried forward as a new `[OPERATOR]` todo below (accelerator +
+      delimiter gaps) plus the existing pd-ssd/pd-standard todo (which already covers the 3rd file). Repo:
+      deployment-service.
 
 - [ ] [SCRIPT] P2. **Migrate group C (15 launchers) to `lc_gcloud_create`** — same pattern and done-when as group A.
       Files: `launch-perp-clob-live.sh`, `launch-perp-funding-manifest-restamp-vm.sh`,
@@ -265,3 +321,13 @@ exactly what this plan's own rules section says to avoid.
   raw-create" / "45 directly migratable" corpus counts are each off by one real file (148 / 44). Did not correct the
   summary/table numbers here since that risks racing group B/C's own in-flight edits to the same doc; flagging for
   whoever runs todo "Update follow-up + Progress Log" (or a future corpus re-measurement) to fold in.
+- **infra 2026-08-16 (slot 17)**: shipped group B — 10 of the listed 15 files migrated to `lc_gcloud_create`
+  (deployment-service@21368ca7af), QG green (439s), `--dry-run` smoke-verified on 2 sampled launchers. Held back 5:
+  `launch-funding-ensemble-paper-cron-vm.sh` (independently re-confirmed the review todo's pd-ssd finding — already
+  flagged there, no new todo needed for it), plus 2 newly-found gaps not previously documented anywhere in this plan
+  or the source issue — `launch-manifest-recon-all-vm.sh`/`-apply-vm.sh` (their `;`-delimited metadata_str silently
+  defeats `lc_gcloud_create`'s internal freshness/canonicalisation-gate guards via a `[^|,]+` regex that doesn't stop
+  at `;`) and `launch-ml-training-vm.sh`/`launch-ml-vm.sh` (their `--machine gpu` path needs `--accelerator=...`,
+  which the wrapper's fixed positional signature has no way to express). Filed a new `[OPERATOR]` todo for both new
+  gaps rather than silently migrating past them or absorbing a wrapper-code fix into this already-dispatched todo's
+  scope.
