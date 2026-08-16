@@ -140,6 +140,21 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
 
 ## Todos
 
+- [ ] [DATA] P0. **CORRECTION 2026-08-16 (main agent, BLK-050d1304): `sub-d-odum1default` is tier `pro` ($20/mo),
+      NOT `max20` ($200/mo) — verified directly against `agent-orchestrator/data/config/accounts.json` (the
+      authoritative live source; `"tier": "pro", "weekly_msg_limit": 600`). Every table row in this doc that labels
+      `sub-d-odum1default` as `max20` (Progress Log "2026-08-10 — Diagnosis + first calibration pass" and "Re-run of
+      the clean accounts against the corrected denominator") used the $200/mo denominator and is therefore wrong —
+      the multipliers (34.4x/18.4x first pass, 24.1x/35.1x re-run) need recomputing against the Pro denominator
+      (`7/days_in_month x $20`, ~$4.52 for an August window), which raises them roughly 10x, not lowers them. **This
+      may be the same root cause as the "1047x outlier" P1 open in
+      `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`** (that doc independently classifies the same
+      account as Pro and is investigating why its multiplier reads so far outside the max20 band — a mislabeled
+      denominator here would explain an outsized multiplier there too, since both docs are measuring the SAME
+      account's list-value consumption against two different assumed subscription costs). **Done when**: both tables'
+      `sub-d-odum1default` rows are recomputed at the Pro denominator (or struck if superseded by todo 11's
+      exclusion), and someone with both docs open confirms/refutes whether the 1047x outlier and this mislabeling are
+      the same bug.
 - [x] ✅ [BACKEND] P0. **Meter-history sampler SHIPPED — agent-orchestrator@ce3389f.** `account_usage_history` (PK
       `account_id, sampled_at`) plus `snapshot_account_usage_history()` called on every UsagePoller tick, covered by
       `tests/test_account_usage_history.py`. **Cadence verified adequate 2026-08-10**: the poller runs every 30 min
@@ -567,7 +582,7 @@ valued at its standard rate.
 | account            | tier  |   (A) |   (B) | published band        |
 | ------------------ | ----- | ----: | ----: | --------------------- |
 | sub-c-ikenna-odum  | max20 | 46.0x |  4.7x | 6-10x                 |
-| sub-d-odum1default | max20 | 34.4x | 18.4x | 6-10x                 |
+| sub-d-odum1default | **max20 (WRONG — see 2026-08-16 correction todo, actual tier is pro)** | 34.4x | 18.4x | 6-10x                 |
 | sub-f-odum2default | max20 | 22.4x | 23.0x | 6-10x                 |
 | sub-e-odum3default | max20 |  7.7x |  3.5x | 6-10x                 |
 | sub-a-ikenna       | pro   |  107x | 63.8x | 3-6x (excluded — Pro) |
@@ -645,7 +660,7 @@ Sonnet-5 promotion (the correct valuation for an August window):
 | account            | list value (promo) | multiplier |             at standard rates |
 | ------------------ | -----------------: | ---------: | ----------------------------: |
 | sub-c-ikenna-odum  |          $1,455.53 |      32.2x |                         46.9x |
-| sub-d-odum1default |          $1,088.19 |      24.1x |                         35.1x |
+| sub-d-odum1default (**WRONG denominator — actual tier is pro, see 2026-08-16 correction todo; multiplier needs recomputing at ~$4.52 not ~$45.16**) |          $1,088.19 |      24.1x |                         35.1x |
 | sub-f-odum2default |            $699.73 |      15.5x |                         22.8x |
 | sub-e-odum3default |            $274.89 |       6.1x | 7.8x (excluded — capture era) |
 
