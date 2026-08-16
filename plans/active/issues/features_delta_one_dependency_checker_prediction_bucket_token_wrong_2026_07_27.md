@@ -303,6 +303,20 @@ four now route through the one helper.
      `gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-prediction-20260816-012950-eadb84/{run.log,EXIT_STATUS}`
      via `unified_trading_library`'s `gcs_describe_object`/`download_from_storage` (never `gsutil`/`gcloud` CLI directly
      — QG-banned) — before relaunching anything; it may have completed or OOM'd by the time this is read.
+- **2026-08-16 (slot-14, data_engineering craft, continued) — monitored the still-RUNNING 2-day-window VM; NOT yet
+  terminal, no relaunch needed.** Checked `features-e2e-prediction-20260816-012950-eadb84`'s live `EXIT_STATUS`/`run.log`
+  (via `gcs_describe_object`/`download_from_storage`, never `gsutil`/`gcloud`) repeatedly over ~50min of this session
+  (01:29:50 VM launch → checks spanning 03:10 through 04:19 UTC, i.e. ~1h40m-2h50m elapsed): `EXIT_STATUS` stayed
+  `RUNNING` throughout, and `run.log` grew monotonically the entire time (20.87MB → 21... → 24.76MB → 25.08MB → 25.75MB →
+  25.92MB → 26.28MB → 26.43MB → 26.90MB → 27.13MB), confirming genuine ongoing compute (`Wrote N/2 daily partitions for
+  KALSHI:PREDICTION_MARKET:...` lines present), not a hang. **New data point for the OOM follow-up below**: this run has
+  now run ~2h46m and reached 27MB+ without OOMing, well past the 9-day window's `exit_code=137` at ~63min/28MB —
+  reinforces (still not fully confirmed) that the OOM is driven by the day-window size, not raw log volume or the
+  ~575-instrument universe alone. **Backgrounding note**: `run_in_background` Bash calls in this session's environment
+  were killed near-instantly (zero output) on two separate attempts (a 4h loop and a 25min loop, both with unbuffered
+  output) — polling was done instead via bounded foreground `sleep`+check loops inside single Bash calls. Ending this
+  session's monitoring here (open-ended remaining duration, unknown total) rather than blocking indefinitely — task
+  handed back to the queue (`GATED`, not done) for a resuming session to check live state first per the note above.
 
 ## Follow-ups
 
