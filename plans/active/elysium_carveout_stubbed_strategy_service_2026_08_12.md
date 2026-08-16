@@ -149,8 +149,11 @@ in production** (Elysium plan § H.12), so stubbing the remainder is continuing 
       the point. This supersedes the earlier instinct in § B to narrow it; the correct fix for "don't hit `KeyError` on
       an advertised name" is a stub that fails informatively, saying this archetype is not part of this package.
 - [x] [AGENT] P2. ✅ **RULED 2026-08-16: collateral/margin eligibility for the two carry archetypes freezes, same
-      treatment as `UniverseService`.** A cross-repo extraction audit (strategy-service's
-      `EXTRACTION_AUDIT.md`, "UAC" and "Updated overall picture" sections) traced this precisely: `staked_basis.py`'s
+      treatment as `UniverseService`.** A cross-repo extraction audit traced this precisely (the audit's cited source
+      doc, strategy-service's `EXTRACTION_AUDIT.md`, does not exist anywhere in the repo — working tree or git history,
+      confirmed 2026-08-16, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log; the dependent
+      claim held up on independent spot-check: `staked_basis.py:119-121,361-369` does call
+      `accepted_perp_collateral`/`get_collateral_haircut`/`venue_accepts_collateral`): `staked_basis.py`'s
       per-tick structure derivation (`LST_AS_MARGIN` vs `USDC_MARGIN_BUFFERED`) calls UAC's live
       `accepted_perp_collateral`/`get_collateral_haircut`/`venue_accepts_collateral` — distinct from and in addition to
       `UniverseService`'s own already-frozen ADV/eligibility filtering at line 101-103 above. Freezing this too (ship the
@@ -269,12 +272,14 @@ these gate readiness to carve, not the carve-out's own content.
       has fleet-wide blast radius, not a local one. Both approaches are now wanted together, not compared as
       alternatives — this raises total pre-ship scope above what §A2's "well-bounded" note assumed when it was
       written, and is worth the operator seeing stated plainly rather than absorbed silently.
-- [ ] [AGENT] P2. **Drop the remaining dead `EXTRACTION_AUDIT.md` citations in this plan** (lines ~153, ~301, ~362 as
-      of 2026-08-16) — the file does not exist anywhere in strategy-service (working tree or git history; confirmed
-      2026-08-16, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log). One occurrence (the
-      §A5 P0 prerequisite above) is already fixed. Spot-check each dependent claim against the actual code before
-      rewriting its citation, the way the fixed occurrence and the child plan's Layer-3/Layer-1 claims were — don't
-      just strip the file name and leave an unverified claim standing.
+- [x] [AGENT] P2. ✅ **Dropped the remaining dead `EXTRACTION_AUDIT.md` citations in this plan** — all 4 remaining
+      occurrences (§A2 ruling ~line 151, wizard-correction ~line 306, Progress Log ~line 367, plus the §A5 P0
+      prerequisite fixed earlier) now state the file does not exist anywhere in strategy-service (working tree or git
+      history; confirmed 2026-08-16, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log).
+      Each dependent claim was spot-checked against the actual code before rewriting its citation, not just
+      stripped: `staked_basis.py:119-121,361-369` does call `accepted_perp_collateral`/`get_collateral_haircut`/
+      `venue_accepts_collateral` (§A2 claim confirmed); `restriction_profile_router.py` is confirmed exactly 153
+      lines (wizard-correction claim confirmed). Both held up independently of the missing source doc.
 
 ## B. What the expansion adds, and therefore what the carve-out must account for
 
@@ -304,7 +309,9 @@ different capability rather than the same one withheld.
 - [ ] [AGENT] P2. **State the distinction in §04's resolution table** so `PortfolioRiskService` being a stub is not read
       as "no risk management" — local guard-rails and overlays ship; cross-client portfolio governance does not.
 - [x] [AGENT] P2. ✅ **CORRECTED 2026-08-16 — the wizard doesn't live in strategy-service, and its real
-      restriction graph isn't wizard-specific.** Per the extraction audit (strategy-service's `EXTRACTION_AUDIT.md`):
+      restriction graph isn't wizard-specific.** Per the extraction audit — the cited source doc, strategy-service's
+      `EXTRACTION_AUDIT.md`, does not exist anywhere in the repo (working tree or git history, confirmed 2026-08-16);
+      the dependent claim held up on spot-check (`restriction_profile_router.py` confirmed 153 lines) —:
       the interactive wizard's UI is in `unified-trading-system-ui`, its manifest generator in `unified-trading-pm`,
       and the real restriction GRAPH (`capability_manifest.py`) in UAC. The only wizard-adjacent code in
       strategy-service is a 153-line router (`api/restriction_profile_router.py`) resolving persona/demo-account UI
@@ -365,8 +372,10 @@ The reduced implementation is a fact about the package. Let the fact do the work
   beneath it is static, mock or inert. Flagged the book-level-overlay resolution as the most consequential open
   decision, since it determines whether the carved strategy has a working risk profile or an un-overlaid one.
 - **2026-08-16** — Interactive session ran a full cross-repo extraction audit ahead of a docs-cleanup pass on
-  strategy-service (full writeup: strategy-service's `EXTRACTION_AUDIT.md`, internal-only, excluded from any external
-  copy). Measured, not assumed: capability wizard is NOT in strategy-service and the plan's "backing restriction graph
+  strategy-service (writeup cited at the time as strategy-service's `EXTRACTION_AUDIT.md`, internal-only — that file
+  does not exist anywhere in the repo, working tree or git history, confirmed 2026-08-16; the claims below held up on
+  independent spot-check anyway, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log). Measured,
+  not assumed: capability wizard is NOT in strategy-service and the plan's "backing restriction graph
   is exactly the reconciliation IP withheld" framing (§B above) overstates a 153-line UI feature-gate router that calls
   no venue/collateral registry — trivial to stub. SIT has zero coupling to `factory.py`'s registry either way.
   Deployment-api/-service/-ui and the PM repo have zero code coupling — pure CI/tooling a client replaces with their
