@@ -324,3 +324,12 @@ shipments remain genuinely blocked on OTHER sessions' state, not on anything thi
 No further ship attempts will be made until a fresh check shows both `unified-trading-library` AND
 `unified-api-contracts` clean (or their respective owning sessions land their own work). Next resume: re-run the same
 mtime check on all three blocker paths before retrying the ship scripts -- do not loop-retry on unchanged state.
+
+**2026-08-16 ~13:20 re-check**: `unified-trading-library` is now fully clean (its CI-workflow diff landed/resolved
+upstream) -- that blocker is CLEARED. Re-ran both ship scripts; MTDS's pre-flight now only fails on
+`unified-api-contracts` (deployment-service is now clean too, so deployment-api's pre-flight also only fails on
+`unified-api-contracts`). Checked `flatten.py`'s mtime immediately after: 13:20:25, i.e. ~23s before the check --
+that session is STILL genuinely live (touched again during this exact 33-minute window), not abandoned. Continuing to
+back off rather than retry against a target that keeps moving. Both shipments remain blocked on this one external,
+unrelated, actively-in-progress WIP. Scheduling a longer re-check (60 min) instead of another 30-minute cycle, since
+30 minutes wasn't enough for that session to land.
