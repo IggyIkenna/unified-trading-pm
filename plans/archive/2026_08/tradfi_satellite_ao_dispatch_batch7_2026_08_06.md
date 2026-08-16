@@ -83,6 +83,10 @@ context_scope:
 
 # TradFi satellite AO batch 7 — fresh audit extraction
 
+> **ARCHIVED 2026-08-16 — COMPLETE.** All 4 todos shipped (last 2026-08-09); reconciled + archived by
+> `tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md` (plan_reconciler, tranche=tradfi, agt-a74a6a). See that
+> doc's Progress Log for the reconciliation record.
+
 > **Status: active — operator-approved 2026-08-06, dispatching.** Per the ag-closeout-audit skill's autonomous-mode
 > contract, a freshly-drafted batch always ships `status: draft` regardless of how clean the conflict-check came back;
 > flipping to `active` to actually dispatch it is an operator decision, never autonomous.
