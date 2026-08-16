@@ -307,3 +307,12 @@ The operator supplied a SECOND key, stored as a new GSM version. Real results, m
 **Net state**: NVIDIA connectivity/auth is now proven working (llama + diffusiongemma both returned real 200s on
 the second key); `gemma-4-31b-it` specifically remains unconfirmed live and needs its own follow-up rather than
 being assumed broken or working either way.
+
+**Kimi real wallet baseline (operator screenshot, `platform.kimi.ai/console/account`, 2026-08-16)**: Total Recharge
+$10.00000 + Voucher Amount $5.00000 = $15 credited, Available Balance $14.99978, Total Consumption $0.00022 —
+confirms the reasoning-token smoke test above cost a trivial, expected amount (not a cost problem — the earlier
+flag was about the empty visible-content response, not spend). **Corrects a research-pass claim**: the earlier
+finding that "the promotional bonus period appears to have already lapsed" is wrong — a real $5 voucher was
+granted on this real recharge. Real dashboard numbers beat the secondary-sourced guess; this $15/$14.99978/$0.00022
+triple is the real baseline for a future Moonshot wallet-reconciliation mechanism (same shape as
+`compute_deepseek_wallet_reconciliation()`), once that todo is reached.
