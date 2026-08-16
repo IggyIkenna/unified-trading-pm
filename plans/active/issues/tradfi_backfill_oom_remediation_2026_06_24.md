@@ -425,7 +425,7 @@ except-handler's cleanup `close()` call retried the SAME failing flush and raise
   exactly 900/900 lines after extracting the buffer logic into a new `coalesced_flush.py` module). Shipped:
   `market-tick-data-service@c5152776`.
 
-- [ ] [DATA] P3. MDPS's own candle-writer
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-4, data_engineering)** — MDPS's own candle-writer
       (`market-data-processing-service/market_data_processing_service/app/core/canonical_writer_streaming.py`) uses the
       same UTL `StreamingParquetWriter` one-file-per-instrument shape as MTDS's raw-tick writer — the SAME pyarrow
       `write_table()` fixed-per-call-overhead mechanism this todo diagnosed could in principle apply there too. No
@@ -434,6 +434,38 @@ except-handler's cleanup `close()` call retried the SAME failing flush and raise
       similar OOM/high-allocation-count signature (grep DP_VM_STALL/DP_VM_EXIT_NONZERO escalations + serial-console
       OOM-kill logs for MDPS candle-build VMs); if yes, scope a separate MDPS-side coalescing todo mirroring this one's
       approach. Target repo: `market-data-processing-service`.
+
+      **Verdict: NO — no confirmed OOM/high-allocation-count signature matching MTDS's mechanism found; no new todo
+      scoped.** Swept `unified-trading-pm/plans/` (`grep -rli` for `DP_VM_STALL`/`DP_VM_EXIT_NONZERO` + `OOM` cross-
+      referenced against `mdps`/`candle`) and every recent MDPS-candle-build-VM exit escalation
+      (`mdps-tradfi-*`/`mdps-cefi-*`/`mdps-defi-*`/`mdps-sports-*` launched via
+      `deployment-service/scripts/vm/launch-mdps-build-continuous-vm.sh` + siblings). Findings:
+      - Every 2026-08-14/15/16 `dp_vm_001_mdps_*_exit_nonzero_*` doc is **explicitly non-OOM** (`exit_code=1`, doc's own
+        words "not 137/OOM") — root causes are a single-date subprocess hang/timeout, a tarball cross-repo import race,
+        a `CONSOLIDATOR_LOCK_TTL_SECONDS` vs staleness-budget mismatch, and staleness-guard races under a concurrent
+        multi-year fleet — none touch the write path at all.
+      - The two real MDPS OOM incidents found (`exit_code=137`) are BOTH a different mechanism: (1)
+        `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` — a Cloud Run recon job's manifest read/merge path,
+        unrelated to `canonical_writer_streaming.py`; (2) `mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md` —
+        `reprocess_sports_odds.py --full` mode's manifest **pre-flight read** (`read_availability_index()` full-schema
+        reload under a 16-worker `ThreadPoolExecutor`), also not the candle-write path.
+      - `mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md` (archived, resolved) is the closest-sounding
+        candidate — 11-22GB RSS building candles for ONE HYPERLIQUID instrument/day — but its confirmed root cause
+        (quiet-host rerun) was a **READ**-side full-file load (`_read_tick_data` at `live_workers.py:489`, no
+        predicate pushdown), already fixed (`market-data-processing-service@4f2b99e`); the archived doc's own banner
+        states this explicitly. Not the pyarrow `write_table()` fan-out mechanism.
+      - **Architecturally MDPS doesn't share the specific fan-out shape that caused MTDS's OOM either**: read
+        `_streaming_write_per_tf`/`_streaming_write_one_group` (`live_workers_streaming.py:416-821`) end-to-end —
+        MDPS writes ONE timeframe at a time (`for tf in sorted_tfs`), and within a timeframe ONE
+        `(instrument_type)` group at a time, with `_streaming_write_one_group` opening exactly one
+        `StreamingParquetWriter` via `open_candle_streaming_writer`, writing its batches, and closing it before the
+        next group/tf is processed. This is the opposite of MTDS's `PartitionedTickWriter`, which holds up to ~516
+        per-symbol `pq.ParquetWriter` instances open CONCURRENTLY across a whole day's `write_chunk()` calls (the
+        actual memray-confirmed root cause of MTDS's `write_table()` fixed-per-call-overhead amplification). MDPS
+        never accumulates that many simultaneously-open writers, so the specific mechanism this todo diagnosed does
+        not transfer even in principle, independent of the absence of a confirmed incident.
+      No code change — negative-result investigation per this todo's own "if yes, scope..." gate; the gate did not
+      fire. Target repo: `market-data-processing-service` (read-only this session).
 
 ## 2026-07-31 finding — false-positive stall-kill on `tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-*` (DP-VM-001, THIRD distinct mechanism, NOT OOM, NOT the consolidator-lock-wait class — root cause not yet isolated)
 
@@ -560,3 +592,11 @@ dates, so no wasted duplicate work from the relaunch.
 - **context-scout 2026-08-06**: re-scouted; the `mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`
   entry had since been archived (now under `plans/archive/2026_08/`) — repointed to its new path, all other 5 entries
   re-verified unchanged (6 entries total).
+- **slot-4 2026-08-16 (data_engineering)**: closed the final P3 "MDPS candle-writer" todo — negative-result
+  investigation, gate did not fire. No confirmed OOM/high-allocation-count signature matching MTDS's pyarrow
+  `write_table()` fan-out mechanism for MDPS's candle-derivation path; the closest candidate
+  (`mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md`) root-caused to an unrelated READ-side full-file
+  load, already fixed. Additionally confirmed architecturally that MDPS never holds many per-symbol writers open
+  concurrently the way MTDS's `PartitionedTickWriter` did (one writer opened/written/closed per timeframe×type group,
+  sequentially), so the mechanism doesn't transfer even in principle. No code change; all `[ ]` todos in this doc are
+  now closed.
