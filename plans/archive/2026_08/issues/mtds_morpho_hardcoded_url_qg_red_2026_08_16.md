@@ -7,8 +7,7 @@ summary: >-
   because of a pre-existing hardcoded URL literal in
   market_tick_data_service/cli/handlers/_oracle_prices_constants.py, unrelated
   to the diff that hit it.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -22,13 +21,18 @@ source: pacifica_solana_canonical_mechanism_unconfirmed_2026_08_15_task_ecf1bbeb
 parent_epic: defi_master
 related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-16
-resolved_by:
+resolved_by: "slot-23 (data_engineering) — market-tick-data-service@8b0cedce63"
 locked_by:
 drift_direction: advance-code
 depends_on: []
 ---
 
 # MTDS quickmerge RED — hardcoded blue-api.morpho.org URL
+
+> **📦 ARCHIVED 2026-08-16 — resolved.** The single tracked todo is done and verified: the hardcoded
+> `_MORPHO_BLUE_API_URL` literal now derives via `get_evm_protocol_rest_url("morpho")` from
+> `unified_api_contracts.registry` (market-tick-data-service@8b0cedce63). `no_hardcoded_venue_urls.sh` verified passing;
+> `quality-gates.sh` green on the shipped SHA.
 
 ## What I found
 
