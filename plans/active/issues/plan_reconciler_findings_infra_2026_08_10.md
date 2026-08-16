@@ -228,33 +228,34 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       `§ "The rule"`, dropped the undefined "finding W" phrasing. Shipped via
       `infra_satellite_ao_dispatch_batch16_2026_08_13.md` (reconciled here 2026-08-15, source doc's own checkbox had
       gone stale).
-- [ ] [INFRA] P2. **`unified-trading-ci` slot-6 clone has a foreign unpushed commit + a branch-tracking
-      misconfiguration** (found incidentally during a 2026-08-10 pre-compact re-audit, outside this doc's PM-corpus
-      scope — noted here rather than lost). `git log origin/main..HEAD` in the slot-6 `unified-trading-ci` checkout
-      shows 1 unpushed commit, sha `369a96d6a3`, authored `ikennaigboaka [slot-4·planning]` at 2026-08-10T05:36:11Z
-      ("fix(lint): resolve shellcheck findings in major-bump-issue-handler.yml") — **not this session's commit** (slot
-      6, not 4); left untouched per the multi-agent-safety rule against acting on another slot's unpushed work without
-      confirming liveness/intent. Separately, `git status --branch` on that checkout reports
-      `main...origin/live-defi-rollout` as the tracking ref — wrong (should track `origin/main`); plausibly because
-      `unified-trading-ci` is a brand-new repo (extracted 2026-08-06 per
-      `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md`) whose per-slot worktree setup may not
-      have run `setup-tab-worktrees.sh`'s normal tracking-branch step consistently across slots yet. Needs: (1) confirm
-      slot-4 liveness and either let them push it or recover it if the slot is dead, (2) audit whether OTHER slots'
-      `unified-trading-ci` clones have the same tracking misconfig, (3) fix at the root (worktree setup script) if
-      systemic. Whoever owns `unified-trading-ci`/worktree infra, not this tranche.
+- [ ] [INFRA] P2. **`unified-trading-ci` branch-tracking misconfiguration — re-verified 2026-08-16 (plan_reconciler
+      Phase -1), STILL PRESENT and looks WORSE than originally scoped, real work remains.** The originally-cited
+      commit `369a96d6a3` (slot-4) is now confirmed reachable on `origin/main`
+      (`git branch -a --contains 369a96d6a3` lists `remotes/origin/main`) — **that specific unpushed-commit finding is
+      RESOLVED**, it landed. But the tracking misconfiguration itself is confirmed STILL LIVE in this same slot's
+      `unified-trading-ci` clone (`git status --branch --short` → `## main...origin/live-defi-rollout`, still wrong —
+      should track `origin/main`), and a fresh `git log origin/main..HEAD` now shows **6 commits** on local `main` not
+      reachable from `origin/main` (incl. `799f0f3 chore: merge origin/main into live-defi-rollout...`), which reads
+      as this checkout's local `main` branch having absorbed live-defi-rollout-scoped work — a bigger version of the
+      same root problem, not a new one. **Deliberately NOT touched by this pass**: this is another repo's branch state
+      or a checkout none of this session's own commits went through, and per the multi-agent-safety rule against
+      acting on unfamiliar/foreign git state without confirming ownership/intent, editing it blind risks real damage.
+      Needs: (1) confirm whether this slot's `unified-trading-ci` local `main` branch is actively used by anyone (if
+      not, the 6 "unpushed" commits may just be tracking-config confusion, not at-risk work), (2) audit whether OTHER
+      slots' `unified-trading-ci` clones have the same tracking misconfig, (3) fix at the root (worktree setup script)
+      if systemic. Whoever owns `unified-trading-ci`/worktree infra, not this tranche.
 
 ## Archive candidates (operator review)
 
-1. `infra_satellite_ao_dispatch_batch7_2026_08_04.md` — all 3 todos `[x]` HARD-evidenced, unlocked, archive-ready. **NOT
-   archived this run**: 3 of 5 referrers (`infra_satellite_ao_dispatch_batch11_2026_08_09.md`,
-   `ag_closeout_audit_infra_parked_2026_08_04.md`, `..._08_06.md`) are inside today's 12h grace window — archiving now
-   would leave leading-slash references dangling in docs this run cannot write. Its finalize twin's own todo 3 ("archive
-   batch7") is correctly still open pending this.
+1. `infra_satellite_ao_dispatch_batch7_2026_08_04.md` — **✅ RESOLVED (archived, verified 2026-08-16 by plan_reconciler
+   Phase -1)**: confirmed at `plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md` — a later session
+   completed the archival once the grace-locked referrers cleared, as this doc's own "Recommended next item" anticipated.
 2. `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`,
-   `ag_closeout_audit_infra_parked_2026_08_01.md`, `ag_closeout_audit_infra_parked_2026_08_07.md` — all 3 now
-   0-open-todos, unlocked, `archive_exempt: true` set this run with a Progress Log reason (same grace-locked-referrer
-   blocker as #1). All 3 should complete the 6-step archival ritual once their respective referrer docs clear grace
-   (roughly: 12-24h from this run's timestamp, 2026-08-10 ~06:00 UTC).
+   `ag_closeout_audit_infra_parked_2026_08_01.md`, `ag_closeout_audit_infra_parked_2026_08_07.md` — **✅ RESOLVED
+   (all 3 archived, verified 2026-08-16 by plan_reconciler Phase -1)**: confirmed at
+   `plans/archive/2026_08/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`,
+   `plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_01.md`,
+   `plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md`.
 
 ## Refuted (dropped by verify)
 
@@ -293,9 +294,9 @@ of the 42 writable docs was read and assessed by a hunter this run.
 
 | Item                                                                                                      | State / why deferred                                                                                        | Blocked on                                                  |
 | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + its finalize's todo 3                        | **Cannot be done yet** — all 3 todos done, ready, but 3 of 5 referrers are inside today's 12h grace window  | Time — referrer docs clearing grace (~12-24h from this run) |
-| Archive `na_eligibility_hash_blind_...2026_08_09.md`, `ag_closeout_audit_infra_parked_2026_08_{01,07}.md` | **Cannot be done yet** — same grace-locked-referrer blocker; `archive_exempt: true` bridge already applied  | Time — referrer docs clearing grace                         |
-| Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md` stale Deferred-work table + finalize summary | **Not done** — genuinely fixable, no blocker, just not this run's scope (meta-tagged, adjacent)             | Nobody — pick it up any time                                |
+| Archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + its finalize's todo 3                        | **Done** — archived by a later session, verified 2026-08-16 (plan_reconciler Phase -1)                      | Nobody — completed                                           |
+| Archive `na_eligibility_hash_blind_...2026_08_09.md`, `ag_closeout_audit_infra_parked_2026_08_{01,07}.md` | **Done** — all 3 archived by a later session, verified 2026-08-16 (plan_reconciler Phase -1)                | Nobody — completed                                           |
+| Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md` stale Deferred-work table + finalize summary | **Done** — per this doc's own "Filed" section item 1 (DONE 2026-08-10, `unified-trading-pm@2828e0e230`); this row itself was the stale one, corrected 2026-08-16 (plan_reconciler Phase -1) | Nobody — completed                                           |
 | Re-count `defi_compute_gcp_migration_2026_08_08.md` off-by-one todo citations                             | **Not done** — real work, deliberately deferred to avoid a rushed second error                              | Nobody — pick it up any time                                |
 | Re-verify MDPS/instruments-service DELETE-half on `codex_vs_repo_docs_ssot_audit_2026_06_01.md`           | **Done** — 2026-08-14 (slot 11): live `git ls-files` check found all 7 DELETE-class docs absent; refuted    | Nobody — completed                                          |
 | `vm-launcher-runbook.md` missing freshness-gap incident                                                   | **Not done** — needs an editorial scope/placement decision, exceeds the mechanical carve-out                | Whoever owns that runbook's editorial scope                 |
@@ -400,3 +401,13 @@ referrer docs' commit ages first and complete the 6-step ritual if clear.
   (`status: active`, `last_updated: 2026-08-10`, added both plans to `related:`), replaced archival banner with revival
   note. Findings doc Deferred-work table updated — both operator-owned rows now Done. PM repo clean, committing +
   pushing this turn.
+- **2026-08-16 (plan_reconciler Phase -1 reconciliation of this doc + 2 sibling findings docs)** — RESOLVED: both
+  Archive-candidates entries (4 docs total: `infra_satellite_ao_dispatch_batch7` + `na_eligibility_hash_blind_...` +
+  `ag_closeout_audit_infra_parked_2026_08_{01,07}`) confirmed archived by a later session (`plans/archive/2026_08/...`,
+  live `find` check); the internal Deferred-work-table contradiction (row 3 said "Not done" while the Filed section
+  already said "DONE 2026-08-10") corrected — the table was the stale side. STILL OPEN, real work: the
+  `unified-trading-ci` finding — the originally-cited unpushed commit `369a96d6a3` is now confirmed landed on
+  `origin/main`, but the branch-tracking misconfiguration is confirmed still live and a fresh check found 6 commits on
+  local `main` unreachable from `origin/main` (bigger than originally scoped) — deliberately left untouched, foreign
+  repo/branch state this pass cannot safely act on blind. Doc stays `status: open` (1 genuine open todo remains) — not
+  archived.
