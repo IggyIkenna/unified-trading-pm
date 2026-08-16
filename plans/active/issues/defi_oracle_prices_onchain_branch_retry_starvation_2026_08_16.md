@@ -173,24 +173,31 @@ staged).
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. **Investigate the ~300-330s background-process-death mechanism**
-      (item 2 above) as a standing platform issue, not just this escalation's blocker: if
-      Bash-tool-launched detached processes in an agent session are hard-capped at ~5-5.5
-      minutes regardless of nohup/setsid/disown, ANY multi-minute shell command (not just
-      MTDS's QG) is at risk fleet-wide. Confirm whether this is deliberate (a
-      session/container lifecycle policy) or a bug, and if deliberate, whether long QG runs
-      need a different execution surface (e.g., dispatch to a VM, per
-      `/codex/05-infrastructure/vm-launcher-runbook.md`, rather than an interactive slot's
-      Bash tool).
-- [ ] [OPERATOR] P1. **Investigate item 6 — MTDS `pytest -n 1` mass per-test `E` from test 1
-      under DEFAULT config (no env overrides)**, distinct from and more severe than item 1:
-      this looks like it could be a standing, currently-broken MTDS test-environment fault
-      (not this session's tuning), which would silently poison EVERY worker's QG attempt on
-      this repo, not just DP-FETCH-009's ship. Recommend a clean, uncontended, single-worker
-      `bash scripts/quality-gates.sh --no-fix` run to completion (do not kill it early) to
-      capture the actual exception from pytest's own error summary — this session killed its
-      only default-config repro at 238s/60% to free the governor slot, before the traceback
-      printed.
+- [x] ✅ [OPERATOR] P1. **~~Investigate the ~300-330s background-process-death
+      mechanism~~ — RESOLVED, not a mystery.** `journalctl` around the death timestamp
+      (08:53:36-38) shows `orphan_reap sweep: slot 5 pid <N> age=315-318s KILLED` — this is
+      the exact, already-documented anti-pattern in
+      `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`:
+      `nohup cmd & echo $!` / `setsid nohup ... & disown` inside a Bash-tool call detaches the
+      real process from the tracked session tree, so `agent-orchestrator/server/orphan_reap.py`
+      classifies it as an orphan and SIGKILLs it ~300-355s later — exactly the technique this
+      session used for every ship attempt (see item 2 above, all three variants tried are the
+      exact anti-pattern). Not deliberate, not a session/container hard cap, not RAM/CPU
+      pressure — a liveness-tracking gap for intentionally-detached children of a live worker
+      shell. Fix (already shipped in `worker.md` per the referenced doc): launch the actual
+      long-running command directly via the Bash tool's native `run_in_background: true`
+      parameter, with no `nohup`/`&`/`setsid`/`disown` wrapper — the harness's own
+      backgrounding keeps the process correctly parented so `orphan_reap` doesn't reap it.
+- [x] ✅ [SCRIPT] P1. **~~Investigate item 6~~ — reclassified, now self-actionable (was
+      wrongly marked OPERATOR-only).** With item 1's death mechanism identified as
+      `orphan_reap` reaping a `nohup`-detached process (not a hard session cap), a clean run
+      no longer requires operator infra changes — it requires this session to stop using
+      `nohup`/`setsid`/`disown` and launch `bash scripts/quality-gates.sh --no-fix` directly
+      via the Bash tool's native `run_in_background: true`. Retrying now on that basis; see
+      Progress Log for the outcome. If the mass-`E` pattern persists under a run that
+      genuinely survives past 315s uninterrupted, that confirms it as a real, independent
+      MTDS test-environment fault (not a truncation artifact) and this reopens as `[CODE] P1`
+      against MTDS itself.
 - [ ] [CODE] P1. **Ship `market-tick-data-service@f122c610` (or its rebased equivalent) via
       `quickmerge --agent --files 'market_tick_data_service/cli/handlers/_oracle_prices_freshness.py
       tests/unit/test_oracle_prices_handler_skip.py'`** once MTDS's QG-governor slot has a
