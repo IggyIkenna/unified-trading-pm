@@ -24,7 +24,7 @@ tags: [data-correctness, ml, strategy, manifest-completeness, orphan-real, hones
 related:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md,
+    /plans/archive/2026_08/issues/features_service_manifest_coverage_gap_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-08-03"

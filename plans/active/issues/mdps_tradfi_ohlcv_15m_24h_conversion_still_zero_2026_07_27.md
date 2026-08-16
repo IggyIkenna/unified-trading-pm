@@ -372,16 +372,43 @@ exists. Neither finding was on any tracked plan before this verification pass.
           handling), depending on which direction is chosen. Evidence: `mdps-backfill-tradfi-20260803-104812` run.log,
           432 `No SchemaContract registered ... instrument_type='COMBO'` lines across `ohlcv_15m`+`ohlcv_24h`.
 
-- [ ] [DATA] P3. **SPLIT 2026-08-12 (/plan-reconcile) — was one todo bundling a ready-vs-blocked pair with different
-      gating; split into this ETF half + the OPTION half below.** `instrument_type=ETF` (52 errors, 2026-08-03 re-run)
-      has **ZERO SchemaContract coverage at ANY timeframe** in
-      `unified_api_contracts.internal.schemas._candle_contracts` (not even the raw `ohlcv_1m`/`ohlcv_1s` pass-through
-      other instrument_types get in `contracts.py`), despite
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot 5, data_engineering) — `unified-api-contracts@0228afe52a`.** SPLIT
+      2026-08-12 (/plan-reconcile) — was one todo bundling a ready-vs-blocked pair with different gating; split into
+      this ETF half + the OPTION half below. `instrument_type=ETF` (52 errors, 2026-08-03 re-run) had **ZERO
+      SchemaContract coverage at ANY timeframe** in `unified_api_contracts.internal.schemas._candle_contracts` (not
+      even the raw `ohlcv_1m`/`ohlcv_1s` pass-through other instrument_types get in `contracts.py`), despite
       `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("tradfi","etf")]` explicitly listing `ohlcv_1m`/`ohlcv_15m`/
       `ohlcv_24h`/`trades`/`tbbo`/`mbp_10` as valid (MVP TradFi scope per workspace CLAUDE.md: BlackRock spot ETFs
-      IBIT/ETHA on NASDAQ) — so unlike the combo/futures_chain finding above, ETF genuinely NEEDS registration, it's not
-      a policy conflict. Genuinely gated: ETF needs a real schema-shape decision (same per-instrument shape as
-      `future`/`equity`, or its own) before registering — an open design question, not yet a same-turn mechanical fix.
+      IBIT/ETHA on NASDAQ) — so unlike the combo/futures_chain finding above, ETF genuinely NEEDS registration, it's
+      not a policy conflict.
+
+      **Schema-shape decision resolved: mirror `equity`, not `future`.** ETF trades on the same consolidated
+      NASDAQ/NYSE tape as equity (`VENUE_INSTRUMENT_TYPES`: both `"NASDAQ"`/`"NYSE"` carry `{"equity","etf"}`), not
+      CME. Found `ohlcv_15m`/`ohlcv_24h` re-aggregated coverage for ETF was ALREADY shipped 2026-08-10
+      (`unified-api-contracts@2fbe8278`, slot-21, `fix(uac): register ETF + futures_chain SchemaContract coverage`) —
+      that closed the exact 52-error evidence cited below. The remaining gap was the BASE grains
+      (`ohlcv_1m`/`trades`) that `future`/`equity` get as Databento pass-throughs in `contracts.py` but ETF never had.
+      Added `TRADFI_ETF_TRADES`/`TRADFI_ETF_OHLCV_1M` (byte-identical column shape to `TRADFI_EQUITY_TRADES`/
+      `TRADFI_EQUITY_OHLCV_1M`) + `CONTRACT_REGISTRY` entries for `("tradfi","etf","trades")`/
+      `("tradfi","etf","ohlcv_1m")`. Deliberately did NOT register `ohlcv_1s`/`tbbo`/`mbp_10` for ETF — `equity`
+      itself has no contract for those grains either (Databento's DBEQ.BASIC equities dataset doesn't emit them), and
+      there is no live-captured-row evidence for ETF at those grains — registering ahead of evidence would be
+      speculative, mirroring this doc's own combo/futures_chain "avoid over-fanning cells the writer never captures"
+      precedent.
+
+      6 new/extended regression tests in `test_mdps_candle_contracts.py`: `test_tradfi_etf_ohlcv_1m_registered`,
+      `test_tradfi_etf_trades_registered`, `test_tradfi_etf_higher_timeframes` (parametrized over
+      `MDPS_TIMEFRAMES_TRADFI_RE_AGGREGATED`), plus `"etf"` added to `test_tradfi_ohlcv_24h_alias_resolves`'s
+      parametrize list and to `test_every_candle_contract_has_timeframe_column`'s pre-existing-pass-through allowlist
+      (that G7 test failed until `etf` was added alongside `future`/`equity` — same shape, same exemption reason).
+      Full `quality-gates.sh` green (13,231 passed), verified ancestor of `origin/live-defi-rollout`.
+
+      **Not yet re-verified live** — no fresh VM run has confirmed `ohlcv_1m`/`trades` now write successfully for ETF
+      (no run has requested those data_types for ETF yet; the 2026-08-03 evidence run only requested
+      `ohlcv_15m`/`ohlcv_24h`, already fixed by the prior commit). Low cost, not urgent enough to justify a solo VM
+      run — fold into the next scheduled tradfi verification pass, same disposition as the sibling `ohlcv_24h`
+      not-yet-re-verified note above.
+
       Repo: unified-api-contracts. Evidence: `mdps-backfill-tradfi-20260803-104812` run.log, 52 `instrument_type='ETF'`
       "No SchemaContract registered" lines.
 

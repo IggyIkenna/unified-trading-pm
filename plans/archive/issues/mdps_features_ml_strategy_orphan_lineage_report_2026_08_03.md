@@ -27,7 +27,7 @@ related:
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
     /plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
-    /plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md,
+    /plans/archive/2026_08/issues/features_service_manifest_coverage_gap_2026_08_03.md,
     /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     /plans/active/issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,

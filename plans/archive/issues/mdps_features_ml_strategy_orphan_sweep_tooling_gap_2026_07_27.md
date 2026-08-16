@@ -37,7 +37,7 @@ related:
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
     /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
-    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+    /plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-07-27"
@@ -168,7 +168,7 @@ lets each one be built, validated, and run to real completion on its own timelin
       candle-manifest coverage gap** — spot-verified against the live cefi manifest directly (75 total MDPS rows in an
       8.78M-row index, zero for the flagged DERIBIT object) to confirm this is a real manifest absence, not a sweep-tool
       bug. Filed as its own P0 finding, out of this todo's scope:
-      [`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`](/plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md)
+      [`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`](/plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md)
       (root-cause + backfill are that doc's todos, not this one's — todo 1's own scope was build+validate the TOOL,
       which is now genuinely done: built, bug-fixed, 31-test-covered, and run to completion on real prod data for 4/5
       asset_groups). Sports's full-corpus sweep (only a bounded 200-object sample run) is P2 follow-up in the new issue
@@ -210,7 +210,7 @@ lets each one be built, validated, and run to real completion on its own timelin
       detection is object-driven not manifest-driven). The two real orphan gaps (onchain 45%, sports 35%) plus the
       calendar phantom-row anomaly are big findings, out of THIS todo's scope (validate the tool) — filed as their own
       doc:
-      [`features_service_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md)
+      [`features_service_manifest_coverage_gap_2026_08_03.md`](/plans/archive/2026_08/issues/features_service_manifest_coverage_gap_2026_08_03.md)
       (backfill + investigation todos live there, not here). `commodity` remains genuinely unwired (flat JSON
       `signal.json`, not parquet, positional day+feature_group with no hive keys at all, own dedicated bucket) — split
       to todo 2c below rather than guessed at in this dispatch.
@@ -423,7 +423,7 @@ lets each one be built, validated, and run to real completion on its own timelin
   under 3 minutes, zero preemptions. Surfaced two real, substantial manifest-coverage gaps (onchain/defi 45% orphan,
   sports/sports 35% orphan = 67,860 real orphan objects) and one phantom-captured anomaly (calendar: 6 manifest rows, 0
   backing objects) — filed as their own doc, out of this todo's "validate the tool" scope:
-  [`features_service_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md).
+  [`features_service_manifest_coverage_gap_2026_08_03.md`](/plans/archive/2026_08/issues/features_service_manifest_coverage_gap_2026_08_03.md).
   Flipped todo 2b — genuinely complete (tool validated against real data for all 5 wired families, 2 of the 3
   originally-unwired families now wired). Split `commodity` (JSON not parquet, needs its own classification path) to new
   todo 2c rather than guess at its shape under time pressure.

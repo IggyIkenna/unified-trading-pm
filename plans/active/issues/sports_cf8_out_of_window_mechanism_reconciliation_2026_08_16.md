@@ -1,10 +1,11 @@
 ---
 doc_type: issue
 title:
-  "CF-8 out-of-window (14,982-row) blank-timeframe `odds_horizon_bucket` population — TWO DIFFERENT root causes
-  identified (2026-08-16): 2026-07-13 cluster (14,656 rows) is `_write_captured_rows()`'s pre-fix rebuild being
-  timeframe-blind by construction; 2026-05-05 cluster (326 rows) is NOT MTDS — plausibly MDPS's
-  `reprocess_sports_odds.py` coarse-summary-row design, possibly not a bug at all"
+  "CF-8 out-of-window (14,982-row) blank-timeframe `odds_horizon_bucket` population — RESOLVED to TWO DIFFERENT root
+  causes (2026-08-16): 2026-07-13 cluster (14,656 rows) is `_write_captured_rows()`'s pre-fix rebuild being
+  timeframe-blind by construction (remediation policy = OPERATOR decision, only open item); 2026-05-05 cluster (326
+  rows) is CONFIRMED NOT a bug — MDPS's `reprocess_sports_odds.py` deliberate coarse pre-flight-skip marker row,
+  correctly excluded from any delete/remediation scope"
 summary: >-
   Split from `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` (at its 999-line hard cap) to continue the
   root-cause chase for the 14,982-row out-of-window blank-`timeframe` `odds_horizon_bucket` population. A dispatched
@@ -16,7 +17,8 @@ summary: >-
   RE-FALSIFIES it for the population as a whole — but a git-blame follow-up found the 14,982 rows are actually TWO
   unrelated populations with two different causes; see the Result sections below.
 status: open
-resolved_by:
+resolved_by: "6/7 todos done 2026-08-16; sole remainder is [OPERATOR] P2 remediation-policy decision — cannot
+  auto-resolve, awaiting operator"
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -189,6 +191,31 @@ mechanism that may not even be a bug:**
 **This overturns this doc's own earlier framing**: the 14,982 rows are two unrelated populations in two different
 repos with two different causes, not one shared mechanism.
 
+## Result (2026-08-16, part 3): MDPS coarse-summary-row hypothesis CONFIRMED at the row level
+
+Ran a live scoped query (`service_name=market-data-processing-service`, window `[2026-05-05T21:30, 2026-05-05T22:30]`,
+script stayed in scratchpad per this investigation's one-off convention):
+
+- **326 blank-timeframe rows in window — all 326 also have blank `league_id`** (100%, zero exceptions). This is the
+  exact structural signature of `reprocess_sports_odds.py`'s coarse per-day summary row (blank `league_id` + blank
+  `timeframe` by design, per its own code comment "keeps pre-flight skip working on resume runs") — no longer
+  circumstantial, this is a direct row-level match.
+- Real fine-grained siblings ARE present in the same window: 109,312 rows, 8 distinct `timeframe` values
+  (`T-0`/`T-10m`/`T-1h`/`T-2h`/`T-4h`/`T-6h`/`T-12h`/`T-24h`), 38 leagues — confirming the rich per-league data this
+  service normally writes, consistent with the coarse row being an ADDITIONAL marker alongside real data, not a
+  substitute for it.
+- One caveat: the single example row checked (`date=2020-08-31`, historical backfill) had 0 real siblings for that
+  SAME `(date,venue)` within this exact 1-hour window — the "same day, same batch" detail isn't confirmed for that
+  specific date (its real per-league rows were likely written in a separate, earlier backfill pass covering that
+  historical date, outside this window). This doesn't weaken the marker-signature finding itself.
+- **This pattern is not one-off**: 1,285 blank-timeframe MDPS rows exist ALL TIME (not just the 326 in this cluster's
+  window) — a recurring, permanent structural behavior of this service, further reinforcing "deliberate design", not
+  a transient bug artifact.
+
+**Verdict: CONFIRMED.** The 326-row 2026-05-05 cluster is `reprocess_sports_odds.py`'s intentional coarse pre-flight-
+skip marker row — **not a bug, not phantom data, and correctly excluded from any CF-8 remediation/delete scope** (the
+P1 SAFETY todo above already confirmed the existing delete script structurally can't touch it regardless).
+
 ## Todos
 
 - [x] [DATA] P1. Run the scoped sibling check above (2 narrow written_at windows, older-timestamp ordering constraint)
@@ -206,15 +233,20 @@ repos with two different causes, not one shared mechanism.
       **DONE 2026-08-16**: not a discrepancy — 14,656/14,982=97.8%≈98%, the parent doc's own cited "98% MTDS" figure
       already IS just the 2026-07-13 sub-cluster; the 326-row 2026-05-05 cluster was never MTDS-attributed. See
       Result part 2 above. (repo: market-tick-data-service)
-- [ ] [DATA] P2. Confirm the MDPS `reprocess_sports_odds.py` coarse-summary-row hypothesis for the 326-row
-      2026-05-05 cluster with a live scoped query filtered `service_name=market-data-processing-service` (currently
-      circumstantial: date/hour/data_type/structural-shape match, not a direct row-level confirmation).
-      (repo: market-data-processing-service)
-- [ ] [DATA] P1. **SAFETY** — before any delete/cleanup script targets this 14,982-row population, confirm it
+- [x] [DATA] P2. Confirm the MDPS `reprocess_sports_odds.py` coarse-summary-row hypothesis for the 326-row
+      2026-05-05 cluster with a live scoped query filtered `service_name=market-data-processing-service`.
+      **DONE 2026-08-16**: 326/326 blank-timeframe rows in window also have blank `league_id` (exact marker
+      signature, zero exceptions); pattern recurs across 1,285 rows all-time. CONFIRMED deliberate design, not a
+      bug. See Result part 3 above. (repo: market-data-processing-service)
+- [x] [DATA] P1. **SAFETY** — before any delete/cleanup script targets this 14,982-row population, confirm it
       EXCLUDES the 326-row 2026-05-05 MDPS cluster if the coarse-summary-row hypothesis above is confirmed as
       deliberate design (pre-flight-skip marker), not a bug — deleting it would be a regression, not a cleanup.
-      Cross-check against `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py`'s actual row-selection
-      filter to see whether it already excludes this sub-cluster or would sweep it up. (repo: market-tick-data-service)
+      **DONE 2026-08-16**: read `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py` directly
+      (`_WINDOW_START="2026-08-15T11:00:00"`, `_WINDOW_END="2026-08-15T23:59:59"`, lines 90-91) — its `written_at`
+      target window is structurally disjoint from BOTH out-of-window clusters (2026-07-13T23:5x and
+      2026-05-05T22:07), which is exactly why this doc calls them "out-of-window" in the first place. The script
+      cannot touch either cluster by construction; no code change needed, no live query required to confirm this.
+      (repo: market-tick-data-service)
 - [ ] [OPERATOR] P2. Decide remediation policy for the 2026-07-13 cluster's "blank from birth" gap (real timeframe
       never captured by the old v8-index rebuild): is this "safe to leave" (same posture as the earlier P2
       `data_type=odds` conclusion), or does it warrant a real backfill recovering true timeframe from underlying
@@ -260,3 +292,15 @@ assumption in my own scoped-check filter. Filed a SAFETY todo (P1) flagging that
 to this population must not sweep up the possibly-legitimate MDPS marker rows. Per the big-finding HARD RULE
 (cross-repo, overturns a previously-recorded framing, data-correctness), notified the operator directly in-chat
 this session.
+
+### 2026-08-16 — both clusters conclusively resolved; only the operator-owned remediation decision remains open
+
+Two follow-ups, both live-data-confirmed: (1) read `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py`
+directly — its `written_at` target window `[2026-08-15T11:00, 2026-08-15T23:59]` is structurally disjoint from both
+out-of-window clusters, so the P1 SAFETY concern is resolved by construction, no code change needed. (2) Ran a live
+scoped query against `service_name=market-data-processing-service` for the 2026-05-05 window: 326/326 blank-
+timeframe rows also have blank `league_id` (exact marker signature, zero exceptions), and the pattern recurs across
+1,285 rows all-time — CONFIRMS the coarse-summary-row hypothesis at the row level, not circumstantial anymore. Both
+findings shipped as `unified-trading-pm@ddef9f25f5` (SAFETY) and this commit (MDPS confirmation). Of this doc's 7
+todos, 6 are now done; the sole remaining item is the `[OPERATOR] P2` remediation-policy decision for the 2026-07-13
+"blank from birth" gap — correctly not started, awaiting the operator.
