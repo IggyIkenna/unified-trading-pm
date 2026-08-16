@@ -27,7 +27,7 @@ referenced_by:
     /codex/11-project-management/foundation-completion-gate-discipline.md,
   ]
 owner:
-last_reviewed: 2026-07-25
+last_reviewed: 2026-08-16
 code_refs: [scripts/plan-hygiene/check_terminal_status_archived.py]
 ---
 
@@ -107,6 +107,13 @@ Then archive. The `git log` history preserves the issue forever; the parent plan
 
 ## Composition with other rules
 
+- **Archive path differs from `doc_type: plan` (resolved 2026-08-16,
+  `archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`)**: the flat
+  `plans/archive/issues/` path this doc states above is specific to `doc_type: issue` — a `doc_type: plan` doc (e.g. a
+  finalize plan) archives to the dated `plans/archive/<YYYY_MM>/` instead, per
+  [`plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)
+  § "6-step ritual" step 6. Corpus-measured at resolution time: 1484 issue docs already at the flat path vs 296 at the
+  dated one (~83%/17%) — flat is both the majority and the internally-consistent convention for this doc type.
 - **Capture Discoveries As Plan Todos** (CLAUDE.md): the discovery still files as an issue todo at the moment it
   surfaces. This rule just says: once the todo lives in a plan, the issue archives.
 - **Foundation-Completion-Gate Discipline** ([[foundation-completion-gate-discipline]]):
