@@ -116,11 +116,20 @@ Each unit walks contract steps 1-9 and records a verdict per step with evidence.
 contributes "unverified", never a pass** — this is the binding consequence of the operator's DERIVED-readiness
 ruling, and it is what stops the sweep manufacturing green.
 
-- [ ] [BACKEND] P0. **Derive the work list** from the now-resolved universe definition: one row per
-      (venue × data type) — 353 rows across 192 venues per
-      `unified-api-contracts/scripts/generate_venue_universe_denominator.py`, minus the 8 DeFi venues still pending
-      capability declaration — with its declared archetype consumers. This is the plan's real todo list; the batches
-      below fork from it.
+- [x] ✅ [BACKEND] P0. **Derive the work list — done 2026-08-16.** SHIPPED —
+      `unified-api-contracts@9693ff0291` (new `scripts/generate_venue_work_list.py`, permanent/re-runnable, mirrors
+      the sibling denominator/consumability scripts). One row per (venue × data type) — confirmed 353 rows across 192
+      venues, cross-checked against `generate_venue_universe_denominator.py`'s count. Per asset_group: defi 200, cefi
+      70, sports 31, tradfi 16, prediction 4, plus 32 rows `UNMAPPED` (venue absent from `VENUES_BY_ASSET_GROUP` —
+      that gap is owned by
+      [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14](/plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md),
+      not this plan). Each row carries its declared archetype consumer(s) (`NONE` if orphaned). **298/353 rows (84%)
+      have no declared archetype consumer** — consistent with, not a new finding beyond, the umbrella plan's already-
+      tracked 172/192-venue orphan measurement (§ STRATEGY CONSUMABILITY,
+      `unified-api-contracts@36a31a165f`): only 5 of 59 `StrategyArchetype` members are declared in
+      `ARCHETYPE_FEATURE_GROUPS` today, so most rows have no consumer to wire toward yet — a scope gap tracked by the
+      archetype-declaration backlog, not blocking this sweep. Full row export: `--csv PATH` flag on the script. **Fork
+      per-asset-group dispatch batches (P0, below) is now the next actionable item.**
 - [ ] [BACKEND] P0. **Fork per-asset-group dispatch batches** rather than one giant plan — cefi, defi, tradfi,
       sports, prediction. Independent same-priority todos touching different files run concurrently by default; a
       single plan spanning all AGs would serialise or breach the line cap. Each batch gets its own
