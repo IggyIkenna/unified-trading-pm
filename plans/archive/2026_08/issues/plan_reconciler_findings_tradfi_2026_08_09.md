@@ -65,7 +65,7 @@ docs from the last few hours) and are READ-ONLY context this run. **16 are writa
 - `plans/active/issues/mtds_available_at_cross_asset_backfill_line_cap_remediation_2026_07_31.md`
 - `plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md`
 - `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`
-- `plans/active/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md`
+- `plans/archive/2026_08/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md` (archived 2026-08-16)
 - `plans/active/issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`
 - `plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md`
 

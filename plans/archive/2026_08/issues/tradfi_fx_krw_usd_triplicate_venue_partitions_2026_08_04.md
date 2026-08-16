@@ -22,7 +22,7 @@ summary: >-
   that it shows BOTH wrong-venue partitions carry REAL duplicated GCS objects (not just manifest bookkeeping drift), and
   adds a third, previously-unseen wrong-venue value (`SPOT`) to that same defect family. Not fixed or deleted here —
   read-only investigation, filed per the findings-triage rule.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -68,6 +68,12 @@ context_scope:
 ---
 
 # TradFi FX KRW-USD daily bar triplicated across FX/SPOT/YAHOO_FINANCE venue partitions
+
+> **📦 ARCHIVED 2026-08-16 — complete.** Every todo (3 main + 1 follow-up) is done, `locked_by` was empty. The
+> follow-up's structural fix (`_VENUE_REMAP`-equivalent normalization/rejection) had already landed via a
+> different plan's todo (`market-tick-data-service@ff6c2f4a`, 2026-08-09,
+> `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`) — this session confirmed it live and flipped this doc's
+> own copy of the todo rather than duplicating the fix, then archived per the plan-completion HARD RULE.
 
 ## What I found
 
@@ -188,9 +194,33 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
 
 ## Follow-ups
 
-- [ ] [SCRIPT] P3. Add _VENUE_REMAP (e.g. {"YAHOO_FINANCE": "FX"}, plus the SPOT bare-segment handling) to
-      migrate_tradfi_canonical_2026_07.py so a repeat wrong-venue promotion is structurally prevented
+- [x] ✅ [SCRIPT] P3. **Already resolved 2026-08-09 by a DIFFERENT plan's todo — confirmed 2026-08-16 (slot 30),
+      flipping this doc's own copy rather than duplicating the fix.** `market-tick-data-service@ff6c2f4a`
+      (`tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` todo 2, landed 2026-08-09T16:39:39Z — confirmed
+      ancestor of `origin/live-defi-rollout`) added `normalize_tradfi_venue()` +
+      `_TRADFI_VENUE_REMAP = {"YAHOO_FINANCE": "FX"}` in the new
+      `_tradfi_migration_recurrence_fixes_2026_08_06.py` module, wired in as
+      `migrate_tradfi_canonical_classify_2026_07.py`'s `_normalize_venue` (used by every one of
+      `_target_single`/`_target_nonhive_eq`/`_target_chain` via `_canonical_single_path`/`_canonical_chain_path`,
+      including the exact `_target_nonhive_eq` bare-segment path this doc's `venue=SPOT` finding traced through).
+      Covers BOTH halves of this todo's ask, though the SPOT half is a GENERIC guard rather than a SPOT-specific
+      remap (arguably the more correct fix — "SPOT" was never confirmed to always mean FX the way
+      "YAHOO_FINANCE" does): any venue token NOT in `VENUES_BY_ASSET_GROUP['tradfi']` after the remap
+      (`SPOT`/`BOGUS_STRAY_VENUE`/anything) makes `normalize_tradfi_venue()` return `None`, which makes
+      `_canonical_single_path`/`_canonical_chain_path` return `None`, which routes the object to
+      `A_CONTENT_REPAIR` (`_needs_content`) instead of a fake canonical path — never silently promoted verbatim.
+      Test coverage confirmed live in `tests/unit/scripts/test_migrate_tradfi_canonical_2026_07.py`:
+      `test_yahoo_finance_legacy_venue_remapped_to_fx` (the remap half),
+      `test_unrecognized_venue_token_rejected_not_promoted` +
+      `test_chain_bundle_unrecognized_venue_also_rejected` (the generic-rejection half that structurally covers
+      SPOT). No new code needed — read-only verification only this session.
 
-> **2026-08-06 archive-candidate audit**: Doc's own Progress Log (context-scout 2026-08-06): 'a repeat occurrence is not
-> structurally prevented until that gap is closed' — the root cause (missing _VENUE_REMAP in the July migration
-> executor) was identified but never fixed, and that gap is not a tracked - [ ] todo.
+> **CORRECTED 2026-08-16 (slot 30)**: the banner below is now stale — the gap it flags was closed 2026-08-09
+> (`market-tick-data-service@ff6c2f4a`, a different plan's todo) and the Follow-up above is now flipped `[x]`
+> with that evidence. Every todo in this doc is now done and `locked_by` is empty — archiving in this same
+> session per the plan-completion HARD RULE.
+>
+> **2026-08-06 archive-candidate audit (stale, kept for history)**: Doc's own Progress Log (context-scout
+> 2026-08-06): 'a repeat occurrence is not structurally prevented until that gap is closed' — the root cause
+> (missing _VENUE_REMAP in the July migration executor) was identified but never fixed, and that gap is not a
+> tracked - [ ] todo.
