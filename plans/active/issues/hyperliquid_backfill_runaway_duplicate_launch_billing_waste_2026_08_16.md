@@ -172,3 +172,19 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   no VMs deleted (deletion needs a human call per STEP 0.65 — these VMs are not stale, they're duplicated).
 - **slot-9 2026-08-16**: shipped the [INFRA] P1 root-cause fix — deployment-service@246fa62319. The [OPERATOR] P0
   fleet-cleanup and [DATA] P2 re-verify todos remain open (both need the duplicate fleet resolved first).
+- **2026-08-16 (operator-authorized fleet cleanup)**: fresh `gcloud compute instances list
+  --filter="name~'cefi-hyperliquid-2023'"` found 78 RUNNING (not 298 — the P1 singleton-guard fix had already
+  stopped new launches; no new VM created after 2026-08-16T02:23-07:00, and all 78 were `SPOT` +
+  `instanceTerminationAction=DELETE`, so ~220 preempted duplicates had already self-deleted since the doc's original
+  298-count). Verified keeper health via GCS reads (`google.cloud.storage` Python SDK only — no gsutil/gcloud CLI
+  object reads) on `vm-heartbeat/<name>.txt` and `vm-logs/<name>/run.log` under
+  `gs://deployment-scripts-central-element-323112/`: sampled the oldest ~20 VMs and found progress clusters by
+  launch-time group rather than strict creation order (a 7-VM group created ~04:01-04:07 UTC was tied
+  furthest-along at HYPERLIQUID/book_snapshot_5 date 2023-08-09, ahead of the single 02:01 VM at 2023-07-30, zero
+  errors on every sampled VM). Chose `cefi-hyperliquid-2023-20260816-040653` as keeper. Deleted the other 77 in one
+  batched `gcloud compute instances delete <77-names> --zone=asia-northeast1-c --quiet` call — all 77 succeeded.
+  Post-delete: exactly 1 VM remained (`cefi-hyperliquid-2023-20260816-040653`, RUNNING), re-verified healthy
+  (advanced to 2023-08-10, zero errors, fresh heartbeat, `ManifestWriter` flushing). Waited ~4 minutes and re-ran the
+  list filter: still exactly 1 VM, same name/creation-timestamp — **no repopulation observed**, confirming the P1
+  singleton-guard fix (deployment-service@246fa62319) is holding live. Todo flipped to done; [DATA] P2 re-verify can
+  now proceed against this single coherent keeper run.
