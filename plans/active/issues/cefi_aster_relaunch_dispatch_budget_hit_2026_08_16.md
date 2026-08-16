@@ -153,6 +153,19 @@ relaunched now.
       occurrence `cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md` — do not implement this twice,
       fix it once in the shared `escalation_dedup.py` logic and close both docs against the same commit. Repo:
       agent-orchestrator.
+
+      **🔴 PAUSED 2026-08-16 15:23 UTC (main agent) — the premise behind this ruling is now in question, re-confirm
+      with the operator before implementing.** This ruling assumed the 304-instance `cefi-aster-` fleet size cited
+      above was legitimate large-fleet demand. It is not: live re-verification found the fleet carries the same
+      duplicate-launch signature (identical full-year metadata per venue+year, `VM_FORCE=false`) tracked in
+      `plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md` — most of
+      those 304 instances are believed to be uncleaned duplicates from the same runaway burst, not genuine
+      concurrent-preemption pressure. Scaling `_MAX_RELAUNCH_DISPATCHES_PER_DAY` by "concurrent same-prefix fleet
+      size" right now would key the new budget off an inflated, bug-driven count — likely making the relaunch storm
+      WORSE once the duplicates are cleaned up and the fleet count drops back to its real size, or actively
+      encouraging faster relaunch of a fleet that shouldn't be this large in the first place. Do not implement this
+      todo until (a) the duplicate cleanup in the linked issue doc is done and (b) the operator re-confirms option B
+      against the fleet's real (post-cleanup) size.
 - [x] ✅ **N/A — option A (leave as-is) was not chosen**, so no manual relaunch is needed; the shard gap will be
       picked up once the scaled budget (todo above) lands.
 
