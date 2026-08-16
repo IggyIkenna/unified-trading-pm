@@ -513,3 +513,30 @@ unrelated blockers were resolved). Phase 0's SINK_MATRIX registration is now ful
 metadata gap flagged earlier is closed. **This plan's Phase 0 and Phase 1 are now both 100% complete with nothing
 outstanding.** Phase 2 and Phase 3 remain not started per the plan's own sequencing (Phase 2 gates on sibling plans'
 own verification sections; Phase 3 is an `[OPERATOR]`-gated GCS delete gated on a post-Phase-1 retention window).
+
+**2026-08-16 -- instruments-service CI failure investigated, confirmed ALREADY FIXED (same case-collision bug class
+as the MTDS `_source_from_row()` fix above, sibling repo, separate commit).** A CI run flagged
+`instruments-service::tests/unit/scripts/test_enumerate_expected_universe_v2.py::
+test_sports_odds_seed_provenance_is_footystats_never_api_football` failing (`sports ODDS seeded with
+source='odds_api'` instead of `'footystats'`), triggered by an unrelated bot base-image digest-pin bump. Investigated
+fresh rather than assuming: this repo (`instruments-service`) IS in this plan's own `repos:` scope, but its
+`enumerate_expected_universe.py::_derive_pm_source_transport()` is a genuinely separate call site from MTDS's
+`_source_from_row()` -- the exact same failure MODE (a generic case-insensitive/`.upper()` fallback resolving
+`data_type` to the reserved uppercase `("sports","ODDS")` footystats key before a more specific branch could claim
+it), independently present in a second file. Root-caused via the live failing CI run
+(`gh run view 31943408746 --log-failed`, commit `128edf887e`, 2026-08-16T11:05:52Z) cross-referenced against git log:
+the enumerator already carries a fix, **`instruments-service@4d8add8e0b`** ("fix(sports): prefer upper-case
+SOURCE_PRIORITY key for sports in `_derive_pm_source_transport`"), landed 2026-08-16T11:26:13Z -- **20 minutes after**
+the failing CI run started, by this same session's earlier work today, but never cross-referenced back into this
+plan's Progress Log despite `instruments-service` being in scope here too. Verified currently green two ways: (1)
+every `quality-gates-v2` run on `instruments-service` since 4d8add8e0b is `success` (incl. the current HEAD
+`254a06fec4` @ 2026-08-16T15:05:27Z, run `31954611823`), and (2) a fresh full local `quality-gates.sh` run on that
+same HEAD passed clean (`5447 passed, 6 skipped, 4 xfailed, 0 failed`, `ALL QUALITY GATES PASSED`), including both
+`test_sports_odds_seed_provenance_is_footystats_never_api_football` and the generalised
+`test_every_sports_data_type_seed_provenance_matches_canonical_registry`. No code change needed -- this entry exists
+only to close the doc gap (the fix landing without a plan cross-reference is exactly the "doc that misled the next
+reader" pattern this workspace's findings-triage rule flags): a fresh session grepping this plan for
+"instruments-service" would otherwise have no record that the enumerator side of the same bug class was already
+handled. A separate, unrelated `consumer-qg-check` CI failure seen the same day (`31958119386`, 16:16:19Z) is NOT
+this bug -- it's a cross-repo candidate-UAC checkout hitting a stale/nonexistent ref (`repository not found`), pure
+CI infra noise, out of scope here.
