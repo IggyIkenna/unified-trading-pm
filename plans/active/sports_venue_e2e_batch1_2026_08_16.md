@@ -70,7 +70,7 @@ source: >-
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`.
+- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@1c9fe64ae2`.
       3 parallel research passes across instruments-service, market-tick-data-service, features-service (step 5
       trivially checked, see below).
       **Step 2 (instrument resolution) — architecturally different from every other AG, PASS once re-framed.**
@@ -106,7 +106,7 @@ source: >-
       `BLOCKED-ON:archetype-declaration-backlog`** per the step-5 result above — nothing in this todo is
       dispatchable until at least one archetype declares needing `odds`. Re-check once the archetype-declaration
       backlog moves.
-- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`.
+- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@1c9fe64ae2`.
       Cross-checked 3 independent SSOTs (`SportsHandler.SUPPORTED_VENUES`, `sports_factory.py`'s
       `_LIVE_VENUE_CONFIGS`, UAC's `SPORTS_*_VENUES` constants): real, wired bet-placement adapters exist for
       exactly 4 venues system-wide (`betfair`, `matchbook`, `kalshi`, `polymarket`), none of the other 27 odds-
@@ -136,7 +136,7 @@ source: >-
 ## Progress Log
 
 **2026-08-16 — full contract sweep done, 2 new gaps found, sports is architecturally distinct.** SHIPPED —
-`unified-trading-pm@<pending-sha>`. 3 parallel research passes. Key structural finding: sports odds venues never
+`unified-trading-pm@1c9fe64ae2`. 3 parallel research passes. Key structural finding: sports odds venues never
 resolve through instruments-service at all (a deliberate, documented 2026-06-29 decision — disjoint from every
 other AG's step-2 pattern), and all 31 rows show `archetype_consumers=NONE` (no archetype has declared needing
 raw `odds` data), so steps 5-8 are trivially `BLOCKED-ON:archetype-declaration-backlog` for the whole AG — no
