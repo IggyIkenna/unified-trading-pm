@@ -1,0 +1,2 @@
+asset_group,finding,event,detail
+cefi,schema_version_not_v9,DP_NOT_V9,"1/29938146 rows non-v9 (legacy_version=0, missing=1, contaminated=0); dist={'None': 1, '9.0': 29938145}"
