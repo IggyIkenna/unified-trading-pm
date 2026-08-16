@@ -59,7 +59,8 @@ source: >-
 
 > **THIS IS HAPPENING** (operator, 2026-08-12): _"we'll show them the carve-out code. That's happening anyway, so that's
 > got to be part of the plan."_ It is a commitment, not a contingency. `status: draft` and `depends_on` the expansion
-> plan reflect **sequencing only** — the three real archetypes must be carved from post-expansion behaviour, or their
+> plan reflect **sequencing only** — the two real archetypes (§A2, narrowed 2026-08-16) must be carved from
+> post-expansion behaviour, or their
 > static implementations freeze the wrong reality and need redoing. Flip to `active` when the expansion lands.
 
 > **All carved artefacts are NEW repositories.** No production code is removed, stubbed or altered. This plan describes
@@ -116,20 +117,23 @@ Per-interface resolution to specify. `FeatureProvider` · `PricingService` · `R
       gives the local circuit breakers the strategy needs to be safe standalone; cross-client portfolio risk and
       governance stay platform-side.
 
-## A2. Archetype scope — THREE real, the rest shipped as stubs (operator ruling 2026-08-12)
+## A2. Archetype scope — TWO real, the rest shipped as stubs (operator ruling 2026-08-12, narrowed 2026-08-16)
 
-**Only the DeFi-relevant archetypes carry real implementations**, plus dispersion so the client can see how an expanded
-strategy correlates against the contracted pair:
+**Only the two contracted archetypes carry real implementations.** `CARRY_FUNDING_DISPERSION` was originally
+included as a voluntary breadth-demonstration ("shown deliberately so they can see how an expanded strategy
+correlates against the contracted pair") — **operator ruled 2026-08-16: remove it.** Not contractually required
+(Annex A scopes to the BTC/ETH/SOL basis strategy only — see §A3), and out of step with this session's direction
+toward narrower disclosure generally.
 
-| Archetype                  | In the carve-out                                                       | Why                                                                                                         |
-| -------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `CARRY_BASIS_PERP`         | **REAL**                                                               | Contracted                                                                                                  |
-| `CARRY_STAKED_BASIS`       | **REAL**                                                               | Contracted                                                                                                  |
-| `CARRY_FUNDING_DISPERSION` | **REAL**                                                               | Shown deliberately so they can see how an expanded, cross-sectional strategy relates to the contracted pair |
-| **All other enum members** | **STUB** — signature, docstring, archetype identity; no decision logic | The **universe of archetypes is disclosed; the mechanisms are not**                                         |
+| Archetype                  | In the carve-out                                                       | Why                                                                  |
+| --------------------------- | -------------------------------------------------------------------------| ----------------------------------------------------------------------|
+| `CARRY_BASIS_PERP`         | **REAL**                                                               | Contracted                                                           |
+| `CARRY_STAKED_BASIS`       | **REAL**                                                               | Contracted                                                           |
+| `CARRY_FUNDING_DISPERSION` | **STUB** (removed from REAL 2026-08-16, was previously REAL)           | Not contracted — voluntary-breadth inclusion, ruled out              |
+| **All other enum members** | **STUB** — signature, docstring, archetype identity; no decision logic | The **universe of archetypes is disclosed; the mechanisms are not**  |
 
 **This is a disclosure design, not a shortcut.** Shipping the full enum as stubs shows the client the real breadth of
-the platform — every family, every archetype name — while the alpha logic transfers for three only. Breadth is visible;
+the platform — every family, every archetype name — while the alpha logic transfers for two only. Breadth is visible;
 mechanism is withheld. It also happens to align with the existing estate: **28 of 60 archetypes are already unreachable
 in production** (Elysium plan § H.12), so stubbing the remainder is continuing a pattern rather than inventing one.
 
@@ -180,10 +184,10 @@ covers exactly:
 `CARRY_STAKED_BASIS` is largely already live for it — `catalog_staked_basis.py` shows `lido-deribit` (7.5%
 haircut) and `lido-bybit` (10% haircut) as verified `LST_AS_MARGIN` slots today; Binance and OKX need no new
 LST-margin integration, they resolve via the engine's existing `USDC_MARGIN_BUFFERED` fallback structure.
-`CARRY_FUNDING_DISPERSION`'s inclusion in §A2 is this plan's own voluntary-breadth choice ("shown deliberately so
-they can see how an expanded strategy correlates against the contracted pair"), not contractually required by this
-scope — worth an explicit operator confirmation on whether to keep it, given the direction of this session's
-rulings toward narrower disclosure.
+**`CARRY_FUNDING_DISPERSION` — RULED OUT 2026-08-16.** It was this plan's own voluntary-breadth choice ("shown
+deliberately so they can see how an expanded strategy correlates against the contracted pair"), not contractually
+required by this scope (Annex A covers the BTC/ETH/SOL basis strategy only). Operator confirmed: remove it. §A2's
+table updated in the same edit — it now ships as a stub like every other non-contracted archetype.
 
 **Effect on the frozen-collateral-eligibility ruling above**: this sharply bounds it. The substitution only needs
 to cover stETH haircuts/acceptance on 4 named CEX venues, not the fleet-wide `VENUE_COLLATERAL_MATRIX` — a much
