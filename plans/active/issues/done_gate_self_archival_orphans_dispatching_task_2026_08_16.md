@@ -106,12 +106,17 @@ response), followed `worker.md`'s documented handling for a cancelled-mid-sessio
 
 ## Todos
 
-- [ ] [BACKEND] P2. Add a `TaskRow.status == "cancelled"` (and/or `"idle"`, any non-`dispatched` terminal state) check
+- [x] [BACKEND] P2. Add a `TaskRow.status == "cancelled"` (and/or `"idle"`, any non-`dispatched` terminal state) check
       early in `done_slot` (`agent-orchestrator/server/routes/slots_worker.py`), before the task_def-dependent M3
       verification pipeline runs — either accept a cancelled-but-verifiably-shipped `/done` call cleanly (mirroring
       `_maybe_close_orphaned_done_task`'s release-slot + log-and-return pattern) or return a distinct, actionable
       reason (e.g. `task_cancelled_mid_session`) instead of repeating `cross_repo_pm_file_touched_no_checkbox_flip`
-      on every retry. Repo: agent-orchestrator.
+      on every retry. Repo: agent-orchestrator. — ✅ agent-orchestrator@a9b04f85c0 (new
+      `_maybe_close_non_dispatched_task` helper, folded into `_resolve_task_def_for_done` alongside the existing
+      orphan-task check so `done_slot`'s own cyclomatic complexity is unchanged; short-circuits for ANY
+      `TaskRow.status != "dispatched"` reached there, returns `dispatch_reason="task_<status>_mid_session"`, and
+      leaves the row intact for todo 2's widened `reconcile_done_gate_rejections.py` scan. 5 new/updated regression
+      tests, full local QG green: 3985 pytest + dashboard tsc/vitest.)
 - [x] [BACKEND] P2. Extend `reconcile_done_gate_rejections.py`'s candidate scan to also cover `status="cancelled"`
       rows with an unresolved `slot_done_rejected_no_plan_flip` event and a verifiably-on-origin cited sha — same
       verification/flip logic, just widen the `WHERE status = ...` scope past the current `"dispatched"`-only filter.
