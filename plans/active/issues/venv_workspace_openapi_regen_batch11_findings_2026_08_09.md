@@ -136,10 +136,19 @@ ship.
       session), or correct `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`'s Residual 1 text (and
       any other citing doc) to stop pointing at the deprecated `check_openapi_drift.py` as the closing Gate. (repo:
       unified-trading-pm) — unified-trading-pm@089e89c2a (gate) + unified-trading-pm@fe613ad6b (QG exclude fix)
-- [ ] 3. [INFRA] P3. Investigate the `gs://instruments-store-cefi-central-element-323112` 404 in
+- [x] ✅ 3. [INFRA] P3. Investigate the `gs://instruments-store-cefi-central-element-323112` 404 in
       `generate_instrument_snapshot.py` (stale/renamed bucket? check `resolve_bucket_name`/bucket-isolation-model) and
       fix so `generate-unified-openapi.sh` can run genuinely end-to-end including the
-      `audit_type_usage.py`/`audit_dead_code.py`/`audit_api_ui_coverage.py` steps. (repo: unified-trading-pm)
+      `audit_type_usage.py`/`audit_dead_code.py`/`audit_api_ui_coverage.py` steps. (repo: unified-trading-pm) —
+      already fixed by `unified-trading-pm@498222736c` (2026-08-11, inherited orphan-WIP from slot-27): replaced the
+      hardcoded env-less `gs://instruments-store-{category}-{project}/...` template with
+      `resolve_bucket_name(kind="instruments-store", asset_group=category)` /
+      `kind="instruments-store-prediction"`, resolving to the real env-tiered
+      `instruments-store-{ag}-prd-central-element-323112` buckets. Independently re-verified 2026-08-16 (slot-3):
+      ran `generate_instrument_snapshot.py --date 2026-03-27` directly against the live GCS buckets — no 404, exits
+      clean (cefi: 516 instruments/1 venue, defi: 3105/26 venues, tradfi/sports/prediction correctly empty — not an
+      error). This was the sole step halting `generate-unified-openapi.sh` before reaching
+      `audit_type_usage.py`/`audit_dead_code.py`/`audit_api_ui_coverage.py`; with it clear those steps can now run.
 - [ ] 4. [SCRIPT] P3. Remove the stale `unified-market-interface` entry from `generate_config_registry.py`'s
       `CONFIG_REGISTRY` list (repo doesn't exist in this workspace; every regen run SKIPs it with a ModuleNotFoundError
       warning). (repo: unified-trading-pm)
@@ -189,3 +198,4 @@ ship.
   fix) — both verified ancestors of `origin/live-defi-rollout`.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **2026-08-16** — Todo 3 closed (slot-3, infra). The GCS 404 was already fixed by a predecessor (`unified-trading-pm@498222736c`, 2026-08-11, an inherited orphan-WIP commit from slot-27) — `generate_instrument_snapshot.py` now resolves the env-tiered bucket via `resolve_bucket_name()` instead of a hardcoded env-less template. Independently re-verified today by running the script directly against live GCS: no 404, clean exit (cefi 516/1 venue, defi 3105/26 venues, tradfi/sports/prediction correctly empty). No code change needed this pass — checkbox flip only.
