@@ -144,10 +144,20 @@ in production** (Elysium plan § H.12), so stubbing the remainder is continuing 
 - [ ] [AGENT] P2. **Keep the enum whole.** Do NOT narrow `StrategyArchetype` to the three — the full enum with stubs is
       the point. This supersedes the earlier instinct in § B to narrow it; the correct fix for "don't hit `KeyError` on
       an advertised name" is a stub that fails informatively, saying this archetype is not part of this package.
-- [ ] [AGENT] P2. **Verify the three real archetypes' dependency closure is genuinely carvable** — they pull the rank
-      allocators, the collateral eligibility filters and the ADV universe resolver, and § A withholds the last of those.
-      Confirm the frozen-universe substitution actually satisfies all three engines before committing to the package
-      boundary.
+- [x] [AGENT] P2. ✅ **RULED 2026-08-16: collateral/margin eligibility for the two carry archetypes freezes, same
+      treatment as `UniverseService`.** A cross-repo extraction audit (strategy-service's
+      `EXTRACTION_AUDIT.md`, "UAC" and "Updated overall picture" sections) traced this precisely: `staked_basis.py`'s
+      per-tick structure derivation (`LST_AS_MARGIN` vs `USDC_MARGIN_BUFFERED`) calls UAC's live
+      `accepted_perp_collateral`/`get_collateral_haircut`/`venue_accepts_collateral` — distinct from and in addition to
+      `UniverseService`'s own already-frozen ADV/eligibility filtering at line 101-103 above. Freezing this too (ship the
+      resolved collateral/haircut answer for the configured venues, not the resolver) means the carved package never
+      needs UAC's live registry code (`unified_api_contracts.registry`) at runtime at all — only the `StrategyArchetype`
+      enum and schema types, which ship whole regardless (small, and disclosure is the point). Without this ruling, UAC's
+      eager `internal`/`registry` `__init__.py` graph (1,064 files/~240k lines, DeFi content interleaved with
+      CeFi/TradFi/sports in flat enums/dicts — see the audit) would have been pulled in wholesale just to satisfy this
+      one call, defeating the IP-withholding intent. **Still open, not yet done:** actually specify and build the frozen
+      collateral/haircut substitution and confirm it satisfies all three engines' decision logic bit-for-bit against a
+      known input — this ruling settles the *design direction*, not the implementation.
 
 ## B. What the expansion adds, and therefore what the carve-out must account for
 
@@ -230,3 +240,24 @@ The reduced implementation is a fact about the package. Let the fact do the work
   organising line: the orchestration that decides what can be done for the client's strategy types is real; everything
   beneath it is static, mock or inert. Flagged the book-level-overlay resolution as the most consequential open
   decision, since it determines whether the carved strategy has a working risk profile or an un-overlaid one.
+- **2026-08-16** — Interactive session ran a full cross-repo extraction audit ahead of a docs-cleanup pass on
+  strategy-service (full writeup: strategy-service's `EXTRACTION_AUDIT.md`, internal-only, excluded from any external
+  copy). Measured, not assumed: capability wizard is NOT in strategy-service and the plan's "backing restriction graph
+  is exactly the reconciliation IP withheld" framing (§B above) overstates a 153-line UI feature-gate router that calls
+  no venue/collateral registry — trivial to stub. SIT has zero coupling to `factory.py`'s registry either way.
+  Deployment-api/-service/-ui and the PM repo have zero code coupling — pure CI/tooling a client replaces with their
+  own. Instruments-service/MTDS/features-service/ml-service have zero *code* coupling (archetypes receive `features`/
+  `mid_price` as plain parameters from an upstream pipeline, never call these services); `MLPrediction` is imported but
+  literally unused (`del predictions`) by all three real archetypes. **The one real blocker found: UAC's eager
+  `internal`/`registry` `__init__.py` graph (1,064 files/~240k lines) is interleaved DeFi/CeFi/TradFi/sports content
+  with no clean-slice import path** — worse than this plan's §A2 todo anticipated, since it affects not just the
+  universe resolver but the two carry archetypes' live collateral/margin calls too. Operator ruled 2026-08-16: freeze
+  that too (see the §A2 todo above) — closes the open design question; UTL has the identical mechanical eager-import
+  flaw but is judged low-stakes (generic infra, no real IP) and ships whole rather than being fixed. execution-service's
+  proposed basic/algo/transfer split maps onto real ABC boundaries, with one added cost (SOR shares AMM/gas modules
+  with basic DEX swaps) and an already-established lazy-registration pattern to reuse from elsewhere in that repo; zero
+  execution-service blast radius from strategy-service's own factory-refactor alternative (not this plan's approach,
+  but was scoped for comparison). Net effect: this plan's stub-carve-out approach is now well-bounded and the
+  higher-confidence path — the alternative (refactor strategy-service's `factory.py` for lazy registration in
+  production) turned out to require an equivalent-or-larger UAC refactor with fleet-wide blast radius, for a benefit
+  mostly orthogonal to external disclosure.
