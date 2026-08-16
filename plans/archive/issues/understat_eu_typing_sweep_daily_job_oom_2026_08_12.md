@@ -9,7 +9,7 @@ summary: >-
   sports enrichment sources checked in the same pass (FootyStats, Transfermarkt/SFI's `soccer-football-info`,
   Transfermarkt) are all genuinely healthy (`Completed: True` for 3+ days). This is a live, currently-recurring
   production failure with no open tracking doc.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -17,7 +17,11 @@ repos: [instruments-service]
 scope: [engineer, admin]
 tags: [sports, understat, oom, cloud-run-job, data-correctness]
 related:
-  [/codex/02-data/data-pipeline-correctness-hard-rule.md, /plans/active/sports_consolidated_closeout_2026_07_19.md]
+  [
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md,
+  ]
 created: 2026-08-12
 author: claude-agent
 priority: P1
@@ -37,6 +41,11 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-16** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> ACKED-INTO-CODE rule. Every todo done: root cause fixed + verified live (`instruments-service@61c6710db1`,
+> `deployment-service@4966bc8509`/`c45bfea303`), alerting-coverage gap confirmed and scoped as its own design plan
+> (`/plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md`) rather than left open here.
 
 ## What was found
 
@@ -216,13 +225,15 @@ mechanism, currently and repeatedly failing.
       general fix (would mean building a new fleet-wide Cloud Run Job execution monitor, a real cross- cutting infra
       design task, not a ≤30-min adjacent fix) — documenting clearly here for separate triage instead.
 
-- [ ] [INFRA] P3. **New follow-up, filed 2026-08-12** — no DP-* alert class or `google_monitoring_alert_policy` covers a
+- [x] ✅ [INFRA] P3. **New follow-up, filed 2026-08-12** — no DP-* alert class or `google_monitoring_alert_policy` covers a
       generic Cloud Run JOB execution `Completed: False` (see the DATA todo above for the full grep evidence); this
       15-day understat OOM streak paged nowhere. Building a fleet-wide Cloud Run Job execution-status watcher (mirroring
       `DP-VM-001`'s exit_code-aware VM fleet monitor, generalized to Cloud Run Jobs) is a real cross-cutting infra
       design task, not a bounded fix — scope it as its own plan (repo: likely `unified-trading-pm`/`deployment-service`,
       registry update in `/codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml`) rather than folding into
-      this issue. Not blocking this issue's resolution.
+      this issue. Not blocking this issue's resolution. **DONE 2026-08-16 (slot 17)**: scoped as a LOCAL design plan —
+      `/plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md` (design sketch + open questions;
+      the real AO-dispatchable implementation plan forks from it once those are resolved).
 
 - [x] ✅ [CODE] P1. **New follow-up, filed 2026-08-12 (interactive session)** — the job's SLIM candidate pre-check
       (`type_understat_eu_no_provider_coverage.py`'s `read_availability_index_safe(bucket, columns=[...])` call,
@@ -369,3 +380,10 @@ mechanism, currently and repeatedly failing.
   `git show origin/main:<path>` content diff instead. instruments-service@61c6710db1 also lands on `main` via the normal
   cycle regardless (verified content-equal once the next promote tick runs; not separately re-verified via ancestry for
   the reason just stated).
+- **2026-08-16 (slot 17, infra craft)**: picked up the still-open `[INFRA] P3` follow-up (Cloud Run Job execution-status
+  watcher has no tracking doc). Per the todo's own instruction, scoped it as a separate LOCAL (`assigned_vm: NA`) design
+  plan rather than folding an open-ended cross-cutting design task into this issue —
+  `/plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md` (design sketch mirroring `DP-VM-001`'s
+  `exit_code_fleet_monitor.py`, open questions on scope/cadence/registry-shape, linked bidirectionally). Flipping the
+  todo above; the real implementation work forks into an AO-dispatchable plan once that design doc's open questions are
+  resolved.
