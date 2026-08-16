@@ -184,12 +184,22 @@ findings.
       cap-exhaustion pattern already shipped for Polymarket/Kalshi this session (`_RAYDIUM_MAX_PAGES=10000` safety-net).
       New regression test `test_get_instruments_paginates_past_first_page` proves a 2-page/3-pool universe is no longer
       truncated to the first page. Full quality-gates.sh green (107s).
-- [ ] [SCRIPT] P3. **Coinbase CDE futures-universe cap, no guard.**
+- [x] ✅ [SCRIPT] P3. **Coinbase CDE futures-universe cap, no guard.**
       `instruments_service/reference_data/adapters/cefi/coinbase_cde.py` `get_instruments` (`limit="250"`, single GET,
       no offset loop or count check) — docstring claims "ALL 99 real live products" today (well under 250) but no
       runtime check protects against growth past 250. Repo: instruments-service. Done when: a runtime check compares the
       returned count against the response's total-count field (if the API exposes one) and logs/pages when the universe
-      approaches or hits the 250 cap.
+      approaches or hits the 250 cap. — instruments-service@31de8c9bd1: live-probed the endpoint (2026-08-16) and found
+      it has no independent "total" field — `num_products` is just the current page's count, always equal to
+      `len(products)` — but it DOES genuinely paginate via `pagination.{next_cursor,has_next}` (2 live probes at
+      limit=5 confirmed zero product_id overlap across pages). Implemented real cursor-based pagination instead of a
+      count-vs-cap heuristic (mirrors `kalshi_perp.py`'s shard-isolation error handling and `raydium.py`'s for/else
+      `_MAX_PAGES=10000` safety-net cap-exhaustion warning + `ADAPTER_PAGE_CAP_HIT` emission in this same session) — a
+      >1-page universe can no longer be silently truncated at all, which fully closes the finding rather than just
+      warning near the old 250 cap. 3 new regression tests: `test_get_instruments_paginates_past_first_page` (2-page
+      universe fully collected), `test_get_instruments_logs_page_cap_hit` (page-budget exhaustion emits
+      `ADAPTER_PAGE_CAP_HIT`), `test_get_instruments_single_page_response_still_works` (no-`pagination`-key response
+      still terminates correctly). Full quality-gates.sh green (141s).
 - [ ] [SCRIPT] P3. **Dormant prediction-market hard page-count ceilings — activate-on-re-enable risk.**
       `instruments_service/reference_data/adapters/cefi/{kalshi_perp,polymarket_perp}.py` both define `_PAGE_LIMIT=200`,
       `_MAX_PAGES=10` (hard 2000-contract ceiling — NOT exhaustion-driven, stops even when `has_more`/cursor says more
@@ -313,6 +323,9 @@ findings.
   line above for detail. instruments-service@2d7c19827, QG green (exit 0), quickmerge landed + ancestry-verified on
   origin/live-defi-rollout. Remaining todos in this doc are still open.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- 2026-08-16 (slot 12, data_engineering): shipped the Coinbase CDE futures-universe cap todo — see the todo's own
+  evidence line above for detail. instruments-service@31de8c9bd1, QG green (141s), quickmerge landed + ancestry-verified
+  on origin/live-defi-rollout. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
