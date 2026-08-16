@@ -47,7 +47,7 @@ context_scope:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
-    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
+    /plans/archive/2026_08/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
     unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py,
