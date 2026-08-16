@@ -138,7 +138,7 @@ source: >-
       pull that bypasses the manifest and also isn't dispatched). Done-when: a real implementation exists and is
       wired, or the gap is confirmed intentional with a cited reason.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, 0/45 rows reach a genuinely complete
-      end-to-end state.** SHIPPED — `unified-trading-pm@<this commit>`. 2 parallel research passes (strategy-
+      end-to-end state.** SHIPPED — `unified-trading-pm@9f23cf22e5`. 2 parallel research passes (strategy-
       service archetype/slot + position-adapter chain-suffix mechanics; execution-service `InstructionActionV2`
       routing), scoped to the 45 `lending_indices`/`lst_rates` rows (31 protocol families) that cleared step 5;
       `oracle_prices`/`dex_pool_state`/`dex_pool_swaps`/`staking_yields` rows stay `BLOCKED-ON` their step-5 gap
@@ -289,7 +289,7 @@ source: >-
 ## Progress Log
 
 **2026-08-16 — steps 6-8 swept, 6 more real gaps found — 0/45 rows (31 protocol families) reach a complete
-end-to-end state.** SHIPPED — `unified-trading-pm@<this commit>`. 2 parallel research passes (strategy-service
+end-to-end state.** SHIPPED — `unified-trading-pm@9f23cf22e5`. 2 parallel research passes (strategy-service
 archetype/slot + position-adapter mechanics; execution-service `InstructionActionV2` routing), scoped to the 45
 `lending_indices`/`lst_rates` rows that cleared step 5. Confirmed chain is never part of the resolvable position-
 adapter venue identity (protocol-only match, chain via RPC config) — so the right check granularity is per-
