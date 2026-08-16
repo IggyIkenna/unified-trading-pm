@@ -19,7 +19,7 @@ summary: >-
   (ts_event→timestamp), fix the futures_chain row_key to omit empty `chain`, and RELAUNCH the 7 years (on-demand or with
   a preemption-resilient strategy — SPOT lost 5/7 in minutes). Repo: market-tick-data-service (schema + manifest
   row_key), deployment-service (launcher).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -36,7 +36,7 @@ source:
   "Monitoring of tradfi-bf-vix-light-{2020..2026}-20260810-13{1032,1055,1116,1136,1155,1218,1254} VMs (worker slot 12,
   dispatched from /plans/active/issues/tradfi_vix_full_history_backfill_2026_08_10.md, 2026-08-10)"
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-12 (data_engineering), 2026-08-16 — all 7 VIX VMs terminal + manifest re-verified full 2020-06-01→2026-08-07 real captured coverage
 locked_by:
 created: 2026-08-10
 priority: P1
@@ -51,6 +51,10 @@ context_scope:
     deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
   ]
 ---
+
+> **🟢 RESOLVED 2026-08-16** — all 7 relaunched VIX backfill VMs completed terminally (EXIT_STATUS=0, self-deleted); the
+> consolidated manifest shows real captured CBOE/VIX rows spanning 2020-06-01→2026-08-07, zero gaps 2020-2025. All todos
+> done. Archived.
 
 # VIX futures backfill launch FAILED
 
@@ -149,10 +153,21 @@ operations log (all times UTC):
       Backfill is IN PROGRESS, not terminal — the 7 on-demand VMs are ~1h into a multi-hour full-history run. No code
       shipped (verification-only task).
 
-- [ ] [DATA] P3. After all 7 VIX backfill VMs reach terminal completion (STOPPED/TERMINATED with EXIT_STATUS=0 or
-      self-deleted), re-verify the consolidated manifest covers the full 2020-06-01→today window with real captured rows
-      (row_count>0) across all years. Per-VM manifests already show data flowing; this is the terminal gate. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-12, data_engineering).** All 7 VIX backfill VMs
+      (`tradfi-bf-vix-light-{2020..2026}-20260810-172{145,159,215,230,246,300,317}`) confirmed terminal: each
+      `vm-logs/<vm>/EXIT_STATUS`=`0`, run.log tail shows `mtds-backfill loop complete` → `[vm-exec] command exited rc=0`
+      → `DEPLOYMENT_COMPLETED ... exit_code=0` → `VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete`; all chunks
+      completed (53/53 for full years, 32/32 for 2026-YTD); `gcloud compute instances list --filter="name~'^tradfi-bf-vix-light-'"`
+      returns 0 running (self-deleted, not preempted/killed). Consolidated manifest
+      (`_index/availability_index.parquet`, CBOE/VIX rows) re-verified: **29,908 captured rows (row_count>0), sum
+      row_count=69,643,743, spanning 2020-06-01→2026-08-07.** Per-year status breakdown: 2020-2025 are **100% captured,
+      0 `empty_confirmed`/`expected_unattempted`** (2020: 2987 dates/7.9M rows; 2021: 4783/8.9M; 2022: 4838/13.4M; 2023:
+      4939/9.0M; 2024: 4826/13.4M; 2025: 4788/8.7M) — the full 2020-06-01 UAC CBOE floor→2025-12-31 window has real
+      captured VIX/CBOE data, zero gaps. 2026 is captured through 2026-08-07 (2747 dates, 8.4M rows) with 1634
+      `expected_unattempted` + 355 `empty_confirmed` for the ~9 days since the 2026-08-10 backfill run (T+1 Databento
+      lag + weekly forward-poll cadence — the ongoing daily forward-poll cron, not a backfill gap; out of this task's
+      scope). Done-when met: all 7 VMs terminal + manifest shows real captured VIX/CBOE rows spanning
+      2020-01-01(→2020-06-01 floor)→today. No code changes needed (verification-only task).
 - [x] ✅ [DATA] P0. **DONE 2026-08-10 (main, Claude Code session) — the `market-tick-data-service@e14f358b` source=
       kwarg bug (todo above) is NOT VIX-specific: it hit 6 CME futures roots too, one of them still actively failing
       live when found.** Checked every `tradfi-bf-cme-ohlcv-1m-*` VM launched today (19 total, all pre-fix, 12:07-15:07
@@ -190,3 +205,12 @@ operations log (all times UTC):
   PROGRESS — VMs will need several more hours to complete the full 7-year window.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+
+- 2026-08-16 (slot-12, data_engineering): final todo (terminal-gate re-verify). All 7 relaunched VMs
+  (`...-172{145,159,215,230,246,300,317}`) confirmed terminal via `EXIT_STATUS=0` + run.log
+  `DEPLOYMENT_COMPLETED exit_code=0` + self-delete scheduling; 0 remain in `gcloud compute instances list`. Consolidated
+  manifest re-verified via a column-pruned pyarrow read (memory-bounded, `run-bounded-analysis.sh`) of
+  `_index/availability_index.parquet`: CBOE/VIX has 29,908 captured rows (row_count>0, sum=69.6M) spanning
+  2020-06-01→2026-08-07; years 2020-2025 are 100% `captured` status with zero `empty_confirmed`/`expected_unattempted`
+  gaps; 2026 captured through 2026-08-07 with the remaining ~9 recent days pending the ongoing daily forward-poll (not a
+  backfill defect). All todos in this issue doc are now complete.

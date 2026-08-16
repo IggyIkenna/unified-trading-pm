@@ -18,7 +18,7 @@ summary: >-
   checked 2026-08-09: only 1 mtds-backfill-odds-* VM running (smallchunk12) — the earlier-seen smallchunk9+smallchunk12
   co-running state was within odds-api-concurrency-guard.sh's cap (intentional --allow-parallel sharding), not a
   violation.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -58,7 +58,7 @@ estimate_calibrated_ai_days: 0.12
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: slot-26 (data_engineering), 2026-08-16 — deployment-service@4aa5f6d90d, market-tick-data-service@3adab2d401
 locked_by:
 locked_since:
 supersedes:
@@ -152,10 +152,10 @@ it's a budget-accounting completeness question best addressed alongside the exis
 the 2026-08-02 incident, not by extending this launcher's own name-pattern filter (a live VM is not a candidate to be
 blocked/refused the way another backfill VM is — it must keep running).
 
-- [ ] [DOC] P3. Investigate whether `odds-api-concurrency-guard.sh`'s credit-budget cap math should also account for the
-      always-on `mtds-live-sports-odds-api-trades-*` VM's ongoing consumption (or a separate, smaller, documented
+- [x] ✅ [DOC] P3. Investigate whether `odds-api-concurrency-guard.sh`'s credit-budget cap math should also account for
+      the always-on `mtds-live-sports-odds-api-trades-*` VM's ongoing consumption (or a separate, smaller, documented
       key/budget already covers live vs. backfill separately — confirm which before changing anything). Repo:
-      deployment-service.
+      deployment-service — deployment-service@4aa5f6d90d, market-tick-data-service@3adab2d401.
 
 ## Progress Log
 
@@ -185,3 +185,26 @@ blocked/refused the way another backfill VM is — it must keep running).
   structurally exempt (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`) and archival on this one todo's
   own done-when is trivial, so no companion finalize doc authored.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **2026-08-16 (slot 26, data_engineering)**: Resolved the follow-up todo. Confirmed via
+  `odds-api-concurrency-guard.sh` + `launch-mtds-sports-odds-backfill-vm.sh`: the guard's "cap" is a VM-COUNT limit
+  (`existing + planned <= cap`), never a real credit-number computation — it does not read `x-requests-remaining` at
+  all, so there is no numeric "credit budget" to literally add the live VM's draw into. Confirmed via
+  `market-tick-data-service/docs/SPORTS_ODDS.md`, `odds_api_ws.py`'s own docstring ("existing odds-api-key vault entry
+  (already used by batch path)"), and the 2026-08-03 entry in
+  `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md` (live curl: `x-requests-remaining: 14992590` +
+  `x-requests-used: 7410` = exactly 5M recurring + 10M top-up = 15M total): the live producer draws on the SAME shared
+  `odds-api-key` credit pool as batch — **not** a separate/smaller budget (rules out the todo's parenthetical
+  alternative). The live VM (`mtds-live-sports-odds-api-trades-*`, launched via `launch-mtds-live.sh`) is also NOT
+  counted by the guard's `ODDS_API_VM_NAME_PATTERN` (`^mtds-backfill-odds-`, a different VM-name prefix) and, by
+  design, must never be refused the way a queued backfill VM can be. Adjacent finding surfaced by this investigation
+  (findings-triage: small + clear + directly on-topic, fixed inline): the live connector
+  (`odds_api_ws.py::OddsApiWSFeedConnector`) never inspected `x-requests-remaining` at all — unlike the batch adapter's
+  `credits_exhausted` circuit breaker (`< 10` remaining), live had ZERO credit visibility, so a live-caused drain
+  toward the shared key would have gone unnoticed until fully negative (as happened in the 2026-08-02 incident). Fixed
+  by adding `_check_credits_remaining` (mirrors the batch adapter's `< 10` threshold, but WARNs instead of stopping —
+  a live producer can't self-stop) with state-transition dedup so it doesn't spam every ~60s poll. Documented the
+  scope boundary directly in `odds-api-concurrency-guard.sh` (VM-count-only, no credit input, live handled separately
+  in the connector) so a future reader doesn't re-derive this. 7 new unit tests added
+  (`tests/unit/test_odds_api_ws_connector.py::TestCheckCreditsRemaining`). No change to `odds-api-concurrency-guard.sh`'s
+  actual cap logic — there was nothing numeric to add the live VM into; the real fix is the live-side visibility this
+  session added.

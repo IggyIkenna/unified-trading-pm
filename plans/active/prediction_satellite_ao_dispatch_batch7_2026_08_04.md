@@ -10,7 +10,7 @@ summary: >-
   `never_cited_count=12` (up from 11 — the 11 prior basenames are unchanged, all still genuinely cross-cutting
   multi-AG-tagged; +1 new). A fresh 12-agent Phase-1 Workflow classified all 12: 11 `exclude_cross_cutting` (matches
   prior rounds' verdict on the same 11 basenames) and exactly 1 `orphaned_never_touched` —
-  `issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md` (created 2026-08-02, one day after the
+  `archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md` (created 2026-08-02, one day after the
   last full audit, so no prior round could have seen it). That doc's own remaining work is a single bounded, AO-eligible
   P3 todo (check whether any real downstream consumer reads `available_at` for `data_type in {trades, book_snapshot_5}`
   on prediction-venue data), conflict-checked clean against all 11 covering docs + the doc's own cross-cutting parent
@@ -27,7 +27,7 @@ tags: [prediction, ao-dispatch, close-out, batch-7, available_at, downstream-con
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
+    /plans/archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -59,7 +59,7 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
+    /plans/archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
     market-tick-data-service/market_tick_data_service/scripts/_rebuild_prediction_emit.py,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -83,18 +83,20 @@ audit ran (2026-07-31) — so no prior round could plausibly have seen it.
 
 ## Todos
 
-- [ ] [DATA] P3. **Check whether any real downstream consumer reads `available_at` for
-      `data_type in {trades, book_snapshot_5}` on prediction-venue (Polymarket/Kalshi) data.** Grep
-      `market-tick-data-service`, `market-data-processing-service`, `features-service`, `strategy-service`,
-      `execution-service`, `deployment-api`, and `deployment-ui`/`unified-trading-system-ui` for real (non-test) call
-      sites that filter or gate on `available_at` specifically for `data_type=trades` or `data_type=book_snapshot_5`
-      prediction rows (as opposed to the already-filled `prediction_canonical_question_group` bundle rows, which are out
-      of scope here — that data_type is confirmed fully covered per the source doc). Repo: market-tick-data-service (+
-      read-only cross-repo grep). Source: `issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`
-      (its own remaining todo, verbatim). **Done when**: a definitive verdict is recorded in that doc's Progress Log —
-      either (a) a real consumer exists, naming it + what it needs, so a separately-scoped `available_at` backfill for
-      `trades`/`book_snapshot_5` can be scoped as a follow-up; or (b) no real consumer exists, so the doc's one
-      remaining todo is checked off and the doc is eligible for archival (0 open todos, `status: resolved`).
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-19, data_engineering) — unified-trading-pm@e3ca863b9d** — code-read across
+      `market-tick-data-service`
+      (write side) + `market-data-processing-service` (candle-compute read side; `features-service`/`strategy-service`/
+      `execution-service`/`deployment-api`/UI checked via grep, no hits). **Verdict**: a real, non-test consumer
+      exists for Kalshi `trades` only — `market-data-processing-service`'s `PredictionTradesAdapter.
+      _get_local_timestamp_column` reads `available_at` as the candle-timestamp source for KALSHI-shaped rows — but it
+      reads the RAW captured parquet's own write-time-stamped column (`market-tick-data-service`'s
+      `kalshi_adapter.py`, unconditional per-row stamp), not the AVAILABILITY MANIFEST's shard-level
+      `available_at`/`available_at_envelope` metadata field this doc's fill-rate audit measured — so the low manifest
+      fill-rate does not affect this consumer. No consumer found for Polymarket `trades` or `book_snapshot_5` (either
+      venue). **No separately-scoped manifest backfill is needed** for either data_type — practically resolves to
+      option (b) of the done-when (no backfill scoped). Full evidence recorded in the source doc's own Progress Log
+      (checkbox flipped there too, `status: open` → `resolved`, 0 open todos). Source:
+      `archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`.
 
 ## Deferred
 

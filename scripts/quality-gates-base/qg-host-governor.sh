@@ -83,6 +83,18 @@
 #                         (minutes, default 30)
 #   QG_SLACK_OVERRUN_COOLDOWN_MIN    per-repo dedup cooldown for the cap-overrun alert
 #                         (minutes, default 30)
+#   QG_GOVERNOR_MAX_WAIT_SECONDS  bounded patience for EVERY acquire loop (token,
+#                         reservation, total-instance) — operator ruling 2026-08-16,
+#                         plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+#                         "Option 1". Past this many seconds of real queue time, the
+#                         WAITING run gives up loudly (marker file + Slack + a
+#                         distinct exit 75) instead of hanging indefinitely — see
+#                         _qg_governor_check_wait_timeout. Default 3600 (60min, the
+#                         operator's own figure). 0 disables (same effect as
+#                         QG_GOVERNOR_WAIT_TIMEOUT_DISABLE=true).
+#   QG_GOVERNOR_WAIT_TIMEOUT_DISABLE  set to "true" to disable the wait-timeout above
+#   QG_SLACK_WAIT_TIMEOUT_COOLDOWN_MIN  per-(repo,gate) dedup cooldown for the
+#                         wait-timeout alert (minutes, default 30)
 #
 # Safe to source repeatedly; functions are idempotent. No effect on correctness — purely
 # a scheduling throttle, so a missing flock(1) degrades gracefully to "no governor".
@@ -557,7 +569,20 @@ _qg_try_reserve() { # <repo> <this_peak_mb> <pid>
 _qg_governor_acquire_reservation() {
     [[ -n "${_QG_RESERVED_PID:-}" ]] && return 0   # idempotent — already holding a reservation
     local repo this waited=0 decision
-    repo="${QG_GOVERNOR_REPO:-${SERVICE_NAME:-unknown}}"
+    # BUG FIX (found live 2026-08-16 chasing a real 9h+ stall): this used to fall back to
+    # the literal string "unknown" when neither QG_GOVERNOR_REPO nor SERVICE_NAME was set
+    # by the caller — already flagged, not yet fixed, in
+    # qg_host_adaptive_resource_governor_2026_07_14.md's "2026-08-15, uac ship" entry.
+    # "unknown" hits _qg_repo_peak_mb's unmeasured-repo path -> QG_UNMEASURED_PEAK_MB
+    # (5500MB, deliberately the heaviest guess) even for a light repo with a real measured
+    # baseline (e.g. unified-api-contracts's real peak ~1117MB) — a ~5x RAM-reservation
+    # overstatement that can fail WAIT_RAM_LIVE under transient host pressure when the
+    # REAL request would have fit easily, indistinguishable from genuine contention in
+    # the "queued Ns" log. _qg_repo_name() (git-remote-derived, the SAME resolver the
+    # total-instance gate already uses successfully) is a robust fallback that needs no
+    # caller-set env var at all — only the truly-ungit-able edge case still reaches
+    # "unknown" inside _qg_repo_name() itself.
+    repo="${QG_GOVERNOR_REPO:-${SERVICE_NAME:-$(_qg_repo_name)}}"
     this="$(_qg_repo_peak_mb "$repo")"
     while true; do
         decision="$(_qg_ledger_with_lock _qg_try_reserve "$repo" "$this" "$$")"
@@ -571,6 +596,7 @@ _qg_governor_acquire_reservation() {
                 return 0 ;;
         esac
         sleep 2; waited=$(( waited + 2 ))
+        _qg_governor_check_wait_timeout "$repo" "$waited" "reservation"
         (( waited % 30 == 0 )) && echo "[qg-governor] ${repo} (${this}MB) waiting: ${decision} ${waited}s" >&2
     done
 }
@@ -634,6 +660,64 @@ _qg_governor_check_overrun() { # <repo> <phase> <exit_code>
     [[ "$rc" -eq 137 ]] || return 0
     _qg_governor_slack_alert "CRITICAL" "qg-governor-overrun:${repo}" "${QG_SLACK_OVERRUN_COOLDOWN_MIN:-30}" \
         "QG ${phase} for ${repo} was OOM-killed (exit 137) inside its systemd cgroup — exceeded its ${QG_MEM_CAP:-1.2x-baseline} cap. Repo may have outgrown its committed baseline; re-profile via scripts/dev/measure-qg-baseline.sh."
+}
+
+# ── QUEUE-WAIT TIMEOUT (operator ruling 2026-08-16 — plan
+#    qg_host_adaptive_resource_governor_2026_07_14.md, "Option 1") ───────────
+# WHY: ten consecutive queued (PRE-admission) quality-gates.sh runs died SILENTLY
+# in 2026-08-15 field incidents (slots 25/29) while still inside one of the
+# acquire loops below — no terminal marker, no exit code, `ps` just shows the PID
+# gone. The external kill's root cause was never confirmed (kernel OOM, the
+# per-repo cgroup cap, and this file's OWN post-admission RAM watchdog were each
+# positively ruled out by direct measurement — see that plan's 2026-08-15 Progress
+# Log entries) — but every acquire loop had ZERO internal timeout/self-kill logic
+# of its own, so a genuinely-stuck queue and an unexplained external kill were
+# indistinguishable: both looked identical, a frozen "queued Ns" line and nothing
+# else, ever. This does NOT root-cause that external kill — it bounds the
+# SYMPTOM every future incident shares (an indefinite, unattributable hang) so a
+# stuck queue becomes a loud, attributable, retryable FAILURE instead.
+#
+# SELF-SCOPED, same posture as _qg_watchdog_*: only ever exits the CURRENT
+# process (the one that has been waiting) — never touches any other slot's PID,
+# so this cannot become a cross-process kill of a peer's legitimate work.
+#
+# DEFAULT (3600s = 60min) chosen against the field data, not guessed: the worst
+# LEGITIMATE queue depth measured in that plan (2026-08-15, "THIRD FINAL UPDATE",
+# a 4-5-deep pileup against a sub-cap-1 repo) was ~1170s (~20min) end to end.
+# 3600s leaves real headroom above every measured legitimate case while still
+# bounding the wait — a queue that's still waiting past an hour is no longer
+# ordinary contention by any measurement on record.
+_qg_governor_wait_timeout_seconds() { echo "${QG_GOVERNOR_MAX_WAIT_SECONDS:-3600}"; }
+
+# <repo> <waited_seconds> <gate_label> — no-op until waited crosses the timeout,
+# then writes a loud marker (mirrors _qg_watchdog_loop's marker pattern), fires a
+# best-effort Slack alert, and EXITS THE WHOLE SCRIPT (this file is sourced, so
+# `exit` here terminates the caller, not just this function) with a distinct,
+# greppable code — never a silent hang, never a return the caller must remember
+# to check.
+_qg_governor_check_wait_timeout() {
+    local repo="$1" waited="$2" gate="$3" max
+    [[ "${QG_GOVERNOR_WAIT_TIMEOUT_DISABLE:-}" == "true" ]] && return 0
+    max="$(_qg_governor_wait_timeout_seconds)"
+    (( max > 0 )) || return 0
+    (( waited >= max )) || return 0
+
+    local dir marker
+    dir="$(_qg_ledger_dir)"; mkdir -p "$dir" 2>/dev/null
+    marker="${dir}/timeout.$$"
+    {
+        echo "killed_by=qg-governor-wait-timeout"
+        echo "gate=${gate}"
+        echo "repo=${repo}"
+        echo "pid=$$"
+        echo "waited_seconds=${waited}"
+        echo "max_wait_seconds=${max}"
+        echo "timed_out_at_epoch=$(date +%s 2>/dev/null || echo 0)"
+    } > "$marker" 2>/dev/null
+    echo "[qg-governor] KILLED(timeout): ${repo} gave up on the ${gate} gate after ${waited}s (>= QG_GOVERNOR_MAX_WAIT_SECONDS=${max}s) — marker: ${marker}. Failing LOUDLY instead of hanging silently; retry, or run 'bash qg-host-governor.sh --status' to check real fleet contention." >&2
+    _qg_governor_slack_alert "CRITICAL" "qg-governor-wait-timeout:${repo}:${gate}" "${QG_SLACK_WAIT_TIMEOUT_COOLDOWN_MIN:-30}" \
+        "QG governor: ${repo} (${gate} gate) gave up after ${waited}s queued (>= ${max}s max) on $(hostname 2>/dev/null || echo host) — marker: ${marker}. Genuine fleet contention or a stuck queue? Check --status."
+    exit 75
 }
 
 # ── RUNTIME ABORT-MONITOR (Phase 4 hardening) ────────────────────────────────
@@ -728,7 +812,7 @@ _qg_watchdog_start() {
     [[ "${QG_GOVERNOR_MODE:-reservation}" == "reservation" ]] || return 0
     [[ "${QG_GOVERNOR_WATCHDOG_DISABLE:-}" == "true" ]] && return 0
     [[ -n "${_QG_WATCHDOG_PID:-}" ]] && return 0   # already running
-    local repo="${1:-${QG_GOVERNOR_REPO:-${SERVICE_NAME:-unknown}}}"
+    local repo="${1:-${QG_GOVERNOR_REPO:-${SERVICE_NAME:-$(_qg_repo_name)}}}"
     ( _qg_watchdog_loop "$$" "$repo" ) &
     _QG_WATCHDOG_PID=$!
     disown "$_QG_WATCHDOG_PID" 2>/dev/null || true
@@ -782,6 +866,7 @@ qg_governor_acquire() {
             eval "exec ${fd}>&-"   # slot busy — close and try next
         done
         sleep 2; waited=$(( waited + 2 ))
+        _qg_governor_check_wait_timeout "${QG_GOVERNOR_REPO:-${SERVICE_NAME:-$(_qg_repo_name)}}" "$waited" "token"
         # narrate every ~30s so a long queue is visible, not silent
         (( waited % 30 == 0 )) && echo "[qg-governor] all ${k} tokens busy — queued ${waited}s" >&2
     done
@@ -888,6 +973,7 @@ qg_governor_acquire_total_instance() {
             _QG_REPO_TOTAL_FD=""
         fi
         sleep 1; waited=$(( waited + 1 ))
+        _qg_governor_check_wait_timeout "$repo_name" "$waited" "total-instance"
         (( waited % 30 == 0 )) && echo "[qg-governor] total-instance tokens busy (${repo_name} sub-cap ${repo_k} / host-wide cap ${global_k}) — queued ${waited}s" >&2
     done
 }

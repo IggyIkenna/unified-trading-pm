@@ -25,7 +25,7 @@ created: 2026-07-28
 authoritative_for: [plan archival-when-done ritual, todos-not-prose rule]
 referenced_by: [CLAUDE.md § "Plans — format + authoring discipline"]
 owner:
-last_reviewed:
+last_reviewed: 2026-08-16
 code_refs:
 ---
 
@@ -64,8 +64,15 @@ but all todos are done — should I unlock it?") but MUST NEVER unlock autonomou
    (near-miss 2026-07-28: a CLAUDE.md bullet citing specific cron-delivery measurements almost got repointed at an
    archived plan instead of confirming the numbers were already recorded in `/codex/04-architecture/ci-alerting.md`,
    where they were).
-6. Clear the lock (if one existed) and confirm the move — the doc should now live under `plans/archive/<YYYY_MM>/`, not
-   `plans/active/`.
+6. Clear the lock (if one existed) and confirm the move. **The destination path depends on `doc_type` (resolved
+   2026-08-16 — this doc previously contradicted itself, using both forms in its own worked examples below;
+   [`archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`](/plans/archive/issues/archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md) has the full corpus
+   measurement — 1484 issue docs already at flat `plans/archive/issues/` vs 296 at the dated form, ~83%/17%)**: a
+   `doc_type: issue` doc moves to flat **`plans/archive/issues/`**, per
+   [`issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md) — the authoritative, internally
+   consistent SSOT for issue-doc archival path, stated unambiguously in its state-machine table. Every other
+   `doc_type` (`plan`, epic finalize docs, etc.) moves to the dated **`plans/archive/<YYYY_MM>/`** shown throughout
+   the rest of this section. Either way, not `plans/active/`.
 
 `run_hygiene_sweep.sh` + `regenerate_active_plan_inventory.py` catch a stale-active-but-fully-checked plan on their own
 cadence, but that is the SAME "caught later, not at completion time" pattern this doc exists to stop relying on.
@@ -131,8 +138,9 @@ should not be, in the cross-repo case).
 
 **Single-repo (mode-1) finalize plans: same-commit flip+archival is the SANCTIONED path (narrowed 2026-08-10).** When
 the plan-of-record lives directly inside the worker's own worktree (e.g. a worker whose worktree IS
-`unified-trading-pm/`), a single commit that flips the last todo AND `git mv`s the doc to `plans/archive/<YYYY_MM>/` is
-now the compliant, hook-satisfying shape:
+`unified-trading-pm/`), a single commit that flips the last todo AND `git mv`s the doc to `plans/archive/<YYYY_MM>/`
+(this section covers `doc_type: plan` finalize docs — an issue doc uses flat `plans/archive/issues/` instead, per step
+6 above) is now the compliant, hook-satisfying shape:
 
 - `check_archive_candidates.sh --only` DEMANDS it: a flip-only commit that leaves the doc 0-open/some-done/unlocked/
   not-exempt is rejected, while the combined commit passes (the old-path deletion is skipped, the archive-path add is

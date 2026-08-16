@@ -729,7 +729,7 @@ context_scope:
   the doc has 4 open items. Items (1) [terraform/scheduler wiring for staking-yields, doc's own "§ 6.1"] and (4) [codex
   defi-data-types-catalog.md § 7 Production-label fix] ARE covered — verbatim-matching todos exist in
   defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 326-333...
-- **`plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`**: Confirmed the two uncovered items
+- **`plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`**: Confirmed the two uncovered items
   are Todo3 (P2 spot-check dex_pool_state/dex_pool_swaps coverage for all 4 protocols — UNISWAP_V2, UNISWAP_V4,
   TRADER_JOE_V2, VELODROME_V2 — across 2026-03→today, gated on "once the relaunched mtds-dex-pools-backfill VM (this
   session) + the running mtds-dex-swaps-backfill-1/2/3 fleet...

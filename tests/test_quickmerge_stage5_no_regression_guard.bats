@@ -150,3 +150,81 @@ _make_fixture_repo() {
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
+
+# ── high-fan-out concurrent-push contention (utl_shared_clone_commits_repeatedly_reset_2026_07_22.md
+#    todo 9) ──────────────────────────────────────────────────────────────────
+#
+# The 4 tests above all mutate a SINGLE clone's own ref state directly (manual
+# `checkout -B` / `reset --hard` in the one working tree) -- none of them involve
+# a second git actor pushing to origin concurrently, which is the actual
+# real-world trigger reported in fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
+# (multiple concurrent agent sessions landing commits on the same branch name,
+# "Reset to origin" hit repeatedly across 24 fleet repos in one day, root-caused
+# there as "ordinary high push-contention from multiple concurrent sessions").
+# This test replays that shape with two independent clones of the same origin.
+
+@test "guard FIRES under realistic multi-session concurrent-push contention (fleet incident replay)" {
+    work_b="$(_make_fixture_repo)"
+    origin="$(git -C "$work_b" remote get-url origin)"
+
+    # Session A clones the SAME origin as of the base commit -- models an
+    # isolated/fresh worktree clone that hasn't seen session B's work yet.
+    # The bare origin's default HEAD symref still points at whatever branch
+    # existed at `git init --bare` time (before live-defi-rollout was pushed),
+    # so a plain clone lands on an empty "master" checkout -- explicitly check
+    # out the real branch.
+    work_a="${BATS_TEST_TMPDIR}/work_a_$$_${RANDOM}"
+    git clone -q "$origin" "$work_a"
+    (cd "$work_a" && git checkout -q live-defi-rollout)
+
+    # Session B is a concurrent, unrelated session/repo that lands and pushes
+    # FIRST, on the same branch name.
+    (
+        cd "$work_b" || exit 1
+        git config user.email "b@example.com"
+        git config user.name "SessionB"
+        echo "session-b work" > b.txt
+        git add b.txt
+        git commit -q -m "session B unrelated commit"
+        git push -q origin live-defi-rollout
+    )
+
+    # Session A makes its own QG-certified commit locally, then detaches + drops
+    # its local branch ref -- the precise isolated-worktree precondition the
+    # guard's own header comment names ("refs/heads/\$BRANCH not recognised as
+    # already checked out"), reached via normal git plumbing (checkout --detach +
+    # branch -D), not a raw ref-file edit.
+    (
+        cd "$work_a" || exit 1
+        git config user.email "a@example.com"
+        git config user.name "SessionA"
+        echo "session-a certified change" > a.txt
+        git add a.txt
+        git commit -q -m "session A certified work"
+    )
+    pre_head="$(cd "$work_a" && git rev-parse HEAD)"
+    pre_branch="live-defi-rollout"
+    (cd "$work_a" && git checkout -q --detach && git branch -D live-defi-rollout -q)
+
+    # STAGE 5's exact branch-selection call: origin now carries session B's
+    # commit, which session A's clone has never fetched, and refs/heads/$BRANCH
+    # doesn't exist locally in work_a -> hits the destructive elif arm via a real
+    # multi-session race, not a single-clone manual construction.
+    (cd "$work_a" && git fetch -q origin live-defi-rollout \
+        && git checkout -B live-defi-rollout origin/live-defi-rollout --quiet)
+    post_branch="$(cd "$work_a" && git branch --show-current)"
+
+    # Sanity: origin's tip really is session B's commit now, not session A's.
+    run bash -c "cd '$work_a' && git log -1 --format=%s"
+    [ "$output" = "session B unrelated commit" ]
+
+    run _run_stage5_no_regression_guard "$work_a" "$pre_head" "$pre_branch" "$post_branch"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"refs/wip-preserve/quickmerge-stage5-regate-${pre_head:0:12}"* ]]
+
+    # Session A's certified commit is durably recoverable, unaffected by the
+    # concurrent session B commit that displaced it.
+    run bash -c "cd '$work_a' && git rev-parse '$output'"
+    [ "$status" -eq 0 ]
+    [ "$output" = "$pre_head" ]
+}

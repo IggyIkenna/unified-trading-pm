@@ -22,7 +22,7 @@ related:
   [
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch9_2026_08_09_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

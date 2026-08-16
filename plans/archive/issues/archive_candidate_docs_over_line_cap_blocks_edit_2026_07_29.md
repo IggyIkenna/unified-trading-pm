@@ -43,7 +43,7 @@ resolved_by:
 context_scope:
   [
     /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
-    /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     scripts/plan-hygiene/check_line_caps.sh,
@@ -140,7 +140,7 @@ content:
       `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`); (2) _Morpho `lending_indices` live-verify /
       rc=137 non-recurrence_ — migrated into a real tracked `- [ ]` todo (`[VERIFY] P3`, broadened to all 7
       not-yet-live-verified DeFi handlers) in
-      `/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`. The sibling `tradfi_mdps` split
+      `/plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`. The sibling `tradfi_mdps` split
       todo above is untouched and still open.
 
 ## Progress Log

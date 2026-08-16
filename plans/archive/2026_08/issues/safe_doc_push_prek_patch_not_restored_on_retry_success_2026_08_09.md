@@ -32,7 +32,7 @@ tags: [safe-doc-push, prek, precommit, data-loss, quickmerge, ci, plan-hygiene]
 related:
   [
     /scripts/dev/safe-doc-push.sh,
-    /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md,
   ]
 created: 2026-08-09
@@ -179,7 +179,7 @@ mitigations, cheapest first:
   machinery silently discarding uncommitted foreign edits) is called out as a currently-live hazard in this session's
   own `SUB_AGENT_MANDATORY_RULES.md` — worth fixing at the root rather than leaving as a standing risk. Gated finalize
   twin authored:
-  `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md`.
+  `/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md`.
 - **2026-08-10 (slot 12, infra, `safe_doc_push_prek_patch_not_restored_on_retry_success-824ee8f3a711`)**: todo 1
   investigated. **Deliberate reproduction** (scratch repo, prek 0.4.12, a local `gate` hook that fails once via a marker
   file then passes, an unrelated file with an unstaged edit present throughout — the exact recipe this todo specifies):

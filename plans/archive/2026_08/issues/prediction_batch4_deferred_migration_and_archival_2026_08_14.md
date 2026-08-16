@@ -10,7 +10,7 @@ summary: >-
   "evaporate with the archived plan" — this is a judgment-call audit (which items are already tracked elsewhere vs.
   genuinely need a new batch5 dispatch plan), out of scope for the single mechanical worker who flipped the last
   checkbox.
-status: open
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -29,7 +29,7 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P2
 parent_epic: predictions_master
-resolved_by:
+resolved_by: cicd escalation agent (slot 3, agt-8b735e), unified-trading-pm, 2026-08-16
 locked_by:
 source: [prediction_satellite_ao_dispatch_batch4_2026_07_26.md todo 4b-iii, this session's completion]
 drift_direction: advance-code
@@ -43,6 +43,11 @@ context_scope:
 ---
 
 # prediction_satellite_ao_dispatch_batch4 — archival prerequisite
+
+> **ARCHIVED**: resolved by unified-trading-pm (cicd escalation agent, slot 3, agt-8b735e, 2026-08-16) — Deferred
+> sections audited + migrated to `/plans/active/issues/prediction_batch4_deferred_residuals_2026_08_16.md`;
+> `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` archived to `plans/archive/2026_08/`. Successor:
+> `prediction_batch4_deferred_residuals_2026_08_16.md` (the 2 migrated residual todos).
 
 ## What I found
 
@@ -87,16 +92,35 @@ Run `/ag-closeout-audit prediction` (or an equivalent manual pass) scoped to thi
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Audit `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s four Deferred sections per the
-      Recommended decision above; draft `prediction_satellite_ao_dispatch_batch5_<date>.md` for any genuinely-orphaned
-      item. Repo: unified-trading-pm. Done when: every Deferred bullet has a recorded disposition in this issue doc's
-      Progress Log.
-- [ ] [SCRIPT] P2. Archive `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` to `plans/archive/2026_08/` via the
-      6-step ritual (banner, codex-alignment re-check, referrer-path fixup scoped to `plans/active/**` + `codex/**`,
-      confirm the move). Gated on the todo above. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-16 (cicd escalation agent, slot 3).** Audited all 4 Deferred sections against the
+      live corpus: 5 of 7 items already had a tracked home elsewhere (fixture-pairing residual + politics/geo
+      canonicalization both complete in `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`; the tarball race +
+      historical Kalshi enumeration both still live open items in `prediction_cross_venue_arb_and_coverage_2026_07_24.md`;
+      the `book_snapshot_5` row-proof complete in `prediction_live_clob_depth_capture_2026_07_24.md`;
+      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` is itself `status: complete`). The 2 genuinely-orphaned
+      items (the `_index` manifest out-of-lifecycle reclassification + the 49-day metadata-gap investigation) migrated
+      into a real tracked issue doc rather than a full batch5-style AO plan (both are single bounded items, not a
+      dispatch-batch's worth of AO-eligible work):
+      `/plans/active/issues/prediction_batch4_deferred_residuals_2026_08_16.md`. Full per-bullet disposition table in
+      that doc. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-16 (cicd escalation agent, slot 3).** Archived
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` to `plans/archive/2026_08/` via the 6-step ritual —
+      archive banner added, referrer-path fixup applied to the 4 live `plans/active/**` referrers carrying a
+      leading-slash `/plans/active/...` reference (`autonomous_session_operator_decisions_2026_07_25.md`,
+      `prediction_live_clob_depth_capture_2026_07_24.md` ×3, `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+      ×3, `prediction_cross_venue_arb_and_coverage_2026_07_24.md`) repointed to the new archive path; the 2
+      `codex/02-data/*.md` mentions (`canonical-cutover-register.md`, `non-canonical-path-inventory.md`) use bare
+      (non-leading-slash) filename citations, out of `check_reference_paths.py`'s existence-check scope, left as
+      historical citations. No codex contract change from this plan's completion (its content was operational
+      migration work, not a new architectural pattern). Repo: unified-trading-pm.
 
 ## Progress Log
 
 - 2026-08-14 (slot 18, data_engineering): filed after verifying + closing batch4's last open todo (4b-iii). See that
   plan's own Progress Log for the 4b-iii completion evidence.
 - **context-scout 2026-08-15**: populated context_scope (3 entries).
+- 2026-08-16 (cicd escalation agent, slot 3, agt-8b735e, dispatched on `ldr_qg_failure` for
+  `check_archive_candidates`'s ratchet blocking `live-defi-rollout`): completed both todos above — audited +
+  migrated the Deferred residuals, then archived batch4. This doc itself now has 0 open todos and no lock; archiving
+  it in the same commit per the single-repo same-commit flip+archival sanctioned pattern
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).

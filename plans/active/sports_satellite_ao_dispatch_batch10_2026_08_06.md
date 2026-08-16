@@ -135,13 +135,20 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
       the calendar, the proven-correct evaluator will fire it on the next 5-min tick. No code or deploy defect found;
       nothing further to fix. Evidence: `sha256:6f59ec20c3bb8fbf8472387a065ce34755ef2972a86d9fc0672fc2faf38eb391` tagged
       `309f75e8`.
-- [ ] [INFRA] P3. File (or fold into an existing infra doc) the proposal to default `mtds-live-*` VM relaunches to
-      `LC_TARBALL_FRESHNESS=enforce`, per the source doc's sole remaining open todo — the proposal must state the
-      recommended default, the rationale (freshness-verified tarball deploys vs stale-image relaunch risk), and the
-      change surface (deployment-service launchers). Source:
-      `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: a proposal doc exists (either
-      a new `plans/active/issues/` doc or a named section folded into an existing infra doc, with the fold cited)
-      carrying the recommendation + rationale.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-16 (slot-19, data_engineering, adopted infra craft)** — filed
+      `/plans/active/issues/mtds_live_vm_tarball_freshness_default_proposal_2026_08_16.md`. Investigated current state
+      before writing the recommendation: found the original `enforce` premise (filed 2026-08-04 against a `warn`
+      default) is now superseded — `deployment-service@c1e0481` (2026-08-06) already flipped the shared library
+      default `warn`→`auto`, and `deployment-service@450b212` (2026-08-07) fixed `auto` mode's own silent-skip bug so
+      it now correctly blocks a launch on residual staleness. Recommendation: pin `LC_TARBALL_FRESHNESS=auto`
+      explicitly (not `enforce`) at the 4 `mtds-live-*`/perp-clob-live launcher call sites — `auto` already gives the
+      same never-launch-on-stale-code guarantee with self-heal instead of a hard abort; `enforce` offered as the
+      explicit alternative if the operator wants a hard-block posture instead. Also fixed a stale doc-comment finding
+      in `launcher_common.sh` (still said `warn` was the default) hit while researching —
+      `deployment-service@8eae625c` (verified on origin). Implementation of the pin itself left as a follow-up todo in the new doc
+      (`assigned_vm: NA` pending operator read of the auto-vs-enforce tradeoff), since this todo's own done-when only
+      required the proposal doc to exist. Source:
+      `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`.
 - [x] ✅ [DATA] P1. Verify-then-fix the ODDS_API CAPTURE path's blank-`fixture_id` raw generation — VERIFIED ALREADY
       FIXED via code read (option b, 2026-08-07): the capture path routes `_route_sports()` → `download_batch()` →
       `_build_fixture_rows()` — the SAME function fixed by `market-tick-data-service@3401c0ab` (2026-07-25);

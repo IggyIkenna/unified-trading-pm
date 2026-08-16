@@ -124,10 +124,21 @@ template, minus the third-party dependency).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Complete **ChatGPT Plus** ($20/mo — staged start, not Pro; see the ruling above) subscription
-      signup and persist an authenticated `~/.codex/auth.json` session on the orchestrator VM (`planning`) — a human
-      ChatGPT OAuth flow, cannot be automated by a worker. Done when: `~/.codex/auth.json` exists on the VM and a manual
-      `codex` CLI smoke call succeeds against it.
+- [x] [OPERATOR] P1. ✅ Complete ChatGPT subscription signup and persist an authenticated `~/.codex/auth.json` session
+      on the orchestrator VM (`planning`). **DONE 2026-08-16**: operator ran `codex login --device-auth` on their
+      laptop (device code + browser confirmation); resulting `~/.codex/auth.json` transferred to the VM via SSM
+      (base64, never printed in any visible output — the officially documented bootstrap pattern per OpenAI's own
+      CI/CD auth docs, "run codex login on a trusted machine with browser access, then transfer the resulting
+      auth.json to your headless server"). `codex` CLI (0.147.0) installed on the VM via SSM first. **Real smoke call
+      succeeded**: `codex exec` returned "OK" for a genuine prompt, 2,745 tokens billed, session id recorded. One
+      finding to fold into the tier tracking: it defaulted to model `gpt-5.6-sol`, not `luna` — GPT-5.6 has three
+      effort presets (Sol/Terra/Luna per this plan's own 7-day usage-grounding numbers) and the bridge will need `-m`
+      to pin Luna explicitly, the default won't do it. **RESOLVED 2026-08-16**: operator shared the actual ChatGPT
+      "Upgrade your plan" screen — "Your current plan" badge is on **Plus**, not Pro (the earlier "im on pro" line was
+      cross-talk about Gemini's Tier 3, confirmed by this screenshot). Staged-start target was already correct;
+      no action needed. Bonus finding: Pro's price is a single tier with a 5x/20x usage toggle ($100/mo at 5x,
+      presumably $200/mo at 20x) — resolves the earlier research ambiguity between "$100 Pro" and "$200 Pro" sources,
+      it's one product with a selectable multiplier, not two different tiers.
 - [ ] [OPERATOR] P3. Upgrade ChatGPT Plus → Pro once the bridge is validated (smoke-test gate passed, real dispatch
       volume observed) and the operator decides to scale. Done when: the ChatGPT account shows Pro active and the quota
       tracking todo's ceiling numbers are remeasured against the new tier — same auth artifact, no other code change

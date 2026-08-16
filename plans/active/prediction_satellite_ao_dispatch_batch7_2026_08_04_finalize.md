@@ -45,7 +45,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
-    /plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
+    /plans/archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
@@ -59,7 +59,7 @@ context_scope:
 ## Todos
 
 - [ ] [REVIEW] P3. **Reconcile the source doc.** batch7's one todo cites
-      `issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`. Confirm that doc's own remaining
+      `archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`. Confirm that doc's own remaining
       todo (the downstream-consumer check) was actually updated with batch7's verdict + commit citation, per batch7's
       own Done-when clause. If the verdict was "no real consumer exists", confirm the source doc's checkbox is flipped
       and its `status` is updated toward `resolved` (0 open todos). If the verdict was "a real consumer exists", confirm

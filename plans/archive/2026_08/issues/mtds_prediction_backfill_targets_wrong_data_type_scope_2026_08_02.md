@@ -17,7 +17,7 @@ summary: >-
   different row populations, not a dedup collision merging one real object's data. The 12+ sessions of Progress Log
   entries in the parent plan have been measuring and chasing an aggregate metric dominated by a data_type this backfill
   script may never have been designed to fill, not a genuine regression in its own scope.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -36,7 +36,9 @@ parent_epic: manifest_master
 assigned_vm: NA
 locked_by:
 priority: P3
-resolved_by:
+resolved_by: >-
+  investigation-only (no code fix needed) — downstream-consumer check resolved via
+  prediction_satellite_ao_dispatch_batch7_2026_08_04.md todo 1, unified-trading-pm@e3ca863b9d
 source: >-
   Found while closing out mtds_available_at_cross_asset_backfill-006 (slot-14, data_engineering) after the prediction
   backfill's `2025-01-01..2026-08-01` continuation (PID 153615) finally reached its terminal `Elapsed...Summary` line
@@ -54,6 +56,13 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-16** — `status: resolved` with all 3 todos `[x]`; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-immediately rule. The final open item (the `available_at` downstream-consumer check) resolved: a real
+> consumer exists for Kalshi `trades` only, but it reads the raw capture writer's own per-row stamp, not the
+> availability-manifest metadata field this doc's fill-rate audit measured — no separately-scoped backfill is needed.
+> Full evidence in the Progress Log below.
 
 # Prediction backfill only fills `prediction_canonical_question_group`, not `trades`/`book_snapshot_5`
 
@@ -157,12 +166,11 @@ scope fact.
       the parent plan with this evidence; `uts-prod-manifest-consolidator-market-data-prediction-cron` resumed via
       `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py`, maintenance window released. See Progress
       Log below.
-- [ ] [DATA] P3. Check whether any real downstream consumer reads `available_at` for
-      `data_type in {trades, book_snapshot_5}` on prediction-venue data before deciding whether a separately-scoped
-      backfill for those data_types is needed at all, or whether this is permanently out of scope. (repo:
-      market-tick-data-service) — dispatch already extracted verbatim into
-      `/plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md` (assigned_vm: planning, status: draft,
-      Source cites this doc); this checkbox closes via that batch's finalize plan once batch7 lands, not directly here.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-19, data_engineering)** — checked whether any real downstream consumer
+      reads `available_at` for `data_type in {trades, book_snapshot_5}` on prediction-venue data. **Verdict: a real
+      consumer exists for Kalshi `trades` only, but it does not need a manifest backfill — no separately-scoped
+      backfill is warranted for either data_type.** Full evidence in the Progress Log entry below (worked via
+      `/plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md` todo 1, its dispatch vehicle).
 
 ## Progress Log
 
@@ -205,3 +213,36 @@ whoever wants to close the loop.
   none apply. Re-verified `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` still carries this exact todo
   (`status: draft`, `assigned_vm: planning`) — still the correct, already-vetted owner; reclassifying here would create
   a competing dispatch surface. No reclassification.
+- **slot-19 2026-08-16 (data_engineering, worked via `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` todo 1)**:
+  Resolved the downstream-consumer question via direct code read across `market-tick-data-service` (the write side)
+  and `market-data-processing-service` (the candle-compute read side) — not a grep-only pass. Findings:
+  - **`market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py`**
+    (`PredictionTradesAdapter`, registered `data_type="trades"`, `category=MarketAssetGroup.PREDICTION`) — a REAL,
+    non-test production consumer. `_get_local_timestamp_column` (line 119) explicitly chooses `available_at` as the
+    authoritative local-timestamp column for KALSHI-shaped trade rows (`_is_kalshi_shaped(df)` gate on
+    `yes_price_dollars`), because Kalshi's raw trades schema carries none of the base class's other candidates
+    (`ts_init`/`local_timestamp`/`ts_event`/`timestamp`) — confirmed byte-exact against Kalshi's own `created_time`
+    on a real 54,295-row sample per the adapter's own docstring. This column feeds OHLCV candle bucketing directly.
+  - **Critical nuance — this consumer does NOT depend on the manifest field this issue's fill-rate audit measured.**
+    Traced the write side: `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/
+    kalshi_adapter.py` (module docstring line 20) stamps `available_at = max(tick_ts, market_created_at)` **per row,
+    at write time**, unconditionally, into the RAW captured trades/order-book parquet's own content — this is a
+    genuine data column inside the captured object itself, separate from the AVAILABILITY MANIFEST's own shard-level
+    `available_at`/`available_at_envelope` metadata field (`_index/availability_index.parquet`, populated only for
+    the bundled `prediction_canonical_question_group` cells by `_rebuild_prediction_emit.py`'s
+    `record_captured_from_counts` calls — the field this doc's 1.48%/17.80% fill-rate numbers describe). MDPS's
+    `trades_adapter.py` reads the RAW captured parquet directly (never the manifest index), so it already has a
+    reliably write-time-stamped `available_at` regardless of the manifest gap — **the low manifest fill-rate does not
+    starve this consumer of anything it needs.**
+  - **Polymarket `trades`**: NOT a consumer — the `_is_kalshi_shaped` guard explicitly scopes the override away from
+    Polymarket rows (its pre-existing `timestamp` column is used instead, byte-for-byte unchanged).
+  - **`book_snapshot_5` (either venue)**: NOT a consumer — grepped
+    `market_data_processing_service/app/adapters/prediction/book_snapshot_adapter.py` for `available_at`: zero hits.
+    Despite `kalshi_adapter.py`'s write-time stamp applying to Kalshi order-book rows too (per its module docstring,
+    "Parses through ... KalshiOrderBook"), no MDPS consumer reads it.
+  - **Verdict**: no separately-scoped `available_at` manifest backfill is needed for either `trades` or
+    `book_snapshot_5` — the one real consumer (Kalshi `trades`) is already fully served by the raw capture writer's
+    own per-row stamp, and no consumer exists for the other 3 (venue, data_type) combinations. Practically resolves
+    to option (b) of this todo's own done-when (no backfill scoped), with the added evidence that an
+    `available_at`-named column IS genuinely used in production for one narrow case, so a future reader doesn't
+    mistake this for "the field is dead everywhere."

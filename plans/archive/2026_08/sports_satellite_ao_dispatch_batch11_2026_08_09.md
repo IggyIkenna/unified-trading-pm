@@ -14,7 +14,7 @@ summary: >-
   judgment-gated; (2) a parity test the source plan's own 2026-08-08 Progress Log entry flagged as newly ripe once its
   gating 3-repo naming migration (todos 1-6) shipped — `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s
   Conflict-gated section held this exact item back citing "the still-unshipped migration," which is now stale.
-status: active
+status: archived
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -32,7 +32,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-16"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -65,6 +65,10 @@ context_scope:
 ---
 
 # Sports satellite AO batch 11 — post-RECLASSIFY-sweep residual extraction (2026-08-09)
+
+> **🟢 ARCHIVED 2026-08-16 — all 2 todos complete.** Reconciled into their source docs' own checkboxes via
+> `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md`; see that finalize plan for the full reconciliation
+> evidence.
 
 ## Methodology
 

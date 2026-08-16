@@ -19,7 +19,7 @@ related:
   [
     plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
-    /plans/active/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md,
+    /plans/archive/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md,
   ]
 created: 2026-07-03
 author: unknown

@@ -371,7 +371,7 @@ spelling variant survives, which is the entire point of the panel". It does not.
       fixture-grain-vs-league-grain decision was already ruled 2026-07-14 ("FIXTURE-GRAIN WANTED"); only dispatch
       routing was unrouted. Build once against the FINAL venue/data_type/horizon axes rather than rebuilding after.
       Resolves the 4 open todos in `/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md`. — **Dispatched
-      2026-08-10**: new AO plan `/plans/active/sports_fixture_grain_catalogue_build_2026_08_10.md` created
+      2026-08-10**: new AO plan `/plans/archive/2026_08/sports_fixture_grain_catalogue_build_2026_08_10.md` created
       (`assigned_vm: planning`, `depends_on` + `gate_on_depends` on the now-archived P1 contracts). Converts the 4
       NA-only catalogue-plan todos into 5 actionable AO todos: closeout Track C/V/E state check (SCOPE OVERLAP
       resolution), manifest-schema extension design, `build_sports_fixture_catalogue_from_manifest()`, adapter wiring,

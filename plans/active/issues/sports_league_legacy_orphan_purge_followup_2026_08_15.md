@@ -101,15 +101,42 @@ Split the 1,814 objects into the two classes above and resolve each:
       but is left unflipped here (out of this todo's own scope) for its own dispatch to close on this citation. Todo
       2 (content-verify the bare duplicates before any purge) remains the real next step, now scoped to a fully
       enumerated, non-mixed 1,814-object population.
-- [ ] [DATA] P3. **For the bare/no-`league=` duplicates**: confirm via content read (row-key comparison against the SAME
+- [x] ✅ [DATA] P3. **For the bare/no-`league=` duplicates**: confirm via content read (row-key comparison against the SAME
       day's other legacy per-league objects, not just filename shape) that they are truly redundant copies before any
       delete — Part 2 of the delete-safety proof still applies even to an apparent duplicate. If confirmed redundant,
       purge via the same §3a fresh-check pattern as `purge_league_legacy_objects_2026_08_15.py`. (repo:
-      market-tick-data-service)
-- [ ] [DATA] P3. **For genuine per-league cells with no canonical twin**: run the same read-split-merge migration
-      `merge_migrated_odds_into_canonical_2026_07_17.py` used (or a scoped re-run of that script limited to these 539
-      pairs) to fold them into canonical, then re-verify a twin now resolves before considering a follow-up delete.
-      (repo: market-tick-data-service)
+      market-tick-data-service) — **DONE 2026-08-16 (slot-23) — market-tick-data-service@2471d18f (verify) +
+      @cbd21be68 (delete-only purge, landed).** Content-verify (row key `(instrument_id, bm_time, price, point)`, live-probed
+      against a sample match to confirm exact schema alignment) was run across all 1,814 `bare_no_league` objects,
+      comparing every bare row against the live canonical `batch_odds_api` rows for the same day (scoped to only the
+      bookmaker venues present in the bare object — no whole-corpus walk). **The original "almost certainly pure
+      bookkeeping noise" hypothesis was WRONG for a real fraction**: only **1,534/1,814 days (84.6%) are fully
+      redundant** (every row matches canonical exactly); **280/1,814 days (15.4%, 437,005 rows out of 51.0M total)
+      carry genuine content NOT present in canonical** — plausibly a different scrape cadence between the legacy
+      footystats-sourced migration and the direct odds_api scraper, not yet root-caused. Purged ONLY the 1,534
+      confirmed-redundant objects via `gcs_conditional_delete` (§3a fresh check: bucket soft-delete retention =
+      604800s, cleared); the 280 divergent-content objects were LEFT UNTOUCHED (Part 2 fails for them —
+      `no-migrate-first`). Post-delete verified: 1,534/1,534 objects gone (0 errors). **Lesson for future sessions**:
+      the combined verify+delete `--apply` path (`verify_bare_league_legacy_orphan_content_2026_08_16.py`) was
+      externally killed 3 consecutive times mid-run (session/background-task-lifecycle related — no zombie process, no
+      OOM signal; likely a runtime cap on backgrounded delete-performing scripts specifically, not read-only ones,
+      which completed cleanly twice in the same session) — worked around by splitting into a separate delete-only
+      script (`purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`) that skips re-verification for
+      already-confirmed days and only does the small fixed set of REST calls needed to delete, completing the full
+      1,534-object purge in under 90s.
+- [ ] [DATA] P3. **RESCOPED 2026-08-16 (slot-23)** — the 280 `bare_no_league` days that FAILED content-verify (real
+      unmatched content, not present in canonical `batch_odds_api`) need investigation + fold-in, not the "genuine
+      per-league cells" framing this todo originally had (todo 1 already established 0 `per_league_cell` orphans
+      exist — this is a different population, discovered by todo 2's content-verify, not todo 1's structural
+      classification). Root-cause WHY these 280 days' legacy rows have no canonical match (scrape-cadence gap in the
+      2026-07-17 merge? A genuinely later addition to the legacy population after that merge ran? A key-matching
+      false-negative in this session's row-key logic — re-spot-check a few before assuming it's real data loss).
+      Full per-day unmatched-row detail is in `market-tick-data-service@2471d18f`'s
+      `verify_bare_league_legacy_orphan_content_2026_08_16.py` `--report` output format (re-run against the 280
+      `no-migrate-first` days only — cite them from a fresh read of that script's report, not re-derived from
+      scratch). If genuinely unique, fold the 437,005 rows into canonical (mirroring
+      `merge_migrated_odds_into_canonical_2026_07_17.py`'s read-split-merge pattern), then re-verify a twin resolves
+      before considering a follow-up delete of these remaining 280 bare objects. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -119,4 +146,17 @@ Split the 1,814 objects into the two classes above and resolve each:
   (`market-tick-data-service@ae1f27a4af`). Measured split: **1,814/1,814 bare_no_league, 0 per_league_cell** — the
   entire orphan population is the bare/no-`league=` duplicate class, none are genuine irreplaceable per-league cells.
   Todo 3 looks moot on this evidence (nothing to fold); left for its own dispatch to close.
+- **2026-08-16 (slot-23)** — Todo 2 done: content-verified all 1,814 `bare_no_league` objects against live canonical
+  `batch_odds_api` rows (row key `instrument_id, bm_time, price, point`). Split: 1,534 (84.6%) fully redundant, 280
+  (15.4%, 437,005 rows) genuinely divergent — the plan's original "almost certainly noise" hypothesis was wrong for a
+  real fraction. Purged the 1,534 confirmed-redundant objects via §3a-gated `gcs_conditional_delete` (bucket
+  soft-delete retention 604800s cleared); left the 280 divergent-content objects untouched. Rescoped todo 3 to
+  investigate + fold the 280-day divergence (was previously framed around todo 1's "genuine per-league cells" axis,
+  which is a different, already-empty population). `market-tick-data-service@2471d18f` (verify script),
+  `@cbd21be68` (delete-only purge, built after the combined verify+apply path was externally killed 3× mid-run;
+  note this SHA superseded an earlier `4aa781a2` citation after a `git pull --rebase --autostash` rewrote the
+  already-committed-but-unpushed purge-script commit, and THAT `caf81cfd` citation was itself superseded a second
+  time by `cbd21be68` when Pass-2 quickmerge hit a push-rejection and auto-rebased onto origin's tip before
+  landing — recurring pattern: cite a purge-script SHA only after `git rev-list --count origin/<branch>..HEAD`
+  confirms it as the actual pushed/ancestor commit, not the pre-push local SHA).
 - **context-scout 2026-08-15**: populated context_scope (4 entries).

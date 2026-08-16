@@ -131,14 +131,32 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
 
 
 def _gated_by(all_plans: list[Coverage]) -> dict[str, list[Path]]:
-    """Every gated parent slug -> the finalize plan path(s) whose depends_on names it.
+    """Every gated parent slug -> the finalize plan path(s) whose depends_on names it
+    AND whose own filename follows the corpus's established `<parent-slug>_finalize[...]`
+    naming convention (every genuine finalize plan in this corpus is named that way --
+    confirmed by inspection at todo-3 sweep time, duplicate_finalize_plans_created_for_
+    one_parent_2026_08_06.md, and ported here from the sibling
+    check_duplicate_gated_finalize_plans.py fix). That second condition matters:
+    `depends_on` + `gate_on_depends: true` alone (`_is_finalize_plan`) is ALSO the exact
+    shape of a sanctioned SPLIT child (CLAUDE.md: "partial parallelism isn't expressible
+    in one plan -> SPLIT (gated step in Plan B via depends_on + gate_on_depends: true)")
+    -- a legitimate downstream phase plan that simply can't start before its parent
+    lands, not a competitor for the parent's archival slot. Filename-blind matching
+    false-positived on e.g. sports_taxonomy_p2_migration_2026_08_08.md +
+    sports_taxonomy_p3_consumers_2026_08_08.md both depending on
+    sports_taxonomy_p1_capture_and_contracts_2026_08_08 -- two substantively distinct
+    phase plans, not duplicate archival attempts (caught 2026-08-16 when this precommit
+    path, unlike its sibling, still lacked the naming guard).
 
     Companion to `_gated_slugs()`: that function collapses to a `set[str]`, which
     dedupes by construction — a slug named by TWO finalize plans is structurally
     invisible through it, exactly the gap that let two finalize plans gate the same
     parent silently on 2026-07-31 (duplicate_finalize_plans_created_for_one_parent_
     2026_08_06.md). This keeps every gating plan's path, so a duplicate is directly
-    observable.
+    observable. `_gated_slugs()` deliberately keeps the filename-blind (broader)
+    definition — a SPLIT phase plan still legitimately counts as "this parent is
+    covered" for coverage-check purposes; only the DUPLICATE-detection use here needs
+    the narrower, naming-convention-scoped definition.
     """
     out: dict[str, list[Path]] = {}
     for cov in all_plans:
@@ -147,9 +165,12 @@ def _gated_by(all_plans: list[Coverage]) -> dict[str, list[Path]]:
         depends_on = cov.frontmatter.get("depends_on")
         if not isinstance(depends_on, list):
             continue
+        stem = cov.path.stem
         for dep in cast(list[object], depends_on):
             if isinstance(dep, str):
-                out.setdefault(dep.strip(), []).append(cov.path)
+                slug = dep.strip()
+                if stem == f"{slug}_finalize" or stem.startswith(f"{slug}_finalize_"):
+                    out.setdefault(slug, []).append(cov.path)
     return out
 
 

@@ -89,7 +89,7 @@ source:
       to `/plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, `status: complete`, under the
       operator's 2026-07-30 line-cap-does-not-block-archival ruling; both of its own "real open items" were discharged
       at archival, not dropped (consolidator cron un-pause = MOOT/verified ENABLED; Morpho `lending_indices` live-verify
-      migrated to a tracked todo in `/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`).
+      migrated to a tracked todo in `/plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`).
       This checkbox stays `- [ ]` because the OTHER two legs are still genuinely open — verified live this pass:
       `/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` is `status: open` with 1 open todo, and
       `/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md` is `status: active` with 3 open todos.

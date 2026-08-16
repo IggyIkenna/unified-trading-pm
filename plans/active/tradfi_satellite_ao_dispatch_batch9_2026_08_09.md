@@ -69,18 +69,31 @@ is deliberately thin; reported honestly rather than padded.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Physical GCS cleanup of the old ICE-Databento instrument parquets** — RULED 2026-08-07 (operator,
-      via consolidated NA-blocker-digest audit): GO AHEAD, conditional on the twin-verify safety check (0 consumers) the
-      doc's own pre-existing gate already requires. Run the twin-verify (confirm 0 consumers of the old ICE-Databento
-      instrument parquets, per the tombstone-reconciliation precedent already applied to the ICE whole-venue purge in
-      the same source doc), then a FRESH `gcs_bucket_soft_delete_retention_seconds(bucket)` check on the target bucket —
-      cite the actual returned value; if ≥604800s (7 days), execute the delete via the sanctioned UTL helpers per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a (the operator's GO-AHEAD already covers the delete
-      itself; the twin-verify + reversibility check is the sole remaining gate, not a fresh operator ask). Repos:
-      deployment-service, instruments-service. Source: `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`
+- [x] ✅ [SCRIPT] P3. **Physical GCS cleanup of the old ICE-Databento instrument parquets** — DONE 2026-08-16
+      (worker, slot-25, data_engineering) — `instruments-service@42cf8ba530`. Live twin-verify found **nothing left
+      to physically delete**: `prod/catalog.parquet` already carries 0 `venue=="ICE"` rows of any kind (920,943
+      total rows checked — the 2026-08-08 round5 whole-venue purge already covers this surface); a full single-
+      delimited-listing sweep (no whole-corpus content walk) of ALL 2,664 by-day partitions found exactly 4 residual
+      `venue=ICE` directories, and every row in every file is content-verified `raw_symbol=="DX-Y.NYB"` /
+      `instrument_type=="INDEX"` — the ONE operator-protected, actively-captured ICE exception (DXY) — zero rows
+      anywhere for the dropped Brent/Gasoil/DX-futures/softs population, and no `futures_contracts.parquet` exists
+      under any `venue=ICE` directory. Fresh `gcs_bucket_soft_delete_retention_seconds` cited:
+      `instruments-store-tradfi-prd-central-element-323112` → **604800s** (7 days, meets the §3a threshold).
+      Formalized as a re-runnable verification/purge script
+      (`scripts/purge_tradfi_ice_dropped_universe_parquets_2026_08_16.py`, mirrors
+      `purge_tradfi_ice_qualifier_rows_2026_08_09.py`'s mechanics) rather than a one-off manual check, so any future
+      re-drift (e.g. a subscription-lockdown reversal) is re-detectable and re-purgeable with the same DXY-exclusion
+      mask + generation-gated conditional-delete. **Also found + fixed an unrelated repo-blocker while shipping**:
+      instruments-service QG was red (`check_adapter_contract_regression` false-positive from a same-day peer
+      `process_write.py`→`process_write_venue.py` split, commit `b421ea77`, whose baseline was never regenerated) —
+      root-caused, verified pre-existing (0 diff to `process_write.py` in my own commit), filed
+      `issues/is_process_write_venue_split_adapter_contract_baseline_stale_2026_08_16.md`, declared + resolved
+      repo-blocker `RB-66e88fee`, regenerated `adapter_contract_baseline.yaml`
+      (`unified-trading-pm@a6b7bab83b` — verified programmatically the ONLY decrease across the full workspace
+      regen was the expected split, 0 files silently dropped). Repos: instruments-service (this todo's script),
+      unified-trading-pm (baseline fix). Source: `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`
       (ICE-Databento parquet GCS-cleanup todo, "From `tradfi_databento_subscription_universe_lockdown_2026_06_18`"
-      section). Done when: the twin-verify confirms 0 consumers, the soft-delete value is cited, and the delete is
-      executed (or explicitly re-gated if the check returns below threshold).
+      section).
 - [ ] [BACKEND] P2. **Build the MDPS-owned `ohlcv_1m`→`ohlcv_15m`/`ohlcv_24h` aggregator for CBOE VX-futures** — RULED
       2026-08-07 (operator): YES, build it, MDPS-owned (not a features-service resampler on `vix_features` alone) —
       aggregate `ohlcv_1m` up to `ohlcv_15m`/`ohlcv_24h` once, upstream of every consumer (delta-one groups need

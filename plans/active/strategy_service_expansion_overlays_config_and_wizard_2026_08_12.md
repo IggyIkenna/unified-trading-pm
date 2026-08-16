@@ -160,9 +160,20 @@ is the same graph extended with borrow/lend/custodian nodes and route edges; rul
       operator only discovers it at run time via `KeyError`.
 - [ ] [AGENT] P2. **Update [capability-wizard](/codex/09-strategy/architecture-v2/capability-wizard.md)** for the
       widened graph and the ruling-3 eligibility split.
-- [ ] [AGENT] P3. **Wizard is NOT part of a carve-out — stub it there.** It lives in strategy-service, so a carve-out
-      must stub it: the restriction graph and universe registries are exactly the reconciliation IP a carve-out
-      withholds. Carried into the carve-out plan; recorded here so the dependency is visible from this side too.
+- [x] [AGENT] P3. ✅ **CORRECTED 2026-08-16 — contradicted this doc's own line 138.** A cross-repo extraction audit
+      (strategy-service's `EXTRACTION_AUDIT.md`) traced the actual code: the interactive wizard isn't in
+      strategy-service at all — its UI lives in `unified-trading-system-ui`, the manifest/prospectus generator in
+      `unified-trading-pm`, and (as line 138 above already correctly states) `capability_manifest.py`, the real
+      restriction GRAPH, lives in **UAC**. The only wizard-adjacent code actually in strategy-service is
+      `strategy_service/api/restriction_profile_router.py` (153 lines) — a thin FastAPI wrapper around one UAC
+      function that resolves persona/demo-account UI-tile visibility (trading/research/promote/observe → unlocked/
+      padlocked/hidden). It calls no venue, collateral, or archetype-eligibility function. That's a UI navigation
+      feature-gate, not "the reconciliation IP a carve-out withholds" — stubbing it (delete or no-op the router) is
+      trivial. The genuinely sensitive restriction/eligibility logic — UAC's `capability_manifest.py` and
+      strategy-service's own `target_universe/` catalog modules — is real IP, but it's already covered by the
+      carve-out's core "3 real archetypes, rest stubbed" mechanism and the 2026-08-16 frozen-eligibility ruling
+      (`elysium_carveout_stubbed_strategy_service_2026_08_12.md` §A2), not by a wizard-specific stub. Updated in the
+      carve-out plan too, in the same edit.
 
 ## D. Risk-limit and wallet selection — audited 2026-08-12, two of the four remaining gaps
 

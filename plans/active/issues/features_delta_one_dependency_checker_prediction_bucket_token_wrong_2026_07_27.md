@@ -303,6 +303,39 @@ four now route through the one helper.
      `gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-prediction-20260816-012950-eadb84/{run.log,EXIT_STATUS}`
      via `unified_trading_library`'s `gcs_describe_object`/`download_from_storage` (never `gsutil`/`gcloud` CLI directly
      — QG-banned) — before relaunching anything; it may have completed or OOM'd by the time this is read.
+- **2026-08-16 (slot-14, data_engineering craft, continued) — monitored the still-RUNNING 2-day-window VM; NOT yet
+  terminal, no relaunch needed.** Checked `features-e2e-prediction-20260816-012950-eadb84`'s live `EXIT_STATUS`/`run.log`
+  (via `gcs_describe_object`/`download_from_storage`, never `gsutil`/`gcloud`) repeatedly over ~50min of this session
+  (01:29:50 VM launch → checks spanning 03:10 through 04:19 UTC, i.e. ~1h40m-2h50m elapsed): `EXIT_STATUS` stayed
+  `RUNNING` throughout, and `run.log` grew monotonically the entire time (20.87MB → 21... → 24.76MB → 25.08MB → 25.75MB →
+  25.92MB → 26.28MB → 26.43MB → 26.90MB → 27.13MB), confirming genuine ongoing compute (`Wrote N/2 daily partitions for
+  KALSHI:PREDICTION_MARKET:...` lines present), not a hang. **New data point for the OOM follow-up below**: this run has
+  now run ~2h46m and reached 27MB+ without OOMing, well past the 9-day window's `exit_code=137` at ~63min/28MB —
+  reinforces (still not fully confirmed) that the OOM is driven by the day-window size, not raw log volume or the
+  ~575-instrument universe alone. **Backgrounding note**: `run_in_background` Bash calls in this session's environment
+  were killed near-instantly (zero output) on two separate attempts (a 4h loop and a 25min loop, both with unbuffered
+  output) — polling was done instead via bounded foreground `sleep`+check loops inside single Bash calls. Ending this
+  session's monitoring here (open-ended remaining duration, unknown total) rather than blocking indefinitely — task
+  handed back to the queue (`GATED`, not done) for a resuming session to check live state first per the note above.
+- **2026-08-16 (slot-7, backend_engineer craft) — the 2-day-window VM is now terminal: OOM'd (`exit_code=137`), NOT a
+  genuine completion. Corrects the prior entry's tentative day-window-size hypothesis.** Checked
+  `features-e2e-prediction-20260816-012950-eadb84`'s `EXIT_STATUS` (via `gcs_describe_object`/`download_from_storage`,
+  never `gsutil`/`gcloud`): `EXIT_STATUS=137`, last modified 2026-08-16T04:24:46Z (VM launched 01:29:50Z, so ~2h55m
+  elapsed). `run.log` final size 28,339,337 bytes (~28.3MB) — `run.log` tail confirms `bash: ... Killed`,
+  `[vm-exec] command exited rc=137`, `DEPLOYMENT_FAILED ... (exit_code=137)`, same signature as the 9-day window's OOM.
+  **This is a second OOM at the same ~28MB log-size mark** (9-day window: OOM'd at ~28MB/~63min; 2-day window: OOM'd at
+  ~28.3MB/~175min) despite a ~3x longer wall-clock runtime on the smaller window — this is the OPPOSITE of what the
+  prior entry's "day-window size drives it" read would predict (a 2-day window should OOM much sooner than a 9-day one
+  if day-count were the driver, not later). The evidence now points toward the OOM correlating with **accumulated
+  log/output volume** (or equivalently, in-process state that scales with amount of per-instrument work logged/held,
+  independent of calendar-day count) rather than the day-window size — still not a confirmed root cause (haven't traced
+  the actual accumulator), but the "day-window size" hypothesis from the prior entry should be treated as WEAKENED, not
+  reinforced, by this data point. **No genuine `EXIT_STATUS=0` completion exists yet for PREDICTION:delta_one at any
+  tested window size (1-day untested).** Per this doc's own Follow-up P3 item 2 ("do not guess a number"), NOT adding a
+  `_FAMILY_TIMEOUT_OVERRIDES` entry this session — the prerequisite (a genuine measured completion) still isn't met.
+  Did not attempt a full OOM root-cause trace through `batch_handler.py`/`orchestrator.py`/`data_loader.py`
+  (~2,800 combined lines) in this session — that's Follow-up P3 item 3's scope, not this dispatched todo's, and taking
+  it on here would be unplanned scope absorption. Task handed back to the queue (`GATED`, not done).
 
 ## Follow-ups
 

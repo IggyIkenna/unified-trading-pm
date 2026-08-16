@@ -171,15 +171,21 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       cycles, ~5-7k per cycle). No code change needed. The upstream backfill skip-logic fix (`check_shard_freshness`
       source/data_type blindness) identified in the 07-29 doc is the actual defect; the consolidator itself is working
       correctly.
-- [ ] [DATA] P3. Re-run `ManifestWriter.lookup()` for exactly 2025-09-04 and 2025-11-13 against the completed VM run
-      `mdps-sports-bucket-20260803-134154` (use a pyarrow/polars venv via `run-bounded-analysis.sh`, one lookup call per
-      date, memory-bounded per the existing recipe in this doc), record the authoritative per-date manifest status
-      (`captured` vs `attempted_failed`) for both dates in
-      `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`, and reconcile the doc's resolved-date
-      list to match whichever of slot-9's or slot-16's prior read is correct. Source:
-      `mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`. Done when: both dates' authoritative status is
-      recorded in the doc with the ManifestWriter query evidence cited, the resolved-vs-still-attempted_failed date list
-      in the doc is corrected to be internally consistent, and the todo itself is checked off as settled.
+- [x] ✅ [DATA] P3. **DONE-ELSEWHERE 2026-08-16 (slot 8).** This exact re-run + reconciliation already happened, twice
+      over, inside the source doc itself before this batch9 dispatch: slot-9 (2026-08-05) ran
+      `ManifestWriter.lookup()` against the prod sports manifest for all 6 disputed dates (incl. 2025-09-04 and
+      2025-11-13) and recorded **both as authoritative COARSE `captured`** — the doc's todo list already carries a
+      `[x] ✅ ... DONE 2026-08-05 (slot-9) — authoritative tie-break complete` entry with the full per-date table
+      (coarse `capture_status` + fine-shard note) and the reconciled resolved-date set
+      `{2025-07-31, 2025-08-26, 2025-09-04, 2025-10-07, 2025-10-14, 2025-11-13}` (6 dates, attempted_failed tally
+      corrected to 20). A further re-run (slot 7, 2026-08-16, same day as this dispatch) re-confirmed the doc is
+      current — 2025-09-04/2025-11-13 do not reappear in that pass's residual list either. This batch9 todo was
+      auto-extracted from a pre-2026-08-05 state of the source doc (per the plan's own banner note that not every
+      todo was individually re-verified before dispatch). No new `ManifestWriter.lookup()` call, code, or doc edit
+      needed — the done_definition's own conditions (per-date authoritative status recorded with query evidence;
+      resolved-vs-still-failed list internally consistent) are already satisfied at
+      `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md` lines 144-186. Source:
+      `mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`.
 - [x] ✅ [DATA] P2. Implement the ruled option A (2026-08-02 operator ruling, cited in
       `/plans/archive/2026_08/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`) in
       `live_workers_chain.py::_write_or_record_empty_timeframe` and

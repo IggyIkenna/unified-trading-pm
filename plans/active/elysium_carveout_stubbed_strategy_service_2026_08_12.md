@@ -59,7 +59,8 @@ source: >-
 
 > **THIS IS HAPPENING** (operator, 2026-08-12): _"we'll show them the carve-out code. That's happening anyway, so that's
 > got to be part of the plan."_ It is a commitment, not a contingency. `status: draft` and `depends_on` the expansion
-> plan reflect **sequencing only** — the three real archetypes must be carved from post-expansion behaviour, or their
+> plan reflect **sequencing only** — the two real archetypes (§A2, narrowed 2026-08-16) must be carved from
+> post-expansion behaviour, or their
 > static implementations freeze the wrong reality and need redoing. Flip to `active` when the expansion lands.
 
 > **All carved artefacts are NEW repositories.** No production code is removed, stubbed or altered. This plan describes
@@ -116,20 +117,23 @@ Per-interface resolution to specify. `FeatureProvider` · `PricingService` · `R
       gives the local circuit breakers the strategy needs to be safe standalone; cross-client portfolio risk and
       governance stay platform-side.
 
-## A2. Archetype scope — THREE real, the rest shipped as stubs (operator ruling 2026-08-12)
+## A2. Archetype scope — TWO real, the rest shipped as stubs (operator ruling 2026-08-12, narrowed 2026-08-16)
 
-**Only the DeFi-relevant archetypes carry real implementations**, plus dispersion so the client can see how an expanded
-strategy correlates against the contracted pair:
+**Only the two contracted archetypes carry real implementations.** `CARRY_FUNDING_DISPERSION` was originally
+included as a voluntary breadth-demonstration ("shown deliberately so they can see how an expanded strategy
+correlates against the contracted pair") — **operator ruled 2026-08-16: remove it.** Not contractually required
+(Annex A scopes to the BTC/ETH/SOL basis strategy only — see §A3), and out of step with this session's direction
+toward narrower disclosure generally.
 
-| Archetype                  | In the carve-out                                                       | Why                                                                                                         |
-| -------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `CARRY_BASIS_PERP`         | **REAL**                                                               | Contracted                                                                                                  |
-| `CARRY_STAKED_BASIS`       | **REAL**                                                               | Contracted                                                                                                  |
-| `CARRY_FUNDING_DISPERSION` | **REAL**                                                               | Shown deliberately so they can see how an expanded, cross-sectional strategy relates to the contracted pair |
-| **All other enum members** | **STUB** — signature, docstring, archetype identity; no decision logic | The **universe of archetypes is disclosed; the mechanisms are not**                                         |
+| Archetype                  | In the carve-out                                                       | Why                                                                  |
+| --------------------------- | -------------------------------------------------------------------------| ----------------------------------------------------------------------|
+| `CARRY_BASIS_PERP`         | **REAL**                                                               | Contracted                                                           |
+| `CARRY_STAKED_BASIS`       | **REAL**                                                               | Contracted                                                           |
+| `CARRY_FUNDING_DISPERSION` | **STUB** (removed from REAL 2026-08-16, was previously REAL)           | Not contracted — voluntary-breadth inclusion, ruled out              |
+| **All other enum members** | **STUB** — signature, docstring, archetype identity; no decision logic | The **universe of archetypes is disclosed; the mechanisms are not**  |
 
 **This is a disclosure design, not a shortcut.** Shipping the full enum as stubs shows the client the real breadth of
-the platform — every family, every archetype name — while the alpha logic transfers for three only. Breadth is visible;
+the platform — every family, every archetype name — while the alpha logic transfers for two only. Breadth is visible;
 mechanism is withheld. It also happens to align with the existing estate: **28 of 60 archetypes are already unreachable
 in production** (Elysium plan § H.12), so stubbing the remainder is continuing a pattern rather than inventing one.
 
@@ -144,10 +148,116 @@ in production** (Elysium plan § H.12), so stubbing the remainder is continuing 
 - [ ] [AGENT] P2. **Keep the enum whole.** Do NOT narrow `StrategyArchetype` to the three — the full enum with stubs is
       the point. This supersedes the earlier instinct in § B to narrow it; the correct fix for "don't hit `KeyError` on
       an advertised name" is a stub that fails informatively, saying this archetype is not part of this package.
-- [ ] [AGENT] P2. **Verify the three real archetypes' dependency closure is genuinely carvable** — they pull the rank
-      allocators, the collateral eligibility filters and the ADV universe resolver, and § A withholds the last of those.
-      Confirm the frozen-universe substitution actually satisfies all three engines before committing to the package
-      boundary.
+- [x] [AGENT] P2. ✅ **RULED 2026-08-16: collateral/margin eligibility for the two carry archetypes freezes, same
+      treatment as `UniverseService`.** A cross-repo extraction audit (strategy-service's
+      `EXTRACTION_AUDIT.md`, "UAC" and "Updated overall picture" sections) traced this precisely: `staked_basis.py`'s
+      per-tick structure derivation (`LST_AS_MARGIN` vs `USDC_MARGIN_BUFFERED`) calls UAC's live
+      `accepted_perp_collateral`/`get_collateral_haircut`/`venue_accepts_collateral` — distinct from and in addition to
+      `UniverseService`'s own already-frozen ADV/eligibility filtering at line 101-103 above. Freezing this too (ship the
+      resolved collateral/haircut answer for the configured venues, not the resolver) means the carved package never
+      needs UAC's live registry code (`unified_api_contracts.registry`) at runtime at all — only the `StrategyArchetype`
+      enum and schema types, which ship whole regardless (small, and disclosure is the point). Without this ruling, UAC's
+      eager `internal`/`registry` `__init__.py` graph (1,064 files/~240k lines, DeFi content interleaved with
+      CeFi/TradFi/sports in flat enums/dicts — see the audit) would have been pulled in wholesale just to satisfy this
+      one call, defeating the IP-withholding intent. **Still open, not yet done:** actually specify and build the frozen
+      collateral/haircut substitution and confirm it satisfies all three engines' decision logic bit-for-bit against a
+      known input — this ruling settles the *design direction*, not the implementation.
+
+## A3. Venue & asset scope — CEX-only, three assets, one staking route (operator ruling 2026-08-16)
+
+Per operator ruling and Annex A of the signed Consulting Agreement (`Elysium_x_IkeNova_contract.pdf`, executed 3
+March 2025, Doc ID `5f6491d203e91ea6c5b836c722dba886e0d1565b`): the contracted "CeFi & DeFi basis trading strategy"
+covers exactly:
+
+- **Assets**: BTC, ETH, SOL (+ their perpetuals/derivatives) — matches Annex A verbatim.
+- **Venues — CEX ONLY, exactly four**: Bybit, Deribit, Binance, OKX. Used for both spot purchase and perp
+  shorting, across all three assets. No other CEX venues. **No DEX/on-chain perp venues at all** — Hyperliquid and
+  Aster (the two live DEX-shaped perp venues in production today) are explicitly named OUT of scope; neither is in
+  the contracted universe.
+- **Staking — ETH only, via Lido (stETH)**. No Marinade, no SOL staking, no other LST protocol. "DeFi" in Annex
+  A's "CeFi & DeFi" phrasing resolves to this one staking leg, not to on-chain perp trading.
+- **Explicitly excluded as a result**: all Solana DeFi/DEX work (Jupiter perps, Kamino borrow, Marinade — see the
+  correction in `solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md`), Hyperliquid, Aster, and any
+  other on-chain venue or protocol.
+
+**Effect on §A2's archetype table**: `CARRY_BASIS_PERP` and `CARRY_STAKED_BASIS` cover this scope directly, and
+`CARRY_STAKED_BASIS` is largely already live for it — `catalog_staked_basis.py` shows `lido-deribit` (7.5%
+haircut) and `lido-bybit` (10% haircut) as verified `LST_AS_MARGIN` slots today; Binance and OKX need no new
+LST-margin integration, they resolve via the engine's existing `USDC_MARGIN_BUFFERED` fallback structure.
+**`CARRY_FUNDING_DISPERSION` — RULED OUT 2026-08-16.** It was this plan's own voluntary-breadth choice ("shown
+deliberately so they can see how an expanded strategy correlates against the contracted pair"), not contractually
+required by this scope (Annex A covers the BTC/ETH/SOL basis strategy only). Operator confirmed: remove it. §A2's
+table updated in the same edit — it now ships as a stub like every other non-contracted archetype.
+
+**Effect on the frozen-collateral-eligibility ruling above**: this sharply bounds it. The substitution only needs
+to cover stETH haircuts/acceptance on 4 named CEX venues, not the fleet-wide `VENUE_COLLATERAL_MATRIX` — a much
+smaller, mostly-already-measured surface than originally scoped.
+
+## A4. Data scope — Tardis excluded entirely; DeFi data limited to Lido rate + gas fees (operator ruling 2026-08-16)
+
+**Tardis-sourced market data is not part of the carve-out at all.** Per operator: the Tardis subscription predates
+this contract, was never billed to the client, and is the firm's own asset. **The client receives zero historical
+Tardis data** — for the CEX market data the two real archetypes need (Bybit/Deribit/Binance/OKX, §A3), the client
+sources their own.
+
+**DeFi-specific data — traced against `staked_basis.py`'s actual feature reads**, since Annex A's Phase One
+deliverable ("historical performance, risk & volatility, and liquidity of basis trading strategy across major
+trading venues **and staking/re-staking programs**") plausibly obligates some unprocessed DeFi data. Given the
+narrowed §A3 scope (Lido staking only, no DeFi-side leverage), the archetype's real DeFi-sourced inputs are:
+
+- `staking_apy_bps` — Lido's stETH staking APY.
+- `lst_native_rate` / `lst_native_rate_ts` — Lido's stETH:ETH conversion rate.
+- `fees_apy_bps` (optional) — its own docstring folds in "funding, swap, **gas**"; the gas component is the
+  on-chain execution-cost data.
+
+Matches the operator's stated scope exactly: Lido rate data and gas fees, nothing else.
+
+- [x] [AGENT] P2. ✅ **RESOLVED 2026-08-16 — both trace to genuine on-chain DeFi data, but neither belongs in this
+      scope.** `health_factor` is produced by `features-service/features_service/onchain/engine/orchestrator.py`'s
+      `_process_health_factor()`, which polls **Aave V3's `getUserAccountData()`** directly — a real on-chain
+      lending-protocol borrowing-health read, not CEX-reported. But it exists to gate **DeFi-native
+      borrowing/leverage** ("kill gate when LST posted as perp margin" against an Aave position) — and the
+      operator has ruled **no DeFi-side leverage is taken in these strategy versions** (§A3/§A4 above). So it's
+      on-chain DeFi data, but for a capability this scope doesn't use — **excluded from the data-scope list, not
+      owed.** (Also currently unpopulated in this corpus — paper-run substitutes a hardcoded safe constant rather
+      than a real per-wallet figure, per `strategy_service/cli/handlers/paper_run_handler.py:26-28,343`.)
+      `usdc_idle_yield_apy_bps` similarly traces to genuine on-chain data — Aave V3/Compound V3/Spark stablecoin
+      **supply** APY (lending, not borrowing — no leverage involved) via
+      `strategy_service/engine/core/canonical_lending_supply_apy_provider.py`. Unlike `health_factor`, supplying
+      idle USDC for yield doesn't require leverage, so this one COULD be in scope if the two real archetypes
+      actually use it live — but its only confirmed wiring today is paper-run/backtest CLI tooling
+      (`paper_run_handler.py`, `paper_universe.py`), not a proven live-trading path. **Not added to the data-scope
+      list above** until its live-path status is confirmed; flagged here so it isn't silently dropped if that
+      changes.
+
+## A5. Pre-carve-out completion bar (operator ruling 2026-08-16)
+
+Two prerequisites before any carve-out repo is built or sent, beyond the code/venue/data scope rulings above —
+these gate readiness to carve, not the carve-out's own content.
+
+- [ ] [OPERATOR] P0. **Full E2E connector + data completeness for the two real archetypes, on the exact §A3
+      scope, before anything ships.** Every connector in the chain — instruments-service through execution-service
+      — must be built and verified for `CARRY_BASIS_PERP` and `CARRY_STAKED_BASIS` across all three modes: batch,
+      live, and paper (paper including proxy/internal-match and testnet where possible). Underlying market data for
+      the scoped venues (Bybit, Deribit, Binance, OKX, Lido — §A3/§A4) must be captured to 100% completion, its
+      availability verified, and its data types reconciled. This is stronger than "does the code exist" — it's
+      "does the pipeline actually run end-to-end and does the data back it up," per this workspace's own
+      data-pipeline-correctness standard
+      ([data-pipeline-correctness-hard-rule](/codex/02-data/data-pipeline-correctness-hard-rule.md)). Directly
+      extends the code-completion bar already gating the repository send in
+      [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md)
+      §D, now scoped precisely to the two archetypes and four venues this plan actually covers.
+- [ ] [OPERATOR] P0. **Land the lazy-loading (factory) refactor before or alongside the carve-out, not as an
+      independent question.** Rationale: so that updating the carve-out later doesn't mean re-deriving a frozen
+      snapshot against a moving, eagerly-coupled main-system target — if `factory.py`'s archetype registration is
+      already lazy/scoped by the time the carve-out exists, keeping it in sync with main-system changes stays
+      cheap. **Scope note, so this isn't treated as free**: the extraction audit (strategy-service's
+      `EXTRACTION_AUDIT.md`) found this refactor doesn't stop at strategy-service — the two real archetypes' live
+      collateral calls mean a genuinely lazy service also needs an equivalent UAC-side refactor
+      (`unified_api_contracts`'s `internal`/`registry` `__init__.py` eagerly loads ~240k lines regardless), which
+      has fleet-wide blast radius, not a local one. Both approaches are now wanted together, not compared as
+      alternatives — this raises total pre-ship scope above what §A2's "well-bounded" note assumed when it was
+      written, and is worth the operator seeing stated plainly rather than absorbed silently.
 
 ## B. What the expansion adds, and therefore what the carve-out must account for
 
@@ -176,8 +286,15 @@ different capability rather than the same one withheld.
       demonstrates.
 - [ ] [AGENT] P2. **State the distinction in §04's resolution table** so `PortfolioRiskService` being a stub is not read
       as "no risk management" — local guard-rails and overlays ship; cross-client portfolio governance does not.
-- [ ] [AGENT] P2. **Stub the capability wizard.** It lives in strategy-service, and its backing restriction graph is
-      exactly the reconciliation IP withheld. Carve the _resolved_ config, not the form that generates it.
+- [x] [AGENT] P2. ✅ **CORRECTED 2026-08-16 — the wizard doesn't live in strategy-service, and its real
+      restriction graph isn't wizard-specific.** Per the extraction audit (strategy-service's `EXTRACTION_AUDIT.md`):
+      the interactive wizard's UI is in `unified-trading-system-ui`, its manifest generator in `unified-trading-pm`,
+      and the real restriction GRAPH (`capability_manifest.py`) in UAC. The only wizard-adjacent code in
+      strategy-service is a 153-line router (`api/restriction_profile_router.py`) resolving persona/demo-account UI
+      tiles — not an archetype-eligibility engine. Deleting or no-op-stubbing that router is trivial; the actual
+      sensitive logic (`capability_manifest.py`, `target_universe/` catalogs) is already covered by the "3 real
+      archetypes, rest stubbed" mechanism above and the frozen-eligibility ruling in §A2, not by a separate wizard
+      carve step. Same correction made in `strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md` §C.
 - [ ] [AGENT] P2. **Account for archetype reachability.** Only the contracted archetypes carve. The other 50-odd enum
       members must not appear as dead names — either the carved enum is narrowed to what ships, or the unreachable ones
       are visibly marked, so the client's engineer does not hit `KeyError` on a name the code advertises.
@@ -230,3 +347,24 @@ The reduced implementation is a fact about the package. Let the fact do the work
   organising line: the orchestration that decides what can be done for the client's strategy types is real; everything
   beneath it is static, mock or inert. Flagged the book-level-overlay resolution as the most consequential open
   decision, since it determines whether the carved strategy has a working risk profile or an un-overlaid one.
+- **2026-08-16** — Interactive session ran a full cross-repo extraction audit ahead of a docs-cleanup pass on
+  strategy-service (full writeup: strategy-service's `EXTRACTION_AUDIT.md`, internal-only, excluded from any external
+  copy). Measured, not assumed: capability wizard is NOT in strategy-service and the plan's "backing restriction graph
+  is exactly the reconciliation IP withheld" framing (§B above) overstates a 153-line UI feature-gate router that calls
+  no venue/collateral registry — trivial to stub. SIT has zero coupling to `factory.py`'s registry either way.
+  Deployment-api/-service/-ui and the PM repo have zero code coupling — pure CI/tooling a client replaces with their
+  own. Instruments-service/MTDS/features-service/ml-service have zero *code* coupling (archetypes receive `features`/
+  `mid_price` as plain parameters from an upstream pipeline, never call these services); `MLPrediction` is imported but
+  literally unused (`del predictions`) by all three real archetypes. **The one real blocker found: UAC's eager
+  `internal`/`registry` `__init__.py` graph (1,064 files/~240k lines) is interleaved DeFi/CeFi/TradFi/sports content
+  with no clean-slice import path** — worse than this plan's §A2 todo anticipated, since it affects not just the
+  universe resolver but the two carry archetypes' live collateral/margin calls too. Operator ruled 2026-08-16: freeze
+  that too (see the §A2 todo above) — closes the open design question; UTL has the identical mechanical eager-import
+  flaw but is judged low-stakes (generic infra, no real IP) and ships whole rather than being fixed. execution-service's
+  proposed basic/algo/transfer split maps onto real ABC boundaries, with one added cost (SOR shares AMM/gas modules
+  with basic DEX swaps) and an already-established lazy-registration pattern to reuse from elsewhere in that repo; zero
+  execution-service blast radius from strategy-service's own factory-refactor alternative (not this plan's approach,
+  but was scoped for comparison). Net effect: this plan's stub-carve-out approach is now well-bounded and the
+  higher-confidence path — the alternative (refactor strategy-service's `factory.py` for lazy registration in
+  production) turned out to require an equivalent-or-larger UAC refactor with fleet-wide blast radius, for a benefit
+  mostly orthogonal to external disclosure.

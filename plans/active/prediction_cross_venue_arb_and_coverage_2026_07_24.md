@@ -50,7 +50,7 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/04-architecture/cross-venue-prediction-arb-detection.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
@@ -176,6 +176,11 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
       detector). Mitigated by committing the code so fleet rebuilds converge, but a launch in the race window still gets
       stale code. Consider SHA-pinned tarball fetch (`VM_*_SHA`) in the launchers for just-shipped code, or a
       build-lock. Repo: deployment-service. Provenance: detector launch 2026-06-24.
+
+> **2026-08-16 (slot-30, `prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize` P3)** — re-verified: this is
+> the ONLY open todo left in this doc. Not shipped, not yet promoted to a batch/`[OPERATOR]` todo — real, genuine
+> residual (deployment-service infra race), open-ended enough ("consider X or Y") that it needs a scoping pass
+> before it's cleanly AO-dispatchable. Doc stays `active` on this residual alone; not archived this session.
 
 > **Extracted 2026-08-09** — twelve fully-closed dated Progress Log sessions (2026-06-20, 2026-06-21, 2026-06-23 x3,
 > 2026-06-25 x4, 2026-06-27 x3) moved verbatim to

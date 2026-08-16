@@ -58,7 +58,7 @@ Grep used: `ao round-5 apply session|ao round-5 apply item|round-5 apply session
 | 14   | `issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md:111`            | "Do not remember - treat as …"                         |
 | 15   | `issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md:202`           | "Build a collision-warning mechanism, WARN not refuse" |
 | 15   | `issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md:177` | (same item as above, cross-cutting)                    |
-| 16   | `issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md:184`                       | "Authorize all 3."                                     |
+| 16   | `/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md:277` | "Authorize all 3." (doc archived 2026-08-16, all todos done) |
 | 17   | `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md:67`           | "Let Claude pick based on …"                           |
 | 19   | `deepseek_claude_blended_provider_routing_2026_07_28.md:414`                               | "Operator will create it - needs …"                    |
 | 20   | `issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md:185`                | "Operator will set it - needs …"                       |

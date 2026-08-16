@@ -26,7 +26,7 @@ summary: >-
   mis-scoping... fix the scoping, do not shrink a finished doc to appease it") but names no concrete fix.
 status: resolved
 nature: issue
-asset_group: [ci, cross-cutting]
+asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

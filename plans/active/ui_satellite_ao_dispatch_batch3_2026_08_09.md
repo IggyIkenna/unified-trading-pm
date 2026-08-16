@@ -85,13 +85,17 @@ drift_direction: advance-docs
       `freeze-deferred-build-replay.yml` and `aws_ec2_launch_lib.sh` content, not just read from the prior claim;
       recorded as closed-prior context, no new todo. Source: `artifact_pipeline_observability_2026_07_17.md`'s
       `[REVIEW] P3` "Issue doc — the whole VM tarball path bypasses `resolve_bucket_name()`" todo.
-- [ ] [INFRA] P3. **Check + report AR/ECR native vulnerability-scan status.** Source: same doc's `[INFRA] P3` "(stretch
+- [x] ✅ [INFRA] P3. **Check + report AR/ECR native vulnerability-scan status.** Source: same doc's `[INFRA] P3` "(stretch
       — optional) Image vulnerability-scan status" todo — "never itself investigated, only ever noted as remaining."
-      Check whether Artifact Registry (GCP) and ECR (AWS) native vulnerability scanning is enabled on the images this
-      pipeline builds, and report current status (enabled/disabled, findings summary if enabled) back into the source
+      Checked whether Artifact Registry (GCP) and ECR (AWS) native vulnerability scanning is enabled on the images this
+      pipeline builds, and reported current status (enabled/disabled, findings summary if enabled) back into the source
       doc's Progress Log. Read-only investigation — no infra change unless the finding itself is a trivial config flip
       explicitly scoped as part of this todo's done-when. Done when: a concrete enabled/disabled status + any findings
-      summary is recorded. Repo: deployment-service.
+      summary is recorded. Repo: deployment-service. — **DONE 2026-08-16**: GCP AR scanning is DISABLED
+      (`containerscanning.googleapis.com` not enabled on the project); AWS ECR has `scanOnPush=true` on 9/20 repos but
+      sampled images show no actual scan results (parked estate, no push activity since 2026-06-27) — neither side has
+      any findings to report. Full detail in the source doc's checkbox + Progress Log:
+      `artifact_pipeline_observability_2026_07_17.md`.
 - [ ] [SCRIPT] P3. **Correct the misattributed VM origin** in
       `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md`. Source: same doc's
       `[SCRIPT] P3` todo naming this specific correction. Re-verify the VM origin attributed in that issue doc against
@@ -123,3 +127,9 @@ drift_direction: advance-docs
   spot-check) but no HARD verification of whether the claimed misattribution was corrected before archival. Source doc
   (`artifact_pipeline_observability_2026_07_17.md`) is grace-blocked this run — cannot flip its corresponding checkbox.
   Full findings: `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md`.
+- **2026-08-16 (slot 12, infra)**: Todo 2 done. Live-checked GCP Artifact Registry + AWS ECR scanning config: AR
+  `vulnerabilityScanningConfig.enablementState=SCANNING_DISABLED` on `unified-trading-system`
+  (`containerscanning.googleapis.com` not enabled project-wide, not flipped — not a trivial/in-scope change); ECR
+  registry-wide `scanType=BASIC`, `scanOnPush=true` on 9/20 repos but 0 findings anywhere — sampled images return null
+  scan status, consistent with the AWS estate's known parking since 2026-06-27. No findings summary exists on either
+  side. Full detail recorded in the source doc's own checkbox + this todo's citation above.

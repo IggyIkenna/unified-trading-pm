@@ -95,7 +95,7 @@ note above — and `shard_4pillar_fail`×1 — also out of scope, false-positive
   rows to `attempted_failed`, including **dex_pool_swaps=20,586** with `UNISWAP_V4=69,573` as the top venue by volume —
   i.e. this exact cell was a phantom-capture misclassification that got corrected one day after this CSV was generated.
   The underlying `dex_pool_swaps` gap for UNISWAP_V4 remains an ACTIVE, tracked backfill target: see
-  `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` (status: open, 2026-07-24) which
+  `plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` (status: open, 2026-07-24) which
   documents UNISWAP_V4 dex_pool_swaps as "PARTIAL, expected pre-2025 absence" with a currently-running fleet (relaunched
   2026-07-23), and the still-`status: active` `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`. No fresh MTDS
   code fix needed here — already covered by those two live efforts.

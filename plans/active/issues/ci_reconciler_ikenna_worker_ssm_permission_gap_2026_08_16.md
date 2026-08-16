@@ -1,0 +1,105 @@
+---
+doc_type: issue
+title: >-
+  ci_reconciler's ambient AWS identity is `ikenna-worker` (static IAM user), not `uts-orchestrator-epic-role` —
+  §0c host-dispatched-watchdog SSM verification structurally unavailable every hourly run
+summary: >-
+  The `ci_reconciler` scheduled role's boot doc states "SSM is still required for the §0c host-dispatched watchdogs...
+  no AWS SSM needed for AO's own API" — implying `aws ssm send-command` against the glue-runner host
+  (`i-042a6332509482556`, `ap-northeast-1`) just works from the orchestrator VM. It does not: `aws sts
+  get-caller-identity` resolves to `arn:aws:iam::427895769566:user/ikenna-worker` (a static shared-credentials-file IAM
+  user), not the orchestrator's documented self-service AWS identity `uts-orchestrator-epic-role`
+  (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) — confirmed by a failed `sts:AssumeRole`
+  attempt (`AccessDenied`) in addition to the direct `ssm:SendCommand` `AccessDeniedException`. Per that SSOT, a
+  permission gap is only self-fixable when hit while acting AS one of the two named orchestrator identities
+  (`unified-trading-sa` GCP / `uts-orchestrator-epic-role` AWS) — `ikenna-worker` is a genuinely different identity, so
+  this run correctly did NOT self-grant `ssm:SendCommand` to it. Net effect: every `/ci-reconcile` §0c sweep run under
+  this credential set cannot directly verify `glue-runner-crash-loop-watchdog.sh` / `ci-vm-resource-watchdog.sh` host
+  state via SSM, and must fall back to indirect evidence (Slack alert/recovery history, GH Actions dispatch history)
+  which the skill itself flags as weaker than a live check.
+status: open
+nature: issue
+scope: [engineer, admin]
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm, agent-orchestrator]
+tags: [ci-reconcile, ssm, iam, aws, permission-gap, coverage-gap, host-dispatched-watchdog]
+related:
+  [
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /codex/12-agent-workflow/measurement-claims-discipline.md,
+    /plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md,
+  ]
+context_scope:
+  - /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md
+  - scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh
+  - scripts/self-hosted-runners/ci-vm-resource-watchdog.sh
+created: 2026-08-16
+author: claude-agent
+last_updated: 2026-08-16
+parent_epic: infrastructure_master
+priority: P2
+source: ci-reconcile skill, scheduled hourly ci_reconciler dispatch agt-17f258 (slot 20)
+assigned_vm: NA
+resolved_by:
+locked_by:
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
+---
+
+# ci_reconciler's ambient AWS identity blocks §0c SSM verification
+
+## Evidence (2026-08-16, ~03:40-03:45 UTC, slot 20)
+
+```
+$ aws sts get-caller-identity
+{"UserId": "AIDAWHIETJHPNCDXGM6BX", "Account": "427895769566",
+ "Arn": "arn:aws:iam::427895769566:user/ikenna-worker"}
+
+$ aws ssm send-command --instance-ids i-042a6332509482556 ...
+AccessDeniedException: User: .../user/ikenna-worker is not authorized to perform: ssm:SendCommand
+  on resource: arn:aws:ec2:ap-northeast-1:427895769566:instance/i-042a6332509482556
+
+$ aws sts assume-role --role-arn arn:aws:iam::427895769566:role/uts-orchestrator-epic-role ...
+AccessDenied: User: .../user/ikenna-worker is not authorized to perform: sts:AssumeRole
+  on resource: arn:aws:iam::427895769566:role/uts-orchestrator-epic-role
+```
+
+`aws configure list` confirms these are static keys from a shared-credentials-file (`~/.aws/credentials`), not
+EC2-instance-metadata-derived — i.e. this dispatch's shell is NOT actually authenticating as the orchestrator VM's
+instance-profile role the way `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` describes for
+every AO worker.
+
+## Why this wasn't self-fixed this run
+
+The self-service SSOT is explicit: self-grant is sanctioned only for a gap hit while acting AS `unified-trading-sa`
+(GCP) or `uts-orchestrator-epic-role` (AWS) — "reserve `[OPERATOR]`/`BLOCKED-CREDENTIALS` for a gap on a genuinely
+DIFFERENT identity this worker cannot assume." `ikenna-worker` is such a different identity (confirmed — cannot even
+`AssumeRole` into the orchestrator's role), so granting `ssm:SendCommand` directly to `ikenna-worker` would be acting
+outside that sanctioned scope, not exercising it.
+
+## Impact this run
+
+Fell back to indirect evidence for the one host-dispatched alert in the sweep window
+(`glue-runner-crash-loop-watchdog` CRITICAL, 08-15 15:49Z, `github-glue-runner-unified-api-contracts@glue-1.service`
+on `i-042a6332509482556`, 26.3h continuous-active): a 24h Slack sweep found this alert fired exactly once with no
+matching recovery post and no recurrence — consistent with either a genuine one-off resolved outside the alert
+channel, or a watchdog that's still silently red. Could not be verified either way live. Same gap applies to
+`ci-vm-resource-watchdog.sh`'s target, not separately re-attempted (identical credential blocker).
+
+## Disposition
+
+Filing as a structural coverage gap rather than attempting a fix — granting AWS permissions to a human-named IAM user
+identity is an operator-scoped IAM decision (this is exactly the class of identity change the self-service doc
+deliberately does NOT cover), not a routine self-service action. Suggested resolution paths for the operator to choose
+from: (a) grant `ikenna-worker` a scoped `ssm:SendCommand` on the specific glue-runner/CI-VM instances if this
+credential set is the intended ambient identity for `ci_reconciler` dispatches going forward, or (b) fix whatever is
+causing `ci_reconciler` dispatches to pick up `ikenna-worker`'s static keys instead of the orchestrator VM's own
+`uts-orchestrator-epic-role` instance-profile credentials (the latter would restore the boot doc's stated "no AWS SSM
+needed" assumption and fix this for every future hourly run, not just this one).
+
+## Progress Log
+
+- 2026-08-16: Filed by `ci_reconciler` (agt-17f258, slot 20) during a routine hourly sweep. No CI/CD items required a
+  fix this run (full fleet + monitor sweep all green/self-resolved) — this was the only unresolved item.

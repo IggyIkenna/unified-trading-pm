@@ -20,7 +20,7 @@ related:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
   ]
 created: "2026-07-29"
 last_updated: "2026-07-30"
@@ -47,7 +47,7 @@ context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---

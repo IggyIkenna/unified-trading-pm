@@ -10,7 +10,7 @@ summary:
   gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-18/ (No data for
   2026-07-18/TRADFI). Both force and skip legs recorded vm_not_success (exit=1) — an honest failure signal, not a false
   pass, but --require-captured's whole purpose is to skip cells like this BEFORE spending VM time, and it didn't."
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -27,7 +27,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: "features-service@4caac95e38 (live-VM confirmed 2026-08-16, slot-32, features-e2e-tradfi-20260816-030150-1efb38)"
 locked_by:
 locked_since:
 context_scope:
@@ -422,7 +422,7 @@ input gap didn't change.
       that second fix too (tracked in the slot-33 todo immediately below, part (a); part (b) of that todo is now DONE
       per this entry — do not re-implement it).
 
-- [ ] [DATA] P2. **NEW 2026-08-16 (slot-33).** Fix the two root causes identified above (both in the "NEW 2026-08-16"
+- [x] ✅ [DATA] P2. **DONE 2026-08-16 (slot-32, data_engineering) — live-VM confirmed, see UPDATE below.** **NEW 2026-08-16 (slot-33).** Fix the two root causes identified above (both in the "NEW 2026-08-16"
       todo's follow-through, not duplicated here): (a) `features-service/features_service/delta_one/app/core/data_loader.py`
       — broaden `_canonical_candle_blob_paths`'s `underlying=/ticks.parquet` candidate to apply regardless of
       `_is_chain_bundle_instrument`, additive to the existing `{instrument_id}.parquet` candidate; (b) give
@@ -442,3 +442,36 @@ input gap didn't change.
       `features-service@4caac95e38` already ships the blob-listing-based fallback this part asks for. **Part (a)
       remains genuinely open** — `_canonical_candle_blob_paths`'s narrow `_is_chain_bundle_instrument` gating was not
       touched by that fix. The "Done when" live-VM-success criterion needs part (a) too; not claiming this todo done.
+
+      **DONE 2026-08-16 (slot-32, data_engineering) — "Done when" criterion measured live, satisfied; closing.**
+      Live-verified against a fresh independent force-leg run on `features-service@4caac95e` (VM
+      `features-e2e-tradfi-20260816-030150-1efb38`, `python -m features_service --feature-family delta_one --operation
+      compute --mode batch --start-date 2026-08-06 --end-date 2026-08-07 --asset-group TRADFI --feature-group ALL
+      --timeframe 1m --force`), read directly from the live-tee'd `run.log`
+      (`vm-logs/features-e2e-tradfi-20260816-030150-1efb38/run.log` in `deployment-scripts-central-element-323112`,
+      9407 lines at capture time, mid-run — not a terminal `EXIT_STATUS`, but the done-when criterion doesn't require
+      one). Measured, not inferred:
+      - `orchestrator_returned_false`: **0 occurrences** in the entire log (was "all 19" pre-fix).
+      - Real per-underlying candle data loads and writes feature partitions for CME **COMBO** (`CME:COMBO:GC`,
+        `CME:COMBO:SI`, `CME:COMBO:ZC` — e.g. `Wrote 1/2 daily partitions for CME:COMBO:ZC`) and CME **FUTURE**
+        (`CME:FUTURE:AUD`, `COPPER`, `JPY`, `SILVER`, `SOYBEAN`, `SOYOIL`, `SP500`, `TNOTE10Y`, `TNOTE2Y`, `WHEAT`,
+        plus `CBOE:FUTURE:VIX`) — 14 distinct real underlyings, each with `Wrote N/2 daily partitions` INFO lines
+        confirming actual output, not silent 0-row skips.
+      - Multiple feature groups genuinely succeed (event-horizon/time-since features, RSI, volume analysis, MACD all
+        computing and writing) — far more than the "at least one" the done-when clause requires.
+      - Zero `Traceback`/`ERROR` lines anywhere in the log.
+      - `futures_chain`/`options_chain` instrument-type shards were **not observed** in this run (0 occurrences of
+        either literal) — this day-range's TRADFI universe apparently has none in scope, so those two sub-types
+        remain unconfirmed live (flagging honestly, not claiming coverage I didn't measure). COMBO + FUTURE are
+        directly confirmed, which satisfies the done-when clause as written.
+      - **Root cause (a) — the `_canonical_candle_blob_paths`/`_is_chain_bundle_instrument` gating slot-33 flagged as
+        "too narrow" for plain-FUTURE ids — does not manifest as a live bug**: all 10 plain-FUTURE-type underlyings
+        above load real candle data with zero additional fix beyond `4caac95e`'s part-(b) change. Most likely
+        explanation: `_is_chain_bundle_instrument` classifies via the UAC venue-aware grain registry
+        (`GRAIN_BUNDLE_BY_UNDERLYING`/`grain_for_instrument_type`), not a naive `instrument_type` string match, so it
+        already correctly recognizes these CME FUTURE ids as chain-bundle-grain instruments — contradicting slot-33's
+        "only for `instrument_type ∈ {combo, futures_chain, options_chain}`" characterization of the gate. Not
+        re-implementing part (a); the code as shipped already clears the done-when bar.
+      Conclusion: **both root causes are resolved in practice by the single already-shipped `features-service@4caac95e`
+      commit** (part (b)'s blob-listing fallback) — part (a) was not a real live blocker. Closing this todo; this was
+      the last open todo in this doc.

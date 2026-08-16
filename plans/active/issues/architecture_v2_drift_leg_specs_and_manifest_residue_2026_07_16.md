@@ -29,12 +29,16 @@ summary:
   "UPDATE" section in the body below.'
 status: open
 nature: process
-asset_group: [defi]
+asset_group: [ui]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-system-ui, strategy-service]
 scope: [engineer, admin]
 tags: [drift-solana-cull, architecture-v2, leg-specs, strategy-archetype, venue-residue, ui-reference-data]
-related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
+related:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+  ]
 created: 2026-07-16
 author: unknown
 last_updated: 2026-07-26
@@ -254,3 +258,15 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
   `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`), a mechanical UI resync gated on that decision landing first,
   and a separate generator item. Doc's own words: "a strategy-domain call, not a registry-cleanup call." Doc stays
   `assigned_vm: NA`.
+- **2026-08-16 (slot 4, data_engineering, task `meta_plan_corpus_hygiene_ao_dispatch_batch1-ca0c6558e40b`) — retagged
+  `asset_group: [defi] → [ui]` per `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 6.** The
+  UAC-source portion of this issue (architecture_v2 leg specs / capability manifest) was already RESOLVED by the
+  2026-07-16 follow-up dispatch (see "UPDATE 2026-07-16" above) and the 9-file false-positive triage (see "UPDATE
+  2026-07-26" above) — the sole remaining open todo (`[ENGINEER] P1`) is exclusively the UI-side resync:
+  `unified-trading-system-ui/lib/registry/ui-reference-data.json`'s `venue_set_variants` /
+  `archetype_capability_registry` / `strategy_instance_catalogue`, the `generate_ui_reference_data.py` generator/UI
+  structural-skew fix, and the `tests/e2e/_shared/strategy-registry.ts` fixture — all `unified-trading-system-ui`
+  content, not defi-domain. `[ui]` fits better than `[cross-cutting]`: the remaining work is single-repo-primary
+  (UI registry + its generator), not genuinely multi-domain. Added
+  `related: [/plans/active/ui_consolidated_closeout_2026_07_30.md]` alongside the existing defi-closeout link so the
+  doc has a path into its new tranche's closeout family (`check_ag_closeout_linkage.py` convention).

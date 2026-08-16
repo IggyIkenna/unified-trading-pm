@@ -51,7 +51,7 @@ depends_on: []
 archive_exempt: true # 0 open todos by design (monitoring + docs done); backfill fix/relaunch tracked in tradfi_vix_backfill_launch_failed_2026_08_10.md
 context_scope:
   [
-    /plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md,
+    /plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md,
     /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
@@ -89,7 +89,7 @@ which is authoritative.
       monitoring task is complete: all 7 VMs were confirmed NOT to have finished (5/7 SPOT-preempted 1-3 min after
       insert, 2/7 deleted mid-run with no completion marker; 2020 VIX has zero real manifest captured rows; 2 code bugs
       found — `ts_event` schema + `chain`-empty manifest write). The backfill itself still needs the fix + relaunch —
-      tracked in `/plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`. Original context: **ALL 7 YEARS
+      tracked in `/plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`. Original context: **ALL 7 YEARS
       ALREADY LAUNCHED 2026-08-10T13:1xZ (this session) — monitor to completion, do NOT re-launch.** Given
       time-sensitivity (Databento account risk) and a same-day audit
       (`plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md`) confirming Databento's rate limits are
@@ -128,9 +128,13 @@ which is authoritative.
   `timestamp` (schema validation FAILED per chunk); (2) manifest write fails `MalformedRowKeyError: chain empty`. The
   monitoring todo's done-when NOT met — flipped `- [x]` only to close THIS monitoring task (deliverable = the finding),
   NOT claiming the backfill succeeded; fix + relaunch tracked in
-  `/plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`.
+  `/plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`.
 - 2026-08-10: `archive_exempt: true` set — this doc's own todos are all done (monitoring closed with the failure
   finding; scope-ruling doc flip done) and the remaining real work (schema fix, manifest row_key fix, relaunch, verify)
-  is fully tracked as 4 open todos in `/plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`. Kept in
+  is fully tracked as 4 open todos in `/plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`. Kept in
   `plans/active/` as the origin/context doc for that follow-up; 0-open-todo state is intentional + durable.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- 2026-08-16: `/plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md` (the follow-up referenced above)
+  is now fully resolved + archived — all 7 relaunched VIX VMs completed terminally and the manifest shows real captured
+  CBOE/VIX rows spanning 2020-06-01→2026-08-07 with zero gaps for 2020-2025. Path references in this doc updated
+  accordingly (the doc moved from `plans/active/issues/` to `plans/archive/issues/`).

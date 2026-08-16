@@ -195,22 +195,42 @@ Two independent causes, both now fixed:
       pre-existing WIP hadn't added): fixed by adding `related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]`
       to the `gcp_service_accounts_registry_diverged…` doc and appending `/plans/active/ui_consolidated_closeout_2026_07_30.md`
       to the `unified_trading_system_ui_block_list…` doc's existing `related:` list — re-check now 0 new orphans.
-- [ ] [DOCS] P3. **Resolve the `[ci, cross-cutting]` dual-tag on
+- [x] ✅ [DOCS] P3. **Resolve the `[ci, cross-cutting]` dual-tag on
       `/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** to a single owner.
       Two prior audits (2026-08-09 Finding 4, 2026-08-10 Finding 2) both read the content as closer to
       `infrastructure`/`meta` than `ci` — i.e. the `ci` half may itself be wrong, not just the `cross-cutting` half.
       **RETAGGED from `[OPERATOR]` per `task_template.md` finding U**: this is a named-doc, named-field content call a
       worker can make and evidence, not a business/spend judgment, a credential gap, or an irreversible mutation. **Done
-      when**: a single `asset_group` value with the deciding content cited in the Progress Log.
-- [ ] [DOCS] P3. **Retag `/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
+      when**: a single `asset_group` value with the deciding content cited in the Progress Log. — unified-trading-pm
+      (this commit). Retagged `[ci, cross-cutting]` → `[meta]`. Content is entirely about the plan-corpus's OWN
+      pre-commit tooling — `check_line_caps.sh`'s over-cap carve-out vs. `validate_plan_links.py`'s corpus-wide
+      broken-link scan deadlocking on an archival edit, resolved via a `plan-completion-and-archival-discipline.md`
+      carve-out fix — not a CI/CD pipeline/workflow-template matter (this batch's own todo 2/3 already reserve `ci` for
+      that) and not general cloud/VM infra. Matches this same batch's todo 4 precedent
+      (`governance_sweep_deferred_followups_2026_08_06.md` → `[meta]`, also a plan-corpus-governance doc). `docspec.py
+      --check --doc-type issue` clean (hard=0 soft=0); `check_ag_closeout_linkage.py` shows 1 pre-existing orphan
+      (`sportradar_credential_ask_2026_08_09.md`, unrelated file, baseline drift predating this task) — no new orphan
+      from this retag, and the doc is `plans/archive/**` (closed record, outside the gated/linkage corpus per
+      `doc-frontmatter-schema.md` §1) so no closeout-family `related:` link is needed.
+- [x] ✅ [DOCS] P3. **Retag `/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
       from `[defi]` to `[ui]` or `[cross-cutting]` by content — its `repos:` is
       `[unified-api-contracts, unified-trading-system-ui]` and the content is strategy-archetype DRIFT venue cleanup,
-      not defi-specific. Carried unactioned since 2026-08-07. **Done when**: retagged, reasoning in the Progress Log.
-- [ ] [DOCS] P3. **Fix the stale "0 open todos" claim in `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`**
+      not defi-specific. Carried unactioned since 2026-08-07. **Done when**: retagged, reasoning in the Progress Log. —
+      Retagged `[defi]` → `[ui]`. The UAC-source portion was already resolved (2026-07-16 follow-up + 2026-07-26
+      false-positive triage); the sole remaining open todo is exclusively `unified-trading-system-ui` registry-resync
+      work (`ui-reference-data.json`, its generator, an E2E fixture), so `[ui]` fits better than `[cross-cutting]`
+      (single-repo-primary, not genuinely multi-domain). Added `related:` link to
+      `ui_consolidated_closeout_2026_07_30.md`. Full reasoning in the target doc's own Progress Log.
+- [x] ✅ [DOCS] P3. **Fix the stale "0 open todos" claim in `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`**
       (~line 745): it states `phantom_audit_estate_coverage_gap_2026_07_10.md` has "0 open todos
       (closed/archived/record-only)" but that doc carries 1 open `[SCRIPT] P2` (widen the phantom audit to the full
       ~47-bucket kind×AG matrix). Re-verified still wrong 2026-08-10. **Done when**: the line reflects the target's real
-      open-todo count.
+      open-todo count. — Re-verified 2026-08-16: `phantom_audit_estate_coverage_gap_2026_07_10.md` still carries exactly
+      1 open todo (line 180, `[SCRIPT] P2`, the same "widen to ~47-bucket kind×AG matrix" item, gated on the
+      2026-08-08 operator ruling recorded at
+      `/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md:176`). Line 745-746 of the closeout doc
+      corrected to "1 open (re-verified 2026-08-16)" with the todo's text cited inline. — unified-trading-pm (this
+      commit).
 - [x] ✅ [DOCS] P2. **Verify + flip the 3 already-resolved checkboxes** in
       `/plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` —
       unified-trading-pm@3fa34e2475. Items 2 (DP-FETCH-009 `[VERIFY] P1`) and 4 (code-fix `[REVIEW] P2`) were already

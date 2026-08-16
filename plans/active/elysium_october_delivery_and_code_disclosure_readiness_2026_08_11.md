@@ -25,6 +25,7 @@ related:
     /codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html,
     /codex/14-customer-journeys/commercial-model/platform-architecture.html,
     /codex/14-customer-journeys/commercial-model/carveout-engineering.html,
+    /codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html,
     /plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md,
     /plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -892,6 +893,28 @@ Coverage across three surfaces now measured, and no two agree: **60** enum membe
       operator most wants to change — verify the reload path reaches `PARAM_SCHEMA_REGISTRY`-driven instance config, and
       wire it if not. SSOT for the pattern:
       [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
+
+## I. Work surface — every doc and artefact in play (2026-08-16)
+
+Ten planning docs carry this delivery, ~215 open todos between them — listed so the surface is visible in one place.
+
+| Doc                                                              | Status | Open/Done |
+| ---------------------------------------------------------------- | ------ | --------- |
+| this plan                                                        | active | 88/19     |
+| `service_config_ownership_and_instruction_contract_2026_08_12`   | draft  | 24/20     |
+| `issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14` | open | 8/11   |
+| `issues/e2e_wiring_reachability_audit_2026_08_15`                | open   | 15/5      |
+| `venue_capability_route_axis_and_cross_ag_declarations_2026_08_14` | active | 10/12   |
+| `solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12`    | draft  | 26/2      |
+| `strategy_service_expansion_overlays_config_and_wizard_2026_08_12` | draft | 24/5     |
+| `elysium_carveout_stubbed_strategy_service_2026_08_12`           | draft  | 16/2      |
+| `issues/path_registry_dead_mode_kwarg_…_2026_08_15`              | open   | 2/1       |
+| `issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15` | open | 0/0     |
+
+**Artefact sources** (`/codex/14-customer-journeys/commercial-model/`): `platform-architecture.html` ·
+`carveout-engineering.html` · `strategy-service-deep-dive.html` · `ODUM_Elysium_Phase2_Update_2026-07-24.html` ·
+**`strategy-service-walkthrough.html`** — target-state collapsible tour, added 2026-08-16, marks every section
+live/partial/planned against production reachability.
 
 ## Deferred work after 2026-08-12
 

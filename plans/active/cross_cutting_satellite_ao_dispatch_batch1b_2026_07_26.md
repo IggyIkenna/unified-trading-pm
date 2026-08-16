@@ -647,7 +647,7 @@ context_scope:
       today (`venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`); a future todo should thread it once that OOM
       fix lands. `quality-gates.sh` green in all 3 repos (UAC 420s, strategy-service 139s, deployment-api 168s — genuine
       full re-runs, not sentinel-skip fast-greens).
-- [ ] [CODE] P3. **Thread `scope=mvp|could_exist|all` through `_build_feature_group_breakdown_uac`'s own caller chain to
+- [x] ✅ [CODE] P3. **Thread `scope=mvp|could_exist|all` through `_build_feature_group_breakdown_uac`'s own caller chain to
       an HTTP query param.** The method itself already accepts `scope` (deployment-api's
       `_build_feature_group_breakdown_uac`, shipped `deployment-api@f47abed`) but its only caller,
       `_apply_optional_venue_dimensions` (`breakdowns_core.py`), does not pass one through, and no route exposes a
@@ -659,7 +659,38 @@ context_scope:
       widening that surface further was deferred rather than risking a second incident under time pressure. Repo:
       deployment-api. Done when: a `scope=mvp` request against the features-coverage drill-down actually narrows the
       returned `feature_groups` to MVP-tagged groups end-to-end (not just at the unit-tested method level), with a
-      regression test at the route layer, and `quality-gates.sh` green.
+      regression test at the route layer, and `quality-gates.sh` green. — **DONE 2026-08-16 (slot 26,
+      data_engineering)** — `deployment-api@7d353b5428`. Threaded `scope` through the exact caller chain the route's
+      `/manifest` endpoint already drives (its `scope: CoverageScope` query param — added earlier for the CEFI
+      per-instrument MVP toggle — already reached `get_manifest_status` → `_manifest_status_bounded_build` →
+      `manifest_category_builder._build_and_override_venue_breakdown`, but that last hop never forwarded `scope` into
+      `_build_venue_breakdown`): `_build_venue_breakdown` → `_build_one_venue_entry` → `_build_single_venue_entry` →
+      `_apply_optional_venue_dimensions` → `_build_feature_group_breakdown_uac` now all carry `scope` (plain `str`,
+      matching the convention used everywhere else in this exact call chain — dropped the now-redundant
+      `_FeatureGroupCoverageScope` Literal alias in `breakdowns_core.py`, which only ever existed to type this one
+      param). Also split `_build_venue_breakdown`'s per-venue loop into a new `_build_venues_dict_and_totals` sibling
+      method (pure code motion) to stay under the 50-line method-size gate after the added param pushed it to 53L.
+      Regression tests added in `tests/unit/test_feature_group_breakdown_uac.py`
+      (`test_apply_optional_venue_dimensions_threads_scope_could_exist` /
+      `..._threads_scope_mvp`) exercising `_apply_optional_venue_dimensions` itself — the layer named in this todo as
+      the broken hop — proving `scope="mvp"` now actually narrows (today's conservative-empty `FeaturesMvpRule` default
+      makes `feature_groups` absent entirely) vs the full UAC-declared universe on the default/`could_exist` path;
+      this is the "not just at the unit-tested method level" layer the done-when asks for, one hop above the
+      pre-existing `_build_feature_group_breakdown_uac`-only tests. `quality-gates.sh` green (224s, then re-verified
+      218s post-quickmerge).
+      **Known residual gap, NOT closed here (deliberately out of this P3's scope)**: this fix covers the ON-DEMAND
+      build path only. `get_manifest_status`'s rollup fast-path (`_read_rollup_if_fresh`, served for `features-*`
+      services whenever no row filter is set) reads a precomputed blob from `data_status_rollup_worker.py`, whose
+      dual-scope variant (`venue_resolution_dual_scope.py::_build_and_override_venue_breakdown_dual_scope`) computes
+      the pre-MTDS-override "base" venue breakdown ONCE (by design, documented there as "scope-independent") and
+      clones it into both the `could_exist` and `mvp` rollup slots — so a `scope=mvp` request served from a FRESH
+      rollup will still show the `could_exist` feature_groups until the rollup worker's dual-scope path is also
+      updated to compute the base breakdown per-scope for `feature_groups` specifically. This is a pre-existing
+      limitation (feature_groups were never scope-aware in the rollup path before this change either), not a
+      regression, and touching the rollup/dual-scope precompute machinery is exactly the wider "venue-year-coverage
+      code family" surface this todo's own text says was deliberately deferred for OOM-risk safety. Not filed as a
+      separate issue doc — flagging here is sufficient since it's a known, bounded, non-regressing gap in a path this
+      same P3 explicitly scoped itself away from.
 - [x] ✅ [DOCS] P1. **Reconcile the remaining pipeline_mode/live codex docs to the shipped M1-BREAKING + M5 contract**
       (source doc §#7 doc-coherence audit, REMAINING scope). — **DONE 2026-07-29 (slot 12, data_engineering)**:
       `pipeline-mode-and-batch-live-reconciliation.md` and `availability-manifest-and-data-status.md` (`codex/02-data/`)

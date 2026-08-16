@@ -694,12 +694,9 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       2026-07-29; the ~daily GCP background job removed ~2,958 images (85% reduction, 519 remaining from ~3,477)
       entirely via the policy — no manual per-image deletion. All 20 package counts are now consistent with the policy
       window.
-- [ ] [INFRA] P3. _(stretch, optional)_ **Image vulnerability-scan status** (AR + ECR native scanning) — split out
-      2026-08-08 (na-eligibility-audit) from the orphaned-image-GC todo above, where it sat as an unchecked trailing
-      sentence with zero checkbox representation and was missed by 3 prior passes (the 2026-08-06 and 2026-08-07
-      `/ag-closeout-audit ui` runs, and this doc's own 2026-08-07 na-eligibility-audit marker, which counted "10 open
-      items" without it). Check whether AR/ECR native vulnerability scanning is enabled and report current status —
-      never itself investigated, only ever noted as remaining.
+- [x] ✅ [INFRA] P3. _(stretch, optional)_ **Image vulnerability-scan status** — **DONE 2026-08-16**, live-checked
+      read-only (see Progress Log). Split out 2026-08-08 from the orphaned-image-GC todo above (was an unchecked
+      trailing sentence, missed by 3 prior passes).
 - [x] ✅ [INFRA] P3. **DONE 2026-08-15** — deploy-churn/crash-loop signal surfaced as a health condition.
       deployment-api@ec80509550 (ancestor of `origin/live-defi-rollout`).
 
@@ -999,3 +996,5 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   class batch1 already validated safe here. 7 implementation-shaped items stay deferred per batch1's precedent. Doc
   stays NA; source checkboxes stay open until batch 3's finalize twin reconciles them.
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **2026-08-16**: vuln-scan todo DONE. GCP AR `SCANNING_DISABLED` (API off, not flipped — billing call). AWS ECR
+  `scanOnPush` true on 9/20 repos, 0 actual scans (parked since 2026-06-27). No findings either side. Open-items: 10.
