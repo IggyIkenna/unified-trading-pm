@@ -237,7 +237,29 @@ grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked
       the current tree — same rebase-changed-the-SHA pattern the doc's own Phase 6 already self-corrected once
       today. Needs the same citation fix for consistency (low severity, substance confirmed present).
 
+- [ ] [DATA] P3. `cefi_backfill_per_day_catalogue_reload_2026_07_20.md`'s sole open todo text ("neither of the two
+      proper-fix options above has been implemented") is stale — `market-tick-data-service@5d428486` (2026-08-05,
+      verified ancestor of `origin/live-defi-rollout`) ships a third mechanism (per-process row-dict caching
+      replacing `df.iterrows()`) that closes the doc's own profiled 98.5%-of-wall-time bottleneck, landed before the
+      2026-08-09 audit that still called it unimplemented. NOT a clean flip candidate (doesn't obviously eliminate
+      the per-day-subprocess architecture the two named options targeted) — needs a re-profile before deciding
+      whether the todo is now fully closed or just partially addressed.
+- [ ] [REVIEW] P3. Possible shared root-cause across the `dp_vm_00N_*` VM-relaunch-chaos family (13 docs dated
+      2026-08-14 through 2026-08-16, still accumulating): `vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s
+      open todo 1 (give the launcher family a way to discover/resume a prior VM's checkpoint under a new name) reads
+      as a plausible fix for a meaningful slice of this family's individual symptom reports. Not independently
+      investigated (the 13 `dp_vm_*` docs are outside this tranche's read scope) — worth whichever tranche/pass owns
+      VM-relaunch infra checking whether they'd collapse under this one fix rather than needing N independent
+      resolutions.
+
 ## Corpus health note (informational, no action needed)
+
+**PM_REPO_PATH dispatch variable**: this run's boot session vars set `PM_REPO_PATH` to the root (read-only) PM
+clone rather than a slot-scoped path — flagged above as an "Environment note" and worked around per RULES.md's
+explicit guardrail. Checked before escalating further: this is NOT new — `plan_reconciler_findings_infra_2026_08_10.md:311-316`
+(a different slot, different tranche, 6 days earlier) independently hit and documented the identical pattern, also
+treating it as informational/self-corrected rather than escalating. Two independent confirmations of a stable,
+harmless, self-correcting characteristic — not treated as a fresh finding needing a new issue doc.
 
 The Phase-0 hygiene sweep's `assigned_vm:NA` corpus-size ratchet failed on this run's FIRST pass (57 new NA docs /
 250 new open todos vs `origin/main`) but PASSED on a second internal pass ~15 min later — consistent with the
