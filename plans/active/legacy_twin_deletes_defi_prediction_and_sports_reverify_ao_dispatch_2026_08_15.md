@@ -184,24 +184,37 @@ resolved_by:
       asset_group-wide `--apply`) + the 243-object residual investigation are filed as todo 5 below, per the "every
       follow-up is a tracked todo" rule. Codex SSOT: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1
       Part 2.
-- [ ] [DATA] P3. **Investigate + resolve the 243-object CURVE/ETHEREUM/pool/dex_pool_state residual found by todo 4's
-      post-fix re-run** (repo: instruments-service) — after both the schema-aware content-compare and source-probe
-      fixes, 243 of the 1,080 candidates still block on "canonical twin NOT captured/resolvable" at the EXACT legacy
-      filename (pool address), concentrated (per the first 25 logged) in days 2021-01-17 through 01-21 and including
-      several `_migrated_curve_ETHEREUM_<timestamp>.parquet` artifacts that look like leftovers from an old migration
-      attempt rather than per-pool captures. Determine per sub-population: (a) do these specific pool addresses have NO
-      canonical capture at all for that day (a genuine v9-registration gap for that specific pool, not the whole day —
-      would need per-address, not just per-day, GCS existence checks), or (b) are the `_migrated_curve_*` artifacts
-      themselves not real per-pool legacy objects at all (e.g. an intermediate/scratch file from the 2026-05-04
-      migration run that should be classified differently by `migration_orphan_sweep.py`, not evaluated as a class-B
-      duplicate in the first place)? Re-run the dry-run's blocked-list logging with the array-slice cap
-      (`blocked[:25]`) either removed or raised for this investigation so the FULL 243-row reason list is available,
-      not just the first 25 (all currently-visible entries happen to share one reason/date-range, which may or may not
-      hold for the rest). Part 5 twin-coverage for the population overall is 837/1080 = 77.5%, short of the 100%
-      required before any `--apply` reconsideration for this asset_group (delete-safety protocol §1 Part 5) — this
-      todo's outcome, not todo 4's, decides whether the residual is migrate-forward, a classifier fix, or permanent
-      `no-migrate-first`. No delete executed by this todo either. Codex SSOT:
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5.
+- [x] ✅ [DATA] P3. **Investigate + resolve the 243-object CURVE/ETHEREUM/pool/dex_pool_state residual found by todo 4's
+      post-fix re-run — DONE 2026-08-16 (slot-28, data_engineering). ANSWER: BOTH (a) AND (b), cleanly split.**
+      (repo: instruments-service). Shipped `deployment-service@5c5ea31ec4` (wired `--verdict-report-out` into the
+      `defi-legacy-dup-cleanup` launcher category, defaulted to a `RUN_TS`-scoped path — closes the `blocked[:25]`
+      log-cap gap `instruments-service@d0f4a6a6`'s durable-report feature was built for but nothing had invoked yet).
+      Launched `canonical-migration-defi-legacy-dup-cleanup-20260816-050223` (dry mode, tarball confirmed @
+      `b421ea77ce88` which includes `d0f4a6a6`), ran to completion in ~87s (exit_code=0, confirmed via run.log), and got
+      the full 1,080-row verdict population — **837 deletable / 243 blocked**, matching todo 4's counts exactly (no
+      drift since) — at
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/legacy_dup_verdict_defi_20260816-050223.parquet`.
+      Downloaded + analyzed all 243 blocked rows (not just the first 25): **(b) 38 rows** are `_migrated_curve_*`
+      filenames — exactly one per day across all 38 days — that **no longer exist in GCS at all**
+      (`gcs_describe_object` returns 404/`None` on every one, verified individually). These are ghost entries in the
+      candidate report (`orphan_sweep_defi.parquet`, generated 2026-07-23, now 3+ weeks stale) — something already
+      deleted/cleaned them up since the report was generated, but `cleanup_legacy_twins.py`'s `_verify_one()` never
+      checked legacy existence before deriving/probing a canonical twin it would never use, so these already-gone
+      objects misleadingly reported "canonical twin NOT captured/resolvable" — a genuine classifier/tooling gap, not a
+      data gap. Fixed via `instruments-service@1ef9288af1` (early `gcs_describe_object(legacy)` check returns a
+      distinct "legacy object no longer exists" verdict before any canonical derivation/probing runs — both a
+      correctness fix and an efficiency win, 2 new unit tests, QG green, verified landed). **(a) The remaining 205
+      rows** are exactly **6 distinct, still-existing** CURVE/ETHEREUM pool addresses (5 present on all 38/38 sampled
+      days, 1 on 15/38 days) — verified via direct GCS prefix listing (not just the tool's per-candidate probe) to have
+      **ZERO canonical twin under `pipeline_mode=batch_onchain_subgraph` on ANY of the 38 sampled days** (0/38 for
+      every address, not merely 0 on their own legacy day). This is a genuine, thoroughly-verified permanent
+      **`no-migrate-first`** legacy-only population — matching the sports `sports_reference_v2/` precedent's
+      Option-(a) ruling — not a classifier bug and not resolvable by re-checking; whether the `onchain_subgraph`
+      source ever covered these 6 specific pools is a separate future backfill-source question, out of this
+      delete-safety todo's scope. **No delete or migrate-forward executed** (read-only investigation throughout,
+      matching the todo's own scope). Part 5 twin-coverage for the population stays 837/1080 = 77.5%, still short of
+      the 100% an asset_group-wide `--apply` would need — unchanged by this todo, now fully explained rather than an
+      opaque residual. Codex SSOT: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5.
 
 ## Progress Log
 
@@ -246,3 +259,13 @@ resolved_by:
   is a legitimate per-object finding (exact-filename twin genuinely absent for specific pool addresses/some old-migration
   artifacts), not a resolution bug — filed as todo 5. No delete executed (dry-run only); Part 5 twin-coverage
   (837/1080 = 77.5%) still short of the 100% an asset_group-wide `--apply` would need.
+- **2026-08-16 (slot-28, data_engineering)**: Executed todo 5 end-to-end — plan is now fully complete (all 5 todos
+  done). Shipped `deployment-service@5c5ea31ec4` (wired `--verdict-report-out` into the `defi-legacy-dup-cleanup`
+  launcher), launched `canonical-migration-defi-legacy-dup-cleanup-20260816-050223` (dry, ~87s, exit_code=0), and
+  downloaded the full 1,080-row verdict population (837 deletable / 243 blocked, unchanged from todo 4). Analyzed
+  every one of the 243 blocked rows: 38 are `_migrated_curve_*` filenames that no longer exist in GCS at all (a stale
+  candidate-report ghost, not a data gap) — fixed via `instruments-service@1ef9288af1`'s legacy-existence early-return
+  in `cleanup_legacy_twins.py::_verify_one()`. The remaining 205 rows are exactly 6 real, still-existing CURVE/ETHEREUM
+  pool addresses independently verified (direct GCS listing, not just the tool's probe) to have zero canonical twin on
+  any of the 38 sampled days — a genuine, permanent `no-migrate-first` population, no delete/migrate-forward action.
+  See todo 5's own entry for full evidence.
