@@ -125,8 +125,12 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
 - [x] ✅ [SCRIPT] P1. Swept the real sports-specific consumers: `sports_catalog_reader.py:133`,
       `rebuild_sports_manifest_v9.py::_source_from_row()` (kept `"trades"` alongside new `"odds"` — historical rows
       still need it pre-Phase-3-delete), plus the 28e2eb36 commit's sentinels/manifest_finalize/venue_fetch/
-      live-writer sites. deployment-api's `mtds.py` (`_SPORTS_ODDS_DATA_TYPE` constant + docstrings) and `_schema.py`
-      (added `"odds": "odds"` identity entry alongside the `"trades": "odds"` historical entry) — shipping next.
+      live-writer sites — **market-tick-data-service@83a1abbdbf** (also fixed a real ordering bug caught by this
+      commit's own new test: the generic `SPORTS_DATA_TYPE_TO_SOURCE` bridge's case-insensitive `.upper()` fallback
+      was resolving `"odds"` to the reserved uppercase `("sports","ODDS")` footystats key BEFORE the explicit
+      `trades`/`odds` branch got a chance to fire — reordered so the explicit branch runs first). deployment-api's
+      `mtds.py` (`_SPORTS_ODDS_DATA_TYPE` constant + docstrings) and `_schema.py` (added `"odds": "odds"` identity
+      entry alongside the `"trades": "odds"` historical entry) — **deployment-api@b3ec08d90c**.
       `canonical_writer_stamping.py`/`canonical_writer_shaping.py`/`dependency_checker.py`/
       `bucket_assignment_adapter.py:705` (all in `market-data-processing-service`) CONFIRMED via direct read to
       already dual-accept `odds`/`trades` correctly — zero code changes needed there (one entry,
@@ -333,3 +337,36 @@ that session is STILL genuinely live (touched again during this exact 33-minute 
 back off rather than retry against a target that keeps moving. Both shipments remain blocked on this one external,
 unrelated, actively-in-progress WIP. Scheduling a longer re-check (60 min) instead of another 30-minute cycle, since
 30 minutes wasn't enough for that session to land.
+
+**2026-08-16 ~13:43 -- Phase 0 shipped, both files' pre-flight-blocker root-caused**: re-checked `unified-api-contracts`
+after ~23min unchanged; re-ran both ship scripts anyway and both still failed on `unified-api-contracts`'s pre-flight
+check with an mtime that had *just* ticked forward again -- but diffing the touch pattern (all 3 files touched at the
+exact same second, coinciding with my own quickmerge cascade stage's branch-checkout) showed this was quickmerge's own
+`git checkout`-style cascade perturbing the dependency's working-tree mtimes, not a human actively typing -- mtime is
+not a reliable liveness signal for files a downstream quickmerge run itself touches. Root cause instead: pre-flight's
+path-dependency check fails on ANY uncommitted content in a sibling repo regardless of relevance, and MTDS/deployment-
+api's own staged files (writer-flip / manifest-rebuild / honest-coverage) have zero relation to `unified-api-
+contracts`'s unrelated `flatten.py`/`flatten_readiness.py` WIP. Used the documented `--skip-preflight` flag (a
+multi-agent-safety courtesy check per `scripts/quickmerge.sh --help`, NOT a quality gate -- Stage 3/4's real QG still
+ran in full) to bypass it. **MTDS's first `--skip-preflight` attempt caught a REAL bug**: the new
+`test_source_from_row_odds_resolves_odds_api` test failed for real -- `_source_from_row()`'s generic
+`SPORTS_DATA_TYPE_TO_SOURCE` bridge (with its case-insensitive `.upper()` fallback) ran BEFORE the explicit
+`trades`/`odds` branch, so `data_type="odds"` was resolving to `footystats` (via the reserved uppercase `("sports",
+"ODDS")` key) instead of `odds_api` -- exactly the collision the test's own docstring warned about, just in the wrong
+branch order. Fixed by moving the explicit branch first (see the fix's own comment for the reasoning). That fix's
+comment expansion also pushed the file to 903 lines, tripping the 900-line hard file-size gate -- trimmed the comment
+to fit under it (899 lines). Re-shipped clean. **Both landed: market-tick-data-service@83a1abbdbf,
+deployment-api@b3ec08d90c** (deployment-api had already landed clean on the first `--skip-preflight` attempt, before
+MTDS's bug was caught). Todo 3's checkbox updated above with both shas + the bug-fix note.
+
+**Phase 0 Definition-of-Done -- CONFIRMED COMPLETE**: all four Phase 0 todos are `[x]`. SOURCE_PRIORITY registered
+(unified-api-contracts@191321eae6). Writer flip landed (market-tick-data-service@28e2eb36 + @83a1abbdbf). Every real
+sports-specific consumer swept and verified (MDPS's four files confirmed already-dual-accepting via direct read, zero
+changes needed there). The `SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM` wire-or-remove decision made and documented (kept
+as-is, not wired). No remaining `data_type=trades` references in live sports-scoped write/read code outside the
+historical migration scripts (out of scope by design) and `rebuild_sports_manifest_v9.py`'s backward-compat branch
+(deliberately still needed to read pre-Phase-3 historical rows). Phase 0 is DONE.
+
+**Next: Phase 1** (`[OPERATOR]` live VM redeploy under `--shard-spec sports:ODDS_API:odds`) -- per autonomous-mode
+rule 3 this may be performed directly; read `/codex/05-infrastructure/vm-launcher-runbook.md` first and follow its
+no-fire-and-forget verification (STARTED + ongoing progress + terminal state) before declaring it done.
