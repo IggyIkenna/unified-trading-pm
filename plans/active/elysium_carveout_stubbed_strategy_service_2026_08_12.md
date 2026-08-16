@@ -212,12 +212,52 @@ narrowed §A3 scope (Lido staking only, no DeFi-side leverage), the archetype's 
 
 Matches the operator's stated scope exactly: Lido rate data and gas fees, nothing else.
 
-- [ ] [AGENT] P2. **Resolve the DeFi-vs-CEX provenance of two optional `staked_basis.py` feature fields before
-      finalising the data-scope list above**: `health_factor` ("LST collateralisation health," used as a kill-gate
-      when the LST is posted as perp margin — may matter even without DeFi-native leverage, e.g. tracking stETH
-      depeg risk while stETH sits as CEX margin, or may be specific to on-chain borrowing health) and
-      `usdc_idle_yield_apy_bps` (idle USDC yield; on-chain money-market vs. a CEX earn product not established).
-      Trace each to its actual producer before deciding whether it counts as owed DeFi data under this scope.
+- [x] [AGENT] P2. ✅ **RESOLVED 2026-08-16 — both trace to genuine on-chain DeFi data, but neither belongs in this
+      scope.** `health_factor` is produced by `features-service/features_service/onchain/engine/orchestrator.py`'s
+      `_process_health_factor()`, which polls **Aave V3's `getUserAccountData()`** directly — a real on-chain
+      lending-protocol borrowing-health read, not CEX-reported. But it exists to gate **DeFi-native
+      borrowing/leverage** ("kill gate when LST posted as perp margin" against an Aave position) — and the
+      operator has ruled **no DeFi-side leverage is taken in these strategy versions** (§A3/§A4 above). So it's
+      on-chain DeFi data, but for a capability this scope doesn't use — **excluded from the data-scope list, not
+      owed.** (Also currently unpopulated in this corpus — paper-run substitutes a hardcoded safe constant rather
+      than a real per-wallet figure, per `strategy_service/cli/handlers/paper_run_handler.py:26-28,343`.)
+      `usdc_idle_yield_apy_bps` similarly traces to genuine on-chain data — Aave V3/Compound V3/Spark stablecoin
+      **supply** APY (lending, not borrowing — no leverage involved) via
+      `strategy_service/engine/core/canonical_lending_supply_apy_provider.py`. Unlike `health_factor`, supplying
+      idle USDC for yield doesn't require leverage, so this one COULD be in scope if the two real archetypes
+      actually use it live — but its only confirmed wiring today is paper-run/backtest CLI tooling
+      (`paper_run_handler.py`, `paper_universe.py`), not a proven live-trading path. **Not added to the data-scope
+      list above** until its live-path status is confirmed; flagged here so it isn't silently dropped if that
+      changes.
+
+## A5. Pre-carve-out completion bar (operator ruling 2026-08-16)
+
+Two prerequisites before any carve-out repo is built or sent, beyond the code/venue/data scope rulings above —
+these gate readiness to carve, not the carve-out's own content.
+
+- [ ] [OPERATOR] P0. **Full E2E connector + data completeness for the two real archetypes, on the exact §A3
+      scope, before anything ships.** Every connector in the chain — instruments-service through execution-service
+      — must be built and verified for `CARRY_BASIS_PERP` and `CARRY_STAKED_BASIS` across all three modes: batch,
+      live, and paper (paper including proxy/internal-match and testnet where possible). Underlying market data for
+      the scoped venues (Bybit, Deribit, Binance, OKX, Lido — §A3/§A4) must be captured to 100% completion, its
+      availability verified, and its data types reconciled. This is stronger than "does the code exist" — it's
+      "does the pipeline actually run end-to-end and does the data back it up," per this workspace's own
+      data-pipeline-correctness standard
+      ([data-pipeline-correctness-hard-rule](/codex/02-data/data-pipeline-correctness-hard-rule.md)). Directly
+      extends the code-completion bar already gating the repository send in
+      [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md)
+      §D, now scoped precisely to the two archetypes and four venues this plan actually covers.
+- [ ] [OPERATOR] P0. **Land the lazy-loading (factory) refactor before or alongside the carve-out, not as an
+      independent question.** Rationale: so that updating the carve-out later doesn't mean re-deriving a frozen
+      snapshot against a moving, eagerly-coupled main-system target — if `factory.py`'s archetype registration is
+      already lazy/scoped by the time the carve-out exists, keeping it in sync with main-system changes stays
+      cheap. **Scope note, so this isn't treated as free**: the extraction audit (strategy-service's
+      `EXTRACTION_AUDIT.md`) found this refactor doesn't stop at strategy-service — the two real archetypes' live
+      collateral calls mean a genuinely lazy service also needs an equivalent UAC-side refactor
+      (`unified_api_contracts`'s `internal`/`registry` `__init__.py` eagerly loads ~240k lines regardless), which
+      has fleet-wide blast radius, not a local one. Both approaches are now wanted together, not compared as
+      alternatives — this raises total pre-ship scope above what §A2's "well-bounded" note assumed when it was
+      written, and is worth the operator seeing stated plainly rather than absorbed silently.
 
 ## B. What the expansion adds, and therefore what the carve-out must account for
 
