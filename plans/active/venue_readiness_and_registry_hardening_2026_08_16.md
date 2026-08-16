@@ -348,14 +348,20 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
       asserts) were folded into that section as a `§ D delta` rather than duplicated here. **Lesson**: the pre-task
       plan-conflict check must grep the corpus by CONCERN, not by filename — a filename grep for "config_abstraction"
       could never have found a plan named "service_config_ownership_and_instruction_contract".
-- [x] [AGENT] P0. ✅ **W4 — venue e2e wiring.** Intended to fork to `/plans/active/venue_e2e_wiring_2026_08_16.md`
-      (held at `status: draft`), but **that file was never actually created** — found broken during an unrelated
-      2026-08-16 dispatch's production-readiness validator run (`check for broken links in plans/active/*.md`).
-      Delinked here rather than left as a dead reference (HARD RULE: a misleading pointer is a finding, fixed on
-      contact) — the actual fork is still outstanding work, tracked by this delinking rather than a live path. The
-      method it was meant to carry (per venue × data type, not per venue), the per-asset-group batch fork
-      structure, and the hard rules the sweep must not violate remain undocumented until the fork actually happens.
-      **Blocked on exactly one thing**: the universe denominator below.
+- [x] [AGENT] P0. ✅ **W4 — venue e2e wiring.** Forked to
+      [`/plans/active/venue_e2e_wiring_2026_08_16.md`](/plans/active/venue_e2e_wiring_2026_08_16.md) (real, 163
+      lines, `status: draft`). **Correction 2026-08-16: the file DOES exist** — a prior entry here claimed it "was
+      never actually created" and delinked it; that claim was itself wrong (a misread during an unrelated dispatch's
+      broken-link check) and is fixed here per the HARD RULE that a misleading pointer is a finding fixed on
+      contact. Its content already documents the method (per venue × data type, not per venue), the per-AG batch
+      fork structure, and the hard rules the sweep must not violate — none of that is "undocumented until the fork
+      happens," contrary to the prior claim. **Still blocked on the same one thing**: the universe denominator
+      below (its own P0 "Define the universe precisely for W4/W5" remains open). Fresh per-AG venue counts measured
+      2026-08-16 (cefi 25, defi 79 protocol identities/105 spellings, tradfi 8, sports 37 canonical/45 physical,
+      prediction 2 — see
+      [`/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md`](/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md)
+      § PRE-AUDIT MEASUREMENTS §1) are useful input to that denominator work but do not by themselves satisfy it —
+      that todo needs one machine-readable list, not five separately-measured counts.
 - [x] [AGENT] P0. ✅ **W5 — smoke-test bar.** Intended to fork to `/plans/active/venue_smoke_test_bar_2026_08_16.md`
       (held at `status: draft`), but **that file was never actually created** either — same broken-link discovery
       as W4 above, delinked for the same reason. Records that the Databento exemption is by **SOURCE, not asset
