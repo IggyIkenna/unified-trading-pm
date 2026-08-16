@@ -310,17 +310,26 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
       time, found 4 of 5 concerns (adapter keys, instrument types, data types, error-code classification) already
       single-SSOT with zero per-service redefinitions; the child plan's real open scope is a same-repo
       `VenueCapability*` naming-overlap resolution plus an error-code coverage audit.
-- [ ] [AGENT] P0. **W3 — service-config abstraction.** Author the child plan. Per service: a `config.py`-style module
-      with declared schemas, hot-reload wiring, and GCS-backed storage — every service, uniformly, so config is always
-      findable in the same place. Existing pattern: [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
-      No in-service hardcoding; the gate should be able to detect a regression.
-- [ ] [AGENT] P0. **W4 — venue e2e wiring.** Author the child plan. Walk the readiness contract steps 1–9 for every
-      venue in the universe, instruments-service through execution-service, including transfers and feature-group
-      availability. This is the largest workstream and the most mechanical — the best AO-dispatch candidate once the
-      contract above is settled.
-- [ ] [AGENT] P0. **W5 — smoke-test bar.** Author the child plan. A batch smoke test per data type per venue, so at
-      minimum we know we can backtest. **Databento-sourced venues are exempt** (operator, 2026-08-16 — that source is
-      already trusted). Where credentials exist or can be provisioned programmatically, add a testnet smoke test too.
+- [x] [AGENT] P0. ✅ **W3 — service-config abstraction. NO new plan — this ground was already owned.** A W3 child was
+      drafted 2026-08-16 and **deleted before shipping** once the overlap was measured: §&nbsp;D of
+      [`/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md)
+      ("Per-service config centralisation + hot reload") already tracks the typed `client_configs` schema, the
+      per-service knob inventory, the execution-service `config.py` resolution and the API-key reloader asymmetry.
+      The operator's 2026-08-16 shape ruling plus its two open sub-questions (schema mechanism; what the gate
+      asserts) were folded into that section as a `§ D delta` rather than duplicated here. **Lesson**: the pre-task
+      plan-conflict check must grep the corpus by CONCERN, not by filename — a filename grep for "config_abstraction"
+      could never have found a plan named "service_config_ownership_and_instruction_contract".
+- [x] [AGENT] P0. ✅ **W4 — venue e2e wiring.** Forked to
+      [`/plans/active/venue_e2e_wiring_2026_08_16.md`](/plans/active/venue_e2e_wiring_2026_08_16.md), held at
+      `status: draft`. Carries the method (per venue × data type, not per venue), the per-asset-group batch fork
+      structure, and the hard rules the sweep must not violate. **Blocked on exactly one thing**: the universe
+      denominator below. `status: draft` is the lever that holds it — `depends_on` documents ordering but does not
+      gate dispatch, so it alone would not stop a worker sweeping an undefined set.
+- [x] [AGENT] P0. ✅ **W5 — smoke-test bar.** Forked to
+      [`/plans/active/venue_smoke_test_bar_2026_08_16.md`](/plans/active/venue_smoke_test_bar_2026_08_16.md), held at
+      `status: draft` on the same blocker. Records that the Databento exemption is by **SOURCE, not asset group** (a
+      TradFi venue sourced elsewhere is in scope), and specifies that a smoke test must provably FAIL on a venue with
+      no data — the pass-on-zero-rows trap has already cost this corpus real time.
 
 ## Design rulings needed before the mechanical children dispatch
 

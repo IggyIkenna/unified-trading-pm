@@ -195,6 +195,33 @@ wires one of these must also delete or update whatever doc claims it is already 
       hot-reloadable. The goal is "everything centralised and hot-reloadable"; without the inventory there is no way to
       say how far along that is, and partial coverage reads as full coverage.
 
+### § D delta — the venue-readiness umbrella's W3 lands HERE, not in a new plan (2026-08-16)
+
+The umbrella [`venue_readiness_and_registry_hardening_2026_08_16`](/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md)
+names "service-config abstraction" as its workstream W3. **This § D already owns that ground** — a separate W3 plan
+was drafted on 2026-08-16 and deleted before shipping once the overlap was measured, precisely to avoid a second
+SSOT for the same concern. What W3 contributes that this section did not already have is the operator's shape
+ruling plus two questions it deliberately left open:
+
+**RULED 2026-08-16 (operator)**: ONE `config.py` per service, split across files by domain **only where the line cap
+forces it** — a mechanical remedy, never an up-front design choice, so "where is this service's config" always has
+one answer. **Always via the config reloader**; a bare module-level constant is not config however well-named.
+GCS-backed storage has a place in every service. This ruling settles the rename-vs-document question above
+consistently: document where renaming collides, but the reloader path is non-negotiable.
+
+- [ ] [AGENT] P0. **Decide the schema mechanism** — the open half of the ruling. Candidates: Pydantic (validation +
+      JSON schema free, matches `UnifiedCloudConfig`'s idiom), dataclass + explicit validator, or a UAC-declared
+      schema each service imports. Weigh against strict `basedpyright`, the `Any` ban, per-reload cost, and whether a
+      bad config should fail at import or only at reload. This is the blocker for the typed-`client_configs` todo
+      above — that todo's "governing schema" is exactly this decision. Done-when: one mechanism named here, with
+      rejected alternatives and why.
+- [ ] [AGENT] P0. **Decide what the gate asserts** to prove in-service hardcoding has not crept back. Needs a
+      machine-checkable definition of "hardcoded config" — note a literal in a code path is NOT automatically config;
+      the four-destination table in
+      [strategy_service_centralization_fixes](/plans/active/strategy_service_centralization_fixes_2026_08_16.md) is
+      the discriminator, and this gate must agree with it rather than invent a second rule. Done-when: specified
+      precisely enough to implement, including what it deliberately does not catch.
+
 ## § G. Execution-service change surface — measured 2026-08-12, exhaustive
 
 > Operator asked to be "fully sure even for the execution service stuff what the changes needed are". This section is
