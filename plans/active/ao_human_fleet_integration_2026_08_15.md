@@ -361,6 +361,17 @@ investigation confirmed are both achievable with existing primitives:
   hook design) below. **Not yet executed**: minting Ikenna's real JWT and registering against production AO is a
   real production-state change — written up as a todo, not run in this pass; still wants one explicit go-ahead in
   the moment it actually runs.
+- **2026-08-16 (same session, Ikenna Phase 4 executed)**: operator gave the explicit go-ahead ("do it") and said
+  Harsh's own instructions would be handled separately (doc or link, operator's own follow-up, not this session's
+  job). Minted + registered Ikenna's slot 9001 against real production AO. Hit and fixed a genuine production
+  regression along the way — the central VM's live `.env.local` had silently drifted to missing all 7 fleet-shared
+  secrets (`ORCHESTRATOR_JWT_SECRET` included), contradicting this plan's own 2026-08-15 claim that it was confirmed
+  in sync; root-caused via direct SSM checks (never printed secret values), fixed via the existing
+  `refresh_env_from_sm.sh --apply` + a service restart (self-serviced, not paused on, per this workspace's own
+  IAM-self-service + maintenance-restart rules). Registration confirmed live and rendering correctly
+  (`agent_kind="human"`, not `"custom"` — the Phase 4b fix is deployed). **Not done this pass**: the second Phase 4
+  todo (claim + complete one real backlog task end-to-end) — "do it" was scoped to registration, a real task
+  claim/done cycle is a bigger action and wasn't asked for yet.
 
 ## Todos
 
@@ -487,16 +498,27 @@ investigation confirmed are both achievable with existing primitives:
 > **Deferral REVERSED for Ikenna, 2026-08-16 (operator, interactive session)**: the 2026-08-15 "stays fully dormant"
 > ruling is superseded for Ikenna's own machine specifically — "we need to flip it on and then start doing it here."
 > Harsh's half is untouched (still a genuine physical impossibility from this session, still pure-verification when he
-> picks it up). Split into two operator-scoped todos below so the two don't get conflated. **Actually executing
-> Ikenna's todo (minting a real JWT, registering against production AO) is a real production-state change — still
-> wants one explicit go-ahead in the moment it runs, separate from writing this todo up.**
+> picks it up). Split into two operator-scoped todos below so the two don't get conflated.
 
-- [ ] [OPERATOR] P1. **Ikenna — issue a long-lived worker-role JWT and register (slot 9001).** From the
-      `agent-orchestrator` repo root:
-      `python3 -c "from server.auth import issue_token; t,e = issue_token('ikenna', role='worker', machine='ikenna-laptop'); print(t); print('expires', e)" mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token # paste the token AO_SLOT_ID=9001 bash scripts/human_fleet/ao-register.sh ikenna`
-      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and `ikenna` shows up in AO's
-      `GET /api/agents` with `role="human"` (needs `agent-orchestrator@609e4ea377`, already shipped, or the 500 from
-      this session's own found bug reproduces live).
+- [x] 22. ✅ [OPERATOR] P1. **Ikenna — issue a long-lived worker-role JWT and register (slot 9001).** Executed this
+      session on explicit operator go-ahead ("do it"). Minted via `issue_token('ikenna', role='worker',
+      machine='ikenna-laptop')`, token written to `~/.config/agent-orchestrator/human-fleet-token` (0600). **Found +
+      fixed a real production gap along the way**: the first mint attempt 401'd — SSM-verified directly against the
+      central VM (`i-0c9b283b31d6b5ca7`) that its live `.env.local` (confirmed as the exact file
+      `orchestrator.service`'s own `EnvironmentFile=` points to, and confirmed absent from the RUNNING process's own
+      `/proc/<pid>/environ`) had ZERO of the 7 fleet-shared keys set, including `ORCHESTRATOR_JWT_SECRET` — meaning the
+      live server was signing every token with an ephemeral, per-restart-only secret, contradicting this plan's own
+      2026-08-15 Progress Log claim that vm-0's secret was confirmed in sync. AWS Secrets Manager and GCP Secret
+      Manager both held the correct, matching value (compared by length/equality only, values never printed). Fixed
+      via the already-built `scripts/refresh_env_from_sm.sh --apply` (synced 7 keys) + `systemctl restart orchestrator`
+      (workers survive, `KillMode=process`) — self-serviced per this workspace's own "both cloud identities are
+      IAM-self-service, don't pause" + "maintenance restarts skip scheduling" rules, not paused on. **Side effect worth
+      knowing**: any dashboard session whose token was signed with the now-replaced ephemeral secret needs a fresh
+      login — self-healing, not a data-loss risk. Registration then succeeded:
+      `{"ok":true,"agent_id":"agt-f6b475","slot_id":9001}`, verified rendering correctly via a direct
+      `GET /api/agents?kind=human` call — `"role":"human"`, `"agent_kind":"human"` (not `"custom"`), confirming
+      `agent-orchestrator@609e4ea377`'s fix is live in production too (self-pulled via the standing 15-min LDR cron).
+      Done when: met — `ikenna` is live in AO's `GET /api/agents` with `role="human"`, `agent_kind="human"`.
 - [ ] [SCRIPT] P2. **Ikenna — run one real, low-stakes task end-to-end.**
       `AO_SLOT_ID=9001 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable), then without
       `--check-only` to actually claim, do the real work, commit+push+flip the plan checkbox, then
