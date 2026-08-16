@@ -49,6 +49,14 @@ depends_on: []
 
 # CeFi backfill VM resource audit
 
+> **🟢 RESOLVED 2026-08-16 (second pass, this session) — banner lifted.** The 521-VM HL/ASTER duplicate fleet this
+> banner warned about has been cleaned up (513 duplicates terminated, 8 keepers remain, repopulation-checked clean)
+> — see `plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md`'s Progress
+> Log. The P3 re-measure todo below can now safely sample the (post-cleanup) real fleet — note the 4 keeper VMs
+> sampled during that cleanup (`RESOURCE_SAMPLE` telemetry, full VM lifetime) showed memory pinned at 6.1-10.2% of
+> the current `e2-highmem-4` (32GB), the SAME headroom pattern this doc already downsized once — worth folding into
+> whatever the P3 re-measure produces rather than re-deriving from scratch.
+
 ## Launchers found and verdict
 
 | Launcher                                                | Machine (before)                                            | CPU / Memory measured                                                             | Verdict                                                                                                                   |

@@ -171,10 +171,18 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       unrelated pair (features-service importing MTDS) stays `[WARN]`-only. Full suite 31/31 passed
       (`.venv/bin/python3 -m pytest tests/unit/test_check_no_service_deps.py -q`); full `quality-gates.sh --no-fix`
       exit 0.
-- [ ] [OPERATOR] P0. **Where does the granularity declaration live?** Keyed per (venue x instrument-type x data-type),
-      must express exceptions at that granularity, read by both MDPS and execution-service. Most likely an extension of
-      the UAC venue capability record rather than a new registry — but that is a shape call, and it should be made
-      before population, because population is the expensive half. **Cross-reference (2026-08-16, W2 resolved)**:
+- [x] ✅ [OPERATOR] P0. **Granularity declaration home — RULED 2026-08-16: a UAC registry**, consistent with venue lists
+      and adapter keys already being UAC data, and readable by execution-service so it can fail closed rather than match
+      as if it had tick data. Not instruments-service (that would make execution's fail-closed check depend on IS), and
+      not manifest-derived-at-runtime.
+      **Seeding, per the operator: do NOT hand-populate from scratch.** Most of it is derivable from the manifest as it
+      stands, plus the plans still to complete, plus what the code already encodes — treat those three as the seed and
+      reconcile, so population is a diff against existing knowledge rather than fresh data entry. Where the three
+      disagree, the manifest is the measurement and wins; a disagreement is itself a finding, not a tie to break
+      quietly. The instrument-type axis and the granularity/exceptions fields are the genuinely new part.
+      **Concrete target, from the W2 evidence below**: extend `VenueCapabilityRecord` — it already carries the
+      (venue × data-type) axis this needs. Keyed per (venue x instrument-type x data-type), expressing exceptions at
+      that granularity, read by both MDPS and execution-service. **Cross-reference (2026-08-16, W2 resolved)**:
       `/plans/active/registry_ssot_hardening_2026_08_16.md` todo 1 resolved the three `VenueCapability*`-named UAC
       types as genuinely orthogonal — no merge, all three survive. Of the three, `VenueCapabilityRecord`
       (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2508`) is the shape closest
@@ -318,18 +326,29 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
 
 These are the LOCAL half of the split — an AO worker cannot settle them alone, so they must be resolved here first.
 
-- [ ] [OPERATOR] P0. **Error-code SSOT shape.** Where does "how we handle every API response/error code" live — a UAC
-      registry keyed by (venue, code), an extension of `classify_venue_error()`, or per-venue declaration files? It must
-      be greppable per venue and diffable when a venue changes its API. Decide the shape before anyone populates it,
-      because the population is the expensive half.
-- [ ] [OPERATOR] P0. **Config-abstraction target shape.** One `config.py` per service, or per domain within a service?
-      What is the schema mechanism, and what does the gate check for to prove no in-service hardcoding crept back?
+- [x] ✅ [OPERATOR] P0. **Error-code SSOT shape — RULED 2026-08-16: extend `classify_venue_error()`.** Not a separate
+      registry and not per-venue declaration files. The existing UAC classifier grows into a (venue, code) registry, so
+      raw venue codes stay bound to the behaviour they already trigger — shard-level failure isolation and the
+      `DependentAction` ladder — rather than being classified in one place and acted on in another. Requirements the
+      shape must keep: greppable per venue, and diffable when a venue changes its API.
+      **Consequence for W4/W5**: population is now unblocked and is the expensive half — it is per-venue mechanical
+      work, so it belongs in the AO-dispatched children, not here.
+- [x] ✅ [OPERATOR] P0. **Config-abstraction target shape — RULED 2026-08-16: one `config.py` per service, split by
+      domain ONLY where the line cap forces it.** The default and the thing the gate asserts is a single per-service
+      module; a domain split is a mechanical remedy for a file that breaches the cap, never a design choice made up
+      front. So "where is this service's config" always has one answer, and a split is self-evidently cap-driven.
+      **Open sub-questions this ruling does NOT settle** (fold into the W3 child, do not re-ask the operator): the
+      schema mechanism, and what precisely the gate checks to prove no in-service hardcoding crept back. Existing
+      pattern to extend: [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
 - [ ] [AGENT] P0. **Define the universe precisely for W4/W5.** "Every venue in our universe" needs a machine-readable
       list before it can be swept — 158 capture venues across 84 families is the current measured figure, but the
       readiness contract applies per (venue × data type), so state the real denominator and where it is derived from.
-- [ ] [AGENT] P1. **Decide whether readiness state is DERIVED or DECLARED.** A derived state (computed from the twelve
-      steps) cannot drift but needs every step machine-checkable; a declared state is cheap and rots. Prefer derived —
-      but only where the check is real, per this workspace's measurement discipline.
+- [x] ✅ [AGENT] P1. **Readiness state — RULED 2026-08-16 (operator): DERIVED from the contract steps.** Not declared,
+      and not a hybrid. A declared state rots, and a stale `LIVE-READY` is precisely the claim-exceeds-measurement
+      failure this workspace bans. **The binding consequence**: every contract step must become genuinely
+      machine-checkable — a step with no real check cannot contribute a passing verdict, and must surface as
+      "unverified", never silently as ready. That makes step-checkability a hard prerequisite of W4/W5 rather than a
+      nice-to-have, and it is the reason step 17 is tracked as a real bidirectional check above.
 
 ## Definition of done for the umbrella
 
@@ -450,6 +469,42 @@ work for karak/pendle/symbiotic, not these 3 files). No further action taken thi
 confirmation — the resume recipe from the "3rd confirmation" entry above still applies verbatim: re-run the
 invariant standalone first, only quickmerge once it passes. `unified-api-contracts` working tree unchanged
 (3 files, `ahead=0`/`behind=0` on committed history); `unified-trading-pm` clean.
+
+**2026-08-16 — still blocked, 6th confirmation, direct-cause recheck.** Checked the actual blocking condition directly
+instead of re-running the full invariant: `execution-service` HEAD moved `37bfaeed0` → `9af4713c` (a routine
+`origin/main` backmerge, not new work) since the last check; its most recent substantive commit is still `37bfaeed`
+("wire real Uniswap/Lido/Jupiter into live dispatch... Jito jitoSOL connector") — unrelated to karak/pendle/symbiotic.
+`grep -rin "karak\|pendle\|symbiotic" defi_adapter.py` = 0 hits, same as every prior check. All 3 tracking issue docs
+(`plans/active/issues/karak_decommission_2026_08_16.md`, `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`,
+`symbiotic_venue_onboarding_2026_08_16.md`) remain `status: open` — none flipped to resolved/in-progress since last
+checked. Condition unchanged; did not re-run the full QG suite (the direct-cause check is a cheaper, equally conclusive
+signal — the invariant fails iff these venues are unwired, and they're still unwired). A `ScheduleWakeup` (1800s) is
+armed to repeat this exact check — note for any session reading this cold: that wakeup is ephemeral (not itself
+durable), so if no further Progress Log entry appears after this one, the wakeup either hasn't fired yet or this
+session ended before it could; re-arm manually if picking this up fresh. `unified-api-contracts` still 3 uncommitted
+files, `ahead=0`/`behind=0`; `unified-trading-pm` clean.
+
+**2026-08-16 — still blocked, 7th confirmation (full-suite + direct-cause, both fresh).** Two independent checks this
+pass, both consistent: (1) a background full `unified-api-contracts` QG suite run (180.77s) reproduces the identical
+single failure — `1 failed, 13246 passed, 678 skipped, 5 xfailed` — with
+`test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`
+as the sole failure, nothing else red; (2) a fresh direct-cause recheck: `execution-service` HEAD unchanged at
+`9af4713c` (no new commits), `grep -rin "karak\|pendle\|symbiotic" defi_adapter.py` = 0 hits, all 3 tracking issue docs
+still `status: open`. Also during this pass, `unified-trading-pm` fast-forwarded one commit behind
+(`dd6ddfb80b` → `7d1ac5c51a`) — a different slot's unrelated doc-only commit
+(`docs(plans): pause aster relaunch-budget-scaling ruling...`, slot-1) — pulled in cleanly via `--ff-only`, touches
+none of this plan's files. `unified-api-contracts` still exactly the same 3 uncommitted files, `ahead=0`/`behind=0`.
+Condition is now confirmed stable across 7 independent checks (5 full-suite, 2 direct-cause) spanning the whole session;
+resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
+hand-wire the venues or edit the SIT ratchet baseline.
+
+**2026-08-16 — still blocked, 8th confirmation, direct-cause recheck (heartbeat).** `execution-service` HEAD unchanged
+at `9af4713c` (no new commits); `grep -rin "karak\|pendle\|symbiotic" defi_adapter.py` = 0 hits, same as every prior
+check; all 3 tracking issue docs still `status: open`. Condition confirmed stable across 8 independent checks (5
+full-suite, 3 direct-cause) spanning the whole session. `unified-api-contracts` still the same 3 uncommitted files,
+`ahead=0`/`behind=0`; `unified-trading-pm` clean at `ahead=0`/`behind=0`. Resume recipe unchanged from the "3rd
+confirmation" entry above. Standing instruction remains in force: do not hand-wire the venues or edit the SIT ratchet
+baseline.
 
 ## Deferred work after 2026-08-16
 

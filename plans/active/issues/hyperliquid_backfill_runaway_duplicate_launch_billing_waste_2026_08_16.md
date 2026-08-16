@@ -12,14 +12,14 @@ summary:
   is the SAME full-year job launched ~40+ times over. Creation-timestamp histogram shows a runaway acceleration, not
   a single launch: 2 VMs at 19:00Z (08-15), climbing to 188 VMs in the single hour 02:00-03:00Z (08-16). Fleet count
   exceeds the script's own `MAX_CONCURRENT=250` default, consistent with multiple concurrent invocations racing past
-  a per-invocation-only concurrency guard. Root cause not fully isolated within this task's scope (no cron/systemd
-  timer found on this host referencing hyperliquid; likely repeated AO-worker-session launches against the same
-  `cefi_hl_aster_batch_data_gaps_2026_06_22.md` / `coverage_floor_registries_no_cross_propagation_2026_07_17.md`
-  HYPERLIQUID re-verify Follow-up without adequately checking for an existing fleet first, per the STEP 0.65
-  guardrail in `agents/infra.md` — the prior 2026-08-15 7-shard launch was correctly zero-checked and scoped;
-  something after it was not). The launcher script itself has NO built-in cross-invocation duplicate-detection —
-  `MAX_CONCURRENT` only bounds parallel subprocess launches WITHIN one script run, not across separate invocations;
-  the zero-pre-existing-fleet check is entirely a caller-side manual discipline with no code-level enforcement."
+  a per-invocation-only concurrency guard. RESOLVED 2026-08-16 (second pass, same day): the duplication was NOT
+  confined to `cefi-hyperliquid-2023` — the SAME original burst also duplicated `cefi-aster-*` (all 4 year-shards)
+  and `cefi-hyperliquid-2024/2025/2026`, 513 extra VMs total across 8 (venue,year) cells, sitting live and billing
+  for ~13h between an incomplete first cleanup pass (which only checked the 2023 cell) and this one. Full fleet
+  cleaned to 8 keepers (one per cell), repopulation-checked clean, and a separate latent gap
+  (`launch-cefi-hl-aster-historical-backfill.sh` never called `lc_write_launch_params`, so a SPOT-preemption relaunch
+  would have blindly fanned out to all venues x all years) fixed at deployment-service@8c2a1da87e. See the Progress
+  Log for full evidence."
 status: open
 priority: P0
 nature: issue
@@ -32,6 +32,8 @@ related:
   [
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/active/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
+    /plans/active/issues/cefi_hl_aster_vm_resource_downsize_2026_08_10.md,
   ]
 created: 2026-08-16
 author: unknown
@@ -148,12 +150,17 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
 
 ## Todos
 
-- [ ] [DATA] P0. **RULED 2026-08-16 (operator, na-eligibility-audit follow-up): investigate the fleet now, then
+- [x] ✅ [DATA] P0. **RULED 2026-08-16 (operator, na-eligibility-audit follow-up): investigate the fleet now, then
       decide — do not kill anything blind first.** Root-cause whether the 298+ VMs are genuine duplicate/redundant
       launches (billing waste) or legitimate sharded parallelism before touching any of them; report findings +
       recommendation before any kill action. Review the live `cefi-hyperliquid-2023-*` fleet (298+ VMs as of 2026-08-16, growing) and
       terminate the duplicates, keeping one coherent run. Needs a human call on which specific run-id(s) to preserve
-      and safe termination of the rest without corrupting in-flight manifest writes. (repo: infra ops, no code)
+      and safe termination of the rest without corrupting in-flight manifest writes. (repo: infra ops, no code) —
+      **CORRECTION 2026-08-16 (second pass, this session): the 2026-08-16 "operator-authorized fleet cleanup" entry
+      below marked this done after resolving ONLY `cefi-hyperliquid-2023-*` (298→1) — a checkbox/prose contradiction,
+      since `cefi-aster-*` (all 4 year-shards) and `cefi-hyperliquid-2024/2025/2026` were left fully duplicated the
+      entire time (513 extra VMs, ~13h of undetected billing waste). Genuinely closed now — see the new Progress Log
+      entry for the full 8-cell (2 venues x 4 year-shards) cleanup.**
 - [x] ✅ [INFRA] P1. Add a cross-invocation "is this (venue, date-range) already running?" guard to
       `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (and consider hoisting into
       `lib/launcher_common.sh` for reuse by sibling launchers) so a second invocation for an identical range refuses
@@ -167,6 +174,67 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
       coverage for the 2023-06-14..2023-12-31 window (the original ask in
       `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s open Follow-up) against that single run's
       completion. (repo: market-tick-data-service / deployment-service)
+- [x] ✅ [DATA] P0. **NEW 2026-08-16 (main agent, operator-directed) — finish the fleet cleanup (2024/2025/2026 +
+      aster, not just 2023) and live-test the guard before declaring this closed.** 521 VMs are live right now
+      (217 hyperliquid + 304 aster) with identical full-year duplicate metadata per (venue, year), same signature
+      as the original 2023 finding. The earlier "fix confirmed holding" cleanup entry below only ever checked
+      `--filter="name~'cefi-hyperliquid-2023'"` — it never looked at 2024/2025/2026 or at `cefi-aster-*` at all, so
+      this is almost certainly the SAME original burst (last fleet-wide creation timestamp 2026-08-16T09:23:26Z,
+      matching the 2023 cutoff) left uncleaned, not a fresh recurrence. Two things still needed: (1) repeat the
+      keeper-selection + batched-delete process from the 2023 cleanup for each of the 2024/2025/2026 year-shards on
+      BOTH venues (per STEP 0.65 — confirm which run to keep via GCS heartbeat/progress reads before deleting, same
+      as before); (2) actually attempt a fresh launch (or a safe dry-run of the guard check) to confirm
+      `lc_metadata_singleton_check()` genuinely refuses a duplicate rather than inferring it from 6h of silence. —
+      **DONE 2026-08-16 (this session): (1) complete — all 8 (venue,year) cells cleaned to one keeper each, 513
+      duplicates terminated, repopulation-checked clean ~4min later. (2) NOT live-tested against a fresh launch
+      attempt this session (would require actually invoking the launcher, out of scope for a cleanup-only pass) —
+      remains an open verification gap, folded into the timeline evidence instead: zero new VMs were created in the
+      ~13h between the two cleanup passes despite the fleet sitting duplicated and visible the whole time, which is
+      at least consistent with (though not a direct live-test of) the guard holding.**
+- [x] ✅ [INFRA] P2. **Recurrence 2026-08-16 (second pass, same day)**: `cefi-aster-*` (all 4 year-shards) and
+      `cefi-hyperliquid-2024/2025/2026` were duplicated the SAME way as the `cefi-hyperliquid-2023` cell above but
+      never noticed/cleaned (the earlier cleanup pass only checked the one cell the doc's title named). 513 total
+      duplicate VMs across 8 (venue, year-shard) cells terminated; 8 keepers (oldest RUNNING VM per cell) preserved.
+      Full forensics (bulk `instances list --format=json` for all 521, serial-port-output for 26 sampled VMs incl. all
+      8 keepers, disk snapshots for all 8 keeper disks) captured BEFORE termination per operator directive. See
+      Progress Log for counts/verdict. (repo: infra ops, no code)
+- [x] ✅ [INFRA] P3. **Latent gap found + fixed while investigating (not the root cause of the 513-VM population above
+      — that was a scope-incomplete cleanup, see Progress Log)**: unlike its sibling
+      `launch-cefi-sharded-backfill.sh`, `launch-cefi-hl-aster-historical-backfill.sh` never called
+      `lc_write_launch_params` before `gcloud compute instances create`, so a FUTURE SPOT preemption of any
+      ASTER/HYPERLIQUID VM would make `RelaunchPreemptedVm` fall back to "just the ambient env" — which for THIS
+      launcher means its own bare defaults (`VENUES=`all 4 venues, `YEARS=`every year since genesis), not the one
+      shard that died. This is the exact class of bug `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` closed
+      for `launch-mdps-sharded-backfill.sh` — that fix never touched this launcher. Fixed:
+      deployment-service `launch-cefi-hl-aster-historical-backfill.sh` `_launch_vm()` now calls
+      `lc_write_preemption_signal_file` + `lc_write_launch_params` with `VENUES=<this venue>` +
+      `OVERRIDE_START_DATE`/`OVERRIDE_END_DATE=<this shard's exact range>` (the launcher's own existing
+      finer-sharding clamp mechanism), mirroring `launch-cefi-sharded-backfill.sh`'s usage exactly — so a preemption
+      relaunch now replays ONLY the one dead shard. Untested against a live preemption (none observed this session);
+      `bash -n` syntax-clean, `quality-gates.sh --no-fix` green (211s). Shipped: deployment-service@8c2a1da87e.
+      (repo: deployment-service)
+- [ ] [DATA] P1. **New finding, 2026-08-16**: the `cefi-aster-2024-20260816-020107` keeper's `run.log` shows
+      `ERROR Schema validation FAILED: venue=ASTER data_type=trades missing columns=['amount'] (have=['timestamp',
+      'price', 'quantity', 'side', 'symbol', 'venue', 'data_type', 'instrument_type', 'underlying',
+      'instrument_id'])` firing repeatedly (e.g. TRBUSDT 2024-03-29, 38096 trades still captured despite the error —
+      unclear whether the error is cosmetic/non-blocking or a genuine schema-contract violation on a subset of ASTER
+      trades rows). Root-cause whether `amount` is a required OnchainPerpBatchHandler/ASTER-adapter trades column
+      that's silently missing, or a stale validation expecting a column the schema no longer carries. (repo:
+      market-tick-data-service)
+- [ ] [INFRA] P3. **Resource-rightsizing finding, 2026-08-16** (operator-requested, mirrors
+      `/vm-resource-rightsizing-check`): self-reported `RESOURCE_SAMPLE` telemetry from 4 sampled `e2-highmem-4`
+      (4 vCPU / 32GB) keeper VMs' `run.log` (n=1347-1593 samples each, full VM lifetime) shows memory pinned at
+      6.1-10.2% (≈1.5-2.1GB RSS of 32GB provisioned — the SAME headroom pattern the 2026-08-10
+      `cefi_hl_aster_vm_resource_downsize_2026_08_10.md` e2-highmem-8→e2-highmem-4 downsize already measured and
+      acted on) and CPU averaging 11-52% of 4 vCPU with bursts to ~110-118% (over 1 full vCPU, i.e. genuinely
+      multi-threaded at times — not a candidate for a smaller vCPU count without care). Recommendation: the memory
+      headroom alone likely supports a non-highmem family (e.g. `e2-standard-4`, 16GB) at the same vCPU count;
+      whether CPU headroom also supports running >1 shard concurrently per VM (raising throughput/$ instead of
+      spinning up more separate VMs) is a distinct calibration question this doc does not resolve — this launcher has
+      no Tardis-style `tardis-concurrency-guard.sh` cap-1 lock (that guard is Tardis-API-rate-limit-specific; ASTER
+      is REST/HL is requester-pays-S3, neither Tardis-gated) so per-VM concurrency is bounded only by
+      `MAX_CONCURRENT` (VM *count*, not per-VM shard parallelism) — a human sizing/concurrency-design call, not
+      auto-applied here. (repo: deployment-service)
 
 ## Progress Log
 
@@ -190,4 +258,102 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   (advanced to 2023-08-10, zero errors, fresh heartbeat, `ManifestWriter` flushing). Waited ~4 minutes and re-ran the
   list filter: still exactly 1 VM, same name/creation-timestamp — **no repopulation observed**, confirming the P1
   singleton-guard fix (deployment-service@246fa62319) is holding live. Todo flipped to done; [DATA] P2 re-verify can
-  now proceed against this single coherent keeper run.
+  now proceed against this single coherent keeper run. **(CORRECTION, second pass below: this entry's "todo flipped
+  to done" only covered the `cefi-hyperliquid-2023` cell — 7 other cells were left duplicated undetected.)**
+- **main agent 2026-08-16 15:23 UTC (operator-directed, na-eligibility-audit follow-up "500+ hyperliquid and aster
+  VMs, clearly a bug")**: re-verified live state — the operator's report is confirmed correct and this issue is
+  NOT actually resolved. `gcloud compute instances list --filter="name~'hyperliquid|cefi-aster'"` → **521 VMs
+  RUNNING**: `cefi-hyperliquid-*` breaks down as 1×2023 (the surviving keeper above) / 71×2024 / 73×2025 / 72×2026;
+  `cefi-aster-*` as 1×2023 / 3×2024 / 75×2025 / 75×2026. Sampled metadata on 3 hyperliquid-2024 VMs
+  (`cefi-hyperliquid-2024-20260816-04{0143,0158,0444}`) and 1 aster-2025 VM
+  (`cefi-aster-2025-20260816-040143`): every one carries the identical full-year `VM_START_DATE`/`VM_END_DATE` for
+  its (venue, year) with `VM_FORCE=false` — the same duplicate signature originally found for 2023. Fleet-wide most
+  recent creation timestamp (across every venue+year) is **2026-08-16T09:23:26Z**, which lines up almost exactly
+  with the 2023-only cutoff (`2026-08-16T09:23-07:00`→`02:23-07:00` local = same instant) the prior cleanup entry
+  used to declare the guard "holding" — strong evidence this is the SAME original multi-venue/multi-year burst, and
+  the earlier verification simply never widened its `gcloud` filter past `cefi-hyperliquid-2023` to notice the
+  ~520 other duplicate VMs sitting right next to the one it cleaned up. Did NOT delete anything (STEP 0.65 — a
+  human/infra-worker call is needed per venue/year on which run to keep, same as the 2023 precedent). Added a 🔴
+  stop-dispatch banner + a new P0 todo above; added matching pointer banners to the two related issue docs
+  (`cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`, `cefi_hl_aster_vm_resource_downsize_2026_08_10.md`).
+  Told the operator this is documented and shipped into the offending plans; the P0 fleet-cleanup + guard-live-test
+  todo is queued (`hyperliquid_backfill_runaway_duplicate_launch_billing_waste-93477db1b0fb`, priority 10, already
+  top of the tier-1 queue) but has not yet been picked up by a worker.
+- **2026-08-16 (second pass, same day — recurrence investigation + full-fleet cleanup, operator-authorized)**:
+  picked up the queued P0 todo above. Fresh `gcloud compute instances list --format=json` found **521 VMs live**:
+  `cefi-aster-*` 304 (2023:73, 2024:81, 2025:75, 2026:75) + `cefi-hyperliquid-*` 217 (2023:1 — the SAME
+  `cefi-hyperliquid-2023-20260816-040653` keeper the first pass chose, still healthy/RUNNING — good continuity
+  signal; 2024:71, 2025:73, 2026:72). `cefi-lighter-*` / `cefi-extended-*` (same launcher, same VENUES default) had
+  ZERO live VMs — consistent with those venues' shards already being fully captured (smaller 2024-genesis universe)
+  and their VMs completing + self-deleting fast, vs. ASTER/HYPERLIQUID's much larger multi-year universe keeping VMs
+  alive for hours.
+  - **Verdict: genuine duplicates, NOT a legitimate sharded fleet.** Grouped all 521 by (venue, year-tag) — every
+    group's VMs carried IDENTICAL `VM_VENUE`/`VM_START_DATE`/`VM_END_DATE` (confirmed via the bulk metadata JSON,
+    not just a name-prefix guess). 8 distinct (venue,year) cells, 513 duplicate VMs beyond one keeper each.
+  - **Timeline verdict: NOT an active/accelerating runaway — a STATIC, undetected-for-~13h leftover.** Creation
+    timestamps for all 521 VMs fall strictly inside 2026-08-15T19:01:13-07:00 → 2026-08-16T02:23:27-07:00 (the exact
+    window the ORIGINAL incident's own histogram already described) — zero VMs created after 02:23, i.e. the P1
+    singleton-guard fix (246fa62319) has been holding for the ~13h since, confirmed independently again here. This is
+    NOT a new runaway and NOT the `lc_write_launch_params` gap firing (no SPOT preemption relaunch was observed
+    creating new VMs in this window) — it is the SAME original incident, whose cleanup was **scope-incomplete**: the
+    prior pass's `gcloud ... --filter="name~'cefi-hyperliquid-2023'"` query only ever looked at one of the 8
+    duplicated cells (matching the doc's own title, itself scoped to what the original discovering session happened
+    to sample) and never re-swept `cefi-aster-*` or the other `cefi-hyperliquid-*` year-shards. ~513 VMs sat live and
+    billing for ~13h undetected between the two passes.
+  - **Forensics captured BEFORE termination (operator directive, mid-session)**: bulk `instances list --format=json`
+    for all 521 (full metadata, every VM, one call); `get-serial-port-output` for 26 VMs (all 8 keepers + a
+    creation-time-spread sample per venue: oldest 3 / newest 3 / 5 evenly-spaced quantiles); disk snapshots
+    (`gcloud compute disks snapshot`) for all 8 keeper disks (`*-preterm-snap-*` / `hl-{year}-preterm-20260816`
+    naming — GCP's 63-char snapshot-name limit forced a shorter name for the `cefi-hyperliquid-*` keepers). All saved
+    under the session scratchpad (`forensics/all_metadata.json`, `forensics/serial/*.log`, plus the snapshot objects
+    live in GCP).
+  - **Manifest-preexistence / genuine-work verdict**: read `run.log` (via `unified_trading_library.get_storage_client`
+    Python SDK, never gsutil/gcloud-storage-CLI, per the hard GCS-object-read rule) for the `cefi-aster-2024` and
+    `cefi-hyperliquid-2024` keepers. BOTH are doing genuine, non-trivial NEW capture work, not idling/no-op-skipping:
+    the ASTER keeper captured 38,096 new TRBUSDT trades rows for 2024-03-29 (`ManifestWriter: per-VM shard updated`,
+    390 total / 52 new entries) and the HYPERLIQUID keeper captured 9,763,177 rows across all 3 data_types for
+    2024-01-22 alone (534 total / 4 new manifest entries, `process_final=True`). So: real, not-yet-fully-captured
+    coverage gaps existed for these shards — the underlying backfill NEED was genuine, only the 513-VM EXECUTION
+    fan-out (7 extra copies of the identical work per cell, on average) was pure waste.
+  - **Skip-logic verdict**: `VM_FORCE=false` on every sampled VM (confirmed in metadata); the keepers' `run.log`
+    shows normal per-symbol/per-day download+capture cycling (including many `Downloaded 0 trades for X` lines for
+    thin symbols) with no evidence of redundantly re-fetching already-manifested days — consistent with the
+    presence-skip path working as designed for the keeper. Whether the (now-deleted) DUPLICATE VMs were ALSO
+    correctly skip-logic-bounded (i.e. only re-downloading, not re-writing, already-captured rows — `ManifestWriter`
+    is generally additive/idempotent per its own per-VM-shard design) was not independently verified per-duplicate
+    before termination; the captured serial logs + keeper metadata JSON are the forensic record if that needs
+    checking later.
+  - **Canonical-path verdict**: sampled real object paths from the HYPERLIQUID keeper's `run.log`, e.g.
+    `market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2024-01-22/pipeline_mode=batch_hyperliquid/asset_group=cefi/venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/HYPERLIQUID:PERPETUAL:ZRO-USD@LIN.parquet`
+    — matches the `{mode}_{source}` `pipeline_mode` convention (`batch_hyperliquid`), correct `asset_group=cefi`,
+    `venue`/`instrument_type`/`data_type` segments present and correctly cased. No non-canonical writes found in the
+    sampled paths (path-structure-only check via manual read, not the UAC `canonical_path_violations()` oracle — not
+    run this session).
+  - **Root-cause distinct findings**: (1) the ORIGINAL runaway's cleanup was scope-incomplete (see verdict above,
+    now closed via the [DATA] P0/[INFRA] P2 todos); (2) a SEPARATE, previously-undiscovered latent gap —
+    `launch-cefi-hl-aster-historical-backfill.sh` never called `lc_write_launch_params`, unlike its sibling
+    `launch-cefi-sharded-backfill.sh` — fixed proactively this session (see [INFRA] P3 todo) as hardening against a
+    FUTURE SPOT-preemption-triggered blind full-fleet relaunch (the exact
+    `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` class of bug, for a launcher that fix never touched).
+  - **Cleanup**: grouped by (venue, year-tag), kept the OLDEST live VM per cell (8 keepers total, most runtime =
+    most progress, consistent with the prior pass's "furthest-along" selection method), deleted the other 513 in
+    chunked (`split -l 50`) synchronous `gcloud compute instances delete` batches. `cefi-hyperliquid-2023` keeper is
+    literally the SAME VM the prior pass already chose (`cefi-hyperliquid-2023-20260816-040653`) — untouched.
+  - **Post-cleanup verification**: all 513 chunked deletes succeeded (11 `split -l 50` batches, synchronous
+    `gcloud compute instances delete ... --quiet`, exit 0 on every batch). Fresh `gcloud compute instances list
+    --filter="name~^cefi-aster OR name~^cefi-hyperliquid"` immediately after: **exactly 8 VMs remain**, all
+    `RUNNING`, one per (venue, year-tag) cell — `cefi-aster-{2023,2024,2025,2026}` + `cefi-hyperliquid-{2023,2024,
+    2025,2026}`, each the intended keeper. **Repopulation check**: re-ran the same filter ~4 minutes later —
+    still exactly 8, same 8 names/creation-timestamps, no new VMs — confirms (again, independently of the prior
+    pass's own check) that the P1 singleton-guard fix is holding and nothing is currently re-triggering the
+    launcher.
+  - **Code fix shipped**: deployment-service@8c2a1da87e (landed on `live-defi-rollout`, LDR trunk) — the
+    [INFRA] P3 `lc_write_launch_params` hardening described above. `bash scripts/quality-gates.sh --no-fix` green
+    (211s) before commit.
+  - **Additional findings folded into new todos above**: an ASTER `trades` schema-validation error
+    (`missing columns=['amount']`) firing repeatedly on the keeper ([DATA] P1, new) and a resource-rightsizing
+    observation (memory pinned at 6-10% of the `e2-highmem-4` 32GB provisioned, CPU averaging 11-52% with bursts
+    over 100%, across 4 sampled keepers' full-lifetime `RESOURCE_SAMPLE` telemetry) ([INFRA] P3, new).
+  - **Banners lifted**: removed the 🔴 DO NOT DISPATCH banner from this doc and the two related docs
+    (`cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`, `cefi_hl_aster_vm_resource_downsize_2026_08_10.md`),
+    replaced with 🟢 RESOLVED pointers back to this Progress Log entry.
