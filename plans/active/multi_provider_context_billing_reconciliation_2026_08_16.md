@@ -193,12 +193,23 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       `(100 - pct_at_period_start) + pct_at_first_reset_boundary + ... + pct_at_period_end`, chained across every
       reset the period spans, using the existing `*_window_start`/`*_resets_at` fields `account_usage_history`
       already carries. Additive to, not a replacement for, `calibrate_account_value.py`'s existing conservative
-      single-window design. Done when: a real historical window that crosses at least one confirmed reset produces a
-      correct, testable total (verified against real 5h/weekly reset timestamps in the live data, not synthetic).
+      single-window design. **Refinement (operator, 2026-08-16): raw percentages are only addable across a reset if
+      the account's TIER stayed constant for the whole period.** A pre-reset 1% (e.g. of a Pro $20/wk budget) and a
+      post-reset 25% (e.g. of a Max $200/wk budget, if the account was upgraded — or if it's simply a DIFFERENT
+      account/model entirely) are not the same unit and cannot be summed as "26%" — each segment must be converted to
+      a common unit (dollars, via the same prorated-budget method `compute_claude_wallet_reconciliation` already
+      uses) BEFORE summing, using whichever tier/account was actually active during THAT segment. This requires
+      tier/account identity tracked PER SEGMENT, not read once at query time as "whatever the account's current tier
+      is now" — check whether `account_usage_history` (or any sampled table) already carries a tier snapshot per row;
+      if not, that's a real gap to close as part of this same todo, not a separate one. Done when: a real historical
+      window that crosses at least one confirmed reset produces a correct, testable total (verified against real
+      5h/weekly reset timestamps in the live data, not synthetic), AND a synthetic/real case where the tier changed
+      mid-window is handled correctly (dollar-normalized, not raw-percentage-summed).
 - [ ] [INFRA] P1. Backfill the reset-aware primitive across the FULL existing `account_usage_history` table —
-      explicit operator requirement (2026-08-16): this is not going-forward-only. Done when: every historical
-      reset-crossing window in the live table has a computed, correct cumulative-consumption value, not left as
-      dropped/unknown.
+      explicit operator requirement (2026-08-16): this is not going-forward-only. Must use the tier-per-segment logic
+      above, not a naive percentage sum, for any historical window where the account's tier changed. Done when: every
+      historical reset-crossing window in the live table has a computed, correct cumulative-consumption value, not
+      left as dropped/unknown.
 - [ ] [DATA] P1. Design the unified per-task billing schema — normalized input/output/cache-read/cache-write token
       counts as the common denominator across every provider's billing shape (metered-$, first-party-token,
       subscription-flat-rate, rate-limited-free-tier), each priced at the provider's PUBLISHED rate (not a computed
