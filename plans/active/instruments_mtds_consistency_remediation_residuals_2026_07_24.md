@@ -6,8 +6,8 @@ summary:
   clean-partition). This is the parent's own CORE original scope -- the F1-F7/N1-N9 findings from the 2026-06-17
   subset+consistency audit, the pre-`--apply` blocker gate, the GCS delete-safety invariant + migration prerequisite
   map, the execution sequence, the v9 `_index` column population + venue/instrument_type spelling canonicalisation
-  (N6r), the migration-unmappable-residue diagnosis, and Phase A-D findings/remediation. Mostly DONE (29/43 todos); 14
-  residuals remain open.
+  (N6r), the migration-unmappable-residue diagnosis, and Phase A-D findings/remediation. **DONE, 0 open** (was
+  stale "29/43, 14 open" -- corrected 2026-08-16 plan_reconciler). ARCHIVE-READY.
 status: active
 nature: process
 asset_group: [cross-cutting]

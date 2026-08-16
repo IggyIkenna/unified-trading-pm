@@ -470,7 +470,9 @@ regeneration. Fix: added `is_broker()` guard to both `add_node()` functions. bro
 
 ### F42 — Adapter-backed venues absent from VENUE_CATEGORY_MAP + ENDPOINT_REGISTRY (phantom adapter coverage)
 
-**Status**: OPEN — logged for registry alignment follow-up. The venue coverage audit (F39, pm@4074e49c) found 6 venues
+**Status**: FIXED — `unified-api-contracts@f3440731` (2026-07-28), per the roll-up table + tracked todo below.
+(Corrected 2026-08-16, plan_reconciler cross-cutting — this inline marker was never updated to match after the fix
+shipped.) The venue coverage audit (F39, pm@4074e49c) found 6 venues
 with real execution adapters that do NOT appear in `VENUE_CATEGORY_MAP` (UAC registry of known venues with category):
 
 - FX (fx_adapter.py:24) — TradFi FX via IBKR; no VENUE_CATEGORY_MAP entry

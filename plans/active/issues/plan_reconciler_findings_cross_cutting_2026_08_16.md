@@ -91,6 +91,22 @@ Phase -1 note on the stale "≤10 parallel" figure below).
    scope/time-difference: same gate, same AG, the correction explicitly says the earlier claim was wrong). **FIXED**:
    board cell corrected `🟢 (applied 2026-06-29)` → `🟡 (REOPENED 2026-08-12 -- GATE C still 0% v9 on disk, see
    slot-2 WAVE item below)`, matching the doc's own 🟡="gated" vocabulary used elsewhere in the same table.
+   `unified-trading-pm@de9fa73ef8`.
+2. **P1** `plan_reconciler_findings_all_2026_08_15.md` (whole-corpus prior run, batch 4) — frontmatter summary + a
+   closing-section bullet both flatly claimed "None of the above have been applied yet," but the body carries 30+
+   dated DONE/APPLIED/RESOLVED entries with real shipped-commit citations from subsequent sessions (grep-measured by
+   the batch-4 hunter, spot-confirmed by me). Same false-progress class as item 1 above, in a DIFFERENT prior
+   reconciler doc. **FIXED**: both claims corrected to point readers at each item's own body entry instead of
+   trusting the stale summary. Also flipped 2 genuinely-resolved-but-unchecked todos inside the same doc (a
+   conflict-marker non-issue already resolved in its own text; a 4-doc archive_exempt-BRIDGE item already
+   filesystem-confirmed archived). `unified-trading-pm@<pending>`.
+3. **P1** `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:9-10` (batch 4) — frontmatter claimed
+   "Mostly DONE (29/43 todos); 14 residuals remain open," but a fresh grep (batch-4 hunter, spot-confirmed by me)
+   measured 0 open `- [ ]` / 41 closed `- [x]` / 5 no-checkbox EXTRACTED-pointer bullets across the full 1001-line
+   doc. `assigned_vm: planning`, unlocked, `status: active` — genuinely 100% done and mis-described. **FIXED**:
+   summary corrected to "DONE — 0 open todos," flagged ARCHIVE-READY (see Archive candidates). Did not personally
+   re-verify HARD evidence on each of the 41 individual `[x]` items (out of proportion for this pass) — the fix here
+   is the mechanically-measured checkbox-count claim, not a re-audit of the doc's substance.
    `unified-trading-pm@<pending>`.
 
 ## Doc-drift
@@ -165,6 +181,12 @@ Phase -1 note on the stale "≤10 parallel" figure below).
    cycle so the operator can review... before archival", filed 2026-08-10) — 6 days and multiple reconcile cycles
    have since passed (confirmed via Phase -1's own doc listing). ARCHIVE-READY, exemption satisfied — 4 referrers
    found (all in `plans/archive/**`) — deferred to the same consolidated referrer-sweep pass.
+3. `plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md` — 0 open todos (see Contradictions
+   #3), unlocked, `status: active`. ARCHIVE-READY per the HARD RULE — referrer sweep not yet done.
+4. `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` (batch-4 hygiene finding,
+   P2, not independently re-verified by me) — hunter reports 0 open todos + a stale `archive_exempt` BRIDGE marker
+   from 2026-08-12 promising a "separate follow-on pass" for archival that hasn't happened, now 4+ days overdue.
+   Candidate ARCHIVE-READY, pending my own confirmation in the consolidated pass.
 
 ## Hygiene fixes
 
@@ -177,6 +199,13 @@ Phase -1 note on the stale "≤10 parallel" figure below).
    corrected to reflect the doc's own 2026-07-26 Progress Log ("Fold A is now 100% closed except..."); only the P3
    Alias-sunset todo remains open. `related:` frontmatter: fixed 2 non-leading-slash paths + repointed 2 entries that
    had moved to `plans/archive/2026_07/` (dangling refs). `unified-trading-pm@<pending>`.
+3. Reference-path-convention fixes (bare slug / `../`-relative / stale-archived-path, batch 3 findings, spot-verified
+   by me before fixing): `capability_wizard_analysis_findings_2026_06_11.md` F42 inline status corrected to FIXED
+   (matches its own roll-up table + tracked todo, both already showed `unified-api-contracts@f3440731` DONE);
+   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` + `cross_venue_funding_reversion_research_2026_07_24.md`
+   `related:` lists repointed to leading-slash paths (1 target had itself moved to `plans/archive/2026_08/` since);
+   `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` body citation repointed to the now-archived target.
+   `unified-trading-pm@<pending>`.
 
 ## Refuted (dropped by verify)
 
