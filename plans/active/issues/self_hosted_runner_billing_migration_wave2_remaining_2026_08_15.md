@@ -62,8 +62,8 @@ depends_on: []
   guard-level fix, not just a test tweak). **Correction (2026-08-15, slot 22):** the "e2e-testing/deployment-service
   manifest drift" fix claimed here was NOT a fix — this same commit's manifest-entry removal reintroduced that exact
   drift (STAGE 1.5 dependency-alignment is RED for every PM push as a result); see
-  `/plans/archive/2026_08/issues/e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md` for the root cause and
-  the still-open operator-gated resolution.
+  `/plans/archive/2026_08/issues/e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md` for the root cause
+  (now resolved and archived).
 - All 7 target repos (instruments-service, unified-api-contracts, market-data-processing-service, trading-agent-service,
   deployment-api, deployment-service, unified-trading-library) are flipped **private** and have self-hosted runner pools
   **installed + confirmed online** via the GitHub API on `ci-escalation-runner-vm-1` (`i-042a6332509482556`).
