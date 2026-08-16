@@ -140,7 +140,7 @@ scope is armed by it, no admission is held.
 That is worth stating plainly because the fields read like they govern behaviour: `expected_recovery_time_seconds`,
 `hard_escalation_seconds`, `fallback_available` and `protected_mode_available` all describe what SHOULD happen, and none
 of it is wired. The batch/data-pipeline side hit the identical failure mode — a complete, tested policy with no
-actuator, which reads as finished — see `/plans/active/revocation_arming_2026_08_14.md`.
+actuator, which reads as finished — see `/plans/archive/2026_08/revocation_arming_2026_08_14.md`.
 
 Until an actuator exists, treat this document as a paging contract, not a control contract.
 

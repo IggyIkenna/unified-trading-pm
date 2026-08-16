@@ -21,7 +21,7 @@ related:
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/04-architecture/kill-switch-circuit-breaker.md,
     /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
-    /plans/active/revocation_arming_2026_08_14.md,
+    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
   ]
 created: "2026-08-14"
 last_updated: 2026-08-14
@@ -35,7 +35,7 @@ locked_since:
 resolved_by:
 supersedes:
 superseded_by:
-source: operator question 2026-08-14 — measured while arming /plans/active/revocation_arming_2026_08_14.md
+source: operator question 2026-08-14 — measured while arming /plans/archive/2026_08/revocation_arming_2026_08_14.md
 drift_direction: advance-code
 depends_on: []
 context_scope:
@@ -44,7 +44,7 @@ context_scope:
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/04-architecture/kill-switch-circuit-breaker.md,
     /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
-    /plans/active/revocation_arming_2026_08_14.md,
+    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
   ]
 ---
 
@@ -217,7 +217,7 @@ none of them appear as todos in that plan.
       `launcher_common.sh`'s ~20 shared `lc_*` helpers (singleton locks, tarball pins, gcloud-create wrappers — used by
       canonical-path launchers too). The launchers actually on the lightweight-observability opt-out are those calling
       `lc_log_upload_trap_block`/`lc_log_upload_continuous_block`: **12**, of which the census in
-      `/plans/active/revocation_arming_2026_08_14.md` found **1** genuine migration candidate
+      `/plans/archive/2026_08/revocation_arming_2026_08_14.md` found **1** genuine migration candidate
       (`launch-prediction-pipeline-vm.sh`). Read that census before deciding — at this size "migrate them" is a small
       job, not a migration plan.
 

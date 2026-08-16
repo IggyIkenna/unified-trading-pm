@@ -1,0 +1,130 @@
+---
+doc_type: plan
+title: Infra satellite — alert-driven-revocation follow-up work (batch 18)
+summary: >-
+  `/na-eligibility-audit` extraction (scoped run, 2026-08-16), NOT a full tranche sweep. Three items from
+  `revocation_arming_2026_08_14.md` / `alert_driven_dependency_revocation_2026_08_12.md` were left open at the end of
+  this session's work — each re-assessed against the bounded/deterministic-outcome bar and found AO-eligible (no
+  operator judgment call blocking the outcome itself), just defaulted to NA along with the rest of those plans. The
+  source plans stay `assigned_vm: NA` — only these 3 extracted items are dispatchable here.
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: [infra, ao-dispatch, revocation, alerting, satellite, batch-18]
+related:
+  [
+    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md,
+    /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
+created: "2026-08-16"
+last_updated: "2026-08-16"
+parent_epic: observability_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 1.2
+estimate_calibrated_ai_days: 1.0
+assigned_role: infra
+effort: medium
+drift_direction: advance-code
+locked_by:
+locked_since:
+context_scope:
+  [
+    deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py,
+    deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/meta_targets.py,
+    deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
+    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
+    deployment-service/scripts/recovery/_durable_state.py,
+    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+  ]
+supersedes:
+superseded_by:
+depends_on: []
+source: >-
+  /na-eligibility-audit, scoped run 2026-08-16 (operator-requested, scoped strictly to the 3 items below, not a
+  tranche sweep) — see the conflict-check evidence in each item below and in this doc's own Progress Log.
+---
+
+# Infra satellite — alert-driven-revocation follow-up work (batch 18)
+
+> **Scope note**: this batch was NOT produced by a full `/na-eligibility-audit` tranche run. It is a deliberately
+> narrow, operator-requested extraction of exactly 3 items already known to be open at the end of a single session's
+> work on `revocation_arming_2026_08_14.md`. Do not treat its absence of other extracted items as evidence those plans'
+> remaining content was swept — it wasn't.
+
+## Conflict-check (per `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3)
+
+Checked all 4 surfaces for each item before extraction:
+
+- **Active `assigned_vm: planning` plans under `parent_epic: observability_master`**: none claim any of the 3 items
+  below by mechanism (grepped `consolidator_bucket_resolver`, `state_bucket()`, `RevocationActuator.release`,
+  `_pause_schedulers` across the whole active plans+issues corpus).
+- **Two genuinely related, non-duplicate issue docs found** (milestone-only overlap, not a conflict — both cross-cited
+  in the relevant items below rather than silently ignored):
+  - `plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md` (P1, its own core fix already
+    shipped `[x]`) — a DIFFERENT bug in the same release/close-bookend pathway: the release CALL SITE couldn't resolve
+    an alert identity at all (fixed). Item 2 below is downstream of that fix, not a duplicate of it — release() can now
+    actually be reached for FLEET_HALT identities, which is what makes item 2's gap observable/worth fixing.
+  - `plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` (P0, open) — the sweep-timeout
+    root cause that `DP-VM-013` (registered this session, `unified-api-contracts@a2734aa9ba`) gives a POLICY to, not a
+    fix for. Registering the policy did not resolve this issue; it remains open and is NOT part of this batch.
+  - `plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md` cites
+    `RevocationActuator._pause_schedulers` only as a ruled-out diagnosis (confirmed NOT the FLEET_HALT mechanism, a
+    manual pause instead) — no overlap with item 2 below.
+- **No sibling batch/finalize doc** for this topic exists yet (`infra_satellite_ao_dispatch_batch1..17` — none mention
+  revocation/consolidator_bucket_resolver/RevocationActuator.release by grep).
+- **No `status: draft` legacy artifact** for this topic found.
+
+Verdict: clear on all 3 items — proceed.
+
+---
+
+- [ ] [SCRIPT] P0. **Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS
+      markers** — the drain-budget denominator (worst-case waste = longest-shard-duration × dependent-count).
+      **BLOCKED-CREDENTIALS in every dev checkout tried so far** (`scripts.recovery._durable_state.state_bucket()`
+      resolves to `''` — the bucket name resolves from runtime-only deploy-time config no dev slot carries).
+      Re-attempted twice (2026-08-14, 2026-08-16), same result both times. This is why it's dispatched here rather
+      than left NA: the outcome itself is fully mechanical (read PROGRESS markers, compute p95/max, no judgment call)
+      — what's missing is RUNTIME CONTEXT a dev checkout doesn't have. If the orchestrator VM's own environment
+      resolves `state_bucket()` correctly (worth checking FIRST, before assuming another VM launch is needed), this
+      is a same-day close. If it doesn't, the worker's job is to say so precisely (what env var/config IS present vs
+      needed) rather than fake a result — do not report BLOCKED-CREDENTIALS as done. Repo: deployment-service.
+- [ ] [CODE] P2. **Wire `RevocationActuator`'s `consolidator_bucket_resolver` into a real production call site.**
+      `deployment-service@310f82e84f` (2026-08-16) added the injected-callable param + `_register_maintenance_windows()`
+      (the FLEET_HALT double-page fix), but every current production `RevocationActuator()` construction
+      (`escalation.py:775`, `meta_watchers.py:195`) passes `None` — a verified no-op, not a regression, but the fix
+      doesn't do anything in production yet. Blocked on a REAL import cycle (confirmed by attempting the direct
+      import, not assumed): this module sits below `escalation.py` (which imports it); the real resolver function,
+      `consolidator_scheduler_watcher.consolidator_job_to_bucket`, sits behind
+      `meta_targets.py` → `meta_watchers.py` → `escalation.py` → back to this module. `meta_targets.py`'s only need
+      for `meta_watchers` is 3 unrelated `FreshnessTarget`-building functions (`catalogue_targets`,
+      `high_attempted_failed_targets`, `cron_targets`) — extracting those 3 to their own module (or moving
+      `FreshnessTarget` itself to a lower-level module both sides can import) breaks the cycle cleanly. Verify the fix
+      by re-running the exact import check that found the cycle:
+      `python3 -c "import deployment_service.data_pipeline_monitors.revocation_actuator"` after wiring must succeed
+      with the resolver imported at module level (no function-level import — that's separately banned by the gate).
+      Repo: deployment-service.
+- [ ] [CODE] P2. **`RevocationActuator.release()` never resumes a FLEET_HALT's paused Cloud Scheduler jobs — only
+      clears the generic hold/drain GCS marker.** `_pause_schedulers()` (the open half) calls
+      `scheduler_maintenance.make_scheduler_pauser()` per job; `release()` has no symmetric `_resume_schedulers()` —
+      confirmed by reading `release()`'s full body, not assumed from its docstring. A FLEET_HALT that opens has no
+      code path that ever closes the actual pause; someone must resume it by hand today. Needs: (1) a way to recover
+      which specific jobs THIS actuation paused (the actuator does not currently persist that list anywhere durable —
+      check whether the existing `ShardedState` actuation-budget record can carry it, or whether a new small record is
+      needed), (2) a `_resume_schedulers()` mirroring `_pause_schedulers()`'s shape, wired into `release()` for the
+      `FLEET_HALT` action specifically. Cross-reference
+      `/plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md` before starting — its P1 fix
+      (already shipped) is what makes `release()` reachable for FLEET_HALT identities at all; this todo assumes that
+      fix is live. Needs real tests (this is pause/resume behavior on production scheduler jobs, not a nicety) — mirror
+      the existing `_pause_schedulers` test shapes in `tests/unit/test_revocation_actuator.py`. Repo: deployment-service.
