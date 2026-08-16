@@ -212,6 +212,12 @@ restated here.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 3, operator ruling)**: given the 2026-08-09 finding below
+  suggests the 0% twin-coverage measurement may itself be a `canonical_twin_path()` lookup-logic bug — **fix the
+  lookup bug first, then let the existing auto-execute-on-100%-coverage rule apply** (not downgraded to
+  permanently-human-only, not left as-is on a possibly-broken measurement) — extracted to
+  `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` (`assigned_vm: planning`). The delete itself
+  stays gated on a fresh, trustworthy 100% coverage measurement.
 - **2026-08-09 (tradfi_satellite_ao_dispatch_batch7-003, root-cause investigation, diagnostic-only, no delete/apply
   run)**: **ROOT CAUSE FOUND — this is a lookup-logic bug in `cleanup_legacy_twins.py`'s `canonical_twin_path()`, NOT a
   manifest registration gap.** Read-only investigation against the live prod report
