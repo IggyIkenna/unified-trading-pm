@@ -275,7 +275,7 @@ days.
       restart it just to "keep it running" if it's genuinely still healthy; checkpoint-resume is proven correct
       across iterations so a restart is cheap if actually needed, but isn't free (redoes the last <24h of dates and
       costs a boot cycle) so don't force one without a reason.
-- [ ] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
+- [x] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
       as `attempted_failed`" is WRONG — directly measured earlier in this campaign (a prior session, same day) that the
       VM's own per-VM manifest shard had **0 `attempted_failed` rows** despite these exact `SchemaContractNotFoundError`
       occurrences being present in its log. Root cause: `SchemaContractNotFoundError` is NOT caught by the shard-level
@@ -288,6 +288,16 @@ days.
       bundle-file-defect case to raise `MalformedTickFieldError` instead (so it's honestly recorded + retryable), or
       widen the shard-isolation catch handler to also record `SchemaContractNotFoundError`. Original finding stands
       otherwise (root cause + narrow blast radius correct).
+      **DECIDED + SHIPPED 2026-08-16**: widened the shard-level failure-isolation catch in
+      `_process_all_timeframes` (`live_workers_chain.py`) to also catch `SchemaContractNotFoundError` alongside
+      `MalformedTickFieldError`/`UpstreamTimestampBiasError`, routing it through `record_failed_for_shard` (honestly
+      recorded + retryable). The loud signal is preserved, not hidden: `SchemaContractNotFoundError` gets its own
+      ERROR-level per-shard log line (asset_group/venue/instrument_type/data_type) via a new `_log_typed_shard_error`
+      helper, on top of the existing ERROR-level `log_event` already fired at the raise site
+      (`canonical_writer.py`'s own `except SchemaContractNotFoundError` handler — untouched). Regression test added:
+      `tests/unit/test_live_workers_typed_error_routing.py::test_schema_contract_not_found_routes_to_record_failed`
+      (proves no unhandled propagation + `record_failed_for_shard` called with `error="SchemaContractNotFoundError"`).
+      Shipped: `market-data-processing-service@bc9706cdb5`.
 - [ ] [DATA] P3. NEW, SEPARATE, narrow finding surfaced mid-4th-re-derive (2026-08-14, unrelated to contract_size/
       margin_type):
       `No SchemaContract registered for asset_group='cefi' instrument_type='<SYMBOL>' data_type='liq_agg_15s' venue='BINANCE-FUTURES'`
@@ -325,7 +335,7 @@ days.
       that option out) pending a follow-up to locate the actual MDPS-side `instrument_type`-derivation bug for this
       narrow symbol/date set. Investigation scripts were scratch-only (not committed; read-only, no GCS objects
       modified).
-- [ ] [SCRIPT] P3. NEW 2026-08-16: `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
+- [x] [SCRIPT] P3. NEW 2026-08-16: `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
       "adapter density bug" NaN-in-`open`/`close` warning on EVERY liquidations shard with any zero-liquidation window
       — 659,791 occurrences and counting in this campaign's log alone. Confirmed FALSE POSITIVE, not a real bug (see
       the spot-check above): liquidations is inherently sparse/event-driven, and null `open`/`close` on a
@@ -336,6 +346,15 @@ days.
       widen the existing `mark_price_mean` check). Low priority — output data is correct, this is pure log-noise
       cleanup (659K lines is real cost in log volume/scan time for anyone debugging this VM, but not a correctness
       issue).
+      **FIXED 2026-08-16**: `_honest_absence_frame` now also matches on presence of `liquidation_count` /
+      `liquidation_notional_usd` (OR'd with the existing `mark_price_mean` check), so a genuine zero-liquidation
+      window's null open/close no longer trips the guard. Trades/book_snapshot_5 (no exemption columns) keep the real
+      protection unchanged. Tests added in `tests/unit/test_fast_candle_aggregation.py`
+      (`TestLiquidationsHonestAbsenceNanGuardExemption`): (a)
+      `test_liquidations_zero_window_does_not_warn` — a liquidations-shaped frame with a legit zero window does NOT
+      warn; (b) `test_dense_adapter_leading_nan_still_warns` — regression guard proving the ORIGINAL bug case (a dense
+      adapter with a leading NaN and none of the exemption columns) still DOES warn. Shipped:
+      `market-data-processing-service@bc9706cdb5`.
 
 ## Lesson
 
@@ -351,3 +370,10 @@ uncommitted across a checkpoint boundary, even mid-task.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **2026-08-16 (autonomous dispatch)**: shipped the two P3 SCRIPT/DATA follow-ups — (1) widened
+  `_process_all_timeframes`'s shard-isolation catch to also catch `SchemaContractNotFoundError`, routed through
+  `record_failed_for_shard`, loud ERROR-level logging preserved; (2) added the liquidations honest-absence exemption
+  to `aggregate_from_15s_efficient`'s NaN guard (`liquidation_count`/`liquidation_notional_usd`). Both + regression
+  tests shipped `market-data-processing-service@bc9706cdb5` (QG green both runs). Incidental fix in the same commit:
+  `canonical_writer_stamping.py`'s DeFi `lst_rates`→`lst_yields` SOURCE_PRIORITY bridge was wrong (nonexistent UAC
+  key, blocking the shared trunk's QG for everyone) — corrected to the actually-registered `lst_rates` key.
