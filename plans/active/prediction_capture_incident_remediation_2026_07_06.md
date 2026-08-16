@@ -300,7 +300,7 @@ orchestrator-dispatched).
       (operator, chat): NO prod access — Kalshi/Polymarket perps are NOT part of MVP.** Polymarket perps beta-gated;
       Kalshi requires extra enrollment work. No prod secrets will be provided. Re-open only on an explicit operator
       announcement that access exists.
-- [ ] [INFRA] [DESCOPED-NOT-MVP 2026-07-14] P3. Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403
+- [ ] [INFRA] P3. [DESCOPED-NOT-MVP 2026-07-14] Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403
       (enrollment live); **re-enumerate against prod** → prod cefi catalogue. Gate: prod perps land as genuine
       `PERPETUAL` crypto perps; `KALSHI-PERP`/`POLYMARKET-PERP` catalogue rows are real (spot-check tickers);
       `Evidence: cloudbuild=<id>`. (Parked behind the access ruling above — not dispatchable.)

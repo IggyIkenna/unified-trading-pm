@@ -346,7 +346,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `rollout-workflow-templates.sh` is now scoped to (`image-build-gate.yml` + `quality-gates-v2.yml.tmpl` as
       already-converted stubs, `notify-slack.yml` as the still-canonical full-content file, `staging-lock-check.yml` as
       the deliberately-not-yet-converted file pending todo 11). Describes the POST-this-plan state, not mid-migration.
-- [ ] 10. [INFRA] P3. _(stretch, optional)_ **Add a branch-protection / visibility-change alert on
+- [ ] [INFRA] P3. 10. _(stretch, optional)_ **Add a branch-protection / visibility-change alert on
       `unified-trading-ci`** — given this plan makes it fleet-critical (11 reusable workflows/actions hosted there once
       this plan + the prior one both ship), consider whether the same accidental-private-flip class of incident that
       started `shared_ci_workflow_repo_extraction_2026_08_06.md` warrants a standing guard (a scheduled check via

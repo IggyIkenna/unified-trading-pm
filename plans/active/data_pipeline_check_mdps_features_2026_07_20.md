@@ -191,7 +191,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       session-teardown blocker: `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. **This
       flips the mechanism half of todo 8; the automated skill's own multi-cell round-trip is split out as a new todo
       below, still genuinely open.**
-- [ ] NEW todo (was 8's remaining scope). [DATA] P0. Complete the automated `/data-pipeline-check-mdps` skill's OWN
+- [ ] [DATA] P0. NEW todo (was 8's remaining scope). Complete the automated `/data-pipeline-check-mdps` skill's OWN
       multi-cell round-trip (force+skip, all AGs × venues × data_types × timeframes, report written) — the mechanism is
       proven (see todo 8 above) but the SKILL DRIVER ITSELF has never survived long enough (5 independent reproductions
       across 2 sessions, both ad-hoc interactive and AO-managed persistent workers) to produce one clean automated
@@ -324,7 +324,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       [`issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
       Headline: every pipeline stage now has real-prod-data-validated orphan tooling; every real orphan population found
       is either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown.
-- [ ] 11c. [DATA] P0. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest
+- [ ] [DATA] P0. 11c. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest
       (safe additive `merge_manifest_from_canonical_paths()` from 11a, never destructive
       `rebuild_manifest_from_canonical_paths`). **Not `[OPERATOR]`-pre-gated** (corrected 2026-07-27 — the additive path
       only ADDS rows, finding O's carve-out applies). **Once 11b lands**: any orphan class needing a real GCS migration

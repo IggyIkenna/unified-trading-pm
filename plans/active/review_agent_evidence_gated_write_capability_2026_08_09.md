@@ -157,7 +157,7 @@ local sandbox first:
 - [x] 6. ✅ [DOC] P1. Ship the real review.md update via `scripts/dev/safe-doc-push.sh` (docs-only path, same as
       `684dd4f8d0`) — unified-trading-pm@bc03ef55d3 (main change), + follow-up unified-trading-pm@4fec7b5b5c (one stale
       "review agents don't commit" mention in the STEP 0 boot-read paragraph missed on the first pass).
-- [ ] 7. [DOC] P2. Run the standard plan-completion check on this doc once 3-6 are done — no archival needed yet (leave
+- [ ] [DOC] P2. 7. Run the standard plan-completion check on this doc once 3-6 are done — no archival needed yet (leave
       `active` for a burn-in period so real review-agent usage can be observed before calling this settled).
 
 ## Progress Log
