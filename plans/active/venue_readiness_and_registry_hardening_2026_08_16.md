@@ -660,14 +660,20 @@ actionable P0.
 
 ## Deferred work after 2026-08-16
 
+**2026-08-16 correction**: this table previously listed W3/W4/W5 and both `[OPERATOR]` design rulings as unresolved.
+That went stale — the Workstreams section and Design-rulings section above (L354-410) already record both rulings as
+RULED and W3 as resolved (folded into an existing plan, no new plan needed). Rewritten to match current state.
+
 | Item | State | Blocked on |
 | --- | --- | --- |
-| "Consolidate `venue_universe` into a clean UAC SSOT" (P2, L265) | Not started | Natural fit for W4 once it forks; not needed for the shipped "at least one archetype" reading of step 17 |
-| W3 "service-config abstraction" child plan | Not started | Blocked on the two `[OPERATOR]` design rulings below (error-code SSOT shape, config-abstraction target shape) |
-| W4 "venue e2e wiring" child plan | Not started | Blocked on W3's design ruling settling first (same contract, sequenced) |
-| W5 "smoke-test bar" child plan | Not started | Blocked on W3/W4 |
-| "Error-code SSOT shape" design ruling (L321) | Operator-owned | Needs an explicit decision: UAC registry keyed by (venue, code) vs. `classify_venue_error()` extension vs. per-venue declaration files |
-| "Config-abstraction target shape" design ruling (L325) | Operator-owned | Needs an explicit decision: per-service vs. per-domain `config.py`, schema mechanism, gate-check shape |
+| "Consolidate `venue_universe` into a clean UAC SSOT" (P2, L265) | Not started | Natural fit for W4 once its own blocker (below) clears; not needed for the shipped "at least one archetype" reading of step 17 |
+| W3 "service-config abstraction" child plan | ✅ Resolved, no new plan | Folded into `/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` § D delta |
+| W4 "venue e2e wiring" child plan | Forked (`status: draft`) | Blocked on its own P0 "Define the universe precisely for W4/W5" (L411) — AGENT-owned, not operator-gated |
+| W5 "smoke-test bar" child plan | Not forked yet | Blocked on the same universe-definition task as W4 |
+| "Error-code SSOT shape" design ruling (L321) | ✅ RULED 2026-08-16 | Extend `classify_venue_error()` into a (venue, code) registry — see L397-403 |
+| "Config-abstraction target shape" design ruling (L325) | ✅ RULED 2026-08-16 | One `config.py` per service, domain-split only when cap-forced — see L404-410 |
 
 **Recommended next item**: the CANONICAL ORTHOGONALITY audits (P0/P0/P1, below) — the STRATEGY CONSUMABILITY section
-is now fully closed (declare→check→report→fix all shipped). W3/W4/W5 still need an operator decision first.
+is fully closed (declare→check→report→fix all shipped), and neither remaining operator ruling blocks it. "Define the
+universe precisely for W4/W5" (L411, AGENT-owned) is the other actionable item and can run independently/concurrently
+— it touches a different file set (venue-universe enumeration vs. data-type/venue-identity vocabulary).
