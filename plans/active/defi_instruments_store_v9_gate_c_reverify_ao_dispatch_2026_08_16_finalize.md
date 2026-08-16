@@ -11,9 +11,11 @@ scope: [engineer]
 tags: [defi, finalize]
 related:
   [
-    /plans/active/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md,
+    /plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md,
+    /plans/active/issues/defi_by_date_capture_cron_stale_2026_08_16.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -33,7 +35,7 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 10, 2026-08-16"
 locked_by:
-context_scope: [/plans/active/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md]
+context_scope: [/plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md]
 locked_since:
 resolved_by:
 ---

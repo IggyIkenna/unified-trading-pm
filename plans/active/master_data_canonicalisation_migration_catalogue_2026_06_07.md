@@ -195,7 +195,7 @@ done
 
 | asset_group       | G0 C-PATH + pmode | G1 catalogue+enum | G2 per-AG ①–⑫ audit | G3 UNION UI |                          G4 `--apply`                          | G5 backfill→100% |
 | ----------------- | :---------------: | :---------------: | :-----------------: | :---------: | :------------------------------------------------------------: | :--------------: |
-| **defi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |     🟡 (REOPENED 2026-08-12 -- GATE C still 0% v9 on disk, see slot-2 WAVE item below)     |        🔴        |
+| **defi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |     🟡 (RE-VERIFIED 2026-08-16 -- GATE C schema_version now 100% v9 organically via routine writes, explicit `--apply-write` still not run + a residual 12% data-quality delta remains; see slot-2 WAVE item below)     |        🔴        |
 | **cefi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
 | **tradfi**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      | 🟢 (applied 2026-07-06, post-apply cleanup tracked separately) |        🔴        |
 | **sports**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
@@ -294,6 +294,17 @@ parallel-safe.
       repeatedly re-verified still 0% v9 on disk as of this same-day re-check (125,242 v8 rows; dry-run proves 100%
       v9-clean transform, but the `--apply` WRITE has never run — GATED, not blocked). Reopened; see
       `/plans/active/defi_migration_audit_log_2026_07_24.md` GATE C for the live tracked todo. NOT ✅ COMPLETE.
+      **RE-VERIFIED 2026-08-16 (slot-13, `defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md`)**:
+      the 2026-08-12 "0% v9, 125,242 v8 rows" reading is now STALE — a fresh live read shows the on-disk `_index`
+      is **100% schema_version=9 today (138,612 rows)**. This did NOT come from the explicit
+      `migrate_instruments_store_v9.py --apply` (still never run — confirmed via git log + a 40+-hour Cloud Run
+      execution-log trace); it's organic convergence via the routine hourly manifest-consolidator cron ingesting
+      already-v9-native live writes. A residual 12% (`data_type_set: 16,750`/138,612 rows) data-quality delta
+      remains that the explicit migration would still fix. `instrument_availability/by_date/` is also NOT empty
+      (78,449 rows already rolled up) but its upstream capture cron is stale 21 days — see the new issue doc
+      `/plans/active/issues/defi_by_date_capture_cron_stale_2026_08_16.md`. Follow-on `--apply-write` plan filed
+      (draft, operator-gated): `/plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md`. STILL
+      NOT ✅ COMPLETE — the explicit migration + capture-cron fix are both still outstanding.
 - [x] ✅ [DATA] P0. **slot 3 (CeFi) — G4 `--apply`** (same sequence; DERIBIT/OKX Era-B chains). Repos: as above. —
       2026-06-29: CeFi already canonical on-disk (`pipeline_mode=batch_tardis` paths confirmed); IS v9 migration done;
       enumerate seed 162,528 rows (EXPECTED_PRE_VENUE_LAUNCH); IS catalogue 349,912 rows > 349,709 promoted ✅
@@ -887,7 +898,7 @@ sequenced and nothing is unblocked-out-of-order or orphaned.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 10, operator ruling — scoped)**: operator asked to
   dispatch slot-2's GATE C `--apply-write`, with an explicit caution to confirm accuracy against latest code
   first. Extracted a RE-VERIFICATION-ONLY task to
-  `/plans/active/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md` (+ finalize) — the actual
+  `/plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md` (+ finalize) — the actual
   `--apply-write` is NOT dispatched by this extraction, pending that re-verify's outcome.
 - **context-scout 2026-08-05 (slot-14)**: line-cap remediation pass 3 — extracted the closed R5 smoke ledger (~125
   lines, every todo done, one-time probe data from 2026-06-11) to

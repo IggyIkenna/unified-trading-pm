@@ -81,6 +81,26 @@ context_scope:
 > QG-harness rootdir finding) was assessed and NOT extracted — see its inline note below (already declined by
 > `defi_satellite_ao_dispatch_batch6_2026_07_30.md` as under-evidenced). Doc stays `assigned_vm: NA`.
 
+> **🟡 GATE C RE-VERIFIED 2026-08-16 (slot-13, `defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md`)
+> — every "currently 0% v9 on disk: 125,242 v8" mention below (2026-06-07/08 dated) is now STALE, superseded by
+> this fresh live measurement, NOT edited in place (dated historical audit record).** Live re-read of
+> `instruments-store-defi-prd-{pid}`'s `_index/availability_index.parquet`
+> (`migrate_instruments_store_v9.py --asset-group defi --skip-objects`, dry-run) shows **100% schema_version=9
+> today (138,612 rows, v8_before=0)** — up from 125,242 v8 rows on 2026-08-12. This is **NOT** the explicit
+> one-time `--apply` migration (still never run — confirmed via git log + a 40+-hour Cloud Run execution-log
+> trace in the archived `defi_manifest_index_catastrophic_shrink_2026_08_16.md` investigation showing `rows_out`
+> stably ~138.5k since 2026-08-15); it's **organic convergence via the routine hourly
+> `uts-prod-manifest-consolidator-instruments-defi` cron** — live captures already write v9-native rows (since
+> the G0 source-aware writer, 2026-06-16) and the consolidator's UNION-ALL merge drops stale null-`capture_status`
+> v8 placeholder rows over cycles. **Residual**: `data_type_set: 16,750`/138,612 rows (12%) — a real,
+> smaller delta the explicit `--apply` would still correct. `instrument_availability/by_date/` in `-prd` is also
+> **NOT empty** (78,449 rows rolled up, contradicting the "EMPTY" finding below) — but its upstream capture cron
+> is stale 21 days, a new separate finding filed as
+> `/plans/active/issues/defi_by_date_capture_cron_stale_2026_08_16.md`. Bucket-architecture assumption
+> (§ below) CONFIRMED unaffected by the sibling dedicated-bucket retirement (`instruments-store` is a distinct
+> bucket `kind`). Follow-on `--apply-write` plan filed (draft, operator-gated):
+> `/plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md`.
+
 ## vm-defi (slot-2) status + findings — 2026-06-07
 
 > Progress on the **G0 C-PATH WRITE** (defi migrator/rebuild source-aware) + **G1-defi IS-catalogue** rows of the gate
@@ -116,6 +136,11 @@ does not require a second whole-corpus walk.
       the `instruments-store-defi` `_index` is v9-canonical (currently 0% v9) AND the defi
       `instrument_availability/by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is empty).
       Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic: manifest_master.
+      **UPDATE 2026-08-16 (slot-13 re-verify)**: both named preconditions now measure differently live — `_index`
+      is 100% v9 (organic consolidator convergence, not the explicit `--apply`) and by_date is populated
+      (78,449 rows, though its capture cron is stale 21d, see the new issue doc). Stays `[ ]` open: the residual
+      12% `data_type_set` delta + the still-un-run explicit migration + the capture-cron staleness are all
+      unresolved. See the top-of-doc banner + the follow-on `--apply-write` plan for the current live status.
 - [ ] [UAC] [MTDS] P1. **Era-B legacy retirement — the per-AG v8→v9 migrator drops ALL `data_type=options_chain`/
       `futures_chain` recognition as its FINAL ATOMIC STEP, right after it relabels the on-disk rows to `trades`** 🟢
       **SAFETY GUARD SHIPPED (uac@93961df3, slot-7 2026-06-08)**: `assert_era_b_purge_safe()`
@@ -923,3 +948,9 @@ speed-note (both deferred optimisations, non-blocking).
   owner: vm-defi). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 - **na-eligibility-audit 2026-08-16** [body-hash:45ca2238e6543285]: KEEP-NA, stale items (flagged, not applied this run) — 925-line hub, read end to end; 12 open todos match Phase-0. Doc-level gates (GATE C v9 write, Era-B legacy retirement, destructive-delete operator sign-off) still hold. One item is mostly-resolved and should be closed-with-evidence + narrowed to its residual scheduler-wiring task + a CREDENTIAL_BLOCKED per-validator sub-feature (the [DATA] P2 item retagged 2026-07-29, describing eigenlayer_rewards/native_staking/staking_yields handlers) -- deliberately NOT rewritten in place this run (long, cross-referenced text; risk of an imprecise edit outweighs the benefit of a mechanical close) -- flagging for the next hands-on pass instead of a low-confidence edit. A second item (giving vault_share_price/risk_params/utilization their own dedicated buckets) carries the same retired-dedicated-bucket-architecture staleness already CAVEAT-annotated on 3 sibling todos in this doc but not yet applied here -- same disposition, flagged not edited. 2 items independently tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE this run (lines ~284, ~627) per a conflict-check against ag-closeout-audits 2026-07-30 orphan-scan -- carried to the next runs mandatory re-assessment list per the skill.
+- **2026-08-16 (slot-13, GATE C re-verify dispatch)**: this same-day na-eligibility-audit entry above ("GATE C v9
+  write... still holds") is CORRECTED by a live re-measurement taken shortly after — see the top-of-doc banner.
+  The "still holds" framing was accurate for the explicit `--apply` migration (still never run) but did not know
+  the on-disk `_index` had already reached 100% v9 organically via routine writes. Full findings + a new
+  capture-cron-staleness issue doc + a follow-on `--apply-write` plan are linked in the banner. Source:
+  `/plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md`.
