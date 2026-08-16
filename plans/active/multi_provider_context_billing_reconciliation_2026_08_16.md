@@ -210,6 +210,14 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       above, not a naive percentage sum, for any historical window where the account's tier changed. Done when: every
       historical reset-crossing window in the live table has a computed, correct cumulative-consumption value, not
       left as dropped/unknown.
+- [ ] [UI] P2. **New, operator 2026-08-16**: once a window's tier/account changed mid-window, its `boost_multiplier`
+      (both the existing `ClaudeWalletPanel.tsx` and any new per-provider equivalent this plan builds) must be
+      VISIBLY marked unreliable, not silently shown as a normal number — a dashed/red indicator with a hover reason
+      ("account switched mid-window: sub-X → sub-Y" or "tier changed: pro → max20"). This is per-window, not
+      per-account: a 1h window fully inside one tier is still a valid, normal-styled multiplier; the SAME account's
+      lifetime view spanning a tier change is not. Depends on the tier-per-segment tracking in the todo above (the
+      flag can't be computed until segment tier identity is actually tracked). Done when: a real window with a tier
+      change renders visibly flagged, and a real window without one renders normally, side by side.
 - [ ] [DATA] P1. Design the unified per-task billing schema — normalized input/output/cache-read/cache-write token
       counts as the common denominator across every provider's billing shape (metered-$, first-party-token,
       subscription-flat-rate, rate-limited-free-tier), each priced at the provider's PUBLISHED rate (not a computed
