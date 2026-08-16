@@ -237,14 +237,23 @@ findings.
       regression tests (460-series universe not truncated at old cap; 7-page/1400-market series fully collected;
       page-budget + total-cap-hit emit the event; constant guards vs measured counts). Full quality-gates.sh green
       (127s).
-- [ ] [CODE] P3. **Morpho Blue first-party API — verify `skip` support before implementing real pagination.** This
+- [x] ✅ [CODE] P3. **Morpho Blue first-party API — verify `skip` support before implementing real pagination.** This
       session added a page-cap WARNING to `morpho.py` (not full pagination) because Morpho Blue's `blue-api.morpho.org`
       GraphQL schema is first-party (not The Graph) and its `skip`/cursor support was NOT verified against a live schema
       — guessing wrong risks a 400 on every call, worse than today's top-1000-by-SupplyAssets truncation. Repo:
       instruments-service. Done when: a live GraphQL introspection query against `blue-api.morpho.org` confirms whether
       `markets(skip: Int, ...)` is a valid argument; if yes, implement the same `while skip <= _MAX_SKIP` loop already
       proven in `uniswap_v2.py`/`uniswap_v3.py`; if no, document the confirmed absence in the code comment and leave the
-      warning-only mitigation in place.
+      warning-only mitigation in place. — instruments-service@c9b7943f: live introspection (2026-08-16) of
+      `blue-api.morpho.org` confirmed `markets(skip: Int, ...)` IS a valid argument (`Query.markets.args` includes
+      `skip: Int`), and a functional 2-page live probe (`first:3/skip:0` vs `first:3/skip:3`) returned zero `marketId`
+      overlap — genuinely works, not just schema-present. Replaced the warning-only mitigation with a real
+      `while skip <= _MAX_SKIP` loop (variables-based query, `_MAX_SKIP=5000` mirroring `uniswap_v2.py`/`uniswap_v3.py`),
+      plus a for/else safety-cap warning + `ADAPTER_PAGE_CAP_HIT` emission on genuine exhaustion (mirrors
+      `coinbase_cde.py`/`kalshi_perp.py` this session). Updated the pre-existing single-page-cap test to
+      `test_get_instruments_paginates_past_first_page` (2-page universe fully collected, not truncated) and added
+      `test_get_instruments_hits_skip_safety_cap_emits_warning` (genuine safety-net exhaustion emits the warning +
+      `ADAPTER_PAGE_CAP_HIT`). Full quality-gates.sh green (123-126s).
 - [x] ✅ [REVIEW] P3. **Sports adapters with no pagination keywords found — confirm no hidden vendor-side default page
       cap.**
       `instruments_service/reference_data/adapters/sports/adapters/{api_football, base,footystats,understat,soccerfootball_info,transfermarkt,open_meteo,api_football_reference}.py`
@@ -339,6 +348,9 @@ findings.
   from the new test code inserted above them — corrected the `line:` values only, scoped to the two instruments-service
   entries; did NOT run `--baseline-write` fleet-wide, which would have silently dropped every other repo's baselined
   entries). Remaining todos in this doc are still open.
+- 2026-08-16 (slot 25, data_engineering): shipped the Morpho Blue skip-pagination-verification todo — see the todo's
+  own evidence line above for detail. instruments-service@c9b7943f, QG green (123-126s), quickmerge landed +
+  ancestry-verified on origin/live-defi-rollout. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
