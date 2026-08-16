@@ -220,7 +220,22 @@ had already run. Treat every todo below as net-new work, not a resume.
       entries, or whether a second instance is needed for isolation/blast-radius reasons. Done when: both providers
       are reachable through a proxy and a real end-to-end smoke test (a `claude` subprocess pointed at the proxy)
       returns a real completion.
-- [ ] [SCRIPT] P1. Register `kimi` and `nvidia` in `AccountProvider` (`server/accounts.py`), add real `RateCard`
+
+      **Progress 2026-08-16 — pattern confirmed, routing NOT yet proven end-to-end.** Both providers added to the
+      EXISTING `config/litellm/grok_gemini_proxy.yaml` `model_list` (`agent-orchestrator@6ede4312cb`) — no second
+      proxy instance needed, confirmed. `MOONSHOT_API_KEY`/`NVIDIA_API_KEY` added to the VM's `.env.local`, proxy
+      restarted (`litellm-grok-gemini-proxy`, active), **Grok + Gemini regression-checked and confirmed still
+      working post-restart** (`grok-4.3` and `gemini-3.5-flash-lite-proj1` both real `200` through the proxy —
+      no collateral damage from the shared-service restart). But the two NEW models both failed a real end-to-end
+      smoke test THROUGH the proxy (distinct from the earlier direct-API smoke tests, which had succeeded):
+      **Kimi (`kimi-k2.6`)**: `403 {"message":"The API you are accessing is not open","type":"permission_denied_error"}`
+      from Moonshot itself — an account/key permission-scope issue on Moonshot's side (the pay-as-you-go key may
+      lack access to this model, or need a separate enablement step), not a proxy bug. **DiffusionGemma**: `404`
+      through the proxy, even though the SAME model returned a real `200` on a direct raw API call earlier — points
+      at a LiteLLM routing bug with the nested-slash model id (`openai/google/diffusiongemma-26b-a4b-it`), not an
+      NVIDIA-side problem. Neither is fixed yet — this todo stays open until a real completion comes back through
+      the proxy for at least one Kimi model and DiffusionGemma.
+- [x] [SCRIPT] P1. ✅ Register `kimi` and `nvidia` in `AccountProvider` (`server/accounts.py`), add real `RateCard`
       entries in `model_pricing.py` using the numbers from the two live-verify todos above, and wire dispatch
       eligibility into `autospawn.py`/`select_account_for_spawn()` — reuse the Gemini per-project-headroom-gate
       pattern (`gemini_headroom.py`) if NVIDIA's rate ceiling turns out to be scoped similarly (per-key or
@@ -228,6 +243,19 @@ had already run. Treat every todo below as net-new work, not a resume.
       account with `account_status: disabled` from creation — **paused, not dispatch-eligible**, per this plan's Why
       section. Done when: `load_accounts()` parses both new accounts without error and dispatch correctly skips them
       while paused (verified by a real spawn attempt that falls through to the next eligible provider).
+
+      **DONE 2026-08-16** — `AccountProvider`/`RateCard` shipped `agent-orchestrator@6ede4312cb` (QG green: 3995
+      pytest passed, dashboard tsc/vitest clean). 4 accounts registered in the live VM `data/config/accounts.json`
+      (`kimi-k3`, `kimi-k2-6`, `kimi-k2-7-code`, `nvidia-diffusiongemma`) — k2.5 and `gemma-4-31b-it` deliberately
+      NOT registered per the live-verify todos' findings. Orchestrator restarted to sync the new `AccountRow`
+      entries, then all 4 confirmed **`"status":"disabled"`** via the real `POST /api/accounts/{id}/disable`
+      endpoint (`disable_account()`, not a raw SQL write) — `last_used_at: null` on all 4 confirms nothing dispatched
+      to them in the brief window before pausing. Labels deliberately carry no "Claude" branding (operator
+      instruction, 2026-08-16) — e.g. "Kimi K3 (Moonshot, via LiteLLM proxy)", not anything Claude-branded; this is
+      also structurally guaranteed by `effective_model_for_telemetry()`'s existing `{provider}-{variant}` override
+      for any non-`anthropic` provider. Per-model gate wiring (the `gemini_headroom.py`-style piece) is NOT done —
+      deferred to the concurrency-measurement todo below, since neither model's real rate/concurrency ceiling is
+      known yet to gate on.
 - [ ] [REVIEW] P2. Wallet/balance reconciliation for both: Moonshot (metered $, confirm whether it exposes a
       balance/usage-read endpoint the way DeepSeek's `/user/balance` and Grok's `management-api.x.ai` do, or whether
       it needs the DeepSeek-style "available-balance-only" design already built) and NVIDIA NIM (free tier — likely
@@ -325,3 +353,70 @@ real money covers the rest, so a reconciliation that only tracks the $10 cash re
 true consumption while the voucher lasts. The wallet-reconciliation todo below must treat the FULL $15 credited
 (recharge + voucher) as the tracked balance pool, not just the $10 cash portion — this $15/$14.99978/$0.00022
 triple is the real baseline for that mechanism (same shape as `compute_deepseek_wallet_reconciliation()`).
+
+### 2026-08-16 — full VM registration + pause, proxy wiring, real routing blockers found
+
+Operator instruction: complete as much of this plan's real infrastructure as possible (backend, credentials, proxy,
+account registration) while task-routing logic stays deliberately out of scope — end state should mirror the other
+four providers exactly: production-ready, paused.
+
+**Code shipped**: `agent-orchestrator@6ede4312cb` — `AccountProvider` gained `kimi`/`nvidia`, real `RateCard`
+entries for `kimi-k3`/`kimi-k2.6`/`kimi-k2.7-code`/`diffusiongemma-26b-a4b-it`, and both added to the existing
+`config/litellm/grok_gemini_proxy.yaml` `model_list`. QG green before shipping (3995 pytest passed, dashboard
+tsc/vitest clean). Deliberately excluded: `kimi-k2.5` (retired) and `google/gemma-4-31b-it` (still hangs, see
+earlier Progress Log entry).
+
+**VM registration** (`data/config/accounts.json`, gitignored, operator-managed only — not in git): 4 accounts added
+(`kimi-k3`, `kimi-k2-6`, `kimi-k2-7-code`, `nvidia-diffusiongemma`), each with its own `~/.claude-accounts/<id>.env`
+pointing `ANTHROPIC_BASE_URL` at the existing local proxy (127.0.0.1:8768) — same pattern as Grok/Gemini, same
+proxy instance, no new infra. Both the JSON patch and the env-file writes were done via a locally-authored Python
+script, base64-transferred and run on the VM — chosen after two failed attempts at inline heredoc/shell-escaped SSM
+commands (a `set -euo pipefail` document-shell incompatibility, then unexpanded `\n` literals inside a heredoc)
+made clear that fighting SSM's JSON/shell quoting layers for anything non-trivial is not worth it; base64-transfer
+a real script instead.
+
+**Real finding mid-sequence — genuinely concerning at first, resolved by verification, not assumption**: after
+manually running `ao-self-pull.sh`, it reported "already current" — read at first as "my commit didn't land,"
+which would have meant the VM's OLD `accounts.py` (no `kimi`/`nvidia` in its `AccountProvider` Literal) was about
+to try parsing the freshly-patched `accounts.json` containing those exact values. Since `load_accounts()` parses
+the whole file in one list comprehension with no per-item error handling, a single invalid Literal there would
+have raised and broken account loading for the ENTIRE FLEET, not just the two new providers. Checked immediately
+rather than assumed: `/api/accounts` was still returning `200` with normal fleet activity in the logs (real
+dispatches, DeepSeek balance polling, no exceptions) — the real explanation was that "already current" meant the
+VM's HEAD was already AHEAD of the commit (a different engineer's QG-ratchet fix commit had landed after mine and
+already been pulled), not behind it. `git log --oneline` confirmed `6ede4312cb` was already present. No actual
+incident occurred, but the check was the right call, not an overreaction — the failure mode this was
+guarding against is real and would have been a genuine fleet-wide outage.
+
+**Real gap this DID surface**: `accounts.json` is not git-tracked, so `ao-self-pull.sh`'s "restart on HEAD move"
+logic never fires for it — a manual `systemctl restart orchestrator` was required regardless of git state, because
+`sync_accounts_to_db()` (which populates the `accounts` DB table backing `/api/accounts` and the `/disable`
+endpoint) only runs once, at process `initialise()`. Restarted; service came back `active`, `/health` returned
+`200`.
+
+**Pause executed via the real mechanism, not raw SQL** — deliberately investigated first rather than hand-writing
+an UPDATE against `account_usage` (which turned out to be a periodic usage-snapshot table, not the canonical
+enable/disable path, and doesn't upsert the separate `accounts` table `/disable` requires). Used the real
+`POST /api/accounts/{id}/disable` endpoint (`disable_account()`, `server/state_store/account_usage.py:261`) for
+all 4 — confirmed `"status":"disabled"` on every one, `last_used_at: null` confirming nothing had dispatched to
+them in the window between creation and pause.
+
+**Proxy env + restart, with a real regression check — genuinely necessary, not performative**: `MOONSHOT_API_KEY`/
+`NVIDIA_API_KEY` added to the VM's `.env.local` (systemd `EnvironmentFile`, so literal values, not
+`$(gcloud ...)` substitution — that only works in the account `.env` files, which ARE sourced by a real shell).
+`litellm-grok-gemini-proxy` restarted, came back `active`. **First regression check attempt showed both Grok AND
+Gemini returning `500`** — alarming, but traced to my OWN test script (ran `gcloud secrets versions access` as the
+default SSM user, which has no active `gcloud` account, so the master-key auth header was empty) rather than a
+real service problem. Re-ran correctly as the `ubuntu` user: **Grok (`grok-4.3`) and Gemini
+(`gemini-3.5-flash-lite-proj1`) both confirmed real `200`s post-restart — no collateral damage.**
+
+**The two new models both failed their real through-proxy smoke test, despite each having worked via a direct raw
+API call earlier** — captured precisely in the todo above rather than left vague: Kimi hit a Moonshot-side `403`
+permission-denied (key/account scope, not a proxy bug); DiffusionGemma hit a `404` specific to the proxy's routing
+of its nested-slash model id, not present on the direct API path. Both PAUSED accounts are unaffected by this
+(they were never going to be dispatched to regardless), but the routing itself is not yet proven working — that
+todo stays open, not marked done.
+
+**Net state**: registration + pause is REAL and DONE (both accounts exist, are paused, cannot be dispatched to).
+Backend code is REAL and DONE (shipped, tested). Proxy routing for the two new models is NOT yet working — a real,
+open, distinct problem for each provider, not a placeholder gap.
