@@ -357,3 +357,21 @@ in this same run.
   baseline) and fixed 2 bare/relative codex refs (`codex/...` → `/codex/...`) caught by `check_reference_paths` on
   the same attempt. Both are exactly the class of finding this skill hunts for in OTHER docs — applying its own
   hygiene bar to itself before landing.
+- **2026-08-16 (pre-compact checkpoint)** — lessons worth carrying forward, not just state: (1) a numbered `1. 2.
+  3.` prose list is NOT a todo to this corpus's tooling — any findings-doc section meant to be counted/tracked needs
+  real `- [ ]`/`- [x]` `[TAG] P<n>.` checkboxes from the FIRST draft, not retrofitted after a hook rejection; (2) a
+  markdown heading text must stay on ONE physical line — split it across a blank line (as this doc's own "Codex
+  corrections applied" heading briefly did, mid-session, while fixing that exact defect class in 2 OTHER docs) and
+  the back half silently becomes body prose, not part of the heading; (3) a conventional-commit `scope` cannot
+  contain `+` (`docs(plans+codex):` was hook-rejected; `docs:` with no scope, or a single-word scope, is required).
+  Durability audit (per `/pre-compact`): `git status` clean, 0 commits ahead of `origin/live-defi-rollout`
+  (verified `git rev-list --count`), scratchpad swept (7 intermediate analysis files — hygiene-sweep raw output,
+  doc inventories, grace-window report — none referenced by any committed doc, none needed by an open todo, none
+  expensive to regenerate; safe to lose). Every substantive finding this run produced already lives in this
+  committed doc or in the target docs' own commits — nothing chat-only remains. **Only open item**: `BLK-e7b0e8da`
+  (the possible-governance-overstep escalation) — checked `/api/slots/30/messages` 5×, the `/progress` heartbeat's
+  returned messages 2×, a direct escalation-id lookup, `/api/escalations/active` (wrong system — that's the
+  CI-wall queue, not blocked-questions), and `ListAgents` (no reachable agents) — no answer content has surfaced
+  yet despite a harness notification claiming one exists. Continuing the STEP-8 wait-loop on a non-busy cadence per
+  `agents/plan_reconciler.md`; `/done` is correctly withheld until this resolves or the operator dismisses it — the
+  one-shot lifecycle contract does not allow completing with a question still open.
