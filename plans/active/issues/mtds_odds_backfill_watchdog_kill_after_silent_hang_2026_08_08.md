@@ -567,3 +567,19 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo 1's scope: this doc's other 2 open todos (todo 1 —
   catch a live hang before the silent window elapses; todo 4 — `PREFIX_IDLE_THRESHOLDS` tuning, still explicitly gated on
   an unconfirmed root cause) are genuinely open work and left untouched — doc stays `status: open`, not archived.
+
+- **2026-08-16 — an even earlier/faster manifestation, possibly the same family, live-SSH'd this time.** A fresh
+  `mtds-backfill-odds-1` relaunch (unrelated to this doc — was closing out
+  `sports_odds_api_data_type_casing_standardization_2026_08_15.md` Phase 0) completed VM boot + dependency install +
+  `Task launched PID: 4907` cleanly per the startup script's own log (`=== VM setup complete ===`, exit status 0), but
+  **`gcloud compute ssh` into the live VM ~17 minutes later showed PID 4907 already gone (`ps -p 4907` empty), zero
+  MTDS/Python processes running, load average ~0.03, and — critically — the GCS `run.log` was never touched at all**
+  (byte-identical to a completely unrelated PRIOR dead instance's stale content from hours earlier, confirming this
+  isn't a read-staleness artifact but a genuine "never wrote anything" case). No OOM-kill in `dmesg`, no crash/signal
+  trace in `journalctl` for the task's PID or its parent shell in the relevant window — the systemd journal shows only
+  my own SSH session noise. This is a MORE SEVERE version of this doc's core mystery: previous occurrences at least
+  produced 16-25% of OOM-peak RSS worth of real log output before going silent; this one produced ZERO log lines
+  before the process was simply gone. Did not deep-dive further (out of scope for the session's actual task) — noting
+  here since it may be the same unroot-caused mechanism firing even earlier, or a related-but-distinct startup-race
+  condition worth a future dedicated investigation. VM left as-is (not relaunched again this pass) since Phase 1 of
+  the casing-standardization plan doesn't depend on this VM completing.
