@@ -189,3 +189,13 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   current HEAD to confirm the registration is correct NOW; checked `git merge-base --is-ancestor` both directions to
   place the registering commit and the tarball-pin commit on the same history. Did not relaunch. Filing this doc as
   the page artifact (mirroring the sibling docs' pattern) plus the root-cause diagnosis those five deferred.
+  Cross-linked from the `mdps-tradfi-2025` sibling doc's own Progress Log (append, not overwrite). Shipped via
+  `safe-doc-push.sh` (`58523a7b76`, ancestor-verified on `origin/live-defi-rollout`). Paged via
+  `/api/slots/20/blocked` (`BLK-12bd850c`) with options A (relaunch now, recommended) / B (hold for cross-VM
+  confirmation first) / C (isolated, no action). Polled `/api/slots/20/messages` for ~3 minutes total (exceeding the
+  role's 2-min bound) — a mid-turn system notification claimed "Operator answered your BLOCKED question," but every
+  poll immediately before AND after that notification returned an empty message list; no `GET
+  /api/blocked/<id>`-style status endpoint exists to cross-check independently of `/messages`. This is the SAME
+  known-unreliable-orchestrator-connectivity pattern the `mdps-tradfi-2023` and `mdps-tradfi-2025` sibling docs both
+  already hit. Per the role's 2-min-no-answer rule, stopped polling — this doc is the durable page artifact; a later
+  operator answer (if it lands out-of-band) should be appended here rather than assumed lost.
