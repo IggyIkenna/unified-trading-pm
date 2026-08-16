@@ -47,8 +47,9 @@ source:
   "DP-VM-008 escalation agt-213940 dispatched via escalate-to-orchestrator (wall_type=data_pipeline_failure), handed
   to the data_pipeline_failure worker (slot 19) per the RB-INFRA-RELAUNCH bound instruction: check for an existing
   open issue doc and page the operator instead of relaunching again."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+effort: max
 estimate_class: research
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.24
@@ -151,3 +152,6 @@ whether today's specific gap (this one `2026-20260816-040430` shard) should just
   the case for the operator to weigh it.
 - Did not relaunch `cefi-extended-starknet-2025-20260816-020053`; did not change any budget logic; status stays `open`,
   pending the same A/B operator decision above.
+- **2026-08-16 (na-eligibility-audit follow-up, operator ruling)**: option B ruled (scale relaunch-dispatch budget by
+  concurrent fleet size, or a finer grouping key) — same fix as `cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`,
+  do not implement twice, close both against the same `escalation_dedup.py` commit.

@@ -48,8 +48,9 @@ source:
   "DP-VM-008 escalation agt-648f49 dispatched via escalate-to-orchestrator (wall_type=data_pipeline_failure), handed
   to the data_pipeline_failure worker (slot 16) per the RB-INFRA-RELAUNCH bound instruction: check for an existing
   open issue doc and page the operator instead of relaunching again."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+effort: max
 estimate_class: research
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.24
@@ -138,13 +139,14 @@ relaunched now.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide A (leave budget as-is) vs B (scale relaunch-dispatch budget by concurrent fleet size or
-      move to a finer `(launcher-family, shard-year)` grouping key) — this is now the SECOND same-day occurrence of
-      this trade-off (see `cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md` for the first, on a
-      37-instance fleet; this finding is on a 304-instance fleet).
-- [ ] [OPERATOR] P3. If A is chosen and the `cefi-aster-2023-20260816-030139` shard gap is wanted sooner than the
-      next UTC-day budget reset, manually relaunch via `launch-cefi-hl-aster-historical-backfill.sh` per the VM's
-      `LAUNCH_PARAMS.json`/`PROGRESS.json` (RB-INFRA-RELAUNCH procedure steps 1-5).
+- [ ] [DATA] P2. **RULED 2026-08-16 (operator, na-eligibility-audit follow-up): option B — scale the relaunch-dispatch
+      budget by concurrent same-prefix fleet size** (or move to a finer `(launcher-family, shard-year)` grouping key,
+      implementer's call which mechanism) in `escalation_dedup.py`. Same ruling applies to the sibling same-day
+      occurrence `cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md` — do not implement this twice,
+      fix it once in the shared `escalation_dedup.py` logic and close both docs against the same commit. Repo:
+      agent-orchestrator.
+- [x] ✅ **N/A — option A (leave as-is) was not chosen**, so no manual relaunch is needed; the shard gap will be
+      picked up once the scaled budget (todo above) lands.
 
 ## Progress Log
 
