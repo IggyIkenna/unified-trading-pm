@@ -64,6 +64,49 @@ jobs:
             fi
           done
 
+      - name: Provision Python deps for cloned repos (uv sync)
+        # Root-cause fix (2026-08-16 /ci-reconcile sweep, 15+ consecutive failures 2026-08-13->
+        # 2026-08-16): each cloned canary repo's own `scripts/setup.sh` unconditionally SKIPS
+        # every install step in CI mode ("CI detected — skipping venv/deps setup (CI manages
+        # its own env)" — setup.sh's own comment) because that assumption is true for
+        # quality-gates-v2.yml (its reusable unified-trading-ci/python-quality-gates-v2.yml DOES
+        # `pip install uv==<pinned>` + `uv venv .venv` + `uv sync --frozen` before any check
+        # runs) but was NEVER true here — this workflow shallow-clones canary repos and goes
+        # straight to `quickmerge.sh --unit-only`, so nothing ever installed unified-api-
+        # contracts' own deps. Symptom: setup.sh's "Import smoke test" step failed
+        # "ModuleNotFoundError: No module named 'pydantic'" on every run. Fix mirrors the
+        # EXISTING quality-gates-v2.yml pattern exactly (same UV_VERSION resolution, same
+        # `uv venv` + `uv sync --frozen` shape) rather than inventing a new one — applied
+        # generically to every cloned dir with both pyproject.toml + uv.lock (unified-trading-pm
+        # itself included; unified-trading-ci has neither and is a no-op skip).
+        run: |
+          cd $GITHUB_WORKSPACE
+          UV_VERSION="$(grep -oP '^UV_VERSION = "\K[^"]+' unified-trading-pm/scripts/workspace/resolve-canonical-versions.py 2>/dev/null)"
+          if [ -z "$UV_VERSION" ]; then
+            echo "::error::could not resolve canonical UV_VERSION from resolve-canonical-versions.py"
+            exit 1
+          fi
+          pip install "uv==$UV_VERSION"
+          for d in */; do
+            d="${d%/}"
+            { [ -f "$d/pyproject.toml" ] && [ -f "$d/uv.lock" ]; } || continue
+            echo "  Provisioning $d ..."
+            (
+              cd "$d"
+              uv venv .venv --quiet
+              attempt=0
+              until uv sync --frozen --quiet; do
+                attempt=$((attempt + 1))
+                if [ "$attempt" -ge 3 ]; then
+                  echo "::warning::uv sync --frozen failed for $d after $attempt attempts — quickmerge --unit-only will surface a real import failure below if deps are genuinely missing"
+                  break
+                fi
+                echo "  WARN: uv sync --frozen attempt $attempt/3 failed for $d — retrying in 5s"
+                sleep 5
+              done
+            )
+          done
+
       - name: Ensure jq
         # Guarded because this now runs on a SHARED, long-lived host, not a throwaway hosted VM.
         # Unguarded `sudo apt-get update && install` would mutate the live orchestrator box on every
