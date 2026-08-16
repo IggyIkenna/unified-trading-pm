@@ -666,34 +666,37 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
 
 ### Todos
 
-- [ ] [OPERATOR] P1. Complete Z.ai GLM Coding Plan **Lite** ($18/mo — staged start, not Max; see the ruling above)
-      signup and hand over the API key + confirm the exact Anthropic-compatible base URL
-      (`https://api.z.ai/api/anthropic`, per Z.ai's own Claude Code integration docs — verify still current at signup
-      time). Done when: a real key exists and is handed to an agent session for registration.
+- [x] [OPERATOR] P1. ✅ Complete Z.ai GLM Coding Plan **Lite** signup and hand over the API key. **DONE 2026-08-16** —
+      real key handed over, stored in GSM (`glm-coding-plan-api-key`). Base URL confirmed still current via a real
+      live call: `https://api.z.ai/api/anthropic`.
 - [ ] [OPERATOR] P3. Upgrade GLM Coding Plan Lite → Max once the Lite-tier pipeline validation above is complete and the
       operator decides to scale. Done when: the Zhipu dashboard shows Max active and the UI headroom-gate todo's ceiling
       constants (currently Lite's ~80/5h + 400/wk) are updated to Max's ~1,600/5h + 8,000/wk — same key, same endpoint,
       no other code change expected.
-- [ ] [INFRA] P1. Register the GLM Coding Plan account end to end mirroring the DeepSeek account pattern exactly: env
-      file (`ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`, `unset CLAUDE_CODE_OAUTH_TOKEN`) + `accounts.json` entry +
-      GSM secret `glm-coding-plan-api-key` (new naming-SSOT entry, `/codex/05-infrastructure/secret-manager-naming.md`
-      §2.7 has no LLM-provider-key convention yet — add one while here, matching the `{vendor}-api-key` pattern already
-      used for `deepseek-v4-pro-api-key`). Done when: `AUTH_OK` verified via a real smoke `claude -p` call and
-      `/api/accounts` shows `status: healthy`.
-- [ ] [INFRA] P1. Extend `AccountProvider` Literal to add `"glm"`. Register two model variants via the existing
-      `variant` field pattern (same mechanism as DeepSeek's pro/flash split): `glm-5.2` (flagship) and `glm-4.7-flashx`
-      (fast/cheap), both reachable under the one Coding Plan credential. Done when: QG green, routing tests extended to
-      cover the new provider value (mirrors `test_deepseek_provider_routing.py`).
-- [ ] [DATA] P1. Add GLM `RateCard` entries to `model_pricing.py`: GLM-5.2 ($1.40 input / $4.40 output /
-      $0.26 cached
-      input — 81% cache discount, confirmed) and GLM-4.7-FlashX ($0.07 input /
-      $0.40 output — cache rate NOT published
-      anywhere found; verify against the live API response's `usage.prompt_tokens_details.cached_tokens` field at
-      registration, do not hardcode a guessed number). These are informational rates for cost-tracking only — actual
-      billing is the flat $160/mo
-      subscription, not these per-token numbers; `price_usage()` still needs them to compute the
-      metered-equivalent-value comparison the reconciliation todo below produces. Done when: `price_usage()` returns
-      non-None for both models against a real captured usage sample.
+- [x] [INFRA] P1. ✅ Register the GLM Coding Plan account end to end. **DONE 2026-08-16** — env files for both
+      variants (`~/.claude-accounts/glm-5-2.env`, `glm-5-turbo.env`) + `accounts.json` entries + GSM secret
+      `glm-coding-plan-api-key`, mirroring the DeepSeek pattern exactly. `AUTH_OK` verified via real live
+      `/v1/messages` calls (not just a config check — see the DATA/INFRA todos below for the real model-name
+      correction this surfaced). **Deliberately deployed PAUSED**, not `status: healthy` — operator instruction
+      2026-08-16 (applied fleet-wide to all three new providers this session): "fully shipped ready to use but on
+      pause mode so agents dont use them yet." Confirmed `account_status: disabled` for both. Treating this as
+      satisfied under the operator's actual instruction, not the todo's original literal "healthy" wording.
+- [x] [INFRA] P1. ✅ Extend `AccountProvider` Literal to add `"glm"`; register two model variants. **DONE 2026-08-16**
+      — but the SECOND variant is **`glm-5-turbo`, not `glm-4.7-flashx`**. Real bug caught before registration: a live
+      `/v1/models` call against the real key confirmed `glm-4.7-flashx` does not exist in Z.ai's catalog at all
+      (same silent-drift class as Grok's dead `grok-4.1-fast`) — it 429'd with "Insufficient balance or no resource
+      package" rather than a clean model-not-found error, which could easily have been misread as a real balance
+      problem instead of a wrong model name. Live catalog confirmed instead: glm-4.5, glm-4.5-air, glm-4.6, glm-4.7,
+      glm-5, glm-5-turbo, glm-5.1, glm-5.2, glm-5.3 — `glm-5-turbo` is the real fast/cheap-tier model. Also found:
+      requesting `glm-5.2` gets silently served by `glm-5.3` (released 2 days before this session), and requesting
+      `glm-4.5-air` gets silently served by `glm-4.7` — Z.ai does its own model aliasing/routing server-side; worth
+      knowing when interpreting a completion's reported `model` field. `agent-orchestrator@4595e46e61`.
+- [x] [DATA] P1. ✅ Add GLM `RateCard` entries to `model_pricing.py`. **DONE 2026-08-16** — `glm-5.2` ($1.40/$4.40,
+      $0.26 cache-read, 81% discount, confirmed 2026-08-15) and `glm-5-turbo` ($0.07/$0.40, cache-read unconfirmed —
+      placeholder equals input_usd, same never-understate-spend philosophy, replacing the dead `glm-4.7-flashx`
+      entry). `price_usage()` verified returning non-None for both. Real, live, working end-to-end: `curl` against
+      `https://api.z.ai/api/anthropic/v1/messages` returned genuine completions for both `glm-5.2` and `glm-5-turbo`
+      (real `usage` blocks, `HTTP 200`). `agent-orchestrator@4595e46e61` — QG green, shipped alongside the test fix.
 - [ ] [INFRA] P1. Build GLM's accurate-usage-capture proxy, mirroring `deepseek_native_proxy_server.py`: verify GLM's
       Anthropic-compatible endpoint reports real usage (input/output/cache-read/cache-write) before trusting it directly
       — DeepSeek's own compat endpoint under-reported 2.5-3.2x before this was caught. If GLM under-reports the same
@@ -781,3 +784,30 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
   ruling applied to the sibling Codex/Luna plan (Plus $20/mo,
   not Pro) and noted (no tier concept applies) in the sibling Grok/Gemini plan. Todos above updated to Lite; new
   `[OPERATOR] P3` upgrade-to-Max todo added rather than silently changing done-when criteria.
+
+- **2026-08-16 — GLM fully shipped: real key, both accounts registered+paused, real model-name correction found and
+  fixed, per operator instruction to get all three new providers "fully shipped ready to use but on pause mode."**
+  Real Coding Plan Lite API key handed over, stored in GSM (`glm-coding-plan-api-key`).
+
+  **Real bug caught before it shipped wrong**: a live `/v1/models` call against the real key confirmed
+  `glm-4.7-flashx` (registered blind 2026-08-15) does not exist in Z.ai's catalog — same silent-drift class already
+  hit with Grok's dead `grok-4.1-fast`, and arguably more dangerous here: the API returned a 429 "Insufficient
+  balance or no resource package" rather than a clean model-not-found error, which reads exactly like a real billing
+  problem rather than a wrong model name. Live catalog confirmed instead: glm-4.5, glm-4.5-air, glm-4.6, glm-4.7,
+  glm-5, glm-5-turbo, glm-5.1, glm-5.2, glm-5.3. Swapped the dead model for the real `glm-5-turbo`
+  (`agent-orchestrator@4595e46e61`, QG green). Separately confirmed: Z.ai does its own model aliasing server-side —
+  a request for `glm-5.2` gets served by `glm-5.3` (released just 2 days before this session), and `glm-4.5-air` gets
+  served by `glm-4.7`; the completion's own `model` field reports what was ACTUALLY served, not what was requested.
+
+  Both accounts (`glm-5-2`, `glm-5-turbo`) registered in the live `accounts.json`, confirmed parsing cleanly via the
+  real `load_accounts()` Pydantic model, then explicitly paused (`account_status: disabled`, confirmed for both) —
+  same treatment as the sibling Grok/Gemini/Codex plans' accounts this same day. Real live smoke test succeeded for
+  both models directly against `https://api.z.ai/api/anthropic/v1/messages` (genuine completions, real `usage`
+  blocks, `HTTP 200`) — GLM's native Anthropic-compatible endpoint needed no proxy, unlike Grok/Gemini/Codex.
+
+  **Honest scope of what's still open**: the accurate-usage-capture proxy (verifying GLM's endpoint reports real
+  usage, not under-reporting the way DeepSeek's did) is unbuilt and unverified. The UI headroom-gate (surfacing +
+  gating on GLM's subscription quota) is unbuilt. The heuristic cache-rate reconciliation for `glm-5-turbo` is
+  unbuilt. This closes GLM's credential/registration story, not its full production-readiness story — mirrors
+  exactly where Grok/Gemini/Codex landed this same session (real bridges/proxies live and smoke-tested, deeper
+  usage-verification and tool-use-fidelity work still ahead).
