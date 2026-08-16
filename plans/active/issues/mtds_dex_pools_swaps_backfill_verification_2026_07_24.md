@@ -584,6 +584,21 @@ rule (see Progress Log entry below for the observed outcome).
   16GB ceiling — no OOM recurrence of the class this doc's sibling archived issue tracked). No code changes shipped —
   used the existing launcher as-is. Repo: deployment-service.
 
+- **2026-08-16 (slot-29)** — picked up the Follow-up `[DATA] P2` below (continue monitoring
+  `mtds-dex-pools-backfill` to genuine completion, handed off from slot-30). Took 3 spaced foreground
+  `gcs_describe_object`/`gcs_read_object_range` checks of `run.log` (UTL SDK, no background-bash monitor per this
+  doc's own established precedent that background polling gets externally killed): **03:05:00Z** —
+  `date=2026-05-25` in progress; **03:10:48Z-03:11:00Z** — `date=2026-06-02` in progress, fresh `ManifestWriter`
+  shard writes each ~54s/date; **03:12:39Z** — VM still `RUNNING` (asia-northeast1-c), no stall (well inside the
+  normal per-date cadence, nowhere near the ~15-20min silent-death threshold). Confirms real forward progress:
+  8 calendar-days advanced (2026-05-25→2026-06-02) in ~6min wall-clock, ~44 days into the 2026-04-13→2026-07-24
+  target range (~43% by date-count). Range is **NOT yet complete** — closing out this session on the accumulated
+  evidence per this doc's own precedent for a multi-day VM outliving one session (2026-08-09, 2026-08-16-slot-4,
+  2026-08-16-slot-30 entries), same as slot-30 did. No code change, no relaunch needed (VM healthy). The
+  Follow-up `[DATA] P2` below stays open, unedited in substance — its ask ("continue monitoring to completion")
+  is still exactly accurate — this entry documents the additional evidence gathered, not a state change to the
+  todo itself. Repo: market-tick-data-service (verify only, read-only GCS checks).
+
 ## Follow-ups
 
 - [x] ✅ [BACKEND] P2. Fix the VELODROME_V2/OPTIMISM dex_pool_swaps persistent "bad indexers" condition
