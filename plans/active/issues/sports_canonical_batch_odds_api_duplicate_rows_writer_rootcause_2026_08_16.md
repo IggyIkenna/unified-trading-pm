@@ -129,3 +129,13 @@ low today; it could be worse in cells/days not sampled.
   cells_cas_conflict=0`, exact match to the dry-run scope, zero errors. Added todo 4 to track the
   out-of-scope full-corpus follow-up (a VM-scoped campaign, not yet started). This issue stays `open` pending
   todo 4.
+- **2026-08-16 (slot-23)**: Operator explicitly authorized todo 4 (full-corpus campaign). In progress per an
+  8-step execution plan (local plan-mode doc, not repo-tracked): (1) write+ship the full-corpus script — ✅
+  DONE, `market-tick-data-service@2d85eb1ad3` (`scripts/sports/backfill_dedup_canonical_odds_api_fullcorpus_2026_08_16.py`,
+  same core logic as the bounded script — duplicated not imported, walks every day in range instead of a
+  40-day sample). (2) wire a new `sports-odds-dedup` launcher category into
+  `deployment-service/scripts/vm/launch-canonical-migration-vm.sh`'s generic one-off-migration dispatcher — code
+  written, quality-gates IN PROGRESS as of this entry (not yet shipped). Steps 3-8 (VM dry-run launch → sanity
+  check totals vs. this doc's "low-thousands" extrapolation → VM apply launch → verify apply==dry-run → close
+  this doc's todo 4 with evidence → archive this doc) are NOT yet started. Todo 4 stays unchecked until the
+  full campaign (steps 3-6) actually completes with verified totals — step 1 alone does not satisfy it.

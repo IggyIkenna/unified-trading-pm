@@ -95,6 +95,26 @@ Multi-item sessions with non-final state → `## Deferred work after <date> <ses
 for next agent"; Half-1+2+3 = full handoff. Half-3 matters when item is non-final; Half-2 ALWAYS matters when item is
 final.
 
+### Half 4 — Human-Fleet-Registered Operators Report to AO (ao_human_fleet_integration_2026_08_15.md, Phase 6)
+
+Applies ONLY to an operator whose laptop is a registered human-fleet slot (`~/.config/agent-orchestrator/
+human-fleet-token` exists — Phase 4; dormant for most sessions today, live for Ikenna's slot 9001 as of 2026-08-16).
+Once registered, Half-2's checkbox flip is followed by reporting completion to AO the same way an AO-dispatched
+worker's own `/done` call does:
+
+```
+AO_SLOT_ID=<slot_id> bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"
+```
+
+**Only when a task is actually AO-claimed** (`ao-claim.sh`) — most human work is plan-authoring or ad-hoc, never
+AO-claimed, and Half-4 is a no-op for it; forcing a report with no real `task_id` is worse than skipping it.
+**Mechanically nudged, not enforced**: a `PostToolUse` hook
+(`agent-orchestrator/scripts/human_fleet/post_plan_commit_hook.py`, wired in `cursor-configs/settings.json`) detects a
+landed `unified-trading-pm` doc-push that flipped a checkbox, checks whether the registered slot has a currently-claimed
+task, and SUGGESTS the `ao-done.sh` call — deliberately confirm-first (per the plan's own resolved design question),
+never auto-fires it. Token/spend counts are NOT part of Half-4 — those flow through the pre-existing Phase 2
+`ao-usage-push.py` path regardless of Half-4, on a completely separate cadence.
+
 ## Rule Violations (review-blocking; agent should self-correct)
 
 - ❌ "I'll flip at end of session" — other slots are reading the work-split RIGHT NOW for reallocation.
