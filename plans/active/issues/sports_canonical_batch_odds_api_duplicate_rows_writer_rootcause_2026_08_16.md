@@ -187,3 +187,17 @@ low today; it could be worse in cells/days not sampled.
   `canonical-migration-sports-odds-dedup-20260816-145835`, tarball confirmed fresh at `mtds@ed0c4372d204`,
   RUNNING as of this entry. Step 3 continues; step 4 (read totals, sanity-check) still pending this run's
   terminal state.
+- **2026-08-16 (data_pipeline_failure escalation `agt-cf32a4`, slot-25)**: `DP-VM-001` (`DP_VM_EXIT_NONZERO`,
+  non-OOM `exit_code=1`) fired for the terminated `canonical-migration-sports-odds-dedup-20260816-134243` and
+  dispatched a relaunch worker per `rb_infra_relaunch.md` (non-OOM exit codes are `page`-tier, not
+  auto-recover-eligible — confirmed by reading `deployment_service.data_pipeline_monitors.escalation._recover_vm_exit_nonzero`
+  and `RelaunchBackfillVm.relaunch()`, which explicitly `SKIPPED (reason=not_oom)` for `exit_code != 137`, so no
+  in-band actuator touched this VM). Independently re-derived the same root cause from `run.log`
+  (`_dup_mask`'s `.round(6)` on an all-null `point` column typed `object`) before finding this doc already had
+  it diagnosed and fixed. Per the runbook's "check for an already-running genuine replacement before
+  relaunching" step: confirmed `canonical-migration-sports-odds-dedup-20260816-145835` is RUNNING
+  (`asia-northeast1-c`), `LAUNCH_PARAMS.json` matches the terminated VM's (`sports-odds-dedup`,
+  `2020-06-06..2026-08-16`, `dry`, shard 1/1), and `PROGRESS.json` is actively advancing (`last_completed_date`
+  `2020-08-29`→`2020-09-25` across two ~1-minute-apart reads). No further action needed — standing down, not
+  relaunching a third VM. Escalation `agt-cf32a4` resolved by reference to this doc's existing fix
+  (`market-tick-data-service@ed0c4372d2`) and the already-in-flight relaunch above; no new code shipped.

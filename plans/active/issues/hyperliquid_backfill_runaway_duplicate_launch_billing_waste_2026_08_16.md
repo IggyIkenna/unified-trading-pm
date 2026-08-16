@@ -148,7 +148,10 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Review the live `cefi-hyperliquid-2023-*` fleet (298+ VMs as of 2026-08-16, growing) and
+- [ ] [DATA] P0. **RULED 2026-08-16 (operator, na-eligibility-audit follow-up): investigate the fleet now, then
+      decide — do not kill anything blind first.** Root-cause whether the 298+ VMs are genuine duplicate/redundant
+      launches (billing waste) or legitimate sharded parallelism before touching any of them; report findings +
+      recommendation before any kill action. Review the live `cefi-hyperliquid-2023-*` fleet (298+ VMs as of 2026-08-16, growing) and
       terminate the duplicates, keeping one coherent run. Needs a human call on which specific run-id(s) to preserve
       and safe termination of the rest without corrupting in-flight manifest writes. (repo: infra ops, no code)
 - [x] ✅ [INFRA] P1. Add a cross-invocation "is this (venue, date-range) already running?" guard to

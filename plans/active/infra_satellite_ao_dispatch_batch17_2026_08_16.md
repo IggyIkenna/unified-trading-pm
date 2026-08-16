@@ -94,23 +94,24 @@ follow-up batch once the operator rules (see `## Deferred`).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Resolve the SPOT-provisioning design fork — the largest blocker (79 of 149 launchers).**
-      `lc_gcloud_create` (`deployment-service/scripts/vm/lib/launcher_common.sh:528-611`) has **zero**
-      `--provisioning-model`/`--instance-termination-action` support — confirmed via
-      `grep -n "provisioning-model\|instance-termination-action" launcher_common.sh` (0 hits). Per CLAUDE.md, backfill
-      VMs default to Spot (`/codex/05-infrastructure/spot-vms-for-backfill.md`), so the 79 raw-create launchers that pass
-      `--provisioning-model=SPOT` cannot migrate to the wrapper as it stands today — this is a bigger, previously
-      undocumented gap than the source issue's 3 named tiers. Options (do not resolve unilaterally — this todo's job is
-      to present them for a ruling, not implement one):
-      (a) add optional `provisioning_model`/`instance_termination_action` params to `lc_gcloud_create` (backward
-      compatible — omit both, unchanged behavior for the 10 current non-Spot callers);
-      (b) add a parallel `lc_gcloud_create_spot` wrapper reusing the same guard logic, to avoid growing the primary
-      function's positional-arg count further;
-      (c) carve Spot launchers out of this migration's scope permanently and accept the guard gap for them (document why
-      in `vm-launcher-runbook.md`'s Known Issues).
-      **Done when**: the operator states a decision (a/b/c) in this todo's own reply, or in the plan's Progress Log below
-      if answered out-of-band. Repo: unified-trading-pm (decision only — no code in this todo). Source: this plan's own
-      measurement (2026-08-16); the source issue's original tiers did not name this gap at all.
+- [ ] [DATA] P1. **RULED 2026-08-16 (operator, na-eligibility-audit follow-up): option (a) — add optional
+      `provisioning_model`/`instance_termination_action` params to `lc_gcloud_create` directly (backward compatible —
+      omit both, unchanged behavior for the 10 current non-Spot callers).** Not (b) a parallel wrapper (avoids logic
+      drift between two VM-launch code paths — a single source of truth is what makes the dedup/resume-from-progress
+      guarantees below actually verifiable) and not (c) carving Spot launchers out permanently. Operator's standing
+      policy: **SPOT everywhere by default, non-SPOT is the exception and must be tracked in the launcher registry**
+      (`VM_PREFIX_TO_BUCKET` or equivalent), not left as an undocumented per-script deviation.
+      **Bundled requirement (operator, same ruling) — this migration must also verify, not just implement**:
+      (1) auto-relaunch after preemption resumes from measured PROGRESS, never replays `START_DATE` from scratch (per
+      `/codex/05-infrastructure/spot-vms-for-backfill.md` — this is a STANDING rule, not new, but explicitly re-flagged
+      here because it's exactly the class of bug a provisioning-model refactor could silently break);
+      (2) the idempotent-skip-existing-without-`--force` check must be evaluated and TESTED (not just asserted) before
+      any of the 79 launchers ship on the new wrapper — write a regression test proving a second launch attempt against
+      an already-running/already-done shard does NOT create a duplicate VM. Both are part of the standing VM-management
+      discipline `cursor-configs/CLAUDE.md` § "Launching VMs / infra" points at
+      (`/codex/05-infrastructure/vm-launcher-runbook.md`) — this todo's done-when includes updating that runbook if the
+      testing surfaces a gap in its documented guarantees, not just landing the provisioning-model code change.
+      Repo: deployment-service.
 
 - [ ] [OPERATOR] P1. **Resolve the `--metadata-from-file` design fork (47 of 149 launchers — not just "e.g. one
       shutdown script" as the source issue framed it).** `lc_gcloud_create` only accepts an inline `metadata_str`
