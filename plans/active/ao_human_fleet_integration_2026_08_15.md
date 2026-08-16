@@ -333,6 +333,22 @@ investigation confirmed are both achievable with existing primitives:
   Confirmed with the operator: Phase 4's real registration/JWT step stays explicitly OFF — only the UI's
   fully-populated appearance was proven out, per the operator's own framing ("so we know the final part is just
   hooking it up and testing it"). Phase 4 itself remains deferred to Harsh exactly as the 2026-08-15 ruling states.
+- **2026-08-16 (same session, classification reconciliation)**: operator asked for a "light way to see plans created
+  and human tasks completed," split by operator — then correctly pressure-tested two proposed designs before either
+  was built. First round (self-declared `role_group` per heartbeat) was rejected: a real session mixes investigation/
+  authoring/execution fluidly, so asking a human to self-toggle live can't honestly classify it. Second round
+  (classify per code-repo commit, by file path touched) was also rejected on two sharper points: (1) a `plans/` commit
+  isn't inherently "planning" — flipping a checkbox with cited evidence is task-execution, not authoring, so path-based
+  classification mislabels it; (2) most human commits carry no AO `task_id` at all (Phase 4 dormant, and even once live
+  plenty of real work — like this exact session — never claims one), so a task-id anchor has near-total "no signal"
+  coverage. **Resolved design** (Phase 5 below): classify `unified-trading-pm` plan-repo commits ONLY (never the
+  code-repo commit, which is just a cited evidence artifact) — a checkbox-flip commit is unambiguously "task
+  completed" (matches this workspace's own existing Commit+Push+Flip hard rule with zero new convention), a
+  non-flipping `plans/`-touching commit is "plan created/updated," and untracked work with neither is correctly
+  invisible rather than force-classified — per the same hard rule, work without a flip isn't "done" work in this
+  workspace's own terms. Operator identity is free from the existing commit-author convention. No AO dependency, no
+  new hook, no live registration needed — this can run today, entirely from git history, regardless of Phase 4's
+  status.
 
 ## Todos
 
@@ -502,3 +518,30 @@ investigation confirmed are both achievable with existing primitives:
       fixed 2 pre-existing dangling references to an archived doc while in this file (unrelated to this plan, fixed per
       the "a doc that misled you is a finding" rule rather than left for the next reader). Evidence:
       unified-trading-pm@9786794390.
+
+### Phase 5 — lightweight per-operator plan/task activity view (git-log-derived, no live AO dependency)
+
+- [ ] [SCRIPT] P2. **Build a git-log-derived "plans created" / "tasks completed" activity view, split by operator, with
+      no dependency on live AO registration (Harsh's Phase 4 stays dormant).** Resolved this session (see Progress Log
+      2026-08-16, "classification reconciliation") after the operator correctly flagged that self-declared
+      `role_group` per-heartbeat can't honestly classify a mixed session, and that neither the code-repo commit nor a
+      task_id is a reliable anchor — a human's interactive commits carry no `task_id` at all (Phase 4 off), and
+      classifying by file path (`plans/` = "planning") wrongly buckets a checkbox-flip-with-evidence commit (task
+      execution) the same as a plan-authoring commit. **Resolved design**: classify from `unified-trading-pm` commits
+      only (never the code-repo commit itself, which is just a cited evidence artifact):
+      - **Task completed** = a `unified-trading-pm` commit that flips a `- [ ]` → `- [x]` checkbox — by construction
+        always tied to one named todo, matching this workspace's own existing "Commit + Push + Flip" hard rule
+        (`/codex/12-agent-workflow/commit-push-flip-rule.md`) exactly, no new convention needed.
+      - **Plan created/updated** = a `unified-trading-pm` commit touching `plans/` that flips no checkbox.
+      - Operator identity: free from the existing commit-author convention (`ikennaigboaka [slot-N·host]` /
+        `scripts/hooks/slot-identity-lib.sh`) — no new tagging needed.
+      - Work with no checkbox flip and no plan-doc commit (pure investigation, a question answered) legitimately shows
+        as neither — this is correct, not a gap: per the same hard rule, untracked work without a flip is genuinely
+        not "done" work in this workspace's own terms, so it shouldn't inflate a completion count.
+      Implementation: a read-only script (`scripts/plan-hygiene/`-style, mirrors `count_open_tasks.py`'s pattern) over
+      `git log --format=... -- plans/` in `unified-trading-pm`, diffing each commit's checkbox state against its
+      parent to detect flips, grouped by commit-author operator. Surface as a small addition to the existing Human
+      Fleet dashboard page (`dashboard/src/HumanFleet.tsx`) OR as a standalone CLI/report — operator's call at build
+      time, not a forced new dashboard section. Done when: running it against this session's own commits correctly
+      shows 2 "tasks completed" (the two checkbox-flip commits, `12e83c4074` and the Phase 4b evidence entry) and 0
+      false "plan created" mislabels.
