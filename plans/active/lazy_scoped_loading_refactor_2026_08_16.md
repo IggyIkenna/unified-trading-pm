@@ -83,9 +83,8 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
 
 ## Todos
 
-- [ ] [AGENT] P0. **Baseline the import cost before changing anything** — measure modules loaded and wall time for a
-      representative import in each of the three repos. Without a before-number, "lazy now" is unfalsifiable, and this
-      plan's whole value is that the scoping is real rather than asserted.
+- [x] [AGENT] P0. ✅ **Baseline the import cost before changing anything** — measured in fresh venvs (first import,
+      cold `.pyc` cache), `sys.modules` delta + wall time. Full numbers in the 2026-08-16 Progress Log entry below.
 - [ ] [AGENT] P0. **Layer 3 (execution-service) first** — convert `algorithms/algorithms.py` to lazy registration
       following the existing `adapters/algorithm_factory.py` / `custody/factory.py` pattern in the same repo. Smallest
       change, proven template, and it validates the approach before touching the shared dependency.
@@ -125,3 +124,26 @@ pov_dynamic, twap, vwap) matching the plan's count; `adapters/algorithm_factory.
 lazy pattern. Both hold up despite the missing source doc. Have not yet spot-checked the strategy-service `factory.py`
 or UAC `registry/__init__.py` / `internal/__init__.py` claims the same way — do that before treating those numbers as
 verified, not just plausible.
+
+**2026-08-16 — baseline import cost measured (todo 1 done).** Fresh venvs, first import in each process, `sys.modules`
+delta + `time.perf_counter()` wall time. Numbers:
+
+| Repo / import                                                 | modules_loaded | wall_ms |
+| -------------------------------------------------------------- | -------------: | ------: |
+| execution-service `execution_service.algorithms.algorithms`    | 5911            | 8890.7  |
+| strategy-service `strategy_service.engine.strategies.v2.factory` | 2900          | 5633.3  |
+| UAC `from unified_api_contracts.internal import StrategyArchetype` | 1766        | 2189.0  |
+| UAC `import unified_api_contracts.registry`                    | 1766            | 2209.9  |
+
+**Measurement trap — flag, don't reconcile silently.** This inverts the plan's declared Low/Medium/High cost ranking:
+execution-service (declared "Low") is both the heaviest and slowest single import measured; UAC (declared "High",
+dominant blocker) is the lightest by module count and fastest by wall time. Two things are NOT in tension here even
+though the ranking looks backwards: (1) `modules_loaded` counts imported modules, not lines-per-module — UAC's
+~240k-line claim is a parse-cost/LOC metric, a large `internal/__init__.py` still counts as one module in this metric,
+so this baseline doesn't measure the same axis the plan's qualitative claim was making; (2) execution-service's own
+heavy transitive deps (boto3, ccxt, twisted — seen in its factory.py neighbors during file search) are very plausibly
+what's driving its number, unrelated to the 7-algorithm eager-import problem this plan is actually about. **UAC's
+fleet-wide blast-radius argument (every consumer pays its cost, not that its own import is the single heaviest) is
+unaffected by this** — but the Low/Medium/High labels in the "three layers, measured" table above should not be read
+as wall-clock-ranked without this caveat. Not re-deriving the labels here; leaving this for whoever tackles Layer 2 to
+weigh, since UAC's actual fix (todo "Layer 2 (UAC) per the ruling") is gated on the pending `[OPERATOR]` ruling anyway.
