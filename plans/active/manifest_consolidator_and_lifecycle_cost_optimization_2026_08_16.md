@@ -130,6 +130,44 @@ context_scope:
       above is gated on it. Do not resolve it as a side effect of this plan — it has its own review requirements
       (client-reporting-batch destroy already resolved moot per that doc's Progress Log; 2 Secret IAM destroys +
       the meta-watchers memory question remain).
+- [x] ✅ [INFRA] P1. **Ensure VMs exit if their AG's manifest consolidator is down mid-run, not just at boot** (operator
+      finding, 2026-08-16 session: "ensure VMs exit if their consolidator is down for the AG relevant to them, to avoid
+      VMs not knowing what their completion status should be — should be a hard rule in the code if not already").
+      Ground-truth investigation confirmed the gap was real: `assert_consolidator_healthy` (UTL
+      `manifest_writer/_state.py`) is only reached (a) as a side effect of callers that repeatedly call
+      `read_availability_index()` (e.g. MDPS's per-date `dependency_checker`), never as a designed periodic mechanism,
+      and (b) via `setup-data-pipeline-vm.sh`'s §5b "OOM preflight", which is a ONE-TIME check at VM boot (hand-rolled
+      `gcloud storage objects describe`, not a call to `assert_consolidator_healthy` — confirmed the SSOT doc's
+      "should wrap this" aspiration never shipped; corrected there, see below). A write-only backfill VM that never
+      re-reads the manifest during its run had ZERO ongoing consolidator-health signal for the rest of a multi-hour
+      backfill. **Fix shipped**: `deployment-service@583091c593` (`live-defi-rollout`) — added an opt-in periodic
+      watchdog to the shared VM-side wrapper `vm-exec-with-gcs-tee.sh` (used by `_launch_with_tee`, the seam nearly
+      every launcher routes through), gated on a new `CONSOLIDATOR_WATCHDOG_BUCKET` env var (empty = fully disabled,
+      zero behavior change for launchers that don't opt in). It re-checks the same bucket's manifest staleness every
+      `CONSOLIDATOR_WATCHDOG_INTERVAL_SEC` (default 900s) for the wrapped command's WHOLE lifetime and, on breach past
+      `CONSOLIDATOR_WATCHDOG_BUDGET_SEC` (default 86400s, mirrors `MANIFEST_CONSOLIDATED_STALENESS_SEC`), SIGTERMs
+      (SIGKILL after a 5s grace) the task and forces the terminal exit code to 78 (EX_CONFIG) — the SAME code the
+      one-time boot preflight already used for this exact condition. This is a loud-fail HARD exit (no
+      warn-and-continue), matching the SSOT's own "Liveness + health contract" default; deliberately does NOT consult
+      `MANIFEST_ALLOW_STALE_FALLBACK` (that flag only gates the READER's per-VM-shard fallback merge, a different
+      concern). `setup-data-pipeline-vm.sh` wires the opt-in automatically for the exact launcher population its
+      existing §5b preflight already covers (`VM_SERVICE=market_tick_data_service && VM_OPERATION=download`,
+      non-test — the ~20 MTDS download backfill launchers). Tests: new
+      `deployment-service/tests/unit/test_consolidator_watchdog_vm_wiring.py` (bash -n syntax + text-invariant +
+      operator-extraction functional checks, mirroring the proven `test_spot_preemption_signal_coverage.py` pattern
+      for this same class of un-sourceable VM bootstrap script). Also corrected
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s stale "should wrap `assert_consolidator_healthy`"
+      framing (never happened, was misleading) and documented the new periodic-recheck capability + its current scope.
+      **Not extended to the other ~170 launchers** (instruments-service/features/sports-specific backfills) — the
+      mechanism is fully generic (any launcher can opt in by exporting `CONSOLIDATOR_WATCHDOG_BUCKET` before calling
+      `_launch_with_tee`), but resolving "which bucket is the AG-relevant one" per remaining launcher family is
+      genuine per-launcher scoping work, not a blind fleet-wide rollout (AUTONOMOUS_AGENT_RULES rule 11 — a gate
+      change must be proven safe for the population it touches before it ships). Follow-up:
+      - [ ] [INFRA] P2. Extend `CONSOLIDATOR_WATCHDOG_BUCKET` opt-in wiring beyond the MTDS-download launcher family to
+            the remaining ~170 `deployment-service/scripts/vm/launch-*.sh` scripts, scoping per-launcher which bucket
+            is "this VM's AG-relevant consolidator" (instruments-service backfills, features backfills, sports
+            fixture/enrichment launchers, etc.) — not a single formula the way MTDS-download's is. Repos:
+            deployment-service.
 
 ## Progress Log
 
@@ -148,3 +186,18 @@ context_scope:
   `/plans/active/honest_coverage_and_data_status_rollup_health_2026_08_16.md`. That apply did NOT touch or resolve
   this plan's own terraform-drift blocker (todo 2 above, `deployment_service_prod_terraform_drift_2026_08_07.md`) —
   still exactly as gated.
+- **2026-08-16 (sub-agent session, operator finding: "ensure VMs exit if their consolidator is down for the AG
+  relevant to them")**: separate, adjacent thread — not the cost-optimization work above, but flagged as relevant to
+  this plan's consolidator-resilience concerns per the dispatching operator. Pre-task conflict check found
+  `manifest_consolidator_job_name_registry_mismatch_2026_08_15.md` (adjacent but distinct — job-naming/registry
+  surface, not VM-side exit behavior) and no doc already tracking this exact gap. Ground-truthed
+  `assert_consolidator_healthy` usage across the fleet (grep + read every call site) and confirmed the gap was real:
+  no VM-side PERIODIC re-check existed anywhere — only a one-time boot preflight (`setup-data-pipeline-vm.sh` §5b,
+  MTDS-download-only) and incidental re-checks for callers that happen to re-read the manifest repeatedly. Designed +
+  shipped a shared, opt-in periodic watchdog in `vm-exec-with-gcs-tee.sh` (the fleet-wide VM-side wrapper seam),
+  auto-wired for the already-proven MTDS-download population. `bash scripts/quality-gates.sh --no-fix` green
+  (`deployment-service`, 243s, sentinel `6f2f8e02bfb226cc9d55039caddae8e1b23c7363`) before shipping via
+  `quickmerge --agent --files` → `deployment-service@583091c593` on `live-defi-rollout`. Corrected the
+  manifest-consolidator-ssot.md doc's stale "should wrap assert_consolidator_healthy" framing in the same session (the
+  misleading-doc HARD RULE). See the flipped todo above for full detail + the tracked follow-up (extending the opt-in
+  to the remaining ~170 launchers).
