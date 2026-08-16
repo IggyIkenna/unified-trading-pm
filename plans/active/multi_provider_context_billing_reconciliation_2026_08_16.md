@@ -117,18 +117,23 @@ something else. Flagged as an open question rather than guessed at (see todo bel
 operator 2026-08-16, not yet designed:
 
 - **Reconciliation**: the sum of every task's attributed billing should equal the fleet's real total spend. Today
-  this exists cleanly only for DeepSeek (`task_usage` table, real per-token cost) and partially for Anthropic
-  (`account_usage_history`, percentage-based, not dollar-based, and — see below — not reset-aware). The other 4
-  providers have no per-task cost attribution built at all yet.
+  this exists cleanly for DeepSeek (`task_usage` table, real per-token cost) **and, corrected 2026-08-16, for
+  Anthropic too** — `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md` shipped a real, live
+  `boost_multiplier` system (`compute_claude_wallet_reconciliation()`, `ClaudeWalletPanel.tsx`,
+  `agent-orchestrator@616450ffac`) with real per-account numbers already pulled (Max20 accounts cluster 14x-32x; a
+  genuine Pro-tier ~1047x outlier is still under investigation there, not a data bug — see that doc's own open
+  todos). This plan's original framing wrongly described the Claude subscription-value question as unsolved; it
+  isn't — it's the reusable PRECEDENT this plan should generalize, not a gap to fill from scratch. The 4 newer
+  providers (Grok/Gemini/GLM/Codex) still have no per-task cost attribution built at all.
 - **Normalized bang-for-buck**: everything should reduce to input/output/cache-read/cache-write token counts so
   providers are comparable regardless of billing shape — metered-$ (Grok), first-party token counts we trust
-  (Anthropic, Gemini), subscription-flat-rate where the real value per dollar is UNKNOWN (Claude's $200/mo, GLM's
-  Coding Plan — this is exactly the "Sonnet multiplier" problem: we know the number we plug in because we don't
-  actually know what $200/mo buys in real tokens), and rate-limited-free-tier where "spend" doesn't exist but
-  capacity does (Gemini's free tier — remaining-RPD-as-a-proxy needs a tested methodology, not an assumption).
-  **Every number that lands in this system should be the provider's PUBLISHED rate** (not a computed effective rate)
-  — that published number times real token counts is what answers "how much bang for the buck are we actually
-  getting" against what we pay.
+  (Anthropic, Gemini), subscription-flat-rate where the real value per dollar is now KNOWN for Claude (see above) but
+  still genuinely UNKNOWN for GLM's Coding Plan (the one remaining real "Sonnet multiplier"-shaped gap — no
+  equivalent calibration has been built for GLM's flat-rate subscription), and rate-limited-free-tier where "spend"
+  doesn't exist but capacity does (Gemini's free tier — remaining-RPD-as-a-proxy needs a tested methodology, not an
+  assumption). **Every number that lands in this system should be the provider's PUBLISHED rate** (not a computed
+  effective rate) — that published number times real token counts is what answers "how much bang for the buck are we
+  actually getting" against what we pay.
 
 Real turn-shaped variance matters here too, not just $/token: "some models are cheap per turn but need many turns;
 some are cheap per token but burn a lot of them" (operator, 2026-08-16) — a single-prompt test (what this session ran)
