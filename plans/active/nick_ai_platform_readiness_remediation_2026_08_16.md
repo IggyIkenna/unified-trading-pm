@@ -130,12 +130,21 @@ helper, not a hand-rolled copy.
       venue filter) → 200, `transfer-encoding: chunked`, 670,695-byte parquet, read back via `pd.read_parquet` as
       13,141 real rows across all 23 venues; unmatched venue → 404. All against live prod data (cefi, day=2026-08-16),
       not a unit-test mock.
-- [ ] [BACKEND] P0. **market-tick-data-service: build the external market-data surface.** Same auth pattern. Two
-      endpoints: an availability query (what's captured for a given asset_group/venue/data_type — reuse the real
-      `coverage.json`/manifest read path the honest-coverage machinery already uses, never re-implement it) and a
-      delivery endpoint covering both daily batch parquet and a streaming leg (reuse the UTL `EventTransport` facade
-      for streaming — `unified_trading_library.streaming.event_facade` — never a bespoke transport). Done-when: both
-      endpoints work behind the same auth dependency, `quality-gates.sh --no-fix` green + a live curl, cited.
+- [ ] [BACKEND] P0. BLOCKED-ON:mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16 — **market-tick-data-service:
+      build the external market-data surface.** Same auth pattern. Two endpoints: an availability query (what's
+      captured for a given asset_group/venue/data_type — reuse the real `coverage.json`/manifest read path the
+      honest-coverage machinery already uses, never re-implement it) and a delivery endpoint covering both daily
+      batch parquet and a streaming leg (reuse the UTL `EventTransport` facade for streaming —
+      `unified_trading_library.streaming.event_facade` — never a bespoke transport). Done-when: both endpoints work
+      behind the same auth dependency, `quality-gates.sh --no-fix` green + a live curl, cited. **Code is written and
+      independently gate-verified green from the correct checkout — genuinely blocked on shipping, not on
+      implementation.** A fleet-wide STEP 5.70 (adapter-contract-call baseline) regression landed on
+      `live-defi-rollout` HEAD via a different, unrelated concurrent session's commit
+      (`market-tick-data-service@bd07cfc3`, slot-4) — blocks EVERY market-tick-data-service quickmerge right now, not
+      just this one. See
+      [`/plans/active/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md`](/plans/active/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md)
+      for full evidence; whoever resolves it (confirm-and-regen-baseline, or restore the missing call site) unblocks
+      this todo — no rework needed here once that clears.
 - [x] [BACKEND] P0. **execution-service: build the external instruction-submission surface.** Same auth pattern. One
       endpoint accepting a `StrategyInstructionEnvelope` (already-real schema —
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py`, class
