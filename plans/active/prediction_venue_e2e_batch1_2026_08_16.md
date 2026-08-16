@@ -109,16 +109,48 @@ source: >-
       an execution adaptor handle every `InstructionActionV2` those archetypes emit. Done-when: a real per-step
       verdict for that one row, plus `BLOCKED-ON` markers for the other 3 citing the specific gap todo each depends
       on.
-- [ ] [BACKEND] P0. **Step 9 per unit — transfers**, across the same 4 rows. Every applicable `BusTransferType`
-      has a working rail, instruments-service through execution-service. Done-when: same per-row verdict discipline.
-- [ ] [BACKEND] P1. **Record every NEW gap found while executing steps 6-9 above as its own tracked todo** in this
-      file — never as prose only, same discipline the steps 1-5 sweep above already followed.
+- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`.
+      `BusTransferType` SSOT: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/
+      transfer_events.py:64-189` (13 members). Per-venue verdict (applies to both of that venue's rows —
+      transfers are venue-scoped, not per-data_type):
+      **POLYMARKET — PASS.** Registered in `VENUE_WALLET_CAPABILITIES["POLYMARKET"]`
+      (`unified-api-contracts/.../execution_service/transfer_types.py:217-223`, `deposits_to=ON_CHAIN`,
+      `custody_provider="copper"`); routes through the real, non-stub generic `ON_CHAIN`/`CUSTODY_TRANSFER` handler
+      (`execution-service/.../transfer_handler.py:209-211` → `custody/factory.py:99-102` →
+      `CopperCustodyProvider`, `custody/copper.py:39`). Documented in
+      `/codex/04-architecture/transfer-architecture.md:95`.
+      **KALSHI — FAIL.** Zero matches for "kalshi" anywhere in transfer-related code (`transfer_coordinator.py`,
+      `transfer_handler.py`, `transfer_types.py`) across all 3 repos. Absent from `VENUE_WALLET_CAPABILITIES`'s
+      "Sports / Prediction" section (only `BETFAIR`/`POLYMARKET` listed) and from `transfer-architecture.md`'s
+      venue tables entirely. **No documented "not applicable" rationale exists** — this reads as a genuine
+      unaddressed gap, not an intentional exclusion; tracked as its own todo below rather than assumed
+      out-of-scope.
+- [ ] [BACKEND] P1. **Gap: KALSHI has no transfer rail at all** — absent from `VENUE_WALLET_CAPABILITIES`
+      (`unified-api-contracts/unified_api_contracts/internal/domain/execution_service/transfer_types.py:210-223`)
+      and from `/codex/04-architecture/transfer-architecture.md`'s venue tables, with no documented reason. Without
+      a `VENUE_WALLET_CAPABILITIES` entry, `classify_transfer_type("KALSHI", ...)` falls through to a CeFi-
+      withdrawal default despite Kalshi having no CCXT `withdraw()` support — a live-money correctness risk, not
+      just a missing feature, if ever actually invoked. Done-when: either a real `VENUE_WALLET_CAPABILITIES` entry
+      + working rail is added for KALSHI, or the exclusion is confirmed intentional (e.g. "Kalshi funds via its
+      own bank/ACH UI, no in-system rail by design") and documented in `transfer-architecture.md`.
+- [ ] [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 above as its own tracked todo** in this
+      file — never as prose only, same discipline the steps 1-5 and step 9 sweeps above already followed.
 - [ ] [BACKEND] P0. **Confirm the parent plan's hard rules held across steps 1-3 above**: strategy-service never
       read MTDS directly; execution fails closed on granularity (`refuse_unservable`, never silently clamped);
       credentials gated RUNNING not BUILDING; no new service-to-service dependency was introduced. Done-when: a
       clean `quality-gates.sh` run across every repo touched by this batch.
 
 ## Progress Log
+
+**2026-08-16 — Step 9 swept, 1 more real gap found.** SHIPPED — `unified-trading-pm@<pending-sha>`. POLYMARKET's
+transfer rail is real and wired (generic ON_CHAIN/CUSTODY_TRANSFER via Copper custody). KALSHI has NO transfer
+rail at all — absent from `VENUE_WALLET_CAPABILITIES` and the transfer-architecture SSOT doc, with no documented
+"not applicable" rationale, meaning `classify_transfer_type` would silently fall through to a wrong CeFi default
+if ever invoked. Tracked as a P1 gap todo (this is now the 3rd real, evidence-backed gap found this session across
+steps 1-9: KALSHI batch book_snapshot_5 missing, KALSHI excluded from feature ingest, KALSHI has no transfer
+rail — a consistent pattern of KALSHI being declared as a capability venue but genuinely under-wired relative to
+POLYMARKET across multiple independent legs). Remaining open: steps 6-8 (rescoped to POLYMARKET/trades),
+hard-rules confirmation.
 
 **2026-08-16 — Steps 1-5 swept, 2 real gaps found.** SHIPPED — `unified-trading-pm@da8caf5f5a`. 3 parallel
 research passes (instruments-service, market-tick-data-service, features-service) produced a real, cited per-row
