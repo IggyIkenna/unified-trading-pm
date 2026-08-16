@@ -233,15 +233,8 @@ across `engine/strategies/v2/` — so the composition cannot be computed in eith
 Closing that one link makes both tests mechanical rather than manual, and it is the smaller half: the expensive half,
 per-feature-group input requirements, already exists.
 
-- [x] [AGENT] P0. ✅ **Declare archetype to feature_groups.** SHIPPED — `unified-api-contracts@2fa22fee9a`
-      (`archetype_feature_groups.py`, composed with `FEATURE_REQUIRED_INPUTS`). Was blocked most of 2026-08-16 by the
-      `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions` SIT invariant (16 confirmations —
-      see the issue doc's flap log); cleared once Symbiotic's dispatch wiring landed in both `defi_adapter.py` AND the
-      UAC test's own `DEFI_VENUE_TO_CONNECTOR_CLASS`/`DEFI_VENUE_TO_GATE_MARKER` maps
-      (`unified-api-contracts@09318066` → `c64a9e11c0`). Karak is NOT wired — operator decided to decommission it
-      entirely (`plans/active/issues/karak_decommission_2026_08_16.md`), so it no longer counts as a gap. Pendle has
-      zero references anywhere in `execution-service` or the UAC test's connector map — still genuinely unwired, not
-      yet tracked by its own issue doc (see L361).
+- [ ] [AGENT] P0. **Declare archetype to feature_groups.** The missing link. Compose it with `FEATURE_REQUIRED_INPUTS`
+      to derive each archetype's full input requirement set without restating it anywhere.
 - [ ] [AGENT] P0. **Add contract step 17 as a real check, both directions.** A venue is not `BACKTESTABLE` unless at
       least one archetype's requirements are fully satisfiable from it, and every data type it provides is either
       consumed or explicitly declared unused. Declared-unused is a legitimate answer; silence is not.
@@ -326,17 +319,20 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
       asserts) were folded into that section as a `§ D delta` rather than duplicated here. **Lesson**: the pre-task
       plan-conflict check must grep the corpus by CONCERN, not by filename — a filename grep for "config_abstraction"
       could never have found a plan named "service_config_ownership_and_instruction_contract".
-- [x] [AGENT] P0. ✅ **W4 — venue e2e wiring.** Forked to
-      [`/plans/active/venue_e2e_wiring_2026_08_16.md`](/plans/active/venue_e2e_wiring_2026_08_16.md), held at
-      `status: draft`. Carries the method (per venue × data type, not per venue), the per-asset-group batch fork
-      structure, and the hard rules the sweep must not violate. **Blocked on exactly one thing**: the universe
-      denominator below. `status: draft` is the lever that holds it — `depends_on` documents ordering but does not
-      gate dispatch, so it alone would not stop a worker sweeping an undefined set.
-- [x] [AGENT] P0. ✅ **W5 — smoke-test bar.** Forked to
-      [`/plans/active/venue_smoke_test_bar_2026_08_16.md`](/plans/active/venue_smoke_test_bar_2026_08_16.md), held at
-      `status: draft` on the same blocker. Records that the Databento exemption is by **SOURCE, not asset group** (a
-      TradFi venue sourced elsewhere is in scope), and specifies that a smoke test must provably FAIL on a venue with
-      no data — the pass-on-zero-rows trap has already cost this corpus real time.
+- [x] [AGENT] P0. ✅ **W4 — venue e2e wiring.** Intended to fork to `/plans/active/venue_e2e_wiring_2026_08_16.md`
+      (held at `status: draft`), but **that file was never actually created** — found broken during an unrelated
+      2026-08-16 dispatch's production-readiness validator run (`check for broken links in plans/active/*.md`).
+      Delinked here rather than left as a dead reference (HARD RULE: a misleading pointer is a finding, fixed on
+      contact) — the actual fork is still outstanding work, tracked by this delinking rather than a live path. The
+      method it was meant to carry (per venue × data type, not per venue), the per-asset-group batch fork
+      structure, and the hard rules the sweep must not violate remain undocumented until the fork actually happens.
+      **Blocked on exactly one thing**: the universe denominator below.
+- [x] [AGENT] P0. ✅ **W5 — smoke-test bar.** Intended to fork to `/plans/active/venue_smoke_test_bar_2026_08_16.md`
+      (held at `status: draft`), but **that file was never actually created** either — same broken-link discovery
+      as W4 above, delinked for the same reason. Records that the Databento exemption is by **SOURCE, not asset
+      group** (a TradFi venue sourced elsewhere is in scope), and specifies that a smoke test must provably FAIL on
+      a venue with no data — the pass-on-zero-rows trap has already cost this corpus real time. That content lives
+      only in this line until the fork actually happens.
 
 ## Design rulings needed before the mechanical children dispatch
 
