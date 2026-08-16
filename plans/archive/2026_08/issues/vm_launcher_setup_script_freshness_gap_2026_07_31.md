@@ -19,7 +19,7 @@ summary: >-
   historical generation to inspect) whether a stale `vm/setup-data-pipeline-vm.sh` GCS copy is the actual cause of the
   5/5 miss, but the absence of ANY freshness check across 139 launchers is a real, independently-confirmed gap
   regardless of whether it explains this specific incident.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -62,6 +62,11 @@ context_scope:
 ---
 
 # 139 VM launchers bypass the setup-script freshness guard
+
+> **RESOLVED 2026-08-16** — all 4 todos done. The P3 follow-up (dedicated migration plan) is closed out by
+> `/plans/active/infra_satellite_ao_dispatch_batch17_2026_08_16.md`, which re-measured the corpus (149 raw-create
+> launchers, not ~136), dispatches migration for the 45 unblocked launchers now, and carries the remaining
+> SPOT/`--metadata-from-file`/`--boot-disk-type` design forks as its own `[OPERATOR]`/`[REVIEW]` todos.
 
 ## What I found
 
@@ -141,21 +146,28 @@ sweep here.
 - [x] ✅ [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option (a): migrate high-value raw-create launchers to
       `lc_gcloud_create`.** First batch (3 launchers) shipped — deployment-service@6998cc228. Remaining ~136 raw-create
       launchers need a dedicated migration plan (see follow-up todo below).
-- [ ] [SCRIPT] P3. **Follow-up: dedicated migration plan for remaining ~136 raw-create launchers to
+- [x] ✅ [SCRIPT] P3. **Follow-up: dedicated migration plan for remaining ~136 raw-create launchers to
       `lc_gcloud_create`.** Shape = option (a), operator-ruled 2026-08-06. First batch done:
       `launch-footystats-forward-poll.sh`, `launch-scenario-runner-vm.sh`, `launch-prediction-arb-detector.sh` (all
-      migrated at deployment-service@6998cc228). Remaining complexity tiers: (1) ~54 no-SPOT startup-script-url
-      launchers with large disk (250GB, need `${BOOT_DISK_SIZE%GB}` extraction), (2) launchers with `--boot-disk-type`
-      env var override (lc_gcloud_create lacks this param — either add it or document the pd-balanced default is
-      sufficient), (3) launchers using `--metadata-from-file` (e.g. strategy-test shutdown script — cannot migrate until
-      lc_gcloud_create supports it or the feature is dropped). **Done when**: a dedicated plan is authored and
-      dispatched covering the full remaining corpus. _(ao-readiness clarification 2026-08-12 (/plan-reconcile): this
-      todo itself is bounded AO work — "author + dispatch a fan-out plan" is the sanctioned pattern per CLAUDE.md
-      "Fanning out work = a tracked plan todo," and the migration SHAPE is already operator-ruled (option (a),
-      2026-08-06). The two genuinely open design forks inside tiers (2)/(3) — add `--boot-disk-type` param support vs.
-      document the pd-balanced default as sufficient; add `--metadata-from-file` support vs. drop that migration target
-      — are NOT for the authoring worker to decide unilaterally; the new plan must carry them as their own
-      `[REVIEW]`/`[OPERATOR]` todos, not silently resolve them while drafting.)_
+      migrated at deployment-service@6998cc228). **DONE 2026-08-16 (slot 9, infra)** —
+      `/plans/active/infra_satellite_ao_dispatch_batch17_2026_08_16.md` authored + dispatched (`status: active`).
+      Re-measured fresh at authoring time: 149 raw-create launchers remain, not ~136. Tier (1)'s "large disk /
+      `${BOOT_DISK_SIZE%GB}` extraction" framing above was stale — measured 0/149 launchers use that pattern (`disk_gb`
+      is already a plain positional arg on `lc_gcloud_create`); batch 17 carries a `[DOCS]` todo to correct it here.
+      Tier (2) (`--boot-disk-type`, 135 launchers) and tier (3) (`--metadata-from-file`, 47 launchers — a real count, not
+      "e.g. one script") are carried forward as batch 17's `[REVIEW]`/`[OPERATOR]` todos exactly per this note's own
+      clarification. **New finding surfaced during authoring, not in this doc's original tiers**: `lc_gcloud_create` also
+      has zero `--provisioning-model=SPOT`/`--instance-termination-action` support, blocking 79 of the 149 launchers —
+      the single largest remaining blocker, filed as batch 17's own `[OPERATOR]` todo 1. Batch 17 dispatches 3 disjoint
+      15-file migration todos now for the 45 launchers with no blocking gap; the SPOT- and metadata-from-file-tier
+      migrations themselves stay deferred in batch 17 pending those two OPERATOR rulings — see batch 17's own `##
+      Deferred` section. _(ao-readiness clarification 2026-08-12 (/plan-reconcile): this todo itself is bounded AO work
+      — "author + dispatch a fan-out plan" is the sanctioned pattern per CLAUDE.md "Fanning out work = a tracked plan
+      todo," and the migration SHAPE is already operator-ruled (option (a), 2026-08-06). The two genuinely open design
+      forks inside tiers (2)/(3) — add `--boot-disk-type` param support vs. document the pd-balanced default as
+      sufficient; add `--metadata-from-file` support vs. drop that migration target — are NOT for the authoring worker
+      to decide unilaterally; the new plan must carry them as their own `[REVIEW]`/`[OPERATOR]` todos, not silently
+      resolve them while drafting.)_
 
 ## Progress Log
 
@@ -237,3 +249,12 @@ sweep here.
   leaving it wide open for the whole tarball-freshness-check duration beforehand. Does not touch the P3 follow-up todo's
   scope (the 136-launcher `lc_gcloud_create` migration) — `lc_gcloud_create` itself would need SPOT/disk-type support
   added before a SPOT launcher like this one could migrate to it.
+- **infra 2026-08-16 (slot 9) — P3 follow-up todo closed**: authored + dispatched
+  `/plans/active/infra_satellite_ao_dispatch_batch17_2026_08_16.md`. Re-measured the raw-create corpus fresh (149, not
+  ~136) rather than trusting this doc's 2026-07-31 count. Folded the 2026-08-09 entry's SPOT-gap observation above into
+  a proper `[OPERATOR]` todo — 79 of 149 launchers are SPOT and blocked on it, the largest single tier, previously only
+  mentioned in passing here and never carried into this todo's own tier enumeration. Confirmed tier (1) ("large disk /
+  `${BOOT_DISK_SIZE%GB}` extraction") does not correspond to any real file (0/149 measured) — batch 17 carries the doc
+  correction. Tiers (2)/(3) carried forward as batch 17's own `[REVIEW]`/`[OPERATOR]` todos, unresolved here per the
+  2026-08-12 clarification. 45 of 149 launchers have no blocking gap and are dispatched now as 3 disjoint migration
+  todos in batch 17.
