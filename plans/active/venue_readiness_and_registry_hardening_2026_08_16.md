@@ -338,8 +338,9 @@ delete prod data on its own authority.
 - [x] [AGENT] P0. ✅ **Audit the data-type vocabulary for near-duplicates.** Findings below. Proposal only — the merge
       follows the rename rule and the purge follows delete-safety.
 - [x] [AGENT] P0. ✅ **Audit for orphaned data types** — captured but consumed by nothing. Findings below.
-- [ ] [AGENT] P1. **Audit venue identities for duplicates** — the same effective venue represented twice. Same
+- [x] [AGENT] P1. ✅ **Audit venue identities for duplicates** — the same effective venue represented twice. Same
       treatment: propose, migrate consumers in one change, register the cutover, route the purge through delete-safety.
+      Findings below: zero duplicates found, no merge to sign off.
 - [ ] [OPERATOR] P0. **Sign off each proposed merge before migration** (the two near-duplicate/orphan candidates below
       that need a decision, not the ones already ruled). Merging two data types rewrites paths, manifest rows and
       consumer bindings at once, and the purge is a prod delete. Both sides are operator-gated.
@@ -411,6 +412,41 @@ alternate capture mechanism (e.g. `gas_fees` via bare `ALCHEMY`); others (`tbbo`
 commented as currently-unreachable/deferred. Out of scope for this pass (target vocabulary was the venue-emitted 31,
 per the ruling's own "a venue produces X" framing) — a follow-up audit item, not added as a new todo here since it
 needs its own P-tag and scoping decision first.
+
+### Audit findings (2026-08-16) — venue identities, 169 canonical venues
+
+Method: mirrors the data-type audit's method above. Enumerated the full canonical venue universe (`ALL_VENUES`, 169
+entries = `sorted(union of VENUES_BY_ASSET_GROUP.values())`, which already folds in DeFi's phase="live" filter) via a
+one-off scan script, and checked for (a) exact normalized-form collisions (strip `-`/`_`, uppercase — catches
+SPELLING duplicates like the already-resolved VELODROME_V2/VELODROMEV2 case), (b) bare venue names co-existing with a
+product-suffixed sibling (catches the OKX-bare-removal class of issue), and (c) overlap between the two
+deprecated/ghost-venue registries (`DEPRECATED_DEFI_GHOST_VENUE_NAMES`, `EMPTY_OR_DEPRECATED_DEFI_VENUES` in
+`unified_api_contracts/registry/capability_declarations/_defi_coverage.py`) and the live canonical set (catches a
+name flagged dead that's still counted).
+
+**Result: zero venue-identity duplicates found.** The registry has already had ~15 prior operator rulings
+systematically eliminate every duplicate-spelling pattern this scan can detect (OKX bare removed 2026-08-04,
+COINBASE bare→COINBASE-SPOT 2026-07-10, BINANCE-DELIVERY deregistered 2026-08-10, bare BETFAIR removed 2026-08-08,
+YEARN→YEARN_V3 2026-07-08, VELODROME_V2/VELODROMEV2 + TRADER_JOE_V2/TRADER_JOEV2 resolved via
+`LEGACY_DEFI_VENUE_ALIASES` — legacy glued forms are non-canonical ALIASES, not a second canonical entry — LADBROKES/
+BET888SPORT sports folds, legacy Tardis ids OKEX/CRYPTOFACILITIES folded via `CEFI_VENUE_FOLD`). This audit confirms
+none of that work has regressed and finds no NEW instance of the pattern.
+
+- **Exact normalized-form collisions**: none across all 169 venues.
+- **Bare + suffixed co-existing**: `BYBIT`/`BYBIT-SPOT`, `KALSHI`/`KALSHI-PERP`, `POLYMARKET`/`POLYMARKET-PERP` — each
+  pair investigated and ruled NOT a duplicate. The bare form and the suffixed form are two different real products
+  (bare = perpetual-futures / prediction YES-NO market, suffixed = spot / crypto-perp-CLOB respectively) — same shape
+  as the already-canonical OKX-SPOT/OKX-SWAP/OKX-FUTURES split, just using the bare string for one product instead of
+  suffixing every product. A naming-CONVENTION inconsistency (worth a style-only cleanup someday), not an identity
+  duplicate — no merge candidate, no action.
+- **Deprecated/ghost-name overlap with the live set**: `DEPRECATED_DEFI_GHOST_VENUE_NAMES` has zero overlap.
+  `EMPTY_OR_DEPRECATED_DEFI_VENUES` overlaps on `TRADER_JOE_V2-AVALANCHE` + `UNISWAP_V3-POLYGON` — investigated and
+  ruled NOT a bug: that registry is a coverage-EXPECTATION dampener (`venue_has_no_expected_defi_coverage()`,
+  docstring: "subgraph returns 0 instruments"), a different axis from canonical membership — a venue can correctly be
+  both real/canonical AND expected to have zero rows. No contradiction, no action.
+
+No merge/purge proposal follows from this audit — there is nothing for the operator to sign off here. Scan script
+destroyed after use (regenerable in minutes from `ALL_VENUES`/`VENUES_BY_ASSET_GROUP`; no open todo depends on it).
 
 ## Workstreams — each forks to its own child plan
 
