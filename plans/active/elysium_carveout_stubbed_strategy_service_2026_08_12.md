@@ -186,8 +186,15 @@ different capability rather than the same one withheld.
       demonstrates.
 - [ ] [AGENT] P2. **State the distinction in §04's resolution table** so `PortfolioRiskService` being a stub is not read
       as "no risk management" — local guard-rails and overlays ship; cross-client portfolio governance does not.
-- [ ] [AGENT] P2. **Stub the capability wizard.** It lives in strategy-service, and its backing restriction graph is
-      exactly the reconciliation IP withheld. Carve the _resolved_ config, not the form that generates it.
+- [x] [AGENT] P2. ✅ **CORRECTED 2026-08-16 — the wizard doesn't live in strategy-service, and its real
+      restriction graph isn't wizard-specific.** Per the extraction audit (strategy-service's `EXTRACTION_AUDIT.md`):
+      the interactive wizard's UI is in `unified-trading-system-ui`, its manifest generator in `unified-trading-pm`,
+      and the real restriction GRAPH (`capability_manifest.py`) in UAC. The only wizard-adjacent code in
+      strategy-service is a 153-line router (`api/restriction_profile_router.py`) resolving persona/demo-account UI
+      tiles — not an archetype-eligibility engine. Deleting or no-op-stubbing that router is trivial; the actual
+      sensitive logic (`capability_manifest.py`, `target_universe/` catalogs) is already covered by the "3 real
+      archetypes, rest stubbed" mechanism above and the frozen-eligibility ruling in §A2, not by a separate wizard
+      carve step. Same correction made in `strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md` §C.
 - [ ] [AGENT] P2. **Account for archetype reachability.** Only the contracted archetypes carve. The other 50-odd enum
       members must not appear as dead names — either the carved enum is narrowed to what ships, or the unreachable ones
       are visibly marked, so the client's engineer does not hit `KeyError` on a name the code advertises.

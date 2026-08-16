@@ -328,6 +328,11 @@ no change at all.**
       `BITGET-FUTURES`, `KRAKEN-FUTURES` have `VENUE_COLLATERAL_MATRIX` rows but no policy in `COLLATERAL_REGISTRY`, so
       their LTV/liquidation semantics are invisible to every registry consumer. **`ASTER` is a live funding-dispersion
       venue**, which makes it the priority of the four.
+- [ ] [AGENT] P3. **Note for whoever builds the carve-out's frozen collateral/eligibility substitution** (ruled
+      2026-08-16, `elysium_carveout_stubbed_strategy_service_2026_08_12.md` §A2): take that snapshot AFTER the three
+      todos above land, not before. `VENUE_COLLATERAL_MATRIX`/`COLLATERAL_REGISTRY` are actively incomplete/ambiguous
+      right now (no Kamino LENDING rows, four missing PERP_CEX policies, unresolved `haircut_pct` units) — freezing
+      early would bake known gaps into the carved package as if they were final.
 - [ ] [SCRIPT] P3. **Resolve the `haircut_pct` unit ambiguity.** The field name is identical in `CollateralAcceptance`
       (FRACTION, `0.075`) and `AssetHaircut` (WHOLE PERCENT, `7.5`), with a single ×100 conversion in
       `_ah_from_venue_collateral()`. Values agree exactly (verified 2026-08-12, all 12 shared perp rows) — this is a
