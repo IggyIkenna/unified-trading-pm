@@ -893,3 +893,10 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   worker todo), not blocked by any infra/credential/process precedent this round settled. No satellite-extraction
   candidate found. Doc stays `assigned_vm: NA` (KEEP-NA valid, round11). Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:6bb357488f3768d0]: KEEP-NA-STALE (already-duplicated), applied — 891-line issue doc, almost entirely shipped/checked off across Phases 0-5. Sole remaining open item (the MVP_SCOPE catalog-identity precondition, line ~693) was flagged in-doc as blocked on a scope/sequencing decision; this doc's own 2026-08-16 Progress Log entry records that ruling landing today (build for all ~26-29 archetypes now) and the resulting work extracted to /plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md (+ finalize, both confirmed live on disk: assigned_vm:planning, status:active, correct Source: citation). Converted the stale open checkbox to a citation marker this run (was never flipped despite the extraction already existing). Doc now has 0 open checkboxes remaining.
+- **CLOSED BY CITATION 2026-08-16 (defi_satellite_ao_dispatch_batch9_2026_08_06_finalize, source-doc reconciliation
+  pass, slot 23, data_engineering)**: the "1 untracked prose-only item (CLI/operator plumbing to set already-shipped
+  `PaperUniverseConfig` fields on `run_paper`)" flagged incidental-not-actioned by the 2026-08-06 na-eligibility-audit
+  entry above is now shipped — `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 5 (`strategy-service@8ee9894e`)
+  added `--archetypes`/`--venue-allowlist`/`--currency-allowlist` CLI flags to `run_paper`'s `service_entry.py`,
+  threaded into `PaperUniverseConfig` via `build_paper_universe_config`, with 16 unit tests + green
+  `quality-gates.sh --no-fix`. No further hygiene action needed on this item.
