@@ -138,12 +138,16 @@ fabrication-by-construction, same principle as the sports 2020-06 floor
       `execution_service/defi_execution/protocols/symbiotic.py` to `0xC329400492C6ff2438472D4651Ad17389fCb843a`,
       citing this issue doc as provenance (matching the `# DERIVED from <source>` citation convention every other
       address in that file uses). — execution-service@70ac877f6a, QG green.
-- [ ] [AGENT] P0. **Wire Symbiotic into `DeFiAdapter`'s real dispatch** (the reachability gap) — add a
+- [x] [AGENT] P0. **Wire Symbiotic into `DeFiAdapter`'s real dispatch** (the reachability gap) — add a
       `symbiotic_connector` parameter + a `"SYMBIOTIC"` venue-gate marker in the STAKE handler (mirrors
       `LIDO-ETHEREUM`'s gating in `_execute_staking`), matching `symbiotic.py`'s existing
       `preflight_validate_operation(venue_id, "supply")` pattern. Remove `symbiotic` from
       `unified-api-contracts/tests/data/execution_service_venue_reachability_baseline.json`'s
-      `unreachable_defi_venues` list in the SAME change (ratchet-down convention).
+      `unreachable_defi_venues` list in the SAME change (ratchet-down convention). — execution-service@85c8310b20,
+      QG green. Baseline already excluded `symbiotic` (removed by a concurrent session earlier this session) — no
+      change needed there. Also wired `symbiotic_connector` into `LiveExecutionHandler._build_defi_adapter` (the
+      real live-execution constructor call site) so the connector actually reaches the adapter at runtime, not just
+      in the dispatcher's type signature.
 - [ ] [AGENT] P0. **Add `venue_constants.py` entry** for Symbiotic (UAC) — mirror EtherFi's shape (capability sets,
       `ProtocolClass.RESTAKING`, chain, fee model, alpha profile).
 - [ ] [AGENT] P0. **Add the corrected address to the UAC LST SSOT** (`registry/lst_token_addresses.py`,
