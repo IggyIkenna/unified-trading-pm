@@ -9,7 +9,12 @@ Reads the capability manifest, finds ``needs_code_scan`` gap edges WITHOUT an
 ``- [ ] [AGENT] P2. …`` todos (target repo named + cold-start context) under
 the ``## Escalated needs_code_scan (auto-emitted)`` section in the gap tracker:
 
-    plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md
+    plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md
+
+(Archived 2026-08-15, ``status: resolved``, 0 open todos at archival — the doc
+still receives new auto-emitted escalations here since this tool is the only
+mechanism that appends to it; a run that adds new todos should flip the
+frontmatter ``status`` back to ``open`` as part of that same change.)
 
 Idempotent on re-run: deduplicates against existing lines; will not append a
 todo that is already present (exact match on the manifest edge reason text).
@@ -247,7 +252,7 @@ def main() -> None:
     uac_root = _WORKSPACE_ROOT / "unified-api-contracts"
     manifest_path = args.manifest or (uac_root / "openapi" / "capability-manifest.json")
     tracker_path = args.tracker or (
-        _PM_ROOT / "plans" / "active" / "issues" / "capability_wizard_gap_discovery_2026_06_11.md"
+        _PM_ROOT / "plans" / "archive" / "2026_08" / "issues" / "capability_wizard_gap_discovery_2026_06_11.md"
     )
 
     todos = emit_todos(manifest_path, tracker_path, dry_run=args.dry_run)

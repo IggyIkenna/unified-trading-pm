@@ -250,7 +250,7 @@ def _section_universe_execution(
         "> **[MACHINE-DERIVED — GAP]** Order semantics (TIF/FOK/IOC/post-only, "
         "ref-pricing modes, multi-leg delta ownership): "
         "`not_registered` — VENUE_ORDER_SEMANTICS registry is honest-empty (Phase 2 backfill pending). "
-        "See gap tracker: `plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`."
+        "See gap tracker: `plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md`."
     )
     lines.append("")
 
@@ -304,7 +304,7 @@ def _section_exposures(
         "Staked-vs-spot equivalence (e.g. stETH/ETH delta-adjusted exposure), "
         "base-currency-neutral views, and intra-leg netting rules are "
         "`not_registered` in any UAC registry. "
-        "Gap tracker: `plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md` — "
+        "Gap tracker: `plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md` — "
         "`AGENT P1: Exposure normalization location: staked-ETH vs ETH equivalence`."
     )
     lines.append("")
