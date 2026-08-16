@@ -148,12 +148,16 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
 
 ## Phase 1 -- redeploy + verify (no regression)
 
-- [ ] [OPERATOR] P1. Once Phase 0 ships (QG green, quickmerge landed, tarball rebuilt): redeploy the live shard under
-      `--shard-spec sports:ODDS_API:odds` (delete-then-relaunch, same pattern as this session's venue-per-bookmaker fix
-      deploy) and verify `live_pipeline_mode_for_venue` resolves cleanly (no `ValueError`) and captured rows land under
-      `pipeline_mode=live_odds_api`, `data_type=odds`, real bookmaker `venue` values. `[OPERATOR]` because it's a
-      live-VM launch/delete per the vm-launcher-runbook gate -- in practice the same operator-directed pattern already
-      used earlier this session.
+- [x] ✅ [OPERATOR] P1. No live VM existed to delete (verified across both clouds); launched fresh:
+      `mtds-live-sports-odds-api-odds-20260816-145019` (asia-northeast1-c), `--shard-spec sports:ODDS_API:odds`,
+      all 30 `get_prediction_leagues()` sport_keys (operator-confirmed scope, $5M/month odds_api quota). Found and
+      fixed a real Phase-0 gap along the way: the event-log spine's `persist-sports-odds` Pub/Sub topic + warm-sink
+      GCS subscription + BQ external table never existed (`deployment-service@cc9974d07e` + `terraform apply`).
+      Post-fix, read-only verification confirmed: VM RUNNING, real parquet objects landing under
+      `gs://central-element-323112-events/live-events/warm/sports/odds/` (5 objects, 8.4-9.6MB each, at 15:10 UTC),
+      manifest shard actively updating (hundreds of new rows/10s cycle), zero `TICK_SINK_FLUSH_FAILED` errors in the
+      log since the fix. `live_pipeline_mode_for_venue` resolved cleanly on all 2,202+ rows checked -- no
+      `ValueError`, no casing collision. `pipeline_mode=live_odds_api`/`data_type=odds` confirmed on every row.
 - [ ] [DATA] P1. Verify no downstream regression for at least one full boundary cycle post-flip: MDPS's bucket
       assignment still finds the shard (it already dual-accepts the old+new tokens per Phase 0's finding), features
       pipeline reads continue, and the live-capture staleness monitor (`DP-LIVE-004`) does not false-page on the
@@ -445,3 +449,24 @@ declaring Phase 1's core goal achieved, only the compaction-config completeness.
 **Verification of actual post-fix persistence is in progress** (a read-only agent checking whether data is now
 landing in GCS under the new odds prefix and whether the `TICK_SINK_FLUSH_FAILED` errors have stopped) -- result to be
 appended once it reports.
+
+**Verification result -- CONFIRMED WORKING**: real parquet objects landing under
+`gs://central-element-323112-events/live-events/warm/sports/odds/` (5 objects observed, 8.4-9.6MB each, created
+2026-08-16 15:10:42-46 UTC, right after the topic/subscription came online). Manifest shard
+(`_index/per_vm/mtds-live-sports-odds-api-odds-20260816-145019.parquet`) actively updating (last-modified 15:20:16
+UTC). `run.log` shows a steady `ManifestWriter: per-VM shard updated` stream every ~10s (170-232 new entries/cycle)
+with **zero** `TICK_SINK_FLUSH_FAILED` occurrences in the last ~3MB of log since the fix landed. Once real data
+existed, re-ran `terraform apply -target=google_bigquery_table.persist_sports_odds` -- succeeded (`1 added, 0
+changed, 0 destroyed`), so the BQ external table is now also live. **Phase 1 is CONFIRMED COMPLETE and verified with
+real evidence, not just "started."**
+
+**Phase 1 Definition-of-Done**: live VM running, no crash-loop, no casing-collision ValueError, correct
+`pipeline_mode=live_odds_api`/`data_type=odds` on every captured row, real bookmaker `venue` values, all 30
+prediction leagues actively producing ticks, full persistence chain (topic -> warm-sink GCS -> BQ external table)
+working end-to-end and independently verified. The only open item from this phase is unified-api-contracts's
+SINK_MATRIX code entry (compaction-config metadata, not persistence-blocking) -- still queued behind an unrelated
+pre-existing karak/symbiotic QG regression from another session; retry once that clears.
+
+**Next**: Phase 2 (dependent-plan verification gates: IS-mirror relabel decision, P2 migration's dangling
+Verification section) and Phase 3 (`[OPERATOR]`-gated GCS delete of orphaned `data_type=trades` objects, gated on a
+retention window post-Phase-1-stability) remain not started, per the plan's own sequencing.
