@@ -211,6 +211,56 @@ per-feature-group input requirements, already exists.
 | --- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | 17  | **Strategy consumability** | At least one archetype's inputs are fully satisfiable from this venue, AND every data type it provides is consumed or declared unused. |
 
+## CANONICAL ORTHOGONALITY — no orphaned data types, no near-duplicates (operator ruling 2026-08-16)
+
+Step 17 stops a VENUE being orphaned. This extends the same test one level down: **a DATA TYPE must not be orphaned
+either.** If a venue produces liquidations, something in the code must consume liquidations — otherwise we pay to
+capture, store and reconcile a stream nobody reads.
+
+### The vocabulary must be minimal and truly orthogonal
+
+A strategy that reads LST rates should read **`lst_rates`** — not `lst_sol_rates`, not a DeFi-flavoured variant of the
+same idea. Where two data types are *in principle the same thing* and differ only by a column or five, they are not two
+data types; they are one, recorded twice.
+
+The requirement is an audit toward the **minimum set of data types that are genuinely orthogonal to each other**:
+
+- Two types describing the same measurement with different column sets: **normalise into one**, then **migrate and
+  purge** — GCS objects AND the manifest, so no second shape survives to be read by accident.
+- Extra columns do not justify a separate type. The superset absorbs the subset.
+- The same logic applies to VENUES: two venue identities with the same name and the same data types are one venue.
+  Worked example: a `COINBASE` and a `COINBASE-2` that both supply only perpetuals should be one entry, not two.
+
+### This composes with three existing SSOTs — it is not new machinery
+
+That matters for cost: the hard parts are already built, and already safety-gated.
+
+| Concern                        | Existing SSOT                                                                                |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Merging/renaming an entity     | [entity-rename-and-split-consumer-migration-rule](/codex/02-data/entity-rename-and-split-consumer-migration-rule.md) — every consumer migrates in the SAME change; a token grep misses path-prefix, filename and registry-membership binders |
+| Purging GCS objects + manifest | [gcs-and-manifest-delete-safety-protocol](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md) — deletes need the 5-part proof, and prod-bucket deletes are HUMAN-ONLY unless reversibility-qualified |
+| Recording the cutover          | [canonical-cutover-register](/codex/02-data/canonical-cutover-register.md)                        |
+
+**The purge half is therefore operator-gated by construction.** An agent may propose and prove a merge; it may not
+delete prod data on its own authority.
+
+### Contract steps added by this ruling
+
+| #   | Step                        | What "done" means                                                                                                             |
+| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 18  | **Data-type consumability** | Every data type this venue emits is consumed by at least one feature group or archetype, or is explicitly declared unused.        |
+| 19  | **Canonical orthogonality** | The data type belongs to the minimal orthogonal set — no near-duplicate exists, or the merge is recorded in the cutover register. |
+
+- [ ] [AGENT] P0. **Audit the data-type vocabulary for near-duplicates.** Output: a proposed minimal orthogonal set,
+      each near-duplicate pair named with its superset/subset relationship stated. Proposal only — the merge follows the
+      rename rule and the purge follows delete-safety.
+- [ ] [AGENT] P0. **Audit for orphaned data types** — captured but consumed by nothing. Each resolves to a missing
+      strategy, a merge candidate, or an explicit declared-unused. Never left silent.
+- [ ] [AGENT] P1. **Audit venue identities for duplicates** — the same effective venue represented twice. Same
+      treatment: propose, migrate consumers in one change, register the cutover, route the purge through delete-safety.
+- [ ] [OPERATOR] P0. **Sign off each proposed merge before migration.** Merging two data types rewrites paths, manifest
+      rows and consumer bindings at once, and the purge is a prod delete. Both sides are operator-gated.
+
 ## Workstreams — each forks to its own child plan
 
 Children are authored separately so each stays under the line cap and workstreams can run concurrently. **Design
