@@ -70,8 +70,10 @@ context_scope:
 > below were already resolved through 2026-08-05; the last open item (the `[DATA] P3` "23 sentinel-free missing
 > odds_api days" Follow-up) is now also resolved — 0 residual today in both candidate sports manifest buckets, see
 > the 2026-08-16 Progress Log entry below. No successor doc; the secondary bucket-divergence finding surfaced while
-> closing it out is tracked separately at
-> `/plans/active/issues/sports_odds_api_is_bucket_coverage_lags_tick_bucket_2026_08_16.md`.
+> closing it out was tracked separately at
+> `/plans/archive/2026_08/issues/sports_odds_api_is_bucket_coverage_lags_tick_bucket_2026_08_16.md` — RESOLVED
+> 2026-08-16 (slot-15): not a trades-mislabel, and not a new gap either — it's the already-tracked
+> `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` P1 backfill's own known gap.
 
 > **🟩 RESOLVED 2026-07-30 (slot 3, operator-authorised live diagnostic: pause-cron + snapshot + probe). THE
 > CONSOLIDATOR IS NOT DROPPING ROWS — this doc's original premise is DISPROVEN.** Static `rows_out` with nonzero
@@ -509,9 +511,10 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
     days specifically.
   - **Secondary finding, filed separately** (out of this todo's diagnostic-only scope, not fixed inline): the two
     buckets disagree by ~300 days on odds_api coverage for the identical window (547 vs 247 missing) — filed as
-    `/plans/active/issues/sports_odds_api_is_bucket_coverage_lags_tick_bucket_2026_08_16.md`, likely the same
-    cross-bucket-mirror-sync gap `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md` already tracks
-    for the `trades`/`TRADES` data_type.
+    `/plans/archive/2026_08/issues/sports_odds_api_is_bucket_coverage_lags_tick_bucket_2026_08_16.md`. **RESOLVED
+    2026-08-16 (slot-15)**: NOT the `trades`/`TRADES` mirror-mislabel hypothesized here — ruled out directly
+    (0/339 differential days carry that data_type). It's the already-tracked, actively-running
+    `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` P1 backfill's own known gap instead.
   - Checkbox flipped in `sports_satellite_ao_dispatch_batch12_2026_08_09.md:153` (this todo's actual tracker per the
     2026-08-12 correction below) citing this entry. Repos: market-tick-data-service (new read-only script, no
     prod-affecting code change). **Shipped: `market-tick-data-service@cfaf2ecd13`** (QG green, landed on LDR).

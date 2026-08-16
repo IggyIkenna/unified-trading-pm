@@ -12,7 +12,7 @@ summary: >-
   window. This is the same cross-bucket-mirror-sync-gap class already tracked for `trades`/`TRADES` labeling in
   `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`, here manifesting as coverage under-count
   rather than a stale label.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -27,14 +27,14 @@ related:
     /codex/02-data/four-surface-reconciliation-procedure.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-16 (slot-15)"
 author: slot-32 (data_engineering)
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P3
 source: ["sports_satellite_ao_dispatch_batch12_2026_08_09-153 (23 sentinel-free days investigation)"]
-resolved_by:
+resolved_by: slot-15 (data_engineering), 2026-08-16
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -42,6 +42,15 @@ depends_on: []
 ---
 
 # Sports IS-bucket odds_api coverage lags the tick bucket
+
+> **🟩 RESOLVED / ARCHIVED 2026-08-16 (slot-15, data_engineering).** Diagnostic question answered: NOT the
+> `trades`/`TRADES` cross-bucket mirror-mislabel (0/339 differential days carry that data_type — ruled out
+> directly). The 547-vs-247 `source=odds_api` day-coverage gap is instead the ALREADY-TRACKED, actively-running
+> odds_api backfill gap owned by `/plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`
+> (P1) — root cause: `instruments-store-sports-prd`'s `odds_api` rows were migrated in from MTDS/the tick-bucket
+> via a one-time script that itself left residual gaps, which that P1 doc's vendor-refetch VM campaign has been
+> closing since 2026-07-27 (635 → 291 missing days as of its latest census). No new fix scoped here; no
+> successor doc — future odds_api coverage monitoring belongs to that P1 doc.
 
 ## What I found
 
@@ -92,15 +101,12 @@ specifically was not separately confirmed live vs stale here).
 
 ## Recommended decision
 
-- [ ] [DATA] P3. Determine whether `instruments-store-sports-prd`'s odds_api coverage gap vs
-      `market-data-tick-sports-prd` is (a) the same cross-bucket-mirror-sync gap already being fixed for
-      `trades`/`TRADES` in `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md` (in which case that
-      fix, once it lands+executes, should be re-verified to also close this 300-day gap — no separate fix needed), or
-      (b) a distinct gap needing its own remediation. Re-run
-      `market-tick-data-service/scripts/sports/investigate_23_sentinel_free_odds_gaps_2026_08_16.py
-      --bucket-kind instruments-store` after that sibling doc's `[OPERATOR]` relabel-VM todo executes; if the
-      547-vs-247 gap has closed, flip this checkbox citing the shared fix; if not, scope a dedicated sync/backfill
-      fix. Repos: instruments-service, market-tick-data-service.
+- [x] ✅ [DATA] P3. **DETERMINED 2026-08-16 (slot-15, data_engineering) — verdict (b) with a twist: NOT the
+      trades/TRADES mirror-mislabel class, AND not a NEW gap either — this is the ALREADY-TRACKED odds_api
+      backfill gap in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (P1). No new fix scoped; no
+      separate action needed beyond that doc's own already-active remediation.** Investigated directly rather
+      than waiting on the sibling `[OPERATOR]` VM todo (still `[ ]` open, per a fresh read of that doc today) —
+      see Progress Log for the full method + evidence. Repos: instruments-service, market-tick-data-service.
 
 ## Progress Log
 
@@ -109,3 +115,45 @@ specifically was not separately confirmed live vs stale here).
   `/plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s Progress Log for that task's
   own resolution (the 23-day residual is fully closed; this doc tracks the separate bucket-divergence finding
   surfaced along the way).
+- **2026-08-16 (slot-15, data_engineering) — investigated + resolved, verdict (b)-not-(a), and further identified
+  as ALREADY-TRACKED, not a new gap.** The sibling `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`
+  `[OPERATOR]` relabel-VM todo is still `[ ]` open (not yet executed), so re-running this doc's own script
+  post-fix (the todo's literal instruction) wasn't yet possible — investigated the ROOT CAUSE directly instead,
+  which the AO-eligibility rule favors over waiting idle on another doc's operator-gated VM.
+  - **Method (2 single-walk, column-pruned + date-filtered `read_availability_index()` reads, no new
+    whole-corpus GCS walk)**: (1)
+    `market-tick-data-service/scripts/sports/investigate_odds_api_is_bucket_gap_2026_08_16.py` reproduced the
+    547-vs-247 `source=odds_api` day-presence gap over the same `2020-06-06..2026-04-15` window (fresh
+    read: IS-bucket 1593/2140 days present, tick-bucket 1893/2140), computed the exact 339-day differential set
+    (days present in the tick-bucket but absent-by-`source` in the IS-bucket), then for EVERY differential day
+    inspected the IS-bucket's full row set (any source/data_type) for that date. Result: **0/339 differential
+    days carry a `data_type=trades`/`TRADES` row** — the trades-mirror mislabel this todo asked about as
+    hypothesis (a) is definitively ruled out; every differential day already has SOME IS-bucket row (0
+    total-absence days), just never one with `source=odds_api`. (2)
+    `market-tick-data-service/scripts/sports/probe_odds_source_field_2026_08_16.py` drilled into a 4-day sample
+    of the differential set: the `data_type=odds` rows present on those dates all carry `source=footystats,
+    pipeline_mode=batch_footystats` — a DIFFERENT vendor's own `odds`-labeled product, not a mislabeled
+    `odds_api` row with a blank/wrong `source` field. So the differential is a genuine absence of any
+    `odds_api`-sourced row on those IS-bucket days, not a same-vendor mislabel of any kind.
+  - **Cross-referencing this genuine-absence finding against the active corpus** (grepped `related:` +
+    `source:` fields, then read `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` in full — the doc was
+    already in this issue's own `related:` list) found the exact mechanism: that P1 doc's own "What I found"
+    section states `instruments-store-sports-prd`'s `odds_api` rows were **migrated in from MTDS/the tick-bucket
+    via a one-time `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` script**, and that migration itself
+    left residual gaps — exactly explaining why the tick-bucket (the live writer's direct target) has better
+    coverage than the IS-bucket (a one-time historical migration snapshot, now being incrementally backfilled).
+    That doc has been actively running VM-launched vendor re-fetches for this precise gap since 2026-07-27,
+    converging 635 → 590 → 300 → 291 missing days (latest census 2026-08-11T16:29Z, wider `..2026-08-11` window,
+    `smallchunk23` VM active at last check) — this IS the dedicated backfill fix hypothesis (a) asked about a
+    DIFFERENT sibling for; the real answer is a THIRD doc already owns it. (Absolute counts aren't
+    directly comparable across the two docs' different window ceilings/census methodologies — not reconciled
+    further here, out of this diagnostic todo's scope — but the mechanism match — one-time-migration-into-IS-
+    bucket + active vendor-refetch backfill converging over weeks — is unambiguous.)
+  - **No new fix scoped or launched** — `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s own P1/P2
+    chain already owns relaunching + re-censusing this exact gap; duplicating a second backfill effort here
+    would risk the concurrent-VM double-spend this workspace already guards against
+    (`odds-api-concurrency-guard.sh`, cap=1). Added this doc to that P1 doc's own `related:` would be circular
+    (already present); no code fix needed here beyond the two read-only investigation scripts (both `Lifecycle:
+    oneoff`, delete-when this doc archives). Flipping this checkbox — the diagnostic question is fully answered
+    (NOT (a) trades-mislabel; not a new (b) either — it's the already-active P1 backfill's own known-and-tracked
+    gap) and no further action belongs to THIS doc.
