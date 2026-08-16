@@ -205,7 +205,16 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 ## Action items
 
 - [ ] [DATA] P1. BLOCKED-ON:tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09 **NARROWED
-      2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%), NOT all 5 years.** Real,
+      2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%), NOT all 5 years.**
+      **DISPATCH-SAFETY NOTE (2026-08-16)**: this `BLOCKED-ON:` marker does NOT match AO's
+      `regen_backlog_from_plan.py::_BLOCKED_TOKEN_RE` (by design — `BLOCKED-ON:<ref>` is verify.py's SEPARATE,
+      deliberately-dispatchable "real work, temporarily blocked on another owner's in-flight fix" marker family, not the
+      closed non-dispatchable taxonomy; conflating the two was flagged as a bug class in
+      ao_satellite_ao_dispatch_batch6_2026_08_04.md). Dispatch is instead correctly suppressed by this doc's own
+      frontmatter `depends_on: [tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09]` +
+      `gate_on_depends: true`, wired 2026-08-12 (see header comment above) — that IS the real machine gate, confirmed
+      still in place. Explicitly citing the blocking doc here too: `tradfi_scope_ruling_possible_violation_legacy_fleet_
+      relaunched_2026_08_09.md` (its `wave_launcher.py` out-of-scope cron holding the singleton lock). Real,
       still-open work — temporarily blocked on the singleton lock clearing, which is itself blocked on the sibling issue
       doc's own unfixed root cause (`wave_launcher.py`'s out-of-scope cron continuing to hold/refresh the lock — a
       different owner's in-flight P1). Not CANCELLED, not DEFERRED-BY-DESIGN: this is live, real work with a corrected,
