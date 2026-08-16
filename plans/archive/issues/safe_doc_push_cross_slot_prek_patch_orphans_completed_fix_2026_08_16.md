@@ -25,6 +25,7 @@ related:
     /plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-16
 last_updated: "2026-08-16"

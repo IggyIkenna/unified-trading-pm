@@ -461,7 +461,7 @@ Side A — `/plans/active/prediction_phase_ab_residuals_2026_07_24.md:124-128`:
 
 > `- [ ] [BACKEND] P1. **Adapters must apply lifecycle bounds BEFORE the network call** — today inactive days land as `SOURCE_RETURNED_ZERO`instead of an honest`EXPECTED_*` …`
 
-Side B — `/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1, legs (2) and (3):
+Side B — `/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1, legs (2) and (3):
 
 > `only emit a cell (captured/empty/failed) for dates WITHIN [available_from, available_to]; outside the market's life = honest BLANK / `expected_unattempted`, NEVER `empty_confirmed``
 > …

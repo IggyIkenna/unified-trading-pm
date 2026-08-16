@@ -2,7 +2,7 @@
 doc_type: issue
 title: prediction_satellite_ao_dispatch_batch4 — archival prerequisite (migrate Deferred sections, then archive)
 summary: >-
-  `/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` reached zero open top-level todos 2026-08-14
+  `/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` reached zero open top-level todos 2026-08-14
   (4b-iii — shape #4 merge+delete — was the last one, verified complete: VM
   `canonical-migration-prediction-shape4-merge-20260812-221112` EXIT_STATUS=0, 799,510 objects, 737,828 deleted, 61,682
   correctly kept as honest non-canonical). Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §
@@ -10,7 +10,7 @@ summary: >-
   "evaporate with the archived plan" — this is a judgment-call audit (which items are already tracked elsewhere vs.
   genuinely need a new batch5 dispatch plan), out of scope for the single mechanical worker who flipped the last
   checkbox.
-status: open
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [prediction, archival, plan-hygiene, ao-dispatch, batch4, batch5]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -29,14 +29,14 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P2
 parent_epic: predictions_master
-resolved_by:
+resolved_by: agt-63ec32 (quality_gate_resolution firefighter, 2026-08-16)
 locked_by:
 source: [prediction_satellite_ao_dispatch_batch4_2026_07_26.md todo 4b-iii, this session's completion]
 drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -87,16 +87,44 @@ Run `/ag-closeout-audit prediction` (or an equivalent manual pass) scoped to thi
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Audit `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s four Deferred sections per the
+- [x] ✅ [SCRIPT] P2. Audit `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s four Deferred sections per the
       Recommended decision above; draft `prediction_satellite_ao_dispatch_batch5_<date>.md` for any genuinely-orphaned
       item. Repo: unified-trading-pm. Done when: every Deferred bullet has a recorded disposition in this issue doc's
-      Progress Log.
-- [ ] [SCRIPT] P2. Archive `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` to `plans/archive/2026_08/` via the
+      Progress Log. — unified-trading-pm@(this commit), see Progress Log for the per-item disposition table.
+- [x] ✅ [SCRIPT] P2. Archive `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` to `plans/archive/2026_08/` via the
       6-step ritual (banner, codex-alignment re-check, referrer-path fixup scoped to `plans/active/**` + `codex/**`,
-      confirm the move). Gated on the todo above. Repo: unified-trading-pm.
+      confirm the move). Gated on the todo above. Repo: unified-trading-pm. — unified-trading-pm@(this commit).
 
 ## Progress Log
 
 - 2026-08-14 (slot 18, data_engineering): filed after verifying + closing batch4's last open todo (4b-iii). See that
   plan's own Progress Log for the 4b-iii completion evidence.
 - **context-scout 2026-08-15**: populated context_scope (3 entries).
+- **2026-08-16 (quality_gate_resolution firefighter, escalation agt-63ec32)**: ran the full per-item disposition audit
+  while resolving the `promote_qg_failure` wall on PR #3244 (`check_archive_candidates.sh` flagged batch4 as a new
+  done-but-unarchived candidate). Findings, grep-confirmed against the live corpus:
+  - "Deferred — gated on a sibling todo landing" (2 items): **BOTH extracted to
+    `prediction_satellite_ao_dispatch_batch5_2026_08_16.md`** (draft) — the combined `_index` manifest
+    canonicalisation single-walk leg (a), and the IS POLYMARKET re-enumeration → `book_snapshot_5` backfill proof.
+    Neither had a live home elsewhere; both were explicitly marked "Batch5 candidate" by batch4's own text.
+  - "RULED 2026-07-28 — arb-pairing wiring + politics/geo canonicalization" (2 rulings): **both already done
+    elsewhere, no migration needed.** Fixture-pairing residual's MLB slice shipped
+    (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 7), remaining team-alias work tracked as its own
+    `[DATA] P2` todo there. Politics/geo audit is `[x]` done at
+    `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` line 517 (`[UAC] P2`).
+  - "Deferred — cross-cutting" (1 item, tarball-overwrite race): **already tracked, no migration needed.** Still a
+    live open NA design question at its source (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`), plus a
+    concrete 2026-08-15 instance doc (`issues/dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md`)
+    already gives the general bug class an active tracker.
+  - "Deferred — time-gated / too-large / upstream-blocked" (3 items): the Kalshi historical mid-gap backfill is still
+    `[SCRIPT] P1` open at its source doc (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`) — no migration
+    needed. The Polymarket-perps-parked item is intentionally frozen `BLOCKED-UPSTREAM` in its own archived doc — no
+    action needed (per that doc's own instruction, "track, do not re-surface every batch cycle"). The 49
+    canonical-only POLYMARKET trades-days gap was **genuinely untracked anywhere else** (grep-confirmed) — extracted
+    to `prediction_satellite_ao_dispatch_batch5_2026_08_16.md` as the third item.
+  - "Deferred — already triaged + deferred by batch3": confirmed no action needed per this doc's own prior note.
+
+  All four Deferred sections now have a recorded disposition; batch4 archived to `plans/archive/2026_08/` in the same
+  commit as this update (banner added, referrer paths fixed corpus-wide in `plans/active/**`/`plans/epics/**`/
+  `codex/**`). This issue doc reaches 0 open todos in the same commit — archiving it alongside batch4 per the
+  "archive the moment a plan is genuinely done" rule (no `locked_by`).

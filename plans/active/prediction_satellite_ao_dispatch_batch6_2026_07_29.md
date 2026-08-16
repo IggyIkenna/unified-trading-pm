@@ -49,7 +49,7 @@ tags: [prediction, ao-dispatch, close-out, batch-6, satellite-docs, data-correct
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
@@ -91,7 +91,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/archive/2026_08/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
     /plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
     instruments-service/instruments_service/reference_data/adapters/prediction/fixture_match.py,
@@ -703,7 +703,7 @@ sports-tranche-owned).
 
 - **cqg partition-completeness — recent-window catalogue re-enumeration (operational run, already-fixed classifier).**
   Sole owner:
-  [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
+  [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
   **todo 3** ("cqg recent-window catalogue re-enumeration with the already-fixed classifier", `[SCRIPT] P2`, still
   `[ ]`, `status: active`). This batch extracted the SAME item from the SAME source doc
   (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`) — flagged as a duplicate-dispatch hazard by

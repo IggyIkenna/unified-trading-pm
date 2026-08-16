@@ -46,7 +46,7 @@ drift_direction: advance-code
 archive_exempt: true # 2026-08-10 slot 22: 0 open todos after DEFERRED-CROSS-DEP flip; archival deferred to /archive-candidates-audit (marquee plan, 33 done todos, complex referrer graph)
 context_scope:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
@@ -253,7 +253,7 @@ context_scope:
         — live book_snapshot_5 already captures end-to-end. Provenance: autonomous catalogue/backfill session
         2026-06-23. **na-eligibility-audit 2026-08-06: KEEP-NA-STALE-DUPLICATE, citation added — already claimed (not
         yet dispatched) in
-        [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
+        [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
         "Deferred — gated on a sibling todo landing" section: "Re-enumerate the IS POLYMARKET universe for a recent past
         date → re-run the `book_snapshot_5` batch backfill → verify `row_count>0`" (`Source:` this exact item,
         verbatim). That section deliberately holds the item NOT-dispatched-speculatively, sequenced after batch4's own
@@ -459,7 +459,7 @@ crypto set).
       actually accumulates multi-hour history. Repos: market-tick-data-service + market-data-processing-service.
       Provenance: operator "do we have depth for a few hours of history / isn't there a plan for how live data
       persists?" 2026-06-24. **EXTRACTED — sole executing owner is
-      [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
+      [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
       `[DATA] P2` "Verify END-TO-END MDPS prediction depth-history retention" todo** (`status: active`,
       `assigned_vm: planning`), which names this checkbox verbatim as its own
       `Source: prediction_live_clob_depth_capture_2026_07_24.md (P2 "Verify END-TO-END depth-history retention")` and

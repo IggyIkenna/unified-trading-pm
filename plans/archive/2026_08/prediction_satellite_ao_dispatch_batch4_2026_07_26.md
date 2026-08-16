@@ -16,7 +16,7 @@ summary: >-
   (operator/time/human-gated) — NOT re-drafted here, cited in the Deferred section. `status: draft` — a skill-drafted AO
   batch is never auto-shipped; flipping to `active` to dispatch is an operator decision (CLAUDE.md "Plan destination —
   ASK BEFORE CREATING").
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -74,11 +74,14 @@ context_scope:
 
 # Prediction satellite AO batch 4 — un-triaged sibling-doc gap extraction
 
-> **Status: active — operator-dispatched (2026-07-28+).** Drafted autonomously by the `/ag-closeout-audit prediction`
-> scheduled run (2026-07-26) as a `status: draft` skill-drafted batch (never auto-shipped per CLAUDE.md's "Plan
-> destination — ASK BEFORE CREATING" HARD RULE); the operator flipped it to `active` and dispatched it (Progress Log
-> tasks `batch4-013/-017/-020/-023/-024`). All split items 4a/4b-i/4b-ii/4c are COMPLETE; one follow-on remains — 4b-iii
-> (shape #4 merge + delete), tracked as a todo below.
+> **🟢 ARCHIVED 2026-08-16.** All top-level todos (4a/4b-i/4b-ii/4b-iii/4c) COMPLETE as of 2026-08-14. Its four
+> "Deferred" sections were audited per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 1
+> before archival (see
+> `/plans/archive/2026_08/issues/prediction_batch4_deferred_migration_and_archival_2026_08_14.md`'s Progress Log for the
+> full per-item disposition): 2 items were already `[x]` done elsewhere (batch6), 3 items were already tracked live
+> at their source docs (`prediction_cross_venue_arb_and_coverage_2026_07_24.md` + a concrete tarball-race instance
+> doc), and 3 genuinely-untracked items were extracted to
+> `/plans/active/prediction_satellite_ao_dispatch_batch5_2026_08_16.md` (`status: draft`). Nothing evaporated.
 
 ## Why this batch exists (the gap batch3 missed)
 
@@ -995,4 +998,5 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   Progress Log for the line cap). **Every top-level `- [ ]` here is now checked** — plan is archival-eligible per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Archival (incl. migrating the Deferred sections
   — a judgment-call audit, out of this dispatched todo's scope) is tracked as its own follow-up:
-  `/plans/active/issues/prediction_batch4_deferred_migration_and_archival_2026_08_14.md`.
+  `/plans/archive/2026_08/issues/prediction_batch4_deferred_migration_and_archival_2026_08_14.md` (resolved +
+  archived 2026-08-16).
