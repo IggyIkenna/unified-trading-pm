@@ -595,11 +595,69 @@ next lever. TYPECHECK is the second target. TESTS remain the largest absolute co
 (sharding/parallelizing the suite) — the data does not support "tests scale disproportionately under load" as the
 primary contention finding; LINT does.
 
-- [ ] [INFRA] P3. Run `profile_qg_resources.py` directly on the planning-vm during real concurrent AO load
+### Results table 4 — planning-vm profiler, single-core-pinned, real concurrent load (2026-08-16)
+
+`profile_qg_resources.py --repo unified-trading-pm --core 2` run directly on the planning-vm (this IS the AO worker
+host — slot 20's own checkout), load-drift-free by construction (one instrumented invocation, not a sequential
+multi-variant sweep). Host context at start: load average 11.70/11.85/13.02 (16 cores, ~0.75-0.8x oversubscribed), 23
+concurrent `quality-gates.sh` processes, 11 concurrent `pytest` processes, 33 active slot dirs; at end: load average
+10.02/11.68/12.67, 19 qg-procs, 1 pytest-proc. `taskset`-pinned to core 2, **exit 0, total wall 375.5s**, overall peak
+RSS 703.5 MB (1806 samples). Tree confirmed clean before and after (no incidental auto-fix diffs).
+
+| Cost center (qg_prof span / coarse phase)   | wall_s     | % of total | Idle/lightly-contended reference                                                                   | Multiplier      |
+| -------------------------------------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------- | --------------- |
+| `tests` (instrumented span)                  | 168.73     | **45%**    | —                                                                                                     | —               |
+| `check_pm_script_path_refs.py` (STEP 5.64)   | **151.39** | **40%**    | 18.22s idle pre-opt / ~25.91s post-opt-but-contended ("Results table 2 rigor follow-up" + 2026-08-08) | **~5.8-8.3x**   |
+| `[6/6]` (post-gate checks, pass 1)           | 26.67      | 7%         | —                                                                                                     | —               |
+| `codex` (instrumented span)                  | 6.18       | 2%         | 8.58s idle                                                                                            | ~0.7x (noise)   |
+| `(_preamble)`                                | 5.47       | 1%         | 4.2s idle                                                                                             | ~1.3x           |
+| `STEP 5.5`                                   | 4.94       | 1%         | —                                                                                                     | —               |
+| `removed-symbols` / `pip-audit` / `typecheck` / `size-checks` / `bandit` / `lint` (spans) | ≤1.5s each | ≤1% each | bandit: 4.08s idle                                                                     | bandit ~0.05x (noise) |
+| ~25 remaining `STEP 5.xx` checks             | rest       | —          | each 0.05-1s individually, idle — matches Phase-1's finding                                          | —               |
+
+Full per-check breakdown (every span + every `STEP 5.xx` coarse-phase row): `unified-trading-pm.txt` /
+`unified-trading-pm.json` / `combined.csv` in the run's scratchpad outdir (gitignored, not committed, per the script's
+own outdir contract).
+
+**Headline finding — this load-drift-free measurement CONTRADICTS the earlier wall-clock-based ranking.** The
+"Contention delta analysis (2026-08-09)" section above (built from sequential wall-clock deltas across the Phase 1 vs.
+Phase 2 flag-suite sweeps) ranked LINT and TYPECHECK as the most load-sensitive phases and read CODEX/
+version-alignment as comparatively resilient. This single-core-pinned, instrumented run tells a different story:
+`check_pm_script_path_refs.py` (STEP 5.64, inside the codex-compliance block) — the same check already flagged and
+partially optimized in "Results table 2 rigor follow-up" (28% of an idle run, cut 74% via a substring pre-filter,
+landing at 25.91s in a lightly-contended run 2026-08-08) — is costing **151.39s (40% of this run's total)** here, a
+**~5.8-8.3x multiplier** over its own prior idle/lightly-contended numbers, and is now the SECOND-LARGEST cost center
+after `tests` itself — well ahead of every other individually-skippable phase. This single-threaded full-corpus
+markdown/codex sweep is far more load-sensitive than the earlier lint/typecheck ranking suggested; it just doesn't show
+up as its own line in the coarser flag-suite wall-clock deltas because it's bucketed inside the broader
+codex-compliance/lint-adjacent phase group there. `tests` remains the single largest absolute cost (168.73s/45%),
+consistent with both prior analyses.
+
+**Caveat**: single run (n=1) — the same shared-host-noise limitation flagged throughout this plan. The 2026-08-08
+optimization's own in-run number (28.62s → 25.91s) was itself noted as "confounded by concurrent sibling-slot host
+load," so part of this 151.39s may be additional load beyond what that measurement saw, not a pure regression; the
+`bandit`/`codex` spans reading FASTER than their idle references is the same single-sample noise cutting the other
+way. The direction of the finding — STEP 5.64 is a major, previously-underweighted load-sensitive cost center — is
+clear regardless of exact multiplier precision.
+
+- [ ] [INFRA] P3. `check_pm_script_path_refs.py` (STEP 5.64) is disproportionately load-sensitive under real concurrent
+      AO load (151.39s/40% of a planning-vm profiler run vs. ~18-26s idle/lightly-contended — see "Results table 4"
+      above) despite the 2026-08-08 substring-pre-filter optimization. Investigate the mechanism (e.g. does the check
+      re-read the corpus from disk repeatedly and lose to I/O contention, or is it purely CPU-bound and just losing more
+      scheduler time-slices on an oversubscribed host — the single-core taskset pin in this measurement should already
+      rule out cross-core contention as the explanation, worth confirming directly) and propose/implement a further fix.
+      Done-when: root cause named + either a fix shipped with a before/after profiler number, or a documented reason no
+      further fix is worthwhile. (repo: unified-trading-pm)
+
+- [x] ✅ [INFRA] P3. Run `profile_qg_resources.py` directly on the planning-vm during real concurrent AO load
       (single-core-pinned, immune to which-variant-ran-when) to get a load-drift-free per-phase breakdown that validates
       or replaces this todo's wall-clock-based contention-sensitivity ranking (lint/typecheck inferred as most
-      load-sensitive — see "Contention delta analysis" above). Done-when: a per-check wall-time table analogous to
-      "Results table 2 rigor follow-up," captured on the planning-vm under measured concurrent load, not this host.
+      load-sensitive — see "Contention delta analysis" above). Done: see "Results table 4" above — a genuine,
+      load-drift-free CONTRADICTION of the earlier ranking: `check_pm_script_path_refs.py` (STEP 5.64), not
+      lint/typecheck broadly, is the standout load-sensitive cost center (151.39s/40% of total, ~6-8x its
+      idle/lightly-contended cost), with `tests` remaining the largest absolute cost (168.73s/45%). New follow-up todo
+      added above per findings-triage (not re-optimized inline — out of this todo's "run and record" scope). —
+      unified-trading-pm@(this commit)
 
 - [x] [INFRA] P2. ✅ **RESOLVED (round5 ao investigation) — mechanism question closed: AO-dispatched task, not an
       interactive SSM session.** A prior 2026-08-06 na-eligibility-audit pass had added a "DEFAULT-RULED" annotation
@@ -638,7 +696,7 @@ primary contention finding; LINT does.
 
 | Item                                                                        | State / why deferred                                                                                                                                                                                 | Blocked on                                     |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Run `profile_qg_resources.py` on planning-vm (P3, the 1 remaining `[ ]`)    | **Not done** — the last open todo; needs an AO-dispatched task to run the profiler single-core-pinned on the planning-vm under measured concurrent load to get a load-drift-free per-phase breakdown | Nobody — pick it up any time (AO-dispatchable) |
+| Deeper fix for `check_pm_script_path_refs.py`'s load-sensitivity (P3, new) | **Not done** — new todo added 2026-08-16 after the planning-vm profiler run found STEP 5.64 costing 151.39s/40% of total (~6-8x its idle/lightly-contended cost) despite the 2026-08-08 pre-filter opt | Nobody — pick it up any time (AO-dispatchable) |
 | Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot) | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)      | Nobody — trivial fix, just not yet done        |
 
 **Previously deferred, now done 2026-08-09**: `check_pm_script_path_refs.py` optimization (done 2026-08-08,
@@ -646,11 +704,31 @@ primary contention finding; LINT does.
 (Results table 3) · Phase 2 planning-vm concurrent-load measurement (all 3 todos `[x]` — mechanism decided, results
 captured, contention-delta analysis written).
 
-**Recommended next item**: archive this doc — 14/15 todos `[x]`, only the P3 planning-vm profiler run remains. The
-finalize doc (`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`) is gated on zero open todos;
-either flip the last P3 or decide it's deferrable and archive anyway.
+**Previously deferred, now done 2026-08-16**: planning-vm `profile_qg_resources.py` run (the last of the original 15
+todos) — see "Results table 4" above; surfaced one new P3 follow-up (STEP 5.64 load-sensitivity), tracked in the
+Deferred-work row above rather than left as prose.
+
+**Recommended next item**: this doc now has 1 open `[ ]` (the new STEP 5.64 follow-up) — not yet zero-open-todos, so
+the gated finalize doc (`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`) still stays
+blocked until that new item is resolved or explicitly deferred/archived-anyway by a future pass.
 
 ## Progress Log (na-eligibility-audit incremental marker)
+
+- **2026-08-16 (slot-20, AO-dispatched, `quality_gates_quickmerge_timing_baseline-674f4f1f1cd2`)**: ran the last open
+  Phase-2 todo — `profile_qg_resources.py --repo unified-trading-pm --core 2`, directly on the planning-vm (this slot
+  IS the planning-vm — no separate access mechanism needed). Host genuinely under real concurrent load at start (load
+  average 11.70-13.02 on 16 cores, 23 concurrent `quality-gates.sh` procs, 11 concurrent `pytest` procs, 33 active slot
+  dirs) — confirmed via `uptime`/`pgrep` immediately before launching, in background (`run_in_background`, not
+  `nohup`), full no-skip run (`QG_PROFILE=1`), `taskset`-pinned to core 2, exit 0, total wall 375.5s. See "Results
+  table 4" above for the full breakdown. **Real, load-drift-free finding that contradicts the earlier
+  wall-clock-based ranking**: `check_pm_script_path_refs.py` (STEP 5.64) — not lint/typecheck broadly — is the
+  standout load-sensitive cost center at 151.39s/40% of total, a ~6-8x multiplier over its own idle/lightly-contended
+  cost from prior measurements, despite the 2026-08-08 optimization. `tests` remains the largest absolute cost
+  (168.73s/45%). Per findings-triage (adjacent finding, same plan) added a new tracked `[ ]` P3 follow-up in this same
+  doc rather than leaving it as prose or absorbing an unplanned deeper-fix scope into this task. Tree confirmed clean
+  before and after the profiler run (no incidental auto-fix diffs to revert). Todo (line ~598 pre-edit, "Run
+  `profile_qg_resources.py` directly on the planning-vm...") flipped `[x]`. Doc now has 1 open todo (the new STEP 5.64
+  follow-up), not zero — the gated finalize doc stays blocked pending that item. — unified-trading-pm@(this commit)
 
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
   (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **6**, matching this verdict's item count. **KEEP-NA is
