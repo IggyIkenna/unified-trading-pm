@@ -544,6 +544,16 @@ failure, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regr
 Resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
 hand-wire the venues or edit the SIT ratchet baseline.
 
+**2026-08-16 — still blocked, 14th confirmation, /heartbeat check-in.** `unified-trading-pm` fast-forwarded 4 more
+commits (`396c8a1bdb`→`eeb1113ebc`: a DP-FETCH-009 stale-manifest-rows issue doc + a `main`↔`_backmerge` merge + an
+unrelated promote PR merge + na-audit-round-7 rulings — none touch this plan or `unified-api-contracts`). Re-ran
+`test_execution_service_venue_coverage_cascade_invariant.py` standalone in `unified-api-contracts`: same single
+failure, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`, identical
+`['karak', 'pendle', 'symbiotic']` signature, `1 failed, 10 passed in 0.44s`. 14th identical confirmation this session
+(8 full-suite/quickmerge, 6 direct-cause/targeted). Condition remains stable across multiple unrelated fleet syncs.
+Resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
+hand-wire the venues or edit the SIT ratchet baseline.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
