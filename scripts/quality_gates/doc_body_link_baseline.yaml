@@ -23,6 +23,7 @@ known_broken:
   - "codex/README.md::.github/PRE_COMMIT_SETUP.md"
   - "plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md::/codex/<NN-section>/<doc>.md"
   - "plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md::codex/09-strategy/architecture-v2/archetypes/<archetype>.md"
+  - "plans/active/issues/doc_body_link_regression_placeholder_archetype_2026_08_16.md::codex/09-strategy/architecture-v2/archetypes/<placeholder>.md"
   - "plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md::/codex/02-data/<filename>.md"
   - "plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md::/codex/02-data/manifest-writer-ssot.md"
   - "plans/audit/results/codex_plan_diff_scan_2026_05_22.md::codex/09-strategy/architecture-v2/archetypes/<placeholder>.md"
