@@ -504,6 +504,21 @@ archetype          │    spot venue  │        │   environment
         Not generic, and where the remaining work sits. Connectors exist ahead of the paths that call them, and the
         wiring is being closed venue by venue — which is why this section reads <b>partial</b> rather than live.
       </p>
+      <div class="callout">
+        <span class="tag">The measurement, and its date</span>
+        <p>
+          The gap is measured, not estimated. On <b>2026-08-15</b>, a caller-graph sweep found <b>27 of 33</b> on-chain
+          protocol connector classes had <b>zero production callers</b> — built, tested, and unreachable. That is the
+          number this section's <b>partial</b> status encodes.
+        </p>
+        <p>
+          Wiring has landed since that sweep — live dispatch for Uniswap, Lido and Jupiter, the instruction router, the
+          recursive-loop orchestrator, Kamino borrow/repay and the Jito connector — so the true figure today is better.
+          It is deliberately not restated here, because it has not been re-measured. A number carried forward without
+          re-measurement is exactly the failure this document exists to avoid; the sweep is now an automated gate, so
+          the next measurement will be a build output rather than a manual count.
+        </p>
+      </div>
     </details>
   </section>
 
@@ -1080,19 +1095,44 @@ max_position_usd          <i># notional ceiling per position</i></div>
     <details class="sec-body" open>
       <summary>Open work, by area</summary>
       <div class="keypoints">
-        <div><b>On-chain execution</b><span>Connectors exist ahead of the paths that call them; wiring is being closed venue by venue</span></div>
-        <div><b>Position reading</b><span>Bespoke readers for stateful protocols — health factors, maturities, liquidity ranges, withdrawal queues</span></div>
-        <div><b>Emergency flatten</b><span>Re-pointing onto the manual instruction surface, with a contract test across the service boundary</span></div>
-        <div><b>Audit</b><span>Extending the immutable record from the manual path to automated orders, fills and instructions</span></div>
-        <div><b>Cross-repo invariants</b><span>Venue-parity checks that fail the build rather than being verified by hand</span></div>
+        <div><b>On-chain execution</b><span>Narrowing, not static — live dispatch, the instruction router and the recursive-loop orchestrator have landed; the remaining connectors are being wired venue by venue</span></div>
+        <div><b>Position reading</b><span>Four bespoke readers for stateful protocols — health factor, maturity, and two withdrawal queues. The generic token-balance reader already covers the rest</span></div>
+        <div><b>Emergency flatten</b><span>Path now settled: it re-points onto the manual instruction surface rather than a new endpoint. Remaining work is request-shape mapping plus a contract test across the service boundary</span></div>
+        <div><b>Audit</b><span>Extending the immutable record from the manual path to automated orders, fills and instructions — including telling an in-flight cancel apart from a post-confirmation one</span></div>
+        <div><b>Cross-repo invariants</b><span>Two of four venue-parity checks now fail the build; the third is unblocked and the fourth covers address drift between the contract registry and execution</span></div>
+        <div><b>Venue readiness</b><span>A venue with no strategy able to consume its data is not ready — the contract now makes that a check rather than a judgement call</span></div>
+      </div>
+      <div class="callout">
+        <span class="tag">Settled since the last revision</span>
+        <p>
+          Four decisions closed that previously blocked work, and they change what the target looks like rather than
+          just how fast it arrives.
+        </p>
+        <p>
+          <b>Readiness is derived, never declared.</b> A venue's state is computed from the contract steps, so it cannot
+          drift — and a step with no real check reports <b>unverified</b>, never a pass. <b>Granularity is declared per
+          venue</b>, so execution refuses a matching class the data cannot support instead of matching as though it had
+          tick data. <b>Error semantics are one registry</b> keyed by venue and code, so a venue's failure behaviour is
+          known before production rather than discovered in it. <b>Service configuration is one module per service</b>,
+          schema-backed and hot-reloadable, so "what is this configured to do" never requires reading implementation.
+        </p>
+        <p>
+          Risk limits ship as <b>our own operating values</b> rather than conservative defaults — the same numbers we
+          run, so behaviour matches the record, with every limit remaining config-overridable. They are our values, not
+          a calibration to someone else's balance sheet.
+        </p>
       </div>
     </details>
   </section>
 
   <footer>
     <p class="lede">
-      Target-state walkthrough — internal draft. Status reflects what is reachable on a production path, not what
-      exists in the repository. Where the two differ, this document says so.
+      Target-state walkthrough — internal draft, revised 2026-08-16. Status reflects what is reachable on a production
+      path, not what exists in the repository. Where the two differ, this document says so.
+    </p>
+    <p class="lede">
+      Counts carry the date they were measured. Where wiring has landed since a sweep, this says the figure has
+      improved rather than restating it — an un-re-measured number is a claim, not a measurement.
     </p>
   </footer>
 </div>
