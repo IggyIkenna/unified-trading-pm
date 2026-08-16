@@ -2,16 +2,22 @@
 doc_type: issue
 title: defi oracle_prices on-chain branch retry-starvation (DP-FETCH-009) — fix shipped
 summary: >-
-  DP-FETCH-009 escalation agt-95ede4 (asset_group=defi, data_type=oracle_prices, 553
-  attempted_failed cells) root-caused: check_oracle_prices_freshness_skip only enumerates
-  Chainlink+Pyth shards, so once those are fresh for a date the whole date is skipped —
-  silently starving AAVE/FLUID/COMPOUND_V3/RADIANT/SPARK/MORPHO's attempted_failed rows
-  of any future retry. Fix implemented, tested, verified via a fully clean
-  quality-gates.sh run (10967 items, 0 errors, 81.91% coverage) on the now-unbroken tree,
-  and SHIPPED: market-tick-data-service@18e05e4b16 (verified ancestor of
-  origin/live-defi-rollout) — UTL half shipped earlier as
-  unified-trading-library@feb05b35bc6b8c04f0159657d6a475dc35feb2ac. Only remaining open
-  item is an optional P3 root-cause follow-up (item 4's xdist OSError), not a ship blocker.
+  DP-FETCH-009 escalation agt-95ede4 (asset_group=defi, data_type=oracle_prices) — TWO
+  layers, do not conflate them. (1) The retry-starvation CODE BUG (check_oracle_prices_freshness_skip
+  only enumerating Chainlink+Pyth shards) is root-caused, fixed, tested, and SHIPPED:
+  market-tick-data-service@18e05e4b16 (verified ancestor of origin/live-defi-rollout) + UTL
+  half unified-trading-library@feb05b35bc6b8c04f0159657d6a475dc35feb2ac. (2) The escalation
+  RE-FIRED anyway (553 -> 1064 attempted_failed and still climbing as of 2026-08-16 ~11:00
+  UTC) because the code fix does not touch the ACTUAL current driver: a pre-existing GCE VM
+  `mtds-oracle-prices-backfill` (unrelated to this fix, already running before this
+  escalation's first dispatch) hit a transient ~10-day 100%-failure window on AAVE/FLUID/
+  SPARK/COMPOUND_V3-ETHEREUM, correctly recorded as attempted_failed (honest, not a bug) and
+  since RECOVERED. Bigger finding surfaced in the same investigation: the daily
+  `uts-prod-mtds-collect-oracle-prices-cron` was silently PAUSED for ~29 days (last ran
+  2026-07-18, NonZeroExitCode) with no tracked justification -- re-enabled live this session.
+  3 sibling defi schedulers (dex-pools/evm-defi/solana-defi) are in the same paused state,
+  same last-run date, same failure -- tracked separately, out of this doc's oracle_prices scope:
+  see /plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md.
 status: open
 nature: issue
 asset_group: [defi]
@@ -25,6 +31,7 @@ related:
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md,
   ]
 created: "2026-08-16"
 author: slot-5
@@ -238,6 +245,37 @@ staged).
       independently of item 2/3 — may be a real, previously-unknown xdist-under-load
       fragility worth its own fix, but wasn't isolated cleanly here (confounded with the
       same-era host contention).
+- [x] ✅ [OPERATOR] P1. **Re-enabled `uts-prod-mtds-collect-oracle-prices-cron`** (was
+      `PAUSED`, last real execution 2026-07-18, no tracked justification found) —
+      `gcloud scheduler jobs resume uts-prod-mtds-collect-oracle-prices-cron
+      --project=central-element-323112 --location=asia-northeast1`, verified
+      `state: ENABLED` post-resume. Restores daily oracle_prices capture for 2026-08-16
+      forward (next fire: tomorrow 00:05 UTC) and means the shipped retry-starvation fix
+      (18e05e4b) now actually gets exercised on a live daily run instead of sitting dormant
+      behind a paused cron.
+- [ ] [SCRIPT] P2. **Retry the transient-failure window once VM `mtds-oracle-prices-backfill`
+      completes.** That VM (launched 2026-08-15 17:52 UTC, pre-existing/unrelated to this
+      fix, `VM_START_DATE=2022-07-25` `VM_END_DATE=2026-08-15` `VM_CHUNK_DAYS=5`
+      `shutdown-on-completion=true`) hit a ~10-day 100%-failure window on AAVE/FLUID/SPARK/
+      COMPOUND_V3-ETHEREUM (observed 2024-04-08..2024-04-17 in a snapshot taken 2026-08-16
+      ~09:40 UTC — re-measure the exact bounds at retry time, this was a point-in-time read,
+      not a confirmed exhaustive boundary) then recovered (healthy partial captures
+      confirmed at 2024-06-10, ~10:55 UTC same day). Do NOT touch the VM while it's still
+      running (`gcloud compute instances list --project=central-element-323112` — check for
+      `mtds-oracle-prices-backfill` TERMINATED/absent first). Once done: re-query
+      `market-data-tick-defi-prd-central-element-323112` filtered
+      `data_type=oracle_prices,capture_status=attempted_failed` (safe reader, filters
+      pushdown — see Progress Log below for the exact query pattern) to get the real final
+      cell list, then re-run `collect-oracle-prices --start-date <D> --end-date <D> --force`
+      per affected date so the manifest actually converts these cells instead of leaving
+      them attempted_failed forever (a one-pass backfill sweep never revisits dates it
+      already finished).
+- [ ] [SCRIPT] P2. **Re-run `check_high_attempted_failed` (or re-query the manifest per the
+      pattern above) after the item-above retry lands** to confirm the defi/oracle_prices
+      attempted_failed count actually drops and DP-FETCH-009 stops re-firing for this cell —
+      the code fix + cron re-enable are necessary but were NOT, by themselves, sufficient to
+      make the alert go green as of this session (count was 1064 and climbing, not 553 and
+      falling, at last measurement).
 
 ## Codex SSOTs
 
@@ -299,3 +337,51 @@ staged).
   reproduced this session. Doc intentionally NOT archived (one todo still open); next
   session/dispatch should either investigate P3 or close it as won't-fix if it doesn't
   reproduce, then archive this doc per the plan-completion-and-archival-discipline SSOT.
+- **2026-08-16, slot-1 (data_pipeline_failure escalation agt-95ede4, 3rd dispatch)**:
+  re-diagnosed from scratch per the role's VERIFY-BEFORE-SHIP step ("re-run the audit that
+  produced the finding, confirm candidate cells no longer flagged") since the doc above
+  claimed "fully shipped" but never actually re-checked the live manifest post-ship.
+  Findings: (1) confirmed `market-tick-data-service@18e05e4b` IS an ancestor of
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor`) — the code fix genuinely
+  landed, no re-work needed there. (2) Queried the LIVE manifest (safe filtered reader,
+  `market-data-tick-defi-prd-central-element-323112`, `data_type=oracle_prices` +
+  `capture_status=attempted_failed`) instead of trusting the stale 553 figure: actual count
+  is 1064 and was still climbing at query time (`attempted_at` up to 2026-08-16T09:40 UTC),
+  venue split FLUID/ETHEREUM=633, SPARK/ETHEREUM=226, AAVE/ETHEREUM=186,
+  COMPOUND_V3/ETHEREUM=19 — MORPHO/RADIANT absent (not affected). (3) Root-caused the
+  climbing count to a DIFFERENT mechanism than the shipped fix: GCE VM
+  `mtds-oracle-prices-backfill` (created 2026-08-15T17:52 UTC — already running BEFORE
+  slot-5's dispatch even started; not caused by and not fixed by 18e05e4b) is doing a
+  one-pass historical sweep 2022-07-25 -> 2026-08-15 in 5-day chunks. Downloaded + read its
+  `run.log` (`gs://deployment-scripts-central-element-323112/vm-logs/
+  mtds-oracle-prices-backfill/run.log`, via UTL `download_from_storage`, never subprocess
+  gsutil) and confirmed: dates 2024-04-08..2024-04-17 hit a genuine 100%-failure window on
+  all 4 on-chain venues (error_reason "All N `<venue>` queries failed" — correctly recorded
+  as `attempted_failed`, NOT a misclassification bug, per the honest-absence contract), but
+  by the time the log reaches 2024-06-10 (real time ~10:55 UTC) the SAME venues are back to
+  healthy partial captures (e.g. "Collected 4 AAVE oracle price records", normal per-reserve
+  `execution reverted, no data` warnings for not-yet-listed reserves) — the failure was
+  transient (RPC/subgraph-provider-shaped) and has already self-resolved; no code bug here,
+  the honest-absence write path did exactly what it should. VM is healthy, mid-sweep, left
+  running undisturbed — killing or duplicating it would be counterproductive.
+  (4) While investigating why the daily cron hadn't already retried these on-chain cells
+  (which 18e05e4b should enable), found the actual reason: `uts-prod-mtds-collect-
+  oracle-prices-cron` was `PAUSED` — last REAL execution 2026-07-18 (`NonZeroExitCode`), a
+  ~29-day silent gap, no maintenance-window marker or issue doc found justifying it. Same
+  exact pattern (paused, last ran 2026-07-18, NonZeroExitCode) independently confirmed for 3
+  SIBLING defi schedulers: dex-pools/evm-defi/solana-defi — filed separately (out of this
+  doc's oracle_prices scope):
+  /plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md.
+  **Action taken**: re-enabled `uts-prod-mtds-collect-oracle-prices-cron`
+  (`gcloud scheduler jobs resume`, verified `state: ENABLED`) — low-risk (separate Cloud Run
+  container from the concurrent backfill VM; per-VM manifest shards avoid write contention)
+  and directly restores daily freshness + lets the already-shipped retry-starvation fix
+  actually run on a live cron instead of sitting dormant. Did NOT touch the 3 sibling
+  schedulers (different data_types, no equivalent safety check done for them — left for the
+  new issue doc). **Net state at end of session**: code fix shipped (confirmed, no change
+  needed) + daily cron restored (new) + transient VM blip diagnosed as self-resolved-not-a-
+  bug (no fix needed, just a follow-up retry once the VM finishes) + 3-sibling-scheduler gap
+  surfaced as a new, separately-tracked P1 issue. The alert will NOT go green immediately —
+  see the P2 todos above for what still needs to happen. This is a genuine partial close,
+  not a full resolution; do not mark the underlying alert condition fixed until the P2
+  todos are done and the manifest count is re-measured at zero/near-zero.
