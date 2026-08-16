@@ -379,14 +379,21 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
   confirmation, and expect up to ~1-6 minutes of lag (cron cadence + lock-contention/TTL) before the consolidated view
   catches up.
 
-- [ ] [SCRIPT] P2. **Land the stranded UAC pinning test for `_KNOWN_NON_VENUE_SOURCES`** — stash
-      `odds_api_source_not_venue_fix: UAC doc/test additions` in `unified-api-contracts` (confirmed still present
-      2026-08-16, `git stash list`) has never landed; it was blocked behind unrelated foreign WIP in
-      `market_data_categories.py` and then never revisited once that WIP cleared. Contains a comment + pinning test
-      documenting why ODDS_API is correctly named in `_KNOWN_NON_VENUE_SOURCES` (the real fix,
-      `market-tick-data-service@a4a20fc7`, already shipped and is live — only this supplementary doc/test artifact is
-      stranded). `git stash pop` (or `apply` + selective `git checkout stash@{N} -- <path>` if other content has since
-      landed in the same file), re-run QG, ship via quickmerge. Low risk, small, does not block anything else.
+- [x] ✅ [SCRIPT] P2. **CORRECTED 2026-08-16 — do NOT land the stranded UAC stash, it is now stale, not "cheap to
+      land".** Read its full content (`git stash show -p stash@{1}` in `unified-api-contracts`): it adds
+      `test_odds_api_capability_entry_kept_uppercase_matching_real_manifest_rows`, asserting `data_type == "ODDS"`
+      (uppercase) is correct because "~17K rows" are stamped that way in prod. This is exactly the premise Phase 1 of
+      `sports_odds_api_data_type_casing_standardization_2026_08_15.md` (archived) live-measured and DISPROVED — zero
+      uppercase rows exist anywhere; the real data is lowercase `odds` (899,286 empty-venue + 1,721 ODDS_API-venue).
+      Confirmed the current registry (`unified_api_contracts/registry/data_type_capability.py`) has no lingering
+      uppercase entry (`grep 'data_type=\"ODDS\"'` → no hits) — the correct fix already shipped and landed. Applying
+      this stash would silently reintroduce the false claim as a permanent pinning test right on top of the already-
+      corrected entries. Attempted `git stash drop 'stash@{1}'` to clean it up — blocked by this workspace's own
+      `block_destructive_commands.py` guardrail (any `git stash drop`/`clear` is agent-forbidden, correctly, since the
+      hook can't tell a deliberate stale-drop from an accidental WIP loss). **Left in place, deliberately not
+      applied.** Operator (or a future session with stash-drop authority) should run
+      `git stash drop 'stash@{1}'` in `unified-api-contracts` to clear it — verify first via
+      `git stash show -p stash@{1}` that it's still this exact stale content before dropping.
 - [ ] [OPERATOR] P0. **REAL ROOT CAUSE FOUND 2026-08-16, supersedes the "silent-hang, unroot-caused" framing below —
       `mtds-backfill-odds-1` is NOT hanging.** SSH'd into the VM directly (`gcloud compute ssh ... --tunnel-through-iap`)
       at 18:24Z, 1.5h after its startup script reported `exit status 0`: no MTDS python process running, load avg

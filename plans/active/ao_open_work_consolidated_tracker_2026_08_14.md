@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycle, dispatch]
 related:
   [
-    /plans/active/issues/ao_fleet_regression_triad_2026_08_16.md,
+    /plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md,
     /plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md,
@@ -208,23 +208,19 @@ context_scope:
       Verified 2026-08-15 (reconciliation sweep, this session). Source:
       `/plans/archive/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` (its own
       "declined-P3, revisited" section already narrates this as shipped — flip the checkbox to match).
-- [ ] [DIAG] P0. **ACTIVE INCIDENT, fleet paused pending fix.** Agents dying mid-task, last ~4h as of 2026-08-16
-      evening, after ~2 days of clean operation — a real regression, not yet root-caused. Live lead:
-      `orphan_reap sweep: slot <N> pid <P> ... KILLED` entries in this exact window; whether these are genuine
-      orphans or a false-positive reap of legitimately-working processes is undetermined. Fleet paused down to 4
-      backlog slots (20/21/22/24) + ci_escalation (32/33) for controlled diagnosis (operator directive) — MUST be
-      resumed once fixed, do not leave at reduced capacity. Source:
-      `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 2 — full evidence, suspect commit list,
-      restore command).
-- [ ] [BACKEND] P1. Scheduled-task/CI-escalation "reserved" slot sets (`config.py::scheduled_task_reserved_slot_ids`/
-      `ci_escalation_reserved_slot_ids`) are computed dynamically per-call from the current live roster, never
-      pinned — the dispatch-gate's reserve set and the scheduler's own target-pick can diverge whenever the roster
-      shifts between the two independent computations, contradicting the "fixed slots" behavior the operator
-      expects. Source: `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 1).
-- [ ] [UI] P2. Dashboard's human-fleet "ikenna" row (slot 9001) shows a single STALE badge that reads as the
-      operator's overall presence, but structurally only reflects one opt-in registration — unrelated to the
-      operator's actual concurrent interactive tab/worktree sessions, which the human-fleet model has no visibility
-      into at all. Source: `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 3).
+- [x] [DIAG] P0. Root-caused + fixed: `context_lifecycle.py::_tick_target`'s boundary-confirmed compaction path
+      recognized a real compaction but never wrote the corrected pct back, so the stale pre-compaction-high value
+      re-armed another forced compact every ~3.5min indefinitely — the "agents dying mid-task" pattern. Fixed +
+      surfaced as a HealthStrip KPI. Fleet resumed to full capacity (0 paused). Evidence: `agent-orchestrator@
+      9ba4391e60` (fix), `agent-orchestrator@1b2dddffc9` (UI). Full detail:
+      `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 2, resolved).
+- [x] [BACKEND] P1. Root-caused + fixed: `_pick_free_slot` had zero awareness of `scheduled_task_reserved_slot_ids`
+      at all — it never diverged from a race, it simply never consulted the reserve, so scheduled jobs landed on
+      whichever slot iterated first. Fixed to prefer a reserved-and-free slot. Evidence: `agent-orchestrator@
+      54f8fc5811`. Full detail: `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 1, resolved).
+- [x] [UI] P2. Fixed: human-fleet rows now state their own scope ("Ikenna (human-fleet slot 9001)") + a
+      scope-clarifying STALE tooltip. Evidence: `agent-orchestrator@1b2dddffc9`. Full detail:
+      `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 3, resolved).
 
 ## Track 2 — Scheduled jobs, benchmarking, model/provider routing
 

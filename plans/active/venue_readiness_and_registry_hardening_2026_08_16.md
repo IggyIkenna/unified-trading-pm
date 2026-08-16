@@ -260,8 +260,29 @@ per-feature-group input requirements, already exists.
       tie (`venue_universe`), which turned out to be per-slot comma-separated strings scattered across
       `strategy-service/strategy_service/engine/strategies/v2/archetype_slots_*.py` (confirmed via grep this session),
       not a clean UAC SSOT — consolidating that is separate scope, not blocking this check.
-- [ ] [AGENT] P1. **Report the unconsumed set.** Data types captured but consumed by no archetype are either a missing
-      strategy or wasted capture cost. Either is worth knowing; neither is visible today.
+- [x] [AGENT] P1. ✅ Shipped — `unified-api-contracts@36a31a165f` ("fix: lst_yields feature_group required its own
+      name as data_type instead of lst_rates"), on `origin/live-defi-rollout`, `ahead=0`. **Report the unconsumed
+      set.** New `scripts/generate_venue_consumability_report.py` (permanent, re-runnable) runs
+      `contract_step_17_check` across all 192 venues in `VENUE_DATA_TYPE_CAPABILITIES`. Measured 2026-08-16: only 9
+      venues (all single-purpose `lending_indices` lenders — AAVE-PLASMA, BENQI-AVALANCHE, EULER_V2-*, FLUID-PLASMA,
+      MARGINFI-SOLANA, SOLEND-SOLANA, VENUS-*) fully pass both directions; 172/192 have >=1 orphaned data_type; 21
+      distinct data_types are orphaned fleet-wide (`dex_pool_state`/`dex_pool_swaps` 33/31 venues, `oracle_prices` 49,
+      `odds` 31, `staking_yields` 26, `lst_rates` 19, etc.) — expected given only 5 of 59 `StrategyArchetype` members
+      are declared in `ARCHETYPE_FEATURE_GROUPS` today (54 `UNDECLARED_ARCHETYPES`), so most captured data has no
+      archetype to consume it yet — a scope gap, not a bug, tracked separately by the archetype-declaration backlog.
+      **But one real bug surfaced by the report, fixed in the same change**: `required_inputs.py`'s `"lst_yields"`
+      feature_group declared its required input as `data_type="lst_yields"` (self-referential) instead of
+      `data_type="lst_rates"` (the raw exchange-rate ticks it's actually computed from — confirmed via
+      `features-service/features_service/onchain/engine/lst_features.py` and
+      `strategy-service/.../canonical_lst_yields_index_provider.py`), unlike the sibling `"lending_rates"` entry which
+      correctly points at `data_type="lending_indices"`. This meant **no real LST venue could ever satisfy
+      YIELD_STAKING_SIMPLE / CARRY_STAKED_BASIS / CARRY_STAKED_BASIS_DATED / CARRY_RECURSIVE_STAKED**, even though 19
+      real LST venues (LIDO-ETHEREUM, ETHERFI-ETHEREUM, JITO-SOLANA, etc.) genuinely provide the data under the
+      `lst_rates` name. Same root-cause drift also left a duplicate/erroneous `("defi", "lst_yields")` raw-data_type
+      entry in both `availability_semantics.py` and `_source_priority_table.py` alongside the correct
+      `("defi", "lst_rates")` entry — removed both — plus a stale `test_validity_matrix_completeness.py` exclusion-list
+      entry that already carried a `# canonical name is lst_rates` comment flagging this exact bug but never acted on
+      it — removed. Full `unified-api-contracts` `quality-gates.sh --no-fix`: `✅ ALL QUALITY GATES PASSED (253s)`.
 - [ ] [AGENT] P2. **Consolidate `venue_universe` into a clean UAC SSOT.** Currently per-slot comma-separated strings
       scattered across `strategy-service/strategy_service/engine/strategies/v2/archetype_slots_*.py` (confirmed via
       grep 2026-08-16) — not derivable as a clean `archetype -> venues` map today. Needed only to implement the
@@ -641,12 +662,12 @@ actionable P0.
 
 | Item | State | Blocked on |
 | --- | --- | --- |
-| "Report the unconsumed set" (P1) | Not started | Nothing — unblocked now that the step-17 check landed (`unified-api-contracts@5a74178360`) |
+| "Consolidate `venue_universe` into a clean UAC SSOT" (P2, L265) | Not started | Natural fit for W4 once it forks; not needed for the shipped "at least one archetype" reading of step 17 |
 | W3 "service-config abstraction" child plan | Not started | Blocked on the two `[OPERATOR]` design rulings below (error-code SSOT shape, config-abstraction target shape) |
 | W4 "venue e2e wiring" child plan | Not started | Blocked on W3's design ruling settling first (same contract, sequenced) |
 | W5 "smoke-test bar" child plan | Not started | Blocked on W3/W4 |
 | "Error-code SSOT shape" design ruling (L321) | Operator-owned | Needs an explicit decision: UAC registry keyed by (venue, code) vs. `classify_venue_error()` extension vs. per-venue declaration files |
 | "Config-abstraction target shape" design ruling (L325) | Operator-owned | Needs an explicit decision: per-service vs. per-domain `config.py`, schema mechanism, gate-check shape |
 
-**Recommended next item**: "Report the unconsumed set" (P1) — the P0 chain (declare archetype→feature_groups → contract
-step 17) is fully shipped as of this session. W3/W4/W5 still need an operator decision first.
+**Recommended next item**: the CANONICAL ORTHOGONALITY audits (P0/P0/P1, below) — the STRATEGY CONSUMABILITY section
+is now fully closed (declare→check→report→fix all shipped). W3/W4/W5 still need an operator decision first.
