@@ -139,7 +139,7 @@ Two independent causes, both now fixed:
       that audit named (`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`,
       `alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md`) were verified 2026-08-10 as already
       archived under `/plans/archive/2026_08/issues/` — out of scope, no action. **Done when**: all 3 carry a single
-      real tranche tag. — unified-trading-pm@\<sha\>. Live re-check at execution time (2026-08-16) found all 3 targets
+      real tranche tag. — unified-trading-pm@e95abc7b0f. Live re-check at execution time (2026-08-16) found all 3 targets
       had already moved since this plan's 2026-08-10 authoring: `deployment_api_events_global_state_leak…` retagged
       `[ci]` here (content is CI-run test-flakiness — a pytest-xdist module-global leak blocking a promote PR's QG
       slice — matching the audit's own `ci` recommendation); `qg_checkers_missing_claude_worktree_exclusion…` was
