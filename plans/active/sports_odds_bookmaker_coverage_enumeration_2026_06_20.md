@@ -271,6 +271,12 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 9)**: the 28-unmapped-league_id question was stale by
+  the time it was asked — already resolved and shipped 2026-08-06 (`unified-api-contracts@6d72669b`, checkbox
+  reconciled 2026-08-16 by `/ag-closeout-audit sports`; see the `[x] ✅ [AGENT] P1` item above). Operator's
+  "tier each individually" preference is moot — the shipped fix already used a hybrid (6→tier_1_domestic,
+  2→tier_2_domestic individually, 13 remaining→a `no_expectation` catch-all tier), matching operator intent for
+  the leagues where individual tiering was warranted. No further action.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — carries a 🔒 'NOT a clean auto-archive
   candidate' banner explicitly forbidding an `[unlock-plan]` without an operator ruling, `locked_by: live-defi-rollout`,
   and a flagged regression-test-deletion discrepancy on todos 2/3 that 'needs an operator call before those checkboxes

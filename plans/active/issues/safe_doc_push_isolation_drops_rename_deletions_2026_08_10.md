@@ -336,3 +336,36 @@ untracked CREATE went through, the tracked MODIFY did not) and still exited 0 �
       gate every success path passes through) so no code path can bypass it. Exit 14 on partial landing with the
       specific failing paths named. Regression: `tests/test_safe_doc_push_per_file_remote_verification.bats` (3/3
       green).
+
+## Third symptom, same mechanism: a RETRIED archival commit resurrects the old path with STALE content (2026-08-16, ag_closeout_auditor)
+
+Distinct from both symptoms above — not create-only (deletion silently dropped) and not false-success (no-op reported
+as landed). Archiving 10 `doc_type: issue` docs (checkbox-flip + `git mv` to `plans/archive/issues/`, `--files` naming
+both old and new paths per this doc's own guidance): **attempt 1** was correctly blocked by `check_archive_candidates`
+(an unrelated, genuine finding — see the parent audit's own report). Immediately after, `git status` showed all 10
+renamed docs duplicated: the NEW path correctly `M` (my fixes), but the OLD path — which had been `git mv`'d away and
+did not exist in the caller tree — now showed as a freshly-staged `A` (added), and `ls`/`cat` confirmed real content on
+disk at the old path: the PRE-EDIT snapshot (`status: open`, none of my checkbox/evidence fixes). Not absent (the
+already-fixed create-only shape), not identical-to-HEAD (the false-success shape) — **actively resurrected with wrong
+content**, for all 10 files, after exactly one failed+retried invocation on the SAME `--files` list.
+
+**Not root-caused** — worked around via the documented `SDP_ISOLATED=0` escape hatch on the next attempt (shared-index
+mode, no isolated worktree involved), which shipped clean. Recovery before that: `git rm -f` on all 10 stale old-path
+files (verified stale via `grep -c "^status: open$"` before removing — 10/10 confirmed pre-edit).
+
+**Working hypothesis, unverified**: the isolated worktree from attempt 1 (which had genuinely propagated the deletions
+correctly, per this doc's own `18ae9a4312` fix) may not be torn down/reset between attempts, and the RETRY's own
+"named file absent from caller tree, present at origin → copy from origin" logic (the deletion-propagation fix's own
+mechanism) may run against a WORKTREE that still has the file, sees "present" instead of "absent", and copies its
+origin-relative content back in as a stray add — i.e. the deletion-propagation fix might not be idempotent across a
+retry against the same isolated worktree instance. Not verified against the actual script source this session (time-
+boxed audit run, not a script-debugging session) — flagged for whoever next reads `safe-doc-push.sh`'s retry loop.
+
+- [ ] [SCRIPT] P1. **Root-cause + fix the retry-resurrection shape above.** Reproduce a blocked-then-retried
+      `--files` archival `git mv` commit through isolated mode twice in a row against the same `--files` list;
+      confirm whether the old path reappears with stale content on the 2nd+ attempt. If confirmed: fix so the
+      isolated worktree is torn down and rebuilt fresh per attempt (or the deletion-propagation check is re-run
+      against the CALLER tree's current state, not a stale worktree snapshot from attempt 1). Add a regression test
+      exercising a real blocked-then-retried invocation, not just a single-shot one. Source: this session,
+      `/ag-closeout-audit ao` 2026-08-16 (dispatch agt-1628ee) — full recovery + working-tree cleanup already applied,
+      nothing currently at risk; this todo is the root-cause fix only.
