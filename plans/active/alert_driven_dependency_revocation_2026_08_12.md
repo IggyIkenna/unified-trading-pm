@@ -111,6 +111,8 @@ bridges them; it does not extend one over the other.
       `scripts.recovery._durable_state. state_bucket()` resolves empty locally (gcloud auth present — 5 accounts
       including a working SA — but the bucket name itself resolves from runtime-only config this dev checkout doesn't
       carry). Needs either a slot with the runtime env wired or a VM-side run. Left open rather than faked.
+      **RE-ATTEMPTED 2026-08-16, still BLOCKED-CREDENTIALS, unchanged** — `state_bucket()` still resolves `''` in this
+      slot. Genuinely needs a VM-side run or a slot with the deploy-time env vars; not fixable from a bare dev checkout.
 - [x] ✅ [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
       PROGRESS via `record_captured`) vs drain-blind (no checkpoint) — a drain-blind prefix can only ever receive
       DEPS_HOLD. Repo: deployment-service. — **MEASURED 2026-08-14** (no code changed, read-only census): **243 total
@@ -377,7 +379,14 @@ bridges them; it does not extend one over the other.
       (adjacent to the visibility carry-over, out of scope for that pass). Either route `_pause_schedulers` through
       `scheduler_maintenance.pause_for_maintenance()` (needs a `bucket`/`surface`/`ttl_minutes` design call this plan's
       operator record does not make) or confirm via a live sweep that this genuinely never double-pages before closing
-      it as a non-issue. Repo: deployment-service.
+      it as a non-issue. Repo: deployment-service. **2026-08-16 — operator chose the first option; mechanism BUILT,
+      NOT YET production-wired.** `deployment-service@310f82e84f` adds `RevocationActuator.__init__`'s
+      `consolidator_bucket_resolver` injected-callable param + `_register_maintenance_windows()`
+      (surface-scoped-per-target, `locked_by="revocation-actuator"`, `ttl_minutes=1440`) — `None` (every current
+      production call site) is a verified no-op, no regression. Wiring the REAL resolver in is blocked on a genuine
+      import cycle (this module sits below `escalation.py`; the resolver function sits behind
+      `meta_targets.py`→`meta_watchers.py`→`escalation.py`→back to this module) — tracked as its own P2 todo in
+      `/plans/active/revocation_arming_2026_08_14.md`.
 - [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
       from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
       documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,

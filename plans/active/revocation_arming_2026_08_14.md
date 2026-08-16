@@ -135,7 +135,7 @@ source:
       `revocation deps_drain delivered for mdps-defi-2022-20260815-050859 -> ['vm-logs/…/DRAIN_REQUESTED.json', 'vm-census/admission-hold/….json'] (DP-VM-002)`
       — both markers written, and `deps_hold delivered for mdps-defi-` (DP-VM-001) shows prefix-family targeting working
       too. **30 distinct VMs received a delivery in 12h.** The mechanism is live and acting. Repo: deployment-service.
-- [ ] [CODE] P0. **Register the 7 emitted-but-unregistered DP ids, or the revocation layer stays blind to them.**
+- [x] ✅ [CODE] P0. **Register the 7 emitted-but-unregistered DP ids, or the revocation layer stays blind to them.**
       Measured 2026-08-15: `DP-LIVE-001/002/003/004`, `DP-VM-012`, `DP-WATCHER-005/006` are emitted by monitor source
       but appear in NEITHER closed set (`data-pipeline-alerts.registry.yaml`'s 54 ids, nor `AlertCode`), so
       `evaluate_revocation()` raises `UnknownAlertIdentityError` and `_apply_revocation` logs
@@ -146,12 +146,27 @@ source:
       existing thing to the producer-silence trigger in `/plans/active/producer_silence_flatten_protocol_2026_08_14.md`
       — so this gap will silently swallow that plan's trigger too unless closed first. Each id needs a deliberate
       `DependentAction` (registering at `NONE` is safe and explicit; anything stronger on a LIVE code is a risk
-      decision). Repo: unified-api-contracts + unified-trading-pm (registry).
-- [ ] [CODE] P1. **Make an unregistered identity fail loudly at CI time, not silently at runtime.** The gap above
+      decision). Repo: unified-api-contracts + unified-trading-pm (registry). — **unified-api-contracts@6acfd3642e.**
+      All 7 registered in `DP_FAILURE_MODE_ACTIONS`; `_DP_REGISTRY_IDS` test-literal updated to match. Verified live
+      via UAC's own venv: `evaluate_revocation()` resolves all 7 without raising, matching the intended action exactly.
+      Survived a real mid-flight incident this session (a peer's unrelated file-size-ratchet split of
+      `dependency_revocation.py` landed via this slot's auto-pull cron while the content sat uncommitted, silently
+      dropping it from the working tree — recovered byte-for-byte from a shared auto-stash and reapplied to the new
+      split file `_dependency_revocation_policies.py`, see Progress Log). Gate green 264s once the governor's
+      unbounded-wait + repo-identity-RAM-inflation bugs (fixed same day, `unified-trading-pm@bea0594fd2`) stopped
+      blocking it — earlier attempts sat queued 3.8h+ / died silently under the pre-fix governor.
+- [x] ✅ [CODE] P1. **Make an unregistered identity fail loudly at CI time, not silently at runtime.** The gap above
       survived because a `WARNING` in a Cloud Run job's logs is invisible until someone greps for it. Add a check that
       every `registry_id=` literal passed to `emit_finding()` resolves in `evaluate_revocation()`'s closed set — an AST
       sweep over the monitor source, in the same family as the anti-inertness guards. A code emitting into a policy
-      layer that cannot key it is the same class of defect as a component with no caller. Repo: deployment-service.
+      layer that cannot key it is the same class of defect as a component with no caller. Repo: deployment-service. —
+      **deployment-service@310f82e84f.** `tests/unit/test_registry_id_closed_set.py` — arm 1 is exactly this AST
+      sweep (18 literal ids collected, parametrized, each resolved via `evaluate_revocation()`); arm 2 is this
+      session's own extension (see the child plan's next open item's resolution note). **Caught a real live gap on
+      its first run before shipping**: a peer's unrelated same-day commit (`d776dbe253`, "umbrella case-sensitivity")
+      landed a new `DP-VM-013` emitter with no policy entry — the guard failed exactly as designed, registered
+      (`unified-api-contracts@a2734aa9ba`, `NONE`/`_AGENT_URGENT`, same DP-WATCHER-003 monitor-blind-not-data-wrong
+      analogy), then shipped green.
 
 > **CORRECTION 2026-08-15 (peer session, re-measured) — the "two layers deep" framing for DP-MANIFEST-001 was wrong,
 > withdrawn.** DP-MANIFEST-001 is one of the 54 already-registered ids — identity was never its problem, and this
@@ -320,7 +335,7 @@ source:
 > — no plan-split needed. The cron-host question is a separate, smaller operator decision, tracked as its own todo below
 > rather than bundled into "migrate everything."
 
-- [ ] [CODE] P1. **Migrate `launch-prediction-pipeline-vm.sh` onto `vm-exec-with-gcs-tee.sh`.** The one genuine
+- [x] ✅ [CODE] P1. **Migrate `launch-prediction-pipeline-vm.sh` onto `vm-exec-with-gcs-tee.sh`.** The one genuine
       lightweight-launcher migration candidate found by the corrected census above — a real multi-stage backfill (MDPS
       tick→OHLCV, features-cross-instrument, features-delta-one) inlining its own startup script instead of the
       canonical gated path. Needs its workload invocation adapted to the tarball-based CLI entrypoint model
@@ -349,9 +364,8 @@ source:
       byte-for-byte (same-looking `deployment_id`, made it look like nothing had changed) — the GCS blob PERSISTS from a
       prior run until the new run's `heartbeat_daemon.py` uploader overwrites it, so an early read after relaunch can
       silently return stale evidence; always cross-check `deployment_id`/instance `creationTimestamp` before trusting
-      log content as "this run's". **Remaining before shipping**: run the full `quality-gates.sh` (deferred this
-      session, not yet run on these 2 files — batch it with the UAC/guard work above per the peer's QG-sweep guidance),
-      quickmerge, then flip this checkbox with the real commit sha.
+      log content as "this run's". **SHIPPED 2026-08-16 — deployment-service@310f82e84f.** Gate green (249s), content
+      re-verified intact after surviving this session's multi-hour QG-governor wait + auto-pull cycles before shipping.
 - [x] ✅ [OPERATOR] P2. **Marker-hold admission model applies to long-lived cron-HOST VMs — VERIFIED ALREADY SATISFIED,
       no code change needed.** Traced all 5 cron-HOST launchers' (`launch-cefi-fwd-daily-cron-vm.sh` + 4 siblings)
       actual daily trigger: none run the data work in-place on the host. Each cron.d entry `bash`-invokes a SEPARATE
