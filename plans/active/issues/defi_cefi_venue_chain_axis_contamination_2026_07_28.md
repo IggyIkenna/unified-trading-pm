@@ -538,6 +538,13 @@ doc for the full history).
   GATED cooldown policy applies rather than passing a value the server would discard anyway). Re-dispatch any time
   at/after 2026-08-16T09:10Z.
 
+- **slot-3 2026-08-16 ~01:46Z (data_engineering, task `defi_cefi_venue_chain_axis_contamination-7a50eb15bb1e`,
+  follow-up cron-verification re-check)**: Re-picked up the same follow-up todo (unchanged since slot-7's check).
+  Gate is still explicit — "No earlier than 2026-08-16T09:10Z". Current time confirmed **2026-08-16T01:46Z** — ~7.4h
+  before the gate opens; none of the 3 verification steps can produce a meaningful result yet, so no GCS/gcloud calls
+  made this pass. Skipping `reason_code=GATED` (real ETA ~444min exceeds the fleet's 180min dispatch-cooldown cap).
+  Re-dispatch any time at/after 2026-08-16T09:10Z.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
