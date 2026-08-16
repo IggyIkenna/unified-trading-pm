@@ -372,6 +372,16 @@ investigation confirmed are both achievable with existing primitives:
   (`agent_kind="human"`, not `"custom"` — the Phase 4b fix is deployed). **Not done this pass**: the second Phase 4
   todo (claim + complete one real backlog task end-to-end) — "do it" was scoped to registration, a real task
   claim/done cycle is a bigger action and wasn't asked for yet.
+- **2026-08-16 (same session, "finish it all")**: operator asked to complete everything remaining. Shipped Phase 5
+  (`plan_task_activity.py`, `unified-trading-pm@baf8fd3762`) and Phase 6 (codex Half-4 + confirm-first hook,
+  `agent-orchestrator@1af50054cf` + same PM commit), both full-QG-green. Attempted the real task-claim/done cycle
+  (Ikenna's remaining Phase 4 todo): fetched the FULL live queued backlog (314 tasks, confirmed exhaustive) — every
+  single one carries a `blocked_reason`. Correctly left un-run rather than force-claiming a gated task, which would
+  mean doing real work against an unmet prerequisite. **Genuinely complete**: Phases 0-3 (prior session), 4b
+  (demo preview), 4-Ikenna-registration, 5, 6. **Genuinely still open, not oversights**: Ikenna's real-task cycle
+  (blocked on backlog state, not on anything this session controls — re-attempt when something clears or the
+  operator names a task directly), and Harsh's entire Phase 4 (physically impossible from this session, per the
+  operator's own "I'll give Harsh instructions separately" framing).
 
 ## Todos
 
@@ -578,7 +588,7 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 5 — lightweight per-operator plan/task activity view (git-log-derived, no live AO dependency)
 
-- [ ] [SCRIPT] P2. **Build a git-log-derived "plans created" / "tasks completed" activity view, split by operator, with
+- [x] 23. ✅ [SCRIPT] P2. **Build a git-log-derived "plans created" / "tasks completed" activity view, split by operator, with
       no dependency on live AO registration (Harsh's Phase 4 stays dormant).** Resolved this session (see Progress Log
       2026-08-16, "classification reconciliation") after the operator correctly flagged that self-declared
       `role_group` per-heartbeat can't honestly classify a mixed session, and that neither the code-repo commit nor a
@@ -608,24 +618,39 @@ investigation confirmed are both achievable with existing primitives:
       server-priced spend to AO, tagged `role_group="human"`/`"planning-human"` — the exact same
       `TaskUsageWindows`/`BatchingEfficiencyPanel` panels every other slot already uses. This script never reads a
       transcript and never needs to — it stays a pure git-log classifier, one lane only.
+      Shipped as `scripts/plan-hygiene/plan_task_activity.py` — classifies every `unified-trading-pm` commit touching
+      `plans/` by comparing checkbox counts against its parent (`min(old_open - new_open, new_done - old_done) > 0` =
+      a real flip, not just noise from an unrelated done-item addition landing in the same commit); operator identity
+      from commit-author email domain (`gmail.com` -> ikenna, `odum-research.com` -> harsh). Run against real history
+      (`--since 2026-08-15`, 677 commits at run time): correctly distinguished `TASK COMPLETED` vs `plan updated` for
+      this session's own commits (spot-checked directly). Standalone CLI as scoped (`--json` for machine use); the
+      dashboard-page option was left undone as explicitly optional in the original design. Evidence:
+      `unified-trading-pm@baf8fd3762`.
 
 ### Phase 6 — after-flip discipline: CLAUDE.md hard rule + a hook that reports completion to AO automatically
 
-- [ ] [DOC] P2. **Add a one-line CLAUDE.md hard rule (pointer only, per this file's own size-budget/condense
+- [x] 24. ✅ [DOC] P2. **Add a one-line CLAUDE.md hard rule (pointer only, per this file's own size-budget/condense
       convention) to the existing "Commit + Push + Flip" section**: once a human-fleet slot is registered (Phase 4
       live), completing a Half-2 checkbox flip is followed by reporting it to AO
       (`ao-done.sh <task_id> <sha> "<evidence>"`) — a "Half 3" for a human-fleet-registered operator specifically, not
       a fleet-wide change (AO-dispatched workers already do this via their own `/done` call; this closes the gap only
       for a human's own interactive session). Full rule text + rationale lives in a new codex doc this rule points to
       — CLAUDE.md itself only gets the 1-line essence + pointer, per its own maintenance rule at the top of the file.
-- [ ] [SCRIPT] P2. **Design + build a Claude Code hook that auto-fires `ao-done.sh` after a detected commit+push+flip
-      sequence**, so the Phase 6 hard rule above is enforced mechanically, not by memory. Concretely: a `PostToolUse`
-      hook on the `Bash` tool, matching a successful `git push` to `unified-trading-pm` whose just-pushed commit
-      flipped a `- [ ]` → `- [x]` (the same detection Phase 5's parser already implements — reuse it, don't
-      re-derive), extracting the todo's task_id if one exists (a checkbox flip on a plan todo doesn't always
-      correspond to an AO backlog `task_id` — most won't, since most human work isn't AO-claimed; the hook fires
-      `ao-done.sh` ONLY when a `human-claim`'d task_id is actually in flight for the current slot, otherwise it's a
-      no-op, matching Phase 5's own "untracked work legitimately shows as neither" principle). Needs a design decision
-      before building: does the hook confirm with the operator before firing (safer, matches this workspace's own
-      "actions visible to others... confirm first" default) or fire silently (matches "mechanical enforcement, not
-      memory")? Recommend confirm-first for the initial build, revisit once the pattern is proven reliable.
+      Added a "Half 4" section to `/codex/12-agent-workflow/commit-push-flip-rule.md` (the existing 3-halves SSOT,
+      extended rather than forked into a new doc) covering the confirm-first hook + the token-counts-are-out-of-scope
+      boundary. **CLAUDE.md itself got NO net-new bytes** — found it already 186B over its own 40,960B hard cap before
+      touching anything (`check_agent_rules_size_cap.py`, QG-enforced, "never raise the cap"); the existing SSOT
+      pointer already resolved to the doc I extended, so no new prose was needed there at all — confirmed the
+      untouched pointer line is enough by re-running the size-cap check standalone (passed, 38B headroom) before the
+      full re-run confirmed clean. Evidence: `unified-trading-pm@baf8fd3762`.
+- [x] 25. ✅ [SCRIPT] P2. **Design + build a Claude Code hook that auto-fires `ao-done.sh` after a detected
+      commit+push+flip sequence**, so the Phase 6 hard rule above is enforced mechanically, not by memory. Resolved
+      the design question in favor of confirm-first (as recommended): `agent-orchestrator/scripts/human_fleet/
+      post_plan_commit_hook.py`, a `PostToolUse` hook matching `Bash`, wired in `cursor-configs/settings.json` (new
+      entry, matcher `"Bash"`, alongside the existing batching-nudge entry). Fast-exit chain (command match ->
+      exit_code==0 -> cwd is unified-trading-pm -> token file exists -> `AO_SLOT_ID` env set -> HEAD actually flipped
+      a checkbox) before the one AO API call (`GET /api/state`, checking the slot's `current_task`) — the network
+      call only fires once every local, cheap gate has already passed. On a match, surfaces a `systemMessage`
+      suggesting the exact `ao-done.sh` invocation; NEVER calls it itself. 10 new tests (every fast-exit branch +
+      both positive/negative outcomes, using a real temp git repo for the checkbox-flip detection, not a mock), full
+      `quality-gates.sh` green (3995 passed). Evidence: `agent-orchestrator@1af50054cf`.
