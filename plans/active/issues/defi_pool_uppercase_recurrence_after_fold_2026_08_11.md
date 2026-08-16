@@ -25,18 +25,17 @@ summary: >-
   (`market-tick-data-service@3f5cc6e4`) — over 6 weeks before the `canonical-migration-defi-rebuild-20260810-093118`
   →`...-204358` VM chain that just completed (per this same plan's todo 1) ran. Neither obvious writer nor the rebuild's
   own path-parsing logic should be able to produce a fresh uppercase `POOL` manifest row today. Yet the population went
-  0 → 7.9M in the 6 days between the fold's verification and this reading. **Mechanism not found** — this doc records
-  what was ruled out, not a diagnosed root cause, and blocks safe retirement: retiring the 7.9M rows again without
-  understanding why they came back risks the exact same "fixed, then silently reverted" cycle the 2026-08-05 fold
-  already went through once.
+  0 → 7.9M in the 6 days between the fold's verification and this reading. **ROOT CAUSE NOW CONFIRMED 2026-08-16** — see
+  "What I found" item 6: a live, ongoing writer defect in `market-data-processing-service`, an entirely different repo
+  from every mechanism checked above.
 status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [market-tick-data-service, unified-trading-pm]
+repos: [market-tick-data-service, market-data-processing-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags:
-  [defi, manifest, pool-casing, dex-pool-swaps, data-correctness, ssot-contradiction, recurrence, root-cause-unresolved]
+  [defi, manifest, pool-casing, dex-pool-swaps, data-correctness, ssot-contradiction, recurrence, root-cause-confirmed]
 related:
   [
     /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
@@ -47,7 +46,7 @@ related:
   ]
 created: "2026-08-11"
 parent_epic: manifest_master
-priority: P1
+priority: P0
 locked_by:
 resolved_by:
 assigned_vm: planning
@@ -64,12 +63,14 @@ context_scope:
     /codex/02-data/canonical-cutover-register.md,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
   ]
 drift_direction: advance-code
 depends_on: []
 ---
 
-# DeFi `instrument_type=POOL` recurrence after a verified fold — root cause unresolved
+# DeFi `instrument_type=POOL` recurrence after a verified fold — root cause CONFIRMED
 
 ## What I found
 
@@ -142,31 +143,84 @@ depends_on: []
      all, or a 5th on-disk shape variant this script's candidate set didn't cover — in EITHER case there is still no
      evidence of a physical *uppercase*-pathed object, so this does not change the conclusion). Combined with the more
      exhaustive 2026-08-12 result, there is no evidence anywhere that the uppercase `POOL` rows correspond to genuinely
-     uppercase-pathed GCS objects — **the Part-5 "legacy COPIED not MOVED" migration treatment is NOT needed; this
-     stays a manifest-only fix.**
+     uppercase-pathed GCS objects **under the 4 path shapes tested — all shaped for the `raw_tick_data/` tree grammar**
+     — see item 6 below for the tree these shapes never covered.
    - **NEW, more urgent finding — a SECOND recurrence has already happened.** The 2026-08-12 retirement (todo 5 in the
      same archived plan, `market-tick-data-service@5e456d0d`) drove captured `instrument_type=POOL` to **0** (verified
      independently post-apply that same day). This session's fresh live query (2026-08-16, 4 days later) found
      **1,641,333** captured `instrument_type=POOL` `dex_pool_swaps` rows present again — i.e. the population regrew
      from 0 to 1.64M in ~4 days, the SAME recurrence pattern this issue doc was opened to track (which went 0→7.9M in
-     ~6 days the first time, 2026-08-05→2026-08-10/11). The root-cause mechanism named in this doc's own title is
-     confirmed to still be ACTIVE and UNFIXED — this is not a one-off, it is a repeating regression. Whatever writes
-     these rows was not identified by any of the checks already run (live writer ruled out, rebuild ruled out, stale
-     tarball ruled out) — the mechanism remains genuinely unknown. **This materially changes the calculus for todo
-     168's "decide whether retirement can proceed, or whether the underlying pipeline needs a durable fix first": a
-     third retirement without first finding the actual writer would almost certainly just recur a fourth time.**
-     Recommend the next worker on todo 168 prioritize identifying WHAT wrote the 1,641,333 rows between 2026-08-12 and
-     2026-08-16 (e.g. `written_at`/`service_name` provenance columns on the regrown rows, mirroring the
-     `service_name=market-data-processing-service` vs `market-tick-data-service` discrepancy slot-7 flagged as an
-     unexplored lead in the archived plan's todo-5 entry) BEFORE re-retiring.
+     ~6 days the first time, 2026-08-05→2026-08-10/11). Recommended the next worker on todo 168 prioritize identifying
+     WHAT wrote the 1,641,333 rows (e.g. `written_at`/`service_name` provenance columns on the regrown rows, mirroring
+     the `service_name=market-data-processing-service` vs `market-tick-data-service` discrepancy slot-7 flagged as an
+     unexplored lead in the archived plan's todo-5 entry) BEFORE re-retiring — **this lead is what item 6 below
+     resolved.**
+6. **2026-08-16 (slot 6, data_engineering) — ROOT CAUSE CONFIRMED: a live, ongoing writer defect in
+   `market-data-processing-service`, a repo NO prior session in this chain had checked.** Slot-7's flagged-but-
+   unexplored lead in item 5 (regrown rows may carry `service_name=market-data-processing-service`, not
+   `market-tick-data-service`) pointed at the right repo. Traced to a precise mechanism, live-verified against prod
+   GCS (not inferred):
+   - **The writer bug**: `market_data_processing_service/app/core/canonical_writer.py:374` builds the
+     `processed_candles/` GCS object PATH directly from `instrument_type` —
+     `f"...instrument_type={instrument_type}/data_type=..."`, no `.lower()`. That `instrument_type` comes from
+     `_infer_instrument_type()` (`canonical_writer_shaping.py:393-395`), whose TOP-PRIORITY resolution path extracts
+     the TYPE token straight from the canonical `instrument_id` string (e.g. `BALANCER-ETHEREUM:POOL:0x...`) —
+     correctly UPPERCASE per the id-grammar rule (`/codex/02-data/canonical-cutover-register.md` §3b, "ID segment —
+     SETTLED, UPPER"). `canonical_writer.py` embeds that SAME uppercase value unmodified into the GCS PATH segment,
+     which per the SAME register's §3a ("PATH segment — SETTLED, lowercase") must always be lowercase. MTDS's own
+     `rebuild_defi_manifest.py::parse_hive_path` and `write_defi_rows()` already handle this correctly (`.lower()`
+     at the path-construction call site, uppercase preserved for the id/manifest-column value) —
+     `canonical_writer.py` is the one writer found so far that conflates the two casings.
+   - **Live-verified at scale, one bounded prefix-listing per pipeline_mode (no corpus walk), day=2023-01-01** (the
+     exact day `backfill_defi_dex_pool_swaps_source_correction.py`'s own docstring already names as having BALANCER
+     activity): `pipeline_mode=batch_onchain_rpc` — **11,718/11,718** objects at `instrument_type=POOL/` (uppercase),
+     **0** at `instrument_type=pool/`. `pipeline_mode=batch_onchain_subgraph` (the "corrected" tree) — **29,561/
+     29,561** likewise 100% uppercase, 0% lowercase. This is a PHYSICAL, at-scale, ONGOING non-canonical GCS corpus
+     under `processed_candles/` for defi POOL `dex_pool_swaps` — distinct from the `raw_tick_data/` tree item 5's
+     DIAG todo confirmed has no physical uppercase objects; that finding was correct for the 4 path shapes it
+     tested but never covered `processed_candles/`'s distinct grammar (it carries a `timeframe=` segment
+     `raw_tick_data/` doesn't) — exactly the "5th on-disk shape variant" item 5 itself flagged as unruled-out.
+     Read-only probe (`list_blobs`+`get_blob_metadata` only, no writes), not shipped as a repo script (trivial
+     enough to re-derive from the citations above): scratchpad `probe_processed_candles_pool_casing.py`, this
+     session.
+   - **The propagation mechanism — `backfill_defi_dex_pool_swaps_source_correction.py` (also MDPS)**: reads
+     `instrument_type` straight off the SOURCE object's on-disk path segment (`classify_object:162`,
+     `segments.get("instrument_type", "")`) — already uppercase per the writer bug above — then (a) propagates it
+     unmodified into the copy's destination path (`dst_path_for_src:134` only swaps `pipeline_mode=`, leaving
+     `instrument_type=POOL/` untouched — confirmed live: the destination tree is ALSO 100% uppercase for this day),
+     and (b) stamps that same uppercase value into a fresh `record_captured(instrument_type=instrument_type, ...)`
+     call (`:431`) with `service_name="market-data-processing-service"` (`:405`) — the direct, now-confirmed source
+     of the recurring uppercase-`POOL` CAPTURED manifest rows this issue doc tracks, and the exact match for
+     slot-7's flagged lead.
+   - **Why this explains BOTH recurrences, not just one**: `canonical_writer.py` is SHARED, cross-asset-group MDPS
+     code (a tradfi-specific branch in the SAME function, `:266`, confirms it isn't defi-only) — it is MDPS's
+     general candle-write path, not a one-off script. Every ordinary defi POOL candle write MDPS performs (not just
+     this one backfill script's narrow mistagged-`pipeline_mode` population) goes through this same buggy path
+     construction. The 2026-08-05→08-11 (0→7.9M) and 2026-08-12→08-16 (0→1.64M) recurrences are consistent with
+     ONGOING, regular MDPS candle-write activity continuously re-creating uppercase-POOL captured manifest rows —
+     not a one-time resurrection event, and not requiring the backfill script to have run again.
+   - **A second, independent, ALSO-real risk found this session (not the primary driver here, but load-bearing for
+     any FUTURE retirement)**: the manifest-consolidator's shard-merge dedup
+     (`unified_trading_library/manifest_writer/_read_index.py::_merge_shard_frames`, mirrored in
+     `manifest_consolidator.py`'s DuckDB `ORDER BY CASE`) has a documented, partially-fixed bug class —
+     `legacy_seed_captured_outranks_resurrection_risk_2026_07_15` — where `capture_status='captured'`
+     UNCONDITIONALLY outranks a newer `attempted_failed` retirement flip for the same dedup key, REGARDLESS OF
+     RECENCY. The 2026-07-15 fix (+2026-07-24 refinement) protects only the tagged `_legacy_seed.parquet` shard
+     specifically; an ORDINARY per-VM shard (e.g. from any DeFi backfill/rebuild VM) that still exists in GCS with
+     an old `captured` row for a retired key has no equivalent protection — it wins the tie-break on its next merge
+     regardless of age. `_prune_consolidated_shards` (`manifest_consolidator.py:1893`) is designed to delete a
+     per-VM shard once its rows are provably merged into canonical, defaulting enabled
+     (`CONSOLIDATOR_PRUNE_SHARDS`, default `true`, `manifest_consolidator.py:473`) — **not verified this session
+     whether it is actually keeping up** on the defi bucket, or whether a backlog of un-pruned stale shards exists;
+     flagged as an open follow-up, not confirmed either way.
 
 ## Why it matters
 
 `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2's stated done-when is "0 remaining captured rows
 with `instrument_type=POOL`" — but the 2026-08-05 fold already reached that state once and it did not hold. Any
 retirement now, even setting aside slot-31's separate content-verify blocker on the wrapped-id matching scheme, risks
-being silently reverted again by whatever mechanism produced this recurrence — which is not yet understood. Retiring
-into an unknown-recurring population is not a safe basis for closing todos 2-4.
+being silently reverted again by whatever mechanism produced this recurrence — which is now understood (item 6) but
+NOT yet fixed. Retiring into an actively-recurring population is not a safe basis for closing todos 2-4.
 
 ## Recommended decision
 
@@ -174,16 +228,15 @@ Before todo 2 (or 3/4) attempts another retirement:
 
 1. Confirm the rebuild VM's actual deployed code content (`cloudbuild`/tarball manifest `commit_sha`, per the pattern
    `defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md` already used) — rule in/out a stale snapshot.
-2. Confirm whether the rebuild is full-replace or upsert-onto-existing (read `rebuild_defi_manifest.py`'s top-level
-   `main()`/index-write path, not yet read this session).
+   **DONE, see "What I found" item 4.**
+2. Confirm whether the rebuild is full-replace or upsert-onto-existing. **DONE, see "What I found" item 4.**
 3. Sample a handful of the 7,930,863 uppercase rows' underlying GCS objects directly (`gcs_describe_object`/`list_blobs`
-   under `instrument_type=POOL/`) to settle whether they're a manifest-column-only artifact (as the 2026-08-05 fold
-   assumed) or genuinely reflect physical objects at an uppercase path — the latter would mean this needs the Part-5
-   "legacy COPIED not MOVED" migration treatment (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part
-   5), not a manifest-only patch.
-4. Only once the recurrence mechanism is understood, decide whether todo 2 retires safely (recommend: yes, once (1)-(3)
-   land and content-verify from the sibling blocker also clears) or whether the underlying pipeline needs a durable fix
-   first so this doesn't recur a third time.
+   under `instrument_type=POOL/`) to settle whether they're a manifest-column-only artifact or genuinely reflect
+   physical objects at an uppercase path. **DONE — genuinely reflects physical objects, just under a different tree
+   (`processed_candles/`) than the one first sampled; see "What I found" items 5-6.**
+4. Only once the recurrence mechanism is understood, decide whether todo 2 retires safely or whether the underlying
+   pipeline needs a durable fix first so this doesn't recur a third time. **DONE 2026-08-16 — durable fix required
+   first; see the Todos list below for the exact gated sequence.**
 
 No irreversible action taken or proposed here — this is a manifest-status-flip-adjacent investigation gap, not a GCS
 delete, but the same evidentiary bar applies given real financial data is at stake.
@@ -204,10 +257,52 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       SECOND recurrence: captured `instrument_type=POOL` regrew from 0 (post-2026-08-12-retirement) to 1,641,333
       (measured today) — see "What I found" item 5.** market-tick-data-service@dc008dcf (script:
       `scripts/one_offs/sample_pool_uppercase_gcs_objects_2026_08_16.py`).
-- [ ] [SCRIPT] P1. Only once the DIAG todo above lands, decide whether
+- [x] ✅ [SCRIPT] P1. Only once the DIAG todo above lands, decide whether
       `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2's retirement can proceed safely, or
       whether the underlying pipeline needs a durable fix first so this doesn't recur a third time. Also re-close
-      `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s now-reopened P3 todo once resolved.
+      `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s now-reopened P3 todo once resolved. **RESOLVED
+      2026-08-16 (slot 6, data_engineering): DECISION = durable fix REQUIRED FIRST; retirement does NOT proceed
+      yet.** Root cause CONFIRMED (not just narrowed) — see "What I found" item 6: a live, ongoing writer defect in
+      `market-data-processing-service`, unrelated to every repo/mechanism prior sessions checked (MTDS
+      `_dex_swaps_queries.py`, `rebuild_defi_manifest.py`). Re-closing the axis-contamination P3 todo is
+      correspondingly DEFERRED to the gated todo below — not safe to re-close while the writer that caused the
+      reopening is still live and unfixed.
+- [ ] [BACKEND] P0. Fix the confirmed root cause:
+      `market_data_processing_service/app/core/canonical_writer.py:374`'s `partition_path` construction must
+      lowercase `instrument_type` for the GCS PATH segment specifically (e.g. `instrument_type=
+      {instrument_type.lower()}`) — while leaving every OTHER use of the `instrument_type` variable in this
+      function (the manifest `record_captured` row content, `lookup_mdps_contract`, log-event payloads) at its
+      current uppercase value, since that matches the id-grammar (§3b) and manifest-column-target (§3c) rules —
+      only the PATH segment (§3a) is wrong today. Audit every OTHER `instrument_type` usage in this same file
+      (this session found ~10 call sites, `:284/301/331/344/357/390/429/512/532/586/659`) individually before
+      touching any of them — some may be additional, not-yet-found path-construction sites with the SAME bug
+      (unverified this session), not all are the row-content/manifest-column use this todo assumes. (repo:
+      market-data-processing-service)
+- [ ] [DIAG] P1. Verify `_prune_consolidated_shards` (`manifest_consolidator.py:1893`) is actually keeping the defi
+      bucket's per-VM-shard backlog drained, not silently falling behind — list `_index/per_vm/` for the defi tick
+      bucket, check the oldest shard's age against the canonical's last-merge marker, and confirm `deleted` counts
+      in recent consolidator run logs are non-zero when a backlog exists. If shards are backlogged, that is the
+      same captured-outranks resurrection risk documented in "What I found" item 6's last bullet, applying to any
+      stale per-VM shard, not just the legacy seed. (repo: unified-trading-library, or wherever the defi
+      consolidator's live Cloud Run schedule is defined — confirm which before filing further)
+- [ ] [SCRIPT] P1. GATED on the `[BACKEND]` fix above landing + being confirmed live (a fresh candle write for a new
+      day producing a lowercase-pathed object, not just a code review) — only THEN retry
+      `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2's retirement (still also gated on that
+      sibling plan's own separate wrapped-id content-verify blocker, unrelated to this doc). Re-close
+      `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s P3 todo in the SAME pass, citing this doc + the
+      landed fix sha.
+- [ ] [DIAG] P2. Scope the corpus-wide non-canonical `processed_candles/.../instrument_type=POOL/` physical-object
+      population before any migration is attempted — this session measured 100% uppercase (41,279 objects) for ONE
+      day's `dex_pool_swaps` alone; the corpus spans ~1,155 distinct days
+      (`backfill_defi_dex_pool_swaps_source_correction.py`'s own enumeration) and likely other defi POOL data_types
+      beyond `dex_pool_swaps` (the writer bug is data_type-agnostic). Likely a six-to-seven-figure object count —
+      needs its own dedicated plan (COPY-to-canonical-lowercase, never a blind rename/move, per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5) once scoped, not a fold into this doc.
+- [ ] [DIAG] P2. Check whether the SAME `canonical_writer.py`/`_infer_instrument_type` casing-conflation bug also
+      affects cefi/tradfi/prediction `processed_candles/` writes — their canonical id grammars ALSO embed an
+      uppercase type token (§3b applies fleet-wide, not defi-only) and `canonical_writer.py` is shared cross-
+      asset-group code (this session confirmed a tradfi-specific branch in the SAME function, `:266`). NOT verified
+      this session — flagging as a plausible, unchecked risk per CLAIM ≤ MEASUREMENT, not a confirmed finding.
 
 ## Progress Log
 
@@ -219,3 +314,16 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   to 1,641,333 as of today, four days after the 2026-08-12 retirement drove it to 0 — a SECOND recurrence of this
   doc's own tracked mechanism. See "What I found" item 5 for full detail and the recommendation for todo 168's next
   worker.
+- **2026-08-16 (slot 6, data_engineering)**: resumed the `[SCRIPT]` decision todo. ROOT CAUSE CONFIRMED — a live,
+  ongoing writer defect in `market-data-processing-service/.../canonical_writer.py:374` (GCS PATH segment built
+  from an un-lowered, correctly-UPPERCASE id-grammar token), live-verified at scale against prod GCS (41,279/41,279
+  sampled `processed_candles/` objects uppercase for one day, 0 lowercase) and connected to the propagation
+  mechanism in `backfill_defi_dex_pool_swaps_source_correction.py` (same repo) that stamps the same casing into
+  fresh `record_captured` manifest rows under `service_name=market-data-processing-service` — resolving slot-7's
+  previously-unexplored lead. DECISION: retirement does NOT proceed until the writer fix (new P0 todo) lands and is
+  verified live. Bumped doc priority P1→P0 given confirmed scale + an actively-recurring correctness bug on real
+  financial data. Filed 5 new follow-up todos (fix, consolidator-prune verification, gated re-retirement, corpus-
+  migration scoping, cross-AG risk check) — see Todos list. Note for the operator/main agent: this is a cross-repo,
+  at-scale data-correctness finding per CLAUDE.md's "big finding" rule — surfacing it prominently here (doc priority
+  P0, new fix todo P0) since no direct operator-notification channel is documented for this worker role beyond the
+  tracked plan itself.
