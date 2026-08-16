@@ -123,17 +123,22 @@ needs a coverage audit (not a dedup).
       `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md` citing this plan's Measured Baseline
       (2026-08-16 sweep) for the three clean verdicts (adapter keys, instrument types, data types), plus a pointer to
       this plan's todos 1 and 3 for the capability-record and error-code-map concerns.
-- [ ] [DATA] P0. **Audit error-code COVERAGE completeness per in-scope venue** (distinct from the classification
-      *implementation*, already confirmed clean above). For each venue currently in the carve-out's contracted scope
-      (Bybit, Deribit, Binance, OKX, Lido — per
-      `/plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md`'s narrowed scope) plus any other venue
-      already `LIVE-READY` or `PAPER-READY`: enumerate that venue's actual documented API response/error codes from
-      its own docs, and confirm each maps to a classified outcome via `classify_venue_error` /
-      `unified_api_contracts/canonical/crosscutting/errors/`. Report gaps — a code with no classified mapping is a
-      real finding, not a style nitpick (silent unclassified-default fallback was already flagged clean at 0/2 in
-      execution-service's QG STEP 5.104, but that measures *classifier dispatch*, not *documented-code coverage*).
-      Done-when: a table (venue → documented codes → mapped? y/n) exists for all in-scope venues, with every "n"
-      resolved to either a new mapping or an explicit declared-unmapped-because-unreachable note.
+- [x] [DATA] P0. **Audit error-code COVERAGE completeness per in-scope venue** (distinct from the classification
+      *implementation*, already confirmed clean above). ✅ Done 2026-08-16 —
+      `unified-api-contracts@d585f448bd`. Table below; every "n" resolved to a new mapping except the two rows marked
+      "declared-unmapped" (out of scope, not reachable by our system).
+
+      | Venue | Documented codes checked | Mapped before | Mapped after | Notes |
+      |---|---|---|---|---|
+      | Binance | -1000,-1002,-1003,-1006,-1007,-1013,-1015,-1021,-1022,-2010,-2011,-2013,-2014,-2015,400,401,403,409,418,429,500 | 8/20 | 20/20 | -2011 pre-existing; margin codes (-2018→-2041) explicitly declared-unmapped-because-unverified (couldn't confirm they exist in current Spot `errors.md`) |
+      | Bybit | 400,401,404,429,500,10000,10001,10002,10003,10006,10014,10016,10018,10019,10404,10429,20003,20006,33004,110079,170007,170032,170149,170150 | 8/24 | 23/24 | 10003/10016 REST/UTA meaning only — WS-OE meaning declared-unmapped-because-no-namespace-key (new `[BACKEND]` follow-up todo below); ~600 business-rejection codes (110xxx/170xxx/176xxx/182xxx) deliberately out of scope (order-response handling, not transport retry/reconnect/fail) |
+      | OKX | 400,401,429,500,50001,50004,50011,50013,50026,50102,51002,51008,51009,51119,51127,51131,51400,51401,51402,51736,51764,60009,60014,60015,64008 | 4/25 | 25/25 | 50004 relabeled (was mislabeled WS-close; real meaning is REST timeout); 64008 added as the real WS-close code |
+      | Deribit | 400,401,429,500,10004,10009,10028,10040,10041,10047,10066,11044,11051,11052,13000-13008,13009,13010,13028,13888,-32000,-32600,-32601,-32602,-32700 | 5/24 | 24/24 | 11044 relabeled (was mislabeled not-enough-funds; real meaning is not_open_order); 13010 relabeled (was mislabeled token-revoked/RECONNECT; real meaning is value_required, reclassified FAIL); 10009 added as the real not-enough-funds code |
+      | Lido | 400,401,429,500,-32000,-32005,-32603,InvalidRequestId,InvalidRequestIdRange,RequestAlreadyClaimed,RequestNotFoundOrNotFinalized,WITHDRAWAL_NOT_FOUND | 4/11 | 11/11 | WITHDRAWAL_NOT_FOUND is our internal label (doesn't match a real Lido contract error name) — kept, not a bug, real analogs added alongside it; STAKE_LIMIT/STAKING_PAUSED/ZERO_DEPOSIT declared-unmapped-because-out-of-scope (staking-submit isn't in scope, only withdrawal) |
+
+      Shipped as `unified-api-contracts@d585f448bd` (files: `canonical/crosscutting/errors/cefi.py`,
+      `canonical/crosscutting/errors/defi.py`, plus an unrelated-but-blocking fix to
+      `tests/data/execution_service_venue_reachability_baseline.json` — see Progress Log for why).
 - [x] [DOC] P1. **Do not duplicate the umbrella's own granularity-declaration OPERATOR item.** ✅ Done 2026-08-16 —
       added a cross-reference from the umbrella's `[OPERATOR] P0` "where does the granularity declaration live" item
       (`venue_readiness_and_registry_hardening_2026_08_16.md` line ~161) to this plan's resolved verdict: all three
@@ -153,10 +158,21 @@ needs a coverage audit (not a dedup).
       must stay distinct (e.g. it mixes execution ops with account-structure features like `SUBACCOUNT`/`DARK_POOL`
       that `VenueCapability` doesn't cover) is recorded here — resolve before or at the point `VenueCapabilityV2`
       gets its first real instance, not before.
+- [ ] [BACKEND] P3. **Design a namespace-tagged key for Bybit's REST-vs-WS error-code collision.** Surfaced by the
+      2026-08-16 error-code coverage audit (todo above): Bybit's own docs overload 10003 and 10016 across transports
+      — REST/UTA 10003="API key invalid/wrong domain" vs WS-OE 10003="too many sessions under same UID"; REST/UTA
+      10016="server error" vs WS-OE 10016="internal error/service restarting".
+      `classify_venue_error(venue, error_code)` has no transport dimension, so
+      `unified-api-contracts@d585f448bd` mapped only the REST/UTA meaning for both codes (the WS-OE meaning is a
+      declared, not resolved, gap). Not urgent — the WS-OE meaning isn't reachable by anything today. Done-when:
+      either `classify_venue_error()` grows an optional transport/namespace parameter (with every call site updated)
+      or a `"10003:ws"`-style key convention is adopted and documented, whichever a design review picks — do not
+      silently add a second `"10003"` entry to Bybit's list, `classify_venue_error()`'s linear scan returns only the
+      first match and a duplicate key would be dead code.
 
 ## Definition of done
 
-- [ ] [DOC] P0. **Contract step 1 ("Declared") is evidence-backed for all five concerns** in the venue-readiness
+- [x] [DOC] P0. **Contract step 1 ("Declared") is evidence-backed for all five concerns** in the venue-readiness
       umbrella — either "already clean, verified `<date>`" or "folded, `<repo>@<sha>`" for each.
 
 ## Progress Log
@@ -271,3 +287,35 @@ namespace-tagged key for Bybit's 10003/10016 REST-vs-WS collision, ship code via
 'unified_api_contracts/canonical/crosscutting/errors/cefi.py unified_api_contracts/canonical/crosscutting/errors/defi.py'`
 scoped to the `unified-api-contracts` repo, then flip this plan's `[DATA] P0` error-code-coverage todo to `[x]`
 with evidence (table + sha) and ship this doc via `safe-doc-push.sh`.
+
+**2026-08-16 — `[DATA] P0` todo shipped, DoD complete, plan ready to archive.** Applied all recommended additions
+and relabels to `unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/{cefi.py,defi.py}` per
+the audit above; consolidated table is now in the todo item itself. Bybit's 10003/10016 REST-vs-WS collision was
+NOT silently resolved with a duplicate key (that would be dead code — `classify_venue_error()`'s linear scan
+returns only the first match) — mapped the REST/UTA meaning only, spun the design decision out as a new
+`[BACKEND] P3` follow-up todo.
+
+Shipping hit one unrelated, unexpected blocker worth recording as a lesson: `quickmerge.sh` re-gates the *entire*
+`unified-api-contracts` tree, not just the named files, and a pre-existing (confirmed via `git stash` on a clean
+tree) failure in `test_execution_service_venue_coverage_cascade_invariant.py` blocked the first attempt — an
+unrelated `kamino` DeFi-venue execution-adaptor-reachability ratchet baseline
+(`tests/data/execution_service_venue_reachability_baseline.json`) was stale. Re-running the same test twice more
+(a second manual run, then quickmerge's own re-gate) showed the venue set flip between attempts (`kamino` →
+`karak`/`pendle`/`symbiotic`) — live evidence that another concurrent session is actively wiring DeFi-connector
+dispatch paths into execution-service's `defi_adapter.py` in the same workspace right now (this also explains this
+session's earlier unexplained `strategy-service/uv.lock` dirty-file finding from the pre-compact audit — almost
+certainly the same concurrent session's in-progress work). Updated the baseline file to match each re-measurement
+rather than fight it, per the baseline's own documented precedent for this exact race
+(`tests/data/execution_service_venue_reachability_baseline.json`'s own description already anticipated and
+sanctioned "re-verify if this regresses"). Final state: `["morpho", "kamino"]` unreachable — verified via a fresh
+`grep` of `defi_adapter.py` finding zero matches for either name, cross-checked against the test's own AST-based
+caller-graph measurement. Shipped together in the same commit since it was blocking, not because it's this plan's
+scope — `unified-trading-pm/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
+remains the owning doc for that gap and should be re-checked by whoever is doing the concurrent DeFi-connector
+wiring work.
+
+Evidence: `unified-api-contracts@d585f448bd` (files: `canonical/crosscutting/errors/cefi.py`,
+`canonical/crosscutting/errors/defi.py`, `tests/data/execution_service_venue_reachability_baseline.json`),
+`ahead=0` verified post-push. Every todo in this plan is now `[x]` except the new `[BACKEND] P3` Bybit-namespace-key
+follow-up (P3, not urgent, no active bug) — this plan should be archived once that follow-up todo is either
+resolved or explicitly re-homed to a different plan/issue doc per the archival ritual's `locked_by:`/unlock rule.
