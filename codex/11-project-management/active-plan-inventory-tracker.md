@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, plan-inventory, orphan-detection, estimation-calibration, dashboard, quickmerge]
 related:
   [
-    plan-hygiene.md,
+    /codex/11-project-management/plan-hygiene.md,
     /codex/08-workflows/estimation-calibration.md,
     /codex/08-workflows/estimation-retrospective-ledger.md,
     ../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
@@ -63,8 +63,8 @@ last_executed: 2026-07-31
 > ARCHIVED banner and Deferred-work section are untouched.
 
 > SSOT for the auto-tracked workspace-wide plan inventory, now hosted in
-> `active_plan_inventory_dashboard_2026_07_24.md`. Shipped
-> 2026-05-12 (PM@ab1a471f) to solve two coupled problems surfaced in the calibration thread:
+> `active_plan_inventory_dashboard_2026_07_24.md`. Shipped 2026-05-12 (PM@ab1a471f) to solve two coupled problems
+> surfaced in the calibration thread:
 >
 > 1. **"What's done vs left across the workspace?"** — was a 20-line grep + manual tally every time.
 > 2. **"Is the master plan truly wrapping every active plan?"** — was hidden until the orphan column made it visible (19

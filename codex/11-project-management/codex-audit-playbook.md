@@ -17,7 +17,7 @@ related:
     ../../plans/archive/2026_05/codex_plan_audit_differential_2026_05_22.md,
     ../../plans/epics/plan_hygiene_master.md,
     /codex/13-codex-governance/SSOT-BOUNDARY.md,
-    plan-hygiene.md,
+    /codex/11-project-management/plan-hygiene.md,
   ]
 created: 2026-05-22
 authoritative_for: [codex-plan alignment audit cadence, codex drift taxonomy]

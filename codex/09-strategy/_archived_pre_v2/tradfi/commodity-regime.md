@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Commodity Regime Strategy
 summary: >-
-  [SUPERSEDED, pre-v2] TradFi commodity-regime strategy (CL/NG futures) — HMM 4-state regime-conditional
-  5-factor model consuming CommoditySignal (rig-count/COT/storage/momentum/weather with IC-calibrated
-  weights), applies regime-specific weights/sizing/stops, executes via the IBKR CME adapter. Replaced by
-  architecture-v2 rules-directional-continuous.
+  [SUPERSEDED, pre-v2] TradFi commodity-regime strategy (CL/NG futures) — HMM 4-state regime-conditional 5-factor model
+  consuming CommoditySignal (rig-count/COT/storage/momentum/weather with IC-calibrated weights), applies regime-specific
+  weights/sizing/stops, executes via the IBKR CME adapter. Replaced by architecture-v2 rules-directional-continuous.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,7 +12,11 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, tradfi, ml, regime, commodity, weather, features]
-related: [ml-directional.md, ../../architecture-v2/archetypes/rules-directional-continuous.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md,
+    ../../architecture-v2/archetypes/rules-directional-continuous.md,
+  ]
 created: 2026-06-16
 authoritative_for:
 referenced_by:
