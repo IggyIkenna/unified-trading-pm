@@ -249,20 +249,32 @@ days.
 - [ ] [SCRIPT] P0. Monitor the (relaunched) liquidations re-derive to completion, same 3-way verification rigor as every
       prior attempt in this batch (log counters + manifest `written_at` + GCS `last_modified` — a clean exit code alone
       has already proven insufficient multiple times this batch). Confirm zero non-zero-rc dates before calling this
-      closed. **STATUS 2026-08-16**: on its 5th VM iteration, `mdps-backfill-cefi-20260815-181733` (`e2-standard-4`,
-      on-demand), healthy, zero `SchemaContractNotFoundError`/`Traceback` hits, currently ~2022-05-05 of the
-      2020-01-01..2026-01-31 range, ETA ~6-9 more days at the current ~6 min/date pace (climbing as it enters
-      higher-volume 2022+ periods — re-estimate when checking in). Prior 4 iterations were killed by an unrelated bug
+      closed. **STATUS 2026-08-16 13:56 UTC**: on its 5th VM iteration, `mdps-backfill-cefi-20260815-181733`
+      (`e2-standard-4`, on-demand), healthy, zero `SchemaContractNotFoundError`/`Traceback` hits across the whole run
+      so far, currently `2022-06-08` of the `2020-01-01..2026-01-31` range (day 890/2223, ~40%) at ~7 min/date and
+      still gradually climbing. **ETA: ~6-10 days from now, i.e. landing roughly 2026-08-22..2026-08-26** — the wide
+      range is because pace keeps climbing through higher-volume periods (the Nov-2022 FTX collapse and the 2023-2024
+      bull run are both still ahead of it). Prior 4 iterations were killed by an unrelated bug
       (`vm_zombie_watchdog.py` false-positiving on long-running jobs — fixed + shipped
-      `deployment-service@149374355e`, see `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`) — this iteration
-      has NOT been killed since that fix landed. **Output spot-checked and looks correct**: pulled
+      `deployment-service@149374355e`, see `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`, now
+      resolved/checkboxes flipped) — this iteration has NOT been killed since that fix landed
+      (~19h uninterrupted as of this note). **Output spot-checked and looks correct**: pulled
       `BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN` 15m liquidation candles for 2022-05-01 — prices match real BTC levels
       (~$37-38K), OHLC internally consistent, liquidation volume tracks visible volatility, and the 22/96 windows with
-      zero liquidations are cleanly `null` (not zero/garbage) — honest absence, not corruption. **Next agent**: SSH
-      check `find /tmp -maxdepth 1 -name "vm-exec-*.log"` for its current progress/errors; if the date range is
-      complete (reaches 2026-01-31 with exit code 0), run the full 3-way verification below and close this todo. If
-      still running, just confirm still-healthy and re-check later — do not restart it, checkpoint-resume is already
-      proven correct across iterations.
+      zero liquidations are cleanly `null` (not zero/garbage) — honest absence, not corruption; the scattered (not
+      block-contiguous) shape of the zero-liquidation windows across a full day further supports genuine sparsity over
+      an upstream collection gap. **Active hourly monitoring stood down 2026-08-16** — nothing else in this doc or
+      `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` is blocked on this VM finishing, and the zombie-watchdog
+      fix (the only thing that was actually killing it) is verified stable, so there's no value in checking every
+      hour for the next ~week. **Next agent, whenever this is picked up again (proactively around the ETA window
+      above, or whenever this doc is next touched for any reason)**: SSH `find /tmp -maxdepth 1 -name
+      "vm-exec-*.log"` on `mdps-backfill-cefi-20260815-181733` for current progress/errors. If the date range is
+      complete (reaches `2026-01-31` with exit code 0), run the full 3-way verification below and close this todo. If
+      it died/got killed again (check `gcloud compute instances describe ... --format="value(status)"` and the
+      Compute Engine operations log for a delete op + its `user`), diagnose why before blindly relaunching — do NOT
+      restart it just to "keep it running" if it's genuinely still healthy; checkpoint-resume is proven correct
+      across iterations so a restart is cheap if actually needed, but isn't free (redoes the last <24h of dates and
+      costs a boot cycle) so don't force one without a reason.
 - [ ] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
       as `attempted_failed`" is WRONG — directly measured earlier in this campaign (a prior session, same day) that the
       VM's own per-VM manifest shard had **0 `attempted_failed` rows** despite these exact `SchemaContractNotFoundError`
