@@ -415,3 +415,46 @@ that read exactly like real ones, and once written down they are believed and pl
 **Deliberately NOT saved**: `agent-orchestrator/_quickmerge_out.log` (regenerable ship log; arguably should be
 gitignored) and the three `.stash-archive-test*-20260812/` dirs in `.tabs/3/` (throwaway verification archives,
 gitignored).
+
+## 2026-08-16 — the pile now ACTIVELY corrupts pushes, plus two measurement traps
+
+**Measured state**: 18 entries (13 `autostash` + 4 `safety-snapshot: pre-reconcile quarantine` + 1 named).
+safe-doc-push's own extreme-pile branch fired and quarantined the dirty tree into yet another named stash *before* the
+pull — the mitigation grows the pile it is mitigating.
+
+**Corruption mechanism, confirmed.** A plan doc was verified marker-free on disk immediately before `safe-doc-push`. The
+push then failed its OWN pre-commit check with `Conflict marker(s) in staged plans`. The conflict was injected by the
+script's autostash replay *during* its run, and its checker then rejected the file the script had just corrupted. So
+"resolve the file, then push atomically" does NOT avoid this — the corruption happens inside the push, after your last
+opportunity to inspect the file.
+
+**TRAP 1 — a conflict-marker grep must match FOUR tokens, not three.** The replay produces a **diff3**-style conflict,
+whose third section is introduced by a base marker of seven PIPE characters (labelled `Stash base`), alongside the three
+familiar ones (seven each of less-than, equals, and greater-than). A grep for only those three familiar tokens reports
+**zero markers on a genuinely conflicted file** whenever the pipe-form base marker is the survivor — a false-clean
+reading that cost several cycles here. Do not hand-roll the grep; the repo's checker already matches all four:
+
+```bash
+bash scripts/plan-hygiene/check_conflict_markers.sh --only <file>
+```
+
+**TRAP 2 — the destructive-command guardrail matches command TEXT, not intent.** Writing a doc that merely *mentions*
+the stash-discard subcommand is blocked exactly like running it (same shape as the merge-marker gate rejecting prose
+about merge markers). Author such docs with file tools, not a Bash heredoc.
+
+**Classification of the 18 (read-only, blob-identity based).** Two tests: (a) is every stashed blob identical to
+origin's current blob; (b) is every stashed blob present anywhere in that file's origin history. Only **5 are provably
+zero-loss** — `stash@{0}` (identical to origin) and `stash@{3} {5} {6} {14}` (every blob already in origin history). The
+other 13 contain blobs never committed. **"UNIQUE" does not mean "valuable"**: `stash@{1}`/`stash@{2}` hold the
+*conflicted* copies of `venue_readiness_and_registry_hardening_2026_08_16.md` from the failed pushes above — uncommitted
+precisely because they were corrupt. Do not read the unique/stale split as work-to-recover without opening each entry.
+
+- [ ] [OPERATOR] P1. **Discard the 5 provably zero-loss entries** — `stash@{14}`, `{6}`, `{5}`, `{3}`, `{0}`, in that
+      DESCENDING order (each discard renumbers the rest), re-verifying identity before each since other sessions push
+      meanwhile. Then re-measure the remaining 13 and triage each recover-vs-discard. **Blocked on a human**: the
+      guardrail in `agent-orchestrator/scripts/hooks/block_destructive_commands.py` forbids agents from running the
+      stash-discard subcommand at all, by design — this is not an agent-actionable todo.
+- [ ] [AGENT] P1. **Make safe-doc-push fail closed on a self-inflicted conflict** — if its own autostash replay
+      introduces conflict markers into a file that was marker-free at entry, it must abort and restore, not hand the
+      corrupted file to its pre-commit checker and report a content violation against the author. This is the fix that
+      actually ends the class; discarding entries only lowers the odds.
