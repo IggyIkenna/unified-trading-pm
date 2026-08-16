@@ -68,7 +68,7 @@ source: >-
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`. Real
+- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@da8caf5f5a`. Real
       per-row verdict, evidence cited, via 3 parallel research passes across instruments-service,
       market-tick-data-service, and features-service:
       | Row | Step 2 (instrument resolution) | Steps 3-4 (batch capture / live adapter) | Step 5 (feature consumption) |
@@ -120,7 +120,7 @@ source: >-
 
 ## Progress Log
 
-**2026-08-16 — Steps 1-5 swept, 2 real gaps found.** SHIPPED — `unified-trading-pm@<pending-sha>`. 3 parallel
+**2026-08-16 — Steps 1-5 swept, 2 real gaps found.** SHIPPED — `unified-trading-pm@da8caf5f5a`. 3 parallel
 research passes (instruments-service, market-tick-data-service, features-service) produced a real, cited per-row
 verdict for all 4 rows. Step 2 (instrument resolution) passes for both venues on all 4 rows. Steps 3-4 (batch
 capture / live adapter) pass for 3/4 rows; KALSHI book_snapshot_5 is live-only (no batch collector — tracked as a
