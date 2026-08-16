@@ -8,7 +8,7 @@ summary: >-
   BLOCKED-EXTRACTION-REGRESSION on config-registry.json's total_repos metric (root-caused but not auto-resolved), a
   stale reference to a deprecated QG script in the parent plan's own stated Gate, an unrelated GCS 404 in the
   instrument-snapshot sub-generator, and a stale phantom-repo entry in generate_config_registry.py.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -47,6 +47,8 @@ context_scope:
 ---
 
 # .venv-workspace + openapi-regen batch11 findings
+
+> **ARCHIVED**: all 4 todos resolved. Successor: none (self-contained findings doc; no follow-up work).
 
 ## What I found
 
@@ -149,9 +151,9 @@ ship.
       clean (cefi: 516 instruments/1 venue, defi: 3105/26 venues, tradfi/sports/prediction correctly empty — not an
       error). This was the sole step halting `generate-unified-openapi.sh` before reaching
       `audit_type_usage.py`/`audit_dead_code.py`/`audit_api_ui_coverage.py`; with it clear those steps can now run.
-- [ ] 4. [SCRIPT] P3. Remove the stale `unified-market-interface` entry from `generate_config_registry.py`'s
+- [x] ✅ 4. [SCRIPT] P3. Remove the stale `unified-market-interface` entry from `generate_config_registry.py`'s
       `CONFIG_REGISTRY` list (repo doesn't exist in this workspace; every regen run SKIPs it with a ModuleNotFoundError
-      warning). (repo: unified-trading-pm)
+      warning). (repo: unified-trading-pm) — unified-trading-pm@96a90f648e
 
 ## Progress Log
 
@@ -199,3 +201,4 @@ ship.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **2026-08-16** — Todo 3 closed (slot-3, infra). The GCS 404 was already fixed by a predecessor (`unified-trading-pm@498222736c`, 2026-08-11, an inherited orphan-WIP commit from slot-27) — `generate_instrument_snapshot.py` now resolves the env-tiered bucket via `resolve_bucket_name()` instead of a hardcoded env-less template. Independently re-verified today by running the script directly against live GCS: no 404, clean exit (cefi 516/1 venue, defi 3105/26 venues, tradfi/sports/prediction correctly empty). No code change needed this pass — checkbox flip only.
+- **2026-08-16** — Todo 4 closed (slot-7, infra). Removed the stale `("unified-market-interface", "unified_market_interface.config", "MarketDataProviderConfig")` entry from `generate_config_registry.py`'s `CONFIG_REGISTRY` list — that repo has no directory in this workspace and isn't in `workspace-manifest.json`, so every regen run was SKIPping it with a permanent `ModuleNotFoundError` warning. QG green, shipped: `unified-trading-pm@96a90f648e`. While shipping, hit a repo-wide QG red from a concurrent commit (`e560378a2d`) that left a backtick-wrapped placeholder path in this same repo's `reference_path_convention_2026_07_23.md` Progress Log — the exact false-positive shape that commit was itself eliminating elsewhere, just missed in its own quoted example. Fixed inline (de-fanged to match the already-established plain-prose style used in `cursor-rules-system.md`/`PLAN_FORMAT.md`): `unified-trading-pm@d81da6f5eb`. All 4 todos now done, no lock — archiving per the 6-step ritual (single-repo mode-1: combined flip+`git mv` commit).
