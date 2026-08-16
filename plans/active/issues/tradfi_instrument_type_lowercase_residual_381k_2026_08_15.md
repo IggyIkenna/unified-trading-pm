@@ -357,11 +357,50 @@ AO-eligible follow-up:
       now counts raw spellings and picks the highest-count one, tie-breaking lexicographically only on an exact count
       tie; added `test_display_label_reflects_lowercase_majority_not_ascii_sort` in `test_measure_honest_coverage.py`.
       Evidence: `instruments-service@7ad50ff97a` (QG green, landed on LDR).
-- [ ] [DATA] P3. **NEW 2026-08-15 (slot-17, data_engineering).** Investigate 84,734 tradfi manifest rows with a BLANK
+- [x] ✅ [DATA] P3. **NEW 2026-08-15 (slot-17, data_engineering).** Investigate 84,734 tradfi manifest rows with a BLANK
       (empty string, not null) `instrument_type` — surfaced incidentally by this doc's own independent verification read
       for the NARROWED re-stamp todo above (`capture_status != attempted_failed` filter), not previously called out in
       this doc. Not a casing defect (out of this doc's scope). Determine whether this is a distinct writer bug, an
-      expected honest-absence marker, or something else. (repo: market-tick-data-service)
+      expected honest-absence marker, or something else. (repo: market-tick-data-service) — **DONE 2026-08-15
+      (slot-31, data_engineering).** Bounded live read (`columns=[instrument_type, capture_status, written_at, venue,
+      data_type, instrument_id, underlying, source, pipeline_mode, date]`, filter `instrument_type == ""`,
+      `run-bounded-analysis.sh --mem-cap 16G`-wrapped) against the same
+      `market-data-tick-tradfi-prd-central-element-323112` availability_index found 84,812 blank-`instrument_type`
+      rows (small growth from the doc's 84,734 snapshot — expected, ordinary corpus drift). Split by
+      `capture_status` resolves the question — **three distinct populations, not one**: (1) **84,024 rows (99.1%) are
+      `empty_confirmed`** — the honest-absence marker (a venue/date/data_type shard genuinely confirmed empty on
+      capture). Blank `instrument_type` here is CORRECT, not a defect: no instrument was ever captured, so there is
+      nothing to type — stamping a guessed value would itself be the fabrication this workspace's honest-absence rule
+      forbids. Spans `databento`/`fred`/`yahoo`/`barchart` sources across 8 venues and all 10 tradfi data_types,
+      `written_at` spread 2026-W25 through 2026-W33 (ordinary, ongoing — matches normal backfill/empty-confirmation
+      cadence, not a spike). (2) **787 rows (0.9%) are `capture_status=="captured"` with REAL data** (`instrument_count`
+      11,486–10,001,360 per shard) but blank `instrument_type` AND blank `instrument_id` — genuinely anomalous:
+      captured data should always carry a type. Follow-up read narrowed this further: all 787 share the EXACT SAME
+      `written_at` (`2026-07-16T07:04:10.308211+00:00`, to the microsecond) — a single one-time write event, not a
+      still-live/growing bug (confirmed stale: no rows with this shape postdate 2026-07-16). All are
+      `source=databento`/`pipeline_mode=batch_databento`, `venue` in `{CME, NASDAQ, NYSE}`, `data_type` in
+      `{ohlcv_1m, tbbo}`; `row_count` is null (only legacy `instrument_count` populated) — the "legacy index,
+      row_count absent" shape UTL's own reader docstring names, consistent with a pre-typed-writer-era write or a
+      one-off backfill/reprocess script that predates the current instrument_type-stamping path. Root writer NOT
+      identified this pass (would need git-blaming whatever ran at that exact timestamp — out of this P3 investigate
+      todo's own scope; filed as a new follow-up todo below rather than guessing a per-row instrument_type without
+      derivation, given this doc's own `combo` incident above is a direct cautionary precedent against exactly that).
+      (3) **1 row is `attempted_failed`** (`FX`/`ohlcv_24h`/`yahoo`, 2026-06-29) — a single-row edge case, 0.0007% of
+      the 13.7M-row corpus; not investigated further, disproportionate to P3 scope. **Conclusion**: NOT a casing-class
+      writer bug and NOT primarily a defect — 99.1% is the expected honest-absence marker working correctly; the 0.9%
+      `captured` residual is a real but small, stale (non-growing), legacy gap, tracked as a new P3 follow-up rather
+      than fixed inline (no live-data mutation shipped this pass, consistent with the sibling
+      "measure `written_at` distribution" todo's own precedent of measurement+classification-only closure). No code
+      changes required for this todo itself.
+- [ ] [DATA] P3. **NEW 2026-08-15 (slot-31, data_engineering).** Identify the writer/script that produced the 787
+      tradfi `captured`-with-blank-`instrument_type`-and-blank-`instrument_id` manifest rows found by the todo above,
+      all sharing the exact `written_at=2026-07-16T07:04:10.308211+00:00` (a single one-time write, not a live bug),
+      `venue` in `{CME, NASDAQ, NYSE}`, `data_type` in `{ohlcv_1m, tbbo}`, `source=databento`. Determine whether
+      `instrument_type` is safely re-derivable (e.g. from the underlying GCS object paths for that exact
+      venue/data_type/date population, if they carry a typed hive-partition segment the manifest row itself doesn't)
+      or whether it must stay an accepted legacy gap — do NOT guess/backfill a value without positive derivation from
+      the underlying data (see the `combo` INCIDENT above for why an unverified live-data mutation on this exact doc
+      is a real, already-realized risk). (repo: market-tick-data-service)
 - [ ] [OPERATOR] P3. **NEW 2026-08-15 (slot-25).** A leftover `stash@{0}: autostash` sits on the MTDS slot-25 checkout
       (git-native, survives compaction — not at risk of loss). Confirmed via `git stash show -p stash@{0}` this is the
       OLD erroneous `ff661a349c`-era WIP (uppercase-`COMBO` direction, the same direction the INCIDENT above reverted) —
@@ -829,3 +868,15 @@ AO-eligible follow-up:
   (picked up unrelated fleet commits, none touching this task). Governor doc tail unchanged since retry11's 10th
   silent death — no retry12, still `BLOCKED-OPERATOR-DECISION`, still awaiting operator choice between option 1 and
   option 2. Nothing new; nothing shipped code-wise. **Safe to compact: YES.**
+- **Progress Log 2026-08-15 (slot-31, data_engineering, "Investigate 84,734 blank-instrument_type rows" todo, DONE).**
+  Bounded live reads (see the todo's own resolution note above for the full breakdown) classify the 84,812-row
+  blank-`instrument_type` population into three groups: 84,024 (99.1%) `empty_confirmed` — the honest-absence marker,
+  correctly blank because nothing was captured (not a defect); 787 (0.9%) `captured` with real data but blank
+  `instrument_type`/`instrument_id`, all from one stale one-time write at `2026-07-16T07:04:10.308211+00:00`
+  (CME/NASDAQ/NYSE, ohlcv_1m/tbbo, databento) — a genuine but small, non-growing legacy gap, filed as a new P3
+  follow-up todo (identify the writer, determine safe derivability before any backfill — explicitly warned against
+  guessing given this doc's own `combo` incident); 1 row `attempted_failed` (FX/ohlcv_24h/yahoo) — negligible,
+  disproportionate to P3 scope, not chased further. No live-data mutation performed this pass — pure measurement +
+  classification, mirroring the sibling `written_at`-distribution todo's own precedent for this kind of scoped
+  investigate todo. Unrelated to this doc's still-open `BLOCKED-OPERATOR-DECISION` quickmerge/qg-governor escalation
+  above — left untouched, that escalation belongs to a different todo lineage and a different owning plan.
