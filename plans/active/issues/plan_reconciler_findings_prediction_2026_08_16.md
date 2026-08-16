@@ -35,6 +35,8 @@ superseded_by:
 resolved_by:
 author: plan_reconciler
 source: "Sharded daily /plan-reconcile prediction-tranche sweep, autonomous dispatch agt-23fdbb, slot 30, 2026-08-16."
+drift_direction: advance-code
+depends_on: []
 ---
 
 # 2026-08-16 plan_reconciler — prediction tranche

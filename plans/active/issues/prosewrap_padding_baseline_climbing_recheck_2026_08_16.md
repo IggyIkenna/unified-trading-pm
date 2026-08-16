@@ -33,6 +33,8 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 supersedes:
 superseded_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Re-check whether the prosewrap-padding baseline is still climbing

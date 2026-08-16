@@ -35,6 +35,8 @@ superseded_by:
 resolved_by:
 author: plan_reconciler
 source: "Sharded daily /plan-reconcile sports-tranche sweep, autonomous dispatch agt-2be768, slot 10, 2026-08-16."
+drift_direction: advance-code
+depends_on: []
 ---
 
 # plan_reconciler findings — sports — 2026-08-16
