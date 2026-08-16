@@ -166,15 +166,22 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       (None-until-recorded, split, replace-prior, replace semantics) + 4 vitest cases; QG green (3597 python / 323
       vitest). Operator action: record the measured gap (was $26.40 on 2026-08-11) via the panel freeze form to activate
       the split.
-- [ ] [OPERATOR] P0. **Record the missing 2026-08-13 top-up
-      ($50) in `deepseek_topups`.** Found live 2026-08-13 by slot 18
-      while implementing the opening-balance freeze: the balance series shows -0.93 → 49.06 at 10:44:44 UTC with NO
-      matching `deepseek_topups` row, so the all-time residual reads **negative (-$66.26)**
-      (attributed $362.57 > real
-      $296.31). A $50 credit at -0.93 matches 49.06 within in-minute spend — record it
-      via the dashboard "Record top-up" form (or the exact amount if the operator knows it precisely) to restore the
-      residual's sign and make the frozen-gap view's `residual_since_observability` meaningful. (repo:
-      agent-orchestrator, operator action)
+- [x] ✅ [OPERATOR] P0. **DONE 2026-08-16 — the missing 2026-08-13 top-up recorded, PLUS a second real top-up the
+      operator made live in this same session.** `deepseek_topups` id 8: $50.00 backdated to 2026-08-13T10:44:44Z
+      (the balance-series evidence this todo already cited). `deepseek_topups` id 9: $50.00 at 2026-08-16T11:10:57Z —
+      a fresh top-up the operator confirmed live via their own DeepSeek dashboard ("Topped-up balance $49.55, Total
+      cost $359.44"). Both verified via `compute_deepseek_wallet_reconciliation()` (not just inserted and assumed
+      correct): `current_balance_usd=49.55` and `real_total_spend_usd=359.44` now match the operator's real dashboard
+      snapshot EXACTLY. `known_topup_total_usd=408.99` (previous $308.99 + these 2 recovered $50 top-ups). Residual is
+      now -$16.93 (attributed $376.37 vs real $359.44) — smaller and a DIFFERENT class of gap than this todo's
+      original -$66.26 (over-attribution now, not a missing top-up) — real, not yet chased, tracked as a new todo
+      below rather than left implicit. (repo: agent-orchestrator)
+- [ ] [REVIEW] P2. **New, 2026-08-16 — chase the -$16.93 residual** (`attributed_total_usd=376.37` vs
+      `real_total_spend_usd=359.44`, per `compute_deepseek_wallet_reconciliation()` live 2026-08-16). Over-attribution,
+      not under-attribution — a different failure class than every prior residual investigation in this doc (all of
+      which found MISSING top-ups or MISSING transcript capture, never double-counted/over-attributed spend). Done
+      when: the source of the ~4.7% over-attribution is identified the same way every other hypothesis in this doc
+      was — killed by measurement, not reasoning.
 - [x] ✅ [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle —
       agent-orchestrator@4d2f9ed118.** `WINDOW_OPTIONS` (24h/168h) toggle wired to
       `GET /api/accounts/deepseek/wallet-reconciliation/window?window_hours=`; `windowedSpendCellText` renders the
