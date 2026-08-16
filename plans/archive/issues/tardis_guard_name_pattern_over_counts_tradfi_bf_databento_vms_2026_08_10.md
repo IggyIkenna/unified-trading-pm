@@ -9,7 +9,7 @@ summary: >-
   conservative-direction (over-blocks), so no cap breach risk, but it pollutes the fleet count every launcher's guard
   reads: a future legitimately-free Tardis slot could read as occupied while tradfi-bf VMs run, and it makes "how many
   Tardis VMs are running" questions unanswerable from the guard alone.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, cross-cutting, tradfi]
 stage: [data]
@@ -39,7 +39,7 @@ supersedes:
 superseded_by:
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: slot-33, 2026-08-16
 source: >-
   Re-check of cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md todo 1's precondition via the
   canonical tardis-concurrency-guard.sh (slot 19, 2026-08-10).
@@ -52,6 +52,12 @@ context_scope:
     deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-16 — RESOLVED.** Both action items done: the fix itself (option 3, negative-stamp exclusion)
+> already shipped 2026-08-10 (`tardis-concurrency-guard.sh@98ec8ddb85` + `launch-tradfi-backfill-vm.sh@f8d3312d21`,
+> under an unrelated-sounding commit message — confirmed via direct code read, not the message alone); the missing
+> regression test shipped 2026-08-16 (`deployment-service@374b1dcd`). Live over-count table in this doc (1 genuine +
+> 3 Databento → 4) now reproducibly returns 1 against the real script. No open todos remain.
 
 # tardis-guard name-pattern fallback over-counts tradfi-bf Databento VMs
 
@@ -103,12 +109,28 @@ Fix at the root per the data-pipeline-correctness HARD RULE. Options, in order o
 
 ## Action items
 
-- [ ] [DATA] P3. Fix the `tardis-concurrency-guard.sh` name-pattern over-count of `tradfi-bf-*-light-*` Databento VMs so
-      `tardis_running_vm_count` reflects true Tardis consumers (repo: deployment-service). Prefer narrowing
-      `TARDIS_VM_NAME_PATTERN` or a negative `VM_TARDIS_CONSUMER=0` stamp on the Databento launchers; verify by
-      re-running `tardis_running_vm_count` while a tradfi-bf VM runs (should read the genuine Tardis count, not 4).
-- [ ] [DATA] P3. Add a guard regression test asserting the union count excludes `tradfi-bf-*-light-*` Databento VMs
-      (repo: deployment-service).
+- [x] ✅ [DATA] P3. **DONE — already shipped 2026-08-10 (option 3: negative-stamp), confirmed 2026-08-16 (slot-33,
+      data_engineering).** `tardis-concurrency-guard.sh@98ec8ddb85` ("fix(vm): honor explicit VM_TARDIS_CONSUMER
+      opt-out so Databento tradfi backfill VMs aren't killed as tardis_cap_violation", 2026-08-10T16:23:04Z) already
+      made `tardis_running_vm_count` read an explicit `VM_TARDIS_CONSUMER` metadata declaration (`1`=consumer,
+      `0`=explicit opt-out) BEFORE falling back to `TARDIS_VM_NAME_PATTERN` (`compose_instrument_ids`-style union
+      logic, `tardis-concurrency-guard.sh:204-217`); `launch-tradfi-backfill-vm.sh:269` stamps
+      `VM_TARDIS_CONSUMER=0` on every VM it creates (`es-opt-backfill-watcher.sh` shells out to that same launcher,
+      so it inherits the stamp with no separate fix needed). Verified live against the real script (mocked
+      `gcloud compute instances list`, not a re-implementation): a `tradfi-bf-vix-light-2020-...` name-match with
+      `VM_TARDIS_CONSUMER=0` now returns count=0; the exact live over-count scenario from this doc's own table (1
+      genuine `cefi-queue-heavy` Tardis VM + 3 `tradfi-bf-*-light-*` Databento VMs) now returns 1, not 4. No further
+      code change needed — this todo's own scope (fix the guard) was already complete; only the regression test
+      below was still missing.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-33, data_engineering) — `deployment-service@374b1dcd`.** Added
+      `TestTardisConcurrencyGuardConsumerStamp` (`tests/unit/test_vm_launcher_scripts.py`) — 4 regression tests
+      against the REAL `tardis-concurrency-guard.sh` (mocked `gcloud compute instances list`, same pattern as the
+      file's existing `TestSetupScriptFreshnessGuard`/`TestCanonicalisationGateGuard` classes): (1) a
+      `tradfi-bf-*-light-*` name-match stamped `VM_TARDIS_CONSUMER=0` is excluded; (2) a
+      `VM_TARDIS_CONSUMER=1` stamp is counted even without a name match; (3) an UNSTAMPED name-match still counts
+      (pre-rollout fallback preserved); (4) the mixed fleet from this doc's own live evidence table (1 genuine +
+      3 Databento) counts as 1. All 4 manually verified against the live script before wiring into pytest (see
+      Progress Log) — full `quality-gates.sh` run before ship.
 
 ## Progress Log
 
@@ -118,3 +140,11 @@ Fix at the root per the data-pipeline-correctness HARD RULE. Options, in order o
   sole slot.
 
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+
+- **2026-08-16 (slot-33, data_engineering)** — on pickup, found the fix itself already shipped 2026-08-10
+  (`tardis-concurrency-guard.sh@98ec8ddb85` + `launch-tradfi-backfill-vm.sh@f8d3312d21`'s `VM_TARDIS_CONSUMER=0`
+  stamp) under a differently-worded commit message (framed as fixing a `tardis_cap_violation` false-kill, not
+  explicitly citing this issue doc) — confirmed via `git log` + direct code read, not assumed from the commit
+  message alone. Verified the fix's actual behavior against the real script with mocked `gcloud` output
+  reproducing this doc's own live over-count table exactly (1 genuine + 3 Databento → 1, not 4). Wrote the
+  still-missing regression test (todo 2) covering both the exclusion and the backward-compat fallback path.
