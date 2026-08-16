@@ -396,6 +396,12 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 2, operator ruling)**: three items ruled via AskUserQuestion.
+  (1) Cross-cloud WIF for the AO VM — **approved** — extracted to `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md`
+  (`assigned_vm: planning`). (2) Chain relabel migration part 2 — **re-verify plan is current, then dispatch** — same
+  extraction. (3) combo_chain expiration field — **ruled: no separate field needed**, each leg's own `instrument_id`
+  already carries expiration (verified live against `unified_api_contracts/canonical/_partition_path_canonicality.py`,
+  matches the `options_chain`/`futures_chain` precedent) — documentation-update todo in the same dispatch plan.
 - **2026-08-10 (interactive, slot 1)**: Traced one pasted alert dump to root cause rather than triaging alert-by-alert.
   Key corrections made DURING the session, recorded because each was a wrong turn caught by verification rather than by
   review: (1) the "2019 Deribit vintage" hypothesis was REFUTED by a control probe of a 2025 shard — identical 25-column
