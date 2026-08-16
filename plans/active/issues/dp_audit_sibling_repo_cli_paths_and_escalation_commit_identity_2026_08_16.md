@@ -179,9 +179,10 @@ in the container's `unified-trading-pm` worktree before the container exits.
 
 ## Todos
 
-- [ ] [CODE] P1. Fix `_DIVERGENCE_CLI` path resolution (option B above) so `_check_divergence`/`_check_missing_expected`
+- [x] ✅ [CODE] P1. Fix `_DIVERGENCE_CLI` path resolution (option B above) so `_check_divergence`/`_check_missing_expected`
       actually run inside `e2e-audit:latest`; verify locally against a real AG's manifest that `DP_DIVERGENT_EMPTY`
-      classification actually executes (not just `.exists()` returning True) before shipping. Repo: e2e-testing.
+      classification actually executes (not just `.exists()` returning True) before shipping. Repo: e2e-testing. —
+      e2e-testing@c3da78786d
 - [ ] [CODE] P2. Confirm live whether `uts-prod-dp-manifest-hygiene-full` (weekly, `--mode full`) has ALSO been
       silently skipping `_check_phantom` via the same `_PHANTOM_CLI` absence (check its recent execution logs first —
       don't assume); if confirmed, decide + implement option A or a scope change for phantom specifically. Repo:
@@ -194,8 +195,32 @@ in the container's `unified-trading-pm` worktree before the container exits.
       `DP_DIVERGENT_EMPTY`/`DP-COVERAGE`-class findings, if any exist in the real manifests, now surface for the
       first time — this may itself uncover a backlog of real, previously-invisible divergence findings worth a
       follow-up triage pass. Repo: e2e-testing.
+- [ ] [CODE] P2. `_dp_common.py`'s `file_escalation_issue` template has drifted from the current
+      `doc-frontmatter-schema.md` — a fresh escalation doc it wrote on 2026-08-16 (RED cefi finding, first real
+      escalation since (1) above shipped) was missing `doc_type`/`summary`/`status`/`nature`/`asset_group`/`stage`/
+      `repos`/`scope`/`tags`/`related`/`priority`/`resolved_by`, all present in older archived instances (e.g.
+      `plans/archive/issues/manifest_hygiene_red_2026_07_14.md`) — so every auto-commit of a genuine RED finding has
+      been failing `plan-hygiene`'s frontmatter-schema check (compounding, not caused by, the git-identity issue in
+      (3) above). Hand-fixed the one instance in `unified-trading-pm@1c8ceabfb8`; the generator itself is still stale.
+      Repo: e2e-testing (`scripts/audit/_dp_common.py`).
 
 ## Progress Log
+
+- **2026-08-16 (backend_engineer worker, slot-12)**: Shipped todo (1). Re-implemented the environment-aware
+  `_DIVERGENCE_CLI` fallback (local-dev sibling path, then container-flat `_WORKSPACE_ROOT/scripts/...` fallback) in
+  `e2e-testing@c3da78786d`. Verified LOCALLY, twice, against real production `cefi` data (not `.exists()` alone):
+  (a) direct `detect_manifest_divergence.py --asset-group cefi` invocation wrote a real
+  `divergence_2026-08-16.csv` (341,215 cells: 58,319 `DIVERGENT_EMPTY`, 58,890 `MISSING_EXPECTED`); (b) the actual
+  `manifest_hygiene_daily.py --asset-group cefi --mode changed` wrapper (the real fix target) then reproduced the
+  identical counts via `_check_divergence`/`_check_missing_expected` (`oracle_expects_but_empty: count=58319`,
+  `oracle_expects_no_manifest_row: count=58890`) — proving the classification genuinely executes, not just that the
+  CLI path resolves. Both runs required `run-bounded-analysis.sh --mem-cap` well above the 6-8G tried first (30M-row
+  `cefi` manifest read+merge needs ~14-16G here); an unbounded/under-capped run SIGTERMs (`exit 143`) right after the
+  manifest load, before classification — worth knowing for whoever re-runs this at scale. This verification run's own
+  RED cefi finding auto-filed for real (`manifest_hygiene_red_cefi_2026_08_16.md` + candidate CSV) — landed via
+  `unified-trading-pm@1c8ceabfb8` after hand-fixing its frontmatter (see new P2 todo above) and a dangling referrer
+  link in `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` left by an unrelated prior archival. Did NOT
+  touch (2)/(3)/(4) — out of scope for this dispatch.
 
 - **2026-08-16 (data_pipeline_failure escalation agent, agt-fc531b, slot-3)**: Filed while wrapping up the
   DP-WATCHER-006 OOM escalation for `uts-prod-dp-manifest-hygiene-changed` (see that escalation's own shipped commits
