@@ -568,11 +568,16 @@ a shipped, tested script mid-draft, without operator direction, is out of scope 
 
 ## Follow-ups
 
-- [ ] [BACKEND] P3. **Close the citation errors the false-done audit surfaced adjacent to this bug.**
-      `mtds_migrate_executor_progress_checkpoint_gap-008/-009/-010` are three backlog rows pointing at ONE
-      still-unimplemented todo (`migrate_sports_league_id_casing_2026_07_21.py`, confirmed zero `record_vm_progress`
-      occurrences), each citing a wrong sha — a direct symptom of positional ids. After Phase 1, dedupe them to one row.
-      Source: /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
+- [ ] [BACKEND] P3. **CORRECTED 2026-08-16 (/plan-reconcile) — false premise, re-scoped.** The original claim that
+      `-008/-009/-010` are three rows pointing at ONE still-unimplemented todo is WRONG:
+      `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md`'s own detailed verification (its P2 items)
+      shows `-008` and `-009` are already correctly `[x]` with real checkpoints — `-008` had a citation defect (wrong
+      sha `c98e0abb`; the real commit is `486c61b2`, for `migrate_sports_casing_2026_07_22.py`) already fixed inline;
+      `-009` (`done_sha=6ddb0374`) is accurately cited for a DIFFERENT script,
+      `migrate_sports_casing_revert_2026_07_27.py` — not a duplicate of `-008` at all. Only `-010` needs checking
+      independently. Remaining scope: verify `-010`'s actual status live (`GET /api/backlog`) and fix its citation if
+      needed — do NOT dedupe `-008`/`-009`, they are correctly separate rows for separate scripts. Source:
+      /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
       unified-trading-pm)
 - [ ] [BACKEND] P2. **Root-cause why `remint_backlog_collision` didn't durably stop
       `defi_catalog_engine_config_key_contract_drift-002`'s collision from recurring.** Found while working the

@@ -96,7 +96,13 @@ reaching the point where a compact would be needed.
       still-unaddressed mechanism (hypothesized AO-server-restart boot-time registration race, not a `has_session()`
       false-negative — neither shipped fix targets it). Unparking now would very plausibly re-wedge on the same unfixed
       mechanism. Re-check once the tmuxpruner doc's open `[BACKEND] P1` restart-correlation todo lands, or once this
-      specific mechanism gets its own fix.
+      specific mechanism gets its own fix. **Stale-reference note (2026-08-16, /plan-reconcile)**: the tmuxpruner doc
+      (`review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`) is now ARCHIVED at
+      `/plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` with 0 open/14
+      closed — but its closure shipped a capture mechanism for the NEXT death plus several unrelated fixes, not a
+      crisp root-cause for THIS todo's specific "silent, no-forced_compact" mechanism per this todo's own analysis
+      above. Re-check due (read the archived doc's full Progress Log for whether that specific mechanism was ever
+      pinned), not safe to blindly unpark on the strength of "the doc closed."
 - [ ] [REVIEW] P3. Once unparked and re-dispatched, independently verify via `GET /api/activity` (filtered client-side
       by `task_id` — the `task=` query param does not filter server-side, confirmed 2026-08-08) that it completes a full
       boot->work->done cycle without re-wedging. Repo: unified-trading-pm (verification + checkbox flip only).
