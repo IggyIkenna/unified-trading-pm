@@ -44,8 +44,15 @@ _FENCE_RE = re.compile(r"^\s*```")
 _STRIKETHROUGH_RE = re.compile(r"^\s*~~.*~~\s*$")
 _TODO_BLOCK_BOUNDARY_RE = re.compile(r"^\s*-\s+\[|^\s*#")
 
+# Re-synced 2026-08-16 with agent-orchestrator/server/regen_backlog_from_plan.py: added
+# the missing UPSTREAM-DESIGN alternative and an optional `:<doc-slug>` citation suffix
+# (e.g. `BLOCKED-UPSTREAM-DESIGN:<slug>`) so a worker can name the specific blocking doc.
+# Deliberately NOT a new `ON` alternative — `BLOCKED-ON:<ref>` is a SEPARATE, established
+# marker family in agent-orchestrator/server/verify.py whose todos are deliberately
+# dispatchable; see that file's `_ADDED_BLOCKED_LINE_RE` / `_BLOCKED_LINE_RE`.
 _BLOCKED_TOKEN_RE = re.compile(
-    r"BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)\b"
+    r"BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-(OUTAGE|DESIGN)|PLAYWRIGHT|JURISDICTION)"
+    r"(?::[\w-]+)?\b"
 )
 _STALE_MARKER_PREFIX_RE = re.compile(
     r"(?:\bwas\b|\bno longer\b|\bretagged\s+(?:from|away\s+from)\b|\bpreviously\b)"
