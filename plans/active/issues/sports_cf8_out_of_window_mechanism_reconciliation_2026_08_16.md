@@ -220,9 +220,11 @@ repos with two different causes, not one shared mechanism.
       `data_type=odds` conclusion), or does it warrant a real backfill recovering true timeframe from underlying
       source data where still available? Affects whether this is closed as understood-and-accepted or becomes new
       remediation work. (repo: market-tick-data-service)
-- [ ] [DOC] P3. Fix the stale `market_tick_data_service/live/websocket_streaming_handler.py` path reference in
+- [x] [DOC] P3. Fix the stale `market_tick_data_service/live/websocket_streaming_handler.py` path reference in
       `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` (if present) to the confirmed real location
-      `market_tick_data_service/cli/handlers/websocket_streaming_handler.py`. (repo: unified-trading-pm)
+      `market_tick_data_service/cli/handlers/websocket_streaming_handler.py`. **DONE 2026-08-16 (moot)**: grepped the
+      parent doc for this path — zero hits. The "stale reference" was the dispatching agent's own framing, not an
+      actual line in the parent doc; nothing to fix. (repo: unified-trading-pm)
 
 ## Progress Log
 
