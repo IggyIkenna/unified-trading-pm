@@ -67,7 +67,7 @@ source: >-
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`.
+- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@285cefec7a`.
       4 parallel research passes, scoped by shared architecture (135 real defi venues, not 192 — see the
       correction below) since exhaustive per-venue checking isn't tractable at this scale.
       **Scope correction**: defi's real venue universe is `ALL_DEFI_VENUES` = **135** unique protocol-chain venues
@@ -122,7 +122,7 @@ source: >-
       emit — verify real routing per the prediction/tradfi batches' methodology, not just a declared mapping.
       Done-when: a real per-row verdict for those rows, plus `BLOCKED-ON` markers for the rest.
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16, 1 major finding escalated as MORE urgent than the
-      cefi sibling.** SHIPPED — `unified-trading-pm@<pending-sha>`. Transfer routing is generic/chain-scoped, not
+      cefi sibling.** SHIPPED — `unified-trading-pm@285cefec7a`. Transfer routing is generic/chain-scoped, not
       per-protocol — `classify_transfer_type` routes purely on wallet type + custody_provider, the specific
       protocol (Aave/Uniswap/Lido/...) never enters the transfer path.
       **Major finding, escalated to a dedicated P0 issue doc + the operator directly**:
@@ -149,7 +149,7 @@ source: >-
 ## Progress Log
 
 **2026-08-16 — full contract sweep done, 1 escalated finding MORE urgent than cefi's, 6 new gaps total.**
-SHIPPED — `unified-trading-pm@<pending-sha>`. 4 parallel research passes plus a dedicated reachability check.
+SHIPPED — `unified-trading-pm@285cefec7a`. 4 parallel research passes plus a dedicated reachability check.
 Scope-corrected the batch's own denominator (135 real defi venues, not the 192 cross-AG total this doc originally
 cited). Instrument resolution: 105/135 real (22 new gap venues beyond the already-tracked 8). Live capture is
 only ~13% of batch coverage — large but already tracked elsewhere, not duplicated. Feature consumption: only
