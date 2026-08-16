@@ -522,6 +522,43 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
   fi
 fi
 
+# ── PER-SLOT PREK_HOME on the shared-index (non-isolated) path (2026-08-16) ─────────────────
+# safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md: the isolated branch above is
+# the ONLY place this script ever scoped PREK_HOME. The AO VM's own host gate (line ~296-297)
+# makes isolation OFF by default for every slot on `planning` (the only VM — every slot 1-31+
+# shares this one host/filesystem), so on THIS host every slot's shared-index commit falls
+# through to prek's own unscoped default (`~/.cache/prek`), and two slots committing
+# concurrently share one `patches/` cache dir — confirmed root cause of 10+ documented
+# "orphaned patch from a different slot" recurrences (see the issue doc). Mirrors the isolated
+# branch's own shared-subdir-symlink-but-private-patches pattern: `repos`/`hooks`/`tools`/
+# `cache`/`config-tracking.json` are expensive hook-environment installs, not part of the race —
+# symlinked in from prek's own already-populated default cache (every slot has been installing
+# straight into it up to now, so it is already warm; no separate seed step needed the way the
+# isolated branch's SEPARATE shared-cache location does) — `patches`/`scratch` are left for prek
+# to create fresh, private to this slot. Skipped when PREK_HOME is already set: either the
+# isolated CHILD re-invocation above already scoped it (never clobber that), or a caller
+# explicitly overrode it.
+if [[ -z "${PREK_HOME:-}" ]]; then
+  _sdp_shared_slot_num=""
+  _sdp_shared_identity_lib="$(dirname "$_SDP_SELF")/../hooks/slot-identity-lib.sh"
+  if [ -f "$_sdp_shared_identity_lib" ]; then
+    # shellcheck disable=SC1090
+    . "$_sdp_shared_identity_lib"
+    slot_identity_resolve "$(pwd)" 2>/dev/null || true
+    [[ "${SLOT_ID_LABEL:-main}" =~ ^slot-([0-9]+)$ ]] && _sdp_shared_slot_num="${BASH_REMATCH[1]}"
+  fi
+  if [[ -n "$_sdp_shared_slot_num" ]]; then
+    _sdp_shared_prek_default="$HOME/.cache/prek"
+    _sdp_shared_prek_home="$HOME/.cache/prek-slot-${_sdp_shared_slot_num}"
+    mkdir -p "$_sdp_shared_prek_home" 2>/dev/null
+    for _sdp_prek_shared_item in repos hooks tools cache config-tracking.json; do
+      [[ -e "$_sdp_shared_prek_default/$_sdp_prek_shared_item" ]] || continue
+      ln -sfn "$_sdp_shared_prek_default/$_sdp_prek_shared_item" "$_sdp_shared_prek_home/$_sdp_prek_shared_item" 2>/dev/null
+    done
+    export PREK_HOME="$_sdp_shared_prek_home"
+  fi
+fi
+
 _sdp_fingerprint_named() {
   local f
   for f in "${FILES[@]}"; do

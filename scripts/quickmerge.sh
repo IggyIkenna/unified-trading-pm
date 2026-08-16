@@ -1098,6 +1098,41 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
   fi
 fi
 
+# ── PER-SLOT PREK_HOME on the shared checkout (non-isolated) path (2026-08-16) ──────────────
+# safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md: `_qm_should_isolate` resolves
+# "auto" to OFF unconditionally (line ~508 above), so the isolated branch above — the ONLY place
+# THIS script ever scoped PREK_HOME — is dead code by default on every host, not just the AO VM.
+# Every default (non `--isolated`) run falls through to prek's own unscoped default
+# (`~/.cache/prek`), and any two concurrent runs on the same host share one `patches/` cache dir
+# — the same cross-slot leak confirmed and fixed for safe-doc-push.sh's analogous shared-index
+# path. Mirrors that fix + the isolated branch's own shared-subdir-symlink-but-private-patches
+# pattern: `repos`/`hooks`/`tools`/`cache`/`config-tracking.json` symlinked in from prek's own
+# already-populated default cache (already warm — every run has been installing straight into it
+# up to now), `patches`/`scratch` left for prek to create fresh, private to this slot. A no-op
+# outside a `.tabs/<N>/` slot checkout (nothing to scope by) or when PREK_HOME is already set
+# (the isolated CHILD re-invocation above already scoped it, or a caller explicitly overrode it).
+if [[ -z "${PREK_HOME:-}" ]]; then
+  _qm_shared_slot_num=""
+  _qm_shared_identity_lib="$PM_ROOT/scripts/hooks/slot-identity-lib.sh"
+  [ -f "$_qm_shared_identity_lib" ] || _qm_shared_identity_lib="$(dirname "$_QM_SELF")/hooks/slot-identity-lib.sh"
+  if [ -f "$_qm_shared_identity_lib" ]; then
+    # shellcheck disable=SC1090
+    . "$_qm_shared_identity_lib"
+    slot_identity_resolve "$(pwd)" 2>/dev/null || true
+    [[ "${SLOT_ID_LABEL:-main}" =~ ^slot-([0-9]+)$ ]] && _qm_shared_slot_num="${BASH_REMATCH[1]}"
+  fi
+  if [[ -n "$_qm_shared_slot_num" ]]; then
+    _qm_shared_prek_default="$HOME/.cache/prek"
+    _qm_shared_prek_home="$HOME/.cache/prek-slot-${_qm_shared_slot_num}"
+    mkdir -p "$_qm_shared_prek_home" 2>/dev/null
+    for _qm_prek_shared_item in repos hooks tools cache config-tracking.json; do
+      [ -e "$_qm_shared_prek_default/$_qm_prek_shared_item" ] || continue
+      ln -sfn "$_qm_shared_prek_default/$_qm_prek_shared_item" "$_qm_shared_prek_home/$_qm_prek_shared_item" 2>/dev/null
+    done
+    export PREK_HOME="$_qm_shared_prek_home"
+  fi
+fi
+
 
 # B (ldr_trunk_promotion_decoupling_2026_06_10): --hotfix is an auditable break-glass. Require an
 # explicit [hotfix] marker in the commit message so a queue-jumping immediate staging promote is
