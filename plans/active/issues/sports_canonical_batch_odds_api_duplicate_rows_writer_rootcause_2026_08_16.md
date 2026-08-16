@@ -88,11 +88,26 @@ low today; it could be worse in cells/days not sampled.
       `tests/unit/test_venue_fetch_sports_dedup_tick_rows.py` covers the exact-dup case, the missing-column
       shapes, multi-group dedup, and no-op passthrough. Full `market-tick-data-service` quality-gates green
       (10945 passed, 0 failed; sentinel written). (repo: market-tick-data-service)
-- [ ] [OPERATOR] P3. **Decide on backfill dedup** of the ~264 already-affected cells found in this 40-day sample
+- [x] [OPERATOR] P3. **Decide on backfill dedup** of the ~264 already-affected cells found in this 40-day sample
       (extrapolated: full ~2020-2026 corpus likely has low-thousands of affected cells). The parent issue
       explicitly forbids silently deduping canonical in-place from an issue doc — this needs its own
       delete-safety-protocol-scoped write (prod-bucket object rewrite, human-gated per the four-surface
-      reconciliation procedure's delete-safety rules). (repo: market-tick-data-service)
+      reconciliation procedure's delete-safety rules). — ✅ operator-authorized bounded backfill executed via
+      `backfill_dedup_canonical_odds_api_sampled_cells_2026_08_16.py` (market-tick-data-service@e73eec3ec3).
+      Fresh §3a check (`gcs_bucket_soft_delete_retention_seconds`) passed at run start (604800s, meets the
+      7-day minimum) before any write; every rewrite CAS-protected (`if_generation_match`) and round-trip
+      row-count verified. `--apply` run over the identical 40-day sample:
+      `cells_rewritten=264 rows_removed=3432 cells_cas_conflict=0` — exact match to the dry-run's
+      `cells_with_dupes=264`/`rows_duplicate=3432`, zero read/verify errors, zero concurrent-writer conflicts.
+      Full extrapolated ~2020-2026 corpus remains explicitly OUT OF SCOPE for this script (see its own
+      docstring) — tracked as todo 4 below. (repo: market-tick-data-service)
+- [ ] [OPERATOR] P3. **Full-corpus backfill-dedup** of the extrapolated low-thousands of affected
+      `batch_odds_api` cells across the entire ~2020-2026 corpus (this 40-day sample bounded 6410 cells out of
+      a much larger total). Requires its own VM-scoped campaign (full-corpus GCS walk = VM-only, never local,
+      per `/codex/05-infrastructure/vm-launcher-runbook.md`) plus a fresh delete-safety-protocol §3a check at
+      execution time. Explicitly out of scope for
+      `backfill_dedup_canonical_odds_api_sampled_cells_2026_08_16.py` per its own docstring. (repo:
+      market-tick-data-service)
 
 ## Progress Log
 
@@ -107,3 +122,10 @@ low today; it could be worse in cells/days not sampled.
   Shipped as `market-tick-data-service@17f7e443bc` (LDR trunk), full quality-gates green. First fix attempt
   used a hard four-column `subset=` and broke 9 tests on shards missing `point`/`bm_time` — corrected to the
   intersection form before shipping. Only todo 3 ([OPERATOR] backfill-dedup decision) remains open.
+- **2026-08-16 (slot-23)**: Todo 3 done — operator authorized the bounded 40-day-sample backfill (explicitly
+  excluding the full-corpus campaign). Shipped `backfill_dedup_canonical_odds_api_sampled_cells_2026_08_16.py`
+  as `market-tick-data-service@e73eec3ec3`, then ran it `--apply` against the same 264 known-affected cells:
+  fresh §3a soft-delete-retention check passed (604800s), `cells_rewritten=264 rows_removed=3432
+  cells_cas_conflict=0`, exact match to the dry-run scope, zero errors. Added todo 4 to track the
+  out-of-scope full-corpus follow-up (a VM-scoped campaign, not yet started). This issue stays `open` pending
+  todo 4.
