@@ -336,7 +336,8 @@ input gap didn't change.
       pre-load during actual feature compute, not lookback validation) — tracked as its own follow-up below rather
       than chased down here (different code path, out of this todo's scope).
 
-- [ ] [DATA] P2. **NEW 2026-08-16.** With the `LookbackValidator` gate now clear (see todo above), the same VM run
+- [x] ✅ [DATA] P2. **NEW 2026-08-16 — investigation DONE, root cause #1 FIXED (see slot-3 entry below); root cause #2
+      remains open, tracked in the slot-33 fix-todo below.** With the `LookbackValidator` gate now clear (see todo above), the same VM run
       (`features-e2e-tradfi-20260816-015304-1efb38`) hit a DIFFERENT, later failure during actual feature compute:
       every one of 19 `delta_one` feature groups failed (`orchestrator_returned_false`), with repeated
       `No pre-loaded candles for CME:combo:/CME:COMBO:/CME:FUTURE:/CME:futures_chain:/CME:options_chain:/
@@ -399,6 +400,28 @@ input gap didn't change.
       `CME:COMBO:` id find a real underlying. Confirms this is now the genuine remaining blocker — see the new P2 todo
       below for the tracked fix.
 
+      **INDEPENDENTLY CONVERGED 2026-08-16 (slot-3, data_engineering) — root cause #1 above FIXED, root cause #2 still
+      open.** Dispatched to this same todo before finding slot-33's entry already existed (reconciling here, not
+      duplicating). Root-caused via the identical mechanism slot-33's finding #1 describes —
+      `compose_instrument_ids` (UTL `unified_trading_library/feature_service_base/manifest_discovery.py`) synthesizes
+      a `"{venue}:{instrument_type}:"` placeholder for a chain-bundle manifest row with no per-instrument granularity,
+      and `DataLoader.get_available_instruments()` passed that placeholder straight into the per-instrument candle
+      loader — which can never resolve a blank symbol. **Fixed** (this is exactly slot-33's fix-direction (b) below,
+      landed independently): moved `LookbackValidator`'s already-proven-correct candle-blob discovery
+      (`_candidate_pipeline_mode_values`, `_list_instrument_ids_for_prefix`,
+      `_discover_instruments_from_processed_candles`) out of `dependency_checker.py` into a shared
+      `_chain_bundle_instrument_id` module, and added `expand_bundle_placeholder_ids()` — wired into
+      `get_available_instruments()` via a new optional `timeframe` param (threaded through both
+      `batch_handler.py`'s and `target_handler.py`'s instrument-resolution paths). A placeholder with no real
+      underlyings discoverable is now dropped (honest skip) rather than silently passed through. 8 new regression
+      tests (`tests/delta_one/unit/test_chain_bundle_instrument_id.py` + `TestGetAvailableInstruments` additions in
+      `test_data_loader.py`); full `quality-gates.sh` green (18436 passed). Shipped:
+      `features-service@4caac95e38`. **Root cause #2 (the `_canonical_candle_blob_paths`/`_is_chain_bundle_instrument`
+      gating too narrow for plain-`FUTURE`-type TradFi ids, e.g. `CBOE:FUTURE:VIX`) was NOT touched by this fix** —
+      confirmed still open per slot-33's live-GCS evidence below; a real end-to-end VM force-leg success still needs
+      that second fix too (tracked in the slot-33 todo immediately below, part (a); part (b) of that todo is now DONE
+      per this entry — do not re-implement it).
+
 - [ ] [DATA] P2. **NEW 2026-08-16 (slot-33).** Fix the two root causes identified above (both in the "NEW 2026-08-16"
       todo's follow-through, not duplicated here): (a) `features-service/features_service/delta_one/app/core/data_loader.py`
       — broaden `_canonical_candle_blob_paths`'s `underlying=/ticks.parquet` candidate to apply regardless of
@@ -414,3 +437,8 @@ input gap didn't change.
       (`vm-logs/…/run.log` in `deployment-scripts-central-element-323112`); live GCS listing of
       `market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-08-06/` (60-object
       sample, `instrument_type=FUTURE` confirmed under `underlying=/ticks.parquet`).
+
+      **UPDATE 2026-08-16 (slot-3): part (b) is DONE** — see the slot-3 entry immediately above this todo;
+      `features-service@4caac95e38` already ships the blob-listing-based fallback this part asks for. **Part (a)
+      remains genuinely open** — `_canonical_candle_blob_paths`'s narrow `_is_chain_bundle_instrument` gating was not
+      touched by that fix. The "Done when" live-VM-success criterion needs part (a) too; not claiming this todo done.
