@@ -39,8 +39,8 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md
+  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
+  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md
   - ../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md
   - ../active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md
   - ../active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
@@ -488,13 +488,13 @@ residuals
 
 ## P1 — important; post-current-gate
 
-### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09`](../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md)
+### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md)
 
-**status**: active · **estimate**: 4.4 cal AI-days (class: infra)
+**status**: complete (archived 2026-08-16) · **estimate**: 4.4 cal AI-days (class: infra)
 
-### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md)
+### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md)
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 2 —
+**status**: complete (archived 2026-08-16) · **estimate**: 0.8 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 2 —
 finalize (reconcile source docs + archive)
 
 ### [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md)

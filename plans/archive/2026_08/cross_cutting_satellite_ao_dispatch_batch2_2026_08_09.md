@@ -21,7 +21,7 @@ summary: >-
   than re-extracted here. One item (`mvp_scope_catalogue_tagging_2026_06_08.md`'s real-data MVP-toggle verify) was
   dropped on a confirmed conflict — it duplicates an already-open todo inside the active
   `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`.
-status: active
+status: complete # archived 2026-08-16 — every todo done; close-out verified by finalize plan
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -64,7 +64,7 @@ estimate_calibrated_ai_days: 4.4
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize
 depends_on: []
 context_scope:
   [

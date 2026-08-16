@@ -32,7 +32,7 @@ tags: [honest-coverage, defi, lst, adapter-factory, unregistered-handler-audit, 
 related:
   [
     /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md,
     /plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
   ]
 created: 2026-08-09
