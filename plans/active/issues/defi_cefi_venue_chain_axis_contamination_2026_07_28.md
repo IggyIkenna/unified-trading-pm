@@ -15,9 +15,14 @@ summary: >-
   path. This doc catalogues the finding + the two most plausible root-cause classes (wrong-axis writer mis-stamp vs.
   cross-AG manifest-consolidator bleed, the latter matching the shape of the ALREADY-RESOLVED
   `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` TOCTOU bug,
-  `unified-trading-library@14301571`, shipped 2026-07-24) without executing a fix — this is a genuine cross-repo,
-  cross-asset-group data-correctness finding per this workspace's findings-triage rule ("big finding" — NOTIFY OPERATOR
-  + issue doc), not investigated to root cause here (read-only audit scope, time-bounded).
+  `unified-trading-library@14301571`, shipped 2026-07-24) — this is a genuine cross-repo, cross-asset-group
+  data-correctness finding per this workspace's findings-triage rule ("big finding" — NOTIFY OPERATOR + issue doc).
+  **CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a)**: the original framing above ("without
+  executing a fix... not investigated to root cause here, read-only audit scope, time-bounded") is now stale — both
+  root causes WERE identified and fixed (writer-defaults-venue-to-chain fixed via `instruments-service@f651ff8b`
+  2026-07-30; the cross-AG splitter bug in `migration_orphan_sweep.py` also fixed 2026-07-30) over the 3 weeks since
+  this doc was opened; see the Todos/Progress Log below for the full remediation history. Only 2 items remain open,
+  both gated on live verification, not a fresh root-cause investigation.
 status: open
 nature: issue
 asset_group: [defi, cefi, tradfi, cross-cutting]
@@ -320,8 +325,10 @@ in this read-only audit pass (time-bounded scope).
       `purge_gas_fees_legacy_venue_prefixes_2026_08_04.py --apply` run (same bucket, same manifest index, same
       consolidator cron paused for that run's duration) — sequence AFTER it completes and the cron is resumed +
       verified, to avoid CAS contention / cron-pause confusion between two concurrent prod-mutating operations.
-- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04 ruling
-      above).** The ~35 real CeFi-Tardis `perp_funding`/`perp_daily_ctx` objects physically mis-filed in the DeFi bucket
+- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04
+      ruling above), gated on step 1 landing AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE
+      the first time — must genuinely re-verify clean this run) before any delete.** The ~35 real CeFi-Tardis
+      `perp_funding`/`perp_daily_ctx` objects physically mis-filed in the DeFi bucket
       (`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-16..22/ pipeline_mode=batch_tardis/asset_group=cefi/venue={BINANCE,BITFINEX,BITGET,BYBIT,KRAKEN,OKX}-FUTURES|DERIBIT/…`,
       verified present 2026-08-10, correct cefi-bucket twins verified at the matching prefix) are still there. Gated on
       step 1 of that ruling landing (corpus re-run/schedule confirmed fresh — i.e.
@@ -403,7 +410,9 @@ in this read-only audit pass (time-bounded scope).
       shipped chain-allowlist fix (`instruments-service@f651ff8b`) — no further architecture change needed. Decided
       using this doc's own new evidence per the autonomous-dispatch "decide, don't ask" rule (documented record of
       intent: this doc's own P2(b) investigation), not a fresh guess.
-- [x] ✅ [DATA] P3. **DONE 2026-08-05 — `market-tick-data-service@87e9e100` + live manifest fold executed, 0 POOL rows
+- [ ] [DATA] P3. **REOPENED 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0) — the DONE claim below is
+      CONTRADICTED by this same item's own STALE annotation further down; aligning the checkbox to reality.** Original
+      claim: **DONE 2026-08-05 — `market-tick-data-service@87e9e100` + live manifest fold executed, 0 POOL rows
       remain.** Fold historical `instrument_type=POOL` (uppercase) defi manifest rows to canonical lowercase `pool`.
       Script `scripts/one_offs/fold_pool_instrument_type_casing_2026_08_05.py` (committed
       `market-tick-data-service@87e9e100`) — 2-pass cell-classification design: Pass 1 classifies every legacy POOL
@@ -414,7 +423,8 @@ in this read-only audit pass (time-bounded scope).
       ParquetFile, not inference). 8,214,021 canonical `pool` rows present. No further action needed.
 
       **STALE — CONTRADICTED 2026-08-11 (slot 4, data_engineering).** This "0 remaining" claim no longer holds: a fresh
-          live read on 2026-08-11 (`plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 1)
+          live read on 2026-08-11 (`/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`
+          todo 1 — path corrected 2026-08-16, plan_reconciler, cefi tranche: doc since archived)
           found **7,930,863** `instrument_type=POOL` (uppercase) captured rows in `data_type=dex_pool_swaps` — not zero, and
           not a small residue. Root cause is NOT a recurred live-writer bug (verified: the only live `record_captured` call
           site for `dex_pool_swaps` pool-grain rows passes lowercase `instrument_type="pool"` with a bare id,

@@ -111,7 +111,12 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
 
 ## Todos
 
-- [ ] [CODE] P1. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`) — make
+- [x] ✅ [CODE] P1. **RULED 2026-08-06 (operator), option A: approved. DONE — verified 2026-08-16 (plan_reconciler,
+      tranche=tradfi, agt-a74a6a).** Evidence: `features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md:120-121`
+      cites the fix landed in this exact function (`features-service@f441638932`, 2026-08-15), later superseded by a
+      fully general rewrite (`features-service@a46681c84a`) per that doc's own 2026-08-15 tracking — 3 more iterations
+      (scope-widening, generalize, full rewrite) all shipped, QG-green. Todo 2 below (the relaunch) stays open — real
+      throughput from the relaunch has not yet been confirmed. `[CODE]` tag (was `[OPERATOR]`) — make
       `_resolve_spot_perp` asset-group-aware, use `futures_chain`/`FUTURE` instrument_type for TRADFI. **Mapping
       convention — standard CME FX futures underlyings** (widely-known market convention, not fabricated): 6A =
       Australian Dollar, 6B = British Pound, 6C = Canadian Dollar, 6E = Euro, 6J = Japanese Yen — each maps to its

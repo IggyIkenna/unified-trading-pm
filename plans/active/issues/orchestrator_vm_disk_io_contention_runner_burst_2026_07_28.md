@@ -48,7 +48,7 @@ locked_by:
 context_scope:
   [
     agent-orchestrator/scripts/bootstrap_vm.sh,
-    /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
+    /plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     scripts/quality-gates-base/base-service.sh,
     /codex/05-infrastructure/vm-launcher-runbook.md,

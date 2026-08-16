@@ -18,7 +18,7 @@ asset_group: sports
 stage: [data]
 repos: [market-tick-data-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
-related: [sports_odds_api_data_type_casing_standardization_2026_08_15]
+related: [sports_odds_api_data_type_casing_standardization_2026_08_15, sports_consolidated_closeout_2026_07_19]
 parent_epic: sports_master
 source: interactive-session
 created: 2026-08-15
@@ -139,3 +139,10 @@ an in-flight dispatch.
   `umi_tick_provider.py:215`) — not obviously dead code — but confirming an actual accruing row population needs a
   live manifest census, which is a production query, out of scope this session. The DECISION todo remains
   operator-owned, untouched.
+- 2026-08-16 (cicd agt-abeafe, slot 14, `ldr_qg_failure` escalation on live-defi-rollout): this doc was the sole
+  `check_ag_closeout_linkage` orphan (asset_group=[sports], no reachable path to `sports_consolidated_closeout_2026_07_19.md`)
+  blocking `quality-gates-v2`'s `checks` slice. Added `sports_consolidated_closeout_2026_07_19` to `related:` —
+  verified `check_ag_closeout_linkage.py --only <this doc>` now reports 0 new orphans, and the full corpus sweep
+  reports 0 orphans (baseline 0). No content change. `check_reference_paths` (the escalation's other named failure)
+  had already self-healed via a later concurrent commit before this dispatch — verified 34 dangling refs == baseline
+  34, no action needed there.

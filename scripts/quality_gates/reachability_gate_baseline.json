@@ -25,7 +25,6 @@
       "RocketPoolConnector",
       "SocketBridgeConnector",
       "SolBlazeConnector",
-      "SymbioticConnector",
       "WethConnector",
       "YearnConnector"
     ],

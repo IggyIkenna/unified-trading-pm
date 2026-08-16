@@ -54,8 +54,11 @@ source: >-
 # prediction satellite AO batch 11 — finalize
 
 > **Machine-gated on `/plans/active/prediction_satellite_ao_dispatch_batch11_2026_08_13.md`** (`depends_on` +
-> `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch itself stays
-> `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
+> `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. **CORRECTED 2026-08-16
+> (plan_reconciler)**: the batch was operator-approved 2026-08-13 and its frontmatter already reads `status: active` —
+> the "stays draft" framing below was stale leftover template text (the sibling batch6/batch7 finalize plans don't
+> carry it). `gate_on_depends` already machine-holds this finalize until the batch's own todos are done, so no separate
+> draft-gate was ever needed either way.
 
 ## Todos
 

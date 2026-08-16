@@ -38,7 +38,7 @@ related:
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
-    /plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md,
+    /plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md,
   ]
 created: 2026-08-16
 resolved_by:
@@ -71,10 +71,16 @@ context_scope:
   `0xC329400492C6ff2438472D4651Ad17389fCb843a`) holds 16,349 wstETH — roughly 20x Karak's King Karak deposits in the
   one pool measured. Both cover the same `CARRY_AVS_CONTINUOUS`/restaking-yield archetype role
   (`restaking-reward-economics.md`); Symbiotic is the larger, structurally-simpler, address-correct venue to build
-  out instead. See `/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md`.
+  out instead. See `/plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md`.
 - **Operator ruling, 2026-08-16**: decommission Karak entirely rather than rebuild — do not leave a half-correct,
   wrong-address connector in the tree (same "complete-looking uncalled/broken component" defect class this
   workspace has already spent several sessions closing, per `e2e_wiring_reachability_audit_2026_08_15.md`).
+- **Cross-doc conflict, resolved 2026-08-16 (this note)**:
+  `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (authored 2026-08-14, two
+  days before this decision) lists Karak among the 20 protocol connectors it says need wiring into real dispatch
+  (its "never instantiated anywhere" list). That direction is SUPERSEDED by this doc for Karak specifically — do
+  not wire Karak per that doc's framing; delete it per this doc instead. That doc now carries a pointer back here so
+  a reader hitting Karak in its list does not wire up a connector this doc says to remove.
 
 ## Scope — every reference found (full-workspace grep, 2026-08-16)
 

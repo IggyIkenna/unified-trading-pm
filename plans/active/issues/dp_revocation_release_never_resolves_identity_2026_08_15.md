@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [revocation, kill-switch, alerting, vm-lifecycle, admission-hold, bug]
 related:
   [
-    /plans/active/revocation_arming_2026_08_14.md,
+    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
     /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,

@@ -30,8 +30,8 @@ tags: [tradfi, ao-dispatch, satellite-extraction, batch-12, orphan-extraction, d
 related:
   [
     /plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/honest-absence-downstream-handling.md,
@@ -72,9 +72,11 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 12 — 2026-08-10 (residual gap, sharded re-run)
 
-**status: draft — the safety rail.** Not ingested/dispatched until an operator reviews and flips this to `active`. Only
-1 source doc, 2 todos — deliberately thin; this batch exists to close a specific, verified gap, not to re-litigate
-slot-25's already-thorough batch11.
+**status: active — reviewed and dispatched (see frontmatter).** CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi,
+agt-a74a6a): this body banner still read `status: draft`, contradicting the frontmatter's `status: active` and the
+fact that todo 1 already shipped (`UAC@a65c2fa9`, `MTDS@fe000178`) — the operator review this banner describes has
+already happened. Only 1 source doc, 2 todos — deliberately thin; this batch exists to close a specific, verified gap,
+not to re-litigate slot-25's already-thorough batch11.
 
 ## Todos
 

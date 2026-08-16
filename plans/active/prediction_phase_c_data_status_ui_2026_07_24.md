@@ -144,4 +144,5 @@ context_scope:
   `prediction_phase_ab_residuals_2026_07_24` still carries 7 open todos. Gate not cleared. No reclassification.
 - **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 2 open, unchanged.
   `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` still open (prerequisite still
-  status:active, 7 open todos). Doc stays NA.
+  status:active, **CORRECTED 2026-08-16 (plan_reconciler): 6 open todos, not 7** — dropped 7→6 on 2026-08-15 per the
+  closeout hub's own re-verified snapshot). Doc stays NA — gate conclusion unaffected by the count correction.

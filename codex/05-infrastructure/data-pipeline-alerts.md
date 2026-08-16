@@ -285,8 +285,12 @@ An alert firing changes nothing for a unit's DEPENDENTS by default — the self-
 (`_DP_RECOVERY_ACTIONS`) act on the FAILING unit itself (restart, relaunch), not on the VMs/jobs reading its output.
 Revocation closes that gap:
 `unified_api_contracts.dependency_revocation.evaluate_revocation(alert_identity, upstream_entity=, drain_capable=)` is
-the single policy SSOT (142 alert identities across `DP_FAILURE_MODE_ACTIONS` + `ALERT_CODE_ACTIONS`), returning a
-`DependentAction`:
+the single policy SSOT (151 alert identities, measured 2026-08-16: 61 DP registry ids + 90 AlertCode members across
+`DP_FAILURE_MODE_ACTIONS` + `ALERT_CODE_ACTIONS` — re-count before quoting, this has grown twice already since the 142
+baseline), returning a `DependentAction`. The module itself now lives split across `_dependency_revocation_types.py`
+(enums/records) + `_dependency_revocation_policies.py` (the two policy tables) + a thin `dependency_revocation.py`
+re-export shim (file-size-ratchet split, 2026-08-16) — import from `dependency_revocation` or the top-level
+`unified_api_contracts` namespace, never the two internal `_dependency_revocation_*` modules directly:
 
 | Action         | Meaning                                                                               |
 | -------------- | ------------------------------------------------------------------------------------- |
@@ -343,9 +347,36 @@ coding-standards pointer above for the batch-vs-live scope distinction.
 | ----------------- | --- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- | ------ |
 | DP-REVOCATION-001 | 🔵  | `RevocationActuator` delivers `FLEET_HALT` — Cloud Scheduler jobs paused for a target's asset group | [S] `RevocationActuator._pause_schedulers` | auto-recover (visibility only, never pages — the actuator IS the recovery) | active |
 
-**Known gap (not yet closed, 2026-08-14)**: a `FLEET_HALT` pause registers no `MaintenanceWindow`, so `DP-WATCHER-004`
-(above) may treat it as an ACCIDENTAL pause rather than a deliberate one — tracked as an open todo in the plan rather
-than confirmed either way. Do not assume suppression works until that's verified or fixed.
+**Known gap, PARTIALLY closed 2026-08-16**: a `FLEET_HALT` pause registers no `MaintenanceWindow`, so `DP-WATCHER-004`
+(above) may treat it as an ACCIDENTAL pause rather than a deliberate one. The mechanism now exists —
+`RevocationActuator.__init__` accepts an injected `consolidator_bucket_resolver` callable and
+`_register_maintenance_windows()` registers a `pause_for_maintenance()` window (surface-scoped-per-target,
+`ttl_minutes=1440`) before pausing — but no production call site passes the resolver yet (`None` at every current
+`RevocationActuator()` construction is a verified no-op). Wiring it in is blocked on a real import cycle (this module
+sits below `escalation.py`; the resolver function sits behind `meta_targets.py`→`meta_watchers.py`→`escalation.py`→
+back to this module) — tracked as an AO-dispatchable todo in
+`/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md`. Do not assume suppression works until that lands.
+
+**A third anti-inertness class, found live 2026-08-15/16: an identity that is EMITTED but never REGISTERED.** The
+"built but not called" failure mode above (actuator with no caller) and "no dependent target resolves" (the
+self-scoped `asset_group`-only targeting fix) both have AST guards. This third shape — a `registry_id=` literal an
+emitter passes to `emit_finding()` that `evaluate_revocation()` doesn't recognize — silently raises
+`UnknownAlertIdentityError`, is caught by `_apply_revocation`, logged as a `WARNING`, and dropped; the revocation
+layer never sees it. Measured 2026-08-15: 7 already-live identities (`DP-WATCHER-005/006`, `DP-VM-012`,
+`DP-LIVE-001/002/003/004`) had been emitting into this gap, 56 rejections in one 2h window alone. Now closed by TWO
+layers: (1) the 7 (+ `DP-VM-013`, caught the next day) are registered in `DP_FAILURE_MODE_ACTIONS`; (2)
+`deployment-service/tests/unit/test_registry_id_closed_set.py` is a standing two-arm CI guard — arm 1 AST-walks every
+`registry_id=` literal in `data_pipeline_monitors/` and asserts it resolves; arm 2 asserts no module talks to UTL's
+bare `log_event()` without also reaching `route_finding()`/`emit_finding()` somewhere in the same file (the shape of
+the ORIGINAL `DP-MANIFEST-001` bug, before this session's fix — a bare `log_event()` call has no `registry_id=`
+literal for arm 1 to see at all). This guard already caught `DP-VM-013` live, on its first run, before it shipped.
+
+**`codex/05-infrastructure/data-pipeline-alerts.registry.yaml` (below) is currently STALE relative to the code**: the
+8 ids named above resolve in `DP_FAILURE_MODE_ACTIONS` but are not yet transcribed into this file's own table — the
+UAC test suite's `_DP_REGISTRY_IDS` literal is deliberately AHEAD of this file until it's updated to match (tracked,
+not forgotten — see `revocation_arming_2026_08_14.md`'s Progress Log, now archived, for the full accounting). Do not
+trust this doc's registry table as a complete list of registered ids without cross-checking
+`DP_FAILURE_MODE_ACTIONS` directly.
 
 ## Watching the watchers — meta-monitoring coverage + the KNOWN SPOF (2026-06-23)
 

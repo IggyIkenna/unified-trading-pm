@@ -168,11 +168,15 @@ already-executed, irreversible deletion rather than a migration to perform.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. **Re-scope the delete list.** `market-data-tick-defi{,-prd}` must be REMOVED from any future DeFi
+- [x] ✅ [OPERATOR] P1. **Re-scope the delete list.** `market-data-tick-defi{,-prd}` must be REMOVED from any future DeFi
       orphan-bucket delete list — it is the permanent canonical bucket, not a delete candidate, under the architecture
       that shipped 2026-07-10..07-16. Confirm this reading (or correct it, if a further architecture change since
       2026-08-14 has occurred) before any DeFi bucket-delete todo is re-dispatched. (repo: unified-trading-pm — plan-doc
-      correction only)
+      correction only) **DONE 2026-08-16 (plan_reconciler defi tranche, dispatch agt-1a88e0)**: removed
+      `market-data-tick-defi{,-prd}` from `defi_migration_audit_log_2026_07_24.md`'s delete-list todo and further
+      corrected it to reflect this doc's Session-2 findings (solana-defi/evm-defi already deleted 2026-07-10, KAMINO
+      resolved-as-moot, Aave/marinade remain an open operator question tracked here) — see that doc for the current
+      text. No architecture change since 2026-08-14 found; this reading stands confirmed.
 - [x] ✅ [DATA] P1. **INVESTIGATED 2026-08-15 (slot 22) — see "Session 2 findings" above; not literally executable as
       scoped.** (c) KAMINO DEX pools + Solana `lending_indices` from the legacy top-level prefixes: RESOLVED-AS-MOOT —
       those prefixes hold zero objects in `market-data-tick-defi-prd` today, and the underlying KAMINO/SOLEND

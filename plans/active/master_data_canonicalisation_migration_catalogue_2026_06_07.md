@@ -195,7 +195,7 @@ done
 
 | asset_group       | G0 C-PATH + pmode | G1 catalogue+enum | G2 per-AG ①–⑫ audit | G3 UNION UI |                          G4 `--apply`                          | G5 backfill→100% |
 | ----------------- | :---------------: | :---------------: | :-----------------: | :---------: | :------------------------------------------------------------: | :--------------: |
-| **defi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
+| **defi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |     🟡 (REOPENED 2026-08-12 -- GATE C still 0% v9 on disk, see slot-2 WAVE item below)     |        🔴        |
 | **cefi**          |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |
 | **tradfi**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      | 🟢 (applied 2026-07-06, post-apply cleanup tracked separately) |        🔴        |
 | **sports**        |        🟢         |     🟢 (dry)      |         🟡          |     🟢      |                    🟢 (applied 2026-06-29)                     |        🔴        |

@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [honest-coverage, shard-dimension, instrument-type, deribit, prediction, data-status, design]
 related:
   [
-    ../instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/04-architecture/instrument-universe-registry-consolidation.md,
   ]

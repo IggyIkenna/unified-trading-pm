@@ -40,6 +40,9 @@ supersedes:
 superseded_by:
 depends_on: [deployment_api_unauthenticated_prod_p0_2026_08_10]
 gate_on_depends: true
+sequential: true # added 2026-08-16 (plan_reconciler agt-8fc5a6) — todo 3 ("archive... once the above verify clean")
+# has a real prose-only ordering dependency on todos 1-2 with no machine gate; the plan is small (4 todos, 1 doc) so
+# whole-doc serialization costs negligible parallelism.
 context_scope:
   [
     /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md,

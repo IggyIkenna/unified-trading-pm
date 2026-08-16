@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [alerting, self-healing, vm-lifecycle, monitoring, cloud-run, revocation]
 related:
   [
-    /plans/active/revocation_arming_2026_08_14.md,
+    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
     /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
@@ -42,7 +42,7 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
     deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
-    /plans/active/revocation_arming_2026_08_14.md,
+    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
   ]
 resolved_by:
 supersedes:
@@ -58,7 +58,7 @@ source: Live confirmation pass on revocation_arming_2026_08_14's OPERATOR P0 tod
 ## What was measured (2026-08-14, read-only)
 
 Running the live-confirmation checklist from
-[`/plans/active/revocation_arming_2026_08_14.md`](/plans/active/revocation_arming_2026_08_14.md)'s open `[OPERATOR]` P0
+[`/plans/archive/2026_08/revocation_arming_2026_08_14.md`](/plans/archive/2026_08/revocation_arming_2026_08_14.md)'s open `[OPERATOR]` P0
 todo produced three results. Two are expected deploy lag; the third is a new defect.
 
 **(a) The deployed image predates the wiring.** `uts-prod-dp-exit-code-monitor` runs
@@ -160,7 +160,7 @@ that plan.
 
 **Schedule discrepancy CLOSED.** Live `uts-prod-dp-exit-code-monitor-cron` is `0 * * * *`, ENABLED (measured via
 `gcloud scheduler jobs list`); executions start on the hour. The plan's `*/5` claim was the stale side, corrected in
-`/plans/active/revocation_arming_2026_08_14.md` — **unified-trading-pm@951a53725d**, verified on origin. At hourly
+`/plans/archive/2026_08/revocation_arming_2026_08_14.md` — **unified-trading-pm@951a53725d**, verified on origin. At hourly
 cadence a 20-minute budgeted sweep also cannot overlap itself, which the `*/5` reading would have implied.
 
 **Both P0 code todos are WRITTEN, GATE-GREEN and COMMITTED LOCALLY — but NOT PUSHED.** Commit deployment-service commit

@@ -79,7 +79,7 @@ a third party cannot tell which from the outside). The confirmation todo below s
 - **Item 4 — cross-role routing change sign-off** — _"Conditional: check for conflicts with other
   plans/issues/implementations first; ship only if it is a clear improvement and does not conflict. Operator delegates
   the conflict-check judgment call back to Claude."_ Cited by
-  `/plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` (~line
+  `/plans/archive/2026_08/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` (~line
   186).
 - **Item 5 — blocked-question UX redesign scope** — _"All three: session_id capture + transcript-jump +
   dedup/similarity."_ Cited by `/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`

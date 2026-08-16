@@ -457,8 +457,10 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
     Features/strategy/model MVP sections not started (no consumer endpoint yet); full real-data MVP-toggle verify
     blocked on a paused manifest consolidator behind a held migration.
 
-15. **predictions_other_bucket_and_ui_drilldown** — 3 of 11 unchecked
-    `plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md` UI re-walk VERIFY blocked on a
+15. **predictions_other_bucket_and_ui_drilldown** — 3 of 11 unchecked (stale path CORRECTED 2026-08-16,
+    plan_reconciler — this whole doc is a self-bannered non-self-updating historical snapshot, so the "3 of 11" claim
+    itself is unverified/likely superseded; the doc is now RESOLVED + archived per `predictions_master.md`)
+    `plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md` UI re-walk VERIFY blocked on a
     UI-capable/playwright slot; Phase-5 canonical-groups backfill for ~24 remaining groups (has a real UAC-registry SSOT
     component); prediction sentinel fan-out fix for honest `empty_confirmed` on zero-trading-day canonical groups.
 

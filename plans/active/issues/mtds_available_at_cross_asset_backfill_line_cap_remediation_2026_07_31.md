@@ -85,9 +85,8 @@ instead of a normal in-plan todo.
 (`-001`, line 164), is still `- [ ]` open. Re-read the plan's own text before acting (per the standing "read the plan
 first" rule) — line 164 is unambiguously unchecked, and no full-range `rebuild_prediction_manifest.py` apply exists
 anywhere in `market-tick-data-service` history (checked the Progress Log for the script name; only the `--dry-run` todo,
-line 142, is done). Resuming now would violate this plan's own HARD constraint section ("dry-run first, snapshot
-
-- pause... before applying, and verify... before resuming") — the exact class of mistake
+line 142, is done). Resuming now would violate this plan's own HARD constraint section ("dry-run first, snapshot, pause before applying,
+and verify before resuming") — the exact class of mistake
   `dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md` documents a different agent making and
   self-correcting earlier the same day. **Declined to resume** — did not touch the prediction cron or run any resume
   script. Root cause: this plan has no machine-encoded ordering between the "Apply" and "Resume" backlog tasks
@@ -112,7 +111,9 @@ running against it) — check the plan's own status before starting.
       from the trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active
       plan, landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
       splitting. (repo: unified-trading-pm) — ✅ 2026-08-01 (slot-11, cicd): see Progress Log for full evidence.
-- [ ] [PLAN] P2. While splitting (todo above), add explicit per-todo sequencing between each asset group's "Apply
+- [ ] [PLAN] P2. **CORRECTED 2026-08-16 (plan_reconciler)**: the split todo above finished 2026-08-01 — this is a
+      standalone follow-up now, not a "while splitting" concurrent step. Add explicit per-todo sequencing between each
+      asset group's "Apply
       `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos via the
       **cross-plan `depends_on` + `gate_on_depends: true` split** (see 2026-07-31 Progress Log entry below — the
       `prereqs.completed_tasks`-on-a-single-todo mechanism this todo originally suggested is NOT a valid authoring

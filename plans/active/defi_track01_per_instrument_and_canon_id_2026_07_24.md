@@ -370,11 +370,17 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       raydium/DEX days — any OTHER high-TVL pool pairing a major asset with a non-major one will still be silently
       dropped unless manually added to the allowlist; this is a point-fix, not a general TVL override. (repo:
       instruments-service, unified-api-contracts)
-- [ ] [DATA] P2. **NEW 2026-07-24 — the DEX asset-relevance filter (`filter_defi_instruments_by_relevance`) needs a real
-      TVL-based fallback, not a hand-maintained allowlist**, per the Divergence RCA above: the current fix only covers
-      the 32 addresses known at ONE 2026-07-20 snapshot; any new high-TVL pool pairing a major/non-major asset going
-      forward silently drops again until someone notices and manually extends `DEFI_FORCE_INCLUDE_POOLS`. (repo:
-      instruments-service, unified-api-contracts)
+- [x] ✅ [DATA] P2. **WON'T-DO — RULED 2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling — see
+      this doc's own 2026-08-16 entry in `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s
+      Progress Log below). Flipped 2026-08-16 (plan_reconciler, dispatch agt-1a88e0) — same-day ruling never
+      propagated to this checkbox.** No TVL-based fallback: `DEFI_FORCE_INCLUDE_POOLS` stays the sole, curated
+      gate; anything not in the allowlist stays excluded (enforce strictly, don't silently admit via a threshold). No
+      code change needed beyond what's already wired (`instruments-service@4e97a82e`). Original text: **NEW 2026-07-24
+      — the DEX asset-relevance filter (`filter_defi_instruments_by_relevance`) needs a real TVL-based fallback, not a
+      hand-maintained allowlist**, per the Divergence RCA above: the current fix only covers the 32 addresses known at
+      ONE 2026-07-20 snapshot; any new high-TVL pool pairing a major/non-major asset going forward silently drops
+      again until someone notices and manually extends `DEFI_FORCE_INCLUDE_POOLS`. (repo: instruments-service,
+      unified-api-contracts)
 - **[BACKEND] P0. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`** (the remaining
   deploy-check + re-enum/re-rollup sub-scope)**. Catalogue-venue gap — ROOT CAUSE FIXED + SHIPPED
   (`unified-api-contracts@f7314dc2`, 9/9 acceptance: 7 new venues + cbETH/wBETH ACCEPT, COINBASE-SPOT/BINANCE-FUTURES
@@ -881,7 +887,12 @@ instruments in one `instruments.parquet` with `available_from/to`).
 > Relocated verbatim 2026-07-24 from the archived Contradiction-resolution section (one of its 2 still-open items) — see
 > the "Contradiction resolution" pointer below for the other 73 (95%-closed) findings.
 
-- [ ] [DATA] P1. **Prediction is a THIRD shard-atom grain** (operator 2026-07-18, per
+- [x] ✅ [DATA] P1. **RESOLVED-AS-STALE-POINTER 2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator
+      ruling; see Progress Log below). Flipped 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0) —
+      same-day finding never propagated to this checkbox.** `plans/active/prediction_consolidated_closeout_2026_07_18.md`
+      already exists and is active, and `canonical_question_group` is already the established key across many active
+      prediction docs — no new doc needed, the ownership question this pointer existed to avoid losing is already
+      answered. Original text: **Prediction is a THIRD shard-atom grain** (operator 2026-07-18, per
       `availability-manifest-and-data-status.md:57-60`): the manifest grain is a **CQG bundle** keyed on
       `canonical_question_group` (`data_type=prediction_canonical_question_group`, e.g. `SPORTS_EPL_MATCH` /
       `BTC_UP_DOWN_DAILY`), with per-CID raw objects (Polymarket `condition_id` / Kalshi ticker) as row-level detail;
@@ -912,6 +923,16 @@ against). Moved verbatim, nothing summarized, to
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator rulings)**:
+  - **DEX-relevance TVL fallback**: RULED — no TVL-based fallback. `DEFI_FORCE_INCLUDE_POOLS` stays the sole,
+    curated gate; anything not in the allowlist stays excluded (enforce strictly, don't silently admit via a
+    threshold). No code change needed beyond what's already wired (`instruments-service@4e97a82e`).
+  - **Prediction manifest keying on `canonical_question_group`**: checked before assuming absence —
+    `plans/active/prediction_consolidated_closeout_2026_07_18.md` already exists and is active, and
+    `canonical_question_group` is already the established key across many active prediction docs (
+    `prediction_phase_ab_residuals_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`,
+    `data_completion_prediction_2026_07_15.md`, and others). This cross-AG pointer is stale — no new doc needed,
+    the ownership question is already answered.
 - **na-corpus-digest-closeout 2026-08-08**: operator ruled two of the 8 genuine judgment items interactively — (1)
   factory-address capture: option (b), RPC `factory()` lookup, AND the 206,107-row historical residual must be migrated
   (GCS objects + manifest rewritten to canonical venue+chain, non-canonical originals purged) not just fixed going

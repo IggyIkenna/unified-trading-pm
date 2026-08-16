@@ -27,20 +27,15 @@ co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
   - ../active/ag_closeout_audit_rollout_2026_07_25.md
-  - ../archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md
-  - ../archive/2026_08/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md
-  - ../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md
-  - ../archive/2026_08/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
-  - ../active/ao_satellite_ao_dispatch_batch15_2026_08_09.md
-  - ../active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md
-  - ../active/ao_satellite_ao_dispatch_batch17_2026_08_10.md
-  - ../active/ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md
+  - ../active/ao_consolidated_closeout_2026_08_12.md
+  - ../active/ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md
+  - ../active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - ../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
   - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
   - ../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md
-  - ../active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md
-  - ../archive/2026_08/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md
+  - ../active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md
+  - ../active/meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10.md
   - ../active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md
   - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
   - ../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md
@@ -398,8 +393,7 @@ Everything else (W3–W8) depends on this shape.
 
 ## Assigned active plans
 
-_20 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
-priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_15 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -408,95 +402,62 @@ _(no plans currently assigned at this priority)_
 ## P1 — important; post-current-gate
 
 ### [`ag_closeout_audit_rollout_2026_07_25`](../active/ag_closeout_audit_rollout_2026_07_25.md)
+**status**: active · **estimate**: 4.8 cal AI-days (class: research)
+**title**: AG closeout-audit rollout — cefi/defi/tradfi/prediction (sports treatment, generalized)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: AG closeout-audit rollout —
-cefi/defi/tradfi/prediction (sports treatment, generalized)
+### [`ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15`](../active/ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md)
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra)
+**title**: AO Death Diagnostics Consolidation, Compaction KPIs, and Sequential-Task Carve-out
 
 ### [`data_pipeline_e2e_milestones_gate_2026_07_24`](../active/data_pipeline_e2e_milestones_gate_2026_07_24.md)
-
-**status**: active · **estimate**: 9.6 cal AI-days (class: research) **title**: Data-pipeline E2E milestones gate — 14
-cross-AG correctness criteria for the 5 asset-group consolidated closeouts
-
-### [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10`](../archive/2026_08/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
-
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+**status**: active · **estimate**: 9.6 cal AI-days (class: research)
+**title**: Data-pipeline E2E milestones gate — 14 cross-AG correctness criteria for the 5 asset-group consolidated closeouts
 
 ### [`one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08`](../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md)
-
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: one_shot_complete session-ownership desync
-— finalize
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra)
+**title**: one_shot_complete session-ownership desync — finalize
 
 ## P2 — useful; opportunistic
 
-### [`ao_satellite_ao_dispatch_batch11_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md)
+### [`ao_consolidated_closeout_2026_08_12`](../active/ao_consolidated_closeout_2026_08_12.md)
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra)
 
-**status**: resolved (archived 2026-08-12) · **estimate**: 0.12 cal AI-days (class: refactor) **title**: AO satellite AO
-batch 11 — fix_frontmatter.py's summary-truncation bug (agent_operating_framework_master epic)
-
-### [`ao_satellite_ao_dispatch_batch11_finalize_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
-
-**status**: archived · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 11 — finalize
-
-### [`ao_satellite_ao_dispatch_batch13_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md)
-
-**status**: active · **estimate**: 0.24 cal AI-days (class: refactor)
-
-### [`ao_satellite_ao_dispatch_batch13_finalize_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md)
-
-**status**: archived · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 13 — finalize
-
-### [`ao_satellite_ao_dispatch_batch15_2026_08_09`](../active/ao_satellite_ao_dispatch_batch15_2026_08_09.md)
-
-**status**: active · **estimate**: 0.32 cal AI-days (class: refactor)
-
-### [`ao_satellite_ao_dispatch_batch15_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md)
-
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 15 — finalize
+### [`ao_dispatch_plans_operator_item_separation_sweep_2026_08_16`](../active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md)
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
+**title**: AO-dispatch plan corpus sweep — separate operator-gated items from worker-dispatchable todos
 
 ### [`asset_class_to_asset_group_rename_2026_07_21`](../active/asset_class_to_asset_group_rename_2026_07_21.md)
-
-**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: AssetClass → AssetGroup rename — domain
-enum only, cross-repo coordinated landing
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
+**title**: AssetClass → AssetGroup rename — domain enum only, cross-repo coordinated landing
 
 ### [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
-
-**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Complete context_scout plumbing + close a
-frontmatter-schema drift + add a plan-brainstorm skill
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra)
+**title**: Complete context_scout plumbing + close a frontmatter-schema drift + add a plan-brainstorm skill
 
 ### [`doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08`](../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md)
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra)
+**title**: check_doc_body_links.py backtick-citation blind spot — finalize
 
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: check_doc_body_links.py backtick-citation
-blind spot — finalize
+### [`meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10`](../active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md)
+**status**: active · **estimate**: 0.6 cal AI-days (class: refactor)
 
 ### [`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08`](../active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md)
-
-**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Multi-agent slot collision + safe-doc-push
-hardening — finalize
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
+**title**: Multi-agent slot collision + safe-doc-push hardening — finalize
 
 ### [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md)
-
-**status**: active · **estimate**: 14.4 cal AI-days (class: research) **title**: >-
+**status**: active · **estimate**: 14.4 cal AI-days (class: research)
+**title**: >-
 
 ### [`reference_path_convention_2026_07_23_finalize_2026_08_08`](../active/reference_path_convention_2026_07_23_finalize_2026_08_08.md)
-
-**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Cross-reference path convention cleanup
-backlog — finalize
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
+**title**: Cross-reference path convention cleanup backlog — finalize
 
 ### [`task_template`](../active/task_template.md)
-
-**status**: active **title**: Task Template — How to Author a Plan
+**status**: active
+**title**: Task Template — How to Author a Plan
 
 ## P3 — backlog; revisit quarterly
 
-### [`ao_satellite_ao_dispatch_batch17_2026_08_10`](../active/ao_satellite_ao_dispatch_batch17_2026_08_10.md)
-
-**status**: active · **estimate**: 0.08 cal AI-days (class: refactor) **title**: AO satellite AO batch 17 — rescue
-slot-4's orphaned mdps throttle-fix WIP (agent_operating_framework_master epic)
-
-### [`ao_satellite_ao_dispatch_batch17_finalize_2026_08_10`](../active/ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md)
-
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 17 — finalize
-
-### [`e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10`](../active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md)
-
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+### [`meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10`](../active/meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10.md)
+**status**: active · **estimate**: 0.12 cal AI-days (class: refactor)

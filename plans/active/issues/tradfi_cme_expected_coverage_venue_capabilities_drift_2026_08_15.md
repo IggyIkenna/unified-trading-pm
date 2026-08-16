@@ -110,3 +110,10 @@ re-merge was never actually re-applied). Two options, either legitimate:
       narrow CME to drop trades/tbbo, matching `VENUE_DATA_TYPE_CAPABILITIES`) or an "eventual target" list (in which
       case confirm deployment-api's completion-pct math already excludes/discounts these cells correctly, or fix it if
       not)? (repos: unified-api-contracts, deployment-api)
+
+## Progress Log
+
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator ruling)**: option 1 — "currently fetchable"
+  list, narrow CME to drop trades/tbbo. Extracted to
+  `/plans/active/tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch,
+  since this doc stays `assigned_vm: NA`.

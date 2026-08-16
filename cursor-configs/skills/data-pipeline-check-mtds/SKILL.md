@@ -1,7 +1,6 @@
 ---
 name: data-pipeline-check-mtds
-description:
-  Run the market-tick-data-service data-pipeline end-to-end smoke check for one operator-given day — Phase 0
+description: Run the market-tick-data-service data-pipeline end-to-end smoke check for one operator-given day — Phase 0
   provisions/verifies the `-test-` buckets, Phase 1 proves force-refetch + skip-if-fresh for every MVP (asset_group,
   venue, data_type) shard — labeling each skip verdict genuine (prod-captured) vs ambiguous, Phase 2 proves the live/MVP
   leg, then writes + prints the report path. Never invents `--day` — it must come from the operator. Composes with
@@ -29,6 +28,27 @@ freshness read (`_resolve_freshness_bucket()` → `get_tick_data_bucket()` →
 no-force run's skip decision is genuinely driven by **PROD** capture state, independent of the test-bucket write target.
 A skip-leg is only a real proof when its target shard/day was **already captured in PROD** — otherwise the "skip fired"
 report line is ambiguous, not proof of anything.
+
+## Canonical-oracle audit (2026-08-16)
+
+Per `/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
+skill:
+
+- **Oracle routing — GAP, not yet routed.** MTDS's `--legs …,canonical` leg (§3, "The canonical-shape regression") is
+  TRADFI-ONLY and asserts a bespoke id-form regex (`unified_api_contracts.assert_tradfi_derivative_ids_canonical`),
+  never the UAC path-structure oracle `canonical_path_violations()`. Unlike IS/MDPS/features, MTDS's write target
+  (`raw_tick_data/by_date/…`) IS exactly the oracle's covered prefix, and as of `unified-api-contracts@d40c5d7d`
+  (2026-07-20, refined `@1cd27478` 2026-07-23) the oracle also covers CEFI/DEFI filename id-form, not just structure —
+  well before this audit date. **Every non-TRADFI shard records `skipped/canonical_shape_check_is_tradfi_only` and
+  gets ZERO canonical-shape checking today.** Tracked as a new follow-up todo on the dispatching plan (see its
+  Progress Log) rather than fixed inline here — extending a shipping checker's leg is real code work, not a doc audit.
+- **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: id-FORM is checked for TRADFI shards only
+  (regex above); CEFI/DEFI/sports/prediction filenames are **unchecked** by this skill. `instrument_type`/`data_type`/
+  `venue`/`chain` VALUES are compared only for internal self-consistency against the shard's own manifest row, never
+  against an independent canonical source — **declared unchecked** as independent value validation.
+- **Banner** (§ "Interpreting verdicts while the raw→canonical instrument-id migration is in flight", and its
+  restatement near "Ground truth is the VM run.log"): **re-verified 2026-08-16, still accurate** — same CEFI
+  migration status as the IS skill's banner. Kept as-is.
 
 ## 0. `--day` is REQUIRED — never synthesize one
 

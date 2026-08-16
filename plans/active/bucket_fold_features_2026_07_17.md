@@ -20,11 +20,11 @@ scope: [engineer, admin]
 tags: [gcs, buckets, consolidation, fold, features, migration, env-split, bigquery, lifecycle, infrastructure]
 related:
   [
-    plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
-    plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
-    plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    plans/active/bucket_fold_closeout_2026_07_17.md,
+    /plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /plans/archive/2026_07/bucket_fold_closeout_2026_07_17.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/pipeline-mode-partition.md,
@@ -61,9 +61,13 @@ context_scope:
 
 # Bucket fold — features 25 per-AG/kind → 5 per-AG (`features-{ag}-{env}-{pid}`)
 
-> **🟡 MIGRATION IN FLIGHT (started 2026-07-17).** Provisions `features-{cefi,defi,tradfi,sports,pred}-{prd,test}-{pid}`
-> (GCP + AWS), re-mounts BQ `feature_external` external tables, deletes ~20 source feature buckets. Cross-plan banner on
-> [[bucket_estate_consolidation_to_sub100_2026_07_13]] W3 + [[bucket_estate_fold_design_2026_07_13]] Fold A.
+> **🟢 NEAR-COMPLETE (code-complete + redeployed 2026-07-26).** Provisioning/migration/atomic cutover/BQ-remount/
+> consolidator-retarget/source-delete are all DONE; only the P3 "Alias sunset" cleanup todo remains open (re-verify a
+> clean `tofu plan` before flipping — see the 2026-08-03 na-eligibility-audit Progress Log note). **Corrected
+> 2026-08-16 (plan_reconciler cross-cutting)** — was stale "MIGRATION IN FLIGHT" since authoring (2026-07-17),
+> contradicting this doc's own 2026-07-26 Progress Log entry ("Fold A is now 100% closed except..."). Cross-plan
+> banner on [[bucket_estate_consolidation_to_sub100_2026_07_13]] W3 (now archived) +
+> [[bucket_estate_fold_design_2026_07_13]] Fold A.
 
 **What / why**: Fold A of [[bucket_estate_fold_design_2026_07_13]] — the ~25 per-AG/kind feature buckets → 5 per-AG
 env-tiered buckets, kind as a top-level path prefix:

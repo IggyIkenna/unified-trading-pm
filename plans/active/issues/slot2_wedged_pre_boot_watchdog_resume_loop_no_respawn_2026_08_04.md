@@ -107,7 +107,10 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
       was marked RESOLVED at 08:55-08:57Z the same day, which is itself evidence the point-fix (kill+respawn) doesn't
       hold and the [BACKEND] durable watchdog-escalation fix above is the actual blocker, not yet shipped. Needs another
       kill+respawn (operator-owned, main cannot self-serve per this doc's established precedent). (repo:
-      agent-orchestrator — operator action)
+      agent-orchestrator — operator action) **Staleness note (2026-08-16, /plan-reconcile)**: this is a point-in-time
+      alert from 2026-08-08 with no Progress Log entry since 2026-08-10 — AutoSpawn cycles slots continuously, so this
+      specific slot-3 state almost certainly no longer holds. Needs a fresh live `GET /api/state` check before acting,
+      not treated as still-actionable as literally worded.
 - [x] ✅ [OPERATOR] P2. **Slot 3 — 2nd instance of the same wedged class (kill+respawn)** — **RESOLVED, verified live
       2026-08-08 (round5-cross-cutting-audit).** Live `GET /api/state` shows slot 3 also now `phase: "idle"` (not
       `working`/wedged), same coherent "214 task(s) blocked" message, `last_ping` fresh (2026-08-08T08:57:01Z). The

@@ -19,6 +19,11 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycle, dispatch]
 related:
   [
+    /plans/active/issues/ao_fleet_regression_triad_2026_08_16.md,
+    /plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md,
+    /plans/active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md,
+    /plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md,
+    /plans/active/task_template.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
@@ -92,17 +97,32 @@ context_scope:
 4. **Infra / VM / host hygiene** → Track 4
 5. **Dashboard e2e flakiness** → Track 5
 6. **Archival + reconciliation bookkeeping** → Track 6
+7. **AO-plan operator-item purity (task_template.md §3 finding Y)** → Track 7
 
 ---
 
 ## Track 1 — Worker liveness / failover / dispatch correctness
 
+- [ ] [OPERATOR] P1. **ROOT-CAUSED + FIX IMPLEMENTED, NOT YET SHIPPED (2026-08-16).** Operator-reported "review agent
+      keeps disappearing" — root cause: `server/routes/slots_worker.py`'s `human_claim`/`human_claim_check` (added
+      `ao_human_fleet_integration_2026_08_15`) never checked `human_slot_ids()` before binding a task to a slot, unlike
+      sibling endpoints `human_heartbeat`/`human_usage_push` which already do — so an ordinary Class-A backlog task got
+      bound onto the reserved review slot, wedged for ~30h, and no `role=review` agent ever registered (confirmed live
+      via SSM: `GET /api/agents` returned zero review rows, slot 2 showed a stale worker-style `current_task`/`plan_ref`
+      instead of review's boot loop). Fix: added the identical `human_slot_ids()` guard to both endpoints, 2 new
+      regression tests, full `test_human_fleet_endpoints.py` (21 passed) + dispatch-gate tests (10 passed) green —
+      diff sitting uncommitted in the `agent-orchestrator` working tree pending operator review/ship via
+      `quickmerge.sh`. Also flags a live-infra follow-up (does the currently-wedged slot 2 need manual recovery?) and a
+      second independent hardening gap (`ensure_review_agents` doesn't verify a "live" review slot is actually running
+      the review prompt vs. some stray session). Source:
+      `/plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md` — full evidence, root cause, diff
+      summary, and the 3 follow-up todos live there.
 - [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@3d2e368`** (2026-08-14, after this tracker's own authoring).
       `retire_orphaned_blocked_rows()` (`server/blocked_reconcile.py:564`) now called at both `reassign_slot`
       (`server/routes/slots_ops.py:763`) and `skip_current_task` (`:1060`) — the `auto_orphaned_slot_reassigned`
       disposition + `blocked_retired_auto_orphaned_slot_reassigned` log event this todo asked for, exactly. Verified
       2026-08-15 (`/ag-closeout-audit`-style reconciliation sweep, this session). Source:
-      `/plans/active/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md` — flip its own
+      `/plans/archive/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md` — flip its own
       checkbox too, same evidence.
 - [x] [REVIEW] P3. **DONE.** Both `_migrate_parking_state` failure paths now `logger.warning(...)` on drop
       (`server/regen_backlog_from_plan.py` — no-candidate branch ~2876-2895, below-threshold branch ~2899-2919), each
@@ -112,7 +132,7 @@ context_scope:
 - [x] [REVIEW] P2. **DONE.** `_sweep_unpushed_slots` now calls `heal_dead_slot_branch_quarantine` directly
       (`server/worker_liveness_watchdog.py:1953`) inside its own unconditional per-tick sweep — fires every tick
       regardless of backlog state, no `_do_spawn` gate. Verified 2026-08-15 (reconciliation sweep, this session).
-      Source: `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` — its own
+      Source: `/plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` — its own
       checkbox + Progress Log are stale (still describe the gap as open as of 2026-08-03), flip + close.
 - [x] [INFRA] P3. **DONE — CORRECTED 2026-08-15: was briefly marked won't-build by a concurrent session's
       investigation-only pass; a separate concurrent session actually built and shipped it,
@@ -125,7 +145,7 @@ context_scope:
       primary-fix efficacy — it just concluded before checking whether the structural exemption was ALSO buildable
       safely, and it was: this is exemption BY the process's own kernel session id, not a blanket allowlist, so it can't
       reintroduce the "genuinely leaked process never reaped" hazard either. Source:
-      `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — flip its checkbox
+      `/plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — flip its checkbox
       too.
 - [x] [BACKEND] P1. **DONE — full 10-component sweep closed 2026-08-15 (this session).** Final per-component verdict:
       `HealthMonitor` FIXED (`agent-orchestrator@349dbc0`), `AgentKeeper` FIXED (`@eb4265c`), `BlockedQueueReconciler`
@@ -137,7 +157,7 @@ context_scope:
       same read-DB / act-with-no-session-open / write-DB split already proven by `tmux_pruner`/`ensure_review_agents`,
       each with a regression test asserting zero open `session_scope()` depth during the slow call. **This closes the P1
       live incident** — flip the source doc's DO-NOT-ARCHIVE guard note to reflect closure (not done in this pass,
-      tracker-level only). Source: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
+      tracker-level only). Source: `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
 - [x] [REVIEW] P2. **DONE.** `WorkerLivenessKicker` now auto-submits a frozen `/compact`/`/pre-compact` at/above
       `context_worker_compact_gate_pct` (`server/worker_liveness/__init__.py:988-1027`, logs
       `frozen_guided_compact_auto_submitted`), citing this exact todo. Verified 2026-08-15 (reconciliation sweep, this
@@ -186,8 +206,25 @@ context_scope:
       `_done_one_off` (`server/routes/slots_worker.py:1912-1924`) matches it against the archived row's own
       `claude_session_id` and returns idempotent 200 instead of 409. Tracker's premise ("still has no field") is stale.
       Verified 2026-08-15 (reconciliation sweep, this session). Source:
-      `/plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` (its own
+      `/plans/archive/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` (its own
       "declined-P3, revisited" section already narrates this as shipped — flip the checkbox to match).
+- [ ] [DIAG] P0. **ACTIVE INCIDENT, fleet paused pending fix.** Agents dying mid-task, last ~4h as of 2026-08-16
+      evening, after ~2 days of clean operation — a real regression, not yet root-caused. Live lead:
+      `orphan_reap sweep: slot <N> pid <P> ... KILLED` entries in this exact window; whether these are genuine
+      orphans or a false-positive reap of legitimately-working processes is undetermined. Fleet paused down to 4
+      backlog slots (20/21/22/24) + ci_escalation (32/33) for controlled diagnosis (operator directive) — MUST be
+      resumed once fixed, do not leave at reduced capacity. Source:
+      `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 2 — full evidence, suspect commit list,
+      restore command).
+- [ ] [BACKEND] P1. Scheduled-task/CI-escalation "reserved" slot sets (`config.py::scheduled_task_reserved_slot_ids`/
+      `ci_escalation_reserved_slot_ids`) are computed dynamically per-call from the current live roster, never
+      pinned — the dispatch-gate's reserve set and the scheduler's own target-pick can diverge whenever the roster
+      shifts between the two independent computations, contradicting the "fixed slots" behavior the operator
+      expects. Source: `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 1).
+- [ ] [UI] P2. Dashboard's human-fleet "ikenna" row (slot 9001) shows a single STALE badge that reads as the
+      operator's overall presence, but structurally only reflects one opt-in registration — unrelated to the
+      operator's actual concurrent interactive tab/worktree sessions, which the human-fleet model has no visibility
+      into at all. Source: `/plans/active/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 3).
 
 ## Track 2 — Scheduled jobs, benchmarking, model/provider routing
 
@@ -224,7 +261,13 @@ context_scope:
       linger enabled for ubuntu, live `systemd --user` instance running (PID 1111), and actively firing — confirmed real
       log output from `CIReconcileLoop`/`AutoParkReconciler`/`BlockedQueueReconciler` started 2026-08-15 09:08:32.
       Source: same doc.
-- [ ] [SCRIPT] P1. Re-run `/plan-reconcile` (whole-corpus) SOLO for a clean, unconfounded benchmark number. Source:
+- [x] [SCRIPT] P1. **ATTEMPTED 2026-08-16 (batch21 satellite todo) — SOLO pre-check correctly FAILED, no run
+      started.** 5 concurrent `plan_reconciler` tranche-shard agents were active at check time (18:32:26Z Sunday) —
+      confirmed the routine per-tranche cadence, not an anomaly; starting a competing whole-corpus dispatch would have
+      confounded the benchmark and risked corpus write-collisions, so none was started. Root cause + full evidence + a
+      new follow-up todo (cadence-drift between SKILL.md's documented weekly quiet-day and the installed every-2h
+      timer) filed in Source. Most recent real whole-corpus number remains the 2026-08-12 interactive run (774 docs,
+      121 contradictions) — 4 days stale. Source:
       `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean steady-state benchmark.
       Source: same doc.
@@ -274,7 +317,7 @@ context_scope:
       `/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`).
 - [x] [REVIEW] P1. **DONE.** `server/prompts.py:296` now has a literal curl body for the `/boot` STEP 2 call. Verified
       2026-08-15 (manual grep, this session). Source:
-      `/plans/active/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`.
+      `/plans/archive/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`.
 - [x] [REVIEW] P2. **DONE.** Zero `worktree_path` hits left in `server.py`/`routes/agents.py`/`autospawn.py` — the
       rename is complete. Verified 2026-08-15 (manual grep, this session). Source: same doc.
 - [x] [REVIEW] P3. **DONE.** `BootRequest` carries `model_config = ConfigDict(extra="forbid")`
@@ -357,7 +400,7 @@ context_scope:
       `resource_history.py`'s sampler already serializes wholesale, so `/ws/vm-resources` picks it up with no further
       wiring. **A dashboard UI tile is explicitly NOT built** (out of scope for this pass, backend-only) — remains a
       genuine follow-up if the operator wants the data surfaced visually, not just available over the WS feed. Source:
-      `/plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`.
+      `/plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`.
 - [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, dominant disk consumer) for real cleanup headroom. Source:
       `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`.
 - [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G). Source: same doc.
@@ -373,11 +416,13 @@ context_scope:
       existence check for future ghost hosts. Resolved the design fork as tombstone-never-prune (row stays for audit
       trail); wired into `models/git_health.py` + `routes/git_health.py:361,428` to exclude tombstoned hosts from
       fleet-wide stale/drift totals. Verified 2026-08-15 (reconciliation sweep, this session, same day as the shipping
-      commit). Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` — flip its
+      commit). Source: `/plans/archive/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` — flip its
       checkbox too.
-- [ ] [OPERATOR] P2. Run the dry-run + live-apply steps for the content-derived-task-id migration against ~1,728 legacy
-      positional ids (minting itself already shipped and live). Source:
-      `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (tracked live in
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-16 (interactive session, operator-approved quiet moment — only 1 task actively
+      dispatched fleet-wide).** Dry-run + live-apply both completed cleanly against the content-derived-task-id
+      migration: 2037 rows renamed, hazard-2 gate 0 unexplained across 673 references, 0 dispatched rows touched,
+      `REFUSING to reset` count 0 immediately post-apply. Full evidence in the source doc's own flipped checkboxes.
+      Source: `/plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (tracked live in
       `/plans/active/content_derived_backlog_task_ids_2026_08_08.md`, do not duplicate there).
 - [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@c6d43ac`** (2026-08-14).
       `worktree_clean_check/_ahead_push.py::push_or_preserve_ahead_commits` (lines 262-283): on a rejected push,
@@ -385,7 +430,7 @@ context_scope:
       `ahead_push_rejected_and_stale` event. Regression:
       `test_sweep_rejected_push_restamps_sentinel_and_flags_rejected`. Verified 2026-08-15 (reconciliation sweep, this
       session). Source:
-      `/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` — flip + archive
+      `/plans/archive/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` — flip + archive
       if now 0 open todos.
 - [x] [REVIEW] P2. Per-occurrence audit of the ~14 `BLOCKED-PREREQ` files in the active corpus (external-gate-mislabel
       vs. same-corpus-dependency), then re-grep-and-confirm as a follow-up. Source:
@@ -454,6 +499,101 @@ before touching the source doc directly._
       a sibling panel, collapsed state survives a reload, a header action button stays clickable and does not
       trigger collapse) plus 10 pre-existing wallet/blocked specs re-run green to confirm no regression. Source:
       operator request, this session (not from the 2026-08-14 audit sweep).
+- [ ] [TEST] P3. **New finding, 2026-08-16, adjacent to the collapsibility work above — NOT caused by it, isolated
+      and confirmed independently.** `dashboard/tests/e2e/task-usage-account-filter.spec.ts` has 2 pre-existing,
+      reproducible failures ("All accounts sums every task..." expects `17.0K`, gets `22.0K`; "tasks on an
+      unregistered account are unreachable..." expects a `0` shortfall, gets `5.0K` bleeding into a registered
+      account's slice) — the +5000 in both cases exactly matches the fixture's "unregistered account" oneoff rows
+      (2000 cicd + 3000 scheduled), suggesting those rows are being double-counted or mis-attributed somewhere in
+      the real `window_task_usage_totals` aggregation, not a test-authoring bug. **Isolation proof**: reproduced
+      with a byte-for-byte reverted `accounts.mock.json` (diffed to confirm identity with `HEAD`) AND a freshly
+      deleted `dashboard/tests/e2e/.tmp/e2e_state.db` — same failure both times, ruling out both today's fixture
+      addition (`grok-4-3-demo`/`kimi-k2-6-demo`) and stale-DB accumulation from repeated test runs as the cause.
+      Not investigated further this session (out of scope for the collapsibility/provider-grouping work it was
+      found alongside). Done when: root-caused in `window_task_usage_totals` (or wherever the real aggregation
+      lives) and both assertions pass again on a fresh DB.
+- [x] [UI] P2. ✅ **New, live operator observation 2026-08-16 — DONE, shipped `agent-orchestrator@f52b541c13`.**
+      While reviewing the collapsibility feature above, the operator noticed only Claude/DeepSeek wallet panels
+      existed and asked to "add the other models by provider so grouping google, xai, etc." Investigating surfaced
+      a real, live bug: `ProviderBadge` (`dashboard/src/components.tsx`) was still the original
+      2026-07-28-era DeepSeek-vs-everything-else-is-"Claude" binary — every Grok/Gemini/GLM/Codex/Kimi/NVIDIA
+      account was silently mislabeled "Claude" in the UI, exactly the failure mode the operator explicitly flagged
+      earlier this session ("i dont want anything registering as claude when its grok even if its claude code").
+      Fixed by adding `PROVIDER_DISPLAY` (a real label/title/CSS-class per registered `AccountProvider` value,
+      exported for reuse) and rewriting `ProviderBadge` to use it, falling back to the raw provider string rather
+      than lying as "Claude" for anything unmapped. Also implemented the actual grouping request: `AccountsPanel`
+      (`layout.tsx`) now groups its rows by provider (anthropic sorts first, others alphabetically by display
+      label), each provider sub-group independently collapsible (own `localStorage` key, reusing the collapse
+      pattern from the todo above). 2 new mock accounts (`grok-4-3-demo`, `kimi-k2-6-demo`) added to
+      `accounts.mock.json` for realistic test coverage — required updating `critical-health.spec.ts`'s
+      hardcoded "ALL 4" account count to "ALL 6" (a real, expected, mechanical consequence of the fixture growing,
+      not a regression). `tsc --noEmit` clean, full `quality-gates.sh` green. **pw:L2** — 2 new tests in
+      `provider-badge.spec.ts` (Grok/Kimi render their own real badge not "Claude"; the Accounts panel groups by
+      provider with independent per-group collapse) plus the full relevant regression sweep re-run green
+      (13/13 across provider-badge/panel-collapsible/fleet-account-column, 2/2 critical-health, 4/4 tier-editor,
+      each via their correct dedicated Playwright project). Source: operator live observation, this session.
+- [x] [UI] P2. ✅ **Operator "build the rest now" 2026-08-16 — Grok DONE, shipped `agent-orchestrator@88c838dd6a`
+      + `agent-orchestrator@60db1a7993`.** Real Grok wallet reconciliation: `GrokBalanceHistoryRow` (new table,
+      mirrors `DeepSeekBalanceHistoryRow`), `GrokBalancePoller` (mirrors `DeepSeekBalancePoller`, 1-min cadence, uses
+      the already-working `fetch_grok_balance()`), `compute_grok_wallet_window_reconciliation()` (real balance-diff
+      vs real `task_usage.spend_usd` WHERE `provider="grok"` — Grok needs no bespoke transcript-sweep table the way
+      DeepSeek does, since `price_usage()` already prices it correctly from the live `/done` capture), new
+      `GET /api/accounts/grok/wallet-reconciliation/window` route, new `GrokWalletPanel.tsx` (24h/7d toggle,
+      collapsible). Deliberately a SIMPLER v1 than DeepSeek's panel: no top-ups tracking, no
+      worker/orchestrator/review split (total attributed spend only). **pw:L2 gap now closed** — new
+      `grok-wallet-reconciliation.spec.ts` (2 tests: balance-at-end/attributed-spend/sampling-since render correctly;
+      the 24h→7d toggle re-fetches and keeps the same attributed spend), shipped alongside Kimi below.
+- [x] [UI] P2. ✅ **Kimi DONE, shipped `agent-orchestrator@60db1a7993`.** The prior blocker — "does Moonshot expose a
+      programmatic balance-read endpoint" — is resolved: confirmed `GET https://api.moonshot.ai/v1/users/me/balance`
+      is real (Bearer auth, `{"data":{"available_balance":...}}` shape;
+      [platform.kimi.ai/docs/api/balance](https://platform.kimi.ai/docs/api/balance)). Clones the Grok pattern
+      (`KimiBalanceHistoryRow`, `KimiBalancePoller`, `compute_kimi_wallet_window_reconciliation()`,
+      `GET /api/accounts/kimi/wallet-reconciliation/window`, `KimiWalletPanel.tsx`) with one real structural
+      difference: the three Kimi model-accounts (kimi-k3, kimi-k2.6, kimi-k2.7-code) share ONE Moonshot API key and
+      therefore one wallet — `KimiBalancePoller` samples balance ONCE per tick (not per account) under a synthetic
+      wallet identity, and `compute_kimi_wallet_window_reconciliation` sums `task_usage.spend_usd` across ALL THREE
+      accounts (`provider="kimi"`), not one. Token resolution is also structurally different from Grok/DeepSeek: no
+      Kimi `AccountDef` carries `api_key_secret_name` (the real key lives server-side in the LiteLLM proxy's own env),
+      so `kimi_balance.py` resolves GSM secret `moonshot-api-key` directly rather than per-account. **pw:L2** — new
+      `kimi-wallet-reconciliation.spec.ts` (2 tests), with a 2-different-account-ids e2e fixture that actually proves
+      the cross-account aggregation claim rather than happening to pass on a single-account case. Full
+      `quality-gates.sh` green (4003 pytest + 380 vitest + tsc clean), 16/16 relevant Playwright specs re-run green.
+- [ ] [UI] P2. **Gemini capacity panel — NOT $-based (genuinely free tier), the real signal is rate-limit CAPACITY
+      consumed.** `gemini_headroom.py` already tracks per-account RPM/TPM/RPD live — this is a UI-only build (a
+      capacity gauge, not a $ balance table), no new backend tracking needed. Fully unblocked, no operator input
+      required — operator-agreed next-easiest win, 2026-08-16. Done when: a `GeminiCapacityPanel.tsx` renders real
+      per-account RPM/TPM/RPD headroom, collapsible, pw:L2-verified.
+- [ ] [INFRA] P2. **NVIDIA capacity-tracking layer, THEN a panel.** Unlike Gemini, no `gemini_headroom.py`-equivalent
+      exists for NVIDIA NIM yet — build the tracking layer first. Baseline researched 2026-08-16 (not yet empirically
+      confirmed against this fleet's own key): free tier is ~40 RPM, **global per-key, shared across every model**
+      (not per-model) — [decodethefuture.org](https://decodethefuture.org/en/nvidia-nim-api-pricing-limits-guide/),
+      [NVIDIA forums](https://forums.developer.nvidia.com/t/request-to-increase-rpm-limit-for-free-nvidia-nim-account/377451) —
+      upgradeable to 200 RPM on request. Done when: a headroom-tracking layer mirroring `gemini_headroom.py`'s shape
+      exists for NVIDIA, plus a panel consuming it, pw:L2-verified.
+- [ ] [DATA] P2. **NVIDIA concurrency-capacity baseline — measure how many Gemma models can run concurrently before
+      the shared 40 RPM ceiling breaks.** Operator observation 2026-08-16: since the ceiling is global-per-key (see
+      todo above), running the 2 paused NVIDIA accounts (`nvidia-diffusiongemma`, `nvidia-gemma-4-31b-it`)
+      concurrently may hit it fast — worth baselining BEFORE any routing logic assumes N-way concurrency is free.
+      **Blocked on operator decision, not on missing information**: measuring this requires enabling the paused
+      accounts, which stays off per standing instruction (task-routing logic doesn't exist yet) — do NOT unpause to
+      run this. Done when: the operator green-lights a bounded live test (both accounts, ramping concurrent request
+      count until 429s appear) and the real breaking point is recorded here.
+- [ ] [INFRA] P3. **GLM/Codex `boost_multiplier` plumbing — build now, dormant, per operator ruling 2026-08-16
+      ("build plumbing now, dormant" over "park until routing ships").** Real calibration needs live dispatch volume
+      (both plans' own P1 todos already say so explicitly — `deepseek_claude_blended_provider_routing_2026_07_28`'s
+      GLM quota-tracking todo, `codex_luna_flex_bridge_2026_08_14`'s Codex quota-tracking todo), and both accounts
+      stay paused until task-routing ships — so this todo is deliberately the SCAFFOLDING only: wire
+      `five_hour_pct`/`weekly_pct` capture (IF the vendor's API exposes an equivalent signal — GLM's z.ai endpoint and
+      Codex's bridge have NOT yet been checked for this; verify before assuming the Claude-header pattern transfers)
+      plus the `boost_multiplier` calc plus a dormant panel ("no data yet" until live), using the CURRENTLY-active
+      price constants (not the future-upgrade tiers both source plans already correctly document separately):
+      **GLM Lite $18/mo** (per `deepseek_claude_blended_provider_routing_2026_07_28`'s 2026-08-15 staged-tier ruling)
+      and **Codex Plus $20/mo** (operator, 2026-08-16: "codex we are on plus not pro its $20 per month. once we have
+      run some stuff we will increase to $100" — `codex_luna_flex_bridge_2026_08_14` already correctly documents Plus
+      as current and Pro/$100/$200 as the future upgrade target, so `_TIER_MONTHLY_PRICE_USD` must key off the tier
+      actually active today, not the plan's Pro-tier research figures). Zero real calibration data renders until the
+      accounts are enabled. Done when: the capture+calc+panel exist, QG-green/pw:L2-verified showing the "no data
+      yet" dormant state.
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
@@ -519,8 +659,44 @@ before touching the source doc directly._
 
 ---
 
+## Track 7 — AO-plan operator-item purity (per `task_template.md` §3 finding Y)
+
+**Merged in 2026-08-16** from `ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md`'s own
+`orchestrator_master` group todo — that sweep now covers only the other 9 non-ao epic groups; this Track is the
+single owner for the ao-topic slice, so the two docs never re-process the same corpus blind to each other. Per
+finding Y: any `assigned_vm: planning` AO plan carrying a genuine `[OPERATOR]`/`BLOCKED-<TOKEN>` item interleaved
+with plain dispatchable todos gets that item forked into a companion `assigned_vm: NA` doc, cross-linked, so the AO
+plan can reach zero-open-todos and archive independently.
+
+- [ ] [PM] P2. **Run the Track-A/B classification pass** (`task_template.md` §3 finding Y's 3-step process) across
+      every `orchestrator_master`-scoped `assigned_vm: planning` plan. One concrete seed finding already surfaced
+      this session (2026-08-16 AO-corpus dedup audit, live-verified against the agent-orchestrator backlog): the
+      Anthropic per-task calibration run
+      (`plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`, live backlog id
+      `...-8719bc760e62`, currently `status=blocked`) is tagged `[OPERATOR]` but is actually read-only/fully
+      AO-dispatchable — only the *interpretation* of the result needs a human. That's a mis-tag to correct
+      (finding Y's step 1: "if mis-tagged, untag it instead of forking it out"), not a fork candidate. Classify the
+      rest of the `orchestrator_master` population the same way before assuming another one needs forking.
+- [ ] [PM] P2. **Resolve the `batch14` DeepSeek-credential-fix conflict** — live-verified 2026-08-16: the env-file
+      GSM-indirection todo (`ao_satellite_ao_dispatch_batch14_2026_08_09.md`, live backlog id `...-791d3e7d35b7`) is
+      `status=queued` right now — genuinely still open, NOT done despite an earlier (incorrect) claim that it landed
+      2026-08-12. It sits on a topic the tracker's own Notes below call fully CANCELLED/out-of-tracker-scope
+      (`deepseek_claude_blended_provider_routing_2026_07_28.md`). Since this specific todo is real, live, queued
+      work with nobody owning it, either (a) dispatch it normally (it's a plain `[INFRA]` todo, not `[OPERATOR]`,
+      and the live backlog already has it queued and ready), or (b) if the DeepSeek-cancellation ruling was meant to
+      cover this too, explicitly cancel it with a citation — don't leave it silently queued-but-orphaned.
+
+---
+
 ## Notes
 
+- **7 of the still-open Track 1/2/4 items extracted into `ao_satellite_ao_dispatch_batch21_2026_08_16.md`
+  (2026-08-16, operator request)** — the bounded, conflict-clear, non-operator-gated items (context-signal re-run,
+  `/plan-reconcile` + `/na-eligibility-audit` benchmark re-runs, `ORCHESTRATOR_VM_ID` env-var-loss root-cause, swap-peak
+  root-cause, two disk-cleanup audits). Its gated `batch21_finalize` reconciles evidence back into this tracker's own
+  checkboxes once done — do not flip them manually in the meantime. See that batch plan's "Why this plan exists"
+  section for the full list of items deliberately NOT extracted (design fork, `[OPERATOR]`-tagged migration, an
+  item gated on a separate NA hold, and one deferred into the finalize plan itself) and why.
 - **Not archivable until `depends_on` clears (operator direction, 2026-08-16).** This tracker's own 12 remaining open
   items are pointers, not the real work — the real work lives in the source docs each item cites. `depends_on` above
   names every distinct source doc still carrying a genuinely-open item as of the 2026-08-15 final reconciliation pass:

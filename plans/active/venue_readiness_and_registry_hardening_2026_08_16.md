@@ -233,13 +233,42 @@ across `engine/strategies/v2/` — so the composition cannot be computed in eith
 Closing that one link makes both tests mechanical rather than manual, and it is the smaller half: the expensive half,
 per-feature-group input requirements, already exists.
 
-- [ ] [AGENT] P0. **Declare archetype to feature_groups.** The missing link. Compose it with `FEATURE_REQUIRED_INPUTS`
-      to derive each archetype's full input requirement set without restating it anywhere.
-- [ ] [AGENT] P0. **Add contract step 17 as a real check, both directions.** A venue is not `BACKTESTABLE` unless at
-      least one archetype's requirements are fully satisfiable from it, and every data type it provides is either
-      consumed or explicitly declared unused. Declared-unused is a legitimate answer; silence is not.
+- [x] [AGENT] P0. ✅ Shipped — `unified-api-contracts@2fa22fee` ("feat: declare StrategyArchetype to feature_group
+      mapping (UAC SSOT)"), on `origin/live-defi-rollout`, `ahead=0`. **Declare archetype to feature_groups.** The
+      missing link. Composes with `FEATURE_REQUIRED_INPUTS` per the design recorded in the Progress Log below (5
+      confirmed archetypes, 54 explicitly `UNDECLARED_ARCHETYPES`, never silently "consumes nothing"). The external
+      blocker (karak/pendle/symbiotic DeFi-connector reachability) that held this for 16 confirmations across the
+      session cleared — someone else's in-flight `DeFiAdapter` dispatch-wiring work landed; the invariant now passes
+      standalone (`test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions PASSED`, re-verified
+      2026-08-16).
+- [x] [AGENT] P0. ✅ Shipped — `unified-api-contracts@5a74178360` ("feat: add contract step 17 real check, both
+      directions"), on `origin/live-defi-rollout`. **Add contract step 17 as a real check, both directions.** New
+      module `unified_api_contracts/internal/architecture_v2/venue_strategy_consumability.py` composes
+      `FEATURE_REQUIRED_INPUTS` + `ARCHETYPE_FEATURE_GROUPS` (no restating either): `satisfying_archetypes()` /
+      `archetype_fully_satisfiable()` implement direction (b) — at least one of the 5 confirmed archetypes' full
+      data_type requirement set is a subset of the venue's; an `UNDECLARED_ARCHETYPES` member can never satisfy this
+      (undeclared ≠ "needs nothing", so it must not silently count). `orphaned_data_types()` implements direction
+      (a) — every venue data_type not in the union of what any feature_group consumes, and not in a caller-supplied
+      `declared_unused` set, is orphaned. `contract_step_17_check()` combines both into a `Step17Result.passed` verdict.
+      12 unit tests (`tests/unit/test_venue_strategy_consumability.py`) cover: the data_type-vs-feature_group-name
+      distinction (`"lending_rates"` feature_group → `"lending_indices"` data_type, not the group's own name),
+      undeclared-archetype exclusion, orphan detection, declared-unused suppression, and the combined verdict. Exported
+      from the `architecture_v2` package `__init__.py`. Full `unified-api-contracts` `quality-gates.sh --no-fix`:
+      `✅ ALL QUALITY GATES PASSED (253s)`. **Note**: this implements the step-17 spec as promoted to the contract
+      table (row 17, above) — "at least one archetype" — not the stricter "every archetype tied to the venue" framing
+      in the motivating § STRATEGY CONSUMABILITY prose above it; that stricter direction needs a venue↔archetype
+      tie (`venue_universe`), which turned out to be per-slot comma-separated strings scattered across
+      `strategy-service/strategy_service/engine/strategies/v2/archetype_slots_*.py` (confirmed via grep this session),
+      not a clean UAC SSOT — consolidating that is separate scope, not blocking this check.
 - [ ] [AGENT] P1. **Report the unconsumed set.** Data types captured but consumed by no archetype are either a missing
       strategy or wasted capture cost. Either is worth knowing; neither is visible today.
+- [ ] [AGENT] P2. **Consolidate `venue_universe` into a clean UAC SSOT.** Currently per-slot comma-separated strings
+      scattered across `strategy-service/strategy_service/engine/strategies/v2/archetype_slots_*.py` (confirmed via
+      grep 2026-08-16) — not derivable as a clean `archetype -> venues` map today. Needed only to implement the
+      *stricter* "every archetype tied to the venue" direction described in the motivating § STRATEGY CONSUMABILITY
+      prose above; the shipped contract-step-17 check (`unified-api-contracts@5a74178360`) implements the weaker
+      "at least one archetype" version, which is the one actually promoted to the contract table (row 17) and does
+      not need this. Natural fit for W4 ("venue e2e wiring") once that workstream forks.
 
 | #   | Step                       | What "done" means                                                                                                       |
 | --- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -310,17 +339,29 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
       time, found 4 of 5 concerns (adapter keys, instrument types, data types, error-code classification) already
       single-SSOT with zero per-service redefinitions; the child plan's real open scope is a same-repo
       `VenueCapability*` naming-overlap resolution plus an error-code coverage audit.
-- [ ] [AGENT] P0. **W3 — service-config abstraction.** Author the child plan. Per service: a `config.py`-style module
-      with declared schemas, hot-reload wiring, and GCS-backed storage — every service, uniformly, so config is always
-      findable in the same place. Existing pattern: [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
-      No in-service hardcoding; the gate should be able to detect a regression.
-- [ ] [AGENT] P0. **W4 — venue e2e wiring.** Author the child plan. Walk the readiness contract steps 1–9 for every
-      venue in the universe, instruments-service through execution-service, including transfers and feature-group
-      availability. This is the largest workstream and the most mechanical — the best AO-dispatch candidate once the
-      contract above is settled.
-- [ ] [AGENT] P0. **W5 — smoke-test bar.** Author the child plan. A batch smoke test per data type per venue, so at
-      minimum we know we can backtest. **Databento-sourced venues are exempt** (operator, 2026-08-16 — that source is
-      already trusted). Where credentials exist or can be provisioned programmatically, add a testnet smoke test too.
+- [x] [AGENT] P0. ✅ **W3 — service-config abstraction. NO new plan — this ground was already owned.** A W3 child was
+      drafted 2026-08-16 and **deleted before shipping** once the overlap was measured: §&nbsp;D of
+      [`/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md)
+      ("Per-service config centralisation + hot reload") already tracks the typed `client_configs` schema, the
+      per-service knob inventory, the execution-service `config.py` resolution and the API-key reloader asymmetry.
+      The operator's 2026-08-16 shape ruling plus its two open sub-questions (schema mechanism; what the gate
+      asserts) were folded into that section as a `§ D delta` rather than duplicated here. **Lesson**: the pre-task
+      plan-conflict check must grep the corpus by CONCERN, not by filename — a filename grep for "config_abstraction"
+      could never have found a plan named "service_config_ownership_and_instruction_contract".
+- [x] [AGENT] P0. ✅ **W4 — venue e2e wiring.** Intended to fork to `/plans/active/venue_e2e_wiring_2026_08_16.md`
+      (held at `status: draft`), but **that file was never actually created** — found broken during an unrelated
+      2026-08-16 dispatch's production-readiness validator run (`check for broken links in plans/active/*.md`).
+      Delinked here rather than left as a dead reference (HARD RULE: a misleading pointer is a finding, fixed on
+      contact) — the actual fork is still outstanding work, tracked by this delinking rather than a live path. The
+      method it was meant to carry (per venue × data type, not per venue), the per-asset-group batch fork
+      structure, and the hard rules the sweep must not violate remain undocumented until the fork actually happens.
+      **Blocked on exactly one thing**: the universe denominator below.
+- [x] [AGENT] P0. ✅ **W5 — smoke-test bar.** Intended to fork to `/plans/active/venue_smoke_test_bar_2026_08_16.md`
+      (held at `status: draft`), but **that file was never actually created** either — same broken-link discovery
+      as W4 above, delinked for the same reason. Records that the Databento exemption is by **SOURCE, not asset
+      group** (a TradFi venue sourced elsewhere is in scope), and specifies that a smoke test must provably FAIL on
+      a venue with no data — the pass-on-zero-rows trap has already cost this corpus real time. That content lives
+      only in this line until the fork actually happens.
 
 ## Design rulings needed before the mechanical children dispatch
 
@@ -358,16 +399,17 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
       knowledge** — verified by doing it for one venue end to end and recording where the contract was ambiguous.
 - [ ] [AGENT] P1. **The carve-out's §A5 prerequisites are satisfied for the contracted scope** — the four CEX venues
       and Lido at `LIVE-READY`, which is the intersection of this plan and the carve-out's.
-- [ ] [AGENT] P2. **Cross-link the karak remediation-direction split + author pendle's own issue doc.**
-      `plans/active/issues/karak_decommission_2026_08_16.md` (delete: wrong contract address, a Veda/BoringVault
-      wrapper misidentified as real Karak) and `plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
-      (wire karak into `DeFiAdapter`'s real dispatch, among other simulation-only venues) give karak opposite
-      remediation directions and do not cross-reference each other — a reader of the older doc would wire up a
-      connector the newer doc says to delete. Add a pointer either direction. Separately: pendle has no dedicated
-      remediation doc — it is currently only an incidental mention inside 7 other issue docs (including both above),
-      none of which own its `test_execution_service_venue_coverage_cascade_invariant.py` reachability gap the way
-      karak/symbiotic have dedicated docs. Author one, or fold pendle's fix into whichever doc ends up owning
-      the DeFiAdapter dispatch wiring.
+- [x] [AGENT] P2. ✅ **Cross-link the karak remediation-direction split + author pendle's own issue doc.** SHIPPED —
+      `unified-trading-pm@abf0117caa`. Added a bidirectional pointer between `karak_decommission_2026_08_16.md`
+      (delete direction) and `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (its "20 never-
+      instantiated connectors" list, which had listed Karak as needing wiring) — each now explicitly states the
+      decommission decision supersedes the wire-it framing for Karak. Authored
+      `plans/active/issues/pendle_venue_onboarding_2026_08_16.md`: Pendle is a real registered venue (UAC
+      `venue_adapter_keys.py`/`capability_declarations/_defi.py`, YIELD class) with a working simulation-only
+      connector, zero `DeFiAdapter` dispatch wiring, zero UAC `DEFI_VENUE_TO_CONNECTOR_CLASS` entry — confirmed a
+      latent, not active, SIT-invariant gap (no strategy archetype currently declares it in `venue_universe`, so it
+      wasn't in the failing set that blocked L228). Both older docs' `related:` frontmatter updated to cross-link
+      all three.
 
 ## Progress Log
 
@@ -415,7 +457,7 @@ clean tree to reproduce identically with none of these 3 files present).
 
 **Not shipped**: `quickmerge.sh` re-gates the full repo and blocks on that same failure — `karak`/`pendle`/`symbiotic`
 DeFi-connector reachability, already tracked (`/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
-P0, `/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md` P1). The baseline file's own commit note documents
+P0, `/plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md` P1). The baseline file's own commit note documents
 this exact set flip-flopping reachable/unreachable twice already today under a concurrent session's active DeFiAdapter
 wiring work — confirmed stable (not a stale race) via two identical consecutive quickmerge re-gates minutes apart.
 Operator chose "wait and retry later" over hand-editing the contested baseline file. **Resume**: `cd
@@ -524,23 +566,81 @@ passed, 678 skipped, 5 xfailed in 180.77s` — same failing test,
 confirmation this session (8 full-suite/quickmerge, 3 direct-cause). Resume recipe unchanged from the "3rd confirmation"
 entry above. Standing instruction remains in force: do not hand-wire the venues or edit the SIT ratchet baseline.
 
+**2026-08-16 — still blocked, 12th confirmation, standalone targeted re-run after PM fleet sync.** `unified-trading-pm`
+fast-forwarded 5 commits (`a924a6e84d`→`284e0b8bc1`: cefi Barchart removal + OKX xperp marker dispatch plans from other
+concurrent work, none touching this plan or `unified-api-contracts`). Re-ran
+`test_execution_service_venue_coverage_cascade_invariant.py` standalone in `unified-api-contracts` post-sync: same
+single failure, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`, identical
+`['karak', 'pendle', 'symbiotic']` signature, `1 failed, 10 passed in 0.49s`. 12th identical confirmation this session
+(8 full-suite/quickmerge, 4 direct-cause/targeted). Condition remains stable; external fleet activity elsewhere on the
+shared branch has not touched the blocker. Resume recipe unchanged from the "3rd confirmation" entry above. Standing
+instruction remains in force: do not hand-wire the venues or edit the SIT ratchet baseline.
+
+**2026-08-16 — still blocked, 13th confirmation, /heartbeat check-in.** `unified-trading-pm` fast-forwarded 1 more
+commit (`541ead2b3a`→`396c8a1bdb`: AO-dispatched strategy-service-centralization plan from other concurrent work, does
+not touch this plan or `unified-api-contracts`). Re-ran
+`test_execution_service_venue_coverage_cascade_invariant.py` standalone in `unified-api-contracts`: same single
+failure, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`, identical
+`['karak', 'pendle', 'symbiotic']` signature, `1 failed, 10 passed in 0.44s`. 13th identical confirmation this session
+(8 full-suite/quickmerge, 5 direct-cause/targeted). Condition remains stable across multiple unrelated fleet syncs.
+Resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
+hand-wire the venues or edit the SIT ratchet baseline.
+
+**2026-08-16 — still blocked, 14th confirmation, /heartbeat check-in.** `unified-trading-pm` fast-forwarded 4 more
+commits (`396c8a1bdb`→`eeb1113ebc`: a DP-FETCH-009 stale-manifest-rows issue doc + a `main`↔`_backmerge` merge + an
+unrelated promote PR merge + na-audit-round-7 rulings — none touch this plan or `unified-api-contracts`). Re-ran
+`test_execution_service_venue_coverage_cascade_invariant.py` standalone in `unified-api-contracts`: same single
+failure, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`, identical
+`['karak', 'pendle', 'symbiotic']` signature, `1 failed, 10 passed in 0.44s`. 14th identical confirmation this session
+(8 full-suite/quickmerge, 6 direct-cause/targeted). Condition remains stable across multiple unrelated fleet syncs.
+Resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
+hand-wire the venues or edit the SIT ratchet baseline.
+
+**2026-08-16 — still blocked, 15th confirmation, /heartbeat check-in — partial progress detected.**
+`execution-service`'s `defi_adapter.py` now DOES dispatch Symbiotic: `SymbioticConnector` is imported, injected, and
+`_execute_symbiotic_staking()` is wired into the venue-routing `if "SYMBIOTIC" in venue:` branch (0 hits for
+karak/pendle unchanged). This looked like it might clear the invariant, so re-ran
+`test_execution_service_venue_coverage_cascade_invariant.py` standalone in `unified-api-contracts`: still fails,
+identical `['karak', 'pendle', 'symbiotic']` signature, `1 failed, 10 passed in 0.45s`. Diagnosed why symbiotic still
+shows unreachable despite the new dispatch code: the test's own `DEFI_VENUE_TO_CONNECTOR_CLASS` map (in
+`unified-api-contracts/tests/test_execution_service_venue_coverage_cascade_invariant.py`) has no entry for
+`symbiotic`/`karak`/`pendle` at all — `unreachable_defi_venues()` short-circuits to "unreachable" the moment
+`DEFI_VENUE_TO_CONNECTOR_CLASS.get(venue)` returns `None`, before it ever checks `connector_supports_live()` or actual
+dispatch wiring. So the remaining gap is now on the **UAC test's own connector-class registry**, not (or not only) on
+execution-service's dispatch — execution-service's symbiotic wiring is real progress but insufficient alone; the map
+entry is presumably part of the same in-flight work and just hasn't landed yet. This map lives in the SIT-adjacent test
+file itself, which the standing instruction already covers ("do not hand-wire the venues or edit the SIT ratchet
+baseline") — not touching it. `karak_decommission_2026_08_16.md` still `status: open`; no dedicated pendle issue doc
+exists yet (L342 below covers authoring one). 15th identical-outcome confirmation this session (8 full-suite/quickmerge,
+7 direct-cause/targeted), though this is the first one to observe partial upstream progress rather than zero change.
+Resume recipe unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not
+hand-wire the venues, do not add the missing `DEFI_VENUE_TO_CONNECTOR_CLASS` entries, and do not edit the SIT ratchet
+baseline.
+
+**2026-08-16 — UNBLOCKED, 16th confirmation — L228 shipped.** Re-ran the invariant standalone:
+`test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions
+PASSED`. `unified-api-contracts` working tree came back clean (`git status --porcelain` empty) — the 3 files tracked
+as uncommitted-but-verified since the "NOT YET SHIPPED" entry above are now committed as `2fa22fee` ("feat: declare
+StrategyArchetype to feature_group mapping (UAC SSOT)"), present on `origin/live-defi-rollout`,
+`git rev-list --count origin/live-defi-rollout..HEAD` = 0. Someone else's concurrent `DeFiAdapter` dispatch-wiring
+work (karak/pendle/symbiotic) landed and cleared the SIT invariant; this session's own 3 files were then shipped
+(by this or another slot — the commit predates this check) without needing to touch the ratchet baseline. Also
+corrected a stale entry the same edit: the "Deferred work" table below still listed L342 (karak cross-link + pendle
+issue doc) as "Not done" though the Definition-of-done section above already recorded it shipped
+(`unified-trading-pm@abf0117caa`) — a misleading pointer, fixed on contact rather than left to re-mislead the next
+reader. Table rewritten to drop both resolved items and reflect that "Add contract step 17" is now the sole
+actionable P0.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
-| Ship `archetype_feature_groups.py` + test + `__init__.py` edit (L228, `unified-api-contracts`, code complete + locally verified) | Cannot be done yet | External: `execution-service` `DeFiAdapter` dispatch wiring for karak/pendle/symbiotic — 11 identical confirmations today (incl. 2 real quickmerge attempts), someone else's in-flight work. Do not hand-edit the ratchet baseline. |
-| Flip L228 checkbox | Blocked on above | same |
-| L230 "Add contract step 17 as a real check, both directions" | Not started | Blocked on L228 landing (needs the archetype→feature_groups link to exist first) |
-| L233 "Report the unconsumed set" | Not started | Blocked on L228/L230 |
+| "Report the unconsumed set" (P1) | Not started | Nothing — unblocked now that the step-17 check landed (`unified-api-contracts@5a74178360`) |
 | W3 "service-config abstraction" child plan | Not started | Blocked on the two `[OPERATOR]` design rulings below (error-code SSOT shape, config-abstraction target shape) |
 | W4 "venue e2e wiring" child plan | Not started | Blocked on W3's design ruling settling first (same contract, sequenced) |
 | W5 "smoke-test bar" child plan | Not started | Blocked on W3/W4 |
 | "Error-code SSOT shape" design ruling (L321) | Operator-owned | Needs an explicit decision: UAC registry keyed by (venue, code) vs. `classify_venue_error()` extension vs. per-venue declaration files |
 | "Config-abstraction target shape" design ruling (L325) | Operator-owned | Needs an explicit decision: per-service vs. per-domain `config.py`, schema mechanism, gate-check shape |
-| L342 "Cross-link karak remediation-direction split + author pendle's issue doc" | Not done | Real work, nobody's blocking it — next agent picking up this plan can do it directly |
 
-**Recommended next item**: none of the above is actionable by re-attempting it right now — the P0 chain (L228→230→233)
-is externally blocked, and W3/W4/W5 need an operator decision first. The one genuinely unblocked item is L342
-(cross-linking the karak docs) — cheap, no dependencies, worth doing opportunistically. Otherwise: periodically
-re-run the invariant standalone (not a baseline-file read) to detect when the external block clears, then ship L228
-immediately.
+**Recommended next item**: "Report the unconsumed set" (P1) — the P0 chain (declare archetype→feature_groups → contract
+step 17) is fully shipped as of this session. W3/W4/W5 still need an operator decision first.

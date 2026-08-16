@@ -275,13 +275,19 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       `ao_fleet_tmux_delete` armed on the VM.
 - [ ] [INFRA] P0. Root-cause death #2 (14:30:28) — NOT explained by `tmpfs-disk-cleanup` (zero runs in that window);
       next occurrence should be caught live by the v2 supervisor or the new auditd delete-watch.
-- [ ] [INFRA] P1. Land the `tmpfs-disk-cleanup.sh` denylist+logging fix once the live peer session's uncommitted WIP in
-      `unified-trading-pm` clears — currently BLOCKED by a genuine checkout collision, not a defect in the fix itself.
+- [x] ✅ [INFRA] P1. **DONE 2026-08-16 (plan_reconciler)** — verified landed: `unified-trading-pm@6cd0d6c3ce`
+      (`git merge-base --is-ancestor 6cd0d6c3ce origin/live-defi-rollout` → true), commit
+      "fix(infra): tmpfs-disk-cleanup denylist missing ao-fleet-tmux socket dir", matching this doc's own 2026-08-13
+      17:46Z Progress Log entry ("landed clean: unified-trading-pm@6cd0d6c3ce").
 - [ ] [INFRA] P2. Re-verify with a genuinely long clean window under the NEW (v2) instrumentation before any
       re-declaration of closure or archival — the prior "50min clean window" claim was contradicted by two further
       deaths the very next check, so the bar for the next closure claim should be materially higher than that.
 - [x] [INFRA] P0. Fourth gap (orphan tmux SERVER processes, distinct from the per-claude-process orphan sweep)
       root-caused + fixed — DONE 2026-08-13, `agent-orchestrator@d813ef1703`, dry-run by default.
+- [x] ✅ [OPERATOR] P1. **DONE 2026-08-16 (plan_reconciler)** — same-doc 2026-08-13 17:46Z-18:10Z Progress Log entry
+      confirms this was actioned: "at the operator's request: found and killed 3 confirmed-dead zombie tmux servers
+      accumulated across today's incidents (2934337 — 7 dead sessions on the ambient socket including the split-brain
+      slot 1; ...), each verified to have zero live `claude` child processes before touching anything."
 - [ ] [OPERATOR] P2. Once `sweep_orphan_tmux_servers`'s dry-run logging shows zero false positives across a real
       observation window on the live fleet (same graduation bar the existing per-claude-process sweep already cleared),
       flip `tuning.orphan_tmux_server_sweep_dry_run` to live.

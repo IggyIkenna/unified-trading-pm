@@ -113,7 +113,9 @@ For every `(asset_group, data_type)` cell in the baseline table:
 
 - **`attempt_coverage_pct`** =
   `100 × (captured_count + empty_confirmed_with_reason_count + attempted_failed_count) / expected_universe_count`. How
-  much of the expected universe has been at least attempted; complement is `expected_unattempted_count`.
+  much of the expected universe has been at least attempted; per the Sanity invariant below, the true complement is
+  `empty_unclassified_count + expected_unattempted_count` (NOT `expected_unattempted_count` alone — unclassified rows
+  are also un-attempted-toward-honest-coverage until the Tier 3D.1 reconciler classifies them).
 
 - **`unclassified_drag_pct`** = `100 × empty_unclassified_count / expected_universe_count`. Tracks Tier 3D.1 back-fill
   progress; should drop to ~0% per asset_group after the reconciler completes.

@@ -30,7 +30,7 @@ tags:
   [agent-orchestrator, backlog, regen, task-id, id-collision, brief-hash, audit-history, migration, dispatch, state-db]
 related:
   [
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -62,7 +62,7 @@ source: >-
   any dispatch ("re-homed ... as properly-phased todos before any dispatch").
 context_scope:
   [
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
     agent-orchestrator/scripts/orchestrator/apply_content_id_migration.py,
     agent-orchestrator/server/routes/backlog.py,
@@ -79,7 +79,7 @@ context_scope:
 
 ## Why this supersedes the "not AO-dispatchable" classification
 
-`/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` carries `assigned_vm: NA` and a record
+`/plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` carries `assigned_vm: NA` and a record
 of THREE reverted dispatch attempts (BLK-29884333, 2026-07-31). That classification was correct at the time and is **not
 being re-litigated**: the reverts were because the raw operator ruling was being dispatched with no surface map and no
 phasing. Its own 2026-07-31 entry states the requirement — re-home "as properly-phased todos **before any dispatch**".
@@ -258,25 +258,37 @@ Both were established by reading the code, and both are silent — neither raise
           (dry-run, apply, idempotent re-apply, invert) against a throwaway scratch DB — all four modes behaved correctly.
           Evidence: agent-orchestrator@a7dfb9652 (verified ancestor of origin/live-defi-rollout). Repo: agent-orchestrator.
 
-- [ ] [OPERATOR] P1. **Dry-run the migration against a SCRATCH COPY of `state.db`, never the live file.** Operator-gated
-      because it requires copying live orchestrator state and reading it outside the service. Assert: row-count
-      preserved; `done_sha`/`done_at`/`done_evidence` byte-identical pre/post; every `completed_tasks` reference
-      remapped-or-justified; idempotent on a second run; zero `dispatched` rows touched. Done-when: the dry-run report
-      is attached to this plan's Progress Log. (repo: agent-orchestrator)
-- [ ] [OPERATOR] P1. **Apply the backfill to live `state.db` + `backlog.yaml` in one logical operation.**
-      Operator-gated: irreversible, touches fleet-core identity, and the two stores are two durable copies of the same
-      identity that must not diverge (`remint_backlog_collision` already accepts this two-store risk for ONE row; this
-      is ~1,728). Run at a quiet dispatch moment — per CLAUDE.md, maintenance-window scheduling is skipped
-      pre-live-trading, so this means "not obviously busy", not a formal window. Verify against the Phase-2 assertions
-      immediately after. **Done-when**: the live apply completes, the Phase-2 assertions (exact-match row count,
-      byte-identical `done_sha`/`done_at`/`done_evidence`, all `completed_tasks` references remapped-or-justified) all
-      re-pass against post-apply live state, and the result is attached to this plan's Progress Log. (repo:
-      agent-orchestrator)
-- [ ] [BACKEND] P2. **Re-verify the two live collisions are gone and stay gone.** `fleet_promoter_glue_runner_stall-001`
-      (resolved 2026-08-08 by closing its last todo) and
-      `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues-002` (open at authoring time). Done-when:
-      `journalctl -u orchestrator.service --since "1 hour ago" | grep -c "REFUSING to reset"` returns 0 across a full
-      `PlanRegenLoop` cycle. (repo: agent-orchestrator)
+- [x] ✅ [OPERATOR] P1. **DONE 2026-08-16 (interactive session, operator-approved "quiet moment" — 1 task actively
+      dispatched fleet-wide at the time).** Dry-run against a scratch copy of `state.db` (SSM
+      `AWS-RunShellScript` on `i-0c9b283b31d6b5ca7`, scratch dir `/home/ubuntu/ao_content_id_dryrun.LBXO6w`, never the
+      live files). All assertions passed: map build 3782/3782 rows accounted for (2037 positional→content, 1734
+      already content-derived, 0 collisions); hazard-2 gate 673 completed_tasks/prerequisites references checked, 0
+      unexplained; forward-apply invariants `{"renamed": 2037, "unchanged": 1745, "dispatched_rows_touched": 0,
+      "done_field_mismatches": 0, "missing_after": 0, "PASS": true, "failures": []}`; idempotency re-run (2nd apply)
+      correctly applied 0 additional rows, `--expect-noop` invariants also `PASS: true, failures: []`. Repo:
+      agent-orchestrator (SSM action, no code change).
+- [x] ✅ [OPERATOR] P1. **DONE 2026-08-16 (interactive session, immediately following the dry-run above, same
+      "quiet moment").** Applied the backfill to LIVE `state.db` + `backlog.yaml` in one logical operation (SSM
+      `AWS-RunShellScript`, backup taken first at
+      `/home/ubuntu/ao_content_id_migration_backup_20260816T154039Z/` — includes `state.db`, `backlog.yaml`, the
+      applied `id_map_live.json`, and `session_plan_live.json` for `--invert` rollback if ever needed). Fresh map
+      rebuilt from the live DB immediately before apply (never the stale checked-in artifact, per this doc's own
+      "why the map is rebuilt fresh" guidance): 3782/3782 rows, 2037 positional→content. Hazard-2 gate re-ran against
+      live state: 673 references, 0 unexplained — gate passed, apply proceeded. `[APPLY] planned=2037
+      applied_this_run=2037 deferred(dispatched)=0` — zero rows were in-flight `dispatched` state at apply time (hazard
+      1 never triggered). **Done-when satisfied**: `journalctl -u orchestrator.service --since "10 min ago" | grep -c
+      "REFUSING to reset"` → **0** immediately post-apply (this plan's own next todo's check, confirmed early).
+      `/api/backlog` answered normally post-apply (3929 live tasks — the delta from the pre-apply 3782 count reflects
+      normal concurrent `PlanRegenLoop` activity during the run, not a migration side-effect; the apply script's own
+      internal row-count assertion, which IS migration-scoped, showed no discrepancy). Repo: agent-orchestrator (SSM
+      action + live data migration, no code change).
+- [ ] [BACKEND] P2. **Re-verify the two live collisions are gone and stay gone — partially confirmed 2026-08-16, needs
+      a full-cycle re-check.** `fleet_promoter_glue_runner_stall-001` (resolved 2026-08-08 by closing its last todo)
+      and `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues-002` (open at authoring time). The live-apply
+      todo above's immediate post-apply check already showed 0 occurrences in the 10 minutes right after migration —
+      a good sign, but that window is shorter than one full `PlanRegenLoop` cycle (~30 min). Done-when: re-run
+      `journalctl -u orchestrator.service --since "1 hour ago" | grep -c "REFUSING to reset"` and confirm 0 across a
+      full cycle that has elapsed since the 2026-08-16 live apply. (repo: agent-orchestrator)
 
 ### Drafted commands for the two `[OPERATOR]` todos above (2026-08-09)
 
@@ -556,11 +568,16 @@ a shipped, tested script mid-draft, without operator direction, is out of scope 
 
 ## Follow-ups
 
-- [ ] [BACKEND] P3. **Close the citation errors the false-done audit surfaced adjacent to this bug.**
-      `mtds_migrate_executor_progress_checkpoint_gap-008/-009/-010` are three backlog rows pointing at ONE
-      still-unimplemented todo (`migrate_sports_league_id_casing_2026_07_21.py`, confirmed zero `record_vm_progress`
-      occurrences), each citing a wrong sha — a direct symptom of positional ids. After Phase 1, dedupe them to one row.
-      Source: /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
+- [ ] [BACKEND] P3. **CORRECTED 2026-08-16 (/plan-reconcile) — false premise, re-scoped.** The original claim that
+      `-008/-009/-010` are three rows pointing at ONE still-unimplemented todo is WRONG:
+      `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md`'s own detailed verification (its P2 items)
+      shows `-008` and `-009` are already correctly `[x]` with real checkpoints — `-008` had a citation defect (wrong
+      sha `c98e0abb`; the real commit is `486c61b2`, for `migrate_sports_casing_2026_07_22.py`) already fixed inline;
+      `-009` (`done_sha=6ddb0374`) is accurately cited for a DIFFERENT script,
+      `migrate_sports_casing_revert_2026_07_27.py` — not a duplicate of `-008` at all. Only `-010` needs checking
+      independently. Remaining scope: verify `-010`'s actual status live (`GET /api/backlog`) and fix its citation if
+      needed — do NOT dedupe `-008`/`-009`, they are correctly separate rows for separate scripts. Source:
+      /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
       unified-trading-pm)
 - [ ] [BACKEND] P2. **Root-cause why `remint_backlog_collision` didn't durably stop
       `defi_catalog_engine_config_key_contract_drift-002`'s collision from recurring.** Found while working the

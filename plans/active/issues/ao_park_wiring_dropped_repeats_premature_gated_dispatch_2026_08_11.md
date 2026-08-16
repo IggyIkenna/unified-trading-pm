@@ -25,7 +25,10 @@ locked_by:
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
-asset_group: [sports, meta]
+asset_group: [ao] # RETAGGED 2026-08-16 (/ag-closeout-audit sports Orthogonality HARD CHECK) — was [sports, meta].
+  # Content is 100% agent-orchestrator dispatch/auto_park internals (parent_epic: infrastructure_master, tags already
+  # include "ao"); "sports" only reflected the triggering symptom (a sports todo's premature dispatch), not the doc's
+  # real scope. This is the ao tranche's doc, not sports'/meta's.
 stage: [meta]
 repos: [agent-orchestrator]
 tags: [ao, auto-park, dispatch, gated, sports]
@@ -125,7 +128,8 @@ recorded in the P3 plan's Progress Log (slots 15/22/10).
   which `check_archive_candidates --only` would otherwise hard-block on ("archive it in this commit"), but
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "never combine the checkbox flip with the
   `git mv` archival" rule forbids doing the archival in this SAME commit (see
-  `/plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` for the full
+  `/plans/archive/2026_08/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` (archived
+  2026-08-16, plan_reconciler) for the full
   same-day conflict this sidesteps, using its documented `archive_exempt: true` bridge). A follow-up commit flips
   `status: resolved` + performs the real 6-step archival ritual + drops this exemption key.
 - **context-scout 2026-08-14**: populated context_scope (2 entries).

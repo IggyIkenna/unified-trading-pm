@@ -170,6 +170,13 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling — scoped)**: operator asked to dispatch
+  the `dex_swaps` migration. Given this doc's own repeated `too_large_or_risky` corroboration (2026-08-04 x2,
+  2026-08-07, 2026-08-09 — the migration design itself has no predetermined outcome until the recent multi-venue
+  gap cluster is root-caused), scoped the dispatch DOWN to only the bounded root-cause step:
+  `/plans/active/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md` (+ finalize). The full content migration
+  is NOT dispatched — it stays gated on that finding plus a full five-part delete-safety proof, per this doc's own
+  standing caution. This doc stays `assigned_vm: NA` until the migration itself is scoped.
 - **interactive session 2026-08-05**: executed the `dex_pools` half only (see the flipped todo above for full detail).
   `dex_swaps`/`rate_indices` remain genuinely untouched -- both need their own dedicated pass (the `dex_swaps` gap
   root-cause + real content migration is the dominant remaining scope by far, ~3.46M of the ~4.0M total rows).

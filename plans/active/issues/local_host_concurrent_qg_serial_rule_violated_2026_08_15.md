@@ -35,7 +35,7 @@ locked_since:
 resolved_by:
 supersedes:
 superseded_by:
-source: measured while shipping /plans/active/revocation_arming_2026_08_14.md
+source: measured while shipping /plans/archive/2026_08/revocation_arming_2026_08_14.md
 drift_direction: advance-code
 depends_on: []
 ---

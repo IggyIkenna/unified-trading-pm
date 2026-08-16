@@ -36,11 +36,14 @@ tags:
   ]
 related:
   [
-    plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
-    plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
-    plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
-    plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    /plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
+    /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
   ]
+  # STALE-REF FIX (plan_reconciler, cefi tranche, agt-2e82f7, 2026-08-16): first 2 entries repointed to their
+  # archived location (both moved, targets confirmed existing there). A 4th entry,
+  # `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, was removed — confirmed genuinely
+  # dangling (not found anywhere in plans/active/ or plans/archive/ after a fresh corpus-wide search).
 created: 2026-07-06
 parent_epic: instruments_master
 assigned_vm: NA
@@ -316,8 +319,12 @@ orchestrator-dispatched).
 
 ### Phase 6 — fix the Kalshi CQG-bucketing write-time bug (found by Phase 3's VERIFY, 2026-07-26)
 
-- [x] ✅ [CODE] P1. **DONE 2026-07-30 — `instruments-service@e0f7aaad` (via
-      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1).** Fix
+- [x] ✅ [CODE] P1. **DONE 2026-07-30** (via `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1).
+      **CORRECTED 2026-08-16 (plan_reconciler)**: the originally-cited `instruments-service@e0f7aaad` is NOT an
+      ancestor of `origin/live-defi-rollout` (lives only on `origin/wip-preserve/slot-5-instruments-service-diverged-...`)
+      — per `prediction_phase_ab_residuals_2026_07_24.md:153-159`'s later, more careful audit, its content landed
+      verbatim under the rebased `instruments-service@94f3ee11`, which IS a verified ancestor. The underlying work is
+      genuinely done; only the cited SHA was wrong. Fix
       `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
       (`_extract_prediction_canonical_group`): `ticker = str(row.get("instrument_key", "") or "")` passes the FULL
       `"KALSHI:PREDICTION_MARKET:{ticker}"` string into `classify_kalshi_to_canonical_group(ticker=...)` instead of the

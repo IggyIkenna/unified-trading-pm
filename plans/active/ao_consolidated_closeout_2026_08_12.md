@@ -91,6 +91,28 @@ and belongs to the active cycle") was wrong. Neither carries any open work; noth
   (`/plans/archive/2026_08/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md`), all 3
   todos done, both false-positive/false-negative blind spots closed with cited commit SHAs.
 
+## Open `[ao]` findings referenced here for closeout-linkage (2026-08-16, `/ag-closeout-audit ao`)
+
+Named here so each has a durable path into this tranche's closeout family that doesn't depend on any one satellite
+doc staying active — the first two were orphaned from `check_ag_closeout_linkage.py`'s reachability graph when
+[`cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`](/plans/archive/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md)
+(the doc that used to carry the only mention of both) archived. All three remain genuinely open, uncovered by any
+active AO-dispatch plan — see this run's parked-findings doc for detail, not duplicated here.
+
+- [`ao_residuals_after_dispatch_hardening_2026_07_17.md`](/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md)
+- [`data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`](/plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md)
+- [`ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md`](/plans/active/issues/ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md) —
+  retagged into `[ao]` 2026-08-16 by `/ag-closeout-audit sports` (was `[sports, meta]`, a mistag — 100%
+  agent-orchestrator dispatch/`auto_park` internals; see that run's sports-tranche parked-findings doc, Finding 1).
+  Its own sole Follow-up item is already `[x]` shipped (`agent-orchestrator@153c0a0f3f`) — only the archival ritual
+  remains, out of scope for the AO tranche's own audit which runs separately.
+
+Also linked here for the same reason — resolved and archived this run, but its own former linkage path
+(`ao_open_issues_consolidated_close_out_2026_07_17.md`, itself since archived) no longer resolves reliably from a
+fresh scan:
+
+- [`regen_positional_task_ids_not_content_stable_2026_07_17.md`](/plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md) — resolved 2026-08-16, see its own `resolved_by:` for evidence.
+
 ## Todos
 
 - [ ] [INFRA] P2. **Re-triage the 115 inherited `plans/active` docs tagged `[ao]`.** This plan opens the tranche; it has
@@ -123,6 +145,18 @@ and belongs to the active cycle") was wrong. Neither carries any open work; noth
       coverage at `unified-trading-pm@cbec983969`. Reconciled 2026-08-14 per
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
       `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [ ] [BACKEND] P2. **Root-cause a recurring `sequential: true` dispatch-ordering violation on satellite finalize
+      plans — 2 confirmed instances.** `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` (2026-08-10, slot 18:
+      todo 4 dispatched before todo 3, which never derived a backlog row at all) and
+      `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md` (2026-08-09: appended todos 5-6 completed while the
+      original chain's todos 2-4 stayed open). A same-shape bug
+      (`/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`) was fixed
+      2026-08-02, 8 days before the batch14 incident — either a regression of that fix, or a distinct gap the fix
+      didn't cover (e.g. specifically appended-after-authoring todos, or a todo that silently never derives a backlog
+      row bypassing the sequential check entirely). Done when: the actual mechanism is identified (read
+      `regen_backlog_from_plan.py`'s `sequential:`-enforcement path + both incidents' exact backlog/dispatch history),
+      and either a regression is confirmed+fixed or the new gap is root-caused and fixed. Repo: agent-orchestrator.
+      Source: `plan_reconciler_findings_ao_2026_08_16.md` § Contradictions.
 
 ## Provenance note
 

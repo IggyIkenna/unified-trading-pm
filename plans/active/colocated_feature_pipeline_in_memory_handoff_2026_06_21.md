@@ -61,7 +61,8 @@ severities were weakened to `"none"`, masking 574 errors).
 ## Todos
 
 > **Status update (2026-07-27, vintage-audit re-verification):** items 1.4, 1.3b, and 1.7e were confirmed extracted
-> verbatim into `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (part 1 of 2, ~L113-125), as a
+> verbatim into `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (part 1 of 2,
+> ~L113-125; moved to archive since -- repointed 2026-08-16, plan_reconciler cross-cutting), as a
 > single combined `[DESIGN] P2` todo ("Land colocated feature pipeline in-memory DAG handoff + parquet consolidation +
 > basedpyright strictness restore") with its own done-when criteria. **Marked SUPERSEDED-BY-BATCH1 below** so nobody
 > dispatches both copies — the 3 checkboxes below stay open here as the bookkeeping record until batch1 executes and

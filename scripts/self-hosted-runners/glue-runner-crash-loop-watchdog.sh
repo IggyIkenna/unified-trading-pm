@@ -86,11 +86,20 @@ THIS_INSTANCE_ID="$(curl -sf -X PUT "http://169.254.169.254/latest/api/token" \
 # under ubuntu's own home instead.
 STATE_DIR="${GLUE_WATCHDOG_STATE_DIR:-/home/ubuntu/.local/state/glue-runner-watchdog}"
 STATE_FILE="${STATE_DIR}/alerted-units"
+# Unconfirmed wedge candidates awaiting a second confirming tick -- see the NEW-wedges loop's
+# 2026-08-16 comment below for why this exists. Deliberately a SEPARATE file from STATE_FILE:
+# STATE_FILE's header comment documents it as shared between exactly two disjoint prefix
+# classes (bare = crash-loop, `wedged::` = wedge) whose recovery loops each skip lines outside
+# their own prefix -- a THIRD prefix here would fall through the crash-loop recovery loop's
+# `case "$unit" in wedged::*) continue ;; esac` unmatched and be mis-treated as a bogus
+# crash-loop unit name. A dedicated file avoids that collision entirely.
+WEDGE_CANDIDATE_FILE="${STATE_DIR}/wedge-candidates"
 GH_REPO="IggyIkenna/unified-trading-pm"
 PM_ENV_FILE="/etc/github-glue-runner.env"
 
 mkdir -p "$STATE_DIR"
 touch "$STATE_FILE"
+touch "$WEDGE_CANDIDATE_FILE"
 
 log() { echo "[glue-runner-watchdog] $*"; }
 
@@ -374,6 +383,13 @@ clear_alerted() {
   mv "${STATE_FILE}.tmp" "$STATE_FILE"
 }
 
+was_candidate()  { grep -qxF "$1" "$WEDGE_CANDIDATE_FILE" 2>/dev/null; }
+mark_candidate() { echo "$1" >> "$WEDGE_CANDIDATE_FILE"; }
+clear_candidate() {
+  grep -vxF "$1" "$WEDGE_CANDIDATE_FILE" > "${WEDGE_CANDIDATE_FILE}.tmp" 2>/dev/null || true
+  mv "${WEDGE_CANDIDATE_FILE}.tmp" "$WEDGE_CANDIDATE_FILE"
+}
+
 # Fire a repository_dispatch carrying the alert. Returns 0 ONLY on a confirmed-sent dispatch --
 # callers gate mark_alerted/clear_alerted on this. Found live 2026-08-05: this used to always
 # `return 0` (token failure) or swallow the gh api call's real exit with a trailing `|| true`,
@@ -462,24 +478,43 @@ for unit in "${units[@]}"; do
   fi
 done
 
-# NEW wedges: page once, mark alerted.
+# NEW wedges: page once, mark alerted. When the job-level lookup is inconclusive (job_sec
+# empty), require TWO consecutive ticks (10min at the default 5min cadence) before paging.
+#
+# 2026-08-16 fix: found live, 4 false CRITICAL wedge pages within ~1h across 4 different repos'
+# glue-N units (deployment-service, trading-agent-service, deployment-api,
+# market-data-processing-service) -- every one's actual GH Actions run history showed only
+# short (seconds-to-minutes) successful jobs, never anything close to WEDGED_THRESHOLD_SEC, and
+# `gh api .../actions/runners` confirmed `busy:false` minutes later for all four. Root cause:
+# these units ARE long-lived (many hours of process uptime, contrary to the "one job per
+# process" JIT design -- a known quirk, see the top-of-file 2026-08-08 note) but were actively
+# cycling through many short jobs successfully. Each time a fresh job landed,
+# runner_busy_status() correctly reported busy=true, but current_job_started_epoch()'s own
+# in-progress-run lookup raced against these very-short jobs finishing before its second API
+# call completed (an already-documented failure mode in that function's own comment) --
+# job_active_seconds() returned "", and this loop used to treat that unconditionally as a
+# confirmed wedge, re-triggering the exact process-uptime false-positive class 2026-08-08 was
+# supposed to have already fixed. A confirmed job age >= threshold still pages immediately (no
+# debounce needed -- it is the strong, unambiguous signal); only the "inconclusive" fallback
+# path now debounces one extra tick, which costs nothing against a genuine multi-hour hang.
 for unit in "${currently_wedged[@]}"; do
   key="wedged::${unit}"
   if ! was_alerted "$key"; then
+    job_sec="$(job_active_seconds "$unit" 2>/dev/null || echo "")"
+    if [ -z "$job_sec" ] && ! was_candidate "$unit"; then
+      log "wedge candidate (unconfirmed, job age unresolvable): ${unit} -- waiting for next tick to confirm before paging"
+      mark_candidate "$unit"
+      continue
+    fi
+    clear_candidate "$unit"
     active_sec="$(unit_active_seconds "$unit")"
     active_hr="$(awk -v s="$active_sec" 'BEGIN{printf "%.1f", s/3600}')"
     mem_mb="$(awk -v b="$(systemctl show "$unit" -p MemoryCurrent --value 2>/dev/null || echo 0)" 'BEGIN{printf "%.0f", (b+0)/1024/1024}')"
-    # 2026-08-08: prefer the resolved job's own age for the alert copy when available -- it's the
-    # signal is_wedged() actually keyed on for a busy=true verdict, and reporting process uptime
-    # instead (which can be much longer, e.g. a long-idle process that just picked up a fresh
-    # short job) is what produced the misleading "active 3.2h" page for a job that was actually
-    # minutes old. Falls back to process uptime only when the job-level lookup was inconclusive.
-    job_sec="$(job_active_seconds "$unit" 2>/dev/null || echo "")"
     if [ -n "$job_sec" ]; then
       job_hr="$(awk -v s="$job_sec" 'BEGIN{printf "%.1f", s/3600}')"
       duration_note="current job active **${job_hr}h** (process itself up ${active_hr}h)"
     else
-      duration_note="process continuously active for **${active_hr}h** (current job's own start time not resolvable)"
+      duration_note="process continuously active for **${active_hr}h** (current job's own start time not resolvable across 2 consecutive ticks)"
     fi
     log "NEW wedge: ${unit} (${duration_note}, ${mem_mb}MB) -- paging"
     if dispatch_alert \
@@ -491,6 +526,21 @@ for unit in "${currently_wedged[@]}"; do
     fi
   fi
 done
+
+# Candidate cleanup: any unit still tracked as an unconfirmed candidate but no longer in
+# currently_wedged this tick recovered before its second confirming tick -- drop it so a later,
+# unrelated NEW wedge occurrence for the same unit starts its own fresh 2-tick confirmation
+# instead of paging immediately off stale candidate state.
+if [ -s "$WEDGE_CANDIDATE_FILE" ]; then
+  while IFS= read -r cand_unit; do
+    [ -z "$cand_unit" ] && continue
+    still_candidate_wedged=false
+    for u in "${currently_wedged[@]:-}"; do
+      [ "$u" = "$cand_unit" ] && still_candidate_wedged=true && break
+    done
+    [ "$still_candidate_wedged" = false ] && clear_candidate "$cand_unit"
+  done < "$WEDGE_CANDIDATE_FILE"
+fi
 
 # RECOVERY: previously alerted as wedged, now either restarted (fresh ActiveEnterTimestamp) or
 # gone -- one bookend post, then clear the state.

@@ -414,6 +414,11 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator ruling)**: raw→canonical
+  (`canonicalize_raw_tradfi_id`) RULED authoritative — the reverse-derivation fix (recovering the raw root token
+  from a canonical name) must be built FROM the forward mapping, not maintained as a separate function. Extracted
+  to `/plans/active/tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md` (+ finalize) for AO
+  dispatch, since this doc stays `assigned_vm: NA` (other todos remain genuinely blocked).
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid — established ruling, not re-litigated.** The
   sole open todo is self-tagged `P1-OPERATOR-DECISION` and states in its own text: "Not AO-dispatchable — blocked on the
   same operator SSOT decision as §4, not a worker-determinable fact." Citation confirmed real by reading §4: two

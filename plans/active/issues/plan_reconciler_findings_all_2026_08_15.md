@@ -7,9 +7,11 @@ summary: >-
   all 10 tranches (ao, ci, tradfi, cefi, defi, cross-cutting, infra, prediction, sports, ui) via ~35 parallel read-only
   hunter sub-agents (several tranches self-partitioned into their own nested sub-batches given corpus size). Surfaced 1
   P0, ~45 P1s, and a long tail of P2/P3 hygiene findings. This doc is the durable home for that output — promoted from
-  session scratchpad before a context compaction, per the workspace's own "durable = committed" rule. Findings are NOT
-  yet applied (auto-fixes not yet run, rulings not yet asked) — this doc IS the backlog for that work, to be picked up
-  by a resuming session or the next scheduled sweep.
+  session scratchpad before a context compaction, per the workspace's own "durable = committed" rule. Findings were NOT
+  yet applied at authoring time — this doc IS the backlog for that work. **STALE as of 2026-08-16 (plan_reconciler
+  cross-cutting correction)**: the body has since accumulated 30+ dated DONE/APPLIED/RESOLVED entries with real
+  shipped-commit citations from subsequent sessions (measured via grep 2026-08-16) — this doc is no longer a purely
+  unapplied backlog; check each item's own body entry for its current status rather than trusting this summary line.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -288,10 +290,11 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       sibling plans that now own the split (`sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` for the
       raw-tick GCS path surface, `sports_odds_api_data_type_casing_standardization_2026_08_15.md` for the manifest
       capture-record surface), and the checkbox itself is already `[x]`. No further reconciliation needed.
-- [ ] [OPERATOR] P2. `carry_staked_basis_funding_scan_experiment_2026_06_16.md` — 2 blocks of literal unresolved git
+- [x] ✅ [OPERATOR] P2. `carry_staked_basis_funding_scan_experiment_2026_06_16.md` — 2 blocks of literal unresolved git
       conflict markers were found in the WORKING TREE by an independent sweep agent; already resolved by this session
       directly (confirmed HEAD was always clean — working-tree-only artifact, not corpus corruption). No further action
-      needed, noted for completeness.
+      needed, noted for completeness. **Flipped 2026-08-16 (plan_reconciler cross-cutting)** — the item's own text
+      already stated resolution with no further action needed; the checkbox was simply never flipped to match.
 - [x] ✅ [OPERATOR] P2. `prediction_phase_e_football_arb_live_2026_07_24.md` — E1 (open) says Kalshi "has none today"
       for af_fixture_id resolution, but E2 (done, same doc) already shipped exactly that. E1's framing is stale; a
       narrower 3-way-identity-match verification may still be genuinely open. Needs doc-owner call on scope. **RESOLVED
@@ -323,10 +326,12 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       **DONE 2026-08-15**: `adapter_findings...` fixed directly (`unified-trading-pm@e83ca342dd`); the other two were
       mid-archival by a concurrent session at the time — landed the `asset_group` fix woven into that session's own
       archival commit (see the P1 CLAIM≤MEASUREMENT item above, same 2 docs).
-- [ ] [DOCS] P3. 4 cross-cutting docs carry identical stale `archive_exempt` BRIDGE markers from 2026-08-12, all
+- [x] ✅ [DOCS] P3. 4 cross-cutting docs carry identical stale `archive_exempt` BRIDGE markers from 2026-08-12, all
       0-open-todos, 3+ days past the promised follow-on: `backfill_vm_slack_alert_e2e_verification_2026_06_23.md`,
       `batch_live_reconciliation_service_audit_2026_05_27.md`, `capability_wizard_gap_discovery_2026_06_11.md`,
       `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`. Route to `/archive-candidates-audit`.
+      **Flipped 2026-08-16 (plan_reconciler cross-cutting)** — verified all 4 now physically live under
+      `plans/archive/2026_08/issues/` (filesystem-confirmed); the requested archival already happened.
 - [x] ✅ [DOCS] P3. `reference_path_convention_2026_07_23.md:144-150` todo assumed a file would be split (it's exactly
       1000L) then its dangling ref fixed — file was instead ARCHIVED whole, archived copy still carries the unfixed
       reference. Todo as worded is unexecutable; needs re-scoping. **DONE 2026-08-15**: re-scoped the todo (split-first
@@ -368,7 +373,9 @@ top of that.
 
 ## Not yet done (see the sibling `## Deferred work` table in this session's `/pre-compact` note for full detail)
 
-- None of the above have been applied yet (no checkbox flips, no operator Q&A run).
+- **STALE (corrected 2026-08-16, plan_reconciler cross-cutting)**: accurate when written, but 30+ items in the body
+  above now carry dated DONE/APPLIED entries with commit citations from subsequent sessions — check each item's own
+  body text for current status rather than trusting this line.
 - Historical-reconcile batches 5-10 (from the SEPARATE earlier pass this same session, reconciling prior dated findings
   docs) were partially committed (batches 1-4 landed) — batches 5-10 (prediction/sports/ui/08-08-archive/
   meta-docs/locked_by-sweep) still need their commits, IF the edits from that earlier apply-agent pass survived the

@@ -844,6 +844,11 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
 
 ## Progress Log addendum
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling)**: the MVP_SCOPE catalog-identity
+  precondition's scope/sequencing question is RULED — build for all ~26-29 archetypes now, not just the
+  `_ENGINE_DRIVABLE_ARCHETYPES` subset. Extracted to
+  `/plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch,
+  since this doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-01**: KEEP-NA valid — both remaining open checkboxes (RecursiveLoopOrchestrator gap,
   MVP_SCOPE catalog-identity precondition) are explicitly operator-design-gated per their own text ("Verdict: still
   correctly NOT AO-dispatchable ... Remains parked pending an operator design/scoping session"; "Scope/sequencing

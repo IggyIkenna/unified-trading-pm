@@ -115,8 +115,9 @@ tmux workers despite the server process being healthy.
 - [ ] [DATA] P2. **NEW 2026-08-15.** Purge/reclassify stale `attempted_failed` rows in `market-data-tick-tradfi`'s
       `availability_index` for `(venue, data_type)` ∈ {(ICE, ohlcv_24h), (CBOE, ohlcv_24h), (FX, ohlcv_24h)} where a
       `captured` row ALREADY exists for the same date (duplicate-VM-race artifacts — see Progress Log below for the
-      measured overlap: 100% of CBOE's, ~99.5% of FX's, ~97.6% of ICE's `attempted_failed` dates already have a captured
-      row). The small residual (`FX`: 10 dates, `ICE`: 37 dates) with NO captured counterpart are calendar
+      measured overlap: 100% of CBOE's, ~99.3% of FX's (corrected 2026-08-16, plan_reconciler — was mis-stated 99.5%
+      here, the Progress Log's own measurement is 10/1379 = 99.3%), ~97.6% of ICE's `attempted_failed` dates already
+      have a captured row). The small residual (`FX`: 10 dates, `ICE`: 37 dates) with NO captured counterpart are calendar
       weekends/holidays where no trading occurred — those should reclassify to `empty_confirmed`, not be purged as
       duplicates. Mirror the Surface A-D / `WithinBoundsTradfiSourceZero` dry-run→review→`--apply` playbook (measure
       first, confirm the "duplicate artifact" theory with a live count, snapshot backup before any CAS write).

@@ -455,8 +455,9 @@ source: >-
           (`("KRX", "EQUITY", "ohlcv_1m") not in cells`, `("KRX", "EQUITY", "ohlcv_24h") in cells`).
           `quality-gates.sh` full run green (ALL QUALITY GATES PASSED, 324s) on the shipped SHA.
 
-- [ ] [CODE] P2. Run distinct-values/axis-value census for tradfi and confirm 0 non-canonical values Source:
-      `plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`
+- [x] ✅ [CODE] P2. Run distinct-values/axis-value census for tradfi and confirm 0 non-canonical values — flipped
+      2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a; checkbox was left unflipped despite the DONE evidence
+      below already being present). Source: `plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`
 
       **DONE 2026-08-15 (slot-6, backend_engineer) — pure verify + 2 findings filed, no code change (per the
           todo's own gate).** Called both shipped endpoints for `asset_group=tradfi` directly (in-process, no live

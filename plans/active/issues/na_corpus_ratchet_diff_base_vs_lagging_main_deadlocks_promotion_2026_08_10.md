@@ -229,3 +229,21 @@ a normal ratchet into a self-reinforcing wall.
   guard unit cases (LDR-wfd→baseline, promote→baseline, feature-PR→diff-scope, push-main→diff-scope) + sweep
   `--ci --no-regen` under LDR env sim EXIT 0 (Hard failures 0). Shipped via quickmerge:
   `scripts/plan-hygiene/run_hygiene_sweep.sh`.
+- **2026-08-16 (cicd agt-abeafe, slot 14, `ldr_qg_failure` escalation on live-defi-rollout, run 31960574434)**: the
+  escalation's original 2 named failures (`check_reference_paths` 40>34, `check_ag_closeout_linkage` 1 orphan) are both
+  fixed/self-healed — see this dispatch's own fix in `sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md`.
+  While verifying the sweep locally, first got a false `check_na_corpus_ratchet` failure because my initial local repro
+  omitted `GITHUB_REF_NAME` (so `run_hygiene_sweep.sh`'s guard defaulted to `--diff-base origin/main` instead of
+  baseline+buffer mode) — re-ran with `GITHUB_REF_NAME=live-defi-rollout` set (correctly simulating this wall's actual
+  CI context) and confirmed **the 2026-08-10 lag-guard fix is working as designed** (correct baseline+buffer mode
+  selected, not diff-base). However the check still hard-fails for real in that mode: **458 NA docs > baseline 432 +
+  buffer 20 = 452** (todo-count axis still within its buffer). This is the SAME organic-creep pattern this doc's own
+  2026-08-10 entries already describe ("5 docs / 29 todos of headroom" at the time) — the corpus grew past the
+  2026-08-15 baseline snapshot (`max_na_docs: 432`) by more than the buffer tolerates. Per this doc's own established,
+  repeatedly-reaffirmed precedent (see the sibling `plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity`
+  doc's Progress Log — 8+ prior dispatches into this exact check all declined to bulk-reclassify/archive NA docs
+  myself, since spot-checks there consistently found the growth is genuine NA-worthy content, not misuse), NOT
+  attempting a bulk fix or blind `--update-baseline` here. Shipping the genuine, in-scope ag_closeout_linkage fix now;
+  leaving this 6-doc overage for the next `/na-eligibility-audit` pass or a reviewed baseline bump. `AUTHORING_SLOT`
+  for this escalation is the `ldr-ci-monitor` sentinel (not a numbered slot) — no slot-ping applicable per this role's
+  skip-rule.

@@ -52,6 +52,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /plans/archive/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md,
     /plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md,
+    /plans/active/issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md,
   ]
 context_scope:
   [

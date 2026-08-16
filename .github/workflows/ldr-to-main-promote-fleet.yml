@@ -49,7 +49,9 @@ on:
     # Matching the heartbeat's own cadence removes that redundant load without changing the
     # effective promotion SLA (still ≤15 min worst case, now delivered deterministically by the
     # heartbeat rather than probabilistically by this schedule).
-    - cron: "*/15 * * * *"
+    # Loosened 15->30min 2026-08-16 (operator: billing + collision reduction). MUST stay in
+    # lockstep with ldr-to-main-promote-heartbeat.timer's OnCalendar (the actual driver).
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:

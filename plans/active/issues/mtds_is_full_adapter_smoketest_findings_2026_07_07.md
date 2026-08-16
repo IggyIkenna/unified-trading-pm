@@ -291,14 +291,30 @@ the todos already promised.
    uncommitted working-tree changes as of this smoke test — needs commit + plan-flip before it counts as shipped (a
    separate background agent was already dispatched for this fix; status pending as of this doc's filing).
 4. MARGINFI/SOLEND have no reference-data adapter of any kind — worse than the other 5 lending protocols checked; no
-   IS-side coverage plan surfaced.
+   IS-side coverage plan surfaced. **Owner confirmed 2026-08-16 (plan_reconciler)**: tracked in
+   `instruments_docs_audit_outstanding_items_2026_07_08.md` §C2 (MARGINFI/SOLEND — DECISION — NEW).
 5. Whether purging/regenerating the stale TradFi catalogue (ICE 16,146→~1 real rows, CBOE 37,563→~89) is already
-   scheduled, or needs a new migration plan — unaddressed.
+   scheduled, or needs a new migration plan — unaddressed. **Plausible owner (2026-08-16, plan_reconciler, NOT
+   independently confirmed the same question)**: `plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`
+   looks relevant by name — verify before treating as settled.
 6. Whether ODDS_API's total absence from instruments-service (IS has no reference-data adapter for it, only MTDS
-   captures its tick data) is a deliberate division of labor or an accidental gap.
+   captures its tick data) is a deliberate division of labor or an accidental gap. **Still no owner found (2026-08-16,
+   plan_reconciler — corpus-wide grep for `ODDS_API` returns ~70 tangentially-related sports/odds docs, none directly
+   answering this question)**; see new todo below.
+
+**HARD RULE gap (2026-08-16, plan_reconciler)**: items 2 and 6 above have no tracked owner anywhere in the corpus and
+were prose-only follow-ups — converted to real todos below per "every follow-up is a `- [ ]` todo, never prose."
 
 ## Todos
 
+- [ ] [VERIFY] P2. **Open question 2 (added 2026-08-16, plan_reconciler)**: verify OKX options wiring end-to-end —
+      needs a `TARDIS_API_KEY` (credential-gated). Done when: a live OKX options request succeeds using a working key,
+      or the credential gap is confirmed still blocking and re-filed with a specific ask.
+- [ ] [RESEARCH] P3. **Open question 6 (added 2026-08-16, plan_reconciler)**: determine whether ODDS_API's total
+      absence from instruments-service's reference-data adapters (MTDS captures its tick data; IS has no adapter for
+      it) is deliberate division of labor or an accidental gap — corpus-wide grep found no doc that already answers
+      this. Done when: a definitive answer is recorded here (with citation if deliberate, or a new coverage todo filed
+      if accidental).
 - [x] [TRIAGE] P0. Work through the P0 list above — HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT venue registration **RESOLVED
       2026-07-12 — operator decided against this finding.** This P0 item is stale/superseded: the operator confirmed
       `unified-api-contracts@181b5311`'s removal is correct and huobi/bitstamp/htx should be entirely removed, not

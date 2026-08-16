@@ -88,7 +88,8 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
       the VM's own instance name, or an explicit `--resume-from-vm=<prior-vm-name>` flag that reads that VM's
       `PROGRESS.json` before starting. Mirrors the intent already proven for SPOT-preemption auto-relaunch
       (`spot-vms-for-backfill.md`'s resume-checkpoint contract) — this closes the gap for a MANUAL relaunch under a
-      genuinely new name, which the auto-relaunch path may not hit the same way.
+      genuinely new name, which the auto-relaunch path may not hit the same way. **Still open** — 2026-08-16's
+      relaunch (see next entry) worked around this manually (explicit `START_DATE`), not by fixing the gap itself.
 - [x] ✅ [INFRA] P3. **ANSWERED 2026-08-14 — confirmed SPOT preemption, not OOM; rightsizing checked, no action
       needed.** See correction above for the full evidence (4 VM deaths, ~2,838 combined RESOURCE_SAMPLE lines, 0
       OOM_KILLED lines). Separately ran `/vm-resource-rightsizing-check` on the current `e2-highmem-16` default: CPU is
@@ -152,4 +153,16 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
      orchestrator, where it's normally invoked): line 322's `date -u -d yesterday +%Y-%m-%d` is GNU-only syntax and
      fails outright on BSD/macOS `date`. Workaround: prepend a `gdate` (homebrew `coreutils`) shim onto `PATH` for the
      invocation, e.g. `ln -sf "$(which gdate)" <tmpdir>/date && PATH="<tmpdir>:$PATH" <launch command>`. Not filing this
-     as its own todo — it only bites a local macOS invocation, which is not this launcher's normal path.
+     as its own todo — it only bites a local macOS invocation, which is not this launcher's normal path. Also needs
+     `GCP_PROJECT_ID` exported (the launcher's own tarball-auto-republish subprocess needs it; the AO orchestrator VM
+     has this set globally, a local macOS shell does not).
+  5. **VM3 successfully relaunched 2026-08-16**, after two blockers were found and fixed in the SAME session: (a) the
+     manifest-corruption bug this doc's sibling
+     `cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md` covers in full (code fix + data migration,
+     both shipped) — fixing it was a genuine PREREQUISITE, not just cleanup, since the same buggy Tier-3 sentinel path
+     would have silently corrupted VM3's own writes too; (b) a `unified-api-contracts`/`deployment-service` dirty-deps
+     chain blocking the launcher's tarball auto-republish, resolved via the documented `Quickmerge:
+     direct-carveout-dirty-deps` direct-push path for the code fix, and a scoped `git stash`/`pop` around
+     `deployment-service`'s unrelated foreign WIP for the launch itself (never touched its content). Confirmed running:
+     `cefi-binance-futures-2026-heavy-20260816-182747`, `LAUNCH_PARAMS.json` shows the correct
+     `ONLY=BINANCE-FUTURES:2026:heavy SINGLE_VM_QUEUE=0` scoping resuming from the real `2026-04-13` checkpoint.

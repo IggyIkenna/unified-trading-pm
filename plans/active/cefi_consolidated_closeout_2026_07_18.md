@@ -332,8 +332,9 @@ POST-BACKFILL pair does NOT (the backfill VM was preempted mid-run, see below) a
     DEBUNKED**: the futures_chain 122,585 `attempted_failed` are NOT source-absence — the failure + aggregation are ON
     OUR SIDE (per-symbol capture gap → bundle never built). Not a writer-gate fix; it FILLS on the Track-2 coverage
     backfill. Do not propagate the debunked premise; do not treat this as an open Track-4 fix.
-  - `issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md` — gate Tardis requests on the
-    vendor catalog; stop recording impossible combos as `attempted_failed` (denominator-corruption, P0).
+  - `/plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md` — **ARCHIVED
+    2026-08-16** — gated Tardis requests on the vendor catalog; stopped recording impossible combos as
+    `attempted_failed` (denominator-corruption, P0). All 6 todos shipped + verified.
 - **Close-out criterion**: the impossible-combo bug fixed; denominator gaps resolved or accepted.
 
 ## Track 5 — Adapter canonical-ID-builder retrofit (RE-DRIFT prevention, post-migration) · P2

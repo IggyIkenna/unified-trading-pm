@@ -25,7 +25,11 @@ stage: [data]
 repos: [market-tick-data-service, deployment-service, unified-trading-pm]
 scope: [engineer]
 tags: [backfill, oom, memory, tardis, cefi, reliability, vm-hang, resource-profiler]
-related: [lst_rate_honest_coverage_2026_07_21, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
+related:
+  [
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-22
 author: unknown
 priority: P0

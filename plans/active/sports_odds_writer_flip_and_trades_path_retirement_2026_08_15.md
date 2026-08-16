@@ -21,7 +21,7 @@ related:
   [
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
-    /plans/active/sports_odds_api_data_type_casing_standardization_2026_08_15.md,
+    /plans/archive/2026_08/sports_odds_api_data_type_casing_standardization_2026_08_15.md,
     /plans/active/issues/sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md,
     /plans/active/mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md,
     /codex/02-data/sports-data-types-catalog.md,
@@ -477,3 +477,66 @@ one genuinely-still-open item re-checked). Still blocked on the identical `['kar
 venue-coverage baseline failure, unrelated to this plan. Not retrying again on a tight loop -- this is non-blocking
 metadata (the live persist path already works end-to-end per Phase 1's verification); will pick back up opportunistically
 rather than burn cycles polling someone else's unresolved regression.
+
+**2026-08-16 -- unrelated blocker fully root-caused and fixed, SINK_MATRIX shipped.** Operator asked whether the
+karak/pendle/symbiotic blocker was local or on remote -- verified it was genuinely already landed on
+`origin/live-defi-rollout` (strategy-service/execution-service checkouts were clean/matching origin, baseline JSON
+matched origin byte-for-byte), not an artifact of this session's dirty tree. Root-caused via direct code
+investigation rather than guessing: `karak`/`pendle` are genuinely unreachable in execution-service's DeFiAdapter
+dispatcher (zero gate wiring for either, confirmed via grep) and match two independently tracked, operator-approved
+gaps (`karak_decommission_2026_08_16.md` -- full decommission in progress; `e2e_wiring_reachability_audit_2026_08_15.md`
+-- pendle's dispatch gap already documented). `symbiotic`, by contrast, turned out to be a genuine TEST bug, not a
+real gap: execution-service's dispatcher DOES gate on `"SYMBIOTIC" in venue` with a real `SymbioticConnector`
+(`supports_live=True`), but the UAC test's own hand-maintained venue-mapping dicts had never been extended to include
+it, so the invariant couldn't see the real wiring. Fixed the mapping instead of baselining a non-gap. All 11 tests in
+that file passed locally before shipping.
+
+Mid-ship hit a genuine conflict: another session had independently landed the EXACT SAME substantive fix seconds
+earlier (`execution-service@85c8310b2` cited in their commit) -- both sessions reached identical conclusions
+independently. Resolved by keeping their already-landed version (stronger evidence, a concrete commit sha) over mine;
+after `git add`-ing the resolved index, those two files were already byte-identical to origin (nothing left to
+commit for them) -- only this plan's actual net-new `sink_matrix.py` change remained to ship.
+
+Re-shipping `sink_matrix.py` alone then hit a THIRD unrelated regression from the same active Symbiotic-onboarding
+work: `test_every_registered_symbol_is_a_declared_lst_token` failing on `ETHEREUM/wstETH-symbiotic`. Investigated
+before touching anything -- found this is a DELIBERATE, already-well-documented architectural exclusion (Symbiotic's
+`wstETH-symbiotic` address is intentionally absent from `LST_VENUE_TO_TOKENS` because including it would make it
+"reachable" through strategy-service's generic-balance-read routing invariant, which Symbiotic's real bespoke
+withdrawal-queue-aware adapter correctly fails -- the in-code comment cites "confirmed via a live pytest failure the
+first time this was tried, not a guess"). The strict "every address must be declared" test simply hadn't caught up to
+that documented exception. Added an explicit, cited exemption set (`_DELIBERATELY_UNDECLARED_SYMBOLS`) rather than
+weakening the test generally. Confirmed via `git stash` that this failure was also 100% unrelated to this plan's own
+change (identical failure with sink_matrix.py removed).
+
+**Landed: unified-api-contracts@c64a9e11c0** (sink_matrix.py + the LST-exemption fix, shipped together after both
+unrelated blockers were resolved). Phase 0's SINK_MATRIX registration is now fully complete -- the compaction-config
+metadata gap flagged earlier is closed. **This plan's Phase 0 and Phase 1 are now both 100% complete with nothing
+outstanding.** Phase 2 and Phase 3 remain not started per the plan's own sequencing (Phase 2 gates on sibling plans'
+own verification sections; Phase 3 is an `[OPERATOR]`-gated GCS delete gated on a post-Phase-1 retention window).
+
+**2026-08-16 -- instruments-service CI failure investigated, confirmed ALREADY FIXED (same case-collision bug class
+as the MTDS `_source_from_row()` fix above, sibling repo, separate commit).** A CI run flagged
+`instruments-service::tests/unit/scripts/test_enumerate_expected_universe_v2.py::
+test_sports_odds_seed_provenance_is_footystats_never_api_football` failing (`sports ODDS seeded with
+source='odds_api'` instead of `'footystats'`), triggered by an unrelated bot base-image digest-pin bump. Investigated
+fresh rather than assuming: this repo (`instruments-service`) IS in this plan's own `repos:` scope, but its
+`enumerate_expected_universe.py::_derive_pm_source_transport()` is a genuinely separate call site from MTDS's
+`_source_from_row()` -- the exact same failure MODE (a generic case-insensitive/`.upper()` fallback resolving
+`data_type` to the reserved uppercase `("sports","ODDS")` footystats key before a more specific branch could claim
+it), independently present in a second file. Root-caused via the live failing CI run
+(`gh run view 31943408746 --log-failed`, commit `128edf887e`, 2026-08-16T11:05:52Z) cross-referenced against git log:
+the enumerator already carries a fix, **`instruments-service@4d8add8e0b`** ("fix(sports): prefer upper-case
+SOURCE_PRIORITY key for sports in `_derive_pm_source_transport`"), landed 2026-08-16T11:26:13Z -- **20 minutes after**
+the failing CI run started, by this same session's earlier work today, but never cross-referenced back into this
+plan's Progress Log despite `instruments-service` being in scope here too. Verified currently green two ways: (1)
+every `quality-gates-v2` run on `instruments-service` since 4d8add8e0b is `success` (incl. the current HEAD
+`254a06fec4` @ 2026-08-16T15:05:27Z, run `31954611823`), and (2) a fresh full local `quality-gates.sh` run on that
+same HEAD passed clean (`5447 passed, 6 skipped, 4 xfailed, 0 failed`, `ALL QUALITY GATES PASSED`), including both
+`test_sports_odds_seed_provenance_is_footystats_never_api_football` and the generalised
+`test_every_sports_data_type_seed_provenance_matches_canonical_registry`. No code change needed -- this entry exists
+only to close the doc gap (the fix landing without a plan cross-reference is exactly the "doc that misled the next
+reader" pattern this workspace's findings-triage rule flags): a fresh session grepping this plan for
+"instruments-service" would otherwise have no record that the enumerator side of the same bug class was already
+handled. A separate, unrelated `consumer-qg-check` CI failure seen the same day (`31958119386`, 16:16:19Z) is NOT
+this bug -- it's a cross-repo candidate-UAC checkout hitting a stale/nonexistent ref (`repository not found`), pure
+CI infra noise, out of scope here.

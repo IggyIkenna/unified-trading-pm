@@ -370,6 +370,8 @@ baseline:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_umi.py:
     count: 1
+  market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_freshness.py:
+    count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_preflight.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py:
@@ -456,6 +458,8 @@ baseline:
     count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py:
     count: 14
+  market-tick-data-service/market_tick_data_service/cli/handlers/tardis_options_chain_backfill_handler.py:
+    count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/token_transfers_handler.py:
     count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py:
@@ -465,7 +469,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/config/service_config.py:
     count: 2
   market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py:
-    count: 3
+    count: 6
   market-tick-data-service/market_tick_data_service/engine/orchestrator/_manifest_bucket.py:
     count: 3
   market-tick-data-service/market_tick_data_service/engine/orchestrator/_state.py:
@@ -501,7 +505,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/ccxt_adapter.py:
     count: 15
   market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_options_adapter.py:
-    count: 10
+    count: 8
   market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_lending.py:
     count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_positions.py:
@@ -639,9 +643,11 @@ baseline:
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py:
-    count: 2
+    count: 3
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/altdata.py:
     count: 1
+  unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/cefi.py:
+    count: 2
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/defi.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/internal.py:

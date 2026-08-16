@@ -198,9 +198,16 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
 
 ## Todos
 
-- [ ] [DATA] P1. **Root-cause + fix DERIBIT's dated-option-into-perpetual misclassification** — find the writer-side
-      bug, run an exhaustive corpus-wide census, backfill/reclassify already-captured objects, then re-run Script 1 for
-      DERIBIT specifically (see "What's NOT done / follow-up needed" above).
+- [x] ✅ [DATA] P1. **Root-cause + fix the writer-side bug — DONE, verified by plan_reconciler (cefi tranche,
+      agt-2e82f7, 2026-08-16).** `market-tick-data-service@06c07089` (2026-08-15, "fix(cefi): recognize Deribit
+      decimal-strike (D-separator) option symbols"), verified ancestor of `origin/live-defi-rollout`. `_OPTION_SYMBOL_RE`
+      required a pure-digit strike, so DERIBIT's `D`-decimal-separator sub-dollar strikes (e.g. `2D3`=2.3, the exact
+      `XRP_USDC-30JAN26-2D3-P.parquet` shape cited in this doc's own evidence table) fell through to the venue-level
+      PERPETUAL default. Ships with a 6-test regression suite pinning the symbol to `InstrumentType.OPTION`.
+- [ ] [DATA] P1. **DEFERRED — census/backfill/reclassify/Script-1-rerun still open.** Run an exhaustive corpus-wide
+      census, backfill/reclassify already-captured objects, then re-run Script 1 for DERIBIT specifically (see "What's
+      NOT done / follow-up needed" above). The 2026-08-07 census (28,158 objects/497 days/~988GB) predates the writer
+      fix and needs re-running against it.
 
 ## Progress Log
 

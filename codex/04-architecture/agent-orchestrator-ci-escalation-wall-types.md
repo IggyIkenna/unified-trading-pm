@@ -57,7 +57,7 @@ role automatically. A new wall_type + role therefore needs ZERO dashboard change
 | `label_mismatch`                              | Conventional-commit label vs API diff mismatch                                                                                                                              | (label-check path)                                                                 | yes                 | `cicd` (generic)                               | commit/label fixed                                                                     |
 | `sit_failure`                                 | A SIT run failed                                                                                                                                                            | `sit-debounce-trigger.yml`                                                         | no                  | `cicd` (generic)                               | next SIT green                                                                         |
 | `ldr_qg_failure`                              | A repo's `live-defi-rollout` itself went QG-red (no PR — Tier-A proxy via `ldr-ci-monitor.yml`'s hourly scan)                                                               | `ldr-ci-monitor.yml`                                                               | no (`pr_number: 0`) | `cicd` (generic)                               | `quality-gates-v2` green on `live-defi-rollout`                                        |
-| `ldr_main_qg_failure`                         | **PM-only**: `ldr-to-main-promote.yml`'s OWN promote PR genuinely QG-failing (not superseded)                                                                               | `ldr-to-main-promote.yml`, every ~15min tick the failure persists (server-deduped) | yes                 | `cicd` (generic)                               | PR's `quality-gates-v2` green                                                          |
+| `ldr_main_qg_failure`                         | **PM-only**: `ldr-to-main-promote.yml`'s OWN promote PR genuinely QG-failing (not superseded)                                                                               | `ldr-to-main-promote.yml`, every ~30min tick the failure persists (server-deduped) | yes                 | `cicd` (generic)                               | PR's `quality-gates-v2` green                                                          |
 | `main_ci_red`                                 | `main` red while LDR green (fix is a promote/backport, not a re-fix)                                                                                                        | CIReconcile main scan                                                              | no                  | `cicd` (generic)                               | main QG green                                                                          |
 | `provenance_blocked`                          | Auto-merge refused — LDR carries a commit that bypassed quickmerge                                                                                                          | `ldr-to-main-promote.yml`                                                          | yes                 | `cicd` (generic)                               | provenance clean + re-armed                                                            |
 | `plan_health`                                 | PM's `plan_health-agent.yml` PR→main gate has judgment-residue hygiene failures                                                                                             | plan_health gate                                                                   | yes/no varies       | `plan_health`                                  | hygiene sweep green                                                                    |
@@ -92,18 +92,19 @@ Three lines of defense, each firing only if the previous one didn't already clea
 
 1. **T+0**: the drain bot's own supersede cycle (already existed; unrelated to this change) — most failures never reach
    tier 2 at all.
-2. **T+15min**: a debounced `#ci-failures` CRITICAL Slack post (`debounce-promote-qg-fail` job,
-   `python-quality-gates-v2.yml`) — re-checks the PR is still open + still failing before posting; silent if it
-   self-resolved. No agent dispatched here — this tier is "tell a human, in case they want to look," not "try to fix
-   it."
-3. **T+30min**: if STILL open + STILL failing (a second, independent re-check — the PR surviving TWO supersede cycles is
-   a much stronger signal this isn't just cadence-race noise), dispatch `promote_qg_failure` to a
-   `quality_gate_resolution` agent.
+2. **T+30min**: if the CONTINUOUS failure streak (walked across PR supersessions by
+   `debounce-promote-qg-fail`, `python-quality-gates-v2.yml`) is still genuinely 30+ min old, a debounced
+   `#ci-failures` CRITICAL Slack post AND the `promote_qg_failure` dispatch to a `quality_gate_resolution` agent fire
+   TOGETHER off the same duration_min reading — realigned 2026-08-15 from an earlier staggered T+15/T+30 design
+   (Slack-then-escalate) to remove the redundant "already warned, now escalating" framing and give a failing streak
+   more room to self-resolve via ordinary supersession before paging a human at all. See
+   `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`'s `debounce-promote-qg-fail` job and
+   `agent-orchestrator/server/escalation.py`'s `promote_qg_failure` WALL_TYPES comment for the current design.
 
 This mirrors `ldr_main_qg_failure`'s own reasoning (fire only on a genuine, non-superseded failure) but adds the
-explicit TIME gate PM's version doesn't need (PM's promote cadence is fast enough — every ~15min tick — that its own
-retry-and-recheck IS the debounce; a fleet-wide repo's promote cadence varies, so `promote_qg_failure` debounces
-explicitly instead of relying on tick frequency).
+explicit TIME gate PM's version doesn't need (PM's promote cadence — every ~30min tick as of 2026-08-16, was ~15min —
+is fast enough that its own retry-and-recheck IS the debounce; a fleet-wide repo's promote cadence varies, so
+`promote_qg_failure` debounces explicitly instead of relying on tick frequency).
 
 ## `quality_gate_resolution` vs the generic `cicd` role
 

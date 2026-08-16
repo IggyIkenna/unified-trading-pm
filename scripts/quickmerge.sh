@@ -1921,7 +1921,24 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
       _qm_sibling_repo_count=$((_qm_sibling_repo_count + 1))
     done
   fi
-  if [ -n "$PM_ROOT" ] && [ -f "$ALIGN_SCRIPT" ] && [ "$_qm_sibling_repo_count" -eq 0 ]; then
+  if [ -n "${QUICKMERGE_SKIP_DEP_ALIGNMENT:-}" ]; then
+    # Opt-in escape hatch (2026-08-16 /ci-reconcile), same class of false-positive as the
+    # sibling-count==0 guard below but for a PARTIALLY-populated workspace: only
+    # workspace-quickmerge-validation.yml sets this (via validate-workspace-quickmerge.sh),
+    # whose canary clone deliberately checks out only workspace-manifest.json's levels[0:3]
+    # (4 of 26 manifest repos: unified-trading-pm, unified-trading-ci, unified-api-contracts,
+    # unified-trading-library) to keep the 6-hourly smoke check fast. check-dependency-
+    # alignment.py's disk-presence check requires EVERY non-archived manifest repo on disk —
+    # with 22 of 26 legitimately absent by this workflow's own design, it reported
+    # "aligned": false every run, which looked exactly like real PM dependency drift but
+    # wasn't (verified: same check against the FULL workspace on this slot returned
+    # aligned=true, disk_absent=0). Nobody else sets this var, so real ships (full workspace)
+    # are unaffected.
+    echo "[$REPO_NAME] ⚠️  Dependency alignment SKIPPED — QUICKMERGE_SKIP_DEP_ALIGNMENT set (this is a"
+    echo "   deliberately-partial canary workspace, not a full multi-repo checkout; the disk-presence"
+    echo "   check would misreport every un-cloned fleet repo as a FAILED verdict about the workspace"
+    echo "   shape, not your change)."
+  elif [ -n "$PM_ROOT" ] && [ -f "$ALIGN_SCRIPT" ] && [ "$_qm_sibling_repo_count" -eq 0 ]; then
     echo "[$REPO_NAME] ⚠️  Dependency alignment SKIPPED — $WORKSPACE_ROOT has no sibling repo"
     echo "   checkouts at all (only $PM_ROOT itself). This looks like a lone-repo/private worktree,"
     echo "   not a full multi-repo workspace, so alignment against sibling pyproject files cannot"

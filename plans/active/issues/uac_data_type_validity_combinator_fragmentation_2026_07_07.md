@@ -993,13 +993,11 @@ just belongs on a different layer than instrument_type does, and conflating the 
       FLUID/MORPHO pre-genesis dates issue noisy-but-harmless real RPC calls** during the shared `collect-oracle-prices`
       call instead of a clean skip (each branch's own earliest-date gate seems to only short-circuit when that venue is
       targeted directly) — cosmetic, wasted RPC calls only, no data-correctness impact. (repo: market-tick-data-service)
-- [ ] [CODE] P3. **Add `if __name__ == "__main__":` guard to `market_tick_data_service/cli/main.py`** — found 2026-08-12
-      while running the COMPOUND_V3 done-when: `python -m market_tick_data_service.cli.main` imports the module
-      (printing 2 config lines from UTL DomainValidationService) and exits 0 running nothing, because main.py has no
-      `__main__` guard. Only the console script `.venv/bin/market-tick-data-service` (or
-      `python -m market_tick_data_service` via `__main__.py`) actually dispatches. The guard makes `-m` behave like the
-      console script — removes a recurring footgun for ad-hoc force-compute/done-when runs. (repo:
-      market-tick-data-service)
+- [x] ✅ [CODE] P3. **DONE — verified by plan_reconciler (cefi tranche, agt-2e82f7, 2026-08-16).** Add
+      `if __name__ == "__main__":` guard to `market_tick_data_service/cli/main.py` — found 2026-08-12 while running the
+      COMPOUND_V3 done-when. **Evidence**: `market-tick-data-service@744f97c6` (2026-08-15, "fix(cli): add __main__
+      guard to main.py for direct script execution"), verified ancestor of `origin/live-defi-rollout`; guard confirmed
+      live at `market_tick_data_service/cli/main.py:642`. (repo: market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the
 > 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real

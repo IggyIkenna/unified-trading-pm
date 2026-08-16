@@ -19,8 +19,9 @@ summary: >-
   (gate the fallthrough to only `ldr_qg_failure`(pr_number==0)/`main_ci_red`, return `None` for the other 6, matching
   the function's own already-documented intent) was approved same-tick (BLK-2a812311, answered A) and dispatched to slot
   11 for a regression-tested quickmerge fix. This doc is the operator-notification + historical-blast-radius record
-  required alongside that fix, not a substitute for it — DP-VM-003 and DP-FETCH-009 specifically still need real
-  investigation since nobody has actually looked at either.
+  required alongside that fix, not a substitute for it. **Corrected 2026-08-16 (/plan-reconcile)**: DP-FETCH-009 was
+  investigated and re-verified stale/resolved (see body below); DP-VM-003 remains genuinely untouched by that
+  re-verification and stays open.
 status: open
 nature: issue
 asset_group:
@@ -138,7 +139,7 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
       deployment-service `a564cca` materiality downgrade, `9102eb9b` dedup-gap fix). This doc's framing ("nobody has
       actually looked at either") is stale for DP-FETCH-009 specifically; DP-VM-003 above is untouched by this
       re-verification and remains open.
-- **[BACKEND] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md`.** Now that the
+- [x] **[BACKEND] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md`.** Now that the
   BLK-2a812311 quickmerge fix has landed (`agent-orchestrator@884a9bfe1`), spot-check a bounded sample of the historical
   `data_pipeline_failure`/`provenance_blocked`/`sit_failure`/`plan_health` rows auto-closed via this bug (beyond
   DP-VM-003/DP-FETCH-009) for any other still-live, still-unaddressed problems masquerading as resolved. See the batch

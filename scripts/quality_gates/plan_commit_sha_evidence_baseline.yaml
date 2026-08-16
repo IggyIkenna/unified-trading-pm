@@ -1,7 +1,10 @@
-fabricated_sha_citation_baseline: 1
+fabricated_sha_citation_baseline: 2
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
 baseline_citations:
-  - path: plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md
-    line: 139
-    cited: market-tick-data-service@8f34de66
+  - path: plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md
+    line: 143
+    cited: execution-service@6dba7ac5
+  - path: plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md
+    line: 151
+    cited: execution-service@6dba7ac5

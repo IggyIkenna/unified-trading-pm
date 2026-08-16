@@ -5368,12 +5368,31 @@ shipped (market-tick-data-service@4d32528, Phase D P1c Item 3) but cannot run un
   `market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_options_adapter.py`
 - **unit tests**: `market-tick-data-service/tests/market_interface/adapters/cefi/test_tardis_options_adapter.py` (run
   under QG --block-network; integration tests marked @pytest.mark.requires_credentials skipped by default)
-- **status**: BLOCKED-CREDENTIALS — NOT deferred; adapter scaffold + unit tests already shipped.
-- **operator action needed**: Reply `[ack]` with Tardis API key location in Secret Manager once provisioned.
-- **round5-cross-cutting-audit 2026-08-08 — STALE, credential already granted, no ack pending**: Tardis billing gate
-  LIFTED 2026-07-12 (operator ruling, paid unlimited access), live in production since (DERIBIT-COMBO + OKX
-  `options_chain` Tardis data flowing). Do not re-ask. The 14 `VOL_*` engines remain blocked on a SEPARATE gate — the
-  standing `v2_engine_venue_buildout_2026_06_15.md` "do NOT run backfills yet" operator ruling — not a credential ack.
+- **status**: RESOLVED 2026-08-16 — credential confirmed genuinely resolvable (`tardis-api-key` GSM secret, verified
+  live via `get_secret_client()`), `TardisOptionsClient.fetch_options_chain` implemented (composes
+  `TardisStreamClient` for auth/retry, downloads Tardis's grouped `OPTIONS.csv.gz` per the
+  `docs.tardis.dev/downloadable-csv-files#options_chain` channel), and dispatch wired
+  (`--operation collect-tardis-options-chain`, `TardisOptionsChainBackfillHandler`) — see
+  `plans/active/issues/tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md` for the full writeup. No
+  operator action needed.
+- **2026-08-16 correction to the round5-cross-cutting-audit line below**: that audit's "DERIBIT-COMBO + OKX
+  `options_chain` Tardis data flowing" claim was itself stale/incorrect at the time it was written — `DERIBIT-COMBO`
+  was deregistered from `VENUES_BY_ASSET_GROUP` 2026-07-23 (UAC@11adf279, BEFORE the 2026-08-08 audit ran) and bare
+  `OKX` was deregistered 2026-08-05 with no `OKX-OPTIONS` successor; a bounded 20-day GCS check (both candidate
+  pipeline_modes, prod bucket) found ZERO captured `options_chain` shards for `DERIBIT` via either the live Deribit
+  handler or Tardis as of 2026-08-16. Confirmed separately: `TardisAdapter`'s own `options_chain`/`futures_chain`
+  handling (`adapters/tradfi/tardis_adapter.py`) is a DIFFERENT thing — a bulk-TRADES-for-options-instruments
+  download, not the mark/IV/greeks snapshot channel `tardis_options_adapter.py` implements — so it was never a
+  substitute path either. The live Deribit handler (`deribit_options_chain_handler.py`) also had its own unrelated
+  bug (wrong bucket DOMAIN string, `"tick-data"` instead of `"market_data"` — `BucketNamingError` on every write,
+  fixed same day) that would have prevented it from ever writing a shard regardless of the Tardis question. Both are
+  fixed now, but nothing had backfilled the historical range yet as of 2026-08-16 — see the issue doc's recommended
+  next-step scope.
+- **round5-cross-cutting-audit 2026-08-08 note (superseded by the correction above, kept for the record)**: "Tardis
+  billing gate LIFTED 2026-07-12 (operator ruling, paid unlimited access), live in production since (DERIBIT-COMBO +
+  OKX `options_chain` Tardis data flowing)." The billing-gate-lifted / paid-unlimited-access part is still accurate;
+  the "live in production" part was not. The 14 `VOL_*` engines remain blocked on a SEPARATE gate — the standing
+  `v2_engine_venue_buildout_2026_06_15.md` "do NOT run backfills yet" operator ruling — not a credential ack.
 
 ## CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19, sports e2e audit)
 

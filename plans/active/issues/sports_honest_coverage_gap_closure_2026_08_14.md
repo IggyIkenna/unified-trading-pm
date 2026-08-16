@@ -283,6 +283,19 @@ rows (confirmed deliberately out of scope).
       `<cross-session-message>` is a legitimate same-workspace channel, redid it correctly. Real gap in
       provenance-verification for mid-task corrections — see Lessons below.
 
+- [x] ✅ [SCRIPT] P1. **CORRECTION to the entry above, 2026-08-16 — the "~17K uppercase rows, must stay uppercase"
+      claim was wrong; it was never independently verified against live data.** Full investigation + fix in
+      `sports_odds_api_data_type_casing_standardization_2026_08_15.md` (Phase 1 finding). A live manifest check found
+      **ZERO rows with exact-uppercase `data_type="ODDS"` anywhere** (checked across both sports buckets, all venues,
+      not just ODDS_API) — real data has always been lowercase `odds` (1,721 rows for `venue=ODDS_API`, 899,286 for
+      the bulk empty-venue entry — both real counts, and both bigger than the old stale comments claimed). Both
+      registry entries in `data_type_capability.py` fixed to lowercase; the pinning test rewritten. The odds_api
+      adapter fix (`market-tick-data-service@a4a20fc7`) was still a real, correctly-motivated fix for the SOURCE CODE
+      (which genuinely wrote uppercase before it), it just turned out to be closing a gap that had never actually
+      shown up in captured manifest data — no GCS migration was ever needed. Lesson: "confirmed it must stay
+      uppercase" in the entry above was itself an unverified claim inherited from a stale code comment, not an
+      independent measurement — exactly the CLAIM ≤ MEASUREMENT trap this workspace's rules exist to catch.
+
 - [ ] [SCRIPT] P1. **SFI: retry the 7 dates behind the 112 `attempted_failed` rows** — 2 confirmed-retriable root
       causes, no structural gap: 79 rows (`JSONDecodeError`, 6 dates in 2022-2023, all attempted 2026-08-07) were hit by
       a truncated-JSON bug already fixed same-session by `instruments-service@ecfc2749` (2026-08-10) — genuinely
@@ -365,6 +378,51 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
   "queryable" for scripts using this write path; verify against the raw per-VM shard file directly if you need immediate
   confirmation, and expect up to ~1-6 minutes of lag (cron cadence + lock-contention/TTL) before the consolidated view
   catches up.
+
+- [ ] [SCRIPT] P2. **Land the stranded UAC pinning test for `_KNOWN_NON_VENUE_SOURCES`** — stash
+      `odds_api_source_not_venue_fix: UAC doc/test additions` in `unified-api-contracts` (confirmed still present
+      2026-08-16, `git stash list`) has never landed; it was blocked behind unrelated foreign WIP in
+      `market_data_categories.py` and then never revisited once that WIP cleared. Contains a comment + pinning test
+      documenting why ODDS_API is correctly named in `_KNOWN_NON_VENUE_SOURCES` (the real fix,
+      `market-tick-data-service@a4a20fc7`, already shipped and is live — only this supplementary doc/test artifact is
+      stranded). `git stash pop` (or `apply` + selective `git checkout stash@{N} -- <path>` if other content has since
+      landed in the same file), re-run QG, ship via quickmerge. Low risk, small, does not block anything else.
+- [ ] [DATA] P1. **odds_api's actual 278-day backfill gap is STILL not closed** — separate from all the bug-fixing this
+      session did (case-mismatch/source-venue misclassification fixed, casing-migration premise found false). The
+      backfill VM itself (`mtds-backfill-odds-1`) never got a confirmed clean multi-hour run: every attempt this
+      session hit either the pre-existing unroot-caused silent-hang bug or died within ~20 minutes with zero log
+      output (see `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`'s 2026-08-16 entry). As of this
+      writing `gcloud compute instances describe mtds-backfill-odds-1 --zone=asia-northeast1-c` shows `RUNNING`, but
+      that is NOT reliable evidence of real progress this session already caught OS-level-RUNNING-while-workload-dead
+      once — SSH in and check for a live MTDS python process + fresh log lines before trusting it. Real root cause of
+      the fast silent-exit is still unconfirmed. See `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the
+      original gap tracking.
+- [ ] [DATA] P2. **Weather VM (`weather-backfill-20260815-011036`) was SPOT-preempted, not completed — relaunch
+      needed.** Confirmed via its deployment record (`deployments/archive/2026-08-15/5b9c3450-592d-47bc-84bb-
+      48a33bc022f2.json`): `status=failed`, `exit_code=125` (the standard vm-vanished sentinel, same signature as
+      every other preempted VM this session — not a workload crash), `completed_at=2026-08-15T16:10:03Z`. Relaunch
+      with the same date range (`2024-01-03 2026-08-02` — resumes from measured progress via existing skip-logic,
+      does not replay from day 0). Once it completes cleanly: run
+      `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` (required to materialize
+      empty_confirmed rows, per that launcher's own printed instruction — NOT yet run as of this session's end).
+- [ ] [SCRIPT] P1. **SFI still 112 `attempted_failed`, unstarted** — see the existing SFI todo above in this doc for
+      the full retry mechanism (7 dates, no new code needed, `DEPLOYMENT_ENV=prod` required). Not touched this session
+      beyond re-confirming the count is unchanged.
+
+## Deferred work after 2026-08-16
+
+| Item | State / why deferred | Blocked on |
+| --- | --- | --- |
+| UAC pinning-test stash (above) | Not done — real work, quick | Nobody — pick it up first, it's the cheapest |
+| odds_api 278-day backfill (above) | Not done — needs a real root-cause dig into the fast silent-exit, or just more relaunch attempts | Nobody, but genuinely uncertain-duration work |
+| Weather VM completion + rescan (above) | Cannot be done yet until VM's terminal status is confirmed | An external check (deployment record), then possibly a relaunch |
+| SFI 7-date retry (above) | Not done — mechanically simple, just never executed | Nobody |
+| api_football derived-entity backlog reclassification `--apply` (748,363→ now merged; the SEPARATE 72,955 genuine-gap cells from the original FIXTURES_OUTCOMES dry-run) | Operator-owned — needs a decision on the 72,955 unprovable cells, not a mechanical retry | Operator review of the original dry-run counts (see the FIXTURES_OUTCOMES todo higher in this doc) |
+| Broader multi-venue `ODDS`/`odds` casing pattern (betfair, footystats) found but explicitly out-of-scope this session | Already tracked elsewhere, not lost | See `plans/active/issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md` — a peer session already filed this independently |
+
+**Recommended next item**: the UAC stash (cheapest, zero risk, five minutes) — then SFI's retry (mechanical, no
+investigation needed) — then the odds_api backfill investigation (the real remaining substantive gap, needs either a
+live SSH-based root-cause session or patience with more relaunches).
 
 ## Progress Log
 

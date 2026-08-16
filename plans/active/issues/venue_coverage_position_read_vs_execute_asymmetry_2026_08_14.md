@@ -26,6 +26,8 @@ related:
     /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
     /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
+    /plans/active/issues/karak_decommission_2026_08_16.md,
+    /plans/active/issues/pendle_venue_onboarding_2026_08_16.md,
   ]
 created: 2026-08-14
 resolved_by:
@@ -207,6 +209,14 @@ Rocket Pool, Solblaze, Symbiotic, Jito Restaking, Karak, Idle, WETH, Bridge, CCT
 genuinely live" measurement (the P0 todo above) described connector-internal capability, correctly, but it is not the
 same property as connector-reachability, and this session's original "✅ real" archetype-table marks for Marinade/
 Kamino/Jupiter conflated the two.
+
+> **Update 2026-08-16 — three names in that list have since diverged from "needs wiring."** **Karak**: the operator
+> decided to decommission it entirely rather than wire it — its hardcoded vault address resolves to zero deployed
+> bytecode on-chain; see `/plans/active/issues/karak_decommission_2026_08_16.md`, which supersedes this list's
+> "wire it" framing for Karak specifically. **Symbiotic**: wired into `DeFiAdapter`'s real dispatch the same day
+> (`/plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md`) — no longer belongs on this "never instantiated"
+> list, kept here only as the historical baseline this audit measured. **Pendle** remains genuinely unwired and now
+> has its own dedicated doc: `/plans/active/issues/pendle_venue_onboarding_2026_08_16.md`.
 
 **Two additional, narrower gaps found by reading the archetype docs against the connector method surfaces:**
 
@@ -583,8 +593,8 @@ correct and is now verified at the ABC rather than inferred.
 | Solblaze/Jito Restaking `get_balance()` dead-code trap                                  | **New residue**      | flagged 2026-08-15, folded into the existing P2 "wire real write paths" todo above                                                                                                                                                                                                                                                                                                          |
 | Kamino bespoke lending-position adapter                                                 | **Done, shipped**    | `strategy-service@70c3c05f5c`, 2026-08-16 — landed using the workspace's own `.env`-move-aside mitigation for the pre-existing `StrategyDomainConfig` gate artifact (new P3 residue todo above on fixing that gate itself)                                                                                                                                                                    |
 | Per-venue instruction-ACTION coverage audit                                             | **Done**             | session 3 — found a deeper "module reachability" gap than the scoped question; see section above + 3 new todos                                                                                                                                                                                                                                                                              |
-| B6 — a consumer per governing section                                                   | **Operator-owned**   | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                                                                                                                                                                                                                                                      |
-| Disclosure call on betfair / ibkr / polymarket adapters                                 | **Operator-owned**   | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                                                                                                                                                                                                                                                        |
+| B6 — a consumer per governing section                                                   | **RULED 2026-08-16** | **No-consumer is a FINDING, not a default.** Same rule as orphaned data types and orphaned venues: a governing section nothing consumes is either a missing consumer or a section that should not exist. Each must resolve one way — "genuinely standing reference, no consumer needed" is a VALID outcome but must be STATED, never left silent. Explicitly does NOT force a fake owner: the investigating agent's refusal to assign one to 4 sections was correct, because an invented consumer satisfies the check while encoding nothing true. |
+| Disclosure call on betfair / ibkr / polymarket adapters                                 | **RULED 2026-08-16** | **Ship as-is.** They are inert unless configured, so there is no functional or risk cost; stripping them would mean maintaining a divergent tree and re-stripping on every sync — the expensive option. The disclosure of breadth beyond the mandate was weighed and accepted as a commercial call, not a technical one.                                                                       |
 | Review of the other session's 7 shipped tasks                                           | **Done, indirectly** | its `execution-service@9946ba5a3` (the live-mode guard) landed at origin mid-session here and was reconciled via `git pull --rebase --autostash` — verified by reading the merged blob back; one real defect caught in reconciliation (its `aster.py` opt-in declared `supports_live=True` WITHOUT fixing the underlying silent-success bug, which this session's `aster.py` fix addresses) |
 | Artifact pass (reconciliation + venue/instruction registry)                             | Not done             | the chunks being verified landed, AND the corrected tier numbers above                                                                                                                                                                                                                                                                                                                      |
 | Live-mode guard base mechanism (`supports_live` + fail-closed)                          | **Done, shipped**    | execution-service@9946ba5a3 (base mechanism) + execution-service@2b92d6ac69 (Solana declaration + extension to all 18 modules)                                                                                                                                                                                                                                                              |
@@ -856,6 +866,32 @@ trust a fresh re-run over this file's prose"), I did not touch the baseline or t
 issue's P0 in progress, not a new bug. Leaving the token_wrapping.py fix uncommitted in `.tabs/17/unified-api-contracts`
 (verified correct + ruff-format-stable + citation-checker-clean) until this stabilizes; it isn't at risk (local-only,
 not shared state) and will ship cleanly once the invariant settles.
+
+## Live-flap observation — 2026-08-16 (slot-29, second symptom of the same in-flight Symbiotic wiring)
+
+Continuing to try to ship the unrelated `archetype_feature_groups.py` UAC SSOT module (main plan L228,
+`venue_readiness_and_registry_hardening_2026_08_16.md`) — this issue's blocking invariant
+(`test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`) is now **RESOLVED** as of
+`unified-api-contracts@09318066` (`feat: register Symbiotic wstETH DefaultCollateral vault in UAC LST SSOT (composite
+key)`) — a standalone `bash scripts/quality-gates.sh --no-fix` run against that exact SHA passed clean (`ALL QUALITY
+GATES PASSED`, sentinel `.qg_last_passed_sha=09318066a3a3be33b7a1e11aa952e7b9aa4dc5de`).
+
+However, by the time `quickmerge.sh`'s own re-gate ran a few minutes later, `origin/live-defi-rollout` had advanced
+3 more commits via the automated promote/backmerge pipeline (`09318066` → `90f11f43` merge-from-main →
+`2bdc894e` promote(LDR→main) → `76adc2bc` ci-routing) — and against `76adc2bc`, a **different, adjacent** test now
+fails: `tests/unit/test_lst_token_addresses.py::test_every_registered_symbol_is_a_declared_lst_token` —
+`AssertionError: ETHEREUM/wstETH-symbiotic is not declared in LST_VENUE_TO_TOKENS`. Reproduced standalone
+(`pytest tests/unit/test_lst_token_addresses.py::test_every_registered_symbol_is_a_declared_lst_token -x -q`), so this
+is a real, current-HEAD failure, not a quickmerge race artifact. `LST_TOKEN_ADDRESS_BY_CHAIN` gained a
+`wstETH-symbiotic` entry but the corresponding `LST_VENUE_TO_TOKENS` venue declaration didn't land with it — same
+signature as the venue-coverage-cascade flapping above: the Symbiotic wiring is still being actively, concurrently
+edited by another slot/session, this time in the LST-registry half rather than the execution-dispatch half.
+
+Per the standing operator ruling (never hand-edit the contested ratchet-baseline file or wire karak/pendle/symbiotic
+myself) and this issue's own precedent, **not fixing `LST_VENUE_TO_TOKENS` myself** — it's the same forbidden zone,
+just a different file. `archetype_feature_groups.py` remains uncommitted, code-complete, verified independently correct
+(3 files, `.tabs/29/unified-api-contracts`), blocked on this tree-wide gate, not on anything in those files. Will retry
+the quickmerge on a later pass once this settles.
 
 ## Context scout
 

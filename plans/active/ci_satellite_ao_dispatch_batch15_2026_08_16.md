@@ -1,0 +1,265 @@
+---
+doc_type: plan
+title: ci satellite AO dispatch batch 15 — 2026-08-16
+summary: >-
+  Second extraction batch from the 2026-08-15/16 full CI-tranche follow-up survey (39 docs re-checked after batch14
+  shipped) — bounded/deterministic items plus checkbox-reconciliation-only items where the underlying work was already
+  done elsewhere but never flipped. Each todo cites its exact source doc; source docs are NOT touched by this batch
+  except where the todo IS itself the reconciliation (explicitly marked). Conflict-checked against batch13, batch14,
+  and each other via basename-citation cross-reference before drafting.
+status: active
+nature: process
+asset_group: [ci]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer]
+tags: [ci, ao-dispatch, satellite-batch, follow-up-survey]
+related:
+  [
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch14_2026_08_15.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
+    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
+    /plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md,
+    /plans/active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md,
+    /plans/archive/2026_08/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
+    /plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md,
+    /plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md,
+    /plans/active/issues/unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14.md,
+    /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
+    /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
+    /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
+    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
+    /plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md,
+    /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md,
+    /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
+  ]
+created: "2026-08-16"
+last_updated: "2026-08-16"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 4.5
+estimate_calibrated_ai_days: 3.6
+assigned_role: infra
+effort: medium
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: []
+context_scope:
+  [
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
+source: >-
+  Drafted from a 2026-08-16 follow-up survey of the CI tranche (39 docs still carrying open CI-tagged todos after
+  batch14 shipped, split across 2 parallel research agents) plus operator rulings from the same session. Ships
+  status: active directly (not draft) — the operator has already confirmed the AO-dispatch pattern and fast-ship
+  cadence for this tranche via batch14's precedent.
+---
+
+# ci satellite AO dispatch batch 15 — 2026-08-16
+
+## Todos — bounded new work
+
+- [ ] [INFRA] P2. **Build the na-corpus/governor baseline-freshness daily promotion job**: a scheduled job that
+      promotes each run's observed peak-RSS into the committed `qg_resource_baseline.json`, plus fires the Slack alert
+      when a run's observed peak exceeds the committed baseline by >20%. This is governor Trigger 3, left unwired by
+      batch13 (which wired triggers 1-2: RSS-cap overrun, host-RAM abort). Source:
+      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (line ~233). Gate: baseline file updates daily
+      from real observed peaks; a synthetic >20%-over-baseline run produces a real Slack alert via the same
+      `_qg_governor_slack_alert()` mechanism batch13 built.
+
+- [ ] [INFRA] P2. **Re-baseline `qg_resource_baseline.json`** — committed values are measured 3.6-5.5x stale versus
+      current cgroup peaks. Source: `plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`
+      (line ~605). Gate: baseline file reflects current measured peaks, re-verified live.
+
+- [ ] [INFRA] P2. **Stagger `ldr-to-main-promote-fleet.yml`'s per-repo fan-out** rather than firing all repos
+      simultaneously on each `*/15` tick. Source: same doc (line ~622). Gate: fan-out is measurably staggered; no
+      regression in overall promote-fleet drain latency.
+
+- [ ] [INFRA] P2. **Share bare repos + `git worktree` for sibling-clone I/O** instead of full clones per slot — explicit
+      do/don't scope already given in the source doc. Source: same doc (line ~634). Gate: sibling-clone disk I/O
+      measurably reduced; existing slot isolation guarantees unaffected.
+
+- [ ] [INFRA] P3. **Reap the governor's 344-file marker-file leak.** Source: same doc (line ~665). Gate: stale marker
+      files cleaned; a regression test confirms new markers don't accumulate unbounded.
+
+- [ ] [DEVOPS] P3. **Build a "mover did-work-counter isn't 0 for N days" backstop check** for the dependency-cascade
+      movers. Source: `plans/active/github_actions_operator_gated_followups_2026_07_17.md` (line ~106). Gate: a mover
+      silently doing nothing for N consecutive days produces a real alert.
+
+- [ ] [UI] P2. **Build the rollout-ratchet dashboard panel** (workflow-template drift + Dockerfile digest-pin status)
+      AND fold in the ruleset/branch-protection drift panel (G4) into the same panel per the source doc's own scoping
+      note — these were flagged as near-duplicate scope, build together not as 2 separate panels. Also add the
+      runtime-level deploy signal (diff running SHA vs `main` HEAD). Source:
+      `plans/active/monitoring_control_plane_master_2026_06_10.md` (lines ~260, ~262, ~465). Gate: one panel showing
+      rollout-ratchet + ruleset-drift status; a separate widget showing running-vs-HEAD SHA diff per service.
+
+- [ ] [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate in `sit_gate_treadmill`'s remaining
+      scope** (mirrors the same hoist pattern batch13 already applied to `ldr_to_main_fleet_promote.sh` for a sibling
+      case) — safety constraint fully specified in the source doc. Source:
+      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` (line ~146). Gate: matches
+      the batch13-shipped hoist pattern's ancestor+concluded-failure scoping.
+
+- [ ] [DEVOPS] P2. **Fix `sit-gate-stuck-detector.yml`'s remaining dedup-key gap** — re-assess given 3+ subsequent
+      recurrences (08-10, 08-14, 08-15) all self-resolved without incident since this was last held back as "too hot to
+      touch while live." Source: same doc (line ~155). Gate: dedup key change verified against the doc's own
+      recurrence history without introducing a new false-suppression.
+
+- [ ] [DEVOPS] P3. **Add `StartLimitBurst`/`StartLimitIntervalSec` to the glue-runner systemd units** — purely
+      additive, does not touch the credential-fetch logic that previously crash-looped prod. Source:
+      `plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (line ~178). Gate: unit
+      files updated; a simulated crash-loop respects the new burst/interval limits.
+
+- [ ] [BACKEND] P2. **Build the post-promotion test-impact divergence-analysis tool** against MDPS's real
+      `TEST_IMPACT_GATE:` logs. Source: `plans/active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`
+      (line ~246). Gate: as stated in the source doc's own done-when.
+
+- [ ] [BACKEND] P2. **Fix the GCS 404 in `generate_instrument_snapshot.py`** (stale/renamed bucket reference) AND
+      **remove the stale `unified-market-interface` phantom entry** from `generate_config_registry.py`. Source:
+      `plans/archive/2026_08/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` (lines ~139, ~143). Gate: both
+      scripts run clean against live GCS/config state.
+
+- [ ] [BACKEND] P2. **Warm the git-object cache for JIT-ephemeral runner checkouts** — fully designed in the source doc
+      (Option C: hardlink-copy the existing 10-min-refreshed mirror, explicit fallback to `actions/checkout` on
+      staleness). Source: `plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md` (line ~275). Gate: matches
+      the 3 implementation steps + fallback already specified in the source doc.
+
+- [ ] [SCRIPT] P3. **Add `detect_template_drift.py --workflows --repo <self>` as a consumer-scoped pre-commit/CI
+      check** on `unified-api-contracts`, mirroring the already-shipped `check_cloudbuild_template_drift.py` STEP
+      5.108 wiring pattern. Source:
+      `plans/active/issues/unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14.md`.
+      Gate: a new drift introduced at the point of authorship (not just fleet-wide) is caught before merge.
+
+- [ ] [DEVOPS] P2. **Classify each of semver-agent's residual stalled-repo cases as correctly-quiet vs. a genuine
+      patch-fallback gap** — same investigate-then-fix-if-mechanical pattern batch13 already used successfully for the
+      prior 7-repo residual (all 7 turned out correctly-quiet). Source:
+      `plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`. Gate: each residual case
+      has a recorded verdict with cited evidence (same shape as batch13's classification).
+
+- [ ] [DEVOPS] P2. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
+      2026-06-28** — bounded diagnostic question (grep trigger config, check dispatch history, diff against last-fired
+      date), not an open-ended design call despite 4+ prior audit passes calling it judgment-only. Source:
+      `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. Gate: a recorded root
+      cause with evidence, or a positive confirmation the cascade is intentionally dormant.
+
+- [ ] [SCRIPT] P3. **Wire the `consumer-qg-gate` job into `pin_branch_protection_rulesets.py`'s required-status-check
+      set** so a failing consumer-QG check actually blocks the PR merge button, not just its own workflow run. Source:
+      `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`. Gate: a deliberately
+      broken consumer-QG check on a test PR is confirmed to block the merge button.
+
+- [x] [DOC] P1. **Split `pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md`** (1013L, over the 1000L
+      hard cap) using the established extraction pattern. Source: `plans/active/issues/plan_reconciler_findings_ci_2026_08_10.md`
+      (line ~223) — operator-approved 2026-08-16 to dispatch as AO-eligible despite the doc's own "Operator-owned"
+      self-tag, since the extraction pattern is already proven safe elsewhere in the corpus. Gate: doc splits cleanly
+      under 1000L per part, no content lost, `check_line_caps.sh` passes. **ALREADY DONE — checkbox reconciliation,
+      `/ag-closeout-audit ci` 2026-08-16 (slot 21):** shipped `unified-trading-pm@f835f7fcc4` (slot-9, dispatch
+      `agt-4f7ad9`, "ci-tranche line-cap splits under Trust Mode") ~53min BEFORE this batch was drafted — this batch's
+      Source citation pointed at the stale predecessor doc (`plan_reconciler_findings_ci_2026_08_10.md`) and missed that
+      the newer `plan_reconciler_findings_ci_2026_08_16.md`'s own Phase -1 had already done this split. Verified live:
+      doc is now 145L.
+
+- [x] [DOC] P1. **Split `plans/active/github_actions_operator_gated_followups_2026_07_17.md`** (1006L, over the 1000L
+      hard cap) using the same extraction pattern. Source: same reconciler doc (line ~232) — same operator approval.
+      Gate: same as above. **ALREADY DONE — checkbox reconciliation, `/ag-closeout-audit ci` 2026-08-16 (slot 21):**
+      same commit `unified-trading-pm@f835f7fcc4`, same stale-Source-citation cause as above. Verified live: doc is now
+      738L.
+
+## Todos — checkbox reconciliation only (work already done elsewhere, never flipped)
+
+- [ ] [REVIEW] P2. **Reconcile the two `[OPERATOR]`-retagged SUPERSEDED/DO-NOT items** in
+      `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (lines ~341, ~349) — both
+      are already struck-through and marked moot (one verified a no-op, one verified would false-break the fleet); flip
+      both `[x]` with a citation to this reconciliation. Gate: doc shows 0 open CI-relevant items after the flip
+      (re-verify the doc's other content isn't gating something else before considering it archive-eligible).
+
+- [ ] [REVIEW] P2. **Reconcile `ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`'s 2 open items**
+      (lines ~97, ~98) — item 2 (port the doomed-run guard to the fleet workflow) is already directly answered/closed
+      by a completed `ci_satellite_ao_dispatch_batch13_2026_08_13.md` todo citing this exact doc as `Source:`
+      ("CHECKED 2026-08-14... zero hits; nothing to port"); item 1 (confirm PR #2714 merged, close) concerns a single
+      PR from 6+ days ago under a fleet that promotes every 15 min — re-verify live via `gh pr view 2714` before
+      flipping. Gate: both items flipped with fresh evidence, not assumed from staleness alone.
+
+- [ ] [REVIEW] P2. **Reconcile `cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`'s 1 open item** —
+      already shipped via `ci_satellite_ao_dispatch_batch13_2026_08_13.md` (`unified-trading-pm@b167edbaf4`, new
+      `find_dropped_substitution_keys()` guard). Flip `[x]` with citation. Gate: verify the cited commit is real and on
+      origin before flipping (per `check_plan_commit_sha_evidence.py`'s discipline).
+
+- [ ] [REVIEW] P3. **Reconcile `sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`'s stale duplicate
+      item** (line ~160, "re-check after LDR goes quiet") — directly answered by the doc's own 2026-08-10 measured
+      section ("the streak DOES reset — there is no masked second bug"), a duplicate of the already-closed item at
+      line ~141. Flip `[x]` citing the doc's own existing evidence.
+
+- [ ] [REVIEW] P3. **Reconcile `codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`'s
+      2 remaining open items** (lines ~190, ~218) — both already done: the SUPERSEDED-banner item is satisfied by the
+      same pre-existing banners verified in `ci_satellite_ao_dispatch_batch14_2026_08_15.md` item 2 (already present on
+      origin, pre-dating batch13); the no-frontmatter-vs-yaml-parse-error distinction was shipped in batch13
+      (`unified-trading-pm@a68d8b716d`, `FrontmatterParseError`). Flip both `[x]` with citations. Gate: verify both
+      citations resolve to real, currently-live content before flipping.
+
+- [ ] [REVIEW] P3. **Reconcile `qg_host_adaptive_resource_governor_2026_07_14.md`'s 2 already-satisfied items**
+      (lines ~217, ~227) — both already marked in-doc "DEFERRED (already satisfied functionally / count-based
+      validated adequate)." Flip `[x]` citing the doc's own existing text as evidence, or leave open with a note if a
+      fresh read finds the in-doc claim itself questionable.
+
+## Deferred (not batched — still needs an operator decision)
+
+- **`qg_host_adaptive_resource_governor`**: MAX_DURATION-vs-PYRIGHT_TIMEOUT scaling design (line ~372), pytest-xdist
+  worker-death open design fork (line ~386), AO/glue-runner ledger unification direction (line ~399), and two live
+  unresolved 2026-08-15 investigations (lines ~720, ~767, root cause still unknown, mid-diagnosis).
+- **Fleet-wide CI concurrency cap** — 2 mechanisms already rejected with real measurements; cgroup `io`-controller
+  delegation identified as the better fit but needs more design work than fits one session. (Duplicated across
+  `ci_vm_io_starvation_audit...` line ~626 and `ci_vm_exposure_remediation_2026_08_06.md` line ~107 — same item.)
+- **Fork-PR "require approval for outside collaborators"** — still a manual web-UI click, no API exists
+  (`github.com/IggyIkenna/unified-trading-pm` → Settings → Actions → General). Duplicated across 2 more docs found in
+  this survey.
+- **Bare-host CI bootstrap proof** — still blocked on the fleet-wide `ikenna-worker` IAM `ssm:*` access gap, twice
+  reconfirmed. Same underlying blocker as batch14's item 1 investigation.
+- **F4 vacuous-crons digest-drift-sweep non-convergence** — bundles a bounded sub-part with an open-ended one, doc
+  repeatedly left unsplit by design.
+- **`sit_validated_workspace_digest`** written-but-unread gap — explicit close-or-justify-dropping design call.
+- **Re-do the credential-fetch `|| true` fix** in `glue-runner-run.sh` — first attempt crash-looped all 5 self-hosted
+  runners; needs a `--selfcheck` mode + one-unit canary rollout before any retry, operator sign-off required given the
+  prod-incident history.
+- **`todo_cancelled_disposition_format_breaks_todo_regression_check`** — cross-file conservation logic design.
+- **`quickmerge_sentinel_race_retry_storm`**: content-hash QG green-tree fast-path — explicit "for operator/careful
+  review, do NOT dispatch blind" banner (touches high-blast-radius shared ship infra).
+- **`quickmerge_environment_autodetect_forces_dev_off_main`**: branch-check broadening design call.
+- **`deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83`**: validate-against-canonical vs.
+  local-sibling-checkouts architecture tradeoff (network cost vs. host-staleness acceptance).
+- **`build_deploy_pipeline_provenance_and_aws_deferred_gaps`**: whether cicd-events ledger should carry `build_id` —
+  low-confidence "confirm whether," doc-level "page-first, do not fix here" ruling governs.
+- **`fleet_workflow_template_dedup_to_unified_trading_ci`**: optional branch-protection/visibility-change alert —
+  priority call, not a spec.
+- **Pytest-timeout 4-doc chain** — confirmed genuinely resolved (both preconditions landed, ~10 days of clean
+  monitoring), but the founding doc's own 14-day monitoring window doesn't close until ~2026-08-20. Leave open until
+  then; archive all 4 together once it closes — do not archive early.
+
+## Progress Log
+
+- **2026-08-16 (interactive session)**: drafted from a 2-agent follow-up survey of the 39 CI-tagged docs still
+  carrying open todos after batch14 shipped, plus operator rulings on the line-cap splits and the e2e-testing
+  tier-DAG fix (landed directly, ahead of this batch, in
+  `plans/active/issues/e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md`).
+- **2026-08-16 — `/ag-closeout-audit ci` (autonomous, scheduled, slot 21, `agt-114e5f`).** Ran a delta audit rather than
+  a full re-survey (this batch had just been drafted the same day by the interactive session above, so a fresh Phase 1
+  sweep would only re-ask the same 39 docs the same questions). Cross-referenced the full 51-doc `ci`-tranche inventory
+  against this batch + batch13 + batch13's finalize + this batch's own finalize + the consolidated closeout, leaving 9
+  docs genuinely uncited by any of the 5; classified all 9 via a 9-agent Workflow. Found and fixed in-run: the 2
+  line-cap-split todos above were already stale on arrival — `unified-trading-pm@f835f7fcc4` (slot-9, `agt-4f7ad9`)
+  shipped both splits ~53min before this batch was drafted, citing the newer `plan_reconciler_findings_ci_2026_08_16.md`
+  doc that superseded the `..._2026_08_10.md` doc this batch's Source lines still pointed at — flipped both `[x]` above
+  with commit evidence, verified live (145L / 738L). Full delta-audit results (7 confirmed orphans, none AO-eligible
+  enough to warrant a fresh batch16 yet, plus 2 asset_group mistags belonging to the `infra` tranche, not `ci`) written
+  to `plans/active/issues/ag_closeout_audit_ci_parked_2026_08_16.md`.

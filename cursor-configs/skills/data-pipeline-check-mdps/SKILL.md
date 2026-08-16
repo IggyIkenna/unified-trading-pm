@@ -33,6 +33,26 @@ verified as its **own** `ShardCheckResult`. Sports adds a `league_id` reporting 
 one shard is a genuine, complete proof (like `data-pipeline-check-is`, unlike MTDS whose freshness read is PROD-scoped).
 What still must be PROD-verified is the **INPUT**: the raw ticks the derivation consumes.
 
+## Canonical-oracle audit (2026-08-16)
+
+Per `/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
+skill:
+
+- **Oracle routing**: N/A, not a gap — this is the CORRECT design, not an omission. The candle namespace
+  (`processed_candles/…`) is oracle-EXEMPT by construction: `canonical_path_violations()` hardcodes
+  `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` and would false-flag every candle path
+  (`/codex/02-data/four-surface-reconciliation-procedure.md`, header note). MDPS's `--legs …,canonical` leg correctly
+  checks against the ratified Option-A registry template (`canonical_writer.py`/`output_path_helpers.py`) instead — no
+  gap, but this exemption reason was not previously stated inline in this skill; now recorded here.
+- **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: the canonical leg asserts the
+  `{instrument_id}.parquet` filename SEGMENT exists at the right depth, but does **not** independently validate the
+  filename stem's ID-FORM grammar (`VENUE:ITYPE:BASE-QUOTE…`) — **declared unchecked** for id-form. `instrument_type=`
+  presence is checked but only tolerated (not required) during the P7 migration window (documented above — not a new
+  finding). `data_type=` is checked against the shard's own SOURCE value (self-consistent, by design). `venue=`/
+  `chain=` are matched against the shard's own manifest row, not an independent canonical venue/chain enum —
+  **declared unchecked** as independent value validation.
+- **Banner**: none present in this skill — nothing to re-date or remove.
+
 ## 0. `--day` is REQUIRED — never synthesize one
 
 This check is meaningless without a real target day. If the invoking prompt doesn't carry an explicit

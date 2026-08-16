@@ -212,7 +212,7 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
       issue's own `rebuild_manifest_from_canonical_paths` reconciliation once fixed, not the live write path. ASTER
       stays excluded per the item above.
 
-## Phase 3 — wire ADV into strategy-side volume caps (RULED 2026-08-08 — implementation not yet started)
+## Phase 3 — wire ADV into strategy-side volume caps (RULED 2026-08-08, IMPLEMENTED 2026-08-09 — DONE)
 
 - [x] ✅ [DESIGN] P2. Design + implement the strategy-side consumption of the ADV signal: position-size cap as a % of
       ADV, and the min-7-day-history-to-trade gate the operator asked for. **RULED (operator, 2026-08-08)**: cap applies
@@ -233,8 +233,8 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 
 | Item                                     | Status      | Why deferred                                                  |
 | ---------------------------------------- | ----------- | ------------------------------------------------------------- |
-| Phase 2 (MDPS candle coverage extension) | Not started | Operator explicit decision — consumer-first, producer later   |
-| Phase 3 (strategy-side wiring)           | Not started | RULED 2026-08-08 (order-sizing time, 10% ADV) — build pending |
+| Phase 2 (MDPS candle coverage extension) | **DONE 2026-07-26** | Core ask shipped; 2 residuals filed separately (see Phase 2 section) |
+| Phase 3 (strategy-side wiring)           | **DONE 2026-08-09** | RULED 2026-08-08 (order-sizing time, 10% ADV); shipped `strategy-service@73aa792f` |
 | `book_depth.py` → Phase-1 utility wiring | Not started | Stretch, only after Phase 1 ships and proves out              |
 
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — the Phase-3 `[BACKEND] P2`

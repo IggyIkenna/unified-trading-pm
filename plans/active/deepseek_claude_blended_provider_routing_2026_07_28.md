@@ -33,8 +33,8 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-05
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 source:
@@ -467,14 +467,35 @@ default from an external reference.
       `deepseek_route_fraction` 0.8→0.9 — `agent-orchestrator@d18e6830cbabd402345fe6bacb071fe24bb2e01e`.
 - [x] [OPERATOR] P2. ✅ Top up the `deepseek-v4-pro` balance ($0.34 as of 2026-08-04T14:05Z). — Done: confirmed $4.84
       live via `/api/accounts` at 2026-08-04T14:33Z.
-- [ ] [OPERATOR] P2. **Recurrence, found 2026-08-09 (slot 30, while re-sourcing the token below): `deepseek-v4-pro`
-      balance is back to
-      $0 — a live `claude -p` auth probe under this account returned `API Error: 402 Insufficient
-      Balance` (confirmed via TWO separate probes: the pre-existing literal-token env file AND the GSM-indirection
-      version, byte-identical error both times — so this is a genuine account-balance exhaustion, not an auth/token
-      regression from the re-sourcing todo below). Same pattern as the 2026-08-04 top-up above (~$4.50
-      spent in ~5 days) — top up again, ideally by enough margin to reduce recurrence frequency.** (repo: N/A, operator
-      action)
+- [x] ✅ [BACKEND] P2. **ROOT-CAUSED + FIXED LIVE 2026-08-16 (interactive session).** Operator correction confirmed:
+      `deepseek-v4-pro` and `deepseek-v4-flash` share ONE billing account — the variant split exists only to track
+      which model id did which task, not to partition funds. Live diagnostic (direct call to
+      `_resolve_balance_token`/`fetch_deepseek_balance` on the VM) found the REAL root cause was NOT a per-variant
+      balance-view quirk — it was a genuine credential-resolution bug: `deepseek-v4-pro`'s GSM secret
+      (`deepseek-v4-pro-api-key`) resolution was failing with `ValueError: GCP_PROJECT_ID or AWS_ACCOUNT_ID must be
+      set in environment` (`unified_trading_library.cloud_interface.constants.get_project_id`), silently falling
+      back to `~/.claude-accounts/deepseek-v4-pro.env`'s literal, UNRESOLVED `$(gcloud secrets ...)` shell
+      substitution text as if it were the real token — DeepSeek correctly 401'd that garbage string. Confirmed via
+      `/proc/$MAINPID/environ` and `.env.local` (the orchestrator's systemd `EnvironmentFile`) that `GCP_PROJECT_ID`
+      was genuinely absent fleet-wide from the live process's own environment — this is not scoped to just this one
+      account; every GSM-backed `api_key_secret_name` resolution in the live orchestrator process was silently
+      exposed to the same risk (masked wherever an account's env-file fallback happened to already hold a real
+      literal key). **Fix**: appended `GCP_PROJECT_ID=central-element-323112` to `.env.local` (backup taken first:
+      `.env.local.bak.20260816T162937Z`), `systemctl restart orchestrator`, confirmed live in the new process's
+      `/proc/$MAINPID/environ`. **Verified working**: the next balance-poller tick after restart logged
+      `deepseek balance poller: deepseek-v4-pro balance=49.55 USD is_available=True` — exact match with
+      `deepseek-v4-flash`'s balance, confirming the shared-wallet premise and that the fix is live. Repo:
+      agent-orchestrator (live infra fix, no code change — `.env.local` + service restart only).
+      **Follow-up worth flagging, not chased further here**: audit whether any OTHER GSM-backed account silently
+      absorbed a bad env-file fallback token while this was broken (most would have failed loudly like this one did,
+      but any account whose env file happened to hold a stale-but-syntactically-valid key would have masked the
+      failure).
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-16 by the same root-cause fix above — this was never a real
+      recurrence.** Was: "Recurrence, found 2026-08-09 (slot 30, while re-sourcing the token below): `deepseek-v4-pro`
+      balance is back to $0 — a live `claude -p` auth probe under this account returned `API Error: 402 Insufficient
+      Balance`... top up again." The 2026-08-09 auth probe's `402` was real (the GSM-fallback env-file token was
+      genuinely invalid at that time too), but the underlying cause was the same `GCP_PROJECT_ID`-missing GSM
+      resolution bug fixed above, not a genuine wallet exhaustion — no top-up was needed or performed.
 - [x] ✅ [OPERATOR] P2. **DONE 2026-08-09 (operator, interactive ruling recorded in this same doc,
       `deepseek_claude_blended_provider_routing_2026_07_28.md`): "Yes, create it now".** Created live via the exact
       prepared command below: `deepseek-v4-pro-api-key` (project `central-element-323112`), version 1, confirmed via
@@ -529,7 +550,7 @@ default from an external reference.
           > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
           > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
           > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-          > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+          > `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
           > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —

@@ -51,6 +51,8 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 assigned_role: infra
 drift_direction: none
+sequential: true # added 2026-08-16 (/plan-reconcile) — todos 1 and 4 both edit generate_na_doc_tranche_inventory.py
+  # + the na-eligibility-audit SKILL.md Phase 0, same priority, no prior ordering guard (AO-dispatch-readiness finding)
 locked_by:
 locked_since:
 supersedes:

@@ -322,8 +322,12 @@ fixture-linked before MVP backfill.
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
   - **[BACKEND] P0.**
     [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 6 open
-    (re-verified via `grep -c` 2026-08-15, `/plan-reconcile` sweep — was 13 as of the 2026-07-25 split). Top: finish the
-    prediction capture-incident remediation; kill the dead Kalshi `trading-api.kalshi.com` host.
+    (re-verified via `grep -c` 2026-08-15, `/plan-reconcile` sweep — was 13 as of the 2026-07-25 split). **CORRECTED
+    2026-08-16 (plan_reconciler)**: prior "Top" text here named 2 items ("finish the prediction capture-incident
+    remediation; kill the dead Kalshi `trading-api.kalshi.com` host") that are both now `[x]` DONE (2026-08-15 and
+    2026-08-30 respectively) — the accurate current top-2 open items match the snapshot above: [DATA] P0.
+    Enumeration-driven canonical/dedupe migration of the prediction manifest; [DATA] P0. Backfill the fixture-match
+    attributes (A4 columns).
   - **[UI] P0.**
     [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
     2 open (re-verified 2026-08-15 — was 4). Top: RE-ADD the data-status "dimensions enumeration" view to
@@ -380,8 +384,11 @@ fixture-linked before MVP backfill.
     audit). **RESOLVED 2026-08-09** — operator ruled DELETE (option A) 2026-08-07, executed + archived
     (instruments-service@4b55c57b) via batch10's todo; the doc is now 0-open-todos and archived.
   - [`plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`](/plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)
-    — **new 2026-07-31** (same audit). 1 open `[BACKEND] P2` — same shape (A) delete vs (B) keep-and-document,
-    operator-gated.
+    — **CORRECTED 2026-08-16 (plan_reconciler)**: 0 open — the sole todo was RULED 2026-08-07 (option A, delete) and
+    shipped `market-tick-data-service@a0b4957e` (verified ancestor of `origin/live-defi-rollout` via the archived
+    `prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`); the doc's own Progress Log was never updated
+    after that 2026-08-10 reconciliation, leaving a stale "operator-gated" impression — good `/archive-candidates-audit`
+    candidate (not archived here, out of this run's bounded scope).
   - [`plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](/plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md)
     (resolved, 1 residual — cross-link; note: archived location, not `plans/active/issues/`)
     - **[CODE] P2.** Durable fix: bound memory in the prediction CLOB universe scan (chunked pagination → incremental)
@@ -454,8 +461,10 @@ fixture-linked before MVP backfill.
     (2026-08-16: 0 open todos — `archive_exempt: true` since 2026-08-10, deferred to a dedicated
     `/archive-candidates-audit` pass for the complex referrer graph, not archived here)
   - [`plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`](/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md)
-    (2026-08-16: re-verified — only 1 genuine open item remains, the rest of this list's prior entries have since
-    shipped/closed)
+    (**CORRECTED 2026-08-16 (plan_reconciler)**: 2 genuine open items remain, not 1 — the source doc's own 2026-08-16
+    banner undercounts a second still-open nested `- [ ]` [DESIGN] P1 todo at that doc's line 220 (fixture-pairing
+    residual), which its own most recent entry explicitly concludes stays unchecked; source doc is in this run's
+    12-hour grace window so the undercount itself is flagged here only, not fixed at the source)
     - **[OPS] P2.** Tarball-overwrite race: a concurrent fleet `create-code-tarballs` (from a clone behind LDR) clobbers
       a freshly-rebuilt GCS tarball/setup-script before a new VM's boot-fetch — not yet promoted to a batch todo
 - **UI / bucket**:

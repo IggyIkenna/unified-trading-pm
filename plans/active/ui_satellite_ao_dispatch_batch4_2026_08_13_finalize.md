@@ -50,8 +50,10 @@ source: >-
 # ui satellite AO batch 4 — finalize
 
 > **Machine-gated on `/plans/active/ui_satellite_ao_dispatch_batch4_2026_08_13.md`** (`depends_on` +
-> `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch itself stays
-> `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
+> `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. **Correction (plan_reconciler
+> agt-8fc5a6, 2026-08-16): the batch was operator-approved 2026-08-13 (`status: active`) and has since shipped all 11
+> todos — the "stays `status: draft`" framing below described the moment this doc was authored, not current state.**
+> This finalize plan itself needs no separate status flip either way (unchanged).
 
 ## Todos
 

@@ -34,6 +34,16 @@ done
 
 mkdir -p "$ARTIFACTS_DIR"
 
+# This validator deliberately clones only workspace-manifest.json's topological levels[0:3]
+# (a small canary subset — 4 of 26 manifest repos as of 2026-08-16) to keep the 6-hourly smoke
+# check fast, never the full fleet. quickmerge.sh's own STAGE 1.5 dependency-alignment check
+# requires every non-archived manifest repo on disk, so run unmodified here it reports a false
+# "aligned: false" for every legitimately-uncloned fleet repo — indistinguishable from real PM
+# dependency drift. QUICKMERGE_SKIP_DEP_ALIGNMENT is quickmerge.sh's opt-in escape hatch for
+# exactly this partial-workspace case (2026-08-16 /ci-reconcile root-cause fix); nothing else
+# in the fleet sets it, so real full-workspace ships are unaffected.
+export QUICKMERGE_SKIP_DEP_ALIGNMENT=1
+
 # Build topological order from manifest
 get_sorted_repos() {
   jq -r '.topologicalOrder.levels[].repos[]' "$MANIFEST" 2>/dev/null || true

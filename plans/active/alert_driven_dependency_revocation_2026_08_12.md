@@ -105,12 +105,12 @@ bridges them; it does not extend one over the other.
 
 ## Phase 0 — Preconditions and measurement (nothing is armed until these land)
 
-- [ ] [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers —
-      this is the drain-budget denominator, since worst-case waste is longest-shard-duration × dependent-count. Repo:
-      deployment-service. **ATTEMPTED 2026-08-14, BLOCKED-CREDENTIALS in this slot**:
-      `scripts.recovery._durable_state. state_bucket()` resolves empty locally (gcloud auth present — 5 accounts
-      including a working SA — but the bucket name itself resolves from runtime-only config this dev checkout doesn't
-      carry). Needs either a slot with the runtime env wired or a VM-side run. Left open rather than faked.
+- **[SCRIPT] P0. CANCELLED — SUPERSEDED 2026-08-16 (extracted to
+  `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 1, via a scoped `/na-eligibility-audit`
+  run).** Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers. Attempted
+  twice from this dev checkout (2026-08-14, 2026-08-16), both `BLOCKED-CREDENTIALS` (`state_bucket()` resolves `''`).
+  Reassessed as bounded/AO-eligible (fully mechanical outcome, just missing runtime context this slot lacks — worth
+  trying from the orchestrator's own environment before assuming a VM launch is needed), not genuinely NA-worthy.
 - [x] ✅ [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
       PROGRESS via `record_captured`) vs drain-blind (no checkpoint) — a drain-blind prefix can only ever receive
       DEPS_HOLD. Repo: deployment-service. — **MEASURED 2026-08-14** (no code changed, read-only census): **243 total
@@ -372,12 +372,15 @@ bridges them; it does not extend one over the other.
       rather than silently exempt. Never silent: paused job names ride back on the outcome. A failing pause does not
       abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports, not cefi, because cefi
       resolves to a SINGLE job and the test would have been vacuous).
-- [ ] [CODE] P2. A FLEET_HALT pause registers no `MaintenanceWindow`, so `check_consolidator_scheduler_paused`
-      (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one — found 2026-08-14, not fixed
-      (adjacent to the visibility carry-over, out of scope for that pass). Either route `_pause_schedulers` through
-      `scheduler_maintenance.pause_for_maintenance()` (needs a `bucket`/`surface`/`ttl_minutes` design call this plan's
-      operator record does not make) or confirm via a live sweep that this genuinely never double-pages before closing
-      it as a non-issue. Repo: deployment-service.
+- **[CODE] P2. CANCELLED — SUPERSEDED 2026-08-16 (mechanism built `deployment-service@310f82e84f`; production wiring
+  extracted to `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2, via a scoped
+  `/na-eligibility-audit` run).** A FLEET_HALT pause registers no `MaintenanceWindow`, so
+  `check_consolidator_scheduler_paused` (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one.
+  Operator chose "route through `pause_for_maintenance()`" — `RevocationActuator.__init__`'s
+  `consolidator_bucket_resolver` injected-callable param + `_register_maintenance_windows()` now exist
+  (`None` at every current production call site is a verified no-op, no regression); wiring the real resolver in is
+  blocked on a genuine `meta_targets.py`→`meta_watchers.py`→`escalation.py`→back-to-actuator import cycle, reassessed
+  as bounded/AO-eligible rather than genuinely NA-worthy.
 - [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
       from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
       documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,
@@ -556,7 +559,7 @@ bridges them; it does not extend one over the other.
 
 ## Phase 8 — ARM IT → SPLIT OUT 2026-08-14
 
-> Phase 8 now lives in **`/plans/active/revocation_arming_2026_08_14.md`**. Split because this file hit its 1000-line
+> Phase 8 now lives in **`/plans/archive/2026_08/revocation_arming_2026_08_14.md`**. Split because this file hit its 1000-line
 > HARD cap (every edit was failing `check_line_caps`) and because arming is genuinely separate work from building.
 > **This plan stays `active` and MUST NOT be archived until the child closes** — the mechanism it describes has still
 > never fired in production.
@@ -564,17 +567,17 @@ bridges them; it does not extend one over the other.
 Each Phase 8 todo below is converted to the documented SUPERSEDED disposition rather than deleted — the todo count is
 conserved and each line names where the work went, per `check_todo_regression.sh`'s CANCELLED/SUPERSEDED convention.
 
-- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).** Resolve
+- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/archive/2026_08/revocation_arming_2026_08_14.md).** Resolve
   dependents to actuation targets. DONE there: deployment-service@cf5e041e7.
-- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).** Call
+- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/archive/2026_08/revocation_arming_2026_08_14.md).** Call
   `actuate()` from `escalation.route_finding()` — blocked on an import cycle, detailed in the child.
-- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).** Emit and
+- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/archive/2026_08/revocation_arming_2026_08_14.md).** Emit and
   release the bookend.
-- **[TEST] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).**
+- **[TEST] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/archive/2026_08/revocation_arming_2026_08_14.md).**
   Anti-inertness guard. SHIPPED as `xfail(strict=True)` at deployment-service@cf5e041e7.
-- **[OPERATOR] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).**
+- **[OPERATOR] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/archive/2026_08/revocation_arming_2026_08_14.md).**
   Confirm it live after wiring.
-- **[CODE] P1. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).**
+- **[CODE] P1. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/archive/2026_08/revocation_arming_2026_08_14.md).**
   Admission-gate coverage is 148/184 launchers, not all of them.
 
 ## Phase 7 — Codex SSOT and close-out

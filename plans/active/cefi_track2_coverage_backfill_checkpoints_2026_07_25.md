@@ -67,7 +67,10 @@ context_scope:
 > MID checkpoint is meaningful, and both MID checkpoints logically precede both POST checkpoints — this plan's own 5
 > todos are a single temporal chain. **Ruling context**: the archived "honest-done 50.79%" verdict rested on a ~350x
 > code-bug throughput collapse (`run_in_executor(None,…)` default-pool + a date-serial barrier), not a physical Tardis
-> ceiling — the bug is now fixed and measured live @~14 MB/s, and the 2.89M-cell gap is ~1-2 days of work at June rates
+> ceiling — the bug is now fixed and measured live @~14 MB/s, and the 2.89M-cell gap was ORIGINALLY estimated at ~1-2 days of work at June rates — **STALE (plan_reconciler, cefi
+> tranche, agt-2e82f7, 2026-08-16): the doc's own 2026-07-28 entry already measured a real ~30-day ETA at actual
+> throughput, and as of 2026-08-15T21:53Z only ~26% is done after 3+ weeks of repeated preemptions — this banner
+> headline was never revised to match.**
 > (autonomous ruling, 2026-07-18, within documented intent — operator can reverse; see
 > `cefi_consolidated_closeout_2026_07_18.md`'s Headline verdict + Track 2 for the full ruling record). Companion gated
 > finalize: `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md`.

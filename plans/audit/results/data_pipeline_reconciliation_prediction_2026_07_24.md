@@ -50,7 +50,7 @@ related:
     plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md,
     plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
     plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
-    plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md,
+    /plans/archive/2026_08/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md,
   ]
 created: 2026-07-24
 resulting_plan:

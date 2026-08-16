@@ -158,7 +158,10 @@ yaml key, and the resolver raises on it. Never mutate process env to reach a **t
 explicitly. **BUT `GCP_PROJECT_ID` is a separate, REQUIRED env read** — the resolver substitutes `${GCP_PROJECT_ID}`
 from process env for the project-id segment and **raises `BucketNamingError` if it is unset** (`bucket_naming.py:354`;
 measured by 4/5 first-run AGs against a clean env). That project-id read is **not** the banned tier-mutation — the two
-are orthogonal. Set `GCP_PROJECT_ID=central-element-323112` in env; still pass the tier via `deployment_env=`.
+are orthogonal. Set `GCP_PROJECT_ID=central-element-323112` in env; still pass the tier via `deployment_env=`. **The
+AWS-side cross-check (Phase 0(b)) needs the same treatment for `AWS_ACCOUNT_ID`** — `resolve_bucket_name(cloud="aws",
+…)` substitutes `${AWS_ACCOUNT_ID}` the same way and raises `BucketNamingError` if unset (measured 2026-08-16, cefi
+run); set `AWS_ACCOUNT_ID=427895769566` in env before resolving any `cloud="aws"` bucket.
 
 > ⚠️ **Do not use UTL `PATH_REGISTRY` / `build_bucket` for Group-A datasets.** Its rows are un-tiered and resolve to 15
 > flat-named buckets that are **already deleted (404 on live probe)**. `cloud-providers.yaml` + `resolve_bucket_name` is

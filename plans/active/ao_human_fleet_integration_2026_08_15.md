@@ -382,6 +382,22 @@ investigation confirmed are both achievable with existing primitives:
   (blocked on backlog state, not on anything this session controls — re-attempt when something clears or the
   operator names a task directly), and Harsh's entire Phase 4 (physically impossible from this session, per the
   operator's own "I'll give Harsh instructions separately" framing).
+- **2026-08-15, operator ruling (interactive session)**: **Phase 4 execution is explicitly DEFERRED, not abandoned.**
+  Operator confirmed the reasoning behind the earlier autonomous pause was correct: "once we do that, we're going to
+  have to start adjusting the way we do things locally... I don't want to get bad feed into AO and mess things up
+  because we're trying to get this working" — i.e. flipping Phase 4 live is a real behavioral/workflow change for
+  both operators, not just a deploy, and shouldn't happen while the operator has "too much going on" to adjust to it
+  properly. Confirmed CURRENT STATE IS FULLY DORMANT, ZERO PRODUCTION FOOTPRINT: no JWT has ever been minted, so
+  every Phase 2 script (`ao-register.sh`/`ao-claim.sh`/`ao-done.sh`/`ao-usage-push.py`) 401s and no-ops; no
+  `SlotRow`/`AgentRow` exists for slot 9001/9002 in production; `human_slot_ids()`'s liveness exemption is inert
+  because there is nothing registered there for it to exempt. Nothing this plan shipped has touched production
+  behavior yet — it is pure standing capability, safe to leave dormant indefinitely.
+  **Ruling: hand Phase 4 to Harsh as PURE VERIFICATION, not further build work** — "pass it over to Harsh if all
+  other code work is done else complete all other code work so his job is verification." Confirmed: all other code
+  work IS done (Phases 0-3 + the codex doc, all shipped and tested this session). Harsh's job when he picks this up
+  is exactly the two remaining Phase 4 todos below, no coding — mint his own token, run register→claim→done once for
+  real, confirm the dashboard + a usage row. **This plan should be treated as feature-complete and left `active`
+  (not archived — real todos remain, just deferred, not done) until Harsh actually runs Phase 4.**
 
 ## Todos
 
@@ -578,6 +594,33 @@ investigation confirmed are both achievable with existing primitives:
       `TaskUsageWindows` panel return the seeded, server-priced usage numbers ($0.68 spend, matching the raw API
       response exactly) — confirming the "toggles and splits on the existing pages, not a new billing page" design
       holds. Full `quality-gates.sh` green (3985 passed). Evidence: `agent-orchestrator@609e4ea377`.
+      `python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)" mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token # paste the token AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name> # 9001=Ikenna, 9002=Harsh`
+      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and the operator shows up in AO's
+      `GET /api/agents`.
+- [ ] [SCRIPT] P2. **Operator-gated — hand to Harsh, pure verification, no coding.** Run one real, low-stakes task
+      end-to-end: `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable),
+      then without `--check-only` to actually claim, do the real work, commit+push, then
+      `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`. Optionally run
+      `ao-usage-push.py` afterward to confirm a usage row appears. Done when: the task shows up correctly in the "Human
+      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
+      (`GET /api/backlog/usage/windows?role_group=human`).
+- [ ] [OPERATOR] P1. **DEFERRED-BY-DESIGN — hand to Harsh, pure verification, no coding.** Issue a long-lived worker-role JWT
+      (`issue_token(role="worker", machine="<name>-laptop")`, `server/auth.py:323-341`) and register. From the
+      `agent-orchestrator` repo root:
+      ```
+      python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)"
+      mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token   # paste the token
+      AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name>   # 9001=Ikenna, 9002=Harsh
+      ```
+      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and the operator shows up in AO's
+      `GET /api/agents`.
+- [ ] [SCRIPT] P2. **DEFERRED-BY-DESIGN — hand to Harsh, pure verification, no coding.** Run one real, low-stakes task
+      end-to-end: `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable),
+      then without `--check-only` to actually claim, do the real work, commit+push, then
+      `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`. Optionally run
+      `ao-usage-push.py` afterward to confirm a usage row appears. Done when: the task shows up correctly in the
+      "Human Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
+      (`GET /api/backlog/usage/windows?role_group=human`).
 - [x] 20. ✅ [INFRA] P3. **Document the human-slot contract as a durable codex SSOT** — new "Human slots" section
       appended to `/codex/04-architecture/agent-orchestrator-worker-liveness.md` covering both hard guarantees
       (never-killable, never-competing), what's reused vs. genuinely new, and a standing instruction that a future

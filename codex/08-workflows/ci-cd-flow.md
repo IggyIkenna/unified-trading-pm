@@ -146,9 +146,13 @@ downgraded to advisory in the MVP:
 ## Branch model — LDR trunk → main direct (staging dormant, reversible)
 
 > **The unit of work lands on `live-defi-rollout` (LDR) and stops.** A slot ships via `quickmerge --agent --files`,
-> which commits to LDR. The **LDR→main fleet promoter** (`ldr-to-main-promote-fleet.yml`, cron `*/15`) opens a standing
+> which commits to LDR. The **LDR→main fleet promoter** (`ldr-to-main-promote-fleet.yml`, cron `*/30`) opens a standing
 > per-repo promote PR (head=LDR) and auto-merges it when the three MVP gates are green — **directly to `main`, no
-> staging hop**. `staging` is KEPT as a branch but is DORMANT: its drain crons are stopped and
+> staging hop**. **The `*/30` cron on both promote workflows is NOT the actual cadence driver** —
+> `scripts/orchestrator/ldr-to-main-promote-heartbeat.timer` on the orchestrator VM directly `gh workflow run`s both
+> every tick regardless of their own `schedule:` value; change the timer's `OnCalendar` in lockstep with any cron
+> change here, or the effective cadence silently stays at the old value (found the hard way 2026-08-16). `staging` is
+> KEPT as a branch but is DORMANT: its drain crons are stopped and
 > `staging_dormant_mode: true` in `workspace-manifest.json`. The `tab/<op>/N` tab-branch model is retired (Path-B
 > per-slot reference-clones are the isolation now). Top-down picture below; per-workflow drill-down in
 > `docs/repo-management/CICD-WORKFLOW-CATALOG.md`.
@@ -161,10 +165,10 @@ flowchart TB
     end
     qm --> ldr[["live-defi-rollout (LDR)<br/>integration SSOT / trunk — no server QG"]]
     sit["full-workspace-sit.yml<br/>(system-integration-tests, assembled workspace)"] -.->|"green ⇒ fleet-green signal"| fleet
-    ldr -->|"service repo (ldr_main)"| fleet["ldr-to-main-promote-fleet.yml<br/>cron */15 — standing per-repo PR"]
+    ldr -->|"service repo (ldr_main)"| fleet["ldr-to-main-promote-fleet.yml<br/>cron */30 — standing per-repo PR"]
     fleet --> ppr{{"LDR -&gt; main PR (frozen per-SHA head)<br/>GATES: sit-gate/fleet-green<br/>+ quality-gates-v2 + quickmerge-provenance"}}
     ppr -->|"all 3 green ⇒ auto-merge (squash)"| main[["main"]]
-    ldr -->|"PM — dedicated Option-B path"| pmpr["ldr-to-main-promote.yml<br/>cron */15, standing PR"]
+    ldr -->|"PM — dedicated Option-B path"| pmpr["ldr-to-main-promote.yml<br/>cron */30, standing PR"]
     pmpr --> main
     main -->|"push:[main]"| semver["semver-agent.yml<br/>mint vX.Y.Z tag"]
     main -->|"push:[main]"| pub["publish-package dispatcher<br/>→ PM publish-package receiver → AR wheel"]
@@ -288,7 +292,7 @@ promote does for service repos.
 
 PM's ONLY path LDR→`main` is the PR `ldr-to-main-promote.yml` opens (`quickmerge` itself stopped opening a competing PR
 the same day, 2026-07-27, `unified-trading-pm@48800b7adb` — see quickmerge's own `PM_OPTION_B` branch for why). Each
-`*/15` tick resolves LDR's current tip to an **immutable per-SHA ref** `promote/unified-trading-pm/<sha12>` (created
+`*/30` tick resolves LDR's current tip to an **immutable per-SHA ref** `promote/unified-trading-pm/<sha12>` (created
 once, never force-updated) and opens/reuses a PAT-authored PR from that frozen ref — a NEW ref (and PR) every time LDR's
 tip advances, not one long-lived branch-headed PR. This closes the OLD foot-gun described below: a squash of a
 branch-headed PR used to leave a gap with no open PR until the next quickmerge; the frozen-head bot now self-opens a
@@ -307,7 +311,7 @@ arm on a branch-headed PR deleted `live-defi-rollout` itself on merge (hit deplo
 App-authored branch-headed PR landed `quality-gates-v2` in a permanent `action_required` hold (WS-L 2026-06-27
 A/B-proof). The migration also switched PR authorship from the GitHub App to a PAT to avoid defect (2).
 
-- **Automated drain: `ldr-to-main-promote.yml`** (PM-only). Every 15 min (+ `workflow_dispatch`) it opens (or reuses) a
+- **Automated drain: `ldr-to-main-promote.yml`** (PM-only). Every 30 min (+ `workflow_dispatch`) it opens (or reuses) a
   frozen-per-SHA-ref promote PR with v2-gated auto-merge **whenever PM's LDR has real content ahead of main** — gated on
   the CHANGED-FILE count of `compare/main...live-defi-rollout` (0 files → no-op, immune to squash-accounting noise) plus
   a tree-equality short-circuit, reusing any open PR for the CURRENT ref (never duplicates), closing/replacing a
@@ -419,7 +423,7 @@ they diverged.
 
 - **`quickmerge --agent --files` lands on LDR and stops** — for a service repo it does not open a per-unit promote PR.
   The local `quality-gates.sh` sentinel is the LDR-landing gate. (PM→main is the exception — see Option B above.)
-- **Promotion is the LDR→main fleet promoter** (`ldr-to-main-promote-fleet.yml`, cron `*/15`). Its LDR→main PR
+- **Promotion is the LDR→main fleet promoter** (`ldr-to-main-promote-fleet.yml`, cron `*/30`). Its LDR→main PR
   (head=LDR, base=main) carries the `quality-gates-v2` required check — that PR's head IS `live-defi-rollout`, so it
   _is_ "CI on LDR content". **LDR never runs server QG itself** (by design — it is the fast, cheap-to-push integration
   axis).
@@ -491,7 +495,7 @@ Pass 2 — Quickmerge (--agent fast-path)
     absent path stages as a deletion (`[ -e "$f" ]` OR `git ls-files --error-unmatch`,
     then `git add -A -- "$f"`) in BOTH staging loops
   • commits + pushes to live-defi-rollout, then STOPS: a service repo lands on LDR;
-    the LDR→main fleet promoter (ldr-to-main-promote-fleet.yml, ~15 min) opens the
+    the LDR→main fleet promoter (ldr-to-main-promote-fleet.yml, ~30 min) opens the
     LDR→main PR whose quality-gates-v2 IS the authoritative server gate — quickmerge
     does NOT open a per-unit PR
   • EXCEPTIONS that open a PR directly: PM (Option-B → main) and --hotfix (→ staging;
@@ -1080,7 +1084,7 @@ Canonical flow is in `/codex/08-workflows/deployment-flow.md`. Summary (the `ldr
 ```
 LDR: quality-gates.sh (full) → sentinel written → quickmerge --agent (SHA check)
   → lands on live-defi-rollout and STOPS (no per-unit promote PR for service repos)
-  → LDR→main fleet promoter `ldr-to-main-promote-fleet` (~15 min) opens the standing LDR→main PR
+  → LDR→main fleet promoter `ldr-to-main-promote-fleet` (~30 min) opens the standing LDR→main PR
   → GATES: sit-gate/fleet-green + quality-gates-v2 (head=LDR, base=main) + quickmerge-provenance
   → all green → auto-merge (squash) to main
   → push:[main] fires: semver-agent mints vX.Y.Z tag + publish-package dispatch → AR wheel

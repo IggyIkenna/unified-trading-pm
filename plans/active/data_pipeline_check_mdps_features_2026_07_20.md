@@ -203,6 +203,12 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `/codex/04-architecture/agent-orchestrator-worker-liveness.md`). Do NOT attempt until that condition flips green.
       **RE-VERIFIED 2026-07-27 (slot-10)**: still `status: open`, condition not flipped — not re-attempted (would be the
       6th reproduction of the same known failure); re-check once the operator/main flips it.
+      **GATE STALE-CHECK 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: the cited blocking doc
+      (`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`) is now `status: resolved`, banner "✅ RESOLVED
+      2026-07-28. All 3 todos done." — archived at `plans/archive/issues/`. This gate has been clear for 19 days and
+      was never re-checked. Not attempting the multi-cell round-trip myself (out of plan_reconciler's plans/**-only
+      scope) — flagging as ready for the next dispatch to attempt (would be the 6th reproduction, but the FIRST since
+      the actual blocking condition resolved).
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.
@@ -658,6 +664,10 @@ on every computed day; handled gracefully.
       `features-service@10caf96e`) — gate now passes live for 07-28/29 + 08-04; benchmark relaunch needs a features
       tarball rebuild. DEFI:onchain gate OPEN (a7976931) but the benchmark yields ZERO output — onchain IS-catalogue stg
       leak (new P2 todo, issue doc).
+      **GATE STALE-CHECK 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: the cited
+      `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md` is now `status: resolved` (archived).
+      This todo has not been revisited since the 2026-08-06 entry below — the per-family real-number work may now be
+      unblocked; not re-attempted here (out of plan_reconciler's plans/**-only scope), flagging for the next dispatch.
 
 ### 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — PREDICTION:delta_one 2nd bucket-token bug found + fixed
 

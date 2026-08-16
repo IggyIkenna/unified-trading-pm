@@ -2,13 +2,20 @@
 doc_type: issue
 title: TradFi Databento account suspended by vendor for non-payment — all Databento fetches fail account-wide
 summary: >-
-  Operator report 2026-08-09: Databento has suspended our account because the bill was not paid. This is a FULL
-  account-level outage — broader than the existing 3-dataset billing-safety allowlist
-  (`/codex/02-data/tradfi-databento-sourcing-ssot.md`), which guards against silent metered charges on an otherwise-live
-  subscription. With the account itself suspended, EVERY Databento request (batch backfill AND the live
-  `databento_tradfi_ws` connector) will fail regardless of allowlist compliance, until the operator pays the bill and
-  the vendor restores the account. Every open TradFi MTDS/backfill todo that depends on a live Databento fetch is
-  non-dispatchable until this resolves. Features/ML work on already-captured data is UNAFFECTED and should proceed.
+  Operator report 2026-08-09: Databento has suspended our account because the bill was not paid — a recurring
+  condition (resolved 2026-08-10, re-suspended 2026-08-12, confirmed still live as of 2026-08-15, see Progress Log).
+  **CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a)**: this doc's original framing below ("FULL
+  account-level outage... EVERY Databento request... will fail") is broader than the doc's own fresher 2026-08-15
+  live-verified finding — the actual blast radius is dataset-scoped, not account-wide: in the same run, CME's
+  GLBX.MDP3 dataset returned 402 while ICE/NASDAQ/NYSE/FX all wrote successfully. Treat the narrower, dated finding in
+  the Progress Log as current; the paragraph below is the ORIGINAL 2026-08-09 report, kept for history, not the
+  current-state summary. With CME/GLBX.MDP3 specifically blocked, every open TradFi MTDS/backfill todo that depends on
+  a live CME/GLBX.MDP3 Databento fetch is non-dispatchable until this resolves; other venues are unaffected. Original
+  2026-08-09 report (kept for history): "This is a FULL account-level outage — broader than the existing 3-dataset
+  billing-safety allowlist (`/codex/02-data/tradfi-databento-sourcing-ssot.md`)... With the account itself suspended,
+  EVERY Databento request (batch backfill AND the live `databento_tradfi_ws` connector) will fail regardless of
+  allowlist compliance, until the operator pays the bill and the vendor restores the account." Features/ML work on
+  already-captured data is UNAFFECTED and should proceed.
 status: blocked
 nature: issue
 asset_group: [tradfi]
@@ -20,7 +27,7 @@ related:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,

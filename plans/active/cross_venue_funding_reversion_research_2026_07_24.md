@@ -17,9 +17,9 @@ scope: [engineer, admin]
 tags: [strategy, defi, cefi, features, research, funding-reversion]
 related:
   [
-    carry_staked_basis_funding_scan_experiment_2026_06_16,
-    carry_strategy_ensemble_productionization_2026_07_24,
-    ../epics/strategy_master.md,
+    /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
+    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/epics/strategy_master.md,
   ]
 created: "2026-07-24"
 parent_epic: strategy_master

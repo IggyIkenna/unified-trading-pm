@@ -47,10 +47,13 @@ related_plans:
   - ../active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
   - ../active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md
   - ../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
-  - ../active/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md
+  - ../archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md
 last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~28 open `- [ ]` todos
@@ -669,10 +672,10 @@ archetype end-to-end (OKX + Binance + Bybit)
 **status**: active · **estimate**: 1.2 cal AI-days (class: infra) **title**: CeFi Track-2 coverage backfill — resume +
 MID/POST checkpoints
 
-### [`tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08`](../active/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md)
+### [`tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08`](../archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md)
 
-**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Tardis impossible-combinations
-vendor-catalog gate + apply-purge — finalize (reconcile + archive)
+**status**: ARCHIVED 2026-08-16 (plan_reconciler) · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Tardis
+impossible-combinations vendor-catalog gate + apply-purge — finalize (reconcile + archive)
 
 ## P1 — important; post-current-gate
 
