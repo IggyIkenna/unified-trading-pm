@@ -85,8 +85,13 @@ source: >-
       (line ~605). Gate: baseline file reflects current measured peaks, re-verified live.
 
 - [ ] [INFRA] P2. **Stagger `ldr-to-main-promote-fleet.yml`'s per-repo fan-out** rather than firing all repos
-      simultaneously on each `*/15` tick. Source: same doc (line ~622). Gate: fan-out is measurably staggered; no
-      regression in overall promote-fleet drain latency.
+      simultaneously on each tick. **NOTE (2026-08-16, retag not stale-content):** the tick cadence itself was
+      loosened `*/15` → `*/30` same-day (`unified-trading-pm@1be6a8e036`, both the workflow cron AND
+      `ldr-to-main-promote-heartbeat.timer`'s `OnCalendar` — that timer is the ACTUAL driver, see its own header
+      comment) — this todo's own scope (staggering dispatch ORDER within one tick's fan-out) is unaffected by that
+      and remains valid, but re-verify the CURRENT cron/timer state before touching either file rather than trusting
+      "*/15" as a given. Source: same doc (line ~622). Gate: fan-out is measurably staggered; no regression in overall
+      promote-fleet drain latency.
 
 - [ ] [INFRA] P2. **Share bare repos + `git worktree` for sibling-clone I/O** instead of full clones per slot — explicit
       do/don't scope already given in the source doc. Source: same doc (line ~634). Gate: sibling-clone disk I/O
