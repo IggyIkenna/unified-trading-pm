@@ -18,7 +18,7 @@ related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: "2026-08-16"
 author: plan_reconciler
 source: "agt-1a88e0"
-locked_by: plan_reconciler-agt-1a88e0
+locked_by:
 priority: P2
 assigned_vm: NA
 execution_scope: local-only
@@ -219,4 +219,41 @@ operator-gated planning decision per CLAUDE.md, not a mechanical trim). The hedg
 (deployment-api PREDICTION_DATA_TYPE_META retirement — actually tracked in
 `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:472-483`) is still valid and can be reapplied
 once this doc is split.
-- **na-eligibility-audit 2026-08-16** [body-hash:6ed0e2abbbdcefbe]: KEEP-NA, valid — 0 open '- [ ]' todos confirmed via grep (matches Phase-0), but this doc is not a task-tracking plan/issue doc in the usual sense -- it is plan_reconciler's own live run-journal for today's (2026-08-16) defi-tranche dispatch (agt-1a88e0), explicitly self-described as 'Run in progress -- this doc is the live journal, appended to as checkpoints land,' and is actively locked_by: plan_reconciler-agt-1a88e0 with status: open.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** [body-hash:6ed0e2abbbdcefbe]: KEEP-NA, valid — 0 open '- [ ]' todos confirmed
+  via grep (matches Phase-0), but this doc is not a task-tracking plan/issue doc in the usual sense — it is
+  plan_reconciler's own live run-journal for the 2026-08-16 defi-tranche dispatch (agt-1a88e0), at the time of this
+  verdict still self-described as "Run in progress" and `locked_by: plan_reconciler-agt-1a88e0` with `status: open`.
+- **2026-08-16 (plan_reconciler /plan-reconcile Phase -1, separate dispatch reconciling this doc against fresh
+  state)**: `agt-1a88e0`'s own last commit landed 2026-08-16T18:34:45Z (the manifest-catastrophic-shrink retraction);
+  no live AO dispatch to slot 6 remains (fleet-wide backlog check: 0 tasks dispatched to slot 6, `dispatched: 2`
+  fleet-wide total at check time, ~3h after the last commit) — confirmed dead per the same evidence class (git-log
+  gap + AO dispatch-status cross-reference) `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` uses, whose Option A
+  (2026-08-15 operator ruling: "once AO confirms a dispatch id is reaped-stale, the lock auto-clears without a human
+  step") is the precedent applied here — `locked_by:` cleared above. This doc is NOT fully resolved (genuine open
+  work remains, listed below) so it stays in `plans/active/issues/`, unlocked rather than archived.
+  - Verified `defi_manifest_index_catastrophic_shrink_2026_08_16.md`'s STEP-6 "not yet resolved" item IS now resolved
+    and archived (`plans/archive/2026_08/issues/defi_manifest_index_catastrophic_shrink_2026_08_16.md`) — the doc's
+    own text above already reflects this correctly; no further action.
+  - Cross-linked the 4 `dex_swaps` row-count-conflict docs the STEP-6 section recommended linking: added the missing
+    cross-references to `defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md` (had 0 of 3) and
+    `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` (had 1 of 3, now 3 of 3) — the row-count
+    conflict itself is still NOT resolved (needs a fresh live manifest read, out of scope for doc reconciliation).
+  - `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` re-checked: still 1005L, still over the 1000L
+    hard cap. STILL-OPEN — genuine split work (operator-gated per CLAUDE.md: "splitting a plan is a planning
+    decision"), not attempted here given the risk of corrupting content mid-split without a dedicated pass.
+  - `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e) re-checked: still `[ ]` open, as
+    expected — the STEP-6 update already correctly noted only the "consolidator may be defective" premise was
+    cleared, not the todo itself.
+  - `defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md` re-checked: still `status: open`, still
+    genuinely unactioned (real scheduler-pause investigation work, not a doc-hygiene gap) — left as-is.
+  - `defi_turbo_api_hides_real_captured_data_2026_07_07.md` re-checked: still `status: open`, no `resolved_by` —
+    still a live P0 data-correctness finding, correctly tracked, nothing new needed from doc reconciliation.
+  - "Plans not reached" section's remaining low-priority items (elysium progress-table stale counts,
+    `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s `sequential: true` note, and the elysium doc's
+    exact stale-count location) were spot-checked where cheap: `batch3_finalize`'s `sequential: true` is already
+    self-explained in its own body text ("todo 2 ..."), likely already a non-issue; the specific elysium
+    progress-table doc could not be pinpointed among 5 candidate docs matching "elysium" in a quick grep — left
+    unresolved, low priority (original run: "none carry live-risk or data-correctness stakes").

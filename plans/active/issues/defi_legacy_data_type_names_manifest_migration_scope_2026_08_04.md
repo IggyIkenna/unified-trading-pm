@@ -170,6 +170,14 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-16 (plan_reconciler, defi-tranche Phase -1) — cross-link, not independently re-verified**: hunter batch B
+  of the 2026-08-16 defi-tranche `/plan-reconcile` run found `dex_swaps` migration-completion claims conflicting by
+  ~3.26M rows across 4 docs that don't cross-reference each other, this one included:
+  `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`,
+  `/plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md` (the same manifest-
+  consolidator/VM-relaunch machinery this doc's own dispatched root-cause todo targets). Added per
+  `plan_reconciler_findings_defi_2026_08_16.md`'s Contradiction #2 recommendation so a worker on any one of these 4
+  docs sees the others; the row-count conflict itself is NOT resolved here (needs a fresh live manifest read).
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling — scoped)**: operator asked to dispatch
   the `dex_swaps` migration. Given this doc's own repeated `too_large_or_risky` corroboration (2026-08-04 x2,
   2026-08-07, 2026-08-09 — the migration design itself has no predetermined outcome until the recent multi-venue
