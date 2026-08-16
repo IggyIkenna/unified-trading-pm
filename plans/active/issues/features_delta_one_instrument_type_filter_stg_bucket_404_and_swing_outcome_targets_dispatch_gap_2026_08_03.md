@@ -65,6 +65,7 @@ context_scope:
     /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
 resolved_by:
+archive_exempt: true
 ---
 
 # features-service delta_one: `-stg-` instruments-store 404 (5th site) + swing_outcome_targets dispatch gap
@@ -379,11 +380,23 @@ from `calculators/__init__.py`'s module-level registry):
   the tracked `UNEXPECTED_DATA_GAP` residual blocker). No code change. Re-pinged authoring slot (`dp-fleet-monitor`)
   with this outcome.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- 2026-08-16 (slot-15, data_engineering): Closed the last open Follow-up todo — see the citation above
+  (features-service@461bb0c8 relaxation, @ade519c6ac regression test). Doc now has 0 open todos. Set
+  `archive_exempt: true` in THIS SAME commit as the sanctioned flip-then-mv bridge
+  (`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`) — it is temporary: an immediately
+  following commit will flip `status` to a terminal value, add the archive banner, `git mv` this doc to
+  `plans/archive/issues/`, drop this `archive_exempt` line, and fix corpus referrers.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Scope a -test-/IS_TEST_RUN-aware relaxation of _filter_market_state's gap-tolerance
-      (boundary_tolerance) so sparse dev-tier TRADFI runs don't fail on a production-density assumption.
+- [x] ✅ [DATA] P3. Scope a -test-/IS_TEST_RUN-aware relaxation of _filter_market_state's gap-tolerance
+      (boundary_tolerance) so sparse dev-tier TRADFI runs don't fail on a production-density assumption. — Already
+      implemented at features-service@461bb0c8 (2026-08-10, `is_test_run` now gates `_filter_market_state`'s
+      `UNEXPECTED_DATA_GAP` raise to a warning; production path unchanged). This session added the missing
+      regression coverage batch7's duplicate todo required (both the relaxed dev-tier path and the unchanged
+      production-density path) — features-service@ade519c6ac
+      (`tests/delta_one/unit/test_filter_market_state_gap_tolerance.py`), full `quality-gates.sh` green (18419
+      passed), verified on origin via `git merge-base --is-ancestor`.
 
 > **2026-08-06 archive-candidate audit**: P3 verdict (a) accepted the sparse-data environment as a characteristic, but
 > Progress Log says a gap-tolerance relaxation 'should be scoped as its own follow-up' — deferred work with no tracked

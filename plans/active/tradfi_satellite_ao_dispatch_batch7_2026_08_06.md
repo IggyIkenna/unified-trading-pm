@@ -198,7 +198,7 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
   that a follow-up fix (in whichever repo owns the actual defect) can be scoped as its own todo. Source:
   `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
 
-- [ ] [CODE] P3. **Relax `_filter_market_state`'s gap-tolerance check for the sparse dev-tier TRADFI candle corpus.**
+- [x] ✅ [CODE] P3. **Relax `_filter_market_state`'s gap-tolerance check for the sparse dev-tier TRADFI candle corpus.**
       features-service's delta_one `orchestrator.py::_filter_market_state` uses `boundary_tolerance = max(2, 4)` (4 NaN
       candles max within trading hours) — correctly tuned for production-density data, but too strict for the current
       sparse dev-tier TRADFI corpus (confirmed via direct GCS evidence: only 3-4 equity instruments total in
@@ -210,6 +210,11 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
       regression test covering both the relaxed dev-tier path and the unchanged production-density path, and
       `quality-gates.sh` is green. Source:
       `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`.
+      — Relaxation already shipped at features-service@461bb0c8 (2026-08-10, before this todo was picked up); this
+      session closed the gap on the "regression test covering both paths" requirement —
+      features-service@ade519c6ac (`tests/delta_one/unit/test_filter_market_state_gap_tolerance.py`, 4 tests: 2
+      is_test_run=True paths + 2 is_test_run=False/production paths), full `quality-gates.sh` green (18419 passed),
+      verified on origin. See the source issue doc's Follow-ups section for the same citation.
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 
