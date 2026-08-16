@@ -26,7 +26,7 @@ summary: >-
   (`instance=1-c366fe97`) acquired a fresh lock at `01:30:54Z`; not confirmed whether this was a stale lock from a
   crashed holder or legitimate serialized contention, not investigated further (out of scope for the monitoring loop
   that found this).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -40,7 +40,7 @@ related:
   ]
 created: 2026-08-10
 author: claude-agent
-last_updated: 2026-08-10
+last_updated: 2026-08-16
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,8 +53,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
-archive_exempt: true
+resolved_by: slot-29-data_engineering-2026_08_16
 source:
   Found during the autonomous sports dual-fleet (INJURIES + odds_api) honest-coverage convergence monitoring loop
   (continuation of sports_all_vendor_honest_coverage_convergence_2026_08_07.md) while investigating why two consecutive
@@ -66,6 +65,23 @@ context_scope:
     plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
   ]
 ---
+
+> **🟩 RESOLVED / ARCHIVED 2026-08-16 (slot 29, data_engineering).** Every todo is now closed: P1 + P2 root-caused
+> (no code defect — see § "Root cause" / "P2 verdict" below), P3 CANCELLED 2026-08-12 (`/plan-reconcile`, premise
+> never held), and P3.1 (the config fix) shipped `deployment-service@36a0423e` — `instruments-sports`'
+> manifest-consolidator `timeout_seconds` 1800->3600, `CONSOLIDATOR_LOCK_TTL_SECONDS` 2400->4200,
+> `CONSOLIDATOR_STALL_ALERT_CYCLES` 40->70, live-deployed + verified via Cloud Logging (merge starting
+> `2026-08-16T02:01:08Z` completed cleanly at `02:16:29Z`, no task-timeout termination). Everything below is
+> retained as history. **Codex-alignment check**: no codex SSOT update needed — `/codex/05-infrastructure/manifest-
+> consolidator-ssot.md`'s own "Task timeout: 1800s" mention (its AWS/Phase-D section) is a different, unrelated
+> config axis (AWS Batch default, not this bucket's GCP per-bucket override), so it does not go stale from this fix;
+> per-bucket GCP override values are already documented at their SSOT, the terraform file's own dated comments
+> (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`), consistent with how the prior
+> defi/cefi/sports bumps were codified. **Referrer check**: 3 corpus mentions
+> (`plan_reconciler_findings_all_2026_08_12.md`, `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`,
+> `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`) are bare-filename prose citations of an already-
+> resolved finding, each self-contained (no fact/number sourced solely from this doc) — none needed a path fix or a
+> codex migration.
 
 ## What was found
 
