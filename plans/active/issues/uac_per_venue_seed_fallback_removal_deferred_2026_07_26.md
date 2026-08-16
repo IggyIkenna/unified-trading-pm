@@ -124,6 +124,10 @@ dangling inside a closed plan todo.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up, operator ruling — resolves the 11+ day disputed reading)**: the
+  2026-07-26 operator ruling covers **only fallback removal — the live-provider wiring is separate, un-ruled-on
+  work**. Stays `assigned_vm: NA` until a fresh, explicit ruling addresses the wiring specifically; the 2026-07-30
+  defi-tranche audit's "gates everything" reading is superseded by this ruling.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - records an explicit 2026-07-26
   operator DEFERRED ruling with a 4-item revisit trigger; the open todo is the first trigger item and is gated on
   CEFI/TRADFI G1-G5 closing.

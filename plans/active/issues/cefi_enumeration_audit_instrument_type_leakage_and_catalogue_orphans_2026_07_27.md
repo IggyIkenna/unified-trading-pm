@@ -294,6 +294,11 @@ adjacent axis the same script happens to also report). **Both findings investiga
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up, operator ruling — resolves the round5-vs-round7 conflict)**:
+  **round5's reclassification stands** — the P2 marker-format-migration todo is ordinary AO-dispatchable work, not
+  operator-gated. Whichever active plan currently owns `cefi_satellite_ao_dispatch_batch10_2026_08_08` content (that
+  doc itself is archived) should have this item's "Deferred — operator" characterization corrected as stale — flag
+  for whoever next touches that lineage.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the P2 todo is a backup-first prod
   marker-format migration (`--apply` on ~700 manifest ids) with no stated safe-idempotent justification; needs the
   delete/apply gate.
