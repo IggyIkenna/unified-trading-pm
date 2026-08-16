@@ -25,7 +25,7 @@ summary: >-
   match its actual `write_defi_rows()` call) are fixed in this pass. Recommendation for staking_yields: WIRE a scheduler
   job (not retire) — it is a UAC-capability-declared, codex-catalogued "Production" data type with no credential blocker
   and no redundancy with lst_rates; the gap is an operational rollout oversight, not obsolete code.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -40,6 +40,7 @@ related:
     canonical_path_oracle_blind_to_filename_stem_2026_07_20,
   ]
 created: 2026-07-24
+last_updated: 2026-08-15
 author: unknown
 priority: P2
 parent_epic: infrastructure_master
@@ -68,6 +69,10 @@ assigned_role: data_engineering
 ---
 
 # staking_yields dead-in-prod confirmed; lst_rates non-canonical-path claim was stale
+
+> **Status (2026-08-15)**: ✅ RESOLVED. Phase 2 (§7's 3 AAVE-Oracle protocols — RENZO/KELPDAO/PUFFER) implemented and
+> shipped, market-tick-data-service@11bccb8c38. All prior findings (§1-§6) and both capability-completion phases (§7)
+> are now complete; every follow-up todo is checked. See the Follow-ups section for full evidence.
 
 ## 0. Why this doc exists
 
@@ -364,6 +369,9 @@ independent plans.
   that remaining work: swapped the resolved-finding docs (`defi_track01_...md`, `defi-data-types-catalog.md`) for the
   `market_interface/adapters/defi` directory (the 11 existing IS adapters §7 names) and `lst_rates_handler.py` (the
   exchange-rate-yield reference pattern §7 explicitly cites for the 3 AAVE-Oracle protocols).
+- **data_engineering slot-7 2026-08-15**: Phase 2 (§7's 3 AAVE-Oracle protocols) implemented and shipped —
+  market-tick-data-service@11bccb8c38. Full evidence on the Follow-ups checkbox below. All §6/§7 work is now done;
+  doc appears eligible for closeout review (not this task's scope to act on).
 
 ## Follow-ups
 
@@ -374,10 +382,18 @@ independent plans.
       `tests/unit/test_staking_yields_handler.py`; all 8 venues
       (YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/SYMBIOTIC/KARAK/JITORESTAKING) batch-fetched from
       `https://yields.llama.fi/pools` and fan-out per project slug. QG green. Phase 2 tracked in follow-up below.
-- [ ] [SERVICE] P3. Implement staking-yields Phase 2: 3 AAVE Oracle protocols (RENZO/KELPDAO/PUFFER ~1.5 AI days) — each
-      uses AAVE V3 Oracle `getAssetPrice()` + DefiLlama coins fallback; Alchemy key already in Secret Manager. Add fetch
-      functions to `staking_yields_handler.py`, add to `fixed_venues` list, add unit tests. See §7 for per-protocol
-      data-source details.
+- [x] ✅ [SERVICE] P3. Implement staking-yields Phase 2: 3 AAVE Oracle protocols (RENZO/KELPDAO/PUFFER ~1.5 AI days) —
+      each uses AAVE V3 Oracle `getAssetPrice()` + DefiLlama coins fallback; Alchemy key already in Secret Manager. Add
+      fetch functions to `staking_yields_handler.py`, add to `fixed_venues` list, add unit tests. See §7 for
+      per-protocol data-source details. — DONE 2026-08-15, market-tick-data-service@11bccb8c38: added
+      `_query_aave_oracle_price` / `_resolve_aave_exchange_rate` / `_resolve_defillama_exchange_rate` /
+      `_resolve_exchange_rate` / `_annualized_yield_pct` / `_make_aave_oracle_yield_fetcher` + `_AAVE_ORACLE_VENUES`
+      tuple; APY annualized from the token/ETH exchange-rate drift over a 30-day lookback (AAVE Oracle primary,
+      DefiLlama `coins.llama.fi` historical fallback — mirrors RenzoAdapter/KelpDAOAdapter/PufferAdapter's documented
+      priority), wired into `fixed_venues` alongside LIDO/ETHERFI/EIGENLAYER. Unit tests added/extended in
+      `tests/unit/test_staking_yields_handler.py` + `tests/market_interface/unit/test_defi_handlers.py` (the latter's
+      pre-existing `process()`-level test needed a compatibility patch since `process()` now always builds AAVE-oracle
+      fetchers). QG green (Pass-1 sentinel verified on d0cba15f).
 
 > **2026-08-06 archive-candidate audit**: All 4 checkboxes are [x], but §7 describes ~30-32h of unimplemented work
 > ('File as a single plan with two sequential phases') — the capability-completion for

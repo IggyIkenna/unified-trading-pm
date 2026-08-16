@@ -926,7 +926,7 @@ against). Moved verbatim, nothing summarized, to
   8 cron-resume — independently re-confirmed still `RUNNING` today via
   `issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md`). 1/9 (the `staking_yields_handler.py`/
   `lst_rates_handler.py` item) is stale — verbatim-extracted into the active
-  `issues/ defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`, which re-verified both claims live and found the
+  `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`, which re-verified both claims live and found the
   lst_rates half FALSE (docstring drift, already fixed) and the staking_yields half real but tracked there. Closed by
   citation. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-07**: refreshed context_scope (5 -> 6 entries) — added

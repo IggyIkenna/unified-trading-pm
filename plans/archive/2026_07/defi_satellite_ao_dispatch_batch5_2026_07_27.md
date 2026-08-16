@@ -147,7 +147,7 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       than reverting it. Done when: a `gcloud storage ls` (or equivalent) capture of the real leaf names is recorded in
       the issue doc and the dead-parameter fix (or its justified retention) ships via scoped
       `quickmerge.sh --agent --files`. Source:
-      `plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` **DONE 2026-08-05 (slot-11):** GCS
+      `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` **DONE 2026-08-05 (slot-11):** GCS
       evidence — EIGENLAYER objects present with canonical instrument_key filenames
       (`EIGENLAYER-ETHEREUM:STAKING:EIGEN.parquet` on 2026-07-28→08-03; `EIGEN.parquet` on 2026-07-26). LIDO/ETHERFI
       zero objects (DNS failures per source doc §6.1, classification fix shipped earlier). Plan's bare-symbol

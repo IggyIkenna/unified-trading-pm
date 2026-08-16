@@ -70,7 +70,7 @@ context_scope:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
   ]
 ---
 
@@ -496,7 +496,7 @@ context_scope:
       `staking-yields`-named job ENABLED and `gcloud run jobs list` shows the matching Cloud Run Job; after its first
       run, at least 1 manifest row exists for `instrument_type=staking` (verify STARTED + the manifest row per
       no-fire-and-forget — do not mark done on terraform-apply alone). Source:
-      `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`. — DONE 2026-07-26, deployment-service@bd46bf2.
+      `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`. — DONE 2026-07-26, deployment-service@bd46bf2.
       Added the map entry exactly as specified; `ENV=prod ./tofu.sh plan -target=...` showed
       `2 to add, 0 to change, 0 to destroy` (a new Cloud Run Job + Cloud Scheduler cron — purely additive, no
       `[OPERATOR]` gate applies); applied. Verified
@@ -524,7 +524,7 @@ context_scope:
       `Status: Implemented, unscheduled`, consistent with § 1's live-verification findings in the source issue doc. Not
       flipped to Production — remains gated on the separate scheduler-wiring todo (already shipped above,
       deployment-service@bd46bf2, but this row change was scoped independently per the todo text). Repo:
-      unified-trading-pm. Source: `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
+      unified-trading-pm. Source: `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
 - [x] ✅ [VERIFY] P1. **DONE 2026-07-28 (slot-5).** Ran a bounded, read-only simulation (12 synthetic defi swap-pool
       instruments × 30-day date axis, zero GCS/network I/O — `enumerate_expected_universe.py` itself couldn't be
       imported in this venv due to the pre-existing, already-tracked fleet-wide `iter_route_contexts` fastapi

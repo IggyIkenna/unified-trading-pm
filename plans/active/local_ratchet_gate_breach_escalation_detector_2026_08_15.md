@@ -176,11 +176,12 @@ source: >-
       established lower in the same test file for real CooldownRow/EscalationQueueRow column arithmetic — a plain
       MagicMock session can't support the real column reads/writes both the detector and escalation sides do).
       `bash scripts/quality-gates.sh` green (3978 passed, up from 3976; dashboard 374 passed).
-- [ ] [REVIEW] P2. Full-fleet dry run: run the detector (todo 2) once against real `origin/live-defi-rollout` HEAD
+- [x] ✅ [REVIEW] P2. Full-fleet dry run: run the detector (todo 2) once against real `origin/live-defi-rollout` HEAD
       across the whole fleet in read-only mode (no `--apply`/enqueue side effects) and record the actual current
       breach/no-breach state per repo as evidence the detector doesn't false-positive against production reality.
       Done-when: the dry-run output is pasted into this plan's Progress Log with zero unexpected breaches, or each real
-      breach found is filed as its own issue doc rather than silently absorbed into this infra plan.
+      breach found is filed as its own issue doc rather than silently absorbed into this infra plan. — see Progress Log
+      entry below (zero breaches, zero errors, all 25 repos scanned).
 
 ## Progress Log
 
@@ -374,3 +375,28 @@ source: >-
   (`/plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`) got a
   dated addendum pointing back at the shipped codex subsection. Remaining open: todo 11 (happy-path regression
   test), todo 12 (full-fleet dry run) — not attempted this session.
+
+- **2026-08-15 (slot-6·review)**: Todo 12 flipped — full-fleet dry run of the detector (todo 2's
+  `agent-orchestrator/scripts/orchestrator/detect_local_ratchet_gate_breaches.py`, read-only by construction — the
+  script has no `--apply`/enqueue flag at all, it only fetches fresh `origin/live-defi-rollout` HEAD per repo into a
+  detached worktree and reports) run against every one of the 25 repos discovered from the three ratchet-baseline
+  YAMLs (`ruff_rule_ratchet_baseline.yaml` / `no_fallback_imports_baseline.yaml` /
+  `no_empty_string_fallback_baseline.yaml`, `.` normalized to `unified-trading-pm`):
+  `agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api,
+  deployment-service, deployment-ui, e2e-testing, execution-service, features-service,
+  fund-administration-service, greeks-service, ibkr-gateway-infra, instruments-service,
+  market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
+  system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api,
+  unified-trading-library, unified-trading-pm, unified-trading-system-ui`. Result JSON summary:
+  `{"repos_scanned": 25, "repos_errored": 0, "errored_repos": [], "breach_count": 0, "breaches": []}` — every
+  (repo, check) pair across all 3 checks × 25 repos exited 0 (checked programmatically: zero non-zero exit codes
+  anywhere in the result set, so this isn't just "no breach flags" but genuinely no scan errors/timeouts either).
+  Detector's own process exit code: 0 (its documented contract: 0 = no breach, no error). Zero unexpected breaches
+  — done-when's first branch satisfied, no issue doc needed. Run at 2026-08-15T23:53:16Z against real
+  `origin/live-defi-rollout` HEAD (fresh `git fetch` + detached worktree per repo, never a local working tree).
+  Full JSON report is ephemeral (session scratchpad, not durable) — the summary above plus the per-repo list is the
+  durable evidence; re-running `python scripts/orchestrator/detect_local_ratchet_gate_breaches.py` (agent-orchestrator
+  repo) reproduces it against whatever HEAD is current at re-run time. Every prior todo in this plan (1-11) was
+  already `[x]` before this session started; with todo 12 now flipped, all 12 todos in this plan are done — the
+  gated `local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md` plan (`depends_on: [this plan]`,
+  `gate_on_depends: true`) owns the reconciliation + archival ritual from here, not this entry.

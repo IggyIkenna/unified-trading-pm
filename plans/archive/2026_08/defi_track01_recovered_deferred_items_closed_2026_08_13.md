@@ -96,7 +96,7 @@ source: >-
       delete-review step. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. **CLOSED 2026-08-07 (na-eligibility-audit, stale-item citation-fix).** File + fix the
       `staking_yields_handler.py` / `lst_rates_handler.py` gap found during the 2026-07-22 C2–C12 scoping pass —
-      verbatim-extracted into `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` (status: open,
+      verbatim-extracted into `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` (status: open,
       `assigned_vm: planning`), which re-verified both claims live: the `lst_rates_handler.py` "non-canonical path" half
       is FALSE (docstring-only drift, already fixed there — the handler does write to the canonical hive path); the
       `staking_yields`-dead-in-production half IS real and stays tracked in that doc's own open §6. Do not re-open this

@@ -725,7 +725,7 @@ context_scope:
   scope (Morpho adapter wiring + calendar-window backfill) is fully complete per the 2026-07-17 re-check #14 — the sole
   remaining item (re-run the G2 gate) is blocked purely on an external condition,
   `defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, owned by...
-- **`plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`**: Confirmed via direct read of § 6:
+- **`plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`**: Confirmed via direct read of § 6:
   the doc has 4 open items. Items (1) [terraform/scheduler wiring for staking-yields, doc's own "§ 6.1"] and (4) [codex
   defi-data-types-catalog.md § 7 Production-label fix] ARE covered — verbatim-matching todos exist in
   defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 326-333...
