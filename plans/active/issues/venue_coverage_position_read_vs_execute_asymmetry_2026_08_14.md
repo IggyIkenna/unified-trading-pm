@@ -834,6 +834,29 @@ silently re-open:
   RAM-pressure watchdog twice (after 30-60 minute queues each time) before a third attempt, timed after process count
   visibly dropped, finally completed — waiting for a quieter moment mattered more than retrying immediately each time.
 
+## Live-flap observation — 2026-08-16 (ci_reconciler sweep, slot-17)
+
+Unrelated to this issue's own scope (not touching execution-service/strategy-service), but confirms the
+`unified-api-contracts` baseline note's own prediction that the invariant would keep flip-flopping: while trying to
+ship an unrelated `unified_api_contracts/registry/token_wrapping.py` formatting fix (ruff-format citation-comment
+placement, see the `workspace-quickmerge-validation.yml` finding in this run's ci_reconciler report), `quickmerge.sh`'s
+re-gate ran `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions` 3 times within ~10 minutes
+and got 3 DIFFERENT results:
+
+1. `beyond the known baseline: ['kamino']`
+2. `beyond the known baseline: ['karak', 'pendle', 'symbiotic']` (twice)
+
+`tests/data/execution_service_venue_reachability_baseline.json` currently lists only `["morpho", "kamino"]` — so run 1
+was consistent with the baseline (kamino genuinely still unreachable), but runs 2-3 flagged `karak`/`pendle`/`symbiotic`
+as NEWLY unreachable, which the baseline file's own prose (dated 2026-08-16) already anticipated: those three were
+observed HAVING a reachable adaptor earlier the same day, then losing it again on a later re-gate — i.e. the underlying
+`DeFiAdapter` dispatch wiring is being actively, concurrently edited (by another slot/session) during the exact window
+of this observation, not settled. Per the baseline note's own guidance ("if this baseline flip-flops again on your run,
+trust a fresh re-run over this file's prose"), I did not touch the baseline or the dispatcher — this is squarely this
+issue's P0 in progress, not a new bug. Leaving the token_wrapping.py fix uncommitted in `.tabs/17/unified-api-contracts`
+(verified correct + ruff-format-stable + citation-checker-clean) until this stabilizes; it isn't at risk (local-only,
+not shared state) and will ship cleanly once the invariant settles.
+
 ## Context scout
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
