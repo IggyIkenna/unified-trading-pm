@@ -48,7 +48,7 @@ context_scope:
   ]
 ---
 
-# defi oracle_prices on-chain branch retry-starvation — fix ready, ship blocked
+# defi oracle_prices on-chain branch retry-starvation — fix shipped
 
 ## What I found
 
