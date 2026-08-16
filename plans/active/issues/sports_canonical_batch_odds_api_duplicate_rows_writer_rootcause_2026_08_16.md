@@ -70,15 +70,24 @@ low today; it could be worse in cells/days not sampled.
 
 ## Recommended decision
 
-- [ ] [DATA] P3. **Root-cause the writer**: identify why `(instrument_id, bm_time, price, point)` tick keys get
-      written twice in ~4% of `batch_odds_api` sports canonical cells. Leading hypotheses (unconfirmed): (a)
-      retry-without-idempotency-check on a partial-failure resume re-appends already-written ticks instead of
-      skipping/overwriting; (b) overlapping capture-window merges write the same tick twice across adjacent
-      capture runs. Start from the `batch_odds_api` sports writer path in `market_tick_data_service` — not yet
-      located/read as part of this issue. (repo: market-tick-data-service)
-- [ ] [DATA] P3. **Fix the writer** once root-caused, so new writes stop producing duplicate-key rows. Add a
-      regression test asserting no duplicate `(instrument_id, bm_time, price, point)` key within a single write.
+- [x] [DATA] P3. **Root-cause the writer**: identify why `(instrument_id, bm_time, price, point)` tick keys get
+      written twice in ~4% of `batch_odds_api` sports canonical cells. — ✅ market-tick-data-service@17f7e443bc.
+      Root cause: `_process_sports_venue_with_leagues` in `venue_fetch.py` calls `_build_fixture_rows` once per
+      kickoff-relative fetch offset (`TIER_1_OFFSETS`); when the bookmaker snapshot hasn't moved between two
+      adjacent offsets, both emit an identical row with no dedup before the single per-shard `write_chunk` call
+      — confirming hypothesis (b) over (a) (no retry/resume involvement).
       (repo: market-tick-data-service)
+- [x] [DATA] P3. **Fix the writer** once root-caused, so new writes stop producing duplicate-key rows. Add a
+      regression test asserting no duplicate `(instrument_id, bm_time, price, point)` key within a single write.
+      — ✅ market-tick-data-service@17f7e443bc. Added `_dedup_sports_shard_tick_rows` (new module
+      `_sports_tick_dedup.py`, split out since `venue_fetch.py` was already at the 900-line ratchet ceiling),
+      called on every per-(bookmaker, league, fixture) shard right after the groupby split and before any write.
+      Key is the INTERSECTION of the four columns with whatever the shard actually has (h2h-only fixtures carry
+      no `point` column at all) — a hard four-column requirement would raise `KeyError`, which the caller's
+      per-venue `except Exception` turns into a whole shard silently dropped. 10-test regression suite in
+      `tests/unit/test_venue_fetch_sports_dedup_tick_rows.py` covers the exact-dup case, the missing-column
+      shapes, multi-group dedup, and no-op passthrough. Full `market-tick-data-service` quality-gates green
+      (10945 passed, 0 failed; sentinel written). (repo: market-tick-data-service)
 - [ ] [OPERATOR] P3. **Decide on backfill dedup** of the ~264 already-affected cells found in this 40-day sample
       (extrapolated: full ~2020-2026 corpus likely has low-thousands of affected cells). The parent issue
       explicitly forbids silently deduping canonical in-place from an issue doc — this needs its own
@@ -92,3 +101,9 @@ low today; it could be worse in cells/days not sampled.
   the fix as its own scoped follow-up") — the bounded 40-day measurement confirmed systemic, so the parent issue
   is closed/archived with this doc as its successor. No root-cause investigation done yet — that is this doc's
   own open todo 1.
+- **2026-08-16 (slot-23)**: Todos 1+2 done — root-caused (adjacent `TIER_1_OFFSETS` fetches re-observing an
+  unchanged bookmaker snapshot, no dedup before `write_chunk`) and fixed (`_dedup_sports_shard_tick_rows`,
+  intersection-of-present-columns key to avoid `KeyError`-driven whole-shard failure on h2h-only shapes).
+  Shipped as `market-tick-data-service@17f7e443bc` (LDR trunk), full quality-gates green. First fix attempt
+  used a hard four-column `subset=` and broke 9 tests on shards missing `point`/`bm_time` — corrected to the
+  intersection form before shipping. Only todo 3 ([OPERATOR] backfill-dedup decision) remains open.
