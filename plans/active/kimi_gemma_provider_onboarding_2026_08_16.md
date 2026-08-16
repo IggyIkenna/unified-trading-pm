@@ -119,6 +119,33 @@ had already run. Treat every todo below as net-new work, not a resume.
       chat UI) — this last point is the load-bearing one for the whole reconciliation and must not be assumed.
       Done when: this plan's Progress Log records the max plan's real terms plus the refreshed per-token table,
       both cited to a live source, before any account is registered.
+
+      **Research pass 2026-08-16 (background agent) — real numbers, plus a critical unconfirmed caveat**: real API
+      model IDs confirmed via `platform.kimi.ai/docs/models`: `kimi-k3` (1M/1,048,576 ctx, $3/$15 per 1M in/out —
+      matches the archived table, unchanged), `kimi-k2.6` (256K/262,144 ctx, ~$0.95/$4.00 — matches archived table),
+      `kimi-k2.5` (256K ctx, ~$0.60/$3.00 — new, was never previously evaluated), plus `kimi-k2.7-code` and legacy
+      `moonshot-v1-{8k,32k,128k}`. API confirmed OpenAI-chat-completions-shaped at `https://api.moonshot.ai/v1`.
+      **The pricing conclusion is unchanged from 2026-08-06 — Kimi still loses to DeepSeek on raw $/token.**
+      **Unconfirmed-but-load-bearing caveat**: multiple secondary sources (no primary Moonshot doc found) describe
+      Kimi's subscription tiers (Adagio free → Vivace $199/mo) as a **CLI/chat-app product on SEPARATE billing from
+      the metered developer API** — i.e. paying for a higher membership tier reportedly does NOT grant API token
+      capacity, the same shape as Claude Max not covering Anthropic API usage. **If true, this undercuts the whole
+      "huge max plan DeepSeek doesn't have" rationale**, since AO dispatch needs programmatic HTTP API access, not a
+      CLI-rate-limited product. This must be confirmed directly with Moonshot (support/docs, not aggregator sites)
+      before any paid membership tier is purchased on the strength of this plan's rationale — get a plain
+      pay-as-you-go/metered API key with a small prepaid top-up for the live-check todos below regardless; that
+      doesn't depend on the max-plan question being resolved either way.
+
+      **Primary-source confirmation, 2026-08-16 (operator screenshot, `kimi.com/platform` Pricing page — upgrades
+      the research pass above from secondary-sourced to primary-sourced)**: exactly three models currently listed —
+      **K3**: $3.00 input / $15.00 output / $0.30 cache-hit per MTok, 1M-token context, "most capable flagship."
+      **K2.7 Code**: $0.95 input / $4.00 output / $0.19 cache-hit per MTok, 256K-token context, coding-specialized.
+      **K2.6**: $0.95 input / $4.00 output / $0.16 cache-hit per MTok, 256K-token context, general-purpose
+      (vision+text, thinking/non-thinking modes). All three match the research pass exactly. **K2.5 is absent from
+      the current pricing page entirely** — corroborates the earlier single-source claim that it's being sunset;
+      treat k2.5 as likely-retired, not a live option, until the live `/v1/models`-equivalent check in the next
+      todo confirms one way or the other. Given this, K2.7 Code (not evaluated at all in the 2026-08-06 rejection)
+      is the more relevant NEW comparison point going forward, not K2.5.
 - [ ] [OPERATOR] P0. Get Moonshot (Kimi) API credentials from the operator — start on Moonshot's cheapest/basic plan
       tier (mirrors the GLM-Lite / ChatGPT-Plus / Gemini-free staging pattern from the prior four providers). Store
       in GSM as `moonshot-api-key` (+ `moonshot-management-key` if a separate balance/usage-read scope exists, per
@@ -145,6 +172,35 @@ had already run. Treat every todo below as net-new work, not a resume.
       was proven hard-enforced rather than trusted from docs). Done when: every real Gemma variant NVIDIA NIM
       actually hosts is confirmed live (not just the original two guesses), and at least one real rate-limit ceiling
       is measured, not assumed from NVIDIA's marketing language.
+
+      **Research pass 2026-08-16 (background agent) — real catalog, via NVIDIA's own `docs.api.nvidia.com`
+      reference pages**: full Gemma lineup confirmed beyond the original two guesses — `google/gemma-7b` (Gemma 1,
+      legacy, ~8K ctx), `google/gemma-2-2b-it`/`google/gemma-2-9b-it` (4K-8K ctx), `google/codegemma-7b`
+      (code-specialized, ~8K ctx), `google/gemma-3-1b-it`/`google/gemma-3-27b-it` (32K/128K ctx, real published
+      MMLU/GSM8K/HellaSwag/BBH numbers), ShieldGemma 2 (safety classifier, not a chat model), **`google/gemma-4-31b-it`**
+      (dense, 256K ctx, MMLU Pro 85.2%/AIME-2026 89.2%/LiveCodeBench-v6 80.0%/Codeforces ELO 2150/GPQA-Diamond 84.3%),
+      **`google/diffusiongemma-26b-a4b-it`** (diffusion-MoE, 26B total/3.8B active, 256K ctx, MMLU Pro 77.6%/GPQA
+      73.2%/Codeforces ELO 1429, ~1000 tok/s on one H100 — confirmed weaker on reasoning/coding but faster, matching
+      the operator's original informal note). **ID correction**: the informally-named `google/gemma-4-31b` is
+      missing the required `-it` suffix — the real hosted ID is `google/gemma-4-31b-it`; the bare non-instruct ID is
+      not a NIM chat-completions endpoint. Rate limits: no official NVIDIA-hosted rate-limit spec page found — only
+      community-reported (~40 RPM/model/key default, ~200 RPM on request, ~1,000 free inference credits for new
+      accounts) — NVIDIA's own forum-cited language is "dependent on model, use-case, and current overall traffic,"
+      confirming "unlimited prototyping" masks real, variable, undocumented throttling. Signup: free NVIDIA Developer
+      Program account → build.nvidia.com → Settings → API Keys → Generate (key prefix `nvapi-`, works fleet-wide
+      across the catalog, no card required). API shape confirmed OpenAI-compatible (base_url
+      `https://integrate.api.nvidia.com/v1`, standard `chat.completions.create`).
+
+      **Real smoke test result, 2026-08-16 (key supplied by operator, stored in GSM `nvidia-api-key`)**: a live
+      authenticated call against BOTH `google/gemma-4-31b-it` and `google/diffusiongemma-26b-a4b-it` returned
+      `HTTP 403 {"status":403,"title":"Forbidden","detail":"Authorization failed"}` — and the SAME 403 against a
+      completely unrelated model (`meta/llama-3.1-8b-instruct`), confirming this is key-wide, not a Gemma-specific
+      access-scope issue. Key round-tripped through GSM byte-for-byte correct (70 chars, prefix/suffix verified) —
+      not a storage/copy-paste corruption on this end. Response also carried a `deprecation: 2026-08-25T00:00:00Z`
+      header on this endpoint — worth re-checking closer to that date regardless of the auth outcome. **Needs
+      operator-side diagnosis**: check the key's status on the build.nvidia.com dashboard — whether it needs an
+      activation step, or whether it's an NGC-catalog key rather than a Build-inference key (NVIDIA has more than
+      one key flavor; only a Build/integrate-scoped key works against this endpoint).
 - [ ] [INFRA] P1. Determine both vendors' native API shape and pick the integration pattern: Moonshot's API is
       OpenAI-chat-completions-shaped (needs the same LiteLLM Anthropic-passthrough proxy pattern as Grok/Gemini,
       `grok_gemini_translation_proxy_2026_08_14.md`) unless live testing finds otherwise; NVIDIA NIM's endpoint is
