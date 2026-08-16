@@ -18,7 +18,7 @@ repos: [deployment-service]
 scope: [engineer, admin]
 tags: [billing-waste, vm-duplicate, tradfi, dxy, ao-outage]
 related:
-  - /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md
+  - /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md
   - /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md
 parent_epic: tradfi_master
 source: "Fleet-wide /vm-preemption-billing-waste-audit sweep, 2026-08-12, interactive session"
@@ -33,7 +33,7 @@ depends_on: []
 context_scope:
   [
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-24h.sh,
     deployment-service/scripts/wave_launcher.py,
   ]

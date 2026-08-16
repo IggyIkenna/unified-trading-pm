@@ -29,7 +29,7 @@ tags: [tradfi, fx, krw, phantom-manifest-rows, data-correctness]
 related:
   [
     /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
   ]
 parent_epic: tradfi_master
 source: "/backfill-monitor smoke-test diagnosis, 2026-08-12 interactive session, KRW/USD MVP cell"

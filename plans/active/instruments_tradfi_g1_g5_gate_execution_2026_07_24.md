@@ -157,7 +157,7 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       below.
 - [ ] [DATA] P0. **UNBLOCKED 2026-08-09** — the databento billing-suspension gate below is lifted for this item: S&P
       options are explicit in-scope work per the MVP-of-MVP ruling
-      (/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md), and Databento was live-verified
+      (/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md), and Databento was live-verified
       reachable the same day (real `metadata.list_datasets` + `ES.FUT ohlcv-1m` pulls both succeeded). Prior gate
       (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
       /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **Launch the ES_OPT backfill** —
@@ -187,7 +187,7 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       `[x]` there with evidence). This item stays open until someone verifies that outcome against this plan's own gate
       — read the archived plan's Progress Log, do not assume it is still being tracked live.
 - [ ] [DATA] P1. **UNBLOCKED 2026-08-09** — same unblock as the launch todo above (S&P options in-scope per
-      /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md; Databento live-verified reachable).
+      /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md; Databento live-verified reachable).
       **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator ruling
       above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES futures
       (mirrors the NASDAQ/NYSE precedent, `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME ×

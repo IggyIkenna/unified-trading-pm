@@ -234,7 +234,7 @@ surface — Phase A1 (writer) → B (migrate `prod/catalog.parquet`) → C (widg
 
 ## MVP universe (operator-defined 2026-07-18 — the Phase-D readiness target)
 
-> **🟡 2026-08-09 scope:** `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
+> **🟡 2026-08-09 scope:** `/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
 
 - **S&P index futures** (ES) + **S&P index options**.
 - **Delta-one single-stock equities** (S&P/NASDAQ single names — already canonical on filenames; verify the id columns).

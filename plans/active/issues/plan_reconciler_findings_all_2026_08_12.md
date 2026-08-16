@@ -89,7 +89,7 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       66→64 < baseline). Note: the actual code (uncommitted 2026-07-28 WIP) was subsequently confirmed unrecoverable —
       flipped on the stated data-correctness bar per the todo's own text, not on a code commit. Todo 1 in the same doc
       remains genuinely `[OPERATOR]`-blocked (real design decision needed), correctly still open.
-- [x] ✅ [REVIEW] P2. `plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` todo —
+- [x] ✅ [REVIEW] P2. `plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` todo —
       **DONE (re-verified 2026-08-16)**: doc's own 2026-08-12 Progress Log entry already reconciled the contradiction —
       live `gcloud scheduler jobs describe`/`gcloud run jobs executions list` confirm the Cloud Scheduler/Cloud Run Job
       path PAUSED since 2026-06-24 (last execution 2026-06-25), the undocumented host cron is the actual live mechanism,

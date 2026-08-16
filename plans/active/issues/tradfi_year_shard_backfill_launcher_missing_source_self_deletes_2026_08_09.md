@@ -331,7 +331,7 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   own internal re-gate also hit the same wall once (626s) before a clean run finally shipped. No content changes were
   needed across any of these attempts — every failure was purely the resource-drift timing gate under contention.
 - **2026-08-09, separate session (interactive, MVP-of-MVP scope-narrowing work)**: independently rediscovered this exact
-  bug via live smoke-testing (per `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s
+  bug via live smoke-testing (per `/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s
   relaunch-verification requirement) — two of my own test launches and a THIRD agent's real ES_OPT dispatch all hit it
   the same way. Also found this launcher's `MACHINE_TYPE` was still the undersized `e2-standard-4` default (never
   received the `e2-highmem-4` bump the exact-same OOM-hang class already got elsewhere, see

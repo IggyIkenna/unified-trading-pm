@@ -19,7 +19,7 @@ tags: [tradfi, cboe, discovery-floor, honest-absence, yahoo, data-correctness]
 related:
   [
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md,
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]

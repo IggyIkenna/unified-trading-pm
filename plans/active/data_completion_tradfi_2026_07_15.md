@@ -282,7 +282,7 @@ context_scope:
 **SCOPE GATE (round-9 combined RECLASSIFY + satellite-extraction sweep, 2026-08-09)**: the remaining "needs an actual
 fetch attempt" work this item describes — filling the NASDAQ/NYSE `expected_unattempted` remainder for years OTHER than
 2026 — is now explicitly `BLOCKED-OPERATOR-DECISION` per
-`/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s same-day ruling: immediate equities
+`/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s same-day ruling: immediate equities
 backfill work is narrowed to **year 2026 only**, with "completing the full historical equities corpus to 100%" (this
 item's 2023-2025 remainder) explicitly gated until November 2026. Do not dispatch further NASDAQ/NYSE multi-year
 backfill off this item before then — cite that ruling doc, not this checkbox, as the current gate.

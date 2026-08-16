@@ -29,7 +29,7 @@ repos: [deployment-service]
 scope: [engineer]
 tags: [tradfi, vix, cboe, backfill, singleton-lock, mvp-scope, operator-decision]
 related:
-  - /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md
+  - /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md
   - /plans/archive/issues/tradfi_es_opt_2025_2026_relaunch_blocked_on_singleton_lock_2026_08_09.md
   - /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md
   - /codex/05-infrastructure/vm-launcher-runbook.md
@@ -52,7 +52,7 @@ archive_exempt: true # 0 open todos by design (monitoring + docs done); backfill
 context_scope:
   [
     /plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md,
-    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
   ]
