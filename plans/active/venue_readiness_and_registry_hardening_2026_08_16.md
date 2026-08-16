@@ -156,7 +156,7 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
 | 15  | **Trigger frequency**    | Strategy-service tick cadence and MDPS derivation cadence are consistent with the declared granularity — nothing triggers faster than its data. |
 | 16  | **Matching class**       | The achievable fidelity tier, declared. Execution REFUSES a richer tier rather than approximating one.                                          |
 
-- [x] [AGENT] P0. ✅ Done 2026-08-16 — unified-trading-pm@\<pending-sha\>. **Gate the normalisation rule.** Add a
+- [x] [AGENT] P0. ✅ Done 2026-08-16 — unified-trading-pm@0a1412cb6b. **Gate the normalisation rule.** Add a
       check that fails if strategy-service imports market-tick-data-service. It holds today by convention only; the
       gate makes it durable and costs almost nothing. Implementation: `scripts/validation/check-no-service-deps.py`
       already ran a fleet-wide raw-cross-service-import scan (WARN-only, ~39 pre-existing tracked violations across
