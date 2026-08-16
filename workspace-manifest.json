@@ -89,7 +89,7 @@
     "strategy-service": "0.71.2",
     "ml-service": "0.58.29",
     "alerting-service": "0.63.32",
-    "unified-trading-api": "0.4.1",
+    "unified-trading-api": "0.4.2",
     "client-reporting-api": "0.32.39"
   },
   "repositories": {
