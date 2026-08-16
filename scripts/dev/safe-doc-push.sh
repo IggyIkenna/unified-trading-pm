@@ -113,6 +113,17 @@
 # origin blob differs from what HEAD carries. The specific failing paths are named. For the
 # deletion shape, re-stage and re-commit the deletion (the on-disk delete usually survives); a
 # bare re-run may or may not re-land it depending on which shape occurred.
+# 15 a named file was verified conflict-marker-FREE at entry (checked with the repo's own
+# scripts/plan-hygiene/check_conflict_markers.sh, not a hand-rolled grep) and is conflicted NOW,
+# after this script's own autostash/quarantine replay ran (added 2026-08-16,
+# unified_trading_pm_stash_pile_accumulation_2026_07_26.md [AGENT] P1 -- confirmed live: a plan
+# doc verified marker-free on disk immediately before this script was invoked failed exit 6's
+# pre-commit conflict-marker hook, because the replay injected the markers DURING the run, after
+# the caller's last chance to inspect the file). This is NOT exit 6: exit 6 means the caller's own
+# content was already bad; exit 15 means this script did it to itself. The affected file(s) are
+# restored to their entry content from this run's own snapshot before exiting -- the corrupted
+# version is never handed to the pre-commit checker. Dirty-at-entry files are unaffected by this
+# check and still resolve to exit 6 exactly as before.
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -595,6 +606,106 @@ done
 # spaces here -- `--files` is a space-separated list, so a spaced path is already
 # unrepresentable at this script's interface.
 _sdp_blob_of() { printf '%s\n' "$2" | awk -v f="$1" '$2 == f { print $1; exit }'; }
+
+# ── SELF-INFLICTED CONFLICT-MARKER GUARD (2026-08-16) ────────────────────────────────────────
+# unified_trading_pm_stash_pile_accumulation_2026_07_26.md [AGENT] P1, confirmed live: a plan doc
+# verified marker-free on disk immediately before this script was invoked failed exit 6's own
+# pre-commit conflict-marker check -- the markers were injected by THIS SCRIPT's autostash/
+# quarantine replay DURING the run, after the caller's last chance to inspect the file. Exit 6
+# ("commit rejected by a pre-commit hook -- a deterministic content failure, not contention")
+# blames the caller's content; here the caller's content was clean and this script authored the
+# defect. Two things follow: (1) an agent reading exit 6 wrongly concludes its own file is bad and
+# burns cycles re-inspecting content that was fine; (2) there is no safe recovery point left --
+# the corruption happens after the file was last inspectable, so "restore from origin, verify
+# clean, apply, push atomically" cannot prevent it.
+#
+# Fingerprint marker-cleanliness AND snapshot the actual bytes of every named file HERE, at entry
+# (same point _SDP_ENTRY_FINGERPRINT/_SDP_ENTRY_HEAD_BLOBS already capture their own entry state),
+# then re-check after every cycle below that can replay stashed content
+# (_sdp_assert_no_self_conflict, called from autostash_guard_bound_backlog's pre-pull sweep,
+# autostash_rebase_reconcile + its post-pop autostash_guard_quarantine_stale_pop sweep, and
+# stage_named_files's rename decomposition). Clean-at-entry + conflicted-now can only mean this
+# script's own machinery did it -- restore from the snapshot captured here and exit 15, never
+# handing the corrupted file to the pre-commit checker. Dirty-at-entry is untouched by this guard
+# on purpose: that stays exit 6's problem, unchanged.
+#
+# Uses the repo's OWN checker (scripts/plan-hygiene/check_conflict_markers.sh), not a hand-rolled
+# grep: a replay produces a diff3-style conflict, whose third section is introduced by a base
+# marker of seven pipe characters ("Stash base") alongside the three familiar seven-character
+# markers -- a grep for only the three familiar ones reports zero markers on a genuinely
+# conflicted file whenever that pipe-form base marker is the survivor of a partial replay. That
+# false-clean reading is exactly what cost the discovering session several cycles; the checker
+# script already gets this right (plus a mangled-by-prettier form and an orphaned `=======`), so
+# use it instead of re-deriving the pattern here.
+_SDP_CONFLICT_CHECKER="${_SDP_SELF%/*}/../plan-hygiene/check_conflict_markers.sh"
+_SDP_ENTRY_SNAPSHOT_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sdp-entry-snapshot-XXXXXX" 2>/dev/null || true)"
+
+_sdp_has_conflict_markers() { # <path> -> 0 if markers present, 1 if clean/absent/checker missing
+  local f="$1"
+  [[ -f "$f" && -f "$_SDP_CONFLICT_CHECKER" ]] || return 1
+  ! bash "$_SDP_CONFLICT_CHECKER" --quiet "$f" >/dev/null 2>&1
+}
+
+_SDP_ENTRY_CONFLICT_CLEAN=""
+for _sdp_cmf in "${FILES[@]}"; do
+  if [[ -f "$_sdp_cmf" ]]; then
+    if _sdp_has_conflict_markers "$_sdp_cmf"; then
+      _SDP_ENTRY_CONFLICT_CLEAN="${_SDP_ENTRY_CONFLICT_CLEAN}DIRTY  ${_sdp_cmf}
+"
+    else
+      _SDP_ENTRY_CONFLICT_CLEAN="${_SDP_ENTRY_CONFLICT_CLEAN}CLEAN  ${_sdp_cmf}
+"
+      if [[ -n "$_SDP_ENTRY_SNAPSHOT_DIR" ]]; then
+        mkdir -p "$_SDP_ENTRY_SNAPSHOT_DIR/$(dirname "$_sdp_cmf")" 2>/dev/null
+        cp -- "$_sdp_cmf" "$_SDP_ENTRY_SNAPSHOT_DIR/$_sdp_cmf" 2>/dev/null || true
+      fi
+    fi
+  else
+    _SDP_ENTRY_CONFLICT_CLEAN="${_SDP_ENTRY_CONFLICT_CLEAN}ABSENT  ${_sdp_cmf}
+"
+  fi
+done
+
+_sdp_entry_was_clean() { # <path> -> 0 if entry state was CLEAN, 1 otherwise (DIRTY/ABSENT)
+  printf '%s\n' "$_SDP_ENTRY_CONFLICT_CLEAN" | awk -v f="$1" '$2 == f && $1 == "CLEAN" { found=1 } END { exit !found }'
+}
+
+# _sdp_assert_no_self_conflict <label> -- call after any cycle that can replay stashed content.
+# Restores + hard-exits 15 on the first self-inflicted corruption found; advisory-only (returns 0)
+# when nothing was clean-at-entry-now-conflicted.
+_sdp_assert_no_self_conflict() {
+  local label="$1" f corrupted=()
+  for f in "${FILES[@]}"; do
+    _sdp_entry_was_clean "$f" || continue
+    [[ -f "$f" ]] || continue
+    _sdp_has_conflict_markers "$f" || continue
+    corrupted+=("$f")
+  done
+  [[ ${#corrupted[@]} -eq 0 ]] && return 0
+  {
+    echo
+    echo "❌ SELF-INFLICTED CONFLICT MARKER(S) after ${label} -- these named file(s) were verified"
+    echo "   marker-free at entry and are conflicted NOW. This script's own autostash/quarantine"
+    echo "   replay did this, not your content. This is exit 15, NOT exit 6 -- exit 6 means your"
+    echo "   content was already bad; this means the script corrupted it after you handed it over."
+    for f in "${corrupted[@]}"; do
+      if [[ -n "$_SDP_ENTRY_SNAPSHOT_DIR" && -f "$_SDP_ENTRY_SNAPSHOT_DIR/$f" ]]; then
+        mkdir -p "$(dirname "$f")" 2>/dev/null
+        if cp -- "$_SDP_ENTRY_SNAPSHOT_DIR/$f" "$f" 2>/dev/null; then
+          echo "   ✓ restored $f to its entry content (recovery ref: $_SDP_ENTRY_SNAPSHOT_DIR/$f)"
+        else
+          echo "   ✖ could not restore $f -- entry snapshot is at $_SDP_ENTRY_SNAPSHOT_DIR/$f, recover by hand"
+        fi
+      else
+        echo "   ✖ no entry snapshot available for $f -- try 'git stash list' (this script never drops a stash entry, only quarantines) or 'git diff HEAD -- $f'"
+      fi
+    done
+    echo "   Never passing the corrupted version to the pre-commit checker. Any stash entries this"
+    echo "   run's own replay created are still parked, never dropped -- see"
+    echo "   plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md."
+  } >&2
+  exit 15
+}
 
 # Whole-tree snapshot. The fingerprint above covers only the NAMED files -- the work being
 # shipped. An uncommitted edit elsewhere in the tree can still be eaten by the reconcile's
@@ -1268,6 +1379,7 @@ autostash_rebase_reconcile() {
   if declare -F autostash_guard_quarantine_stale_pop >/dev/null 2>&1; then
     autostash_guard_quarantine_stale_pop "${FILES[*]}" "origin/${BRANCH}" || true
   fi
+  _sdp_assert_no_self_conflict "autostash rebase reconcile + post-pop quarantine sweep"
   return 0
 }
 
@@ -1431,6 +1543,7 @@ push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
   autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
 fi
+_sdp_assert_no_self_conflict "pre-pull autostash backlog quarantine sweep"
 
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   echo "── attempt ${attempt}/${MAX_ATTEMPTS} ──"
@@ -1502,6 +1615,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     fi
     unstage_foreign_paths
     reassert_renames
+    _sdp_assert_no_self_conflict "stage_named_files rename-deletion decomposition"
 
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
