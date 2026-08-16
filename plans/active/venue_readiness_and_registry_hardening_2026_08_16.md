@@ -451,6 +451,20 @@ confirmation — the resume recipe from the "3rd confirmation" entry above still
 invariant standalone first, only quickmerge once it passes. `unified-api-contracts` working tree unchanged
 (3 files, `ahead=0`/`behind=0` on committed history); `unified-trading-pm` clean.
 
+**2026-08-16 — still blocked, 6th confirmation, direct-cause recheck.** Checked the actual blocking condition directly
+instead of re-running the full invariant: `execution-service` HEAD moved `37bfaeed0` → `9af4713c` (a routine
+`origin/main` backmerge, not new work) since the last check; its most recent substantive commit is still `37bfaeed`
+("wire real Uniswap/Lido/Jupiter into live dispatch... Jito jitoSOL connector") — unrelated to karak/pendle/symbiotic.
+`grep -rin "karak\|pendle\|symbiotic" defi_adapter.py` = 0 hits, same as every prior check. All 3 tracking issue docs
+(`plans/active/issues/karak_decommission_2026_08_16.md`, `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`,
+`symbiotic_venue_onboarding_2026_08_16.md`) remain `status: open` — none flipped to resolved/in-progress since last
+checked. Condition unchanged; did not re-run the full QG suite (the direct-cause check is a cheaper, equally conclusive
+signal — the invariant fails iff these venues are unwired, and they're still unwired). A `ScheduleWakeup` (1800s) is
+armed to repeat this exact check — note for any session reading this cold: that wakeup is ephemeral (not itself
+durable), so if no further Progress Log entry appears after this one, the wakeup either hasn't fired yet or this
+session ended before it could; re-arm manually if picking this up fresh. `unified-api-contracts` still 3 uncommitted
+files, `ahead=0`/`behind=0`; `unified-trading-pm` clean.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
