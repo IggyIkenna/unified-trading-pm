@@ -109,7 +109,7 @@ source: >-
       an execution adaptor handle every `InstructionActionV2` those archetypes emit. Done-when: a real per-step
       verdict for that one row, plus `BLOCKED-ON` markers for the other 3 citing the specific gap todo each depends
       on.
-- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`.
+- [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@c20f242a85`.
       `BusTransferType` SSOT: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/
       transfer_events.py:64-189` (13 members). Per-venue verdict (applies to both of that venue's rows —
       transfers are venue-scoped, not per-data_type):
@@ -142,7 +142,7 @@ source: >-
 
 ## Progress Log
 
-**2026-08-16 — Step 9 swept, 1 more real gap found.** SHIPPED — `unified-trading-pm@<pending-sha>`. POLYMARKET's
+**2026-08-16 — Step 9 swept, 1 more real gap found.** SHIPPED — `unified-trading-pm@c20f242a85`. POLYMARKET's
 transfer rail is real and wired (generic ON_CHAIN/CUSTODY_TRANSFER via Copper custody). KALSHI has NO transfer
 rail at all — absent from `VENUE_WALLET_CAPABILITIES` and the transfer-architecture SSOT doc, with no documented
 "not applicable" rationale, meaning `classify_transfer_type` would silently fall through to a wrong CeFi default
