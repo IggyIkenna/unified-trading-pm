@@ -8,14 +8,18 @@ summary:
   rejects ANY commit that stages it — including a pure formatting restore with zero semantic change. The whitespace-only
   reformat was reverted (not landed) rather than fixed here, since splitting the plan is out of scope for the task that
   found this."
-status: open
+status: resolved
 nature: notes
 asset_group: [prediction]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, line-cap, prediction, ao-dispatch-batch]
-related: [/plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md]
+related:
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29_progresslog.md,
+  ]
 created: 2026-08-15
 author: slot-30
 parent_epic: plan_hygiene_master
@@ -27,7 +31,7 @@ source:
   (git diff -w empty), but pre-commit's plan-hygiene hook rejected the commit on the pre-existing 1001-line hard-cap
   violation, unrelated to the patch content itself."
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-15
 locked_by:
 execution_scope: orchestrator-agent
 model_tier:
@@ -37,6 +41,9 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-08-16 — resolved.** The sole todo (split the over-cap plan) shipped. See the Progress Log below
+> for the split's details.
 
 ## What I found
 
@@ -68,10 +75,11 @@ determinable by the worker alone, no design judgment needed.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Split `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (1001 lines) into two plan
-      docs under the 1000-line hard cap (ideally under the 500-line soft cap each) — preserve every existing todo's
-      checkbox state and `[TAG] P<n>.` text verbatim, keep the `_finalize.md` plan's `depends_on` pointed at whichever
-      half now carries the still-open items, and re-run
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-16 (slot-15, data_engineering) — `unified-trading-pm@<this-commit>`.** Split
+      `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (1001 lines) into two plan docs under the
+      1000-line hard cap (ideally under the 500-line soft cap each) — preserve every existing todo's checkbox state and
+      `[TAG] P<n>.` text verbatim, keep the `_finalize.md` plan's `depends_on` pointed at whichever half now carries the
+      still-open items, and re-run
       `bash scripts/plan-hygiene/check_line_caps.sh plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29*.md`
       to confirm both halves pass before shipping. (repo: unified-trading-pm)
 
@@ -79,3 +87,12 @@ determinable by the worker alone, no design judgment needed.
 
 - **2026-08-15 (slot-30, data_engineering)** — filed. No code/plan-content changes made to the offending file itself
   (reverted the incidental whitespace restore rather than force it through).
+- **2026-08-16 (slot-15, data_engineering)** — split executed. The main doc's `## Progress Log` section (224 lines of
+  historical entries, no todos/checkboxes) moved verbatim into a new companion doc,
+  `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29_progresslog.md`, replaced by a short pointer in the
+  main doc. Every Todos/Deferred-section todo's checkbox state and text is byte-identical (only the Progress Log moved).
+  Main doc now 785 lines (soft-warn only, not blocking); new companion doc 282 lines. No `depends_on` change needed on
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md` — the still-open items (Betfair back+lay P2, Phase-5
+  canonical-groups P1) both stayed in the main doc, which kept its filename. Verified:
+  `bash scripts/plan-hygiene/check_line_caps.sh plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29*.md` →
+  `✅ check_line_caps: staged plan(s)/epic(s) within cap`.
