@@ -228,3 +228,7 @@ reasoning above.
 ## Progress Log (context-scout)
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 6, operator ruling)**: the open `[OPERATOR]` P1 xperp
+  wire-format todo is RULED — option (b), encode `_XPERP` in the instFamily field. Extracted to
+  `/plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch, since this
+  doc stays `assigned_vm: NA`. Do not re-litigate the (a)/(b)/(c) choice.

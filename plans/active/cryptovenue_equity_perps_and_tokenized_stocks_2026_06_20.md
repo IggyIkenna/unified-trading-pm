@@ -260,6 +260,15 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
 
 ## Progress Log
 
+### 2026-08-16 — na-eligibility-audit follow-up Q&A round 6
+
+Two flagged questions resolved:
+- **Barchart removal (Phase 5 line 248)**: operator ruling re-confirmed (already operator-directed 2026-06-24) —
+  extracted the fully-specced todo to `/plans/active/cefi_barchart_removal_ao_dispatch_2026_08_16.md` (+ finalize)
+  for AO dispatch, since this doc stays `assigned_vm: NA`.
+- **Index-perp mapping (Phase 1c)**: already `[x] ✅` done in this doc (line 637) — no new work needed; the audit
+  report's flagged question was stale by the time it was asked.
+
 ### 2026-08-09 — NET-basis backtest re-run with dividend yield priced in (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 8)
 
 > **Header corrected 2026-08-09**: was mislabeled "todo 6" (that's the BBO+depth live-ws extension, Phase 3 above) —
