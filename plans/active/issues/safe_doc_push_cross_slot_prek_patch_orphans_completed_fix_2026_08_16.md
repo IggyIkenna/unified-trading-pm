@@ -145,17 +145,32 @@ pins (5 named test cases + a `bash -n` check).
       (cite this issue doc + the original slot-14 authorship) rather than presenting it as new work. **Done when**: the
       fix is live on `origin/live-defi-rollout`, QG green, and the stash is dropped only after the push is verified
       landed (`git merge-base --is-ancestor`).
-- [ ] [INFRA] P2. **Root-cause whether this is a genuine cross-slot PREK_HOME leak** (a residual gap in
+- [x] ✅ [INFRA] P2. **Root-cause whether this is a genuine cross-slot PREK_HOME leak** (a residual gap in
       `unified-trading-pm@62d1a42613`'s isolation fix) or a same-slot-16-inherited-WIP explanation that doesn't
       actually implicate cross-slot leakage (e.g. check whether slot 16's own recent session history ever ran
       `safe-doc-push.sh` work under a "slot-14"-labeled identity, or whether `PREK_HOME` was genuinely unset/shared for
       this run). Read `scripts/dev/safe-doc-push.sh`'s current `PREK_HOME` handling, confirm whether the isolated-mode
       code path was actually taken this run (logs/env), and file the concrete fix (or confirm no fix needed + explain
       the mechanism) as its own follow-up if this is a real residual gap. **Done when**: the mechanism is confirmed with
-      evidence (not guessed) and either fixed or explicitly ruled a one-off.
+      evidence (not guessed) and either fixed or explicitly ruled a one-off. — CONFIRMED genuine cross-slot leak via
+      evidence (grep + live env check on this host): PREK_HOME is only ever scoped inside `safe-doc-push.sh`'s
+      isolated-worktree branch (one assignment, line 502); the AO VM's own 2026-08-10 host gate defaults isolation OFF
+      for every slot on `planning` (confirmed `ORCHESTRATOR_VM_ID=planning` -> `_sdp_host_label()` != `"laptop"`), so
+      PREK_HOME is never scoped on this host and every slot shares one `~/.cache/prek/patches/` dir. NOT a defect in
+      the isolated-mode scoping code itself — a gap in the host gate's own justification, which addressed the
+      git-index hazard but never considered prek's separate host-global cache dir. Not itself an active data-loss
+      defect (`check_orphaned_prek_patches()` has a 100% catch rate across 10+ prior documented recurrences of this
+      exact signature) — filed the concrete cheap fix as its own follow-up per this todo's own instruction:
+      `/plans/active/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`. —
+      unified-trading-pm (this doc + the new follow-up doc only, no code change for this todo).
 
 ## Progress Log
 
 - **2026-08-16T04:30Z (slot-16, infra)** — filed. Recovered content into stash
   `d7c6b862ebce96bde257bb58b6fd9a17d829d414` (see "What slot-16 did" above); original patch files left in place
   pending resolution. No code shipped by slot-16 (recovery-only, per scope discipline).
+- **2026-08-16 (slot-31, infra)** — todo 2 (root-cause) done. Confirmed the mechanism with direct evidence (grep of
+  `safe-doc-push.sh` + a live env check on this exact `planning` host) and filed the follow-up fix doc:
+  `/plans/active/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`. Todo 1 (ship the recovered
+  fix / pop the stash) remains open — out of scope for this task (a separate, larger `quality-gates.sh`+`quickmerge`
+  shipping task, not a root-cause investigation).
