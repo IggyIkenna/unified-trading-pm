@@ -15,7 +15,7 @@ summary: >-
   so it is likely NOT the direct cause — but SOMETHING with write access to this clone is resetting the branch ref to
   origin without checking for local commits ahead of it. Flagging for operator investigation rather than guessing
   further.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -30,7 +30,7 @@ related:
   ]
 created: 2026-07-22
 author: unknown
-last_updated: 2026-07-28
+last_updated: 2026-08-16
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,13 +44,23 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "multiple sessions across 2026-07-22 through 2026-08-16 (see Progress Log) — final todo (9) closed by
+  slot-30 (data_engineering), unified-trading-pm@aff23df235"
 source: observed live during the data_pipeline_reconciliation_skill_2026_07_20 R2 rescue, 2026-07-22
 depends_on: []
 context_scope: [scripts/quickmerge.sh, /codex/05-infrastructure/per-tab-worktrees.md, /codex/08-workflows/ci-cd-flow.md]
 ---
 
 # unified-trading-library shared clone repeatedly reset to origin (2026-07-22)
+
+> **📦 ARCHIVED 2026-08-16 — resolved.** All 9 tracked todos done, unlocked. Root cause was never a single mechanism —
+> multiple distinct reset-to-origin sources were found and fixed across the doc's life: `cascade_dep_branch`'s
+> `checkout -B` TOCTOU race (locked + made atomic, `unified-trading-pm@06dc7632`/`@1d82f66451`), quickmerge's own
+> STAGE-5 branch-selection reset (guarded + preserve-ref recovery, `@f93a618e6`), plus the related worktree-isolation
+> gaps found along the way (all fixed, see Todos below). The final open todo (9) confirmed the STAGE-5 guard's bats
+> coverage didn't exercise real multi-session concurrent-push contention and extended it to do so
+> (`unified-trading-pm@aff23df235`) — the underlying mechanism was already understood (ordinary high push-contention
+> from concurrent sessions), not a new root cause needing further investigation.
 
 > **This is a HARD-RULE violation somewhere in the fleet**: CLAUDE.md explicitly bans `git reset --hard`/`clean -fd`/
 > `restore` of uncommitted work, and the multi-agent-safety section requires `git pull --ff-only` (which SAFELY no-ops
@@ -215,15 +225,24 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       separate traceable plan/codex doc records that earlier decision, only the code comment itself; the 2026-08-08
       entry on todos 4/5 below was re-confirming scope for those two, not re-authorizing this one from scratch. No
       further action needed.
-- [ ] 9. [REVIEW] P3. **NEW (found during the todo-3 audit, 2026-08-09).** Re-verify the STAGE-5 no-regression guard
-      (`unified-trading-pm@f93a618e6`, closes `quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`)
-      against the evidence in `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (items
-      5/6/9), which reports the identical "Reset to origin" symptom recurring on 7-of-24 repos in a single 2026-08-06
-      session, AFTER the guard had shipped. Every instance there was recoverable via `git cherry-pick` (no permanent
-      loss) and the mandatory verify-before-`/done` step caught it, so this is NOT urgent — but confirm whether the
-      bats-test coverage for the STAGE-5 guard exercises high-fan-out concurrent-push contention (many repos shipping
-      near-simultaneously), and if it doesn't, extend it or file a fresh root-cause doc. Target repo:
-      `unified-trading-pm` (`scripts/quickmerge.sh` + its bats suite).
+- [x] ✅ 9. [REVIEW] P3. **DONE 2026-08-16 (slot 30) — coverage gap confirmed, extended (not a fresh root-cause doc;
+      the mechanism was already understood, just untested).** Read `tests/test_quickmerge_stage5_no_regression_guard.bats`
+      in full: all 4 existing tests mutate a SINGLE clone's own ref state directly (manual `checkout -B`/`reset --hard`
+      in one working tree) — none of them involve a SECOND git actor pushing to origin concurrently, which is the actual
+      real-world trigger the `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` items 5/6 evidence
+      describes (multiple concurrent agent sessions landing commits on the same branch name; root-caused there as
+      "ordinary high push-contention from multiple concurrent sessions on the same repos' remotes", every instance
+      recovered via `git cherry-pick`, guard behaved correctly every time it fired). So: confirmed gap = real, confirmed
+      mechanism = already correctly understood (not a mystery needing a fresh root-cause doc) — extended the bats suite
+      instead. Added `"guard FIRES under realistic multi-session concurrent-push contention (fleet incident replay)"`:
+      two independent clones of the same origin (session A + session B), session B commits+pushes first, session A makes
+      its own certified commit then detaches+drops its local branch ref (the guard's own documented precondition —
+      "refs/heads/\$BRANCH not recognised as already checked out"), then session A's STAGE-5 `checkout -B` genuinely
+      hits the destructive elif arm via real git plumbing (not a manually-constructed single-clone scenario) — verifies
+      the guard still fires and durably preserves session A's commit even though origin moved out from under it via a
+      concurrent, unrelated push. All 7 tests green (`bats tests/test_quickmerge_stage5_no_regression_guard.bats`).
+      Shipped `unified-trading-pm@aff23df235` (QG green, sentinel-verified on the exact shipped SHA before push).
+      Repo: unified-trading-pm.
 
 ## Related QG-infra findings this session (worktree isolation vs the QG harness)
 
