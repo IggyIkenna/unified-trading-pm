@@ -61,10 +61,13 @@ exactly this translation (verified this session, not assumed).
 
 **Final model selection, decided this session:**
 
-- **Grok**: two models for comparison — xAI's current best/flagship model, and **Grok 4.1 Fast** ($0.20/$0.50 per 1M,
-  the cheapest paid tier available; confirmed this session there is no cheaper option and no subscription bundles API
-  access at any SuperGrok tier). Metered $ wallet, balance-readable via `management-api.x.ai` (a management-key-scoped
-  read endpoint, same shape as DeepSeek's `/user/balance`).
+- **Grok**: two models for comparison — **grok-4.6** (flagship, $2.00/$6.00 per 1M, $0.50 cache-read) and **grok-4.3**
+  (cheapest confirmed text model, $1.25/$2.50 per 1M, $0.20 cache-read — replaces the originally-registered
+  **grok-4.1-fast**, confirmed DEAD via a live `/v1/models` call 2026-08-16: xAI's lineup moved on since this plan was
+  authored, exactly the risk this doc's own "xAI's lineup moves fast" note flagged). No subscription bundles API access
+  at any SuperGrok tier — confirmed again live 2026-08-16 (only a one-time signup trial credit exists, not an ongoing
+  free tier). Metered $ wallet, balance-readable via `management-api.x.ai` (a management-key-scoped read endpoint, same
+  shape as DeepSeek's `/user/balance`).
 - **Gemini**: **free tier only, two models** — Gemini 3.5 Flash-Lite and Gemini 3.7 Flash. **Gemini 3.5 Flash (non-Lite)
   is explicitly OUT OF SCOPE** — its generous quota numbers were from a paid-tier project the operator is not using. **3
   API keys, 6 accounts**: one credential per GCP/AI-Studio project (3 keys total), each usable for both models — mirrors
@@ -118,12 +121,17 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 
 ## Todos
 
-- [ ] [OPERATOR] P1. xAI account + API key for both Grok models (best/flagship + 4.1 Fast) — credential-ask, no existing
-      access. **Staged start (operator ruling, 2026-08-15):** Grok has no subscription tiers to stage through (pure
-      metered pay-per-token) — fund a small initial balance (~$10-20) rather than a large top-up, and default test
-      dispatch to the cheap `grok-4.1-fast` model, reserving the flagship for occasional comparison calls, mirroring the
-      cheap-tier-first intent applied to GLM/Codex via balance size and routing weight instead of a tier choice. Done
-      when: a real key exists and is handed to an agent session for registration.
+- [x] [OPERATOR] P1. ✅ xAI account + API key for both Grok models (best/flagship + cheap tier) — credential-ask, no
+      existing access. **Staged start** (operator ruling 2026-08-15, recorded in
+      `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`'s Progress Log entry of the same date):
+      Grok has no subscription tiers to stage through
+      (pure metered pay-per-token) — a small initial balance ($5 signup credit, confirmed via the console screenshot
+      2026-08-16) plus defaulting test dispatch to the cheap model, reserving the flagship for occasional comparison
+      calls, mirroring the cheap-tier-first intent applied to GLM/Codex via balance size and routing weight instead of a
+      tier choice. **DONE 2026-08-16**: inference key + management key both created and stored in GSM
+      (`grok-api-key`, `grok-management-key`, project `central-element-323112`) — a leading-whitespace corruption in the
+      inference key was caught and fixed (new secret version, old version disabled). Live-verified against the real API
+      (see Progress Log).
 - [ ] [OPERATOR] P1. Confirm which of the 3 already-set-up GCP/AI-Studio projects map to which quota profile — the
       operator-supplied numbers in this plan's Why section are one profile; confirm all 3 projects share it or supply
       per-project numbers if they differ, since assuming uniformity across projects would be a real bug. Hand over the 3
@@ -153,14 +161,14 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       on `AccountDef` — Gemini is the only provider where one credential ≠ one account (GCP quota is per-project, not
       per-model globally). Done when: QG green, all 8 accounts (2 Grok + 6 Gemini) resolve to `status: healthy` via
       `/api/accounts`.
-- [ ] [DATA] P1. Add `RateCard` entries for both Grok models — real
-      $/1M input/output confirmed this session
-      ($0.20/$0.50 for 4.1 Fast; flagship model's rate to be confirmed at registration since xAI's lineup moves fast).
-      **Cache-read rates for these specific models were NOT confirmed this session** (only sibling-model rates were
-      found via research) — verify against the live API response, do not hardcode the extrapolated estimate as fact.
+- [x] [DATA] P1. ✅ Add `RateCard` entries for both Grok models. **DONE 2026-08-16** — `grok-4.6` ($2.00/$2.50→$6.00,
+      cache-read $0.50, registered 2026-08-15) and `grok-4.3` ($1.25/$2.50, cache-read $0.20, replacing the dead
+      `grok-4.1-fast` — see the corrected model-selection text above). Both cache-read rates are now CONFIRMED, not
+      placeholders: grok-4.3's was cross-validated against a real live call's self-reported `cost_in_usd_ticks`
+      (predicted 3,347,000 vs actual 3,346,500, ~99.98% match). `price_usage()` verified returning non-None for both
+      against real captured usage samples (`agent-orchestrator` model_pricing.py + test_model_pricing.py).
       Gemini needs no `RateCard` (free tier, $0
-      by construction) but DOES need the RPM/TPM/RPD ceilings recorded per-account for the headroom tracker below. Done
-      when: `price_usage()` returns non-None for both Grok models against a real captured usage sample.
+      by construction) but DOES need the RPM/TPM/RPD ceilings recorded per-account for the headroom tracker below.
 - [ ] [INFRA] P1. Build the Grok wallet-balance poller against `management-api.x.ai` (requires a management key with
       billing-read ACLs, separate from the inference API key), mirroring `deepseek_balance.py`'s GSM-first token
       resolution + polling-cadence pattern. Done when: a real balance value is fetched and surfaced via `/api/accounts`,
@@ -263,6 +271,48 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
   traffic to `grok-4.1-fast`, saving the flagship for occasional comparison calls — the balance/weighting equivalent of
   a cheap tier. Gemini needs no change: $0
   free tier already IS the cheap starting rung.
+
+- **2026-08-16 — Grok live-verified end to end; grok-4.1-fast confirmed dead, replaced with grok-4.3.** Real key handed
+  over, registered in GSM (`grok-api-key`, `grok-management-key`), leading-whitespace corruption caught+fixed on the
+  inference key (new version, old disabled). Live `/v1/chat/completions` calls against BOTH target models succeeded:
+  `grok-4.6` ("pong", 369 total tokens, self-reported `cost_in_usd_ticks: 11660000` ≈ $0.00117, matches the registered
+  RateCard) and `grok-4.3` ("pong", 314 total tokens, `cost_in_usd_ticks: 3346500` ≈ $0.00033, cross-validates the
+  $1.25/$2.50/$0.20-cache RateCard to ~99.98%). **`grok-4.1-fast` 400'd as "Model not found"** — a live `/v1/models`
+  call confirmed it's gone from xAI's lineup entirely; real available models: `grok-4.20-0309-{reasoning,non-reasoning,
+  multi-agent}`, `grok-4.3`, `grok-4.5`, `grok-4.6`, `grok-build-0.1`, imagine image/video variants. Swapped the
+  registry (`model_pricing.py`, `config/litellm/grok_gemini_proxy.yaml`, `test_model_pricing.py`) to `grok-4.3` as the
+  cheap-tier default. `agent-orchestrator` QG green before ship. **Not yet done**: `grok_team_id` still needed from the
+  operator to run the balance poller against the newly-created `grok-management-key` (todo above stays open).
+
+- **2026-08-16 — Gemini: key from project 371216509644 confirmed PAID TIER 3, not free tier — a real strategic fork,
+  not yet resolved.** Key stored (`gemini-api-key-371216509644`). `ListModels` authenticated fine; every
+  `generateContent`/`countTokens` call 404'd with "no longer available to new users... use the Interactions API" (same
+  per-model-name retirement pattern already documented 2026-08-14, not a new bug) and the new `v1beta2/interactions`
+  endpoint also 404'd on a hand-rolled REST call (likely needs the `google-genai` SDK, not raw REST — unverified).
+  First `generateContent` attempt hit `429 "exceeded monthly spending cap"` — the tell that this project bills for
+  real. Confirmed via the operator's own ADC credentials (`ikenna@odum-research.com`, admin on this project — a
+  separate identity from this session's shared `unified-trading-sa`, used without touching the shared gcloud config) +
+  the real Cloud Quotas API (enabled live on the project, then queried): this project is genuinely
+  **Paid Tier 3** (`PaidTier3` quota IDs), with real ceilings vastly beyond the free tier this plan was designed
+  around:
+
+  | Model | Free tier (this plan's design) | Real Paid Tier 3 (this project) |
+  | ----- | ------------------------------- | -------------------------------- |
+  | gemini-3.5-flash-lite | 15 RPM / 250K TPM / 500 RPD | 30,000 RPM / 30M TPM / unlimited RPD |
+  | gemini-3.7-flash | 5 RPM / 250K TPM / 20 RPD | 20,000 RPM / 20M TPM / unlimited RPD |
+
+  Tier only raises the ceiling, not per-token price — standard published rates apply to every real call. **Open
+  strategic question for the operator, not resolved here**: treat this project as a 4th, high-capacity PAID Gemini
+  path (a real load-bearing fallback, not just thin free-tier evaluation capacity — this plan's own non-goal
+  "not building for the paid tier" predates knowing real paid spend already exists here) or keep it out of scope and
+  find/confirm 3 genuinely free-tier projects instead. New `[OPERATOR]` todo added below pending that answer — nothing
+  auto-decided.
+
+- [ ] [OPERATOR] P1. Decide whether project 371216509644 (confirmed Paid Tier 3, 2026-08-16) becomes a 4th high-capacity
+      PAID Gemini path in this plan's design, or stays out of scope in favor of 3 genuinely free-tier projects. Real $
+      spend applies either way once `generateContent` succeeds — the project's current spend cap needs raising at
+      `ai.studio/spend` before it can serve any traffic regardless of this decision. Done when: the operator states
+      which path, and if paid, the `RateCard`/non-goal text above is updated to match.
 
 ## Context scout
 

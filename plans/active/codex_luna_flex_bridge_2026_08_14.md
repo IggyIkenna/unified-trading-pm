@@ -124,10 +124,19 @@ template, minus the third-party dependency).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Complete **ChatGPT Plus** ($20/mo — staged start, not Pro; see the ruling above) subscription
-      signup and persist an authenticated `~/.codex/auth.json` session on the orchestrator VM (`planning`) — a human
-      ChatGPT OAuth flow, cannot be automated by a worker. Done when: `~/.codex/auth.json` exists on the VM and a manual
-      `codex` CLI smoke call succeeds against it.
+- [x] [OPERATOR] P1. ✅ Complete ChatGPT subscription signup and persist an authenticated `~/.codex/auth.json` session
+      on the orchestrator VM (`planning`). **DONE 2026-08-16**: operator ran `codex login --device-auth` on their
+      laptop (device code + browser confirmation); resulting `~/.codex/auth.json` transferred to the VM via SSM
+      (base64, never printed in any visible output — the officially documented bootstrap pattern per OpenAI's own
+      CI/CD auth docs, "run codex login on a trusted machine with browser access, then transfer the resulting
+      auth.json to your headless server"). `codex` CLI (0.147.0) installed on the VM via SSM first. **Real smoke call
+      succeeded**: `codex exec` returned "OK" for a genuine prompt, 2,745 tokens billed, session id recorded. One
+      finding to fold into the tier tracking: it defaulted to model `gpt-5.6-sol`, not `luna` — GPT-5.6 has three
+      effort presets (Sol/Terra/Luna per this plan's own 7-day usage-grounding numbers) and the bridge will need `-m`
+      to pin Luna explicitly, the default won't do it. **Still unconfirmed**: whether the account is on Plus (the
+      staged target) or already Pro — operator said "im on pro" in a message that also carried unrelated Gemini
+      credentials, ambiguous whether that confirms the ChatGPT tier or was cross-talk; the upgrade-to-Pro todo below
+      stays open pending a direct answer, don't assume it's already satisfied.
 - [ ] [OPERATOR] P3. Upgrade ChatGPT Plus → Pro once the bridge is validated (smoke-test gate passed, real dispatch
       volume observed) and the operator decides to scale. Done when: the ChatGPT account shows Pro active and the quota
       tracking todo's ceiling numbers are remeasured against the new tier — same auth artifact, no other code change
