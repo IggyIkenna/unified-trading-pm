@@ -5,7 +5,7 @@ summary: >-
   Daily deep plan-reconciliation run-findings doc for the cross-cutting topic tranche, dispatch agt-33a6ec (slot 28).
   Records hunter-detected candidates, adversarial-verification outcomes, applied fixes, routed operator questions, and
   coverage for this run. Also the progress journal for the run itself.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,6 +38,14 @@ context_scope:
 ---
 
 # plan_reconciler findings — cross-cutting tranche — 2026-08-10
+
+> **✅ ARCHIVED 2026-08-16 (/plan-reconcile Phase -1 reconciliation)** — 0 open todos: Item C (this doc's last open
+> item) was flipped `[x]` 2026-08-16 via the operator-ruled `BLK-a8e6b715` fix, `unified-trading-pm@de9fa73ef8` (see
+> the 2026-08-16 cross-cutting findings doc's Filed section). `locked_by:` was already cleared 2026-08-15 per the
+> dead-lock precedent. Corpus referrers carrying a literal `plans/active/issues/` path to this doc repointed to
+> `plans/archive/issues/` in the same pass (`citadel_paper_batch_live_reconciliation_2026_06_19.md`,
+> `manifest_v9_residual_2026_08_15.md` x2, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`,
+> `bucket_iam_write_protection_per_tier_2026_06_09.md`, `plan_reconciler_findings_cross_cutting_2026_08_16.md`).
 
 Dispatch `agt-33a6ec`, slot 28, tranche `cross-cutting`. PM head at run start: `f8f07e7459`.
 

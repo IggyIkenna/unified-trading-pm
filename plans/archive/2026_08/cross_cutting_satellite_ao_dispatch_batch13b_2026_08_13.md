@@ -23,15 +23,15 @@ tags: [cross-cutting, ao-dispatch, satellite-batch, na-eligibility-audit, ag-clo
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md,
+    /plans/archive/2026_08/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md,
     /plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md,
     /plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md,
     /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
-    /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
+    /plans/archive/2026_08/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
     /plans/active/issues/plan_reconciler_findings_all_2026_08_12.md,
-    /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
-    /plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md,
-    /plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md,
+    /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
+    /plans/archive/2026_08/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md,
+    /plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md,
     /plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md,
     /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,
   ]

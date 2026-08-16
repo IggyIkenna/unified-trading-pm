@@ -15,7 +15,7 @@ tags: [role, plan_reconciler, reconciliation, plan-hygiene, cross-cutting, shard
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
+    /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
     /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
   ]
@@ -32,8 +32,8 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: "plan_reconciler (agt-3cc834) since 2026-08-16T17:36:33Z"
-locked_since: "2026-08-16T17:36:33Z"
+locked_by:
+locked_since:
 depends_on: []
 context_scope: [/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
 ---
@@ -58,7 +58,10 @@ Phase -1 note on the stale "≤10 parallel" figure below).
   exists to catch, just aimed at its own prior output. Not archived (still has 1 genuinely open item). Item C itself
   is a codex-SSOT multi-part rewrite (explicitly "not a single substitution" per its own text) — does not qualify for
   the STEP-5.f2 mechanical carve-out, so it stays operator-gated regardless of trust mode. Routing via `/blocked` this
-  run with a drafted recommendation (see Filed).
+  run with a drafted recommendation (see Filed). **UPDATE 2026-08-16 (separate /plan-reconcile Phase -1 pass)**: Item
+  C resolved (`unified-trading-pm@de9fa73ef8`, see Filed #1 below), the doc reached 0 open todos, and has since been
+  ARCHIVED to `/plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` — see Archive candidates
+  #1 below for the executed ritual.
 - `plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md` (same-day, `ao` tranche, agt-3eb42b/slot 28) —
   documents 2 live infra gaps this run must work around: (1) `/api/plan-health/result` may reject an empty/omitted
   `X-Orchestrator-Secret` despite documented loopback-trust; (2) a `/blocked` answer may not reliably surface via
@@ -99,7 +102,7 @@ Phase -1 note on the stale "≤10 parallel" figure below).
    reconciler doc. **FIXED**: both claims corrected to point readers at each item's own body entry instead of
    trusting the stale summary. Also flipped 2 genuinely-resolved-but-unchecked todos inside the same doc (a
    conflict-marker non-issue already resolved in its own text; a 4-doc archive_exempt-BRIDGE item already
-   filesystem-confirmed archived). `unified-trading-pm@<pending>`.
+   filesystem-confirmed archived). `unified-trading-pm@f2c07765e6`.
 3. **P1** `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:9-10` (batch 4) — frontmatter claimed
    "Mostly DONE (29/43 todos); 14 residuals remain open," but a fresh grep (batch-4 hunter, spot-confirmed by me)
    measured 0 open `- [ ]` / 41 closed `- [x]` / 5 no-checkbox EXTRACTED-pointer bullets across the full 1001-line
@@ -107,7 +110,7 @@ Phase -1 note on the stale "≤10 parallel" figure below).
    summary corrected to "DONE — 0 open todos," flagged ARCHIVE-READY (see Archive candidates). Did not personally
    re-verify HARD evidence on each of the 41 individual `[x]` items (out of proportion for this pass) — the fix here
    is the mechanically-measured checkbox-count claim, not a re-audit of the doc's substance.
-   `unified-trading-pm@<pending>`.
+   `unified-trading-pm@f2c07765e6`.
 
 ## Doc-drift
 
@@ -174,28 +177,35 @@ Phase -1 note on the stale "≤10 parallel" figure below).
 ## Archive candidates (operator review)
 
 1. `plan_reconciler_findings_cross_cutting_2026_08_10.md` — Item C (its last open todo) flipped this run (see Filed
-   #1 / Progress Log below); doc now has 0 open todos, unlocked. ARCHIVE-READY — 10 referrers found (mix of active +
-   archived docs) — deferred to a consolidated referrer-sweep pass later in this run's STEP 5.
+   #1 / Progress Log below); doc now has 0 open todos, unlocked. **ARCHIVED 2026-08-16** (separate `/plan-reconcile`
+   Phase -1 pass): moved to `/plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+   (`status: resolved`, banner added); the 5 leading-slash-path referrers found (of 10 total mentions — 5 were bare
+   filename mentions, out of `check_reference_paths.py`'s scope) repointed:
+   `citadel_paper_batch_live_reconciliation_2026_06_19.md`, `manifest_v9_residual_2026_08_15.md` (x2),
+   `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`, `bucket_iam_write_protection_per_tier_2026_06_09.md`,
+   and this doc's own `related:` entry (line 18).
 2. `plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md` — all 3 todos `[x]`, unlocked,
    `archive_exempt: true` but the exemption is explicitly time-boxed ("keep active through the next plan-reconcile
    cycle so the operator can review... before archival", filed 2026-08-10) — 6 days and multiple reconcile cycles
-   have since passed (confirmed via Phase -1's own doc listing). ARCHIVE-READY, exemption satisfied — 4 referrers
-   found (all in `plans/archive/**`) — deferred to the same consolidated referrer-sweep pass.
+   have since passed (confirmed via Phase -1's own doc listing). **ARCHIVED 2026-08-16** (same pass): moved to
+   `/plans/archive/issues/committed_conflict_marker_plan_doc_2026_08_10.md`, `archive_exempt` dropped. Re-measured
+   referrer count at archival time: 5 (not the 4 originally estimated), all bare filename mentions inside already-
+   archived docs — none needed a leading-slash repoint.
 3. `plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md` — 0 open todos (see Contradictions
-   #3), unlocked, `status: active`. ARCHIVE-READY per the HARD RULE — referrer sweep not yet done.
+   #3), unlocked, `status: active`. Still ARCHIVE-READY, NOT executed this pass either — 27 referrers is out of
+   proportion for a Phase -1 reconciliation of 3 named findings docs; left for a dedicated `/archive-candidates-audit`
+   pass (this doc's own status note is accurate as written, no change needed).
 4. `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` — independently confirmed
    (0 open todos, `archive_exempt: true` BRIDGE-marker citing the exact same deferred-follow-on pattern, 4+ days
-   overdue).
+   overdue). Still ARCHIVE-READY, NOT executed this pass — 16 referrers, same proportionality call as #3.
 
-**DECISION — archival execution deferred for all 4, this run (2026-08-16)**: referrer counts measured for all 4 —
-10, 4, **27**, and **16** respectively (70 total... 57 excluding the 13 that already point correctly, but a
-per-referrer citation-format audit wasn't run to separate correct-format from needs-repoint). Executing the full
-6-step ritual (incl. checking + repointing every referrer's exact citation) for all 4 in this pass risks a rushed,
-incomplete sweep that leaves NEW dangling references — directly counter-productive given the corpus-wide
-reference-path-convention ratchet is ALREADY failing (39 vs baseline 34, confirmed this run's Phase 0). Proportionate
-call: leave all 4 clearly marked here as ARCHIVE-READY with their referrer counts (this doc is itself
-`context_scope`-linked from the corpus, so it's a discoverable pointer) for a dedicated `/archive-candidates-audit`
-pass or direct operator action, rather than a rushed partial sweep in this run's remaining budget.
+**DECISION (2026-08-16, original run)**: archival execution deferred for all 4 in the original run, given the
+reference-path-convention ratchet was already failing and a rushed 4-doc sweep risked new dangling refs.
+**UPDATE (2026-08-16, separate /plan-reconcile Phase -1 pass)**: #1 and #2 executed above — both were directly in
+scope (findings-doc self-reconciliation / a small, already-measured 4-5-referrer case) and completed cleanly with no
+new dangling refs introduced (verified via fresh `grep` before and after). #3 and #4 remain deferred — their
+27-and-16-referrer scope is better suited to a dedicated `/archive-candidates-audit` pass than folded into this
+3-doc-scoped session.
 
 ## Hygiene fixes
 
@@ -203,18 +213,18 @@ pass or direct operator action, rather than a rushed partial sweep in this run's
    refreshed against live corpus state — 5 of 11 have since archived (annotated, no longer need retagging), 6 remain
    active. Also corrected a self-contradiction: the `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` bullet
    claimed "operator ruling still outstanding" while this SAME doc's own Todos section already showed it RULED
-   2026-08-06 and flipped `[x]` 2026-08-09 — never back-ported to the summary bullet. `unified-trading-pm@<pending>`.
+   2026-08-06 and flipped `[x]` 2026-08-09 — never back-ported to the summary bullet. `unified-trading-pm@ca11808d7e`.
 2. `plans/active/bucket_fold_features_2026_07_17.md` — stale "🟡 MIGRATION IN FLIGHT" banner (since 2026-07-17)
    corrected to reflect the doc's own 2026-07-26 Progress Log ("Fold A is now 100% closed except..."); only the P3
    Alias-sunset todo remains open. `related:` frontmatter: fixed 2 non-leading-slash paths + repointed 2 entries that
-   had moved to `plans/archive/2026_07/` (dangling refs). `unified-trading-pm@<pending>`.
+   had moved to `plans/archive/2026_07/` (dangling refs). `unified-trading-pm@ca11808d7e`.
 3. Reference-path-convention fixes (bare slug / `../`-relative / stale-archived-path, batch 3 findings, spot-verified
    by me before fixing): `capability_wizard_analysis_findings_2026_06_11.md` F42 inline status corrected to FIXED
    (matches its own roll-up table + tracked todo, both already showed `unified-api-contracts@f3440731` DONE);
    `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` + `cross_venue_funding_reversion_research_2026_07_24.md`
    `related:` lists repointed to leading-slash paths (1 target had itself moved to `plans/archive/2026_08/` since);
    `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` body citation repointed to the now-archived target.
-   `unified-trading-pm@<pending>`.
+   `unified-trading-pm@f2c07765e6`.
 
 ## Refuted (dropped by verify)
 
@@ -287,3 +297,19 @@ cross-cutting run should prioritize these.
   `git apply` restored the foreign patch to the working tree only (left uncommitted, unstaged — not this run's work
   to commit), then removed the now-applied patch file. No content lost; flagging as a live recurrence of the known
   class for whoever next reads that tracked issue doc.
+- **2026-08-16T21:42Z (separate /plan-reconcile Phase -1 reconciliation pass, this doc's own dead lock cleared)**:
+  this doc's `locked_by: plan_reconciler (agt-3cc834) since 2026-08-16T17:36:33Z` was confirmed DEAD before touching
+  it: `check-ao-backlog-status.sh` filtered on `agt-3cc834` against the live AO backlog returned 0 matching tasks
+  (queued/dispatched/blocked), and no commit landed against this doc for ~3h05m before this pass started (last
+  activity `dc95c63538` at 18:27:12Z, itself already framed as a deliberate stopping point — "batch 5-9 not hunted...
+  a future cross-cutting run should prioritize these" — not a mid-sentence crash). Same 3-part liveness bar the
+  2026-08-15 precedent used for the sibling 08-10 doc's lock (no live tmux session / no recent commits /
+  AO-confirmed not-in-backlog). Lock cleared. **Backfilled 5 `<pending>` sha placeholders** with their real,
+  HEAD-reachable commits (`git log --stat` per candidate commit, matched by touched-file set, not guessed):
+  Contradictions #2/#3 and Hygiene #3 → `f2c07765e6`; Hygiene #1/#2 → `ca11808d7e`. **Executed 2 of the 4 deferred
+  archivals** (see Archive candidates, updated above) — `plan_reconciler_findings_cross_cutting_2026_08_10.md` (my
+  direct Phase -1 scope) and `committed_conflict_marker_plan_doc_2026_08_10.md` (small, already-measured referrer
+  count) — both via the standard 6-step ritual, flat `plans/archive/issues/` destination per
+  `archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`'s same-day ruling. Left
+  batches 5-9 and the "confirmed findings not applied" list untouched — genuine remaining ordinary work, not a
+  doc-hygiene gap this Phase -1 pass exists to close.

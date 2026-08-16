@@ -317,7 +317,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       a fleet-wide 21-repo local-vs-`origin/main` `staging_versions` lag (incl. UAC itself, local=0.124.0 vs origin/main
       staging_versions=0.72.0) — neither is the strategy-service-QG-preflight-blocking pairing this todo cited; both are
       pre-existing, tracked separately, and out of this todo's scope. Source:
-      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` Item H.
+      `/plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` Item H (archived 2026-08-16).
 - [x] ✅ [SCRIPT] P3.3. **SWAP leg `size_units` now denominated in the OUT asset (ETH), not the USDC-in notional** —
       DONE (strategy-service@67e7826c). `staked_basis.py` both SWAP legs (open `_build_atomic_legs` + rescale) now set
       `size_units` to the canonical OUT-asset qty (`eth_qty = usdc_to_stake / eth_price`; rescale `eth_delta_qty`),
