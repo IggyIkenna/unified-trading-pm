@@ -13,7 +13,7 @@ summary: >-
   migrate-then-delete, mirroring merge_migrated_odds_into_canonical_2026_07_17.py) vs. safe-to-drop bookkeeping residue
   (that script's own docstring documents a 2x bare/no-`league=` duplicate-object pattern in this same population, which
   would never carry a `league_id=`-keyed twin by construction and may be pure noise).
-status: open
+status: resolved
 assigned_vm: planning
 nature: issue
 asset_group: [sports]
@@ -29,7 +29,7 @@ related:
   ]
 parent_epic: sports_master
 priority: P3
-resolved_by:
+resolved_by: market-tick-data-service@e0cdaff5ee (fold) + purge_confirmed_bare_league_legacy_orphans_2026_08_16.py run (harness task b1t1m4oz5)
 locked_by:
 created: 2026-08-15
 author: slot-11
@@ -44,6 +44,7 @@ context_scope:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+last_updated: 2026-08-16 # status flipped resolved -- all 3 todos done, 280/280 divergent-content days folded into canonical then purged, 0 open items remain
 ---
 
 # 1,814 orphan legacy `league=` objects — disposition follow-up
@@ -124,7 +125,7 @@ Split the 1,814 objects into the two classes above and resolve each:
       script (`purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`) that skips re-verification for
       already-confirmed days and only does the small fixed set of REST calls needed to delete, completing the full
       1,534-object purge in under 90s.
-- [ ] [DATA] P3. **RESCOPED 2026-08-16 (slot-23), root-cause CONFIRMED same session** — the 280 `bare_no_league` days
+- [x] [DATA] P3. **DONE 2026-08-16 (slot-23) — 280/280 folded then purged, 0 open items remain.** RESCOPED 2026-08-16 (slot-23), root-cause CONFIRMED same session — the 280 `bare_no_league` days
       that FAILED content-verify (real unmatched content, not present in canonical `batch_odds_api`) needed
       investigation + fold-in, not the "genuine per-league cells" framing this todo originally had (todo 1 already
       established 0 `per_league_cell` orphans exist — this is a different population, discovered by todo 2's
@@ -252,22 +253,35 @@ Split the 1,814 objects into the two classes above and resolve each:
   /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16_postfold.jsonl` (new report filename,
   distinct from the pre-fold baseline at `/tmp/verify_report_2026_08_16.jsonl` — that file is left untouched as the
   dry-run-time record).
+- **2026-08-16 (slot-23, continuation 6) — post-apply re-verify confirmed 280/280 `fully_redundant`, purge launched
+  and completed. TODO 3 DONE, ISSUE RESOLVED.** Task `bt03cyvxr` completed exit 0:
+  `/tmp/verify_report_2026_08_16_postfold.jsonl` shows **`disposition_fully_redundant=280`, `unmatched_rows=0`,
+  `bare_rows=7,915,337` all matched** — the fold fully closed the divergence for every one of the 280 days, confirming
+  run3's writes (and the two partial predecessor runs) landed correctly. Log noise was 6 benign `WARNING Connection
+  pool is full, discarding connection: oauth2.googleapis.com` lines (gRPC/oauth connection churn under load), not real
+  errors. Launched the delete-only purge standalone (never combined with verify, per the established sequencing
+  lesson) via the harness's native `run_in_background: true` (no `nohup`):
+  `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py --verify-report
+  /tmp/verify_report_2026_08_16_postfold.jsonl --apply --confirm-prod-delete` → harness task `b1t1m4oz5`, completed
+  exit 0: `§3a fresh soft-delete-retention check: 604800s`, `fully_redundant objects loaded: 280`, **`TOTALS over 280
+  objects (apply=True): deleted: 280`** — every one of the 280 now-redundant bare legacy objects removed, matching
+  the verify population exactly. Combined with todo 2's earlier 1,534-object purge, the entire 1,814-object
+  `bare_no_league` legacy population (100%) is now resolved: 1,534 were pure duplicates (purged 2026-08-16 without a
+  fold), 280 had genuinely unique tail-of-day content (folded into canonical, then purged once redundant). 0
+  `per_league_cell` orphans ever existed (todo 1). All three todos in this doc are now closed with 0 open items —
+  flipping doc to `status: resolved` and archiving.
 
-## Deferred work after 2026-08-16
+## Deferred work after 2026-08-16 (CLOSED — all items resolved, doc archived same commit)
 
 | Item | State | Blocked on |
 | --- | --- | --- |
 | Regenerate verify-report: `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16.jsonl` (read-only, **no** `--apply`/`--confirm-prod-delete`) | **Done 2026-08-16 (slot-23)** — 280/280 lines, all `disposition=no-migrate-first` (matched_rows=7,478,332, unmatched_rows=437,005, bare_rows=7,915,337) | — |
 | `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16_run3.jsonl` | **Done 2026-08-16 (slot-23)** — run3 (harness task `bz44854ny`) reached 280/280, exit 0. Cumulative `rows_added` across all 3 runs = 427,871 vs dry-run baseline 428,933 (0.25% gap, reconciled — see Progress Log, explained by ongoing live canonical writes between dry-run and apply, no errors/guard-refusals). | — |
-| Post-apply re-verify the 280 days now resolve `fully_redundant` | **In progress (harness task `bt03cyvxr`, native `run_in_background: true`)** — read-only, writes `/tmp/verify_report_2026_08_16_postfold.jsonl`. Expect all 280 days `disposition=fully_redundant`. | The re-verify's own completion |
-| Purge the newly-redundant bare objects (mirror `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`'s §3a pattern: fresh `gcs_bucket_soft_delete_retention_seconds >= 604800` check same-run, `--confirm-prod-delete`) — invoke as `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py --verify-report /tmp/verify_report_2026_08_16_postfold.jsonl --apply --confirm-prod-delete` | Not done | The post-apply re-verify above confirming 280/280 `fully_redundant` |
-| Flip this todo `[x]` with the purge script's SHA + object/byte counts, then archive this doc (last open item) | Not done | The purge above |
-| `sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md` todo 1 ("Scope the duplication") | Not done, independently pickup-able | Nothing — unrelated to this chain |
+| Post-apply re-verify the 280 days now resolve `fully_redundant` | **Done 2026-08-16 (slot-23)** — harness task `bt03cyvxr`, exit 0. All 280/280 days `disposition=fully_redundant`, `unmatched_rows=0`. | — |
+| Purge the newly-redundant bare objects | **Done 2026-08-16 (slot-23)** — harness task `b1t1m4oz5`, exit 0. `deleted: 280` / `fully_redundant objects loaded: 280` — 100% of the population purged, §3a retention check passed at 604800s. | — |
+| Flip this todo `[x]` with the purge script's SHA + object/byte counts, then archive this doc (last open item) | **Done 2026-08-16 (slot-23)** — todo 3 flipped above; doc frontmatter set `status: resolved`, `resolved_by:` cites the fold commit + purge task; `git mv` to `plans/archive/issues/` in the same commit as this edit. | — |
+| `sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md` todo 1 ("Scope the duplication") | Not done, independently pickup-able | Nothing — unrelated to this now-closed chain |
 
-**Recommended next item**: let the post-apply re-verify (harness task `bt03cyvxr`, native `run_in_background: true`,
-no `nohup`) finish — do not manually re-poll beyond an armed watchdog notification or an explicit operator status
-request, per the async-wait/poll-discipline HARD RULE. On completion, confirm all 280 days show
-`disposition=fully_redundant` (any `has_unique_content` day is a stop-and-investigate signal, not something to paper
-over), then run the purge script standalone against `/tmp/verify_report_2026_08_16_postfold.jsonl` — never combine
-apply+purge in one process, per the same host lesson as above (the purge script exists specifically because combining
-verify+delete in one long process is what got killed three times on 2026-08-16, per its own docstring).
+**This issue is fully resolved — no further action needed on it.** The unrelated
+`sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md` todo remains open and independently pickup-able by any
+future session; it is not part of this chain.
