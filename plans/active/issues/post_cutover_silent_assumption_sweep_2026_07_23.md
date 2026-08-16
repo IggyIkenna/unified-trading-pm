@@ -304,7 +304,7 @@ validated against UAC v1 can promote after UAC v2 lands.
 >   for git-tag repos**: `scripts/cicd/reconcile_release_tags.py` has **no `--mint` implementation** (grepped this
 >   session) and hard-refuses to mint for dynamic-versioned repos; its own STALL message names semver-agent as the
 >   minter.
-> - **Codex now rules the opposite of this section**: `/codex/08-workflows/ci-cd-flow.md:1004` § _"Release tag
+> - **Codex now rules the opposite of this section**: `/codex/08-workflows/ci-cd-flow.md:1413` § _"Release tag
 >   reconciler — a STALL DETECTOR, not the minter (corrected 2026-07-25)"_.
 >
 > **Corroborating measurement**: this section's premise was "no tags are minted and `versions` is NOT advancing". Ran
@@ -393,7 +393,7 @@ classify them by conventional-commit prefix (the rules above), compute the next 
       `--mint` flag so the detector stays usable standalone.~~ Moot -- the per-repo `semver-agent` retarget
       (`unified-trading-pm@0b128a725`, `push:[main]`, fleet-rolled to all 22 `ldr_main` repos) shipped instead and is
       proven live (see the ⛔ banner above this section). No `--mint` flag exists or will be built;
-      `reconcile_release_tags.py` stays a STALL DETECTOR only (`/codex/08-workflows/ci-cd-flow.md:1004`).
+      `reconcile_release_tags.py` stays a STALL DETECTOR only (`/codex/08-workflows/ci-cd-flow.md:1413`).
 - [x] ⛔ [DOC] P1. **SUPERSEDED 2026-07-25, formally retired 2026-08-08 (operator ruling — see
       `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4).** Option B (this whole sub-steps
       list) was never built; the per-repo `semver-agent` retarget shipped instead (see the ⛔ banner above this
@@ -418,7 +418,7 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 - [x] ⛔ [DOC] P2. **RETIRED 2026-08-08 (operator ruling) — already superseded in practice.** ~~Update
       `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" once B ships — it currently documents B as
       _planned_.~~ B will never ship; codex already reflects the actual shipped state
-      (`/codex/08-workflows/ci-cd-flow.md:1004` § "Release tag reconciler — a STALL DETECTOR, not the minter (corrected
+      (`/codex/08-workflows/ci-cd-flow.md:1413` § "Release tag reconciler — a STALL DETECTOR, not the minter (corrected
       2026-07-25)"), so there is nothing left to update for this specific item.
 
 ## Docs (P2)
