@@ -437,6 +437,23 @@ before touching the source doc directly._
       matching the requested `--project`/positional filter — a single-project run now boots only that pair, "start
       everything" preserved only as the conservative fallback for unmappable filters. Verified 2026-08-15
       (reconciliation sweep, this session). Source: same doc.
+- [x] [UI] P2. **New, operator 2026-08-16 — DONE same day, shipped `agent-orchestrator@c56f053fbf`.** Make the
+      Wallet Reconciliation (Claude + DeepSeek),
+      Accounts, Fleet, Blocked questions, Escalations, and Scheduled jobs/dispatch dashboard panels
+      expandable/collapsible. Implemented by extending the shared `Panel` component
+      (`dashboard/src/components.tsx`) with a `collapsible` prop — the title becomes a toggle button (chevron +
+      title only, not the whole header, so a header's own action buttons like Fleet's "Spawn worker" stay
+      independently clickable), collapse state persists per-panel via `localStorage`
+      (`orch.panelCollapsed.<title>`, matching this dashboard's existing session/tweaks persistence pattern in
+      App.tsx), body simply isn't rendered when collapsed (matches the codebase's existing conditional-render
+      convention for expand/collapse elsewhere, e.g. the activity-group rows). Wired into all 8 real panel
+      instances behind the 6 named categories (`layout.tsx`: Blocked questions, Escalations, Scheduled jobs,
+      Scheduled dispatch, Accounts ×2 empty/populated; `App.tsx`: Fleet; `ClaudeWalletPanel.tsx` +
+      `DeepSeekWalletPanel.tsx`). `tsc --noEmit` clean, full `quality-gates.sh` green. **pw:L2** — new regression
+      spec `dashboard/tests/e2e/panel-collapsible.spec.ts` (3 tests: toggle hides/shows the body without affecting
+      a sibling panel, collapsed state survives a reload, a header action button stays clickable and does not
+      trigger collapse) plus 10 pre-existing wallet/blocked specs re-run green to confirm no regression. Source:
+      operator request, this session (not from the 2026-08-14 audit sweep).
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
