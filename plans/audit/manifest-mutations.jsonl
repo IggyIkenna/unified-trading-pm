@@ -3078,3 +3078,5 @@
 {"timestamp": "2026-08-16T18:28:53Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "fund-administration-service=0.9.61 (branch=main, bump=patch)", "commit_sha": "0675cc8ac2bdbceaf5719743154e458970c3781e"}
 {"timestamp": "2026-08-16T18:30:01Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "ibkr-gateway-infra=0.5.3 (branch=main, run=31964698661)", "commit_sha": "0675cc8ac2bdbceaf5719743154e458970c3781e"}
 {"timestamp": "2026-08-16T18:30:04Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ibkr-gateway-infra=0.5.3 (branch=main, bump=patch)", "commit_sha": "0675cc8ac2bdbceaf5719743154e458970c3781e"}
+{"timestamp": "2026-08-16T18:31:09Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.17 (branch=main, run=31964802880)", "commit_sha": "2aa363388169c36a04cbe60fc3bb5df3b48b7f41"}
+{"timestamp": "2026-08-16T18:31:13Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.17 (branch=main, bump=patch)", "commit_sha": "2aa363388169c36a04cbe60fc3bb5df3b48b7f41"}
