@@ -156,9 +156,49 @@ and (b) the live handler's bucket bug making it a permanent no-op even though re
   plus `_collect_currency_day`'s three routing branches (captured / zero-rows / failed) against a fake client.
 - **Real integration run** (by hand, not wired into default QG — `@pytest.mark.requires_credentials` skip preserved):
   constructed a real `TardisOptionsClient()` (genuine Secret Manager resolution, no explicit key) and called
-  `fetch_options_chain("deribit", "BTC", date(2026, 8, 10))` against the live Tardis API.
-  <!-- FILL IN AFTER THE BACKGROUND RUN COMPLETES: row count / elapsed time / sample symbol. -->
-- Full `bash scripts/quality-gates.sh` run: <!-- FILL IN: pass/fail + evidence -->
+  `fetch_options_chain("deribit", "BTC", date(2026, 8, 10))` against the live Tardis API. Result: **inconclusive, not
+  a code-contract failure**. `TardisStreamClient`'s warmup (small auth'd GET to `api.tardis.dev/exchanges`) succeeded
+  immediately, proving the credential + auth-header path works end-to-end. The actual `OPTIONS.csv.gz` bulk download
+  then timed out on all 3 retry attempts (`aiohttp` `TimeoutError`, zero bytes ever received, ~5 min per attempt —
+  `TardisClientConfig.read_timeout=300s` — over a ~15-minute total wall-clock window) and `fetch_options_chain`
+  correctly propagated the exhausted-retries `TimeoutError` (no silent swallow). This file is genuinely large
+  (codebase's own comments cite 300 MB+ for a heavy DERIBIT options day) and this attempt ran from an interactive
+  dev sandbox, not a properly-provisioned backfill VM — the same URL shape, auth pattern, and
+  `TardisStreamClient.async_get_bytes` retry machinery this call reuses are already proven in production by
+  `TardisAdapter`'s own (different) bulk options/futures downloads, so a code-level contract mismatch is unlikely.
+  Treat this as **unverified against a real large download in this environment** — recommend one real attempt from
+  an actual backfill VM (not a dev sandbox) before trusting this at scale; do not read the mocked unit-test pass as
+  proof the live download completes.
+- Full `bash scripts/quality-gates.sh` (repo `.venv`) run for market-tick-data-service: **PASSED** — "✅ ALL QUALITY
+  GATES PASSED" (5 iterations to get there: import-order lint auto-fixed via `ruff --fix`; a 55-line
+  `fetch_options_chain` method over the 50-line method-size cap fixed by extracting `_build_options_chain_url`/
+  `_options_chain_rows_or_raise` helpers; the cross-repo `adapter_contract_baseline.yaml` ratchet — see below — one
+  genuine host-contention timeout retried clean). Shipped
+  `market-tick-data-service@3105f17711` (6 files: adapter, new handler, `deribit_options_chain_handler.py` bucket
+  fix, `cli/main.py` dispatch wiring, both test files).
+
+## Cross-repo shipping notes (unified-trading-pm)
+
+- `scripts/quality_gates/adapter_contract_baseline.yaml`: this file's `tardis_options_adapter.py` entry (count: 10)
+  predated this session and was already stale relative to the pre-fix scaffold — regenerating after the real
+  implementation legitimately dropped the count to 8 (the reduction is entirely in trimmed docstring text, not a
+  dropped `classify_venue_error`/`ADAPTER_FETCH_FAILED` call — both real call sites are still present and exercised
+  by the mocked unit tests). Fixed via a full-workspace `--regenerate-baseline` run, verified only 2 other files'
+  counts moved (both increases, safe for a shrink-only ratchet) before shipping. Shipped
+  `unified-trading-pm@fc1ff3612a`.
+- `scripts/quality_gates/reachability_gate_baseline.json`: unrelated pre-existing drift hit while shipping —
+  `execution-service:defi_protocols`'s `SymbioticConnector` had become reachable (good — something wired it up) but
+  the shrink-only baseline still listed it, hard-failing quickmerge's post-gate re-validation for ANY PM commit.
+  Removed the single stale entry per the checker's own remedy text. Shipped `unified-trading-pm@bb6faddbf7`.
+- **A real data-loss near-miss worth recording**: an earlier `--isolated` quickmerge attempt for this doc's own
+  `adapter_contract_baseline.yaml` + `slot_1.md` edits reported `✅ Landed` but the landed commit
+  (`unified-trading-pm@bb6faddbf7`) only actually contained 2 of the 4 named `--files` — the baseline fix and the
+  slot_1 ping silently never made it into that commit despite a clean exit. Recovered from a leftover
+  `qm-iso-evac-<pid>-*` stash entry from that same attempt (confirmed mine via the PID, confirmed content via `git
+  stash show -p` before popping), re-verified, and re-shipped successfully as
+  `unified-trading-pm@fc1ff3612a`. Exactly the "`ahead=0` + clean tree ≠ landed" failure mode CLAUDE.md's ship-
+  discipline section warns about — worth a broader audit of `--isolated` + multi-file `--files` interaction if this
+  recurs.
 
 ## Recommended next step — NOT executed here (explicitly out of scope)
 
