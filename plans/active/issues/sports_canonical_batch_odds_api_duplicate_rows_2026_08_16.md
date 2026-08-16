@@ -15,7 +15,7 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [sports, data-quality, canonical, duplicate-rows]
-related: [/plans/active/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md]
+related: [/plans/archive/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md]
 parent_epic: sports_master
 priority: P3
 resolved_by:
@@ -25,7 +25,7 @@ author: slot-23
 source: ["incidental finding while building fold_divergent_bare_league_legacy_orphans_2026_08_16.py"]
 context_scope:
   [
-    /plans/active/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md,
+    /plans/archive/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md,
     market-tick-data-service/scripts/sports/fold_divergent_bare_league_legacy_orphans_2026_08_16.py,
   ]
 execution_scope: orchestrator-agent
