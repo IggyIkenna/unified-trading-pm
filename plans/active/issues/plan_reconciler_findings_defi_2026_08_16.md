@@ -195,6 +195,15 @@ Remaining lower-priority items from the hunter reports not yet applied (elysium 
 `defi_turbo_api_hides_real_captured_data_2026_07_07.md` moot-premise todo, a handful of P3 frontmatter/cosmetic
 items) — left for a future pass; none carry live-risk or data-correctness stakes.
 
+## Checkpoint 3 — final fixes this run
+
+- `defi_turbo_api_hides_real_captured_data_2026_07_07.md` — flipped `[ ]`→`[x]` RESOLVED-AS-MOOT: the todo's premise
+  (declare HYPERLIQUID/ASTER into `ALL_DEFI_VENUES`) was invalidated by the 2026-08-02 migration that moved their
+  data OUT of `asset_group=defi` entirely (opposite direction).
+- `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` — flagged (not resolved) a genuine `sequential: true`
+  process-order violation: todo 4 (archival, "must run last") is `[x]` done while todo 1 (reconciliation, meant to
+  run first) is still open. Recommended the next worker spot-check before assuming the reconciliation is unstarted.
+
 ## Split finding (routed, not fixed)
 
 `plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md` is **1005L, over the 1000L hard

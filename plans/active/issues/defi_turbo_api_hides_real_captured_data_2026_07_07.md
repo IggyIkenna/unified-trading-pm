@@ -291,7 +291,16 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       full onboarding is real feature work, properly scoped as its own follow-up:
       `issues/defi_plasma_chain_onboarding_gap_2026_07_26.md` (not attempted here — identity resolution was this todo's
       actual scope).
-- [ ] [SCRIPT] P1. **RECLASSIFIED 2026-08-08 — axis decision already ruled, only mechanical UAC registration remains.**
+- [x] ✅ [SCRIPT] P1. **RESOLVED-AS-MOOT 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0) — the premise
+      below is now stale.** The 2026-08-08 "purely mechanical" plan was to declare HYPERLIQUID/ASTER into
+      `ALL_DEFI_VENUES` so their `asset_group=defi` rows stop being filtered out. But
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md` (2026-08-02) confirms HYPERLIQUID/ASTER data was deliberately
+      MIGRATED OUT of `asset_group=defi` entirely (7,599 objects moved to `asset_group=cefi`, per the archived
+      `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`, parity-verified) specifically to eliminate
+      CEFI/DEFI double-counting risk — the opposite direction from declaring them INTO the DeFi venue registry. There
+      is no longer any real `asset_group=defi` data for these two venues to unhide; registering them now would either
+      be a no-op or reintroduce the exact double-counting the migration was built to prevent. No code change needed.
+      **RECLASSIFIED 2026-08-08 — axis decision already ruled, only mechanical UAC registration remains.**
       Original text (kept for context): "PARTIALLY FIXED 2026-07-21 (Track 6,
       `defi_consolidated_closeout_2026_07_18.md`) — user-facing symptom resolved via a deployment-api-local stopgap, UAC
       declaration still open." `deployment-api@427ede5` adds a supplemental whitelist

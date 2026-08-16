@@ -67,7 +67,13 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all distinct source docs' checkboxes.** For each of
+- [ ] [REVIEW] P1. **PROCESS-ORDER FLAG 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: this plan
+      declares `sequential: true` specifically because "todo 4 (archival) must run last" — but todo 4 below is already
+      `[x]` DONE (2026-08-06), while THIS todo (1) is still open. The dispatcher's `sequential: true` machine-gate
+      should have prevented this ordering; either it was bypassed or this todo's reconciliation genuinely happened
+      but was never checked off. Recommend the next worker verify which, by spot-checking a few of the ~21 named
+      source docs for a batch-3-citing annotation before assuming this reconciliation still needs doing from scratch.
+      **Reconcile all distinct source docs' checkboxes.** For each of
       `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s now-done todos: flip the corresponding checkbox/section in its
       named source doc (each todo ends with "Source: `<doc>.md`"), citing the batch-3 commit(s) that shipped it — verify
       the actual shipped commit exists before citing it. After flipping, re-check whether that source doc now has 0 open
