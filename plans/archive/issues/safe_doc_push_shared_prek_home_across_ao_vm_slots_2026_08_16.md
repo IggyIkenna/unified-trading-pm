@@ -19,7 +19,7 @@ summary: >-
   2026-08-10 host-gate's own reasoning, which addressed the git-index/working-tree collision hazard (correctly ruled
   absent on the AO VM, since each slot has its own clone) but never considered prek's OWN cache directory, which is a
   host-filesystem-level shared resource independent of git-clone isolation.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -46,7 +46,7 @@ source: >-
   slot-31 (infra), root-causing the todo in safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
   2026-08-16.
 author: slot-31
-resolved_by:
+resolved_by: unified-trading-pm@201f5bfcca
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -57,6 +57,13 @@ context_scope:
     /plans/archive/issues/safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-16** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence in `resolved_by:` (unified-trading-pm@201f5bfcca) — PREK_HOME now
+> scoped per-slot on the shared-index path in both `safe-doc-push.sh` and `quickmerge.sh`. Single-repo case
+> (plan-of-record in this same worktree), so the checkbox flip and this `git mv` land in the same commit per the
+> 2026-08-10-narrowed same-commit-flip+archival sanction.
 
 # safe-doc-push.sh: PREK_HOME is shared host-wide across every AO VM slot — root cause confirmed
 
@@ -140,14 +147,15 @@ operation). A minimal fix:
 
 ## Todos
 
-- [ ] [INFRA] P3. Implement the recommended fix above in `scripts/dev/safe-doc-push.sh`: scope `PREK_HOME` per-slot
+- [x] ✅ [INFRA] P3. Implement the recommended fix above in `scripts/dev/safe-doc-push.sh`: scope `PREK_HOME` per-slot
       in the shared-index (non-isolated) code path too, reusing `slot-identity-lib.sh`'s existing slot-label
       resolution and the isolated branch's shared-subdir-symlink pattern (lines 480-487) so hook-repo installs stay
       cheap/shared while `patches/`/`scratch` become private per slot. Add/extend a regression test confirming two
       concurrent `safe-doc-push.sh` shared-index runs (simulated distinct slot labels) no longer see each other's
       prek patches. Mirror the same fix into `quickmerge.sh` if it has the analogous host-gate/PREK_HOME shape (check
       first — do not assume). Done when: shipped via the full `quality-gates.sh` → `quickmerge` flow (this is a
-      `scripts/dev/` code change) and the regression test is green. (repo: unified-trading-pm)
+      `scripts/dev/` code change) and the regression test is green. (repo: unified-trading-pm) —
+      `unified-trading-pm@201f5bfcca` (see Progress Log).
 
 ## Progress Log
 
@@ -160,3 +168,23 @@ operation). A minimal fix:
   `check_orphaned_prek_patches()` has a 100% catch rate across every logged instance. Filed this follow-up with a
   concrete, cheap fix rather than absorbing the code change into the root-cause task itself (infra.md: shared-tooling
   blast-radius changes are for their own scoped task, not folded into an investigation todo).
+- **2026-08-16 (slot-14, infra) — implemented + shipped.** Confirmed `quickmerge.sh` has the ANALOGOUS shape (its
+  own isolated-branch-only PREK_HOME scoping, lines ~943-968) but its host gate is even broader: `_qm_should_isolate`
+  resolves `"auto"` to OFF unconditionally on every host (a 2026-08-10 same-day correction, not just the AO-VM host
+  gate) — so its isolated branch is dead code by default everywhere, not only on `planning`. Mirrored the fix into
+  both files at the identical insertion point (right after the isolated-attempt `if` block closes): when
+  `PREK_HOME` is not already set, resolve the caller's slot label via `slot-identity-lib.sh`'s
+  `slot_identity_resolve "$(pwd)"` (same helper the isolated branch already uses, purely PATH-based — no worktree
+  cost); if it resolves to a real `slot-<N>` (a no-op outside a `.tabs/<N>/` checkout, e.g. a laptop clone), export
+  `PREK_HOME="$HOME/.cache/prek-slot-<N>"`, symlink `repos`/`hooks`/`tools`/`cache`/`config-tracking.json` in from
+  prek's own already-populated default cache (`~/.cache/prek` — already warm since every slot has been installing
+  straight into it up to now; no separate seed-back step needed, unlike the isolated branch's own SEPARATE
+  `qm-iso-prek`/shared-cache location), and leave `patches`/`scratch` unlinked for prek to create fresh, private to
+  that slot. New regression suite `tests/test_safe_doc_push_shared_prek_home_per_slot.bats` (10/10 passing): two
+  slots resolve to two different, stable, non-colliding `PREK_HOME` dirs; the concurrent-patches hazard is
+  concretely closed (a file written under slot 14's `patches/` is provably invisible under slot 16's); shared items
+  symlink correctly while `patches`/`scratch` stay unlinked; a missing shared-cache item is skipped, not an error; a
+  non-slot cwd is a clean no-op; an already-set `PREK_HOME` (isolated child, or explicit override) is never
+  clobbered; the mirrored `quickmerge.sh` snippet independently verified with its own two-slot test. Sibling suites
+  re-run for regression: `test_safe_doc_push_rebase_failure_classification.bats` (6/6) and
+  `test_safe_doc_push_failure_classification.bats` (9/9), both unaffected. `bash -n` clean on both scripts.

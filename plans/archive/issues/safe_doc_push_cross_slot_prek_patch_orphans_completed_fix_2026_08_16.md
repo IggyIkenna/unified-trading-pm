@@ -181,7 +181,7 @@ pins (5 named test cases + a `bash -n` check).
       git-index hazard but never considered prek's separate host-global cache dir. Not itself an active data-loss
       defect (`check_orphaned_prek_patches()` has a 100% catch rate across 10+ prior documented recurrences of this
       exact signature) — filed the concrete cheap fix as its own follow-up per this todo's own instruction:
-      `/plans/active/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`. —
+      `/plans/archive/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`. —
       unified-trading-pm (this doc + the new follow-up doc only, no code change for this todo).
 
 ## Progress Log
@@ -191,7 +191,7 @@ pins (5 named test cases + a `bash -n` check).
   pending resolution. No code shipped by slot-16 (recovery-only, per scope discipline).
 - **2026-08-16 (slot-31, infra)** — todo 2 (root-cause) done. Confirmed the mechanism with direct evidence (grep of
   `safe-doc-push.sh` + a live env check on this exact `planning` host) and filed the follow-up fix doc:
-  `/plans/active/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`. Todo 1 (ship the recovered
+  `/plans/archive/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`. Todo 1 (ship the recovered
   fix / pop the stash) remains open — out of scope for this task (a separate, larger `quality-gates.sh`+`quickmerge`
   shipping task, not a root-cause investigation).
 - **2026-08-16 (slot-16, infra) — todo 1 dispatched back to slot-16, then discovered already landed by a parallel
@@ -215,4 +215,4 @@ pins (5 named test cases + a `bash -n` check).
   unrelated `done_gate_self_archival_orphans_dispatching_task_2026_08_16.md` diff appearing in slot-16's tree during
   BOTH this session's quickmerge attempts) are both consistent with — but not independently new evidence for beyond
   what slot-31 already confirmed — the cross-slot shared-`PREK_HOME` mechanism tracked in
-  `/plans/active/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`.
+  `/plans/archive/issues/safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`.
