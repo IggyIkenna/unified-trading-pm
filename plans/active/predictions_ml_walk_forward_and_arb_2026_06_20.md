@@ -11,11 +11,11 @@ stage: [meta]
 repos: [features-service, ml-service]
 scope: [engineer, admin]
 tags: [prediction, ml, walk-forward, arb-calculator, model-2a, auc, sports, feature-service]
-related: [../epics/predictions_master.md, ../epics/sports_master.md]
+related: [/plans/epics/predictions_master.md, /plans/epics/sports_master.md]
 created: "2026-06-12"
 parent_epic: predictions_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
@@ -47,7 +47,8 @@ context_scope:
 > `predictions_master.md`" — so these are predictions-owned, NOT sports-owned.
 
 > **🔴 GATED ON `sports_master:Group E`** — the walk-forward run is BLOCKED until the sports half's FSS produces ≥95%
-> non-NULL features for the trained universe at the buckets (`sports_master` line 463
+> non-NULL features for the trained universe at the buckets (`sports_master` line 644 as of 2026-08-16 — CORRECTED,
+> plan_reconciler, was stale-cited "line 463" —
 > `[GATE] P0. Block predictions Group E until FSS produces ≥95% non-NULL features`). The sports half (288M ODDS_API row
 > migration + MDPS bucketing + FSS run) lives in `sports_master`; this plan picks up the moment that gate is GREEN.
 
@@ -68,8 +69,8 @@ downstream of the sports-half FSS feature production (the Group E gate).
       `aggregate_walk_forward_acceptance` (mean across folds + Group-F gate: AUC ≥ 0.55 AND ECE ≤ 5%); 18 unit tests.
       Code + tests only — NOT yet run against real walk-forward output.
 - [ ] [ANALYSIS] P0. Run the acceptance-metrics computation above against the real walk-forward output (BLOCKED-ON line
-      53's walk-forward run, itself BLOCKED-ON `sports_master:Group E` gate — `plans/epics/sports_master.md` line 598,
-      still unchecked as of that epic's last_updated 2026-06-24).
+      53's walk-forward run, itself BLOCKED-ON `sports_master:Group E` gate — `plans/epics/sports_master.md` line 644
+      as of 2026-08-16 (CORRECTED, plan_reconciler, was stale-cited "line 598"), still unchecked).
 - [x] ✅ [SCRIPT] P0. Training-config sanity check: feature columns match the FSS schema, label leakage absent,
       walk-forward window correct. — ml-service@872acbb | Fixed: (1) `SPORTS_MODEL_2A_GRID.feature_groups` corrected
       from 15 invalid calculator-level names to `["derived_features","odds_features"]` (the two valid GCS path groups);
@@ -147,7 +148,8 @@ registered canonical_question_groups have ≥1 live manifest row.
 
 **Per-cadence completion % table** (captured / empty_confirmed / attempted_failed / expected_unattempted counts, and
 `reachable_coverage_pct = captured / (captured + attempted_failed + expected_unattempted)` — empty_confirmed EXCLUDED
-from the numerator per the RULED formula, `/codex/02-data/availability-manifest-and-data-status.md` line 1136):
+from the denominator per the RULED formula (CORRECTED 2026-08-16, plan_reconciler — was imprecisely worded "numerator"
+here; `empty_confirmed` was never a numerator candidate, only `captured` is), `/codex/02-data/availability-manifest-and-data-status.md` line 1136):
 
 > **CORRECTED 2026-08-12 (/plan-reconcile)**: the line citation above was "line 1054", which now falls in that codex
 > doc's unrelated "Sparseness"/sports-fixtures section (the 2285-line doc has grown/shifted since this was written
@@ -195,7 +197,7 @@ recorded; the Group-F gate decision is made from the real AUC/calibration number
   plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
   agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) —
   none apply. All 4 remaining open items are chained/blocked on the still-open cross-plan `sports_master:Group E` gate
-  (re-confirmed `plans/epics/sports_master.md` line 629 unchecked live), a cross-asset-group prerequisite none of
+  (re-confirmed `plans/epics/sports_master.md` line 644 (CORRECTED 2026-08-16, plan_reconciler, was stale-cited "line 629") unchecked live), a cross-asset-group prerequisite none of
   round-11's criteria touch. No reclassification.
 
 ### 2026-08-05 (slot 15, data_engineering, dispatch `prediction_satellite_ao_dispatch_batch6-010`) — [DIAG] P2 verdict
@@ -237,7 +239,7 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: KEEP-NA, valid — 4 open todos, all chained/
-  blocked on the still-open cross-plan `sports_master:Group E` gate (`plans/epics/sports_master.md` line 629, verified
+  blocked on the still-open cross-plan `sports_master:Group E` gate (`plans/epics/sports_master.md` line 644 (CORRECTED 2026-08-16, plan_reconciler, was stale-cited "line 629"), verified
   unchecked live, plus its own upstream FSS-run/feature-matrix-verification prerequisites also still unchecked). No
   reclassify/archive/duplicate candidates. Agrees with the 2026-07-30 audit's verdict.
 - **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 4 open, unchanged.

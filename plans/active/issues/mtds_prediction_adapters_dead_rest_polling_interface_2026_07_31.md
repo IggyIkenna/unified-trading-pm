@@ -154,3 +154,11 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   deletion into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 (`status: draft`, verbatim source
   citation), gated for reconciliation via `batch10_finalize`. Not independently reclassified — would create a duplicate
   AO-dispatch surface. Doc stays NA pending batch10's operator-approved dispatch + execution.
+- **plan_reconciler 2026-08-16 (prediction tranche)**: **RESOLVED, was reading as unresolved.** The batch10 dispatch +
+  execution referenced above completed — traced via the now-archived
+  `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md:78-82`, which confirms this
+  doc's own SHA (`market-tick-data-service@a0b4957e`) shipped and was reconciled 2026-08-10. This doc's Progress Log was
+  never updated after that reconciliation, leaving the false impression above ("pending... dispatch + execution") that
+  this run corrects. The sole todo's `[x]` checkbox was already accurate. Good `/archive-candidates-audit` candidate
+  (the equivalent sibling `is_polymarket_dead_fixture_cross_reference_2026_07_31.md` was archived on resolution; this
+  one wasn't) — not archived here, out of this run's bounded scope.
