@@ -25,7 +25,10 @@ locked_by:
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
-asset_group: [sports, meta]
+asset_group: [ao] # RETAGGED 2026-08-16 (/ag-closeout-audit sports Orthogonality HARD CHECK) — was [sports, meta].
+  # Content is 100% agent-orchestrator dispatch/auto_park internals (parent_epic: infrastructure_master, tags already
+  # include "ao"); "sports" only reflected the triggering symptom (a sports todo's premature dispatch), not the doc's
+  # real scope. This is the ao tranche's doc, not sports'/meta's.
 stage: [meta]
 repos: [agent-orchestrator]
 tags: [ao, auto-park, dispatch, gated, sports]

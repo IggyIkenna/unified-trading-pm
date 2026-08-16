@@ -94,13 +94,18 @@ and belongs to the active cycle") was wrong. Neither carries any open work; noth
 ## Open `[ao]` findings referenced here for closeout-linkage (2026-08-16, `/ag-closeout-audit ao`)
 
 Named here so each has a durable path into this tranche's closeout family that doesn't depend on any one satellite
-doc staying active — both were orphaned from `check_ag_closeout_linkage.py`'s reachability graph when
+doc staying active — the first two were orphaned from `check_ag_closeout_linkage.py`'s reachability graph when
 [`cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`](/plans/archive/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md)
-(the doc that used to carry the only mention of both) archived. Both remain genuinely open, uncovered by any active
-AO-dispatch plan — see this run's parked-findings doc for detail, not duplicated here.
+(the doc that used to carry the only mention of both) archived. All three remain genuinely open, uncovered by any
+active AO-dispatch plan — see this run's parked-findings doc for detail, not duplicated here.
 
 - [`ao_residuals_after_dispatch_hardening_2026_07_17.md`](/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md)
 - [`data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`](/plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md)
+- [`ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md`](/plans/active/issues/ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md) —
+  retagged into `[ao]` 2026-08-16 by `/ag-closeout-audit sports` (was `[sports, meta]`, a mistag — 100%
+  agent-orchestrator dispatch/`auto_park` internals; see that run's sports-tranche parked-findings doc, Finding 1).
+  Its own sole Follow-up item is already `[x]` shipped (`agent-orchestrator@153c0a0f3f`) — only the archival ritual
+  remains, out of scope for the AO tranche's own audit which runs separately.
 
 Also linked here for the same reason — resolved and archived this run, but its own former linkage path
 (`ao_open_issues_consolidated_close_out_2026_07_17.md`, itself since archived) no longer resolves reliably from a

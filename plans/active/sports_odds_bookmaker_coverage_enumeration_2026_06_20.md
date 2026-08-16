@@ -234,14 +234,27 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
       unified-api-contracts@53f2e48f. Added LEAGUE_ID_TO_TIER dict mapping 23 league_ids that cleanly fit the existing 3
       tiers (tier_1_domestic, tier_1_international, tier_2_domestic). Both naming conventions included (odds_api
       SOCCER_* prefix + canonical slugs). 28 non-EU leagues left unmapped per next todo. Quality gates green.
-- [ ] [AGENT] P1. **Extend `EXPECTED_BOOKMAKER_MARKET_SETS` to cover the 28 unmapped league_ids** (A-LEAGUE,
+- [x] ✅ [AGENT] P1. **Extend `EXPECTED_BOOKMAKER_MARKET_SETS` to cover the 28 unmapped league_ids** (A-LEAGUE,
       ALLSVENSKAN, EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP,
       SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_CHINA_SUPERLEAGUE,
       SOCCER_DENMARK_SUPERLIGA, SOCCER_GREECE_SUPER_LEAGUE, SOCCER_JAPAN_J_LEAGUE, SOCCER_KOREA_KLEAGUE1,
       SOCCER_MEXICO_LIGAMX, SOCCER_NORWAY_ELITESERIEN, SOCCER_POLAND_EKSTRAKLASA, SOCCER_RUSSIA_PREMIER_LEAGUE,
       SOCCER_SWEDEN_ALLSVENSKAN, SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPERLIGA,
       SUPER_LEAGUE, SUPER_LIG) — or add a `tier_3_global` / `no_expectation` tier for non-EU leagues the empirical audit
-      determines have inconsistent bookmaker coverage.
+      determines have inconsistent bookmaker coverage. **DONE — was already shipped 2026-08-06, checkbox never
+      reconciled (found + fixed by `/ag-closeout-audit sports`, 2026-08-16).** `unified-api-contracts@6d72669b`
+      (2026-08-06T23:41:40Z, verified ancestor of `origin/live-defi-rollout`): resolved the fork via a hybrid of BOTH
+      options named in this todo — 6 leagues into `tier_1_domestic`, 2 into `tier_2_domestic` (all-present-bookmaker
+      methodology against `registry/data/sports_bookmaker_league_coverage.json`), and the remaining 13
+      zero-observed-coverage leagues into a new `no_expectation` tier (empty dict, explicitly excluded from cluster
+      validation) — i.e. exactly the "or add a `tier_3_global`/`no_expectation` tier" branch this todo already
+      named as an acceptable resolution. 4 new regression tests (all 28 entries + count floor). This checkbox stayed
+      open through 2 subsequent audit passes (na-eligibility-audit 2026-08-08 round7, ag-closeout-audit-derived
+      round11 2026-08-09) that both re-confirmed "genuine either/or fork, no tiebreaker" without checking whether the
+      fork had already been resolved by a commit that predates both passes — a checkbox-reconciliation gap, not a
+      re-opened design question. The doc's OTHER open todo (P2, `trades` cluster-validation gap) remains a genuine
+      unresolved fork, untouched by this fix; the `locked_by: live-defi-rollout` do-not-archive-without-ruling banner
+      also stays as-is (that governs archival, not this checkbox).
 - [x] ✅ [SCRIPT] P0. **Fix `fixture_id=NULL` propagation in the odds_api backfill path** — golden window `trades` data
       has all fixture_ids as NULL, which blocks per-fixture cluster validation entirely (this is the P1c Todo 4 gate
       blocker). **DONE (na-eligibility-audit 2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md:344`:
