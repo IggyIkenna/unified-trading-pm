@@ -986,6 +986,13 @@ section above, which conflated answered and open items):
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 4, operator ruling)**: two items ruled via AskUserQuestion.
+  (1) Track C venue-vocabulary cleanup — **trust current dispositions, dispatch directly** despite the doc's history
+  of reversals. (2) Track V's `league_id` DELETE — **run a fresh live-writer check on this population first**, given
+  a sibling doc found a live writer re-contaminating a different league-vocabulary population as recently as
+  2026-08-10. Both extracted to `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md`
+  (`assigned_vm: planning`).
+
 > **Line-cap remediation (2026-08-10)**: entries from the 2026-07-30 na-eligibility-audit marker through the 2026-08-08
 > na-eligibility-audit marker were extracted verbatim to
 > `/plans/archive/2026_08/sports_consolidated_closeout_progress_log_history_2026_08_10.md` to bring this doc back under
