@@ -253,7 +253,7 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
   implementing either todo. **Note for whoever reads `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred —
   human-only" listing for this doc**: that snapshot predates this doc's own `round5-cefi-question-resolution 2026-08-08`
   entry above, which supersedes it. Companion finalize plan:
-  `/plans/active/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md`.
+  `/plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md`.
 
 ## Progress Log
 
@@ -325,5 +325,5 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 - **ARCHIVED 2026-08-16 (plan_reconciler, cefi tranche, agt-2e82f7)**: the "archiving in the next commit" intent above
   was never executed — the doc sat active+unlocked for a week. Re-verified all 6 todos still `[x]`, no Deferred items
   untracked, `locked_by` empty, gated finalize doc's own re-verification todos 1-2 both independently confirmed the
-  work landed (see `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md`).
+  work landed (see `/plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md`).
   Archiving now via the 6-step ritual; finalize doc's todo 3 flipped + it is archived alongside in the same commit.

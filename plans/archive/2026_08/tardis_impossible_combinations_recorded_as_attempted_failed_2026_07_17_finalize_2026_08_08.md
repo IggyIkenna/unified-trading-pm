@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [cefi, tardis, honest-coverage, denominator, close-out, archival]
 related:
   [
-    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
+    /plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -44,7 +44,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
+    /plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py,
     market-tick-data-service/scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

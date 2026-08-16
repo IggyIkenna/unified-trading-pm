@@ -185,7 +185,65 @@ own instruction not to delete without confirming safety first.
 
 ## Filed
 
-(pending)
+Confirmed findings that need real verification/judgment beyond doc-reconciliation (live VM/GCS checks, a corpus-wide
+grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked as todos rather than left in prose:
+
+- [ ] [DATA] P2. `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` + `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`:
+      re-run the corpus-wide `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-*/run.log`
+      grep for `SCRIPT 1 CONTENT MIGRATION SUMMARY` across all 44 shards now that shard 24 (the last known holdout,
+      per `cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md`) completed `EXIT_STATUS=0`
+      2026-08-15T20:13:16Z — settle whether the fleet is genuinely 44/44 and flip/close both docs' remaining todos +
+      delete `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own `# Delete-when:` marker.
+- [ ] [DATA] P2. Live-check 3 VMs whose gating docs are 5+ days stale (batch-5 hunter, 2026-08-16 gcloud checks
+      found the gates already cleared but outcomes unverified — GCS report reads blocked by the workspace's
+      subprocess guardrail, needs the sanctioned SDK path): `mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`
+      todo 2 + `mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md` (both share VM
+      `mdps-backfill-cefi-20260808-095136`, confirmed gone) and `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md`'s
+      DEFI re-run leg (VM `pipeline-e2e-check-mtds-20260815-172227-4ffa29`, confirmed gone, report likely already at
+      its named GCS path).
+- [ ] [INFRA] P2. Split `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` (1079L, 79 over
+      the 1000-line hard cap — confirmed via `wc -l` 2026-08-16) — 2 genuinely-open todos are explicit design/judgment
+      calls, so this is a real remediation not a mechanical trim.
+- [ ] [INFRA] P3. `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` is AT the 1000-line hard cap with
+      zero headroom while still actively accumulating entries (9th relaunch attempt just launched 2026-08-15) —
+      split proactively before the next append trips the gate.
+- [ ] [DATA] P2. `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s sole open todo re-points to a
+      NEW 19-VM HYPERLIQUID fleet found running 2026-08-16 that no task in the doc launched — identify/confirm it's
+      the expected relaunch before assuming progress.
+- [ ] [OPERATOR] P3. Unidentified live VM `mdps-backfill-cefi-20260816-162418` (found via `gcloud compute instances list`
+      2026-08-16) doesn't match any doc in the cefi-batch-5 hunter's 13-doc read — confirm it's a legitimate
+      known launch, not a duplicate/orphaned one.
+- [ ] [DOC] P3. `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` has a systematic link-TEXT/href
+      mismatch (≥11 entries display `plans/active/issues/...` text while the href already correctly points at
+      `plans/archive/...` — cosmetic, the href works) — bulk find-and-replace pass needed. Also missing a reference
+      to `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (active since 2026-07-28, 2 open P0
+      phases) despite the digest's stated complete-index purpose.
+- [ ] [REVIEW] P3. `per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s "Remaining open in this doc: 3"
+      summary (2026-08-09) is stale — a 4th todo was added 2026-08-14 and never folded into the count.
+- [ ] [BACKEND] P3. `dp_vm_002_cefi_queue_heavy_binancefutu_streaming_writer_progress_gap_2026_08_14.md` frontmatter
+      uses non-standard field names `estimate_baseline:`/`calibrated_ai_days:` instead of the
+      `estimate_baseline_ai_days:`/`estimate_calibrated_ai_days:` convention every sibling doc uses — likely a schema
+      typo that could make tooling silently miss this doc's estimate.
+- [ ] [REVIEW] P3. Possible new AO-dispatch failure-mode class (batch-4 hunter, distinct from the known
+      `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` shape): the SAME escalation ID (`agt-9d78d2`)
+      reached two workers concurrently before either had filed an issue doc to check against, producing
+      `dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md` and
+      `dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md` as duplicate-tracking docs (now
+      cross-linked, see Hygiene fixes). Worth the AO-dispatch mechanism owner considering whether to dedup at the
+      escalation-creation layer.
+- [ ] [DATA] P3. `prediction_capture_incident_remediation_2026_07_06.md`:114-118 cites
+      `unified-trading-library@6c090bb`/`@1651340` — neither is an ancestor of `origin/live-defi-rollout` (both exist
+      only on `origin/wip-preserve/cascade-*` branches), but the CONTENT (dtype-coercion fix) is confirmed present in
+      the current tree — same rebase-changed-the-SHA pattern the doc's own Phase 6 already self-corrected once
+      today. Needs the same citation fix for consistency (low severity, substance confirmed present).
+
+## Corpus health note (informational, no action needed)
+
+The Phase-0 hygiene sweep's `assigned_vm:NA` corpus-size ratchet failed on this run's FIRST pass (57 new NA docs /
+250 new open todos vs `origin/main`) but PASSED on a second internal pass ~15 min later — consistent with the
+extreme same-day concurrent-agent churn observed throughout this run (dozens of unrelated commits landing every
+few minutes from other slots). This is a corpus-wide (not cefi-specific) condition with its own standing remediation
+skill (`/na-eligibility-audit`) — not actioned here, noted for visibility only.
 
 ## Archive candidates (operator review)
 
@@ -197,8 +255,31 @@ own instruction not to delete without confirming safety first.
 
 ## Coverage (hunters / batches / docs)
 
-(pending — corpus 108 docs, 80 non-grace working set, 28 grace-window read-only)
+- Corpus: 108 cefi-tagged docs (`generate_tranche_doc_inventory.py --tranche cefi`), 3.7MB. 28 in the 12h grace
+  window (read-only context, not written). 80 non-grace docs = this run's full working set.
+- 6 read-only hunter sub-agents (general-purpose, model=sonnet), ≤14 docs each, every one of the 80 non-grace docs
+  read in full by exactly one hunter. Each hunter independently ran its own HARD-evidence verification (git
+  `merge-base --is-ancestor` ancestry checks, file-existence checks, live `gcloud`/deployment-registry-telemetry
+  reads where relevant) rather than trusting doc text alone — ~55+ commit-sha ancestry checks run across the 6
+  reports, only 2 exceptions found (both explained as a rebase-changed-SHA-but-content-landed pattern, not lost
+  work).
+- Verified inline by the orchestrator (this session, sonnet/max, per the "small candidate counts verify inline"
+  rule + each hunter's own strong independent evidence): all applied fixes re-confirmed against live file state
+  immediately before editing (caught one hunter-1 finding already resolved by a concurrent tradfi-tranche run, see
+  Contradictions).
+- Confirmed + applied this run: 2 archived docs (6-step ritual, both fully verified done), 2 checkbox flips (HARD
+  evidence), 1 todo split (half-done rule), 4 stale-digest-entry corrections, 2 stale-banner corrections, 8
+  dangling/malformed reference-path fixes, 2 missing cross-doc `related:` links added, 1 stale-todo-premise
+  correction. 14 additional confirmed findings filed as tracked todos (real verification/judgment beyond doc-editing
+  — live VM/GCS checks, a corpus-wide grep, 2 line-cap splits).
+- Verified refuted / already-resolved-by-a-concurrent-run: 1 (batch-1's canonical_path_oracle hidden-checkbox
+  finding — fixed by a same-day concurrent `/plan-reconcile` tradfi-tranche pass before this run reached it).
+- Phase 5.9 ledger: `routed_to_operator = 0` == `parked = 0` (no finding this run met the STILL-ASK/PARK bar — blast
+  radius / explicit human signal / preference-with-no-ground-truth / standing hard-stop; every confirmed item was
+  either auto-resolvable from existing evidence or ordinary filed follow-up work, not an authority call). Hunter
+  `agent_skips = 0` == `enumerated = 0` (all 6 hunters completed their full assigned batch with no partial/declined
+  coverage).
 
 ## Plans not reached
 
-(pending)
+None — all 80 non-grace docs in the cefi tranche were read in full by the hunter fan-out.
