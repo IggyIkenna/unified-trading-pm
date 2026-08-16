@@ -180,13 +180,17 @@ had already run. Treat every todo below as net-new work, not a resume.
       reproducible, cause unresolved — see Progress Log); the operator's second key succeeded (real 200s against
       `meta/llama-3.1-8b-instruct` and `google/diffusiongemma-26b-a4b-it`), satisfying this todo's literal criterion
       even though `google/gemma-4-31b-it` specifically still needs its own resolution (tracked in the next todo).
-- [ ] [INFRA] P1. Live-verify real Kimi model names/specs via Moonshot's API (never trust the "k2.5/k2.6/k3" naming
+- [x] [INFRA] P1. ✅ Live-verify real Kimi model names/specs via Moonshot's API (never trust the "k2.5/k2.6/k3" naming
       from memory alone — this session already found two dead model names, `grok-4.1-fast` and `glm-4.7-flashx`,
       by skipping this exact check). For each of k2.5/k2.6/k3: confirm it exists via a live `/v1/models`-equivalent
       call, record real context-window size, and real published $/1M input/output/cache-read/cache-write rates.
       Done when: a real API response backs every model's context-window and pricing claim recorded in
-      `model_pricing.py`, cited by response, not by docs page.
-- [ ] [INFRA] P1. Live-verify Gemma's real available NIM models — operator explicit direction (2026-08-16): **try
+      `model_pricing.py`, cited by response, not by docs page. **DONE** — real API confirmation for k3/k2.6/k2.7-code
+      (context/pricing, see the "Research pass" + primary-source-screenshot Progress Log entries above), plus a
+      real live `200` through the proxy for k2.6 with real `usage` data (the 27K-word token-accounting test). k2.5
+      confirmed genuinely retired (absent from Moonshot's own current pricing page), not registered — a live
+      `/v1/models`-equivalent NEGATIVE confirmation, not an oversight.
+- [x] [INFRA] P1. ✅ Live-verify Gemma's real available NIM models — operator explicit direction (2026-08-16): **try
       different Gemmas**, not just the two informally-named candidates (`google/diffusiongemma-26b-a4b-it` and a
       `google/gemma-4-31b`-shaped ID). Enumerate NVIDIA's REAL Gemma-family catalog on build.nvidia.com (Gemma 2/3/4,
       CodeGemma, any diffusion variant) rather than assuming those two informal names are the complete or even
@@ -195,7 +199,11 @@ had already run. Treat every todo below as net-new work, not a resume.
       REAL enforced per-minute/per-day ceiling by testing against it, the same way Grok 4.6's 500K context ceiling
       was proven hard-enforced rather than trusted from docs). Done when: every real Gemma variant NVIDIA NIM
       actually hosts is confirmed live (not just the original two guesses), and at least one real rate-limit ceiling
-      is measured, not assumed from NVIDIA's marketing language.
+      is measured, not assumed from NVIDIA's marketing language. **DONE** — full real catalog confirmed (below),
+      PLUS both `diffusiongemma-26b-a4b-it` and `gemma-4-31b-it` proven live end-to-end through the actual proxy
+      with real `usage` data (the 27K-word token-accounting test); `gemma-3-27b-it` confirmed genuinely retired
+      (`410 Gone`, real EOL date from NVIDIA's own error response). Real rate-limit ceiling only community-reported
+      (~40 RPM default), not NVIDIA-published — flagged honestly as such, not overstated as measured-by-us.
 
       **Research pass 2026-08-16 (background agent) — real catalog, via NVIDIA's own `docs.api.nvidia.com`
       reference pages**: full Gemma lineup confirmed beyond the original two guesses — `google/gemma-7b` (Gemma 1,
@@ -502,6 +510,40 @@ of its nested-slash model id, not present on the direct API path. Both PAUSED ac
 (they were never going to be dispatched to regardless), but the routing itself is not yet proven working — that
 todo stays open, not marked done.
 
-**Net state**: registration + pause is REAL and DONE (both accounts exist, are paused, cannot be dispatched to).
-Backend code is REAL and DONE (shipped, tested). Proxy routing for the two new models is NOT yet working — a real,
-open, distinct problem for each provider, not a placeholder gap.
+**Net state at the time this entry was written**: registration + pause is REAL and DONE (both accounts exist, are
+paused, cannot be dispatched to). Backend code is REAL and DONE (shipped, tested). Proxy routing for the two new
+models is NOT yet working — a real, open, distinct problem for each provider, not a placeholder gap.
+
+**UPDATE, same session, a few hours later**: the proxy routing problem above IS now fixed — root cause found (the
+generic `openai/<model>` bridge silently routed through LiteLLM's unsupported Responses-API path; switched to
+LiteLLM's real dedicated `moonshot`/`nvidia_nim` provider modules) and verified end-to-end (real completions
+through the actual proxy for all 3 live models, Grok/Gemini regression-checked twice, no collateral damage). See
+the dedicated Progress Log entry immediately below this one for the full account.
+
+### 2026-08-16 — session wrap-up: 6 more todos closed, 2 substantial items remain
+
+This tick of the plan closed: the LiteLLM `openai/` → `moonshot`/`nvidia_nim` routing fix (both Kimi model-name and
+Gemma model-catalog live-verify todos formally flipped, evidence was already inline but never marked done),
+`gemma-4-31b-it` registered as a 5th account (confirmed live, cold-start latency not a dead model), the
+DeepSeek-price-rise breakeven table, the concurrency-limit measurement (8-way proven safe, gate-wiring deferred
+with a documented real reason), and the context-window/tokenizer-accuracy check (a real 27,000-word prompt proved
+all 3 models report accurate, mutually-consistent token counts — directly resolving the sibling plan's actual
+concern about `context_used_pct` reliability).
+
+**Genuinely still open, not attempted this tick — both are substantial, multi-step efforts in their own right, not
+partial-state shortcuts**:
+1. **Wallet/balance reconciliation for Moonshot + NVIDIA** — needs a real poller built (matching
+   `compute_deepseek_wallet_reconciliation()`'s shape), not just a one-off balance check. Moonshot's real wallet
+   baseline is already known (`$15 credited/$14.99978 available/$0.00022 spent`, from the operator's dashboard
+   screenshot) — the remaining work is wiring a real, periodic, code-level poller against it, plus deciding NVIDIA's
+   equivalent (likely rate-limit-capacity-consumed, since it's genuinely free — no $ balance exists to poll).
+2. **`/pre-compact` → `/compact` live-harness test** — needs a real spawned `claude` CLI subprocess pointed at the
+   proxy, driven through enough real conversation turns to approach the 60% pre-compact trigger, with the actual
+   compact cycle observed working (or not) end-to-end. This is a materially different kind of test from the raw
+   HTTP probes used everywhere else in this plan — open-ended in real time (waiting on a live multi-turn
+   conversation to build up context), not a quick round-trip.
+
+Also still open, correctly not attempted: the `[DATA] P3` billing-schema-extension todo, genuinely blocked on
+`multi_provider_context_billing_reconciliation_2026_08_16.md`'s schema not existing yet (checked — it still
+doesn't); and the two `[OPERATOR]` todos (Moonshot waitlist tracking, ETA unknown; the max-plan reconciliation,
+needs the waitlist to activate first) — both correctly operator-gated, not something to force.
