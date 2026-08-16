@@ -642,6 +642,14 @@ rule (see Progress Log entry below for the observed outcome).
   `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` line) and #2's rename ships, this doc itself becomes
   archivable and its parent `defi_consolidated_closeout_2026_07_18.md` todo can close.
 
+  **Update 2026-08-16 (slot-13) — goalposts #1 and #3 are now CLOSED, only #2 remains open.** The
+  `mtds-dex-pools-backfill` VM (trader_joe_v2, `2026-04-13→2026-07-24`) self-deleted at completion; `run.log`'s
+  executed `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` line + `DEPLOYMENT_COMPLETED
+  exit_code=0` + a 6-date GCS spot-check (all FOUND) confirm the range is genuinely filled — full evidence in the
+  two Follow-up todos below. The sole remaining blocker to archiving this doc is `[SCRIPT] P3` #2 (the
+  `PROGRESS.json` static-echo rename in `launch-mtds-dex-pools-backfill-vm.sh`) — not attempted this session
+  (out of this monitoring task's own scope; a separate `[SCRIPT]`-tagged todo for a future dispatch).
+
 ## Follow-ups
 
 - [x] ✅ [BACKEND] P2. Fix the VELODROME_V2/OPTIMISM dex_pool_swaps persistent "bad indexers" condition
@@ -699,7 +707,11 @@ rule (see Progress Log entry below for the observed outcome).
       `PROGRESS.json` field + the ambiguous-deleter class are tracked as follow-ups below rather than fixed inline,
       out of this spot-check todo's scope).
 
-- [ ] [DATA] P2. **IN PROGRESS 2026-08-16 (slot 30) — confirmed healthy PAST the historical death point; session
+- [x] ✅ [DATA] P2. **DONE 2026-08-16 (slot-13) — VM ran to genuine completion.** See the sibling Follow-up
+      todo below for the closing evidence (executed `[[VM_PROGRESS]]` line + `DEPLOYMENT_COMPLETED exit_code=0`
+      + 6-date GCS spot-check) — both this todo and the Follow-up below tracked the same "continue monitoring
+      to completion" ask per this doc's own Step-8b goalposts note, resolved together with the same evidence,
+      not duplicated. **IN PROGRESS 2026-08-16 (slot 30) — confirmed healthy PAST the historical death point; session
       closes on this evidence, continued monitoring handed to the Follow-up below (background-bash monitoring
       proved unreliable this session, same class already noted elsewhere in this doc — "got killed twice by
       something outside this agent's control").** Picked up this todo; before launching a duplicate, checked for
@@ -731,7 +743,20 @@ rule (see Progress Log entry below for the observed outcome).
       `requested_end_date`). Repo: deployment-service (`launch-mtds-dex-pools-backfill-vm.sh` / the shared
       `[[VM_PROGRESS]]` convention, if this pattern is shared with sibling launchers — check before assuming
       single-file scope).
-- [ ] [DATA] P2. **NEW 2026-08-16 (slot 30).** Continue monitoring `mtds-dex-pools-backfill` (already running,
+- [x] ✅ [DATA] P2. **DONE 2026-08-16 (slot-13, data_engineering) — genuine completion confirmed.** Instance
+      `mtds-dex-pools-backfill` no longer exists (`gcloud compute instances list` empty — self-deleted per
+      `VM_SHUTDOWN_ON_COMPLETION=true`). Fetched `EXIT_STATUS` (content `"0"`, `last_modified=2026-08-16T03:55:18Z`),
+      `run.log` tail, and `PROGRESS.json` via the UTL SDK (`get_storage_client().list_blobs` +
+      `download_from_storage`, no subprocess gsutil/gcloud-storage). `run.log` shows the genuine EXECUTED-OUTPUT
+      completion line this todo's own bar required — `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true`
+      — immediately followed by `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED 7a10b1aa-...(exit_code=0)`,
+      and the self-shutdown scheduling line. Corroborated with a fresh 6-date GCS-object-existence spot-check
+      (UTL SDK `list_blobs`, not the manifest) for `dex_pool_state`/TRADER_JOE_V2/AVALANCHE across the target
+      window: 2026-04-13, 2026-06-01, 2026-06-15, 2026-07-01, 2026-07-20, 2026-07-24 all **FOUND**. Range
+      `2026-04-13→2026-07-24` is filled. No relaunch needed. No code changes — read-only GCS + deployment-registry
+      verification only. Repo: market-tick-data-service (verify).
+
+      **Original todo text (2026-08-16, slot 30):** Continue monitoring `mtds-dex-pools-backfill` (already running,
       launched 2026-08-16T02:25:12Z, `--protocols trader_joe_v2` scoped to `2026-04-13→2026-07-24`) through to
       genuine completion — two spaced live checks this session (T+27min/T+32min) confirmed real forward progress
       past the ~16min point where the 2026-08-09 predecessor died silently, but the range was NOT yet confirmed
