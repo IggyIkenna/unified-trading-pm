@@ -165,10 +165,13 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
       **incremental** ("Re-processing tradfi/<date>: 36 timeframe shards missing" on every date) — a relaunch with the
       same `--start-date 2021-01-01 --end-date 2021-12-31` range should skip already-captured shards, not redo the
       full year.
-- [ ] [SCRIPT] P1. Confirm/refute the "shared root cause across all six" hypothesis — pull `run.log` for the four
-      other still-recent `mdps-tradfi-`/`tradfi-bf-` sibling VMs (2023, 2025, 2026 shards + the CME 2020 shards, see
-      `related:` above) via the same UTL-storage-client method, before their `vm-logs/` GCS objects age out of the
-      14-day retention window. If confirmed, this converts from "5-6 isolated pages" to "one incident, one fix."
+- [x] ✅ [SCRIPT] P1. **EXTRACTED 2026-08-16 (na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b) →
+      `/plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2** (consolidates
+      `dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md` todo 1's narrower ask for the 2023 VM
+      specifically, so the same run.log pull isn't dispatched twice). Confirm/refute the "shared root cause across all
+      six" hypothesis — pull `run.log` for the four other still-recent `mdps-tradfi-`/`tradfi-bf-` sibling VMs (2023,
+      2025, 2026 shards + the CME 2020 shards, see `related:` above) via the same UTL-storage-client method, before
+      their `vm-logs/` GCS objects age out of the 14-day retention window.
 - [ ] [SCRIPT] P2. Consider whether `create-code-tarballs.sh`'s tarball refresh cadence/triggers should include MDPS
       (and other TradFi-pipeline service repos) more proactively — e.g. a scheduled `--asset-group TRADFI` (or
       `--all`) refresh, or a CI hook on `market-data-processing-service` merges — rather than relying on an operator
@@ -199,3 +202,8 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   known-unreliable-orchestrator-connectivity pattern the `mdps-tradfi-2023` and `mdps-tradfi-2025` sibling docs both
   already hit. Per the role's 2-min-no-answer rule, stopped polling — this doc is the durable page artifact; a later
   operator answer (if it lands out-of-band) should be appended here rather than assumed lost.
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, per-todo split.** The
+  cross-VM confirm/refute todo is bounded/deterministic and conflict-cleared (consolidated with the 2023 sibling's
+  identical narrower ask) — extracted to `tradfi_satellite_ao_dispatch_batch14_2026_08_16.md`. Todo 1 (operator
+  relaunch-now decision) and todo 3 (tarball-refresh-cadence design question) stay genuinely operator/design-gated.
+  Doc stays `assigned_vm: NA`.

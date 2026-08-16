@@ -132,12 +132,25 @@ launcher/adapter is cheaper than repeatedly burning the daily relaunch bound on 
 <!-- Converted from prose 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a) — this doc had zero `- [ ]`/`- [x]`
      checkboxes despite real remaining work (invisible to backlog generation / archive-candidate detection). -->
 
-- [ ] [OPERATOR] P1. Pull `run.log` for `mdps-tradfi-2023-20260815-040118` from its GCS log path and diagnose the
-      `exit_code=1` root cause (per "Recommended decision" above, option A). Done when: root cause identified and
-      either fixed before the next scheduled tradfi-2023 backfill attempt, or a targeted follow-up is filed.
+- [x] ✅ [SCRIPT] P1. **RETAGGED [OPERATOR]→[SCRIPT] + EXTRACTED 2026-08-16 (na-eligibility-audit, tradfi tranche,
+      dispatch agt-45ad7b) → `/plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2** (consolidated
+      with `dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md` todo 2's broader ask, which
+      already names this same 2023 VM — dispatched once, not twice). Was mistagged `[OPERATOR]`: pulling a run.log and
+      grepping it for a known error string is a bounded read-only diagnostic, not a judgment call. Pull `run.log` for
+      `mdps-tradfi-2023-20260815-040118` from its GCS log path and diagnose the `exit_code=1` root cause. Done when:
+      root cause identified and either fixed before the next scheduled tradfi-2023 backfill attempt, or a targeted
+      follow-up is filed.
 - [ ] [DEVOPS] P2. Cross-check the `mdps-tradfi-`/`tradfi-bf-` launcher/adapter code path for a systemic non-OOM
       failure mode — this is the THIRD same-shape relaunch-bound-page doc in 48h (see `related:` for the other two).
       Done when: either a shared root cause is confirmed and fixed, or the 3 occurrences are confirmed independent.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, per-todo split.** Todo 1 was
+  mistagged `[OPERATOR]` for what reads as a bounded read-only diagnostic — retagged `[SCRIPT]` and extracted
+  (consolidated with the `mdps-tradfi-2021` sibling's broader same-shape ask). Todo 2 (systemic-cause cross-check) is
+  DEPENDENCY_BLOCKED on todo 1's + the 2021 sibling's findings — stays NA pending that outcome. Doc stays
+  `assigned_vm: NA`.
 
 ## Progress Log
 
