@@ -418,6 +418,10 @@ Two secondary findings:
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 12, operator ruling)**: k-prefix coin-case convention
+  RULED — canonical uppercase. Extracted to
+  `/plans/active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md` (+ finalize) for AO
+  dispatch, since this doc stays `assigned_vm: NA`.
 - **2026-08-15 (slot-11, data_engineering)**: Flipped both `[INFRA] P3`/`[FIX] P3` "Dispatched to batch-6 todo 24" items
   — both already shipped elsewhere, checkboxes were stale. Full evidence in
   `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo 24's Progress note + this doc's own todo text

@@ -942,6 +942,9 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 12)**: operator explicitly declined to assume "RULING
+  3" covers this specific HYPERLIQUID un-hide ask without re-checking its actual text first — deliberately NOT
+  ruled here. Stays open pending a dedicated read of RULING 3's scope against this exact ask.
 - **context-scout 2026-08-15**: populated `context_scope` (3 entries — added
   [transfer-architecture](/codex/04-architecture/transfer-architecture.md) alongside the existing two codex SSOTs) per
   `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up. Extracted the three oldest Progress

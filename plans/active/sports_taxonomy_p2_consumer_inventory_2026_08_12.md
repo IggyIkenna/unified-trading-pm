@@ -460,6 +460,11 @@ pipeline (the migration plan's actual purge target) → `league_id=` canonical, 
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 12)**: operator declined to edit
+  `sports_taxonomy_p2_migration_2026_08_08.md`/`sports_taxonomy_p3_consumers_2026_08_08.md` on this citation
+  alone, given the higher stakes of touching 2 already-active plans — deliberately NOT actioned here. This
+  doc's `league=` (not `league_id=`) finding (direct code read of `gcs_paths.py`) stays flagged; needs a fresh,
+  dedicated verification pass before either sibling plan is edited.
 - **2026-08-12** — Produced via 7 parallel Explore-agent passes (MTDS, MDPS, instruments-service, UAC, features-service,
   ml-service, deployment-api), each checking all 5 binding types named by the codex rule. Surfaces the
   `enumerate_expected_universe.py` override-dict precedent as the load-bearing lesson, the `league=`/`league_id=`
