@@ -19,7 +19,7 @@ related:
     /codex/06-coding-standards/model-tier-selection.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-16
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -342,14 +342,19 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
   find/confirm 3 genuinely free-tier projects instead. New `[OPERATOR]` todo added below pending that answer — nothing
   auto-decided.
 
-- [ ] [OPERATOR] P1. Decide whether project 371216509644 (confirmed Paid Tier 3, 2026-08-16) becomes a 4th high-capacity
-      PAID Gemini path in this plan's design, or stays out of scope in favor of 3 genuinely free-tier projects. Real $
-      spend applies either way once `generateContent` succeeds — the project's current spend cap needs raising at
-      `ai.studio/spend` before it can serve any traffic regardless of this decision. Done when: the operator states
-      which path, and if paid, the `RateCard`/non-goal text above is updated to match. **Lower priority now** — 4
-      genuinely free-tier projects were found+registered the same day (see below), so the paid path is no longer
-      needed to hit the plan's 3-project minimum; still worth an answer if the operator wants it as a bonus
-      high-capacity path later.
+- [x] [OPERATOR] P1. ✅ Decide whether project 371216509644 (confirmed Paid Tier 3, 2026-08-16) becomes a 4th
+      high-capacity PAID Gemini path in this plan's design, or stays out of scope in favor of 3 genuinely free-tier
+      projects. **DONE 2026-08-16 — operator answered yes, add it as a 4th path.** Registered live (see Progress Log
+      entry below for full evidence): 2 new accounts, `gemini-3-5-flash-lite-proj4` / `gemini-3-7-flash-proj4`,
+      `gcp_project: "371216509644"`, `api_key_secret_name: "gemini-api-key-371216509644"`, mirroring the proj1-3
+      shape exactly. **Registered PAUSED** (`account_status: disabled`, confirmed via direct DB read post-write),
+      matching the existing convention for every other new-provider account this plan/its siblings registered.
+      **Follow-up still open, operator-only**: the project's real spend cap must be raised at
+      `https://aistudio.google.com/app/apikey` → billing/spend-limit settings for project `371216509644`
+      (`ai.studio/spend`, per the earlier Progress Log finding) before this account can be un-paused — that step
+      needs the operator's own console login and cannot be done by an agent. Until then this account stays
+      `account_status: disabled` and will not serve traffic even if un-paused prematurely (would 429 on first real
+      use per the earlier `429 "exceeded monthly spending cap"` finding).
 
 - **2026-08-16 — full Gemini free-tier project sweep, 4 projects confirmed+keyed+smoke-tested, self-served via the
   operator's own admin ADC identity.** Refreshed `ikenna@odum-research.com`'s expired ADC session live mid-session
@@ -420,6 +425,103 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
   balance-poller scheduling cadence (vs. on-demand-only) is unconfirmed. Cross-checking captured usage against each
   vendor's own dashboard is still open. The real-live-account-throttle proof for Gemini's headroom gate needs the
   accounts un-paused first.
+
+- **2026-08-16 (later) — project 371216509644 registered as the 4th, high-capacity PAID Gemini path, per operator
+  approval, via live AWS SSM write against the orchestrator VM (i-0c9b283b31d6b5ca7, ap-northeast-1).**
+  **Pre-write check**: live-read `accounts.json` on the VM first (not assumed from this doc) — confirmed the project
+  was NOT already registered (only the 3 free-tier proj1-3 pairs existed, 25 total accounts). **Backup taken**
+  before editing: `data/config/accounts.json.bak.20260816T154145Z` on the VM. **Two new accounts added**, mirroring
+  the proj1-3 JSON shape exactly (same fields: `id`/`label`/`tier`/`provider`/`weekly_msg_limit`/`primary_email`/
+  `oauth_token_env_file`/`variant`/`gcp_project`/`api_key_secret_name`), labels explicitly say "PAID Tier 3, cap not
+  yet raised" rather than "free tier" so the risk isn't silently mislabeled:
+  - `gemini-3-5-flash-lite-proj4` — `gcp_project: "371216509644"`, `variant: "3.5-flash-lite"`
+  - `gemini-3-7-flash-proj4` — `gcp_project: "371216509644"`, `variant: "3.7-flash"`
+  - Both: `api_key_secret_name: "gemini-api-key-371216509644"` (the GSM secret confirmed stored 2026-08-16, see
+    entry above).
+
+  **Real bug avoided by reading code first, not assumed**: `AccountDef` (`server/accounts.py`) has NO
+  `account_status`/`disabled` field at all — the `"account_status: disabled"` convention described in
+  `accounts.json`'s own `_comment` field is NOT a JSON key on the account entry; it's a DB-backed field
+  (`AccountUsageRow.account_status`, `server/orm.py`) written only via `disable_account()`
+  (`server/state_store/account_usage.py`). Adding the JSON entry alone would have left the account
+  defaulting to `healthy`/dispatch-eligible — the opposite of what was needed. Fixed by calling the real
+  `disable_account(session, account_id)` write path (via the orchestrator's own venv + `session_scope()`) for both
+  new ids, then independently reading back `AccountUsageRow.account_status` to confirm.
+
+  **Evidence, both before AND after validated**: JSON validity confirmed via the app's own `load_accounts()`
+  Pydantic loader post-write (`PARSED_OK total_accounts=27`, up from 25); DB write confirmed
+  (`DB_STATUS gemini-3-5-flash-lite-proj4 account_status=disabled`,
+  `DB_STATUS gemini-3-7-flash-proj4 account_status=disabled`); a fully independent third live read (separate SSM
+  call, filtering `gcp_project=="371216509644"`) confirmed exactly 2 matching entries with the expected shape.
+  No service restart performed — unnecessary since the account stays paused either way, and avoids touching a
+  live production process for a config-only change.
+
+  **What's still open, operator-only**: the project's real spend cap must be raised at
+  `https://aistudio.google.com/app/apikey` (billing/spend-limit settings, project `371216509644` /
+  `uts-compliance-ikenna`) before this account can be safely un-paused — needs the operator's own console login,
+  not agent-doable. Un-pausing before that would let it 429 on first real use (`429 "exceeded monthly spending
+  cap"`, already observed once against this same project, see the 2026-08-16 entry above).
+
+- **2026-08-16 (later still) — premise correction: all 4 free-tier projects were confirmed live all along; the gap
+  was registration, not project count.** The operator independently confirmed, from their own GCP console, the exact
+  same list of 4 "Free tier" projects this plan's 2026-08-16 sweep entry found: `gen-lang-client-0008266149`,
+  `elated-nectar-440116-e9`, `poetic-bongo-456907-e4`, `spring-mix-426915-t9`. Nothing was ever "only 3 of 4" at the
+  project/key level — that sweep entry's own text already says "All 4 final keys real, live, and smoke-tested." The
+  actual gap was narrower: only 3 of the 4 (`gen-lang-client-0008266149`/proj1, `elated-nectar-440116-e9`/proj2,
+  `poetic-bongo-456907-e4`/proj3) were ever turned into live `accounts.json` dispatch entries — `spring-mix-426915-t9`
+  was keyed, smoke-tested, and then left an unused spare with no account entry. **Live-verified 2026-08-16** via a
+  fresh SSM read of `accounts.json` on the orchestrator VM (not assumed from this doc): confirmed exactly 2 accounts
+  each for proj1/proj2/proj3, 2 accounts for the paid proj4 (`371216509644`), and **0 accounts** for
+  `spring-mix-426915-t9` — closing the ambiguity cleanly before any write.
+
+  **`spring-mix-426915-t9` registered as the 4th FREE-TIER Gemini path** (not a paid one — see the cancellation
+  entry below), via live AWS SSM write against the orchestrator VM (i-0c9b283b31d6b5ca7, ap-northeast-1), same
+  read-backup-write-verify procedure as every prior account registration in this plan.
+
+  **Pre-write**: GSM secret `gemini-api-key-spring-mix-426915-t9` confirmed present (`gcloud secrets versions
+  access latest`, key length 39, consistent with the other 3 free-tier keys) and smoke-tested with a real
+  `generateContent` call against both target models — `gemini-3.5-flash-lite`: `HTTP 200`, text `"pong"`,
+  `usageMetadata` `{promptTokenCount: 7, candidatesTokenCount: 1, totalTokenCount: 8}`; `gemini-3.7-flash`:
+  `HTTP 200`, text `"pong"`, `usageMetadata` `{promptTokenCount: 7, candidatesTokenCount: 1, totalTokenCount: 110,
+  thoughtsTokenCount: 102}` — same verification shape (real REST `generateContent`, real `usageMetadata` returned)
+  used for the other 3 free-tier projects' 2026-08-16 sweep entry above.
+
+  **Backup taken** before editing: `data/config/accounts.json.bak.20260816T155543Z` on the VM (full pre-edit copy).
+  **Two new accounts added**, cloned directly from the live proj1 entries to mirror the shape exactly (same fields:
+  `id`/`label`/`tier`/`provider`/`weekly_msg_limit`/`primary_email`/`oauth_token_env_file`/`variant`/`gcp_project`/
+  `api_key_secret_name`), named `proj5` (not `proj4` — that id is already the paid project, kept registered):
+  - `gemini-3-5-flash-lite-proj5` — `gcp_project: "spring-mix-426915-t9"`, `variant: "3.5-flash-lite"`
+  - `gemini-3-7-flash-proj5` — `gcp_project: "spring-mix-426915-t9"`, `variant: "3.7-flash"`
+  - Both: `api_key_secret_name: "gemini-api-key-spring-mix-426915-t9"`, label says "free tier" (accurate, unlike
+    proj4's paid label).
+
+  **Registered PAUSED**, same DB-backed convention as every other new account in this plan: `AccountDef` in
+  `accounts.json` carries no `account_status` field (confirmed again, same finding as the proj4 entry above) — wrote
+  via the real `disable_account(session, account_id)` path (`server/state_store/account_usage.py`) against the
+  live DB for both new ids.
+
+  **Evidence, before AND after, plus an independent third read**: `load_accounts()` (the app's own Pydantic loader)
+  parsed the edited file cleanly post-write (`PARSED_OK total_accounts=29`, up from 27, both new ids present).
+  `disable_account()`'s own return value showed `status=disabled` for both ids immediately after the write. A
+  **separate, later SSM call** (fresh process, fresh DB session) independently re-read `AccountUsageRow.account_status`
+  for both ids and got `disabled` again. A **third, fully independent SSM call** re-read `accounts.json` directly
+  from disk (bypassing `load_accounts()` entirely) and confirmed both entries present with the exact expected shape.
+  No service restart performed (config-only change, account stays paused either way).
+
+  **Net result**: all 4 of the operator's confirmed free-tier projects are now registered as live dispatch accounts
+  (proj1/proj2/proj3/proj5, 8 accounts total), plus the separate paid proj4 pair kept registered-paused as an inert
+  spare (see cancellation entry immediately below) — 10 Gemini accounts total in `accounts.json`, all
+  `account_status: disabled` pending the operator's un-pause decision.
+
+- [x] [OPERATOR] P1. ✅ CANCELLED 2026-08-16 — raise the spend cap on paid project `371216509644` so its
+      `gemini-3-5-flash-lite-proj4`/`gemini-3-7-flash-proj4` accounts can be un-paused. **Operator decision: "not
+      needed, no longer relevant" — free-tier coverage is sufficient.** With `spring-mix-426915-t9` now registered
+      (see entry above), all 4 of the operator's confirmed free-tier projects are live dispatch accounts (8 Gemini
+      accounts, proj1/2/3/5) — there is no remaining need for the paid path's extra headroom. **Not removed**: the
+      `gemini-3-5-flash-lite-proj4`/`gemini-3-7-flash-proj4` accounts stay registered in `accounts.json`, still
+      `account_status: disabled` — zero cost, zero risk while paused, and removing a working registration is a
+      live-infra change this cancellation doesn't call for (this is a documentation/scope change, not an infra
+      teardown). There is simply no plan to ever un-pause them or raise their spend cap going forward.
 
 ## Context scout
 
