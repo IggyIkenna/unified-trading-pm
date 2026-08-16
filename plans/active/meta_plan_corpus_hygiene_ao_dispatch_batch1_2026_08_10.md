@@ -221,11 +221,16 @@ Two independent causes, both now fixed:
       work (`ui-reference-data.json`, its generator, an E2E fixture), so `[ui]` fits better than `[cross-cutting]`
       (single-repo-primary, not genuinely multi-domain). Added `related:` link to
       `ui_consolidated_closeout_2026_07_30.md`. Full reasoning in the target doc's own Progress Log.
-- [ ] [DOCS] P3. **Fix the stale "0 open todos" claim in `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`**
+- [x] ✅ [DOCS] P3. **Fix the stale "0 open todos" claim in `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`**
       (~line 745): it states `phantom_audit_estate_coverage_gap_2026_07_10.md` has "0 open todos
       (closed/archived/record-only)" but that doc carries 1 open `[SCRIPT] P2` (widen the phantom audit to the full
       ~47-bucket kind×AG matrix). Re-verified still wrong 2026-08-10. **Done when**: the line reflects the target's real
-      open-todo count.
+      open-todo count. — Re-verified 2026-08-16: `phantom_audit_estate_coverage_gap_2026_07_10.md` still carries exactly
+      1 open todo (line 180, `[SCRIPT] P2`, the same "widen to ~47-bucket kind×AG matrix" item, gated on the
+      2026-08-08 operator ruling recorded at
+      `/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md:176`). Line 745-746 of the closeout doc
+      corrected to "1 open (re-verified 2026-08-16)" with the todo's text cited inline. — unified-trading-pm (this
+      commit).
 - [x] ✅ [DOCS] P2. **Verify + flip the 3 already-resolved checkboxes** in
       `/plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` —
       unified-trading-pm@3fa34e2475. Items 2 (DP-FETCH-009 `[VERIFY] P1`) and 4 (code-fix `[REVIEW] P2`) were already
