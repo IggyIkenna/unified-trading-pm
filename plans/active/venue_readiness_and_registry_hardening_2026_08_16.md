@@ -506,11 +506,22 @@ full-suite, 3 direct-cause) spanning the whole session. `unified-api-contracts` 
 confirmation" entry above. Standing instruction remains in force: do not hand-wire the venues or edit the SIT ratchet
 baseline.
 
+**2026-08-16 — still blocked, 9th & 10th confirmations, two quickmerge attempts.** Attempted to ship
+`archetype_feature_groups.py` via `quickmerge.sh` twice in succession (`quickmerge_uac.log`, `quickmerge_uac_retry2.log`
+in scratchpad); both re-ran the full `unified-api-contracts` QG suite and both failed identically at
+`test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions` — `1 failed, 13246 passed, 678 skipped,
+5 xfailed`, quickmerge's own re-gate step reported "REAL failure, not a lost race" both times. Same 3-venue signature as
+every prior check. Condition now confirmed stable across 10 independent checks (7 full-suite, 3 direct-cause) spanning
+the whole session — this is not flapping, it is a stable external blocker. `unified-api-contracts` HEAD unchanged at
+`c9e5780e33` (`_backmerge` merge commit), still the same 3 uncommitted files, `ahead=0`/`behind=0`. Resume recipe
+unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not hand-wire the venues or
+edit the SIT ratchet baseline.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
-| Ship `archetype_feature_groups.py` + test + `__init__.py` edit (L228, `unified-api-contracts`, code complete + locally verified) | Cannot be done yet | External: `execution-service` `DeFiAdapter` dispatch wiring for karak/pendle/symbiotic — 5 identical confirmations today, someone else's in-flight work. Do not hand-edit the ratchet baseline. |
+| Ship `archetype_feature_groups.py` + test + `__init__.py` edit (L228, `unified-api-contracts`, code complete + locally verified) | Cannot be done yet | External: `execution-service` `DeFiAdapter` dispatch wiring for karak/pendle/symbiotic — 10 identical confirmations today (incl. 2 real quickmerge attempts), someone else's in-flight work. Do not hand-edit the ratchet baseline. |
 | Flip L228 checkbox | Blocked on above | same |
 | L230 "Add contract step 17 as a real check, both directions" | Not started | Blocked on L228 landing (needs the archetype→feature_groups link to exist first) |
 | L233 "Report the unconsumed set" | Not started | Blocked on L228/L230 |
