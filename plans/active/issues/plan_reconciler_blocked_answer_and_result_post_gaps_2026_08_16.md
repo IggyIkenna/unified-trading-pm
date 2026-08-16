@@ -142,3 +142,11 @@ worker's ability to read it back via the AO HTTP surface.
   NOT affected (fully captured in `plan_reconciler_findings_ao_2026_08_16.md` + git history) — filing this as a
   separate meta-doc about the reconciler's own tooling reliability, matching the precedent of
   `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` and `plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`.
+- **2026-08-16 ~17:14 UTC (plan_reconciler, post-compact retry)**: re-tried `GET /api/slots/28/messages` after this
+  session's context compaction completed — returned `200 {"messages":[]}` this time (the earlier call in this same run
+  returned a real `Internal Server Error`; not reproduced on this attempt, so the 500 looks transient rather than a
+  stable fault). Content is still empty either way — BLK-050d1304's answer remains unretrieved. Cross-checked
+  `GET /api/activity?limit=10`: the 10 most recent fleet-wide events are all compaction/dispatch noise from other slots
+  (ids 547096-547105); none reference `BLK-050d1304` or any blocked-question resolution for slot 28. This strengthens
+  gap 2's diagnosis toward the write/delivery side (the answer never lands anywhere a worker can read) rather than a
+  flaky read-side 500 — worth checking first when todo 2 below is picked up.

@@ -263,6 +263,31 @@ new scope, not a wiring bug in what already exists.
       Shrinking-ratchet baseline is a NAME SET, not a count (unlike `check_pytest_unit_dir_coverage.py`'s), so
       swapping one gap for a different one still fails. `features-service`'s per-domain `*_REGISTRY` family is the
       natural next batch of registry-mode targets — noted in-code, not added speculatively (unmeasured).
+- [x] ✅ [SCRIPT] P1. **`SymbioticConnector` is now wired but still baselined as unreachable — remove it from
+      `reachability_gate_baseline.json`.** `execution-service@85c8310b` ("feat: wire Symbiotic into DeFiAdapter's real
+      dispatch (STAKE handler)", 2026-08-16 16:46 UTC) landed the wiring — exactly the intent this gate exists to
+      enforce (§ "Add a reachability gate" above) — but nobody has yet re-run
+      `check_reachability_gate.py --update-baseline` (or hand-edited the JSON) to drop `SymbioticConnector` from the
+      still-expected-unreachable list, so the ratchet ("only shrinks") now fails: `[FAIL] execution-service:
+      defi_protocols: 1 baselined class(es) are now reachable and must be removed from the baseline: SymbioticConnector`.
+      **This is currently blocking quickmerge tree-wide for every agent on unified-trading-pm** (discovered 2026-08-16
+      by plan_reconciler while diagnosing an unrelated docs-only quickmerge failure — confirmed via 2 identical
+      consecutive quickmerge failures citing this exact class). Out of plan_reconciler's HARD LIMIT scope
+      (`scripts/quality_gates/reachability_gate_baseline.json` is not under `plans/**`) to fix directly. Done when: the
+      baseline file drops `SymbioticConnector` (or the wiring is reverted, whichever is correct) and a fresh
+      `quality-gates.sh` run on unified-trading-pm no longer fails `reachability-gate` for this class. Repo:
+      unified-trading-pm. **Caveat (verified 2026-08-16, plan_reconciler)**: a same-day peer commit (`effde0f7d5`)
+      claimed "fix(qg): drop now-reachable SymbioticConnector from reachability baseline" in its message, but
+      `git show effde0f7d5 -- scripts/quality_gates/reachability_gate_baseline.json` produces an EMPTY diff — the file
+      was not actually touched (its last real touch remains `unified-trading-pm@0428f5ee1f`, the gate's original
+      creation commit). Don't trust that commit message as evidence this is done; verify the JSON directly before
+      closing this todo. **RESOLVED 2026-08-16 (plan_reconciler)** — `unified-trading-pm@bb6faddb` ("fix(qg): regenerate
+      adapter-contract baseline + drop now-reachable SymbioticConnector + tardis options_chain credential unblock
+      docs") landed a real 1-line deletion (`git log --stat` confirms `1 file changed, 1 deletion(-)`, unlike
+      `effde0f7d5`'s hollow claim above). Independently re-verified by direct measurement, not by trusting the message:
+      `git show origin/live-defi-rollout:scripts/quality_gates/reachability_gate_baseline.json | grep -c
+      SymbioticConnector` → `0`. The second "Done when" condition (a fresh `quality-gates.sh` run no longer failing
+      `reachability-gate` for this class) is being confirmed by the quickmerge attempt shipping this very doc.
 - [ ] [AGENT] P1. **SIT invariant 2 — the mode-axis PREREQUISITE now exists, wiring the invariant itself is still
       open.** Operator ruling 2026-08-15: build the axis, do not weaken the invariant. **Done**: `BasePositionAdapter`
       now carries an explicit `mode: TradingMode` (+ `testnet` as the PAPER sub-mode selector), resolved per
@@ -825,3 +850,13 @@ rendered as a broken grid, because that component expects `div > b + span`.
   terminated by hand after confirming zero CPU and zero forward progress) — both fixed upstream mid-session (60-minute
   hard bound on the acquire loop; the repo-identity resolver now falls back to the same git-based `_qg_repo_name()`
   auto-detection the total-instance gate already used correctly).
+- **2026-08-16 (plan_reconciler, ao tranche, dispatch agt-3eb42b, post-compact)**: filed the `SymbioticConnector`
+  reachability-baseline todo above after 2 identical consecutive quickmerge failures isolated it as the sole remaining
+  blocker (a separate `plan-commit-sha-evidence` failure in the same runs was a distinct, unrelated bad-SHA citation in
+  `self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md`, independently fixed by a peer session
+  mid-diagnosis). Caught `effde0f7d5`'s commit message falsely claiming the baseline fix (empty diff on direct
+  measurement) and documented it in-line so the next reader wouldn't trust it. Armed a bounded (~28 min, 60s-interval)
+  background watchdog polling `origin/live-defi-rollout`'s actual baseline JSON content directly, rather than
+  blind-retrying the full quickmerge — cheaper and matches "poll on a progress metric, not activity." Detected the real
+  fix (`unified-trading-pm@bb6faddb`) on the watchdog's first check; re-verified independently before flipping this
+  todo (0 occurrences, real 1-line-deletion diff — not another hollow claim).
