@@ -524,6 +524,16 @@ passed, 678 skipped, 5 xfailed in 180.77s` — same failing test,
 confirmation this session (8 full-suite/quickmerge, 3 direct-cause). Resume recipe unchanged from the "3rd confirmation"
 entry above. Standing instruction remains in force: do not hand-wire the venues or edit the SIT ratchet baseline.
 
+**2026-08-16 — still blocked, 12th confirmation, standalone targeted re-run after PM fleet sync.** `unified-trading-pm`
+fast-forwarded 5 commits (`a924a6e84d`→`284e0b8bc1`: cefi Barchart removal + OKX xperp marker dispatch plans from other
+concurrent work, none touching this plan or `unified-api-contracts`). Re-ran
+`test_execution_service_venue_coverage_cascade_invariant.py` standalone in `unified-api-contracts` post-sync: same
+single failure, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`, identical
+`['karak', 'pendle', 'symbiotic']` signature, `1 failed, 10 passed in 0.49s`. 12th identical confirmation this session
+(8 full-suite/quickmerge, 4 direct-cause/targeted). Condition remains stable; external fleet activity elsewhere on the
+shared branch has not touched the blocker. Resume recipe unchanged from the "3rd confirmation" entry above. Standing
+instruction remains in force: do not hand-wire the venues or edit the SIT ratchet baseline.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
