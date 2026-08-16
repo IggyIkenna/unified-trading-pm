@@ -357,7 +357,9 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   (`unified-api-contracts@fd69b7cb52`) and filed the full correction record + remaining follow-up todos (MTDS
   docstring correction, shipping the migration script — both blocked by an unrelated live cross-session
   `.gitleaks.toml`/`.pre-commit-config.yaml` rollout in market-tick-data-service) at
-  `/plans/active/issues/pacifica_solana_canonical_mechanism_correction_2026_08_16.md` (`unified-trading-pm@c05d71c06d`).
+  `/plans/archive/issues/pacifica_solana_canonical_mechanism_correction_2026_08_16.md` (`unified-trading-pm@c05d71c06d`;
+  filed active, archived same-day once its own follow-ups landed — path corrected here since the reference-path ratchet
+  is content-blind to a same-day archive).
   **Final state**: full stack live in production code across 5 repos (UAC, instruments-service, MTDS, execution-service
   simulation-only, strategy-service), zero `DEFERRED`/`BLOCKED-OPERATOR` end-states per the autonomous-completion
   contract — the one open item is a tracked `- [ ]` todo with a clear unblock condition (a reconciliation pass, not a
