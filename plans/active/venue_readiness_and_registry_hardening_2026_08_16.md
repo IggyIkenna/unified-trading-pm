@@ -169,6 +169,48 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       type, granularity, achievable matching class. This is what makes "what can we actually do here" answerable without
       reading code — and it is the same table we can show a counterparty.
 
+## STRATEGY CONSUMABILITY — a venue with no consumer is not ready (operator ruling 2026-08-16)
+
+A venue is only ready if **at least one strategy archetype can actually use what it provides**. Data nobody consumes is
+not capability; it is storage. This forces the readiness contract to close end-to-end rather than stopping at "we
+capture it".
+
+Two directions, and both must hold:
+
+| Direction        | The test                                                                                    | Failure looks like                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Venue to strategy | For every data type the venue provides, is there an archetype that consumes it?               | A venue supplies a data type nothing trades. Captured, stored, inert.                       |
+| Strategy to venue | For every archetype tied to the venue, are ALL its required inputs available from that venue? | Lido is declared as a venue, but staking rates are missing — so no archetype can run on it. |
+
+The second is sharper and more common: a venue can be 90% wired and still useless because the ONE input its only
+candidate archetype needs is the one that is absent.
+
+### The chain exists, except for one link — measured 2026-08-16
+
+    venue          -> data types                        EXISTS   venue capability record
+    feature_group  -> required (asset_group, data_type) EXISTS   FEATURE_REQUIRED_INPUTS, a real UAC SSOT
+    archetype      -> feature_groups                    MISSING  the gap
+
+`unified_api_contracts/canonical/domain/features/required_inputs.py` already declares, per feature group, the
+`(asset_group, data_type)` inputs it needs, with `get_required_inputs` / `has_required_inputs` /
+`validate_required_inputs` helpers. But **nothing maps an archetype to the feature groups it consumes** — zero hits
+across `engine/strategies/v2/` — so the composition cannot be computed in either direction today.
+
+Closing that one link makes both tests mechanical rather than manual, and it is the smaller half: the expensive half,
+per-feature-group input requirements, already exists.
+
+- [ ] [AGENT] P0. **Declare archetype to feature_groups.** The missing link. Compose it with `FEATURE_REQUIRED_INPUTS`
+      to derive each archetype's full input requirement set without restating it anywhere.
+- [ ] [AGENT] P0. **Add contract step 17 as a real check, both directions.** A venue is not `BACKTESTABLE` unless at
+      least one archetype's requirements are fully satisfiable from it, and every data type it provides is either
+      consumed or explicitly declared unused. Declared-unused is a legitimate answer; silence is not.
+- [ ] [AGENT] P1. **Report the unconsumed set.** Data types captured but consumed by no archetype are either a missing
+      strategy or wasted capture cost. Either is worth knowing; neither is visible today.
+
+| #   | Step                       | What "done" means                                                                                                       |
+| --- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 17  | **Strategy consumability** | At least one archetype's inputs are fully satisfiable from this venue, AND every data type it provides is consumed or declared unused. |
+
 ## Workstreams — each forks to its own child plan
 
 Children are authored separately so each stays under the line cap and workstreams can run concurrently. **Design
