@@ -27,7 +27,13 @@ name: ldr-to-main-promote
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # every 15 min → drains within a ~30-min LDR→main SLA (tightened from */30 2026-06-10)
+    # every 30 min → drains within a ~60-min LDR→main SLA (was tightened 30->15min on 2026-06-10 to shrink the
+    # SLA; loosened back 2026-08-16 — under this repo's current commit velocity, a 15min cadence routinely cut a
+    # fresh promote PR before the prior one's QG run even finished, so most PRs were "closed as superseded" not
+    # because content genuinely regressed but because the drain bot's own cadence outran CI. 30min gives each
+    # attempt real room to either pass or genuinely fail before being superseded — accepted SLA cost for fewer
+    # wasted CI runs + a cleaner #ci-failures signal (operator decision, ci_alert_failure_resolution_linkage doc).
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
