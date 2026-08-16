@@ -526,6 +526,37 @@ before touching the source doc directly._
       provider with independent per-group collapse) plus the full relevant regression sweep re-run green
       (13/13 across provider-badge/panel-collapsible/fleet-account-column, 2/2 critical-health, 4/4 tier-editor,
       each via their correct dedicated Playwright project). Source: operator live observation, this session.
+- [x] [UI] P2. ✅ **New, operator "build the rest now" 2026-08-16 — Grok DONE, shipped `agent-orchestrator@88c838dd6a`.**
+      Real Grok wallet reconciliation: `GrokBalanceHistoryRow` (new table, mirrors `DeepSeekBalanceHistoryRow`),
+      `GrokBalancePoller` (mirrors `DeepSeekBalancePoller`, 1-min cadence, uses the already-working
+      `fetch_grok_balance()`), `compute_grok_wallet_window_reconciliation()` (real balance-diff vs real
+      `task_usage.spend_usd` WHERE `provider="grok"` — Grok needs no bespoke transcript-sweep table the way DeepSeek
+      does, since `price_usage()` already prices it correctly from the live `/done` capture), new
+      `GET /api/accounts/grok/wallet-reconciliation/window` route, new `GrokWalletPanel.tsx` (24h/7d toggle,
+      collapsible). Deliberately a SIMPLER v1 than DeepSeek's panel: no top-ups tracking (no pre-existing ledger to
+      reconcile against — the balance series only starts from when this poller first ran) and no
+      worker/orchestrator/review split (reports total attributed spend only — real, honest, just less finely
+      bucketed; add the split later if it proves needed). Full `quality-gates.sh` green (one real basedpyright
+      catch along the way: `TaskUsageRow.spend_usd` is nullable, unlike DeepSeek's topup amount — fixed by
+      coalescing per-row before summing, not just the final aggregate). **NOT yet pw:L2-verified** — QG-green and
+      typecheck-clean, but no Playwright regression spec written for this panel yet (see the todo below).
+      **Remaining scope from the same "build the rest now" instruction, real per-provider assessment, not
+      guessed**:
+      - **Kimi**: same shape as Grok is buildable IF Moonshot exposes a real balance-read API endpoint — unconfirmed
+        (the kimi_gemma_provider_onboarding plan's own wallet-reconciliation todo already flags this as open). Real
+        wallet baseline already known ($15 credited/$14.99978 available, from the operator's console screenshot) —
+        the gap is whether a programmatic balance READ exists, not whether the number exists.
+      - **Gemini**: NOT $-based (genuinely free tier) — the real signal is rate-limit CAPACITY consumed, which
+        `gemini_headroom.py` already tracks per-account RPM/TPM/RPD. Needs a different kind of panel (capacity
+        gauge, not a $ balance table), not a Grok-pattern clone.
+      - **NVIDIA**: same free-tier shape as Gemini, but NO capacity-tracking exists yet at all (unlike Gemini) —
+        would need building the headroom-tracking layer first, not just a panel on top of existing data.
+      - **GLM, Codex**: subscription flat-rate (like Claude), NOT metered $ like Grok/DeepSeek — needs Claude's
+        `boost_multiplier` subscription-value CALIBRATION methodology transplanted, a materially bigger design
+        effort than Grok's balance-diff approach, not a quick clone.
+      Done when: pw:L2 spec exists for GrokWalletPanel, AND each of the 4 remaining providers has either a real
+      panel shipped or an explicit, scoped follow-up todo (not a silent gap) — this todo's own text above already
+      is that scoping for the first pass; convert each bullet into its own dedicated `- [ ]` when picked up.
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
