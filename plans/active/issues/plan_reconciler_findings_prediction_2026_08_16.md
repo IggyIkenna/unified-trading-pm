@@ -375,3 +375,17 @@ in this same run.
   yet despite a harness notification claiming one exists. Continuing the STEP-8 wait-loop on a non-busy cadence per
   `agents/plan_reconciler.md`; `/done` is correctly withheld until this resolves or the operator dismisses it — the
   one-shot lifecycle contract does not allow completing with a question still open.
+- **2026-08-16 (second pre-compact checkpoint)** — re-polled after a second context compaction: `GET
+  /api/slots/30/messages` → `{"messages":[]}`, a fresh `/progress` heartbeat → `{"messages":[]}` — `BLK-e7b0e8da`
+  still unanswered, no new activity to report. **New lesson**: boot-message env vars (`$SERVER_URL`/`$SLOT_ID`/
+  `$DISPATCH_ID`, delivered once at dispatch per `agents/plan_reconciler.md` § "Your boot message provides") do NOT
+  persist across separate Bash tool calls — only cwd survives between calls, shell exports do not — so a curl built
+  on a bare `$SERVER_URL` silently fails (`curl: (3) URL rejected: No host part in the URL`) in any Bash call after
+  the one that first exported it. Recovered by confirming `python3` listening on `:8765` (`ss -tlnp`) and
+  re-exporting `SERVER_URL=http://localhost:8765` inline in the same command as every curl — matches the role
+  file's own "same-box localhost" note. Any future wait-loop tick (this session or a cold resume) must re-export
+  inline every time, never assume the shell remembers. Durability audit: `git status` clean, `ahead=0` (HEAD moved
+  to `76bb0a6380` via other concurrent slot dispatches since the last checkpoint — expected multi-agent behavior,
+  nothing of mine at risk); scratchpad now 9 files (2 more than the prior checkpoint's count, from the STEP-5
+  exit-gate diagnosis), all still regenerable sweep/digest/inventory dumps, none referenced by a committed doc,
+  none promoted. Continuing the non-busy STEP-8 wait-loop; `/done` still correctly withheld.
