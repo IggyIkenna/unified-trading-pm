@@ -183,10 +183,19 @@ Phase -1 note on the stale "≤10 parallel" figure below).
    found (all in `plans/archive/**`) — deferred to the same consolidated referrer-sweep pass.
 3. `plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md` — 0 open todos (see Contradictions
    #3), unlocked, `status: active`. ARCHIVE-READY per the HARD RULE — referrer sweep not yet done.
-4. `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` (batch-4 hygiene finding,
-   P2, not independently re-verified by me) — hunter reports 0 open todos + a stale `archive_exempt` BRIDGE marker
-   from 2026-08-12 promising a "separate follow-on pass" for archival that hasn't happened, now 4+ days overdue.
-   Candidate ARCHIVE-READY, pending my own confirmation in the consolidated pass.
+4. `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` — independently confirmed
+   (0 open todos, `archive_exempt: true` BRIDGE-marker citing the exact same deferred-follow-on pattern, 4+ days
+   overdue).
+
+**DECISION — archival execution deferred for all 4, this run (2026-08-16)**: referrer counts measured for all 4 —
+10, 4, **27**, and **16** respectively (70 total... 57 excluding the 13 that already point correctly, but a
+per-referrer citation-format audit wasn't run to separate correct-format from needs-repoint). Executing the full
+6-step ritual (incl. checking + repointing every referrer's exact citation) for all 4 in this pass risks a rushed,
+incomplete sweep that leaves NEW dangling references — directly counter-productive given the corpus-wide
+reference-path-convention ratchet is ALREADY failing (39 vs baseline 34, confirmed this run's Phase 0). Proportionate
+call: leave all 4 clearly marked here as ARCHIVE-READY with their referrer counts (this doc is itself
+`context_scope`-linked from the corpus, so it's a discoverable pointer) for a dedicated `/archive-candidates-audit`
+pass or direct operator action, rather than a rushed partial sweep in this run's remaining budget.
 
 ## Hygiene fixes
 
@@ -218,7 +227,42 @@ Progress Log as it proceeds.
 
 ## Plans not reached
 
-(none yet)
+**Coverage decision**: hunted 5 of 10 batches this run (batches 0-4, ~57 of 114 non-grace docs, ~57% by doc count)
+rather than all 10 — see Progress Log for the rationale (value density from the first 5 batches was very high;
+pushing to full coverage in one run risks the same "runs too long, dies mid-flight" failure mode sharding was
+introduced to prevent). Batches 5-9 (the remaining ~57 workable docs, file lists preserved in this run's scratchpad
+bin-packing output) were NOT hunted this run — genuinely unreached, not refuted or filed as resolved. A future
+cross-cutting run should prioritize these.
+
+**Confirmed findings this run did NOT apply** (verified/read but not personally resolved, given time budget):
+
+- Batch 0 — `pipeline_mode_partition_migration_2026_06_01.md` todos (M1: cefi/tradfi/sports/prediction rider may
+  already be satisfied per the master doc's C-PATH inventory, unresolved across 3 prior audit passes; M2: the
+  "instruments bucket — no canonicalisation plan exists yet" claim may be false, a live plan is registered) — both
+  need a live grep-confirm I didn't run this pass.
+- Batch 0 — `daily_trading_analyst_llm_job_design_2026_07_29.md` §5: self-identified stale codex citation
+  (`agent-orchestrator-single-vm-architecture.md` says "01:00 UTC daily/opus", live reality is hourly/sonnet-forced)
+  has its own open follow-up todo, still `[ ]`.
+- Batch 1 — `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`: P0 priority, `assigned_vm: planning`, 5 days
+  stalled with no Progress Log movement despite closely-related sibling work happening nearby in the same window —
+  looks like a dispatch-gap, not a genuine blocker. Worth a live AO-backlog check.
+- Batch 3 — `deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md`: frontmatter states a
+  root cause as settled fact; the doc's OWN bisection body falsifies it, and a later cross-slot measurement only
+  "partially rehabilitates" it with an explicit caveat ("could not pin the specific commit"). Genuinely nuanced/still
+  evolving — did not attempt a fix, needs a closer read than this pass's budget allowed.
+- Batch 3 — `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`: sole open todo already burned 4
+  dispatch cycles (2026-08-12→08-14) before a guard fix shipped (`agent-orchestrator@5c3dfb58c8`); no confirmation
+  since 08-14 that the guard is actually holding. `assigned_vm: planning` — worth a live AO-backlog check before
+  assuming this is settled.
+- Batch 3 — `infra_ops_residual_migration_verification_2026_07_24.md`: a P0 "confirm what's actually shipped" item
+  open 23+ days, re-classified as "stays NA, judgment work" by 4+ separate na-eligibility-audit passes without the
+  actual audit ever being run. Pattern worth surfacing on its own — repeated re-classification isn't the same as
+  doing the work.
+- Batch 3 — `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md`: Progress Log repeatedly (3 separate audit
+  passes) asserts `locked_by: live-defi-rollout` while the actual frontmatter field is blank — a stale-prose
+  instance of the corpus-wide branch-name-as-lock pattern already tracked in
+  `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`. Not independently fixed here (prose-only,
+  no functional lock exists) — noted for that doc's own sweep.
 
 ## Progress Log
 
