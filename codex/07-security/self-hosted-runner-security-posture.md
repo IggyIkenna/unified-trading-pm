@@ -57,15 +57,25 @@ ambient identity still doubles as the agent-orchestrator's own identity — that
 done**. Deploy reference: `/codex/05-infrastructure/agent-orchestrator-deploy.md` § "CI-runner fleet". Relaunch runbook:
 `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`.
 
-## Current self-hosted repo set (re-derived live, 2026-08-09)
+## Current self-hosted repo set (re-derived live, 2026-08-16)
 
-Source of truth: `unified-trading-pm/scripts/workflow-templates/self-hosted-qg-repos.txt`. Exactly **7 repos**, all
-private, remain routed to self-hosted for genuine billing reasons — every other repo the fleet ever routed here (public
-repos get free/unmetered GitHub-hosted minutes, so routing them here only added exposure + contention for no benefit)
-has been reverted to `ubuntu-latest`:
+Source of truth: `unified-trading-pm/scripts/workflow-templates/self-hosted-qg-repos.txt`. **14 repos**, all private,
+remain routed to self-hosted for genuine billing reasons — every other repo the fleet ever routed here (public repos get
+free/unmetered GitHub-hosted minutes, so routing them here only added exposure + contention for no benefit) has been
+reverted to `ubuntu-latest`:
 
 `agent-orchestrator` · `strategy-service` · `e2e-testing` · `features-service` · `market-tick-data-service` ·
 `execution-service` · `ml-service`
+
+**Wave 2 (2026-08-15/16 billing sweep — flipped private + self-hosted in the same pass, per the private-before-self-host
+sequencing rule below)**: `instruments-service` · `unified-api-contracts` · `market-data-processing-service` ·
+`trading-agent-service` · `deployment-api` · `deployment-service` · `unified-trading-library`. Live-verified: pool
+online on `ci-escalation-runner-vm-1` (`i-042a6332509482556`) via the GitHub API, and real LDR-push runs actually
+claiming `glue-ip-172-31-3-59-1` (not `ubuntu-latest`) for `unified-api-contracts`, `market-data-processing-service`,
+`deployment-service`, `trading-agent-service`, `deployment-api`, `unified-trading-library`. `instruments-service`'s
+workflow file content is verified identical to the working repos' at LDR HEAD, but its own fresh dispatch hit a
+content-sentinel cache skip (zero compute, so no runner assignment to observe) — re-verify on its next real content-
+changing push. Details/provenance: `/plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md`.
 
 ## Public-repo / fork-PR threat model — the `unified-trading-pm` exposure is RESOLVED (2026-08-07)
 

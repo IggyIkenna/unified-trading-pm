@@ -1303,6 +1303,17 @@ was never referenced cross-repo. Full incident + migration history:
 `plans/archive/shared_ci_workflow_repo_extraction_2026_08_06.md` (once archived) or
 `plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`.
 
+**Forward migration (2026-08-15/16) — the wave-2 billing sweep.** Once a repo is flipped private (billing is otherwise
+free/unmetered on GitHub-hosted for public repos, so self-hosting only pays off private), the sanctioned sequencing is
+always **private-flip FIRST, self-hosted-routing SECOND** — reversing the order re-creates the fork-PR ambient-identity
+exposure the public-repo revert above exists to prevent. 7 repos went through this in one pass:
+`instruments-service`, `unified-api-contracts`, `market-data-processing-service`, `trading-agent-service`,
+`deployment-api`, `deployment-service`, `unified-trading-library` — see
+`/codex/07-security/self-hosted-runner-security-posture.md` § "Current self-hosted repo set" for the live-verified
+runner-assignment evidence and `/plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md`
+for the full ship provenance (commit SHAs, the dependency-chain sequencing that mattered here — `unified-trading-library`
+and `unified-api-contracts` are upstream of the other 5 in `workspace-manifest.json`, so they had to land first).
+
 **Second wave — the rest of the flat-copy fleet templates moved too (2026-08-07/08).** The same
 host-in-`unified-trading-ci` pattern was extended from the 2 files above to 7 more: `version-registry-notify.yml`,
 `main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`, `request-major-bump.yml`, `staging-backmerge-to-ldr.yml`,
