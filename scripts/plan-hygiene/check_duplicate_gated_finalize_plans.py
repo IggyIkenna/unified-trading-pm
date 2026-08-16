@@ -23,16 +23,28 @@ runtime sys.path splice for what is otherwise a completely standalone check (eve
 other checker in this directory is self-contained the same way).
 
 A live corpus-wide run at authoring time (2026-08-15) found 6 PRE-EXISTING
-duplicate-gated parents, not the single 2026-07-31 pair this issue doc was filed
-against -- so this is a SHRINKING-RATCHET baseline check, same shape as
-check_reference_paths.py / check_archive_candidates.sh in this directory, not an
-absolute zero-tolerance gate. Hard-failing unconditionally on ship would red the
-whole fleet's --ci sweep on debt this todo did not create and todo 3 (the
-port-then-supersede sweep) has not yet cleared -- exactly the "a stricter gate
-must be one the whole fleet already passes" principle check_create_only_archive_
-commits.py's own ALLOWED_DUPLICATE_STEMS ratchet already encodes in this same
-directory. Baseline lives in duplicate_gated_finalize_plans_baseline.yaml; todo 3
-re-baselines to 0 once it clears the known pairs.
+duplicate-gated parents using a filename-blind match (any `depends_on` +
+`gate_on_depends: true` plan counted as a "finalize plan"). Todo 3's sweep
+(2026-08-16) read all 6 flagged plans' actual titles/content and found EVERY ONE
+was a false positive: a sanctioned SPLIT child (CLAUDE.md: "partial parallelism
+isn't expressible in one plan -> SPLIT (gated step in Plan B via depends_on +
+gate_on_depends: true)") -- a legitimate downstream phase plan that can't start
+before its parent lands, not a competitor for the parent's archival slot. Example:
+prediction_phase_ab_residuals_2026_07_24 was "gated by 3 finalize plans" that were
+actually Phase C (data-status UI), Phase D (smoke-test/backfill) and Phase E
+(football arb live) -- three substantively distinct plans, none of them archival
+attempts. `_gated_by()` now additionally requires the gating plan's OWN filename to
+follow the corpus's established `<parent-slug>_finalize[...]` naming convention
+(every genuine finalize plan in this corpus is named that way) before it counts
+toward a parent's duplicate-finalize tally -- see that function's docstring. This
+closed all 6 false positives (0 duplicate-gated parents on re-scan) without
+changing detection of a genuine collision (the reconstructed 2026-07-31 incident
+shape is still caught -- see the test suite). Still a SHRINKING-RATCHET baseline
+check, same shape as check_reference_paths.py / check_archive_candidates.sh in
+this directory, not an absolute zero-tolerance gate -- kept that way since a
+future genuine collision could plausibly still slip past the naming heuristic (a
+mis-named finalize plan). Baseline lives in duplicate_gated_finalize_plans_baseline.yaml,
+re-baselined to 0 as of todo 3.
 
 Usage:
   python3 scripts/plan-hygiene/check_duplicate_gated_finalize_plans.py [--quiet] [--workspace-root <path>]
@@ -86,7 +98,22 @@ def _is_finalize_plan(fm: dict[str, object]) -> bool:
 
 
 def _gated_by(all_plans: list[_Coverage]) -> dict[str, list[Path]]:
-    """Every gated parent slug -> the finalize plan path(s) whose depends_on names it."""
+    """Every gated parent slug -> the finalize plan path(s) whose depends_on names it
+    AND whose own filename follows the corpus's established `<parent-slug>_finalize[...]`
+    naming convention (every genuine finalize plan in this corpus is named that way --
+    confirmed by inspection at todo-3 sweep time, duplicate_finalize_plans_created_for_
+    one_parent_2026_08_06.md). That second condition matters: `depends_on` +
+    `gate_on_depends: true` alone (todo 1/2's `_is_finalize_plan`) is ALSO the exact
+    shape of a sanctioned SPLIT child (CLAUDE.md: "partial parallelism isn't expressible
+    in one plan -> SPLIT (gated step in Plan B via depends_on + gate_on_depends: true)")
+    -- a legitimate downstream phase plan that simply can't start before its parent
+    lands, not a competitor for the parent's archival slot. Filename-blind matching over-
+    flagged all 6 corpus hits as false positives at todo-3 sweep time (verified by
+    reading each flagged plan's actual title/summary: e.g. prediction Phase C/D/E are
+    three substantively distinct plans, not duplicate archival attempts, for
+    prediction_phase_ab_residuals_2026_07_24) -- see that doc's 2026-08-16 Progress Log
+    entry for the full per-parent evidence.
+    """
     out: dict[str, list[Path]] = {}
     for cov in all_plans:
         if not _is_finalize_plan(cov.frontmatter):
@@ -94,9 +121,12 @@ def _gated_by(all_plans: list[_Coverage]) -> dict[str, list[Path]]:
         depends_on = cov.frontmatter.get("depends_on")
         if not isinstance(depends_on, list):
             continue
+        stem = cov.path.stem
         for dep in cast(list[object], depends_on):
             if isinstance(dep, str):
-                out.setdefault(dep.strip(), []).append(cov.path)
+                slug = dep.strip()
+                if stem == f"{slug}_finalize" or stem.startswith(f"{slug}_finalize_"):
+                    out.setdefault(slug, []).append(cov.path)
     return out
 
 
