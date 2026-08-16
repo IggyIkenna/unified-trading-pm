@@ -883,3 +883,5 @@ family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27,
 - **context-scout 2026-08-15**: re-confirmed context_scope (2 entries) unchanged — still a genuinely code-free
   discoverability-index doc (its own body IS the reading list); the parent closeout plan + the line-cap-remediation
   source doc remain the right minimal set.
+- **context-scout 2026-08-16**: re-confirmed context_scope (2 entries) unchanged — both paths still resolve; still a
+  genuinely code-free discoverability-index doc.

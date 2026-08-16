@@ -969,6 +969,12 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   billing-restoration citations resolve to `tradfi_databento_account_billing_suspended_2026_08_09.md`, already
   summarized inline in this doc's own Progress Log; kept the existing 6-entry set (M-1 coordinator + 3 codex SSOTs + 2
   source scripts) rather than adding a 7th, since the issue doc's key facts are already inline here.
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (6 entries) -- new 2026-08-16 P3 live
+  re-verification todo (deferred from the now-archived `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`)
+  carries its own 3 fix commit hashes inline and needs no new source citation; checked the `0228afe52a` short-SHA for a
+  step-4a fingerprint match against the corpus — the one hit
+  (`dp_vm_003_canonical_migration_cefi_deribit_sweep_wedged_relaunched_fresh_name_2026_08_16.md`) is a coincidental
+  current-HEAD tarball-version stamp for an unrelated CEFI VM relaunch, not a shared-investigation match.
 
 - [ ] [SCRIPT] P3. **Live re-verification sweep, deferred from the now-archived
       `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` issue doc

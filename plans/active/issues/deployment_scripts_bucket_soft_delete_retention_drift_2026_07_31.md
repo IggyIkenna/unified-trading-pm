@@ -216,3 +216,6 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   the honest verification checkpoint; re-tracked as a new date-gated `- [ ]` P3 todo for re-check on/after 2026-08-17.
   No writer-side investigation warranted yet — drain is real and ongoing, just slower than the 08-09 point-estimate. Fix
   intact (retentionDurationSeconds=0, confirmed by prior reads). (repo: deployment-service, verification-only.)
+
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (3 entries), still accurate — sole open item is the
+  date-gated (`on/after 2026-08-17`) final-drain re-check, same verification scope as before.

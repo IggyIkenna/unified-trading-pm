@@ -103,3 +103,4 @@ continuous interactive session, not a later worker citing a claimed-but-unverifi
 - **2026-08-15 (interactive /plan-reconcile session)**: created to give this session's 7 batched rulings a traceable
   home; rulings applied across ~9 commits the same session (ao/ci/cross_cutting/infra/prediction/sports/ui tranches, the
   2026-08-08 findings-doc archival, the meta/incident docs, and the locked_by placeholder sweep).
+- **context-scout 2026-08-16**: populated/refreshed context_scope (2 entries).

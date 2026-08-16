@@ -45,7 +45,9 @@ locked_by:
 context_scope:
   [
     scripts/dev/safe-doc-push.sh,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md,
+    /plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md,
   ]
 source: >-
   cefi_residual_ao_dispatch_2026_08_15_finalize.md re-verification/archival session, 2026-08-15 (slot-3, review).
@@ -423,3 +425,5 @@ tracked-but-missing shape.
   the same false-positive shape pass-2's own fix had to correct once already for the mid-loop-staged case (see the
   "rename-source exclusion fix" in slot-25's pass-2 note) — this may be that same exclusion not covering the
   already-committed case, a distinct code path from the one pass-2 fixed.
+
+- **context-scout 2026-08-16**: populated/refreshed context_scope (4 entries).

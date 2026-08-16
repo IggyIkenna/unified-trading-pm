@@ -130,3 +130,4 @@ when the violation list is empty.
 - **2026-08-10 (/ci-reconcile, slot-2·laptop)** — Found during the § 0b standing-monitor enumeration; would not have
   been found from the Slack channel, since the defect's whole effect is the absence of a Slack message. Concrete support
   for this skill's own § 6 rule that silence is not evidence of health.
+- **context-scout 2026-08-16**: populated/refreshed context_scope (3 entries).

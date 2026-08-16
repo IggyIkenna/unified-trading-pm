@@ -77,3 +77,7 @@ source: >-
       finalize plan's own `related:` entry and `/codex/05-infrastructure/vm-launcher-runbook.md`'s Known Issues
       pointer), then archive this finalize plan too. Done when: both plans are under `plans/archive/`, and
       `regenerate_active_plan_inventory.py` reports zero orphan referrers to either.
+
+## Progress Log
+
+- **context-scout 2026-08-16**: populated/refreshed context_scope (3 entries).

@@ -407,3 +407,6 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   (deterministic UAC registration, no remaining judgment call). Flipped `assigned_vm: NA` -> `assigned_vm: planning` —
   this was the doc's only open todo.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (4 entries), still accurate — both registry files
+  (`defi_venues.py`, `defi_venue_capabilities.py`) still directly target the sole open `[SCRIPT] P1` mechanical
+  registration todo.

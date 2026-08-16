@@ -984,3 +984,5 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
   narrowed both todos to just the operator-scheduled execution step. Not a RECLASSIFY candidate: scheduling + review
   sign-off are genuine operator-gated actions, not worker-determinable outcomes.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (5 entries), unchanged. Doc is at 986 lines
+  (14 from the 1000-line hard cap) — kept this touch to a single marker append, no context_scope reformatting.

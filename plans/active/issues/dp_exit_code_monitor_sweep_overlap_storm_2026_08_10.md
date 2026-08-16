@@ -45,6 +45,7 @@ context_scope:
     /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/_gcs_tail.py,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 source: >-
@@ -525,6 +526,9 @@ until the next sweep) and is a stopgap, not the root fix.
   `sha256:fb09250c...`), stronger than the timestamp-inference discipline used by prior sessions on this doc. **Result:
   OOM class confirmed gone** — no `signal 9`/`"memory limit"` anywhere in the execution's logs, and the new
   `run-log-prefetch` phase completed fast (32.9s for 241 candidates), vs. the pre-fix unbounded fan-out that OOM'd
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries) — added
+  `deployment_service/data_pipeline_monitors/_gcs_tail.py`, the module the 2026-08-14 tail-cap fix (`e69f8aeda4`)
+  split out and this doc's own fix-chain now centers on.
   `qgtnz`/`fwgt2`. But the sweep still hit the full 1800s timeout — only 26/266 terminated VMs classified, 180
   `download_bytes` stall/retry warnings logged. Investigated further: compared `terminated-base-signals` VM counts
   across `htqvk` (19:00Z, pre-fix) and `jd9zn` (22:00Z, post-fix) — both report the IDENTICAL `266 VMs`, proving the

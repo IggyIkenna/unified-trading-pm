@@ -1014,3 +1014,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   exhaust before even the first category (CEFI) completes — per-category timing may never log regardless of
   checkpoint state. 2026-08-17T00:00Z passing is not sufficient on its own; re-check must confirm ≥1 real timing
   line has actually appeared. Todo left GATED, unchanged.
+- **context-scout 2026-08-16**: marker-only touch (doc is at 1016 lines, already over the 1000-line hard cap;
+  `check_line_caps.sh`'s small-marker-append exception covers a 0-deletion, non-checkbox append like this one) —
+  context_scope left unchanged (5 entries, all still resolve), not re-verified path-by-path this pass.

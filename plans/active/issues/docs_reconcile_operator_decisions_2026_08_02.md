@@ -443,3 +443,8 @@ just tracked here so they aren't lost:
   `doc_reference_baseline.yaml`, 24 in `doc_body_link_baseline.yaml` (12 GENUINE-DEAD, 12 PLACEHOLDER-PROSE checker
   false-positives already tracked by `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`); 0 CLEARED, 0
   MOVED this run — no baseline changes made. Full Phase-5 report in this run's chat transcript / `/done` evidence.
+- **context-scout 2026-08-16**: re-verified context_scope (6 entries), unchanged — all six still directly cited by an
+  open BLOCKED-OPERATOR-DECISION item's own evidence; already at this skill's 2-6 target ceiling so no addition made
+  despite newer items 5/6 accruing since the last scout (their cited docs — `plan-hygiene.md` ×2,
+  `cursor-rules-system.md`, `.cursor/rules/README.md` — are lower-value than the 6 already listed, which anchor the
+  still-largest-blast-radius items 2-4).

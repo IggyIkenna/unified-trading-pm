@@ -138,3 +138,4 @@ retry, not genuinely new information.
   `≤2/(vm-prefix, day)` bound, and the `tradfi-bf-cme-ohlcv-1m-` family was already reported at that bound (2/2) — did
   not relaunch. Filed this issue doc and paging the operator via `/blocked` per the escalation's explicit instruction.
   No code changed this session.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

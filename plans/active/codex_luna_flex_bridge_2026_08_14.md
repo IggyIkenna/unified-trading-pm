@@ -316,3 +316,6 @@ template, minus the third-party dependency).
   mandatory smoke-test gate (`[REVIEW] P0`, real skill + real tool call) stays blocked on it. Also still open:
   system-prompt marker verification, quota tracking/gating, cross-checked usage-capture, the `model_pricing.py` Luna
   entry, and streaming support.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged — all 6 paths confirmed
+  still on disk, still accurate (`codex_bridge_server.py` remains the central file for the still-open `tool_use`
+  translation gap).

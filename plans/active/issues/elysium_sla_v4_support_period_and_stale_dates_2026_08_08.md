@@ -429,3 +429,4 @@ they were independent. Worth the operator knowing before forwarding it.
   re-synced from `origin` before editing (stale copy preserved at `/tmp/issue-local-stale-backup.md`). **Any session
   working in a behind-HEAD checkout must read the file from `origin/<branch>` before editing it, not from disk.**
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

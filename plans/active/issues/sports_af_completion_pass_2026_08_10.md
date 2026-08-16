@@ -41,6 +41,8 @@ context_scope:
     instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py,
     deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
     /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/active/issues/mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md,
+    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
   ]
 ---
 
@@ -814,3 +816,7 @@ automator still alive, re-launch if session teardown killed it.
   completed, stalled, or was abandoned. Flagging for the next session with infra-query scope: re-check
   `af-backfill-*` VM state and the chain automator's liveness before assuming this task is still genuinely
   in-flight rather than silently stalled.
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries — added
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` and
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, the two companion docs this doc's own Progress Log
+  repeatedly points to as "full detail" for the odds-backfill fleet it babysits alongside the AF campaign).

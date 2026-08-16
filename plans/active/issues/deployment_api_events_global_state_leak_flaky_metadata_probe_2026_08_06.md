@@ -192,3 +192,5 @@ executes the real lifecycle context manager at all).
   (investigate + reconcile the two independent `unified_trading_library` event-global-state stores, and why the
   `conftest.py` autouse reset didn't prevent the CI-only leak) is genuine investigation/design work on a fleet-wide
   shared dependency, not a mechanical fix.
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (4 entries), still accurate — all 4 paths still
+  resolve and still directly target the sole open `[BACKEND] P3` investigation scope.

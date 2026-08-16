@@ -109,3 +109,4 @@ so they were left as a follow-up rather than expanded in-scope for a one-shot es
 - 2026-08-15 (agt-d1be49, slot 18): filed during DP-MANIFEST-001 tradfi escalation triage; root cause fixed in
   `relaunch_consolidator.py` + `escalation.py` in the same session (shipped separately), this doc tracks the remaining
   three-file blast radius.
+- **context-scout 2026-08-16**: populated/refreshed context_scope (6 entries).

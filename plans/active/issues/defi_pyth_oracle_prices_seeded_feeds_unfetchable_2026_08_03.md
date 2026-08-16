@@ -447,3 +447,5 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   work (reconcile 3 coexisting oracle_prices/PYTH naming conventions) -- an earlier in-session attempt at this exact
   reconciliation produced a false "77 gap days" result via a last-writer-wins merge shadowing real data. Multiple
   standing audits (2026-08-04/07/08) independently reached KEEP-NA. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (5 entries), unchanged — all 5 paths still resolve
+  and still target the sole open `[DATA] P3` naming-reconciliation scope.

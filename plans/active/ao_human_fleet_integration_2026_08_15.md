@@ -50,6 +50,7 @@ context_scope:
     agent-orchestrator/dashboard/src/App.tsx,
     agent-orchestrator/dashboard/src/layout.tsx,
     agent-orchestrator/dashboard/src/TaskUsageWindows.tsx,
+    agent-orchestrator/dashboard/src/HumanFleet.tsx,
     /plans/archive/2026_08/issues/review_agent_rate_limit_blind_kill_2026_08_14.md,
   ]
 supersedes:
@@ -372,6 +373,9 @@ investigation confirmed are both achievable with existing primitives:
   (`agent_kind="human"`, not `"custom"` — the Phase 4b fix is deployed). **Not done this pass**: the second Phase 4
   todo (claim + complete one real backlog task end-to-end) — "do it" was scoped to registration, a real task
   claim/done cycle is a bigger action and wasn't asked for yet.
+- **context-scout 2026-08-16**: refreshed context_scope (15 entries) — all 14 prior entries re-verified on disk;
+  added `agent-orchestrator/dashboard/src/HumanFleet.tsx` (the existing Human Fleet dashboard page the 2026-08-16
+  Phase 5/6 additions name directly as the surface their new work extends).
 
 ## Todos
 

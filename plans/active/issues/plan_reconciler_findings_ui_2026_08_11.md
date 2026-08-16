@@ -150,3 +150,4 @@ include multiline-frontmatter ui-tagged docs.
 - **2026-08-15 (operator-ruling application session)**: this doc's own `## Todos` item (multiline-frontmatter ui
   inventory expansion) left open/ordinary-work — checked for a newer ui-tranche `/plan-reconcile` findings doc that
   might have picked it up; none exists as of this date. No other changes made to this doc's substance.
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries), unchanged.

@@ -433,3 +433,4 @@ a missing checkbox, so no new todo is added here; a future hygiene pass should c
   closed; 0 remaining. This doc is itself now an archive candidate — deferred to a separate pass per this corpus's
   convention of not self-archiving in the same turn that closes out the last item (mirrors the `bucket_iam` BRIDGE
   precedent above).
+- **context-scout 2026-08-16**: populated/refreshed context_scope (3 entries).

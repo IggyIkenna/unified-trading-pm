@@ -44,6 +44,7 @@ context_scope:
     deployment-service/terraform/gcp,
     deployment-service/terraform/gcp/client_reporting_scheduler.tf,
     deployment-service/terraform/gcp/t1_batch_scheduler.tf,
+    deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
     /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
   ]
 ---
@@ -205,3 +206,8 @@ the IaC config; the third is a Cloud Run job module removal.
     text updates on `lst-rates`/`perp-funding` (both purely descriptive, documenting already-applied historical live
     memory bumps), and the `liquidation-events`/`risk-params` output-map additions. No other memory/cpu/env changes
     found beyond the two already discussed.
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries, was 4) — added
+  `deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`, the concrete `.tf` file the doc's own
+  2026-08-09 finding names directly (the `cpu 8->4`/`memory 32Gi->16Gi` in-place update the open `[OPERATOR] P1` todo
+  says must be excluded or confirmed before applying).

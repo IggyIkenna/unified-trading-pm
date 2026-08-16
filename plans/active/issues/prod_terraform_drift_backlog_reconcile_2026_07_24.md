@@ -229,3 +229,4 @@ todo below.
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

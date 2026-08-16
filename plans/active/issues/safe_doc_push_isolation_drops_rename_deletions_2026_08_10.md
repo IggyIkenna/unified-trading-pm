@@ -56,6 +56,7 @@ context_scope:
     /scripts/dev/safe-doc-push.sh,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/archive/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
+    /plans/active/issues/safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md,
   ]
 source: >-
   Found during the 2026-08-10 autonomous ag-closeout close-out (slot 1) while verifying commit `8ac88720e6` against
@@ -336,3 +337,5 @@ untracked CREATE went through, the tracked MODIFY did not) and still exited 0 â€
       gate every success path passes through) so no code path can bypass it. Exit 14 on partial landing with the
       specific failing paths named. Regression: `tests/test_safe_doc_push_per_file_remote_verification.bats` (3/3
       green).
+
+- **context-scout 2026-08-16**: populated/refreshed context_scope (4 entries).

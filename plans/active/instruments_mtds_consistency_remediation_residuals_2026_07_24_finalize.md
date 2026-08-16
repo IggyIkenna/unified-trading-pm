@@ -111,3 +111,4 @@ last_updated: "2026-08-11"
   `launch-defi-manifest-projection-vm.sh` yet. No archival performed; both todos left open; skipping GATED — VM launch
   - execution is out of this archival todo's own scope (this finalize plan carries no `repos:`, doc-only) and belongs to
     the issue doc's own SCRIPT todo.
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (3 entries), still accurate.

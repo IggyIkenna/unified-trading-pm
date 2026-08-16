@@ -142,3 +142,4 @@ with a real message + a Progress Log entry in the dedup plan), or (c) already su
   needed): split into a `[x]` `[DIAG]` disposition-ruling todo (done) + an open `[OPERATOR]` drop-the-stash todo, so
   this stops re-dispatching to INFRA workers who cannot execute the drop and instead surfaces to the operator queue.
   Todo intentionally left open — the stash itself is still present, unresolved pending human action.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (3 entries), unchanged.

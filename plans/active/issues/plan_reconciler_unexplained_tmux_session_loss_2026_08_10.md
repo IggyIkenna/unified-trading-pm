@@ -170,3 +170,7 @@ proves — the forensic evidence needed to confirm it was itself lost, per this 
 incident's mechanism: a shared ambient tmux socket combined with a bare `kill-server` issued from any process/slot,
 which would tear down sibling sessions with no per-session trace. This is offered as the most plausible mechanism given
 the evidence gap already documented above, not as a definitive resolution of this doc's UNDETERMINED root cause.
+
+### context-scout 2026-08-16
+
+Populated context_scope (4 entries).

@@ -235,3 +235,5 @@ stabilize. Left untracked, this manifest residual would silently persist forever
 > above, in "## Follow-ups" (`[DATA] P3. Re-run shard4's range ... re-poll the ~20 remaining attempted_failed dates`).
 > Evidence: full-file read of this doc, `## Follow-ups` section immediately precedes this banner. Doc otherwise still
 > has that one open todo — not an archive candidate.
+
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries, unchanged — still accurate).

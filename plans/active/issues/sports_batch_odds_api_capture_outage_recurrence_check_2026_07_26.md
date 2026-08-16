@@ -483,6 +483,8 @@ convergence into the 2026-06-27..07-25 range) should flip it via
 `POST /api/prerequisites/sports_odds_backfill_chain_converged_to_target_range {"value": true}` once that happens, which
 re-enables this todo's dispatch. Checkbox left unchecked (no new work to flip it on).
 
+**context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
 **2026-08-09 (slot 25, data_engineering)** — Dispatched item 1 again by AO (task derivation still reads the checkbox's
 own stale "NOT YET LAUNCHED" opening line, unaware of the 2026-08-09 ag-closeout-audit note already added below it). Per
 the pre-task plan/issue conflict-check HARD RULE, read that note first rather than acting on the task brief alone — it

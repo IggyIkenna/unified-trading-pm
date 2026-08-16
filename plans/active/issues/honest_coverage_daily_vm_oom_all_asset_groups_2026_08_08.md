@@ -296,3 +296,4 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   2026-07-16/08-01 fixes → 08-06..09-15 OOM recurrences → this session's e2-highmem-8 bump) worth keeping in place as a
   standing reference rather than moving + fixing 9 referrer paths under time pressure. Genuinely 0 open todos as of this
   entry — the exemption is for referrer-link stability, not because work remains.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -550,3 +550,5 @@ Progress Log).
   `DeepSeekWalletPanel.tsx` (UI wiring already shipped; remaining open work is backend-only), and the
   `deepseek_flash_spend_235_residual_2026_08_10.md` issue (already surfaced via this doc's own `related:` field, and
   superseded by this doc's own fuller root-cause narrative).
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (7 entries) -- no body content change since
+  2026-08-15 (frontmatter `last_updated` bump only); all 7 entries still resolve.

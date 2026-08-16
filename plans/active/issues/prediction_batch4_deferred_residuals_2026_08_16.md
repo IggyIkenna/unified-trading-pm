@@ -108,3 +108,4 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
   the `check_archive_candidates` CI ratchet blocking `live-defi-rollout`). Cross-checked all 4 Deferred sections
   against the live corpus (see table above) — 5 of 7 items already tracked elsewhere, 2 genuinely orphaned and
   migrated here as real `- [ ]` todos.
+- **context-scout 2026-08-16**: populated context_scope (2 entries).

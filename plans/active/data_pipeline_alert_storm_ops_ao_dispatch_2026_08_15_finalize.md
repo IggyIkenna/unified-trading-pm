@@ -41,3 +41,8 @@ resolved_by:
 
 - [ ] [REVIEW] P2. Confirm all 3 todos landed with evidence (WIF setup verified working, chain relabel part 2
       execution evidence, combo_chain schema doc updated); archive that plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-16**: populated context_scope (1 entry) — finalize gate doc, code-free by rule; the one
+  gated source doc is the correct minimal set.

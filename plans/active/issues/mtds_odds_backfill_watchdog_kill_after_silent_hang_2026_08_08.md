@@ -54,7 +54,7 @@ context_scope:
     deployment-service/scripts/vm/vm_zombie_watchdog.py,
     deployment-service/deployment_service/vm_prefix_registry.py,
     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
-    market-tick-data-service/scripts/setup-data-pipeline-vm.sh,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
   ]
 ---
 
@@ -567,3 +567,7 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo 1's scope: this doc's other 2 open todos (todo 1 —
   catch a live hang before the silent window elapses; todo 4 — `PREFIX_IDLE_THRESHOLDS` tuning, still explicitly gated on
   an unconfirmed root cause) are genuinely open work and left untouched — doc stays `status: open`, not archived.
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries) — corrected a dead source path
+  (`market-tick-data-service/scripts/setup-data-pipeline-vm.sh`, which does not exist, to
+  `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`, the correct VM bootstrap script the doc's own body
+  discusses via `run.log`/heartbeat/`WATCHDOG_TRACE.log` provenance).

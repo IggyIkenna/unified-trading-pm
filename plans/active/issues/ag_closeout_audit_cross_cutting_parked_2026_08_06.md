@@ -299,3 +299,5 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
   open findings (1/2/3/5) are all cross-tranche `asset_group` retag handoffs to `ui`/`infrastructure`/`ci`, explicitly
   scoped "owning-tranche fix, leave to X tranche's own audit" -- not this tranche's write by construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (5 entries), still accurate -- findings 1/2/3/5's
+  targets remain the correct still-open retag pointers.

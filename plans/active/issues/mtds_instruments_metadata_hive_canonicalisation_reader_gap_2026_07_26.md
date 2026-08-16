@@ -423,3 +423,4 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   `/plans/archive/issues/defi_risk_params_cron_job_fleet_wide_zero_rows_2026_08_10.md` with 3 diagnostic + fix +
   re-verify todos. All 9 original todos in this doc are now ✅; the Cloud Run regression is tracked in the new P0 doc.
   This doc is now eligible for archive (all todos done, no lock).
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries, unchanged — still accurate).

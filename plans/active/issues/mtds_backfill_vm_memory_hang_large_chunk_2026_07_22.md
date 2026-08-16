@@ -960,3 +960,4 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
       **Documented usage**: `gcloud compute instances add-labels <vm> --zone=<zone> --labels=keep=true` immediately
       before starting actively-supervised manual work on a finished/RUNNING backfill VM; remove the label (or delete the
       VM) the moment that work ends.
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries, unchanged — still accurate).

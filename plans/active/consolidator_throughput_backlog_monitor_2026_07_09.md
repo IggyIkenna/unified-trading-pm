@@ -541,3 +541,5 @@ context_scope:
   (its 4 concrete sub-parts are all already individually shipped, see the closed todo above). Doc otherwise stays NA —
   the 2 remaining open items (WS-1 + WS-3 shipping gates) are both explicitly deferred by the same dated 2026-07-10
   operator decision (local-dev-only until all cockpit plans complete).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (5 entries), unchanged — all 5 paths confirmed
+  still on disk, still accurate.

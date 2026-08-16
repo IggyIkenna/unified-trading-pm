@@ -184,3 +184,4 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
   if still stale; warn always returned 0 regardless). Regression test
   `test_auto_mode_stale_after_dirty_skip_returns_nonzero` added to `TestTarballFreshnessGuard`. QG green. Shipped via
   `infra_satellite_ao_dispatch_batch8_2026_08_07.md` (now archived).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (3 entries), unchanged.

@@ -977,3 +977,6 @@ drift_direction: advance-code
   own 2026-08-09 live-verification pass). Swapped the generic AO-architecture codex citation for
   `instruments-service/.../adapters/tradfi/databento/` (the CME/Databento adapter home, the concrete remaining-work
   target) and added this doc's own finalize plan (established sibling-batch convention, e.g. batch1b/batch13).
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (6 entries) — the last open todo (CME COMBO
+  fix) is now `[x]` done, 0 open todos remain; all 6 entries still resolve as accurate historical context. (Archival
+  status is `/plan-reconcile`/`/ag-closeout-audit`'s call, not this skill's — not touched here.)

@@ -209,6 +209,8 @@ precondition named by the parent plan.
   `venv_workspace_openapi_regen_batch11_findings_2026_08_09.md`, which Residual 1's own 2026-08-12 `/plan-reconcile`
   correction names as where "the next picker-up should start" (specifically its todo 1) rather than repeat the
   investigation this doc's own stale "nothing committed" text describes.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged — all 6 paths confirmed
+  still on disk, still accurate.
 
 ## na-eligibility-audit verdict
 

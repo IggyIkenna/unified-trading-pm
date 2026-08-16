@@ -947,3 +947,5 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`, which this doc's own sole remaining open todo
   (the cicd-escalation-added Final 4-surface re-proof + archival gate) explicitly names as the doc to read instead of
   duplicate-driving from here.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged — all 6 paths confirmed
+  still on disk, still accurate.

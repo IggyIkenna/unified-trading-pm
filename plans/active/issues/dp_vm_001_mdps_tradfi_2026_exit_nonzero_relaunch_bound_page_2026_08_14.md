@@ -134,3 +134,4 @@ guidance both point the same direction: stop and page.
   non-OOM exit codes are a PAGE case regardless of relaunch-count bound, and the `mdps-tradfi-` family was additionally
   reported already at its `≤2/day` relaunch bound — did not relaunch. Filed this issue doc and paged the operator via
   `/blocked` per the escalation's explicit instruction. No code changed this session.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

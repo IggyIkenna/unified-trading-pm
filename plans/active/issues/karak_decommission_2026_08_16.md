@@ -200,3 +200,4 @@ change — a token grep alone misses path-prefix/filename/registry-membership bi
   per operator's "Human" plan-destination ruling (assigned_vm: NA). MDPS had zero hits (Karak, like most DeFi LST/
   restaking venues, produces no candle-derivable market data MDPS processes — consistent with the Symbiotic
   onboarding doc's finding that MDPS is not a relevant layer for this venue shape).
+- **context-scout 2026-08-16**: populated/refreshed context_scope (3 entries).

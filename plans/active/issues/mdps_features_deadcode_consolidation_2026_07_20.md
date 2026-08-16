@@ -198,6 +198,7 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   whole-doc flip even though todos 1-3 are now correctly declassified/bounded (per the same-day round5 pass above). Doc
   stays NA in full; todos 1-3 are ready for dispatch the moment todo 8 is resolved or split out, but that split is not
   performed here since it changes doc structure beyond a citation/marker touch.
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries, unchanged — still accurate).
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms round7 (2026-08-08)

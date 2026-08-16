@@ -157,3 +157,7 @@ date (`2022-12-13`) that actually needs it.
   DP-VM-001's routing table (non-OOM → page) and RB-INFRA-RELAUNCH's stand-down guidance (don't race an
   already-converging actuator), did NOT relaunch. Filed this issue doc with the diagnosed root cause (a step beyond the
   two 2026-08-14 precedent docs, which explicitly deferred `run.log` reading) and paged the operator via `/blocked`.
+- **context-scout 2026-08-16**: populated context_scope (6 entries) — verified all six against the doc's own
+  root-cause chain (relaunch runbook, alert routing SSOT, the fleet monitor, its GCS SDK read layer, the sibling
+  gap-fill actuator module, and the sharded-backfill launcher); list unchanged from what was already in frontmatter,
+  no additions needed.

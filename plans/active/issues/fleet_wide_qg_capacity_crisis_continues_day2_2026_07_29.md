@@ -620,3 +620,5 @@ offers 2 non-mechanical paths -- (a) a recorded 'leave as-is' ruling, or (b) shi
 against a live comparable incident burst -- neither is a single checkable fact, and it touches server/escalation.py's
 live AO-dispatch-critical-path retry mechanism (the exact 'multi-file rewrite of live-dispatch-critical-path machinery'
 caution class), so a wrong partition choice risks a new starvation failure mode. Confirmed genuine and unchanged.
+
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (5 entries), unchanged.

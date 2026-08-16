@@ -59,7 +59,8 @@ context_scope:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /scripts/plan-hygiene/check_na_corpus_ratchet.py,
-    /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
+    /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
   ]
 ---
 
@@ -270,3 +271,9 @@ different task than writing the ruling:
   found all 6 resolved. Remaining open todos are 2 permanent operator hard-stops (live-trading go-ahead;
   fork-PR-approval GitHub UI click with no API path), 1 bounded-but-gated-by-the-whole-doc-rule DIAG item, and 1
   editorial line-cap trim needing human judgment -- whole doc stays NA.
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries) — todo 2's 6-subpart RECLASSIFY item is now fully
+  closed (round7, above), so swapped the stale `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`
+  citation (that item's own gating example, now resolved) for the two docs the doc's remaining genuinely-open
+  `[OPERATOR]` items actually point at: `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (P0
+  fork-PR-approval setting) and `sports_predictions_live_mode_activation_readiness_2026_07_21.md` (P3 live-trading
+  go-ahead) — both verified to exist and both are permanent operator hard-stops per this doc's own Progress Log.

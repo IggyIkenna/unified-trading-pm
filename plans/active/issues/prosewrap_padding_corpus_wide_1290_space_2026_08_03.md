@@ -50,6 +50,7 @@ context_scope:
   [
     /plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md,
     /scripts/plan-hygiene/check_prosewrap_padding.sh,
+    /scripts/plan-hygiene/fix_prosewrap_padding.py,
     /scripts/plan-hygiene/prosewrap_padding_baseline.yaml,
     /scripts/plan-hygiene/run_hygiene_sweep.sh,
   ]
@@ -244,3 +245,6 @@ Mechanical, bounded remediation — not a design/judgment call:
   on a pre-existing dangling reference to a `predictions_other_bucket_and_ui_drilldown` doc that no longer resolves).
   Those 6 files' prosewrap debt (329 lines total) remains in the baseline — split them below the line cap first, then
   repair + re-lower the baseline in the same pass.
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries) — added `/scripts/plan-hygiene/fix_prosewrap_padding.py`,
+  the automated repair script this doc's own todo 1 names as the remediation mechanism.

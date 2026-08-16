@@ -280,3 +280,5 @@ DEPLOYMENT_ENV race investigation's own next step runs, since the 2 MTDS tests a
 env-leak and fixing them first risks masking the leak before its cause is confirmed. Verified both cited blocker docs
 are real and still open: mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md (status: open) and
 mtds_deployment_env_race_survives_single_worker_2026_07_23.md (status: open).
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries, unchanged).

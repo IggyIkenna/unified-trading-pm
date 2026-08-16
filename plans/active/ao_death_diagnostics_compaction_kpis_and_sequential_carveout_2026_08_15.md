@@ -231,3 +231,7 @@ to draft-then-catch it.
   against a concurrent peer session's unrelated push, which duplicated the Item-4/root-cause sections three times over —
   resolved by keeping the latest (sha-complete) copy and discarding the two stale ones; verified via a full-file re-read
   before the final push, not just a marker grep.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged — all 6 paths confirmed
+  still on disk, still the highest-value set across the doc's 3 sub-topics (death diagnostics, compaction KPIs,
+  sequential carve-out — the latter already covered by `agent-orchestrator-worker-liveness.md`, which documents the
+  `one_task_per_session` ruling this doc's item 4 carves out from).

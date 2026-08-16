@@ -45,6 +45,7 @@ context_scope:
     /codex/04-architecture/kill-switch-circuit-breaker.md,
     /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/revocation_arming_2026_08_14.md,
+    /plans/active/producer_silence_flatten_protocol_2026_08_14.md,
   ]
 ---
 
@@ -231,3 +232,9 @@ none of them appear as todos in that plan.
   freshness SLA before allowing order submission".
 - `health_aggregator.py` module docstring: "per-ClientWorker heartbeat rollup... Consumed by
   `strategy_service/api/main.py`'s health endpoint" — intra-service, not cross-service.
+
+## Progress Log
+
+- **context-scout 2026-08-16**: populated/refreshed context_scope (6 entries; added
+  `/plans/active/producer_silence_flatten_protocol_2026_08_14.md`, the plan the "RESOLVED into a plan" section names as
+  the executable successor for the superseded risk-decision/gating todos).

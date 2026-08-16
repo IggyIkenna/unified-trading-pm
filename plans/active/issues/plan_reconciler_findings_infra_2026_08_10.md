@@ -400,3 +400,4 @@ referrer docs' commit ages first and complete the 6-step ritual if clear.
   (`status: active`, `last_updated: 2026-08-10`, added both plans to `related:`), replaced archival banner with revival
   note. Findings doc Deferred-work table updated — both operator-owned rows now Done. PM repo clean, committing +
   pushing this turn.
+- **context-scout 2026-08-16**: populated context_scope (3 entries).

@@ -483,6 +483,12 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   dispatch path needs an open-issue-doc dedup check (unfixed as of the last dispatch). Read-only throughout: no GCS
   write, no manifest change, no code shipped; PM plan-doc edits only.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (5 entries) — since 2026-08-14: (1) 3 items
+  (AO VM cross-cloud WIF, chain relabel migration part 2, combo_chain expiration ruling) were operator-ruled and
+  extracted OUT to `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md` (already scouted separately, points back to
+  this doc), so they no longer need a citation here; (2) the "Alert-accuracy quartet" todo's checkbox was flipped
+  (already-shipped confirmation, no new code target). All 5 existing entries still resolve and remain the correct set
+  for this doc's still-open topics.
 - **2026-08-15 (slot-7·backend_engineer, cefi_satellite_ao_dispatch_batch19 dispatch) — flipped the "Alert-accuracy
   quartet" todo's checkbox; already-shipped, no code change needed.** Dispatched to implement this todo via
   `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s own extraction of it. Grepped `deployment-service` before writing

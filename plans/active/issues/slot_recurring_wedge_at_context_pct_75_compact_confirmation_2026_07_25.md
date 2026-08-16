@@ -73,6 +73,7 @@ context_scope:
     agent-orchestrator/server/context_lifecycle.py,
     agent-orchestrator/server/worker_liveness/__init__.py,
     agent-orchestrator/server/worker_liveness/_respawn.py,
+    agent-orchestrator/server/context_probe.py,
   ]
 depends_on: []
 ---
@@ -428,3 +429,6 @@ data.
   audits (07-30 through 08-08) consistently kept this NA on this exact reasoning; the doc's own most recent entries
   (2026-08-08) show it is still being actively characterized (a second, possibly-distinct wedge sub-mode found), not
   settled enough for a bounded worker fix. Not re-litigated.
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries — added `agent-orchestrator/server/context_probe.py`,
+  the learned-window module the doc's own remaining "re-run 60-min validation after any future change to the context
+  signal" todo directly targets).

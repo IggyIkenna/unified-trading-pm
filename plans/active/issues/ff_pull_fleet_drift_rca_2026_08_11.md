@@ -145,3 +145,4 @@ was **not** recoverable from those stashes, nor from 89 dangling blobs.
   matcher (rename source vs destination, substring and prefix non-matches, staged add, delete, empty incoming); the
   backstop fires with its full payload on the age gate and stays silent at 152-behind/2h-old; AO 15/15 tests green.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

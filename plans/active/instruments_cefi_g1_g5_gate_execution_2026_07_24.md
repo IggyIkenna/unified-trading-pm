@@ -767,3 +767,4 @@ Coverage is the verification lens — every number flows through `compute_honest
   gate marker) is an operator sign-off recording, not a worker-determinable fact. Item 2 (EXTENDED's
   raise-vs-fallback CF-11 honest-absence behavior) is a genuine behavior-change design decision with manifest
   implications, not mechanically bounded by any round-11 ruling. No reclassification.
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (6 entries).

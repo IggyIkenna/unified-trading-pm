@@ -149,3 +149,4 @@ class of failure repeatedly.
   `dp_vm_001_mdps_tradfi_2023_...` sibling doc hit yesterday. Per the role's 2-min-no-answer rule, stopped polling —
   this doc is the durable page artifact; a later operator answer (if it lands out-of-band) should be appended here
   rather than assumed lost.
+- **context-scout 2026-08-16**: populated context_scope (4 entries).

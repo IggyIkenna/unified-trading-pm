@@ -36,6 +36,8 @@ context_scope:
   [
     deployment-service/deployment_service/sports_trigger_evaluation.py,
     deployment-service/deployment_service/sports_trigger_periodic.py,
+    deployment-service/deployment_service/sports_trigger_scheduler.py,
+    deployment-service/deployment_service/sports_trigger_state.py,
     /codex/06-coding-standards/quality-gates.md,
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
   ]
@@ -107,6 +109,9 @@ false positives worth a targeted `# type: ignore`-equivalent per this repo's own
   for an explicit operator ruling"), staying `assigned_vm: NA` and flagging here rather than guessing which side should
   own the file family.
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries, was 4) — added `sports_trigger_scheduler.py` and
+  `sports_trigger_state.py`, the 2 remaining files (of the 4 the doc's own Finding section names) that were missing
+  from the prior list; all 4 files carry the ~23 flagged basedpyright errors this doc's sole open todo targets.
 
 ## na-eligibility-audit verdict
 

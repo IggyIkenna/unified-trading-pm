@@ -37,7 +37,11 @@ superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 2, 2026-08-16"
 locked_by:
 context_scope:
-  [/plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md]
+  [
+    /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -64,3 +68,6 @@ resolved_by:
   `fail_hard_canonical_enforcement_design_2026_07_20.md`. Gap 3 already shipped (checked in source doc); Stage 2
   schema v10 `instrument_id_form` backfill authorization was not separately ruled this round and stays with the
   source doc as still-open.
+- **context-scout 2026-08-16**: refreshed context_scope (1 -> 3 entries) — added the two Gap 1/Gap 2 implementation
+  target files named in the design doc's own §5b resolutions and this plan's own [WRITER] todos (`venue_fetch.py`,
+  `partitioned_writer.py`), both verified to exist in market-tick-data-service.

@@ -39,9 +39,9 @@ locked_by:
 context_scope:
   [
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
-    /plans/active/defi_migration_audit_log_2026_07_24.md,
     /plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
   ]
 locked_since:
 resolved_by:
@@ -106,3 +106,13 @@ resolved_by:
   `/plans/active/defi_live_poller_phased_build_2026_08_15.md`. `status: draft` on the new plan — it needs an operator
   ruling on dispatch cadence (filed as a follow-up todo in that plan) before any tranche is extracted into an
   AO-dispatchable batch.
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-16**: populated context_scope (4 entries) — 2 of 3 todos now done, leaving exactly ONE open
+  item (the phoenix registry contradiction). Swapped `defi_migration_audit_log_2026_07_24.md` (source for the now-DONE
+  orphan-bucket todo) and `gcs-and-manifest-delete-safety-protocol.md` (also tied to that done todo) for the two UAC
+  registry files the open todo's own DoD requires reading directly:
+  `unified_api_contracts/registry/defi_venues.py` (`ALL_DEFI_VENUES`) and
+  `unified_api_contracts/registry/market_data_categories.py` (`VENUES_BY_ASSET_GROUP`) — neither was previously cited
+  despite being the literal source of the contradiction the todo exists to resolve.

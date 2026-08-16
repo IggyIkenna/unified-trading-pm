@@ -386,3 +386,7 @@ exactly what this plan's own rules section says to avoid.
   there). Also: `live-defi-rollout` was under sustained push churn during this ship — quickmerge rebased my commit
   twice (274b858c → 575c0b28 → 1794ecd1fe), each requiring a fresh QG pass before the next push attempt; final SHA
   independently verified as an ancestor of `origin/live-defi-rollout`.
+
+## Context scout
+
+- **context-scout 2026-08-16**: populated/refreshed context_scope (3 entries).

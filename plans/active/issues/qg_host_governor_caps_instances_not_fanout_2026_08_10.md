@@ -210,3 +210,4 @@ deliberate decision rather than changed mid-session.
   masquerade as this issue's signature if the log isn't checked for which repo actually ran. Not actioned (same
   deliberately-not-hot-patched blast-radius reasoning); backing off from immediate retries given every relaunch appears
   to add to an already-severe fleet-wide storm (21 concurrent instances at last check) rather than help it clear.
+- **context-scout 2026-08-16**: refreshed context_scope (3 entries, unchanged).

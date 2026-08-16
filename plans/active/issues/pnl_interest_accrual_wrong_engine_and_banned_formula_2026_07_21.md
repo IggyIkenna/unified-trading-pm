@@ -810,6 +810,7 @@ code.
   accrual-formula leg in this doc required. Incidental, not actioned: 2 untracked prose-only follow-on items (wire
   `ShareClassFxMatrix` to a real rate feed; un-orphan `convert_settlement_to_share_class`) — would also land NA if
   tracked given the same client-facing-NAV sensitivity. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries), unchanged.
 - **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (1 open
   `[CODE] P1` item at entry: Option B, the FX-noise-isolated true-native-staking-return metric). Checked against every
   accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-defaults-AO-dispatched,

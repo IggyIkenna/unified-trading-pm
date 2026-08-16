@@ -61,6 +61,7 @@ context_scope:
     deployment-service/scripts/vm/launch-manifest-recon-all-vm.sh,
     instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    /plans/active/issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md,
   ]
 created: "2026-08-15"
 parent_epic: infrastructure_master
@@ -203,3 +204,8 @@ was never previously flagged as at-risk for this same unsliced read.
   found and nothing to unphantom. Manifest is clean." — flipped this doc's todo #3 and
   `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. The `columns=` slim-read todo above remains
   open — a genuine efficiency fix, not required to close batch6's todo now that a correctly-sized VM proved sufficient.
+- **context-scout 2026-08-16**: populated context_scope (7 entries) — added the sibling doc
+  `dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md` per a confirmed step-4a fingerprint match: both
+  docs independently record the identical escalation ID `agt-9d78d2` (dispatched to slot 18 here, slot 11 in the
+  sibling) for the SAME VM `manifest-recon-cefi-20260815-093854` — two workers investigating the same incident, only
+  cross-referenced via later Progress Log prose, never in either doc's `related:`/`context_scope`. Written on BOTH docs.

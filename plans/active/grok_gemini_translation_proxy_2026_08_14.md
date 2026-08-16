@@ -41,7 +41,8 @@ context_scope:
     agent-orchestrator/server/accounts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/model_pricing.py,
-    agent-orchestrator/server/deepseek_balance.py,
+    agent-orchestrator/server/gemini_headroom.py,
+    agent-orchestrator/server/grok_balance.py,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 ---
@@ -424,3 +425,7 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 ## Context scout
 
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+- **context-scout 2026-08-16**: refreshed context_scope (5 -> 6 entries) — swapped
+  `agent-orchestrator/server/deepseek_balance.py` for the two new provider-specific modules this plan actually
+  shipped since the last scout (`gemini_headroom.py`, `grok_balance.py`), both now directly named in the doc's own
+  Progress Log and verified to exist.

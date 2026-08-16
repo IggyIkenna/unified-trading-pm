@@ -66,6 +66,7 @@ context_scope:
     deployment-service/terraform/gcp/t1_recon_instruments_jobs.tf,
     deployment-service/terraform/gcp/_imports_reconcile.tf,
     deployment-service/terraform/gcp/t1_batch_scheduler.tf,
+    /plans/active/issues/asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md,
   ]
 ---
 
@@ -196,3 +197,7 @@ because:
   blocks are unconditionally hardcoded to prod resource IDs with no env-gating, and dev/staging/prod share ONE GCP
   project — a live-verified structural risk (proven via the exact same aliasing bug just found+fixed for the single
   `t1_batch` SA), not yet known to have caused actual contamination. See the 2 new todos above.
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries, was 4) — added
+  `/plans/active/issues/asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`, the sibling doc the doc's own
+  2026-08-15 findings were discovered against and cite directly (both new `_imports_reconcile.tf` todos originate
+  from that doc's dev `t1_batch` SA drift investigation).

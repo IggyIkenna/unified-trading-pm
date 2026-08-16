@@ -811,3 +811,7 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
   unbuilt. This closes GLM's credential/registration story, not its full production-readiness story — mirrors
   exactly where Grok/Gemini/Codex landed this same session (real bridges/proxies live and smoke-tested, deeper
   usage-verification and tool-use-fidelity work still ahead).
+
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (6 entries) -- the 2026-08-15/16 GLM
+  registration + model-name-swap work (`agent-orchestrator@4595e46e61`) landed inside `model_pricing.py`/`config.py`,
+  both already cited; no new distinct source file introduced.

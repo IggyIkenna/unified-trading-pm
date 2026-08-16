@@ -57,6 +57,7 @@ context_scope:
   [
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     e2e-testing/scripts/validation/validate_shards_4pillar.py,
+    e2e-testing/tests/unit/test_validate_shards_4pillar_required_columns.py,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/archive/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md,
   ]
@@ -196,3 +197,6 @@ should be filed as its own todo against that decision's outcome.
   either candidate data_type, a bigger/different finding than the 2026-08-08 ruling assumed. See the todo above for the
   full evidence trail; corrected the DESIGN follow-up's scope to match. Doc remains `assigned_vm: NA` — the corrected
   DESIGN todo is still a genuine open decision (real per-data_type contracts, or a reframing of seed_validator's role).
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries — added
+  `e2e-testing/tests/unit/test_validate_shards_4pillar_required_columns.py`, the regression suite pinning the
+  2026-08-15 tick-family wiring + the deliberate defi/sports non-wiring this doc's remaining DESIGN todo depends on).

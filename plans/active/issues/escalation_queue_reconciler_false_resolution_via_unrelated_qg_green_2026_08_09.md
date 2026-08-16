@@ -188,3 +188,4 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   independent verification in `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` Progress Log
   (todo 11, slot 22). All 4 todos in this doc are now resolved (2 flipped `[x]`, 1 extracted to batch7, 1 flipped here).
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (2 entries), unchanged.

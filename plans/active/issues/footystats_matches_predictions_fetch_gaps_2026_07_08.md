@@ -260,6 +260,8 @@ code-fix task). A data_engineering slot with a full session budget should:
   unnecessary in practice since `pending_fetch=0` means there is nothing left to backfill. Left todo #4 as-is for a
   future pass to adjudicate the VM-dispatch/archived-plan-flip decision explicitly rather than silently closing it.
 
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
 - **2026-07-27** — Re-checked todo #4's gate per `sports_satellite_ao_dispatch_batch4_2026_07_25.md` todo #1
   (data_engineering slot). A fresh single-walk read of `_index/availability_index.parquet`
   (`unified_trading_library.read_availability_index`) shows the 2026-07-12 zero-verification NO LONGER HOLDS:

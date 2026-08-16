@@ -41,6 +41,7 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py,
     market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py,
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
@@ -148,3 +149,4 @@ file an issue") already points here, but the reasoning is worth recording:
 - 2026-08-16 — Filed by escalation agt-e65b3f (data_pipeline_failure worker, slot 4). Full diagnosis above; did not fire
   a relaunch (see "Why a naive relaunch is wrong here"). Verified via `deployment_service.data_pipeline_monitors._gcs`
   read helpers (never raw `gsutil`/`gcloud storage`) + one `gcloud compute instances list` fleet check.
+- **context-scout 2026-08-16**: populated context_scope (6 entries).

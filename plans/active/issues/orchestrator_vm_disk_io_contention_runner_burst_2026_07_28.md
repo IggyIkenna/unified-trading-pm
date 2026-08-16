@@ -458,3 +458,4 @@ per the doc's own guidance, no new issue doc filed.
   defect — stays open, doc NOT archived. Re-check only if a `PYRIGHT_TIMEOUT`-triggered `exit=124` kill recurs outside a
   burst/fan-out window.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged.

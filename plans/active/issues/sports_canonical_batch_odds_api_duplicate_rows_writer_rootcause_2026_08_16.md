@@ -32,6 +32,8 @@ context_scope:
   [
     /plans/archive/issues/sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md,
     market-tick-data-service/scripts/sports/measure_canonical_odds_duplicate_scope_2026_08_16.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/_sports_tick_dedup.py,
+    market-tick-data-service/scripts/sports/backfill_dedup_canonical_odds_api_sampled_cells_2026_08_16.py,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -129,3 +131,4 @@ low today; it could be worse in cells/days not sampled.
   cells_cas_conflict=0`, exact match to the dry-run scope, zero errors. Added todo 4 to track the
   out-of-scope full-corpus follow-up (a VM-scoped campaign, not yet started). This issue stays `open` pending
   todo 4.
+- **context-scout 2026-08-16**: populated context_scope (4 entries).

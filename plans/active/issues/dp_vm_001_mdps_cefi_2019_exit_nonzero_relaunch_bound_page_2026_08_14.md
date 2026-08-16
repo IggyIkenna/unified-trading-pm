@@ -119,3 +119,6 @@ guidance both point the same direction: stop and page.
   bound, and the `mdps-cefi-` family was additionally reported already at its `≤2/day` relaunch bound — did not
   relaunch. Filed this issue doc and paged the operator via `/blocked` per the escalation's explicit instruction. No
   code changed this session.
+- **context-scout 2026-08-16**: populated context_scope (4 entries) — verified all four against the doc's own
+  routing-decision chain (relaunch runbook, alert routing SSOT, the fleet monitor, and the launcher-family registry);
+  list unchanged from what was already in frontmatter, no additions needed.

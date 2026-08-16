@@ -382,3 +382,4 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
   "not a bounded/deterministic todo per task_template.md's dispatch-scope-eligibility rule" (item 2's acceptance test)
   and a genuine unresolved 3-option design fork with no tiebreaker (item 1, line-1-completeness vs. proseWrap). No new
   evidence since the 2026-08-08 operator-Q&A investigation entry changes either disposition.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -180,3 +180,5 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   the move-vs-copy question outside the plan's own drafting). Consumer inventory + file:line citations carried over from
   this session's 2-pass Explore-agent investigation (see the source todo's own Progress Log entry in
   `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` for the raw investigation transcript). No code changed.
+- **context-scout 2026-08-16**: populated/refreshed context_scope (7 entries) — all 7 pre-existing entries re-verified
+  on disk, unchanged.

@@ -1011,3 +1011,5 @@ not open). Todo 1 (P3, track capacity-side root-cause fix + re-test) and todo 3 
 archive-all-four-docs-together condition) both hinge on qg_governor_glue_runner_ledger_coordination_2026_08_03.md Phase
 2-3 'landing AND holding (sustained)'. Independently verified (direct grep of the archived doc's frontmatter, not just
 trusted the claim): that doc is genuinely at plans/archive/2026_08/, status: complete -- Phase 2-3 landed.
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries), unchanged.

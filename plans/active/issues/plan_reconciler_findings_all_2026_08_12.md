@@ -712,3 +712,4 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   to track the remaining lower-severity backlog per the "no silent caps" rule — the raw 46-batch hunter output (~236
   total findings across categories) existed only in an ephemeral session scratchpad and would have been lost without
   this doc.
+- **context-scout 2026-08-16**: populated/refreshed context_scope (2 entries).

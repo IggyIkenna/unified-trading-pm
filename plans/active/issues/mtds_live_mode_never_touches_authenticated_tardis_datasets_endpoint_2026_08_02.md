@@ -196,3 +196,4 @@ as this update.
   independently re-verified WRONG and overturned before any archival action. The sole open item is a genuine dormant
   conditional tripwire ("IF a future connector change ever routes live capture through the authenticated endpoint"), not
   zero remaining work. Stays open, untouched. Do not re-flag as archivable on this same reasoning.
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries, unchanged — still accurate).

@@ -250,3 +250,4 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
   reconciliation for 5 days** (2026-08-10 through 2026-08-15), not a hypothetical edge case affecting a handful of docs.
   Once the `[BACKEND] P1` follow-up lands, this class of incident should self-heal instead of requiring a human to
   notice and unlock each tranche doc individually.
+- **context-scout 2026-08-16**: populated/refreshed context_scope (6 entries).

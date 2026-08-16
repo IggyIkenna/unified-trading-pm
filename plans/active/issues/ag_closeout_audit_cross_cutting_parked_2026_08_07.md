@@ -71,9 +71,9 @@ source: >-
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
+    /plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md,
+    /plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
+    /plans/archive/2026_08/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md,
   ]
 ---
 
@@ -337,3 +337,7 @@ spot per this skill's SKILL.md).
   "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute these itself by
   construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries) -- swapped SKILL.md-adjacent process pointers for the
+  3 still-genuinely-open findings' own targets (finding 3: deployment_api_events_global_state_leak; finding 6:
+  provenance_marker_broken; finding 7: qg_checkers_missing_claude_worktree_exclusion, now at its archived path) --
+  findings 1/2/5 are MOOT/archived per this doc's own todo list, so their prior citations were lower-value.

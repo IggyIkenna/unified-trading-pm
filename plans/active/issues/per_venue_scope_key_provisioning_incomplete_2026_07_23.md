@@ -251,3 +251,4 @@ All three are real design/priority calls, not something determinable from code o
   human/operator-gated** (Bybit key creation `[HUMAN P1]`, OKX/Hyperliquid scope-separation design `[BACKEND P2]` gated
   on an unresolved design call, Upbit/Kraken/Bitfinex/Bitget provisioning `[HUMAN P3]`) — unchanged by this Aster
   shipment.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (3 entries), unchanged.

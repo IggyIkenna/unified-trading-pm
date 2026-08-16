@@ -738,3 +738,6 @@ batch)
   (ag-closeout-audit SKILL.md + the master canonicalisation-migration plan + 4 codex SSOTs spanning
   data-pipeline-correctness/manifest/pipeline-mode/honest-coverage) already covers this hub doc's Reachability-map-wide
   themes across Tracks 1-13, 16-17, 23-24; still accurate.
+
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (6 entries) — no content change since
+  2026-08-15; all 6 entries still resolve and still cover the hub doc's themes.

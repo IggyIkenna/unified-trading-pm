@@ -222,3 +222,7 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
   showed 14 CURVE still `captured` after my upload (the two scripts rewrite the same blob non-atomically), but a fresh
   DuckDB verify confirms the terminal state is **21 `attempted_failed`** (7 BALANCER + 14 CURVE) — the full
   operator-confirmed disposition. Consolidator resumed (ENABLED). Ship: `market-tick-data-service@ad0db52396`.
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries), unchanged — no prior marker despite an existing
+  list (never scouted by this skill before). All 4 entries still resolve and still target the sole open `[DATA] P2`
+  doc-correction todo (fix the disproven "0 objects for its entire lifetime" premise in this plan and the archived
+  2026-08-04 recommendation doc).

@@ -55,16 +55,12 @@ source: >-
 drift_direction: advance-code
 context_scope:
   [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh,
     deployment-service/scripts/recovery/relaunch_backfill_vm.py,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_classify.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py,
-    deployment-service/scripts/wave_launcher.py,
     deployment-service/scripts/vm/vm_zombie_watchdog.py,
-    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
-    deployment-service/scripts/vm/lib/launcher_common.sh,
   ]
 ---
 
@@ -519,3 +515,12 @@ Exactly one watchdog VM now live in the fleet, running the fixed code.
 `lc_log_upload_trap_block` sentinel's 2026-07-13 vintage means this false-kill class may predate today by over a month,
 not historically scoped beyond this session's 1-day sweep; and the tarball-install swallowed-failure bug in
 `launch-vm-zombie-watchdog.sh` is a separate, real bug worth its own fix.
+
+## Context scout
+
+- **context-scout 2026-08-16**: populated/refreshed context_scope (6 entries) — trimmed the doc's own
+  frontmatter-authored 10-entry list to a minimal 6 (2 codex SSOTs the doc's `related:` already cited but
+  `context_scope` didn't, plus the 4 source files most central to the two shipped bugs), per this skill's 2-6-entry
+  target; dropped `escalation.py`/`escalation_dedup.py`/`wave_launcher.py`/`vm-exec-with-gcs-tee.sh`/
+  `launcher_common.sh` (secondary to the fix sites) and `exit_code_fleet_monitor.py` (the sweep-wiring call site, less
+  central than `_classify.py`'s actual dedup logic).

@@ -54,6 +54,7 @@ context_scope:
     /codex/05-infrastructure/per-tab-worktrees.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,
     deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh,
+    /plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md,
   ]
 resolved_by:
 source: >-
@@ -190,3 +191,5 @@ Two independent fix directions, either or both:
   the shared-gcloud-identity fix space.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+
+- **context-scout 2026-08-16**: refreshed context_scope (4 entries — added the overlapping WIF-poisoning sibling doc flagged by the 2026-08-08 na-eligibility-audit note).

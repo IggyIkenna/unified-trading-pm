@@ -182,3 +182,5 @@ superseded'). The 2 remaining P3 items are each explicitly self-classified in-do
 bounded fixes: (1) an archived-doc off-by-one cross-reference typo, explicitly deferred as 'low-value... not worth a
 dedicated pass'; (2) a title/summary editorial rewrite of a sibling doc, explicitly self-classified 'NOT AO-ELIGIBLE
 (judgment call)...
+
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (3 entries), unchanged.

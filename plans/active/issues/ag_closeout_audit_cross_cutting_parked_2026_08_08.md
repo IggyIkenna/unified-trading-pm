@@ -328,6 +328,9 @@ ledger.
   (Track 2 for slot2_wedged, Track 5 for context_scout) so `check_ag_closeout_linkage.py` clears both (21→19 orphans,
   still ≤ baseline 49). `ci ×6`/`infrastructure ×3`/`meta ×1` remain for those tranches' own audits.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (4 entries), still accurate -- the sole open todo
+  (retag findings 1-13 across ci/ao/infrastructure/meta) has no single narrower target, SKILL.md + the consolidated
+  closeout + the predecessor parked doc remain the right minimal set.
 - **stale-`[OPERATOR]`-flip sweep 2026-08-09**: the `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` design
   question flagged "unruled since 2026-07-31" was actually ruled 2026-08-06 (option A) — re-verified against the target
   doc's own todo, now `[CODE] P2`, tag already corrected there. Flipped `[x]` and retagged `[DOCS]` here; no further

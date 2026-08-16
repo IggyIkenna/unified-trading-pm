@@ -254,3 +254,4 @@ same CLI path would hit the identical wall.
   `[CODE] P0` todo ("Wire ml-service `--family` to actually scope SPORTS training", explicitly citing the operator
   ruling) — the implementing plan is genuinely in-flight, not stalled. No change: this doc's sole open todo stays
   resolved-by-citation to that plan's finalize.
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries, unchanged — still accurate).

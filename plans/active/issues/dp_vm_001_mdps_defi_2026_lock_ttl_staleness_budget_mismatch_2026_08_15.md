@@ -161,3 +161,10 @@ together once the real fix lands.
 - 2026-08-15: Filed by escalation agt-24861c (slot 30). Diagnosed root cause live (scheduler/job/lock/env, GCS SDK
   reads only). Paged operator per DP-VM-001 non-OOM routing table + boot directive. Not fixed inline (cross-cutting
   budget decision, out of one-shot scope).
+- **context-scout 2026-08-16**: populated context_scope (4 entries) — verified all four against the doc's own
+  root-cause chain (manifest-consolidator SSOT, alert routing SSOT, the TTL-override module, and the GCS read layer);
+  list unchanged from what was already in frontmatter, no additions needed. Noted for the report, not fixed here (out
+  of this skill's scope): `plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` cites this same env var
+  for the DEFI bucket at a different value (`4200s`, in `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`)
+  vs. this doc's directly-measured live `9000s` — plausibly a stale/superseded config snapshot in the other doc, not
+  independently verified live by this pass.

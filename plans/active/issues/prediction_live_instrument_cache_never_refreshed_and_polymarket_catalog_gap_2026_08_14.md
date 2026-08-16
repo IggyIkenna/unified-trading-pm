@@ -44,6 +44,7 @@ source: >-
   blobs on 08-03/08-05 and zero on 08-10/08-13/08-14 while KALSHI stayed populated every day.
 context_scope:
   [
+    /codex/05-infrastructure/live-pipeline-architecture.md,
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     market-tick-data-service/market_tick_data_service/live/_instrument_cache_consumer.py,
@@ -129,3 +130,4 @@ and is flagged, not diagnosed further, here.
   run silent — `live_stream_watcher.build_prediction_live_shards()` resolving the wrong GCS bucket kind and silently
   returning zero shards every sweep) was fixed directly in this session, not filed here — see
   `deployment-service@<pending commit>` and the parity plan's Progress Log.
+- **context-scout 2026-08-16**: populated context_scope (4 entries).

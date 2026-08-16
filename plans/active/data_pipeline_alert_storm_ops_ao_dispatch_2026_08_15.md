@@ -41,6 +41,7 @@ context_scope:
   [
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    unified-api-contracts/unified_api_contracts/canonical/_partition_path_canonicality.py,
   ]
 locked_since:
 resolved_by:
@@ -69,3 +70,4 @@ resolved_by:
   `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`. Combo_chain ruling was verified live against
   `unified_api_contracts/canonical/_partition_path_canonicality.py` before being recorded — not taken on the
   operator's framing alone.
+- **context-scout 2026-08-16**: populated context_scope (3 entries).

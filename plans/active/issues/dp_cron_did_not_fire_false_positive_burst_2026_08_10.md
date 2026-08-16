@@ -117,6 +117,8 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md,
     deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/producer_lifecycle.py,
+    deployment-service/deployment_service/backends/aws_census.py,
   ]
 source: >-
   Operator-reported: 10 DP_CRON_DID_NOT_FIRE alerts fired within ~90 seconds of each other at 2026-08-10T00:09-00:10Z,
@@ -305,3 +307,7 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   quickmerge, landed on `live-defi-rollout` at `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`
   (ancestry-verified against origin).
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries) — added
+  `deployment_service/data_pipeline_monitors/producer_lifecycle.py` and `deployment_service/backends/aws_census.py`,
+  the two new modules this doc's own follow-up session built + names explicitly (`ProducerLifecycleState`,
+  `describe_ec2_instance_state`).

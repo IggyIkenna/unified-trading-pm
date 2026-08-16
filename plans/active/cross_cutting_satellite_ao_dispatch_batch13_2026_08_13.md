@@ -1089,3 +1089,7 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
     without this specific phase0 todo ever being cross-referenced/flipped. Source doc's own §2.2 line is NOT touched by
     this commit (checkbox reconciliation back into source docs happens in the paired finalize plan per this batch's own
     header convention).
+
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (5 entries) — coordinator-doc exemption
+  still holds (89 items across 39 source docs, no single dominant target); the 2026-08-15 enumerate_expected_universe.py
+  todo added since the last scout is one closed item among many, not a new dominant theme.

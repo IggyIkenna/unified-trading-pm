@@ -146,3 +146,7 @@ Marked `assigned_vm: NA` — this is a design decision, not a worker-determinabl
   24h (max attempted_at 2026-08-11, 2d old) and zero `"schema contract violated"` rows since 2026-07-31 — the re-fire is
   100% dedup-inertia (the `_resolve_pm_path`-returns-None path), not a data regression. Worker sessions keep being
   burned until the Option A [CODE] P2 todo lands.
+- **context-scout 2026-08-16**: populated context_scope (5 entries) — verified all against the doc's own root-cause
+  trace (`escalation.py::route_finding` → `escalation_dedup.check_dispatch_dedup_for_finding` →
+  `_resolve_pm_path` → `deployment-api/cloudbuild.yaml`'s `pm-plans/` placeholder); list unchanged from what was
+  already in frontmatter, no additions needed.

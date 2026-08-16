@@ -301,3 +301,4 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
     and did NOT kill either duplicate VM (no destructive action without a clearer instruction than "relaunch," and
     reaping is already this doc's own tracked P0/P1 territory). No code shipped this session; this Progress Log entry is
     the only change. `/done` posted with `one_shot_complete: true`.
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries, unchanged — still accurate).

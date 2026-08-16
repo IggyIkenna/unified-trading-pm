@@ -129,3 +129,5 @@ questions below are answered.
   precedent (`exit_code_fleet_monitor.py`, the `DP-VM-001` registry row, the registry.yaml schema) and wrote the
   design sketch + open questions above; did not resolve them this pass (that is the first todo above, left open for
   whoever picks this up next — human or a future AO-dispatch once reclassified via `/na-eligibility-audit`).
+- **context-scout 2026-08-16**: populated/refreshed context_scope (5 entries) — all 5 author-supplied entries
+  re-verified on disk, unchanged.

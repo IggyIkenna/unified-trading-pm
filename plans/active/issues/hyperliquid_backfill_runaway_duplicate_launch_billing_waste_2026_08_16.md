@@ -53,6 +53,7 @@ depends_on: []
 context_scope:
   [
     deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
@@ -172,3 +173,7 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   no VMs deleted (deletion needs a human call per STEP 0.65 — these VMs are not stale, they're duplicated).
 - **slot-9 2026-08-16**: shipped the [INFRA] P1 root-cause fix — deployment-service@246fa62319. The [OPERATOR] P0
   fleet-cleanup and [DATA] P2 re-verify todos remain open (both need the duplicate fleet resolved first).
+- **context-scout 2026-08-16**: populated context_scope (4 entries) — added
+  `deployment-service/scripts/vm/lib/launcher_common.sh` (verified exists), the actual file the shipped
+  `lc_metadata_singleton_check()` root-cause fix landed in, alongside the launcher script the doc's own body already
+  named.

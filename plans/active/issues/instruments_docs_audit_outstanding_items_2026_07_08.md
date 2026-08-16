@@ -677,3 +677,4 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   site; `jito_restaking.py` cites this doc's C4 section by name); `drift.py` confirmed absent from the repo (DRIFT
   purged 2026-07-16). The "~9 more adapters" sub-claim was left explicitly marked unverified per this todo's own
   done-when (not silently dropped). No code changed — doc-only correction.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

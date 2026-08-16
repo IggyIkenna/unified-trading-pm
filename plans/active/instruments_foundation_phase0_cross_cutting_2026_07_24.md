@@ -553,3 +553,4 @@ wrong).
   open Phase-0 items sit behind GATE 0 (still NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra with genuine
   DESIGN-judgment items (expected-universe oracle venue-truth sourcing decision) that aren't cleanly bounded-outcome. No
   cheat-sheet precedent (IAM/reversible-delete/recurring-finding-job) applies to any open item here.
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (6 entries).

@@ -42,7 +42,11 @@ superseded_by:
 resolved_by: ""
 last_updated: 2026-08-14
 context_scope:
-  [/codex/05-infrastructure/per-tab-worktrees.md, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    scripts/hooks/slot-identity-lib.sh,
+  ]
 ---
 
 # slot-7's unified-trading-ci checkout: foreign slot-12 commit on the wrong branch
@@ -100,3 +104,8 @@ this task's repo). Needs a human or a dedicated diagnostic task to:
       instead of directly on `live-defi-rollout` per Path-B topology, and whether
       `worktree_clean_check.check_slot_branch_state`'s pre-spawn guard should have caught this. Repo: agent-orchestrator
       or unified-trading-pm (wherever the guard lives).
+
+## Progress Log
+
+- **context-scout 2026-08-16**: populated context_scope (3 entries — added `scripts/hooks/slot-identity-lib.sh`,
+  named directly in this doc's own commit-identity-convention finding).

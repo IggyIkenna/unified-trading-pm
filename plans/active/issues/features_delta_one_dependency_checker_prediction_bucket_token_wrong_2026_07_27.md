@@ -42,7 +42,8 @@ context_scope:
   [
     features-service/features_service/common/__init__.py,
     features-service/features_service/delta_one/app/core/dependency_checker.py,
-    features-service/features_service/volatility/core/dependency_checker.py,
+    features-service/features_service/delta_one/app/core/data_loader.py,
+    features-service/scripts/pipeline_e2e_check.py,
     execution-service/execution_service/utils/dependency_checker.py,
     /codex/02-data/per-asset-group-bucket-layouts.md,
   ]
@@ -356,3 +357,10 @@ four now route through the one helper.
 
 > **2026-08-06 archive-candidate audit**: Benchmark [DATA] P3 todo marked [x] but 'Full benchmark measurement
 > (throughput number) needs a longer-running VM or dedicated benchmark leg' — the measurement itself never completed.
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries) — swapped the now-fixed
+  `volatility/core/dependency_checker.py` (unreachable, no live PREDICTION bug) for `data_loader.py` and
+  `scripts/pipeline_e2e_check.py`, the two files the doc's still-open Follow-ups (OOM investigation; timeout-table
+  entry) actually point at.

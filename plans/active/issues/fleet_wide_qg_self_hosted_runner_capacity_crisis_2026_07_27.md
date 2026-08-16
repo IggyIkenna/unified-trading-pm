@@ -822,3 +822,5 @@ pool dead):
     an out-of-self-service-scope AWS IAM gap, not attempted-and-failed). Reconciling this back into
     `self_hosted_runner_public_repo_revert_2026_08_05.md`'s own todo 20 checkbox happens in that plan directly (same
     turn).
+
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (5 entries), unchanged.

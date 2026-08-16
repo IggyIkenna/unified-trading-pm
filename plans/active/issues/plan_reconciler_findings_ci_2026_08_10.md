@@ -489,3 +489,4 @@ written).
   to its bound. Not escalating further this run: item 9 above already captures the gap as a durably filed, routed
   finding; `can_continue: true` was set at blocked-question submission time (SUB_AGENT_MANDATORY_RULES ASK-never-BLOCK),
   so the sweep's completion was never contingent on this answer arriving. Proceeding to close the one-shot lifecycle.
+- **context-scout 2026-08-16**: populated/refreshed context_scope (4 entries).

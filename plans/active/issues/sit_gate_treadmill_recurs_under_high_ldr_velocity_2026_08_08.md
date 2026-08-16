@@ -64,6 +64,7 @@ context_scope:
     scripts/cicd/sit_gate_stuck_detector.py,
     .github/workflows/sit-gate-stuck-detector.yml,
     .github/workflows/ldr-to-main-promote-fleet.yml,
+    scripts/cicd/ldr_to_main_fleet_promote.sh,
   ]
 ---
 
@@ -231,3 +232,6 @@ The two subsequent ticks (`31881938530` 11:24Z, `31882197030` 11:30Z) both logge
 a `SIT GATE BLOCK` line. No orphaned/stale promote PR this occurrence (PR #652 merged cleanly, unlike the `#939` case in
 the 2026-08-10 measured section) — todo 1 (dedup-key) and the hoist-cleanup todo are unchanged/still open, this
 occurrence did not exercise either.
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries — added `scripts/cicd/ldr_to_main_fleet_promote.sh`,
+  the exact script the still-open "hoist the superseded-promote-PR cleanup above the SIT gate" todo targets).

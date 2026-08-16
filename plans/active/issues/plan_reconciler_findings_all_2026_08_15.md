@@ -374,3 +374,7 @@ top of that.
   meta-docs/locked_by-sweep) still need their commits, IF the edits from that earlier apply-agent pass survived the
   session's repeated autostash cycles (confirmed at least the infra doc's edits did NOT survive and had to be redone —
   verify each remaining batch's target files before assuming the content is still there).
+
+## Progress Log
+
+- **context-scout 2026-08-16**: populated/refreshed context_scope (2 entries).

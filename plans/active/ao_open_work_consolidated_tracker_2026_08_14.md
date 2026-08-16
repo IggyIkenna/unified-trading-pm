@@ -746,3 +746,6 @@ before touching the source doc directly._
   CENTRAL production orchestrator. Live-fixed (`ORCHESTRATOR_VM_ID=planning` restored + service restart, verified a
   stuck escalation successfully dispatched afterward) — see the two new Track 4 items above (fix DONE, root-cause of
   the drift still open). Per operator direction, plugged into this tracker instead of filing a new issue doc.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (5 entries), unchanged — all 5 paths confirmed
+  still on disk; kept deliberately minimal per this doc's own prior-marker design note (each todo cites its own
+  Source doc, so a wider list would duplicate what's already per-item).

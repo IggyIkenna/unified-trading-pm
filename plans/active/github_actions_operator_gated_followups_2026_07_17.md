@@ -1004,3 +1004,4 @@ assert-not-decorative: doc's own D3 table row states 'digest-drift-sweep still u
 bare-host bootstrap PROVE: container leg done, IMDS/EC2-role + GCP ADC (doc flags this leg 'interactive') + systemd +
 real GH runner registration 'structurally cannot' run in a container -- tied to 'the upcoming planning-VM deploy,' a
 genuine host rebuild.
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (6 entries).

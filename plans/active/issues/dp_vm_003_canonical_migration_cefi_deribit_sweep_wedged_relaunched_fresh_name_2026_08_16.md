@@ -122,3 +122,4 @@ source: >-
   correctly blocked by the VM-delete guardrail. Relaunched under fresh name
   `canonical-migration-cefi-deribit-sweep-20260816-010754` — confirmed `STARTED` (RUNNING, tarballs fresh). Filed this
   issue for the operator decision on the old VM. Not deleted; not requeued for autonomous deletion.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (7 entries), unchanged.

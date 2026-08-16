@@ -263,3 +263,7 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
   Folded the same finding + evidence into that doc's twin todo 2 rather than filing a third issue doc — no code change
   needed here, the root cause is already tracked and fixed there. No repos touched by this session (findings-only
   cross-check).
+- **context-scout 2026-08-16**: populated context_scope (4 entries) — verified all four against the doc's own
+  evidence (the sweep-overlap sibling doc, the meta-watchers OOM doc it folds a finding into, the exit-code monitor
+  module itself, and the data-pipeline-alerts codex SSOT); list unchanged from what was already in frontmatter, no
+  additions needed.

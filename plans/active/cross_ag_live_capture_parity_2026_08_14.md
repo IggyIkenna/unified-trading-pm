@@ -39,9 +39,9 @@ context_scope:
   [
     market-tick-data-service/market_tick_data_service/live/connectors/,
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    market-tick-data-service/market_tick_data_service/live/_is_universe.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     /plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md,
-    /plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
     /plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
   ]
 supersedes:
@@ -438,3 +438,8 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
   `quickmerge --agent --files '<the 4 files>'`, then flip the Finding-C todo above to done with the shipped SHA + a
   post-fix `captured` row citation (the todo's own DoD). Did not attempt to verify via a live VM restart/redeploy this
   session — the fix isn't shipped yet, so nothing on the running VM has changed.
+
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries) — swapped in `live/_is_universe.py`
+  (`read_is_universe_sync`, the confirmed root-cause target of the now fully-diagnosed, fix-stashed BYBIT-FUTURES
+  Finding-C handoff added 2026-08-15) for `wsfeedconnector_phase35_gap_2026_07_06.md` (archived/resolved; the parent
+  doc's own Finding-D prose already carries the honesty-follow-up reasoning without needing the archived doc itself).

@@ -58,7 +58,7 @@ depends_on: []
 context_scope:
   [
     market-tick-data-service/scripts/pipeline_e2e_check.py,
-    unified_trading_library/pipeline_e2e_check/launcher.py,
+    unified-trading-library/unified_trading_library/pipeline_e2e_check/launcher.py,
     deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh,
     unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     /plans/archive/2026_08/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
@@ -595,3 +595,6 @@ Two independent angles, not mutually exclusive:
   realistic completion window), NOT arming a background monitor — will do a direct one-shot poll before this session
   ends; if it hasn't reached `EXIT_STATUS` by then, hand off is this VM name + prefix above (check `EXIT_STATUS`
   directly before assuming stalled or launching a duplicate).
+- **context-scout 2026-08-16**: populated/refreshed context_scope (5 entries) — fixed a dead pointer (the
+  `unified_trading_library/...` launcher entry was missing its `unified-trading-library/` repo prefix and did not
+  resolve; corrected).

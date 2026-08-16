@@ -117,3 +117,4 @@ identity and not a legitimate cross-reference to a sibling key before changing i
   work — resume by fixing that blocker, then `quickmerge.sh` this file alongside the sibling exit-code-monitor fix
   (`plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` Todo 2), both currently sitting
   uncommitted in the same working tree for the same reason.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (2 entries), unchanged.

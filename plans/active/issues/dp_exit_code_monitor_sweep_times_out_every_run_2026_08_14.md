@@ -42,6 +42,7 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
     deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/revocation_arming_2026_08_14.md,
   ]
 resolved_by:
@@ -243,3 +244,9 @@ the release bookend.
 **Recommended next item**: fix the basedpyright ratchet blocker
 (`deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md`) — it blocks ALL deployment-service
 shipping, including the already-written, already-tested Todo 2 fix sitting uncommitted in this checkout.
+
+## Progress Log — context-scout
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries) — added `/codex/05-infrastructure/data-pipeline-alerts.md`,
+  the codex SSOT for the DP_VM_* alert routing this doc's whole timeout/truncation chain feeds, already in the
+  doc's `related:` frontmatter but missing from `context_scope`.

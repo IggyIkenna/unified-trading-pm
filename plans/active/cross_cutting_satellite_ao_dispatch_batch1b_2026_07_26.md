@@ -61,8 +61,8 @@ context_scope:
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md,
-    deployment-api/deployment_api/services/data_status/breakdowns_core.py,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
+    /plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md,
   ]
 ---
 
@@ -746,3 +746,8 @@ context_scope:
   `deployment-api/.../breakdowns_core.py` (the concrete `_build_feature_group_breakdown_uac` caller-chain target for the
   remaining `[CODE] P3` scope-threading todo) and `repo_scripts_governance_audit_2026_06_18.md` (the human-judgment gate
   blocking the remaining classify/delete/relocate sub-item of the `[SCRIPT] P2` todo).
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries) — the `[CODE] P3` scope-threading todo landed
+  (`breakdowns_core.py` checkbox now `[x]`), leaving exactly ONE open todo (`[SCRIPT] P2` classify/delete/relocate,
+  gated on `repo_scripts_governance_audit_2026_06_18.md`, already present). Swapped `breakdowns_core.py` (now-done
+  item's target) for `/plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` — the open todo's
+  own cited `Source:` doc, which the prior scope never surfaced.

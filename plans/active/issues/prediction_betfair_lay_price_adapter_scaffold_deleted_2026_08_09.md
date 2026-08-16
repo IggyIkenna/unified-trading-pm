@@ -420,3 +420,4 @@ concrete reason not to).
     this.** Todo 4 stays unchecked.
 
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries), unchanged.

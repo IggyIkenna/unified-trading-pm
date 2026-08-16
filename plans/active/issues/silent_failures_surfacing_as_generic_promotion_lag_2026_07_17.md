@@ -229,3 +229,7 @@ the doc's own root-cause section (an apostrophe inside a `${VAR:-...}` default w
 assignment) mandates a `--selfcheck` whole-script validation mode plus a one-unit-at-a-time canary rollout before any
 retry -- exactly the 'multi-file/multi-day rewrite of live-dispatch-critical-path machinery' caution class, not a
 small/low-risk change despite being bundled into one todo.
+
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged — every path still
+  resolves (the `ci_satellite_ao_dispatch_batch1_2026_07_26.md` entry already reflects its archival to
+  `/plans/archive/2026_08/`).

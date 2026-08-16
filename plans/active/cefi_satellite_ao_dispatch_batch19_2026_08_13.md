@@ -879,3 +879,6 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   launcher script + its concurrency guard are the existing mechanism, used as designed. The knowingly-uncovered ~3-week
   Dec-2025 XAU/XAG tail and the `light` group slice remain the documented follow-up (slot-27's note above) — not part of
   this todo's scope.
+
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged — genuinely code-free
+  dispatch-batch coordinator (each todo cites its own source doc + evidence inline).

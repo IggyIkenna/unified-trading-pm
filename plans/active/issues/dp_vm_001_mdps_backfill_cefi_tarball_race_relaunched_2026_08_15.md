@@ -77,7 +77,6 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     deployment-service/scripts/vm/launch-mdps-backfill-vm.sh,
     deployment-service/scripts/vm/lib/launcher_common.sh,
-    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
     unified-trading-library/unified_trading_library/pipeline_mode_resolver.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py,
   ]
@@ -264,3 +263,8 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
   directly instead of re-running the whole check against the original `stale_repos` set. 25/25 tarball/freshness unit
   tests green (`tests/unit/test_vm_launcher_scripts.py -k "tarball or fresh"`), full `deployment-service`
   `quality-gates.sh` green (280s), shipped via quickmerge. Only the P3 `[OPERATOR]` todo remains open on this doc.
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries) — trimmed
+  `deployment-service/scripts/recovery/relaunch_backfill_vm.py` (the doc's own text confirms this actuator explicitly
+  SKIPS this exit code and was never invoked — tangential, not the fix path) to stay within this skill's 2-6 target;
+  the remaining 6 (relaunch runbook, alert routing, the two launcher scripts actually touched by the fix, and the
+  UTL/UAC root-cause files) are the doc's real load-bearing set.

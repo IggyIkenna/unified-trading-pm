@@ -169,6 +169,7 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
   dashboard tile), correctly left NA/unbuilt per the 2026-07-30 self-assessment. No change.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

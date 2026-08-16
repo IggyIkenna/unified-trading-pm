@@ -36,6 +36,7 @@ context_scope:
     scripts/quality_gates/check_doc_body_links.py,
     scripts/plan-hygiene/check_reference_paths.py,
     scripts/quality_gates/check_codex_doc_freshness.py,
+    scripts/plan-hygiene/fix_frontmatter.py,
   ]
 supersedes:
 superseded_by:
@@ -535,3 +536,6 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   `unified-trading-pm@d307287cf3`. Broken-link/collision/summary-quality/doctrine-consistency hunters not re-run
   corpus-wide this pass (all confirmed clean within the last 4 days by the 2026-08-08/09/10 dispatches; scoped to the
   touched-file set per the established "skip a redundant full fan-out" precedent from 2026-08-08's 4th dispatch).
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries) — added `scripts/plan-hygiene/fix_frontmatter.py`,
+  the root-cause script for this doc's own tracked truncated-`summary:` finding (`get_first_paragraph_after_heading()`),
+  already named explicitly in this doc's body and Progress Log.

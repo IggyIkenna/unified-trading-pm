@@ -52,6 +52,7 @@ context_scope:
     deployment-service/deployment_service/shard_calculator.py,
     deployment-service/deployment_service/smoke_test_framework.py,
     deployment-service/deployment_service/sports_latency_observation.py,
+    /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
   ]
 ---
 
@@ -284,3 +285,9 @@ finding auto-recovers instead of re-escalating) is blocked on this ratchet.
 
 **Recommended next item**: Todo 2 (operator decision) — it unblocks ALL deployment-service shipping immediately,
 independent of whether Todo 3's cache-hit investigation ever resolves the "why."
+
+## Progress Log
+
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries, was 5) — added
+  `/plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md`, the sibling doc this doc's own
+  "Deferred work" table names as the concrete work already parked behind the open `[OPERATOR] P2` ratchet decision.

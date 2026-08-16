@@ -116,3 +116,6 @@ context_scope:
   `_get_ar_repo_name()` source (`deployment-api/deployment_api/routes/builds.py`), the remaining P3's cited capability-
   probe analog (`alerting-service/alerting_service/notifiers/pagerduty.py`), and its cited same-root-shape sibling issue
   doc.
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (4 entries) — both todos are now `- [x]` DONE
+  (shipped `deployment-api@661c080` + `deployment-api@374b6757fc`); all 4 entries still resolve and remain accurate
+  citations for the shipped work, no open scope to re-target.

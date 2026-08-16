@@ -994,3 +994,5 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
 > **2026-08-11 note**: this doc hit its 1000-line hard cap on the entry directly above — further monitoring-pass entries
 > are appended to `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md` (the current
 > split with headroom) instead of here, per this doc-chain's established split practice.
+
+- **context-scout 2026-08-16**: refreshed context_scope (5 entries), unchanged.

@@ -151,6 +151,8 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
 
 ## Progress Log
 
+- **context-scout 2026-08-16**: populated context_scope (2 entries).
+
 - 2026-08-10 (slot-31, data_engineering, `mdps_sports_chain_bundle_multi_venue_partition_mismatch-05aa5ad81aad`): filed
   while re-running Finding 5's prescribed verification — the partition_mismatch bug itself is confirmed fixed (0
   rejects), but the checker's own pass/fail bit for this shard is unreliable due to this separate template-root

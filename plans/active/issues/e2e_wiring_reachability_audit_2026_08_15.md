@@ -40,6 +40,7 @@ context_scope:
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
     strategy-service/strategy_service/close_all/carry_staked_basis.py,
     execution-service/execution_service/api/app.py,
+    execution-service/execution_service/api/main.py,
     unified-api-contracts/unified_api_contracts/internal/modes.py,
   ]
 ---
@@ -818,3 +819,6 @@ rendered as a broken grid, because that component expects `div > b + span`.
   terminated by hand after confirming zero CPU and zero forward progress) — both fixed upstream mid-session (60-minute
   hard bound on the acquire loop; the repo-identity resolver now falls back to the same git-based `_qg_repo_name()`
   auto-detection the total-instance gate already used correctly).
+- **context-scout 2026-08-16**: refreshed context_scope (6 entries) — added `execution_service/api/main.py` per
+  session 5/6's new open P1 finding (unresolved ambiguity between the Dockerfile-served `api/main.py` and `api/app.py`,
+  which this doc and its siblings currently treat as the production reachability boundary).

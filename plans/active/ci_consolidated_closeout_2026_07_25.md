@@ -257,3 +257,5 @@ unblocked on a CI runner.
   Progress Log entry IS that link-back fix) — the other 2 retagged docs were already reachable and needed no further
   linkage fix. Re-verified 0→0 new orphans after this entry landed.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (3 entries), unchanged — all 3 paths confirmed
+  still on disk, still accurate.

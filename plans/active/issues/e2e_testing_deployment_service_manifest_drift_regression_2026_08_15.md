@@ -150,3 +150,4 @@ Two independent fixes, different scopes:
   "e2e-testing/deployment-service manifest drift" was not fixed by `unified-trading-pm@3f3fd16221`; that commit's
   manifest-entry removal is the regression this doc root-caused. The `[OPERATOR]` P1 todo (tier-DAG vs. black-box-testing
   resolution) remains open.
+- **context-scout 2026-08-16**: populated context_scope (4 entries).

@@ -158,3 +158,4 @@ lands; that is not a bug. The residual reconciler content-check gap is filed abo
   — so scoping `reconcile_release_tags.py`'s copy without also revisiting that one risks the exact cross-script
   divergence this file's own comments warn against. Re-sequenced the todo above: gate implementation on the OPERATOR
   `breaking_scan_dir`-completeness audit landing first. Not attempted; no code changed this pass.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

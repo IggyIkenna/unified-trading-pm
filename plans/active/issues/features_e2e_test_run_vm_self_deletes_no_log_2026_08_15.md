@@ -533,3 +533,7 @@ Exactly the observed symptom: the VM can read its startup script but can never w
   unblocked for a future dispatch (not attempted here — cost-conscious per `vm-launcher-runbook.md`, 7 billable VM
   launches already spent on this doc with zero real throughput; a relaunch is a separate, already-tracked next step, not
   mine to absorb per `/boot-per-shippable-unit`'s "don't fan out to multiple tasks in one session").
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-16**: populated context_scope (4 entries).

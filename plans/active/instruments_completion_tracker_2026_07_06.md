@@ -716,6 +716,7 @@ content post-line-cap-split.
 
 ## Progress Log
 
+- **context-scout 2026-08-16**: re-verified context_scope, no change needed (5 entries).
 - **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: the legacy-twin GCS deletes todo — **execute for
   defi/prediction now (tradfi already tracked separately, cefi already done); sports explicitly excluded pending a fresh
   re-check** — operator specifically asked for the sports twin-coverage numbers to be re-measured ("looking more solid

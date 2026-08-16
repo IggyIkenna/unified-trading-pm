@@ -448,3 +448,5 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
   this doc's tag being silently wrong in the meantime.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-16**: re-scouted; context_scope unchanged (4 entries), still accurate — still targets the
+  sole remaining open `[SCRIPT] P2` (regenerate `openapi/prospectus/*.md` via `generate_strategy_prospectus.py`).

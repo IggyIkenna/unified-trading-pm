@@ -146,3 +146,4 @@ full unscoped output.
   census-script commit stays local-only (`instruments-service@3fbcf108`, ahead=1) until this clears — the actual
   valuable output of that work (the 15.9M-row census numbers + risk analysis) is already durably shipped separately via
   `unified-trading-pm@974700fc98`, so nothing load-bearing is at risk from the script itself waiting.
+- **context-scout 2026-08-16**: populated/refreshed context_scope (4 entries).

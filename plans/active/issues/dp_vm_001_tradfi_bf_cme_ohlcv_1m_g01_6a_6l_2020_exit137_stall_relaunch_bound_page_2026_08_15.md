@@ -144,3 +144,4 @@ this could be a systemic issue in the launcher/capture path rather than two unre
   `≤2/(vm-prefix, day)` bound, and the family was already reported at that bound today — did not relaunch. Filed this
   issue doc and paging the operator via `/blocked` per the escalation's explicit instruction. No code changed this
   session.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -161,3 +161,4 @@ context_scope:
   `archive_exempt: true`. Independently re-verified the routing plan
   (`ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`) still carries its own open `[REVIEW] P0` archival todo
   naming this doc — routing still valid, not stale.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -48,6 +48,7 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
     deployment-service/scripts/recovery/relaunch_stalled_vm.py,
     instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+    /plans/active/issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md,
   ]
 created: "2026-08-15"
 parent_epic: infrastructure_master
@@ -182,3 +183,9 @@ triage.
   the full evidence + the successful re-run on `e2-highmem-16` that closed
   `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. Flipped this doc's operator-kill todo as moot (billing
   already stopped).
+- **context-scout 2026-08-16**: populated context_scope (8 entries) — added the sibling doc
+  `dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md` per a confirmed step-4a fingerprint
+  match: both docs independently record the identical escalation ID `agt-9d78d2` (dispatched to slot 11 here, slot 18
+  in the sibling) for the SAME VM `manifest-recon-cefi-20260815-093854` — two workers investigating the same incident,
+  only cross-referenced via later Progress Log prose, never in either doc's `related:`/`context_scope`. Written on BOTH
+  docs.

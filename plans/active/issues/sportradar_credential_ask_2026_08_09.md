@@ -51,6 +51,7 @@ context_scope:
   [
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sportradar_adapter.py,
     /codex/02-data/external-data-always-available-rule.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 source:
   [
@@ -125,3 +126,5 @@ already-credentialed Odds-API/footystats path). Once provisioned:
   `live-defi-rollout` gate (see `plans/archive/2026_08/issues/ag_closeout_linkage_ratchet_blocks_pm_promote_2026_08_16.md`).
   Added `/plans/active/sports_consolidated_closeout_2026_07_19.md` to `related:` above — the single unambiguous
   sports closeout family for this doc's `asset_group`. No content change.
+- **context-scout 2026-08-16**: refreshed context_scope (3 entries — added
+  `/plans/active/sports_consolidated_closeout_2026_07_19.md`, matching today's `related:` linkage fix).

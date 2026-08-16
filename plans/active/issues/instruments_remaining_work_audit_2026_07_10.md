@@ -840,3 +840,4 @@ Script:
 - **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged since 2026-07-30.
   Sole todo is still the same umbrella 'close the 6 remaining Headline P0s' across independently-scoped items, several
   themselves operator-gated; not a single determinable outcome.
+- **context-scout 2026-08-16**: re-scouted; context_scope re-verified (6 entries), unchanged.
