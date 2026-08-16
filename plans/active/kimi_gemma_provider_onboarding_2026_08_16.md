@@ -233,9 +233,13 @@ had already run. Treat every todo below as net-new work, not a resume.
       it needs the DeepSeek-style "available-balance-only" design already built) and NVIDIA NIM (free tier — likely
       no $ balance at all, so the meaningful reconciliation is against RATE-LIMIT capacity consumed, same shape as
       the Gemini free-tier todo already tracked in `multi_provider_context_billing_reconciliation_2026_08_16.md`).
-      Done when: a real number (either $ balance or rate-limit-capacity-consumed) is confirmed readable and matches
-      what the vendor's own dashboard/console shows, cross-checked live the way the DeepSeek $50 topup was verified
-      this session.
+      **Operator rule, 2026-08-16**: any one-time promotional/voucher credit (confirmed real for Moonshot — see
+      Progress Log) must be tracked as part of the real $ balance pool, not excluded as "free" — it's finite and
+      consumable the same as a cash recharge, so a reconciliation that ignores it under-reports true consumption
+      until it's drawn down. Track TOTAL credited (cash + voucher), not cash-only. Done when: a real number (either
+      $ balance or rate-limit-capacity-consumed) is confirmed readable and matches what the vendor's own
+      dashboard/console shows — cash and voucher portions both accounted for — cross-checked live the way the
+      DeepSeek $50 topup was verified this session.
 - [ ] [REVIEW] P2. Context-window/tokenizer accuracy check for Kimi and Gemma-via-NVIDIA, following the same
       live-test discipline established in `multi_provider_context_billing_reconciliation_2026_08_16.md` (don't trust
       the char/4 or word-count heuristics — this session already proved a word-count estimate under-measured a real
@@ -307,3 +311,17 @@ The operator supplied a SECOND key, stored as a new GSM version. Real results, m
 **Net state**: NVIDIA connectivity/auth is now proven working (llama + diffusiongemma both returned real 200s on
 the second key); `gemma-4-31b-it` specifically remains unconfirmed live and needs its own follow-up rather than
 being assumed broken or working either way.
+
+**Kimi real wallet baseline (operator screenshot, `platform.kimi.ai/console/account`, 2026-08-16)**: Total Recharge
+$10.00000 + Voucher Amount $5.00000 = $15 credited, Available Balance $14.99978, Total Consumption $0.00022 —
+confirms the reasoning-token smoke test above cost a trivial, expected amount (not a cost problem — the earlier
+flag was about the empty visible-content response, not spend). **Corrects a research-pass claim**: the earlier
+finding that "the promotional bonus period appears to have already lapsed" is wrong — a real $5 voucher was
+granted on this real recharge. Real dashboard numbers beat the secondary-sourced guess.
+
+**Operator correction, 2026-08-16: the $5 voucher is one-time, but it must still be tracked as real $ spent, not
+excluded as "free."** It's a finite, consumable resource the same as the $10 cash recharge — once it's drawn down,
+real money covers the rest, so a reconciliation that only tracks the $10 cash recharge would silently under-report
+true consumption while the voucher lasts. The wallet-reconciliation todo below must treat the FULL $15 credited
+(recharge + voucher) as the tracked balance pool, not just the $10 cash portion — this $15/$14.99978/$0.00022
+triple is the real baseline for that mechanism (same shape as `compute_deepseek_wallet_reconciliation()`).
