@@ -113,7 +113,7 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
       the families it does not use. This is the test that makes the carve-out's laziness verifiable rather than claimed.
 - [ ] [AGENT] P1. **Add a regression guard** so eager imports cannot creep back — a ratcheted module-count or
       import-graph check, shrink-only in the same sense as the other baselines in this corpus.
-- [ ] [AGENT] P1. **Re-measure and record the delta** against the baseline from the first todo, in this plan's Progress
+- [x] [AGENT] P1. ✅ **Re-measure and record the delta** against the baseline from the first todo, in this plan's Progress
       Log, with the numbers rather than an adjective.
 
 ## Progress Log
@@ -249,3 +249,33 @@ fleet-wide blast-radius argument (every consumer pays its cost, not that its own
 unaffected by this** — but the Low/Medium/High labels in the "three layers, measured" table above should not be read
 as wall-clock-ranked without this caveat. Not re-deriving the labels here; leaving this for whoever tackles Layer 2 to
 weigh, since UAC's actual fix (todo "Layer 2 (UAC) per the ruling") is gated on the pending `[OPERATOR]` ruling anyway.
+
+**2026-08-16 — post-fix delta re-measured (todo "Re-measure and record the delta" done).** Same two imports as the
+baseline, run against the current checkouts (both fixes already shipped and on `live-defi-rollout`). **Methodology
+deviation, flagged not hidden**: the baseline was measured with a cold `.pyc` cache; this re-measurement is warm-cache
+— `find -exec rm -rf` to clear `__pycache__` is blocked outright by this workspace's destructive-command guardrail
+(`block_destructive_commands.py`), and there is no non-recursive substitute for a directory tree of cache files. Module
+count does not depend on cache state (the same modules import either way); wall time does, so the wall-time deltas
+below are directionally suggestive only, not baseline-comparable.
+
+| Repo / import | baseline modules | after modules | baseline wall_ms | after wall_ms (warm cache) |
+| --- | ---: | ---: | ---: | ---: |
+| execution-service `execution_service.algorithms.algorithms` | 5911 | **5929** | 8890.7 | 13148.2 |
+| strategy-service `strategy_service.engine.strategies.v2.factory` | 2900 | **2850** | 5633.3 | 4161.1 |
+
+**strategy-service (Layer 1) shows the expected direction**: -50 modules, and wall time down too despite the warm-cache
+skew working against a clean read (config/logging setup on the execution-service run alone printed to stdout, showing
+these processes carry real side effects, not pure import-graph measurement).
+
+**execution-service (Layer 3) is higher than its own baseline, not lower — flag, don't reconcile silently.** 5929 is
+also higher than the 5892 figure already recorded in the Layer-3-implemented entry above, measured on this same
+checkout closer to ship time. The 7-algorithm eager-import fix itself is not in question — that was independently
+verified via direct `sys.modules` inspection immediately after the narrower `algorithms.algorithms`-only import in the
+Layer 3 entry, confirming the impl modules are genuinely absent until first access. The most plausible explanation for
+the higher total now is the pre-existing, not-mine `uv.lock` drift noted at Layer 3 ship time (a `google-cloud-monitoring`
+dependency addition, left untouched and unshipped) — if that dependency has since been installed into this `.venv`
+between measurements, its transitive import graph would inflate `len(sys.modules)` independent of anything this plan
+changed. **Not verified further this session** — confirming that specific causal chain (diffing `.venv` package lists
+across the two measurement times) is out of this todo's scope and the `.venv` state at the earlier measurement time is
+not reproducible after the fact. Recorded as a measurement trap for whoever next touches execution-service import cost,
+not silently smoothed into a false "the fix worked, numbers went down" narrative.
