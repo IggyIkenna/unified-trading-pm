@@ -288,3 +288,16 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
   already substantively covered (94-doc inventory, 81 non-grace docs fanned to 5 hunters, 8 docs archived, 21 docs
   touched across 5 commits, all verified on origin) by the live sibling run before investigating further; this
   session's own remaining time went to the two findings above instead.
+
+- **2026-08-16 (/plan-reconcile Phase -1, dedicated pass)**: re-verified all 3 open todos against fresh code state,
+  reading the live `agent-orchestrator` checkout directly (not the doc's own claims). **Todo 1 (Option A auto-clear)
+  still NOT implemented**: grepped `server/*.py` for any `reaped-stale`/`reaped_stale` correlation with `locked_by` —
+  zero hits; the only related artifact found, `server/plan_reconciler_liveness_canary.py`, is a DIFFERENT mechanism
+  (detects the `plan-reconciler.timer` itself going silently inactive, not a per-dispatch dead-lock correlation) —
+  does not satisfy this todo. **Todo 3 (pre-dispatch duplicate-tranche check) still NOT implemented**: read
+  `server/plan_health.py`'s `dispatch()` function (line 490) in full — no check against an existing live
+  `locked_by:`/non-terminal `AgentRow` for the same `(tranche, date)` exists before `autospawn.do_spawn()` is called.
+  Todo 2 (bare-`locked_by` stamping audit) not independently re-verified this pass (requires reading the skill's own
+  lock-stamping STEP, not just grepping code) — left open as-is. All 3 todos confirmed genuinely open, real
+  unimplemented engineering work in `agent-orchestrator` — no doc-level fix applies. Doc NOT archived (3 items still
+  open).
