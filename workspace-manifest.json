@@ -85,7 +85,7 @@
     "e2e-testing": "0.41.20",
     "agent-orchestrator": "0.100.3",
     "greeks-service": "0.18.49",
-    "trading-agent-service": "0.12.40",
+    "trading-agent-service": "0.12.41",
     "strategy-service": "0.71.3",
     "ml-service": "0.58.30",
     "alerting-service": "0.63.33",
