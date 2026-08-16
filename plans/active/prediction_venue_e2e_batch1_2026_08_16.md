@@ -68,29 +68,65 @@ source: >-
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Steps 1-5 per unit — declaration through features**, across prediction's 4 (venue, data_type)
-      rows. Declared in the UAC capability record; instruments-service resolves instruments with coverage windows;
-      MTDS captures every declared data type and the manifest reconciles; a live adapter exists for every batch
-      adapter; the venue's data reaches the feature groups that consume it. Done-when: every row has a stated
-      per-step verdict (pass/fail/unverified — never silently absent), with any gap recorded as a tracked todo per
-      the P1 item below.
-- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across the same 4 rows. A position adapter
-      resolves in batch, live AND paper; the venue is declared in the archetype/slot catalogues that can legitimately
-      trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit. **Verified wrong,
-      2026-08-16**: this todo originally claimed "expect NONE, DeFi-only archetypes" — false. All 4 prediction rows
-      (`KALSHI`/`POLYMARKET` × `book_snapshot_5`/`trades`) actually show a real consumer via
-      `MARKET_MAKING_PREDICTION` (needs `polymarket_market_microstructure`, fed by `book_snapshot_5`) and
-      `MARKET_MAKING_CONTINUOUS`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` (via `trades`) — confirmed live via
-      `generate_venue_work_list.py`. **None of prediction's 4 rows are `BLOCKED-ON:archetype-declaration-backlog`**;
-      this step is genuinely dispatchable for all 4. Done-when: same per-row verdict discipline (re-verify live
-      before dispatch — the registry moves fast).
+- [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@<pending-sha>`. Real
+      per-row verdict, evidence cited, via 3 parallel research passes across instruments-service,
+      market-tick-data-service, and features-service:
+      | Row | Step 2 (instrument resolution) | Steps 3-4 (batch capture / live adapter) | Step 5 (feature consumption) |
+      | --- | --- | --- | --- |
+      | KALSHI, book_snapshot_5 | PASS — `KalshiReferenceDataAdapter`, coverage window `kalshi.py:1359-1360` | **PARTIAL — live only** (`KalshiClobWSFeedConnector`, `kalshi_clob_ws.py:354`); no batch collector found (`kalshi_adapter.py` has zero `book_snapshot_5` refs) | **FAIL** — `_ingest_prediction` (`batch_handler.py:167-176`) only lists `venue=POLYMARKET` parquets; KALSHI structurally excluded |
+      | KALSHI, trades | PASS — same resolver | PASS — batch `kalshi_adapter.py:245`, live `kalshi_trades_ws.py:192` | **FAIL** — same structural KALSHI exclusion (`batch_handler.py:117-129`) |
+      | POLYMARKET, book_snapshot_5 | PASS — `PolymarketReferenceDataAdapter`, coverage window `parsing.py:221-222` | PASS — batch `polymarket_adapter.py:347`, live `polymarket_clob_ws.py:306` | **FAIL** — `PolymarketMicrostructureCalculator.required_columns` is trades-only (`polymarket_microstructure_calculator.py:36-37`); book-consuming groups (`book_depth_bands`/`liquidity_walls`) are filtered out of PREDICTION entirely (`batch_handler.py:797-812`) |
+      | POLYMARKET, trades | PASS — same resolver | PASS — batch `polymarket_adapter.py:476`, live `polymarket_trades_ws.py:149` | **PASS** — real, wired, enabled-by-default compute (`polymarket_microstructure_calculator.py:47-81`) |
+
+      **Only 1 of 4 rows (POLYMARKET, trades) clears step 5.** Root cause is 2 real code gaps in
+      `features-service`, tracked as their own todos below — NOT the archetype-declaration issue this doc originally
+      (wrongly) assumed; that correction is recorded above. Never trust a stale "expect X" claim over live evidence.
+- [ ] [BACKEND] P2. **Gap: KALSHI has a live book_snapshot_5 connector
+      (`market_tick_data_service/live/connectors/kalshi_clob_ws.py:354`) but no batch/backfill collector** —
+      `kalshi_adapter.py`'s `download_batch` is trades-only. Cannot backfill KALSHI order-book history; live-only
+      capture means no historical replay/backtest for this data_type. Done-when: a batch collector exists (mirroring
+      `PolymarketAdapter._build_book_snapshot_5_rows`, `polymarket_adapter.py:347`) or this is explicitly ruled
+      out-of-scope with a cited reason.
+- [ ] [BACKEND] P1. **Gap: `features-service`'s PREDICTION ingest path structurally excludes KALSHI entirely.**
+      `_ingest_prediction`/`_list_polymarket_parquets` (`features_service/cross_instrument/cli/handlers/
+      batch_handler.py:117-129,167-176`) hard-filter to `venue=POLYMARKET` — KALSHI trades and book_snapshot_5 are
+      both real, captured (batch+live for trades; live-only for book), but orphaned at the feature layer regardless.
+      Done-when: KALSHI is ingested alongside POLYMARKET for PREDICTION (or the exclusion is confirmed intentional
+      with a cited reason — e.g. KALSHI's `polymarket_market_microstructure` fit is genuinely different and needs
+      its own calculator, not a blind extension of the filter).
+- [ ] [BACKEND] P1. **Gap: no feature_group consumes POLYMARKET book_snapshot_5.**
+      `PolymarketMicrostructureCalculator` is trades-only (`polymarket_microstructure_calculator.py:36-37`), and
+      the generically-applicable book-consuming groups (`book_depth_bands`/`liquidity_walls`/`order_flow_inference`/
+      `microstructure`/`flow_interaction`) are all filtered out of PREDICTION by
+      `_filter_feature_groups_for_asset_group` (`batch_handler.py:797-812`) — real captured book data (batch+live,
+      confirmed PASS above) is fully orphaned. Done-when: at least one feature_group reads POLYMARKET
+      book_snapshot_5, or the gap is confirmed intentional with a cited reason.
+- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across the same 4 rows. **Gated by the step-5
+      result above**: only (POLYMARKET, trades) has a real feature output to feed strategy today; the other 3 rows
+      cannot meaningfully reach steps 6-8 until their respective gap todos above close. Scope this todo to
+      (POLYMARKET, trades) first: does a position adapter resolve in batch/live/paper; is POLYMARKET declared in
+      the archetype/slot catalogues for `MARKET_MAKING_CONTINUOUS`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE`; does
+      an execution adaptor handle every `InstructionActionV2` those archetypes emit. Done-when: a real per-step
+      verdict for that one row, plus `BLOCKED-ON` markers for the other 3 citing the specific gap todo each depends
+      on.
 - [ ] [BACKEND] P0. **Step 9 per unit — transfers**, across the same 4 rows. Every applicable `BusTransferType`
       has a working rail, instruments-service through execution-service. Done-when: same per-row verdict discipline.
-- [ ] [BACKEND] P1. **Record every gap found across steps 1-9 above as its own tracked todo** in this file — never
-      as prose only.
+- [ ] [BACKEND] P1. **Record every NEW gap found while executing steps 6-9 above as its own tracked todo** in this
+      file — never as prose only, same discipline the steps 1-5 sweep above already followed.
 - [ ] [BACKEND] P0. **Confirm the parent plan's hard rules held across steps 1-3 above**: strategy-service never
       read MTDS directly; execution fails closed on granularity (`refuse_unservable`, never silently clamped);
       credentials gated RUNNING not BUILDING; no new service-to-service dependency was introduced. Done-when: a
       clean `quality-gates.sh` run across every repo touched by this batch.
 
 ## Progress Log
+
+**2026-08-16 — Steps 1-5 swept, 2 real gaps found.** SHIPPED — `unified-trading-pm@<pending-sha>`. 3 parallel
+research passes (instruments-service, market-tick-data-service, features-service) produced a real, cited per-row
+verdict for all 4 rows. Step 2 (instrument resolution) passes for both venues on all 4 rows. Steps 3-4 (batch
+capture / live adapter) pass for 3/4 rows; KALSHI book_snapshot_5 is live-only (no batch collector — tracked as a
+P2 gap). Step 5 (feature consumption) passes for exactly 1/4 rows (POLYMARKET, trades) — the other 3 fail due to 2
+structural gaps in features-service (KALSHI hard-excluded from the PREDICTION ingest path; no feature_group reads
+POLYMARKET book data), both now tracked as P1 gap todos, not left as prose. Steps 6-8 rescoped to the 1 passing row
+first, with the other 3 explicitly `BLOCKED-ON` their respective gap todo. Confirms the earlier archetype-count
+correction was right to make: the real blocker for prediction was never archetype declaration, it was these 2 code
+gaps — a different root cause than what this doc originally (wrongly) assumed.
