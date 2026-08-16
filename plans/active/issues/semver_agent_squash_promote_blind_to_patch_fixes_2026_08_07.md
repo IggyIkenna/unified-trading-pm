@@ -65,6 +65,7 @@ drift_direction: advance-code
 depends_on: []
 source: "reconcile-release-tags stall alert (13 repos), investigated 2026-08-07"
 resolved_by:
+archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 context_scope:
@@ -335,7 +336,14 @@ before).
       `reconcile_release_tags.py` healthy/tag-derived list (`market-tick-data-service:v0.112.2`), unstalled — the
       unrelated pre-existing test failure this todo was gating on no longer blocks anything, since no per-repo ship of
       THIS fix is needed anymore.
-- [ ] [DEVOPS] P2. **NEW 2026-08-09 (stale-recheck sweep) — root-cause the residual 7-repo stall.** `e2e-testing`,
+- [x] ✅ [DEVOPS] P2. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** Classified via
+      `ci_satellite_ao_dispatch_batch13_2026_08_13.md` (2026-08-14): all 7 repos verdicted "correctly quiet" (no
+      SOURCE_DIR-touching commit since baseline) via two independent methods (live `reconcile_release_tags.py
+      --dry-run` + per-repo `git log -- <source_dir>/`). Re-confirmed live this session: fresh
+      `reconcile_release_tags.py --dry-run` run → `0 STALLED`. The one latent misconfig batch13 separately surfaced
+      (e2e-testing's `source_dir: "e2e_testing"` pointing at a non-existent directory) is NOT new/untracked — already
+      carried as 2 open todos in `/plans/active/issues/ibkr_gateway_infra_release_tag_stall_2026_08_11.md:97-133`, so no
+      new todo added here. Was: **NEW 2026-08-09 (stale-recheck sweep) — root-cause the residual 7-repo stall.** `e2e-testing`,
       `fund-administration-service`, `greeks-service`, `ibkr-gateway-infra`, `system-integration-tests`,
       `trading-agent-service`, `unified-trading-api` are still `STALL`ed per `reconcile_release_tags.py --dry-run` even
       though all 7 got this doc's patch-fallback fix shipped (see the `## Shipped` checklist) and their

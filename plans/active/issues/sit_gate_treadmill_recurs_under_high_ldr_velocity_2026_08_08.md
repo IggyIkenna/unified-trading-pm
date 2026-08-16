@@ -56,6 +56,7 @@ source:
     direct invocation, not from the Slack alert text",
   ]
 resolved_by:
+archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 context_scope:
@@ -143,7 +144,12 @@ gone quiet or the streak has reset." Run live from an interactive session with A
       treadmill and NOT the "different, currently-masked bug" this todo was written to rule out. No fresh investigation
       warranted. The na-eligibility gate on "once LDR goes quiet" is discharged: convergence was observed WITHOUT LDR
       going quiet.
-- [ ] [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate** — L962-979 is unreachable whenever
+- [x] ✅ [DEVOPS] P2. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** `unified-trading-pm@5ff1205e68`
+      (ancestor of HEAD) adds `_close_ancestor_failed_promote_prs()`, hoisted before the content-identical skip and SIT
+      gate, closing only when the head is a strict ancestor of `$LDR_SHA` (via the GitHub compare API, never inferred
+      from ref-name, short-circuits on empty `$LDR_SHA`) AND `quality-gates-v2` has CONCLUDED failure on that exact head
+      — exactly the design constraint below. New test `test-ldr-promote-ancestor-cleanup-hoist.sh` exercises all 4
+      branches. Was: **Hoist the superseded-promote-PR cleanup above the SIT gate** — L962-979 is unreachable whenever
       L756 returns BLOCKED, so an orphaned red promote PR survives indefinitely and is what makes the lag monitor page
       (see the measured section). **Design constraint (do NOT skip)**: the predicate must not mass-close. Closing every
       `headRefName != $PROMOTE_HEAD` PR early is unsafe — if `LDR_SHA` is empty from a failed API read, `PROMOTE_HEAD`
@@ -152,15 +158,26 @@ gone quiet or the streak has reset." Run live from an interactive session with A
       concluded red check can never merge, so no viable promotion is discarded — the case that makes a naive hoist
       risky). Needs a test in `scripts/quality-gates-base/tests/` extracting the real function body, per the
       `test-sit-fleet-green-auto-retrigger.sh` precedent. Repo: unified-trading-pm.
-- [ ] [DEVOPS] P2. **Fix `sit-gate-stuck-detector.yml`'s dedup key** — the cooldown should not suppress a repost when
+- [x] ✅ [DEVOPS] P2. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** `unified-trading-pm@c91496e0db`
+      (ancestor of HEAD): `.github/workflows/sit-gate-stuck-detector.yml`'s `dedup_key` is now
+      `sit-gate-stuck-${{ needs.check.outputs.max_streak }}` (was flat `sit-gate-stuck`), and
+      `scripts/cicd/sit_gate_stuck_detector.py` now emits a `max_streak` GH output — a worsening streak becomes a new
+      key that bypasses the flat 60-min cooldown, exactly as asked. Was: **Fix `sit-gate-stuck-detector.yml`'s dedup
+      key** — the cooldown should not suppress a repost when
       the detector's own worst-repo streak count has INCREASED since the last post (i.e. include the streak count, or a
       monotonic-worsening check, in the dedup decision alongside the flat 60-min timer). Read
       `scripts/self-hosted-runners/hosted-baseline/notify-slack.yml`'s dedup_key/cooldown_min contract before changing
       call sites elsewhere in the fleet. SSOT: `/codex/04-architecture/ci-alerting.md`.
-- [ ] [DEVOPS] P3. **Re-check after LDR goes quiet** — once commit velocity on `live-defi-rollout` drops (multiple
-      sessions currently shipping concurrently), confirm SIT completes an uninterrupted round and both repos' streak
-      resets to 0; if it does NOT reset even once LDR is quiet for one full round-trip window, that would indicate a
-      DIFFERENT, currently-masked bug and warrants fresh investigation (not assumed to be this same treadmill).
+- [x] ✅ [DEVOPS] P3. **RESOLVED — DUPLICATE of the already-answered item above (plan_reconciler Phase -1, 2026-08-16).**
+      This is a near-verbatim duplicate of the earlier "Re-check after LDR goes quiet" todo (already `[x]`, answered
+      2026-08-10) — the measured section there shows the streak resets on gate PASS even under *sustained* velocity, a
+      stronger result than "once LDR is quiet" asks for, so this instance's own ask is subsumed. Independently
+      re-confirmed live 2026-08-14 via `ci_satellite_ao_dispatch_batch13_2026_08_13.md` (`sit_gate_stuck_detector.py` →
+      healthy, both repos at streak 0). Was: **Re-check after LDR goes quiet** — once commit velocity on
+      `live-defi-rollout` drops (multiple sessions currently shipping concurrently), confirm SIT completes an
+      uninterrupted round and both repos' streak resets to 0; if it does NOT reset even once LDR is quiet for one full
+      round-trip window, that would indicate a DIFFERENT, currently-masked bug and warrants fresh investigation (not
+      assumed to be this same treadmill).
 
 ## na-eligibility-audit verdict
 

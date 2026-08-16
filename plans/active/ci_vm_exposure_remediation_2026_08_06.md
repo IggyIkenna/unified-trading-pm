@@ -25,7 +25,8 @@ related:
     agent-orchestrator/scripts/install-resource-history-sampler.sh,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-06"
+last_updated: "2026-08-15" # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale 9 days behind the doc's
+  # own most recent (context-scout 2026-08-15) Progress Log entry
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

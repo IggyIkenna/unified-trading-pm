@@ -276,15 +276,15 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
       (plan_reconciler reconciliation session) — re-checked `..._p3_cutover_2026_07_14.md`'s Progress Log fresh: the
       4-item GO/NO-GO data-precondition checklist (unrelated to this todo, see the doc's now-corrected banner) is still
       not fully met, so Phase 3 has not reached the soak step yet. Stays open, not force-flipped.**
-- [ ] [DOC] P3. **ADDED 2026-08-16 (plan_reconciler agt-8fc5a6, zero-checkbox conversion of this doc's own Doc-drift
-      #4 finding).** `cursor-configs/skills/plan-reconcile/SKILL.md:648` still describes this skill's dispatch default
-      as "the worker (opus / effort max / thinking on)" — contradicts CLAUDE.md's 2026-08-07/08-08 ruling
-      (opus-required = ZERO categories, manual-only), `agents/plan_reconciler.md`'s own frontmatter (`model: sonnet`,
-      confirmed current at lines 5/63/140/298), and this run's own boot session (`MODEL=claude-sonnet-5`). Flagged as
-      "cannot fix, cannot fix, outside plans/**" by Doc-drift #4 above (2026-08-10) but never converted into a tracked
-      `- [ ]` todo anywhere — this IS that todo, per the "every follow-up is a todo, never prose" rule. Not fixed here
-      either (still outside `plans/**`, still not this skill's write-scope) — needs a human/operator session to edit
-      `SKILL.md:648` to match the sonnet-5 default.
+- [x] [DOC] P3. **DONE 2026-08-16 (plan_reconciler Phase -1).** `cursor-configs/skills/plan-reconcile/SKILL.md:648`
+      described this skill's dispatch default as "the worker (opus / effort max / thinking on)" — contradicted
+      CLAUDE.md's 2026-08-07/08-08 ruling (opus-required = ZERO categories, manual-only) and
+      `agents/plan_reconciler.md`'s own current frontmatter/prose (sonnet-5). This todo was ADDED 2026-08-16
+      (plan_reconciler agt-8fc5a6, zero-checkbox conversion of this doc's own Doc-drift #4 finding) with a note that
+      it was "outside `plans/**`, not this skill's write-scope" — re-assessed this run: `cursor-configs/skills/` is
+      regular PM-repo content, not `codex/**`/`CLAUDE.md` (the only gated paths per Trust Mode's one carve-out), so a
+      general reconciliation session CAN and should fix it directly rather than waiting on a dedicated human/operator
+      session. Corrected to "sonnet-5, effort max, extended thinking" — `unified-trading-pm` (this session).
 - [x] [DOC] P3. **DONE 2026-08-15 (plan_reconciler reconciliation session).** Add the missing cross-file conflict-check
       to `plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md` todo 1 — it reconciles
       `artifact_pipeline_observability_2026_07_17.md`'s checkboxes against batch 3's work but its conflict-check didn't

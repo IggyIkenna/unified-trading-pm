@@ -39,6 +39,7 @@ context_scope:
 created: 2026-08-10
 source: ci-reconciler sweep
 resolved_by:
+archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -94,8 +95,17 @@ can't.
 
 ## Follow-ups
 
-- [ ] [DEVOPS] P2. Confirm PR #2714 merges green (QG run `31405420640`) and LDR→main catches up; then close this issue.
-- [ ] [DEVOPS] P3. Consider the same doomed-run guard in `ldr-to-main-promote-fleet.yml`'s per-repo supersede path if
+- [x] ✅ [DEVOPS] P2. **RESOLVED — DONE on newer evidence, not the stale cited PR (plan_reconciler Phase -1,
+      2026-08-16).** PR #2714 confirmed CLOSED/never-merged (`gh pr view 2714`, live 2026-08-16: `state: CLOSED,
+      mergedAt: null, closedAt: 2026-08-10T16:01:44Z`) — superseded by normal promote-supersede behavior, not a
+      regression. Underlying goal (LDR→main draining, no doomed-run wedge) confirmed via ≥30 `chore(promote)` merges
+      landed 2026-08-16 alone on `origin/main`, plus `ci_satellite_ao_dispatch_batch13_2026_08_13.md`'s 2026-08-14
+      reconciliation (PRs #2997-#3000 each merged cleanly within ~4 min). Was: Confirm PR #2714 merges green (QG run
+      `31405420640`) and LDR→main catches up; then close this issue.
+- [x] ✅ [DEVOPS] P3. **RESOLVED — nothing to port (plan_reconciler Phase -1, 2026-08-16).** Checked by
+      `ci_satellite_ao_dispatch_batch13_2026_08_13.md:206-214` (2026-08-14): zero `inflight_wait`-shaped code exists in
+      `ldr-to-main-promote-fleet.yml` to port into. Was: Consider the same doomed-run guard in
+      `ldr-to-main-promote-fleet.yml`'s per-repo supersede path if
       the fleet bot ever shows the same wait-on-doomed-run shape (no evidence of it today — fleet PRs are per-SHA
       fresh).
 

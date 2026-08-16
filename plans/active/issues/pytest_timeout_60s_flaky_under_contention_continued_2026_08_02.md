@@ -43,7 +43,8 @@ related:
   ]
 created: 2026-08-02
 author: unknown
-last_updated: 2026-08-03T15:35Z
+last_updated: 2026-08-10 # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale ~7 days behind the doc's own
+  # most recent (na-eligibility-audit 2026-08-10) Progress Log entry
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

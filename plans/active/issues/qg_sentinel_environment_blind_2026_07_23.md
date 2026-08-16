@@ -279,4 +279,9 @@ autonomous_session_operator_decisions_2026_07_25.md entry #29, option A') that h
 DEPLOYMENT_ENV race investigation's own next step runs, since the 2 MTDS tests are the only known reproducer of a real
 env-leak and fixing them first risks masking the leak before its cause is confirmed. Verified both cited blocker docs
 are real and still open: mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md (status: open) and
-mtds_deployment_env_race_survives_single_worker_2026_07_23.md (status: open).
+mtds_deployment_env_race_survives_single_worker_2026_07_23.md (status: open). **STALE — CORRECTED 2026-08-16
+(plan_reconciler Phase -1):** both docs were root-caused + archived 2026-08-15 via `unified-trading-pm@54046afb9f`
+("root-cause + archive MTDS DEPLOYMENT_ENV leak docs — STAGE 0 cascade ruled out, real fix already shipped 2026-07-25")
+— both now `status: resolved` at `/plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`
+and `/plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md`. That same commit already
+repointed this doc's `context_scope` and one resolution-checklist link but left this verdict paragraph unrevised.

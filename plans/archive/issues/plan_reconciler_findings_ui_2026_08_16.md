@@ -10,7 +10,8 @@ summary: >-
   technical question resolved via direct code-reading (gate_on_depends semantics — no fix needed, mechanism is
   correct). Zero operator escalations this run — every candidate resolved to either HARD-evidenced auto-fix or
   confirmed-still-genuinely-open.
-status: open
+status: resolved
+resolved_by: plan_reconciler Phase -1, 2026-08-16 (self — zero open items at completion, per its own Phase 5.9 ledger)
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -42,6 +43,12 @@ depends_on: []
 ---
 
 # plan_reconciler findings — ui tranche, 2026-08-16
+
+> **RESOLVED + ARCHIVED 2026-08-16 (plan_reconciler Phase -1)** — zero genuinely-open items at completion (Phase 5.9
+> ledger: 0 routed / 0 parked, both balanced; every candidate resolved to HARD-evidenced auto-fix or
+> confirmed-correctly-still-open elsewhere). Spot-verified 4 of this run's own headline claims independently before
+> archiving (Track 4 flip, the 3-todo auth-guard flip, both archive-candidate moves) — all confirmed accurate on disk.
+> See Progress Log.
 
 > **Run**: dispatch `agt-8fc5a6`, sharded to `tranche=ui`. Fourth `/plan-reconcile ui` run. Full corpus write access —
 > 0 of 25 tranche docs grace-blocked.
@@ -215,3 +222,11 @@ staged files).
 - **2026-08-16 (plan_reconciler agt-8fc5a6)**: full run as described above. 2 commits landed on `live-defi-rollout`
   (`0474a1e0b6`, `df064366ce`), both independently verified reachable on `origin/live-defi-rollout` post-push. Working
   tree confirmed clean after each. No operator escalations needed.
+- **plan_reconciler Phase -1, 2026-08-16 (later same day)**: re-verified this doc's own headline claims against fresh
+  state rather than trusting the self-report — spot-checked Track 4 flip (`ui_consolidated_closeout_2026_07_30.md:188`
+  confirmed `[x]`), all 3 `deployment_api_prod_disable_auth_true_2026_08_06.md` flips (confirmed `[x]` at lines
+  153/157/164/171), and both archive-candidate moves (`unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`
+  and `plan_reconciler_findings_ui_2026_08_11.md` both confirmed present at their claimed `plans/archive/2026_08/issues/`
+  paths, absent from `plans/active/`). All confirmed accurate — zero corrections needed. No active corpus referrers to
+  this doc found (it is brand-new, created earlier the same day). Archiving per the 6-step ritual (`doc_type: issue` →
+  flat `plans/archive/issues/`).

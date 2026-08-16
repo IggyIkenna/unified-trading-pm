@@ -227,11 +227,18 @@ sufficient.
       (the patch-fallback fix minting a real tag) — MTDS's tag mint does NOT count as proof of that fix since MTDS was
       excluded from the rollout. See `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` for the fix's own
       follow-up section once the dispatched agent lands it.
-- [~] [DEVOPS] P2. **Agent dispatched 2026-08-07 ~18:20Z.** Harden `promote-fleet-startup-failure-monitor.yml` to also
+- [x] ✅ [DEVOPS] P2. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** `unified-trading-pm@c526128fb0`
+      (+`ff435d5b53` refinement), ancestor of HEAD, title cites this doc by filename — adds `fetch_queued_runs()` /
+      `stuck_queued_runs()` for the exact "status=queued longer than N min, no newer completed run" signature.
+      Independently re-confirmed by `ci_satellite_ao_dispatch_batch13_2026_08_13.md:158-162`. Was: **Agent dispatched
+      2026-08-07 ~18:20Z.** Harden `promote-fleet-startup-failure-monitor.yml` to also
   catch "queued, never started for an extended period" as its own failure signature — it currently reports success
   throughout this entire incident (same class of coverage gap as `ci_failure_watcher.py`'s glue-starvation/
   escalation-label bugs found earlier 2026-08-07).
-- [~] [DEVOPS] P2. **Agent dispatched 2026-08-07 ~18:20Z.** `glue-runner-crash-loop-watchdog`'s ">10800s active =
+- [x] ✅ [DEVOPS] P2. **RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16).** `unified-trading-pm@c0003b9e28`
+      (dated same day 2026-08-07 20:00, ancestor of HEAD) adds `runner_busy_status()` — a GitHub-API busy-check consumed
+      by `is_wedged()` — directly fixing the exact incident (execution-service/glue-1 3.1h/busy:false false page). Was:
+      **Agent dispatched 2026-08-07 ~18:20Z.** `glue-runner-crash-loop-watchdog`'s ">10800s active =
   probably hung" heuristic false-positived on 4 healthy, idle, `busy:false` runners (e2e-testing, strategy-service,
   market-tick-data-service, ml-service) during this incident's low-throughput window — add an actual CPU-time or
   GitHub-API `busy` check before paging, not wall-clock active-duration alone. Do not restart these services; they were

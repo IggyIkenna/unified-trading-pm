@@ -21,7 +21,9 @@ summary: >-
   (`ikenna-worker` lacks `ssm:DescribeInstanceInformation`). Needs someone with host root on the old orchestrator VM (`i-0c9b283b31d6b5ca7`) (or SSM) to
   `systemctl start` the two units. Secondary finding: the glue-runner-crash-loop-watchdog does NOT catch this class — it
   only flags units actively crash-looping (repeated restarts), not a unit sitting cleanly `inactive`/stopped.
-status: open
+status: open # summary below describes the ORIGINAL P1 host-access blocker, which was resolved same-day
+  # (2026-08-04) -- corrected 2026-08-16 (plan_reconciler Phase -1). 2 open todos remain, both narrower P2/P3
+  # follow-ups (monitoring-gap extension; no automated deploy/sync -- now RESOLVED, see Todos).
 nature: issue
 asset_group:
   [ci] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 6, meta_plan_corpus_hygiene_ao_dispatch_batch1)
@@ -308,7 +310,11 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
       within the hour) and the fix shipped to `live-defi-rollout` as `879e3e109` (quickmerge's SHA-sentinel skipped a
       redundant Pass-2 QG re-run, so this added no extra host load) — draining to `main` via `ldr-to-main-promote.yml`
       on the normal ~15-30min SLA, not yet independently re-verified on `main`.
-- [ ] [INFRA] P3. **No automated deploy/sync exists for this watchdog script at all — found while fixing the item
+- [x] ✅ [INFRA] P3. **RESOLVED — DONE 2026-08-16 (plan_reconciler Phase -1).** `unified-trading-pm@572addd34f` adds
+      `scripts/self-hosted-runners/deploy-sbin-scripts.sh` (header comment cites this exact todo) +
+      `github-glue-deploy-sync.{service,timer}`, wired into `setup-glue-runners.sh`'s base-pool install path (verified
+      `systemctl enable --now github-glue-deploy-sync.timer` at lines 587-601) — a real ~10-min sync, verified ancestor
+      of HEAD. Was: **No automated deploy/sync exists for this watchdog script at all — found while fixing the item
       above.** The live host's executed copy (`/usr/local/sbin/glue-runner-crash-loop-watchdog.sh`) was already stale
       before today's fix, missing the 2026-08-05 unit-enumeration pattern-match fix documented in this same script's own
       header comment (bare `grep glue` vs. the `github-glue-runner*` glob). No workflow, cron, or install script
