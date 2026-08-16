@@ -1160,6 +1160,32 @@ unstage_foreign_paths() {
   done <<<"$staged"
 }
 
+# rebase_failure_is_content_conflict -- classify a `git pull --rebase --autostash` failure as a
+# genuine content collision (needs a human) vs a non-content failure that should be RETRIED
+# instead of hard-exiting 3 (safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md).
+# THE BUG: autostash_rebase_reconcile used to funnel EVERY `git pull --rebase --autostash`
+# failure into "this is a genuine content collision, not contention" and an immediate exit 3 --
+# even failures that are plainly NOT a content collision, like git's own usage/state error
+# "Cannot rebase onto multiple branches" or a transient `index.lock`, on what direct inspection
+# showed was an ordinary clean ahead/behind divergence. Mirrors commit_failure_is_retriable's
+# design: key on RECOGNIZED signal text so this does not silently regress the common, correctly-
+# classified real-conflict case. Genuine git conflict markers -> conflict (return 0, unchanged
+# exit-3 hard-stop behaviour). A short, explicit allowlist of known NON-content failure
+# signatures -> not-a-conflict (return 1, caller retries). Anything unrecognized defaults to
+# "conflict" (return 0) -- safer than guessing retriable, which would silently retry a real
+# conflict 6x into a misleading "transient, re-run" exhaustion message instead of today's clear,
+# immediate "resolve manually" one.
+rebase_failure_is_content_conflict() {
+  local err_file="$1"
+  if grep -qiE "CONFLICT \(content\)|could not apply|unmerged files|needs merge" "$err_file"; then
+    return 0
+  fi
+  if grep -qiE "cannot rebase onto multiple branches|index\.lock|unable to access|could not resolve host|couldn.t find remote ref|connection (reset|refused|timed out)" "$err_file"; then
+    return 1
+  fi
+  return 0
+}
+
 # autostash_rebase_reconcile -- `git pull --rebase --autostash` PLUS verification that the
 # autostash actually popped. Bug fixed 2026-08-08 (see
 # autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md): under heavy
@@ -1170,12 +1196,19 @@ unstage_foreign_paths() {
 # stash, `git add` stages nothing, the "already matches HEAD" heuristic below is satisfied on a
 # false premise, and the script reports success while silently dropping the whole commit.
 # Returns 0 on success (rebase done, any autostash cleanly restored or none existed).
-# Returns 1 on failure -- caller should treat this as "needs a human", same as a rebase conflict.
+# Returns 1 on a genuine content conflict -- caller should treat this as "needs a human".
+# Returns 2 on a recognized NON-content failure (e.g. "Cannot rebase onto multiple branches",
+# index.lock contention) -- caller should retry, not hard-exit (2026-08-16 fix).
 autostash_rebase_reconcile() {
   local before_stash after_stash
   before_stash="$(git rev-parse -q --verify refs/stash 2>/dev/null || echo none)"
   if ! git pull --rebase --autostash origin "$BRANCH" -q 2>/tmp/_sdp_rebase_err; then
     git rebase --abort 2>/dev/null || true
+    if ! rebase_failure_is_content_conflict /tmp/_sdp_rebase_err; then
+      echo "  rebase/pull failed for a NON-content reason (not a real conflict) -- retriable:" >&2
+      cat /tmp/_sdp_rebase_err >&2
+      return 2
+    fi
     echo "  rebase conflicted -- this is a genuine content collision, not contention. Resolve manually:" >&2
     cat /tmp/_sdp_rebase_err >&2
     return 1
@@ -1380,8 +1413,12 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
         if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
           echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
-          if ! autostash_rebase_reconcile; then
+          autostash_rebase_reconcile; _sdp_rebase_rc=$?
+          if [[ $_sdp_rebase_rc -eq 1 ]]; then
             exit 3
+          elif [[ $_sdp_rebase_rc -eq 2 ]]; then
+            backoff "$attempt"
+            continue
           fi
         else
           echo "  pull failed:"; cat /tmp/_sdp_pull_err
@@ -1392,8 +1429,12 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     else
       # Defensive: shouldn't normally happen pre-commit, but handle the same as the
       # post-commit case if it does (e.g. a prior failed attempt left a local commit).
-      if ! autostash_rebase_reconcile; then
+      autostash_rebase_reconcile; _sdp_rebase_rc=$?
+      if [[ $_sdp_rebase_rc -eq 1 ]]; then
         exit 3
+      elif [[ $_sdp_rebase_rc -eq 2 ]]; then
+        backoff "$attempt"
+        continue
       fi
     fi
 
@@ -1524,7 +1565,8 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
   if grep -qiE "non-fast-forward|rejected|fetch first" /tmp/_sdp_push_err; then
     echo "  origin moved during this attempt -- reconciling (post-commit: rebase+autostash) and retrying"
-    if ! autostash_rebase_reconcile; then
+    autostash_rebase_reconcile; _sdp_rebase_rc=$?
+    if [[ $_sdp_rebase_rc -eq 1 ]]; then
       exit 3
     fi
     backoff "$attempt"
