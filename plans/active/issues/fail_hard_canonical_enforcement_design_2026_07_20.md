@@ -231,6 +231,10 @@ implementation todos on that check, since they're each independently reviewable 
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 2, operator ruling)**: the Gap 1-3 implementation question —
+  **run the §5b sanity check first, then proceed** — extracted to
+  `fail_hard_canonical_enforcement_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`). Gap 3 was already shipped
+  (checked below); the Stage 2 schema v10 backfill authorization question was not separately ruled this round.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - `nature: design`,
   APPROVED-IN-PRINCIPLE only; the open `[DESIGN]` todo is closing 3 adversarially-confirmed architecture gaps before
   write-enforce.

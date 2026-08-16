@@ -147,8 +147,8 @@ conflict signal (§ "Stale local content" below). LDR push rejected → ahead=0 
 `--rebase --autostash`+`restore --staged .` pre-add — same after a failed commit: restore-staged first, else a peer
 session absorbs it; conflict `rebase --abort` + stash by name (never `git stash drop` foreign WIP). Inherited-dirty-WIP
 is **LIVENESS-gated** (dead claim → inherit + commit; live claim / mtime <120s → PROTECT). An interactive session IS
-slot N (long uncommitted WIP = stale-worker anti-pattern; `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5
-min). **Distinct failure mode — two operators/sessions sharing ONE slot's checkout** (interactive sessions have no
+slot N — **verify `pwd` under `.tabs/<N>/`**; a bare `<repo>` path succeeds but is NEVER your slot
+(cron-checked every 5 min). **Distinct failure mode — two operators/sessions sharing ONE slot's checkout** (interactive sessions have no
 allocation mechanism, unlike AO-dispatched workers): shared index/`user.name`/`user.email` → contention + wrong commit
 attribution; WARN-only `.agent-claim` liveness heartbeat + `SessionStart` collision hook mitigate (never hard-block).
 SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.

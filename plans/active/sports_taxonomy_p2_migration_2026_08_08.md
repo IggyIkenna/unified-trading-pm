@@ -591,7 +591,7 @@ returns < 604800, the delete falls back to approve-executes and the todo must st
 - [x] ✅ [DATA] P2. **Purge the 16,968 legacy `league=` GCS objects** (1,034.5 MB, 1,814 days) from the todo above.
       **CLOSED 2026-08-15 (slot-11)** — `market-tick-data-service@8a772b3180`; §3a fresh check retention=604800s;
       deleted 15,154/16,968 (785.7MB), 0 errors; remaining 1,814 no-twin objects (539 pairs) left untouched, follow-up:
-      `/plans/active/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md`.
+      `/plans/archive/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md` (resolved + archived 2026-08-16).
 - [x] ✅ [SCRIPT] P1. **Launch one small VM to close out the 3 tiny manifest-only fixes** found + characterized
       2026-08-14 (slot-26), blocked on local `--apply` OOM-kills (sandbox cgroup limit, not genuine exhaustion). Item 1
       (`odds_horizon_bucket`) **DONE 2026-08-14 (slot-29)** standalone, ahead of this batch — see its own todo. Items

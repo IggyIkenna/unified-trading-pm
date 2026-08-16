@@ -28,7 +28,7 @@ related:
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-16
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -43,7 +43,19 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: []
+depends_on:
+  [
+    slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25,
+    ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30,
+    ao_satellite_ao_dispatch_batch3_2026_07_31,
+    context_scout_completion_and_plan_brainstorm_skill_2026_07_30,
+    orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02,
+    orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25,
+    shared_host_home_filesystem_full_2026_07_26,
+    content_derived_backlog_task_ids_2026_08_08,
+    ao_satellite_ao_dispatch_batch3_finalize_2026_07_31,
+    l2_book_microstructure_capture_2026_07_13,
+  ]
 source: >-
   A 5-parallel-agent code-audit sweep (2026-08-14, this session) checked every open todo across 44 AO-subject-matter
   plans/issues (created on/before 2026-08-07) directly against live agent-orchestrator code — not just checkbox state.
@@ -278,6 +290,31 @@ context_scope:
       `bash scripts/refresh_env_from_sm.sh` dry-run on vm-0: `add=0 replace=0 keep=7`,
       `DRY-RUN: in sync, nothing to do`, JWT included. No write performed — this item is genuinely closed, not deferred.
       Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox flipped there too.
+- [x] [BACKEND] P0. **DONE — LIVE FIX APPLIED 2026-08-16 (this session, direct SSM).** `planning`'s own
+      `orchestrator.service` (`.env.local`, `EnvironmentFile=-`) was missing `ORCHESTRATOR_VM_ID` entirely — confirmed
+      by `env` on the live `MainPID` (empty) vs. the still-running `deepseek_native_proxy_server` process (up since
+      2026-08-13, environ carried `ORCHESTRATOR_VM_ID=planning`), proving the line existed before and dropped out of
+      `.env.local` sometime between then and orchestrator.service's most recent restart (08:54:18Z today). Effect:
+      `server_url()`'s `is_standalone()` guard (the 2026-07-29 local-pilot-incident fix) fired on **every** escalation
+      dispatch fleet-wide — confirmed via `GET /api/escalations/active`: `agt-09c955` (instruments-service,
+      `cloud_build_failure`) stuck at 238 failed attempts, `agt-95ede4` (market-tick-data-service,
+      `data_pipeline_failure`) at 313 attempts / 5 re-escalations, both `last_error: "server_url unresolved: ...
+      standalone instance (vm_id='')"`. Restored `ORCHESTRATOR_VM_ID=planning` to `.env.local` (backed up first) and
+      `systemctl restart orchestrator` (`KillMode=process` — tmux workers unaffected); verified new `MainPID`'s environ
+      carries the value, `/api/backlog` returns 200, and `agt-95ede4` flipped to `status: dispatched, last_error: null`
+      on the next retry tick (~90s later) — confirmed live, not just code-read. No source doc existed for this before
+      today; tracked here per the operator's "plug into the 14th consolidated tracker, don't file a new doc" direction.
+- [ ] [DIAG] P1. **Root-cause why `.env.local` lost `ORCHESTRATOR_VM_ID` between 2026-08-13 and the 08:54:18Z
+      2026-08-16 `orchestrator.service` restart — NOT root-caused, only patched live** (see item directly above).
+      `refresh_env_from_sm.sh` is UPSERT-only by design and always backs up on `--apply` (`.env.local.bak.<epoch>`),
+      but the two existing backups on `planning` are from 2026-07-30 and 2026-08-08 — neither near the incident window
+      — so that script is not the obvious culprit as-observed; more likely a redeploy/reprovision step re-ran
+      `bootstrap_vm.sh`'s Step-5 `.env.local` overwrite-from-Secret-Manager path (correct only for a FRESH VM per that
+      script's own comment) without the identity-var upsert (`_upsert_env ORCHESTRATOR_VM_ID`) that's supposed to
+      follow it, on an already-provisioned long-lived host. Needs: `sudo journalctl` / shell history around the restart
+      window on `planning`, and confirmation whether any CI/redeploy workflow calls `bootstrap_vm.sh`'s overwrite path
+      against the already-provisioned central VM instead of `refresh_env_from_sm.sh`. Until root-caused, this can
+      silently recur on the next redeploy.
 - [x] [BACKEND] P0. **DESIGN RESOLVED 2026-08-15 (this session, operator discussion) — no longer operator-blocked, now
       bounded implementation work.** Design the dirty-worktree resolution policy (Ikenna, Slack 2026-06-12). Operator
       confirmed the revision directly in-session: keep steps 1-2 unchanged (QG-green→quickmerge /
@@ -467,6 +504,21 @@ before touching the source doc directly._
 
 ## Notes
 
+- **Not archivable until `depends_on` clears (operator direction, 2026-08-16).** This tracker's own 12 remaining open
+  items are pointers, not the real work — the real work lives in the source docs each item cites. `depends_on` above
+  names every distinct source doc still carrying a genuinely-open item as of the 2026-08-15 final reconciliation pass:
+  `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25` (60-min context-signal re-validation),
+  `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30` (the two solo benchmark re-runs + artifact
+  publish), `ao_satellite_ao_dispatch_batch3_2026_07_31` + `context_scout_completion_and_plan_brainstorm_skill_2026_07_30`
+  (the standing `context_scope` corpus backfill), `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02`
+  (best-effort swap-peak root cause), `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25` (DB-pool
+  right-sizing design fork), `shared_host_home_filesystem_full_2026_07_26` (disk-usage + `mdps_bench_data` audits),
+  `content_derived_backlog_task_ids_2026_08_08` (the deliberately-deferred live backlog-ID migration),
+  `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31` (gated on the same `context_scope` backfill), and
+  `l2_book_microstructure_capture_2026_07_13` (blocked on its own separate `assigned_vm: NA` hold). This tracker stays
+  `active` and un-archived until every one of those clears its own open work — do not archive this doc on the strength
+  of its own 12 items alone reading "just pointers," per this workspace's `depends_on` convention (documents ordering +
+  gates archival, per `plans/PLAN_FORMAT.md`).
 - **Explicitly excluded from this tracker** (correctly gated/standing, not real remaining work to schedule):
   `ao_tranche_full_content_audit_findings_2026_07_31.md`'s standing opportunistic-retag policy (intended to sit open
   indefinitely); `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (correctly blocked on a named
@@ -686,3 +738,11 @@ before touching the source doc directly._
   ongoing/multi-session by the operator's own direction). **Recommended next item** if this session resumes: the
   dirty-worktree implementation (Track 4 P0, spec fully written, zero design ambiguity left) — highest-value remaining
   bounded work.
+- **2026-08-16 (operator-reported "fix these Activity [entries]", interactive session)**: dashboard Activity feed
+  showed a burst of `escalation_dispatch_initiated` → `escalation failed` pairs (slots #13-#18, ~10:35-10:38Z), each
+  citing `server_url() resolved to the PRODUCTION default ... on a standalone instance (vm_id='')`. Traced via
+  read-only SSM to `planning`'s own `orchestrator.service`: `.env.local` was missing `ORCHESTRATOR_VM_ID` outright,
+  so every escalation dispatch fleet-wide was fail-closed by the 2026-07-29 guard — not a dev/laptop instance, the
+  CENTRAL production orchestrator. Live-fixed (`ORCHESTRATOR_VM_ID=planning` restored + service restart, verified a
+  stuck escalation successfully dispatched afterward) — see the two new Track 4 items above (fix DONE, root-cause of
+  the drift still open). Per operator direction, plugged into this tracker instead of filing a new issue doc.

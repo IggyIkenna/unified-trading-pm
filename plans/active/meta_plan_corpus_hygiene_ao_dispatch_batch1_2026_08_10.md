@@ -239,10 +239,16 @@ Two independent causes, both now fixed:
       (asia-northeast1-c, created 2026-08-10T09:29:02Z), matching the independent verification already recorded in this
       plan's Progress Log (todo 11, slot 22). Item 3 was already extracted (prose, no checkbox). All 4 items resolved;
       `archive_exempt: true` added — doc is the operator-visible historical-blast-radius record.
-- [ ] [DOCS] P3. **Fix the stale Phase 7 wording in `/plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md`**
-      (~line 202): its Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as
-      "STILL OPEN — prod is silent...", but Phase 7 closed 2026-08-07. Re-verified still stale 2026-08-10. **Done
-      when**: the wording matches Phase 7's actual closed state.
+- [x] ✅ [DOCS] P3. **Fix the stale Phase 7 wording in `/plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md`**
+      (~line 202): its Deferred item 8 still described `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as
+      "STILL OPEN — prod is silent...", but Phase 7 closed 2026-08-07. **Already fixed** — verified 2026-08-16 (slot 7)
+      that this exact fix landed 2026-08-10 in `unified-trading-pm@478f90d112` ("flip 3 ui-parked todos (Findings
+      1/3/4) — SKILL.md clarifications already done, batch1 stale Phase 7 wording fixed, archive_exempt added"): its
+      diff replaces the "STILL OPEN" prose with wording citing a 2026-08-07 operator ruling (per
+      `/plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s own Deferred item 8) plus live verification —
+      `cpu-throttling: false` on the live Cloud Run service, `/api/artifacts/images` now returns full real data, 39
+      repos, 0 empty. Confirmed at HEAD (`git diff HEAD` clean, no working-tree delta) — this todo's own text was
+      simply never flipped after that landed. No new code/doc change needed; flip only.
 - [x] ✅ [DATA] P1. **Relaunch the stalled backfill VM DP-VM-003.** **RETAGGED from `[OPERATOR]` per `task_template.md`
       finding U** (2026-07-27 operator ruling — `[OPERATOR]` is for a business/spend judgment, a human-only credential,
       or an irreversible destroy; a named-launcher relaunch is none of those): AO workers have driven DP-VM-003

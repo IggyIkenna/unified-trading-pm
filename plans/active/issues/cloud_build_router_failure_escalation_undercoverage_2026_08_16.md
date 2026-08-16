@@ -118,9 +118,46 @@ Suggested next steps for whoever picks this up:
   self-clear without a fresh `qg-passed` event) or whether they're low-priority enough to wait for their next natural
   commit.
 
+## Todos
+
+- [ ] [BACKEND] P1. Root-cause why `cloud_build_router_failure` escalated for only 1 of 5 identically-failed repos.
+      Read the escalation-creation path in `agent-orchestrator/server/escalation.py` (likely a webhook/watcher
+      reacting to the `cloud-build-router` Slack CRITICAL post, or a Firestore/DB write path — not yet located) and
+      determine whether it (a) only watches a subset of repos, (b) has a dedup/rate-limit keyed too broadly (one
+      escalation per incident-class rather than per-repo), or (c) only fires on a specific trigger shape. Also
+      determine whether this classifier is the same underlying watcher as the separate `cloud_build_failure`
+      wall_type (escalation `agt-09c955`, which independently caught the instruments-service instance ~5h late via
+      backlog depth) or a genuinely distinct detection path. Done when: the classifier's actual matching logic is
+      confirmed by direct read (not inferred), and either fixed or explicitly scoped as a follow-up with a filed
+      root cause. Needs `/ci-reconcile` or hands-on agent-orchestrator engineering — not a mechanical fix.
+
 ## Progress Log
 
 - 2026-08-16 ~05:40Z: Filed by `ci_reconciler` (agt-d02274, slot 8) during the hourly sweep, after confirming via
   direct `gcloud builds list` + `GET /api/escalations/active` that 4 of 5 identically-failed repos have no
   escalation coverage. Did not attempt a root-cause fix this pass — out of scope for a quick classifier bug and a
   peer slot (13) is already actively assigned to the one repo that DID escalate.
+- 2026-08-16 10:48-11:00Z (slot 3, escalation `agt-09c955`, wall_type=`cloud_build_failure` — a SEPARATE watcher
+  from the `cloud_build_router_failure` classifier this doc investigates; dispatched for `instruments-service`,
+  arrived ~5h after the incident window via a deep backlog queue, ~307 tasks queued at dispatch time): verified LIVE
+  the incident is now fully closed on all fronts, no fix needed this pass —
+  1. `instruments-service`: slot 13 (escalation `agt-d078a9`, the one that DID fire) fixed it at 05:34:24Z by
+     hand-bumping `Dockerfile`'s `ARG BASE_IMAGE_DIGEST` past the stale pin (commit `848b0832b`, full diagnostic
+     comment left in-file), then `update-dependency-version.yml`'s automated fan-out independently re-refreshed the
+     same digest at 05:50:47Z (`github-actions[bot]`, commit `6a0157f00`). Confirmed via `gcloud builds list`: 4
+     consecutive SUCCESS builds since 05:46Z, zero FAILUREs since 05:31Z, and the pinned digest resolves live via
+     `gcloud artifacts docker images describe`.
+  2. The other 4 repos named in this doc (`deployment-api`, `ml-service`, `strategy-service`, `features-service`)
+     have ALSO self-healed — confirmed via direct `gcloud builds list --region=asia-northeast1` filtered per-repo:
+     each shows its 05:07-05:27Z FAILURE followed by SUCCESS builds from 05:56Z–08:20Z onward, with no further
+     failures since. This answers this doc's own "Suggested next steps" question #2: no manual escalation is
+     needed for the other 4 repos — the same `update-dependency-version.yml` digest-refresh fan-out that fixed
+     instruments-service evidently caught all 5 repos' base-image pins within the same ~05:30-06:20Z window.
+  3. Still UNRESOLVED (this pass did not touch it, same scope reasoning as the original filer): the actual
+     escalation-classifier coverage gap in `agent-orchestrator/server/` — why only `agt-d078a9`
+     (`cloud_build_router_failure`) fired for 1 of 5 identical failures. Leaving `status: open` for that reason.
+     Secondary data point for whoever root-causes it: a DIFFERENT wall_type/watcher (`cloud_build_failure`, this
+     escalation `agt-09c955`) DID independently catch the instruments-service instance, but its dispatch was
+     delayed ~5 hours behind the incident by backlog depth — by the time a worker picked it up, the incident had
+     long since self-resolved. Whether that's the SAME watcher as `cloud_build_router_failure` under a different
+     name, or a genuinely separate detection path, was not determined this pass.

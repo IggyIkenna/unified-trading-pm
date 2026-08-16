@@ -394,23 +394,24 @@ item here.
       green (10454 passed, 28 skipped, 1 xpassed, coverage 81.10%); rewrote affected unit tests to mock
       `HeliusSolanaAdapter.from_environment()` instead of the deleted RPC functions; added new adapter-level coverage
       for `get_vote_accounts()`/`from_environment()`.
-- [ ] [SCRIPT] P3. **Reclassify the 1,404 BLAZESTAKE retirement markers out of `attempted_failed`** per the 2026-08-08
-      operator ruling, option (c) — this is a `capture_status` flip (`attempted_failed`→`empty_confirmed`), NOT a row
-      delete, matching the corpus's existing "capture_status-flip retirement" precedent (fully reversible, no row
-      removed). Write a targeted reclassification script (same shape as the already-shipped
-      `relabel_retire_blazestake_venue_2026_08_06.py`, which flipped these exact rows `captured`→`attempted_failed` with
-      reason `superseded_by_content_verified_canonical_solblaze_solana_relabel_2026_08_06`) that finds every
+- [x] ✅ [SCRIPT] P3. **Reclassify the 1,404 BLAZESTAKE retirement markers out of `attempted_failed`** per the 2026-08-08
+      operator ruling (`issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` item 4), option (c) —
+      this is a `capture_status` flip (`attempted_failed`→`empty_confirmed`), NOT a row delete, matching the corpus's
+      "capture_status-flip retirement" precedent. Write a targeted reclassification script (same shape as the
+      already-shipped `relabel_retire_blazestake_venue_2026_08_06.py`, which flipped these exact rows
+      `captured`→`attempted_failed` with reason
+      `superseded_by_content_verified_canonical_solblaze_solana_relabel_2026_08_06`) that finds every
       `(defi, lst_rates, BLAZESTAKE)` row with `capture_status=attempted_failed` AND an `error_reason` starting
-      `superseded_by_` (currently ~1,404 rows — live-reverify the count at execution time, do NOT assume it's still
-      exactly 1,404), and rewrites each to `capture_status=empty_confirmed` via the standard manifest recorder's
-      honest-absence path. Use a bounded pushdown read (`pyarrow.fs.GcsFileSystem` +
-      `dataset.scanner(columns=..., filter=...)`, NOT a full `to_table()` — the 2.6GB defi `_index` OOMs on a full
-      read). Repo: deployment-service (or wherever the manifest-mutation script family for this consolidator lives —
-      mirror the existing script's repo). Source:
-      `issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` item 4. Done when: (1) a bounded pushdown
+      `superseded_by_` (~1,404 rows — live-reverify at execution time), and rewrites each to
+      `capture_status=empty_confirmed` via the standard manifest recorder's honest-absence path (bounded pushdown
+      read — `pyarrow.fs.GcsFileSystem` + `dataset.scanner(columns=..., filter=...)`, NOT a full `to_table()`, the
+      2.6GB defi `_index` OOMs on a full read). Done when: (1) a bounded pushdown
       read confirms 0 remaining `attempted_failed` rows for `(BLAZESTAKE, lst_rates)` with a `superseded_by_*` reason
       after the script runs; (2) DP-FETCH-009's `(defi, lst_rates)` `attempted_failed` count drops by the reclassified
-      row count.
+      row count. **DONE 2026-08-16 (slot-22).** `reclassify_blazestake_lst_rates_attempted_failed_2026_08_16.py`
+      (mirrors `retire_dex_pool_fees_all_captured_rows_2026_08_12.py`'s CAS + consolidator-pause gate). Live count
+      matched the estimate (1,404/1,404); flipped clean, verified 0 remaining. Commit
+      `market-tick-data-service@b11d14ff8e`, independently ancestor-verified.
 - [x] ✅ [SCRIPT] P2 (2026-08-09, slot-20). **Confirm the live instruments-service Cloud Run revision actually serves
       `origin/main` HEAD** (i.e. the deployed image includes the `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix
       restoring BTC/ETH/INF, not a stale pre-fix image) — a mechanical ops-check, not a redeploy-authorization judgment

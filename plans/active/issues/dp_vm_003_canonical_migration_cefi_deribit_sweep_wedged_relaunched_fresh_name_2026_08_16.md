@@ -98,6 +98,15 @@ source: >-
   confirmed `RUNNING`, tarballs fresh (`mtds-code@9e5f97ba2dee`, `unified-api-contracts-code@0228afe52a9b`,
   `unified-trading-library-code@f036e1827b57`, `deployment-service-code@45a2f9066f02`).
 
+## Todos
+
+- [ ] [OPERATOR] P2. **Decide the fate of the old wedged VM** `canonical-migration-cefi-deribit-sweep-20260816-003410`
+      (still `RUNNING` as of filing; not autonomously deletable per the `canonical-migration-` carve-out in
+      `data_engineering.md` STEP 0.55). Inspect directly (serial console / `py-spy dump` if reachable) to confirm
+      genuine wedge vs. legitimate long-running call, then delete if dead — or leave it to self-recover / a later
+      `/vm-preemption-billing-waste-audit` sweep if inconclusive. Converted from this doc's prose "Recommended
+      decision" section per the workspace's "every follow-up is a `- [ ]` todo, never prose" hard rule.
+
 ## Recommended decision
 
 - **A**: Operator inspects the old VM (`...-003410`) directly (serial console / `py-spy dump` if still reachable) to

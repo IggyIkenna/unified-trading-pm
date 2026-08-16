@@ -107,6 +107,18 @@ source: >-
   deeper root-cause pass (why `exit_code=1`, which shard/date range, timeout vs adapter error vs schema issue) is
   follow-up work, same scoping as the four prior sibling docs.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Root-cause the recurring `mdps-tradfi-`/`tradfi-bf-` non-OOM `exit_code=1` pattern** — FIVE
+      same-shape pages in under 48h (this doc + the four `related:` sibling docs above) with no `run.log` pull yet on
+      any of them. Pull `run.log` for at least this VM (`mdps-tradfi-2025-20260815-020059`,
+      `gs://deployment-scripts-<project>/vm-logs/mdps-tradfi-2025-20260815-020059/run.log`, via UTL's
+      `download_from_storage`/`get_storage_client`, never subprocess `gsutil`), diagnose the shared root cause across
+      the family, and fix it in the launcher/adapter. Was recommendation A in this doc's "Recommended decision"
+      section (converted to a tracked todo per the workspace's "every follow-up is a `- [ ]` todo, never prose" hard
+      rule) — was PAGED to the operator via `/api/slots/6/blocked` (`BLK-8dd12ae8`) but no answer surfaced before the
+      orchestrator API became unreachable (see Progress Log); still needs an answer/action.
+
 ## Recommended decision
 
 A: Operator (or a devops-role worker) pulls `run.log` for `mdps-tradfi-2025-20260815-020059`

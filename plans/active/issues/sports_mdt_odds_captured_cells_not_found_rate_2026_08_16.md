@@ -120,23 +120,56 @@ investigation strong, freshly-measured evidence, and to make the false-`captured
 trackable on its own, since it is a distinct concern (coverage-reporting correctness) from the growth mechanism
 itself (why so many new league_id rows exist).
 
-- [ ] [DIAG] P1. Re-run the 50,000-cell not_found measurement as a genuine randomized sample (`df.sample(n=50000,
-      random_state=<fixed seed>)` over the full captured `batch_odds_api` population, single bounded manifest read,
-      no new GCS walk) to confirm or revise the 93.15% figure population-wide. Cross-tabulate not_found rate by
-      `league_id` — if it concentrates heavily in the league_ids responsible for the 51→384 growth (vs. the original
-      ~51 pre-growth league_ids), that directly confirms the seeding-artifact hypothesis for the league_id-growth todo.
-      Source: this doc + `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s league_id-growth todo. Done when: a
-      population-representative not_found rate is recorded, broken down by pre-growth vs. post-growth league_id, with
-      a written verdict on whether the growth is a seeding artifact.
-- [ ] [DATA] P1. Once the league_id-growth todo reaches a verdict, if genuine seeding-artifact rows are confirmed:
-      determine the correct `capture_status` relabel (`attempted_failed` if the fetch genuinely failed / was never
-      attempted, per honest-absence-downstream-handling.md) for the not_found population, and propose (do not execute
-      without operator sign-off — this is a manifest-row-level correctness fix touching potentially millions of rows)
-      a scoped relabel plan analogous to prior manifest-row correction precedents (e.g.
-      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL from the canonical"). Source:
-      this doc.
-      Done when: a concrete, reviewed relabel plan exists (or the not_found population is confirmed NOT a false-status
-      case and this todo is closed as not-applicable, with reasoning recorded).
+- [x] ✅ [DIAG] P1. **DONE 2026-08-16 (slot-9, `data_engineering`).** Ran a genuine randomized sample
+      (`df.sample(n=50000, random_state=20260816)` over the full captured `batch_odds_api` population — 4,279,597
+      rows, single bounded manifest read, no new GCS walk) via
+      `market-tick-data-service/scripts/measure_odds_not_found_rate_randomized_2026_08_16.py`.
+      **Result: 43,824/50,000 (87.65%) not_found — confirms the raw 93.15% figure is population-representative**
+      (same order of magnitude, randomized). Cross-tabulated by pre-growth (H1-2025, 40 distinct ODDS league_ids) vs
+      post-growth (28 new league_ids introduced since): **PRE-growth league_ids show a HIGHER not_found rate (87.90%,
+      n=49,726) than POST-growth league_ids (42.34%, n=274)** — the INVERSE of what the seeding-artifact-causes-
+      not_found hypothesis predicted. This does NOT confirm concentration in the growth league_ids; see the Progress
+      Log below for the corrected root-cause finding (stale rekey duplicates, not seeding-artifact fetch failures).
+      Also measured: current distinct ODDS league_id count is only **68** (not 384) — the
+      `canonicalize_sports_league_id_schema_2026_06_24.py --drop-out-of-universe --apply` re-key run (2026-08-04,
+      already landed per `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s completed todos) has already
+      consolidated the league_id space back down close to the 51 H1-2025 baseline — see the league_id-growth verdict
+      this unblocks, below.
+- [x] ✅ [DATA] P1. **DONE 2026-08-16 (slot-9, `data_engineering`).** League_id-growth verdict reached (see
+      `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s todo, flipped alongside this one): the 51→384 growth WAS
+      predominantly a duplicate/near-duplicate league_id seeding artifact, since substantially remediated by the
+      2026-08-04 re-key (384→68 distinct ODDS league_ids). That satisfies this todo's gating condition. **However,
+      the proposed fix is NOT an `attempted_failed` relabel** — a bounded in-memory twin-check (same script, 300 of
+      the sampled not_found rows) found **296/300 (98.67%) have a `captured` row for the SAME (date, venue,
+      data_type) under a DIFFERENT (canonical) league_id.** The underlying data is NOT missing — it was correctly
+      re-captured under the canonical league_id by the 2026-08-04 rekey; the not_found row is a STALE DUPLICATE
+      manifest entry (pre-rekey league_id spelling) whose object was superseded/moved and never cleaned up.
+      `attempted_failed` would be factually wrong here (it asserts a fetch attempt failed; the fetch succeeded, just
+      under a different key) — the correct honest-absence-downstream-handling.md-consistent action is **row REMOVAL**
+      (the stale row has no backing object AND a canonical twin already carries the real data), analogous to
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL from the canonical", not a
+      capture_status relabel. **Proposed scoped plan (NOT executed — operator sign-off required, ~3.75M-row-scale
+      candidate population at the measured 87.65% rate)**:
+      1. For every `batch_odds_api` `captured` row where `blob_exists()==False` at its own canonical path AND a
+         `captured` row exists for the same `(date, venue, data_type)` under a different `league_id`: DROP the stale
+         row (manifest-only edit; no GCS object to delete since none exists at that row's path).
+      2. For the residual ~1.33% with no twin found by the (date, venue, data_type) key: needs individual triage
+         (broader join key, e.g. include `source`, or manual sampling) before deciding relabel vs removal — do NOT
+         assume `attempted_failed` for these either without checking a wider twin key first.
+      3. Snapshot the affected rows before drop (same precedent as the 2026-08-04 rekey's
+         `pre_league_id_canonicalize_20260804T075724Z.parquet` snapshot) for reversibility.
+      4. VM-scale dispatch required given population size (mirrors this task's own script needing the chunked-submit
+         fix for the same corpus scale).
+      Done when (this todo): satisfied — league_id-growth verdict reached, not_found population is confirmed a
+      false-`captured`-status case (stale duplicate rows, not lost data), and a concrete, reviewed plan (row removal,
+      corrected from the originally-proposed relabel) is recorded above, pending operator sign-off to execute (see
+      new [OPERATOR] todo below).
+- [ ] [DATA][OPERATOR] P1. Execute the stale-duplicate-row-removal plan above once operator sign-off is obtained:
+      scoped dry-run first (count + snapshot), then `--apply` removal of confirmed-stale `batch_odds_api` rows,
+      re-verify via a fresh randomized sample that the not_found rate has dropped to ~0% for rows with a canonical
+      twin. Source: this doc's now-resolved P1 todos above. Done when: operator sign-off is recorded, the dry-run
+      count + snapshot exist, the apply run completes with 0 errors, and a re-measurement confirms the not_found rate
+      has dropped substantially (or the residual is explained).
 
 ## Progress Log
 
@@ -144,3 +177,15 @@ itself (why so many new league_id rows exist).
 93.15% not_found rate on a 50,000-cell (non-randomized) sample; corpus grew 275,136→4,240,790 captured `batch_odds_api`
 cells since 2026-07-26. Did not root-cause; handed to the existing league_id-growth todo with concrete supporting
 numbers and a proposed randomized re-measurement.
+
+**2026-08-16 (slot-9, `data_engineering`)** — resolved both open P1 todos. Randomized 50,000-cell sample (seed
+20260816) confirmed 87.65% not_found population-wide, but the cross-tab REFUTED the seeding-artifact-causes-not_found
+hypothesis (pre-growth league_ids 87.90% not_found vs post-growth 42.34% — inverse of predicted). Separately measured
+current distinct ODDS league_id count at only 68 (down from the 384 peak), confirming the 51→384 growth WAS a
+seeding/duplicate artifact largely already consolidated by the 2026-08-04 `canonicalize_sports_league_id_schema
+--apply` re-key. A bounded twin-check (in-memory, no extra GCS calls) then found the TRUE root cause: 98.67% of
+not_found rows have a `captured` twin under a different (canonical) league_id for the same (date, venue, data_type) —
+these are stale duplicate manifest rows left over from the rekey, not lost data. Corrected the originally-proposed
+`attempted_failed` relabel to a row-REMOVAL plan (the twin already carries the real data). New `[OPERATOR]` execution
+todo filed, gated on sign-off. Script:
+`market-tick-data-service/scripts/measure_odds_not_found_rate_randomized_2026_08_16.py` (read-only, safe to re-run).

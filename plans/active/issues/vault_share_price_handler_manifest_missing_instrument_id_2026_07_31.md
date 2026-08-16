@@ -141,11 +141,51 @@ for this exact multi-instrument-per-group shape.
       `capture_status=captured` rows carry a well-formed lowercased `instrument_id`. MORPHO_VAULTS has ZERO
       vault_share_price manifest rows of any kind after 2026-08-04 — not a fix-verification failure, a separate capture
       gap (see new follow-up below).
-- [ ] [DATA] P3. **MORPHO_VAULTS vault_share_price has captured zero manifest rows since 2026-08-04** — diagnose whether
+- [x] ✅ [DATA] P3. **MORPHO_VAULTS vault_share_price has captured zero manifest rows since 2026-08-04** — diagnose whether
       the cron/handler is failing silently for this venue specifically (permission error, catalogue lookup gap, RPC
       failure) or the venue was deliberately paused; the other 4 vault_share_price venues (MAKER/YEARN_V3/ ETHENA/FRAX)
-      are all capturing normally in the same window. (repo: market-tick-data-service)
+      are all capturing normally in the same window. (repo: market-tick-data-service) —
+      market-tick-data-service@1a4db09a9d. Root-caused 2026-08-16 (slot-24): NOT a capture failure. The handler writes
+      real, correct parquet objects to GCS every day (confirmed 2026-08-01 through 08-14, 2 objects/day under
+      `raw_tick_data/by_date/day=<D>/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=MORPHO_VAULTS/...`), but
+      `"MORPHO_VAULTS"` (underscore) is a registered UAC `DEPRECATED_DEFI_GHOST_VENUE_NAMES` entry, superseded by
+      canonical `"MORPHOVAULTS"` (no underscore) — the manifest consolidator silently drops its rows at merge time, so
+      the venue read as "never capturing" even though it ran successfully every day. The sibling YEARN_V3 spelling was
+      already canonical (kept its underscore); MORPHO_VAULTS was the one gap. Fixed both `_VAULTS` entries
+      (`steakUSDC`, `GTUSDCP`) in `vault_share_price_handler.py` to `protocol="MORPHOVAULTS"`, corrected the misleading
+      comment above `_VAULTS` that had implied both were already canonical, and added a regression test
+      (`test_no_vault_protocol_uses_a_deprecated_ghost_venue_name`) asserting no `_VAULTS` entry uses a
+      `DEPRECATED_DEFI_GHOST_VENUE_NAMES` token. Only affects rows written going forward under the new spelling; the
+      historical GCS objects/manifest rows under the old `MORPHO_VAULTS` spelling (2026-05-01 onward) are untouched by
+      this commit — see new Follow-up below for that migration.
+
+## Follow-ups (new)
+
+- [ ] [DATA] P3. **Migrate historical MORPHO_VAULTS-spelled GCS objects + manifest rows to canonical MORPHOVAULTS**
+      (2026-05-01 through 2026-08-16, ~3.5 months) — the existing
+      `market-tick-data-service/scripts/rename_vault_venue_canonical.py` "Phase 1.5a-3" one-off only rewrites the
+      manifest `venue` COLUMN in `_index/availability_index.parquet`; it does NOT touch the underlying GCS object
+      paths/content (which still embed `venue=MORPHO_VAULTS` in the path and filename). A correct fix needs a proper
+      path+content+manifest migration (copy/rewrite objects under the new venue segment, then update or regenerate the
+      manifest rows), not just the manifest-only rename. Follow delete-safety protocol for any old-path object removal
+      once the new-path copies are verified. (repo: market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: Fix shipped at b0909a5e but Progress Log explicitly leaves status open:
 > 'Verification of the next NATURAL fresh capture ... is still outstanding' — live post-fix manifest-row confirmation
 > not yet observed.
+
+- **2026-08-16 (slot-24, data_engineering craft)**: root-caused and fixed the MORPHO_VAULTS zero-capture follow-up
+  (task `vault_share_price_handler_manifest_missing_instrument_id-f27451ef0961`). Initial investigation used a GCS
+  prefix missing the `pipeline_mode=batch_onchain_rpc/` path segment (sits between `day=` and `asset_group=` in the
+  canonical layout) and produced a false "0 objects" read, which briefly pointed the investigation at the wrong
+  hypothesis (RPC/write/schema layers — all independently verified healthy). Corrected the prefix and confirmed real
+  parquet objects exist for every day 2026-08-01 through 08-14. Actual cause: `"MORPHO_VAULTS"` is a UAC
+  `DEPRECATED_DEFI_GHOST_VENUE_NAMES` entry, silently dropped by the manifest consolidator at merge time — a
+  venue-canonicalization gap in the writer, not a capture/scheduling/credential failure. Shipped
+  `market-tick-data-service@1a4db09a9d` (code fix + comment fix + regression test), Pass-1 `quality-gates.sh` green,
+  ancestry-verified on `origin/live-defi-rollout`. Push was delayed ~15+ min by sustained multi-slot QG-governor
+  contention on this repo (sentinel invalidated repeatedly by peer pushes, `market-tick-data-service` sub-cap 1
+  queued 500+s more than once) — resolved by retrying once contention eased rather than force-pushing or bypassing
+  the gate. Filed the historical GCS-path+manifest migration (the pre-fix `MORPHO_VAULTS`-spelled backlog,
+  2026-05-01 onward) as a new, distinct Follow-up above — the existing `rename_vault_venue_canonical.py` script is
+  manifest-column-only and insufficient alone. Status stays `open` pending that follow-up.

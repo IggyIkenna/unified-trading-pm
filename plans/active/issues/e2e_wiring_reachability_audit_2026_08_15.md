@@ -220,11 +220,15 @@ new scope, not a wiring bug in what already exists.
 - [ ] [OPERATOR] P0. **Rule on the close-all contract** — new `/api/orders` endpoint in execution-service, or migrate
       `close_all/*` onto `/manual/instruction`? Both halves currently pass their own tests while the seam is broken.
       **Note 2026-08-15**: a ruling on this exact question is already recorded below, § "CLOSE-ALL RULING (operator,
-      2026-08-15)" — migrate onto `/manual/instruction`. This todo stays open only because the ruling's implementation
-      (the next todo) has not shipped.
-- [ ] [AGENT] P0. **Implement whichever side the ruling picks, and add the missing HTTP-level test** — the defect
-      survived because nothing exercises strategy→execution over the wire. A contract test that would have failed here
-      is worth more than the fix.
+      2026-08-15)" — migrate onto `/manual/instruction`. **The implementation has now shipped (next todo, ✅)** —
+      this todo stays open only pending an operator's explicit close-out of the ruling itself, not for any remaining
+      work.
+- [x] [AGENT] P0. ✅ **Implement whichever side the ruling picks, and add the missing HTTP-level test** —
+      `strategy-service@701dce1850` (close_all request-shape mapping onto `POST /manual/instruction`) +
+      `execution-service@3800849e87` (the HTTP-level contract test, FastAPI `TestClient` against the real router,
+      including a regression guard that `GET`/`POST /api/orders` still 404s — the exact seam whose absence let this
+      survive). The defect survived because nothing exercised strategy→execution over the wire; this test is worth
+      more than the fix.
 - [x] [AGENT] P0. ✅ **Re-derived the execute-side tier table on CALLER-GRAPH reachability** — see § "Re-derived
       reachability table (2026-08-15, session 5)" above. **6 of 32 connector modules (19%) are genuinely
       reachable-and-live**; the prior "~16 genuinely live" figure measured write-path-realness only. Client artifacts
@@ -259,20 +263,35 @@ new scope, not a wiring bug in what already exists.
       Shrinking-ratchet baseline is a NAME SET, not a count (unlike `check_pytest_unit_dir_coverage.py`'s), so
       swapping one gap for a different one still fails. `features-service`'s per-domain `*_REGISTRY` family is the
       natural next batch of registry-mode targets — noted in-code, not added speculatively (unmeasured).
-- [ ] [AGENT] P1. **SIT invariant 2 needs a mode axis first** (operator ruling 2026-08-15: build the axis, do not weaken
-      the invariant). `position_interface/` has one boolean per venue and no batch/live/paper distinction anywhere in
-      adapter resolution. Design pass required before the invariant is expressible. Invariants 1+3 already landed
+- [ ] [AGENT] P1. **SIT invariant 2 — the mode-axis PREREQUISITE now exists, wiring the invariant itself is still
+      open.** Operator ruling 2026-08-15: build the axis, do not weaken the invariant. **Done**: `BasePositionAdapter`
+      now carries an explicit `mode: TradingMode` (+ `testnet` as the PAPER sub-mode selector), resolved per
+      adapter-construction rather than a service-global, and `reconciliation_engine.py` gained a `leg:
+      ReconVerdictType` guard so a paper-vs-batch (determinism) failure and a paper-vs-live (execution) failure alert
+      differently (`strategy-service@701dce1850`). **Not done**: the invariant itself — "assert a reader exists for
+      each mode a slot actually runs in" — is not yet wired into
+      `system-integration-tests/scripts/run_cross_repo_invariants.sh` as `INV-2x`. Invariants 1+3 already landed
       (`system-integration-tests@da65ae1`); invariant 3 was itself found deficient on review 2026-08-15 (compared
       venue names not instruction actions, never checked `supports_live`) and rewritten
       (`unified-api-contracts@e9201d80`). Invariant 4 (UAC↔execution LST address drift) is also landed
       (`unified-api-contracts@e9201d80`, `system-integration-tests@c30e412851`) — narrowed mid-session to just
       `mSOL`/SOLANA after Chunk A's address migration landed concurrently for all 6 ETHEREUM addresses
-      (`execution-service@d981725c2`). Invariant 2 (this todo) remains the only one still blocked on the mode-axis
-      design pass.
-- [ ] [AGENT] P1. **Build the 4 bespoke position readers** — Morpho health factor, Pendle maturity, Symbiotic + Karak
-      withdrawal queues. A bare token balance MISREPRESENTS these rather than merely missing them.
+      (`execution-service@d981725c2`). Invariant 2 is now unblocked, not yet shipped.
+- [x] [AGENT] P1. ✅ **Build the 4 bespoke position readers** — `strategy-service@701dce1850`. Morpho: real health
+      factor via `position()`/`market()`/oracle `price()` on-chain reads (function selectors verified via
+      `eth_utils.keccak`, not guessed). Pendle: PT-token balance + maturity, `position_type` liquid/locked by maturity
+      vs now. Symbiotic + Karak: vault-share balance + withdrawal-delay metadata, honest-scope (no in-progress
+      withdrawal-request tracking claimed). All 4 return `DeFiLendingPosition`/`DeFiStakingPosition` via
+      `get_normalized_positions()`, not a bare `CanonicalBalance` — a raw token balance MISREPRESENTS a leveraged
+      health-factor position or a maturity-bearing PT token, which is exactly why this todo existed.
 - [x] [AGENT] P1. ✅ **Migrate execution-service protocol modules onto the UAC LST address SSOT** —
-      `execution-service@<pending>` (this session). The 6 addresses that existed in both places
+      `execution-service@d981725c2` (landed by a concurrent session in this checkout while this exact migration was
+      independently being written here too; reconciled via rebase — their version is strictly the more complete one
+      (adds a shared fail-loud `required_lst_address()` helper in `_evm_generic.py` and also covers `symbiotic.py`,
+      neither of which this session's draft had), so it was taken as-is rather than merged piecemeal; this session's
+      distinct, non-overlapping contribution — the `quote_maintenance.py` docstring correction and the close-all HTTP
+      contract test above — carried through the reconciliation onto `execution-service@3800849e87`). The 6 addresses
+      that existed in both places
       (`unified_api_contracts.registry.lst_token_addresses.LST_TOKEN_ADDRESS_BY_CHAIN["ETHEREUM"]`: `stETH`, `wstETH`,
       `rETH`, `weETH`, `ezETH`, `pufETH`) are now sourced by direct dict lookup from that SSOT in `lido.py`,
       `rocket_pool.py`, `etherfi.py`, `renzo.py`, `puffer.py` — the class attribute names (`STETH_ADDRESS`, etc.) are
@@ -726,6 +745,21 @@ rendered as a broken grid, because that component expects `div > b + span`.
 4. **State which property you measured.** "Write path is real" and "reachable in production" are different claims and
    this corpus has conflated them repeatedly.
 
+- [ ] [AGENT] P1. **Resolve which FastAPI app execution-service's Dockerfile actually deploys** — found 2026-08-15/16,
+      not yet chased. `execution_service/api/main.py` (a bare health-only app, `/health`+`/readiness` only) is what the
+      Dockerfile's `CMD` serves via uvicorn. `execution_service/api/app.py` — the richer app with `/manual`,
+      `/preview`, the evidence router, kill-switch, and the hyperliquid/bybit perp-hedge startup wiring
+      (`@app.on_event("startup")`) this doc and its siblings treat as "the" production reachability boundary — is a
+      DIFFERENT module. `cloudbuild.yaml` only builds/pushes the image; it does not `gcloud run deploy`, so which app
+      actually serves live traffic is resolved elsewhere (deployment-service/deployment-api), not verified this
+      session. Every reachability claim in this doc and `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
+      that treats `api/app.py`'s startup wiring as a production entry point is currently UNVERIFIED against actual
+      deployment topology — it may be entirely correct (this method matches the doc's own stated "how to verify a
+      reachability claim" method above, § step 1: `FastAPI(...)` instantiation, and app.py IS a real FastAPI
+      instantiation reachable via `python -m uvicorn` even if not the Dockerfile's default `CMD`), but the gap should
+      be closed with a direct check (`/codex/04-architecture/runtime-deployment-topology.md` §5, or a live check of
+      the deployed Cloud Run service's actual entrypoint) rather than left assumed.
+
 ## Progress Log
 
 - **context-scout 2026-08-15**: populated context_scope (5 entries).
@@ -745,3 +779,42 @@ rendered as a broken grid, because that component expects `div > b + span`.
   point) — did not chase which one Cloud Run actually deploys (deployment-topology question, out of this session's
   scope); flagged here so a future session doesn't re-derive reachability against the wrong app file without knowing
   this ambiguity exists.
+- **session 6, 2026-08-16**: shipped the mode-axis DESIGN PASS (`strategy-service@701dce1850`): `BasePositionAdapter`
+  gained an explicit `mode: TradingMode` + `testnet` (PAPER sub-mode selector), resolved per adapter-construction;
+  `reconciliation_engine.py` gained a `leg: ReconVerdictType` guard (paper-vs-batch = determinism check, paper-vs-live
+  = execution check — different meanings on failure); close_all migrated onto `POST /manual/instruction` with request-
+  shape mapping (`strategy-service@701dce1850`) + an HTTP-level contract test proving it, including a regression guard
+  that `/api/orders` still 404s (`execution-service@3800849e87`); the dual position-resolver (FINDING 4) unified —
+  `routing.create_position_adapter` now delegates to `factory.get_position_adapter` instead of carrying a parallel,
+  zero-caller implementation; and the 4 bespoke DeFi readers (Morpho health factor, Pendle maturity, Symbiotic + Karak
+  withdrawal-delay metadata) shipped, all real reads with machine-verified function selectors, not stubs.
+  **Reconciled two independent same-goal collisions from concurrent sessions in this shared checkout, rather than
+  overwriting either side**: (1) `execution-service@d981725c2` did the identical LST-address-SSOT migration this
+  session was also mid-writing — their version was strictly more complete (a shared `required_lst_address()` helper +
+  `symbiotic.py` coverage this session's draft lacked), so it was taken as-is, with this session's non-overlapping
+  `quote_maintenance.py` fix and the new contract test carried through onto the same commit chain
+  (`execution-service@3800849e87`). (2) `strategy-service@70c3c05f` (Kamino bespoke position adapter, an unrelated
+  concurrent effort) touched the same `capabilities.py`/`factory.py` dispatch tables this session's mode-axis rewrite
+  also touched — merged additively (both venue lists combined) and, since `KaminoPositionAdapter` predated the mode
+  axis and had no `mode`/`testnet` params at all, extended it to accept and thread them through consistently with
+  every other adapter, rather than leaving it as a silent mode-unaware exception inside a capabilities table that
+  claimed full mode coverage for it. Both reconciliations were done in an isolated `git worktree` (never touching the
+  shared checkout's live/dead foreign WIP directly — README.md/config.py/nav_snapshot_publisher.py/
+  webhook_dispatcher.py + 2 new docs sat dirty from another concurrent session throughout, checked for liveness via
+  mtime each time before ever stashing them, restored via `stash pop` once the reconciled commit was pushed), then the
+  reconciled commit was replayed into the real checkout once the foreign WIP tested dead (>120s stale) so the
+  baseline-ratchet quality gates (which key off the checkout's directory basename) would resolve against the correct
+  scope name rather than the worktree's differently-named one — the first gate run against a mismatched worktree name
+  produced a false pass (STEP 5.101/5.107 baseline lookups silently resolved to an empty/zero baseline for the unknown
+  scope name, making legitimate pre-existing findings look new; re-run against the correctly-named checkout to get a
+  trustworthy result). **Root-caused and reported (not authored — landed independently by another party mid-session,
+  `unified-trading-pm@bea0594fd2`) two host-wide QG-governor bugs** that stalled every `unified-api-contracts`
+  quickmerge on this host for 2-4 hours: the reservation-mode heavy-phase gate's repo-identity resolution silently fell
+  through to the literal string `"unknown"` (neither `QG_GOVERNOR_REPO` nor `SERVICE_NAME` is ever set by any caller),
+  inflating every run's RAM reservation to the 5.5 GB worst-case default regardless of the repo's real (much smaller)
+  measured baseline; separately, the total-instance gate's acquire loop had no bound, so a process that won a lock but
+  hit a control-flow bug before recognizing it would spin printing "queued Ns" forever while still holding the real
+  kernel-level flock (confirmed via `lsof` on two independent stuck PIDs, one 1h10m stale, one 4h17m stale, both
+  terminated by hand after confirming zero CPU and zero forward progress) — both fixed upstream mid-session (60-minute
+  hard bound on the acquire loop; the repo-identity resolver now falls back to the same git-based `_qg_repo_name()`
+  auto-detection the total-instance gate already used correctly).

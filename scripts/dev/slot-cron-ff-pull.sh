@@ -412,6 +412,31 @@ _check_lockfile_drift() {
     printf '%s' "${hash}" > "${state_file}" 2>/dev/null || true
 }
 
+_clear_stale_index_lock() {
+    # A crashed/killed git process (this cron itself, a concurrent quickmerge run, or the
+    # operator's own terminal/editor) can leave .git/index.lock behind, which then silently
+    # blocks EVERY future git write in this clone — fetch, merge, even `git status` in some
+    # paths — with no distinguishing error surfaced to the caller (`git merge --ff-only ...
+    # 2>/dev/null` just falls into the generic [skip:ff-failed] branch forever, indistinguishable
+    # from a real conflict). Incident: unified-trading-system-ui/.git/index.lock sat for 3 days
+    # (2026-08-13 → 2026-08-16), silently blocking every Cursor sync AND this cron's own FF
+    # attempts, discovered only when the operator asked why Cursor couldn't sync. Same threshold
+    # as the dirty-WIP liveness gate elsewhere in this script (mtime <120s → PROTECT, could be a
+    # live git process actually writing the index right now).
+    local repo_name="$1" lock=".git/index.lock" age
+    [[ -f "${lock}" ]] || return 0
+    age=$(( $(date +%s) - $(stat -f %m "${lock}" 2>/dev/null || stat -c %Y "${lock}" 2>/dev/null || date +%s) ))
+    if [[ "${age}" -lt 120 ]]; then
+        log "[lock:live] ${repo_name} — .git/index.lock is ${age}s old, within the live-write window; leaving it"
+        return 1
+    fi
+    if lsof -- "${lock}" >/dev/null 2>&1; then
+        log "[lock:held] ${repo_name} — .git/index.lock is ${age}s old but a process still has it open; leaving it"
+        return 1
+    fi
+    rm -f "${lock}" && log "[lock:cleared] ${repo_name} — removed a stale .git/index.lock (${age}s old, no process holding it)"
+}
+
 _refresh_independent_clone_ref() {
     # Path-B fix (2026-06-12): advance an independent slot clone's
     # refs/remotes/origin/<branch> from its --reference (main-workspace) clone, whose ref was
@@ -508,6 +533,11 @@ ff_one() {
     # git/dirty/throttle outcome below (pure local file reads, no network; see the function's
     # own comment for the full rationale).
     _check_lockfile_drift "${repo_name}" "${repo_key}"
+
+    # Stale .git/index.lock guard — also unconditional/every-tick, same reasoning: a lock left
+    # by a crashed process silently blocks every git write below (fetch AND merge) with no
+    # distinguishable error, so this must run before Step 2's fetch even attempts anything.
+    _clear_stale_index_lock "${repo_name}"
 
     # Min-interval throttle (widen-pm-cron-cadence_2026_07_27): skip this repo entirely,
     # before any other per-repo work, if it was processed more recently than its configured

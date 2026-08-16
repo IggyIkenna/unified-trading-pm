@@ -183,7 +183,7 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
 
 ## Todos
 
-- [ ] [SCRIPT] P2. `lc_verify_tarball_freshness`'s `auto` mode (deployment-service `scripts/vm/lib/launcher_common.sh`)
+- [x] ✅ [SCRIPT] P2. `lc_verify_tarball_freshness`'s `auto` mode (deployment-service `scripts/vm/lib/launcher_common.sh`)
       races under high branch churn: it republishes stale tarballs pinned to the workspace's CURRENT HEAD, then
       re-verifies against a FRESH read of that same HEAD — on a fast-moving shared branch (confirmed here for
       `unified-trading-library`/`unified-api-contracts`/`market-tick-data-service`/`deployment-service`, all
@@ -192,13 +192,20 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
       for the HEAD it was built against. Same class as
       `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`. Fix: capture `expected_sha` ONCE
       before republish and re-verify against that CAPTURED value (not a fresh `git rev-parse HEAD`), or accept a
-      recently-uploaded tarball whose manifest sha matches the sha the republish step itself just built against.
-- [ ] [SCRIPT] P3. Same function's final "still stale" error message (the `auto`-mode branch, `launcher_common.sh`
+      recently-uploaded tarball whose manifest sha matches the sha the republish step itself just built against. —
+      **deployment-service@fb55e8ac35**: refactored the auto-mode re-verify to capture `expected_sha` once per repo
+      during the initial scan and reuse those captured values (never a fresh `git rev-parse`/`fetch` HEAD read) for
+      the post-republish re-verify; factored the manifest-compare logic into `_lc_tarball_manifest_matches` so both
+      the initial scan and the re-verify share one comparison path. 25/25 tarball/freshness unit tests green, full
+      `quality-gates.sh` green (280s), landed via quickmerge.
+- [x] ✅ [SCRIPT] P3. Same function's final "still stale" error message (the `auto`-mode branch, `launcher_common.sh`
       ~line 1149) names the ORIGINAL full `$stale_repos` set rather than just the repos that actually failed the
       post-republish re-verify — confirmed live this session: `market-data-processing-service` individually printed
       `tarball fresh` on re-verify yet was still listed in the aggregate "auto-republish completed but tarball(s) still
       stale" error. Cosmetic (doesn't change the abort/proceed decision) but misleads whoever reads the error into
-      re-investigating an already-fine repo.
+      re-investigating an already-fine repo. — **deployment-service@fb55e8ac35**: fixed incidentally by the P2 refactor
+      above — the re-verify now tracks a `still_stale` set built per-repo from actual re-verify results, so the final
+      error names only the repos that genuinely failed re-verify, not the original full `stale_repos` set.
 - [ ] [OPERATOR] P3. Consider whether `lc_resolve_tarball_sha`/the tarball-publish pipeline should gate a cross-repo
       symbol reference (a UTL commit landing a new `PipelineMode.<X>` reference) on the corresponding UAC commit already
       being tarball-published, closing the failure CLASS this incident hit (not just this one VM) — out of scope for a
@@ -247,3 +254,13 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
   for an already-resolved finding (possible re-fire of the original DP_VM_EXIT_NONZERO event before the first worker's
   relaunch/close registered, or a dedup-window gap in the DP_\* cooldown-map mechanism per
   `/codex/05-infrastructure/data-pipeline-alerts.md` § "Wiring caveat") — not diagnosed further here, one-shot scope.
+- 2026-08-16 (slot-6, infra, dispatched via the gated sports P3 diag task
+  `sports_mdps_forcevm_timeframe_ceiling_crash_untracked_2026_08_16.md`): Fixed both `[SCRIPT]` todos above —
+  `deployment-service@fb55e8ac35` refactors `lc_verify_tarball_freshness`'s auto-mode to capture each repo's
+  `expected_sha` once during the initial scan and re-verify the post-republish state against that CAPTURED value
+  (never a fresh `git rev-parse`/`fetch` HEAD read), closing the republish/re-verify race; factored the manifest
+  compare into `_lc_tarball_manifest_matches` so the initial scan and the re-verify share one comparison path. This
+  incidentally fixes the P3 "still stale" error-message todo too, since the re-verify now tracks per-repo failures
+  directly instead of re-running the whole check against the original `stale_repos` set. 25/25 tarball/freshness unit
+  tests green (`tests/unit/test_vm_launcher_scripts.py -k "tarball or fresh"`), full `deployment-service`
+  `quality-gates.sh` green (280s), shipped via quickmerge. Only the P3 `[OPERATOR]` todo remains open on this doc.

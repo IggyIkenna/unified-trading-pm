@@ -20,7 +20,7 @@ tags: [dependency-management, quality-gates, quickmerge, venv, fastapi, silent-f
 related:
   [
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
     /plans/active/quality_gates_quickmerge_timing_baseline_2026_07_31.md,
@@ -128,12 +128,12 @@ to a different objective:
 
 - `/plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md` (3 mentions — closest to an owner; scoped to
   lifting CVE `--ignore-vuln` entries, not to venv staleness)
-- `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` — correctly identifies
+- `/plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` — correctly identifies
   `fastapi_factory.py` as the importer
 - `/plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` — records the exact `param schema GAP` warning
 - `/plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` — reports a stale **0.135.1** (a
   third version, so the staleness is not uniform across slots/time)
-- `/plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`,
+- `/plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`,
   `/plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`,
   `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` — each calls it "pre-existing"
   and moves on

@@ -1,89 +1,89 @@
 {
   "folders": [
     {
-      "path": "../../",
+      "path": ".",
       "name": "📁 Workspace Root",
     },
     {
-      "path": "../../unified-trading-api",
+      "path": "unified-trading-api",
     },
     {
-      "path": "../../unified-trading-library",
+      "path": "unified-trading-library",
     },
     {
-      "path": "../../unified-trading-pm",
+      "path": "unified-trading-pm",
       "name": "📋 Project Management",
     },
     {
-      "path": "../../unified-trading-ci",
+      "path": "unified-trading-ci",
     },
     {
-      "path": "../../unified-trading-system-ui",
+      "path": "unified-trading-system-ui",
       "name": "🎨 UI",
     },
     {
-      "path": "../../batch-live-reconciliation-service",
+      "path": "batch-live-reconciliation-service",
     },
     {
-      "path": "../../client-reporting-api",
+      "path": "client-reporting-api",
     },
     {
-      "path": "../../deployment-api",
+      "path": "deployment-api",
     },
     {
-      "path": "../../deployment-service",
+      "path": "deployment-service",
     },
     {
-      "path": "../../deployment-ui",
+      "path": "deployment-ui",
     },
     {
-      "path": "../../execution-service",
+      "path": "execution-service",
     },
     {
-      "path": "../../alerting-service",
+      "path": "alerting-service",
     },
     {
-      "path": "../../features-service",
+      "path": "features-service",
     },
     {
-      "path": "../../ibkr-gateway-infra",
+      "path": "ibkr-gateway-infra",
     },
     {
-      "path": "../../instruments-service",
+      "path": "instruments-service",
     },
     {
-      "path": "../../market-data-processing-service",
+      "path": "market-data-processing-service",
     },
     {
-      "path": "../../market-tick-data-service",
+      "path": "market-tick-data-service",
     },
     {
-      "path": "../../ml-service",
+      "path": "ml-service",
     },
     {
-      "path": "../../strategy-service",
+      "path": "strategy-service",
     },
     {
-      "path": "../../system-integration-tests",
+      "path": "system-integration-tests",
     },
     {
-      "path": "../../trading-agent-service",
+      "path": "trading-agent-service",
     },
     {
-      "path": "../../unified-api-contracts",
+      "path": "unified-api-contracts",
     },
     {
-      "path": "../../e2e-testing",
+      "path": "e2e-testing",
       "name": "🧪 E2E Testing",
     },
     {
-      "path": "../../agent-orchestrator",
+      "path": "agent-orchestrator",
     },
     {
-      "path": "../../fund-administration-service",
+      "path": "fund-administration-service",
     },
     {
-      "path": "../../greeks-service",
+      "path": "greeks-service",
     },
   ],
   "settings": {

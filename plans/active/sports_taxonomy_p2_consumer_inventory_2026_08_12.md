@@ -420,7 +420,7 @@ confirmation there (`census_league_vs_league_id_partition_duplication_2026_08_15
 IS canonical** for that raw-tick domain (real per-bookmaker data); `league=` (`pipeline_mode=batch_footystats`,
 mis-stamped 2026-05-05) is the legacy duplicate there. The sweep's purge already ran: 15,154/16,968 legacy `league=`
 raw-tick objects deleted `market-tick-data-service@8a772b3180` (2026-08-15, slot-11); 1,814 no-twin objects
-intentionally left, tracked in `/plans/active/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md`.
+intentionally left, tracked in `/plans/archive/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md` (resolved + archived 2026-08-16).
 
 **Net: no remaining contradiction — the two docs were describing two different path builders for two different data
 domains.** `gcs_paths.py` (this doc's target, `sports_reference/`) → `league=` only, confirmed. MTDS raw-tick odds

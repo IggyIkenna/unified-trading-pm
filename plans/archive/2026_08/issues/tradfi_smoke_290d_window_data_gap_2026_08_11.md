@@ -14,7 +14,7 @@ summary: >-
   attempted_failed; KRX ohlcv_1m has ZERO captured rows (2,564 rows, all empty_confirmed). So the harness is CORRECT and
   the honest signal is "tradfi data does not yet cover the 290-calendar-day window required by driver
   `tradfi_vol_regime_24h_200p`."
-status: open
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [data]
@@ -49,6 +49,13 @@ context_scope:
     e2e-testing/scripts/build_smoke/coverage_harness.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-16 (/plan-reconcile Section 2 pass)** — operator ruling landed 2026-08-12 (Option 1: accept
+> `INSUFFICIENT_HISTORY` until the tracked tradfi backfill work closes the window; see the RULED banner below). This doc
+> is a decision record, not an owner of any tracked action — the actual backfill work (incl. the KRX zero-coverage gap)
+> is owned by `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md` and
+> `/plans/active/data_completion_to_100_all_ag_2026_06_21.md`, neither of which duplicates this doc's content. Nothing
+> left for this doc itself to track; archiving as a closed decision record.
 
 ## Finding
 

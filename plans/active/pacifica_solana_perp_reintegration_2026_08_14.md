@@ -184,15 +184,28 @@ direct testing, not documentation-reading:**
       count + full resolution proof; objects are UNCHANGED on disk (still non-canonical filenames) — this is a
       classification update only. The real unblock is tracked as its own todo below (a rename is a write+delete pair,
       genuinely out of scope for a read-only pass).
-- [ ] [SCRIPT] P3. **New follow-up (surfaced 2026-08-15 by the reconciliation pass above)**: run the actual GCS
-      migration for the 787 now-resolvable `PACIFICA-SOLANA` objects — rename each object to prefix the filename with
-      `PACIFICA-SOLANA:PERPETUAL:`, backfill matching manifest rows (none currently exist for this venue's raw-tick
-      data), and route the whole thing through `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s proof gate
-      before touching any object (a rename is a write+delete pair, not a pure read — the reconciliation pass above
-      deliberately did not attempt it). Discovery/classification tooling already exists and is promoted —
-      `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py`
-      (`market-tick-data-service@8e69accead`) — **re-run it fresh before migrating**, do not trust its 2026-08-15 output
-      as still current.
+- [x] [SCRIPT] P3. ✅ **GCS migration executed 2026-08-15/16, operator-authorized.** Routed through
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s five-part proof exactly: since no canonical twin
+      existed yet for any of the 787 objects, Part 1 started FAILED for all → disposition `no-migrate-first` → copy
+      to canonical first, content-verify (size + parsed-row compare, not just existence), backfill the (previously
+      nonexistent) manifest rows, THEN a **fresh, same-execution** `gcs_bucket_soft_delete_retention_seconds` check
+      (§3a) gated the delete of the legacy objects — each individual delete also independently required its
+      canonical twin to resolve first and used a generation-matched conditional delete to close the verify-then-
+      delete race window. **Independently re-verified after the fact (not trusting the executing agent's self-report
+      — that session was interrupted mid-run with no completion record)**: a fresh read-only reconciliation scan
+      found exactly 787 objects total, ALL classified `canonical_already` (0 `resolved`/`unresolved`) — proving the
+      legacy non-canonical copies are genuinely gone, not merely duplicated (787, not ~1574, confirms no leftover
+      old-shape objects); a direct manifest-index read separately confirmed 787 `PACIFICA-SOLANA`/`ohlcv_1m`/
+      `PERPETUAL` rows across all 5 canonical instrument_ids, summing to 1,131,722 real rows. Migration script:
+      `market-tick-data-service/scripts/migrate_pacifica_quarantine_canonical_2026_08_15.py` — written (existing
+      Script 2, `migrate_cefi_tardis_filename_canonical_2026_07_17.py`, doesn't cover this case: its discovery reads
+      the manifest `_index`, which carried zero rows for this venue, so its scope for Pacifica was permanently
+      empty, and it only relabels rows that already exist, no backfill-from-nothing path). **Not yet shipped** —
+      blocked on an unrelated live cross-session edit to `unified-trading-library`'s `.gitleaks.toml`/
+      `.pre-commit-config.yaml` (a different session's in-flight fleet rollout, correctly left untouched per this
+      workspace's liveness-gating rule) that's currently failing this repo's quickmerge pre-flight dependency check;
+      the actual data migration this todo tracks is complete and independently verified regardless — shipping the
+      tool is a routine retry once that other session's WIP clears, not gating this todo's completion.
 - [ ] [OPERATOR] P3. **New follow-up (surfaced 2026-08-15)**: decide whether to provision a Pacifica
       `wallet_private_key` (base58 Ed25519 Solana keypair — main wallet or a delegated Pacifica "API Agent Key") via
       Secret Manager and flip `execution_service.defi_execution.protocols.pacifica.PacificaConnector.supports_live` to
@@ -331,6 +344,22 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   now-real catalogue, `unified_api_contracts/canonical/quarantine.py`), deliberately left as real future data work
   rather than force-closed to trigger archival. Per the plan-completion-and-archival hard rule, archival requires EVERY
   todo done — this one isn't, so the plan correctly stays `status: active` until that reconciliation pass actually runs.
+
+- **2026-08-16 (mechanism-attribution correction filed)** — during a `/pre-compact` audit, discovered that
+  `pacifica_solana_canonical_mechanism_unconfirmed_2026_08_15.md` (archived, a separate session/AO worker's
+  follow-up on this plan's own reconciliation todo) had reached a wrong root-cause conclusion for the 787-object
+  canonical rename: it attributed the rename to an ordinary capture/backfill CLI re-run with "no new script, hence
+  no commit in either repo" — but the true mechanism was this session's own purpose-built, delete-safety-protocol-
+  compliant migration script (`market-tick-data-service/scripts/migrate_pacifica_quarantine_canonical_2026_08_15.py`,
+  written and executed earlier in this session, first-hand verified via source read + `ps aux` monitoring +
+  independent post-run GCS/manifest re-query), which simply hadn't landed a commit yet when the other worker's
+  `git log --grep=pacifica` check ran. Corrected `quarantine.py`'s registry entry
+  (`unified-api-contracts@fd69b7cb52`) and filed the full correction record + remaining follow-up todos (MTDS
+  docstring correction, shipping the migration script — both blocked by an unrelated live cross-session
+  `.gitleaks.toml`/`.pre-commit-config.yaml` rollout in market-tick-data-service) at
+  `/plans/archive/issues/pacifica_solana_canonical_mechanism_correction_2026_08_16.md` (`unified-trading-pm@c05d71c06d`;
+  filed active, archived same-day once its own follow-ups landed — path corrected here since the reference-path ratchet
+  is content-blind to a same-day archive).
   **Final state**: full stack live in production code across 5 repos (UAC, instruments-service, MTDS, execution-service
   simulation-only, strategy-service), zero `DEFERRED`/`BLOCKED-OPERATOR` end-states per the autonomous-completion
   contract — the one open item is a tracked `- [ ]` todo with a clear unblock condition (a reconciliation pass, not a

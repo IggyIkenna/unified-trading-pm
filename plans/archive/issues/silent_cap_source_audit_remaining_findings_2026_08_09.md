@@ -10,7 +10,7 @@ summary: >-
   tracks the REMAINING findings — either higher-risk (needs a live-schema verification or a query-shape redesign before
   touching), lower-priority (dormant code / low real-world exposure), or needing a closer manual read the time-boxed
   audit couldn't complete.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting, defi, prediction, sports]
 stage: [data]
@@ -29,7 +29,7 @@ parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
-resolved_by:
+resolved_by: market-tick-data-service@102a66de38
 locked_by:
 locked_since:
 source:
@@ -54,6 +54,13 @@ context_scope:
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-16** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Every todo shipped, most recently the `UniswapV3Adapter` item
+> (`market-tick-data-service@102a66de38`, plus its two preceding commits `6da10ad1`/`c6ceadce`) — see that todo's own
+> text for the correction it required (the original finding's repro cited this package's deprecated
+> `_defi_graph_models.py`, not the real `unified_api_contracts.external.thegraph` model the adapter actually imports).
 
 # Silent-cap source audit — remaining findings
 
@@ -311,22 +318,27 @@ findings.
       invariant explicitly and warning any future caller that widens the window/interval to either add real
       multi-request chunking or make the cap-exceeded branch fail loud/route to attempted_failed instead of relying on
       the existing warning-only clip. No behavior change (comment-only), QG green.
-- [ ] [CODE] P3. **`UniswapV3Adapter._download_swaps`/`_download_pool_hourly_data` (market-tick-data-service) crash with
-      `AttributeError` on ANY successful non-empty page — dormant because nothing in production instantiates
-      `UniswapV3Adapter`.** Discovered while adding regression coverage for this doc's Graph-pagination-error-vs-empty
-      todo (item 4, now shipped). `_parse_swap_record` reads `swap.amountUSD`/`swap.sqrtPriceX96`/
-      `swap.transaction.blockNumber` and `_convert_v3_hourly_item` reads `item.periodStartUnix` etc., but the backing
-      pydantic models (`GraphUniswapSwap`/`GraphSwapTransaction`/`GraphPoolHourData` in `_defi_graph_models.py`) declare
-      those fields under their snake_case Python name with a camelCase GraphQL `alias` (e.g.
-      `amount_usd: ... = Field(alias="amountUSD")`) — pydantic v2 attribute access uses the field name, not the alias,
-      so `swap.amountUSD` raises `AttributeError` (confirmed via a live `.venv` repro, not just a read). Live V3
-      swap/hourly capture is unaffected TODAY because `dex_swaps_handler.py`'s cascade
-      (`build_swaps_cascade`/`_dex_swaps_queries.py`) is the actual production path for Uniswap V3 and does not use this
-      adapter class — `grep -rn "UniswapV3Adapter("` outside its own file hits only one test file. Repo:
-      market-tick-data-service. Done when: every aliased-model attribute access in `_parse_swap_record` and
-      `_convert_v3_hourly_item` is switched to the model's actual (snake_case) field name, and a regression test
-      exercises `_download_swaps`/`_download_pool_hourly_data` with a non-empty page (previously impossible without
-      hitting this crash) to prove the class is safe if it's ever wired into production.
+- [x] ✅ [CODE] P3. **`UniswapV3Adapter._download_swaps`/`_download_pool_hourly_data` — CORRECTION: the described
+      `AttributeError` does not reproduce against the model this adapter actually imports.** The original finding's
+      repro cited `_defi_graph_models.py` (this package's own copy, snake_case-field + `alias="camelCase"`) — but
+      `uniswap_v3_adapter.py` imports `GraphUniswapSwap`/`GraphSwapTransaction`/`GraphPoolHourData` from
+      `unified_api_contracts.external.thegraph` instead (`_defi_graph_models.py` is dead code per its own
+      "TODO(GH-BACKLOG): replace with UAC imports and delete" docstring). UAC's models declare these fields as the
+      literal camelCase GraphQL name directly — no alias — so `swap.amountUSD`/`item.periodStartUnix`/etc. (the
+      ORIGINAL, pre-this-todo code) were already correct. A first attempt (market-tick-data-service@6da10ad1) "fixed"
+      the code to snake_case attribute access, matching the wrong (unused) model, which broke the adapter against its
+      real import — caught live by the new regression tests themselves (`AttributeError: 'GraphPoolHourData' object
+      has no attribute 'period_start_unix'. Did you mean: 'periodStartUnix'?`) before shipping further, then corrected
+      (`market-tick-data-service@c6ceadce` reverts to camelCase against the real UAC model + rewrites the existing
+      `test_uniswap_v3_bar_edge.py` fixtures to build real `unified_api_contracts` model instances instead of the
+      deprecated local module; `market-tick-data-service@102a66de38` fixes a wrong test assertion — UAC's
+      `GraphPoolHourData` doesn't declare `feeGrowthGlobal0X128`/`1X128` at all, so the adapter's output has always
+      silently carried `"0"` for those two regardless of the wire value, a genuine but separate, out-of-scope-here gap
+      that would need a UAC schema change). Full regression coverage now exists exercising `_download_swaps`/
+      `_download_pool_hourly_data` end-to-end with a non-empty page against the real model (previously untested in
+      either direction) — QG green, 10934 passed. `UniswapV3Adapter` remains dormant (nothing in production
+      instantiates it; `dex_swaps_handler.py`'s cascade is the real V3 swap/hourly path), so this closes as "already
+      safe, now proven" rather than "bug fixed."
 
 ## Progress Log (append-only)
 

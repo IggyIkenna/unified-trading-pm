@@ -336,3 +336,74 @@ class TestMainWarnOnlyRawImport:
         captured = capsys.readouterr()
         assert exit_code == 0
         assert captured.err == ""
+
+
+# ── Tests: main — strategy-service -> MTDS is HARD-FAILED (normalisation rule) ───
+# The "normalisation rule" (2026-08-16 operator ruling,
+# /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md): strategy-service
+# must never import market-tick-data-service directly. This one pair is hard-failed;
+# every other raw cross-service import pair stays WARN-only (see class above).
+
+
+def _make_strategy_mtds_workspace(tmp_path: Path) -> Path:
+    pm_dir = tmp_path / "unified-trading-pm"
+    pm_dir.mkdir()
+    (pm_dir / "workspace-manifest.json").write_text(
+        json.dumps(
+            {
+                "repositories": {
+                    "strategy-service": {"type": "service"},
+                    "market-tick-data-service": {"type": "service"},
+                }
+            }
+        )
+    )
+    return tmp_path
+
+
+class TestMainHardFailedNormalisationRule:
+    def test_strategy_service_importing_mtds_hard_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        workspace = _make_strategy_mtds_workspace(tmp_path)
+        strategy = workspace / "strategy-service"
+        strategy.mkdir()
+        (strategy / "pyproject.toml").write_text('[project]\nname = "strategy-service"\n')
+        (strategy / "engine.py").write_text("from market_tick_data_service.market_interface import CanonicalTick\n")
+        monkeypatch.setenv("REPO_ROOT", str(workspace))
+        monkeypatch.chdir(strategy)
+        exit_code = MOD.main()
+        captured = capsys.readouterr()
+        assert exit_code == 1
+        assert "[FAIL]" in captured.err
+        assert "normalisation rule" in captured.err
+        assert "[WARN]" not in captured.err
+
+    def test_other_service_importing_mtds_still_warn_only(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        # Only the (strategy-service, market-tick-data-service) pair is hard-failed —
+        # e.g. features-service reading MTDS directly stays WARN-only, unaffected.
+        pm_dir = tmp_path / "unified-trading-pm"
+        pm_dir.mkdir()
+        (pm_dir / "workspace-manifest.json").write_text(
+            json.dumps(
+                {
+                    "repositories": {
+                        "features-service": {"type": "service"},
+                        "market-tick-data-service": {"type": "service"},
+                    }
+                }
+            )
+        )
+        features = tmp_path / "features-service"
+        features.mkdir()
+        (features / "pyproject.toml").write_text('[project]\nname = "features-service"\n')
+        (features / "engine.py").write_text("import market_tick_data_service\n")
+        monkeypatch.setenv("REPO_ROOT", str(tmp_path))
+        monkeypatch.chdir(features)
+        exit_code = MOD.main()
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "[WARN]" in captured.err
+        assert "[FAIL]" not in captured.err

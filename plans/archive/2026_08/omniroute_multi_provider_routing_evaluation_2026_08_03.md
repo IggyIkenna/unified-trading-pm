@@ -142,6 +142,15 @@ ten below were rejected on numbers that were available before signup, and three 
 | **MiniMax M3**          | ❌ **rejected**             | **Strictly dominated by DeepSeek V4 Pro** — $0.60/$2.40 vs $0.44/$0.87 (36% pricier input, 2.8× pricier output), 80.5% vs 80.6% SWE-bench, same 1M ctx. Requires payment up front just to mint a key. No outcome could change a decision.                                                                                           |
 | **Kimi K3**             | ❌ rejected                 | $3/$15 — worse than Claude Sonnet 5 ($2/$10 intro) on price _and_ below it on capability. Dominated by the baseline itself.                                                                                                                                                                                                         |
 | **Kimi K2.6**           | ❌ rejected                 | $0.95/$4.00, 80.2%, 262K ctx — above DeepSeek on price, below on benchmark and context. No distinct hypothesis.                                                                                                                                                                                                                     |
+
+> **🟡 Kimi conclusion partially superseded 2026-08-16** — see
+> `/plans/active/kimi_gemma_provider_onboarding_2026_08_16.md`. The per-token dominance finding above likely still
+> holds (pending live re-verification, not assumed) — this is NOT a reversal of that number. What changed is the
+> **distinct hypothesis** this table's own selection rule requires (§ "The selection rule this register produced"
+> below): Moonshot offers a flat-rate/subscription "max plan" capacity tier with no DeepSeek equivalent at any price
+> — standby capacity headroom during a DeepSeek price spike, not $/task parity. That clears this doc's own bar
+> ("what would it beat DeepSeek at, and why would we believe that?") on a different axis than the one this table
+> measured. The new plan re-litigates nothing else here — MiniMax/Qwen/GPT-5.6/GLM conclusions above are unaffected.
 | **Qwen3.7 Max**         | ❌ rejected                 | $1.48/$4.43, 80.4% — 3.4× DeepSeek's input cost and 5× its output cost for a benchmark tie. No distinct hypothesis.                                                                                                                                                                                                                 |
 | **GPT-5.6 (Sol/Terra)** | ⏸️ deferred                 | Real frontier tier, but a **long-context pricing cliff above 272K input**: Sol $5/$30 → **$10/$45**, Terra $2/$12 → $4/$18. This workspace routinely exceeds 272K in agentic sessions, so headline pricing understates true cost badly. Revisit only if the frontier tier is specifically wanted.                                   |
 | **GLM-5.2 (`zai`)**     | ✅ **approved — now wired** | The **only** challenger with a falsifiable hypothesis rather than a coin-flip: top open-weight model on the Artificial Analysis Intelligence Index — a broader composite than SWE-bench's single-repo Python harness. $1.40/$4.40, ~$5 of tokens to falsify. Wired 2026-08-04; see the onboarded table above for its funding state. |
@@ -155,7 +164,7 @@ The operator's candidate list was **gemini · deepseek · kimi · glm · qwen ·
 | gemini      |  ✅   |   ✅    | free key; Flash serves, `gemini-3.1-pro-preview` 429s on free-tier quota       |
 | deepseek    |  ✅   |   ✅    | paid, `DEEPSEEK_OK` routed in 1,979 ms — the incumbent                         |
 | glm (`zai`) |  ✅   |   ❌    | key valid, zero balance (`1113`) — one top-up from working                     |
-| kimi        |  ❌   |    —    | not wired; register recommends against (pricier than DeepSeek, no edge)        |
+| kimi        |  ❌   |    —    | not wired; register recommends against on price (pricier than DeepSeek, no edge) — 🟡 revisited 2026-08-16 on a capacity/max-plan hypothesis instead, see `/plans/active/kimi_gemma_provider_onboarding_2026_08_16.md` |
 | qwen        |  ❌   |    —    | not wired; register recommends against (3.4× input / 5× output vs DeepSeek)    |
 | openai      |  ❌   |    —    | not wired; **deferred, not rejected** — the 272K long-context cliff, see below |
 

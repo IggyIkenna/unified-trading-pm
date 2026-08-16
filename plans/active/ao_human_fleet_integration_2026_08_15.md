@@ -309,6 +309,69 @@ investigation confirmed are both achievable with existing primitives:
   his own token, run register→claim→done once for real, confirm the dashboard + a usage row. **This plan should be
   treated as feature-complete and left `active` (not archived — real todos remain, just deferred, not done) until Harsh
   actually runs Phase 4.**
+- **2026-08-16 (interactive session, operator-requested scope addition)**: operator confirmed Phase 4's real
+  registration/JWT step stays OFF for now (unchanged from the 2026-08-15 deferral) but asked for a new, smaller
+  addition first: prove out what the dashboard will look like fully populated, entirely without touching production, so
+  the only thing left when Phase 4 does flip is "hook it up and test," not "also figure out if the UI works." Added
+  Phase 4b below — seeds the two reserved human slots (9001/9002) into the existing mock-mode demo backend
+  (`ORCHESTRATOR_MODE=mock`, port 8766, `scripts/populate_demo.py` — the same tool already used to preview every other
+  fleet feature) via the real `human-heartbeat`/`human-usage` endpoints, then verifies the Human Fleet page and the
+  `role_group=human`/`planning-human` usage filters render correctly against that seeded data with Playwright. Zero
+  production footprint: `_refuse_if_live_mode()` already hard-blocks this script from ever running against a live-mode
+  server, independent of anything this session does.
+- **2026-08-16 (same session, Phase 4b shipped)**: `seed_human_slots()` built, run against a local
+  `ORCHESTRATOR_MODE=mock` instance (:8766), and verified end-to-end with Playwright against a
+  `VITE_BACKEND_PORT=8766` dashboard dev server. Caught 2 real bugs in the process — `AgentRole` and `AgentKind`
+  (`server/models/_types.py`) both never got `"human"`/`"planning-human"` added on the BACKEND, only the frontend TS
+  types (Phase 3's own todo 17 only touched `dashboard/src/layout.tsx`+`types.ts`). The `AgentRole` gap 500'd the
+  entire `GET /api/agents` — every dashboard page's poll, not just Human Fleet's — the instant a human agent existed;
+  the `AgentKind` gap silently mislabeled every human agent as `"custom"` via an existing defense-in-depth coercion
+  (`agents.py::_coerce_unknown_kind_to_custom`), never crashing but defeating the entire role_group-split design this
+  plan exists to deliver. Both fixed, full `quality-gates.sh` green (3985 pytest + 374 vitest), shipped
+  `agent-orchestrator@609e4ea377`. **Production impact of this session's work: zero** — the fix widens two Literal
+  types and adds an opt-in local seeding helper; no production data touched, `_refuse_if_live_mode()` unchanged.
+  Confirmed with the operator: Phase 4's real registration/JWT step stays explicitly OFF — only the UI's
+  fully-populated appearance was proven out, per the operator's own framing ("so we know the final part is just
+  hooking it up and testing it"). Phase 4 itself remains deferred to Harsh exactly as the 2026-08-15 ruling states.
+- **2026-08-16 (same session, classification reconciliation)**: operator asked for a "light way to see plans created
+  and human tasks completed," split by operator — then correctly pressure-tested two proposed designs before either
+  was built. First round (self-declared `role_group` per heartbeat) was rejected: a real session mixes investigation/
+  authoring/execution fluidly, so asking a human to self-toggle live can't honestly classify it. Second round
+  (classify per code-repo commit, by file path touched) was also rejected on two sharper points: (1) a `plans/` commit
+  isn't inherently "planning" — flipping a checkbox with cited evidence is task-execution, not authoring, so path-based
+  classification mislabels it; (2) most human commits carry no AO `task_id` at all (Phase 4 dormant, and even once live
+  plenty of real work — like this exact session — never claims one), so a task-id anchor has near-total "no signal"
+  coverage. **Resolved design** (Phase 5 below): classify `unified-trading-pm` plan-repo commits ONLY (never the
+  code-repo commit, which is just a cited evidence artifact) — a checkbox-flip commit is unambiguously "task
+  completed" (matches this workspace's own existing Commit+Push+Flip hard rule with zero new convention), a
+  non-flipping `plans/`-touching commit is "plan created/updated," and untracked work with neither is correctly
+  invisible rather than force-classified — per the same hard rule, work without a flip isn't "done" work in this
+  workspace's own terms. Operator identity is free from the existing commit-author convention. No AO dependency, no
+  new hook, no live registration needed — this can run today, entirely from git history, regardless of Phase 4's
+  status.
+- **2026-08-16 (same session, deferral reversed for Ikenna)**: operator: "we need to flip it on and then start doing
+  it here" — the 2026-08-15 "stays fully dormant" ruling is superseded for Ikenna's own machine specifically (Harsh's
+  half unchanged, still a genuine physical impossibility from this session). Split Phase 4's single shared todo into
+  4 operator-scoped todos so Ikenna's now-actionable items don't get conflated with Harsh's still-deferred ones.
+  Operator also asked (a) for a CLAUDE.md hard rule + a hook so completing a task actually reports to AO
+  automatically once a slot is live, rather than relying on memory, and (b) correctly pressure-tested Phase 5 on
+  token counts: git commits carry no token data, so Phase 5's git-log classifier stays scoped to plan-vs-task
+  labeling ONLY — token/spend counts are Phase 2's already-built job (`ao-usage-push.py`, dormant only because
+  nothing has pushed real usage yet), which goes live the moment Phase 4 does. Added Phase 6 (hard-rule pointer +
+  hook design) below. **Not yet executed**: minting Ikenna's real JWT and registering against production AO is a
+  real production-state change — written up as a todo, not run in this pass; still wants one explicit go-ahead in
+  the moment it actually runs.
+- **2026-08-16 (same session, Ikenna Phase 4 executed)**: operator gave the explicit go-ahead ("do it") and said
+  Harsh's own instructions would be handled separately (doc or link, operator's own follow-up, not this session's
+  job). Minted + registered Ikenna's slot 9001 against real production AO. Hit and fixed a genuine production
+  regression along the way — the central VM's live `.env.local` had silently drifted to missing all 7 fleet-shared
+  secrets (`ORCHESTRATOR_JWT_SECRET` included), contradicting this plan's own 2026-08-15 claim that it was confirmed
+  in sync; root-caused via direct SSM checks (never printed secret values), fixed via the existing
+  `refresh_env_from_sm.sh --apply` + a service restart (self-serviced, not paused on, per this workspace's own
+  IAM-self-service + maintenance-restart rules). Registration confirmed live and rendering correctly
+  (`agent_kind="human"`, not `"custom"` — the Phase 4b fix is deployed). **Not done this pass**: the second Phase 4
+  todo (claim + complete one real backlog task end-to-end) — "do it" was scoped to registration, a real task
+  claim/done cycle is a bigger action and wasn't asked for yet.
 
 ## Todos
 
@@ -432,19 +495,70 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 4 — per-operator setup + rollout
 
-- [ ] [OPERATOR] P1. **Operator-gated — hand to Harsh, pure verification, no coding.** Issue a long-lived worker-role
-      JWT (`issue_token(role="worker", machine="<name>-laptop")`, `server/auth.py:323-341`) and register. From the
-      `agent-orchestrator` repo root:
-      `python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)" mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token # paste the token AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name> # 9001=Ikenna, 9002=Harsh`
-      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and the operator shows up in AO's
-      `GET /api/agents`.
-- [ ] [SCRIPT] P2. **Operator-gated — hand to Harsh, pure verification, no coding.** Run one real, low-stakes task
-      end-to-end: `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable),
-      then without `--check-only` to actually claim, do the real work, commit+push, then
-      `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`. Optionally run
-      `ao-usage-push.py` afterward to confirm a usage row appears. Done when: the task shows up correctly in the "Human
-      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
-      (`GET /api/backlog/usage/windows?role_group=human`).
+> **Deferral REVERSED for Ikenna, 2026-08-16 (operator, interactive session)**: the 2026-08-15 "stays fully dormant"
+> ruling is superseded for Ikenna's own machine specifically — "we need to flip it on and then start doing it here."
+> Harsh's half is untouched (still a genuine physical impossibility from this session, still pure-verification when he
+> picks it up). Split into two operator-scoped todos below so the two don't get conflated.
+
+- [x] 22. ✅ [OPERATOR] P1. **Ikenna — issue a long-lived worker-role JWT and register (slot 9001).** Executed this
+      session on explicit operator go-ahead ("do it"). Minted via `issue_token('ikenna', role='worker',
+      machine='ikenna-laptop')`, token written to `~/.config/agent-orchestrator/human-fleet-token` (0600). **Found +
+      fixed a real production gap along the way**: the first mint attempt 401'd — SSM-verified directly against the
+      central VM (`i-0c9b283b31d6b5ca7`) that its live `.env.local` (confirmed as the exact file
+      `orchestrator.service`'s own `EnvironmentFile=` points to, and confirmed absent from the RUNNING process's own
+      `/proc/<pid>/environ`) had ZERO of the 7 fleet-shared keys set, including `ORCHESTRATOR_JWT_SECRET` — meaning the
+      live server was signing every token with an ephemeral, per-restart-only secret, contradicting this plan's own
+      2026-08-15 Progress Log claim that vm-0's secret was confirmed in sync. AWS Secrets Manager and GCP Secret
+      Manager both held the correct, matching value (compared by length/equality only, values never printed). Fixed
+      via the already-built `scripts/refresh_env_from_sm.sh --apply` (synced 7 keys) + `systemctl restart orchestrator`
+      (workers survive, `KillMode=process`) — self-serviced per this workspace's own "both cloud identities are
+      IAM-self-service, don't pause" + "maintenance restarts skip scheduling" rules, not paused on. **Side effect worth
+      knowing**: any dashboard session whose token was signed with the now-replaced ephemeral secret needs a fresh
+      login — self-healing, not a data-loss risk. Registration then succeeded:
+      `{"ok":true,"agent_id":"agt-f6b475","slot_id":9001}`, verified rendering correctly via a direct
+      `GET /api/agents?kind=human` call — `"role":"human"`, `"agent_kind":"human"` (not `"custom"`), confirming
+      `agent-orchestrator@609e4ea377`'s fix is live in production too (self-pulled via the standing 15-min LDR cron).
+      Done when: met — `ikenna` is live in AO's `GET /api/agents` with `role="human"`, `agent_kind="human"`.
+- [ ] [SCRIPT] P2. **Ikenna — run one real, low-stakes task end-to-end.**
+      `AO_SLOT_ID=9001 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable), then without
+      `--check-only` to actually claim, do the real work, commit+push+flip the plan checkbox, then
+      `AO_SLOT_ID=9001 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`, then run
+      `ao-usage-push.py` to confirm a real, priced `TaskUsageRow` appears (this is what actually turns the dormant
+      Phase 2 usage/billing capability into real numbers — see Phase 5's note on token counts below). Done when: the
+      task shows up correctly in the "Human Fleet" dashboard page and
+      `GET /api/backlog/usage/windows?role_group=human` returns a real row.
+- [ ] [OPERATOR] P1. **Harsh — hand to Harsh, pure verification, no coding (unchanged from the 2026-08-15 ruling).**
+      Same steps as Ikenna's todo above, but `machine='harsh-laptop'`, `AO_SLOT_ID=9002`. Done when: `ao-register.sh`
+      returns `{"ok": true, ...}` and `harsh` shows up in AO's `GET /api/agents`.
+- [ ] [SCRIPT] P2. **Harsh — run one real, low-stakes task end-to-end (unchanged from the 2026-08-15 ruling).** Same
+      steps as Ikenna's task todo above, `AO_SLOT_ID=9002`. Done when: the task shows up correctly in the "Human
+      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it.
+- [x] 21. ✅ [INFRA] P2. **Phase 4b — preview the fully-populated dashboard via the mock demo backend, zero production
+      connectivity.** Added `seed_human_slots()` to `scripts/populate_demo.py` — seeds `SlotRow`/`AgentRow`/
+      `TaskUsageRow` for both reserved human slots (9001=ikenna, role_group="human", claimed task B-004; 9002=harsh,
+      role_group="planning-human", no claimed task) against `ORCHESTRATOR_MODE=mock` on :8766 only —
+      `_refuse_if_live_mode()` hard-blocks the script against a live-mode server regardless. **Found and fixed 2 real,
+      previously-undetected bugs while proving this out** — neither is specific to the demo/preview path; both would
+      have hit a REAL human registration in production the moment Phase 4 went live:
+      1. `AgentRole` (`server/models/_types.py`) never got `"human"` added alongside `AgentKind` — `human_heartbeat`
+         registers `role="human"` (write succeeds, no crash), but `AgentView.role: AgentRole` then threw a hard
+         `pydantic.ValidationError` on read, 500ing the ENTIRE `GET /api/agents` the instant any human agent existed —
+         not just Human Fleet's own fetch, but the main dashboard's own unfiltered poll (every fleet page, every
+         refresh). Confirmed via live `curl` against the mock backend before the fix, clean 200 after.
+      2. `AgentKind` (`server/models/_types.py`) also never got `"human"`/`"planning-human"` added — Phase 3's own todo
+         17 only touched `dashboard/src/layout.tsx`+`types.ts` (frontend), never the backend Literal. A defense-in-depth
+         `@field_validator` (`server/models/agents.py::_coerce_unknown_kind_to_custom`,
+         `agent_orchestrator_agent_kind_literal_gap_2026_07_28`) caught this SILENTLY — no crash, but every human agent
+         would have rendered as generic `"custom"`, not `"human"`/`"planning-human"`, defeating the entire point of this
+         plan's role_group split (exactly the "don't pollute general agent stats" requirement the operator asked for).
+         Only surfaced because the validator's own `logger.warning(...)` was checked, not because anything visibly broke.
+      Both fixed by widening the two Literals (mirroring the existing frontend `AgentKind` union, which already had both
+      values). Verified end-to-end with Playwright against a `VITE_BACKEND_PORT=8766` dashboard dev server: Human Fleet
+      page renders both rows correctly labeled (`human`/`planning-human`, not `custom`), model/context%/current-task/
+      online all populate correctly, and the `role_group=human`/`planning-human` filter buttons on the existing
+      `TaskUsageWindows` panel return the seeded, server-priced usage numbers ($0.68 spend, matching the raw API
+      response exactly) — confirming the "toggles and splits on the existing pages, not a new billing page" design
+      holds. Full `quality-gates.sh` green (3985 passed). Evidence: `agent-orchestrator@609e4ea377`.
 - [x] 20. ✅ [INFRA] P3. **Document the human-slot contract as a durable codex SSOT** — new "Human slots" section
       appended to `/codex/04-architecture/agent-orchestrator-worker-liveness.md` covering both hard guarantees
       (never-killable, never-competing), what's reused vs. genuinely new, and a standing instruction that a future
@@ -452,3 +566,57 @@ investigation confirmed are both achievable with existing primitives:
       fixed 2 pre-existing dangling references to an archived doc while in this file (unrelated to this plan, fixed per
       the "a doc that misled you is a finding" rule rather than left for the next reader). Evidence:
       unified-trading-pm@9786794390.
+
+### Phase 5 — lightweight per-operator plan/task activity view (git-log-derived, no live AO dependency)
+
+- [ ] [SCRIPT] P2. **Build a git-log-derived "plans created" / "tasks completed" activity view, split by operator, with
+      no dependency on live AO registration (Harsh's Phase 4 stays dormant).** Resolved this session (see Progress Log
+      2026-08-16, "classification reconciliation") after the operator correctly flagged that self-declared
+      `role_group` per-heartbeat can't honestly classify a mixed session, and that neither the code-repo commit nor a
+      task_id is a reliable anchor — a human's interactive commits carry no `task_id` at all (Phase 4 off), and
+      classifying by file path (`plans/` = "planning") wrongly buckets a checkbox-flip-with-evidence commit (task
+      execution) the same as a plan-authoring commit. **Resolved design**: classify from `unified-trading-pm` commits
+      only (never the code-repo commit itself, which is just a cited evidence artifact):
+      - **Task completed** = a `unified-trading-pm` commit that flips a `- [ ]` → `- [x]` checkbox — by construction
+        always tied to one named todo, matching this workspace's own existing "Commit + Push + Flip" hard rule
+        (`/codex/12-agent-workflow/commit-push-flip-rule.md`) exactly, no new convention needed.
+      - **Plan created/updated** = a `unified-trading-pm` commit touching `plans/` that flips no checkbox.
+      - Operator identity: free from the existing commit-author convention (`ikennaigboaka [slot-N·host]` /
+        `scripts/hooks/slot-identity-lib.sh`) — no new tagging needed.
+      - Work with no checkbox flip and no plan-doc commit (pure investigation, a question answered) legitimately shows
+        as neither — this is correct, not a gap: per the same hard rule, untracked work without a flip is genuinely
+        not "done" work in this workspace's own terms, so it shouldn't inflate a completion count.
+      Implementation: a read-only script (`scripts/plan-hygiene/`-style, mirrors `count_open_tasks.py`'s pattern) over
+      `git log --format=... -- plans/` in `unified-trading-pm`, diffing each commit's checkbox state against its
+      parent to detect flips, grouped by commit-author operator. Surface as a small addition to the existing Human
+      Fleet dashboard page (`dashboard/src/HumanFleet.tsx`) OR as a standalone CLI/report — operator's call at build
+      time, not a forced new dashboard section. Done when: running it against this session's own commits correctly
+      shows 2 "tasks completed" (the two checkbox-flip commits, `12e83c4074` and the Phase 4b evidence entry) and 0
+      false "plan created" mislabels.
+      **Explicitly OUT of scope: token/spend counts.** Git commits carry no token data — that was never git's job.
+      Once Phase 4 is live (above), token counts flow through the ALREADY-BUILT Phase 2 mechanism instead:
+      `ao-usage-push.py` scans that operator's OWN local `~/.claude/projects/*.jsonl` transcript and pushes
+      server-priced spend to AO, tagged `role_group="human"`/`"planning-human"` — the exact same
+      `TaskUsageWindows`/`BatchingEfficiencyPanel` panels every other slot already uses. This script never reads a
+      transcript and never needs to — it stays a pure git-log classifier, one lane only.
+
+### Phase 6 — after-flip discipline: CLAUDE.md hard rule + a hook that reports completion to AO automatically
+
+- [ ] [DOC] P2. **Add a one-line CLAUDE.md hard rule (pointer only, per this file's own size-budget/condense
+      convention) to the existing "Commit + Push + Flip" section**: once a human-fleet slot is registered (Phase 4
+      live), completing a Half-2 checkbox flip is followed by reporting it to AO
+      (`ao-done.sh <task_id> <sha> "<evidence>"`) — a "Half 3" for a human-fleet-registered operator specifically, not
+      a fleet-wide change (AO-dispatched workers already do this via their own `/done` call; this closes the gap only
+      for a human's own interactive session). Full rule text + rationale lives in a new codex doc this rule points to
+      — CLAUDE.md itself only gets the 1-line essence + pointer, per its own maintenance rule at the top of the file.
+- [ ] [SCRIPT] P2. **Design + build a Claude Code hook that auto-fires `ao-done.sh` after a detected commit+push+flip
+      sequence**, so the Phase 6 hard rule above is enforced mechanically, not by memory. Concretely: a `PostToolUse`
+      hook on the `Bash` tool, matching a successful `git push` to `unified-trading-pm` whose just-pushed commit
+      flipped a `- [ ]` → `- [x]` (the same detection Phase 5's parser already implements — reuse it, don't
+      re-derive), extracting the todo's task_id if one exists (a checkbox flip on a plan todo doesn't always
+      correspond to an AO backlog `task_id` — most won't, since most human work isn't AO-claimed; the hook fires
+      `ao-done.sh` ONLY when a `human-claim`'d task_id is actually in flight for the current slot, otherwise it's a
+      no-op, matching Phase 5's own "untracked work legitimately shows as neither" principle). Needs a design decision
+      before building: does the hook confirm with the operator before firing (safer, matches this workspace's own
+      "actions visible to others... confirm first" default) or fire silently (matches "mechanical enforcement, not
+      memory")? Recommend confirm-first for the initial build, revisit once the pattern is proven reliable.

@@ -19,7 +19,7 @@ summary: >-
   in `dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md` (`lc_verify_tarball_freshness`'s auto-mode
   republish/re-verify race under high branch churn) — meaning this sports crash may already be a duplicate symptom of
   that same open root cause, not a separate bug needing its own fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -49,7 +49,7 @@ source:
     2026-08-10) — prose finding, never tracked as a todo; re-surfaced by a docs-only-scoped re-check, slot-2,
     2026-08-16",
   ]
-resolved_by:
+resolved_by: "2026-08-16 (slot-6, infra) — force leg re-run clean on a fresh VM, 15m+1h both passed; the report's 4h/24h rows were stale 2026-08-09 pre-fix data, not new failures."
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -107,12 +107,36 @@ here.
 
 ## Todos
 
-- [ ] [DIAG] P3. Once `dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md`'s
+- [x] ✅ [DIAG] P3. Once `dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md`'s
       `lc_verify_tarball_freshness` P2 fix ships, re-run
       `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`
       (fresh VM) to confirm the force leg no longer crashes / no longer enumerates 4h/24h. Close this doc and
       cross-reference the checker doc if it passes; open a dedicated sports-specific diagnosis if it still crashes.
-      (repo: market-data-processing-service)
+      (repo: market-data-processing-service) — **CONFIRMED PASSING**: gate cleared (P2 shipped
+      deployment-service@fb55e8ac35), re-ran the exact command on a fresh VM
+      (`mdps-backfill-sports-pipelinecheck-20260816-110550-d0c755`). Its own `run.log` shows a clean `exit_code=0`,
+      162/162 succeeded, no self-delete-on-crash. The written report initially LOOKED like a reproduction (4h/24h
+      rows still shown `failed`/`vm_exit_nonzero=1`) — direct inspection of the report JSON's per-row `attempt_ts`
+      showed those two rows are STALE, timestamped `2026-08-09T22:14:52Z` (the ORIGINAL 2026-08-10 crash's leftover
+      data, never cleared by a subsequent correctly-scoped run) — while this session's force-leg rows for `15m`/`1h`
+      both carry `attempt_ts=2026-08-16T11:05:49Z` and `status=passed`. Directly confirmed current-HEAD
+      `_valid_timeframes()` (`scripts/pipeline_e2e_check.py:827`) already correctly intersects
+      `get_valid_timeframes_for_data_type('odds_horizon_bucket')` (`['15m','1h','4h','24h']`) against
+      `_TIMEFRAME_CEILING_BY_ASSET_GROUP[SPORTS]` (`('1m','15m','1h')`) and returns exactly `['15m','1h']` — 4h/24h
+      are NOT enumerated by the checker anymore. Closing per Recommended Decision Option A.
+
+## Progress Log
+
+- 2026-08-16 (slot-6, infra, dispatched task `sports_mdps_forcevm_timeframe_ceiling_crash_untracked-a76f44f08be3`):
+  Shipped the gating fix (`deployment-service@fb55e8ac35`, `lc_verify_tarball_freshness` auto-mode captured-SHA
+  re-verify — see `dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md`), then re-ran the pipeline
+  check per this doc's own recommended decision. Fresh VM ran clean (exit_code=0, 162/162 succeeded). A report-merge
+  artifact (stale 4h/24h rows from the original 2026-08-09/10 crash, never cleared by later correctly-scoped runs)
+  initially made the report LOOK like a reproduction — resolved by checking each row's `attempt_ts` in the report
+  JSON rather than trusting the rendered table alone. No live code defect found; closing as resolved. Note for
+  future readers of `data_pipeline_e2e_check_mdps_*.json/.md` reports: a cell absent from the CURRENT run's
+  `_valid_timeframes()` output can still show a stale prior-run verdict in the merged report — check `attempt_ts`
+  before treating a "failed" row as current.
 
 ## Progress Log
 
@@ -130,3 +154,13 @@ here.
   `lc_verify_tarball_freshness` P2 todo is still `status: open` / unchecked `- [ ]` (confirmed via grep, read-only). The
   gate has not cleared, so this doc's own P3 todo (re-run `pipeline_e2e_check.py` force leg) remains correctly
   un-actionable. No VM launched, no fix attempted this session.
+- 2026-08-16 (slot-2, data_engineering, "docs only, no writes" session, third check same session): **Gate cleared** —
+  `dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md`'s P2 (`lc_verify_tarball_freshness` auto mode)
+  and P3 (final "still stale" error message) todos both flipped `- [x] ✅` via a foreign session's
+  `c6ab276b40` ("docs(plans): flip P2+P3 tarball-freshness race todos", evidence: `deployment-service@fb55e8ac35`),
+  confirmed via read-only grep. This doc's sole P3 todo (re-run
+  `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`
+  on a fresh VM) is now **actionable-now** for the first time — but the re-run itself is a VM launch (real infra
+  spend), which is outside this "docs only, no writes" session's scope. Not executed this session; flagging as the
+  top-priority next action for the next session with infra-write authorization. No VM launched, no code changed this
+  session.

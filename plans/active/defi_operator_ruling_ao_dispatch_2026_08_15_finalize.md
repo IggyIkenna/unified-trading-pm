@@ -9,7 +9,11 @@ stage: [data]
 repos: [unified-api-contracts, market-tick-data-service, instruments-service]
 scope: [engineer]
 tags: [defi, finalize]
-related: [/plans/active/defi_operator_ruling_ao_dispatch_2026_08_15.md]
+related:
+  [
+    /plans/active/defi_operator_ruling_ao_dispatch_2026_08_15.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 created: "2026-08-15"
 last_updated: "2026-08-15"
 parent_epic: defi_master
