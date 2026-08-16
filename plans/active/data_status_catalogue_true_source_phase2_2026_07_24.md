@@ -137,6 +137,10 @@ plan is that other half.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 11, operator ruling)**: extracted to
+  `/plans/active/deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16.md` (+
+  finalize) for AO dispatch, since this doc stays `assigned_vm: NA`.
+
 _(none yet — this plan was created 2026-07-24 by the plan line-cap remediation split; the todo above carries its full
 prior design history verbatim from the parent plan's Progress Log.)_
 
