@@ -13,7 +13,7 @@ summary:
   "Daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for cefi
   (schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk) — first real
   run after the _DIVERGENCE_CLI path-resolution fix landed."
-status: open
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [meta]
@@ -26,7 +26,7 @@ related:
     cefi_consolidated_closeout_aggregated_sources_2026_07_24,
   ]
 priority: P1
-resolved_by:
+resolved_by: e2e-testing@9ed5f78e3f
 ---
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_08_16)
@@ -58,4 +58,37 @@ above before acting.
 
 ## Todos
 
-- [ ] [CODE] P1. Manifest hygiene RED — 1 AG(s) with findings (2026_08_16) — diagnose + fix the root cause (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate CSV(s) above first (source `manifest_hygiene_daily.py`).
+- [x] ✅ [CODE] P1. Manifest hygiene RED — 1 AG(s) with findings (2026_08_16) — diagnosed. **Root cause is NOT a
+      market-tick-data-service code bug or an oracle misclassification** — the `oracle_expects_but_empty`/
+      `oracle_expects_no_manifest_row` findings for the 10 sampled venue×data_type pairs (BINANCE-FUTURES/SPOT,
+      BYBIT, COINBASE-SPOT/FUTURES, KRAKEN-SPOT, OKX-SPOT/SWAP, DERIBIT) are REAL, GENUINE gaps — they are exactly
+      the residual coverage the active P0 `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` chronological
+      Tardis backfill is mid-flight filling (measured ~26% complete as of 2026-08-15T21:53Z per that plan's own
+      STALE banner). DERIBIT's `options_chain`/`futures_chain` rows are additionally already tracked by the
+      still-open `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`. `schema_version_not_v9` (1/29,938,146
+      rows) is an immaterial legacy straggler, not a code defect.
+
+      **The actual bug** (`e2e-testing/scripts/audit/manifest_hygiene_daily.py`): the daily audit's link-tracking
+      suppression (`_active_backfill_residual_venues`) — whose whole purpose is to silence a per-day escalation for
+      a venue already covered by an active backfill wave — globbed ONLY the retired `mvp_backfill_<ag>_*.md`
+      filename convention. cefi's roster-of-record plan forked/renamed to
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` on 2026-07-25, so the glob matched zero files in
+      `plans/active/`, the roster silently went empty for cefi, and suppression was disabled with no signal that it
+      happened — every divergence finding for cefi has re-escalated as "new" ever since (compounded by this being
+      the FIRST run where the detector could even fire at all, per the related
+      `dp_audit_sibling_repo_cli_paths_and_escalation_commit_identity_2026_08_16.md` container-path fix that landed
+      the same day).
+
+      **Fixed**: widened `_active_backfill_residual_venues`'s glob to sweep both the legacy
+      `mvp_backfill_<ag>_*.md` convention AND the current `<ag>_*backfill*.md`/`<ag>_*coverage*.md` convention, so a
+      future plan rename doesn't silently disable suppression again. Added a regression test
+      (`test_active_backfill_residual_venues_parses_current_naming_convention`) planting a
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`-shaped fixture. Also appended a
+      `| VENUE | status |` roster table to `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` itself (a pure
+      format restatement of that plan's own already-documented 26-venue MVP roster, in the exact markdown-table
+      shape `_BACKFILL_ROSTER_ROW_RE` parses) so the now-fixed glob has real table rows to extract — a glob fix
+      alone would not have re-enabled suppression, since the target plan's venue mentions are prose lists, not
+      tables. 226/226 e2e-testing unit tests green (full suite, forced non-cached run). — e2e-testing@9ed5f78e3f +
+      unified-trading-pm (this doc + the roster-table plan edit, same commit batch). No backfill work itself was
+      performed here — that is `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s own in-progress scope,
+      unchanged by this fix.

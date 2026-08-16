@@ -345,3 +345,45 @@ Gated via the companion `cefi_track2_coverage_backfill_checkpoints_finalize_2026
 `/codex/05-infrastructure/vm-launcher-runbook.md` (Tardis cap + the throughput-fix ruling),
 `/codex/02-data/availability-manifest-and-data-status.md`. No new durable contract is created by this plan — every todo
 executes an already-decided spec from the parent doc.
+
+## Link-tracking roster (for `manifest_hygiene_daily.py` suppression)
+
+> Added 2026-08-16 (`manifest_hygiene_red_cefi_2026_08_16.md`): this plan is cefi's roster-of-record for the daily
+> manifest-hygiene divergence audit's link-tracking suppression (`_active_backfill_residual_venues` in
+> `e2e-testing/scripts/audit/manifest_hygiene_daily.py`) — it silences a per-day `oracle_expects_but_empty`/
+> `oracle_expects_no_manifest_row` escalation for a venue already covered by this in-progress backfill. The
+> venues below restate, in the machine-parsed `| VENUE | ... |` table format the tool requires, the same 26-venue
+> MVP roster already documented in prose in the MID-BACKFILL spot-check todo above (`23 false-positive-pattern` +
+> `COINBASE-CDE` + the 2 non-MVP venues) — no new coverage claim, purely a format restatement so the suppression
+> mechanism (which was silently disabled by this plan's own 2026-07-25 rename off the retired
+> `mvp_backfill_cefi_tick_v10_2026_06_27.md` filename) actually fires again. Update this table if the MVP venue
+> roster changes; do not let it drift from the prose list above.
+
+| venue            | status                                          |
+| ----------------- | ------------------------------------------------ |
+| BINANCE-SPOT      | Track-2 chronological backfill in progress        |
+| BINANCE-FUTURES   | Track-2 chronological backfill in progress        |
+| BINANCE-DELIVERY  | Track-2 chronological backfill in progress        |
+| BYBIT             | Track-2 chronological backfill in progress        |
+| BYBIT-SPOT        | Track-2 chronological backfill in progress        |
+| OKX               | Track-2 chronological backfill in progress        |
+| OKX-SPOT          | Track-2 chronological backfill in progress        |
+| OKX-FUTURES       | Track-2 chronological backfill in progress        |
+| OKX-SWAP          | Track-2 chronological backfill in progress        |
+| DERIBIT           | Track-2 backfill + issues/deribit_options_chain_af_g4_blocker_2026_07_03.md |
+| UPBIT             | Track-2 chronological backfill in progress        |
+| COINBASE-SPOT     | Track-2 chronological backfill in progress        |
+| COINBASE-FUTURES  | Track-2 chronological backfill in progress        |
+| COINBASE-CDE      | issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md |
+| BITFINEX-SPOT     | Track-2 chronological backfill in progress        |
+| BITFINEX-FUTURES  | Track-2 chronological backfill in progress        |
+| BITGET-SPOT       | Track-2 chronological backfill in progress        |
+| BITGET-FUTURES    | Track-2 chronological backfill in progress        |
+| KRAKEN-SPOT       | Track-2 chronological backfill in progress        |
+| KRAKEN-FUTURES    | Track-2 chronological backfill in progress        |
+| HYPERLIQUID       | native-REST, CAP-EXEMPT                           |
+| ASTER             | native-REST, CAP-EXEMPT                           |
+| EXTENDED-STARKNET | native-REST, CAP-EXEMPT                           |
+| LIGHTER-ZKSYNC    | native-REST, CAP-EXEMPT                           |
+| KALSHI-PERP       | not_in_mvp_scope                                  |
+| POLYMARKET-PERP   | not_in_mvp_scope                                  |
