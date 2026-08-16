@@ -454,7 +454,20 @@ precisely because they were corrupt. Do not read the unique/stale split as work-
       meanwhile. Then re-measure the remaining 13 and triage each recover-vs-discard. **Blocked on a human**: the
       guardrail in `agent-orchestrator/scripts/hooks/block_destructive_commands.py` forbids agents from running the
       stash-discard subcommand at all, by design — this is not an agent-actionable todo.
-- [ ] [AGENT] P1. **Make safe-doc-push fail closed on a self-inflicted conflict** — if its own autostash replay
-      introduces conflict markers into a file that was marker-free at entry, it must abort and restore, not hand the
-      corrupted file to its pre-commit checker and report a content violation against the author. This is the fix that
-      actually ends the class; discarding entries only lowers the odds.
+- [x] [AGENT] P1. **Make safe-doc-push fail closed on a self-inflicted conflict** — unified-trading-pm@b4949264d0.
+      Added `_sdp_assert_no_self_conflict`, fingerprinting every named file's conflict-marker-cleanliness (via
+      `scripts/plan-hygiene/check_conflict_markers.sh`, not a hand-rolled grep — TRAP 1's diff3 `|||||||` base marker
+      is exactly why) plus a byte snapshot at entry, then re-checking after every cycle that can replay stashed
+      content: `autostash_guard_bound_backlog`'s pre-pull sweep, `autostash_rebase_reconcile` + its post-pop
+      `autostash_guard_quarantine_stale_pop` sweep, and `stage_named_files`'s rename-deletion decomposition. A file
+      clean at entry and conflicted after any of those is restored from the entry snapshot and the run exits 15
+      (new, documented in the header alongside 2–14) — never reaching the pre-commit checker. Dirty-at-entry is
+      untouched by the new guard and still resolves to exit 6, unchanged.
+      **Reproduced twice** (sandbox repo mirroring this layout, real git operations, no mocking):
+      (1) POSITIVE — a file verified clean via `check_conflict_markers.sh` at entry, corrupted mid-run when
+      `sdp_recover_named_from_any_stash` pulled a conflicted blob out of a landmine stash entry after a legitimate
+      upstream delete (exactly this pile's stash@{1}/{2} shape) → exit 15, file restored byte-for-byte to entry
+      content, pre-commit hook never invoked (verified via a call-marker file), landmine stash entry left parked.
+      (2) NEGATIVE (control) — a file genuinely conflicted at entry → exit 6 unchanged, content left as-is, hook
+      DID run. The stash-pile-growth side effect of the extreme-pile quarantine branch and the 5 operator-owned
+      zero-loss discards above are unchanged by this fix, as scoped.
