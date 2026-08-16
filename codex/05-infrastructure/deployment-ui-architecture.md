@@ -33,7 +33,7 @@ referenced_by:
     /codex/05-infrastructure/ui-architecture.md,
   ]
 owner: ikenna
-last_reviewed: 2026-05-15
+last_reviewed: 2026-08-16
 code_refs:
 codified: 2026-05-08
 sources:
@@ -80,6 +80,25 @@ sources:
 > bucket names via `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)`; if any API code hardcodes flat
 > bucket names (audit at implementation time), fix in same logical unit as Phase 0c. The header env badge tooltip should
 > show the resolved env-tiered bucket name(s) for the operator's current page so cross-env verification is one-glance.
+
+> **🟡 NAV-SHELL CONTENT DRIFT flagged 2026-08-16 (freshness-gate re-review, `check_codex_doc_freshness.py`)** — the
+> "six top-level tabs + Monitor 4-sub-tab" shell described below (§ The six top-level tabs, § Monitor sub-tab
+> structure) no longer matches the shipped deployment-ui nav. Confirmed against
+> `deployment-ui/src/components/NavMenu.tsx` (`NAV_GROUPS`, current HEAD) + its own changelog comments: live/batch/paper
+> cockpit sub-tabs were MERGED into one unified `/deployments` table (operator decision 2026-07-08); the `?tab=`
+> cockpit-pane query scheme was retired site-wide for one-plain-route-per-screen (2026-07-17 nav audit); the standalone
+> `/vm-deployments` page was retired (2026-07-21,
+> `plans/active/issues/vm_deployments_venue_panels_orphaned_route_2026_07_21.md`); the Fleet tab was removed
+> (2026-07-27, `deployment_ui_fleet_tab_removal_2026_07_27.md`); `CloudBuildsTab` was retired and folded into the
+> `/artifacts` Pipeline tab (`ArtifactPipeline.tsx`). There is no top-level "Monitor" tab or 4-lifecycle-class sub-tab
+> group in the current nav — `NAV_GROUPS` is now 7 groups / 15 screens (Overview, Deploy & Deployments, Data, Cost &
+> Artifacts, Repos & Alerts, Safety & Chaos, Research). The underlying primitives § "The four orthogonal axes" describes
+> (cloud-target toggle via `CloudProviderContext`, env-tier-by-hostname resolution) **were verified still accurate** —
+> both exist unchanged in current `deployment-ui/src`. It is specifically the tab-shell/nav-diagram sections below that
+> are stale. Full rewrite tracked as
+> [`/plans/active/issues/deployment_ui_architecture_doc_nav_drift_2026_08_16.md`](/plans/active/issues/deployment_ui_architecture_doc_nav_drift_2026_08_16.md)
+> — until that lands, treat `deployment-ui/src/components/NavMenu.tsx` as ground truth for current nav shape, not the
+> diagram/tables below.
 
 ## TL;DR
 
