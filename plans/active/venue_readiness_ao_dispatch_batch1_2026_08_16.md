@@ -87,13 +87,17 @@ those stay local by construction and are deliberately absent.
       **Do NOT add eETH or rsETH**: they are deliberately absent (operator ruling 2026-08-16) because no venue
       declares them, and an entry no venue declares is unreachable. Done-when: no execution-service module carries its
       own LST address literal, and the invariant above covers the result.
-- [ ] [BACKEND] P0. **Migrate close-all onto `/manual/instruction`.** Ruling 2026-08-16: close-all re-points onto the
-      existing manual instruction surface, NOT a new `/api/orders`. `/manual/instruction` is the DIRECT path;
-      `/manual/pending` is the approval-gated one — target the direct path. The value is that it is the same path
-      humans already use manually, so it is continuously exercised rather than being an emergency-only route that
-      rots. Real work is request-shape mapping. **Include an HTTP contract test across the service boundary** — the
-      kind that would have caught the original 404. Done-when: close-all issues through `/manual/instruction` and the
-      contract test fails if the route or request shape changes.
+- [x] [BACKEND] P0. ✅ **Migrate close-all onto `/manual/instruction`.** ALREADY SHIPPED before this batch was
+      dispatched — `strategy-service@701dce1850` (`close_all/_template.py`'s `StrategyCloseAllScript` posts to
+      `{execution_service_url}/manual/instruction`; `carry_staked_basis.py`/`arbitrage_price_dispersion.py` both
+      extend it, zero remaining `/api/orders` references anywhere in `close_all/`) + `execution-service@3800849e87`
+      (`tests/unit/test_manual_instruction_close_all_contract.py` — real-route accept test, side-mapping test, AND a
+      regression guard `test_the_old_api_orders_path_still_does_not_exist` asserting `POST /api/orders` still 404s).
+      Verified directly against `origin/live-defi-rollout` this turn (both SHAs confirmed ancestors, both files read
+      in full) — not trusted from the parent issue doc's own `[x]` claim. Duplicate of
+      `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md`'s already-closed todo of the same shape;
+      this batch1 item was authored 2026-08-16 without cross-checking that doc. No code change needed — flipping
+      only.
 - [ ] [DATA] P0. **Audit the four `/data-pipeline-check-*` skills against current canonical expectations.** Measured
       2026-08-16: ZERO of the four call `canonical_path_violations()` — the UAC MACHINE ORACLE that must never be
       re-implemented — and two (`data-pipeline-check-is` line 25, `data-pipeline-check-mtds` line 255) carry their own
