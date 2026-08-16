@@ -217,3 +217,14 @@ on shared AWS infra, not something to self-grant.
   for a worker. No new information on the IAM gap itself; thirteen days unresolved. This task's own "Done when" also
   depends separately on todo 21 (laptop-side login sampler, `[OPERATOR]`, not yet shipped) — even a resolved IAM grant
   would not alone close that task, so it is being reported/skipped rather than retried.
+- **2026-08-16 (slot-17, ci_reconciler)**: FOURTEENTH independent confirmation, from `/ci-reconcile`'s scheduled hourly
+  sweep §0c (host-dispatched-watchdog check for `ci-vm-resource-watchdog`/`glue-runner-crash-loop-watchdog` on
+  `i-042a6332509482556`) and §5 (AO worker-liveness cross-check via `check-ao-backlog-status.sh` against
+  `i-0c9b283b31d6b5ca7`). Identical `AccessDeniedException` on `ssm:SendCommand` for both instances;
+  `sts assume-role` to `uts-orchestrator-epic-role` denied; IMDS (`169.254.169.254`) unreachable, confirming this slot
+  runs on a static `ikenna-worker` credential, not an EC2 instance profile. AO's own `:8765` HTTP surface
+  (`/api/healthz`, `/api/escalations/active`) plus a direct `tmux -S /tmp/ao-fleet-tmux list-sessions` (no `sudo`
+  needed from this session's own uid) fully substituted for §5's dispatch-freshness AND worker-liveness checks this run
+  (~28 live `orch-slot-N` sessions incl. the 2 slots the 2 active escalations were dispatched to) — only §0c's
+  watchdog-specific host log tail stayed uncovered, reported as a coverage gap. No new information on the IAM gap
+  itself; fourteen days unresolved.
