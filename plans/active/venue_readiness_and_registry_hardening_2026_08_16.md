@@ -233,8 +233,14 @@ across `engine/strategies/v2/` — so the composition cannot be computed in eith
 Closing that one link makes both tests mechanical rather than manual, and it is the smaller half: the expensive half,
 per-feature-group input requirements, already exists.
 
-- [ ] [AGENT] P0. **Declare archetype to feature_groups.** The missing link. Compose it with `FEATURE_REQUIRED_INPUTS`
-      to derive each archetype's full input requirement set without restating it anywhere.
+- [x] [AGENT] P0. ✅ Shipped — `unified-api-contracts@2fa22fee` ("feat: declare StrategyArchetype to feature_group
+      mapping (UAC SSOT)"), on `origin/live-defi-rollout`, `ahead=0`. **Declare archetype to feature_groups.** The
+      missing link. Composes with `FEATURE_REQUIRED_INPUTS` per the design recorded in the Progress Log below (5
+      confirmed archetypes, 54 explicitly `UNDECLARED_ARCHETYPES`, never silently "consumes nothing"). The external
+      blocker (karak/pendle/symbiotic DeFi-connector reachability) that held this for 16 confirmations across the
+      session cleared — someone else's in-flight `DeFiAdapter` dispatch-wiring work landed; the invariant now passes
+      standalone (`test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions PASSED`, re-verified
+      2026-08-16).
 - [ ] [AGENT] P0. **Add contract step 17 as a real check, both directions.** A venue is not `BACKTESTABLE` unless at
       least one archetype's requirements are fully satisfiable from it, and every data type it provides is either
       consumed or explicitly declared unused. Declared-unused is a legitimate answer; silence is not.
@@ -588,23 +594,32 @@ Resume recipe unchanged from the "3rd confirmation" entry above. Standing instru
 hand-wire the venues, do not add the missing `DEFI_VENUE_TO_CONNECTOR_CLASS` entries, and do not edit the SIT ratchet
 baseline.
 
+**2026-08-16 — UNBLOCKED, 16th confirmation — L228 shipped.** Re-ran the invariant standalone:
+`test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions
+PASSED`. `unified-api-contracts` working tree came back clean (`git status --porcelain` empty) — the 3 files tracked
+as uncommitted-but-verified since the "NOT YET SHIPPED" entry above are now committed as `2fa22fee` ("feat: declare
+StrategyArchetype to feature_group mapping (UAC SSOT)"), present on `origin/live-defi-rollout`,
+`git rev-list --count origin/live-defi-rollout..HEAD` = 0. Someone else's concurrent `DeFiAdapter` dispatch-wiring
+work (karak/pendle/symbiotic) landed and cleared the SIT invariant; this session's own 3 files were then shipped
+(by this or another slot — the commit predates this check) without needing to touch the ratchet baseline. Also
+corrected a stale entry the same edit: the "Deferred work" table below still listed L342 (karak cross-link + pendle
+issue doc) as "Not done" though the Definition-of-done section above already recorded it shipped
+(`unified-trading-pm@abf0117caa`) — a misleading pointer, fixed on contact rather than left to re-mislead the next
+reader. Table rewritten to drop both resolved items and reflect that "Add contract step 17" is now the sole
+actionable P0.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
-| Ship `archetype_feature_groups.py` + test + `__init__.py` edit (L228, `unified-api-contracts`, code complete + locally verified) | Cannot be done yet | External: `execution-service` `DeFiAdapter` dispatch wiring for karak/pendle/symbiotic — 11 identical confirmations today (incl. 2 real quickmerge attempts), someone else's in-flight work. Do not hand-edit the ratchet baseline. |
-| Flip L228 checkbox | Blocked on above | same |
-| L230 "Add contract step 17 as a real check, both directions" | Not started | Blocked on L228 landing (needs the archetype→feature_groups link to exist first) |
-| L233 "Report the unconsumed set" | Not started | Blocked on L228/L230 |
+| "Add contract step 17 as a real check, both directions" (line 238) | Not started | Nothing — unblocked now that the archetype→feature_groups link landed |
+| "Report the unconsumed set" (line 241) | Not started | Depends on step-17 check above landing |
 | W3 "service-config abstraction" child plan | Not started | Blocked on the two `[OPERATOR]` design rulings below (error-code SSOT shape, config-abstraction target shape) |
 | W4 "venue e2e wiring" child plan | Not started | Blocked on W3's design ruling settling first (same contract, sequenced) |
 | W5 "smoke-test bar" child plan | Not started | Blocked on W3/W4 |
 | "Error-code SSOT shape" design ruling (L321) | Operator-owned | Needs an explicit decision: UAC registry keyed by (venue, code) vs. `classify_venue_error()` extension vs. per-venue declaration files |
 | "Config-abstraction target shape" design ruling (L325) | Operator-owned | Needs an explicit decision: per-service vs. per-domain `config.py`, schema mechanism, gate-check shape |
-| L342 "Cross-link karak remediation-direction split + author pendle's issue doc" | Not done | Real work, nobody's blocking it — next agent picking up this plan can do it directly |
 
-**Recommended next item**: none of the above is actionable by re-attempting it right now — the P0 chain (L228→230→233)
-is externally blocked, and W3/W4/W5 need an operator decision first. The one genuinely unblocked item is L342
-(cross-linking the karak docs) — cheap, no dependencies, worth doing opportunistically. Otherwise: periodically
-re-run the invariant standalone (not a baseline-file read) to detect when the external block clears, then ship L228
-immediately.
+**Recommended next item**: "Add contract step 17 as a real check, both directions" (line 238) — the P0 chain's external
+blocker cleared (see Progress Log below), so this is now the sole genuinely actionable P0 item. W3/W4/W5 still need an
+operator decision first.
