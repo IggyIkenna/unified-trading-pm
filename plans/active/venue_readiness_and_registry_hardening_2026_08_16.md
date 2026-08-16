@@ -339,6 +339,16 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
       knowledge** — verified by doing it for one venue end to end and recording where the contract was ambiguous.
 - [ ] [AGENT] P1. **The carve-out's §A5 prerequisites are satisfied for the contracted scope** — the four CEX venues
       and Lido at `LIVE-READY`, which is the intersection of this plan and the carve-out's.
+- [ ] [AGENT] P2. **Cross-link the karak remediation-direction split + author pendle's own issue doc.**
+      `plans/active/issues/karak_decommission_2026_08_16.md` (delete: wrong contract address, a Veda/BoringVault
+      wrapper misidentified as real Karak) and `plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
+      (wire karak into `DeFiAdapter`'s real dispatch, among other simulation-only venues) give karak opposite
+      remediation directions and do not cross-reference each other — a reader of the older doc would wire up a
+      connector the newer doc says to delete. Add a pointer either direction. Separately: pendle has no dedicated
+      remediation doc — it is currently only an incidental mention inside 7 other issue docs (including both above),
+      none of which own its `test_execution_service_venue_coverage_cascade_invariant.py` reachability gap the way
+      karak/symbiotic have dedicated docs. Author one, or fold pendle's fix into whichever doc ends up owning
+      the DeFiAdapter dispatch wiring.
 
 ## Progress Log
 
@@ -417,3 +427,16 @@ quickmerge a 3rd time against the same root cause; this is someone else's in-fli
 before the next quickmerge attempt, re-run the invariant test standalone first (not just a baseline-file read) —
 `cd unified-api-contracts && .venv/bin/python -m pytest tests/test_execution_service_venue_coverage_cascade_invariant.py::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions -v`
 — only proceed to `quickmerge.sh` once that passes standalone.
+
+**2026-08-16 — still blocked, 4th confirmation, same root cause; two new cross-doc findings tracked as a todo.**
+Another fresh standalone re-run of the invariant (not a baseline snapshot) reproduces the identical
+`new_regressions=['karak', 'pendle', 'symbiotic']` — the 4th identical confirmation today, stable not flapping. Per
+this session's own async-wait guidance ("two identical consecutive failures... stop blind-retrying"), no further
+bare rechecks planned; the actual unblock is someone else's in-flight `DeFiAdapter` dispatch-wiring work landing.
+While surveying that work's tracked docs, found: (1) `karak_decommission_2026_08_16.md` (delete — wrong contract
+address) and `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (wire up) give karak opposite
+remediation directions with no cross-reference between them; (2) pendle has no dedicated remediation doc, only
+incidental mentions across 7 other issue docs. Neither blocks this plan's P0 directly, so not fixed inline —
+tracked as the new P2 todo above ("Cross-link the karak remediation-direction split...") rather than editing two
+other active docs mid-session. This plan's own 3 files remain unchanged and correct (re-read in full this session,
+no drift); nothing here changes the resume recipe two entries above.
