@@ -20,7 +20,7 @@ related:
   [
     citadel_paper_batch_live_reconciliation_2026_06_19,
     plans/epics/strategy_master.md,
-    plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: strategy_master

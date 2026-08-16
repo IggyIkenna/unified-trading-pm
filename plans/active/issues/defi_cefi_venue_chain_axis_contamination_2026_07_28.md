@@ -421,7 +421,8 @@ in this read-only audit pass (time-bounded scope).
       ParquetFile, not inference). 8,214,021 canonical `pool` rows present. No further action needed.
 
       **STALE — CONTRADICTED 2026-08-11 (slot 4, data_engineering).** This "0 remaining" claim no longer holds: a fresh
-          live read on 2026-08-11 (`plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 1)
+          live read on 2026-08-11 (`/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`
+          todo 1 — path corrected 2026-08-16, plan_reconciler, cefi tranche: doc since archived)
           found **7,930,863** `instrument_type=POOL` (uppercase) captured rows in `data_type=dex_pool_swaps` — not zero, and
           not a small residue. Root cause is NOT a recurred live-writer bug (verified: the only live `record_captured` call
           site for `dex_pool_swaps` pool-grain rows passes lowercase `instrument_type="pool"` with a bare id,

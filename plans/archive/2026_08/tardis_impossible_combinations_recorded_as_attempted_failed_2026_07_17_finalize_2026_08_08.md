@@ -101,14 +101,13 @@ context_scope:
       10,560,938 total cefi rows in the ~24h since apply, so one previously-reclassified shard plausibly got
       legitimately re-captured via ordinary live retry in the interim — not evidence the purge itself is wrong). The
       delta landed; no revert needed.
-- [ ] [DOC] P2. **Archive
-      `plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`** via the standard
-      6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the archive
-      banner → run the codex-alignment check → grep the corpus for every referrer of
-      `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17` and fix each path to point at the
-      archived location → clear `locked_by` (already empty, confirm). **Done when**: the doc is moved to
-      `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
-      archived alongside it in the same commit.
+- [x] ✅ [DOC] P2. **DONE 2026-08-16 (plan_reconciler, cefi tranche, agt-2e82f7)** — Archived
+      `plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md` to
+      `plans/archive/2026_08/`: confirmed no Deferred items untracked, added the archive banner, `locked_by` was
+      already empty, fixed the 6 active-plan corpus referrers (solana_dex_pool_swaps_indexer_002, cefi_master epic,
+      cefi_consolidated_closeout_2026_07_18, dp_fetch_009, cefi_consolidated_closeout_aggregated_sources) to the new
+      path — archive-to-archive historical mentions left as pre-archival-path prose (standard corpus convention).
+      This finalize doc archived alongside it in the same commit.
 
 ## Progress Log
 

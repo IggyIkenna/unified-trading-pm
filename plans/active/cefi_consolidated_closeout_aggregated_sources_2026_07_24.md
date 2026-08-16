@@ -641,7 +641,8 @@ context_scope:
       `PYTEST_UNIT_DIR`.
   - [`plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`](/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md)
     — ✅ CLOSED 2026-08-03, all todos done, archived.
-  - [`plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`](/plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md)
+  - [`plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`](/plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md)
+    — **ARCHIVED 2026-08-16** (0 open todos, all 6 `[x]`).
     - **[CODE] P0.** Gate the Tardis request universe on the vendor catalog (symbol x data_type x date-range); cache +
       refresh daily.
     - **[CODE] P0.** Stop recording impossible combos as `attempted_failed` — distinguish by Tardis JSON code.

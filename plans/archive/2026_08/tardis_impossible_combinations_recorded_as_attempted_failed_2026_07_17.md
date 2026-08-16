@@ -14,8 +14,8 @@ summary:
   2025-04-30, making code=140 a large systematic multiplier. Tardis's own catalog supplies the exact 3-tuple to gate on
   (symbol x dataTypes x availableSince..availableTo) - the fix is a vendor-catalog intersection, NOT a symbol mapping
   change (the mapping is correct - AAVEUSDC is a genuine Bybit symbol Tardis simply never archived).
-status: open
-resolved_by:
+status: complete
+resolved_by: plan_reconciler-agt-2e82f7-2026-08-16
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -322,3 +322,8 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
   for the full diff evidence). **All 6 todos in this doc are now done and it is unlocked** — archiving in the next
   commit per the plan-completion-and-archival-discipline HARD RULE (checkbox flip and `git mv` kept as separate commits,
   per RULES.md § 2's incident note).
+- **ARCHIVED 2026-08-16 (plan_reconciler, cefi tranche, agt-2e82f7)**: the "archiving in the next commit" intent above
+  was never executed — the doc sat active+unlocked for a week. Re-verified all 6 todos still `[x]`, no Deferred items
+  untracked, `locked_by` empty, gated finalize doc's own re-verification todos 1-2 both independently confirmed the
+  work landed (see `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md`).
+  Archiving now via the 6-step ritual; finalize doc's todo 3 flipped + it is archived alongside in the same commit.

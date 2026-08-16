@@ -63,7 +63,57 @@ from scratch.
 
 ## Flips verified
 
-(pending)
+1. `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` — `[CODE] P3` `__main__` guard todo. HARD:
+   `market-tick-data-service@744f97c6` (2026-08-15), verified ancestor of `origin/live-defi-rollout`; guard confirmed
+   live at `market_tick_data_service/cli/main.py:642`.
+2. `deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` — sole todo SPLIT (half-done rule): the
+   writer root-cause sub-part flipped `[x]` (HARD: `market-tick-data-service@06c07089`, verified ancestor); the
+   census/backfill/reclassify/Script-1-rerun sub-parts stay `[ ]`, annotated DEFERRED.
+3. `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md` — all 6 todos already `[x]`
+   (verified: doc's own 2026-08-09 entry + gated finalize doc's independent re-verification of both sub-checks).
+   **Archived** via the 6-step ritual (see Archive candidates below) — its own "archiving in the next commit" intent
+   from 2026-08-09 had never executed.
+4. `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md` todo 3 (archive
+   the source doc) — flipped `[x]` as part of executing the archival above. Archived alongside its source in the
+   same commit.
+
+## Contradictions (batches 2-6 additional)
+
+- **[P2]** `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s banner claimed "~1-2 days of work at June
+  rates" vs. the same doc's own 2026-07-28 entry (measured ~30-day ETA) and 2026-08-15T21:53Z status (~26% done
+  after 3+ weeks of repeated preemptions). **Fixed**: banner annotated stale, real state cited.
+- **[P1, already resolved by a concurrent run]** `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` had a
+  mid-line hidden checkbox (§7 bare-wire-symbol todo, invisible to line-anchored parsers) — cefi-batch-2 hunter
+  flagged this independently, but a concurrent `/plan-reconcile` run (tranche=tradfi, agt-a74a6a, dated 2026-08-16,
+  same day) had already fixed the exact same formatting bug before this pass reached it. No action taken — verified
+  current state shows the fix already landed. Good example of the "verify freshness before acting" discipline
+  paying off (would have been a duplicate/colliding edit otherwise).
+- **[P1, ARCHIVED — see above]** `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`'s own
+  2026-08-09 Progress Log said "archiving in the next commit" — the commit never happened, and its gated finalize
+  doc's todo 3 sat open for a week after its gate cleared. Resolved by executing the archival this pass.
+
+## Hygiene fixes (dangling refs / stale link paths)
+
+Fixed 8 dangling or wrong-format `related:`/body path references (all confirmed via direct file-existence checks
+before repointing, all archive-target paths confirmed to exist):
+
+- `crypto_alpha_research_2026_07_24.md` — `related:` entry repointed to `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md`.
+- `prediction_capture_incident_remediation_2026_07_06.md` — 2 `related:` entries repointed to their archived
+  location, 1 leading-slash format fix, 1 entry REMOVED (confirmed genuinely dangling after a fresh corpus-wide
+  search — `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` does not exist anywhere in `plans/`).
+- `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` — `related:` entry format-fixed
+  (`../`-relative → leading-slash; target already existed, format-only violation).
+- `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` — body reference to
+  `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` repointed to its archived location.
+- `dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md` /
+  `dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md` — added missing `related:` cross-references
+  (confirmed: same escalation `agt-9d78d2`, same VM `manifest-recon-cefi-20260815-093854`, 2 independent docs never
+  cross-linked each other structurally, only in prose).
+- `dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md`'s sole open `[BACKEND] P3` todo — premise
+  corrected: framed as a "hang" needing a py-spy dump + timeout, but both this doc's own later entry and its
+  companion doc now confirm the actual mechanism was a genuine guest-level OOM (`mem_pct` 75.3%→99.2%, verified via
+  deployment-registry telemetry) — a timeout wouldn't have prevented it. Redirected to the companion doc's actual
+  fix (`columns=` slim-read).
 
 ## Contradictions
 

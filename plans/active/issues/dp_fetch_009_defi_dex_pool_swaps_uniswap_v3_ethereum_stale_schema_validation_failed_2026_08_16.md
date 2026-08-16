@@ -64,7 +64,7 @@ related:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
+    /plans/archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 source: dp-fleet-monitor

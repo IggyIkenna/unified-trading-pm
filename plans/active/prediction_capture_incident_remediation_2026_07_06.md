@@ -36,11 +36,14 @@ tags:
   ]
 related:
   [
-    plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
-    plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
-    plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
-    plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    /plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
+    /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
   ]
+  # STALE-REF FIX (plan_reconciler, cefi tranche, agt-2e82f7, 2026-08-16): first 2 entries repointed to their
+  # archived location (both moved, targets confirmed existing there). A 4th entry,
+  # `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, was removed — confirmed genuinely
+  # dangling (not found anywhere in plans/active/ or plans/archive/ after a fresh corpus-wide search).
 created: 2026-07-06
 parent_epic: instruments_master
 assigned_vm: NA

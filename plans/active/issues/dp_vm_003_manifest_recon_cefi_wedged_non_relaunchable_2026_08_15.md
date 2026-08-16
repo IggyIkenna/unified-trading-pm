@@ -38,6 +38,7 @@ related:
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md,
+    /plans/active/issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md,
   ]
 context_scope:
   [
@@ -155,10 +156,15 @@ triage.
       `mem_pct` reached 99.2% per its own deployment registry telemetry, read before archival), not merely wedged;
       correcting this doc's "NOT OOM'd" characterization above, which was based on the GCE instance `status` field
       (RUNNING) rather than in-guest memory telemetry. No manual kill needed — billing already stopped on its own.
-- [ ] [BACKEND] P3. If this recurs for another `manifest-recon-*`/phantom-recon dry-run, capture a live `py-spy dump`
-      before killing to identify the exact blocking call, then bound it with a timeout (the DP-VM-003/004 "unbounded
-      HTTP call hangs" fix pattern) in whichever of `reconcile_phantom_manifest_rows_all.py` or `heartbeat_daemon.py`'s
-      uploader loop turns out to be the culprit.
+- [ ] [BACKEND] P3. **STALE PREMISE (plan_reconciler, cefi tranche, agt-2e82f7, 2026-08-16)**: this todo's "capture a
+      py-spy dump to identify the blocking call, then bound it with a timeout" framing assumed a HANG. The companion
+      doc (`dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md`) and this doc's own later
+      Progress Log entry both now confirm the actual mechanism was a genuine guest-level OOM (`mem_pct` 75.3%→99.2%
+      via deployment-registry telemetry), not a hang — a timeout would change how the process dies, not prevent the
+      OOM. The real fix is the companion doc's own `[SCRIPT] P2` todo (thread `columns=` through
+      `reconcile_phantom_manifest_rows_all.py:1719`'s call to avoid the full-schema unsliced read) — recommend closing
+      this todo as superseded-by-that-fix if it recurs, rather than chasing a py-spy dump for a hang that isn't the
+      cause.
 
 ## Progress Log
 
