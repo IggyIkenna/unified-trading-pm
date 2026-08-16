@@ -1,18 +1,22 @@
 ---
 doc_type: issue
-title: "FF-pull starvation watchdog detects correctly but its operator-ping delivery has been HTTP 401 fleet-wide since at least 19:28Z"
+title: "FF-pull starvation watchdog operator-ping delivery was HTTP 401 on slot 5 — ROOT-CAUSED + FIXED (stale per-slot .orch_token); slots 3/4 likely need the same fix"
 summary: >-
   `slot-git-status-report.sh`'s FF-pull starvation watchdog (`check_starvation_for_slot`,
-  `ff-starvation-detect.sh`) is correctly detecting real starvation episodes (a dirty local edit colliding with
+  `ff-starvation-detect.sh`) was correctly detecting real starvation episodes (a dirty local edit colliding with
   incoming origin content, blocking `slot-cron-ff-pull.sh`'s auto-heal) — confirmed live for `.tabs/5/unified-
   trading-pm` (starved 20:13:27Z-21:10:21Z, 42 commits behind, well past both the 25-commit and 3-tick paging
-  thresholds). But every ping attempt to `${ORCH_URL}/api/slots/<N>/message` returns HTTP 401 and is logged as
-  `[starve-ping-fail]` — the operator never actually gets notified. Same 401 hitting slots 3, 4, and 5 in
-  `/tmp/slot-git-status-report.501.log`, starting at least 19:28Z (slot 3/4) and 20:13Z (slot 5), continuing every
-  ~5 min with zero successful pings in the observed window. The DETECTION half of the system is healthy; the
-  DELIVERY half is fleet-wide broken. Root cause not yet diagnosed — likely an expired/misconfigured bearer token
-  the watchdog uses to authenticate against the orchestrator's slot-message API, not investigated further this
-  session (don't guess-fix a credential without understanding its provisioning/rotation path).
+  thresholds) — but every ping attempt to `${ORCH_URL}/api/slots/<N>/message` was returning HTTP 401, logged as
+  `[starve-ping-fail]`. **ROOT-CAUSED for slot 5**: `resolve_token_for_slot()` checks the PER-SLOT
+  `.tabs/<N>/.orch_token` file before the home-dir `~/.orch_token` fallback — slot 5's per-slot token had `exp:
+  2026-05-27` (expired ~3 months ago, JWT `exp` claim decoded directly), silently shadowing the still-valid
+  `~/.orch_token` (`exp: 2026-09-09`) that would otherwise have been used. **FIXED for slot 5** (2026-08-16):
+  replaced the stale per-slot token with the valid home-dir one; verified live with a direct
+  `POST /api/slots/5/message` call — now returns HTTP 200 (previously 401). Slots 3 and 4 showed the identical
+  401 pattern in the shared log (`/tmp/slot-git-status-report.501.log`, since at least 19:28Z) and likely have
+  the same stale-per-slot-token root cause, but their `.tabs/3/.orch_token` / `.tabs/4/.orch_token` files were
+  NOT touched this session — those are different slots' checkouts, not mine to reach into without the operator
+  present/confirming (per the multi-agent slot-boundary rule).
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -85,29 +89,54 @@ the DELIVERY half is silently swallowing every alert — functionally equivalent
 except it looks like one exists (misleading). This is exactly the kind of gap that lets a slot drift for hours
 before an operator notices, same failure class as the incidents the mechanism was built to prevent.
 
+## Root cause (found + fixed, slot 5 only)
+
+`resolve_token_for_slot()` (`scripts/dev/slot-git-status-report.sh:444-465`) resolution order is: explicit
+`TOKEN_FILE` → per-slot `${TABS_DIR}/<N>/.orch_token` → `~/.orch_token` → `/tmp/orch_token` → (loopback-only
+anonymous). Slot 5's per-slot `.orch_token` (dated `Aug 16` mtime but actually minted long before — decoded JWT
+`exp` claim: `2026-05-27T15:40:57Z`) was silently shadowing the healthy `~/.orch_token` (`exp:
+2026-09-09T08:09:17Z`) sitting one fallback level down — the resolver never got far enough to try it. This is a
+pure stale-local-credential bug, nothing wrong on the orchestrator/server side, and nothing wrong with the
+watchdog's detection logic.
+
+**Fix applied (slot 5, 2026-08-16)**: backed up the expired per-slot token to
+`.tabs/5/.orch_token.expired-2026-05-27.bak`, copied the valid `~/.orch_token` content into
+`.tabs/5/.orch_token` (mode 600 preserved). Verified live: `POST /api/slots/5/message` with the new token now
+returns `200` (was `401`).
+
 ## What I did NOT do
 
-- Did not touch the ping/auth code — the token's provisioning/rotation mechanism isn't something to guess-fix
-  from the client side without understanding how it's meant to be issued/refreshed.
-- Did not attempt to diagnose the orchestrator-side `/api/slots/<N>/message` endpoint or check whether a JWT
-  secret rotated recently — out of scope for a client-log-driven investigation.
+- Did NOT touch slots 3 or 4's `.orch_token` files, even though the identical 401 pattern in the shared log
+  strongly suggests the same stale-per-slot-token cause — those are different slots' checkouts (potentially
+  live/in-use by another session right now), out of bounds for me to reach into without the operator present.
+- Did NOT change `resolve_token_for_slot()`'s resolution order or add expiry-awareness (e.g. skip an expired
+  per-slot token and fall through to the next candidate) — that's a real hardening opportunity (see todo below)
+  but is a shared-script change affecting the whole fleet, not a same-turn fix for my own stale file.
+- Did NOT investigate why slot 5's per-slot token was ~3 months stale in the first place (no rotation cron found
+  for `.orch_token` files specifically) — worth checking if one is supposed to exist.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Diagnose the 401: check whether the bearer token `slot-git-status-report.sh` uses to POST to
-      `${ORCH_URL}/api/slots/<N>/message` has expired, was rotated, or the endpoint itself changed its auth
-      contract — cross-check against however AO's other internal-proxy ES256/JWT auth is provisioned (per
-      CLAUDE.md: "internal proxy ES256 / accounts via GSM"). Confirm which of the fleet's slots are affected
-      (at minimum 3, 4, 5 confirmed here) — likely all of them if it's a shared credential.
-- [ ] [BACKEND] P2. Once root-caused, fix the credential/endpoint mismatch and verify with a live starvation
-      episode (or a forced test) that `[starve-ping]` (200) actually appears in the log — the fix isn't done
-      until a real successful delivery is observed, not just "the code looks right."
-- [ ] [BACKEND] P3. Consider whether the watchdog itself should escalate differently (e.g. fall back to a Slack
-      webhook, or write a local marker file an operator/agent can grep) when the orchestrator ping fails
-      repeatedly, so a broken delivery path doesn't silently degrade to zero visibility again.
+- [x] ✅ [OPS] P1. **FIXED 2026-08-16 (interactive session, slot-5)** — stale per-slot `.orch_token` replaced with the
+      valid `~/.orch_token`; verified via a live `200` response. See "Root cause" above.
+- [ ] [OPERATOR] P2. Check `.tabs/3/.orch_token` and `.tabs/4/.orch_token` (and any other slot) for the same
+      stale-per-slot-token pattern (decode the JWT `exp` claim, compare against `~/.orch_token`'s) and refresh
+      any that are expired, mirroring the slot-5 fix above.
+- [ ] [BACKEND] P3. Harden `resolve_token_for_slot()` to skip an expired candidate and fall through to the next
+      one (it already has `decode_jwt_exp()` available — currently only used elsewhere for a different check;
+      wire it into the resolution order itself) instead of using the first FILE it finds regardless of validity
+      — this is the actual generalizable fix that prevents this class of silent shadowing recurring per-slot.
+- [ ] [BACKEND] P3. Find or create whatever's supposed to keep `.orch_token` files fresh across slots (a
+      rotation cron, a re-mint-on-expiry hook) — a 3-month-stale credential with no apparent alarm suggests
+      nothing is currently minding token freshness at all.
+- [ ] [DOC] P3. Consider whether the watchdog itself should escalate differently (e.g. fall back to a Slack
+      webhook, or write a local marker file) when the orchestrator ping fails repeatedly, so a future credential
+      lapse doesn't silently degrade to zero visibility again the same way this one did.
 
 ## Progress Log
 
 - **2026-08-16 (interactive session, slot-5)**: filed after the operator asked why a starved PM repo wasn't
-  auto-healed given the documented cron/watchdog — traced to detection working correctly but delivery 401'ing
-  fleet-wide. Not root-caused further this session.
+  auto-healed given the documented cron/watchdog — traced to detection working correctly but delivery 401'ing.
+  Root-caused to a stale per-slot `.orch_token` (expired 2026-05-27) shadowing a valid `~/.orch_token`
+  (2026-09-09) in the resolver's fallback order. Fixed for slot 5, verified live (401→200). Slots 3/4 likely
+  affected too but not touched — flagged as an operator todo since those checkouts aren't mine to reach into.
