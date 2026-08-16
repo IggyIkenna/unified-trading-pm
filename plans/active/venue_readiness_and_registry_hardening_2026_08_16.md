@@ -517,11 +517,18 @@ the whole session — this is not flapping, it is a stable external blocker. `un
 unchanged from the "3rd confirmation" entry above. Standing instruction remains in force: do not hand-wire the venues or
 edit the SIT ratchet baseline.
 
+**2026-08-16 — still blocked, 11th confirmation, background QG run.** A full `unified-api-contracts` QG suite run
+(background task, harness-tracked, not a scratchpad file) completed after the 9th/10th entries above: `1 failed, 13246
+passed, 678 skipped, 5 xfailed in 180.77s` — same failing test,
+`test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`, nothing else red. 11th identical
+confirmation this session (8 full-suite/quickmerge, 3 direct-cause). Resume recipe unchanged from the "3rd confirmation"
+entry above. Standing instruction remains in force: do not hand-wire the venues or edit the SIT ratchet baseline.
+
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
-| Ship `archetype_feature_groups.py` + test + `__init__.py` edit (L228, `unified-api-contracts`, code complete + locally verified) | Cannot be done yet | External: `execution-service` `DeFiAdapter` dispatch wiring for karak/pendle/symbiotic — 10 identical confirmations today (incl. 2 real quickmerge attempts), someone else's in-flight work. Do not hand-edit the ratchet baseline. |
+| Ship `archetype_feature_groups.py` + test + `__init__.py` edit (L228, `unified-api-contracts`, code complete + locally verified) | Cannot be done yet | External: `execution-service` `DeFiAdapter` dispatch wiring for karak/pendle/symbiotic — 11 identical confirmations today (incl. 2 real quickmerge attempts), someone else's in-flight work. Do not hand-edit the ratchet baseline. |
 | Flip L228 checkbox | Blocked on above | same |
 | L230 "Add contract step 17 as a real check, both directions" | Not started | Blocked on L228 landing (needs the archetype→feature_groups link to exist first) |
 | L233 "Report the unconsumed set" | Not started | Blocked on L228/L230 |
