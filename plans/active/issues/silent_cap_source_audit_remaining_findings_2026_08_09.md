@@ -299,13 +299,18 @@ findings.
       unfixed implementation. `market_interface/clients/alchemy_transfers_client.py` also confirmed to already carry
       its warning-only mitigation (2 `logger.warning` cap-exhaustion sites, no `attempted_failed` plumbing — matches
       the todo's own note that none exists for this client). No code change needed; no new implementation to ship.
-- [ ] [SCRIPT] P3. **`_umi_extended.py` candle-window pagination — currently safe, latent risk if call graph changes.**
+- [x] ✅ [SCRIPT] P3. **`_umi_extended.py` candle-window pagination — currently safe, latent risk if call graph changes.**
       `market_tick_data_service/adapters/_umi_extended.py::_extended_candle_params` logs a truncation warning and clips
       to `_EXTENDED_CANDLE_PAGE_CAP=2800` bars but issues only ONE request (never chunks) when `needed` exceeds the cap
       — currently safe because both call sites always pass a 1-day `PT1M` window (≤1440 bars). Repo:
       market-tick-data-service. Done when: either the function gains real chunking so a future wider-window caller can't
       silently truncate, or (if genuinely out of scope) a code comment states the current call-graph invariant that
-      keeps this safe, so a future caller change is forced to notice the constraint.
+      keeps this safe, so a future caller change is forced to notice the constraint. — market-tick-data-service@01912df09c:
+      confirmed both call sites (`_fetch_extended_candles_for_symbol`, `fetch_extended_candles`) always pass
+      `interval="PT1M"` over a single UTC day; added a docstring to `_extended_candle_params` stating this call-graph
+      invariant explicitly and warning any future caller that widens the window/interval to either add real
+      multi-request chunking or make the cap-exceeded branch fail loud/route to attempted_failed instead of relying on
+      the existing warning-only clip. No behavior change (comment-only), QG green.
 - [ ] [CODE] P3. **`UniswapV3Adapter._download_swaps`/`_download_pool_hourly_data` (market-tick-data-service) crash with
       `AttributeError` on ANY successful non-empty page — dormant because nothing in production instantiates
       `UniswapV3Adapter`.** Discovered while adding regression coverage for this doc's Graph-pagination-error-vs-empty
@@ -363,6 +368,11 @@ findings.
   duplicate — see the todo's own evidence line above for detail. No code shipped (nothing to fix; both files already
   carry the CF-11 fix from a prior session). 2 todos remain open in this doc (`_umi_extended.py` candle-window
   chunking, `UniswapV3Adapter` aliased-field `AttributeError`).
+- 2026-08-16 (slot 20, data_engineering): shipped the `_umi_extended.py` candle-window pagination todo (documentation
+  option) — see the todo's own evidence line above for detail. market-tick-data-service@01912df09c, QG green,
+  quickmerge landed + ancestry-verified on origin/live-defi-rollout (repo under heavy concurrent push churn today —
+  took 5 quickmerge attempts, the first 4 killed mid-run by an AO server restart at 05:58, 5th succeeded after the
+  server stabilized). 1 todo remains open in this doc (`UniswapV3Adapter` aliased-field `AttributeError`).
 
 ## Codex SSOTs
 
