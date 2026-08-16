@@ -6,6 +6,10 @@ summary: >-
   call is commented out and the method always returns a CONFIRMED result. Every CEX_WITHDRAW-routed venue (18 of
   cefi's 22, everything that isn't ON_CHAIN/CUSTODY_TRANSFER) would report a successful withdrawal that never
   actually happened. Found during the venue_e2e_wiring_2026_08_16 cefi batch sweep, step 9 (transfers).
+  **Reachability confirmed 2026-08-16 (later same day): DEAD-CODE-TODAY** — HandlerRegistry never constructs a
+  live adapter (defaults to MockTransferAdapter), TransferCoordinator has no CEX_WITHDRAW handler registered at
+  all, and the system is still pre-live-trading. Real bug, currently inert — must-fix-before-live-trading-cutover,
+  not an active incident.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -75,30 +79,63 @@ mode is silent: no exception, no `BLOCKED`/`FAILED` status, just a false-positiv
 
 ## What I have NOT verified
 
-- Whether any live-trading code path today actually calls this withdrawal method in practice (vs. it being dead
-  code reachable only in theory) — I read the transfer-dispatch code, not every caller across the codebase.
 - Whether a downstream check (e.g. a balance reconciliation job) would eventually catch the discrepancy, bounding
-  the real-world blast radius even if the stub is hit.
+  the real-world blast radius if this were ever hit before the fix lands — still open, see todo below.
+
+## Reachability — confirmed DEAD-CODE-TODAY, 2026-08-16
+
+Full evidence chain (research pass across execution-service):
+
+1. **`LiveCcxtTransferAdapter` is never constructed in production.** The only builder is
+   `engine/transfers/factory.py:150`'s `create_transfer_adapter()`, which is called nowhere in production code —
+   only its own definition, a re-export, and a docstring comment (`transfer_handler.py:93`, an instruction, not a
+   call).
+2. **The real dispatch path hard-codes the mock adapter.** `HandlerRegistry.get_handler()`
+   (`engine/routing/handler_registry.py:218`) instantiates `TransferHandler(config=handler_config)` with no
+   `adapter=` argument, so `TransferHandler.__init__` (`transfer_handler.py:96`) defaults to
+   `MockTransferAdapter()`. Every `CEX_WITHDRAW` dispatched through the live engine hits the mock, not the real
+   stub.
+3. **`TransferCoordinator` (the other named router) is also unwired** — its only instantiation anywhere in the
+   repo is a unit test (`tests/transfer_coordinator/test_transfer_coordinator.py:102`); its default handler map
+   registers `SUBACCOUNT_MOVE` only, `CEX_WITHDRAW` has no handler at all (`transfer_coordinator.py:148-150`) —
+   would `KeyError`, not reach any adapter, even if instantiated.
+4. **strategy-service CAN emit a transfer intent** (`strategy_service/transfer_coordinator.py:31`,
+   `event_bus.publish`), but execution-service has no wired consumer for it in production per #2/#3 — the intent
+   has nowhere live to land.
+5. **System-wide**: `execution-service/.claude/CLAUDE.md:257-258` still states "pre-live-trading (2026-07-28)" as
+   of 2026-08-16 — an independent bound on real-world risk regardless of code reachability.
+
+**Important nuance — this does NOT self-heal when live trading starts.** Flipping `OperationalMode` to LIVE alone
+would not fix this: `HandlerRegistry` itself never plumbs a real adapter through `create_transfer_adapter()`, so
+the mock stays wired even in live mode until that's fixed directly. This is why the fix stays tracked as a
+must-close-before-live-trading-cutover item, not something the pre-live-trading state makes moot.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Confirm real-world reachability**: grep every caller of `TransferCoordinator`/
-      `_dispatch_transfer` with `BusTransferType.CEX_WITHDRAW` across execution-service and any service that
-      triggers live fund movement, to determine whether this stub is actually reachable in the current live-
-      trading flow today, or only in tests/manual invocation. Done-when: a cited, evidence-backed reachability
-      verdict (reachable-in-prod vs. dead-code-today) exists.
-- [ ] [BACKEND] P0. **If reachable: wire the real `exchange.withdraw()` CCXT call**, replacing the stub, with the
-      same error-handling rigor the rest of the transfer dispatch code uses (fail loud, never silently succeed).
-      If genuinely unreachable today: change the stub to fail loud (`raise NotImplementedError` or return a
-      `BLOCKED`/`FAILED` status) instead of a false `CONFIRMED`, so a future caller cannot be silently misled even
-      before the real integration lands. Done-when: either a real withdrawal executes and is verified against the
-      exchange's own confirmation, or the stub fails loud instead of lying.
-- [ ] [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** (bounding
-      the real blast radius if the stub has ever been hit in a live context) — done-when: a cited answer, yes or
-      no, with evidence.
+- [x] ✅ [BACKEND] P0. **Confirm real-world reachability — done 2026-08-16. Verdict: DEAD-CODE-TODAY.** Full
+      evidence chain recorded above. De-escalates this from "active incident" to "must-fix-before-live-trading-
+      cutover" — real bug, currently inert.
+- [ ] [BACKEND] P0. **Wire the real `exchange.withdraw()` CCXT call** in `LiveCcxtTransferAdapter`, AND wire
+      `HandlerRegistry`/`TransferCoordinator` to actually construct/route to it via `create_transfer_adapter()`
+      (per the reachability finding, the adapter fix alone is not sufficient — the dispatch wiring gap must close
+      too). Same error-handling rigor as the rest of the transfer dispatch code (fail loud, never silently
+      succeed). Until this lands, treat CEX withdrawals as NOT a real capability, regardless of `OperationalMode`.
+      Done-when: a real withdrawal executes through the live dispatch path (not a direct unit-test construction)
+      and is verified against the exchange's own confirmation.
+- [ ] [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** if it had
+      ever been reachable — done-when: a cited answer, yes or no, with evidence.
+- [ ] [BACKEND] P2. **`TransferCoordinator`'s missing `CEX_WITHDRAW` handler-map entry is itself worth fixing**
+      independent of the adapter-wiring fix above — a caller that DOES construct a `TransferCoordinator` directly
+      (bypassing `HandlerRegistry`) would hit a `KeyError`, not a clean error. Done-when: `CEX_WITHDRAW` has a
+      registered handler (or the missing-key case fails loud with a clear message) in
+      `transfer_coordinator.py:148-150`.
 
 ## Progress Log
 
-- **2026-08-16**: Filed during the cefi AG batch's step-9 (transfers) venue-readiness sweep. Not yet triaged for
-  reachability — flagged to the operator directly given the live-money-correctness class of the finding, per this
-  workspace's "big finding → notify operator" rule, rather than left as a silent plan todo.
+- **2026-08-16**: Filed during the cefi AG batch's step-9 (transfers) venue-readiness sweep. Flagged to the
+  operator directly given the live-money-correctness class of the finding, per this workspace's "big finding →
+  notify operator" rule, rather than left as a silent plan todo.
+- **2026-08-16 (later, same session)**: Reachability confirmed DEAD-CODE-TODAY via a dedicated research pass —
+  see the new section above. De-escalated from "active incident, unknown blast radius" to "real, tracked,
+  must-fix-before-live-trading-cutover bug with zero current blast radius." Still P0 given it blocks the
+  live-trading cutover, not downgraded further.
