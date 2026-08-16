@@ -1,0 +1,116 @@
+---
+doc_type: plan
+title: Lazy/scoped loading refactor — strategy-service, UAC, execution-service
+summary: >-
+  Make archetype/algorithm registration and contract imports lazy and deployment-scoped, so a build loads only what it
+  needs. Three layers, ascending cost: strategy-service's factory.py eagerly registers every archetype engine across
+  every family; unified-api-contracts' registry/__init__.py (1,270 L) and internal/__init__.py (2,708 L) eagerly import
+  ~240k lines on any import, with DeFi content interleaved with CeFi/TradFi/sports in flat enums — the dominant blocker
+  and fleet-wide in blast radius; execution-service's algorithms/algorithms.py eagerly imports all 7 algorithms and is
+  cheapest, since that repo already has the lazy pattern in adapters/algorithm_factory.py and custody/factory.py. A
+  lazy factory.py alone does NOT solve it — live collateral calls still import UAC and pull the whole graph. Carve-out
+  prerequisite: land this before or alongside the carve-out so later updates do not re-derive a frozen snapshot against
+  a moving, eagerly-coupled target. SIT needs no changes.
+status: draft
+nature: process
+asset_group: [cross-cutting]
+stage: [strategy, execution]
+repos: [unified-api-contracts, strategy-service, execution-service]
+scope: [engineer]
+assigned_vm: NA
+execution_scope: local-only
+tags: [lazy-loading, import-graph, carve-out-prerequisite, uac, refactor]
+priority: P0
+source: operator-request-2026-08-16
+parent_epic: infrastructure_master
+related:
+  [
+    /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
+    /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
+  ]
+created: 2026-08-16
+resolved_by:
+locked_by:
+drift_direction: advance-code
+depends_on: []
+estimate_class: refactor
+estimate_baseline_ai_days: 8.0
+estimate_calibrated_ai_days: 3.2
+last_updated: "2026-08-16"
+locked_since:
+supersedes:
+superseded_by:
+context_scope:
+  [
+    /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
+    /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    strategy-service/EXTRACTION_AUDIT.md,
+  ]
+---
+
+# Lazy/scoped loading refactor
+
+> **Parent**: [`/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`](/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md)
+> (workstream W1). **Referenced by**: carve-out plan §A5 P0 #2.
+
+## Why, in one paragraph
+
+A deployment should load the archetypes and contracts it actually uses. Today a single import pulls the whole graph, so
+a scoped build is not scoped in any meaningful sense — which is what makes a carve-out expensive to produce AND
+expensive to keep in sync afterwards. Landing this **before** the carve-out means later updates diff against a system
+that is already scoped, rather than re-deriving a frozen snapshot against a moving, eagerly-coupled target.
+
+## The three layers, measured
+
+Source: `strategy-service/EXTRACTION_AUDIT.md` (internal audit, 2026-08-15/16).
+
+| Layer                  | What is eager                                                                     | Cost   | Blast radius            |
+| ---------------------- | ----------------------------------------------------------------------------------- | ------ | ----------------------- |
+| strategy-service       | `factory.py` registers every archetype engine across every family, not just DeFi's  | Medium | This repo               |
+| **unified-api-contracts** | `registry/__init__.py` (1,270 L) + `internal/__init__.py` (2,708 L) import ~240k lines; `from unified_api_contracts.internal import StrategyArchetype` pulls the package | **High** | **Fleet-wide**          |
+| execution-service      | `algorithms/algorithms.py` imports all 7 algorithm implementations at module level   | Low    | This repo               |
+
+**The trap to avoid**: a fully lazy `factory.py` does not fix the UAC layer. The two real archetypes' live collateral
+calls import UAC directly, which loads the full eager graph regardless of strategy-service's own laziness. Doing only
+layer 1 and declaring the refactor done would be a measured non-result.
+
+**The cheapest layer first is a legitimate order**: execution-service already has the lazy pattern working in
+`adapters/algorithm_factory.py` and `custody/factory.py` — that is a proven local template to copy, not a new design.
+
+**SIT needs no changes.** The audit's § "SIT — no coupling" found `system-integration-tests` never runs strategy-service
+in a mode that queries a runtime registry, so a lazy registry is invisible to it.
+
+## Todos
+
+- [ ] [AGENT] P0. **Baseline the import cost before changing anything** — measure modules loaded and wall time for a
+      representative import in each of the three repos. Without a before-number, "lazy now" is unfalsifiable, and this
+      plan's whole value is that the scoping is real rather than asserted.
+- [ ] [AGENT] P0. **Layer 3 (execution-service) first** — convert `algorithms/algorithms.py` to lazy registration
+      following the existing `adapters/algorithm_factory.py` / `custody/factory.py` pattern in the same repo. Smallest
+      change, proven template, and it validates the approach before touching the shared dependency.
+- [ ] [AGENT] P0. **Layer 1 (strategy-service)** — make `factory.py` register only the archetypes a deployment declares.
+      Must preserve: the coverage gate that fails on a missing schema, and the clients.yaml coverage gate. A lazy
+      registry that quietly registers nothing would pass both by accident — assert a positive count.
+- [ ] [OPERATOR] P0. **Ruling before layer 2: how far does UAC's `__init__` restructure go?** Splitting
+      `registry/__init__.py` and `internal/__init__.py` changes the import surface every repo in the fleet depends on.
+      Options are (a) lazy submodule attributes preserving today's public paths, (b) explicit submodule imports with a
+      deprecation for the flat ones, (c) leave UAC eager and accept that scoping stops at strategy-service. Needs an
+      operator call — it is a fleet-wide API decision, not a local refactor.
+- [ ] [AGENT] P0. **Layer 2 (UAC) per the ruling** — the dominant blocker. DeFi content is interleaved with
+      CeFi/TradFi/sports in flat enums and dicts, so this is not a directory move; it is a genuine restructure. Ship
+      behind the fleet's normal gates and expect every dependent repo's gate to be the real test.
+- [ ] [AGENT] P0. **Prove the end state with a scoped-build test** — construct a deployment declaring only
+      `CARRY_BASIS_PERP` + `CARRY_STAKED_BASIS` (the contracted archetypes) and assert the loaded-module set excludes
+      the families it does not use. This is the test that makes the carve-out's laziness verifiable rather than claimed.
+- [ ] [AGENT] P1. **Add a regression guard** so eager imports cannot creep back — a ratcheted module-count or
+      import-graph check, shrink-only in the same sense as the other baselines in this corpus.
+- [ ] [AGENT] P1. **Re-measure and record the delta** against the baseline from the first todo, in this plan's Progress
+      Log, with the numbers rather than an adjective.
+
+## Progress Log
+
+**2026-08-16 — authored.** Forked from the carve-out plan's §A5 P0 #2 at operator request, so the refactor is
+discoverable under its own name rather than buried in a plan titled "carve-out stubbed strategy service" — the biggest
+item here (UAC) has fleet-wide blast radius well beyond strategy-service, and someone scanning plan titles for it would
+not have found it.

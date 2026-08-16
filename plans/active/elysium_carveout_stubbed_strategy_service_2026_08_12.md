@@ -247,6 +247,15 @@ these gate readiness to carve, not the carve-out's own content.
       extends the code-completion bar already gating the repository send in
       [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md)
       §D, now scoped precisely to the two archetypes and four venues this plan actually covers.
+> **FORKED OUT 2026-08-16.** The lazy-loading refactor now has its own plan —
+> [`/plans/active/lazy_scoped_loading_refactor_2026_08_16.md`](/plans/active/lazy_scoped_loading_refactor_2026_08_16.md)
+> — under the umbrella
+> [`/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`](/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md),
+> which owns track (a): getting the system to full capability in a shape that makes the carve-out doable. Forked
+> because the biggest layer (UAC's eager `__init__` graph) has fleet-wide blast radius and would not be found by anyone
+> scanning plan titles for it. **The prerequisite below still stands and still gates this plan** — it is now satisfied
+> by that child rather than by work tracked here.
+
 - [ ] [OPERATOR] P0. **Land the lazy-loading (factory) refactor before or alongside the carve-out, not as an
       independent question.** Rationale: so that updating the carve-out later doesn't mean re-deriving a frozen
       snapshot against a moving, eagerly-coupled main-system target — if `factory.py`'s archetype registration is
