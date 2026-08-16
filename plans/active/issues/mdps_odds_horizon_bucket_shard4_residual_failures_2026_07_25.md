@@ -189,12 +189,43 @@ stabilize. Left untracked, this manifest residual would silently persist forever
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **slot 7, 2026-08-16**: Launched the shard4 `full`-mode resume-friendly re-run per the Follow-ups todo:
+  `mdps-sports-bucket-20260816-004505` (SPOT, e2-standard-8, `bash launch-mdps-sports-bucket-vm.sh 2025-01-01
+  2026-07-25 full`). Monitored to completion (2877s elapsed): **571 total, 45 success, 0 empty, 16 failed, 509
+  skipped (already-captured, correct full-mode resume), 1 LOSS-GUARD-BLOCKED.** Real progress vs. the prior 20-date
+  residual: **3 of the 4 previous `LOSS_GUARD_BLOCKED` dates resolved** — 2025-08-14, 2025-09-18, 2025-10-23 all now
+  `LOSS_GUARD_PASS [no_loss]`; only **2025-02-16** remains blocked (would still lose 62 (fixture,bookmaker)
+  observations, 1491→1573 — upstream still thinner than the existing corpus for that one date). The 12
+  `ADAPTER_RETURNED_EMPTY_OUTPUT` dates are **unchanged** (2025-08-05, 08-12, 08-13, 08-26, 09-02, 09-03, 09-10,
+  11-11, 11-13, 12-18, 12-24, 12-31 — same zombie-tick-filter working-as-designed pattern as before). The 4
+  `RAW_ODDS_SHAPE_UNRECOGNIZED` dates (2026-06-21..24) failed again as expected — confirmed **permanent** upstream
+  absence per the stale-gating note above, not a regression. **Residual is now 17 dates (down from 20)**: 12
+  `ADAPTER_RETURNED_EMPTY_OUTPUT` + 4 permanent `RAW_ODDS_SHAPE_UNRECOGNIZED` + 1 `LOSS_GUARD_BLOCKED`. No code
+  changes — verification/backfill-execution only. Marking the Follow-ups todo below done (its own scoped action —
+  re-run + verify — is complete); opened a fresh Follow-ups todo for the next re-attempt, scoped to only the
+  genuinely-retriable 13 dates (excludes the 4 permanent dates from future gating).
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Re-run shard4's range (2025-01-01..2026-07-25) on a future full-mode resume-friendly pass once upstream
-      odds_api backfills 2026-06-21..24 and the LOSS_GUARD_BLOCKED dates' observation counts stabilize — re-poll the ~20
-      remaining attempted_failed dates
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot 7)** — Re-ran shard4's range (2025-01-01..2026-07-25) in `full` mode
+      (resume-friendly). Result: 3 of 4 `LOSS_GUARD_BLOCKED` dates resolved; 12 `ADAPTER_RETURNED_EMPTY_OUTPUT` +
+      4 permanent `RAW_ODDS_SHAPE_UNRECOGNIZED` dates unchanged. See Progress Log entry above for full detail.
+      Superseded the "once upstream odds_api backfills 2026-06-21..24" gating condition (confirmed permanent
+      absence, see the stale-gating note above) — that half of the original condition is retired, not carried
+      forward. (repo: market-data-processing-service, deployment-service — verification/backfill-execution only, no
+      new code.)
+      **STALE GATING NOTE (slot 7, 2026-08-16, superseded by the todo above — kept for history): the "once upstream
+      odds_api backfills 2026-06-21..24" half of the original condition will never be met —
+      `odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` (archived 2026-08-05) confirmed via a live re-fetch
+      attempt (0 rows, 0 credits used, all 4 dates) that the vendor's historical endpoint has NO odds data for these
+      4 dates; it's a genuine PERMANENT absence, not a pending backfill. These 4 dates will stay `attempted_failed`
+      forever and that is the correct honest state.**
+- [ ] [DATA] P3. Re-run shard4's range (2025-01-01..2026-07-25) on a future `full`-mode resume-friendly pass once the
+      remaining `2025-02-16` `LOSS_GUARD_BLOCKED` date's observation count stabilizes and/or any of the 12
+      `ADAPTER_RETURNED_EMPTY_OUTPUT` dates naturally resolve (as 07-31/08-26/09-04/10-07/10-14/11-13 already did
+      across earlier re-runs). **Excludes** the 4 permanent `RAW_ODDS_SHAPE_UNRECOGNIZED` dates (2026-06-21..24) —
+      do not gate this retry on them; they will never resolve (see stale-gating note above). Repo:
+      market-data-processing-service.
 
 > **2026-08-06 archive-candidate audit**: Doc's own prose: ~20 dates remain attempted_failed and 'should be picked up
 > again on a future full-mode re-run', with 'nothing currently re-polls just these 26 dates' — an explicitly deferred
