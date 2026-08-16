@@ -397,13 +397,14 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       once — SSH in and check for a live MTDS python process + fresh log lines before trusting it. Real root cause of
       the fast silent-exit is still unconfirmed. See `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the
       original gap tracking.
-- [ ] [DATA] P2. **Weather VM (`weather-backfill-20260815-011036`) status unconfirmed at session end** — `gcloud
-      compute instances describe` returns NOT FOUND (terminated, but completed-vs-preempted unclear — deployment
-      record check was still running when this was written, check
-      `deployments/archive/2026-08-1{5,6}/*.json` for `vm_name=weather-backfill-20260815-011036`). If it completed
-      cleanly: run `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` (required to materialize
-      empty_confirmed rows, per that launcher's own printed instruction — NOT yet run as of this session's end). If
-      preempted: relaunch (standard SPOT recovery, same date range `2024-01-03 2026-08-02`).
+- [ ] [DATA] P2. **Weather VM (`weather-backfill-20260815-011036`) was SPOT-preempted, not completed — relaunch
+      needed.** Confirmed via its deployment record (`deployments/archive/2026-08-15/5b9c3450-592d-47bc-84bb-
+      48a33bc022f2.json`): `status=failed`, `exit_code=125` (the standard vm-vanished sentinel, same signature as
+      every other preempted VM this session — not a workload crash), `completed_at=2026-08-15T16:10:03Z`. Relaunch
+      with the same date range (`2024-01-03 2026-08-02` — resumes from measured progress via existing skip-logic,
+      does not replay from day 0). Once it completes cleanly: run
+      `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` (required to materialize
+      empty_confirmed rows, per that launcher's own printed instruction — NOT yet run as of this session's end).
 - [ ] [SCRIPT] P1. **SFI still 112 `attempted_failed`, unstarted** — see the existing SFI todo above in this doc for
       the full retry mechanism (7 dates, no new code needed, `DEPLOYMENT_ENV=prod` required). Not touched this session
       beyond re-confirming the count is unchanged.
