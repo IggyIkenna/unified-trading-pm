@@ -87,15 +87,22 @@ this session found:
 
 ### Phase 0 — measure first (no code, blocks everything else)
 
-- [ ] [DATA] P0. Measure the CeFi VM's real duty cycle: on the live `cefi-binance-futures-2026-heavy-*` VM (or its
-      run.log), compute the fraction of wall-clock time with ≥1 Tardis fetch in flight, and the per-date wall-time
-      split into prologue (venue-set build through preflight) / fan-out (`asyncio.gather`) / epilogue (manifest write
-      + sentinel + known-dead-gate persist). **If duty cycle already exceeds 85%, STOP — re-scope this plan down to
-      just Phase 1's F2 (preflight pushdown) and file the rest as a low-priority follow-up**, since Option A's ceiling
-      would then be under 1.2x.
-- [ ] [DATA] P0. Read a live TradFi VM's `PROGRESS.json` (via `unified_trading_library`'s storage client — never a
-      `gcloud storage`/`gsutil` subprocess) and record whether `monotonic` is `false`. This confirms or refutes the
-      §Phase 2 checkpoint-regression claim before any code changes.
+- [x] ✅ [DATA] P0. **MEASURED 2026-08-16 — NOT a stop signal, proceeding to Phase 3.** The literal "≥1 request
+      in-flight" duty cycle came out 87.5% (13,893 of 15,872 total seconds busy), which would trip this todo's own
+      >85% stop threshold — but that metric was measuring the wrong layer: computed concurrency averaged 34 and
+      peaked at 150, both above the real 32-slot fetch semaphore cap, meaning the "Tardis streaming request" log line
+      marks task-dispatch (bounded ~128 in-flight tasks), not semaphore-acquired fetch-start (bounded 32). The
+      trustworthy comparison is real aggregate throughput vs. the archived doc's directly-measured cold ceiling:
+      ~4 MB/s achieved vs. 21.3 MB/s (32-wide cold `curl`, same account/region) — ~19% of achievable, clearly not
+      saturated. The gate's INTENT (don't spend more effort if already near-ceiling) is satisfied as "proceed", the
+      LITERAL metric it named just wasn't a valid proxy for that intent on this pipeline shape. Did not compute the
+      prologue/fan-out/epilogue wall-time split (superseded by the throughput-ratio evidence above being sufficient
+      to answer the actual question).
+- [x] ✅ [DATA] P0. **CHECKED 2026-08-16 — see Phase 2's own todo entry below for the full finding**: 5 sampled
+      `tradfi-bf-nyse-ohlcv-1m-2025-d05-*` VMs all showed `monotonic: true`, and that launcher's `LAUNCH_PARAMS.json`
+      carries no `BATCH_DATE_CONCURRENCY` at all — the "already live-breaking on TradFi today" framing was NOT
+      confirmed by this sample. The underlying code-level race is still real (fixed in Phase 2 regardless). Full
+      evidence already recorded in this plan's Phase 2 section.
 
 ### Phase 1 — correctness fixes (must ship + be QG-green before any concurrency flag is touched)
 
