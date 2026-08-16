@@ -698,13 +698,19 @@ batch)
   The instrument-universe half of the original concern was split off, still unruled:
   [`instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`](/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md).
 
-### Genuinely cross-cutting, real open work, currently uncovered (orphaned_never_touched)
+### Formerly orphaned, now resolved
 
 - [`honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`](/plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md)
-  — `measure_honest_coverage.py --asset-group all`'s GCE VM OOM'd (root cause undetermined: organic growth / gc-loop
-  leak / data-shape burst), no fix shipped, fire-and-forget launcher gap unaddressed. 3 of 4 remaining items are
-  operator-gated/judgment calls; 1 (fix the stale `TASK=features-backfill` VM metadata label) is small and bounded but
-  not enough alone to justify a fresh batch — held for a future batch or direct pickup.
+  — **RESOLVED 2026-08-15** (verified live 2026-08-16, ag_closeout_auditor cross-cutting): all 4 suggested-next-steps
+  items closed (`deployment-service@8e203c55` right-sized the launcher machine type + verified clean via
+  `--oom-monitor`; the daily cron has written fresh `coverage.json` with zero gaps since 08-12). Doc kept in place with
+  `archive_exempt: true` (9 live corpus referrers cite this path as standing right-sizing-incident history) rather than
+  moved — 0 open todos, nothing further needed from this tranche.
+
+### Genuinely cross-cutting, real open work, currently uncovered (orphaned_never_touched)
+
+- None currently known (2026-08-16 audit) — see this run's own parked-findings doc for the fresh 2026-08-16
+  never-cited/orthogonality candidate set and their verdicts.
 
 ## Todos
 

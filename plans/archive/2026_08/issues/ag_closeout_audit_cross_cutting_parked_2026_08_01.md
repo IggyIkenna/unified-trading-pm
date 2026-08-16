@@ -19,7 +19,7 @@ summary: >-
   rule (this run reached only Phase 0-2 + a Phase 3 draft for the disjoint orphaned population — see
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` — these 6 mistags are excluded from that batch by
   definition, per Phase 2's "count by verdict, excluding exclude_cross_cutting").
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -66,6 +66,8 @@ context_scope:
     /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
   ]
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-16** — both remaining open todos verified resolved (see Progress Log's final entry).
 
 # Parked findings — 2026-08-01 `/ag-closeout-audit cross-cutting` run
 
@@ -205,7 +207,10 @@ member, not just a retag.
       `[ao, ci]` to `[ci]` only, not a discrepancy), and it carries a full `✅ ARCHIVED 2026-08-02` banner citing
       `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 22 as the archival
       authorization (all 8/8 todos done, `locked_by` cleared).
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc retagged `[ao]` and
+      archived to `/plans/archive/2026_08/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`
+      (verified live via fresh grep; corroborated by `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`'s 2026-08-16
+      refresh note). Original text preserved for record. Was: Retag
       `plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`'s `asset_group`
       `[cross-cutting]` → `[ao]` (finding 2). Done when: the tag is corrected and the doc is folded into
       `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per the 2026-07-31 audit — confirm the
@@ -221,7 +226,9 @@ member, not just a retag.
       already correct on trunk — and the doc has been archived to
       `/plans/archive/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md` per the
       archival-discipline HARD RULE (zero open todos, `locked_by:` empty). No retag needed on an archived doc.
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc's `asset_group` is now
+      `[infrastructure]` (verified live via fresh grep; this retag landed since the same-day plan_reconciler
+      cross-cutting refresh, which had still read it unretagged). Original text preserved for record. Was: Retag
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`'s `asset_group`
       `[cross-cutting]` → `[infrastructure]` (finding 4). Done when: the tag is corrected, the doc is folded into
       `infra_consolidated_closeout_2026_07_25.md`'s membership, and its 2 AO-eligible items (live SA enumeration;
@@ -279,3 +286,8 @@ member, not just a retag.
   cross-tranche parked-findings register; the 2 remaining open todos are `[DOCS] P3` `asset_group` retags of docs owned
   by OTHER tranches, explicitly scoped "leave to the owning tranche's own audit" per the 2026-07-30
   concurrent-sharded-worker rule -- structurally not this tranche's write, not a defaulted-to-NA judgment call.
+- **ag_closeout_auditor cross-cutting 2026-08-16 (reconciliation-first pass, dispatch `agt-dd96db`, slot 6)**: both
+  remaining open todos (2, 4) verified RESOLVED via fresh direct grep — both target docs' `asset_group` no longer reads
+  `cross-cutting` (retagged `[ao]` and `[infrastructure]` respectively, one also archived). All 6 findings + both todos
+  now closed. Doc has 0 open todos, `locked_by:` empty — archived to `plans/archive/2026_08/issues/` per the
+  archival-discipline HARD RULE.

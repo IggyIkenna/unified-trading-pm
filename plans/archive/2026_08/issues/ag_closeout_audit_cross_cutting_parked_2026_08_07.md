@@ -30,7 +30,7 @@ summary: >-
   → **71** today, still 2 over the 69 baseline) and recorded that cross-cutting's 37-doc share of that count is, on this
   run's evidence, dominated by exactly the same same-day-mistagged-issue-doc cluster pattern this run's own 7 findings
   show — see that doc's Progress Log for the update.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -76,6 +76,8 @@ context_scope:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
   ]
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-16** — all remaining open todos verified resolved (see Progress Log's final entry).
 
 # Parked findings — 2026-08-07 `/ag-closeout-audit cross-cutting` run
 
@@ -275,7 +277,9 @@ spot per this skill's SKILL.md).
       `[cross-cutting]` → `[ci]` (finding 2) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ci`'s closeout membership, and current incident state (was blocked on an
       external GH Actions outage as of 2026-08-06) is re-verified before treating any of its 3 todos as stale.
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc's `asset_group` is now
+      `[ci]` (corrected 2026-08-16 via `meta_plan_corpus_hygiene_ao_dispatch_batch1` todo 3, verified live). Original
+      text preserved for record. Was: Retag
       `plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`'s `asset_group`
       `[cross-cutting]` → `[ci]` or `[infrastructure]` (finding 3, `ci` recommended, `infrastructure` defensible) —
       owning-tranche fix. Done when: the tag is corrected to a single real tranche and folded into that tranche's
@@ -295,11 +299,15 @@ spot per this skill's SKILL.md).
       and archived to `plans/archive/2026_08/issues/` before the `ci` tranche picked up this retag; asset_group no
       longer matters for an archived, resolved doc. No action taken (retagging a closed archive entry has no downstream
       effect on closeout membership).
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc archived (verified live).
+      Original text preserved for record. Was: Retag
       `plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s
       `asset_group` `[cross-cutting]` → `[ci]` (finding 6) — owning-tranche fix, leave to the `ci` tranche's own audit.
       Done when: the tag is corrected and the doc is folded into `ci`'s closeout membership.
-- [ ] [DOCS] P3. Retag `plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`'s `asset_group`
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc archived (verified live,
+      now at `/plans/archive/2026_08/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`). Original
+      text preserved for record. Was: Retag
+      `plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`'s `asset_group`
       `[cross-cutting]` → `[infrastructure]` (finding 7) — owning-tranche fix, leave to the `infra` tranche's own audit.
       Done when: the tag is corrected and the doc is folded into `infra`'s closeout membership.
 
@@ -337,3 +345,8 @@ spot per this skill's SKILL.md).
   "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute these itself by
   construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **ag_closeout_auditor cross-cutting 2026-08-16 (reconciliation-first pass, dispatch `agt-dd96db`, slot 6)**: all 3
+  remaining open todos (findings 3, 6, 7) verified RESOLVED via fresh direct grep — finding 3's target retagged `[ci]`,
+  findings 6 and 7's targets both archived. All 7 findings + all 4 carry-forward items now closed (see the sibling
+  2026-08-08 doc's own 2026-08-16 refresh for the carry-forward items). Doc has 0 open todos, `locked_by:` empty —
+  archived to `plans/archive/2026_08/issues/` per the archival-discipline HARD RULE.

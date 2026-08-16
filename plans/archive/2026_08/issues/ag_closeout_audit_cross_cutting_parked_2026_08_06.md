@@ -44,7 +44,7 @@ summary: >-
   cleared 2026-08-03 (its blocking dependency archived resolved) and the doc self-dispatched via a separate
   na-eligibility-audit reclassify pass — batch1's Deferred section updated in place to record this, no fresh batch todo
   needed since the doc already covers itself.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -89,6 +89,8 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-16** — all remaining open todos verified resolved (see Progress Log's final entry).
 
 # Parked findings — 2026-08-06 `/ag-closeout-audit cross-cutting` run
 
@@ -232,12 +234,17 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
       `[cross-cutting]` → `[ui]` (finding 1) — owning-tranche fix, leave to the `ui` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ui_consolidated_closeout_2026_07_30.md`'s membership, and its 3
       AO-eligible items are considered for that tranche's next batch.
-- [ ] [DOCS] P3. Retag `plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`'s
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc's `asset_group` is now
+      `[infrastructure]` (corrected 2026-08-10, verified live via fresh grep). Original text preserved for record. Was:
+      Retag `plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`'s
       `asset_group` `[cross-cutting]` → `[infrastructure]` (finding 2) — owning-tranche fix, leave to the `infra`
       tranche's own audit. Done when: the tag is corrected and the doc is folded into
       `infra_consolidated_closeout_2026_07_25.md`'s membership. Remains KEEP-NA (operator-direction-gated) per the
       2026-08-04 na-eligibility-audit ruling — a retag does not change its dispatch eligibility.
-- [ ] [DOCS] P3. Retag `plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`'s
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc verified + archived to
+      `/plans/archive/2026_08/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md` by
+      plan_reconciler (dispatch `agt-8fc5a6`, same day). Original text preserved for record. Was: Retag
+      `plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`'s
       `asset_group` `[cross-cutting]` → `[ui]` (finding 3) — owning-tranche fix, leave to the `ui` tranche's own audit.
       Done when: the tag is corrected AND the doc is verified (`vitest run block-list-parity.test.ts` green on current
       `main`) + archived citing `unified-trading-system-ui@3c2efb2c` as the incidental-fix evidence — not re-dispatched
@@ -251,7 +258,9 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
       evidence, no genuine judgment call blocking it): retagged, banner added, moved to
       `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`, all 6 corpus referrers fixed. See that
       doc's own Progress Log for the full ritual trail.
-- [ ] [DOCS] P3. Retag `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — target doc archived (verified live).
+      Original text preserved for record. Was: Retag
+      `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
       `asset_group` `[defi, cross-cutting]` → `[ci]` or `[infrastructure]` (finding 5, owning tranche TBD by content) —
       leave to whichever of those two tranches' own audit claims it first. Done when: the tag is corrected to a single
       real tranche and the doc is folded into that tranche's closeout membership.

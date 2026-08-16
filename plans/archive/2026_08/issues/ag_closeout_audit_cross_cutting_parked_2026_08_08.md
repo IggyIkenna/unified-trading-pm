@@ -32,7 +32,7 @@ summary: >-
   `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` (also closed that doc's Todo 2 on the met done-when).
   `cursor-configs/skills/ag-closeout-audit/SKILL.md` updated with the widened Orthogonality peer set so every future run
   (any tranche) inherits the fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -80,6 +80,8 @@ context_scope:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
   ]
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-16** — the remaining open todo verified resolved (see Progress Log's final entry).
 
 # Parked findings — 2026-08-08 `/ag-closeout-audit cross-cutting` run
 
@@ -284,10 +286,13 @@ ledger.
 
 ## Todos
 
-- [ ] [DOCS] P3. Retag findings 1-13 above `asset_group` `[cross-cutting]`/`[ao, cross-cutting]`/`[ci, cross-cutting]` →
-      their real single owner (`ao` ×3, `ci` ×6, `infrastructure` ×3, `meta` ×1) — owning-tranche fix, leave to each
-      tranche's own audit. Done when: all 13 tags are corrected and folded into their real tranche's closeout
-      membership.
+- [x] ✅ [DOCS] P3. **RESOLVED 2026-08-16 (ag_closeout_auditor cross-cutting)** — all 13 targets verified retagged via
+      fresh direct grep (ao ×3 already done 2026-08-09; ci ×6 and infrastructure ×3 and meta ×1 corrected 2026-08-16,
+      mostly via `meta_plan_corpus_hygiene_ao_dispatch_batch1` todo 3 + a same-day plan_reconciler pass). Original text
+      preserved for record. Was: Retag findings 1-13 above `asset_group` `[cross-cutting]`/`[ao, cross-cutting]`/
+      `[ci, cross-cutting]` → their real single owner (`ao` ×3, `ci` ×6, `infrastructure` ×3, `meta` ×1) —
+      owning-tranche fix, leave to each tranche's own audit. Done when: all 13 tags are corrected and folded into their
+      real tranche's closeout membership.
 - [x] ✅ [DOCS] P1. **DEDUPED 2026-08-10 — duplicate of finding 4 in
       `/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md`, the origin doc**, and now dispatched
       as todo 1 of `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`. The "3rd consecutive day"
@@ -352,3 +357,11 @@ ledger.
   question flagged "unruled since 2026-07-31" was actually ruled 2026-08-06 (option A) — re-verified against the target
   doc's own todo, now `[CODE] P2`, tag already corrected there. Flipped `[x]` and retagged `[DOCS]` here; no further
   action needed on this doc's side, implementation tracked at the target.
+- **ag_closeout_auditor cross-cutting 2026-08-16 (reconciliation-first pass, dispatch `agt-dd96db`, slot 6)**: the one
+  remaining open todo (all 13 findings' retags) verified fully RESOLVED via fresh direct grep of all 13 target docs.
+  The 11 carry-forward items were already reconciled today by an earlier plan_reconciler cross-cutting pass (see this
+  doc's own carried-forward section above, refreshed 2026-08-16) — 5 archived, 6 confirmed retagged/escalated
+  independently. The 1 genuine orphan (`honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`) is also now fully
+  resolved (0 open todos as of 2026-08-15, `archive_exempt: true`) — the closeout doc's "Known non-orphan dispositions"
+  section is being updated to match in the same turn. Doc has 0 open todos, `locked_by:` empty — archived to
+  `plans/archive/2026_08/issues/` per the archival-discipline HARD RULE.
