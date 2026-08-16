@@ -364,7 +364,7 @@ architecture (L0–L4)".
   sonnet-tier dispatch (DeepSeek = baseline fallback). SSOT: `/codex/15-runbooks/safe-service-restart-procedures.md`.
 - **AO scheduled jobs (systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
   (`agent_exit_reason == "lifecycle-complete"` is done); `git pull` does NOT reinstall a timer — re-run
-  `bash scripts/install-<job>-timer.sh` (**NO `sudo`** since 2026-08-08 — now hard-fails, see codex); `no_capacity` is
+  `bash scripts/install-<job>-timer.sh` (**NO `sudo`** since 2026-08-08 — now hard-fails); `no_capacity` is
   legacy (queue-on-no-capacity default); `quarantined/timeout/error` page, `dispatched/queued` don't. SSOT:
   `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);

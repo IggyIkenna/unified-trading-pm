@@ -674,14 +674,21 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       archived, 0 open todos — moot.
 - [x] ✅ [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md —
       bundled ready-and-blocked halves in one todo. **DONE (verified 2026-08-16)**: doc archived, 0 open todos — moot.
-- [ ] [REVIEW] P3. (ao-readiness)
+- [x] ✅ [REVIEW] P3. (ao-readiness)
       plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md —
-      non-dispatchable marker may not match the AO regex. **CONFIRMED REAL (checked 2026-08-16)**: the sole open todo's
-      marker is `BLOCKED-ON:tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09` — the AO
-      ingestion-gate regex (`agent-orchestrator/server/regen_backlog_from_plan.py` `_BLOCKED_TOKEN_RE`) only recognizes
-      `BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-(OUTAGE|DESIGN)|PLAYWRIGHT|JURISDICTION)` — `BLOCKED-ON:`
-      is NOT in that list, so this todo would be dispatched to an AO worker despite being genuinely blocked. Real gap,
-      needs a marker fix (not a one-line touch — leaving open for the owning tranche).
+      non-dispatchable marker may not match the AO regex. **RESOLVED (2026-08-16)**: `BLOCKED-ON:` is deliberately
+      OUTSIDE `_BLOCKED_TOKEN_RE` — it's verify.py's separate, deliberately-dispatchable "real work, temporarily blocked
+      on another owner's in-flight fix" marker family (confirmed correct fit for this exact todo's content on
+      re-read), not the closed non-dispatchable taxonomy. The actual dispatch-safety gap this bullet worried about does
+      NOT exist: the doc's own frontmatter already carries
+      `depends_on: [tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09]` + `gate_on_depends:
+      true`, wired 2026-08-12 (/plan-reconcile, per that doc's own header comment) — that machine gate is what
+      actually suppresses dispatch, and it was verified still in place. Separately, for defense-in-depth,
+      `_BLOCKED_TOKEN_RE` was widened 2026-08-16 (agent-orchestrator@188dd74171 + PM sync in
+      `scripts/plan-hygiene/count_operator_blocking_todos.py`) to accept an optional `:<doc-slug>` citation suffix on
+      the existing closed-taxonomy tokens (e.g. `BLOCKED-UPSTREAM-DESIGN:<slug>`) — deliberately NOT absorbing
+      `BLOCKED-ON:` itself, to avoid silently flipping that established dispatchable family. Annotated the todo doc
+      with a DISPATCH-SAFETY NOTE explaining this.
 - [x] ✅ [REVIEW] P3. (ao-readiness)
       plans/active/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md — VM-delete/kill
       decision tagged `[INFRA]` not `[OPERATOR]`. **DONE (verified 2026-08-16)**: already retagged 2026-08-12
