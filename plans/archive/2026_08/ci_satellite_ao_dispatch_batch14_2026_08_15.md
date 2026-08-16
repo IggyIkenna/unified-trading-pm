@@ -21,7 +21,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13.md,
     /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
     /plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md,
-    /plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md,
     /plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md,
     /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
     /plans/archive/2026_08/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md,
@@ -190,7 +190,7 @@ source: >-
       local ratchet breach (not observed via a GitHub Actions run conclusion) produces an escalation-queue entry within
       the 15-minute grace window if unresolved. **DUPLICATE — 2026-08-15 (slot-16·infra) finding**: this exact scope was
       already covered by a dedicated, more-detailed implementation plan authored the same day —
-      `/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md` (`assigned_vm: planning`,
+      `/plans/archive/2026_08/local_ratchet_gate_breach_escalation_detector_2026_08_15.md` (`assigned_vm: planning`,
       `sequential: true`) — which this batch's own frontmatter conflict-check should have caught but didn't. Rather than
       re-implement separately, continued that plan's todos 3+4 (the 15-min grace-window state machine +
       `escalation.enqueue` wiring) directly. **Shipped**: `agent-orchestrator@452ba5a` (+ test-isolation fix
@@ -224,7 +224,7 @@ source: >-
       recurring cadence where none existed before (previously ad-hoc/manual invocation only) — resolves the corpus-
       growth-vs-lagging-main deadlock via faster NA-corpus retirement per the operator's ruling. Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` +
-      `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`.
+      `plans/archive/2026_08/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`.
 
 - [x] ✅ [INFRA] P3. **Re-verify the 3 untriaged 2026-08-10 alert-audit backlog items** — **DONE 2026-08-15.** (1)
       "7-repo release-tag stall": `python3 scripts/cicd/reconcile_release_tags.py --dry-run` reports **0 STALLED

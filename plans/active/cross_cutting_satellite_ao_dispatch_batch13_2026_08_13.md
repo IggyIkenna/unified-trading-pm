@@ -872,8 +872,8 @@ source: >-
 - [x] ✅ [CODE] P2. **Authored — AO-dispatched, per operator-approved BLK-3f47f1af (2026-08-15).** Routing confirmed
       with the operator before authoring (option A: AO-dispatched, since the 2026-08-12 ruling already fully specifies
       the shape — no open design call remained). New 12-todo implementation plan:
-      `plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md` (+ paired gated finalize
-      `plans/active/local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md`) — unified-trading-pm
+      `plans/archive/2026_08/local_ratchet_gate_breach_escalation_detector_2026_08_15.md` (+ paired gated finalize
+      `plans/archive/2026_08/local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md`) — unified-trading-pm
       (2026-08-15, slot-7·infra). Scopes: new `local_ratchet_gate_breach` wall type in
       `agent-orchestrator/server/escalation.py`, a fleet-wide detector against live `origin/live-defi-rollout` HEAD, the
       15-minute delayed re-check state machine, AO dispatch as primary remediation, and Slack-alert-ownership
