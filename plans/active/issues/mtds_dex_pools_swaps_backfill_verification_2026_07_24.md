@@ -641,15 +641,24 @@ rule (see Progress Log entry below for the observed outcome).
       `PROGRESS.json` field + the ambiguous-deleter class are tracked as follow-ups below rather than fixed inline,
       out of this spot-check todo's scope).
 
-- [ ] [DATA] P2. **NEW 2026-08-16.** Relaunch `mtds-dex-pools-backfill` for the still-open TRADER_JOE_V2
-      `dex_pool_state` window (`2026-04-13`→`2026-07-24`, 14/18 spot-checked dates still ABSENT) with ACTIVE
-      monitoring past the usual T+10min health-check — this VM has now died silently (no shutdown/error log line,
-      no completion marker) at least twice under this same singleton name (2026-07-18 confirmed external delete;
-      2026-08-09 this todo's finding, cause undetermined). Poll `run.log`'s `last_modified` timestamp (not just
-      content) periodically until either a genuine `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true`
-      executed-output line appears or the range is otherwise confirmed complete via a fresh spot-check — a
-      T+10min-only health-check has now twice been insufficient to catch an early silent death. Repo:
-      deployment-service (launch) / market-tick-data-service (verify).
+- [ ] [DATA] P2. **IN PROGRESS 2026-08-16 (slot 30).** Picked up this todo; before launching a duplicate, checked
+      for an already-running instance (`gcloud compute instances list --filter="name~'mtds-dex-pools-backfill'"`)
+      and found ONE ALREADY RUNNING — `mtds-dex-pools-backfill`, created 2026-08-16T02:25:12Z (a peer slot must
+      have picked up this exact todo just ahead of this dispatch; no duplicate launched, per singleton-lock +
+      no-redundant-launch discipline). Confirmed genuinely healthy and progressing via `run.log` (45,774 bytes,
+      `last_modified=2026-08-16T02:52:59Z`) + heartbeat blob (`running`): actively writing real
+      trader_joe_v2/AVALANCHE rows (276 records for `date=2026-05-12` at the time of this check — inside the
+      target `2026-04-13→2026-07-24` window, well past the ~24-day point where the 2026-08-09 attempt died
+      silently). Set up an active background monitor (bounded ~100min, 5min poll interval) reading `run.log`'s
+      `gcs_describe_object(...).last_modified` (metadata mtime, not just content — the exact signal this todo asks
+      for) + VM instance liveness, watching for either the genuine
+      `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` executed-output line, a sustained
+      last-modified stall (>=4 consecutive 5min rounds unchanged while the VM still exists — the previous silent-
+      death signature), or the VM disappearing. Per the async-wait discipline (hand a bounded wait to the harness,
+      don't busy-poll), this session is now waiting on that monitor's own completion notification rather than
+      re-checking manually every few minutes — see the next Progress Log entry (to be appended) for the outcome
+      once the monitor concludes. Repo: deployment-service (launch, none needed this session) / market-tick-data-service
+      (verify, ongoing).
 - [ ] [SCRIPT] P3. **NEW 2026-08-16.** `mtds-dex-pools-backfill`'s launcher script's `PROGRESS.json` field
       `last_completed_date` is a static echo of the requested `--end-date` CLI parameter written once near VM
       start, not a live per-day walk-progress marker — misleading to any reader who trusts the field name (this
