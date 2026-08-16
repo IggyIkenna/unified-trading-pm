@@ -607,11 +607,54 @@ rule (see Progress Log entry below for the observed outcome).
       over the former bad-indexers window (2026-07-27→2026-08-04) to clear the ~339 residual `attempted_failed` rows
       left from the ~7-day outage. Subgraph confirmed healthy 2026-08-06; this session's re-run is retrying and
       succeeding as expected. Repo: deployment-service (no code change — used the existing launcher).
-- [ ] [DATA] P3. Once the `mtds-dex-pools-backfill` VM launched 2026-08-09T22:29Z (see Progress Log entry same date)
-      finishes traversing its full `2026-03-01→2026-07-24` assigned range (ETA ~90min from launch, ~00:00Z 2026-08-10,
-      per its observed ~34s/day processing rate), re-run the 18-date GCS-object-existence spot-check for TRADER_JOE_V2
-      `dex_pool_state` across that window to confirm the "large majority of sampled dates FOUND" bar from
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 12 is actually met (not just the 2 dates spot-checked at
-      launch time). If still materially absent once the VM reaches `DEPLOYMENT_COMPLETED`, file a new root-cause finding
-      (the catalogue-TTL fix + relaunch already ruled out the previously-confirmed stale-cache cause). Repo:
-      market-tick-data-service.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-14, data_engineering) — gap did NOT close; VM died abnormally ~15min into a
+      146-day range, new root-cause finding filed (per this todo's own instruction).** Re-ran the 18-date
+      GCS-object-existence spot-check for TRADER_JOE_V2 `dex_pool_state` across `2026-03-01`→`2026-07-24` (same UTL
+      SDK `list_blobs` method as this doc's precedent): **only 4/18 (22%) dates FOUND** (`2026-03-01/03-10/03-18`,
+      `2026-04-04` — all clustered in the first ~5 weeks); the remaining 14/18 (78%), `2026-04-13` through
+      `2026-07-24`, are still ABSENT. This does NOT meet the "large majority FOUND" bar — materially absent, per this
+      todo's own trigger condition.
+
+      **Root-caused why**: the `mtds-dex-pools-backfill` VM launched 2026-08-09T22:29:51Z (confirmed via GCE audit
+      log — 2 `v1.compute.instances.insert` calls at 22:29:54Z/22:30:06Z) never reached its own completion marker.
+      Its launcher script only prints `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` INSIDE an
+      `if [[ $_GENERIC_RC -eq 0 ]]` guard after the python process exits — that exact string appears in the run.log
+      exactly ONCE, as the shell script's OWN source line (`[vm-exec] starting: bash -c ...`), never as executed
+      output, proving the guard's branch never fired. The run.log (`vm-logs/mtds-dex-pools-backfill/run.log`,
+      `last_modified=2026-08-09T22:45:28Z`, confirmed via blob metadata — not just log content) stops abruptly
+      mid-stream after a routine `RESOURCE_SAMPLE` line (cpu=100%, mem=14%, rss=3.2GB — well within budget, not OOM)
+      while still processing `2026-03-24` — only ~24 days into the 146-day range, matching the 4/18 spot-check
+      result. No `received signal`, no `DEPLOYMENT_FAILED`/`DEPLOYMENT_COMPLETED`, no Traceback anywhere in the log.
+      GCE audit log shows 2 `v1.compute.instances.delete` calls at 22:45:56Z/22:46:46Z (~30-90s after the log went
+      silent) by principal `1060025368044-compute@developer.gserviceaccount.com` — the GCE default compute SA, which
+      is ambiguous evidence (both a VM's own self-shutdown-on-completion script AND an external watchdog reap run
+      under this same default SA identity), so the exact trigger is NOT conclusively determined here — flagging as
+      unresolved rather than guessing. **Separately confirmed misleading**: `PROGRESS.json`
+      (`last_modified=2026-08-09T22:33:16Z`, i.e. written once ~3min after launch) reads
+      `{"last_completed_date":"2026-07-24",...}` — this is a STATIC ECHO of the requested `--end-date` CLI parameter
+      written near VM start, NOT a live per-day walk-progress marker; a future reader trusting this field's name at
+      face value would wrongly conclude the VM reached the end of its range. `EXIT_STATUS` in the same GCS prefix
+      reads `0`, but its `last_modified` is `2026-08-05T01:21:36Z` — STALE, leftover from an unrelated prior run
+      under this same singleton VM name, not written by this 2026-08-09 launch at all. Confirmed via `compute
+      instances.aggregated_list_instances`: no `mtds-dex-pools-backfill` instance currently exists (it is gone,
+      whatever killed it). Repo: market-tick-data-service (finding only — no code change this todo; the misleading
+      `PROGRESS.json` field + the ambiguous-deleter class are tracked as follow-ups below rather than fixed inline,
+      out of this spot-check todo's scope).
+
+- [ ] [DATA] P2. **NEW 2026-08-16.** Relaunch `mtds-dex-pools-backfill` for the still-open TRADER_JOE_V2
+      `dex_pool_state` window (`2026-04-13`→`2026-07-24`, 14/18 spot-checked dates still ABSENT) with ACTIVE
+      monitoring past the usual T+10min health-check — this VM has now died silently (no shutdown/error log line,
+      no completion marker) at least twice under this same singleton name (2026-07-18 confirmed external delete;
+      2026-08-09 this todo's finding, cause undetermined). Poll `run.log`'s `last_modified` timestamp (not just
+      content) periodically until either a genuine `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true`
+      executed-output line appears or the range is otherwise confirmed complete via a fresh spot-check — a
+      T+10min-only health-check has now twice been insufficient to catch an early silent death. Repo:
+      deployment-service (launch) / market-tick-data-service (verify).
+- [ ] [SCRIPT] P3. **NEW 2026-08-16.** `mtds-dex-pools-backfill`'s launcher script's `PROGRESS.json` field
+      `last_completed_date` is a static echo of the requested `--end-date` CLI parameter written once near VM
+      start, not a live per-day walk-progress marker — misleading to any reader who trusts the field name (this
+      todo's own 2026-08-09 Progress Log entry cited it as if it reflected real progress). Either make it a genuine
+      live-updating per-day marker, or rename it to something that doesn't imply completion (e.g.
+      `requested_end_date`). Repo: deployment-service (`launch-mtds-dex-pools-backfill-vm.sh` / the shared
+      `[[VM_PROGRESS]]` convention, if this pattern is shared with sibling launchers — check before assuming
+      single-file scope).
