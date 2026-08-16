@@ -249,7 +249,33 @@ days.
 - [ ] [SCRIPT] P0. Monitor the (relaunched) liquidations re-derive to completion, same 3-way verification rigor as every
       prior attempt in this batch (log counters + manifest `written_at` + GCS `last_modified` — a clean exit code alone
       has already proven insufficient multiple times this batch). Confirm zero non-zero-rc dates before calling this
-      closed.
+      closed. **STATUS 2026-08-16**: on its 5th VM iteration, `mdps-backfill-cefi-20260815-181733` (`e2-standard-4`,
+      on-demand), healthy, zero `SchemaContractNotFoundError`/`Traceback` hits, currently ~2022-05-05 of the
+      2020-01-01..2026-01-31 range, ETA ~6-9 more days at the current ~6 min/date pace (climbing as it enters
+      higher-volume 2022+ periods — re-estimate when checking in). Prior 4 iterations were killed by an unrelated bug
+      (`vm_zombie_watchdog.py` false-positiving on long-running jobs — fixed + shipped
+      `deployment-service@149374355e`, see `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`) — this iteration
+      has NOT been killed since that fix landed. **Output spot-checked and looks correct**: pulled
+      `BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN` 15m liquidation candles for 2022-05-01 — prices match real BTC levels
+      (~$37-38K), OHLC internally consistent, liquidation volume tracks visible volatility, and the 22/96 windows with
+      zero liquidations are cleanly `null` (not zero/garbage) — honest absence, not corruption. **Next agent**: SSH
+      check `find /tmp -maxdepth 1 -name "vm-exec-*.log"` for its current progress/errors; if the date range is
+      complete (reaches 2026-01-31 with exit code 0), run the full 3-way verification below and close this todo. If
+      still running, just confirm still-healthy and re-check later — do not restart it, checkpoint-resume is already
+      proven correct across iterations.
+- [ ] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
+      as `attempted_failed`" is WRONG — directly measured earlier in this campaign (a prior session, same day) that the
+      VM's own per-VM manifest shard had **0 `attempted_failed` rows** despite these exact `SchemaContractNotFoundError`
+      occurrences being present in its log. Root cause: `SchemaContractNotFoundError` is NOT caught by the shard-level
+      failure-isolation handler that converts `MalformedTickFieldError`/`UpstreamTimestampBiasError` into
+      `record_failed_for_shard()` — it's deliberately a hard, loud, pipeline-halting signal by design (someone needs to
+      register a contract), not a per-shard-recordable failure. That's fine for the intended case (missing contract
+      registration) but wrong for THIS case (malformed raw bundle data) — these failures are currently invisible to
+      both the manifest and to Slack alerting (confirmed earlier: zero `DP_VM_PREEMPTED`/`DP_RUN_MOSTLY_EMPTY`-class
+      events matched this signature in `#data-pipeline-alerts`). Still needs a decision: reclassify this specific
+      bundle-file-defect case to raise `MalformedTickFieldError` instead (so it's honestly recorded + retryable), or
+      widen the shard-isolation catch handler to also record `SchemaContractNotFoundError`. Original finding stands
+      otherwise (root cause + narrow blast radius correct).
 - [ ] [DATA] P3. NEW, SEPARATE, narrow finding surfaced mid-4th-re-derive (2026-08-14, unrelated to contract_size/
       margin_type):
       `No SchemaContract registered for asset_group='cefi' instrument_type='<SYMBOL>' data_type='liq_agg_15s' venue='BINANCE-FUTURES'`
@@ -258,12 +284,23 @@ days.
       `venue=BINANCE-FUTURES/.../data_type=liquidations/ticks.parquet` BUNDLE file (multiple instruments per file, not
       per-instrument) has a malformed per-row `instrument_type` column containing the SYMBOL string instead of
       `PERPETUAL` for these specific rows — a likely raw MTDS historical data-quality issue for this exact 9-day window,
-      not an MDPS code bug (MDPS's fail-closed `SchemaContract` lookup is working as designed, refusing to guess).
-      Correctly recorded as `attempted_failed`, not silently wrong. Needs: (1) confirm the raw bundle file's actual
-      `instrument_type` column content for one of these symbol/dates to verify the hypothesis, (2) if confirmed, either
-      a targeted content-fix (same methodology as Finding 1a) or accept as honest historical absence. Very small blast
-      radius (16 occurrences vs the thousands-of-shards P0 findings above) — does not block calling Findings 1/2/3
-      verified.
+      not an MDPS code bug (MDPS's fail-closed `SchemaContract` lookup is working as designed, refusing to guess). NOT
+      "correctly recorded as `attempted_failed`" — see the correction above, this failure class is currently invisible
+      to the manifest entirely. Needs: (1) confirm the raw bundle file's actual `instrument_type` column content for
+      one of these symbol/dates to verify the hypothesis, (2) if confirmed, either a targeted content-fix (same
+      methodology as Finding 1a) or accept as honest historical absence. Very small blast radius (16 occurrences vs the
+      thousands-of-shards P0 findings above) — does not block calling Findings 1/2/3 verified.
+- [ ] [SCRIPT] P3. NEW 2026-08-16: `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
+      "adapter density bug" NaN-in-`open`/`close` warning on EVERY liquidations shard with any zero-liquidation window
+      — 659,791 occurrences and counting in this campaign's log alone. Confirmed FALSE POSITIVE, not a real bug (see
+      the spot-check above): liquidations is inherently sparse/event-driven, and null `open`/`close` on a
+      zero-liquidation window is the CORRECT honest-absence representation, not the "pre-LOCF leading-NaN density bug"
+      this guard exists to catch on continuous LOCF-densified data (trades/book_snapshot_5). `derivative_ticker`
+      already has an exemption for this exact shape (`_honest_absence_frame`, keyed on the `mark_price_mean` column) —
+      liquidations needs the same kind of exemption (key on `liquidation_count`/`liquidation_notional_usd` presence, or
+      widen the existing `mark_price_mean` check). Low priority — output data is correct, this is pure log-noise
+      cleanup (659K lines is real cost in log volume/scan time for anyone debugging this VM, but not a correctness
+      issue).
 
 ## Lesson
 
