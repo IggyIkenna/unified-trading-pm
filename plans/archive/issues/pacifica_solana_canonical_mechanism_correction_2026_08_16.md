@@ -7,7 +7,7 @@ summary: >-
   standard canonical-by-default writer, "no new script, hence no commit in either repo". That conclusion was reached
   without knowledge of the actual migration tooling — a purpose-built, delete-safety-protocol-compliant script this
   session's operator had already dispatched and executed. This issue corrects the record with first-hand evidence.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -26,7 +26,7 @@ related:
     /plans/active/pacifica_solana_perp_reintegration_2026_08_14.md,
   ]
 created: 2026-08-16
-resolved_by:
+resolved_by: pacifica_solana_canonical_mechanism_correction_2026_08_16
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -82,16 +82,22 @@ already-executed script is invisible to it.
 
 - [x] ✅ [DATA] P2. Correct `unified_api_contracts/canonical/quarantine.py`'s `QUARANTINE_REGISTRY["PACIFICA-SOLANA"]`
       mechanism claim with the true root cause (repos: unified-api-contracts). See Progress Log for the shipped SHA.
-- [ ] [DATA] P3. Correct `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py`'s docstring
+- [x] ✅ [DATA] P3. Correct `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py`'s docstring
       "MECHANISM NOTE (2026-08-16...)" section with the same correction, once the repo's live cross-session
-      `.gitleaks.toml`/`.pre-commit-config.yaml` rollout clears (repo: market-tick-data-service).
-- [ ] [SCRIPT] P3. Ship the migration script itself,
+      `.gitleaks.toml`/`.pre-commit-config.yaml` rollout clears (repo: market-tick-data-service). —
+      `market-tick-data-service@f3c2cd7c5b`.
+- [x] ✅ [SCRIPT] P3. Ship the migration script itself,
       `market-tick-data-service/scripts/migrate_pacifica_quarantine_canonical_2026_08_15.py` (currently untracked,
       already executed against prod, quality-gates.sh confirmed green before the repo went dirty) — same blocker as
-      above (repo: market-tick-data-service).
+      above (repo: market-tick-data-service). — `market-tick-data-service@f3c2cd7c5b`.
 
 ## Progress Log
 
+- **2026-08-16 (both remaining todos shipped, issue resolved)**: the foreign cross-session
+  `.gitleaks.toml`/`.pre-commit-config.yaml` rollout blocking `market-tick-data-service` cleared (confirmed via a
+  clean `git status --porcelain` and a fresh commit landing from the other session). Corrected the docstring's
+  "MECHANISM NOTE" and shipped both it and the untracked migration script together via quickmerge, full QG green —
+  `market-tick-data-service@f3c2cd7c5b`. Every todo in this issue is now done — resolved.
 - **2026-08-16**: filed this correction after discovering the wrong mechanism attribution during `/pre-compact`'s
   Step-1 audit. Shipped the `quarantine.py` fix via quickmerge — see the `unified-api-contracts` repo's git log for
   the landed SHA (not restated here to avoid a stale-sha rot risk if this doc is read later; grep
