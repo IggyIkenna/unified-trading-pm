@@ -598,6 +598,19 @@ rule (see Progress Log entry below for the observed outcome).
   Follow-up `[DATA] P2` below stays open, unedited in substance — its ask ("continue monitoring to completion")
   is still exactly accurate — this entry documents the additional evidence gathered, not a state change to the
   todo itself. Repo: market-tick-data-service (verify only, read-only GCS checks).
+- **2026-08-16 (slot-30, resumed session)** — worked the `[DATA] P2` "continue monitoring `mtds-dex-pools-backfill`"
+  follow-up (independently of, and concurrently with, the slot-29 entry above). Confirmed VM still `RUNNING` via
+  `gcloud compute instances list`. Five foreground `gcs_describe_object` checks on `run.log` (UTL SDK, not a
+  subprocess `gsutil`/`gcloud storage` call) spanning T+46min→T+54min from launch (03:11:00Z→03:19:00Z UTC, launch
+  was 2026-08-16T02:25:12Z) show monotonic size growth (76,343→80,070→83,124→86,178→89,586 bytes), `last_modified`
+  advancing every ~1-2min, zero stalls — well past both the predecessor's ~16min death point and this doc's own
+  earlier T+32min checkpoint. Log content confirms real per-day `trader_joe_v2/AVALANCHE` writes (200-300 rows/day,
+  real `ManifestWriter` shard updates) currently at `date=2026-06-02`, roughly 50/102 days into the
+  `2026-04-13→2026-07-24` target range — genuine completion still ~35-40min out at the observed pace, too long for
+  this session to hold open (10min per-Bash-call ceiling; background-bash monitoring already noted unreliable in
+  this environment). Left the follow-up checkbox open (not done — VM has not reached the end of its range) for the
+  next dispatch to re-check. No code changes — read-only GCS + VM status verification only. Repo:
+  market-tick-data-service (verify).
 
 ## Follow-ups
 
@@ -701,3 +714,16 @@ rule (see Progress Log entry below for the observed outcome).
       Background-bash monitoring has proven unreliable in this environment (killed externally, at least twice
       across sessions) — prefer short spaced foreground checks over a long-lived background poll. Repo:
       market-tick-data-service (verify) / deployment-service (relaunch if needed).
+
+      **Continued 2026-08-16 (slot 30, resumed session) — still healthy, still NOT complete; leaving open for
+      next dispatch rather than manufacturing another hand-off todo.** Five foreground `gcs_describe_object`
+      checks on `run.log` spanning T+46min through T+54min from launch (03:11:00Z→03:19:00Z UTC) show monotonic
+      size growth (76,343→80,070→83,124→86,178→89,586 bytes) with `last_modified` advancing every ~1-2min and
+      zero stalls — comfortably past both the predecessor's ~16min death point and this doc's own earlier
+      T+32min checkpoint. Log content confirms real per-day trader_joe_v2/AVALANCHE writes (`ManifestWriter`
+      shard updates, 200-300 real rows/day) currently at `date=2026-06-02`, i.e. roughly 50/102 days into the
+      `2026-04-13→2026-07-24` target range — genuine completion is still ~35-40min out at the observed
+      ~50s/day pace, too long to hold this session open for (10min Bash-call ceiling; background-bash already
+      unreliable per this todo's own note). Leaving the checkbox open (not done) for the next
+      dispatch/heartbeat to re-check `run.log` mtime — if still advancing, it's near done; if frozen >15-20min,
+      relaunch per this todo's own instructions.
