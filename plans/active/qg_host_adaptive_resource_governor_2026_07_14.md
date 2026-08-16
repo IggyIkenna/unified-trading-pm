@@ -701,7 +701,16 @@ governor logic) still flakes on this host, unchanged by this work.
       backgrounded child.
 - [ ] [INFRA] P3. Whether mtds's (and unified-api-contracts's) per-repo sub-cap of 1 is too restrictive given how many
       slots routinely work these repos concurrently — a governor-tuning question distinct from the timeout/bug fixes
-      above, surfaced but not investigated this session.
+      above, surfaced but not investigated this session. **Corroborating incident (folded in from
+      `plans/archive/2026_08/issues/qg_governor_host_wide_cap_sustained_saturation_2026_08_16.md`, archived
+      2026-08-16 as a duplicate of this same open item)**: slot-22, shipping a trivial single-file mtds change via
+      quickmerge, hit two separate 30+ minute stretches of `[qg-governor] total-instance tokens busy (mtds sub-cap 1
+      / host-wide cap 6) — queued Ns` with no free token (one ~32min before its background task was reaped, one
+      ~11.5min before it acquired a token) — live `ps aux` showed 10+ concurrent `quality-gates.sh` across many
+      slots (17, 20, 24, 26, 27, 30, 33, ...), consistent with genuine fleet-wide contention rather than a hang.
+      Recommended next step for whoever picks this up: sample `queued Ns` wait durations over a representative
+      week and compare against the host RAM/CPU budget that sized `host-wide cap 6`, to determine whether the cap
+      (or mtds's specific sub-cap of 1) is undersized for current fleet concurrency, before changing any number.
 
 ## Measured runtime drift — RESOLVED 2026-07-22 (plan-reconcile follow-up)
 

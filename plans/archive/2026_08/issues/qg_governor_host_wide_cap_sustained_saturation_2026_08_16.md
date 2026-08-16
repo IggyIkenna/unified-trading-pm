@@ -1,13 +1,20 @@
 ---
 doc_type: issue
-title: QG host-wide governor (cap=6) saturated continuously for 30+ minutes, twice, on one ordinary shipping task
+title: QG host-wide governor (cap=6) saturated continuously for 30+ minutes, twice, on one ordinary shipping task (FOLDED — see plans/active/qg_host_adaptive_resource_governor_2026_07_14.md)
 summary: >-
   Shipping a single-file, one-off manifest-mutation script through the normal quickmerge flow hit two separate 30+
   minute stretches where quality-gates.sh's host-wide concurrency governor (market-tick-data-service sub-cap 1 /
   host-wide cap 6) stayed continuously saturated with no free token, before eventually clearing. Not a defect in the
   shipped change — flagged as a monitoring/capacity question: is cap=6 undersized for current fleet size, or was this
   an unusual peak (many slots landing work around the same time)?
-status: open
+
+  **FOLDED-IN 2026-08-16 (triage pass)**: this is the same open question already tracked as an `[INFRA] P3` todo in
+  `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` ("Whether mtds's ... per-repo sub-cap of 1 is too
+  restrictive given how many slots routinely work these repos concurrently"), filed one day after that todo was
+  first surfaced (2026-08-15). This incident's specific measurements (32min + 11.5min waits, 10+ concurrent
+  `quality-gates.sh` processes) were merged into that todo as corroborating evidence rather than tracked twice.
+  Archiving here to avoid duplication — see the master doc for the live, single copy of this open item.
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -28,9 +35,9 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: qg_host_adaptive_resource_governor_2026_07_14
 depends_on: []
-resolved_by:
+resolved_by: folded into qg_host_adaptive_resource_governor_2026_07_14.md's existing [INFRA] P3 todo (2026-08-16)
 source: >-
   slot-22 (data_engineering), 2026-08-16: observed while shipping
   defi_satellite_ao_dispatch_batch11_2026_08_09.md's BLAZESTAKE lst_rates reclassify todo — a completely unrelated,
@@ -78,9 +85,15 @@ Not urgent enough to block on — filed as a P3 investigation, not a fix-now ite
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Sample QG-governor queue-wait durations over a representative week** (not a one-off incident) and
-      compare against the host's RAM/CPU budget that sized `host-wide cap 6` in the first place, to determine whether
-      the cap is undersized for current fleet concurrency or this session's 30-45 min waits were an unusual peak.
-      Repo: unified-trading-pm (governor script lives under
-      `scripts/quality-gates-base/base-service.sh`). Done when: a dated finding states either "cap is adequately
-      sized, this was peak contention" or "cap should be raised to N, here's why" with supporting samples.
+- [x] [SCRIPT] P3. ~~Sample QG-governor queue-wait durations over a representative week...~~ **FOLDED 2026-08-16** —
+      this exact investigation is already tracked as the `[INFRA] P3` todo in
+      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` ("Whether mtds's ... per-repo sub-cap of 1 is
+      too restrictive..."); this doc's measurements were merged into that todo rather than duplicating the tracked
+      work here.
+
+## Progress Log
+
+- 2026-08-16 (triage pass): confirmed this doc's open question duplicates an already-open `[INFRA] P3` todo in
+  `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (filed 2026-08-15, one day before this doc).
+  Merged this incident's specific measurements into that todo as corroborating evidence, then archived this doc as
+  folded-in to avoid tracking the same open question twice.

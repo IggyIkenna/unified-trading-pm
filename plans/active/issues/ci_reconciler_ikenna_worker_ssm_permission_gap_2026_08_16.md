@@ -99,7 +99,21 @@ causing `ci_reconciler` dispatches to pick up `ikenna-worker`'s static keys inst
 `uts-orchestrator-epic-role` instance-profile credentials (the latter would restore the boot doc's stated "no AWS SSM
 needed" assumption and fix this for every future hourly run, not just this one).
 
+## Todos
+
+- [ ] [OPERATOR] P2. Decide the resolution path: (a) grant `ikenna-worker` a scoped `ssm:SendCommand` on the
+      specific glue-runner/CI-VM instances if this credential set is the intended ambient identity for
+      `ci_reconciler` dispatches going forward, or (b) fix whatever is causing `ci_reconciler` dispatches to pick
+      up `ikenna-worker`'s static keys instead of the orchestrator VM's own `uts-orchestrator-epic-role`
+      instance-profile credentials (restores the boot doc's "no AWS SSM needed" assumption for every future hourly
+      run). Done when: `aws sts get-caller-identity` from a `ci_reconciler` dispatch resolves to
+      `uts-orchestrator-epic-role` (or an explicitly operator-approved alternate identity with SSM access), and a
+      live `aws ssm send-command` against the glue-runner/CI-VM instances succeeds.
+
 ## Progress Log
 
 - 2026-08-16: Filed by `ci_reconciler` (agt-17f258, slot 20) during a routine hourly sweep. No CI/CD items required a
   fix this run (full fleet + monitor sweep all green/self-resolved) — this was the only unresolved item.
+- 2026-08-16 (triage pass): confirmed still open, operator-gated (IAM identity decision, not self-fixable per the
+  self-service SSOT). Added a tracked `- [ ]` Todos section (doc previously carried only prose disposition —
+  hygiene fix per the "every follow-up is a tracked todo" rule). No live re-check attempted this pass.

@@ -118,6 +118,19 @@ Suggested next steps for whoever picks this up:
   self-clear without a fresh `qg-passed` event) or whether they're low-priority enough to wait for their next natural
   commit.
 
+## Todos
+
+- [ ] [BACKEND] P1. Root-cause why `cloud_build_router_failure` escalated for only 1 of 5 identically-failed repos.
+      Read the escalation-creation path in `agent-orchestrator/server/escalation.py` (likely a webhook/watcher
+      reacting to the `cloud-build-router` Slack CRITICAL post, or a Firestore/DB write path — not yet located) and
+      determine whether it (a) only watches a subset of repos, (b) has a dedup/rate-limit keyed too broadly (one
+      escalation per incident-class rather than per-repo), or (c) only fires on a specific trigger shape. Also
+      determine whether this classifier is the same underlying watcher as the separate `cloud_build_failure`
+      wall_type (escalation `agt-09c955`, which independently caught the instruments-service instance ~5h late via
+      backlog depth) or a genuinely distinct detection path. Done when: the classifier's actual matching logic is
+      confirmed by direct read (not inferred), and either fixed or explicitly scoped as a follow-up with a filed
+      root cause. Needs `/ci-reconcile` or hands-on agent-orchestrator engineering — not a mechanical fix.
+
 ## Progress Log
 
 - 2026-08-16 ~05:40Z: Filed by `ci_reconciler` (agt-d02274, slot 8) during the hourly sweep, after confirming via
