@@ -22,6 +22,7 @@ related:
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-15"
 last_updated: 2026-08-15

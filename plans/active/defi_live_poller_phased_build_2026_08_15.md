@@ -18,6 +18,7 @@ related:
   [
     /plans/active/defi_operator_ruling_ao_dispatch_2026_08_15.md,
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-15"
 last_updated: "2026-08-15"
