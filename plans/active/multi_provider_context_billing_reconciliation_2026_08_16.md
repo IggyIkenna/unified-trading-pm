@@ -35,6 +35,7 @@ related:
     /plans/active/grok_gemini_translation_proxy_2026_08_14.md,
     /plans/active/codex_luna_flex_bridge_2026_08_14.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
+    /plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-16
