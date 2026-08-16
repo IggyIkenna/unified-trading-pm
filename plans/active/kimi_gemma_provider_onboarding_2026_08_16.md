@@ -146,16 +146,27 @@ had already run. Treat every todo below as net-new work, not a resume.
       treat k2.5 as likely-retired, not a live option, until the live `/v1/models`-equivalent check in the next
       todo confirms one way or the other. Given this, K2.7 Code (not evaluated at all in the 2026-08-06 rejection)
       is the more relevant NEW comparison point going forward, not K2.5.
-- [ ] [OPERATOR] P0. Get Moonshot (Kimi) API credentials from the operator — start on Moonshot's cheapest/basic plan
-      tier (mirrors the GLM-Lite / ChatGPT-Plus / Gemini-free staging pattern from the prior four providers). Store
-      in GSM as `moonshot-api-key` (+ `moonshot-management-key` if a separate balance/usage-read scope exists, per
-      the Grok precedent where the inference key and the balance-read key were confirmed to be genuinely different
-      credentials). Done when: the key resolves via GSM and a real authenticated `/v1/models`-equivalent call
-      succeeds.
-- [ ] [OPERATOR] P0. Get an NVIDIA Developer Program account + API key for the NIM free-hosted endpoint (operator
+- [x] ✅ [OPERATOR] P0. Get Moonshot (Kimi) API credentials from the operator — **DONE 2026-08-16**: operator confirmed
+      pay-as-you-go is the only currently-usable tier (see waitlist todo below for the membership plan). Key stored
+      in GSM as `moonshot-api-key`; a real authenticated call against `kimi-k2.6` returned HTTP 200 (see Progress
+      Log — the response itself surfaced a real reasoning-token gotcha, not a credential problem). No separate
+      management/balance-read key found or needed yet — revisit only if a balance-reconciliation todo needs one.
+- [ ] [OPERATOR] P3. **New, operator 2026-08-16**: track the Moonshot membership-plan waitlist the operator joined
+      (a "10-30x boost" tier over pay-as-you-go, per the operator). ETA unknown — this is a waitlist, not a
+      purchase. When it activates: (1) get its real terms (price, what the boost actually means — rate-limit
+      multiplier? token quota? concurrency?), (2) critically, confirm whether it actually grants API access, given
+      Todo 1's unconfirmed caveat that Kimi's consumer membership tiers may be a CLI/chat-only product on separate
+      billing from the API — this waitlisted plan could be the exception (the "boost via plan" framing suggests
+      it might genuinely target API/agent use, unlike the Adagio-Vivace consumer tiers) or could turn out to be the
+      same trap. Done when: either the plan activates and its API-applicability is confirmed one way or the other,
+      or this is explicitly re-parked with a status check-in date if it's still pending after a reasonable interval.
+- [x] ✅ [OPERATOR] P0. Get an NVIDIA Developer Program account + API key for the NIM free-hosted endpoint (operator
       must create the NVIDIA account — this is not something that can be done from a service credential). Store in
       GSM as `nvidia-api-key`. Done when: the key resolves via GSM and a real authenticated call against
-      `https://integrate.api.nvidia.com/v1` succeeds.
+      `https://integrate.api.nvidia.com/v1` succeeds. **DONE 2026-08-16**: a first key 403'd fleet-wide (real,
+      reproducible, cause unresolved — see Progress Log); the operator's second key succeeded (real 200s against
+      `meta/llama-3.1-8b-instruct` and `google/diffusiongemma-26b-a4b-it`), satisfying this todo's literal criterion
+      even though `google/gemma-4-31b-it` specifically still needs its own resolution (tracked in the next todo).
 - [ ] [INFRA] P1. Live-verify real Kimi model names/specs via Moonshot's API (never trust the "k2.5/k2.6/k3" naming
       from memory alone — this session already found two dead model names, `grok-4.1-fast` and `glm-4.7-flashx`,
       by skipping this exact check). For each of k2.5/k2.6/k3: confirm it exists via a live `/v1/models`-equivalent
@@ -262,3 +273,37 @@ had already run. Treat every todo below as net-new work, not a resume.
       in the live-verify todos, not re-derived from memory.
 
 ## Progress Log
+
+### 2026-08-16 — credentials provisioned, first live smoke tests
+
+**Moonshot (Kimi)**: operator confirmed pay-as-you-go is the only currently-usable tier — joined a waitlist for a
+"10-30x boost" membership plan, ETA unknown (tracked as a new todo below, not assumed to land). Real pay-as-you-go
+key supplied, stored in GSM as `moonshot-api-key`. Live smoke test against `kimi-k2.6`: **HTTP 200, real response**
+— but `max_tokens: 50` was entirely consumed by `reasoning_content` (49 reasoning tokens), leaving `content: ""`
+and `finish_reason: "length"`. **Confirmed gotcha, same shape as the omniroute-eval README's documented DeepSeek
+trap**: k2.6 is a reasoning-by-default model — any probe needs a generous `max_tokens` (≥300, per that README's own
+prior finding) or the visible answer never appears and looks like a broken provider. Response headers also carried
+`msh-gid: enterprise-tier-1` — unexplained, possibly an internal Moonshot account-tier label unrelated to the
+operator's actual (pay-as-you-go) billing; not investigated further, flag if it becomes relevant.
+
+**NVIDIA NIM (Gemma)**: the FIRST key supplied returned a consistent, instant `403 Forbidden {"detail":"Authorization
+failed"}` across every model tested (Gemma AND an unrelated Llama model) — confirmed key-wide, not model-specific.
+The operator supplied a SECOND key, stored as a new GSM version. Real results, mixed:
+- `meta/llama-3.1-8b-instruct` — **200 OK, fast (0.33s)**, real inference telemetry in the response (`nvext.timing`,
+  `kv_hit_rate`). Confirms the new key is valid and NOT the problem.
+- `google/gemma-4-31b-it` — **hangs**: request fully uploads, then zero bytes back for a full 30s until curl's own
+  timeout fires (`curl: (28) Operation timed out`). Not an auth rejection (those are instant, as seen above) — looks
+  like either a cold-start/model-not-actively-hosted state, or a per-model access grant this generic key doesn't
+  carry. Tried once with a bounded timeout; not blind-retried further per this workspace's polling discipline —
+  flagging as a real open question rather than guessing at the cause.
+- `google/diffusiongemma-26b-a4b-it` — **200 OK, fast (0.49s)**, but returned `content: ""` with only 1 completion
+  token and `finish_reason: "stop"` (not a truncation like the Kimi case above) — the model responded but produced
+  no visible answer to a trivial "say OK" prompt. Needs prompt/param tuning to get a real answer, not a broken
+  connection.
+- `google/gemma-3-27b-it` — **HTTP 410 Gone**: `"The model 'google/gemma-3-27b-it' has reached its end of life on
+  2026-05-12T00:00:00Z and is no longer available."` Confirms this Gemma 3 variant is genuinely retired, not a typo
+  or transient issue.
+
+**Net state**: NVIDIA connectivity/auth is now proven working (llama + diffusiongemma both returned real 200s on
+the second key); `gemma-4-31b-it` specifically remains unconfirmed live and needs its own follow-up rather than
+being assumed broken or working either way.
