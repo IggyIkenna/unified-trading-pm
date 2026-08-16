@@ -461,6 +461,39 @@ before touching the source doc directly._
       a sibling panel, collapsed state survives a reload, a header action button stays clickable and does not
       trigger collapse) plus 10 pre-existing wallet/blocked specs re-run green to confirm no regression. Source:
       operator request, this session (not from the 2026-08-14 audit sweep).
+- [ ] [TEST] P3. **New finding, 2026-08-16, adjacent to the collapsibility work above — NOT caused by it, isolated
+      and confirmed independently.** `dashboard/tests/e2e/task-usage-account-filter.spec.ts` has 2 pre-existing,
+      reproducible failures ("All accounts sums every task..." expects `17.0K`, gets `22.0K`; "tasks on an
+      unregistered account are unreachable..." expects a `0` shortfall, gets `5.0K` bleeding into a registered
+      account's slice) — the +5000 in both cases exactly matches the fixture's "unregistered account" oneoff rows
+      (2000 cicd + 3000 scheduled), suggesting those rows are being double-counted or mis-attributed somewhere in
+      the real `window_task_usage_totals` aggregation, not a test-authoring bug. **Isolation proof**: reproduced
+      with a byte-for-byte reverted `accounts.mock.json` (diffed to confirm identity with `HEAD`) AND a freshly
+      deleted `dashboard/tests/e2e/.tmp/e2e_state.db` — same failure both times, ruling out both today's fixture
+      addition (`grok-4-3-demo`/`kimi-k2-6-demo`) and stale-DB accumulation from repeated test runs as the cause.
+      Not investigated further this session (out of scope for the collapsibility/provider-grouping work it was
+      found alongside). Done when: root-caused in `window_task_usage_totals` (or wherever the real aggregation
+      lives) and both assertions pass again on a fresh DB.
+- [x] [UI] P2. ✅ **New, live operator observation 2026-08-16 — DONE, shipped `agent-orchestrator@f52b541c13`.**
+      While reviewing the collapsibility feature above, the operator noticed only Claude/DeepSeek wallet panels
+      existed and asked to "add the other models by provider so grouping google, xai, etc." Investigating surfaced
+      a real, live bug: `ProviderBadge` (`dashboard/src/components.tsx`) was still the original
+      2026-07-28-era DeepSeek-vs-everything-else-is-"Claude" binary — every Grok/Gemini/GLM/Codex/Kimi/NVIDIA
+      account was silently mislabeled "Claude" in the UI, exactly the failure mode the operator explicitly flagged
+      earlier this session ("i dont want anything registering as claude when its grok even if its claude code").
+      Fixed by adding `PROVIDER_DISPLAY` (a real label/title/CSS-class per registered `AccountProvider` value,
+      exported for reuse) and rewriting `ProviderBadge` to use it, falling back to the raw provider string rather
+      than lying as "Claude" for anything unmapped. Also implemented the actual grouping request: `AccountsPanel`
+      (`layout.tsx`) now groups its rows by provider (anthropic sorts first, others alphabetically by display
+      label), each provider sub-group independently collapsible (own `localStorage` key, reusing the collapse
+      pattern from the todo above). 2 new mock accounts (`grok-4-3-demo`, `kimi-k2-6-demo`) added to
+      `accounts.mock.json` for realistic test coverage — required updating `critical-health.spec.ts`'s
+      hardcoded "ALL 4" account count to "ALL 6" (a real, expected, mechanical consequence of the fixture growing,
+      not a regression). `tsc --noEmit` clean, full `quality-gates.sh` green. **pw:L2** — 2 new tests in
+      `provider-badge.spec.ts` (Grok/Kimi render their own real badge not "Claude"; the Accounts panel groups by
+      provider with independent per-group collapse) plus the full relevant regression sweep re-run green
+      (13/13 across provider-badge/panel-collapsible/fleet-account-column, 2/2 critical-health, 4/4 tier-editor,
+      each via their correct dedicated Playwright project). Source: operator live observation, this session.
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
