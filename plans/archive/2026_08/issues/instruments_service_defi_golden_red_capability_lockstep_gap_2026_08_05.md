@@ -17,7 +17,7 @@ summary: >-
   UAC is still churning, so a regen would be stale again within hours). This blocks ALL instruments-service shipping
   (quickmerge re-gates on a red tree), including slot-14's sports TEAMS full-history backfill (task
   `sports_consolidated_native_ao_extract-022`).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -34,7 +34,7 @@ related:
   ]
 created: "2026-08-05"
 author: slot-14 (data_engineering craft)
-last_updated: "2026-08-05"
+last_updated: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -42,7 +42,7 @@ assigned_role: engineer
 priority: P1
 drift_direction: advance-code
 source: [sports_consolidated_native_ao_extract-022 (slot-14)]
-resolved_by:
+resolved_by: slot-17, 2026-08-16
 locked_by:
 locked_since:
 depends_on: []
@@ -55,6 +55,15 @@ context_scope:
     instruments-service/scripts/backfill_teams_full_history_2026_08_05.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-16 (slot 17).** Every checkbox closed, 0 open. Core issue (defi golden red blocking fleet-wide
+> instruments-service shipping) resolved same-day via the lockstep regen (`instruments-service@0975de10`, golden
+> cleared 13:07:59Z); the blocked sports TEAMS backfill (`sports_consolidated_native_ao_extract-022`) shipped
+> (`d6fa4db9e`) and its own `/done` POST — the doc's last remaining prose-tracked follow-up — was independently
+> confirmed already landed (`done_at=2026-08-05T15:17:01Z`, verified live via `GET /api/backlog`). The
+> CI-content-first-dep-resolution lesson this doc surfaced is already codified at `/codex/08-workflows/ci-cd-flow.md`.
+> The SAME golden-red failure class recurred 2026-08-14 — see `/plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`
+> (open) for the current live incident of this pattern.
 
 ## Problem
 
@@ -315,7 +324,7 @@ shipped.
 | Launch SPOT backfill VM (`--apply`, `launch-sports-teams-full-history-backfill-vm.sh`, `instr-backfill-sports` prefix) | **DONE** — full VM `instr-backfill-sports-teams-20260805-133652` (SPOT, launched 13:36:52Z) logged `Done. 44296/44296 cells written (0 failed). Manifest closed (per-VM shard drained).` at 13:54:19Z, rc=0, `DEPLOYMENT_COMPLETED exit_code=0`, then **self-deleted** (STOPPING→gone). Per-VM shard `_index/per_vm/instr-backfill-sports-teams-20260805-133652.parquet` (1.57 MB) written 13:54:18Z. Smoke VM (133011) pre-verified 232/232. | —          |
 | Post-backfill coverage census (expected_unattempted→0, bounded)                                                        | **DONE** — 678,275 TEAMS rows: captured=582,088, empty_confirmed=74,252, expected_unattempted=21,918, attempted_failed=17; 0 dedup twins; residual 21,918 FULLY explained (98 source-empty leagues — api_football 0-team, residual⊂0-team set, 0 fetch failures); empty_confirmed re-classification tracked as follow-up todo above                                                                                                           | —          |
 | Flip plan checkbox (Track S2) + `docs(plans):` commit SAME turn                                                        | **DONE** — flip (`- [x] ✅`, line 559) + evidence (line 565: UTL@11009da7; 44,296/44,296 cells) + stale-header correction, committed `d6fa4db9e` `docs(plans):`, direct-pushed via the SANCTIONED carve-out (PM exempt from strict-quickmerge + no-source commit = documented carve-out); `git rev-list --count origin/live-defi-rollout..HEAD` = 0 verified after push.                                                                      | —          |
-| POST /done `sports_consolidated_native_ao_extract-022`                                                                 | **PENDING — final step** — executed right after this issue-doc commit lands (task WORK + ship are complete + verified; /done is the lifecycle close-out).                                                                                                                                                                                                                                                                                     | —          |
+| POST /done `sports_consolidated_native_ao_extract-022`                                                                 | **DONE** — verified 2026-08-16 (slot 17) via `GET /api/backlog`: `status="done"`, `done_sha="d6fa4db9e8edfdad15cd76e4956036cbc298d20e"`, `done_at="2026-08-05T15:17:01.011551Z"`, `dispatched_to=14`. The table's "PENDING" note was stale — the /done POST had already landed same-day, just never reflected here.                                                                                                                          | —          |
 
 **Resume path (next session — this issue doc is the SSOT)**: the defi golden cleared 13:07:59Z, the backfill script
 shipped (`instruments-service@8a6597db`), the full backfill VM **COMPLETED**
@@ -352,12 +361,18 @@ read MUST be column-projected pyarrow (5 cols) — an unfiltered 9.25M-row read 
 
 ## Follow-ups
 
-- [ ] [OPS] P3. POST /done sports_consolidated_native_ao_extract-022 (lifecycle close-out) — the Deferred-work table
-      lists it as PENDING (final step) and the resume-path text says 'Nothing pending for this task except the /done
-      POST'.
+- [x] ✅ [OPS] P3. **RESOLVED 2026-08-16 (slot 17) — already done, doc was stale.** `GET /api/backlog` confirms
+      `sports_consolidated_native_ao_extract-022` was `status="done"` (`done_sha=d6fa4db9e8edfdad15cd76e4956036cbc298d20e`,
+      `done_at=2026-08-05T15:17:01.011551Z`) — the /done POST this todo was tracking had already landed same-day as the
+      ship; only the Deferred-work table's "PENDING" note had gone stale. No further action needed; this was a
+      doc-correction, not an outstanding POST.
 
 > **2026-08-06 archive-candidate audit**: Core issue (defi golden red) is genuinely resolved (golden cleared 13:07:59Z
 > via lockstep regen instruments-service@0975de10; backfill shipped and completed 44296/44296; census done; flip shipped
 > d6fa4db9e). But the doc's own Deferred-work table carries an explicitly PENDING prose item (POST /done
 > sports_consolidated_native_ao_extract-022) that was never converted to a tracked todo — a deferred follow-up in prose
 > blocks archival.
+>
+> **2026-08-16 (slot 17) — that PENDING claim is now confirmed stale, not real; see the Follow-ups checkbox above.**
+> Every todo in this doc is now closed and unlocked — archival-eligible per CLAUDE.md's "plan with every todo done +
+> unlocked MUST be archived immediately" rule.

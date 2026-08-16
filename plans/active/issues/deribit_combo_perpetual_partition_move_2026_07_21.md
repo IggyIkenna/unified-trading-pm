@@ -551,9 +551,39 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       there, and if the confirmed-phantom count is non-zero, `--apply` there too (with `--dry-run` output captured as
       evidence). Alternative if a VM is undesirable for a one-shot sweep: add a date/venue-bounding parameter to
       `merge_canonical_with_outstanding_shards` itself (cross-repo UTL change — judged out of scope for this task).
-      Once the sweep genuinely executes, flip the P3 todo above with the row count + evidence.
+      Once the sweep genuinely executes, flip the P3 todo above with the row count + evidence. **VM-side OOM found +
+      fixed 2026-08-16 (slot 24)**: the `cefi-deribit-sweep` category's own dry-run VM attempts also died
+      `EXIT_CODE=137` at the identical `"Catalogue DERIBIT COMBO symbols loaded: 70782"` point on the launcher's
+      default `e2-standard-8` (two independent VMs, `canonical-migration-cefi-deribit-sweep-20260816-000842` and
+      `-001205` — see Progress Log). Shipped `deployment-service@10b100e0bd`: bumped the category's default
+      `MACHINE_TYPE` to `e2-standard-16`, following the same file's existing precedented auto-bump pattern
+      (`cefi-content-apply`/`defi-pool-casing-fold`/`defi-sushiswap-retire`). Landed on LDR, ancestry-verified,
+      ahead=0. **Still not done**: no VM has yet completed a dry-run on the new machine type — relaunch and confirm
+      before flipping either this or the P3 todo above.
 
 ## Progress Log
+
+- **2026-08-16** (slot 24, data_engineering, task `deribit_combo_perpetual_partition_move-3c27da745321`, continued) —
+  Followed the P2 todo's VM instruction and launched `canonical-migration-cefi-deribit-sweep-*` dry-run VMs on the
+  launcher's default `e2-standard-8` — hit a NEW failure mode, not the local-host one the prior entry diagnosed. Two
+  independent VM launches (`-20260816-000842`, `-001205`) both died at the exact same point the local attempts did
+  (`"Catalogue DERIBIT COMBO symbols loaded: 70782"`), `EXIT_CODE=137` confirmed for `-001205` via its GCS `run.log`;
+  `-000842` never got as far as uploading a `run.log` (its `EXIT_STATUS` blob is stuck at stale `"RUNNING"`, instance
+  since self-reaped by `--instance-termination-action=DELETE`, the standard SPOT-VM behavior — so VM disappearance
+  alone does not distinguish OOM from preemption). A third occurrence of the identical signature was also visible in
+  an earlier scratchpad/task-output log from the same day. Per CLAUDE.md's CLAIM≤MEASUREMENT rule: SPOT preemption is
+  NOT fully ruled out (dmesg was unreachable after self-deletion in both cases), but two-to-three independent deaths
+  at the identical code point matches `launch-canonical-migration-vm.sh`'s own documented `e2-standard-8` OOM
+  precedent for three other categories (`cefi-content-apply`, `defi-pool-casing-fold`, `defi-sushiswap-retire`), and
+  the code point (right after catalogue load, before `merge_canonical_with_outstanding_shards` — the prior entry's
+  root-caused unbounded full-corpus manifest merge — has printed anything) is consistent with that merge being the
+  memory-hungry step. Extended the launcher's existing precedented per-category `MACHINE_TYPE` auto-bump pattern to
+  this category rather than parking it as a new open-ended blocker: shipped `deployment-service@10b100e0bd` (default
+  `e2-standard-8`→`e2-standard-16` for `cefi-deribit-sweep`, explicit caller-supplied `MACHINE_TYPE` still wins).
+  quickmerge landed on `live-defi-rollout`, post-push ancestry verified, `ahead=0`, clean tree. **Not yet done**: no
+  VM has been relaunched on the new default to confirm the fix actually resolves the crash — that is the next action.
+  Neither the P2 nor P3 checkbox above is flipped; per CLAUDE.md, only a VM run that reaches the manifest-merge stage
+  and actually reports a candidate-row count (or a confirmed non-OOM failure requiring a different fix) closes this.
 
 - **2026-08-15** (slot 24, data_engineering, task `deribit_combo_perpetual_partition_move-3c27da745321`) — Shipped
   `--sweep-stale-rows` (`--dry-run`/`--apply`) on `market-tick-data-service@88e927c5`, column-pruning the

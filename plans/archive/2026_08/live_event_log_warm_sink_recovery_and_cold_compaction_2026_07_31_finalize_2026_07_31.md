@@ -68,7 +68,8 @@ context_scope:
 > — which the survivor did NOT have — was PORTED into it before this banner went up, so superseding drops no work. Root
 > cause (the finalize-plan remediation path has no idempotency guard, so a second finalize plan can be created for a
 > parent that is already gated) is tracked in
-> `/plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md` and is not a blocker here.
+> `/plans/archive/2026_08/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md` (resolved + archived
+> 2026-08-16) and is not a blocker here.
 
 ## Todos
 

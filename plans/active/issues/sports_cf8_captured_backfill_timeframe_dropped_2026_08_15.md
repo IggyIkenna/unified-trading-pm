@@ -31,10 +31,7 @@ repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [data-correctness, cf-8, available-at, sports, manifest-writer, row-key, timeframe, regression]
 related:
-  [
-    /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
-    /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
-  ]
+  [/plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md, /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md, /plans/active/issues/sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md]
 created: 2026-08-15
 author: data_engineering (slot-2)
 priority: P0
@@ -542,8 +539,10 @@ issue's scope); flagged as a follow-up todo below.
       `timeframe`, active on 2026-05-05 and 2026-07-13 specifically. Not yet searched this pass: MTDS's own
       `odds_horizon_bucket`-touching scripts beyond the two already-ruled-out ones (`_rebuild_sports_write.py`,
       `manifest_finalize.py`) — a repo-wide grep for `odds_horizon_bucket` writers under
-      `market-tick-data-service/` (not yet run) is the precise next step, not another MDPS-side read. (repo:
-      market-tick-data-service)
+      `market-tick-data-service/` (not yet run) is the precise next step, not another MDPS-side read. **Continued
+      2026-08-16** in `sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` (split at cap): WS ruled OUT,
+      `_write_captured_rows()` RE-FALSIFIED by a tighter scoped check (0/200, older-written_at ordering) — mechanism
+      still genuinely unknown; git-blame is the next lead. (repo: market-tick-data-service)
 - [ ] [DATA] P1. **NEW, 2026-08-15 (later pass) — repo-wide MTDS script search run, exhausted with a negative
       result; narrowed to one unconfirmed structural candidate.** All 24 MTDS files referencing
       `odds_horizon_bucket` (`grep -rl`) were triaged by write-call presence, then each real candidate checked:

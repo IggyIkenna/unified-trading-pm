@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [defi, expected-universe, golden-drift, aave-v3, rewards, qg-red, cross-repo, lockstep, tradfi-xfail-near-miss]
 related:
   [
-    /plans/active/issues/instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md,
+    /plans/archive/2026_08/issues/instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md,
     /plans/archive/2026_08/issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md,
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,

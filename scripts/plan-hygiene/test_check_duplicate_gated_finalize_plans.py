@@ -101,6 +101,33 @@ def test_single_gated_parent_is_not_a_duplicate(tmp_path: Path) -> None:
     assert _run(tmp_path) == 0
 
 
+def test_sanctioned_split_children_are_not_flagged_as_duplicate_finalize_plans(tmp_path: Path) -> None:
+    """A parent gated by ONE genuine finalize plan plus TWO sanctioned SPLIT children
+    (CLAUDE.md: "partial parallelism isn't expressible in one plan -> SPLIT (gated step
+    in Plan B via depends_on + gate_on_depends: true)") must NOT read as 3 duplicate
+    finalize plans -- the SPLIT children's filenames don't follow the `<parent>_finalize`
+    convention, so they aren't competing for the parent's archival slot at all. This is
+    the exact false-positive class todo 3's corpus sweep found in all 6 pre-fix baseline
+    hits (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md, 2026-08-16
+    Progress Log)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_15.md")
+    _write_plan(
+        active / "parent_2026_08_15_finalize.md",
+        extra_frontmatter="depends_on: [parent_2026_08_15]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_phase_c_2026_08_15.md",
+        extra_frontmatter="depends_on: [parent_2026_08_15]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_phase_d_2026_08_15.md",
+        extra_frontmatter="depends_on: [parent_2026_08_15]\ngate_on_depends: true",
+    )
+
+    assert _run(tmp_path) == 0
+
+
 def test_strict_mode_fails_on_any_duplicate_regardless_of_baseline(tmp_path: Path) -> None:
     """--strict ignores the baseline entirely -- used by anything that wants a
     zero-tolerance answer (e.g. todo 3's one-time sweep) rather than the ratchet

@@ -426,8 +426,10 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md — low severity
 - [ ] [DOC] P3. (codex-drift) plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md —
       codex-alignment fix claimed complete, partially true per a sibling doc — low severity, historical
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md — 3
-      open todos lack an explicit "Done when" clause
+- [x] ✅ [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md
+      — MOOT 2026-08-16: doc resolved + archived (3/3 todos done with cited evidence, path updated on archival). All 3
+      todos ended up with explicit done-when text (todo 3 always had one; todos 1/2 closed with concrete
+      evidence/commits) — unified-trading-pm@7247bb6a69.
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:790-808 — per-repo rollout
       item, ibkr-gateway-infra, low severity
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md:544-558 — low
