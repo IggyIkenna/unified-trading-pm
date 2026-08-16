@@ -148,29 +148,43 @@ template, minus the third-party dependency).
       from this checkout; the committed `accounts.mock.json` is example-only). Not urgent at the $20/mo Plus starting
       tier. Done when: the seat(s) are named and the corresponding `accounts.json` entries are removed/disabled, or the
       operator confirms no seat cut is needed at the validated spend level.
-- [ ] [INFRA] P0. Build `codex_bridge_server.py` — a standalone FastAPI process exposing `POST /v1/messages` (Anthropic
-      Messages format), translating to/from the Codex App Server SDK's JSON-RPC thread/turn model, authenticated via
-      `~/.codex/auth.json`. Structure mirrors `deepseek_native_proxy_server.py` (standalone process, not inline in the
-      main orchestrator). Done when: a manual `curl -X POST /v1/messages` with a simple prompt returns a valid
-      Anthropic-shape response sourced from a real Luna completion.
+- [x] [INFRA] P0. ✅ Build `codex_bridge_server.py` and deploy it as a real running service. **DONE 2026-08-16** —
+      systemd unit `codex-bridge.service` (127.0.0.1:8769, new — no scaffolding existed for this one, unlike
+      litellm) + `openai-codex` added as a real dependency (was deliberately lazy/optional while undeployed).
+      Real evidence: `curl -X POST /v1/messages` returned a valid Anthropic-shape response
+      (`{"type":"message","role":"assistant","model":"gpt-5.6-luna",...}`, `HTTP 200`) from a REAL Luna completion —
+      correctly pinned to Luna (the bridge's `_CODEX_MODEL` constant), unlike the earlier raw `codex exec` CLI smoke
+      test which defaulted to the `sol` preset. Clean boot on first try (no crash-loop, unlike litellm's fastapi
+      conflict). `agent-orchestrator@0b1dfd34e6`. One real test bug found+fixed along the way: a pre-existing test
+      assumed `openai-codex` was ambiently absent (`ImportError`-based) — now that it's a real dependency it's
+      actually installed, so the test's premise was false; fixed to simulate the ImportError explicitly via
+      `sys.modules` injection rather than relying on environment absence.
 - [ ] [INFRA] P0. Translate system-prompt injection correctly — CLAUDE.md + skill content arriving as the Anthropic
-      request's system block must reach Codex's own instructions channel unmodified, not dropped or truncated. Done
-      when: a real request carrying a distinctive CLAUDE.md marker string is proven to influence the Codex-backed
-      response (the marker is echoed/acted on), not just passed through blind.
-- [ ] [INFRA] P0. Translate `tool_use`/`tool_result` round-tripping correctly — skills, hooks, and subagent tool calls
-      depend on this working both directions (Claude Code issuing a tool call, the bridge translating it into whatever
-      Codex's own tool-execution model expects, and the result translated back). Done when: a real multi-step
-      tool-calling exchange (not a single-turn text response) completes correctly through the bridge.
-- [ ] [REVIEW] P0. **Smoke-test gate before any real fleet traffic** (operator instruction, 2026-08-14): run an actual
-      skill invocation and an actual tool call through the bridge, not just a "say hello" prompt — Codex's protocol is
-      structurally more different from Anthropic's than OpenAI's/Gemini's chat-completions-style APIs are, so this is
-      the highest-risk piece of the whole multi-provider effort. Done when: a dated Progress Log entry records a real
-      skill (e.g. a slash-command invocation) and a real tool call (e.g. a file edit) both completing correctly through
-      a Codex-backed session, verified by inspecting the actual result, not trusting the session's own claim.
-- [ ] [INFRA] P1. Register `AccountProvider` value `"codex"` (extends the Literal the sibling DeepSeek/GLM plan owns).
-      Deploy the bridge process on the orchestrator VM (or reachable from it) — same requirement the ruled-out OmniRoute
-      doc flagged: it must run where workers actually spawn, not the operator's laptop. Done when: an `accounts.json`
-      entry with `provider: "codex"` resolves to `status: healthy` via `/api/accounts`.
+      request's system block must reach Codex's own instructions channel unmodified, not dropped or truncated. **Still
+      open 2026-08-16** — only a plain-text completion was smoke-tested (see the P0 above), not a real CLAUDE.md
+      marker-carrying request. Done when: a real request carrying a distinctive CLAUDE.md marker string is proven to
+      influence the Codex-backed response (the marker is echoed/acted on), not just passed through blind.
+- [ ] [INFRA] P0. Translate `tool_use`/`tool_result` round-tripping correctly. **Still open 2026-08-16, confirmed a
+      real structural gap, not just untested** — the module's own code still renders `tool_use`/`tool_result` content
+      blocks as a labelled text placeholder, not a real translation to Codex's own tool-execution model (unchanged
+      from the 2026-08-15 blind-build). This is the single biggest remaining gap before this bridge is genuinely
+      production-ready for anything beyond plain text completion — a real live Codex session now exists to build and
+      test this against (it didn't before today), but building a full tool-use translation layer is real engineering
+      work, deliberately not attempted in this same session alongside the deployment work. Done when: a real
+      multi-step tool-calling exchange (not a single-turn text response) completes correctly through the bridge.
+- [ ] [REVIEW] P0. **Smoke-test gate before any real fleet traffic** (operator instruction, 2026-08-14). **Still open
+      2026-08-16** — the plain-text smoke test above does NOT satisfy this: it explicitly requires a real skill
+      invocation and a real tool call, both blocked on the tool_use translation todo directly above. Done when: a
+      dated Progress Log entry records a real skill (e.g. a slash-command invocation) and a real tool call (e.g. a
+      file edit) both completing correctly through a Codex-backed session, verified by inspecting the actual result.
+- [x] [INFRA] P1. ✅ Register `AccountProvider` value `"codex"` and deploy the bridge on the orchestrator VM. **DONE
+      2026-08-16** — `codex-luna` registered in the live `accounts.json`, confirmed parsing cleanly via the real
+      Pydantic model. Real bug found+fixed: initially set `tier: "subscription"`, not a valid `AccountTier` literal
+      (`Literal["pro","max5","max20","team","enterprise","api"]`) — would have broken parsing on next load; fixed to
+      `"api"`, matching how DeepSeek/Grok are tagged. **Deliberately deployed PAUSED, not `status: healthy`** —
+      operator instruction 2026-08-16: "fully shipped ready to use but on pause mode." Confirmed
+      `account_status: disabled`. The done-when's literal "healthy via /api/accounts" is not what was wanted here —
+      satisfied under the operator's actual instruction; flip to enabled when ready for live dispatch.
 - [ ] [DATA] P1. Quota tracking reusing the SAME `five_hour_pct`/`weekly_pct` fields Claude already uses (Codex Pro's
       5h-rolling + separate weekly cap is the same shape) — calibrate the REAL ceiling via live measurement over the
       first operating week rather than trusting OpenAI's stated 1,000-5,600/5h range, and gate dispatch on it exactly
@@ -266,3 +280,39 @@ template, minus the third-party dependency).
   upgrade time rather than trusting either figure now. Todos above updated; new `[OPERATOR] P3` upgrade-to-Pro todo
   added, and the seat-cut todo downgraded from urgent (not needed at the $20/mo
   starting spend).
+
+- **2026-08-16 — real Codex/Luna auth session deployed to the VM + bridge built and deployed live, per operator
+  instruction to get all three new providers "fully shipped ready to use but on pause mode."** Operator ran
+  `codex login --device-auth` on their laptop; `~/.codex/auth.json` transferred to the orchestrator VM via SSM
+  (base64, never printed — the officially documented OpenAI CI/CD bootstrap pattern: "run codex login on a trusted
+  machine with browser access, then transfer the resulting auth.json to your headless server"). `codex` CLI 0.147.0
+  installed on the VM; a real `codex exec` smoke call returned "OK" (2,745 tokens, session id recorded) — but
+  defaulted to model `gpt-5.6-sol`, not `luna` (GPT-5.6 has three effort presets: Sol/Terra/Luna).
+
+  Confirmed via a real ChatGPT "Upgrade your plan" screenshot that the account is on **Plus**, not Pro (the earlier
+  "im on pro" line was cross-talk about Gemini's Tier 3) — the staged-start target was already correct, no action
+  needed. Bonus finding: Pro is one product with a 5x/20x usage-multiplier toggle ($100/mo at 5x), not two separate
+  tiers — resolves the earlier $100-vs-$200 research ambiguity.
+
+  Built and deployed `codex-bridge.service` (127.0.0.1:8769) — new systemd unit + install script (no scaffolding
+  existed for this one, unlike the Grok/Gemini LiteLLM proxy). `openai-codex` added as a real dependency
+  (`agent-orchestrator@0b1dfd34e6`) — was deliberately lazy-imported/optional while the bridge was undeployed. Clean
+  boot on first try. Real Anthropic-format smoke test through the ACTUAL bridge endpoint (not raw `codex exec`)
+  succeeded: `{"type":"message","role":"assistant","model":"gpt-5.6-luna",...}`, `HTTP 200` — correctly pinned to
+  Luna this time via the bridge's own `_CODEX_MODEL` constant.
+
+  Registered `codex-luna` in the live `accounts.json`. Real bug caught before it could break parsing: initially set
+  `tier: "subscription"`, not a valid `AccountTier` literal — fixed to `"api"` (matching DeepSeek/Grok's tagging) and
+  re-verified via the real `load_accounts()` Pydantic model, not just visual inspection. Deployed **deliberately
+  PAUSED** (`account_status: disabled`, confirmed) per the operator's explicit "pause mode" instruction — not the
+  literal "healthy" the [INFRA] P1 todo's done-when originally asked for; treating that as satisfied under the real
+  instruction, not the stale literal wording.
+
+  **Honest scope of what's still open, unchanged in substance from the 2026-08-15 blind build**: `tool_use`/
+  `tool_result` translation is STILL a structural text-placeholder stub, not a real translation to Codex's own
+  tool-execution model — confirmed by re-reading the live code, not assumed. This is the single biggest remaining
+  gap. A real live Codex session now exists to build and test this against (it didn't before today), but that's
+  genuine engineering work, deliberately not attempted in the same session as the deployment/credential work. The
+  mandatory smoke-test gate (`[REVIEW] P0`, real skill + real tool call) stays blocked on it. Also still open:
+  system-prompt marker verification, quota tracking/gating, cross-checked usage-capture, the `model_pricing.py` Luna
+  entry, and streaming support.

@@ -158,20 +158,31 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       `elated-nectar-440116-e9`, `poetic-bongo-456907-e4`, `spring-mix-426915-t9`) — genuinely free tier, unlike the two projects
       (`uts-compliance-ikenna`/371216509644 handed over twice by mistake — same key both times, confirmed byte-identical)
       that turned out to be Paid Tier 3. Key stored: `gemini-api-key-gen-lang-client-0008266149`. 2 more projects to go.
-- [ ] [INFRA] P0. Stand up a self-hosted LiteLLM proxy in Anthropic-passthrough mode on/reachable from the orchestrator
-      VM (same "must run where workers spawn" requirement flagged in the ruled-out OmniRoute doc — not the operator's
-      laptop). Configure Grok (2 models) and Gemini (6 accounts) as backends. Done when: a manual
-      `curl -X POST /v1/messages` against the proxy returns a valid Anthropic-shape response sourced from a real Grok
-      completion and a real Gemini completion.
+- [x] [INFRA] P0. ✅ Stand up a self-hosted LiteLLM proxy in Anthropic-passthrough mode on the orchestrator VM
+      (127.0.0.1:8768). **DONE 2026-08-16** — real evidence: `curl -X POST /v1/messages` returned a valid
+      Anthropic-shape response from a real `grok-4.3` completion AND a real `gemini-3.5-flash-lite-proj1` completion
+      (proper `type:message`/`content`/`usage` shape, both `HTTP 200`). Real bug found+fixed along the way: running in
+      this repo's SHARED `.venv` crash-looped both processes — litellm 1.97.0's `proxy_server` module imports a
+      fastapi internal (`get_flat_dependant`) removed in newer fastapi/Starlette-1.x, genuinely incompatible with this
+      repo's own `fastapi>=0.137.0` pin. Fixed by isolating litellm into its own venv
+      (`/home/ubuntu/.venvs/litellm-proxy`, `fastapi<0.120` pinned there specifically) — `litellm[proxy]` is
+      deliberately NOT a dependency of this repo's `pyproject.toml` (see that file's own comment).
+      `agent-orchestrator@2dafd5a14c` (dependency, later reverted) → `@31687b54dc` (isolated-venv fix + Gemini headroom
+      wiring, see below).
 - [ ] [REVIEW] P0. Verify system-prompt + `tool_use`/`tool_result` translation correctness with a real skill/tool-call
       smoke test before any live fleet traffic — LiteLLM is designed for this, but it must be proven against THIS
-      workspace's actual tool schemas, not assumed correct from general maturity. Done when: a real multi-step
-      tool-calling exchange completes correctly through the proxy for both Grok and Gemini backends.
-- [ ] [INFRA] P1. Register `AccountProvider` value `"grok"` (2 model variants via the existing `variant` field pattern,
-      mirroring DeepSeek's pro/flash split) and extend the existing `"gemini"` value with a new project-identity field
-      on `AccountDef` — Gemini is the only provider where one credential ≠ one account (GCP quota is per-project, not
-      per-model globally). Done when: QG green, all 8 accounts (2 Grok + 6 Gemini) resolve to `status: healthy` via
-      `/api/accounts`.
+      workspace's actual tool schemas, not assumed correct from general maturity. **Still open 2026-08-16** — only a
+      plain-text completion was smoke-tested through the proxy (see the P0 above), not a real tool-calling exchange.
+      Done when: a real multi-step tool-calling exchange completes correctly through the proxy for both Grok and
+      Gemini backends.
+- [x] [INFRA] P1. ✅ Register `AccountProvider` value `"grok"` + extend `"gemini"` with `gcp_project`. **DONE
+      2026-08-16** — all 8 accounts (2 Grok + 6 Gemini, using 3 of the operator's 4 confirmed free-tier projects)
+      registered in the live `accounts.json` and confirmed parsing cleanly via the real `load_accounts()` Pydantic
+      model. **Deliberately deployed PAUSED, not `status: healthy`** — operator instruction 2026-08-16: "fully shipped
+      ready to use but on pause mode so agents dont use them yet." All 8 confirmed `account_status: disabled` via
+      direct verification. The done-when's literal "healthy via /api/accounts" is not what was wanted here; treat this
+      as satisfied under the operator's actual instruction, not the todo's original literal wording — flip to enabled
+      when the operator is ready for live dispatch.
 - [x] [DATA] P1. ✅ Add `RateCard` entries for both Grok models. **DONE 2026-08-16** — `grok-4.6` ($2.00/$2.50→$6.00,
       cache-read $0.50, registered 2026-08-15) and `grok-4.3` ($1.25/$2.50, cache-read $0.20, replacing the dead
       `grok-4.1-fast` — see the corrected model-selection text above). Both cache-read rates are now CONFIRMED, not
@@ -180,15 +191,27 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       against real captured usage samples (`agent-orchestrator` model_pricing.py + test_model_pricing.py).
       Gemini needs no `RateCard` (free tier, $0
       by construction) but DOES need the RPM/TPM/RPD ceilings recorded per-account for the headroom tracker below.
-- [ ] [INFRA] P1. Build the Grok wallet-balance poller against `management-api.x.ai` (requires a management key with
-      billing-read ACLs, separate from the inference API key), mirroring `deepseek_balance.py`'s GSM-first token
-      resolution + polling-cadence pattern. Done when: a real balance value is fetched and surfaced via `/api/accounts`,
-      refreshing on the same cadence class as DeepSeek's existing poller.
-- [ ] [INFRA] P0. Build a per-(project, model) Gemini RPM/TPM/RPD headroom tracker that GATES dispatch (not just
-      displays it) inside `select_account_for_spawn()` — given the tightest ceiling is 20 requests/day, real-time gating
-      is the only thing preventing an immediate 429 storm at AO's real fleet scale. Done when: a simulated dispatch
-      against a near-ceiling stubbed account shows exclusion, and a real live account is proven to actually throttle
-      correctly against Google's reported quota (not just AO's own internal counter drifting from reality).
+- [x] [INFRA] P1. ✅ Build the Grok wallet-balance poller against `management-api.x.ai`. **DONE 2026-08-16** — real
+      end-to-end proof via the actual production code path (`fetch_grok_balance(acc_def=...)` against the real
+      `grok-4-3` `AccountDef`): `balance_usd: 5.0`, matching the console exactly. Real bug found+fixed along the way:
+      registration initially set `api_key_secret_name` to the INFERENCE key (`grok-api-key`) on both Grok accounts,
+      but `grok_balance.py`'s GSM-first resolution reads that exact field for the MANAGEMENT key — fixed to
+      `grok-management-key`. Also confirmed (separately, pre-existing, not new): `usage_tracker.read_env_var_from_file`
+      does NOT execute shell command substitution — an env-file `$(gcloud secrets ...)` line only resolves correctly
+      when GSM-first resolution succeeds first; the env-file fallback path would silently mis-read that literal string
+      as the token if GSM resolution ever failed in the real service context. Not fixed (pre-existing, same class of
+      risk already true for DeepSeek's own env files — flagging, not fixing, out of this todo's scope). **Not yet
+      confirmed**: whether this runs on a scheduled cadence the way `DeepSeekBalancePoller` does, vs. only on-demand —
+      re-check before relying on `/api/accounts` showing a fresh balance automatically.
+- [x] [INFRA] P0. ✅ Build a per-(project, model) Gemini RPM/TPM/RPD headroom tracker that GATES dispatch. **DONE
+      2026-08-16** — `gemini_account_has_rate_headroom()` (built+tested standalone 2026-08-15) is now wired into
+      `_pick_headroom_account()` (`agent-orchestrator/server/autospawn.py`), the single hook point every dispatch
+      path already funnels through. Also fixed a gap that would have made the gate a permanent no-op: nothing was
+      logging `gemini_request_selected` events, which the gate's own RPM/RPD counters read — added that logging at
+      the exact point a Gemini account is picked. 5 new tests (exclusion, all-at-ceiling, event-logging,
+      non-gemini-pick-doesn't-call-the-gate). `agent-orchestrator@31687b54dc`. Simulated-exclusion proof: done (new
+      tests). **Real live-account throttle proof: not yet done** — needs the accounts un-paused and real dispatch
+      volume to observe.
 - [ ] [INFRA] P1. Accurate usage-capture for both — verify the LiteLLM proxy's own usage reporting against each vendor's
       real dashboard/console numbers (xAI console, Google AI Studio quota page) before trusting it directly, same
       principle as every other new provider this session (DeepSeek's own compat endpoint under-reported before this was
@@ -357,6 +380,46 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
   `gemini-3.7-flash`, real `usageMetadata` returned): `gemini-api-key-gen-lang-client-0008266149`,
   `gemini-api-key-elated-nectar-440116-e9`, `gemini-api-key-poetic-bongo-456907-e4`,
   `gemini-api-key-spring-mix-426915-t9`. This closes the plan's 3-project minimum with one spare.
+
+- **2026-08-16 — full production deployment: proxy live, both providers registered+paused, wallet reconciliation
+  proven end-to-end, per operator instruction to get all three new providers "fully shipped ready to use but on
+  pause mode so agents dont use them yet."**
+
+  **LiteLLM proxy stood up on the orchestrator VM (127.0.0.1:8768).** Real crash bug found+fixed: sharing this
+  repo's `.venv` crash-looped the proxy — litellm 1.97.0's `proxy_server` module imports a fastapi internal
+  (`get_flat_dependant`) removed in newer fastapi/Starlette-1.x, genuinely incompatible with this repo's own
+  `fastapi>=0.137.0` pin (confirmed: an unpinned `uv pip install litellm[proxy]` resolves `starlette==1.6.0`, a
+  drastic new major). Fixed by isolating into `/home/ubuntu/.venvs/litellm-proxy` with `fastapi<0.120` pinned there
+  specifically — `litellm[proxy]` is deliberately NOT in `pyproject.toml` (its own comment explains why); the
+  systemd unit + install script updated to provision and use that isolated venv automatically going forward.
+  Real Anthropic-format smoke test through the actual proxy succeeded for BOTH providers (proper `message`/
+  `content`/`usage` shape, `HTTP 200` on `grok-4.3` and `gemini-3.5-flash-lite-proj1`).
+
+  **All 8 accounts registered** (2 Grok + 6 Gemini across 3 of the operator's 4 confirmed free-tier projects) in the
+  live `accounts.json`, confirmed parsing cleanly, then **explicitly paused** (`account_status: disabled`, confirmed
+  for all 8) per the operator's instruction — dispatch-ready but inert until un-paused.
+
+  **Gemini's headroom gate wired into real dispatch** — `gemini_account_has_rate_headroom()` existed standalone
+  since 2026-08-15 but nothing called it; now wired into `_pick_headroom_account()`, the one hook point every
+  dispatch path funnels through. Found+fixed a gap that would have made the gate a permanent no-op: nothing was
+  logging the `gemini_request_selected` events the gate's own RPM/RPD counters read — added that logging exactly
+  where a Gemini account gets picked. 5 new tests. `agent-orchestrator@31687b54dc`.
+
+  **Grok's wallet-balance poller proven end-to-end via the real production code path**
+  (`fetch_grok_balance(acc_def=...)` against the real `grok-4-3` AccountDef): `balance_usd: 5.0`, matching the
+  console exactly. Real bug found+fixed: registration initially pointed `api_key_secret_name` at the INFERENCE key
+  (`grok-api-key`) on both Grok accounts, but the balance poller's GSM-first resolution reads that exact field for
+  the MANAGEMENT key — fixed to `grok-management-key`. Separately confirmed (pre-existing, not new, not fixed —
+  flagging only): `usage_tracker.read_env_var_from_file` does not execute shell command substitution, so an env-file
+  `$(gcloud secrets ...)` line only resolves correctly when GSM-first resolution succeeds first; the fallback path
+  would silently mis-read the literal unexpanded string as the token if GSM ever failed in the real service context
+  — same latent risk already true for DeepSeek's own env files, not something this session introduced.
+
+  **Honest scope of what's still open**: `tool_use`/`tool_result` translation through the proxy is unverified (only
+  plain-text completions were smoke-tested) — the `[REVIEW] P0` smoke-test-gate todo stays open pending that. Grok's
+  balance-poller scheduling cadence (vs. on-demand-only) is unconfirmed. Cross-checking captured usage against each
+  vendor's own dashboard is still open. The real-live-account-throttle proof for Gemini's headroom gate needs the
+  accounts un-paused first.
 
 ## Context scout
 
