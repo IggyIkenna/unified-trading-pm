@@ -68,7 +68,7 @@ source: >-
 ## Todos
 
 - [x] ✅ [BACKEND] P0. **Steps 1-5 per unit — done 2026-08-16. Cefi confirmed as the mature/flagship AG.** SHIPPED
-      — `unified-trading-pm@<pending-sha>`. 4 parallel research passes across instruments-service,
+      — `unified-trading-pm@69d861ef2d`. 4 parallel research passes across instruments-service,
       market-tick-data-service, features-service.
       **Step 2 — PASS for 20/22 venues.** Shared `TardisReferenceDataAdapter` covers 16 venues via
       `VENUE_TO_ADAPTER_KEY`; 6 have dedicated per-venue adapters. `KALSHI-PERP`/`POLYMARKET-PERP` have deliberate
@@ -98,7 +98,7 @@ source: >-
       mapping) for the major venues first (BINANCE/BYBIT/OKX/COINBASE/KRAKEN families). Done-when: a real per-row
       verdict, with `BLOCKED-ON` markers only where step 5 genuinely failed.
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16, 1 major finding escalated + 2 real per-venue gaps.**
-      SHIPPED — `unified-trading-pm@<pending-sha>`. 18 CEX venues each have their own correct `VENUE_WALLET_
+      SHIPPED — `unified-trading-pm@69d861ef2d`. 18 CEX venues each have their own correct `VENUE_WALLET_
       CAPABILITIES` entry (no base-name inheritance), correctly routed to `CEX_WITHDRAW` by `classify_transfer_
       type`; 4 on-chain/custody venues (ASTER/HYPERLIQUID/LIGHTER-ZKSYNC/POLYMARKET-PERP) route correctly to
       `CUSTODY_TRANSFER`/`ON_CHAIN` with a real, non-stub custody adapter.
@@ -133,7 +133,7 @@ source: >-
 ## Progress Log
 
 **2026-08-16 — full contract sweep done, 1 major finding escalated, 3 new gaps total.** SHIPPED —
-`unified-trading-pm@<pending-sha>`. 4 parallel research passes across all 4 repos. Cefi confirmed genuinely
+`unified-trading-pm@69d861ef2d`. 4 parallel research passes across all 4 repos. Cefi confirmed genuinely
 healthy at step 5 (feature consumption) — every major feature group has a real, cited, cefi-specific
 implementation, unlike prediction's structural gaps. The one severe finding is at step 9: CEX withdrawal
 execution is a stub that always returns `CONFIRMED` without calling the real exchange, affecting all 18 CEX
