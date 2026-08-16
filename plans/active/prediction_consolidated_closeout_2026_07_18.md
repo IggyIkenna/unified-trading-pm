@@ -389,13 +389,14 @@ fixture-linked before MVP backfill.
   - [`plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md`](/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md)
     — 0 open todos (ARCHIVED 2026-07-29; both re-based via decision 338 and shipped — `unified-api-contracts@283d7449` +
     `instruments-service@38e393de` + `market-tick-data-service@5bf8a3c7`).
-  - [`plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`](/plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md)
-    — **1 open** (corrected 2026-07-30, batch2 finalize re-triage; was wrongly marked 0 open — `status: open` on the doc
-    itself). **[DATA] P2.** market-tick-data-service — investigate the KALSHI-venue scaffold-row provenance mislabel
-    (129,227 rows carrying `venue=KALSHI` with `pipeline_mode`/`source` stamped
-    `polymarket_clob`/`polymarket_gamma_api`, spanning dates back to 2018; NOT the already-fixed captured-row defect).
-    The doc's own bundle-atom root-cause remediation (items 1-6) and its combined residual close-out (a/b/c/d) are all
-    done/superseded — only this one residual todo remains open.
+  - [`plans/archive/2026_08/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`](/plans/archive/2026_08/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md)
+    — **0 open, ARCHIVED 2026-08-16** (`status: resolved`). Both residual follow-ups are done: the KALSHI-venue
+    scaffold-row provenance mislabel via `market-tick-data-service/scripts/restamp_prediction_kalshi_scaffold_provenance_2026_08_03.py`
+    (prior session), and the P3 non-prediction-venue backstamp (tradfi/cefi/defi) via
+    `instruments-service/scripts/restamp_venue_scaffold_provenance_2026_08_16.py` —
+    `instruments-service@ddac7eb7e2`, tradfi already clean, cefi 292,469 rows + defi 215,781 rows restamped. The doc's
+    own bundle-atom root-cause remediation (items 1-6) and its combined residual close-out (a/b/c/d) were already
+    done/superseded.
   - [`plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`](/plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md)
     — **added to this index 2026-08-06** (`/ag-closeout-audit prediction`, closing a `check_ag_closeout_linkage.py`
     graph-disconnection gap — see
