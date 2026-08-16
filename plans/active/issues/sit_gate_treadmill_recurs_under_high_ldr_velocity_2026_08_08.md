@@ -248,3 +248,23 @@ The two subsequent ticks (`31881938530` 11:24Z, `31882197030` 11:30Z) both logge
 a `SIT GATE BLOCK` line. No orphaned/stale promote PR this occurrence (PR #652 merged cleanly, unlike the `#939` case in
 the 2026-08-10 measured section) — todo 1 (dedup-key) and the hoist-cleanup todo are unchanged/still open, this
 occurrence did not exercise either.
+
+**cicd escalation agt-99ba75, 2026-08-16 ~22:41Z** (`sit_gate_stuck` wall, `market-tick-data-service` 4 straight
+SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31976820987`): Live-diagnosed via `gh run view --log` on
+the fleet-promote run + `sit_gate_stuck_detector.py` (no `--slack`), not assumed from the alert text. **Same documented
+moving-tree race, self-converged during my diagnosis — no code fix needed, nothing to push.** Sequence: run
+`31976820987` (22:38:19Z) logged `SIT GATE BLOCK market-tick-data-service: true-delta not SIT-validated on this tree`
+(fail-closed, `sit_validated_tree=f01b93e2...` vs `LDR tree=57d6b0f9...`), re-dispatching SIT-on-LDR (runs `31976558396`
+in-progress + `31976861349` pending at diagnosis time); no orphaned/stale promote PR existed for market-tick-data-service
+throughout (`gh pr list --search "chore(promote)"` empty before and after). Backgrounded a bounded poll of
+`sit_gate_stuck_detector.py` (every 3 min, 40-min cap, heartbeating each tick) rather than block synchronously: streak
+held flat at "4 straight, same latest-tick URL" through 22:47Z-22:59Z (no new BLOCK tick landed — SIT round still in
+flight, not a masked second bug), then converged at 23:02:53Z: `sit-gate stuck detector: healthy (no repo has 3+
+consecutive SIT GATE BLOCK ticks)`. Verified concretely, not just inferred from the detector: the next fleet-promote tick
+(run `31977885032`, 23:01:40Z) logged `SIT GATE PASS market-tick-data-service: true-delta SIT-validated on this tree
+(sit_validated_tree == LDR tree 57d6b0f967a5...)`, cut promote PR `market-tick-data-service#1123`, and the same tick's
+summary lists market-tick-data-service under `Promoted (8)` — i.e. the PR was created AND auto-merged in the same tick,
+consistent with the doc's "an existing PR is itself proof the gate passed" framing. No orphaned PR left behind (list is
+empty post-merge). Todos 1 (dedup-key) and 3 (hoist PR cleanup) are unchanged/still open — this occurrence did not
+exercise either (no PR ever went stale).
