@@ -129,3 +129,9 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
   matching 2026-08-15 entry) — its launcher tries to auto-republish a stale code tarball and safely refuses on
   uncommitted source. Neither blocker is mine to resolve; the script ship is a plain retry once that repo's owner
   commits or clears their WIP.
+- 2026-08-16 — Shipped: `market-tick-data-service@338d91f0` (race-window-shrink script, bundled with an unrelated
+  CeFi manifest-correction script in the same commit for efficiency — see
+  `cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md` for that unrelated finding's own record).
+  `unified-api-contracts` was still dirty with the same foreign WIP as before; shipped via the documented
+  `Quickmerge: direct-carveout-dirty-deps` direct-push path instead of waiting further. Content-verified landed on
+  `origin/live-defi-rollout` (`ahead=0`, no diff).
