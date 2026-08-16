@@ -51,16 +51,17 @@ resolved_by:
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Reconcile before deleting — a contradiction was found after the ruling, not before.**
-      `cross_ag_live_capture_parity_2026_08_14.md` line 148-151 claims `PHOENIX-SOLANA` is "not in current UAC
-      `VENUES_BY_ASSET_GROUP` at all" (verified live, 168-venue universe) and its REST API was deprecated 2026-05-15 —
-      operator ruled 2026-08-15 to delete `phoenix_ws.py` as dead code on that basis. But that same source doc's own
-      Progress Log (line 383-385) separately notes
+- [ ] [DATA] P2. **RETAGGED 2026-08-16 (operator ruling, na-eligibility-audit follow-up round 4): this is a
+      read-then-compare task, not an operator judgment call — dispatch it, do not gate it.** Reconcile before
+      deleting: `cross_ag_live_capture_parity_2026_08_14.md` line 148-151 claims `PHOENIX-SOLANA` is "not in current
+      UAC `VENUES_BY_ASSET_GROUP` at all" (verified live, 168-venue universe) and its REST API was deprecated
+      2026-05-15 — operator ruled 2026-08-15 to delete `phoenix_ws.py` as dead code on that basis. But that same
+      source doc's own Progress Log (line 383-385) separately notes
       `/plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` (open, `assigned_vm: planning`)
       independently found `PHOENIX-SOLANA` **IS** present in `ALL_DEFI_VENUES`. These two findings directly disagree on
       whether `PHOENIX-SOLANA` exists in any UAC venue registry today. Read both docs, resolve which is current, and
-      only THEN execute (or skip) the `phoenix_ws.py` deletion — do not delete blind on the operator's ruling alone,
-      since the ruling was made without this contradiction surfaced. (repos: unified-api-contracts,
+      only THEN execute (or skip) the `phoenix_ws.py` deletion — do not delete blind on the operator's original ruling
+      alone, since that ruling was made without this contradiction surfaced. (repos: unified-api-contracts,
       market-tick-data-service)
 - [x] ✅ [DATA] P1. **NOT CONFIRMED — did not delete. Two independent blockers found, reported in
       `/plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md`.** (1) The
