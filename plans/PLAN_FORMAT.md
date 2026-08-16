@@ -546,7 +546,8 @@ clone, not by trusting the self-report.
 > DATA-mutation completions — a restamp/backfill row-count, a GCS object rename/delete, a terraform/tofu state op — had
 > no analogous machine-checkable artifact; completion rested on the worker's self-report of running their own script.
 > Review flagged this same class three independent times (tofu-state, `do_rename`, prediction restamp row-counts) — see
-> `plans/active/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md` (RULED 2026-08-06: extend the §8b contract).
+> `plans/archive/2026_08/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md` (RULED 2026-08-06: extend the §8b
+> contract; implemented + archived 2026-08-16).
 
 Any `- [x]` todo whose completion is a **prod DATA-MUTATION claim** — a restamp/backfill/purge row or shard count, a
 GCS object rename/delete, or a terraform/tofu state operation — MUST cite a verifiable artifact ref on the checkbox
