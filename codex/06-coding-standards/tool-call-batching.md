@@ -63,7 +63,13 @@ magnitude. Cutting redundant round-trips is the right one.
   repository" instead of a silent wrong-repo answer. Reproduced twice in immediate succession in one multi-repo
   `/pre-compact` audit (2026-08-15): a flat `cd PM && ... && cd MTDS && ... && echo "=== UAC ===" && ...` (missing the
   `cd` into UAC) reported MTDS's SHA mislabeled as UAC's both times — caught only because the two repos' SHAs were
-  implausibly identical, not by the command's own structure.
+  implausibly identical, not by the command's own structure. **Reproduced a third time the very next day (2026-08-16,
+  slot-23 `/pre-compact`)**: a flat `cd PM && ... && cd MTDS && ... && grep ... plans/ codex/ docs/` (missing the `cd`
+  back into PM before the grep) silently ran the dangling-reference sweep against MTDS's own tree instead — this time
+  caught only by the sweep returning suspiciously empty when it should have surfaced known historical hits, not by any
+  structural signal. The written rule (subshells) already existed a day earlier and was not applied — restating it a
+  second time is unlikely to fix it either; treat any flat multi-`cd` chain as the anti-pattern on sight, not just when
+  the output looks wrong.
 - **Multiple `tool_use` blocks in one message** for independent calls — reading four files, grepping three patterns,
   checking two repos' status. These are independent by construction; nothing is learned by spacing them out.
 - **`replace_all: true`, or one Write**, instead of a serial run of near-identical Edits on the same file.
