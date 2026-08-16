@@ -60,8 +60,9 @@ context_scope:
 
 > **🟢 ARCHIVED 2026-08-16** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
-> archive-on-resolve rule. Resolution evidence in `resolved_by:` (unified-trading-system-ui@afc9860735, the final
-> todo to land) — every todo shipped repo@sha, cited per-todo in this doc's own checkboxes and Progress Log.
+> archive-on-resolve rule. Resolution evidence in `resolved_by:` (unified-trading-system-ui@6065a11586, the final
+> todo to land — two commits, manifest resync + the golden-test-count fix it required) — every todo shipped
+> repo@sha, cited per-todo in this doc's own checkboxes and Progress Log.
 > Single-repo case (plan-of-record in this same worktree), so the checkbox flip and this `git mv` land in the same
 > commit per the 2026-08-10-narrowed same-commit-flip+archival sanction.
 
