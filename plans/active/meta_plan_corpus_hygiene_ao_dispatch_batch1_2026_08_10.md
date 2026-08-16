@@ -131,7 +131,7 @@ Two independent causes, both now fixed:
       `check_frontmatter_schema` 2013 docs zero violations (3 targets live in `plans/active/`; the 4th
       `shared_ci_workflow_repo_extraction_2026_08_06` is archived under `plans/archive/2026_08/` but was still retagged
       to `[ci]` for corpus orthogonality).
-- [ ] [DOCS] P3. **Retag the 3 surviving `cross-cutting` 2026-08-07 findings to their real owner** (all in
+- [x] ✅ [DOCS] P3. **Retag the 3 surviving `cross-cutting` 2026-08-07 findings to their real owner** (all in
       `/plans/active/issues/`): `deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md` → `[ci]` or
       `[infrastructure]` (audit recommended `ci`, `infrastructure` defensible — pick by content);
       `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` → `[ci]`;
@@ -139,7 +139,17 @@ Two independent causes, both now fixed:
       that audit named (`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`,
       `alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md`) were verified 2026-08-10 as already
       archived under `/plans/archive/2026_08/issues/` — out of scope, no action. **Done when**: all 3 carry a single
-      real tranche tag.
+      real tranche tag. — unified-trading-pm@\<sha\>. Live re-check at execution time (2026-08-16) found all 3 targets
+      had already moved since this plan's 2026-08-10 authoring: `deployment_api_events_global_state_leak…` retagged
+      `[ci]` here (content is CI-run test-flakiness — a pytest-xdist module-global leak blocking a promote PR's QG
+      slice — matching the audit's own `ci` recommendation); `qg_checkers_missing_claude_worktree_exclusion…` was
+      ALREADY `[infrastructure]` (fixed 2026-08-07 by the `ag-closeout-audit infra`-tranche run per its own
+      in-file comment — no action needed); `provenance_marker_broken_by_history_rewrite…` is no longer in
+      `plans/active/issues/` at all — it was resolved + archived 2026-08-15 to
+      `/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
+      (its own banner confirms), so it falls under this same todo's own "already archived — out of scope, no
+      action" precedent already applied to the other 2 originally-named targets. All 3 now carry a single real
+      tranche tag (or are archived, out of scope).
 - [ ] [DOCS] P3. **Retag the 12 outstanding `cross_cutting_parked_2026_08_08` findings** (its findings 1-9 and 11-13;
       finding 10 `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` was already fixed to
       `[infrastructure]` by the `ao` tranche's 2026-08-10 run — skip it). Read that parked doc's findings section for
