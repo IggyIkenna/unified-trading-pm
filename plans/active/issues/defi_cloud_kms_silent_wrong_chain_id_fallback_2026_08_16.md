@@ -107,10 +107,18 @@ worst case, a transaction that is valid on the wrong chain.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Check live `wallet_provisioning.json` content** (GCS, not in a repo checkout) for any
-      wallet with `signing_surface=CLOUD_KMS_ENCRYPTED` that could plausibly touch LINEA (or any other
-      cloud_kms-unmapped chain). Done-when: a cited, evidence-backed answer — this determines whether the fix is
-      urgent-before-any-LINEA-op or can follow normal priority.
+- [ ] [OPERATOR] P0. **Check live `wallet_provisioning.json` content for any wallet with
+      `signing_surface=CLOUD_KMS_ENCRYPTED` that could plausibly touch LINEA.** Exact GCS path found (2026-08-16,
+      via `unified_api_contracts/internal/domain/defi/wallet_config.py:638`):
+      `wallet-config/{chain_env}/{client_id}/wallet_mapping.json` is the sibling `WalletMappingConfig` path; the
+      `WalletProvisioningConfig` docstring (`wallet_config.py:211`) cites the analogous
+      `wallet-config/{chain_env}/wallet_provisioning.json` — bucket name resolves via `resolve_bucket_name(...)`
+      per this workspace's storage convention, not hardcoded in this file. **Not completed this session** — this
+      is live production custody/wallet configuration (which real wallets are assigned to which signing surface),
+      genuinely operator-territory to query directly rather than an interactive session guessing at GCS
+      credentials for a file this sensitive. Tagged `[OPERATOR]` rather than left as a generic `[BACKEND]` todo.
+      Done-when: a cited, evidence-backed answer — this determines whether the fix below is urgent-before-any-
+      LINEA-op or can follow normal priority.
 - [ ] [BACKEND] P0. **Wire `cloud_kms.py` and `local_key.py` to call UAC's canonical `resolve_chain_id()`**
       instead of their local, narrower, silently-failing maps — the same fix the prior remediation pass already
       applied to `bridge_cost_model.py`/`sor_cross_chain.py`/`uniswap.py`. Done-when: an unmapped chain raises
@@ -124,6 +132,12 @@ worst case, a transaction that is valid on the wrong chain.
 
 ## Progress Log
 
+**2026-08-16 (later, same session)**: Traced the exact GCS path template for `WalletProvisioningConfig`
+(`unified_api_contracts/internal/domain/defi/wallet_config.py:211,638`) — narrows the operator's follow-up work,
+but stopped short of actually querying live GCS content for this specific file: querying real production
+custody/wallet-signing-surface assignments is judgment-and-access territory appropriate for the operator to run
+directly, not something to chase autonomously via guessed credentials for data this sensitive. Retagged the
+reachability todo `[OPERATOR]` accordingly.
 - **2026-08-16**: Filed during the defi AG batch's step-9 (transfers) venue-readiness sweep, immediately followed
   by a dedicated reachability research pass (mirroring the cefi CCXT-withdraw-stub investigation). Verdict:
   REACHABLE-BUT-GATED, not dead code — flagged to the operator directly as more urgent than the cefi finding,
