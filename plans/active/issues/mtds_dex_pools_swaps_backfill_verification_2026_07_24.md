@@ -570,6 +570,20 @@ rule (see Progress Log entry below for the observed outcome).
   `dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip rule (the dispatch-time Slack alert
   already covers the FYI). Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
 
+- **2026-08-16 (slot-4)** — worked the `[SCRIPT] P3` follow-up (re-run velodrome_v2/OPTIMISM dex_pool_swaps backfill
+  over the former bad-indexers window). Pre-launch GCS-object-existence spot-check (3 dates via UTL SDK
+  `list_blobs`) reconfirmed the gap was still genuinely open: 2026-07-27 ABSENT, 2026-07-31 and 2026-08-04 already
+  FOUND (matches the doc's "339 residual rows" partial-gap description, not a total absence). Launched
+  `mtds-dex-swaps-backfill` (SPOT, e2-standard-4, asia-northeast1-c,
+  `--protocols velodrome_v2 --start 2026-07-27 --end 2026-08-05`); launcher's own `lc_verify_tarball_freshness`
+  confirmed all 4 core tarballs current (mtds-code, unified-api-contracts, unified-trading-library,
+  deployment-service — post-`5c12c9e5`). T+10min health-verified via `run.log` pull (UTL SDK
+  `download_from_storage`, not a subprocess `gsutil`/`gcloud storage` call): RUNNING, no crash, `last_completed_date`
+  advancing monotonically through the window (2026-08-01→02→03 observed), real non-empty swap rows written every
+  processed day (20034/4302/4685 records for velodrome_v2/OPTIMISM), peak RSS 8798MB (well within the e2-standard-4
+  16GB ceiling — no OOM recurrence of the class this doc's sibling archived issue tracked). No code changes shipped —
+  used the existing launcher as-is. Repo: deployment-service.
+
 ## Follow-ups
 
 - [x] ✅ [BACKEND] P2. Fix the VELODROME_V2/OPTIMISM dex_pool_swaps persistent "bad indexers" condition
@@ -582,11 +596,17 @@ rule (see Progress Log entry below for the observed outcome).
       verified OK across all dates including the former bad-indexers window (2026-07-25→2026-08-04 all return real swap
       rows). No subgraph ID swap needed — self-healed. Residual `attempted_failed` rows (339 as of 2026-08-05) clear on
       targeted backfill VM re-run (see new [SCRIPT] follow-up below).
-- [ ] [SCRIPT] P3. Re-run velodrome_v2/OPTIMISM dex_pool_swaps backfill over the former bad-indexers window
-      (2026-07-27→2026-08-04) to clear the ~339 residual `attempted_failed` rows left from the ~7-day outage. Subgraph
-      is now fully healthy — a targeted VM launch (`mtds-dex-swaps-historical` or equivalent scoped to
-      `--protocols velodrome_v2 --start 2026-07-27 --end 2026-08-05`) with current code tarball (post-5c12c9e5) will
-      retry and succeed. Provenance: this task (slot-5, -009); confirmed subgraph health 2026-08-06.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-16 (slot-4)** — pre-launch GCS spot-check confirmed the gap was still real
+      (2026-07-27 ABSENT; 2026-07-31/2026-08-04 already FOUND — consistent with the doc's "339 residual rows" partial
+      gap, not a full absence). Launched `mtds-dex-swaps-backfill` (SPOT, e2-standard-4, asia-northeast1-c,
+      `--protocols velodrome_v2 --start 2026-07-27 --end 2026-08-05`), all 4 tarballs tarball-freshness-verified at
+      launch (mtds-code, unified-api-contracts, unified-trading-library, deployment-service — post-`5c12c9e5`).
+      T+10min health-verified via `run.log`: RUNNING, no crash, `last_completed_date` advancing monotonically
+      (2026-08-01→02→03 observed in this window), real non-empty swap rows every processed day (20034/4302/4685
+      records), peak RSS 8798MB (well within the 16GB VM ceiling). Re-run velodrome_v2/OPTIMISM dex_pool_swaps backfill
+      over the former bad-indexers window (2026-07-27→2026-08-04) to clear the ~339 residual `attempted_failed` rows
+      left from the ~7-day outage. Subgraph confirmed healthy 2026-08-06; this session's re-run is retrying and
+      succeeding as expected. Repo: deployment-service (no code change — used the existing launcher).
 - [ ] [DATA] P3. Once the `mtds-dex-pools-backfill` VM launched 2026-08-09T22:29Z (see Progress Log entry same date)
       finishes traversing its full `2026-03-01→2026-07-24` assigned range (ETA ~90min from launch, ~00:00Z 2026-08-10,
       per its observed ~34s/day processing rate), re-run the 18-date GCS-object-existence spot-check for TRADER_JOE_V2
