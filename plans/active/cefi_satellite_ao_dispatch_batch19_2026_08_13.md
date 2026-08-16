@@ -23,7 +23,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md,
+    /plans/archive/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md,
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
     /plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md,
@@ -537,7 +537,7 @@ source: >-
       table + venue-plumbing findings (existing Tardis CeFi pipeline already covers both venues, no new adapter needed)
       already recorded in the source doc's own Progress Log — no new code/research needed by this batch; this batch's
       2026-08-13 conflict-check drafted the item before the source doc's own audit-day research landed later the same
-      day. Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md` (Todo 1, already `[x] ✅`).
+      day. Source: `plans/archive/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md` (Todo 1, already `[x] ✅`).
 - [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-8·backend_engineer), stale-checkbox
       correction per the AO-dispatch conflict-check protocol §3.4.** Add confirmed tokenized-equity symbols to the UAC
       CeFi instrument universe with instrument_type=SPOT_PAIR + tracks_equity link. The source doc's own identical Todo
@@ -545,21 +545,21 @@ source: >-
       OKX/Bybit tokenized-equity SPOT_PAIR symbols + tracks_equity links", confirmed ancestor of
       `origin/live-defi-rollout`): added `MCD` to `CEFI_EQUITY_PERP_BASE_UNIVERSE` and 41 new `tracks_equity` links in
       `CRYPTO_EQUITY_PERP_TO_REAL_EQUITY`. Source doc's own checkbox is already `[x]` there. No code shipped by this
-      batch (none needed). Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
+      batch (none needed). Source: `plans/archive/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-8·backend_engineer), stale-checkbox
       correction per the AO-dispatch conflict-check protocol §3.4.** Add confirmed symbols to the CeFi MVP scope rule
       (mirror CEFI_EQUITY_PERP_BASE_UNIVERSE pattern). The source doc's own identical Todo 3 was verified DONE by
       slot-29 on 2026-08-13 — **`unified-api-contracts@bfad33b58`** (confirmed ancestor of `origin/live-defi-rollout`):
       new `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` (67 raw venue bases) unioned into `CeFiMvpRule.base_ccys`, with a
       perp-gate-exempt carve-out for the no-perp-leg SPOT_PAIR cells. No code shipped by this batch (none needed).
-      Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
+      Source: `plans/archive/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-8·backend_engineer), stale-checkbox
       correction per the AO-dispatch conflict-check protocol §3.4.** Register an InstrumentRecord per confirmed symbol
       dated to its real historical listing date. The source doc's own identical Todo 5 was verified DONE by slot-7 on
       2026-08-13 — no code change was needed (the Tardis adapter's existing full-universe enumeration already emits a
       `SPOT_PAIR` record per symbol dated to its real `availableSince`); a regression guard shipped —
       **`instruments-service@4eca07bac4`** (confirmed ancestor of `origin/live-defi-rollout`). No code shipped by this
-      batch (none needed). Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
+      batch (none needed). Source: `plans/archive/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [x] ✅ [CODE] P2. Launch the CeFi Tardis/venue-native backfill for the tokenized-equity SPOT window — **LAUNCHED
       2026-08-15T15:14 UTC (slot-3·backend_engineer).** Tardis 1-VM concurrency guard cleared (0 running Tardis
       consumers, per the sourced `tardis_concurrency_guard 1 asia-northeast1-c central-element-323112` function, not a
@@ -570,7 +570,7 @@ source: >-
       confirmed STAGING via `gcloud compute instances list` immediately after launch — covers OKX-SPOT + BYBIT-SPOT,
       `VM_START_DATE=2025-01-01 VM_END_DATE=2026-08-14`, data_types trades;book_snapshot_5, shuts down on completion.
       Source doc's own Todo 6 flipped in the same commit (see its Progress Log). Source:
-      `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
+      `plans/archive/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [x] ✅ [CODE] P2. Grep prior mdps-cefi-_/mdps-tradfi-_/mdps-defi-* run.log archives (or manifest attempted_failed
       reason strings) for the exact Timestamp-vs-float TypeError signature to size the historical blast radius, and
       re-trigger record_failed→retry for any shard whose failure resolves to this exact root cause —

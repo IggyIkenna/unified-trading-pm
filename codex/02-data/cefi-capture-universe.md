@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: CeFi Capture Universe — Two-Layer Architecture
-summary:
-  Two-layer CeFi capture model — instruments-service enumerates the FULL catalogue while MTDS downloads only the
+summary: Two-layer CeFi capture model — instruments-service enumerates the FULL catalogue while MTDS downloads only the
   ~540-base CEFI_BASE_ASSET_UNIVERSE gated by the per-day venue perp-gate (spot captured only if the venue lists a
   perp), with staking-spot/TradFi-perp exceptions and inverse/linear margin rules; one is_in_mvp_capture_universe
   predicate is the honest-coverage denominator.
@@ -122,7 +121,7 @@ symbols are pure `SPOT_PAIR` tokenized-equity products with **no perp leg on eit
 equity perps below, which DO have a PERP form and only ride `SPOT_PAIR` as their secondary tokenized-spot form). Bases
 in this set are captured on ANY venue that lists them regardless of `has_perp_for_base`, mirroring the
 `STAKING_SPOT_EXCEPTION` mechanism (operator precedent 2026-06-23). Discovered/registered 2026-08-12/13,
-`plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`; `MVP_SCOPE_CONFIG_VERSION` 25 → 26.
+`plans/archive/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`; `MVP_SCOPE_CONFIG_VERSION` 25 → 26.
 
 - **OKX** — 56 `X<UNDERLYING>-USDT` spot tokens (base `X<UNDERLYING>`), `instCategory=3`, live-queried real per-symbol
   listing dates (2026-07-15/16 through 2026-08-13).
