@@ -60,7 +60,10 @@ context_scope:
 > `unified-trading-pm@233ebd6148` ("remove redundant status:draft double-gate on finalize plans"), a finalize plan's
 > `depends_on` + `gate_on_depends: true` already machine-holds its todos until the upstream is done — a separate
 > body-level `status: draft` is a stale double-gate. Frontmatter `status: active` is correct; this plan is machine-gated
-> on `defi_satellite_ao_dispatch_batch6_2026_07_30.md` (1 of 26 todos still open as of this check).
+> on `defi_satellite_ao_dispatch_batch6_2026_07_30.md`. **STALE-COUNT-FIXED 2026-08-16 (plan_reconciler, defi tranche,
+> dispatch agt-1a88e0)**: the "1 of 26 todos still open" claim above was from 2026-08-12 and never re-checked —
+> `defi_satellite_ao_dispatch_batch6_2026_07_30.md` is now fully `[x]` (item 24 + its follow-up both closed
+> 2026-08-15), so this finalize plan is gate-clear and ready for dispatch.
 
 ## Todos
 

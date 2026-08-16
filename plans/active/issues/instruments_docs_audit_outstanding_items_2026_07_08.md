@@ -40,14 +40,14 @@ tags:
   ]
 related:
   [
-    plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
-    plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
-    plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md,
-    plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md,
-    plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
-    plans/active/prediction_canonical_identity_migration_2026_07_08.md,
+    /plans/archive/issues/sports_manifest_unknown_league_id_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
+    /plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md,
+    /plans/archive/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md,
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/archive/2026_07/prediction_canonical_identity_migration_2026_07_08.md,
   ]
 created: 2026-07-08
 author: unknown

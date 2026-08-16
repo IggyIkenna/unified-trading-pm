@@ -57,6 +57,10 @@ drift_direction: advance-code
 release these until batch9 is fully done.** (Batch9 itself stays `status: draft` until the operator approves dispatch —
 this finalize plan needs no separate flip, `gate_on_depends` holds it correctly either way per the "no double gate"
 finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
+**BANNER-FIXED 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: the "batch9 stays status: draft"
+claim above is stale — `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s actual frontmatter is
+`status: active — operator-approved 2026-08-06, dispatching`, and all 17 of its todos are now `[x]`. This finalize
+plan's gate is clear and it is ready for dispatch.
 
 ## Todos
 

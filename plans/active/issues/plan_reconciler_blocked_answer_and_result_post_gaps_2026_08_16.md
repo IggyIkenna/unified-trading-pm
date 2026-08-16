@@ -142,6 +142,17 @@ worker's ability to read it back via the AO HTTP surface.
   NOT affected (fully captured in `plan_reconciler_findings_ao_2026_08_16.md` + git history) — filing this as a
   separate meta-doc about the reconciler's own tooling reliability, matching the precedent of
   `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` and `plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`.
+- **2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: SECOND live reproduction of Gap 2, with a new
+  diagnostic clue for todo 2. Posted `/blocked` (BLK-9b43a627), got the harness-level "Operator answered your BLOCKED
+  question" notification, but `GET /api/slots/6/messages` returned only an unrelated git-status-red nudge — the
+  answer was NOT in the queue. Found it instead via `GET /api/activity?limit=15`:
+  `{"event_type":"blocked_message_orphaned_by_reassign","slot_id":6,"task_id":"agt-1a88e0","details":{"current_task":null,"text":"[operator] BLOCKED Q answered: A"}}`.
+  The event name itself is the new clue this run adds: `orphaned_by_reassign` suggests the delivery-side bug is tied
+  to task/slot reassignment (`current_task":null` at the time of the orphan event) rather than a generic 500 in the
+  messages handler — worth checking whether the worker's `task_id` changed or its slot was reassigned between posting
+  the `/blocked` call and the operator's answer landing. `/api/activity` was a usable workaround THIS time (the answer
+  text was recoverable there even though `/messages` failed) — worth considering as a fallback read path in whatever
+  fix todo 2 lands, not just a diagnostic aid.
 - **2026-08-16 ~17:14 UTC (plan_reconciler, post-compact retry)**: re-tried `GET /api/slots/28/messages` after this
   session's context compaction completed — returned `200 {"messages":[]}` this time (the earlier call in this same run
   returned a real `Internal Server Error`; not reproduced on this attempt, so the 500 looks transient rather than a

@@ -162,9 +162,48 @@ in `agent-orchestrator/server`'s boot-message construction) so future dispatches
 - This checkpoint covers the highest-confidence/highest-severity subset. Remaining lower-priority items (see hunter
   reports) continue in the next checkpoint(s) of this same run.
 
-## Plans not reached (yet — continuing this run)
+## Checkpoint 2 — additional fixes applied
 
-Deferred to next checkpoint: the ~8 remaining same-day/clear missed-flips (mdps_features stale gates ×2, track01
-same-day rulings ×2, batch6/9-finalize stale claims, solana_dex_pool_swaps_indexer_002 todo 4), dangling-ref fixes
-(`instruments_docs_audit_outstanding_items_2026_07_08.md` ×6, `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`
-hedge-pointer citation), the elysium progress-table stale-count fix, and assorted P2/P3 frontmatter/cosmetic items.
+- `data_pipeline_check_mdps_features_2026_07_20.md` — 2 stale gates annotated (both cited blocking docs are now
+  `status: resolved`/archived; gates cleared 19 and 10 days ago respectively, never re-checked). Not re-attempted
+  myself (out of plans/**-only scope), flagged for the next dispatch.
+- `defi_track01_per_instrument_and_canon_id_2026_07_24.md` — 2 todos flipped `[ ]`→`[x]`: same-day (2026-08-16)
+  operator rulings in this doc's own Progress Log were never propagated to their todos (DEX-relevance TVL fallback
+  WON'T-DO; prediction cross-AG pointer resolved-as-stale).
+- `defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md` / `..._batch9_2026_08_06_finalize.md` — stale
+  gate-status banners corrected (both parent batches are now fully `[x]`, both finalize plans are gate-clear and
+  dispatch-ready; the banners still said "1 of 26 open" / "batch9 stays draft").
+- `solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md` — todo 4 flipped `[x]`, per its own text
+  ("should be closed alongside todo 3", which was already `[x]`).
+- `instruments_docs_audit_outstanding_items_2026_07_08.md` — fixed 6 of 8 `related:` paths (archived since filing;
+  the doc's own `context_scope` already had 2 of these correct, proving the drift was real) + added leading slashes
+  per the cross-reference convention.
+- `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` — resolved a hedge-pointer ("out of scope for this
+  pass", uncited) by citing where the deferred item is actually tracked
+  (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:472-483`).
+- **Meta-finding**: my own `/blocked` post (BLK-9b43a627, the bucket-identity halt-order question) reproduced the
+  SAME-DAY `ao`-tranche-filed infra bug (`plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`) — the
+  operator's answer ("A") never reached `GET /api/slots/6/messages`, only recoverable via `GET /api/activity` as
+  `event_type: blocked_message_orphaned_by_reassign`. Added this as new evidence to that existing tracked doc rather
+  than re-filing — the event-type name is a genuinely new diagnostic clue (points at task/slot reassignment as the
+  likely mechanism) that the first report didn't have.
+
+## Plans not reached (yet)
+
+Remaining lower-priority items from the hunter reports not yet applied (elysium progress-table 4 stale counts, a
+`sequential: true` process-order note on `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`, the
+`defi_turbo_api_hides_real_captured_data_2026_07_07.md` moot-premise todo, a handful of P3 frontmatter/cosmetic
+items) — left for a future pass; none carry live-risk or data-correctness stakes.
+
+## Split finding (routed, not fixed)
+
+`plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md` is **1005L, over the 1000L hard
+cap** — discovered when a small, unrelated hedge-pointer citation fix (batch G's finding) got blocked by
+`check_line_caps` on ANY staged change to this file. This is pre-existing (confirmed: reverting my edit still leaves
+it at 1005L at HEAD) — not caused by this run, and apparently never surfaced before because the pre-commit line-cap
+check only fires on staged files, and nobody had staged a change to this specific doc since it crossed the cap.
+Reverted my citation-fix edit rather than trim someone else's content to force it under cap (splitting a plan is an
+operator-gated planning decision per CLAUDE.md, not a mechanical trim). The hedge-pointer fix itself
+(deployment-api PREDICTION_DATA_TYPE_META retirement — actually tracked in
+`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:472-483`) is still valid and can be reapplied
+once this doc is split.
