@@ -140,6 +140,11 @@ full unscoped output.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 11)**: not extracted to AO dispatch — this doc's own
+  `scope_note` explicitly opts out ("filed local-only rather than dispatched — this is a triage/handoff doc, not
+  a work item requiring its own AO dispatch"), and the 2,280-line diff's blind-regen risk (unverified accumulated
+  drift baked in silently) matches that judgment. Respecting the existing scoping; whoever owns the DeFi
+  capability audit resolves it inline per the 2026-08-05 precedent's playbook, as already documented.
 - **2026-08-14 (slot-18)**: discovered while attempting to ship an unrelated census script; root-caused the UAC commit,
   attempted + reverted the regen after finding (a) it silently would have resolved an unrelated open tradfi design
   question, and (b) the defi-scoped diff is far broader than the one settled commit. Filed this doc; my own
