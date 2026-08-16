@@ -208,3 +208,12 @@ already the kind of thing the standing hygiene sweep tracks.
 - **17:30 UTC** — Filed 1 operator question (P0 subscription-tier dispute) via `/blocked`, `can_continue: true`. Filed
   1 durable pattern-todo on the `ao` coordinator doc. Wrote this findings doc. Proceeding to STEP 8 (loop-and-wait for
   the asked question).
+- **17:40 UTC** — Operator answered BLK-050d1304 (confirmed via a direct Claude Code harness notification), but the
+  answer never became retrievable via this worker's documented channel (`GET /api/slots/28/messages` → `Internal
+  Server Error` then empty ×2; no resolution event in `/api/activity`). Filed as a separate live gap-tracking doc,
+  `plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md` (also covers a 2nd gap hit this run —
+  `/api/plan-health/result` rejecting the documented no-auth localhost path). This doc's `locked_by` stays set —
+  BLK-050d1304 remains genuinely open from this worker's side pending either the answer surfacing through a channel
+  this worker can read, or a fresh session/operator applying it directly to the 2 affected docs
+  (`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`,
+  `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`).
