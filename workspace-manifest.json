@@ -350,7 +350,7 @@
         "coverage_pct": null,
         "warn_file_count": 17
       },
-      "ldr_ci_status_sha": "84e5d97f3295deccb1aea5d34737d52d4931c811"
+      "ldr_ci_status_sha": "98edcd6f301ddc38a0030808eb29e9cc5d0f7eee"
     },
     "deployment-service": {
       "promotion_model": "ldr_main",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "7cac2753fb100ddb48123582ae458eb260db5703"
+      "ldr_ci_status_sha": "c28bb8c87bece516882be2fcd9447acbd64a909b"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "bcaf1c4010983ccfd88a48b909fc5f59ffd38e15"
+      "ldr_ci_status_sha": "0b518281f5116f036a0421f3fd60641fc84c8c86"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -835,7 +835,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 5,
@@ -843,7 +843,7 @@
         "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "a7bd6c46d3f32f12ec5c2c394a6d1252f6f9ad65"
+      "ldr_ci_status_sha": "0d471d56ad6fb3bd27ec70f221a8cb3409924fd0"
     },
     "market-tick-data-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "01a59912e25b2cb6238cf9e94e691eb98f2083d7"
+      "ldr_ci_status_sha": "3a30e411de9f053faaabb4651d38d383e5690b6d"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -974,7 +974,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "fd8a69ef608a8f75c2fed8b0a75da0a922a2ae79"
+      "ldr_ci_status_sha": "5f5f56c1ed9f8991e7a1728b3be519e9d21dd790"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1196,7 +1196,7 @@
         "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "17c8d8269e2ea96be115969996d014af2c56498d"
+      "ldr_ci_status_sha": "141414af596ce20f57e8655e38019e38c4cd8fce"
     },
     "unified-api-contracts": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "e75a7235fd668fc683bc02e1128640f0f893e5ab"
+      "ldr_ci_status_sha": "36a31a165f7f52376e600ecf80b91706f2196a00"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1297,7 +1297,7 @@
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "931960ffdd60a48bb9cfef67881f1d84b46d1105"
+      "ldr_ci_status_sha": "8d17f5d7e801dba4a559b49e05c8d28799fa5c77"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "78022ba142d8a7b7e3052ec38e9aa2dc2bbdab26"
+      "ldr_ci_status_sha": "8fac8084416563f80c4790cfb7e132d5a639e299"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1424,7 +1424,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "none",
-      "ldr_ci_status_sha": "520e29365a244153e6fa2d26cba8b0fcfbb88c09"
+      "ldr_ci_status_sha": "7c97cb7b9450c9df2b66cc971a01b7cb08aa5e42"
     },
     "deployment-ui": {
       "promotion_model": "ldr_main",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "60db1a7993f099bc76421b98156d1bc1fdf2af1e"
+      "ldr_ci_status_sha": "bf8075a4a3bd2a96f55821381abf9c3604aa55a2"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
