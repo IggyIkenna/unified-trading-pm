@@ -117,3 +117,16 @@ needed" assumption and fix this for every future hourly run, not just this one).
 - 2026-08-16 (triage pass): confirmed still open, operator-gated (IAM identity decision, not self-fixable per the
   self-service SSOT). Added a tracked `- [ ]` Todos section (doc previously carried only prose disposition —
   hygiene fix per the "every follow-up is a tracked todo" rule). No live re-check attempted this pass.
+- 2026-08-16 (agt-135424, slot 16, ~18:00Z hourly sweep): confirmed still open and unchanged —
+  `aws sts get-caller-identity` still resolves to `arn:aws:iam::427895769566:user/ikenna-worker`, and
+  `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` (§5's own worker-liveness check, a second,
+  DIFFERENT SSM target — the orchestrator VM `i-0c9b283b31d6b5ca7` itself, not just the glue-runner host from the
+  original filing) hit the identical `AccessDeniedException` on `ssm:SendCommand`. So the gap is broader than
+  originally scoped: it blocks BOTH the §0c host-dispatched-watchdog check AND the §5 AO worker-liveness check, any
+  time a `ci_reconciler` dispatch needs to reach EITHER of the two AWS-SSM-fronted hosts. Did not attempt a
+  self-grant (same identity, same reasoning as the original filing). Substituted INDIRECT evidence for §5 this run:
+  `GET /api/escalations/active` showed one escalation move `queued` (created 18:01:25Z) → `dispatched` (18:01:34Z,
+  to slot 33) in 9 seconds, and `GET /api/healthz` returned `{"status":"ok","mode":"live","uptime_seconds":427}` —
+  consistent with a live, actually-spawning dispatch loop (not just a healthy HTTP process), though this is a
+  weaker signal than the direct `tmux list-sessions` check §5 calls for and should not be treated as a full
+  substitute going forward.
