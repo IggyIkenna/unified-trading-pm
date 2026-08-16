@@ -1,17 +1,17 @@
 ---
 doc_type: issue
-title: defi oracle_prices on-chain branch retry-starvation (DP-FETCH-009) — fix committed locally, ship blocked on host QG contention
+title: defi oracle_prices on-chain branch retry-starvation (DP-FETCH-009) — fix shipped
 summary: >-
   DP-FETCH-009 escalation agt-95ede4 (asset_group=defi, data_type=oracle_prices, 553
   attempted_failed cells) root-caused: check_oracle_prices_freshness_skip only enumerates
   Chainlink+Pyth shards, so once those are fresh for a date the whole date is skipped —
   silently starving AAVE/FLUID/COMPOUND_V3/RADIANT/SPARK/MORPHO's attempted_failed rows
-  of any future retry. Fix implemented + tested + verified via a full green
-  quality-gates.sh pass (market-tick-data-service, "ALL QUALITY GATES PASSED (245s)",
-  BEFORE host load worsened) and committed locally as market-tick-data-service@f122c610
-  (rebased through several upstream syncs — sha will change on next rebase, verify by
-  commit MESSAGE/diff content, not this sha). NOT YET PUSHED — 18+ ship attempts over
-  ~4h all failed due to severe host-wide resource contention (see "What blocked shipping").
+  of any future retry. Fix implemented, tested, verified via a fully clean
+  quality-gates.sh run (10967 items, 0 errors, 81.91% coverage) on the now-unbroken tree,
+  and SHIPPED: market-tick-data-service@18e05e4b16 (verified ancestor of
+  origin/live-defi-rollout) — UTL half shipped earlier as
+  unified-trading-library@feb05b35bc6b8c04f0159657d6a475dc35feb2ac. Only remaining open
+  item is an optional P3 root-cause follow-up (item 4's xdist OSError), not a ship blocker.
 status: open
 nature: issue
 asset_group: [defi]
@@ -101,7 +101,7 @@ this session, BEFORE host contention set in**: `✅ ALL QUALITY GATES PASSED (24
 10915 passed / 28 skipped / 1 xpassed, 0 lint errors, codex compliance clean. The diff is
 correct. **NOT a code-quality blocker — a shipping-logistics blocker only** (see below).
 
-**Committed locally**: `market-tick-data-service@f122c610...` (message: `fix(defi):
+**Committed locally**: `market-tick-data-service@18e05e4b...` (message: `fix(defi):
 retry-starved oracle_prices on-chain branches (DP-FETCH-009, agt-95ede4)`). This sha WILL
 change on the next `git pull --rebase` against the fast-moving `live-defi-rollout` branch
 — identify the commit by its MESSAGE/diff content, not this literal sha, if it's moved.
@@ -222,16 +222,18 @@ staged).
       (`market-tick-data-service@08aae3da`) and pulled in via this session's next rebase. See
       item 7 for full detail. Unrelated to the oracle_prices diff; no further action needed
       on this sub-issue.
-- [ ] [CODE] P1. **Ship `market-tick-data-service@3e1c813f` (rebased equivalent of the
-      originally-committed `f122c610`; message unchanged: `fix(defi): retry-starved
-      oracle_prices on-chain branches (DP-FETCH-009, agt-95ede4)`) via
+- [x] ✅ [CODE] P1. **Shipped `market-tick-data-service@18e05e4b16`** (message: `fix(defi):
+      retry-starved oracle_prices on-chain branches (DP-FETCH-009, agt-95ede4)`) via
       `quickmerge --agent --files 'market_tick_data_service/cli/handlers/_oracle_prices_freshness.py
-      tests/unit/test_oracle_prices_handler_skip.py'`** — a fresh `quality-gates.sh --no-fix`
-      run (task `b4g3akk96`, launched natively backgrounded post-rebase, i.e. against the
-      NOW-FIXED tree with item 7's `DataTypeConfig` break already resolved) is in flight as of
-      this update; if it passes, ship immediately. If slot 5's local commit is gone, reapply
-      the ~94-line diff described in "The fix" section above (both files named, both changes
-      summarized in enough detail to reconstruct without re-reading the original source).
+      tests/unit/test_oracle_prices_handler_skip.py'`. Preceded by task `b4g3akk96`
+      (`quality-gates.sh --no-fix`, background, exit 0): full `10967`-item pytest run, zero
+      `E`/`F`, 81.91% coverage, steps 5.90-5.97 all PASS — the only `FAIL` entries were
+      pre-existing `L1-only (no network)` CEFI live-data smoke-matrix checks, unrelated to
+      this diff. Quickmerge log confirms `✅ post-push ancestry verified — 18e05e4b1 is an
+      ancestor of origin/live-defi-rollout`; independently reconfirmed via
+      `git fetch origin live-defi-rollout` (ahead=0/behind=0 after fetch) and
+      `git branch -r --contains 18e05e4b` (lists `origin/live-defi-rollout`). Lands on LDR
+      trunk; drains to `main` via `ldr-to-main-promote-fleet.yml` (no action needed here).
 - [ ] [CODE] P3. **Root-cause item 4** (`PYTEST_WORKERS=3` xdist crash) if it reproduces
       independently of item 2/3 — may be a real, previously-unknown xdist-under-load
       fragility worth its own fix, but wasn't isolated cleanly here (confounded with the
@@ -286,3 +288,14 @@ staged).
   natively backgrounded (task `b4g3akk96`) against the now-current, unbroken tree to verify
   the actual oracle_prices fix (rebased to `3e1c813f`); outcome pending as of this entry —
   next session/cycle: check `b4g3akk96`'s result and ship via quickmerge if green.
+- **2026-08-16, slot-5 (same session, final cycle)**: `b4g3akk96` completed exit 0 (10967
+  items, 0 errors, 81.91% coverage, steps 5.90-5.97 all PASS). Shipped immediately via
+  `quickmerge --agent --files '...'` (task `b4ed3vpnk`, exit 0) — landed as
+  `market-tick-data-service@18e05e4b16` on `live-defi-rollout`, ancestry independently
+  reconfirmed post-fetch. DP-FETCH-009 code fix is now fully shipped (both repo halves).
+  Escalation `agt-95ede4` should self-heal on the next daily/backfill run for the affected
+  on-chain oracle venues. Only remaining open item: `[CODE] P3` (item 4's xdist `OSError`,
+  optional root-cause follow-up, not a ship blocker) — left open, not independently
+  reproduced this session. Doc intentionally NOT archived (one todo still open); next
+  session/dispatch should either investigate P3 or close it as won't-fix if it doesn't
+  reproduce, then archive this doc per the plan-completion-and-archival-discipline SSOT.
