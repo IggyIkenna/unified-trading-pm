@@ -644,3 +644,32 @@ Deliberately did not force/dispatch around the queue (measured elsewhere in this
 contended slot cost a 2h+ livelock). If the split lands before this session's own quickmerge, the 7-id addition will
 need to be re-applied against whichever new file hosts `DP_FAILURE_MODE_ACTIONS`, verified via
 `git diff origin/<branch> -- <path>` before pushing, per the stale-local-content rule — not blind-retried.
+
+### 2026-08-16 — exactly that happened: content silently lost to a live pull, recovered from a shared auto-stash
+
+**What happened, measured, not assumed.** The UAC gate queued 3.8+ hours (peaked ~17,310s — 3-way slot contention,
+`ps` showed 7 concurrent `quality-gates.sh` processes across `.tabs/1`/`.tabs/3`/`.tabs/6` at one point), then the
+background run FAILED with exit 144. `git status --porcelain` on the two edited files then came back CLEAN and
+`git rev-list --count origin/live-defi-rollout..HEAD` / the reverse both read `0` — HEAD had silently advanced to
+match origin via the slot's automatic `git pull` cron (reflog: 10+ consecutive `Fast-forward` merges), landing the
+peer's `dependency_revocation.py` → `_dependency_revocation_policies.py` + `_dependency_revocation_types.py` split.
+This session's uncommitted edits to the OLD monolithic file were gone from the working tree — not merged, not
+conflicted, just absent, exactly the risk flagged in the prior entry.
+
+**Recovered, not re-typed.** `git stash list` showed 2 entries; `git diff stash@{0}^ stash@{0} -- <path>` (NOT
+`git stash show` piped with a path arg — that form raised "Too many revisions specified") surfaced the exact diff.
+`stash@{0}` ("cascade-32202-live-defi-rollout") turned out to be a SHARED auto-stash the pull-protection cron created
+across the WHOLE dirty tree at pull time — it also held ~56 lines of a completely unrelated peer's odds_api casing-
+migration changes (`test_data_type_capability_registry.py`, `registry/data_type_capability.py`), confirming this slot's
+checkout had two sessions' uncommitted work bundled into one stash entry. Extracted ONLY this session's two files'
+hunks and hand-applied them to the NEW split file (`_dependency_revocation_policies.py`, same insertion point,
+identical content — diffed byte-for-byte against the stash to confirm) and the test file (clean re-apply, unchanged
+target). Left the peer's two files exactly as found (already independently staged by something else in this shared
+checkout) — not mine to touch, not mine to commit. Re-verified: all 7 ids resolve via `evaluate_revocation()` again,
+26/26 tests green in `test_dependency_revocation.py`.
+
+**Rule earned, not previously written anywhere in this plan**: `git stash show -p <stash> -- <path>` errors
+("Too many revisions specified") — the working form is `git diff <stash>^ <stash> -- <path>`. A shared slot's
+auto-stash-on-pull mechanism can bundle MULTIPLE sessions' unrelated dirty files into ONE stash entry — grep the full
+stash diff for content you recognize before assuming a stash with an unfamiliar name/message isn't yours, and never
+touch/restage/commit any file in a recovered stash you don't recognize as your own edit.
