@@ -1006,3 +1006,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   direct grep before citing. QG green (5352 passed); 4 existing drilldown-route tests updated to patch `run_bounded` at
   its call-site path (patching the inner fn would make `run_bounded` try to pickle a `Mock` for a real spawned child) +
   1 new regression test for the `BoundedSubprocessError` → 503 mapping.
+- **2026-08-16T05:20Z (slot 26)** — the P3 timing-log todo's checkpoint-skip theory is INCOMPLETE: live Cloud Logging
+  confirms `uts-prod-data-status-rollup-svc` genuinely ATTEMPTED features-delta-one-service again at 04:47:48Z (not
+  skipped — `coverage rollup failed for service=features-delta-one-service: timed out after 420s`), post the
+  00:32:57Z instrumentation deploy, yet zero `manifest category timing` lines exist anywhere in the last 6h. Matches
+  `data_status_rollup_worker.py`'s own unconfirmed hypothesis (lines ~271-293) that the 420s per-service ceiling may
+  exhaust before even the first category (CEFI) completes — per-category timing may never log regardless of
+  checkpoint state. 2026-08-17T00:00Z passing is not sufficient on its own; re-check must confirm ≥1 real timing
+  line has actually appeared. Todo left GATED, unchanged.
