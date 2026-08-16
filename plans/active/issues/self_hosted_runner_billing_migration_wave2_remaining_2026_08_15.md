@@ -143,17 +143,18 @@ landed at `unified-trading-pm@9456bfc183`. Live CI runner-assignment verified (`
 - [x] [SCRIPT] P1. Add `self_hosted_runner_labels: '["self-hosted","glue"]'` to `update-dependency-version.yml`,
       `semver-agent.yml`, `main-backmerge-to-ldr.yml` caller stubs across all 7 wave-2 repos — the reusable-workflow
       callee in `unified-trading-ci` already supports the input (same mechanism as quality-gates-v2.yml); the always-on
-      7 repos already had this, wave-2 never did. Fires 5-9x/day per repo per workflow. Edits applied to all 7 repos;
-      shipped: unified-api-contracts BLOCKED (see below). Repo: all 7 wave-2.
-- [ ] [OPERATOR] P1. Ship BLOCKED on `unified-api-contracts` by a genuinely pre-existing, unrelated test failure —
-      `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions` fails with/without this session's
-      diff (confirmed via stash test). Traces to live, actively-dated 2026-08-16 work:
+      7 repos already had this, wave-2 never did. Fires 5-9x/day per repo per workflow. **Shipped + verified on origin,
+      all 7**: `unified-api-contracts@76adc2bc3d` (unblocked once `execution-service@6dba7ac5` landed the symbiotic
+      venue-reachability fix another session was mid-work on), `unified-trading-library@abb158eeeb`,
+      `deployment-service@2743f24cf9`, `trading-agent-service@9e00c03`, `deployment-api@1d19ce6fa7`,
+      `instruments-service@fd15192b1b`, `market-data-processing-service@2e66754f43`. Repo: all 7 wave-2. DONE.
+- [x] [OPERATOR] P1. Ship of the above was BLOCKED on `unified-api-contracts` by a genuinely pre-existing, unrelated
+      test failure — `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions` failed with/
+      without this session's diff (confirmed via stash test). Traced to live, actively-dated 2026-08-16 work:
       `/plans/active/issues/karak_decommission_2026_08_16.md`,
-      `/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md`. Two identical consecutive quickmerge failures —
-      not mine to fix (domain wiring decision) or bypass. Retry once that work lands. Once unified-api-contracts clears,
-      unified-trading-library + deployment-service + trading-agent-service + deployment-api need the same 3-workflow
-      ship (edits already applied locally to all 4, just uncommitted). Repo: unified-api-contracts (blocker),
-      unified-trading-library, deployment-service, trading-agent-service, deployment-api (downstream).
+      `/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md`. Not fixed or bypassed here — waited for that
+      other session's own fix (`execution-service@6dba7ac5`) to land, then retried and it passed. Repo:
+      unified-api-contracts. RESOLVED (external dependency landed).
 - [ ] [SCRIPT] P2. `image-build-gate.yml` fires 10-13x/day per repo on `ubuntu-latest` — its callee
       (`unified-trading-ci/.github/workflows/image-build-validate.yml`) has NO `self_hosted_runner_labels` input at
       all (unlike the other reusable workflows), so this needs real work: add the
@@ -177,8 +178,10 @@ landed at `unified-trading-pm@9456bfc183`. Live CI runner-assignment verified (`
       fork, on `ubuntu-latest`. **Operator wants this repo permanently DELETED** (not archived) — attempted via
       `gh repo delete IggyIkenna/agent-orchestrator-fork-bak --yes`, blocked: current token lacks the `delete_repo`
       OAuth scope, which needs an interactive `gh auth refresh -h github.com -s delete_repo` (cannot be completed in a
-      non-interactive session). Operator needs to either run that refresh + hand off, or delete directly via GitHub UI
-      (Settings → Danger Zone). Until then this repo is STILL LIVE and billing. Repo: agent-orchestrator-fork-bak.
+      non-interactive session). Operator needs to either run
+      `gh auth refresh -h github.com -s delete_repo` themselves then hand off for a retry, or delete directly via
+      GitHub UI (Settings → Danger Zone). Until then this repo is STILL LIVE and billing (96 runs/day on
+      `ubuntu-latest`). Repo: agent-orchestrator-fork-bak. STILL BLOCKED on OAuth scope.
 
 ## Sequencing note
 
