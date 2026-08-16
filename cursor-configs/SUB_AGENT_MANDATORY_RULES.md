@@ -1,9 +1,8 @@
 # SUB-AGENT MANDATORY RULES — Lean Essentials
 
 > Sub-agent in the **Unified Trading System** workspace — context is FRESH, nothing inherited. **Read this file in full
-> before your first tool call.** Non-negotiable floor; for domain-specific rules read `cursor-configs/CLAUDE.md`
->
-> - only the codex SSOT your task touches (conditional-load — skip rules that don't apply).
+> before your first tool call.** Non-negotiable floor; for domain rules read `cursor-configs/CLAUDE.md` — only the codex
+> SSOT your task touches (conditional-load — skip rules that don't apply).
 
 ## Identity + workspace
 
@@ -29,9 +28,8 @@ cd <repo> && bash scripts/quality-gates.sh --no-fix # no reformat — committing
 ```
 
 **Never** run `pytest` directly (wrong venv); **never** `pip install` (use `uv pip install`); **never** re-lock
-internal-dep drift in `uv.lock`. A green `quality-gates.sh` tree is the per-repo quality boundary — the gate enforces
-the bans, so green tree = contract. **Shared host ≤2 full QGs at once — never bulk-kill another slot's `pytest`/QG.**
-SSOT: `/codex/06-coding-standards/quality-gates.md`.
+internal-dep drift in `uv.lock`. Green tree = the quality boundary (the gate enforces the bans). **Shared host ≤2 full
+QGs at once — never bulk-kill another slot's `pytest`/QG.** SSOT: `/codex/06-coding-standards/quality-gates.md`.
 
 ## Ship CODE: two-pass, never a raw `git push`
 
@@ -40,14 +38,12 @@ SSOT: `/codex/06-coding-standards/quality-gates.md`.
    per-unit commits.
 2. **Pass 2 — `bash scripts/quickmerge.sh "feat: …" --agent --files '<p1> <p2>'`** — ALWAYS `--agent`, scope `--files`
    by name (never the whole tree, never `git add -A` even on prek retry). Verifies sentinel == HEAD, stages, commits,
-   lands on LDR; Tier-C drain promotes LDR→staging→main behind `quality-gates-v2`. **A raw `git push` of code is
-   BANNED** (dodges dep gates). Carve-outs: dirty-deps; PM `docs(plans):` flip via `scripts/dev/safe-doc-push.sh`.
-   **Never `[skip ci]`** on a v2-gated promotion-PR commit (required check goes MISSING → PR BLOCKED). **NEVER
-   force-push a shared branch.**
+   lands on LDR (promotion to main is automatic). **A raw `git push` of code is BANNED** (dodges dep gates). Carve-outs:
+   dirty-deps; PM `docs(plans):` flip via `scripts/dev/safe-doc-push.sh`. **Never `[skip ci]`** on a v2-gated
+   promotion-PR commit (goes MISSING → PR BLOCKED). **NEVER force-push a shared branch.**
 3. **Commit + Push + Flip, SAME turn (HARD RULE)**: flip `- [ ]` → `- [x] — <repo>@<sha> + evidence`, commit with the
    MANDATORY `docs(plans):` prefix (`plan(...)` is hook-rejected) — unflipped is invisible to the orchestrator, causing
-   a wasted re-dispatch. An all-done unlocked plan archives immediately (`locked_by` needs `[unlock-plan]` ask). SSOT:
-   `/codex/08-workflows/ci-cd-flow.md`.
+   a wasted re-dispatch. SSOT: `/codex/08-workflows/ci-cd-flow.md`.
 
 **Conditional push**: `git fetch` first; 0 incoming → push freely; behind at quickmerge → STAGE 0.4 auto-reconciles (ff
 → rebase-autostash); same-file conflict → `rebase --abort` + `QUICKMERGE_BLOCKED` (recover per the autostash recipe,
@@ -56,7 +52,7 @@ never blind-overwrite).
 ## Foot-guns (each has burned the workspace)
 
 - **Foreign work in your commit**: stage by NAME, never `git add .`/`-A`; re-stage by name after any hook reformat.
-- **`git diff --cached --stat <path>` masks other staged hunks** — never pass a path arg.
+- **`git diff --cached --stat <path>` masks other staged hunks** — never pass a path.
 - **Never** `git checkout origin/<b> -- .` / `... HEAD -- <file>` on a dirty file you don't own, `git stash drop`
   foreign WIP, or `git reset --hard`/`clean -fd`/`restore` uncommitted work — all UNRECOVERABLE.
 - **Verify against the stable remote ref** (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`, never
@@ -97,31 +93,29 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live) → **NOTIFY THE O
   continue (not `[OPERATOR]`). SSOTs: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a,
   `…/orchestrator-cloud-identity-self-service.md`.
 - **Capture every side-discovery as a plan todo immediately** (P0-P3 + provenance, never auto-memory/chat-summary).
-  **Citadel planning**: pre-audit the blast radius (grep removed/renamed symbols first); phased DAG + QG gates; no
-  shims; SSOT types in UAC.
+  Pre-audit the blast radius (grep removed/renamed symbols) before a phased build; no shims; SSOT types in UAC.
 
 ## Async-wait / background work
 
-Never report a backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness
-tasks); poll external work only on a **progress metric** (flat = STALL → diagnose); reach a TERMINAL **measured**
-verdict (liveness `kill -0 <PID>`, no self-match) — `ScheduleWakeup`/a dispatched sub-agent are NOT reliable wakes, arm
-your OWN `run_in_background` heartbeat watchdog (≤30-min). **Never `gh workflow run ldr-to-main-promote-fleet.yml` to
-check if your repo promoted** — starves its one shared slot (measured 2+ hr livelock); read `promotion_lag_monitor.py`
-or `gh pr list --search "chore(promote)"`. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+Never report a backgrounded task done before its real exit; poll external work only on a **progress metric** (flat =
+STALL → diagnose), never harness tasks; reach a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match)
+— `ScheduleWakeup`/a dispatched sub-agent are NOT reliable wakes, arm your OWN `run_in_background` heartbeat watchdog
+(≤30-min). Never `gh workflow run ldr-to-main-promote-fleet.yml` to self-check promotion — starves its shared slot; read
+`promotion_lag_monitor.py` instead. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 
 ## When YOU spawn sub-agents
 
-**Max 5 parallel** (different repos ok, same file never) — the host is SHARED by ~4 slots, so 10-per-slot oversubscribes
-a ~10-core box several times over (operator ruling 2026-08-10). Paste THIS file at the TOP of every Task spawn (no
-inherited context); if impractical, prepend "read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in
-full and follow ALL rules" — injection failure means the agent MUST NOT proceed. Send all `Task` calls in ONE message;
-set `model=` explicitly. Finish-to-DONE → also paste `cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
+**Max 5 parallel** (different repos ok, same file never — shared host, operator ruling 2026-08-10). Paste THIS file at
+the TOP of every Task spawn (no inherited context); if impractical, prepend "read
+`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules" — injection failure means
+the agent MUST NOT proceed. Send all `Task` calls in ONE message; set `model=` explicitly. Finish-to-DONE → also paste
+`cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
 
 ## When escalating a question to the operator (HARD RULE)
 
 **Always present options, never open-ended** — min 2, your recommendation marked (e.g. "A: … [WORKER REC]"); the
-dashboard has an "Other" free-text input. Only one path genuinely exists → say so, don't fake a choice. Never a bare
-yes/no without framing both sides.
+dashboard has an "Other" free-text input. Only one path exists → say so, don't fake a choice. Never a bare yes/no
+without framing both sides.
 
 ## When in doubt — retrieve less but right
 
@@ -131,6 +125,6 @@ yes/no without framing both sides.
 `code_refs` jumps doc→code. Fallback: `cursor-configs/CLAUDE.md`'s domain index — or ask the operator a focused question
 (≤1 min read-only investigation first).
 
-- **Ship via `safe-doc-push.sh`/`quickmerge.sh` — they COMMIT FROM AN ISOLATED WORKTREE** so a peer session sharing your
-  checkout can't revert your edits; never re-improvise reconcile-retry. **Exit 10 = your edits were reverted — RECOVER
-  from the printed stash ref, never plain re-run.** SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
+- **Ship via `safe-doc-push.sh`/`quickmerge.sh` — they COMMIT FROM AN ISOLATED WORKTREE** (peer-checkout-safe); never
+  re-improvise reconcile-retry. **Exit 10 = your edits were reverted — RECOVER from the printed stash ref, never plain
+  re-run.** SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.

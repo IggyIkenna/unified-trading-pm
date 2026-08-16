@@ -10,7 +10,7 @@ summary: >-
   code is unaffected by a WARN (only over-cap fails the gate), so this is not blocking anything — filed per the
   workspace's "every deferral is a tracked todo, not just a Progress Log note" rule rather than left as a chat/log-only
   observation.
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [claude-md, sub-agent-mandatory-rules, quality-gates, size-cap, documentation, process]
 related: []
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-16"
 author: slot-5 (data_engineering)
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
@@ -37,11 +37,16 @@ source: >-
   `scripts/quality_gates/check_agent_rules_size_cap.py` to verify a `cursor-configs/CLAUDE.md` clarification stayed
   under its own cap — see that work's now-archived tracking doc,
   `/plans/archive/2026_08/issues/claude_md_qg_cap_line_omits_auto_governor_2026_08_09.md`, Progress Log.
-resolved_by:
+resolved_by: slot-28 (data_engineering), 2026-08-16
 locked_by:
 ---
 
 # `SUB_AGENT_MANDATORY_RULES.md` nearing its 10 KiB cap
+
+> **RESOLVED 2026-08-16** — condensed `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` from 10,224 B to 9,715 B (509 B
+> saved) by tightening prose in the quality-gates, ship-CODE, async-wait, sub-agent-spawn, plans-discipline, and
+> escalation sections to 1-line directives (no rule dropped — codex/CLAUDE.md pointers preserved throughout). Checker
+> re-verified `ok`, not `WARN`: `python3 scripts/quality_gates/check_agent_rules_size_cap.py`.
 
 ## What I found
 
@@ -72,11 +77,12 @@ lean) without losing any rule, and rerun the checker to confirm `ok`.
 
 ## Todos
 
-- [ ] [DOC] P3. Condense `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` by ≥500 B (current: 9,832 B / cap 10,240 B) —
+- [x] [DOC] P3. Condense `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` by ≥500 B (current: 9,832 B / cap 10,240 B) —
       find prose that can drop to a 1-line directive + codex/CLAUDE.md pointer, same discipline the file already applies
       to itself. Reverify green (`ok`, not `WARN`) via `python3 scripts/quality_gates/check_agent_rules_size_cap.py`
       before shipping. Not urgent (still under the hard cap) — pick up opportunistically, e.g. alongside the next edit
-      that already touches this file. (repo: unified-trading-pm)
+      that already touches this file. (repo: unified-trading-pm) — ✅ slot-28 (data_engineering) 2026-08-16, see
+      Progress Log.
 
 ## Progress Log
 
@@ -85,3 +91,12 @@ lean) without losing any rule, and rerun the checker to confirm `ok`.
   remains, well under the hard cap).
 - **na-corpus-hygiene 2026-08-09**: RECLASSIFY — `assigned_vm: NA → planning`. Purely mechanical condense-and-verify
   task with a stated done-when (checker reports `ok`, not `WARN`) — no design/judgment call, no `locked_by`.
+- **2026-08-16 (slot-28, data_engineering)** — On pickup, the live on-disk file was actually 10,224 B (not the 9,832 B
+  this doc's stale `## What I found` snapshot recorded — further edits landed between 2026-08-09 and now and had
+  already eaten the stated 408 B headroom down to 16 B). Condensed 6 sections (quality-gates intro, ship-CODE Pass-2 +
+  Commit/Push/Flip, async-wait, sub-agent-spawn parenthetical, plans-discipline Citadel bullet, escalation +
+  retrieve-less-but-right closing bullets) to 1-line directive + pointer form, dropping zero rules. Final size 9,715 B
+  (509 B saved), checker reports `ok`. Archiving this doc in the same commit per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "Single-repo (mode-1) finalize plans:
+  same-commit flip+archival is the SANCTIONED path" — plan-of-record lives in this worker's own worktree
+  (`unified-trading-pm/`), all todos now done, unlocked.
