@@ -577,73 +577,37 @@ issue's scope); flagged as a follow-up todo below.
       `git log --since=2026-04-01 --until=2026-07-15 -- '**/*.py'` across MTDS for any now-deleted/superseded
       script matching the bug signature, since the population's write dates (2026-05-05, 2026-07-13) both predate
       this repo's current script inventory and a removed one-off is plausible. (repo: market-tick-data-service)
-- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up to the entry above — 2 more candidates ruled out, one important new
-      clue found; still not confirmed.** (1) **RULED OUT**: MTDS's batch per-league sports writer
-      (`venue_fetch.py::_process_sports_venue_with_leagues`, line 695) — read in full. It receives the venue's
-      WHOLE `venue_data_types` list (which, per `configs/venue_data_types.yaml` lines ~449-469, includes
-      `odds_horizon_bucket` for ODDS_API/BETFAIR/PINNACLE — this contradicts the earlier "zero raw-vendor sources"
-      framing from an earlier pass; `SOURCE_PRIORITY` and `venue_data_types.yaml` answer different questions, the
-      latter governs what a venue's raw capture is allowed to be tagged as, not just literal vendor-fetch types).
-      But its shard-count key is **hardcoded** `shard_counts[(bm_str, "odds", league_str, "odds", fixture_str)]`
-      (line 796, literal string `"odds"` in both data_type-like slots) — structurally cannot produce an
-      `odds_horizon_bucket`-tagged manifest row regardless of what `venue_data_types` requested. Confirmed by
-      direct read, not inference. (2) **Traced but NOT ruled out — live WS shard path**: confirmed
-      `websocket_streaming_handler.py`'s `data_type` is a raw CLI `--shard-spec asset_group:venue:data_type`
-      argument (not adapter-classified); `_resolve_connector` looks up the connector by VENUE only
-      (`resolve_ws_feed_venue_key`), never validating `data_type` against what that venue's connector actually
-      produces. The ODDS_API connector (`live/connectors/odds_api_ws.py`) stores `self._data_type` (line 232) but
-      never reads it anywhere else in the 424-line file — meaning if a shard WERE launched with
-      `--shard-spec sports:ODDS_API:odds_horizon_bucket`, it would stream the exact same raw odds ticks as a
-      normal `odds` shard, just manifest-recorded under the wrong `data_type` label via the already-identified
-      `MTDSShardManifestRecorder.record_captured()` (structurally no `timeframe` param). Found the live-shard
-      launcher (`deployment-service/scripts/vm/launch-mtds-live.sh`) — it requires an explicit, manually-supplied
-      `--shard-spec` per invocation; it does **not** auto-iterate `venue_data_types.yaml` to launch one shard per
-      declared data_type, so this path needs a deliberate launch decision, not something that falls out of config
-      alone. Not yet found (or ruled out): any actual launch record/log of a
-      `sports:ODDS_API:odds_horizon_bucket` shard. (3) **New clue, argues AGAINST the live-shard hypothesis**: the
-      two write-timestamp clusters for the 14,982-row population — 14,656 rows at `2026-07-13T23:5x`, 326 rows at
-      `2026-05-05T22:07` — are each a TIGHT SINGLE-MINUTE cluster. Continuous live WS ingest stamps
-      `available_at` per-tick throughout a shard's runtime (hours+), so a single-minute cluster of thousands of
-      rows is a poor fit for "a live shard ran with the wrong data_type for a while" and a much better fit for "a
-      single batch/script invocation wrote many rows in one pass" — reinforcing the original, still-unconfirmed
-      hypothesis that this is a one-off script, not the live path. **Precise next step**: search MTDS's script
-      inventory (both current and via `git log` on MODIFIED, not just deleted, files) for anything that could have
-      run as a single batch job at `2026-07-13T23:5x` and `2026-05-05T22:07` UTC specifically — the exact
-      characters-since-midnight granularity of both timestamps suggests these are real job-completion stamps, not
-      per-row `available_at` values, so cross-referencing against any cron/systemd job log or VM launch history
-      for those two exact windows may be more direct than further code tracing. Do not assume the live-shard
-      candidate confirmed OR ruled out — it remains genuinely open, just deprioritized by this clue. (repo:
+- [x] ✅ [DATA] P1. **SUPERSEDED, 2026-08-16 — see the confirmed root-cause entry below.** Was: candidate tracing
+      (batch per-league writer RULED OUT via hardcoded `"odds"` shard-count key; live WS shard path traced but not
+      ruled out; tight single-minute write clusters argued for a batch/script origin over live WS). (repo:
       market-tick-data-service, deployment-service)
-- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up — deployment-archive check attempted, result is UNINFORMATIVE (not a
-      negative), a measurement trap caught before it was asserted.** Re-ran this doc's own scratchpad deploy-history
-      checker (`check_deploy_history_cf8_2026_08_15.py`, extended with the 2026-05-05 date) against
-      `deployment-scripts-central-element-323112/deployments/archive/<date>/` for both target write dates: **0
-      records for 2026-05-05, 0 records for 2026-07-13.** Before treating that as "no VM/deploy job ran on either
-      date" (which would have ruled out every deployment-service-tracked launch mechanism, including
-      `launch-mtds-live.sh`), checked when the archive itself starts: **earliest archived date is 2026-07-16** (32
-      total archived dates, all ≥2026-07-16). **Both target dates predate the archive mechanism's existence
-      entirely** — the 0-record result is uninformative by construction, not a real absence signal (CLAIM ≤
-      MEASUREMENT: 0 hits ≠ missing when the search tool itself doesn't cover the queried range). This neither
-      confirms nor rules out a deployment-service-launched job on either date; it just means this particular tool
-      can't answer that question for dates this old. **Precise next step, not yet tried**: (a) check whether MTDS
-      or the underlying VM hosts retain systemd/journal logs reaching back to 2026-05-05/07-13 (unlikely at this
-      remove, but worth one cheap check before ruling it out); (b) a more promising angle — read the GCS object
-      metadata (not the manifest row) on a small sample of the actual phantom-timeframe parquet shard files
-      themselves (`gcs_describe_object` per this repo's storage conventions, never subprocess `gsutil`) — object
-      `time_created`/`updated` plus any custom metadata (uploader identity, generating host/job name if stamped)
-      may carry a clue the manifest row itself doesn't, since the manifest and the underlying shard file are
-      written by the same process but the object metadata layer hasn't been inspected at all yet this entire
-      investigation. (repo: market-tick-data-service)
-- [ ] [DATA] P2. **NEW, 2026-08-16 — GCS-path angle BLOCKED; redirect filed; no new root cause.** Manifest has NO
-      `path`/`gcs_path` column (`_V8_COLUMNS`, UTL `_read_index.py:488-569`); rebuilding a real object path needs
-      `build_canonical_candle_object_path`/`registry.py:362`, itself requiring `timeframe` — circular for these
-      rows. **Next**: a bounded per-shard prefix LIST (not a corpus walk) on one known captured/blank-timeframe
-      row, to check whether ANY real object exists (none = these `captured` rows have no backing data). Also ruled
-      out a 3rd coarse-write site (`reprocess_sports_odds.py:1210-1217`, captured branch, omits timeframe/
-      league_id) vs. the 652/14,330 split (~line 484-493) — shape matches neither bucket. This pass's narrow query
-      (4 `empty_confirmed`/MDPS rows at `2026-05-05T22:07`) vs. the doc's 326 `captured`/MDPS rows for "the same
-      cluster" — different status, NOT reconciled. `MTDSShardManifestRecorder.record_captured()` (line 561-568)
-      remains the correct, untouched lead. (repo: market-tick-data-service, market-data-processing-service, UTL)
+- [x] ✅ [DATA] P1. **SUPERSEDED, 2026-08-16 — see the confirmed root-cause entry below.** Was: deployment-archive
+      check for both cluster dates returned 0 records, but the archive only starts 2026-07-16 (predates both dates)
+      — correctly flagged as uninformative-by-construction, not a negative. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **SUPERSEDED, 2026-08-16 — see the confirmed root-cause entry below (the prefix-LIST 0-blob
+      result is explained there too: wrong dataset prefix, not absence of data).** Was: GCS-path reconstruction
+      blocked (manifest has no `path` column; the timeframe-keyed path builder is circular for these rows).
+      (repo: market-tick-data-service, market-data-processing-service, UTL)
+- [x] ✅ [DATA] P1. **ROOT CAUSE OF THE 14,656-ROW 2026-07-13 CLUSTER CONFIRMED, 2026-08-16** (supersedes the 3
+      todos above). It IS this doc's own `_write_captured_rows()` timeframe-drop bug (`e0b34e77fd`) — the missing
+      piece was WHICH invocation produced this population. Sample row: `league_id=ELITESERIEN,
+      service_name=market-tick-data-service, pipeline_mode=batch_mdps_odds_horizon_bucket, timeframe=None,
+      written_at=2026-07-13T23:56:29`. `pipeline_mode` naming "mdps" despite a MTDS `service_name` was the key clue
+      — traced to MDPS's `reprocess_sports_odds.py:215-230` (`_OUTPUT_PATH_TEMPLATE`), confirming these rows were
+      ORIGINALLY written by MDPS with real timeframes/league_ids. `_rebuild_sports_write.py:26-33`'s
+      `_SURFACE_SERVICE_NAME = {"mdps": "market-tick-data-service", ...}` explains the service_name flip: the
+      rebuild's `"mdps"` surface key is legacy-named and stamps `service_name=market-tick-data-service` on every
+      row it re-emits regardless of origin, carrying forward `league_id`/`pipeline_mode`/etc. unchanged but
+      dropping `timeframe` (the bug). **Triggering event**: `sports_cf8_available_at_backfill_regression_2026_07_13.md`
+      documents a `rebuild_sports_manifest_v9.py --no-dry-run --force` run (`sports_manifest_canonicalisation-004`,
+      slot 3, 2026-07-13, apply window 21:07–23:41 UTC) — matching `written_at≈23:56 UTC` within plausible
+      finalization lag. **Timing confirmed**: `e0b34e77fd` landed 2026-08-15T17:21:30Z, over a month AFTER — the
+      2026-07-13 run executed on pre-fix code. **Prefix-LIST 0-blob result explained, not contradictory**:
+      `_write_captured_rows()` only re-emits a manifest INDEX row, never a new parquet object — the real backing
+      data lives under MDPS's `processed/.../timeframe={horizon}/bucketed.parquet` path (untouched by this
+      additive-only rewrite), consistent with these being manifest-index duplicates, not missing data. Closes the
+      root-cause investigation; remaining work is the backfill re-attempt (line ~276) and maintenance-window gap
+      (line ~284), both already tracked. (repo: market-tick-data-service, unified-trading-pm)
 
 ## Progress Log
 
