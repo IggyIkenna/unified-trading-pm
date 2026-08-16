@@ -38,7 +38,7 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 source: "slot-29, discovered while shipping aiohttp_json_charset_guessing_audit_2026_08_16.md's plan-flip, 2026-08-16"
-resolved_by: unified-trading-pm@922337430d
+resolved_by: unified-trading-pm@c3bb4dbcd1
 locked_by:
 locked_since:
 context_scope: [scripts/dev/safe-doc-push.sh]
@@ -46,7 +46,7 @@ context_scope: [scripts/dev/safe-doc-push.sh]
 
 > **🟢 ARCHIVED 2026-08-16** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
-> archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (unified-trading-pm@922337430d) — the
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (unified-trading-pm@c3bb4dbcd1) — the
 > `rebase_failure_is_content_conflict` classifier fix. Single-repo case (plan-of-record in this same worktree), so the
 > checkbox flip and this `git mv` land in the same commit per the 2026-08-10-narrowed same-commit-flip+archival
 > sanction.
@@ -96,7 +96,7 @@ clean divergence (ahead+behind, no conflicting hunks) to confirm it no longer fa
       clean ahead/behind divergence against `origin/live-defi-rollout` (no real multi-branch ambiguity, no conflicting
       hunks) can trigger the exit-3 "Cannot rebase onto multiple branches" abort, and fix the over-broad detection.
       Done when: the false-positive condition is root-caused, fixed, and a regression test/case exercises plain clean
-      divergence without aborting. (repo: unified-trading-pm) — `unified-trading-pm@922337430d` (see Progress Log).
+      divergence without aborting. (repo: unified-trading-pm) — `unified-trading-pm@c3bb4dbcd1` (see Progress Log).
 
 ## Progress Log
 

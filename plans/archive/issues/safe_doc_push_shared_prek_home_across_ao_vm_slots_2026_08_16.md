@@ -46,7 +46,7 @@ source: >-
   slot-31 (infra), root-causing the todo in safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
   2026-08-16.
 author: slot-31
-resolved_by: unified-trading-pm@201f5bfcca
+resolved_by: unified-trading-pm@653eb125ce
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -60,7 +60,7 @@ context_scope:
 
 > **🟢 ARCHIVED 2026-08-16** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
-> archive-on-resolve rule. Resolution evidence in `resolved_by:` (unified-trading-pm@201f5bfcca) — PREK_HOME now
+> archive-on-resolve rule. Resolution evidence in `resolved_by:` (unified-trading-pm@653eb125ce) — PREK_HOME now
 > scoped per-slot on the shared-index path in both `safe-doc-push.sh` and `quickmerge.sh`. Single-repo case
 > (plan-of-record in this same worktree), so the checkbox flip and this `git mv` land in the same commit per the
 > 2026-08-10-narrowed same-commit-flip+archival sanction.
@@ -155,7 +155,7 @@ operation). A minimal fix:
       prek patches. Mirror the same fix into `quickmerge.sh` if it has the analogous host-gate/PREK_HOME shape (check
       first — do not assume). Done when: shipped via the full `quality-gates.sh` → `quickmerge` flow (this is a
       `scripts/dev/` code change) and the regression test is green. (repo: unified-trading-pm) —
-      `unified-trading-pm@201f5bfcca` (see Progress Log).
+      `unified-trading-pm@653eb125ce` (see Progress Log).
 
 ## Progress Log
 
