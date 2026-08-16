@@ -470,3 +470,10 @@ pre-existing karak/symbiotic QG regression from another session; retry once that
 **Next**: Phase 2 (dependent-plan verification gates: IS-mirror relabel decision, P2 migration's dangling
 Verification section) and Phase 3 (`[OPERATOR]`-gated GCS delete of orphaned `data_type=trades` objects, gated on a
 retention window post-Phase-1-stability) remain not started, per the plan's own sequencing.
+
+**2026-08-16 -- SINK_MATRIX ship retry**: retried after a stale scheduled-wakeup prompt fired (its instructions
+predated Phase 0/1 completion, both already landed/verified by the time it fired -- no redundant work done, just this
+one genuinely-still-open item re-checked). Still blocked on the identical `['karak', 'pendle', 'symbiotic']`
+venue-coverage baseline failure, unrelated to this plan. Not retrying again on a tight loop -- this is non-blocking
+metadata (the live persist path already works end-to-end per Phase 1's verification); will pick back up opportunistically
+rather than burn cycles polling someone else's unresolved regression.
