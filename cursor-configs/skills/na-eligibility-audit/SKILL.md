@@ -339,6 +339,24 @@ related fixes into coherent commits (one per tranche or per verdict class, not o
 notify the operator + file `plans/active/issues/<slug>_<date>.md`. NEVER write agent memory; NEVER create `*_SUMMARY.md`
 — the final report is chat text.
 
+**`safe-doc-push.sh`'s "content changed during the reconcile" warning can be a false positive when many OTHER dirty
+files (not in this call's `--files`) sit alongside a large multi-file edit set (2026-08-16 finding, cefi tranche,
+~45-file run) — do not assume real collision, VERIFY**: `git diff HEAD "stash@{N}" -- <path> | git apply --check -`
+for the flagged quarantine stash; if it applies cleanly, your edit is a conflict-free superset of current HEAD and
+`git apply -` (not a blind `git checkout stash@{N} -- <path>` restore, which would clobber a GENUINE concurrent
+change if one existed) safely reproduces it. A real collision DOES happen on this branch too — this same run also hit
+one, a live worker shipping a real fix for an item mid-extraction — resolve those as an actual rebase conflict
+(compare both sides' content, keep whichever is factually current, never blind-prefer either side). **`git mv` +
+multi-batch shipping**: if a renamed (archived) file isn't in the SAME `--files` list as every commit, the script's
+foreign-path defensive unstage can orphan the rename (content safe in the quarantine stash, but neither the old nor
+new path is committed) — either commit a rename in its own dedicated call immediately, or keep it listed in `--files`
+until it lands. **Finalize-plan frontmatter is PATH-derived**: a finalize plan co-located under `plans/active/issues/`
+(source doc is `doc_type: issue`) must itself be `doc_type: issue` with an issue-valid `status` (`open`, not
+`active`) and a present `resolved_by:` key, not the `doc_type: plan`/`status: active` shape copied from a
+flat-`plans/active/`-sited precedent — `check_frontmatter_schema` derives the required type from the file's own
+directory. It also needs a `related:` (not just `context_scope:`) link to the tranche's consolidated closeout plan or
+`check_ag_closeout_linkage` flags it as a new orphan.
+
 ## Phase 1b — blocker-classification tag (STANDARD, every run, added 2026-08-07)
 
 Every Phase-1 hunter tags each open todo with a SECOND, finer-grained blocker-classification tag alongside the
