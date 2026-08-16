@@ -18,7 +18,11 @@ summary: >-
   (business/live-trading/policy decisions with no default I should apply).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [meta] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 13,
+  # meta_plan_corpus_hygiene_ao_dispatch_batch1) -- was [cross-cutting]. Content genuinely spans multiple OTHER
+  # tranches' conflict-check RECLASSIFY items (sports/defi/tradfi/cefi docs), not cross-cutting's own
+  # data-pipeline scope -- correctly meta, not a specific tranche.
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

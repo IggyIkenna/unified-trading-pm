@@ -34,7 +34,7 @@ related:
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
     /plans/active/issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md,
-    /plans/active/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md,
+    /plans/archive/2026_08/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md,
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
     /plans/archive/2026_08/issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -166,7 +166,7 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
       both fixes are shipped with regression tests (one exercising an already-quarantined-object `_rel()` call, one
       exercising a non-canonical venue token being rejected/remapped instead of silently promoted), and
       `quality-gates.sh` is green. Source: `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`,
-      `issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md`.
+      `/plans/archive/2026_08/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md`.
 
 - [x] ✅ [DATA] P2. **DONE 2026-08-09 — root cause found: lookup-logic bug in `canonical_twin_path()`, NOT a manifest
       registration gap.** Investigated all 900 class-B tradfi legacy-twin candidates against the live prod report +

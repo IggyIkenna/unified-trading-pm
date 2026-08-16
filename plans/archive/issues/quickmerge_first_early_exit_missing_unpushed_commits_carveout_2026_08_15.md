@@ -18,7 +18,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [quickmerge, ci-cd, early-exit, shipping-pipeline, bug]
-related: [/plans/active/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md]
+related: [/plans/archive/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md]
 created: 2026-08-15
 author: slot-29 (backend_engineer)
 source: ["axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md todo 2, dedup-collision cleanup"]

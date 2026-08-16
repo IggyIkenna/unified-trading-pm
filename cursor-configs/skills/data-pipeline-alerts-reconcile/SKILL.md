@@ -225,7 +225,7 @@ statements shipped in live alert bodies, each actively misdirecting triage:
   no Tardis API dependency). Verify before trusting: `rg -l 'tardis_concurrency_guard' scripts/vm/` then cross-check the
   prefix's actual binding in `launcher_registry.LAUNCHER_FOR_VM_PREFIX`.
 - `DP_VM_GONE_NO_CAPTURE`: the `"(0 → 0)"` figure is a fixed template, not a per-VM reading
-  (`/plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md`).
+  (`/plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md`).
 - `DP_VM_PREEMPTED_NO_RELAUNCH` renders with **no** `reason`/`returncode`/`stderr` field even though the emitting code
   populates all three — so the actual failure cause is invisible in Slack.
 

@@ -46,7 +46,7 @@ scope: [engineer]
 tags: [dp-vm-002, mdps, defi, expected-unattempted, honest-absence, pre-genesis, false-positive, fixed]
 related:
   [
-    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+    /plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
     /plans/active/issues/dp_vm_002_cefi_queue_heavy_binancefutu_streaming_writer_progress_gap_2026_08_14.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/honest-absence-downstream-handling.md,

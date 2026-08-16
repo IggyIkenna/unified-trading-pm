@@ -188,7 +188,7 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       — the fix-approach ruling this todo was waiting on is RESOLVED; the code fix shipped 2026-07-30 and this retag was
       just stale for a day.** `market-tick-data-service@362e64e34c1` ("fix(sports): scope smart-skip freshness evidence
       to odds_api's declared source") implements Option A from
-      `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1 (now flipped there too):
+      `/plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s P1 (now flipped there too):
       `check_shard_freshness` is now called with `expected_sources={"ODDS_API": "odds_api"}` for the sports path, so the
       foreign `venue='ODDS_API', source='mdps_odds_horizon_bucket'` sentinel row no longer counts as evidence — the
       572-day permanent-skip is fixed at the source. Retagged `[OPERATOR]` → `[DATA]` since no further design ruling is
@@ -436,7 +436,7 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   `instruments-store-sports-prd-central-element-323112` manifest consolidator's `rows_out` is byte-identical (9,411,982)
   across every real merge cycle for 47+ minutes while shards/dedup_dropped fluctuate — it is not absorbing new content
   at all right now, for anyone, not just this task's writer. Filed
-  `plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (P0) with the full log evidence,
+  `plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (P0) with the full log evidence,
   escalated via `/blocked` (`BLK-62e1dc42`, recommendation C: stop further backfill VM churn on this task AND get live
   investigation given the fleet-wide blast radius). **Retagged both P1 and P2 checkboxes above from credential-blocked
   to `BLOCKED-OPERATOR-DECISION`** pointing at that P0 doc — this is the actual current blocker, not credentials (the

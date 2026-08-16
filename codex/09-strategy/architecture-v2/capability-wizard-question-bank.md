@@ -30,8 +30,8 @@ code_refs:
 
 Every wizard question is pinned to the code anchor that powers its answer set. **Rule: a question may only appear in the
 wizard if its options are derivable from a registry/enum (status `registry`) or it is an explicitly tracked gap (`gap` →
-[gap tracker](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)).** A question with no anchor
-and no gap entry is itself a finding.
+[gap tracker](../../../plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md)).** A question with
+no anchor and no gap entry is itself a finding.
 
 Modes: **walkthrough** (chained, each stage filters the next), **isolation** (any single question, flat),
 **screener/inverse** (start from holdings or target metrics → qualifying strategies), **portfolio** (combine multiple
@@ -161,4 +161,4 @@ option combo, and is ref pricing delta-adjusted or fixed?
 - Plan:
   [`plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md)
 - Gap tracker:
-  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
+  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md)

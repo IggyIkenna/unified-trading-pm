@@ -12,7 +12,7 @@ summary: >-
   flagged this same class three independent times (see instances below), each time confirming the code looked correct
   but the operational outcome was unverifiable from durable artifacts alone. Filed for an operator ruling on whether to
   extend §8b-style evidence-backing to prod-mutation scripts.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -50,6 +50,11 @@ context_scope:
   ]
 ---
 
+> **ARCHIVED — resolved 2026-08-16.** The 2026-08-06 operator ruling ("YES, extend it") is implemented:
+> `plans/PLAN_FORMAT.md` §8d defines the `Evidence: manifest-delta=|vm-log=|gcs-op=|state-list=` artifact convention,
+> and `check_evidence_backed_completion.py` grew a baselined-ratchet sub-rule C enforcing it, mirroring sub-rule B's
+> same-clause-proximity discipline. `unified-trading-pm@d30c3dbbc6`.
+
 # Prod DATA-mutation claims have no verifiable evidence artifact (evidence-backing gap)
 
 ## The gap
@@ -85,7 +90,7 @@ not a code defect.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **RULED 2026-08-06: YES, extend it.** `[SCRIPT]` tag (was `[OPERATOR]`) — directly supports the
+- [x] ✅ [SCRIPT] P3. **RULED 2026-08-06: YES, extend it.** `[SCRIPT]` tag (was `[OPERATOR]`) — directly supports the
       existing data-pipeline-correctness HARD RULE; prod data mutations deserve the same evidence rigor builds already
       get. Add the artifact convention + the `check_evidence_backed_completion.py` prod-mutation branch.
       AO-dispatchable. Rule on whether to extend the §8b evidence-backing contract to prod DATA-mutation completions:
@@ -94,7 +99,15 @@ not a code defect.
       the same way builds cite `cloudbuild=<id>` — and whether `check_evidence_backed_completion.py` should grow a
       prod-mutation branch. This is a standards/scope change (PLAN_FORMAT.md + the QG), hence operator-gated, not a
       worker fix. If ruled yes, the follow-up ([SCRIPT] to add the artifact convention + QG branch) is dispatchable.
-      (repo: unified-trading-pm, decision only)
+      (repo: unified-trading-pm, decision only) — **DONE 2026-08-16**: `plans/PLAN_FORMAT.md` §8d adds the
+      `Evidence: manifest-delta=<path>|vm-log=<path>|gcs-op=<id>|state-list=<before>,<after>` convention;
+      `check_evidence_backed_completion.py` grew a baselined-ratchet sub-rule C (COUNTED verbs
+      restamp/backfill/purge require a same-clause row/shard/object count; STANDALONE forms — GCS object
+      rename/delete-with-count, tofu/terraform state rm — trigger on their own); `scripts/quality-gates.sh`'s
+      post-gate wiring + error messaging updated to mention sub-rule C; 9 new unit tests
+      (`tests/unit/test_check_evidence_backed_completion.py::TestSubRuleCMutationClaims`). Baseline absorbed the
+      corpus's 93 pre-existing unevidenced mutation claims (ratchet, not strict-0 — new claims regress the gate).
+      Evidence: unified-trading-pm@d30c3dbbc6
 
 ## Progress Log
 
@@ -122,3 +135,15 @@ not a code defect.
   gate, scoped single-script change, not dispatch-critical-path machinery). Conflict-check cleared (no overlapping claim
   in `parent_epic: agent_operating_framework_master`). `assigned_role` was unset; filled `infra` (PM-repo QG-tooling
   scope).
+- **infra 2026-08-16 (slot-20)**: Implemented the ruled extension. `plans/PLAN_FORMAT.md` §8d documents the
+  `Evidence: manifest-delta=|vm-log=|gcs-op=|state-list=` convention, mirroring §8b's structure and carve-outs.
+  `check_evidence_backed_completion.py` gained sub-rule C: `_MUTATION_COUNTED_VERB_RE` (restamp/backfill/purge, only
+  a violation alongside a same-clause row/shard/object count — same same-clause-proximity discipline sub-rule B uses
+  to avoid false-positiving on a bare mention) and `_MUTATION_STANDALONE_RE` (GCS object rename/delete with an
+  explicit count, tofu/terraform state rm — these already embed enough specificity to trigger alone). Baselined
+  ratchet (93 pre-existing unevidenced mutation claims absorbed via `--baseline-write`, matching how sub-rule B's own
+  baseline works) rather than strict-0, since retroactively failing the whole corpus on a brand-new rule would be a
+  false regression, not a real one. `scripts/quality-gates.sh`'s post-gate comment block + failure messaging updated
+  to name sub-rule C alongside A/B. 9 new unit tests. Evidence: unified-trading-pm@d30c3dbbc6. Archiving this doc in
+  the same commit as the flip (single-repo mode-1 sanctioned combined shape per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — zero open todos, no `locked_by`.

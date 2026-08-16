@@ -119,7 +119,7 @@ thinking_tier: max | high | medium | mechanical | off | none # optional — exte
 last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout | NA
 locked_since: YYYY-MM-DD
-context_scope: [/codex/path/to/ssot.md, plans/active/related-doc.md] # elective minimal reading-list; see doc-frontmatter-schema.md — populate this YOURSELF at authoring time (task_template.md §2a), don't just leave it for the next /context-scout sweep
+context_scope: [/codex/<section>/<ssot-doc>.md, /plans/active/<related-doc>.md] # elective minimal reading-list; see doc-frontmatter-schema.md — populate this YOURSELF at authoring time (task_template.md §2a), don't just leave it for the next /context-scout sweep
 depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering + gates archival
 supersedes: [old-plan-slug] # list of plans made obsolete by this one
 superseded_by: [new-plan-slug] # list of plans that replaced this one
@@ -539,6 +539,38 @@ clone, not by trusting the self-report.
 - Scope is deliberately narrow: only `<repo>@<sha>` where `<repo>` is an EXACT sibling-clone directory name is checked
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
+
+### 8d. Prod DATA-mutation evidence — restamp/backfill/rename/delete/tofu-state claims cite a verifiable artifact (codified 2026-08-16)
+
+> **Why:** § 8b's `Evidence: cloudbuild=<id>` contract only covers RUNTIME infra claims (build/deploy/promote). Prod
+> DATA-mutation completions — a restamp/backfill row-count, a GCS object rename/delete, a terraform/tofu state op — had
+> no analogous machine-checkable artifact; completion rested on the worker's self-report of running their own script.
+> Review flagged this same class three independent times (tofu-state, `do_rename`, prediction restamp row-counts) — see
+> `plans/archive/2026_08/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md` (RULED 2026-08-06: extend the §8b
+> contract; implemented + archived 2026-08-16).
+
+Any `- [x]` todo whose completion is a **prod DATA-MUTATION claim** — a restamp/backfill/purge row or shard count, a
+GCS object rename/delete, or a terraform/tofu state operation — MUST cite a verifiable artifact ref on the checkbox
+line or its continuation lines:
+
+```markdown
+- [x] ✅ ... <the claim> ... Evidence: manifest-delta=<path> | vm-log=<path> | gcs-op=<id> | state-list=<before>,<after>
+```
+
+- `manifest-delta=<path>` — a written manifest-delta row/file recording the before/after row counts a reviewer can
+  independently open.
+- `vm-log=<path>` — a durable log path (e.g. `vm-logs/<unit>/RESULT.json`) a reviewer can independently resolve.
+- `gcs-op=<id>` — a GCS operation id, or a content-equality check (crc32c/size/row-count) for a rename/delete.
+- `state-list=<before-path>,<after-path>` — a `terraform state list` / `tofu state list` before/after pair (paths or
+  pasted-content refs) proving the state change.
+- Multiple refs and additional token kinds are allowed; cite whichever artifact the script actually produced.
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` (PM post-gate):
+  sub-rule C (baselined ratchet, same discipline as sub-rule B) flags a `- [x]` restamp/backfill/purge row-count claim,
+  a GCS object rename/delete claim, or a tofu/terraform state-op claim that cites no `manifest-delta=`/`vm-log=`/
+  `gcs-op=`/`state-list=` ref. Unlike sub-rule A, there is no single "mutation API" to poll the way Cloud Build has
+  one — the cited artifact is the durable, independently-openable evidence a reviewer resolves by hand, not something
+  this gate calls out to verify live.
+- A code-ship claim (`<repo>@<sha>` + "QG green") remains OUT of scope here, same carve-out as § 8b.
 
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 

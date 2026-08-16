@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [ui, playwright, smoke, tech-debt]
 related:
   [
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: 2026-07-28
@@ -33,7 +33,7 @@ assigned_role: ui_developer
 drift_direction: advance-code
 depends_on: []
 context_scope:
-  [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, /plans/epics/agent_operating_framework_master.md]
+  [/plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md, /plans/epics/agent_operating_framework_master.md]
 ---
 
 # unified-trading-system-ui wizard smoke-suite pre-existing failures

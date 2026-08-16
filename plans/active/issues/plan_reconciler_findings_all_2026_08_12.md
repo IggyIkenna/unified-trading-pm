@@ -323,7 +323,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       status:active vs body draft banner
 - [ ] [REVIEW] P3. (P2) plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md:84 — banner says 2 open todos,
       both now [x]
-- [ ] [REVIEW] P3. (P2) plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md:478-482 —
+- [ ] [REVIEW] P3. (P2) plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md:478-482 —
       orphaned prose Follow-up now correctly tracked elsewhere, source doc not updated
 - [ ] [REVIEW] P3. (P2) plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md — all checkboxes
       [x], frontmatter status stale (self-flagged 2026-08-06, never fixed)

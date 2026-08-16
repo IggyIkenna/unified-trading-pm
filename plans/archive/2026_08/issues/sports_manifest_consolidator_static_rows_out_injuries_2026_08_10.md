@@ -26,7 +26,7 @@ summary: >-
   (`instance=1-c366fe97`) acquired a fresh lock at `01:30:54Z`; not confirmed whether this was a stale lock from a
   crashed holder or legitimate serialized contention, not investigated further (out of scope for the monitoring loop
   that found this).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -40,7 +40,7 @@ related:
   ]
 created: 2026-08-10
 author: claude-agent
-last_updated: 2026-08-10
+last_updated: 2026-08-16
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,7 +53,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: slot-29-data_engineering-2026_08_16
 source:
   Found during the autonomous sports dual-fleet (INJURIES + odds_api) honest-coverage convergence monitoring loop
   (continuation of sports_all_vendor_honest_coverage_convergence_2026_08_07.md) while investigating why two consecutive
@@ -65,6 +65,23 @@ context_scope:
     plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
   ]
 ---
+
+> **🟩 RESOLVED / ARCHIVED 2026-08-16 (slot 29, data_engineering).** Every todo is now closed: P1 + P2 root-caused
+> (no code defect — see § "Root cause" / "P2 verdict" below), P3 CANCELLED 2026-08-12 (`/plan-reconcile`, premise
+> never held), and P3.1 (the config fix) shipped `deployment-service@36a0423e` — `instruments-sports`'
+> manifest-consolidator `timeout_seconds` 1800->3600, `CONSOLIDATOR_LOCK_TTL_SECONDS` 2400->4200,
+> `CONSOLIDATOR_STALL_ALERT_CYCLES` 40->70, live-deployed + verified via Cloud Logging (merge starting
+> `2026-08-16T02:01:08Z` completed cleanly at `02:16:29Z`, no task-timeout termination). Everything below is
+> retained as history. **Codex-alignment check**: no codex SSOT update needed — `/codex/05-infrastructure/manifest-
+> consolidator-ssot.md`'s own "Task timeout: 1800s" mention (its AWS/Phase-D section) is a different, unrelated
+> config axis (AWS Batch default, not this bucket's GCP per-bucket override), so it does not go stale from this fix;
+> per-bucket GCP override values are already documented at their SSOT, the terraform file's own dated comments
+> (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`), consistent with how the prior
+> defi/cefi/sports bumps were codified. **Referrer check**: 3 corpus mentions
+> (`plan_reconciler_findings_all_2026_08_12.md`, `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`,
+> `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`) are bare-filename prose citations of an already-
+> resolved finding, each self-contained (no fact/number sourced solely from this doc) — none needed a path fix or a
+> codex migration.
 
 ## What was found
 
@@ -223,15 +240,17 @@ correct; the fix is config (mirror defi's 3600s timeout + 4200s TTL). Filed as P
   cross-check enhancement was never triggered. If the census-vs-VM-progress cross-check is still wanted as
   general-purpose defense-in-depth independent of this specific (now-closed) incident, that is a fresh, unconditional
   proposal for the operator to scope — not a re-opening of this todo.
-- [ ] [SCRIPT] P3.1. Bump the `instruments-sports` manifest-consolidator Cloud Run task timeout from 1800s to 3600s AND
-      its `CONSOLIDATOR_LOCK_TTL_SECONDS` from 2400s to 4200s (mirroring the `market-data-defi` per-bucket override
-      pattern) so a legitimately-running merge + CAS-retry re-merge (~15–20 min/cycle at current 72–75-shard /
-      17.3M-rows_in working set) can no longer hit the 1800s task timeout and get SIGKILLed mid-merge, orphaning the
-      lock and blocking the bucket for the TTL window (observed TWICE in ~1h on 2026-08-10 — `6tx26` killed 01:19:29Z,
-      `xzc5v` killed 02:00:27Z; both left stale locks reclaimed only at 2400s TTL). Keep the "TTL > task timeout"
-      structural invariant. Repo: deployment-service (terraform/gcp/manifest_consolidator_scheduler.tf) — deploy the
-      per-bucket override like `market-data-defi`'s, then verify via Cloud Logging that the next long merge logs no
-      task-timeout termination.
+- [x] ✅ [SCRIPT] P3.1. **DONE 2026-08-16 (slot 29, data_engineering)** — deployment-service@36a0423e. Bumped
+      `instruments-sports`' timeout_seconds 1800->3600 and `CONSOLIDATOR_LOCK_TTL_SECONDS` 2400->4200 in
+      `terraform/gcp/manifest_consolidator_scheduler.tf` (mirroring the `market-data-defi` per-bucket override
+      pattern); scaled `CONSOLIDATOR_STALL_ALERT_CYCLES` 40->70 in lockstep (TTL_seconds/60, same invariant the
+      map's own comments document) to avoid a false SILENT STALL page under the new TTL. Live-deployed via
+      `gcloud run jobs update` (stopgap ahead of a real `tofu apply`, mirrors the precedent already used for
+      defi/cefi/sports in this file) and verified live: `timeoutSeconds=3600`,
+      `CONSOLIDATOR_LOCK_TTL_SECONDS=4200`, `CONSOLIDATOR_STALL_ALERT_CYCLES=70`. **Verified via Cloud Logging**:
+      the merge cycle starting `2026-08-16T02:01:08Z` (first cycle under the new config) completed cleanly at
+      `02:16:29Z` (~15m21s, `rows_out=15892136`) — no `"Terminating task ... maximum timeout"` event, and no such
+      event anywhere in the fleet-wide log since. "TTL > task timeout" invariant preserved (4200s > 3600s).
 
 ## Progress Log
 

@@ -54,7 +54,10 @@ summary: >-
   preference.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 9, meta_plan_corpus_hygiene_ao_dispatch_batch1)
+  # -- was [cross-cutting]. Content is prettier mangling a CI workflow-template placeholder, breaking
+  # quality-gates-v2 fleet-wide, squarely ci-tranche.
 stage: [meta]
 repos:
   [

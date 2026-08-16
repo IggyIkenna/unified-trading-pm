@@ -17,7 +17,7 @@ summary: >-
   expected" rule — worth a tracked note since several other scheduled skills in this workspace (`na-eligibility-audit`,
   `plan-reconcile`, `docs-reconcile`) document the identical `Workflow` + `args`-object fan-out pattern and could hit
   the same failure blind.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -103,13 +103,14 @@ over 50-90+ docs' worth of metadata), a future worker following the documented p
 immediate failure with no obvious cause, burn a turn diagnosing it cold, and only discover the inline-literal workaround
 by accident — exactly the kind of trap this ritual exists to pre-empt for the next reader.
 
-- [ ] [DIAG] P3. Reproduce with a minimal `Workflow` call (a trivial script + a small object `args`, e.g.
+- [x] ✅ [DIAG] P3. Reproduce with a minimal `Workflow` call (a trivial script + a small object `args`, e.g.
       `{a: 1, b: [1,2,3]}`) and a large one (mirror this run's ~20KB payload) to isolate whether the failure is
       size-gated, shape-gated, or transient. If a real threshold or bug is confirmed, add a one-line caution to this
       workspace's `Workflow`-using skills (`ag-closeout-audit`, `na-eligibility-audit`, `plan-reconcile`,
       `docs-reconcile`) recommending inline literals over `args` for large candidate-list payloads, OR file it as a
       product bug if it's outside this repo's control. Source: this issue doc. Done when: root cause is
-      confirmed/ruled-out with a minimal repro, and (if confirmed) the affected skill docs carry the caution.
+      confirmed/ruled-out with a minimal repro, and (if confirmed) the affected skill docs carry the caution. —
+      unified-trading-pm@ROOT_CAUSE_CONFIRMED (see Progress Log 2026-08-16)
 
 ## Progress Log
 
@@ -128,3 +129,23 @@ by accident — exactly the kind of trap this ritual exists to pre-empt for the 
   not-data-pipeline-work retag). Issue doc under `plans/active/issues/` — exempt from the finalize-plan-coverage rule,
   no companion finalize doc needed.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **slot-6 (data_engineering worker, adopted infra craft) 2026-08-16**: Reproduced with two live `Workflow` calls — a
+  44-byte object `{a: 1, b: [1, 2, 3]}` and a 16.3KB object mirroring the original shape (66 `candidates` + 15
+  `coveringPaths`). **Root cause confirmed, NOT size-gated**: in both calls `typeof args` was `"string"` inside the
+  script body — the object passed via the tool's top-level `args` parameter arrives as a JSON-encoded STRING, never a
+  parsed/live object, regardless of payload size (44B and 16.3KB both stringified identically). The large-payload repro
+  threw the byte-for-byte SAME error as the original report:
+  `TypeError: undefined is not an object (evaluating 'args.coveringPaths.map')` — because a string has no
+  `coveringPaths` property, `.map` throws exactly this way. This contradicts the `Workflow` tool's own documented
+  contract ("Pass arrays/objects as actual JSON values in the tool call, NOT as a JSON-encoded string") — the tool
+  claims live-object binding but this harness's tool-call transport in fact always stringifies an object/array `args`
+  value; the fix at the call site is `JSON.parse(args)` as the script's first line, or skip `args` and inline the data
+  as JS literals (the original workaround). **Correction to this todo's own premise**: only `ag-closeout-audit`
+  actually invokes the `Workflow` tool today (`SKILL.md` § "Phase 1") — `na-eligibility-audit`, `plan-reconcile`, and
+  `docs-reconcile` use plain `Agent`/sub-agent fan-out, not `Workflow`+`args` at all (grepped all four SKILL.md files,
+  0 hits for "Workflow" in the latter three), so the "several other scheduled skills... document the identical pattern"
+  claim in this doc's `## Why this is worth tracking` section was stale/inaccurate — no caution added to those three.
+  Added the caution to `ag-closeout-audit/SKILL.md` § "Phase 1" (unified-trading-pm). This is a harness/tool-level
+  defect outside this repo's control to fix directly (no product-bug channel available from this session), so the
+  actionable within-repo deliverable — the caution on the one skill that actually uses the pattern — is the closure.
+  Archiving this issue doc same-commit (single-repo case, sanctioned per RULES.md § 2).

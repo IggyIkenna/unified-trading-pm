@@ -24,7 +24,7 @@ related:
   [
     /plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
@@ -150,18 +150,22 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
       fresh `pd.read_parquet` confirms `event_id=4e5c385bec9516e786c4876ac68413f7` has non-null
       `odds_closing_home=2.415`, `odds_closing_draw=2.7`, `odds_closing_away=3.625`. Source doc's Follow-ups updated to
       match.
-- [ ] [DIAG] P3. **Explain the 23 sentinel-free missing `odds_api` days** (2020-06-06..2026-04-15, dates with neither an
-      `odds_api` row nor an `ODDS_API` sentinel row) not accounted for by the already-diagnosed-and-fixed
+- [x] ✅ [DIAG] P3. **Explain the 23 sentinel-free missing `odds_api` days** (2020-06-06..2026-04-15, dates with neither
+      an `odds_api` row nor an `ODDS_API` sentinel row) not accounted for by the already-diagnosed-and-fixed
       sentinel-collision mechanism (`check_shard_freshness` ODDS_API-sentinel collision,
-      `market-tick-data-service@362e64e3`, which explains the other 572 of 595 originally-missing days). Investigate and
-      document the actual cause (a distinct writer-generation gap, a genuinely-never-attempted day, or something else)
-      with file:line/evidence citations — this is an investigation todo, not a data-mutation one. Cross-check the 23
-      dates against `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s in-flight full-range odds_api
-      backfill first (chunk 26/451 as of 2026-08-09) — if that chain will independently settle some/all of the 23 days
-      once it converges, say so and don't duplicate its work; only investigate the residual it won't explain. Source:
-      `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (## Follow-ups, `[DATA] P3`).
-      Done when: each of the 23 days has a stated, evidenced explanation, or a citation showing the in-flight backfill
-      already covers/will cover it.
+      `market-tick-data-service@362e64e3`, which explains the other 572 of 595 originally-missing days). **DONE
+      2026-08-16 (slot-32, data_engineering) — RESOLVED, 0 residual today, not a distinct root cause.** Reproduced the
+      same 2x2 classification over the identical window against both candidate sports manifest buckets
+      (`market-tick-data-service/scripts/sports/investigate_23_sentinel_free_odds_gaps_2026_08_16.py`):
+      `instruments-store-sports-prd` (the bucket the original 595/572/23 numbers were measured against) now shows 547
+      missing odds_api days, **100% sentinel-covered** (0 sentinel-free); `market-data-tick-sports-prd` (the live
+      `check_shard_freshness`/backfill-fleet target) shows 247 missing, 99.6% sentinel-covered. All `ODDS_API` sentinel
+      `written_at` values predate 2026-07-30 — proving these 23 days' sentinel rows already existed before the
+      original census, just not yet merged into the canonical by the manifest consolidator (the same
+      shard-exists-but-unconsolidated lag this doc's own root-cause section documents), not a distinct cause. Full
+      evidence + a secondary bucket-divergence finding (filed separately) in
+      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`'s 2026-08-16 Progress Log entry. Repo:
+      market-tick-data-service (new read-only script only, no prod-affecting code change).
 - [x] ✅ [CODE] P2. **Register a `sports-drop-stale` category in
       `deployment-service/scripts/vm/launch-canonical-migration-vm.sh`**, mirroring the existing `cefi-drop-stale`
       category's exact pattern (line ~1229), then run the dry-run census against the real sports target population to

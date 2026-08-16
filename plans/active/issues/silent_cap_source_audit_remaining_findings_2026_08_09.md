@@ -200,7 +200,7 @@ findings.
       universe fully collected), `test_get_instruments_logs_page_cap_hit` (page-budget exhaustion emits
       `ADAPTER_PAGE_CAP_HIT`), `test_get_instruments_single_page_response_still_works` (no-`pagination`-key response
       still terminates correctly). Full quality-gates.sh green (141s).
-- [ ] [SCRIPT] P3. **Dormant prediction-market hard page-count ceilings — activate-on-re-enable risk.**
+- [x] ✅ [SCRIPT] P3. **Dormant prediction-market hard page-count ceilings — activate-on-re-enable risk.**
       `instruments_service/reference_data/adapters/cefi/{kalshi_perp,polymarket_perp}.py` both define `_PAGE_LIMIT=200`,
       `_MAX_PAGES=10` (hard 2000-contract ceiling — NOT exhaustion-driven, stops even when `has_more`/cursor says more
       data exists) but are currently `_REPOINT_PENDING = True` (return `[]` before any network call) — dormant risk that
@@ -208,7 +208,13 @@ findings.
       instruments-service. Done when: `range(_MAX_PAGES)` is replaced with a genuinely cursor-exhaustion-driven loop (a
       large safety-net page count, e.g. mirroring `polymarket/clob.py`'s `_CLOB_MAX_PAGES = 10000` "safety cap against
       runaway loop" pattern which already correctly exits on the CLOB's own cursor sentinel) BEFORE either venue's
-      `_REPOINT_PENDING` flag flips to re-enable it.
+      `_REPOINT_PENDING` flag flips to re-enable it. — instruments-service@9e201ee0dd: raised `_MAX_PAGES` 10→10000 on
+      both adapters (safety-net, mirrors `clob.py`'s `_CLOB_MAX_PAGES=10000` pattern) so each loop is exhaustion-driven
+      off its own cursor/`has_more` signal, not a page-count ceiling; added a for/else cap-exhaustion warning +
+      `ADAPTER_PAGE_CAP_HIT` emission (mirrors `coinbase_cde.py`'s pattern from this same session) so genuine safety-net
+      exhaustion is loud, not silent. 4 new regression tests (2 per adapter): proves pagination past the old 10-page/
+      2000-contract ceiling (12 pages fully collected) and proves genuine safety-net exhaustion emits
+      `ADAPTER_PAGE_CAP_HIT`. Full quality-gates.sh green (202s).
 - [x] ✅ [REVIEW] P3. **Kalshi instruments-service nested series-scoped mitigation caps — verify against live API before
       trusting the current mitigation is sufficient.**
       `instruments_service/reference_data/adapters/prediction/kalshi.py`'s live snapshot already mitigates the top-2000
@@ -231,14 +237,23 @@ findings.
       regression tests (460-series universe not truncated at old cap; 7-page/1400-market series fully collected;
       page-budget + total-cap-hit emit the event; constant guards vs measured counts). Full quality-gates.sh green
       (127s).
-- [ ] [CODE] P3. **Morpho Blue first-party API — verify `skip` support before implementing real pagination.** This
+- [x] ✅ [CODE] P3. **Morpho Blue first-party API — verify `skip` support before implementing real pagination.** This
       session added a page-cap WARNING to `morpho.py` (not full pagination) because Morpho Blue's `blue-api.morpho.org`
       GraphQL schema is first-party (not The Graph) and its `skip`/cursor support was NOT verified against a live schema
       — guessing wrong risks a 400 on every call, worse than today's top-1000-by-SupplyAssets truncation. Repo:
       instruments-service. Done when: a live GraphQL introspection query against `blue-api.morpho.org` confirms whether
       `markets(skip: Int, ...)` is a valid argument; if yes, implement the same `while skip <= _MAX_SKIP` loop already
       proven in `uniswap_v2.py`/`uniswap_v3.py`; if no, document the confirmed absence in the code comment and leave the
-      warning-only mitigation in place.
+      warning-only mitigation in place. — instruments-service@c9b7943f: live introspection (2026-08-16) of
+      `blue-api.morpho.org` confirmed `markets(skip: Int, ...)` IS a valid argument (`Query.markets.args` includes
+      `skip: Int`), and a functional 2-page live probe (`first:3/skip:0` vs `first:3/skip:3`) returned zero `marketId`
+      overlap — genuinely works, not just schema-present. Replaced the warning-only mitigation with a real
+      `while skip <= _MAX_SKIP` loop (variables-based query, `_MAX_SKIP=5000` mirroring `uniswap_v2.py`/`uniswap_v3.py`),
+      plus a for/else safety-cap warning + `ADAPTER_PAGE_CAP_HIT` emission on genuine exhaustion (mirrors
+      `coinbase_cde.py`/`kalshi_perp.py` this session). Updated the pre-existing single-page-cap test to
+      `test_get_instruments_paginates_past_first_page` (2-page universe fully collected, not truncated) and added
+      `test_get_instruments_hits_skip_safety_cap_emits_warning` (genuine safety-net exhaustion emits the warning +
+      `ADAPTER_PAGE_CAP_HIT`). Full quality-gates.sh green (123-126s).
 - [x] ✅ [REVIEW] P3. **Sports adapters with no pagination keywords found — confirm no hidden vendor-side default page
       cap.**
       `instruments_service/reference_data/adapters/sports/adapters/{api_football, base,footystats,understat,soccerfootball_info,transfermarkt,open_meteo,api_football_reference}.py`
@@ -264,7 +279,7 @@ findings.
       prove >page-size universes are no longer truncated (footystats 700-match date; SFI 150-championship list +
       250-match present-day + 2 pagination-parser units). Full quality-gates.sh green (exit 0, 173s first run / 35s
       content-sentinel re-run), quickmerge landed + ancestry-verified on origin/live-defi-rollout.
-- [ ] [SCRIPT] P3. **Market-tick-data-service prediction/transfer bounded max-page loops — same cap-exhaustion-warning
+- [x] ✅ [SCRIPT] P3. **Market-tick-data-service prediction/transfer bounded max-page loops — same cap-exhaustion-warning
       gap as this session's Kalshi/Polymarket fix, lower priority given confirmed call-graph usage.**
       `market_interface/clients/alchemy_transfers_client.py::get_all_transfers` already got a warning-only fix this
       session (no attempted_failed plumbing exists in this client).
@@ -275,7 +290,15 @@ findings.
       Kalshi/Polymarket trades-fetch implementation distinct from the ones fixed this session, since the parent audit's
       file paths for these overlapped with the ones already patched. Repo: market-tick-data-service. Done when: a fresh
       grep confirms whether a distinct MTDS-side implementation exists; if so, apply the same `for/else` cap-exhaustion
-      → `attempted_failed` pattern; if it's the same file already fixed, close this as duplicate.
+      → `attempted_failed` pattern; if it's the same file already fixed, close this as duplicate. — CLOSED AS DUPLICATE
+      (2026-08-16): fresh grep of `market_tick_data_service/market_interface/adapters/prediction/{kalshi_adapter,
+      polymarket_adapter}.py` confirms both ALREADY carry the `for/else` cap-exhaustion → `attempted_failed` pattern
+      (`_log_page_cap_exhausted()` helper, cursor-based pagination, CF-11 routing) — `git log` on both files shows the
+      most recent touch is `c6b9113b fix(defi): CF-11 swallow-fixes in manifest recorder, liquidations GraphQL,
+      polymarket catalogue`, i.e. these ARE the same-session fix this todo asked to re-confirm, not a distinct
+      unfixed implementation. `market_interface/clients/alchemy_transfers_client.py` also confirmed to already carry
+      its warning-only mitigation (2 `logger.warning` cap-exhaustion sites, no `attempted_failed` plumbing — matches
+      the todo's own note that none exists for this client). No code change needed; no new implementation to ship.
 - [ ] [SCRIPT] P3. **`_umi_extended.py` candle-window pagination — currently safe, latent risk if call graph changes.**
       `market_tick_data_service/adapters/_umi_extended.py::_extended_candle_params` logs a truncation warning and clips
       to `_EXTENDED_CANDLE_PAGE_CAP=2800` bars but issues only ONE request (never chunks) when `needed` exceeds the cap
@@ -326,6 +349,20 @@ findings.
 - 2026-08-16 (slot 12, data_engineering): shipped the Coinbase CDE futures-universe cap todo — see the todo's own
   evidence line above for detail. instruments-service@31de8c9bd1, QG green (141s), quickmerge landed + ancestry-verified
   on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-16 (slot 31, data_engineering): shipped the dormant prediction-market hard page-count ceiling todo (KALSHI-PERP
+  / POLYMARKET-PERP) — see the todo's own evidence line above for detail. instruments-service@9e201ee0dd, QG green
+  (202s), quickmerge landed + ancestry-verified on origin/live-defi-rollout. Also fixed a mechanical
+  `xfail_skip_tracked_baseline.yaml` line-number drift (two pre-existing skip markers in the touched test files shifted
+  from the new test code inserted above them — corrected the `line:` values only, scoped to the two instruments-service
+  entries; did NOT run `--baseline-write` fleet-wide, which would have silently dropped every other repo's baselined
+  entries). Remaining todos in this doc are still open.
+- 2026-08-16 (slot 25, data_engineering): shipped the Morpho Blue skip-pagination-verification todo — see the todo's
+  own evidence line above for detail. instruments-service@c9b7943f, QG green (123-126s), quickmerge landed +
+  ancestry-verified on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-16 (slot 10, data_engineering): closed the MTDS prediction/transfer bounded max-page-loops todo as
+  duplicate — see the todo's own evidence line above for detail. No code shipped (nothing to fix; both files already
+  carry the CF-11 fix from a prior session). 2 todos remain open in this doc (`_umi_extended.py` candle-window
+  chunking, `UniswapV3Adapter` aliased-field `AttributeError`).
 
 ## Codex SSOTs
 

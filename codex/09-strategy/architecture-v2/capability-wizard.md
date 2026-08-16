@@ -99,7 +99,7 @@ The capability wizard is three artifacts over one data model:
 - Plan:
   [`plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md)
 - Gap tracker:
-  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
+  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md)
 - Archetype taxonomy:
   [`enums.py` StrategyArchetype/StrategyFamily](../../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py) +
   [`archetype_capability.py`](../../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py)
@@ -168,6 +168,6 @@ Param-schema locations in `strategy_service/engine/strategies/v2/param_schema.py
   [`plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md)
   (append-only Progress Log = build history)
 - Capability gaps:
-  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
+  [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md)
 - Bugs/conflicting truths (F1–F19):
   [`plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md`](../../../plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md)

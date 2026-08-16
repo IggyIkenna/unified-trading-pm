@@ -27,7 +27,7 @@ tags: [reconciliation, batch-live-recon, cloud-run, stage0, config-pull, data-co
 related:
   [
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    /plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
     /plans/archive/issues/setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md,
   ]
 created: "2026-07-30"
@@ -59,7 +59,7 @@ source: >-
 context_scope:
   [
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    /plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
     /plans/archive/issues/setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,

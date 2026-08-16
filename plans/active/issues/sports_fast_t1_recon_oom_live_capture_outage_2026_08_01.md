@@ -60,7 +60,7 @@ context_scope:
   [
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/preflight.py,
     deployment-service/deployment_service/sports_trigger_evaluation.py,
     deployment-service/configs/sports-trigger-tiers.yaml,

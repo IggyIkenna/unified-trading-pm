@@ -639,13 +639,10 @@ context_scope:
     - +3 more P2 — see file for the rest.
   - [`plans/active/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`](/plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md`](/plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md)
-    - **[DESIGN] P1.** Cross-check this doc's root-cause fix against the concurrent DERIBIT-COMBO venue-registry purge
-      before either lands.
-    - **[WRITER] P1.** Widen the combo-shape guard and port the split fix into `tardis_cefi_shards.py`.
-    - **[DATA] P2.** Implement + dry-run the partition-move script against the 15,119-row scope; canary two named
-      objects first.
-    - **[DATA] P2.** Operator review of the widened scope + live-fleet sequencing before any `--apply` is scheduled.
+  - [`plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md`](/plans/archive/2026_08/issues/deribit_combo_perpetual_partition_move_2026_07_21.md)
+    — **RESOLVED + ARCHIVED 2026-08-16**: all §9 todos done — root-cause fixed (`mtds@2ddc6d4a`), MVP-scope reversed
+    (`uac@cd35596d`/`3be60810`), the partition-move `--apply`'d 2026-08-12 (1,719 objects, 0 remaining), and the
+    residual stale-manifest-row sweep `--apply`'d 2026-08-16 (799 confirmed-phantom rows removed).
   - [`plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`](/plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md)
     - **[VERIFY] P0.** Verify DERIBIT options_chain af after wave-1 reprobe VMs complete.
     - **[MONITOR] P1.** If af > 0 after reprobe: check DERIBIT light VM logs for OOM/preemption evidence.

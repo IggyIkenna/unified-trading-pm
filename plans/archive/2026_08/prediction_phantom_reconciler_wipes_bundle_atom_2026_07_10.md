@@ -20,7 +20,7 @@ summary:
   2026-06-27T09:36:17Z) demoted it. This is the PRIMARY driver of the prediction _index residual, and it falsifies the
   earlier working hypothesis that the schema_version=4 legacy rows are 'superseded by an existing v9 captured bundle' —
   there is NO captured v9 bundle row for any date to supersede them."
-status: open
+status: resolved
 nature: notes
 asset_group: [prediction]
 stage: [data, meta]
@@ -339,9 +339,19 @@ the diagnostic script itself (kept for lifecycle-marker traceability, delete-whe
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Backstamp historical rows for affected non-prediction venues (tradfi IBKR/ECB/OFR/YAHOO/EIA, cefi
+- [x] ✅ [DATA] P3. Backstamp historical rows for affected non-prediction venues (tradfi IBKR/ECB/OFR/YAHOO/EIA, cefi
       HYPERLIQUID/ASTER/EXTENDED_STARKNET, defi CHAINLINK/PYTH/AAVE/SOLANA_RPC/HELIUS) via per-asset_group restamp
-      scripts per the Kalshi precedent
+      scripts per the Kalshi precedent — instruments-service@ddac7eb7e2
+      (`scripts/restamp_venue_scaffold_provenance_2026_08_16.py`). tradfi: 0 mis-stamped rows found, already clean
+      (no apply needed). cefi: 292,469 rows restamped (ASTER 160,180 + HYPERLIQUID 132,289), snapshot
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_venue_scaffold_provenance_restamp_20260816T021623306338Z.parquet`,
+      shard `_index/per_vm/restamp-venue-scaffold-provenance-20260816T021623306338Z.parquet`. defi: 215,781 rows
+      restamped (CHAINLINK 123,507 + AAVE 70,038 + PYTH 22,236), snapshot
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/snapshots/pre_venue_scaffold_provenance_restamp_20260816T021801886740Z.parquet`,
+      shard `_index/per_vm/restamp-venue-scaffold-provenance-20260816T021801886740Z.parquet`. All target rows were
+      `capture_status != captured` (0 captured-status matches, STOP-ON-SURPRISE passed both runs). Corrected rows land
+      via the additive per-VM shard pattern; the live consolidator merges async (~per-minute cron) since
+      `pipeline_mode`/`source`/`transport` are not consolidator dedup-key columns.
 
 > **2026-08-06 archive-candidate audit**: The [DATA] P3 todo fixed enumerate_expected_universe.py
 > (instruments-service@2b165597); its own completion says 'Backstamp of historical rows is a follow-on data operation' —

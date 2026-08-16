@@ -13,7 +13,7 @@ doc_type: issue
 status: resolved
 priority: P0
 nature: issue
-asset_group: cross-cutting
+asset_group: [infrastructure] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 11, meta_plan_corpus_hygiene_ao_dispatch_batch1) -- was scalar `cross-cutting`. Content is VM-launcher/heartbeat safety (SIGPIPE bug, stale watcher redeploy, fleet-monitoring liveness rule), squarely infra-tranche.
 stage: meta
 scope: engineer
 repos:

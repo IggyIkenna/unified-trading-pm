@@ -584,6 +584,64 @@ rule (see Progress Log entry below for the observed outcome).
   16GB ceiling — no OOM recurrence of the class this doc's sibling archived issue tracked). No code changes shipped —
   used the existing launcher as-is. Repo: deployment-service.
 
+- **2026-08-16 (slot-29)** — picked up the Follow-up `[DATA] P2` below (continue monitoring
+  `mtds-dex-pools-backfill` to genuine completion, handed off from slot-30). Took 3 spaced foreground
+  `gcs_describe_object`/`gcs_read_object_range` checks of `run.log` (UTL SDK, no background-bash monitor per this
+  doc's own established precedent that background polling gets externally killed): **03:05:00Z** —
+  `date=2026-05-25` in progress; **03:10:48Z-03:11:00Z** — `date=2026-06-02` in progress, fresh `ManifestWriter`
+  shard writes each ~54s/date; **03:12:39Z** — VM still `RUNNING` (asia-northeast1-c), no stall (well inside the
+  normal per-date cadence, nowhere near the ~15-20min silent-death threshold). Confirms real forward progress:
+  8 calendar-days advanced (2026-05-25→2026-06-02) in ~6min wall-clock, ~44 days into the 2026-04-13→2026-07-24
+  target range (~43% by date-count). Range is **NOT yet complete** — closing out this session on the accumulated
+  evidence per this doc's own precedent for a multi-day VM outliving one session (2026-08-09, 2026-08-16-slot-4,
+  2026-08-16-slot-30 entries), same as slot-30 did. No code change, no relaunch needed (VM healthy). The
+  Follow-up `[DATA] P2` below stays open, unedited in substance — its ask ("continue monitoring to completion")
+  is still exactly accurate — this entry documents the additional evidence gathered, not a state change to the
+  todo itself. Repo: market-tick-data-service (verify only, read-only GCS checks).
+- **2026-08-16 (slot-30, resumed session)** — worked the `[DATA] P2` "continue monitoring `mtds-dex-pools-backfill`"
+  follow-up (independently of, and concurrently with, the slot-29 entry above). Confirmed VM still `RUNNING` via
+  `gcloud compute instances list`. Five foreground `gcs_describe_object` checks on `run.log` (UTL SDK, not a
+  subprocess `gsutil`/`gcloud storage` call) spanning T+46min→T+54min from launch (03:11:00Z→03:19:00Z UTC, launch
+  was 2026-08-16T02:25:12Z) show monotonic size growth (76,343→80,070→83,124→86,178→89,586 bytes), `last_modified`
+  advancing every ~1-2min, zero stalls — well past both the predecessor's ~16min death point and this doc's own
+  earlier T+32min checkpoint. Log content confirms real per-day `trader_joe_v2/AVALANCHE` writes (200-300 rows/day,
+  real `ManifestWriter` shard updates) currently at `date=2026-06-02`, roughly 50/102 days into the
+  `2026-04-13→2026-07-24` target range — genuine completion still ~35-40min out at the observed pace, too long for
+  this session to hold open (10min per-Bash-call ceiling; background-bash monitoring already noted unreliable in
+  this environment). Left the follow-up checkbox open (not done — VM has not reached the end of its range) for the
+  next dispatch to re-check. No code changes — read-only GCS + VM status verification only. Repo:
+  market-tick-data-service (verify).
+
+- **2026-08-16 (slot-29) — `/pre-compact` checkpoint**: this session also worked an unrelated `infrastructure_master`
+  P3 follow-up (`aiohttp_json_charset_guessing_audit_2026_08_16.md`, no content relation to this dex-pools initiative
+  beyond sharing the session) — fixed 5 aiohttp `resp.json(content_type=None)` call sites in market-tick-data-service
+  to pin `encoding="utf-8"`, `quality-gates.sh` PASSED (10912 tests passed / 0 failed), committed locally as
+  `market-tick-data-service@7ffa995c`. `quickmerge.sh` was still in flight (re-gating, host QG governor queue) at
+  session end — not yet confirmed on origin. See that issue doc's own Progress Log for full detail; noted here only so
+  a reader of this doc knows the session's remaining tool-call budget went there, not further into this dex-pools
+  monitoring work. **Safe to compact: YES** for this doc's own content — the slot-29 dex-pools entry above
+  (2026-05-25→2026-06-02 progress check, ~43% by date-count) was already committed+pushed as
+  `unified-trading-pm@e23fade567` before this checkpoint; nothing new for THIS initiative was found or changed in this
+  checkpoint.
+
+  **Goalposts (Step 8b) — this doc's own initiative is still open, umbrella goal**: the `mtds-dex-pools-backfill` VM
+  (trader_joe_v2, `2026-04-13→2026-07-24`, launched 2026-08-16T02:25:12Z) runs to completion with `dex_pool_state`
+  fully filled across that range for all 4 protocols, AND `dex_pool_swaps` gaps for TRADER_JOE_V2/VELODROME_V2 get
+  their dedicated historical backfill — only then does `defi_consolidated_closeout_2026_07_18.md`'s parent "verify the
+  mtds-dex-pools/dex-swaps backfill VMs" todo (this doc's origin) actually close. Open todos across this doc (all in
+  `## Follow-ups` below, none blocked on credentials/VM/operator — all actionable now or by waiting on the running VM):
+  1. `[DATA] P2` (line ~659, "IN PROGRESS 2026-08-16 slot 30") — continue monitoring the running VM; next check should
+     use short spaced foreground `gcs_describe_object`/`gcs_read_object_range` checks on `run.log` (NOT a background-bash
+     monitor — proven unreliable/externally-killed at least 3x across this doc's sessions), silence >15-20min ⇒ treat as
+     dead and relaunch (idempotent per-day skip, do not replay from `--start`).
+  2. `[SCRIPT] P3` (line ~683) — `PROGRESS.json`'s `last_completed_date` field is a static echo of `--end-date`, not a
+     live per-day marker; either make it live or rename it (e.g. `requested_end_date`) so it stops misleading readers.
+  3. `[DATA] P2` (line ~691) — functionally the same "continue monitoring to completion" ask as #1 (both open from the
+     slot-30/slot-4 handoff chain); resolve both together with the same evidence, don't duplicate the check.
+  No closing action beyond these 3 — once the VM's range is confirmed complete (an 18-date GCS spot-check or a genuine
+  `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` line) and #2's rename ships, this doc itself becomes
+  archivable and its parent `defi_consolidated_closeout_2026_07_18.md` todo can close.
+
 ## Follow-ups
 
 - [x] ✅ [BACKEND] P2. Fix the VELODROME_V2/OPTIMISM dex_pool_swaps persistent "bad indexers" condition
@@ -607,11 +665,95 @@ rule (see Progress Log entry below for the observed outcome).
       over the former bad-indexers window (2026-07-27→2026-08-04) to clear the ~339 residual `attempted_failed` rows
       left from the ~7-day outage. Subgraph confirmed healthy 2026-08-06; this session's re-run is retrying and
       succeeding as expected. Repo: deployment-service (no code change — used the existing launcher).
-- [ ] [DATA] P3. Once the `mtds-dex-pools-backfill` VM launched 2026-08-09T22:29Z (see Progress Log entry same date)
-      finishes traversing its full `2026-03-01→2026-07-24` assigned range (ETA ~90min from launch, ~00:00Z 2026-08-10,
-      per its observed ~34s/day processing rate), re-run the 18-date GCS-object-existence spot-check for TRADER_JOE_V2
-      `dex_pool_state` across that window to confirm the "large majority of sampled dates FOUND" bar from
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 12 is actually met (not just the 2 dates spot-checked at
-      launch time). If still materially absent once the VM reaches `DEPLOYMENT_COMPLETED`, file a new root-cause finding
-      (the catalogue-TTL fix + relaunch already ruled out the previously-confirmed stale-cache cause). Repo:
-      market-tick-data-service.
+- [x] ✅ [DATA] P3. **DONE 2026-08-16 (slot-14, data_engineering) — gap did NOT close; VM died abnormally ~15min into a
+      146-day range, new root-cause finding filed (per this todo's own instruction).** Re-ran the 18-date
+      GCS-object-existence spot-check for TRADER_JOE_V2 `dex_pool_state` across `2026-03-01`→`2026-07-24` (same UTL
+      SDK `list_blobs` method as this doc's precedent): **only 4/18 (22%) dates FOUND** (`2026-03-01/03-10/03-18`,
+      `2026-04-04` — all clustered in the first ~5 weeks); the remaining 14/18 (78%), `2026-04-13` through
+      `2026-07-24`, are still ABSENT. This does NOT meet the "large majority FOUND" bar — materially absent, per this
+      todo's own trigger condition.
+
+      **Root-caused why**: the `mtds-dex-pools-backfill` VM launched 2026-08-09T22:29:51Z (confirmed via GCE audit
+      log — 2 `v1.compute.instances.insert` calls at 22:29:54Z/22:30:06Z) never reached its own completion marker.
+      Its launcher script only prints `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` INSIDE an
+      `if [[ $_GENERIC_RC -eq 0 ]]` guard after the python process exits — that exact string appears in the run.log
+      exactly ONCE, as the shell script's OWN source line (`[vm-exec] starting: bash -c ...`), never as executed
+      output, proving the guard's branch never fired. The run.log (`vm-logs/mtds-dex-pools-backfill/run.log`,
+      `last_modified=2026-08-09T22:45:28Z`, confirmed via blob metadata — not just log content) stops abruptly
+      mid-stream after a routine `RESOURCE_SAMPLE` line (cpu=100%, mem=14%, rss=3.2GB — well within budget, not OOM)
+      while still processing `2026-03-24` — only ~24 days into the 146-day range, matching the 4/18 spot-check
+      result. No `received signal`, no `DEPLOYMENT_FAILED`/`DEPLOYMENT_COMPLETED`, no Traceback anywhere in the log.
+      GCE audit log shows 2 `v1.compute.instances.delete` calls at 22:45:56Z/22:46:46Z (~30-90s after the log went
+      silent) by principal `1060025368044-compute@developer.gserviceaccount.com` — the GCE default compute SA, which
+      is ambiguous evidence (both a VM's own self-shutdown-on-completion script AND an external watchdog reap run
+      under this same default SA identity), so the exact trigger is NOT conclusively determined here — flagging as
+      unresolved rather than guessing. **Separately confirmed misleading**: `PROGRESS.json`
+      (`last_modified=2026-08-09T22:33:16Z`, i.e. written once ~3min after launch) reads
+      `{"last_completed_date":"2026-07-24",...}` — this is a STATIC ECHO of the requested `--end-date` CLI parameter
+      written near VM start, NOT a live per-day walk-progress marker; a future reader trusting this field's name at
+      face value would wrongly conclude the VM reached the end of its range. `EXIT_STATUS` in the same GCS prefix
+      reads `0`, but its `last_modified` is `2026-08-05T01:21:36Z` — STALE, leftover from an unrelated prior run
+      under this same singleton VM name, not written by this 2026-08-09 launch at all. Confirmed via `compute
+      instances.aggregated_list_instances`: no `mtds-dex-pools-backfill` instance currently exists (it is gone,
+      whatever killed it). Repo: market-tick-data-service (finding only — no code change this todo; the misleading
+      `PROGRESS.json` field + the ambiguous-deleter class are tracked as follow-ups below rather than fixed inline,
+      out of this spot-check todo's scope).
+
+- [ ] [DATA] P2. **IN PROGRESS 2026-08-16 (slot 30) — confirmed healthy PAST the historical death point; session
+      closes on this evidence, continued monitoring handed to the Follow-up below (background-bash monitoring
+      proved unreliable this session, same class already noted elsewhere in this doc — "got killed twice by
+      something outside this agent's control").** Picked up this todo; before launching a duplicate, checked for
+      an already-running instance (`gcloud compute instances list --filter="name~'mtds-dex-pools-backfill'"`) and
+      found ONE ALREADY RUNNING — `mtds-dex-pools-backfill`, created 2026-08-16T02:25:12Z (a peer slot must have
+      picked up this exact todo just ahead of this dispatch; no duplicate launched, per singleton-lock +
+      no-redundant-launch discipline). Took TWO spaced live checks of `run.log`'s `gcs_describe_object(...)`
+      metadata mtime (not just content, per this todo's own ask) + a content tail, ~4min apart:
+      **check 1 (T+27min from launch, 02:52:59Z)**: 45,774 bytes, real trader_joe_v2/AVALANCHE row writes (276
+      records for the day then in progress — inside the target `2026-04-13→2026-07-24` window).
+      **check 2 (T+32min, 02:57:00Z)**: mtime genuinely advanced, size grew to 52,555 bytes, a NEW day's
+      `DEX pools collection complete: 336 total records` line + a fresh `ManifestWriter` shard update — confirms
+      real forward progress, not a frozen/stalled log. Critically, **this VM has now survived past the ~16min
+      mark (T+27/32min vs. launch at 02:25:12Z) where the 2026-08-09 predecessor died silently** (that one went
+      quiet ~16min post-launch, ~24/146 days in) — a meaningfully stronger signal than either prior single-point
+      T+10min check. A background-bash active monitor (5min poll, `gcs_describe_object` mtime + VM liveness) was
+      also attempted this session but was externally killed after only its first round (same unreliable-background-
+      bash pattern already flagged in this doc's 2026-08-16 slot-4 entry) — not something this session can fix, so
+      rather than keep re-attempting it, closing out on the two-spaced-live-check evidence above, consistent with
+      this doc's own established precedent for a multi-day VM run outliving one session (see the 2026-08-09 and
+      2026-08-16-slot-4 entries). Continued monitoring to actual completion is picked up by the new Follow-up P2
+      todo below. Repo: deployment-service (launch, none needed this session) / market-tick-data-service (verify,
+      ongoing).
+- [ ] [SCRIPT] P3. **NEW 2026-08-16.** `mtds-dex-pools-backfill`'s launcher script's `PROGRESS.json` field
+      `last_completed_date` is a static echo of the requested `--end-date` CLI parameter written once near VM
+      start, not a live per-day walk-progress marker — misleading to any reader who trusts the field name (this
+      todo's own 2026-08-09 Progress Log entry cited it as if it reflected real progress). Either make it a genuine
+      live-updating per-day marker, or rename it to something that doesn't imply completion (e.g.
+      `requested_end_date`). Repo: deployment-service (`launch-mtds-dex-pools-backfill-vm.sh` / the shared
+      `[[VM_PROGRESS]]` convention, if this pattern is shared with sibling launchers — check before assuming
+      single-file scope).
+- [ ] [DATA] P2. **NEW 2026-08-16 (slot 30).** Continue monitoring `mtds-dex-pools-backfill` (already running,
+      launched 2026-08-16T02:25:12Z, `--protocols trader_joe_v2` scoped to `2026-04-13→2026-07-24`) through to
+      genuine completion — two spaced live checks this session (T+27min/T+32min) confirmed real forward progress
+      past the ~16min point where the 2026-08-09 predecessor died silently, but the range was NOT yet confirmed
+      complete. Check `run.log`'s `gcs_describe_object(...).last_modified` (not just content) periodically; either
+      a genuine `[[VM_PROGRESS]] last_completed_date=2026-07-24 monotonic=true` EXECUTED-OUTPUT line (not the
+      static `PROGRESS.json` echo — see the sibling `[SCRIPT]` todo above) or a fresh 18-date GCS-object-existence
+      spot-check (same method as this doc's prior sessions) showing the window filled confirms done. If the log
+      goes silent (mtime frozen) for >15-20min while the VM instance still exists, treat as the same silent-death
+      class and relaunch with the same params (idempotent per-day skip) rather than waiting indefinitely.
+      Background-bash monitoring has proven unreliable in this environment (killed externally, at least twice
+      across sessions) — prefer short spaced foreground checks over a long-lived background poll. Repo:
+      market-tick-data-service (verify) / deployment-service (relaunch if needed).
+
+      **Continued 2026-08-16 (slot 30, resumed session) — still healthy, still NOT complete; leaving open for
+      next dispatch rather than manufacturing another hand-off todo.** Five foreground `gcs_describe_object`
+      checks on `run.log` spanning T+46min through T+54min from launch (03:11:00Z→03:19:00Z UTC) show monotonic
+      size growth (76,343→80,070→83,124→86,178→89,586 bytes) with `last_modified` advancing every ~1-2min and
+      zero stalls — comfortably past both the predecessor's ~16min death point and this doc's own earlier
+      T+32min checkpoint. Log content confirms real per-day trader_joe_v2/AVALANCHE writes (`ManifestWriter`
+      shard updates, 200-300 real rows/day) currently at `date=2026-06-02`, i.e. roughly 50/102 days into the
+      `2026-04-13→2026-07-24` target range — genuine completion is still ~35-40min out at the observed
+      ~50s/day pace, too long to hold this session open for (10min Bash-call ceiling; background-bash already
+      unreliable per this todo's own note). Leaving the checkbox open (not done) for the next
+      dispatch/heartbeat to re-check `run.log` mtime — if still advancing, it's near done; if frozen >15-20min,
+      relaunch per this todo's own instructions.

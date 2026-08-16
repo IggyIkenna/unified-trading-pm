@@ -115,6 +115,64 @@ class TestGenuineClaimsStillFlagged:
         assert _violations(block) == []
 
 
+class TestSubRuleCMutationClaims:
+    """Sub-rule C: prod DATA-mutation claims (restamp/backfill/purge row-counts, GCS object
+    rename/delete, tofu/terraform state ops) must cite a verifiable artifact ref."""
+
+    def _mutation_violations(self, block_text: str) -> list[object]:
+        blocks = MOD._iter_todo_blocks(block_text, Path("x.md"))
+        return MOD._check_mutation_claims_without_evidence(blocks)
+
+    def test_restamp_row_count_without_evidence_flagged(self) -> None:
+        block = "- [x] Restamped 12,006 rows in the prediction manifest, all clean now.\n"
+        violations = self._mutation_violations(block)
+        assert len(violations) == 1
+        assert violations[0].rule == "C-mutation-claim-without-evidence"  # type: ignore[attr-defined]
+
+    def test_restamp_row_count_with_evidence_not_flagged(self) -> None:
+        block = (
+            "- [x] Restamped 12,006 rows in the prediction manifest. "
+            "Evidence: manifest-delta=vm-logs/restamp-2026-08-16/delta.json\n"
+        )
+        assert self._mutation_violations(block) == []
+
+    def test_backfilled_bare_mention_without_count_not_flagged(self) -> None:
+        # A bare mention of "backfill" with no completed-count claim isn't a mutation claim.
+        block = "- [x] Decided we should backfill this table later, not done yet in this todo.\n"
+        assert self._mutation_violations(block) == []
+
+    def test_gcs_object_delete_with_count_without_evidence_flagged(self) -> None:
+        block = "- [x] Deleted 342 GCS objects that were duplicate lowercase-venue rows.\n"
+        violations = self._mutation_violations(block)
+        assert len(violations) == 1
+
+    def test_gcs_object_rename_with_evidence_not_flagged(self) -> None:
+        block = "- [x] Renamed 12 GCS objects to the canonical path. Evidence: gcs-op=op-8f21c\n"
+        assert self._mutation_violations(block) == []
+
+    def test_tofu_state_rm_without_evidence_flagged(self) -> None:
+        block = "- [x] Ran tofu state rm on the stale resource, confirmed removed.\n"
+        violations = self._mutation_violations(block)
+        assert len(violations) == 1
+
+    def test_tofu_state_rm_with_evidence_not_flagged(self) -> None:
+        block = (
+            "- [x] Ran terraform state rm on the stale resource. "
+            "Evidence: state-list=vm-logs/before.txt,vm-logs/after.txt\n"
+        )
+        assert self._mutation_violations(block) == []
+
+    def test_code_ship_claim_not_flagged(self) -> None:
+        # An ordinary code-ship claim (no mutation verb) is unaffected.
+        block = "- [x] Shipped the fix — myrepo@04b19bd5, QG green, all tests passing.\n"
+        assert self._mutation_violations(block) == []
+
+    def test_purge_with_count_without_evidence_flagged(self) -> None:
+        block = "- [x] Purged 124 lowercase duplicate rows from the manifest, verified clean.\n"
+        violations = self._mutation_violations(block)
+        assert len(violations) == 1
+
+
 class _FakeCompletedProcess:
     def __init__(self, returncode: int, stdout: str = "") -> None:
         self.returncode = returncode

@@ -33,12 +33,16 @@ summary: >-
 status: open
 resolved_by: deployment-api@fa17399671
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-16 (meta_plan_corpus_hygiene_ao_dispatch_batch1 todo 3) -- was [cross-cutting]. Content is a
+  # CI-pipeline test-flakiness finding: a pytest-xdist module-global leak causing a real GCE metadata probe in
+  # deployment-api's QG test slice, discovered while triaging a promote PR blocked on sit-gate/fleet-green -- CI-run
+  # mechanics, not a data-pipeline cross-AG concern. `tags:` already includes `ci`; audit recommended `ci`.
 stage: [meta]
 repos: [deployment-api, unified-trading-library]
 scope: [engineer, admin]
 tags: [ci, flaky-test, pytest-socket, gce-metadata, events, global-state, unified-trading-library]
-related: []
+related: [/plans/active/ci_consolidated_closeout_2026_07_25.md]
 created: 2026-08-06
 author: interactive session (operator-triggered CI audit)
 last_updated: 2026-08-06

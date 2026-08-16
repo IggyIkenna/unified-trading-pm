@@ -27,15 +27,15 @@ Agent operating procedures for the Unified Trading System. Authoritative agent r
 
 ## Superseded Content (now in cursor rules)
 
-| Was here                     | Now in                                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------- |
-| WORKFLOW_OVERVIEW            | `sub-agent-workflow-standard.mdc` + `agents-follow-cursor-rules.mdc`                  |
-| TASK_TEMPLATE                | `unified-trading-pm/plans/archive/2026_07/cursor_tasks_start_here_2026_03_02.md`      |
-| TASK_CLASSIFICATION          | `ai-task-classification.mdc`                                                          |
-| WORKER_AGENT_INSTRUCTIONS    | `agents-follow-cursor-rules.mdc`                                                      |
-| LOCAL_VS_CLOUD_ORCHESTRATION | `parallel-agent-execution.mdc`                                                        |
-| QUICK_REFERENCE              | `anti-patterns-quick-reference.mdc`                                                   |
-| cloud-orchestration-spec.md  | Moved to `unified-trading-pm/codex/04-architecture/cloud-agent-orchestration-spec.md` |
+| Was here                     | Now in                                                                                                                                                                                                                                                                                                      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WORKFLOW_OVERVIEW            | `sub-agent-workflow-standard.mdc` + `agents-follow-cursor-rules.mdc`                                                                                                                                                                                                                                        |
+| TASK_TEMPLATE                | `unified-trading-pm/plans/archive/2026_07/cursor_tasks_start_here_2026_03_02.md`                                                                                                                                                                                                                            |
+| TASK_CLASSIFICATION          | `ai-task-classification.mdc`                                                                                                                                                                                                                                                                                |
+| WORKER_AGENT_INSTRUCTIONS    | `agents-follow-cursor-rules.mdc`                                                                                                                                                                                                                                                                            |
+| LOCAL_VS_CLOUD_ORCHESTRATION | `parallel-agent-execution.mdc`                                                                                                                                                                                                                                                                              |
+| QUICK_REFERENCE              | `anti-patterns-quick-reference.mdc`                                                                                                                                                                                                                                                                         |
+| cloud-orchestration-spec.md  | Superseded by `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (the prior "Moved to" target this row named — `cloud-agent-orchestration-spec.md` under `04-architecture` — was never created; corrected 2026-08-16, `reference_path_convention_2026_07_23.md` existence-check sweep) |
 
 ---
 

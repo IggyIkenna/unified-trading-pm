@@ -1903,7 +1903,7 @@ done
 | ConfigStore for mutable config    | Runtime-changeable config (feature flags, thresholds) read via `ConfigStore`, not env vars        |
 | No ad-hoc config loading          | No `json.load(open('config.json'))` or `yaml.safe_load(open('config.yaml'))` in service code      |
 | Singleton pattern consistent      | Config instantiated once per process (`@lru_cache(maxsize=1)` or module-level)                    |
-| Config documented in codex        | `unified-trading-pm/codex/06-coding-standards/configuration-management.md` covers all patterns    |
+| Config documented in codex        | a `configuration-management.md` doc under `codex/06-coding-standards/` covers all patterns (never created — dangling ref, see reference_path_convention_2026_07_23.md) |
 
 ### §30.X ConfigStore Load Isolation
 
@@ -2064,15 +2064,15 @@ used as format string in production adapter/service code; OR malformed format sp
   RUNTIME_TOPOLOGY_DECISIONS.md, data-catalogue._.yaml, per-service PROTOCOL\_\* env files
 - **Runtime topology (canonical SSOT):** `unified-trading-pm/configs/runtime-topology.yaml`
 - **Coverage targets:** `unified-trading-pm/cursor-rules/testing/test-coverage-targets.mdc`
-- **Stub tracker:** `unified-trading-pm/plans/active/stub_completion_interfaces_and_infra.md`
+- **Stub tracker:** `unified-trading-pm/plans/archive/stub_completion_interfaces_and_infra.plan.md`
 - **Performance targets:** `unified-trading-pm/codex/06-coding-standards/performance-targets.md`
-- **Semver rules:** `unified-trading-pm/plans/active/major_version_bump_approval_gate_2026_03_11.md`
+- **Semver rules:** `unified-trading-pm/plans/archive/major_version_bump_approval_gate_2026_03_11.plan.md`
 - **Readiness checklist:** `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
 - **Data freshness contracts:** `unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py`
 - **Batch-live symmetry:** `unified-trading-pm/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
-- **API key phases:** `unified-trading-pm/plans/active/api_keys_and_auth.md`
+- **API key phases:** `unified-trading-pm/plans/archive/api_keys_and_auth.plan.md`
 - **Previous audit reports:** `system-integration-tests/reports/audit_<date>.json`
-- **Config architecture:** `unified-trading-pm/codex/06-coding-standards/configuration-management.md`
+- **Config architecture:** a `configuration-management.md` doc under `codex/06-coding-standards/` (never created — dangling ref)
 - **Runtime topology:** `unified-trading-pm/configs/runtime-topology.yaml`
 - **UCI factory methods:** `unified-trading-library/unified_trading_library/cloud_interface/factory.py`
 - **UIC domain schemas:** `unified-api-contracts/unified_api_contracts/internal/`

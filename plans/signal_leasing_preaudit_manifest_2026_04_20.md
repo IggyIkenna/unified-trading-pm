@@ -363,10 +363,11 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
 - `unified-trading-pm/codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md` — new SSOT doc:
   implementation map, D1-D10 resolutions, HMAC signing format, idempotency contract, failure-isolation pattern, auth
   model, per-counterparty rate-limit table, schema-depth payload shapes.
-- `unified-trading-pm/codex/04-architecture/signal-broadcast-topology.md` — cross-link into 04-architecture for
-  service-topology discovery: shows strategy-service → WebhookTransport → counterparty, SSOT for topic/secret naming.
-- `unified-trading-pm/codex/07-security/signal-broadcast-credentials.md` — counterparty-credential lifecycle:
-  provisioning, rotation, revocation, HMAC signature spec.
+- `signal-broadcast-topology.md`, new doc under `codex/04-architecture/` (never created — dangling ref, see
+  reference_path_convention_2026_07_23.md) — cross-link into 04-architecture for service-topology discovery: shows
+  strategy-service → WebhookTransport → counterparty, SSOT for topic/secret naming.
+- `signal-broadcast-credentials.md`, new doc under `codex/07-security/` (never created — dangling ref) —
+  counterparty-credential lifecycle: provisioning, rotation, revocation, HMAC signature spec.
 - `unified-trading-pm/scripts/propagation/rollout-counterparty-registry.sh` — optional helper (defer to follow-up) for
   propagating `COUNTERPARTY_REGISTRY` seed data.
 
@@ -394,9 +395,9 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
 - `unified-trading-pm/cursor-rules/adapters/` — optional new cursor rule `signal-broadcast-failure-isolation.mdc` if
   plan §Phase 6 decides it's worth its own rule file. Recommendation per plan: likely skip (already covered by existing
   adapter-error-classification rule).
-- `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.md` — tick Phase 1 box
+- `unified-trading-pm/plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md` — tick Phase 1 box
   - reference this manifest (done in Phase 1 wrap-up commit).
-- `unified-trading-pm/plans/active/path_to_100m_finalization_2026_04_20.md` — tick linked phase if any references signal
+- `unified-trading-pm/plans/ai/path_to_100m_finalization_2026_04_20.plan.md` — tick linked phase if any references signal
   leasing backend enablement.
 - `unified-trading-pm/codex/14-customer-journeys/roadmap/plan-references.md` — add this plan to the roadmap index.
 

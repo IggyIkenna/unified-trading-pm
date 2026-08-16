@@ -28,7 +28,7 @@ stage: [data]
 repos: [features-service]
 scope: [engineer]
 tags: [sports, odds, features-service, data-correctness, dead-code, regression]
-related: [/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md]
+related: [/plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md]
 created: 2026-07-25
 priority: P1
 parent_epic: sports_master

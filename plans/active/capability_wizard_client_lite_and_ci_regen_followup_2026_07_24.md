@@ -17,7 +17,7 @@ tags: [strategy, capability-wizard, ci-regen, client-lite, successor-plan, docsp
 related:
   [
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
@@ -47,10 +47,10 @@ source: >-
 context_scope:
   [
     /codex/09-strategy/architecture-v2/capability-wizard.md,
-    /plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
+    /plans/archive/2026_08/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
     scripts/openapi/generate-unified-openapi.sh,
     "unified-trading-system-ui/app/(public)/questionnaire/",
-    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
   ]
 ---
@@ -101,7 +101,7 @@ on a `.venv-workspace`-capable CI runner being provisioned (operator action).
 
 **Gate**: `.venv-workspace` provisioned on a CI runner (or a laptop with full workspace) → re-run
 `generate-unified-openapi.sh` end-to-end → its wired-in `check_extraction_count_regression.py` checkpoint (see
-`/plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` todo 2) exits 0 with all 3 outputs
+`/plans/archive/2026_08/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` todo 2) exits 0 with all 3 outputs
 (`ui-reference-data.json`, `config-registry.json`, `unified-trading-system.openapi.json`) freshly regenerated and
 committed.
 
@@ -149,8 +149,8 @@ was never regenerated since, which is the whole premise of this Residual. Per th
 checkpoint rule, the worker discarded the generated outputs (`git checkout --`) rather than commit and did not override
 the gate unilaterally. Full findings + 4 follow-up todos (re-verify-and-commit is todo 1, a deprecated-gate correction,
 an unrelated GCS 404, a stale phantom-repo entry) are tracked at
-`/plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` — the next picker-up should start
-there (specifically its todo 1) rather than repeat this investigation.
+`/plans/archive/2026_08/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` (archived 2026-08-16,
+all 4 resolved) for the full history — this Residual's own re-verify-and-commit work (its todo 1) is done.
 
 ## Residual 2 — Client-lite wizard successor (use case 4)
 

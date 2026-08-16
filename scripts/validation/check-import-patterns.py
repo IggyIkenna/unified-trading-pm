@@ -138,7 +138,9 @@ class ImportChecker:
             # packages (unified-trading-library, unified-api-contracts) here for Cloud
             # Build staging — that's the sibling's OWN source tree, not this repo's code,
             # so it must never be scanned for THIS repo's import-convention violations.
-            skip_dirs = {".venv", "venv", "__pycache__", ".git", "node_modules", ".deps"}
+            # .claude: nested per-agent git worktrees (.claude/worktrees/<id>/) can carry a
+            # stale/divergent snapshot of the same repo's source.
+            skip_dirs = {".venv", "venv", "__pycache__", ".git", "node_modules", ".deps", ".claude"}
             if any(part in file_path.parts for part in skip_dirs):
                 continue
 

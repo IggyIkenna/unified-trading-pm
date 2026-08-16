@@ -13,7 +13,10 @@ summary: >-
   root cause not identified, only the blocking symptom and a safe uncommitted fix waiting behind it.
 status: resolved
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 8, meta_plan_corpus_hygiene_ao_dispatch_batch1)
+  # -- was [cross-cutting]. Content is a quickmerge re-gate STEP 5.95 type:ignore-ratchet blocker, squarely ci-tranche
+  # (CI/CD gate mechanics).
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [quality-gates, ratchet, ci-cd, ready-to-ship-blocked]

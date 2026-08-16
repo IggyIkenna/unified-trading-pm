@@ -1736,7 +1736,7 @@ All API services in this cluster conform to the following pattern. Deviations ar
 | Topic                                | Location                                                                              |
 | ------------------------------------ | ------------------------------------------------------------------------------------- |
 | Repo registry (cluster=api-services) | `unified-trading-pm/workspace-manifest.json`                                          |
-| UI → API wiring                      | `unified-trading-pm/codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md`                  |
+| UI → API wiring                      | `unified-trading-pm/codex/05-infrastructure/ui-dependency-matrix.md`                  |
 | Runtime topology diagram             | `unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`        |
 | Build order (L6 node)                | `unified-trading-pm/codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg`                 |
 | Quality gates                        | `unified-trading-pm/codex/06-coding-standards/quality-gates.md`                       |

@@ -19,7 +19,7 @@ summary: >-
   harm.
 status: resolved
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer]

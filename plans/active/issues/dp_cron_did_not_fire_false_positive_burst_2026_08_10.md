@@ -93,7 +93,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+    /plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
     /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/runtime-deployment-topology.md,

@@ -428,6 +428,13 @@ For the target `<ag>`:
 
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
 
+**Caution — `Workflow`'s top-level `args` param (confirmed 2026-08-16 repro,
+`plans/archive/2026_08/issues/workflow_tool_object_args_param_undefined_in_script_2026_08_08.md`):** a JS object/array
+passed via `args` arrives inside the script body as a JSON-encoded STRING, not a live object — `args.someKey` reads
+`undefined` regardless of payload size (reproduced identically with both a 44-byte and a 16KB object). Either
+`JSON.parse(args)` as the script's first line, or skip `args` and inline the candidate/covering-path data as JS literals
+directly in the script body (the workaround that unblocked the 2026-08-08 sports run).
+
 **`all` mode**: run Phase 0-3 once PER TRANCHE, as 10 separate top-level `Workflow` invocations (never nest a
 `workflow()` call inside another — the tool throws on >1 level of nesting) — either sequentially or fired in parallel
 from the calling context, then aggregate the 10 reports into one combined summary at the end. Do not try to flatten all

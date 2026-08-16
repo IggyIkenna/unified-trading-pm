@@ -127,7 +127,8 @@ context_scope:
       Code: `market-tick-data-service@feeb8a6e` (dtype fix in `do_merge()`). Evidence was already recorded in this file
       but never reflected back onto this checkbox.
 - [x] ✅ [DATA] P2. Design the COMBO-in-perp-partition move for DERIBIT. **CLOSED 2026-08-04 (na-eligibility-audit)**:
-      the design doc `/plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` exists and is described
+      the design doc `/plans/archive/2026_08/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` (archived
+      2026-08-16, all todos done) exists and is described
       as ready — this checkbox's ask was the DESIGN only; the actual partition-move APPLY (15,119 rows) is a separate,
       still-open, operator-gated action tracked by the cross-reference todo further down this file and by table row 7
       below ("DERIBIT combo PARTITION-MOVE — Operator-owned, explicitly out of scope").
@@ -195,7 +196,8 @@ context_scope:
 - `unified-trading-pm@518371960`, `d42bc6c79`, `91a6ba1bd`, `d60ede7d7`, and one more in-flight for the quarantine
   checkbox flip — plan Progress Log deltas (all the fleet-recovery + investigation narrative below is captured there;
   this checkpoint is the condensed pointer).
-- `unified-trading-pm/plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` — new design doc:
+- `unified-trading-pm/plans/archive/2026_08/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` (archived
+  2026-08-16, all todos done) — new design doc:
   DERIBIT combo instruments mispartitioned as perpetual/future. Measured scope **15,119 rows** (76x the plan's original
   23/787 estimate) across TWO partitions (8,849 `instrument_type=perpetual` + 6,270 `instrument_type=future`),
   root-caused to `TardisAdapter._classify_row_instrument_type` (`tardis_adapter.py:354-402`) having a combo-aware guard

@@ -50,8 +50,10 @@ EXCLUDE_FILENAMES = {"conftest.py"}
 # their contents are never scanned (these hold third-party / generated code, not repo source).
 # Without this, a plain rglob("*.py") would still enumerate every .venv file (~14k on a big
 # repo) just to discard them per-path. (Naming: these are excluded, not "pruned"/removed.)
+# ".claude" excludes nested per-agent git worktrees (.claude/worktrees/<id>/) — a worktree
+# can carry an older/different snapshot of the same repo's source.
 EXCLUDE_DIR_NAMES = frozenset(
-    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git", ".claude"}
 )
 
 

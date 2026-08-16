@@ -267,11 +267,59 @@ four now route through the one helper.
   is actually leftover install corruption.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-16 (slot-22, data_engineering craft) — found + fixed a 3rd instance of the same bucket-naming bug class;
+  root-caused the "40-min pipeline timeout" this issue's own Follow-up names; found a NEW OOM blocker.** Working the
+  benchmark-completion Follow-up below:
+  1. **3rd instance of the PREDICTION-bucket-abbreviation bug**: `FeaturesDeltaOneConfig.get_instruments_store_bucket()`
+     (`features_service/delta_one/config.py`) called `resolve_bucket(kind="instruments-store",
+     asset_group="prediction", ...)` directly — raises for PREDICTION (no entry in the CEFI/DEFI/TRADFI/SPORTS-only
+     per-asset_group dict; PREDICTION resolves via the dedicated flat `instruments-store-prediction` kind instead). The
+     exception was swallowed by `filter_delta_one_instruments`'s except-fallback, silently zeroing the instrument list
+     and failing with "No delta-one instruments available after filtering". Fixed by extracting
+     `resolve_instruments_store_bucket()` into `features_service.common` (mirrors the existing
+     `resolve_mdps_candle_bucket` pattern) and routing `get_instruments_store_bucket` through it —
+     `features-service@09be801b`, verified on origin (`git merge-base --is-ancestor` true). Regression tests at both
+     layers (`tests/common/test_common_init.py`, `tests/delta_one/unit/test_config.py`).
+  2. **Root-caused the "40-min pipeline timeout"**: `pipeline_e2e_check.py`'s driver process waits on the launched
+     compute VM via a per-`(family, asset_group)` `_FAMILY_TIMEOUT_OVERRIDES` table (`_DEFAULT_TIMEOUT_SEC = 2400`) — no
+     `("delta_one", "PREDICTION")` entry exists, so it floors to 2400s. A genuine 9-day benchmark run measured
+     ~267s/shard-day, right at that boundary, so the DRIVER gave up (`vm_not_success:timeout_no_exit_status`) and
+     self-deleted — even though **the nested compute VM is a separate GCE instance NOT killed by the driver's own
+     timeout/self-delete and kept computing independently**: `features-e2e-prediction-20260816-002015-eadb84` kept
+     writing real feature partitions for ~43 more minutes after its driver
+     (`pipeline-e2e-check-features-20260816-001533-cf7359`) self-deleted at 2400s. Worth knowing for future runs: a
+     driver "failed: timeout" verdict does NOT mean the underlying compute failed — it means nobody was left watching. A
+     `--timeout-sec` CLI override exists and works (bypasses the table); used 7200s on the retry.
+  3. **NEW finding — genuine OOM on the 9-day benchmark window**: the nested compute VM above (`e2-highmem-4`) was
+     OOM-killed (`exit_code=137`, plain `Killed`, no traceback) after ~63min / 28MB of run.log, mid `technical_indicators`
+     computation across the ~575-instrument PREDICTION delta_one universe. A 2-day-window retry
+     (`features-e2e-prediction-20260816-012950-eadb84`) survived well past the 28MB point the 9-day run died at (still
+     RUNNING, genuinely writing partitions, log >18MB at last check) — suggestive that the OOM scales with accumulated
+     work over the day-window rather than being purely instrument-count-driven, but NOT yet confirmed either way with a
+     genuine completed measurement. Tracked as a new Follow-up below.
+  4. **Status at session end**: instruments-store fix shipped + verified. Benchmark throughput measurement still NOT
+     complete — the 2-day-window nested VM `features-e2e-prediction-20260816-012950-eadb84` was still RUNNING (no
+     stall) as of this entry. A resuming session should check its LIVE state first —
+     `gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-prediction-20260816-012950-eadb84/{run.log,EXIT_STATUS}`
+     via `unified_trading_library`'s `gcs_describe_object`/`download_from_storage` (never `gsutil`/`gcloud` CLI directly
+     — QG-banned) — before relaunching anything; it may have completed or OOM'd by the time this is read.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Complete the full PREDICTION:delta_one benchmark throughput measurement on a longer-running VM or
-      dedicated benchmark leg (feature writes did not complete within the 40-min pipeline timeout).
+- [ ] [DATA] P3. Complete the full PREDICTION:delta_one benchmark throughput measurement — instruments-store bucket bug
+      now fixed (`features-service@09be801b`) and the 40-min-timeout root cause is understood (see Progress Log
+      2026-08-16); still blocked on getting one genuine `EXIT_STATUS=0` completion. Check
+      `features-e2e-prediction-20260816-012950-eadb84`'s live state first (see Progress Log) before relaunching — it may
+      already be terminal.
+- [ ] [SCRIPT] P3. Add a `("delta_one", "PREDICTION")` entry to `_FAMILY_TIMEOUT_OVERRIDES` in
+      `features-service/scripts/pipeline_e2e_check.py` once a genuine measured completion exists (per that file's own
+      "real measurements, not a blanket guess" discipline) — do not guess a number.
+- [ ] [DATA] P3. Investigate the OOM (`exit_code=137`) on PREDICTION:delta_one's 9-day benchmark window on
+      `e2-highmem-4` (32GB) — determine whether it's driven by the day-window size or the ~575-instrument universe size,
+      and whether it's a genuine memory leak in the delta_one batch-compute path (e.g. per-instrument feature-result
+      accumulation never released) vs. a machine-type sizing issue (`launch-features-vm.sh` hardcodes the machine type —
+      not env-overridable). See Progress Log 2026-08-16 for the two data points (9-day OOM'd at 28MB/~63min; 2-day
+      survived past that point).
 
 > **2026-08-06 archive-candidate audit**: Benchmark [DATA] P3 todo marked [x] but 'Full benchmark measurement
 > (throughput number) needs a longer-running VM or dedicated benchmark leg' — the measurement itself never completed.

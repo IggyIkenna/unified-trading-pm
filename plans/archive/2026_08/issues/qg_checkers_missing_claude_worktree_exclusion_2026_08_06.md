@@ -18,7 +18,7 @@ summary: >-
   to currently misfire (that requires a live locked worktree with divergent content to actually be present when the
   checker runs, which is intermittent/session-dependent) — this issue tracks the STRUCTURAL gap, not 28 confirmed false
   positives.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [infrastructure] # corrected 2026-08-07 (ag-closeout-audit infra-tranche run) -- was [cross-cutting]. Real content is
@@ -50,7 +50,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm@5955e07cdc
 depends_on: []
 context_scope:
   [
@@ -61,6 +61,9 @@ context_scope:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 ---
+
+> **ARCHIVED — resolved 2026-08-16.** All 30 checkers (list drifted 28→30 since 2026-08-06) fixed;
+> unified-trading-pm@5955e07cdc. See Fix + Progress Log below.
 
 # 28 shared QG checkers missing a `.claude` worktree exclusion
 
@@ -141,14 +144,17 @@ unrelated VM-launch-pattern deliverable) per the "every deferral is a tracked to
 
 ## Fix
 
-- [ ] [SCRIPT] P3. For each of the 28 files above: add `".claude"` to its dir-exclusion set/frozenset/tuple, following
+- [x] ✅ [SCRIPT] P3. For each of the 28 files above: add `".claude"` to its dir-exclusion set/frozenset/tuple, following
       the exact pattern already applied in `check_manifest_import_alignment.py` and
       `check_no_legacy_bucket_string_concat.py` (both in this same repo, `unified-trading-pm`) — a one-line addition + a
       short comment explaining why (nested per-agent worktree can carry a stale/divergent snapshot of the SAME repo's
       source). Batch by directory (`scripts/quality_gates/`, `scripts/validation/`, `scripts/qg/`, `scripts/checkers/`,
       `scripts/workspace/`) for reviewable commit sizes. Re-run the grep above FIRST to confirm the list hasn't drifted,
       then verify each touched file still imports/runs clean
-      (`python3 -c "import ast; ast.parse(open('<file>').read())"` at minimum; prefer actually invoking the checker).
+      (`python3 -c "import ast; ast.parse(open('<file>').read())"` at minimum; prefer actually invoking the checker). —
+      unified-trading-pm@5955e07cdc. Re-ran the regen grep first per instruction: list had drifted from 28 to **30**
+      (`check_pytest_unit_dir_coverage.py` and `check_xfail_skip_tracked.py` added since 2026-08-06) — fixed all 30, not
+      just the original 28. Each file `ast.parse()`-verified clean; re-ran the regen grep post-fix — 0 remaining hits.
 
 ## Progress Log
 
@@ -172,3 +178,7 @@ unrelated VM-launch-pattern deliverable) per the "every deferral is a tracked to
   to flip. No finalize-plan twin required — `doc_type: issue` docs live under `plans/active/issues/` and
   `check_finalize_plan_coverage.py` globs only `plans/active/*.md` (verified by reading the script), so this doc type is
   structurally exempt regardless of todo count.
+- **slot-13 2026-08-16**: fixed + shipped, unified-trading-pm@5955e07cdc (30 files — list had drifted from 28 to 30
+  since 2026-08-06). Same session also hit + resolved an unrelated pre-existing quickmerge Stage-5 re-gate blocker
+  (`plans/archive/2026_08/issues/doc_body_link_regression_placeholder_archetype_2026_08_16.md`) — landed in the same
+  commit range, unrelated to this doc's own fix.

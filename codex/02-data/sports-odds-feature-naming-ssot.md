@@ -18,8 +18,8 @@ tags: [sports, odds-features, schema-parity, naming-convention, uac-ssot]
 related:
   [
     /codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
-    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
-    /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_08/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
   ]
 created: "2026-08-10"
 authoritative_for: [sports odds-feature field naming scheme]
@@ -76,7 +76,7 @@ This is a **generative rule** — apply it to any new odds-feature field rather 
 ## Provenance
 
 Decided 2026-07-23 (operator ruling BLK-a1ce4719 on
-`/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`), migrated across all 4 repos by
-`sports_odds_feature_naming_canonicalization_2026_07_21.md` (archived — see that plan's Progress Log for the full
+`/plans/archive/2026_08/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`), migrated across all 4 repos
+by `sports_odds_feature_naming_canonicalization_2026_07_21.md` (archived — see that plan's Progress Log for the full
 per-commit migration trail: `unified-api-contracts@689efa54`, `features-service@0ded2449`+`@e240eca2`,
 `ml-service@91f031a`+`@07976ae`+`@10e219f`, `strategy-service@4c55438c`).

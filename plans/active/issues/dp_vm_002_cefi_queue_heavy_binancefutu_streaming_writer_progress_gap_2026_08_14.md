@@ -29,7 +29,7 @@ tags: [dp-vm-002, false-positive, mtds, cefi, streaming-parquet-writer, fixed, r
 related:
   [
     /plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md,
-    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+    /plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]

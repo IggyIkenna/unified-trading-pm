@@ -23,8 +23,8 @@ scope: [engineer, admin]
 tags: [sports, odds-features, naming-migration, checkbox-drift, uncommitted-wip, cross-repo, uac-ssot]
 related:
   [
-    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
-    /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_08/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
   ]
 created: 2026-07-25
 priority: P2

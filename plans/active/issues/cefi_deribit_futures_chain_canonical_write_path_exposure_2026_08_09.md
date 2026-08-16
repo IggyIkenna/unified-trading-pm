@@ -203,8 +203,9 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
   (2-4) **three `tradfi-bf-*-light-*` VMs caught ONLY by the name-pattern fallback, NOT stamped, and NOT Tardis
   consumers** — `tradfi-bf-es-opt-light-2026-…`, `tradfi-bf-vix-light-2020-…`, `tradfi-bf-vix-light-2022-…` (launched
   2026-08-10; Databento OHLCV backfills per `launch-tradfi-backfill-vm.sh`'s "serialize across the shared Databento
-  account" + the Databento es-opt watcher). That name-pattern over-count is a real guard finding, filed separately (see
-  `issues/tardis_guard_name_pattern_over_counts_tradfi_bf_databento_vms_2026_08_10.md`). **Important timing fact**:
+  account" + the Databento es-opt watcher). That name-pattern over-count is a real guard finding, filed separately — RESOLVED 2026-08-16 (see
+  `/plans/archive/issues/tardis_guard_name_pattern_over_counts_tradfi_bf_databento_vms_2026_08_10.md`). **Important
+  timing fact**:
   `market-tick-data-service@e24199df` (the fix) landed **2026-08-09T13:10Z**, ~4.5h AFTER the cefi-queue VM was created
   (08:37Z) — so the running slot holder executes PRE-fix code and cannot itself prove the fix. Fresh bounded manifest
   re-measurement (single column-pruned read via `measure_honest_coverage._read_manifest`;

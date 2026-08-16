@@ -717,7 +717,8 @@ same-session live read.
   missed-preemption-marker incident via a concurrent-agent republish race. Status: the shape is operator-ruled (migrate
   high-value raw-create launchers to `lc_gcloud_create`; a first batch of 3 shipped deployment-service@6998cc228) and a
   follow-up plan for the remaining ~136 launchers is tracked as an open P3 todo. See
-  `/plans/active/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md` for the full incident + resolution state.
+  `/plans/archive/2026_08/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md` for the full incident +
+  resolution state, or the live migration work at `/plans/active/infra_satellite_ao_dispatch_batch17_2026_08_16.md`.
 
 ## References
 

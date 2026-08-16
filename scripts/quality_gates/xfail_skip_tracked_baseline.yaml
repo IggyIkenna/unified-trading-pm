@@ -135,7 +135,7 @@ entries:
   - repo: instruments-service
     file: tests/unit/test_kalshi_perp_adapter.py
     kind: skip
-    line: 325
+    line: 410
     status: pending_removal
     successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
     snippet:
@@ -144,7 +144,7 @@ entries:
   - repo: instruments-service
     file: tests/unit/test_polymarket_perp_adapter.py
     kind: skip
-    line: 304
+    line: 383
     status: pending_removal
     successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
     snippet:

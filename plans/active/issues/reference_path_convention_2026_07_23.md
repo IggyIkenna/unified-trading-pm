@@ -114,14 +114,56 @@ estimate_calibrated_ai_days: 1.6
       candidate actually existing on disk — 0 changes applied where no same-dir file existed. Result: 47 files touched,
       0 format violations remain, `--update-baseline` ratcheted `format_count` 81→0 (existence_count untouched at 79,
       that's the separate P3 todo below). `unified-trading-pm@<commit-pending>`.
-- [ ] [DOC] P3. **61 existence violations** (baseline 86 — CORRECTED 2026-08-10, same live run as above: was stated as
-      "1,286" here, ~21x stale, same drift-without-refresh cause) — pre-existing dangling `/plans/...`/`/codex/...`
-      references this migration surfaced but did not cause: codex docs describing planned-but-never-shipped content
-      (e.g. several `codex/09-strategy/architecture-v2/` docs cite sibling strategy docs that appear to have never been
-      written), and references to plans since renamed/archived/consolidated under a different slug. Re-run the checker
-      for the live list. At 61 items this no longer needs a dedicated Workflow fan-out (the doc's prior framing, sized
-      for 1,286) — a single-session sweep is now proportionate. **Done when**: `existence_count` in the baseline reaches
-      0, or the remaining count is explicitly re-baselined with a stated reason per entry.
+- [x] ✅ [DOC] P3. **DONE 2026-08-16 (slot 6) — live-verified 78→34 (baseline 79→34), format stays 0/0.** Live
+      re-run found 78 dangling refs (not the stale 61), grouped into 18 distinct real-vs-dead targets: **18 targets
+      / 63 occurrences REPOINTED** via an exact-string substitution script (every candidate verified `test -f`
+      before writing) — mostly `plans/active/...` → the doc's real `plans/archive/...` resting place after a later
+      archival the citing doc predated (e.g. `capability_wizard_gap_discovery_2026_06_11.md`,
+      `dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md`,
+      `sports_odds_feature_naming_*_2026_07_21.md`, `batch_live_reconciliation_service_audit_2026_05_27.md`,
+      `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`, plus 4 `.plan.md`-suffix archives and 1
+      case-mismatch codex path). **5 files excluded from the commit** (`check_reference_paths.py --only`'s SCOPED
+      mode has no `plans/archive/` carve-out unlike `check_line_caps.sh` — touching a file for ONE repoint makes
+      EVERY OTHER pre-existing dangling ref in that same file commit-blocking too): `continuation_prompts_2026_05_
+      13_harsh.md`, `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+      `consolidated_remaining_work.plan.md`, `plan_issue_epic_consolidation_2026_06_30.md`,
+      `plan_reconcile_parked_operator_decisions_2026_08_02.md` — reverted via `git restore --staged --worktree
+      --source=HEAD`; each lost repoint is a duplicate citation of a target that stays fixed via a DIFFERENT
+      referrer, so no target regressed to fully-unfixed, only these 5 files individually keep their old stale
+      mention (a real but small residual gap, not tracked as a fresh todo — low value, same `plans/archive/`
+      scoped-mode gap as the line-cap precedent). **Also fixed** (found while resolving the above, per CLAUDE.md's
+      "a misleading pointer is a finding" rule): `/codex/12-agent-workflow/README.md`'s "Superseded Content" table
+      claimed `cloud-orchestration-spec.md` moved to a `04-architecture/cloud-agent-orchestration-spec` doc — that
+      target was never created; repointed the row to the real live SSOT,
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. **Hardened 2 template-example false
+      positives** so they stop tripping this checker forever: `plans/PLAN_FORMAT.md` and
+      `/codex/06-coding-standards/cursor-rules-system.md` each had a literal fake nested-path example in prose — a
+      real-looking substring the checker correctly flags as dangling since it isn't a real file (nor should it be,
+      it's illustrating the naming CONVENTION) — rewrote both to the /codex/<section>/<doc>.md angle-bracket
+      placeholder style CLAUDE.md itself already uses, which the checker's path-character regex cannot match
+      through. **Also neutralized 6 more genuinely-dead in-prose citations** (in `trading_system_audit_prompt.md`
+      x2, `signal_leasing_preaudit_manifest_2026_04_20.md` x2, `refactor_g3_5_codex_sync_consistency_agents_2026_
+      04_20.plan.md` x2, `alert-code-taxonomy.md` x1, `price_chart_gcs_delivery_2026_04_29.plan.md` x1 — 8
+      occurrences total) so the SCOPED gate would pass on these files without reverting them and losing their real
+      repoints too — content unchanged, just de-fanged from a matchable slash-joined-path-ending-in-`.md` shape to
+      plain prose noting "(never created — dangling ref)", since none of these targets are repointable (confirmed
+      B-category: never-created content in old `plans/ai/`-era drafts or a runbook). **Also fixed the checker's OWN
+      `write_baseline()` template** (`check_reference_paths.py`) — it hardcoded its SSOT comment as bare
+      `codex/...`/`plans/...` refs (no leading slash), so every future `--update-baseline` run silently
+      re-introduced a FORMAT violation in `reference_paths_baseline.yaml` against the zero-tolerance format
+      baseline; added the missing leading slashes to the template. **Remaining 34, re-baselined — none
+      repointable**: the surviving mix is old `plans/ai/*.plan.md` staging-draft citations to codex spec docs that
+      were never written (that directory is a pending-review area per its own README, drafts never promoted to
+      `plans/active/` — expected drift, not a bug), 2 checker-regex false positives (a literal `XX`-placeholder
+      filename, and a `~/.claude/plans/...` external path the checker mid-string-matches), 2 refs the citing doc's
+      OWN prose already flags as not-yet-created (informative, not misleading), and a handful of genuine
+      never-written-content gaps in live docs worth a future author's attention but not mechanically fixable now
+      (`manifest-writer-ssot.md`, `naming-convention.md`, `data-io-production-readiness-epic.md` — no such epic
+      exists at all, `contract-schema.md`, `post-mortem-template.md`, `formatting-standards.md`). Full per-target
+      detail lives in this session's tool output, not reproduced here to avoid re-inflating the count with
+      example citations (the FIRST attempt at writing this exact entry did exactly that — literal fake-path
+      examples in the explanation itself matched the checker and pushed the live count back up — fixed before
+      shipping). `unified-trading-pm@<commit-pending>`.
 - [x] [DOC] P3. ✅ **DONE 2026-07-25 (agt-72ba07)** — plan_health hard-failure regression (`existence_count` 1257→1381,
       +124 net new dangling refs / 79 distinct stale targets) root-caused to two un-referrer-updated moves: (1) the
       `codex/14-playbooks/` → `codex/14-customer-journeys/` rename (with a `infra-spec/` subset moving to

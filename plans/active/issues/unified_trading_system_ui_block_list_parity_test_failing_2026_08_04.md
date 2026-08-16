@@ -9,12 +9,16 @@ summary: >-
 status: open
 nature: issue
 archive_exempt: true
-asset_group: [cross-cutting]
+asset_group: [ui]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [test-failure, codex-drift, block-list]
-related: [/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md]
+related:
+  [
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+  ]
 created: 2026-08-04
 last_updated: "2026-08-09"
 author: unknown

@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [reconciliation, blrs, findings, rescope]
 related:
   [
-    /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    /plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
   ]
 created: 2026-07-28
@@ -43,7 +43,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    /plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     unified-trading-api/unified_trading_api/routes/reporting.py,
     unified-trading-api/unified_trading_api/routes/positions.py,

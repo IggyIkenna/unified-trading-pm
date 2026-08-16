@@ -241,11 +241,13 @@ already caught once.
       rows reindexed to `expected`'s final column set (post-union) before hashing, or switch the presence check to the
       same natural-key-subset method `verify_stale_raw_league_id_content_2026_08_14.py` already uses. Add a regression
       test with mismatched source/existing schemas (mirrors this session's real case).
-- [ ] [DATA] P3. BLOCKED on the two new P1 todos above (Parts 1/2/5 must show 0 FAIL fleet-wide, not just for
-      `day=2025-09-18`). ONLY after that: get explicit re-authorization (this is a NEW gate, not automatic) and launch
-      the SAME `sports-league-id-delete` category in `full` mode (`--apply-prod --confirm-prod-write`) to execute the
-      actual delete, per finding T's carve-out — re-query `gcs_bucket_soft_delete_retention_seconds()` fresh at
-      execution time, cite the value inline.
+- [ ] [DATA][OPERATOR] P3. **Gating condition MET 2026-08-16 (slot 30)**: fresh full-range
+      (`2020-06-06..2026-08-16`) `dry`-mode re-verify shows **144,276/144,276 PASS, 0 FAIL fleet-wide** — Parts
+      1/2/5 now cleanly pass with no known-outstanding gap (see Progress Log entry below for the run detail).
+      BLOCKED ONLY on explicit re-authorization now (this is a NEW gate per this doc's own text, not automatic) —
+      once granted, launch the SAME `sports-league-id-delete` category in `full` mode
+      (`--apply-prod --confirm-prod-write`) to execute the actual delete, per finding T's carve-out — re-query
+      `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value inline.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
       `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same
       commit) — see that plan's Progress Log / todo annotation.
@@ -448,6 +450,28 @@ already caught once.
   recommended fresh full-range re-verify + explicit re-authorization, per the doc's own standing gate. No repo code
   changes; ad-hoc analysis scripts stayed in the session scratchpad, never committed (the existing trio's tools were
   reused as-is, unmodified).
+
+- **2026-08-16 (slot 30, this session)**: Picked up the P3 todo. Checked for a live/concurrent VM in this category
+  first (`gcloud compute instances list --filter="name~'canonical-migration-sports-league-id-delete'"` — none
+  running), then launched a fresh full-range `dry`-mode re-verify:
+  `canonical-migration-sports-league-id-delete-20260816-020358` (asia-northeast1-c, e2-standard-8, SPOT,
+  `2020-06-06..2026-08-16`, launched 02:03:58Z). Confirmed genuine boot via the VM's heartbeat blob
+  (`vm-heartbeat/<vm>.txt` reading `running`, not just launcher exit code), then bounded-polled
+  (background, 180s interval, 55min cap) for the durable `verify_report.json` upload rather than busy-polling in
+  the foreground. Report landed at 02:48:27Z (~44min run, consistent with the 2026-08-15 precedent) —
+  `gs://deployment-scripts-central-element-323112/canonical-migration-sports-league-id-delete/20260816-020358/verify_report.json`
+  (73.4MB). Downloaded + tallied via a `run-bounded-analysis.sh`-wrapped ad-hoc script (4G RSS-poll cap; the
+  report's schema is `{"targets": [{"day","venue","raw","source","canon_targets","verify","reason"}, ...]}`, not
+  the `status`/`result` field names guessed on the first pass — corrected after inspecting one sample item).
+  **Result: 144,276/144,276 `verify=PASS`, 0 FAIL** — a clean sweep across the entire population, zero FAILs
+  found anywhere (not just the previously-known `day=2025-09-18` and `SUPER_LEAGUE`-split clusters, both already
+  fixed in earlier sessions). This is the definitive fleet-wide 0-FAIL confirmation the P3 todo's own text
+  required before authorizing the full-mode delete. **Did NOT launch the `full`-mode delete** — the todo's own
+  gate requires a SEPARATE, explicit re-authorization beyond the retention-safety carve-out (finding T /
+  the K1/K2 sibling near-miss precedent), which this session does not have; filing a `/blocked` question to the
+  operator for that explicit go-ahead rather than treating this 0-FAIL result as authorization by itself. No
+  repo code changes this session (read-only GCS + VM launch only); ad-hoc analysis script stayed in the session
+  scratchpad, never committed.
 
 ## Context scout
 

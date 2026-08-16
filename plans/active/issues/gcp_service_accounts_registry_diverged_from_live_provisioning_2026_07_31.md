@@ -13,12 +13,12 @@ summary:
   effectively no per-service least-privilege isolation in production today."
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [gcp, iam, service-account, least-privilege, security, registry-drift]
-related: []
+related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]
 created: 2026-07-31
 author: unknown
 last_updated: 2026-07-31

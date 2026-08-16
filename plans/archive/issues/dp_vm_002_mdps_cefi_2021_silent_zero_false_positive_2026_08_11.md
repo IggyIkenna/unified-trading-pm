@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [dp-vm-002, false-positive, mdps, cefi, polars-aggregated, already-fixed, relaunch-needed]
 related:
   [
-    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+    /plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
@@ -41,7 +41,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+    /plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
     deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
