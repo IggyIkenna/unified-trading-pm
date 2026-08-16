@@ -203,7 +203,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Deferred — orphaned but not AO-eligible (design/judgment fork or explicit operator ruling, no evidence-based tiebreaker)
 
-- `/plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md` — its sole open item
+- `/plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md` — its sole open item
   (`[REVIEW] P3`, should the host-resource dashboard surface `MemoryAvailable`/cgroup-vs-host RAM mismatch) was
   self-assessed in its own 2026-07-30 Progress Log as real feature-sized, cross-repo work (a new agent-orchestrator
   cgroup-stat reader AND a new deployment-ui dashboard tile needing its own `pw:L2` regression spec), not a bounded fix

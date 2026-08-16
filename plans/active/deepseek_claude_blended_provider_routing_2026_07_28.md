@@ -550,7 +550,7 @@ default from an external reference.
           > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
           > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
           > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-          > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+          > `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
           > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —

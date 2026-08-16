@@ -27,7 +27,8 @@ summary: >-
   to send. Every future one-shot/scheduled role spawn (not just `ag_closeout_auditor` — `na_eligibility_auditor`,
   `context_scout_auditor`, `docs_reconciler`, `plan_reconciler`, `plan_health` all share this same `_compose()` path) is
   one guessed field name away from reproducing this a 4th time.
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — all 3 todos verified live in code (server/prompts.py, server/models/worker_api.py:51)
 nature: issue
 asset_group: [ao]
 stage: [meta]

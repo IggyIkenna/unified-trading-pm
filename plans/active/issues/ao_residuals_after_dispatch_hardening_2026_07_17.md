@@ -23,7 +23,7 @@ related:
   [
     ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     ../../archive/issues/ao_backlog_prune_gcs_wrong_db_2026_07_17.md,
     ../../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
     ../../epics/escalation_and_disaster_recovery_master.md,
@@ -53,7 +53,7 @@ context_scope:
     /plans/epics/escalation_and_disaster_recovery_master.md,
     /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
     /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     agent-orchestrator/server/dispatch.py,
   ]
 source:

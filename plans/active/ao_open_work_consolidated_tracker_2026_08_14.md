@@ -122,7 +122,7 @@ context_scope:
       (`server/routes/slots_ops.py:763`) and `skip_current_task` (`:1060`) — the `auto_orphaned_slot_reassigned`
       disposition + `blocked_retired_auto_orphaned_slot_reassigned` log event this todo asked for, exactly. Verified
       2026-08-15 (`/ag-closeout-audit`-style reconciliation sweep, this session). Source:
-      `/plans/active/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md` — flip its own
+      `/plans/archive/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md` — flip its own
       checkbox too, same evidence.
 - [x] [REVIEW] P3. **DONE.** Both `_migrate_parking_state` failure paths now `logger.warning(...)` on drop
       (`server/regen_backlog_from_plan.py` — no-candidate branch ~2876-2895, below-threshold branch ~2899-2919), each
@@ -132,7 +132,7 @@ context_scope:
 - [x] [REVIEW] P2. **DONE.** `_sweep_unpushed_slots` now calls `heal_dead_slot_branch_quarantine` directly
       (`server/worker_liveness_watchdog.py:1953`) inside its own unconditional per-tick sweep — fires every tick
       regardless of backlog state, no `_do_spawn` gate. Verified 2026-08-15 (reconciliation sweep, this session).
-      Source: `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` — its own
+      Source: `/plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` — its own
       checkbox + Progress Log are stale (still describe the gap as open as of 2026-08-03), flip + close.
 - [x] [INFRA] P3. **DONE — CORRECTED 2026-08-15: was briefly marked won't-build by a concurrent session's
       investigation-only pass; a separate concurrent session actually built and shipped it,
@@ -145,7 +145,7 @@ context_scope:
       primary-fix efficacy — it just concluded before checking whether the structural exemption was ALSO buildable
       safely, and it was: this is exemption BY the process's own kernel session id, not a blanket allowlist, so it can't
       reintroduce the "genuinely leaked process never reaped" hazard either. Source:
-      `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — flip its checkbox
+      `/plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — flip its checkbox
       too.
 - [x] [BACKEND] P1. **DONE — full 10-component sweep closed 2026-08-15 (this session).** Final per-component verdict:
       `HealthMonitor` FIXED (`agent-orchestrator@349dbc0`), `AgentKeeper` FIXED (`@eb4265c`), `BlockedQueueReconciler`
@@ -157,7 +157,7 @@ context_scope:
       same read-DB / act-with-no-session-open / write-DB split already proven by `tmux_pruner`/`ensure_review_agents`,
       each with a regression test asserting zero open `session_scope()` depth during the slow call. **This closes the P1
       live incident** — flip the source doc's DO-NOT-ARCHIVE guard note to reflect closure (not done in this pass,
-      tracker-level only). Source: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
+      tracker-level only). Source: `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
 - [x] [REVIEW] P2. **DONE.** `WorkerLivenessKicker` now auto-submits a frozen `/compact`/`/pre-compact` at/above
       `context_worker_compact_gate_pct` (`server/worker_liveness/__init__.py:988-1027`, logs
       `frozen_guided_compact_auto_submitted`), citing this exact todo. Verified 2026-08-15 (reconciliation sweep, this
@@ -206,7 +206,7 @@ context_scope:
       `_done_one_off` (`server/routes/slots_worker.py:1912-1924`) matches it against the archived row's own
       `claude_session_id` and returns idempotent 200 instead of 409. Tracker's premise ("still has no field") is stale.
       Verified 2026-08-15 (reconciliation sweep, this session). Source:
-      `/plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` (its own
+      `/plans/archive/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` (its own
       "declined-P3, revisited" section already narrates this as shipped — flip the checkbox to match).
 - [ ] [DIAG] P0. **ACTIVE INCIDENT, fleet paused pending fix.** Agents dying mid-task, last ~4h as of 2026-08-16
       evening, after ~2 days of clean operation — a real regression, not yet root-caused. Live lead:
@@ -317,7 +317,7 @@ context_scope:
       `/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`).
 - [x] [REVIEW] P1. **DONE.** `server/prompts.py:296` now has a literal curl body for the `/boot` STEP 2 call. Verified
       2026-08-15 (manual grep, this session). Source:
-      `/plans/active/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`.
+      `/plans/archive/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`.
 - [x] [REVIEW] P2. **DONE.** Zero `worktree_path` hits left in `server.py`/`routes/agents.py`/`autospawn.py` — the
       rename is complete. Verified 2026-08-15 (manual grep, this session). Source: same doc.
 - [x] [REVIEW] P3. **DONE.** `BootRequest` carries `model_config = ConfigDict(extra="forbid")`
@@ -400,7 +400,7 @@ context_scope:
       `resource_history.py`'s sampler already serializes wholesale, so `/ws/vm-resources` picks it up with no further
       wiring. **A dashboard UI tile is explicitly NOT built** (out of scope for this pass, backend-only) — remains a
       genuine follow-up if the operator wants the data surfaced visually, not just available over the WS feed. Source:
-      `/plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`.
+      `/plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`.
 - [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, dominant disk consumer) for real cleanup headroom. Source:
       `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`.
 - [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G). Source: same doc.
@@ -416,13 +416,13 @@ context_scope:
       existence check for future ghost hosts. Resolved the design fork as tombstone-never-prune (row stays for audit
       trail); wired into `models/git_health.py` + `routes/git_health.py:361,428` to exclude tombstoned hosts from
       fleet-wide stale/drift totals. Verified 2026-08-15 (reconciliation sweep, this session, same day as the shipping
-      commit). Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` — flip its
+      commit). Source: `/plans/archive/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` — flip its
       checkbox too.
 - [x] ✅ [OPERATOR] P2. **DONE 2026-08-16 (interactive session, operator-approved quiet moment — only 1 task actively
       dispatched fleet-wide).** Dry-run + live-apply both completed cleanly against the content-derived-task-id
       migration: 2037 rows renamed, hazard-2 gate 0 unexplained across 673 references, 0 dispatched rows touched,
       `REFUSING to reset` count 0 immediately post-apply. Full evidence in the source doc's own flipped checkboxes.
-      Source: `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (tracked live in
+      Source: `/plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (tracked live in
       `/plans/active/content_derived_backlog_task_ids_2026_08_08.md`, do not duplicate there).
 - [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@c6d43ac`** (2026-08-14).
       `worktree_clean_check/_ahead_push.py::push_or_preserve_ahead_commits` (lines 262-283): on a rejected push,
@@ -430,7 +430,7 @@ context_scope:
       `ahead_push_rejected_and_stale` event. Regression:
       `test_sweep_rejected_push_restamps_sentinel_and_flags_rejected`. Verified 2026-08-15 (reconciliation sweep, this
       session). Source:
-      `/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` — flip + archive
+      `/plans/archive/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` — flip + archive
       if now 0 open todos.
 - [x] [REVIEW] P2. Per-occurrence audit of the ~14 `BLOCKED-PREREQ` files in the active corpus (external-gate-mislabel
       vs. same-corpus-dependency), then re-grep-and-confirm as a follow-up. Source:

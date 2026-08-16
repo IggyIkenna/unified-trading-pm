@@ -16,7 +16,8 @@ summary:
   re-verify on a later tick, and (since origin has since diverged) the repo also now reads behind > 0, permanently
   excluding it from this sweep. A genuinely QG-verified commit silently degrades from auto-landing eventually to needing
   a human, with zero retry logic and no test coverage for this branch."
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — sole todo shipped agent-orchestrator@c6d43ac4, verified live
 nature: issue
 asset_group: [ao]
 stage: [meta]

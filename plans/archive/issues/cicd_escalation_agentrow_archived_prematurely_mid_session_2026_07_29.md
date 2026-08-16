@@ -34,7 +34,7 @@ summary: >-
   this exact `claude_session_id` at 20:29:16Z (`resume_n: 1`) — 16 minutes AFTER the row's `finished_at` — so the
   liveness watchdog's resume/re-nudge mechanism fired on a session whose AgentRow the system already believed was
   lifecycle-complete, which is itself an inconsistent state regardless of what caused the original archival.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -66,7 +66,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: /ag-closeout-audit ao (2026-08-16) — sole open todo verified live in code (server/models/worker_api.py:275-276, server/routes/slots_worker.py:1950-1952)
 drift_direction: advance-code
 source: "slot 3, cicd escalation agt-a14109 (wall_type=plan_health, repo=unified-trading-pm#1780), 2026-07-29"
 context_scope:

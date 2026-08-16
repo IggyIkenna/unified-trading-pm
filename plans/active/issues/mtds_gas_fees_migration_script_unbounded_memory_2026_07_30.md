@@ -31,7 +31,7 @@ tags: [defi, gas-fees, memory-leak, manifest-writer, incident, fleet-wide-outage
 related:
   [
     /plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
-    /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
+    /plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
     /plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -57,7 +57,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
+    /plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     unified-trading-library/unified_trading_library/manifest_writer/_state.py,
     unified-trading-library/unified_trading_library/manifest_writer/_writer.py,
@@ -176,7 +176,7 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
       2026-08-02 (slot-14)**: see `plans/archive/2026_08/defi_satellite_ao_dispatch_batch7_2026_08_01.md`'s todo 4 for
       the full inventory (48 sites audited, 24 fixed, 20 already-safe, 3 deliberately safe-by-design, 1 false-positive
       docstring mention). Shipped `market-tick-data-service@e4cc07b7`, `instruments-service@d0e4e5a3`,
-      `market-data-processing-service@6593011`.
+      `market-data-processing-service@5bc11b8`.
 - [ ] [REVIEW] P2. This is the SECOND fleet-wide memory incident within the same session (the first, a stale cgroup cap,
       is fixed + self-healing per `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`) — consider
       whether a per-slot subprocess RSS ceiling (e.g. a `cgroup`/`ulimit` scoped to each slot's OWN spawned children,

@@ -10,7 +10,8 @@ summary:
   watcher triggered a restart whose graceful shutdown hung for ~20s before systemd SIGKILLed it. The service recovered
   on its own once restarted; this doc tracks the two real open questions the incident raises rather than letting the
   diagnosis live only in chat.
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — DO-NOT-ARCHIVE guard (Problem 1, DB-lock storm) closed by a verified 5-commit 10-component sweep
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]

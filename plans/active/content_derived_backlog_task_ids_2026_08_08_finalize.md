@@ -19,7 +19,7 @@ tags: [agent-orchestrator, backlog, task-id, migration, finalize, verification]
 related:
   [
     /plans/active/content_derived_backlog_task_ids_2026_08_08.md,
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     ao_consolidated_closeout_2026_07_25,
   ]
@@ -51,7 +51,7 @@ context_scope:
     /plans/active/content_derived_backlog_task_ids_2026_08_08.md,
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/routes/slots_worker.py,
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
@@ -91,7 +91,7 @@ So the questions below are asked against **live state after the fact**, not agai
       at the new collision check rather than silently succeed. Quiet logs alone are consistent with "regen stopped
       running", so assert the positive too. (repo: agent-orchestrator)
 - [ ] [BACKEND] P2. **Reconcile the source doc.** Update
-      `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`: flip its content-hash-rewrite
+      `/plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`: flip its content-hash-rewrite
       todo and its 2026-07-27 `dispatched`-row-gap todo with evidence, and record in its Progress Log that BLK-29884333
       was satisfied (properly-phased execution plan) rather than overridden. **Leave its `assigned_vm: NA` untouched** —
       it stays the analysis SSOT. (repo: unified-trading-pm)

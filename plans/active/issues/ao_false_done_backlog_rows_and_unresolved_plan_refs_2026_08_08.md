@@ -30,7 +30,7 @@ related:
   [
     /codex/12-agent-workflow/commit-push-flip-rule.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /codex/15-runbooks/safe-service-restart-procedures.md,
   ]

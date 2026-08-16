@@ -12,7 +12,8 @@ summary: >-
   mistake. The correct pattern is to pass the actual long-running command directly to the Bash tool with
   `run_in_background: true` (no `nohup`/`&` wrapper) — the harness's own backgrounding keeps the process properly
   parented and tracked, and the harness notifies on real completion.
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — last open item shipped agent-orchestrator@6ea54d88, verified live
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]

@@ -14,7 +14,8 @@ summary:
   has no task to re-occupy slot16 with, so no live worker ever lands on the clone to push. The work is durable
   (committed in the slot's local .git, not lost unless the clone dir is wiped) but stranded off-origin at a standing
   drift_violation. Operator was already notified via the server's own unpushed_plans_alert_sent (06:02Z).
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — reclaim-and-push todo verified live in worker_liveness_watchdog.py's unconditional sweep
 nature: issue
 asset_group: [ao]
 stage: [meta]

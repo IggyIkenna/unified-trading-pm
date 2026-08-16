@@ -18,7 +18,7 @@ summary: |
   count that MOVES (56 of 66 at 2026-07-17T13:19Z, vs 58 of 64 a day earlier), so re-run the query rather than cite a
   figure. Every unhashed row is a `done` row, which bounds the exposure and retires half the original reasoning for the
   exemption.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -57,7 +57,10 @@ context_scope:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  /ag-closeout-audit ao (2026-08-16) — the ruled content-hash rewrite shipped in full via
+  content_derived_backlog_task_ids_2026_08_08.md (live-applied 2026-08-16, 2037/3782 rows migrated, 0 unexplained,
+  0 dispatched rows touched). This checkbox flip does not re-litigate this doc's own assigned_vm:NA/banner-guard.
 depends_on:
 source:
   - "ao_dispatch_residuals_2026_07_15 R7 (`Task-ID instability across regen`) — that index is the ONLY doc that carried

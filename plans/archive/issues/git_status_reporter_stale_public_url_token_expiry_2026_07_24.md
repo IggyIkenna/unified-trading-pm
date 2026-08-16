@@ -17,7 +17,8 @@ summary:
   2026-07-24T15:47:03Z, and `git_staleness_alert_sent` was still firing for slots 0-16 at 20:02Z (~255m silent);
   ~/.orch_token mtime was 2026-06-24, consistent with an expired/stale bearer token. Non-blocking, no-page
   (observability-integrity, not operational) — but it recurs on every token rotation and spams the activity feed.
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — last open item shipped agent-orchestrator@426e8cf5, verified live
 nature: issue
 asset_group: [ao]
 stage: [meta]

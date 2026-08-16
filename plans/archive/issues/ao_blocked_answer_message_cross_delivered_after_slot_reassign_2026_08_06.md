@@ -20,7 +20,8 @@ summary: >-
   per-slot state bleeds into the new occupant" bug once before for a different mechanism (`_prereq_blocked_since`, see
   `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md:626-641` and its fix
   `ao_dispatch_liveness_p0_2026_07_20.md`) — this is the same shape, unfixed, for blocked-question message delivery.
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — both todos shipped (agent-orchestrator@365e18e, @3d2e3681), verified live
 nature: issue
 asset_group: [ao]
 scope: [engineer]

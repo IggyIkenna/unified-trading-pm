@@ -21,7 +21,8 @@ summary: >-
   (64GB→ MemoryHigh=46G/MemoryMax=54G/MemorySwapMax=16G), applied instantly via `systemctl set-property ... --runtime`
   (no restart, no worker disruption), then wrote the matching persistent drop-in + `daemon-reload` so it survives
   reboot. All 3 endpoints returned to HTTP:200 (0.04s-3.6s) within the same command sequence, no restart needed.
-status: open
+status: resolved
+resolved_by: /ag-closeout-audit ao (2026-08-16) — last open item shipped agent-orchestrator@ca6603af (backend half; UI tile explicitly out of scope)
 nature: issue
 asset_group: [ao]
 stage: [meta]

@@ -30,7 +30,7 @@ tags:
   [agent-orchestrator, backlog, regen, task-id, id-collision, brief-hash, audit-history, migration, dispatch, state-db]
 related:
   [
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -62,7 +62,7 @@ source: >-
   any dispatch ("re-homed ... as properly-phased todos before any dispatch").
 context_scope:
   [
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
     agent-orchestrator/scripts/orchestrator/apply_content_id_migration.py,
     agent-orchestrator/server/routes/backlog.py,
@@ -79,7 +79,7 @@ context_scope:
 
 ## Why this supersedes the "not AO-dispatchable" classification
 
-`/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` carries `assigned_vm: NA` and a record
+`/plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` carries `assigned_vm: NA` and a record
 of THREE reverted dispatch attempts (BLK-29884333, 2026-07-31). That classification was correct at the time and is **not
 being re-litigated**: the reverts were because the raw operator ruling was being dispatched with no surface map and no
 phasing. Its own 2026-07-31 entry states the requirement — re-home "as properly-phased todos **before any dispatch**".

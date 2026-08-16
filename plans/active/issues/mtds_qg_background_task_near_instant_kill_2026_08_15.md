@@ -25,7 +25,7 @@ tags: [infra, quality-gates, qg-governor, shared-host, background-task, kill, de
 related:
   [
     /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
-    /plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
+    /plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
     /plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md,
   ]
 created: 2026-08-15
