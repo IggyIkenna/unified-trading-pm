@@ -73,12 +73,32 @@ resolved_by:
       fine on its existing in-memory credential state (no restart = no disruption). Two follow-up todos filed below
       to close this out safely. Repo: agent-orchestrator (no code diff — pure GCP/host infra standup; evidence here
       + the live GCP IAM state is the artifact).
-- [ ] [INFRA] P1. **New follow-up from the WIF standup above**: verify the live `orchestrator.service` process has
-      actually picked up the new WIF credential (needs operator/root — this worker session had no sudo), either after
-      its next natural restart (`ao-self-pull.sh`'s restart-on-HEAD-move) or a manual `systemctl restart orchestrator`
-      — check `/proc/<MainPID>/environ` for no stale state and confirm a live GCP-dependent call (e.g. a Secret
-      Manager read) succeeds post-restart. **Done when**: confirmed live, cited here. Repo: agent-orchestrator
-      (host-level, `planning` VM).
+- [x] ✅ [INFRA] P1. **New follow-up from the WIF standup above**: verify the live `orchestrator.service` process has
+      actually picked up the new WIF credential — **CONFIRMED LIVE 2026-08-16 (slot 22, infra)**, no operator/sudo
+      needed after all: `orchestrator.service` had ALREADY naturally restarted (Main PID 2575365, `Active: active
+      (running) since 2026-08-16T18:46:18Z`) — after the ADC cutover at `18:44:38Z` (matches the backup file's own
+      timestamp `application_default_credentials.json.static-key-backup.20260816T184438Z`), so this restart already
+      picked up the swap; no manual `systemctl restart` was required.
+      - `/proc/2575365/environ`: no `GOOGLE_APPLICATION_CREDENTIALS` override present — the process can ONLY resolve
+        via the well-known default ADC path, which is confirmed to be the WIF `external_account` config (not the old
+        static-key JSON): `~/.config/gcloud/application_default_credentials.json`, `type: external_account`,
+        `audience: .../workloadIdentityPools/aws-orchestrator-pool/...`.
+      - **Direct GCP-dependent call, reproducing `agent-orchestrator/server/auth.py::_load_gcs_secret`'s EXACT code
+        path** (`get_storage_client(provider="gcp", project_id=...).download_bytes(...)` against
+        `gs://central-element-323112-orchestrator-creds/orchestrator/jwt-secret` — the same bucket/blob
+        `ORCHESTRATOR_JWT_SECRET_GCS` points at) under the orchestrator's own venv: **succeeded, read 63 bytes.** (Note:
+        this specific code path is currently short-circuited in the live deployment by the raw `ORCHESTRATOR_JWT_SECRET`
+        env var also being set — `_load_secret()` returns early on `if raw: return raw` before ever calling
+        `_load_gcs_secret` — so the orchestrator process itself hasn't actually exercised this GCP call since the
+        restart; reproducing the identical call outside the process is the closest available direct proof.)
+      - `gcloud secrets list --project=central-element-323112` (same ambient credential resolution, same host) also
+        succeeded, returning real live secret names — re-confirms slot-6's original verification still holds post-cutover.
+      - `journalctl -u orchestrator` since the restart: zero credential/GCP/exception errors in 9+ minutes of live
+        runtime (33 tracked slots, successful dispatches including this task's own `/boot`) — if the ambient
+        credential were broken, any GCS/Secret-Manager-touching code path (`gcs_sync.py`, `snapshot_recency.py`,
+        `auth.py`) would have logged an exception; none did.
+      **Done when met**: confirmed live, cited here. Repo: agent-orchestrator (host-level, `planning` VM) — no code
+      diff, host/infra verification only.
 - [ ] [INFRA] P2. **Gated on the todo above landing**: once the live cutover to WIF is confirmed, formally revoke the
       old static SA key (`gcloud iam service-accounts keys delete 4af7b762c69e34eda225428a0979c039db4ad18a
       --iam-account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`) — deliberately NOT done in
@@ -116,3 +136,13 @@ resolved_by:
   gated follow-ups (verify live cutover post-restart; then formally revoke the old key) + 1 new lower-priority
   finding (a separate static AWS user credential also present on the host). Full evidence in the flipped checkbox
   above.
+- **2026-08-16 (slot 22, infra worker, AO-dispatched, this session runs ON the `planning` VM)**: Verified the live
+  cutover todo. `orchestrator.service` had already naturally restarted since slot-6's cutover (Main PID 2575365,
+  up since 18:46:18Z, ~1.5 min after the 18:44:38Z credential swap) — no manual restart or operator/sudo needed.
+  Confirmed no stale `GOOGLE_APPLICATION_CREDENTIALS` override in the live process env, and reproduced
+  `auth.py::_load_gcs_secret`'s exact GCS-read call under the orchestrator's own venv (succeeded, 63 bytes) — the
+  strongest available direct proof, since that specific call is currently short-circuited in this deployment by the
+  raw `ORCHESTRATOR_JWT_SECRET` env var also being set, so the live process hasn't itself exercised the GCS path
+  since restarting. Cross-checked with a fresh `gcloud secrets list` (same ambient credential) and 9+ minutes of
+  clean (0-exception) orchestrator logs. Next todo (revoke the old static SA key) is now unblocked for the
+  dispatcher to pick up as its own separate task.
