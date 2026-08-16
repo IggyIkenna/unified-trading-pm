@@ -278,12 +278,28 @@ input gap didn't change.
       900-line file cap); non-chain per-symbol shards are unaffected (filename stem still used directly). 3 new
       regression tests in `tests/delta_one/unit/test_lookback_validation.py`
       (`TestDiscoverInstrumentsChainBundleTicksLeaf`). Full `quality-gates.sh` green (18418 passed).
-- [ ] [DATA] P3. Re-run `/data-pipeline-check-features --family delta_one --asset-group TRADFI` (features-service) once
-      TRADFI MDPS candles exist for at least one real trading day, to get the genuine force+skip proof this doc's
-      original todos were gated on. Not actionable today — every TRADFI MDPS candle manifest row checked 2026-06-01 to
-      2026-08-05 was `empty_confirmed`, never `captured` (see the 2026-08-05 Progress Log entry); this todo is blocked
-      on the upstream TRADFI candle backfill actually landing real captured rows, not on any features-service code
-      change. Converted from the 2026-08-06 archive-candidate audit's prose note (never previously a tracked todo).
+- [x] ✅ [DATA] P3. **RE-RUN DONE 2026-08-16 — dependency-checker layer now unblocked; force+skip proof still gated,
+      root cause is now DIFFERENT and narrower.** Re-ran
+      `python3 scripts/pipeline_e2e_check.py --day 2026-08-16 --family delta_one --asset-group TRADFI --legs force,skip --require-captured --auto-day`.
+      `--auto-day` slid the window to 2026-08-06..2026-08-07 and the runtime dependency checker passed
+      (`✅ Dependencies verified for 2026-08-06/TRADFI`) — confirming at least one real `capture_status=captured`
+      TRADFI MDPS candle row now exists (a change from every row 2026-06-01..2026-08-05 being `empty_confirmed`, see
+      2026-08-05 entry below). Both VM legs then failed at a DIFFERENT, later gate: features-service's own pre-flight
+      `LookbackValidator` requires `max_lookback=200` (`expected=780, required=741` candles per instrument) and found
+      **25/25 TRADFI delta_one instruments at 0/741** — `CME:COMBO:GC`, `CME:COMBO:SI`, `CME:COMBO:ZC`, `CME:COMBO:ZL`,
+      `CME:COMBO:ZM` (full list in run.log) all show zero `processed_candles` at `timeframe=1m` across the entire
+      200-day lookback, not just the empty-confirmed weekends. Report:
+      `unified-trading-pm/plans/audit/results/data_pipeline_e2e_check_features_2026_08_16.md`. VM evidence:
+      `features-e2e-tradfi-20260816-004617-1efb38` run.log (`vm-logs/…/run.log` in
+      `deployment-scripts-central-element-323112`), `EXIT_STATUS=1` both legs. **Likely root cause, already tracked
+      elsewhere — not re-investigated here (craft-scope: this task is a re-run/report, not an MDPS deep-dive)**: this
+      matches the CME combo/chain-bundle candle silent-zero-output gap already under active investigation in
+      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (`status: open`, `assigned_vm: planning`) —
+      that doc's own findings describe COMBO chain-bundle candles silently producing zero output despite confirmed real
+      raw-tick input; the 200-day lookback zero-count found here for the same COMBO underlyings (GC/SI/ZC/ZL/ZM) is
+      consistent with, and may be the same defect surfacing through, a different validator. No features-service code
+      change needed for THIS finding — features-service@(no new code — re-run only). No new issue doc filed (would
+      duplicate the existing open tracker); see the new follow-up todo below instead.
 
 > **2026-08-06 archive-candidate audit**: Both original todos are [x] and the two-layer fix is confirmed working
 > (features-service@1b272676 + @ecd548b8, re-run CONFIRMED 2026-08-05; the honest-empty TRADFI path is now correctly
@@ -291,3 +307,11 @@ input gap didn't change.
 > todo above (was prose-only here before 2026-08-16). The 'ticks' malformed instrument_id follow-up is DONE (2026-08-16,
 > see above) — root cause was a chain-bundle candle-path parsing bug, not a data_type-name mislabel as the 2026-08-05
 > Progress Log guessed.
+
+## Follow-ups (new, 2026-08-16)
+
+- [ ] [DATA] P3. Once `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`'s COMBO
+      chain-bundle-candle silent-zero-output gap is fixed (repo: market-data-processing-service), re-run
+      `/data-pipeline-check-features --family delta_one --asset-group TRADFI` once more to check whether the
+      `LookbackValidator` 0/741-candle failure for `CME:COMBO:{GC,SI,ZC,ZL,ZM}` clears — this is the genuine
+      force+skip proof this doc's original todos were gated on. Not actionable until that sibling doc's fix lands.
