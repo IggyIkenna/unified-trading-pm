@@ -112,10 +112,10 @@ response), followed `worker.md`'s documented handling for a cancelled-mid-sessio
       `_maybe_close_orphaned_done_task`'s release-slot + log-and-return pattern) or return a distinct, actionable
       reason (e.g. `task_cancelled_mid_session`) instead of repeating `cross_repo_pm_file_touched_no_checkbox_flip`
       on every retry. Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. Extend `reconcile_done_gate_rejections.py`'s candidate scan to also cover `status="cancelled"`
+- [x] [BACKEND] P2. Extend `reconcile_done_gate_rejections.py`'s candidate scan to also cover `status="cancelled"`
       rows with an unresolved `slot_done_rejected_no_plan_flip` event and a verifiably-on-origin cited sha — same
       verification/flip logic, just widen the `WHERE status = ...` scope past the current `"dispatched"`-only filter.
-      Repo: agent-orchestrator.
+      Repo: agent-orchestrator. — ✅ agent-orchestrator@d75732a1f9
 - [ ] [BACKEND] P3. Live-repro `verify._archival_rename_disposition` against this exact commit shape (same-commit
       checkbox flip + `git mv`, single-repo mode-1) in an isolated scratch repo to confirm whether it resolves
       correctly on its own once the `status=cancelled` short-circuit gap above is fixed, or whether it has a
@@ -126,3 +126,14 @@ response), followed `worker.md`'s documented handling for a cancelled-mid-sessio
 
 - 2026-08-16 (slot-30, data_engineering) — filed from a live `/done` rejection loop hit while completing
   `utl_shared_clone_commits_repeatedly_reset-2a5bc33031bd`. See "What I found" above for the full evidence chain.
+- 2026-08-16 (slot-3, backend_engineer) — todo 2 shipped (`agent-orchestrator@d75732a1f9`): widened
+  `find_candidates()`'s `WHERE status = ...` to `("dispatched", "cancelled")`, added a `task_status` field on
+  `Candidate` for report visibility, and updated the module/function docstrings to match. Also fixed a real
+  correctness gap this widening would otherwise have introduced: `_mark_done()`'s unconditional
+  `clear_slot_assignment(candidate.slot_id)` call is safe for the existing `dispatched` population (the slot is
+  presumably still stuck retrying the same task) but NOT for `cancelled` rows — a cancelled task's `dispatched_to`
+  slot has very likely already moved to different live work by the time this script runs (the ORM's own
+  `SlotRow.current_task` comment says it's "cleared on done/cancel"), so blindly clearing it could rip a live,
+  unrelated task assignment out from under the slot. Guarded it to only clear when `slot.current_task ==
+  candidate.task_id` still holds. Added 3 new tests (cancelled candidate discovery + the two clear/no-clear slot
+  guard cases) plus the pre-existing suite; full `quality-gates.sh --no-fix` green (3981 passed, 2 skipped).
