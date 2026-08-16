@@ -108,14 +108,28 @@ concept). A better-fitted precedent already exists and is unused by any of these
 org, tier-limited — that deployment-api's simpler internal pattern doesn't have. Each todo below builds on this UTL
 helper, not a hand-rolled copy.
 
-- [ ] [BACKEND] P0. **instruments-service: build the external instruments surface.** New router (e.g.
-      `instruments_service/api/routers/external.py`) wired into `api/main.py`, protected by
-      `unified_trading_library.cloud_interface.api_auth.create_api_auth("instruments-service")`. Two endpoints
-      mirroring deployment-api's "check, then download" shape: an instruments query (by asset_group/venue/
-      instrument_type, reading the real `InstrumentRecord` catalogue already used internally — do not duplicate the
-      read path) and a bulk parquet dump (streamed, not loaded fully into memory). Done-when: both endpoints return
-      real data behind a valid `Authorization: Bearer` JWT with `org_id` set, and a `quality-gates.sh --no-fix` green
-      run + a live curl against the running service, both cited.
+- [x] [BACKEND] P0. **instruments-service: build the external instruments surface.** — `instruments-service@2fcf7a19`.
+      New router `instruments_service/api/routers/external.py` wired into `api/main.py`, protected by
+      `unified_trading_library.cloud_interface.api_auth.create_api_auth("instruments-service")` (top-level
+      `create_api_auth`/`AuthContext` re-export, same pattern already live in
+      `client-reporting-api/client_reporting_api/api/routes/exports.py`). Read logic lives in new
+      `instruments_service/engine/orchestrator/catalogue_query.py`, reusing the existing
+      `resolve_instruments_store_kind`/`resolve_bucket_name`/`get_storage_client` bucket-resolution path (the SAME one
+      `writers.py`/`instruments_handler.py` use) rather than duplicating it — reads back the already-written
+      `instrument_availability/by_date/.../instruments.parquet` catalogue, never re-fetches via URDI. Two endpoints:
+      `GET /v1/instruments` (query by asset_group/venue/instrument_type, JSON, row-capped) and
+      `GET /v1/instruments/bulk` (streamed combined-parquet dump via chunked `StreamingResponse`; a two-pass
+      schema-unify — `pa.unify_schemas(..., promote_options="permissive")` — was required after a live multi-venue
+      test crashed on real per-venue schema drift, e.g. `tick_size` decimal128(2,2) vs decimal128(9,8); confirmed
+      value-preserving on real data before landing).
+      **Done-when evidence**: `quality-gates.sh --no-fix` → `✅ ALL QUALITY GATES PASSED` (exit 0). Live local run
+      (uvicorn, real ADC creds against prod GCS, read-only) with a minted `create_token()` JWT (`org_id=org-nick-ai-test`,
+      `subscription_tier=data-pro`): no-token → 401; bad `asset_group` → 400;
+      `GET /v1/instruments?asset_group=cefi&venue=DERIBIT&instrument_type=PERPETUAL&limit=2` → 200, 2 real rows
+      (`DERIBIT:PERPETUAL:ADA-USDC@LIN`, ...); `GET /v1/instruments/bulk?asset_group=cefi` (all 23 cefi venues, no
+      venue filter) → 200, `transfer-encoding: chunked`, 670,695-byte parquet, read back via `pd.read_parquet` as
+      13,141 real rows across all 23 venues; unmatched venue → 404. All against live prod data (cefi, day=2026-08-16),
+      not a unit-test mock.
 - [ ] [BACKEND] P0. **market-tick-data-service: build the external market-data surface.** Same auth pattern. Two
       endpoints: an availability query (what's captured for a given asset_group/venue/data_type — reuse the real
       `coverage.json`/manifest read path the honest-coverage machinery already uses, never re-implement it) and a
@@ -236,6 +250,41 @@ before they reach a client document.
 
 ## Progress Log
 
+**2026-08-16 — W4 Sports mock-config half done (step-8 registry-contradiction half still open — see checkbox).**
+`deployment-api@8239f10a77`. Wired `deployment-api/deployment_api/routes/sports_venues.py`'s `GET /sports/venues`
+off the hardcoded `{"venues": [], "status": "live_not_configured"}` stub. Read the sibling pattern
+(`routes/venue_credentials.py`) and the real credential source (`execution-service/execution_service/
+adapters/sports_factory.py::_LIVE_VENUE_CONFIGS`, consumed by `sports_execution/routing.py::SportsExecutionRouter`)
+before writing anything — deployment-api has no Python dependency on execution-service (no service↔service deps),
+so live mode probes Secret Manager directly for the SAME secret names `SportsExecutionRouter` loads
+(`betfair-app-key`, `matchbook-username`, `kalshi-api-key-id`, `polymarket-clob-api-key`), never
+re-implementing adapter/credential logic. Deliberately scoped to the 4 real, adapter-backed venues only —
+did not fold in bookmakers still `NO_ADAPTER_YET` in UAC's `venue_adapter_keys.py` (confirmed live: `BETFAIR_EX_UK`,
+`PINNACLE`, `DRAFTKINGS` etc. are still `NO_ADAPTER_YET` there despite real adapters existing in execution-service —
+this IS the step-8 registry contradiction the other half of this todo covers; left untouched, not my scope).
+Left `update_venue_credentials`/`check_venue_health`/`enable_venue`/`disable_venue` on their honest
+`live_not_configured` stub — no real backend exists for those mutations, and inventing one wasn't asked.
+
+Live curl evidence (local uvicorn, `DISABLE_AUTH=true ENVIRONMENT=development GCP_PROJECT_ID=central-element-323112`,
+real ADC, real Secret Manager — not mocked): `GET /sports/venues` returned real per-venue status —
+`betfair` and `kalshi` show `"status":"active","has_credentials":true` (real secrets `betfair-app-key`/
+`kalshi-api-key-id` resolved), `matchbook`/`polymarket` show `"status":"unconfigured","has_credentials":false`
+(no secret present) — 4/4 real venues, no `live_not_configured` stub anywhere in the response.
+`status_filter=active` correctly narrowed to the 2 configured venues. `quality-gates.sh --no-fix` green
+(sentinel `98edcd6f301ddc38a0030808eb29e9cc5d0f7eee`, matches landed HEAD's parent).
+
+Adjacent finding (fixed in the same commit, zero regression risk — no test file existed for that route):
+`venue_credentials.py:87` called `get_secret_client(project_id)` — a positional-arg bug that lands `project_id`
+in the function's `provider` parameter (UTL signature is `get_secret_client(provider=None, project_id=None, ...)`),
+which raises `ValueError("Unsupported cloud provider")` on every real (non-empty) project_id. Used the correct
+`project_id=` keyword form in the new sports code and fixed the one sibling instance directly in this file family.
+**3 more instances of the same bug pattern found but NOT fixed** (different files, outside this task's scope,
+`infra_health.py` in particular being a CI/CD-adjacent health gate that deserves its own blast-radius check before
+an ad-hoc fix) — filed as
+[`/plans/active/issues/deployment_api_client_factory_positional_project_id_bug_2026_08_16.md`](/plans/active/issues/deployment_api_client_factory_positional_project_id_bug_2026_08_16.md).
+Operator notified in this session's final report per the findings-triage HARD RULE (CI/CD-adjacent = worth a flag,
+even though not itself data-correctness/cross-repo).
+
 **2026-08-16 — authored.** Read the two source docs (nick_ai plan §§5-6, full pre-audit results) plus the venue-
 readiness umbrella plan and `defi_consolidated_closeout_2026_07_18.md` Track 8 before drafting — found the two
 scope-changing landmines documented above (W2 fabrication risk, W4-DeFi already-answered). Confirmed a better-fitted
@@ -247,3 +296,23 @@ names alone); caught and corrected a real count-drift while building it (enum do
 import measures 60/5/55 — noted in the artifact itself, not silently used the stale number). Operator ruling
 2026-08-16 on the Polymarket paper-trading blocker: simulate via the existing matching engine, framed above as a
 wiring-first investigation given Polymarket's real CLOB depth data, not an assumed from-scratch build.
+
+**2026-08-16 — W1 instruments-service done, `instruments-service@2fcf7a19`.** Read `api_auth.py` directly (not just
+cited) before writing anything, confirming the JWT/`X-Service-Token`/`X-API-Key` shape and finding
+`client-reporting-api/client_reporting_api/api/routes/exports.py` as a live precedent already using
+`create_api_auth`+`AuthDep` exactly this way. Found no existing generic "query the catalogue" reader inside
+instruments-service itself (only write-path helpers + one UTL lifecycle-bounds loader scoped to a different purpose)
+— built `engine/orchestrator/catalogue_query.py` reusing the SAME bucket-resolution primitives
+(`resolve_instruments_store_kind`/`resolve_bucket_name`) and the SAME `download_bytes`+`pd.read_parquet` idiom already
+used throughout the orchestrator package, rather than reinventing bucket/path logic. Verified the real shard path shape
+directly against prod GCS (`instrument_availability/by_date/day=.../pipeline_mode=batch_instruments_service/
+asset_group=cefi/venue=BINANCE-SPOT/instruments.parquet`) before writing the reader, confirming the R2 full-hive
+canonicalisation is what's actually live. First cut of the bulk-parquet writer (naive "cast every shard to the first
+shard's schema") crashed for real against live multi-venue data — `ArrowNotImplementedError: Unsupported cast from
+string to null` — caught by testing against real prod data (23 cefi venues, day=2026-08-16) BEFORE shipping, not by a
+unit test; root cause: per-venue schema drift is real (all-null columns infer as pyarrow `null` in one venue's shard
+vs a concrete type in another; `tick_size` decimal128 precision differs per venue). Fixed with a two-pass
+schema-unify (`pa.unify_schemas(..., promote_options="permissive")`) — re-verified value-preserving (0.01 stays 0.01,
+just wider precision) and correct (13,141 rows / 23 venues round-tripped) before shipping. `quality-gates.sh --no-fix`
+green. Shipped via quickmerge, landed LDR `instruments-service@2fcf7a19`. No blockers hit — the UTL auth module
+imported cleanly and the internal bucket/storage primitives were reachable exactly as described.
