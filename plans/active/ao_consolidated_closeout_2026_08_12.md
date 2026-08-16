@@ -123,6 +123,18 @@ and belongs to the active cycle") was wrong. Neither carries any open work; noth
       coverage at `unified-trading-pm@cbec983969`. Reconciled 2026-08-14 per
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
       `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [ ] [BACKEND] P2. **Root-cause a recurring `sequential: true` dispatch-ordering violation on satellite finalize
+      plans — 2 confirmed instances.** `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` (2026-08-10, slot 18:
+      todo 4 dispatched before todo 3, which never derived a backlog row at all) and
+      `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md` (2026-08-09: appended todos 5-6 completed while the
+      original chain's todos 2-4 stayed open). A same-shape bug
+      (`/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`) was fixed
+      2026-08-02, 8 days before the batch14 incident — either a regression of that fix, or a distinct gap the fix
+      didn't cover (e.g. specifically appended-after-authoring todos, or a todo that silently never derives a backlog
+      row bypassing the sequential check entirely). Done when: the actual mechanism is identified (read
+      `regen_backlog_from_plan.py`'s `sequential:`-enforcement path + both incidents' exact backlog/dispatch history),
+      and either a regression is confirmed+fixed or the new gap is root-caused and fixed. Repo: agent-orchestrator.
+      Source: `plan_reconciler_findings_ao_2026_08_16.md` § Contradictions.
 
 ## Provenance note
 
