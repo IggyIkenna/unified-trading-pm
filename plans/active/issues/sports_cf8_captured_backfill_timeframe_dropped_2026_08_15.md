@@ -461,6 +461,19 @@ issue's scope); flagged as a follow-up todo below.
       `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`. Read each for how it calls the adapter and
       what `timeframe` value (if any) it threads into its own write call — one of these is the actual culprit.
       (repo: market-data-processing-service)
+- [ ] [DATA] P1. **All 5 candidate scripts now read, 2026-08-16 — 4 ruled out, 1 NEW non-candidate lead found
+      instead.** `reclassify_*`/`migrate_*` only touch already-fine (league_id+timeframe-populated) rows;
+      `backfill_missing_shards_*` has no writer of its own (shells out to `reprocess_sports_odds.py`); none can
+      create a NEW blank-timeframe `captured` row. **New lead, different repo, not one of the 5**: IS's
+      `enumerate_expected_universe.py` (`instruments-service/scripts/`) never emits `timeframe` anywhere in its
+      sports emission path (0 grep hits outside an unrelated `full_timeframe_coverage` fn) — `_SPORTS_PRESENT_COLS`
+      is `[data_type, league_id, date]` only. It already has 2 confirmed, fixed grain-mismatch over­rides for this
+      EXACT source (`_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`, `_SPORTS_MANIFEST_VENUE_OVERRIDE` — both cite this
+      source's `expected_unattempted` vs `captured` 0-overlap), but no `_TIMEFRAME_OVERRIDE` exists — a 3rd,
+      unfixed instance of the same class, full 2018–2026 corpus scale (plausible match for 899,508). **Caveat, not
+      yet confirmed**: this seeds `expected_unattempted`, not `captured` — needs a live capture_status breakdown of
+      the 899,508 population to confirm it's the actual mechanism vs. a real, separate bug worth its own fix either
+      way. (repo: instruments-service)
 - [ ] [DATA] P1. **NEW, 2026-08-16, follow-up — 1 of 5 candidates read, narrows the search**:
       `reprocess_sports_odds.py` (grepped, not fully read) writes REAL per-horizon `timeframe` values — it maps
       `horizon_name` (e.g. `"T-24h"`) straight into its `ManifestWriter.add(...)` call (`timeframe=horizon_name,`
