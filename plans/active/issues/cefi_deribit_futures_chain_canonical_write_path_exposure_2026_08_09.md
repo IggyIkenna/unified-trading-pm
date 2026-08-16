@@ -152,12 +152,13 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
       unit-verified for BINANCE-FUTURES/BYBIT. Repo: market-tick-data-service, deployment-service (VM launch). **Done
       when**: a fresh DERIBIT futures_chain capture attempt shows `captured > 0` for at least one shard, or a genuine
       remaining bug specific to DERIBIT is found and filed.
-- [ ] [DATA] P3. Add a `DataTypeCapability(asset_group=CEFI, data_type="futures_chain", venue="DERIBIT", ...)` entry to
+- [x] ✅ [DATA] P3. Add a `DataTypeCapability(asset_group=CEFI, data_type="futures_chain", venue="DERIBIT", ...)` entry to
       `unified_api_contracts/registry/data_type_capability.py` — DERIBIT futures_chain is real, config-enabled
       (`configs/venue_data_types.yaml`), and actively attempted in the live manifest; the registry should reflect that
       instead of silently omitting it. While there, reconcile `configs/venue_data_types.yaml`'s `futures_chain`
       path-structure `venues:` list (currently `[DERIBIT, BINANCE-FUTURES]`, missing BYBIT) against the same ground
-      truth. Repo: unified-api-contracts, market-tick-data-service.
+      truth. Repo: unified-api-contracts, market-tick-data-service. — unified-api-contracts@b3b32f827e +
+      market-tick-data-service@c1284428c5
 
 ## Progress Log
 
@@ -240,3 +241,13 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
     state, since it's a pure code/config change touching unified-api-contracts/market-tick-data-service with no
     external-API dependency. Releasing via
     `/skip-current-task {"reason_code": "GATED", "estimated_unblock_minutes": 480}`.
+- **2026-08-16 (slot 27, infra→data_engineering craft-adopt)** — dispatched on todo 2 (the registry-drift fix, never
+  previously attempted). Added the `DataTypeCapability(asset_group=CEFI, data_type="futures_chain", venue="DERIBIT")`
+  entry to `unified_api_contracts/registry/data_type_capability.py` (shipped unified-api-contracts@b3b32f827e), and
+  reconciled `configs/venue_data_types.yaml`'s `chain_data_types.futures_chain.venues` list to add BYBIT (shipped
+  market-tick-data-service@c1284428c5). Both SSOTs now agree: DERIBIT, BINANCE-FUTURES, BYBIT all declare
+  `futures_chain` capability. Shipping took multiple retries — the shared planning-vm was under severe QG-governor
+  congestion this session (~15 sibling slots concurrently running market-tick-data-service QG; several background QG/
+  quickmerge runs were externally killed mid-run, one foreground 10-min call never even cleared the queue) — no code
+  issue, purely host contention; eventually cleared. Todo 1 (the gated DERIBIT re-capture) remains open, still blocked
+  on the N=1 Tardis-slot cap per the prior entries — not re-checked this dispatch (out of scope for todo 2).
