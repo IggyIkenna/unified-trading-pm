@@ -48,7 +48,7 @@ related:
     /plans/archive/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
   ]
 created: 2026-08-06
-last_updated: "2026-08-06"
+last_updated: "2026-08-16"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -65,6 +65,7 @@ source:
 resolved_by: ["instruments-service@497c4f5e"]
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
     instruments-service/scripts/build_instrument_catalogue.py,
@@ -171,12 +172,29 @@ observability hook whoever picks up the follow-up needs.
       `gh pr list --repo <org>/instruments-service --search "promote"` (the number will likely have moved again by
       execution time), then re-trigger the job once it merges. (repo: instruments-service, verification only — blocked
       on the standard promotion pipeline, not a new problem)~~
-- [ ] [DATA] P3. Trace and fix the actual upstream encoding defect producing UTF-8-as-Latin-1 mojibake sports
-      player/team names (this incident's `'JeleÅ\x84'` for `'Jeleń'`) — most likely in an MTDS api_football lineups
-      adapter or orchestrator write path. Not chased down this session (would need either a corpus grep of MTDS sports
-      capture code for a wrong-charset decode, or pulling the specific corrupted by_date blob to identify the source
-      league/day). The new `junk_name_skips` warning log (instruments-service@497c4f5e) is the observability hook for
-      tracking recurrence until this is fixed at the source. (repo: market-tick-data-service, likely)
+- [x] ✅ DONE 2026-08-16 (slot-23) — root cause was in **instruments-service**, not MTDS (this todo's own "most likely
+      MTDS" guess was wrong — noting the correction since it would have misled the next grep). Traced to
+      `instruments_service/reference_data/adapters/sports/adapters/base.py`'s shared `_get_with_retry()` (used by every
+      api_football `fixture_lineups`/`fixtures_schedule`/`teams` fetch) and `api_football.py`'s own `/status` call: both
+      called aiohttp's `resp.json(content_type=None)` with no `encoding=` override. Without one, aiohttp's
+      `ClientResponse.json()` falls back to statistical charset detection whenever Content-Type doesn't literally say
+      `application/json` — exactly what api-football.com's responses don't reliably send — and the detector
+      occasionally misidentifies a UTF-8 multi-byte sequence (Polish "Jeleń" → bytes `C5 84`) as Latin-1/cp1252,
+      producing the exact `"JeleÅ\x84"` mojibake from the live incident. Fixed by pinning `encoding="utf-8"` (RFC 8259:
+      JSON is always UTF-8) at all 5 `resp.json(content_type=None)` call sites in the sports adapters directory (the 2
+      api_football sites, plus the identical anti-pattern found in the adjacent `transfermarkt.py` adapter, 3 sites) —
+      instruments-service@5f2f3ca619, regression test `test_utf8_name_survives_missing_charset_content_type` reproduces
+      the exact incident byte pattern, full `quality-gates.sh` green (335s). Not independently re-verified against a fresh
+      live blob sample — the fix needs to reach `main` and the running container needs a fresh image before any NEW
+      capture reflects it (same promotion-lag caveat this doc's own P1/P2 history already hit); re-running that full
+      cycle is out of scope for this P3 follow-up. The corrupted historical rows are isolated to a re-fetchable window
+      (api_football serves the same day/league data on request, not a one-time-only capture), so the routine sports
+      catalogue regen cadence will naturally correct them once the fix deploys — satisfying this todo's "OR isolated to
+      a re-captureable window with a stated plan" bar. Mirrors `sports_satellite_ao_dispatch_batch10_2026_08_06.md`
+      todo 1 (same fix, same evidence — flipped there too, same session). Broader non-sports fleet exposure to the same
+      `resp.json(content_type=None)`-without-`encoding=` anti-pattern is out of this doc's scope — filed as
+      `aiohttp_json_charset_guessing_audit_2026_08_16.md`. Every todo in this doc is now resolved; archived this same
+      session.
 
 ## Progress Log
 
@@ -229,3 +247,10 @@ observability hook whoever picks up the follow-up needs.
   broader ~19-foreign-commit provenance-range question (a `ci` tranche concern, not sports-specific) remains genuinely
   open and is left untouched here.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **slot-23 (data_engineering) 2026-08-16**: Closed the final open P3 todo — traced + fixed the upstream mojibake
+  encoding defect (instruments-service@5f2f3ca619, see todo above for full evidence). Every todo in this doc is now
+  `[x]`, unlocked, no dependents blocking — archiving to `plans/archive/2026_08/issues/` in a follow-up commit per the
+  6-step archival ritual. Also flipped the duplicate-tracking todo 1 in
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md` (same fix) and fixed its `related:` path to point at the new
+  archive location. Filed `aiohttp_json_charset_guessing_audit_2026_08_16.md` for the out-of-scope fleet-wide follow-up
+  (auditing non-sports aiohttp adapters for the same anti-pattern).

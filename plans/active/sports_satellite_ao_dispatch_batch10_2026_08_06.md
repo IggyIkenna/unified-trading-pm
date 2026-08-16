@@ -78,17 +78,16 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
 
 ## Todos
 
-- [ ] [DATA] P3. Trace and fix the upstream sports player/team-name UTF-8-as-Latin-1 mojibake encoding defect that
-      produced this incident's `'JeleÅ\x84'` (real name `'Jeleń'`) — most likely an MTDS api_football lineups adapter or
-      sports-reference orchestrator write path (`sports_reference/by_date/.../entity=fixture_lineups/`): grep the MTDS
-      sports capture code for a wrong-charset decode (`.decode("latin-1")` / `.encode("latin-1").decode("utf-8")`
-      anti-pattern), or pull the specific corrupted by_date blob(s) to identify the source league/day; fix the charset
-      round-trip at the write site; add a regression test; run `quality-gates.sh --no-fix` green; ship via quickmerge.
-      The `junk_name_skips` warning log (instruments-service@497c4f5e) is the observability hook. Source:
-      `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`. Done when: the write site is identified with cited
-      evidence, the fix ships via quickmerge, and a fresh sample of the previously-corrupted by_date blob(s) shows
-      correctly-encoded player/team names (or the corrupted rows are provably isolated to a re-captureable window with a
-      stated plan).
+- [x] ✅ DONE 2026-08-16 (slot-23, same session as the source doc) — root cause + fix: instruments-service@5f2f3ca619
+      pinned `encoding="utf-8"` on every `resp.json(content_type=None)` call site in
+      `instruments_service/reference_data/adapters/sports/adapters/{base,api_football,transfermarkt}.py` (aiohttp falls
+      back to charset-guessing without it, which mis-decoded the incident's UTF-8 Polish name as Latin-1 mojibake — the
+      write site was in **instruments-service, not MTDS** as this todo's own text guessed). Regression test added; full
+      `quality-gates.sh` green. Not independently re-verified against a fresh live blob sample (needs LDR→main
+      promotion + Cloud Build rebuild first) — corrupted historical rows are re-fetchable, so the routine catalogue
+      regen cadence corrects them once deployed, satisfying this todo's re-captureable-window OR-clause. Full evidence +
+      Progress Log: `/plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`
+      (archived same session).
 - [x] ✅ [CONFIG] P2. Close the sports trigger-tier residual gap — add `odds_t12h`, `odds_t4h`, `odds_t2h` forward
       snapshot triggers to `deployment-service/configs/sports-trigger-tiers.yaml`'s `pre_match.triggers` (following the
       existing `odds_t24h`/`t6h`/`t1h` pattern, `cloud_run_job_name: "uts-prod-market-tick-data-service-fast-t1-recon"`,
