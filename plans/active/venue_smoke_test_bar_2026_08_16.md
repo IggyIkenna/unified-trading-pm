@@ -91,6 +91,26 @@ before any of W4's more expensive per-leg verification runs.
 is **coverage and systematisation**, not a new harness: make those run per (venue × data type) across the whole
 universe, with the exemption set and the testnet verdict recorded.
 
+**But they must be audited before they are relied on — operator direction 2026-08-16.** Canonical expectations have
+moved since those skills were written, and a smoke harness asserting a stale canonical shape reports green over
+migrated data. Measured 2026-08-16:
+
+- **ZERO of the four skills call `canonical_path_violations()`** — the UAC MACHINE ORACLE that CLAUDE.md requires
+  ("never a re-implemented rule"). All four assert canonical in prose only.
+- **Two carry their own stale-warning banners**: `data-pipeline-check-is` (line 25) and `data-pipeline-check-mtds`
+  (line 255) both say that while the raw→canonical instrument-id migration is in flight, *"this check's pass/fail is
+  actively misleading"* — dated 2026-07-18 and 2026-07-20 respectively.
+- **Three canonical-changing dispatches landed 2026-08-16 alone** — cefi casing residual, sports venue-vocab +
+  league_id delete, tradfi purge extension + twin-delete fix — so the drift is active, not historical.
+
+- [ ] [BACKEND] P0. **Audit all four `/data-pipeline-check-*` skills against current canonical expectations before
+      W5 depends on them.** Per skill: does its canonical leg call `canonical_path_violations()` or re-implement the
+      rule; does it validate the filename instrument_id (the oracle is PATH-STRUCTURE-ONLY and VALUE-BLIND, so
+      id-form and `instrument_type`/`data_type`/`venue`/`chain` VALUES must be checked separately or explicitly
+      declared unchecked); is its stale-migration banner still true. Done-when: each skill either routes through the
+      oracle or records why it cannot, and every banner is re-dated or removed. **This is a prerequisite of every
+      other todo in this plan** — a harness that reports green over migrated data makes the whole bar worthless.
+
 Contract step 1 (venue declared, batch/live capability axis) belongs to
 [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14](/plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md),
 which also already declares `batch = none` for venues with no batch source — those must not be reported as smoke
