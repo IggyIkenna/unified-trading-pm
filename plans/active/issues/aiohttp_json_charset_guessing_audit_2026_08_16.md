@@ -112,3 +112,23 @@ does not cover this encoding gap) once the sweep shows how many repos/call-sites
   session: confirm `market-tick-data-service@7ffa995c` (or its post-rebase SHA) is on `origin/live-defi-rollout`
   (`git fetch && git rev-list --count origin/live-defi-rollout..HEAD` = 0), then flip the todo to `- [x] ✅` with that
   SHA as evidence — no further code changes needed.
+
+- **slot-29 (data_engineering) 2026-08-16, pre-compact checkpoint**: `market-tick-data-service@7ffa995c` still
+  unpushed — `ahead=1 behind=1` vs `origin/live-defi-rollout` (my commit not yet on origin; a peer commit landed on
+  origin after my last rebase). The shipping `quickmerge.sh` run (background task) is genuinely still in progress, not
+  stalled: it hit a second sentinel invalidation ("HEAD moved — a peer likely pushed"), auto-re-gated, and is now
+  queued 720s+ in the host-wide QG governor (`sub-cap 1 / host-wide cap 6`) — confirmed via `ps aux` that 6+ concurrent
+  `quality-gates.sh` processes are running across other slots (17/18/19/33) right now, i.e. real host contention, not a
+  hung process. Left it running rather than killing/retrying — killing a queued-but-live governor client only makes
+  contention worse for everyone. Verified the other 4 repos this session cascaded into (`unified-trading-pm`,
+  `deployment-service`, `unified-api-contracts`, `unified-trading-library`) are all `ahead=0` (fully pushed, nothing at
+  risk); `deployment-service@1d78d15c` (vm-launcher e2-highmem-16 fix) in particular was already confirmed durable, not
+  something this checkpoint needed to act on. Scratchpad's 6 `qg_mtds*.log` files are disposable QG debug output from
+  earlier attempts (the largest, `qg_mtds6.log`, stopped updating at 03:18:56Z with no live PID behind it — an
+  abandoned standalone debug run, superseded by the quickmerge job's own internal QG pass); none are referenced by any
+  committed doc. **Lesson for next session**: a `[qg-governor] queued Ns` line climbing past 10 minutes under confirmed
+  multi-slot contention is still not a failure signal — only a terminal exit code (or the task notification) is;
+  resist the urge to kill and restart, since a restart re-enters the same queue from zero. Next session (or this one on
+  wake): check the task notification/final output for `✅ Pushed <sha>` vs `QUICKMERGE_BLOCKED`; if pushed, verify
+  `rev-list --count origin/live-defi-rollout..HEAD` = 0 for market-tick-data-service, then flip the todo below with the
+  landed SHA.
