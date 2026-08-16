@@ -201,7 +201,7 @@ ever fires (`/plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_r
   alert referenced the CI ratchet/TID251 class at all), so it simply inherits the generic escalation-lifecycle notifiers
   this doc already documents above (`notify_escalation_dispatched`/`_resolved`/ `_unresolved`/`_abandoned`), the same as
   every other push-fix-to-LDR wall type — nothing bespoke to duplicate or collide with.
-- SSOT: `/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md`,
+- SSOT: `/plans/archive/2026_08/local_ratchet_gate_breach_escalation_detector_2026_08_15.md`,
   `/plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`.
 
 ## Self-monitoring detector registry — owner / cadence / verifier

@@ -183,7 +183,7 @@ the fix inline. Does not block anything currently (the originating incident is r
       vs human plan, per the standing hard rule, before authoring) — scope: new escalation wall type in
       `server/escalation.py`, a 15-minute delayed re-check against LDR before dispatch, AO-driven remediation that
       restores the breached ratchet/baseline below its ceiling, existing Slack alert left as visibility-only.
-      **RESOLVED 2026-08-15**: authored as `/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md`
+      **RESOLVED 2026-08-15**: authored as `/plans/archive/2026_08/local_ratchet_gate_breach_escalation_detector_2026_08_15.md`
       (`assigned_vm: planning`, AO-dispatched per operator routing decision BLK-3f47f1af) +
       `local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md`. Implementation is actively in progress
       there (wall type, detector, 15-min grace-window state machine, and `enqueue()` wiring all shipped as of this
@@ -191,6 +191,17 @@ the fix inline. Does not block anything currently (the originating incident is r
       full-fleet dry run — tracked in that plan, not here). This doc's own scope (author the plan) is done; archiving
       here does not require the dedicated plan's OWN remaining todos to be finished first — see that plan for
       ongoing status.
+
+      **2026-08-15 (slot-18·review) — implementation plan now fully landed (all 12 todos), re-verified against real
+      `origin/live-defi-rollout`**: every commit sha the implementation plan's own Progress Log cites was directly
+      checked (`git cat-file -e` + `git merge-base --is-ancestor … origin/live-defi-rollout`), not trusted from the
+      plan's checkbox alone — all 9 confirmed real and landed: `agent-orchestrator@16c831ed84` (wall type),
+      `@ce84b67` (fleet-wide detector entrypoint), `@452ba5a` + `@39e45c8549` (15-min grace-window state machine +
+      test-isolation fix), `@8ba680c0f7` (routing test), `@dd4789d305` (self-deadlock fix in
+      `escalate_local_ratchet_gate_breaches.py`), `@899c4af8ac` (remediation-goal wording pinned in `cicd.md`),
+      `@17c6e56dc4` (systemd timer installer), `@f1965181d4` (full happy-path regression test). Todo 12's full-fleet
+      dry run (read-only, no commit) also landed: zero breaches across all 25 repos carrying a ratchet-baseline YAML.
+      The gated finalize plan owns closeout from here.
 
 > **2026-08-15 (slot-23·infra) — documentation cross-reference**: the implementation plan's todo 10 (document the wall
 > type + grace window + AO-primary/Slack-visibility-only split) landed in

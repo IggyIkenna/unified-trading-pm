@@ -9,7 +9,7 @@ summary: >-
   machinery, a fleet-wide detector that checks live `origin/live-defi-rollout` HEAD per repo (independent of any one
   contributor's local run), a 15-minute delayed re-check before escalating (the observed pattern is self-heal on the
   next quickmerge), and AO dispatch as the primary remediation path — the existing Slack alert stays visibility-only.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting, meta]
 stage: [meta]
@@ -19,7 +19,7 @@ tags: [escalation, ci, quality-gates, ratchet, coverage-gap, ci-failure-watcher,
 related:
   [
     /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
-    /plans/active/local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md,
+    /plans/archive/2026_08/local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md,
     /plans/active/task_template.md,
   ]
 created: "2026-08-15"
@@ -59,6 +59,10 @@ source: >-
 ---
 
 # local ratchet-gate-breach escalation detector — implementation
+
+> **ARCHIVED 2026-08-15** — all 12 todos done; closeout ritual run by the paired
+> `local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md`. See that plan (also archived alongside this
+> one) for the closeout evidence.
 
 > **Operator-approved 2026-08-15** (BLK-3f47f1af, main agent verified against the 2026-08-12 ruling) — `status: active`,
 > dispatchable. `sequential: true`: run in file order.

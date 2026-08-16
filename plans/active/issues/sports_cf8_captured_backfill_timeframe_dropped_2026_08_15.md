@@ -578,6 +578,63 @@ issue's scope); flagged as a follow-up todo below.
       `git log --since=2026-04-01 --until=2026-07-15 -- '**/*.py'` across MTDS for any now-deleted/superseded
       script matching the bug signature, since the population's write dates (2026-05-05, 2026-07-13) both predate
       this repo's current script inventory and a removed one-off is plausible. (repo: market-tick-data-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up to the entry above — 2 more candidates ruled out, one important new
+      clue found; still not confirmed.** (1) **RULED OUT**: MTDS's batch per-league sports writer
+      (`venue_fetch.py::_process_sports_venue_with_leagues`, line 695) — read in full. It receives the venue's
+      WHOLE `venue_data_types` list (which, per `configs/venue_data_types.yaml` lines ~449-469, includes
+      `odds_horizon_bucket` for ODDS_API/BETFAIR/PINNACLE — this contradicts the earlier "zero raw-vendor sources"
+      framing from an earlier pass; `SOURCE_PRIORITY` and `venue_data_types.yaml` answer different questions, the
+      latter governs what a venue's raw capture is allowed to be tagged as, not just literal vendor-fetch types).
+      But its shard-count key is **hardcoded** `shard_counts[(bm_str, "odds", league_str, "odds", fixture_str)]`
+      (line 796, literal string `"odds"` in both data_type-like slots) — structurally cannot produce an
+      `odds_horizon_bucket`-tagged manifest row regardless of what `venue_data_types` requested. Confirmed by
+      direct read, not inference. (2) **Traced but NOT ruled out — live WS shard path**: confirmed
+      `websocket_streaming_handler.py`'s `data_type` is a raw CLI `--shard-spec asset_group:venue:data_type`
+      argument (not adapter-classified); `_resolve_connector` looks up the connector by VENUE only
+      (`resolve_ws_feed_venue_key`), never validating `data_type` against what that venue's connector actually
+      produces. The ODDS_API connector (`live/connectors/odds_api_ws.py`) stores `self._data_type` (line 232) but
+      never reads it anywhere else in the 424-line file — meaning if a shard WERE launched with
+      `--shard-spec sports:ODDS_API:odds_horizon_bucket`, it would stream the exact same raw odds ticks as a
+      normal `odds` shard, just manifest-recorded under the wrong `data_type` label via the already-identified
+      `MTDSShardManifestRecorder.record_captured()` (structurally no `timeframe` param). Found the live-shard
+      launcher (`deployment-service/scripts/vm/launch-mtds-live.sh`) — it requires an explicit, manually-supplied
+      `--shard-spec` per invocation; it does **not** auto-iterate `venue_data_types.yaml` to launch one shard per
+      declared data_type, so this path needs a deliberate launch decision, not something that falls out of config
+      alone. Not yet found (or ruled out): any actual launch record/log of a
+      `sports:ODDS_API:odds_horizon_bucket` shard. (3) **New clue, argues AGAINST the live-shard hypothesis**: the
+      two write-timestamp clusters for the 14,982-row population — 14,656 rows at `2026-07-13T23:5x`, 326 rows at
+      `2026-05-05T22:07` — are each a TIGHT SINGLE-MINUTE cluster. Continuous live WS ingest stamps
+      `available_at` per-tick throughout a shard's runtime (hours+), so a single-minute cluster of thousands of
+      rows is a poor fit for "a live shard ran with the wrong data_type for a while" and a much better fit for "a
+      single batch/script invocation wrote many rows in one pass" — reinforcing the original, still-unconfirmed
+      hypothesis that this is a one-off script, not the live path. **Precise next step**: search MTDS's script
+      inventory (both current and via `git log` on MODIFIED, not just deleted, files) for anything that could have
+      run as a single batch job at `2026-07-13T23:5x` and `2026-05-05T22:07` UTC specifically — the exact
+      characters-since-midnight granularity of both timestamps suggests these are real job-completion stamps, not
+      per-row `available_at` values, so cross-referencing against any cron/systemd job log or VM launch history
+      for those two exact windows may be more direct than further code tracing. Do not assume the live-shard
+      candidate confirmed OR ruled out — it remains genuinely open, just deprioritized by this clue. (repo:
+      market-tick-data-service, deployment-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up — deployment-archive check attempted, result is UNINFORMATIVE (not a
+      negative), a measurement trap caught before it was asserted.** Re-ran this doc's own scratchpad deploy-history
+      checker (`check_deploy_history_cf8_2026_08_15.py`, extended with the 2026-05-05 date) against
+      `deployment-scripts-central-element-323112/deployments/archive/<date>/` for both target write dates: **0
+      records for 2026-05-05, 0 records for 2026-07-13.** Before treating that as "no VM/deploy job ran on either
+      date" (which would have ruled out every deployment-service-tracked launch mechanism, including
+      `launch-mtds-live.sh`), checked when the archive itself starts: **earliest archived date is 2026-07-16** (32
+      total archived dates, all ≥2026-07-16). **Both target dates predate the archive mechanism's existence
+      entirely** — the 0-record result is uninformative by construction, not a real absence signal (CLAIM ≤
+      MEASUREMENT: 0 hits ≠ missing when the search tool itself doesn't cover the queried range). This neither
+      confirms nor rules out a deployment-service-launched job on either date; it just means this particular tool
+      can't answer that question for dates this old. **Precise next step, not yet tried**: (a) check whether MTDS
+      or the underlying VM hosts retain systemd/journal logs reaching back to 2026-05-05/07-13 (unlikely at this
+      remove, but worth one cheap check before ruling it out); (b) a more promising angle — read the GCS object
+      metadata (not the manifest row) on a small sample of the actual phantom-timeframe parquet shard files
+      themselves (`gcs_describe_object` per this repo's storage conventions, never subprocess `gsutil`) — object
+      `time_created`/`updated` plus any custom metadata (uploader identity, generating host/job name if stamped)
+      may carry a clue the manifest row itself doesn't, since the manifest and the underlying shard file are
+      written by the same process but the object metadata layer hasn't been inspected at all yet this entire
+      investigation. (repo: market-tick-data-service)
 
 ## Progress Log
 

@@ -40,7 +40,7 @@ context_scope:
     unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py,
     unified-trading-pm/scripts/quality_gates/ruff_rule_ratchet_baseline.yaml,
   ]
-related: [/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md]
+related: [/plans/archive/2026_08/local_ratchet_gate_breach_escalation_detector_2026_08_15.md]
 ---
 
 > **ARCHIVED**: resolved by agent-orchestrator@c884ce3c9c,ed15e2c596,6d00256,f5b199c797 (slots 6/20/16/24,
