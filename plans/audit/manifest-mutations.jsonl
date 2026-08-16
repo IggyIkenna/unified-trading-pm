@@ -2822,3 +2822,5 @@
 {"timestamp": "2026-08-16T01:12:21Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "features-service=0.85.1 (branch=main, bump=patch)", "commit_sha": "833c90b3d82d4c6c5a793b119dd3f0793feaaa34"}
 {"timestamp": "2026-08-16T01:21:34Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "unified-api-contracts=0.128.0 (branch=main, run=31919367567)", "commit_sha": "5639e2a9ca2dc77883d400acce8fad6a6c22273c"}
 {"timestamp": "2026-08-16T01:21:37Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-api-contracts=0.128.0 (branch=main, bump=minor)", "commit_sha": "5639e2a9ca2dc77883d400acce8fad6a6c22273c"}
+{"timestamp": "2026-08-16T01:54:47Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "features-service=0.85.2 (branch=main, run=31920627165)", "commit_sha": "ec6648cc3dd10ff034aca273226d05f350beb668"}
+{"timestamp": "2026-08-16T01:54:50Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "features-service=0.85.2 (branch=main, bump=patch)", "commit_sha": "ec6648cc3dd10ff034aca273226d05f350beb668"}
