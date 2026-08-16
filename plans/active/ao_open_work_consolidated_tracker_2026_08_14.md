@@ -43,7 +43,19 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: []
+depends_on:
+  [
+    slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25,
+    ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30,
+    ao_satellite_ao_dispatch_batch3_2026_07_31,
+    context_scout_completion_and_plan_brainstorm_skill_2026_07_30,
+    orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02,
+    orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25,
+    shared_host_home_filesystem_full_2026_07_26,
+    content_derived_backlog_task_ids_2026_08_08,
+    ao_satellite_ao_dispatch_batch3_finalize_2026_07_31,
+    l2_book_microstructure_capture_2026_07_13,
+  ]
 source: >-
   A 5-parallel-agent code-audit sweep (2026-08-14, this session) checked every open todo across 44 AO-subject-matter
   plans/issues (created on/before 2026-08-07) directly against live agent-orchestrator code — not just checkbox state.
@@ -492,6 +504,21 @@ before touching the source doc directly._
 
 ## Notes
 
+- **Not archivable until `depends_on` clears (operator direction, 2026-08-16).** This tracker's own 12 remaining open
+  items are pointers, not the real work — the real work lives in the source docs each item cites. `depends_on` above
+  names every distinct source doc still carrying a genuinely-open item as of the 2026-08-15 final reconciliation pass:
+  `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25` (60-min context-signal re-validation),
+  `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30` (the two solo benchmark re-runs + artifact
+  publish), `ao_satellite_ao_dispatch_batch3_2026_07_31` + `context_scout_completion_and_plan_brainstorm_skill_2026_07_30`
+  (the standing `context_scope` corpus backfill), `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02`
+  (best-effort swap-peak root cause), `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25` (DB-pool
+  right-sizing design fork), `shared_host_home_filesystem_full_2026_07_26` (disk-usage + `mdps_bench_data` audits),
+  `content_derived_backlog_task_ids_2026_08_08` (the deliberately-deferred live backlog-ID migration),
+  `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31` (gated on the same `context_scope` backfill), and
+  `l2_book_microstructure_capture_2026_07_13` (blocked on its own separate `assigned_vm: NA` hold). This tracker stays
+  `active` and un-archived until every one of those clears its own open work — do not archive this doc on the strength
+  of its own 12 items alone reading "just pointers," per this workspace's `depends_on` convention (documents ordering +
+  gates archival, per `plans/PLAN_FORMAT.md`).
 - **Explicitly excluded from this tracker** (correctly gated/standing, not real remaining work to schedule):
   `ao_tranche_full_content_audit_findings_2026_07_31.md`'s standing opportunistic-retag policy (intended to sit open
   indefinitely); `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (correctly blocked on a named

@@ -309,6 +309,30 @@ investigation confirmed are both achievable with existing primitives:
   his own token, run register→claim→done once for real, confirm the dashboard + a usage row. **This plan should be
   treated as feature-complete and left `active` (not archived — real todos remain, just deferred, not done) until Harsh
   actually runs Phase 4.**
+- **2026-08-16 (interactive session, operator-requested scope addition)**: operator confirmed Phase 4's real
+  registration/JWT step stays OFF for now (unchanged from the 2026-08-15 deferral) but asked for a new, smaller
+  addition first: prove out what the dashboard will look like fully populated, entirely without touching production, so
+  the only thing left when Phase 4 does flip is "hook it up and test," not "also figure out if the UI works." Added
+  Phase 4b below — seeds the two reserved human slots (9001/9002) into the existing mock-mode demo backend
+  (`ORCHESTRATOR_MODE=mock`, port 8766, `scripts/populate_demo.py` — the same tool already used to preview every other
+  fleet feature) via the real `human-heartbeat`/`human-usage` endpoints, then verifies the Human Fleet page and the
+  `role_group=human`/`planning-human` usage filters render correctly against that seeded data with Playwright. Zero
+  production footprint: `_refuse_if_live_mode()` already hard-blocks this script from ever running against a live-mode
+  server, independent of anything this session does.
+- **2026-08-16 (same session, Phase 4b shipped)**: `seed_human_slots()` built, run against a local
+  `ORCHESTRATOR_MODE=mock` instance (:8766), and verified end-to-end with Playwright against a
+  `VITE_BACKEND_PORT=8766` dashboard dev server. Caught 2 real bugs in the process — `AgentRole` and `AgentKind`
+  (`server/models/_types.py`) both never got `"human"`/`"planning-human"` added on the BACKEND, only the frontend TS
+  types (Phase 3's own todo 17 only touched `dashboard/src/layout.tsx`+`types.ts`). The `AgentRole` gap 500'd the
+  entire `GET /api/agents` — every dashboard page's poll, not just Human Fleet's — the instant a human agent existed;
+  the `AgentKind` gap silently mislabeled every human agent as `"custom"` via an existing defense-in-depth coercion
+  (`agents.py::_coerce_unknown_kind_to_custom`), never crashing but defeating the entire role_group-split design this
+  plan exists to deliver. Both fixed, full `quality-gates.sh` green (3985 pytest + 374 vitest), shipped
+  `agent-orchestrator@609e4ea377`. **Production impact of this session's work: zero** — the fix widens two Literal
+  types and adds an opt-in local seeding helper; no production data touched, `_refuse_if_live_mode()` unchanged.
+  Confirmed with the operator: Phase 4's real registration/JWT step stays explicitly OFF — only the UI's
+  fully-populated appearance was proven out, per the operator's own framing ("so we know the final part is just
+  hooking it up and testing it"). Phase 4 itself remains deferred to Harsh exactly as the 2026-08-15 ruling states.
 
 ## Todos
 
@@ -445,6 +469,32 @@ investigation confirmed are both achievable with existing primitives:
       `ao-usage-push.py` afterward to confirm a usage row appears. Done when: the task shows up correctly in the "Human
       Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
       (`GET /api/backlog/usage/windows?role_group=human`).
+- [x] 21. ✅ [INFRA] P2. **Phase 4b — preview the fully-populated dashboard via the mock demo backend, zero production
+      connectivity.** Added `seed_human_slots()` to `scripts/populate_demo.py` — seeds `SlotRow`/`AgentRow`/
+      `TaskUsageRow` for both reserved human slots (9001=ikenna, role_group="human", claimed task B-004; 9002=harsh,
+      role_group="planning-human", no claimed task) against `ORCHESTRATOR_MODE=mock` on :8766 only —
+      `_refuse_if_live_mode()` hard-blocks the script against a live-mode server regardless. **Found and fixed 2 real,
+      previously-undetected bugs while proving this out** — neither is specific to the demo/preview path; both would
+      have hit a REAL human registration in production the moment Phase 4 went live:
+      1. `AgentRole` (`server/models/_types.py`) never got `"human"` added alongside `AgentKind` — `human_heartbeat`
+         registers `role="human"` (write succeeds, no crash), but `AgentView.role: AgentRole` then threw a hard
+         `pydantic.ValidationError` on read, 500ing the ENTIRE `GET /api/agents` the instant any human agent existed —
+         not just Human Fleet's own fetch, but the main dashboard's own unfiltered poll (every fleet page, every
+         refresh). Confirmed via live `curl` against the mock backend before the fix, clean 200 after.
+      2. `AgentKind` (`server/models/_types.py`) also never got `"human"`/`"planning-human"` added — Phase 3's own todo
+         17 only touched `dashboard/src/layout.tsx`+`types.ts` (frontend), never the backend Literal. A defense-in-depth
+         `@field_validator` (`server/models/agents.py::_coerce_unknown_kind_to_custom`,
+         `agent_orchestrator_agent_kind_literal_gap_2026_07_28`) caught this SILENTLY — no crash, but every human agent
+         would have rendered as generic `"custom"`, not `"human"`/`"planning-human"`, defeating the entire point of this
+         plan's role_group split (exactly the "don't pollute general agent stats" requirement the operator asked for).
+         Only surfaced because the validator's own `logger.warning(...)` was checked, not because anything visibly broke.
+      Both fixed by widening the two Literals (mirroring the existing frontend `AgentKind` union, which already had both
+      values). Verified end-to-end with Playwright against a `VITE_BACKEND_PORT=8766` dashboard dev server: Human Fleet
+      page renders both rows correctly labeled (`human`/`planning-human`, not `custom`), model/context%/current-task/
+      online all populate correctly, and the `role_group=human`/`planning-human` filter buttons on the existing
+      `TaskUsageWindows` panel return the seeded, server-priced usage numbers ($0.68 spend, matching the raw API
+      response exactly) — confirming the "toggles and splits on the existing pages, not a new billing page" design
+      holds. Full `quality-gates.sh` green (3985 passed). Evidence: `agent-orchestrator@609e4ea377`.
 - [x] 20. ✅ [INFRA] P3. **Document the human-slot contract as a durable codex SSOT** — new "Human slots" section
       appended to `/codex/04-architecture/agent-orchestrator-worker-liveness.md` covering both hard guarantees
       (never-killable, never-competing), what's reused vs. genuinely new, and a standing instruction that a future
