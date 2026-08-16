@@ -151,11 +151,15 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
 - [ ] [OPERATOR] P0. Review the live `cefi-hyperliquid-2023-*` fleet (298+ VMs as of 2026-08-16, growing) and
       terminate the duplicates, keeping one coherent run. Needs a human call on which specific run-id(s) to preserve
       and safe termination of the rest without corrupting in-flight manifest writes. (repo: infra ops, no code)
-- [ ] [INFRA] P1. Add a cross-invocation "is this (venue, date-range) already running?" guard to
+- [x] ✅ [INFRA] P1. Add a cross-invocation "is this (venue, date-range) already running?" guard to
       `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (and consider hoisting into
       `lib/launcher_common.sh` for reuse by sibling launchers) so a second invocation for an identical range refuses
       or requires an explicit override instead of silently launching a parallel duplicate fleet. (repo:
-      deployment-service)
+      deployment-service) — deployment-service@246fa62319: added `lc_metadata_singleton_check()` to
+      `launcher_common.sh` (metadata-scoped, unlike the existing prefix-only `lc_singleton_check`, so legitimate
+      concurrent year/date shards under one venue prefix are NOT blocked) and wired it into `_launch_vm` so a
+      RUNNING VM already carrying the same VM_VENUE/VM_START_DATE/VM_END_DATE refuses the duplicate launch (override
+      via FORCE=true). QG green (244s). Verified dry-run + shellcheck clean.
 - [ ] [DATA] P2. Once the duplicate fleet is resolved to a single coherent run, re-verify HYPERLIQUID captured-row
       coverage for the 2023-06-14..2023-12-31 window (the original ask in
       `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s open Follow-up) against that single run's
@@ -166,3 +170,5 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
 - **slot-8 2026-08-16**: filed this issue doc after discovering the runaway fleet while checking status for
   `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s HYPERLIQUID re-verify Follow-up. No code shipped,
   no VMs deleted (deletion needs a human call per STEP 0.65 — these VMs are not stale, they're duplicated).
+- **slot-9 2026-08-16**: shipped the [INFRA] P1 root-cause fix — deployment-service@246fa62319. The [OPERATOR] P0
+  fleet-cleanup and [DATA] P2 re-verify todos remain open (both need the duplicate fleet resolved first).
