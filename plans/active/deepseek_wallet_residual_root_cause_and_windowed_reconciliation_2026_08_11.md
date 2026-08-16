@@ -30,7 +30,7 @@ related:
     /codex/12-agent-workflow/measurement-claims-discipline.md,
   ]
 created: 2026-08-11
-last_updated: 2026-08-12
+last_updated: 2026-08-16
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -176,12 +176,45 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       now -$16.93 (attributed $376.37 vs real $359.44) — smaller and a DIFFERENT class of gap than this todo's
       original -$66.26 (over-attribution now, not a missing top-up) — real, not yet chased, tracked as a new todo
       below rather than left implicit. (repo: agent-orchestrator)
-- [ ] [REVIEW] P2. **New, 2026-08-16 — chase the -$16.93 residual** (`attributed_total_usd=376.37` vs
-      `real_total_spend_usd=359.44`, per `compute_deepseek_wallet_reconciliation()` live 2026-08-16). Over-attribution,
-      not under-attribution — a different failure class than every prior residual investigation in this doc (all of
-      which found MISSING top-ups or MISSING transcript capture, never double-counted/over-attributed spend). Done
-      when: the source of the ~4.7% over-attribution is identified the same way every other hypothesis in this doc
-      was — killed by measurement, not reasoning.
+- [x] ✅ [REVIEW] P2. **ROOT-CAUSED 2026-08-16 — the -$16.93 residual is leftover stock from a ~6-hour DeepSeek
+      native-proxy cache-miscategorization bug on 2026-08-12, already fixed forward, never repaired retroactively.**
+      Measured live (no code change needed): `curl http://13.113.200.22:8765/api/accounts/deepseek/wallet-
+      reconciliation/window?window_hours=<N>` for N=1..96 (public API, port 8765 reachable directly — no SSM/creds
+      needed; this session's own AWS identity `ikenna-worker` lacks `ssm:SendCommand` on the orchestrator instance and
+      is NOT one of the two self-service cloud identities per `/codex/05-infrastructure/orchestrator-cloud-identity-
+      self-service.md`, so DB access went through the read-only HTTP surface instead). **The fleet has been
+      essentially idle for the trailing 48h** (attributed_total_usd=$0.00 for every window ≤48h as of 2026-08-16
+      12:17 UTC) — ruling out the 2026-08-16 16:00 UTC DeepSeek peak/off-peak repricing (`model_pricing.py`
+      `DEEPSEEK_V4_PEAK_PRICING_START`) as a candidate: there has been no real usage today to reprice.
+      **Hour-by-hour bisection of the 72–96h trailing window** (first-differencing `attributed_total_usd` vs
+      `real_spend_usd` per 1h slice) isolates the ENTIRE excess to five consecutive hours, `window_start`
+      2026-08-12T15:19Z→19:19Z: d_attributed=$47.28 vs d_real=$19.84 in that span alone (excess ≈$27.44) against
+      ~$0 excess in every hour before or after it back to the 96h boundary. **That window brackets EXACTLY the gap
+      between two known commits**: `85232486e3` (2026-08-12T13:19 UTC — proxy deployed, `deepseek-v4-pro` canary
+      live) and `4e2d7b34b60b1d103b7315bbd0325a160f2df96e` (2026-08-12T19:24 UTC — the cache-split fix, already
+      documented above as "the cache-split-never-reaches-the-CLI bug"). That fix's own commit message states the
+      mechanism verbatim with real numbers: BEFORE `{"input_tokens": 213536, "output_tokens": 500}`, AFTER
+      `{"input_tokens": 1568, "cache_read_input_tokens": 211968, "output_tokens": 500}` — for ~6 hours, every
+      cache-hit token the CLI actually got served (billed by DeepSeek at `cache_read_usd=$0.003625/M`) was reported
+      to the `claude` CLI's own transcript as a plain, uncached `input_token` and later swept + priced by
+      `deepseek_usage_poller` at the full `input_usd=$0.435/M` rate — a **120x per-token overcharge on our own
+      recorded spend for exactly the fraction of tokens that were cache hits**, real DeepSeek billing unaffected
+      (DeepSeek billed correctly server-side the whole time; only OUR derived `deepseek_message_usage.spend_usd`
+      was wrong). Fixed forward in the same commit — every turn since 2026-08-12T19:24Z self-corrects — but the
+      rows already written during that 6-hour window were never retroactively repriced. **This is the SAME failure
+      class the plan already root-caused on 2026-08-12** ("a DeepSeek-server-side categorization defect", 2 todos
+      above) — not a new, different mechanism; the -$16.93 is simply the still-outstanding dollar remainder of that
+      already-diagnosed and already-fixed bug, after the two later topup corrections (+$100 total) partially offset
+      it, same "frozen historical stock" shape as the $26.40 pre-observability gap this plan already has a
+      dedicated `opening_balance` mechanism for. No code fix is applicable (nothing to fix going forward; already
+      fixed) — see the new [OPERATOR] todo below for the optional stock-freeze follow-up.
+- [ ] [OPERATOR] P3. **Optional — fold the now-explained -$16.93 into the frozen `opening_balance` (or record a
+      second freeze event) so `residual_since_observability_usd` reads zero instead of carrying an already-
+      root-caused, already-fixed historical bug as a live-looking number.** `opening_balance_usd` is still `null`
+      live (2026-08-16 — the earlier $26.40 pre-observability freeze from the P2 todo above was also never actually
+      submitted via the panel form). Not urgent: the underlying bug is fixed forward and the dollar amount is small:
+      `POST /api/accounts/deepseek/wallet-reconciliation/opening-balance` with the measured pre-observability +
+      2026-08-12 cache-bug stock, or via the `DeepSeekWalletPanel` freeze form. (repo: agent-orchestrator, doc only)
 - [x] ✅ [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle —
       agent-orchestrator@4d2f9ed118.** `WINDOW_OPTIONS` (24h/168h) toggle wired to
       `GET /api/accounts/deepseek/wallet-reconciliation/window?window_hours=`; `windowedSpendCellText` renders the
@@ -432,6 +465,20 @@ Progress Log).
   LDR->main promotion pipeline is repo hygiene, not the AO deploy path.
 
 ## Progress Log
+
+- **2026-08-16** — Root-caused the -$16.93 over-attribution residual (the `[REVIEW]` P2 todo above), read-only, no
+  code change. AWS SSM access (used by every prior live measurement in this doc) was NOT available to this session
+  — `ikenna-worker` lacks `ssm:SendCommand` and cannot self-grant it (not one of the two self-service cloud
+  identities; can't even read its own IAM policies) — so measurement went through the orchestrator's public
+  `:8765` HTTP API instead (confirmed reachable directly, no SSM needed, per the 2026-08-15 security-group note in
+  `runtime-deployment-topology.md`). Confirmed the fleet has been idle 48h (rules out today's DeepSeek peak/off-peak
+  repricing as a cause), then hour-bisected the `wallet-reconciliation/window` endpoint across the 72-96h trailing
+  range and isolated the entire excess to 2026-08-12T15:19-19:19Z — exactly the gap between the native-proxy deploy
+  (`85232486e3`, 13:19 UTC) and its cache-split fix (`4e2d7b34b6`, 19:24 UTC). Same mechanism the plan already
+  root-caused on 2026-08-12 ("DeepSeek-server-side categorization defect") — this todo just closes the loop by
+  showing the CURRENT residual is that same already-fixed bug's leftover dollar remainder, not a new failure class.
+  Added one optional `[OPERATOR]` follow-up (fold into `opening_balance`); no fix needed since the bug self-corrected
+  going forward on 2026-08-12.
 
 - **2026-08-13** — Shipped the opening-balance freeze (the open P2 todo, agent-orchestrator@a3eda085f6). Full detail in
   the flipped todo. **Live finding while implementing**: the all-time residual is now **NEGATIVE
