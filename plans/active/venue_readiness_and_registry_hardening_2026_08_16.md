@@ -359,3 +359,43 @@ outside UAC) — all across the 7 umbrella repos. The capability-record concern 
 types, no merge needed) and error-code-map concern (implementation clean, coverage unverified) are also resolved/
 in-progress there; see that plan's todos 1 and 3. A future venue-readiness check should cite this baseline rather than
 re-running the same sweep.
+
+**2026-08-16 — "Declare archetype to feature_groups" (the P0 above this entry) built and verified, NOT YET SHIPPED —
+blocked by an unrelated repo-wide gate, not a design gap.** Research pass found `MULTI_GROUP_STRATEGIES`
+(strategy-service `cli/handlers/batch_data_loading.py`) is stale pre-v2 scaffolding (references archetype names that
+predate the current 59-member `StrategyArchetype` enum) — do not extend it. Of the 59 archetypes, only 5 have real
+code-level evidence for their feature_group consumption, traced to `paper_run_handler.py`'s tick-loader dispatch
+(frozenset-keyed by `spec.archetype`): `CARRY_STAKED_BASIS`, `CARRY_STAKED_BASIS_DATED`, `CARRY_RECURSIVE_STAKED` →
+`{lending_rates, lst_yields}`; `YIELD_STAKING_SIMPLE` → `{lst_yields}`; `YIELD_ROTATION_LENDING` → `{lending_rates}`.
+The remaining 54 (ML_DIRECTIONAL, RULES_DIRECTIONAL, MARKET_MAKING, VOL_TRADING, STAT_ARB_PAIRS, EVENT_DRIVEN, most
+ARBITRAGE_STRUCTURAL/MEV, DEFI_LP, PORTFOLIO, the CARRY_BASIS_PERP/DATED family) have zero code signal — no
+feature-name→feature_group registry exists to derive them mechanically either (checked: sample archetype default
+feature names like `"zscore_btc_1h"` don't map to a group without domain judgment). Operator ruling this session:
+declare only the 5 confirmed, mark the rest explicitly UNDECLARED (never silently "consumes nothing"), track the rest
+as follow-up.
+
+Built in `unified-api-contracts` (working tree, uncommitted as of this entry):
+`unified_api_contracts/internal/architecture_v2/archetype_feature_groups.py` (new — `ARCHETYPE_FEATURE_GROUPS`,
+`UNDECLARED_ARCHETYPES`, `ArchetypeFeatureGroupUndeclaredError`, `get_archetype_feature_groups()`,
+`get_archetype_required_inputs()` — composes with `canonical.domain.features.required_inputs
+.FEATURE_REQUIRED_INPUTS`, does not restate it), `unified_api_contracts/internal/architecture_v2/__init__.py`
+(exports wired in), `tests/unit/test_archetype_feature_groups.py` (new). Full repo `quality-gates.sh` run: 13246
+passed, 1 unrelated pre-existing failure (`test_execution_service_venue_coverage_cascade_invariant.py
+::test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_regressions`, confirmed via `git stash` on a
+clean tree to reproduce identically with none of these 3 files present).
+
+**Not shipped**: `quickmerge.sh` re-gates the full repo and blocks on that same failure — `karak`/`pendle`/`symbiotic`
+DeFi-connector reachability, already tracked (`/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
+P0, `/plans/active/issues/symbiotic_venue_onboarding_2026_08_16.md` P1). The baseline file's own commit note documents
+this exact set flip-flopping reachable/unreachable twice already today under a concurrent session's active DeFiAdapter
+wiring work — confirmed stable (not a stale race) via two identical consecutive quickmerge re-gates minutes apart.
+Operator chose "wait and retry later" over hand-editing the contested baseline file. **Resume**: `cd
+unified-api-contracts && git status` — if the 3 files above are still present in the working tree, re-run
+`bash scripts/quickmerge.sh "feat: declare archetype to feature_groups SSOT link (venue_readiness_and_registry_hardening_2026_08_16
+L228)" --agent --files 'unified_api_contracts/internal/architecture_v2/archetype_feature_groups.py
+unified_api_contracts/internal/architecture_v2/__init__.py tests/unit/test_archetype_feature_groups.py'` once the
+karak/pendle/symbiotic gate has cleared (check the two issue docs above first); if it lands, flip the "Declare
+archetype to feature_groups" checkbox above with the resulting `unified-api-contracts@<sha>`. If the 3 files are
+gone (a different session's checkout, or this slot's working tree was reset), this entry has the full design to
+redo it without re-running the archetype research — the 5-archetype mapping + citations above is the complete
+answer, not just a pointer.
