@@ -193,6 +193,32 @@ table updated in the same edit — it now ships as a stub like every other non-c
 to cover stETH haircuts/acceptance on 4 named CEX venues, not the fleet-wide `VENUE_COLLATERAL_MATRIX` — a much
 smaller, mostly-already-measured surface than originally scoped.
 
+## A4. Data scope — Tardis excluded entirely; DeFi data limited to Lido rate + gas fees (operator ruling 2026-08-16)
+
+**Tardis-sourced market data is not part of the carve-out at all.** Per operator: the Tardis subscription predates
+this contract, was never billed to the client, and is the firm's own asset. **The client receives zero historical
+Tardis data** — for the CEX market data the two real archetypes need (Bybit/Deribit/Binance/OKX, §A3), the client
+sources their own.
+
+**DeFi-specific data — traced against `staked_basis.py`'s actual feature reads**, since Annex A's Phase One
+deliverable ("historical performance, risk & volatility, and liquidity of basis trading strategy across major
+trading venues **and staking/re-staking programs**") plausibly obligates some unprocessed DeFi data. Given the
+narrowed §A3 scope (Lido staking only, no DeFi-side leverage), the archetype's real DeFi-sourced inputs are:
+
+- `staking_apy_bps` — Lido's stETH staking APY.
+- `lst_native_rate` / `lst_native_rate_ts` — Lido's stETH:ETH conversion rate.
+- `fees_apy_bps` (optional) — its own docstring folds in "funding, swap, **gas**"; the gas component is the
+  on-chain execution-cost data.
+
+Matches the operator's stated scope exactly: Lido rate data and gas fees, nothing else.
+
+- [ ] [AGENT] P2. **Resolve the DeFi-vs-CEX provenance of two optional `staked_basis.py` feature fields before
+      finalising the data-scope list above**: `health_factor` ("LST collateralisation health," used as a kill-gate
+      when the LST is posted as perp margin — may matter even without DeFi-native leverage, e.g. tracking stETH
+      depeg risk while stETH sits as CEX margin, or may be specific to on-chain borrowing health) and
+      `usdc_idle_yield_apy_bps` (idle USDC yield; on-chain money-market vs. a CEX earn product not established).
+      Trace each to its actual producer before deciding whether it counts as owed DeFi data under this scope.
+
 ## B. What the expansion adds, and therefore what the carve-out must account for
 
 The expansion plan changes what "real" means at the decision boundary, so the carve-out inherits it.
