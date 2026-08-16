@@ -615,6 +615,26 @@ issue's scope); flagged as a follow-up todo below.
       for those two exact windows may be more direct than further code tracing. Do not assume the live-shard
       candidate confirmed OR ruled out — it remains genuinely open, just deprioritized by this clue. (repo:
       market-tick-data-service, deployment-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up — deployment-archive check attempted, result is UNINFORMATIVE (not a
+      negative), a measurement trap caught before it was asserted.** Re-ran this doc's own scratchpad deploy-history
+      checker (`check_deploy_history_cf8_2026_08_15.py`, extended with the 2026-05-05 date) against
+      `deployment-scripts-central-element-323112/deployments/archive/<date>/` for both target write dates: **0
+      records for 2026-05-05, 0 records for 2026-07-13.** Before treating that as "no VM/deploy job ran on either
+      date" (which would have ruled out every deployment-service-tracked launch mechanism, including
+      `launch-mtds-live.sh`), checked when the archive itself starts: **earliest archived date is 2026-07-16** (32
+      total archived dates, all ≥2026-07-16). **Both target dates predate the archive mechanism's existence
+      entirely** — the 0-record result is uninformative by construction, not a real absence signal (CLAIM ≤
+      MEASUREMENT: 0 hits ≠ missing when the search tool itself doesn't cover the queried range). This neither
+      confirms nor rules out a deployment-service-launched job on either date; it just means this particular tool
+      can't answer that question for dates this old. **Precise next step, not yet tried**: (a) check whether MTDS
+      or the underlying VM hosts retain systemd/journal logs reaching back to 2026-05-05/07-13 (unlikely at this
+      remove, but worth one cheap check before ruling it out); (b) a more promising angle — read the GCS object
+      metadata (not the manifest row) on a small sample of the actual phantom-timeframe parquet shard files
+      themselves (`gcs_describe_object` per this repo's storage conventions, never subprocess `gsutil`) — object
+      `time_created`/`updated` plus any custom metadata (uploader identity, generating host/job name if stamped)
+      may carry a clue the manifest row itself doesn't, since the manifest and the underlying shard file are
+      written by the same process but the object metadata layer hasn't been inspected at all yet this entire
+      investigation. (repo: market-tick-data-service)
 
 ## Progress Log
 
