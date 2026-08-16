@@ -332,3 +332,12 @@ bar, framed as track (a) — "get the system to full capability and into a shape
 **2026-08-16 — dead reference dropped.** `strategy-service/EXTRACTION_AUDIT.md` was cited in `context_scope` but does
 not exist in the repo (working tree or git history, confirmed by full recursive search) — removed. See the child plan's
 Progress Log for the independent spot-check of the numbers this file was meant to back.
+
+**2026-08-16 — contract step 1 ("Declared") partially evidenced by W2.** Per
+`/plans/active/registry_ssot_hardening_2026_08_16.md`'s Measured Baseline (2026-08-16 sweep), three of the five
+"one declaration, no per-service copies" concerns are **clean, no fold needed**: adapter keys (exactly one
+`VENUE_TO_ADAPTER_KEY` dict), instrument types (zero redefinitions outside UAC), and data types (zero redefinitions
+outside UAC) — all across the 7 umbrella repos. The capability-record concern (three orthogonal `VenueCapability*`
+types, no merge needed) and error-code-map concern (implementation clean, coverage unverified) are also resolved/
+in-progress there; see that plan's todos 1 and 3. A future venue-readiness check should cite this baseline rather than
+re-running the same sweep.

@@ -118,13 +118,11 @@ needs a coverage audit (not a dedup).
         `OPTIONS_TRADE`↔`OPTIONS_TRADING`, `STAKE`↔`NATIVE_STAKING`, `PROVIDE_LIQUIDITY`↔`LP_PROVISION`. See new
         todo below — tracked separately since it's a fourth type, out of this todo's named scope, and not yet
         live (no `VenueCapabilityV2` instances exist to make it an active bug).
-- [ ] [DOC] P1. **Record the adapter-keys / instrument-type / data-type clean-SSOT verdict as contract-step-1
-      evidence.** The umbrella's step 1 ("Declared... one declaration, no per-service copies") needs a citable
-      evidence line, not just this plan's own table. Add a one-line pointer from
-      `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`'s contract table (or its Progress Log) to
-      this plan's Measured Baseline section for these three concerns, so a future venue-readiness check doesn't
-      re-run the same sweep. Done-when: the umbrella plan's Progress Log cites this plan + date for the three clean
-      verdicts.
+- [x] [DOC] P1. **Record the adapter-keys / instrument-type / data-type clean-SSOT verdict as contract-step-1
+      evidence.** ✅ Done 2026-08-16 — added a Progress Log entry to
+      `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md` citing this plan's Measured Baseline
+      (2026-08-16 sweep) for the three clean verdicts (adapter keys, instrument types, data types), plus a pointer to
+      this plan's todos 1 and 3 for the capability-record and error-code-map concerns.
 - [ ] [DATA] P0. **Audit error-code COVERAGE completeness per in-scope venue** (distinct from the classification
       *implementation*, already confirmed clean above). For each venue currently in the carve-out's contracted scope
       (Bybit, Deribit, Binance, OKX, Lido — per
@@ -178,3 +176,8 @@ finding in the process: `VenueCapabilityV2.features: list[VenueFeature]` uses a 
 overlaps `VenueCapability`'s under inconsistent casing — tracked as a new P2 todo since it isn't yet an active bug
 (nothing instantiates `VenueCapabilityV2` today). Also closed todo 4 (cross-referenced the umbrella's granularity
 `[OPERATOR]` item to `VenueCapabilityRecord` as the closest-fit shape — evidence only, not a decision).
+
+**2026-08-16 — todo (contract-step-1 evidence) resolved.** Added a Progress Log entry to the umbrella plan citing
+this plan's Measured Baseline for the three clean verdicts (adapter keys, instrument types, data types) plus a
+pointer to todos 1 and 3 here for the capability-record and error-code-map concerns — closes the umbrella's
+contract-step-1 "Declared" citable-evidence requirement for these three concerns.
