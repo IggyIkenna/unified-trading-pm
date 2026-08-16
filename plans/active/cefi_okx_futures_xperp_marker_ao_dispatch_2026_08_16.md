@@ -49,7 +49,8 @@ resolved_by:
 
 ## Todos
 
-- [ ] [DATA] P1. **RULED 2026-08-16 (operator): option (b) — encode `_XPERP` in the instFamily field.**
+- [x] ✅ [DATA] P1. **RULED 2026-08-16 (operator): option (b) — encode `_XPERP` in the instFamily field.**
+      market-tick-data-service@3acdd478e5.
       `market-tick-data-service/.../okx_futures_ws.py`: (1) extend `_OKX_FUTURES_WIRE_RE` to match
       `BASE-USD_UM_XPERP-YYMMDD` (add optional `_XPERP` after `_UM`) and set infix group to linear; (2) update
       `_instrument_to_okx_futures_inst_id` to emit `AAPL-USD_UM_XPERP-{yymmdd}` for xperp instruments, distinguishing
@@ -65,3 +66,15 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 6, operator ruling)**: extracted from
   `okx_futures_instid_marker_convention_mismatch_2026_07_30.md`; operator chose option (b) of the 3 listed
   disambiguation options (lookup via instruments-service / encode in instFamily / expiry heuristic).
+- **2026-08-16 (slot 6, backend_engineer)**: ✅ DONE — `market-tick-data-service@3acdd478e5`, quality-gates green
+  (10968 passed, 0 failed; sentinel `.qg_last_passed_sha=3acdd478e544b11db8d05cf31f255769e0da96cc`). Implemented
+  option (b) as a static `_OKX_FUTURES_XPERP_EQUITY_BASES` instFamily (base-quote) membership check in
+  `okx_futures_ws.py`, not a live lookup or expiry heuristic. Fixed the AAPL parity case in both
+  `test_okx_futures_live_batch_id_parity.py` and the pre-existing `test_okx_futures_ws_2026_07_13.py` (which the
+  QG run's first pass caught as 3 regressions — the old `AAPL-USD_UM-310613` expectation was never a real OKX wire
+  form; corrected to `AAPL-USD_UM_XPERP-310613`). **Scope note**: only the 28 confirmed-live equity/ETF xperp bases
+  are enumerated (exact match to the `[RESEARCH] P2` 2026-08-07 finding); the remaining 76 confirmed-live crypto
+  xperp bases are NOT yet enumerated by name in this codebase, so those contracts still round-trip through the
+  plain (non-xperp) wire form and remain silently unfixed. Follow-up todo filed on
+  `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` to enumerate + add them. This plan's only todo is
+  now done — eligible for archival.

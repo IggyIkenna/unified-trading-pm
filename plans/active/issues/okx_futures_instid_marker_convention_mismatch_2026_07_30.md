@@ -163,7 +163,7 @@ reasoning above.
       instId) for subscription. The just-shipped parity test (`market-tick-data-service@d964dce4`) also uses the wrong
       `AAPL-USD_UM-310613` wire form for its AAPL parity case. All 104 xperp subscriptions silently fail at 0 rows. New
       `[DATA] P1` todo added below.
-- [ ] [OPERATOR] P1. **na-eligibility-audit 2026-08-16**: this doc's own 2026-08-16 Progress Log entry records the operator ruling + extraction of this exact scope to `cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md` (+ finalize), assigned_vm: planning, status: active. Stays open here (source doc citation only), not yet done. Original text: **CORRECTED 2026-08-12 (/plan-reconcile)** — retagged `[DATA]` → `[OPERATOR]`: this todo's own text
+- [x] ✅ [OPERATOR] P1. **na-eligibility-audit 2026-08-16**: this doc's own 2026-08-16 Progress Log entry records the operator ruling + extraction of this exact scope to `cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md` (+ finalize), assigned_vm: planning, status: active — DONE 2026-08-16, `market-tick-data-service@3acdd478e5` (see that plan's Progress Log for full evidence). Original text: **CORRECTED 2026-08-12 (/plan-reconcile)** — retagged `[DATA]` → `[OPERATOR]`: this todo's own text
       (below) says "Needs `[OPERATOR]` decision ... tagging `[OPERATOR]` until decided," and the doc's own 2026-08-09
       na-eligibility-audit entry independently confirms "genuine operator-gated design work" — the bracket tag was never
       actually updated to match. **Add `_XPERP` infix support to OKX-FUTURES wire-format handling**
@@ -177,6 +177,18 @@ reasoning above.
       `AAPL-USD_UM_XPERP-310613` ↔ `OKX-FUTURES:FUTURE:AAPL-USD@LIN-20310613` parity. Source: `[RESEARCH] P2` above
       (2026-08-07). Needs `[OPERATOR]` decision on (a)/(b)/(c) before implementation — tagging `[OPERATOR]` until
       decided.
+- [ ] [RESEARCH] P2. **NEW 2026-08-16 (slot 6, follow-up gap from the `[DATA]`/`[OPERATOR] P1` fix above).** The
+      shipped `_OKX_FUTURES_XPERP_EQUITY_BASES` set in `okx_futures_ws.py` only enumerates the 28 confirmed
+      equity/ETF-like xperp base symbols from `[RESEARCH] P2`'s 2026-08-07 finding (AAPL AMD AMZN GOOGL META MSFT
+      NVDA TSLA AAOI BILL COIN CRCL EWY HOOD INTC MRVL MSTR MU PLTR QCOM QQQ SAMSUNG SKHYNIX SNDK SOFTBANK SOXL
+      SPCX SPY). The remaining 76 confirmed-live crypto xperp base symbols (part of the same 104-instrument
+      `ruleType=xperp` universe, `/api/v5/public/instruments?instType=FUTURES`) were never enumerated by name in
+      that finding, so `_instrument_to_okx_futures_inst_id` still emits the plain non-XPERP wire form for them —
+      those contracts remain silently mis-subscribed (same failure mode as the equity ones, just not yet fixed).
+      Live-verify + enumerate the 76 crypto base symbols via `/api/v5/public/instruments?instType=FUTURES`
+      (`ruleType=xperp`, excluding the 28 already-known equity/ETF ones), then add them to
+      `_OKX_FUTURES_XPERP_EQUITY_BASES` (or a sibling crypto set) in `market-tick-data-service`'s
+      `okx_futures_ws.py`. Repo: market-tick-data-service.
 
 ## Progress Log (na-eligibility-audit)
 
@@ -236,3 +248,7 @@ reasoning above.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-16** [body-hash:204e1fba79b30ecd]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
+- **2026-08-16 (slot 6, backend_engineer)**: `[OPERATOR] P1` DONE — `market-tick-data-service@3acdd478e5` (via
+  `cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md`), QG green (10968 passed, 0 failed). Filed new
+  `[RESEARCH] P2` above for the 76 unenumerated crypto xperp base symbols — genuine remaining gap, not fully closed
+  by this fix.
