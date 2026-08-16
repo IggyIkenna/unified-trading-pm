@@ -344,6 +344,20 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   now-real catalogue, `unified_api_contracts/canonical/quarantine.py`), deliberately left as real future data work
   rather than force-closed to trigger archival. Per the plan-completion-and-archival hard rule, archival requires EVERY
   todo done — this one isn't, so the plan correctly stays `status: active` until that reconciliation pass actually runs.
+
+- **2026-08-16 (mechanism-attribution correction filed)** — during a `/pre-compact` audit, discovered that
+  `pacifica_solana_canonical_mechanism_unconfirmed_2026_08_15.md` (archived, a separate session/AO worker's
+  follow-up on this plan's own reconciliation todo) had reached a wrong root-cause conclusion for the 787-object
+  canonical rename: it attributed the rename to an ordinary capture/backfill CLI re-run with "no new script, hence
+  no commit in either repo" — but the true mechanism was this session's own purpose-built, delete-safety-protocol-
+  compliant migration script (`market-tick-data-service/scripts/migrate_pacifica_quarantine_canonical_2026_08_15.py`,
+  written and executed earlier in this session, first-hand verified via source read + `ps aux` monitoring +
+  independent post-run GCS/manifest re-query), which simply hadn't landed a commit yet when the other worker's
+  `git log --grep=pacifica` check ran. Corrected `quarantine.py`'s registry entry
+  (`unified-api-contracts@fd69b7cb52`) and filed the full correction record + remaining follow-up todos (MTDS
+  docstring correction, shipping the migration script — both blocked by an unrelated live cross-session
+  `.gitleaks.toml`/`.pre-commit-config.yaml` rollout in market-tick-data-service) at
+  `/plans/active/issues/pacifica_solana_canonical_mechanism_correction_2026_08_16.md` (`unified-trading-pm@c05d71c06d`).
   **Final state**: full stack live in production code across 5 repos (UAC, instruments-service, MTDS, execution-service
   simulation-only, strategy-service), zero `DEFERRED`/`BLOCKED-OPERATOR` end-states per the autonomous-completion
   contract — the one open item is a tracked `- [ ]` todo with a clear unblock condition (a reconciliation pass, not a
