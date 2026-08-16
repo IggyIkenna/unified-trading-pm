@@ -130,17 +130,30 @@ helper, not a hand-rolled copy.
       when: a submitted instruction reaches the real handler (verified via a paper-mode round-trip, not a mock),
       `quality-gates.sh --no-fix` green, cited.
 
-## W2 — Archetype feature-group scaffold: awaiting human review, not dispatched
+## W2 — Archetype feature-group scaffold
 
-- [ ] [REVIEW] P1. **Operator reviews the [Archetype Feature
-      Scaffold](https://claude.ai/code/artifact/c6c345e7-10fb-4679-b9d2-6eada7fc3f6c)** and marks up which of the 55
-      candidate rows to actually declare. Once marked up, the entries the operator approves become a small, bounded
-      follow-up todo (declare exactly those rows in `ARCHETYPE_FEATURE_GROUPS`, matching the module's existing
-      evidence-comment convention) — not opened until the review comes back. The 12 rows flagged as genuine registry
-      gaps (no `feature_group` exists at all — CeFi perp-funding basis, on-chain MEV, DEX-pool-state/vault-share-
-      price) are a separate, likely-larger follow-up (new feature_group definitions in features-onchain /
-      features-delta-one, not an archetype-declaration task) — do not fold them into the same follow-up as the
-      confidence-tagged declarations.
+- [x] [REVIEW] P1. ✅ Operator reviewed the [Archetype Feature
+      Scaffold](https://claude.ai/code/artifact/c6c345e7-10fb-4679-b9d2-6eada7fc3f6c) 2026-08-16 and approved the
+      35-row High-confidence tier for declaration. Shipped —
+      `unified-api-contracts@a617bbdf` ("feat: declare 35 High-confidence StrategyArchetype feature_group mappings
+      (operator-reviewed scaffold, W2)"): `ARCHETYPE_FEATURE_GROUPS` grew from 5 to 40 declared archetypes (verified
+      via direct Python import: `len(ARCHETYPE_FEATURE_GROUPS)==40`, `len(UNDECLARED_ARCHETYPES)==20`,
+      `40+20==60` ✓); the module docstring now honestly distinguishes the two evidence tiers (dispatch-code-traced
+      vs. operator-reviewed-scaffold) rather than conflating them. One real, correct side-effect caught by
+      `quality-gates.sh` and fixed in the same commit:
+      `tests/unit/test_venue_strategy_consumability.py::test_venue_with_no_satisfying_archetype_fails` asserted a
+      venue offering only `ohlcv_1m` satisfies no archetype — no longer true, since `ML_DIRECTIONAL_CONTINUOUS`/
+      `RULES_DIRECTIONAL_CONTINUOUS`/`TSMOM_BTC_CTA` all resolve to `ohlcv_1m`-only inputs now. Fixed the fixture to
+      `mev_events` (a real registry gap — zero feature_group consumers anywhere) rather than weakening the check.
+      `quickmerge.sh` printed a transient exit-10 "silent revert" warning mid-run (a concurrent peer's push landing
+      during the Not-Behind Gate) — verified directly (file content diff + `git show HEAD:<path>` + `git
+      merge-base --is-ancestor HEAD origin/live-defi-rollout`) that the final commit genuinely landed with the full
+      change on both local HEAD and origin before treating it as done; not a blind re-run.
+- [ ] [REVIEW] P2. **The 20 rows NOT declared** (8 Medium — ambiguous domain/ML-layer-unclear; 12 Low — genuine
+      `feature_group` registry gaps: CeFi perp-funding basis, on-chain MEV, DEX-pool-state/vault-share-price,
+      PORTFOLIO_MULTI_STRATEGY's meta-strategy shape) remain open in the scaffold artifact, un-actioned. The 12 gap
+      rows are a separate, likely-larger follow-up (new `feature_group` definitions in features-onchain/
+      features-delta-one, not an archetype-declaration task) — do not fold them into a future declaration pass.
 
 ## W3 — Granularity declaration (step 13) — land early, genuinely independent
 
