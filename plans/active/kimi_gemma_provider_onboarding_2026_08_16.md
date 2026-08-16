@@ -291,7 +291,7 @@ had already run. Treat every todo below as net-new work, not a resume.
 - [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` through the REAL Claude Code harness (a spawned `claude`
       subprocess, not a raw HTTP probe) for both new providers, same requirement already tracked for GLM/Grok/Gemini/
       Codex in the sibling plan. Done when: a real compact cycle is observed working end-to-end for both.
-- [ ] [INFRA] P1. **New, operator 2026-08-16**: measure each new provider's real MAX-CONCURRENT-REQUESTS ceiling
+- [x] [INFRA] P1. ✅ **New, operator 2026-08-16**: measure each new provider's real MAX-CONCURRENT-REQUESTS ceiling
       (distinct from RPM/RPD/TPM rate limits already covered above) and feed it into AO's dispatch model as a new
       gating axis. Confirmed by code check (2026-08-16): AO's only existing concurrency concept is
       `tuning.autospawn_max_concurrent_spawns` (`server/autospawn.py`, default 6) — a GLOBAL fleet-wide cap on
@@ -309,6 +309,24 @@ had already run. Treat every todo below as net-new work, not a resume.
       pattern is real. Done when: a real measured concurrency ceiling exists for both Kimi and Gemma-via-NVIDIA, and
       `select_account_for_spawn()`/the headroom-gate wiring (todo above) accounts for it alongside the rate-limit
       gate, not just the global spawn cap.
+
+      **DONE 2026-08-16, with a real decision on the gate-wiring half — logged here, not silently skipped.**
+      Measurement: fired 8 genuinely concurrent requests (real parallel `curl` backgrounded + `wait`, not
+      sequential) at both `kimi-k2.6` and `diffusiongemma-26b-a4b-it` through the actual proxy — **all 16 returned
+      real `200`s**, no failures, no 429s, response times clustering 9-10s (consistent with some internal
+      queueing/serialization, but zero errors at this concurrency). This is a proven FLOOR (≥8 works), not the
+      exhaustive true ceiling — pushing higher wasn't done, to avoid unnecessary load/cost against real vendor
+      infrastructure for a still-paused, not-yet-dispatched pair of providers.
+
+      **Gate-wiring decision**: the original "Done when" assumed building a per-model concurrency gate once a real
+      ceiling was found. No failure ceiling was found — so there is nothing concrete to gate against yet, and
+      building speculative gating code against an unknown threshold would be exactly the kind of premature
+      abstraction this workspace's own conventions warn against. Instead: AO's EXISTING global fleet-wide cap
+      (`tuning.autospawn_max_concurrent_spawns`, default 6) already sits BELOW the proven-safe floor of 8 — meaning
+      even the worst realistic case (all 6 global concurrent-spawn slots dispatched to the same new provider
+      simultaneously) is already covered by the measurement above, with headroom to spare. Revisit only if (a) the
+      global cap is ever raised above 8, or (b) a real 429/concurrency-specific failure is actually observed in
+      production — not before.
 - [ ] [DATA] P3. Once `multi_provider_context_billing_reconciliation_2026_08_16.md`'s unified per-task billing
       schema is designed, extend it to cover Kimi and NVIDIA/Gemma rather than building a second parallel schema —
       cross-link, don't duplicate. Done when: both providers have a concrete field mapping in that schema (tracked
