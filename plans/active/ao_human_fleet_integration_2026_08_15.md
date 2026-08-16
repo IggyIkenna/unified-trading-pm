@@ -519,7 +519,16 @@ investigation confirmed are both achievable with existing primitives:
       `GET /api/agents?kind=human` call — `"role":"human"`, `"agent_kind":"human"` (not `"custom"`), confirming
       `agent-orchestrator@609e4ea377`'s fix is live in production too (self-pulled via the standing 15-min LDR cron).
       Done when: met — `ikenna` is live in AO's `GET /api/agents` with `role="human"`, `agent_kind="human"`.
-- [ ] [SCRIPT] P2. **Ikenna — run one real, low-stakes task end-to-end.**
+- [ ] [SCRIPT] P2. **Ikenna — run one real, low-stakes task end-to-end.** **Attempted 2026-08-16, genuinely blocked —
+      not skipped, not forced.** Fetched the FULL live queued backlog (`GET /api/backlog?status=queued`, 314 tasks,
+      confirmed exhaustive — `limit=2000` returned the same 314 as `limit=200`): every single one carries a non-null
+      `blocked_reason` (`gate_on_depends`, unmet prereq task, etc.) — zero tasks are currently ready for AO's own
+      dispatch. `_human_claim_verdict` does NOT re-check `gate_on_depends`/prereq state at all (only
+      dispatched_to/status/next-50-ranking) — a human COULD technically force-claim a gated task through this path,
+      but doing so means working against a prerequisite the system itself says isn't met, which is a worse outcome
+      than deferring. Correctly left un-run rather than manufactured. Re-attempt once something genuinely clears (the
+      backlog is fluid — re-run the same fetch+filter to check), or the operator names a specific task directly to
+      override the "wait for something ready" default. Steps for when a candidate exists:
       `AO_SLOT_ID=9001 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable), then without
       `--check-only` to actually claim, do the real work, commit+push+flip the plan checkbox, then
       `AO_SLOT_ID=9001 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`, then run
