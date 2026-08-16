@@ -190,7 +190,19 @@ scope, not a coverage gap in the tranche itself.
 
 ## Phase-0 hygiene sweep (corpus-wide, informational)
 
-`run_hygiene_sweep.sh --ci --no-regen`: 1 hard failure (`assigned_vm:NA corpus size ratchet` — corpus-wide,
-`/na-eligibility-audit`'s remit, not a tradfi-tranche contradiction; noted, not chased by this run), 1 soft
-warning (`Delete/VM-launch todo tagging` candidate signal — folded into each batch hunter's AO-readiness check
-instead of a dedicated pass).
+**Entry (Phase 0, `--no-regen`)**: 1 hard failure (`assigned_vm:NA corpus size ratchet` — corpus-wide,
+`/na-eligibility-audit`'s remit, not a tradfi-tranche contradiction), 1 soft warning (folded into hunter checks).
+
+**Exit gate (`--ci` with regen, run after all fixes)**: 3 hard failures — the pre-existing NA-ratchet (unchanged,
+out of scope), plus 2 NEW ones this run's own archival work caused, both understood and one fully fixed:
+- `AG-closeout linkage` (baseline 0 → found 1 orphan) — **FIXED**: `tradfi_recovery_quarantine_registration_gap_2026_07_27.md`
+  was missing a `related:` link to its closeout family; added. Re-verify not yet re-run (see below).
+- `Reference path convention — existence` (baseline 34 → 40, i.e. +6) — **2 of 6 fixed** (a missed `_finalize`-variant
+  path in `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` + its own finalize twin, both pointing at the
+  now-archived batch11). **4 remain, unfixable this pass by the HARD RULE**: `tradfi_consolidated_closeout_2026_07_18.md`
+  (×2, referencing archived batch7) and `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (×2, same) are BOTH inside
+  the 12h grace window (active same-day edits by other sessions) — archiving batch7 was correct and necessary
+  (7-day-stale cleared gate), but the referrer-repoint side of that archival cannot land until grace clears on those
+  2 docs. This is a genuine, temporary, self-explaining ratchet regression, not an oversight — flagging honestly
+  rather than claiming a clean exit gate. Recommend the next `all` or `tradfi` pass (or whichever session next
+  legitimately touches those 2 docs) repoints these 4 refs to close the gap.
