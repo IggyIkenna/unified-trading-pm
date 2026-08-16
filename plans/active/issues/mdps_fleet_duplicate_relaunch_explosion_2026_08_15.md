@@ -392,9 +392,31 @@ campaigns, this session:
       data-capture work was lost; no relaunch needed. Correcting the prior framing here — this was NOT "real stalled
       backfill work sitting idle," it was disposable test infrastructure. Leave any genuinely-needed backfill coverage
       to normal AO-dispatched agents working against fresh (fixed) code going forward, not a manual bulk-relaunch pass.
-- [ ] [OPERATOR] P1. `lc_log_upload_trap_block`'s RUNNING sentinel has existed since 2026-07-13 — over a month before
-      this was caught. Historically scope how far back this false-kill class goes for launchers using that wrapper (this
-      pass only swept the last 24h of Cloud Logging). May surface additional silently-lost campaigns predating today.
+- [x] [SCRIPT] P1. `lc_log_upload_trap_block`'s RUNNING sentinel has existed since 2026-07-13 — over a month before this
+      was caught. Historically scoped how far back this false-kill class goes via bounded `gcloud logging read` sweeps
+      (project `central-element-323112`) over `resource.type="gce_instance"` for the exact
+      `textPayload:"reason=zombie_finished_not_shutdown"` kill signature and the broader `textPayload:"WARNING ZOMBIE"`
+      pre-kill-decision signature, across 2026-06-15→2026-08-15T07:39:00Z (covers the full `lc_log_upload_trap_block`
+      lifetime plus the watchdog's own launch history). **Result: CONFIRMED ZERO PRIOR KILLS** — both queries return
+      nothing before 2026-08-15T07:38:26Z (the literal first kill of the already-documented incident;
+      07:39 in this doc's earlier text rounds that same event). Cross-checked against the watchdog's own GCE
+      `instances.insert` audit-log history (`protoPayload.methodName="v1.compute.instances.insert"`,
+      `protoPayload.resourceName:"vm-zombie-watchdog"`): the watchdog VM was launched/relaunched 06-23 (×2, ~21min
+      apart), 07-18 (×3, all within one hour), 08-05 (×1), 08-07 (×2, ~16min apart), 08-10 (×4) — every pre-08-10 batch
+      is a cluster of short-lived relaunches consistent with script iteration/testing, not standing continuous
+      coverage. The 08-10T16:30:07Z instance (`vm-zombie-watchdog-20260810-163005`) is the first to run continuously
+      for days; its own serial-console sweep log (sampled 08-14T20:37-21:14, ~5min cadence) shows repeated
+      `INFO watchdog complete: killed 0/0 zombies` right up to 08-15T07:38:26Z, when it logged the first-ever
+      `WARNING ZOMBIE ... reason=zombie_finished_not_shutdown` and killed `mtds-oracle-prices-backfill`. Verified this
+      isn't a Cloud Logging retention artifact: a control query for generic `gce_instance` log lines on 2026-06-23
+      (the earliest watchdog launch, ~54 days before "today" 2026-08-16) successfully returned timestamped entries,
+      proving that date is inside the queryable window despite `_Default` bucket `retentionDays: 2` metadata (this
+      project's logs are evidently retained well past that stated value — noted for future queries, not re-derived
+      further here). **Conclusion: the false-kill class had zero real blast radius before 2026-08-15T07:38:26Z** — not
+      because the sentinel bug wasn't live (it was, since 07-13), but because no watchdog instance ran with continuous
+      coverage against a genuinely long-running VM until the 08-10 instance, and even that instance observed nothing
+      qualifying for 5 days until the morning of 08-15. No additional silently-lost campaigns predating 2026-08-15
+      found. Query evidence (exact filters + zero-hit / first-hit results) is in the Progress Log entry below.
 - [ ] [SCRIPT] P2. Re-derive the ORIGINAL "four preemptions" narrative above from the raw
       `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text (not just this doc's own paraphrase) to confirm vs.
       definitively refute whether those specific four dispatch events were themselves triggered by this watchdog bug
@@ -519,3 +541,44 @@ Exactly one watchdog VM now live in the fleet, running the fixed code.
 `lc_log_upload_trap_block` sentinel's 2026-07-13 vintage means this false-kill class may predate today by over a month,
 not historically scoped beyond this session's 1-day sweep; and the tarball-install swallowed-failure bug in
 `launch-vm-zombie-watchdog.sh` is a separate, real bug worth its own fix.
+
+### 2026-08-16 — historical blast-radius scope for the pre-2026-08-15 window (read-only investigation)
+
+Scoped how far back the `zombie_finished_not_shutdown` false-kill class actually goes, per the P1 todo above. Two
+bounded `gcloud logging read` queries (project `central-element-323112`, `resource.type="gce_instance"`, `--account
+unified-trading-sa@central-element-323112.iam.gserviceaccount.com`), both windowed `timestamp>="2026-06-15T00:00:00Z"
+AND timestamp<"2026-08-15T07:39:00Z"` (widened past the requested 30-day floor to also cover the watchdog's earliest
+launch on 2026-06-23):
+
+- `textPayload:"reason=zombie_finished_not_shutdown"` (the exact kill-decision signature) → **0 rows** before
+  `2026-08-15T07:38:26.931093083Z` (two duplicate lines for that one kill — hostname-prefixed + raw serial-port
+  format — both timestamped identically; this is the same first kill this doc already documents as starting "07:39
+  UTC").
+- `textPayload:"WARNING ZOMBIE"` (the broader pre-decision log line, covers every zombie classification the watchdog
+  ever made, including the unrelated-but-legitimate `zombie_stale_heartbeat` reason) → first hit
+  `2026-08-14T22:39:50Z` (`reason=zombie_stale_heartbeat`, not the sentinel bug), and the sentinel-bug reason only
+  appears starting `2026-08-15T07:38:26Z`. Zero hits of any kind before `2026-08-14T22:39:50Z`.
+
+Cross-checked against the watchdog's own launch history (`protoPayload.methodName="v1.compute.instances.insert"`,
+`protoPayload.resourceName:"vm-zombie-watchdog"`, unbounded from 2026-06-01): launches at 06-23 (×2, 21min apart),
+07-18 (×3, all within one hour), 08-05 (×1), 08-07 (×2, 16min apart), 08-10 (×4, last one `vm-zombie-watchdog-
+20260810-163005` at 16:30:07Z). Every pre-08-10 cluster is short-lived relaunches consistent with iterative
+script development/testing, not standing fleet protection — so there was no meaningful continuous watchdog coverage
+window before 2026-08-10T16:30Z for this bug to have fired against in the first place. Pulled a serial-console sample
+from the 08-10 instance's own sweep loop (08-14T20:37-21:14Z, ~5min cadence): consistently `INFO watchdog complete:
+killed 0/0 zombies` for hours, right up to the 07:38:26Z first kill the next morning — direct proof this specific
+long-lived watchdog instance evaluated real fleet VMs repeatedly for days without misfiring, until the morning of
+08-15.
+
+Ruled out a Cloud Logging retention false-negative: `_Default` bucket metadata reports `retentionDays: 2`
+(`gcloud logging buckets describe _Default --location=global`), which would make a 06-15-start window meaningless if
+taken at face value — but a control query for any `gce_instance` textPayload on 2026-06-23 (54 days before "today")
+successfully returned real timestamped rows, proving this project's logs are actually retrievable well past the
+stated 2-day value (a stale/inapplicable bucket setting, not a real 2-day cutoff — flagging for whoever next relies on
+that field, not fixed here as it's out of this task's scope).
+
+**Verdict: CONFIRMED ZERO prior blast radius.** No VMs were falsely killed by this bug before
+`2026-08-15T07:38:26Z` — the already-documented ~320-VM incident (itself since confirmed by the operator to be a
+disposable smoke-test batch) is the ENTIRE blast radius of this bug to date, despite the underlying sentinel having
+been live since 2026-07-13. No additional silently-lost production campaigns were found. No operator action needed on
+this specific question — todo marked done above.
