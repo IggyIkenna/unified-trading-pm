@@ -884,6 +884,11 @@ sequenced and nothing is unblocked-out-of-order or orphaned.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 10, operator ruling — scoped)**: operator asked to
+  dispatch slot-2's GATE C `--apply-write`, with an explicit caution to confirm accuracy against latest code
+  first. Extracted a RE-VERIFICATION-ONLY task to
+  `/plans/active/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md` (+ finalize) — the actual
+  `--apply-write` is NOT dispatched by this extraction, pending that re-verify's outcome.
 - **context-scout 2026-08-05 (slot-14)**: line-cap remediation pass 3 — extracted the closed R5 smoke ledger (~125
   lines, every todo done, one-time probe data from 2026-06-11) to
   `/plans/archive/2026_08/master_data_canonicalisation_migration_catalogue_r5_smoke_ledger_history_2026_08_05.md`;

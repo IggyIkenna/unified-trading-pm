@@ -622,6 +622,11 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 10)**: confirmed against
+  `/codex/02-data/cross-asset-canonical-target-ssot.md` D1 — manifest `instrument_type` COLUMN case is
+  UPPERCASE for cefi (operator-ruled 2026-07-20, "uppercase is fine"), matching this same line 523/2,982-row
+  directive exactly. This is the SAME item already extracted in round 3 (below), not a separate open question —
+  the audit report's flagging of it as distinct was a duplicate, closed by citation. No new action.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 3, operator ruling)**: the instrument_type casing residual
   (line 523, 2,982 non-canonical rows) — **re-count fresh, then apply** — extracted to
   `cefi_casing_residual_ao_dispatch_2026_08_16.md` (`assigned_vm: planning`).

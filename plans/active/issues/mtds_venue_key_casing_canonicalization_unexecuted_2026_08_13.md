@@ -95,3 +95,10 @@ documented decision going silently unimplemented, and a new venue integration th
       only once every registration is confirmed canonical. **Done when**: every venue key in the registry is UPPERCASE,
       a live shard-spec dispatch for each affected venue is confirmed working, and a follow-up removes the now-redundant
       lowercase/uppercase fallback branches.
+
+## Progress Log
+
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 10, operator ruling — re-verify then execute)**:
+  extracted to `/plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md` (+ finalize)
+  for AO dispatch, since this doc stays `assigned_vm: NA`. Operator asked to re-confirm the design against
+  current code before executing, folded into the dispatched todo.
