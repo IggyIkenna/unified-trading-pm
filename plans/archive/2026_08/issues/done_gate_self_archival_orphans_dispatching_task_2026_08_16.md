@@ -10,7 +10,7 @@ summary: >-
   this case either — it only scans `status="dispatched"` rows, not `status="cancelled"` ones — so a worker whose real
   work is genuinely complete and verifiably on origin has no automated recovery path and must fall back to
   `/skip-current-task`.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -25,11 +25,15 @@ parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
-resolved_by:
+resolved_by: slot-25 (backend_engineer)
 source: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/verify.py, agent-orchestrator/scripts/orchestrator/reconcile_done_gate_rejections.py]
 depends_on: []
 drift_direction: advance-code
 ---
+
+> **ARCHIVED 2026-08-16** — all 3 todos done, unlocked, closed out via the standard 6-step ritual.
+> Every corpus referrer has been fixed (none found outside this doc); this doc is retained for provenance only.
+> Nothing further to action here — see the Todos + Progress Log below for full history.
 
 # /done M3 gate vs. self-archival-cancelled TaskRow (2026-08-16)
 
@@ -122,11 +126,23 @@ response), followed `worker.md`'s documented handling for a cancelled-mid-sessio
       rows with an unresolved `slot_done_rejected_no_plan_flip` event and a verifiably-on-origin cited sha — same
       verification/flip logic, just widen the `WHERE status = ...` scope past the current `"dispatched"`-only filter.
       Repo: agent-orchestrator. — ✅ agent-orchestrator@d75732a1f9
-- [ ] [BACKEND] P3. Live-repro `verify._archival_rename_disposition` against this exact commit shape (same-commit
+- [x] [BACKEND] P3. Live-repro `verify._archival_rename_disposition` against this exact commit shape (same-commit
       checkbox flip + `git mv`, single-repo mode-1) in an isolated scratch repo to confirm whether it resolves
       correctly on its own once the `status=cancelled` short-circuit gap above is fixed, or whether it has a
       SEPARATE bug for this case — this issue's own investigation stopped at the DB-level cancellation finding and
-      didn't need to determine which. Repo: agent-orchestrator.
+      didn't need to determine which. Repo: agent-orchestrator. — ✅ agent-orchestrator@e3597c70d9 (SEPARATE bug
+      confirmed, not just the cancelled short-circuit gap: live-repro'd `_archival_rename_disposition` directly
+      against the ACTUAL incident commit `unified-trading-pm@5c725d68da` and its parent `aff23df235` — returned
+      `False`. Root cause: `_UNCHECKED_TAG_PRIORITY_RE` lacked the `_ORDINAL_PREFIX_RE` tolerance its sibling
+      `_CHECKED_TAG_PRIORITY_RE` already has, so `_tag_priority_line_statuses` always found ZERO same-tag-priority
+      "open" lines for todo 9's `- [ ] 9. [REVIEW] P3. ...` line (numbered-todo doc), which silently broke
+      `_disposition_by_tag_position` — the ordinal-position fallback tier `_archival_rename_disposition` needs
+      because this commit's closure line was fully REWORDED ("NEW... re-verify" -> "DONE... coverage gap
+      confirmed"), not just checkmark-annotated, so `_shares_distinguishing_content`'s vocabulary check couldn't
+      correlate it either. Fixed the regex (1-line change) + added a hermetic single-repo regression test
+      reproducing the same shape; confirmed post-fix `_archival_rename_disposition` returns `True` against the
+      real commit. Full local `quality-gates.sh` green: 3986 pytest passed (+1 new), 2 skipped, dashboard
+      tsc/vitest green.)
 
 ## Progress Log
 
@@ -143,3 +159,9 @@ response), followed `worker.md`'s documented handling for a cancelled-mid-sessio
   unrelated task assignment out from under the slot. Guarded it to only clear when `slot.current_task ==
   candidate.task_id` still holds. Added 3 new tests (cancelled candidate discovery + the two clear/no-clear slot
   guard cases) plus the pre-existing suite; full `quality-gates.sh --no-fix` green (3981 passed, 2 skipped).
+- 2026-08-16 (slot-25, backend_engineer) — todo 3 shipped (`agent-orchestrator@e3597c70d9`): live-repro'd
+  `_archival_rename_disposition` directly against the real incident commit `unified-trading-pm@5c725d68da`
+  (not a synthetic scratch repo) and confirmed it returns `False` pre-fix — a genuine SEPARATE bug, not just
+  the `status=cancelled` short-circuit gap todo 1 fixed. Root cause + fix: see the todo-3 checkbox annotation
+  above. All 3 todos now done and this doc is unlocked — archiving in a follow-up commit per the 6-step
+  ritual (cross-repo flip+archival stays split across two commits per `RULES.md` § 2).
