@@ -6,8 +6,11 @@ summary:
   clean-partition). This is the parent's own CORE original scope -- the F1-F7/N1-N9 findings from the 2026-06-17
   subset+consistency audit, the pre-`--apply` blocker gate, the GCS delete-safety invariant + migration prerequisite
   map, the execution sequence, the v9 `_index` column population + venue/instrument_type spelling canonicalisation
-  (N6r), the migration-unmappable-residue diagnosis, and Phase A-D findings/remediation. **DONE, 0 open** (was
-  stale "29/43, 14 open" -- corrected 2026-08-16 plan_reconciler). ARCHIVE-READY.
+  (N6r), the migration-unmappable-residue diagnosis, and Phase A-D findings/remediation. **Checkbox count reads 0
+  open `- [ ]` (corrected 2026-08-16 plan_reconciler) but that is a DELEGATION ARTIFACT, not genuine completion --
+  see `..._finalize.md` (3 independent 2026-08-11/12 dispatches) -- N5r/N6r reads `[x]` only via delegation to
+  `/plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e), still open
+  (fresh-checked 2026-08-16). NOT archive-ready -- plan_reconciler's "0 open" was checkbox-count-only.**
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -512,14 +515,9 @@ finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
       `gcs_copy_object` import = runtime ImportError → restored to canonical `cloud_interface` form). e2e QG green
       (foreign untracked `verify_unmappable_legacy_content_aware.py` set aside — its `qg-cloud-sdk` noqa trips the
       TID251 ratchet, see N-residual below). Direct-LDR push (dirty-deps carve-out: live foreign UAC WIP). — e2e-testing
-- **[INFRA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`** (steps 1-4 of the
-  5-step item below; step 5, the legacy-bucket delete, stays here — operator-gated, tracked with the other legacy
-  deletes). Research `-prd-` buckets carry NO `_index/` — move the availability index off the legacy
-  `perp-funding`/`lst-rates` buckets. See the batch doc for the full scoped todo; do not duplicate-dispatch steps 1-4
-  from here. Step 5 (retained here): **ONLY once steps 1-4 land via the batch doc are the legacy research buckets
-  delete-safe (operator-gated, tracked with the other legacy deletes).** SSOT:
-  `/codex/05-infrastructure/manifest-consolidator-ssot.md` +
-  `e2e-testing/docs/defi/research_data_canonical_sources_2026_06_18.md`. — deployment-service/e2e-testing
+- [x] ✅ [INFRA] P2. **DONE 2026-08-09/16 (batch2 reconciliation) — stale premise.** Legacy AND `-prd-` twin
+  research buckets (perp-funding, lst-rates) confirmed DELETED (404, ≥4 corroborating docs). Nothing to seed-copy;
+  docstring fix `e2e-testing@44b46eb`. **Step 5 (legacy-bucket delete) now MOOT.** Was: EXTRACTED → batch2 (archived).
 
 - [x] ✅ [CODE] P3. **e2e `verify_unmappable_legacy_content_aware.py` non-ruff `# noqa: qg-cloud-sdk`** — FIXED by the
       authoring (migrate/audit) agent 2026-06-18 (e2e-testing@9bd18bf). The two GCS upload sites were routed through
@@ -611,17 +609,16 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       objects are GCS-written; the defi `availability_index.parquet` records them on the next `rebuild_defi_manifest.py`
       walk / consolidator run (folded into the N5r/N6r rebuild-for-real-replace below — do NOT run a competing partial
       rebuild). — e2e-testing
-- **[DATA] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Verify-then-delete
-  the ~122 genuinely-legacy-only tradfi stragglers — reversibility-verified (604800s GCS soft-delete confirmed, finding
-  T), named bucket, TWIN-VERIFIED-SAFE-only scope. See the batch doc for the full scoped todo; do not duplicate-dispatch
-  from here. — e2e-testing
+- [x] ✅ [DATA] P3. **DONE 2026-08-09/16 (batch2 reconciliation)** — TradFi legacy stragglers deleted —
+  `instruments-service@2e069b6ce8`: 977 deleted via `gcs_conditional_delete` (0 failed), 117 already gone,
+  soft-delete 604800s confirmed. Was: EXTRACTED → batch2 (archived). — instruments-service
 
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
-- **[DATA] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** F1 — confirm or
-  resume the KRAKEN-SPOT/KRAKEN-FUTURES 6-year backfill (LIGHTER-ZKSYNC/PACIFICA-SOLANA/ EXTENDED-STARKNET already
-  completed 2026-06-18; Kraken was reported RUNNING with ETA ~1h as of 2026-06-18/19 and never revisited). See the batch
-  doc for the full scoped todo; do not duplicate-dispatch from here. — instruments-service
+- [x] ✅ [DATA] P1. **DONE 2026-08-09/16 (batch2 reconciliation) — verification-only.** F1 — fresh bounded
+  manifest scan (reproduced twice) confirms KRAKEN-SPOT/FUTURES coverage reaches 2026-08-09, 0 missing days since
+  2020-01-01, 0 `attempted_failed`; daily `cefi-fwd-daily-cron` kept it current — nothing to resume. Was: EXTRACTED
+  → batch2 (archived). — instruments-service
 - [x] ✅ [DATA] P2. **F2 — backfill 5 missing BITGET-FUTURES + 5 BITGET-SPOT instrument-days** that MTDS captured but
       instruments is absent for. — instruments-service — DONE 2026-06-18: re-ran the IS daily CLI
       `--venues BITGET-FUTURES BITGET-SPOT --start-date 2024-11-08 --end-date 2026-06-18` (idempotent, re-fetched the
@@ -715,13 +712,12 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       canonicalize_mtds_index@d7b04b2 APPLIED). venue-spelling dedup CODE shipped (mtds@cf63cf6: `_canonical_defi_venue`
       replicates the migrator so manifest venue==object-path venue — SAFE only in the per-object rebuild, NOT the
       index-walk). **Residual N6r below.** — market-tick-data-service
-- [x] ✅ [SCRIPT] P2. **EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** N5r/N6r —
-      DeFi rebuild-for-real-replace (venue-dedup + VAULT-0-row + 496 chain-pollution wholesale live-index replace,
-      operator APPROVED 2026-08-09). A same-day design investigation found the naive rebuild+upsert does NOT achieve
-      replace-not-merge (stale legacy-spelled rows survive an upsert); a properly-scoped ADD+REMOVE swap tool (mirroring
-      the sports K1K2 precedent, never a bucket-wide replace — that would delete co-located MDPS candle rows) is
-      required. See the batch doc for the full scoped todo + design; do not duplicate-dispatch from here. —
-      market-tick-data-service
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09/16 (batch2 reconciliation) — tooling (a)+(b) shipped, execution tracked
+      separately.** N5r/N6r: naive rebuild+upsert can't achieve replace-not-merge, so built a scoped ADD+REMOVE swap
+      tool (mirrors sports K1K2, never a bucket-wide replace) — `market-tick-data-service@978a49fa` (chunking) +
+      `@8175ec7a` (swap tool, 26 tests). Sub-steps (c)-(e) (VM-only execution) tracked in
+      `/plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`. Was: EXTRACTED → batch2
+      (archived). — market-tick-data-service
 - [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
       `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
       non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
@@ -729,9 +725,11 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       **1.40M→782,005** in `projected_index_cefi_v2`. Genuine `VENUE_FETCH_FAILED`(83,975)+`HTTP_429`(3,652) preserved →
       backfill Step 9. The ~698k UNCLASSIFIED reconcile-to-expected_unattempted is N1b (depends Step 4). —
       market-tick-data-service
-- **[CODE] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** F6 (reframed) —
-  TRADFI option/instrument_type encoding unify + 182k blank-type stamp (a pure typing fix, not missing data). See the
-  batch doc for the full scoped todo; do not duplicate-dispatch from here. — market-tick-data-service
+- [x] ✅ [CODE] P2. **DONE 2026-08-09/16 (batch2 reconciliation) — stale "182k" premise, real population 291
+  rows.** F6 (reframed) TRADFI options_chain blank-`instrument_type` stamp — `market-tick-data-service@b9f41a49`
+  (CAS re-stamp). Independently re-measured via DuckDB: 291 rows (CME options_chain, one 2026-07-16 batch), all
+  stamped; fresh post-apply read confirms 0 blank cells remain (104,540/104,540 typed). Was: EXTRACTED → batch2
+  (archived). — market-tick-data-service
 - [x] ✅ [INFRA] P3. **N7 / Step-5 prefix_tpls VERIFY — DONE (no code change needed)**:
       `reconcile_phantom_manifest_rows_all.py` `prefix_tpls = canonical_path_templates(ag)` (CF-15/V0 UAC SSOT) for
       cefi/defi/tradfi/prediction — VERIFIED complete: enumerates every coexisting shape
@@ -921,11 +919,12 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       objs / ~9.98 TB, the Phase-D-below procedure) was NOT in this session's audit scope
       (`--ag defi,tradfi,sports,pred` only, per operator instruction) — its status is UNCONFIRMED by this run, not
       re-asserted as pending or done; re-audit cefi separately before assuming either.]**
-- **[INFRA] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Phase D — delete
-  legacy GCS dupes (cefi-only, ~1.08M objects/~9.98TB), reversibility-verified (604800s GCS soft-delete confirmed,
-  finding T), named bucket, bare-canonical-twin-only scope. **The batch doc flags this item's scale for extra scrutiny —
-  a worker picking it up should re-confirm the twin-verify output fresh, not trust a stale prior pass.** See the batch
-  doc for the full scoped todo; do not duplicate-dispatch from here. — instruments-service/deployment-service
+- [x] ✅ [INFRA] P1. **DONE 2026-08-15/16 (batch2 reconciliation) — resolved via issue-doc closure, not a fresh
+  delete run.** Phase D cefi legacy GCS dupes: `instruments-service@3698dc819` hardened the delete tooling; the
+  2026-08-09 dry-run found 0/1,077,672 candidates deletable — root-caused 2026-08-15: the target corpus was already
+  removed by the independent, already-tracked 2026-07-27 cefi migration wave (status: complete). Nothing further to
+  delete. Evidence: `/plans/archive/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` (status: resolved). Was:
+  EXTRACTED → batch2 (archived). — instruments-service/deployment-service
 - [x] ✅ [DATA] P2. **N9c — RESOLVED 2026-06-18** (was: open, "MTDS `_index` is NOT yet v9 for any of the 5 AGs;
       `pipeline_mode` column 100% BLANK" — corrected 2026-07-12, finding id 88, §A2 B-queue ruling; verified
       `mtds@6b9f4b5` present on `live-defi-rollout`). Fixed by the "MARKET-DATA `_index` v9 COLUMN POPULATION — APPLIED

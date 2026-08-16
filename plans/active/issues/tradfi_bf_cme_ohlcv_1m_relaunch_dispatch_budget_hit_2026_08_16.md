@@ -1,0 +1,159 @@
+---
+doc_type: issue
+title: >-
+  tradfi-bf-cme-ohlcv-1m- launcher family hit the 2/day RB-INFRA-RELAUNCH dispatch budget —
+  tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-20260816-220540 preempted and left un-relaunched by design; operator decision
+  needed, same trade-off as the same-day cefi-aster-/cefi-extended- occurrences
+summary: >-
+  DP-VM-008 escalation agt-ee0261 (dispatched by `deployment_service.data_pipeline_monitors.escalation` with
+  `wall_type=data_pipeline_failure`, authoring_slot=`dp-fleet-monitor`) reported VM
+  `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-20260816-220540` (SPOT) as preempted, relaunchable via
+  `launch-tradfi-bf-cme-ohlcv-1m.sh` (no Tardis dependency). The dispatched worker's context explicitly read "DO NOT
+  RELAUNCH... launcher-family tradfi-bf-cme-ohlcv-1m- already hit 2/2 relaunch dispatches today (RB-INFRA-RELAUNCH
+  bound)" — the same `escalation_dedup.check_relaunch_dispatch_budget` mechanism
+  (`_MAX_RELAUNCH_DISPATCHES_PER_DAY = 2`, 2026-08-10 fix) already documented today for the `cefi-extended-` and
+  `cefi-aster-` launcher-families (`cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md`,
+  `cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`). Live-verified (2026-08-16, ~23:04 UTC):
+  `gcloud compute instances list --filter="name~'^tradfi-bf-cme-ohlcv-1m'"` returns 36 RUNNING instances across
+  launcher groups g01-g06 (years 2020-2026), all launched in a single wave ~15:02-15:14 PT the same afternoon — but
+  `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-*` is conspicuously ABSENT from that wave (the family shows 2020, 2022,
+  2023, 2025, 2026 shards for group g02-6m-cl, but not 2024), and an exact-name filter for the preempted VM returns
+  zero rows — confirmed gone, not relaunched. This same launcher-family ALSO has two OPEN same-day DP-VM-001
+  (exit_code=137 stall, a different alert class) issue docs already citing the identical "2/2 relaunch dispatches
+  today" bound (`dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`,
+  `dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`) — this is now the
+  THIRD distinct relaunch-blocked incident against the same launcher-family prefix today, across two different
+  DP-* alert classes. No existing open issue doc covers this specific VM or the DP-VM-008 preemption class for this
+  launcher-family — filing fresh per the runbook's "check for an existing open issue doc and page the operator
+  instead of relaunching again" instruction (`/codex/15-runbooks/incidents/rb_infra_relaunch.md`). This is NOT a
+  code bug — the budget enforced exactly as designed.
+status: open
+nature: issue
+asset_group: [tradfi]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: [tradfi, vm, preemption, spot, relaunch-budget, rb-infra-relaunch, dp-vm-008, alerting, operator-decision]
+related:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /plans/active/issues/cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md,
+    /plans/active/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
+    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+  ]
+created: "2026-08-16"
+author: unknown
+priority: P2
+parent_epic: observability_master
+source:
+  "DP-VM-008 escalation agt-ee0261 dispatched via escalate-to-orchestrator (wall_type=data_pipeline_failure), handed
+  to the data_pipeline_failure worker (slot 11) per the RB-INFRA-RELAUNCH bound instruction: check for an existing
+  open issue doc and page the operator instead of relaunching again."
+assigned_vm: planning
+execution_scope: orchestrator-agent
+effort: max
+estimate_class: research
+estimate_baseline_ai_days: 0.2
+estimate_calibrated_ai_days: 0.24
+assigned_role: data_engineering
+drift_direction: none
+depends_on: []
+resolved_by:
+locked_by:
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
+    deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py,
+    deployment-service/deployment_service/vm_prefix_registry.py,
+  ]
+---
+
+# tradfi-bf-cme-ohlcv-1m- launcher family hit its 2/day RB-INFRA-RELAUNCH dispatch budget — VM left un-relaunched by design
+
+## What I found
+
+- Escalation `agt-ee0261` (DP-VM-008, INFO severity) reported SPOT VM
+  `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-20260816-220540` preempted, relaunchable via
+  `launch-tradfi-bf-cme-ohlcv-1m.sh` (no Tardis dependency). `escalation.py`'s
+  `escalation_dedup.check_relaunch_dispatch_budget` found the `tradfi-bf-cme-ohlcv-1m-` launcher-family had already
+  had 2 DISTINCT VMs dispatched for relaunch today (`_MAX_RELAUNCH_DISPATCHES_PER_DAY = 2`, `escalation_dedup.py`),
+  so the dispatched worker's context correctly read "DO NOT RELAUNCH... (RB-INFRA-RELAUNCH bound)" instead of a
+  relaunch instruction — the intended behavior of the 2026-08-10 fix.
+- Live-verified (2026-08-16, ~23:04 UTC): `gcloud compute instances list --filter="name~'^tradfi-bf-cme-ohlcv-1m'"`
+  returns 36 RUNNING instances across launcher groups g01-g06 (years 2020-2026), all launched in one wave between
+  ~15:02 and ~15:14 PT the same afternoon. The `g02-6m-cl` group shows shards for 2020, 2022, 2023, 2025, and 2026 —
+  but NOT 2024, matching exactly the preempted VM's shard token. An exact-name filter for
+  `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-20260816-220540` returns zero rows — confirmed gone, not relaunched, and
+  the `2024` shard for this group is not present anywhere in the current wave.
+- Checked `plans/active/issues/` for the exact VM name and `DP-VM-008`+`tradfi-bf-cme-ohlcv-1m` — no existing open
+  issue doc covers this specific VM, launcher-family, or the DP-VM-008 preemption class for this family today. Two
+  same-family, same-day sibling docs DO exist, but for a DIFFERENT alert class (DP-VM-001, `exit_code=137`
+  stall-induced kills, not SPOT preemption): `g01-6a-6l-2020-20260816-162556` and `btc-2020-20260816-180410`, both
+  also citing the identical "2/2 relaunch dispatches today" bound language for this same launcher-family prefix.
+
+## Why it matters
+
+This is NOT a bug — `check_relaunch_dispatch_budget` worked exactly as designed: it stopped a further automated
+relaunch dispatch and told the worker to escalate to a human instead of blindly retrying. But this is now the
+**third** distinct relaunch-blocked incident against the `tradfi-bf-cme-ohlcv-1m-` prefix TODAY, across **two
+different DP-\* alert classes** (DP-VM-001 exit137 stalls ×2, DP-VM-008 SPOT preemption ×1 here) — the same
+cross-day/cross-shard pattern already flagged as worth operator attention in the `btc-2020` sibling doc, now also
+crossing alert-class boundaries on the same launcher-family prefix. It also mirrors, same-day, the identical
+per-launcher-family budget trade-off already surfaced twice for `cefi-extended-` (37 live instances) and
+`cefi-aster-` (304 live instances, later found to include duplicate-launch pollution — see that doc's PAUSED
+banner): a 36-instance concurrently-running SPOT fleet under one launcher-family prefix can legitimately generate
+more than 2 DISTINCT preemptions in a single calendar day, at which point further preemptions that day go
+un-relaunched until the day rolls over. Unlike the `cefi-aster-` case, this worker did NOT find evidence of a
+duplicate-launch/billing-waste pattern here — the 36-instance count matches the expected shard cardinality (6
+groups × up to 7 years each, single VM per shard), so this looks like genuine large-legitimate-fleet pressure, not
+a repeat of the `cefi-aster-` pollution issue.
+
+## Recommended decision
+
+- **A**: Leave the budget as-is (global `_MAX_RELAUNCH_DISPATCHES_PER_DAY = 2` per launcher-family) — accept that
+  `tradfi-bf-cme-ohlcv-1m-2024-g02-6m-cl` stays un-relaunched until the day rolls over (or manually relaunch this
+  one shard now if the operator wants it sooner); no code change needed.
+- **B**: Scale the relaunch-dispatch budget by concurrent same-prefix fleet size (or move to a finer
+  `(launcher-family, shard-year)` grouping key) — the same option B already raised (and currently PAUSED pending
+  the `cefi-aster-` duplicate-launch cleanup) in the `cefi-aster-`/`cefi-extended-` sibling docs. **Do not implement
+  this separately** — if the operator chooses B, it should be fixed once in `escalation_dedup.py` and close all
+  three same-day docs (this one + the two cefi siblings) against the same commit.
+- **My recommendation**: **A** for now, same rationale as both cefi siblings — but this occurrence, being genuinely
+  legitimate fleet pressure (no duplicate-launch pollution found here, unlike `cefi-aster-`), is cleaner evidence
+  for B than either cefi case alone. Worth weighing once the `cefi-aster-` cleanup (referenced in that doc's
+  PAUSED banner) lands and the operator re-evaluates B against real fleet sizes across all three launcher-families.
+
+## What I did NOT do
+
+- Did not relaunch `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-20260816-220540` — the bound explicitly says not to, and
+  the runbook's root-cause-diagnosed carve-out doesn't apply (no bug here to fix).
+- Did not change `_MAX_RELAUNCH_DISPATCHES_PER_DAY` or any budget logic — that's option B above, an operator call.
+- Did not cross-check `run.log`/failure signatures against the two open DP-VM-001 sibling docs for this same
+  family — those track a different alert class (stall/exit137) and their own root-cause todos already cover that.
+
+## Todos
+
+- [ ] [OPERATOR] P2. Decide option A vs B (above) for the `tradfi-bf-cme-ohlcv-1m-` launcher-family's relaunch
+      dispatch budget; if B, implement once in `escalation_dedup.py` (repo: agent-orchestrator) and close this doc
+      plus `cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md` and
+      `cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md` against the same commit — do not implement per-doc.
+- [ ] [OPERATOR] P3. If A is chosen (or as an interim step regardless), decide whether to manually relaunch just the
+      `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024` shard now vs waiting for the daily budget reset.
+
+## Progress Log
+
+- 2026-08-16 (slot 11, data_pipeline_failure escalation agt-ee0261): Received escalation for DP-VM-008
+  `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-20260816-220540` preempted, `tradfi-bf-cme-ohlcv-1m-` family already at 2/2
+  relaunch dispatches today. Checked for an existing issue doc naming this VM/launcher-family/DP-VM-008 class —
+  none found (found two same-family DP-VM-001 exit137-stall sibling docs from earlier today, a different alert
+  class, and two same-day cefi launcher-family docs covering the identical budget mechanism). Confirmed via
+  `gcloud compute instances list` that the exact VM is gone from the live fleet and that the `g02-6m-cl-2024` shard
+  is absent from the family's current 36-instance relaunch wave (all other g02-6m-cl years present). Per
+  RB-INFRA-RELAUNCH, did not relaunch. Filed this issue doc and paged the operator via `/blocked`. No code changed
+  this session.

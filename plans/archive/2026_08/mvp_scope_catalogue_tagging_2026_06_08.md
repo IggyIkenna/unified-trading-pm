@@ -195,11 +195,12 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       universe, never grow it — mirrors `deployment-api@3390c98`'s `test_route_venue_year_coverage_scope.py` pattern).
       `MVP_SCOPE_CONFIG_VERSION` 20→21. **The data-status coverage CONSUMER is NOT part of this todo** — split into the
       new P2b-2 todo below (genuine design gap, not guessed at under time pressure).
-- **[IMPLEMENT] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** P2b-2 — models
-  data-status coverage consumer — the design gap this item was previously blocked on (what "could exist" means for
-  models; where trained-model identities get recorded) is resolved per the round5-cross-cutting-audit 2026-08-08 note
-  above (`TrainingGridConfig` = could-exist bound; `ModelRegistry.list_models()` = live write path — narrows to ordinary
-  wiring). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [IMPLEMENT] P2. **DONE 2026-08-09/16 (batch2 reconciliation)** — P2b-2 — models data-status coverage
+  consumer — `ml-service@a24a0bb0`, `deployment-api@90b51dfe`. New `GET /training/model-coverage` in ml-service
+  enumerates the could-exist universe via `TrainingGridConfig`, looks up captured via `ModelRegistry.list_models()`,
+  filters `scope=mvp` through UAC `is_model_mvp()`; deployment-api adds a byte-for-byte HTTP passthrough at
+  `GET /api/data-status/model-coverage`. 11 new ml-service + 4 new deployment-api unit tests. Was: EXTRACTED 2026-08-09
+  → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
 - **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md`.** **Verify**: with MVP
   ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP catalogued instruments as missing; with
   MVP OFF, the full could-exist universe is shown (the gap is honest, not hidden) — re-confirm consolidator freshness

@@ -82,15 +82,18 @@ children.
 
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
-- **[INFRA] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Observability
-  wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job — cefi's pattern is shipped + prod-verified (cited
-  as GATE-G2 evidence); TradFi/sports/prediction have no observability-verification pass at all. See the batch doc for
-  the full scoped todo; do not duplicate-dispatch from here.
-- **[SCRIPT] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Layered coverage
-  via the Honest-Coverage v2 SSOT — the SSOT + `measure_honest_coverage.py` producer are shipped
-  (`schema_version == 2`), but `layer1_completeness_pct`/`instrument_gates_download`/`denominator_complete` have zero
-  grep hits in deployment-api/deployment-ui — surfacing through the API + UI is still unbuilt. See the batch doc for the
-  full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [INFRA] P0. **DONE 2026-08-09/16 (batch2 reconciliation)** — Observability wiring (§0.5) for every
+  instruments/MTDS backfill VM + roll-up job. Root cause: TradFi backfill VMs never survived long enough to be
+  observable (`VM_TASK=cefi-backfill` matched no dispatch branch, self-deleted in 2-4min). Fixed —
+  `deployment-service@acf965d96` (+ peer `deployment-service@c99ab99b`) extends `launch-tradfi-backfill-vm.sh` +
+  `launch-targeted-options-chain-backfill.sh`'s CME-OPTIONS/CBOE-VIX-OPTIONS shards with `VM_TASK=mtds-backfill`.
+  Sports/prediction needed no fix (already correctly routed). Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
+- [x] ✅ [SCRIPT] P0. **DONE 2026-08-09/16 (batch2 reconciliation)** — Layered coverage via the Honest-Coverage v2 SSOT
+  surfaced through API + UI — `deployment-api@5a345de22` (byte-for-byte passthrough of the 3 named fields, proven by 2
+  new unit tests), `deployment-ui@c55ed8256` (Layer-2 headline+badge gated on Layer-1; Vitest synthetic-gap fixture;
+  `pw:L2` regression spec `data_status_coverage_labels.spec.ts`, 5/5 specs green). Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
 - [ ] [SCRIPT] P0. **Cumulative-drawdown health metric (§1.2)** — per venue, the cumulative-instruments-ever-seen
       series; any negative day-over-day delta = a hard defect (flag + block). Active-count drops must net to a typed
       reason (cefi/tradfi delisting; DeFi delisting OR `NOT_ENOUGH_TVL`). DoD: drawdown count per venue surfaced; target
@@ -126,13 +129,20 @@ children.
       canonical-form work, and a separate cefi finding (G1.3 follow-up) notes the guard "must treat split↔glued as
       equivalent" for on-chain-perp venues **until** it is aligned — i.e. describes a future state, not a live guard.
       Leaving `[ ]` open.
-- **[SCRIPT] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Verification
-  discipline — captured∩expected KEY-OVERLAP, not raw count (§6.1/§6.3). See the batch doc for the full scoped todo; do
-  not duplicate-dispatch from here.
-- **[SCRIPT] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Silent-cap source
-  audit + `FetchEvidence` enforcement (§6.2/§6.5) — keystone gate is shipped and live; the full per-source
-  page/snapshot/window-cap sweep is not evidenced as exhaustive. See the batch doc for the full scoped todo; do not
-  duplicate-dispatch from here.
+- [x] ✅ [SCRIPT] P0. **DONE 2026-08-09/16 (batch2 reconciliation)** — Verification discipline: captured∩expected
+  KEY-OVERLAP gate, not raw count (§6.1/§6.3) — `instruments-service@ef635e32`
+  (`scripts/backfill_completion_key_overlap_gate_2026_08_09.py`: `evaluate_backfill_completion()` requires both
+  `run.log EXIT_STATUS==0` AND ≥1 previously-pending expected key now `captured`; reproduces + fails on the DeFi
+  silent-stall signature; 8/8 unit tests green). Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
+- [x] ✅ [SCRIPT] P0. **DONE 2026-08-09/16 (batch2 reconciliation)** — Silent-cap source audit + `FetchEvidence`
+  paging sweep across every data source, done independently twice (converging on the same candidate set) —
+  `instruments-service@b8668094` (Betfair `listMarketCatalogue` top-1000 cap: event-type-scoped pagination +
+  `ADAPTER_PAGE_CAP_HIT` observability), alongside 2 CRITICAL RPC-error-swallow bugs, a Lighter pagination defect, 5
+  Graph skip-cursor additions, 3 cap-exhaustion warnings, and the Polymarket top-2000 cap fix shipped the same session
+  (full set: `/plans/archive/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md`, remaining lower-priority
+  items tracked there). Was: EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`
+  (archived).
 - [ ] [SCRIPT] P0. **Depth-aware re-fetch trigger (§7.5) — NOT blanket `--force`, NOT just unexpected-missing** —
       re-fetch ONLY `{missing/EU, attempted_failed, captured-but-instrument_count < expected_depth}` (the
       shallow-capture a plain skip-if-exists misses); needs the §2.1 depth oracle for `expected_depth`; the §2.2
@@ -141,10 +151,11 @@ children.
       `expected_depth` across `instruments-service`, `market-tick-data-service`, or `unified-api-contracts` — this item
       is correctly blocked on the still-unbuilt §2.1 depth oracle (item 4 above) and the still-unbuilt §2.2 reconcile
       pass (item 5 above), matching its own stated dependency. Leaving `[ ]` open.
-- **[DESIGN] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.**
-  Cost/entitlement-boundary reason class (§6.4) — the `COVERAGE_EXCLUSIONS` registry mechanism is shipped (empty today);
-  the named TradFi ~241k beyond-free-Databento-window case just needs registering. See the batch doc for the full scoped
-  todo; do not duplicate-dispatch from here.
+- [x] ✅ [DESIGN] P1. **DONE 2026-08-09/16 (batch2 reconciliation)** — Cost/entitlement-boundary reason class (§6.4):
+  registered the TradFi Databento cost-boundary case in `COVERAGE_EXCLUSIONS` — `unified-api-contracts@c839a47d`. CME
+  `trades`+`tbbo` entries, `reason=SUBSCRIPTION_GAP`, `start=2020-01-01`/`end=2025-08-06`; live-verified via
+  `expected_coverage()` returning `EXPECTED_UPSTREAM_OUT_OF_BOUNDS` in-window. Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
       2026-06-24).** Any GCS data in a non-canonical **schema** (`schema_version` < v9 / drifted fields), **path**
       (missing `pipeline_mode={mode}_{source}/`/`asset_group=` keys, legacy sibling trees, glued `PROTOCOL-CHAIN`), or
@@ -289,9 +300,14 @@ re-implemented here — this is reconciliation only, per this todo's own scope.
 
 ### From `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (archived)
 
-- **[INFRA] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Rebuild the IS
-  daily definition producer — cefi+defi shipped + prod-verified (2 of 5 AGs); tradfi/sports/prediction have no prod
-  daily producer at all. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [INFRA] P0. **DONE 2026-08-09/16 (batch2 reconciliation)** — Rebuild the IS daily-definition producer for
+  TradFi/sports/prediction. **Finding**: sports and prediction already had live, prod-verified daily producers (stale
+  premise); only TradFi was broken — `uts-prod-instruments-service-tradfi-t1-recon` crashed on
+  `UndeclaredTradfiVenueError('FRED')` daily for ≥5 days. Fixed — `instruments-service@cad1d322` declares FRED as a
+  24/7 venue alongside FX. Live-verified via manual rebuild + execution:
+  `Evidence: cloudbuild=00f77c23-2ce0-4371-b203-8cedbede3404` (SUCCESS), execution
+  `uts-prod-instruments-service-tradfi-t1-recon-kfkzj` completed exit 0. Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
 - [x] [INFRA] P1. ✅ **Wire the lifecycle roll-up to trigger on every IS instruments update (per-AG).** TF authored
       (deployment@98bee4b, `lifecycle_catalogue_scheduler.tf`); REMAINING = `terraform apply` + T+10min per-AG execution
       verify. (MIGRATED FROM: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.) — deployment-service@c1d2e3e6
@@ -304,10 +320,13 @@ re-implemented here — this is reconciliation only, per this todo's own scope.
       supersedes the earlier "diagnose fast-fail" bullet.) — RESOLVED: root cause was full-history-walk timeout, not a
       grpc/pyarrow init bug; fixed by instruments-service@b0596d0c incremental engine (reachable on
       origin/live-defi-rollout).
-- **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** All asset groups
-  adopt the proper catalogue — cefi/tradfi/defi shipped (is@6ea46565); the granularity-aware producer for prediction
-  (per-cqg) + sports (per-league vs per-fixture) is still unbuilt. See the batch doc for the full scoped todo; do not
-  duplicate-dispatch from here.
+- [x] ✅ [CODE] P1. **DONE 2026-08-09/16 (batch2 reconciliation) — stale premise, no code change needed.** All 5
+  asset groups already adopt the granularity-aware catalogue producer: the cited pre-history-rewrite commit
+  (live-defi-rollout equivalent `instruments-service@8c1875e0`) introduced the shared shape-aware `_row_data_types()`
+  filter into all 5 `_enumerate_v2_*` functions in the same commit, sports (per-league) and prediction (per-cqg-bundle)
+  included — the todo's own "cefi/tradfi/defi only" claim did not survive contact with the code. Live-verified against
+  real prod catalogues/manifests for all 5 AGs 2026-08-09 (scan-only, no full-corpus walk). Was: EXTRACTED 2026-08-09 →
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (archived).
 
 ---
 

@@ -201,6 +201,54 @@ if [[ "$(pwd -P)" != "$(cd "$_sdp_toplevel" && pwd -P)" ]]; then
   exit 2
 fi
 
+# ── PRE-EXISTING UNMERGED-STATE GUARD (2026-08-16, closes the retry-resurrection shape from
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10's "third symptom") ────────────────
+# Reproduced live: a `git pull --rebase --autostash` whose autostash pop hits a delete/modify
+# conflict (the caller's staged rename deletes a path; origin's tip independently modified the
+# SAME path since the caller's last sync) leaves that path UNMERGED in the index with the
+# CONFLICTING (non-caller) content restored to disk -- not the caller's deletion, not the
+# caller's edit. That first run correctly hard-stops (autostash_rebase_reconcile's explicit-pop
+# failure -> exit 3, "resolve manually"). The bug is what a SECOND invocation against that same,
+# still-unmerged tree does: the plain `git pull` in the pre-commit branch fails with git's own
+# "Pulling is not possible because you have unmerged files" -- text that matches none of the
+# divergent-branches/would-be-overwritten phrases that route into autostash_rebase_reconcile's
+# conflict handling, so it falls into the GENERIC retriable branch instead (`echo "pull failed:"
+# ...; backoff; continue`), burns all MAX_ATTEMPTS attempts on a state no retry can fix, and
+# exits 5 with "your named files are byte-identical to what you handed this script, so
+# re-running is safe" -- false for this case. The resurrected content sits on disk the entire
+# time, one `git add` away from landing as a fresh, unintended commit the moment anyone (human or
+# agent) treats "present on disk" as "safe to stage" -- exactly what stage_named_files() and
+# reassert_renames() do for any ordinary tracked-or-untracked file, by design, because they
+# cannot themselves distinguish that shape from a legitimate concurrent write.
+#
+# Checking for a PRE-EXISTING unmerged index before this script does anything else -- earlier
+# than the isolated-worktree copy loop too, since that loop would otherwise `cp` whatever
+# conflicted content sits on disk straight into the "clean" throwaway worktree -- turns a silent
+# multi-attempt burn plus misleading guidance into an immediate, correctly-diagnosed stop naming
+# the exact paths, before any reconcile/stage/commit step ever runs.
+_sdp_unmerged_paths() { git ls-files -u 2>/dev/null | awk -F'\t' '{print $2}' | sort -u; }
+_sdp_pre_existing_unmerged="$(_sdp_unmerged_paths)"
+if [[ -n "$_sdp_pre_existing_unmerged" ]]; then
+  {
+    echo
+    echo "❌ This checkout already has UNMERGED (conflicted) path(s) in the index -- refusing to"
+    echo "   run. This is very likely left over from an EARLIER safe-doc-push.sh attempt whose"
+    echo "   autostash pop hit a delete/modify conflict and restored the CONFLICTING side's"
+    echo "   content to disk instead of your intended change. A retry cannot resolve this on its"
+    echo "   own -- git will keep refusing every pull/rebase with \"unmerged files\" until a human"
+    echo "   resolves it, and blindly re-staging the resurrected content would land it as a fresh,"
+    echo "   unintended commit."
+    echo "   Conflicted path(s):"
+    printf '     %s\n' $_sdp_pre_existing_unmerged
+    echo "   RESOLVE FIRST: inspect each path (git status, git diff), decide the correct end state"
+    echo "   (for an archival rename this is almost always: the path should stay DELETED --"
+    echo "   'git rm -- <path>'), then re-run this script."
+    echo "   See plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md"
+    echo "   (third symptom) for the full mechanism."
+  } >&2
+  exit 3
+fi
+
 # ── F9 ISO-MERGE BASE (2026-08-12) ───────────────────────────────────────────────────────────
 # pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md F9: isolated mode's copy loop
 # below used to `cp` the caller's on-disk file straight into a worktree freshly checked out at

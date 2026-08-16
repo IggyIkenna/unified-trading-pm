@@ -361,11 +361,38 @@ origin-relative content back in as a stray add — i.e. the deletion-propagation
 retry against the same isolated worktree instance. Not verified against the actual script source this session (time-
 boxed audit run, not a script-debugging session) — flagged for whoever next reads `safe-doc-push.sh`'s retry loop.
 
-- [ ] [SCRIPT] P1. **Root-cause + fix the retry-resurrection shape above.** Reproduce a blocked-then-retried
-      `--files` archival `git mv` commit through isolated mode twice in a row against the same `--files` list;
-      confirm whether the old path reappears with stale content on the 2nd+ attempt. If confirmed: fix so the
-      isolated worktree is torn down and rebuilt fresh per attempt (or the deletion-propagation check is re-run
-      against the CALLER tree's current state, not a stale worktree snapshot from attempt 1). Add a regression test
-      exercising a real blocked-then-retried invocation, not just a single-shot one. Source: this session,
-      `/ag-closeout-audit ao` 2026-08-16 (dispatch agt-1628ee) — full recovery + working-tree cleanup already applied,
-      nothing currently at risk; this todo is the root-cause fix only.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-16 — root-caused via live reproduction (not the isolated-worktree
+      teardown hypothesis — that was checked and ruled out), fixed, regression-tested.**
+      **Actual mechanism** (confirmed by direct repro with two local git repos + a genuinely
+      diverged origin, not inferred): the isolated-worktree-teardown theory does NOT hold — the
+      parent's `trap _sdp_cleanup_isolation EXIT` correctly removes the throwaway worktree on
+      every exit path, verified. The REAL mechanism lives in the SHARED-INDEX retry loop (the
+      path every AO-VM invocation actually runs, since isolation defaults OFF there by host
+      gate): when `git pull --rebase --autostash` hits a delete/modify conflict on the autostash
+      pop (the caller's staged deletion of a rename's old path vs. origin's independent edit to
+      that same path since the caller's last sync), git resolves the pop by leaving the
+      CONFLICTING content on disk, UNMERGED in the index. That FIRST run already correctly
+      hard-stops (`autostash_rebase_reconcile`'s explicit-pop failure → exit 3). The bug is what
+      a SECOND invocation ("the retry") against that same still-unmerged tree does: the plain
+      `git pull` in the pre-commit branch fails with git's own "Pulling is not possible because
+      you have unmerged files" — text that matches none of the divergent-branches/would-be-
+      overwritten phrases routing into `autostash_rebase_reconcile`'s (correct, already-tested)
+      conflict classifier, so it falls into the GENERIC retriable branch instead, burns all
+      `MAX_ATTEMPTS` on a state no retry can fix, and exits 5 with "your named files are
+      byte-identical … re-running is safe" — false for this case. The resurrected (conflicting,
+      stale-relative-to-the-caller's-intent) content sits on disk the whole time, one `git add`
+      away from landing as a fresh, unintended commit the moment anyone treats "present on disk"
+      as "safe to stage" — exactly what `stage_named_files()`/`reassert_renames()` do for an
+      ordinary file, by design, since they cannot themselves distinguish that shape from a
+      legitimate concurrent write.
+      **Fix**: unified-trading-pm@\<pending, see commit below\> — a new guard at the very top of
+      `safe-doc-push.sh` (before the isolated-worktree copy loop, before the retry loop) checks
+      for pre-existing unmerged index entries via `git ls-files -u` and hard-stops immediately
+      (exit 3, naming the conflicted path(s), pointing at this doc) instead of ever reaching
+      `stage_named_files()`/`git add` on a corrupted tree. Verified live: re-running the exact
+      repro's second invocation now exits 3 immediately on attempt 1 with a correct diagnosis,
+      instead of burning 6 attempts and exiting 5 with misleading guidance.
+      **Regression test**: `tests/test_safe_doc_push_unmerged_retry_resurrection_guard.bats` (4
+      tests: pre-existing-unmerged hard-stops naming the path; the checkout is left untouched,
+      never staged; isolated mode also refuses before its copy loop runs; a clean checkout is
+      unaffected). Full `tests/test_safe_doc_push_*.bats` suite: 71/71 green (no regressions).

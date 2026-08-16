@@ -20,7 +20,7 @@ status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
-repos: [market-tick-data-service, instruments-service, unified-trading-library]
+repos: [market-tick-data-service, market-data-processing-service, instruments-service, unified-trading-library]
 scope: [engineer]
 tags: [mdt, sports, odds, manifest, honest-coverage, data-correctness, capture-status, not-found, league-id-growth]
 related:
@@ -217,18 +217,35 @@ below (stop the writer, relabel the existing population, investigate the coincid
       (`scripts/measure_odds_api_not_found_rate_randomized_2026_08_16.py`); full spot-check transcript in this
       session's Progress Log entry below. Source: this doc + `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s
       league_id-growth todo (now known to be unrelated to this finding).
-- [ ] [CODE] P0. **ACTIVE BUG — stop the writer.** Find and fix the `market-tick-data-service` call site(s) writing
-      manifest rows with `pipeline_mode=batch_odds_api`, `data_type=odds_horizon_bucket`, `capture_status=captured` —
-      per UAC `SOURCE_PRIORITY[('sports','ODDS_HORIZON_BUCKET')]` this data_type has no raw vendor source at all
-      (it's MDPS-derived, belongs under a different pipeline_mode), so no code path should ever call
-      `record_captured` for it here. Confirmed still writing as of 2026-08-15 (yesterday) — every day this ships,
-      more phantom `captured` rows land. Cross-check whether this is the SAME call site the already-open
-      `pipeline_e2e_check.py` enumeration todo (`sports_satellite_ao_dispatch_batch9_2026_08_04.md`, sourced from
-      `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`) already names, or a distinct production write path
-      feeding it. Source: this doc's todo 1 finding (2026-08-16). Done when: the writer no longer emits
-      `capture_status=captured` for `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket)`, a regression test
-      covers it, and a fresh manifest read after the fix ships shows zero NEW rows in that combination past the fix's
-      deploy timestamp.
+- [x] ✅ [CODE] P0. **DONE 2026-08-16 (slot-18, `backend_engineer`) — market-data-processing-service@3ae762e725, NOT
+      market-tick-data-service.** **Correction to this todo's own framing**: the offending call site was never in
+      MTDS — a full grep of `market_tick_data_service/` (package code, not one-off `scripts/`) found zero live
+      `record_captured` callers for `odds_horizon_bucket`; every hit was a comment or a migration script. The real
+      writer is MDPS's sports candle pipeline (`bucket_assignment_adapter.py`'s
+      `SportsBucketAssignmentAdapter`/`canonical_writer.py`'s `write_candle_parquet`), which resolves its manifest
+      `pipeline_mode` via `resolve_pipeline_mode_from_source(blob_path)` — the RAW upstream ODDS_API tick file's own
+      mode — and threads that SAME value through to its OWN derived-candle output, even though
+      `odds_horizon_bucket`'s registered `SOURCE_PRIORITY` source (`mdps_odds_horizon_bucket`) already has a
+      dedicated closed-set `PipelineMode` triple (`BATCH_/LIVE_/REPLAY_MDPS_ODDS_HORIZON_BUCKET`, defined in UAC)
+      that the live write path simply never used — confirmed by a standalone repair script
+      (`market-data-processing-service/scripts/reprocess_sports_odds.py`) already writing the CORRECT dedicated mode,
+      proving the intended target was known but never wired into production. Fix: added
+      `resolve_output_pipeline_mode(source_data_type, pipeline_mode)` (`canonical_writer_shaping.py`) and called it at
+      both write choke points — `write_candle_parquet` (covers the eager `_write_candles` path AND the
+      chain-bundle path, both funnel through it) and `_streaming_write_one_group`
+      (`live_workers_streaming.py`, the streaming path) — remapped BEFORE any path/manifest use so path==manifest
+      stays true by construction; every other `source_data_type` passes through unchanged (verified via unit tests,
+      `TestResolveOutputPipelineMode` in `tests/unit/test_canonical_writer_utility_functions.py`). `quality-gates.sh`
+      green. **Not yet done**: a fresh manifest read confirming zero NEW `(pipeline_mode=batch_odds_api,
+      data_type=odds_horizon_bucket, capture_status=captured)` rows past this fix's deploy timestamp — needs the fix
+      live in production for at least one capture cycle first; tracked as a follow-up below.
+- [ ] [DIAG] P2. Verify the `market-data-processing-service@3ae762e725` writer fix (todo above) is actually live and
+      effective: once the deploy has run through at least one sports odds capture cycle, read the manifest for
+      `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` rows with
+      `attempted_at`/`written_at` past the deploy timestamp — expect ZERO new rows in that combination, and instead
+      see new rows landing under `pipeline_mode=batch_mdps_odds_horizon_bucket` (or the live/replay siblings) for the
+      same period. Source: this doc's writer-fix todo above. Done when: a written verdict + fresh manifest evidence
+      confirms the fix is live and no new phantom rows are landing, or names the reason it isn't yet.
 - [ ] [DATA] P1. Once the writer-fix todo above ships, propose (do not execute without operator sign-off — this is a
       manifest-row-level correctness fix touching ~3.7M existing rows) a scoped relabel plan for the EXISTING
       `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` population: determine
@@ -286,3 +303,32 @@ noticed real `data_type=odds` captures stop dead at 2026-07-26 (527,541 rows, ze
 diag todo, not yet explained. Replaced todo 2 (which was gated on the disproven league_id-growth link) with 3 new
 todos: [CODE] P0 stop-the-writer, [DATA] P1 relabel-the-existing-population, [DIAG] P2 the odds-capture-stall
 question. Verdict recorded: NOT a league_id-seeding artifact.
+
+**2026-08-16 (slot-18, `backend_engineer`)** — closed the [CODE] P0 stop-the-writer todo:
+`market-data-processing-service@3ae762e725`. **The todo's own framing named the wrong repo** — grepped
+`market_tick_data_service/` (package code) for `odds_horizon_bucket`: every hit was a comment or a one-off
+migration script, zero live `record_captured` callers. The real writer is MDPS's sports candle pipeline
+(`SportsBucketAssignmentAdapter` in `bucket_assignment_adapter.py` -> `write_candle_parquet` in
+`canonical_writer.py`), which resolves its manifest `pipeline_mode` via
+`resolve_pipeline_mode_from_source(blob_path)` — the RAW upstream ODDS_API tick file's own mode — and threads
+that unchanged into its OWN derived `odds_horizon_bucket` candle output. UAC already carries a dedicated
+closed-set `PipelineMode` triple for exactly this case
+(`BATCH_/LIVE_/REPLAY_MDPS_ODDS_HORIZON_BUCKET`, matching `SOURCE_PRIORITY[("sports","ODDS_HORIZON_BUCKET")] ==
+["mdps_odds_horizon_bucket"]`), and a standalone repair script
+(`market-data-processing-service/scripts/reprocess_sports_odds.py`) already uses it correctly — proving the
+intended fix was known but never wired into the live write path. Added
+`resolve_output_pipeline_mode(source_data_type, pipeline_mode)` to `canonical_writer_shaping.py` and called it at
+the two write choke points: `write_candle_parquet` (covers both the eager per-instrument-file path and the
+chain-bundle path — both funnel through the shared `_write_candles`/`_upload_candles_to_gcs` mixin into this one
+function) and `_streaming_write_one_group` in `live_workers_streaming.py` (the memory-bounded streaming path),
+remapped BEFORE any path/manifest use in each so the on-disk object path and the manifest row stay consistent by
+construction. Every OTHER `source_data_type` (including the sibling `odds_snapshot`/`odds_movement`/
+`arbitrage_opportunity` sports adapters, which have no dedicated MDPS source registered) passes through unchanged.
+5 new unit tests (`TestResolveOutputPipelineMode`, `tests/unit/test_canonical_writer_utility_functions.py`) cover
+the batch/live/replay remap plus the pass-through cases; `quality-gates.sh` green
+(`.qg_last_passed_sha=3ae762e7`). Corrected this doc's `repos:` frontmatter to add
+`market-data-processing-service` (was missing the repo the actual fix landed in). Filed a new [DIAG] P2 follow-up
+todo to verify the fix is live in production (needs one real capture cycle to elapse first) — could not verify
+that in this session since it requires post-deploy manifest evidence. Did NOT touch the [DATA] P1
+existing-population relabel todo or the [DIAG] P2 odds-capture-stall todo — both remain open, unblocked by this
+fix.

@@ -346,11 +346,15 @@ context_scope:
       `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen" — so the actual cqg-bundle-grain seed run this
       checkbox asks for is still not executed; not flipping here, the AO-dispatchable seed-run work now lives (or should
       be tracked) in `prediction_phase_ab_residuals_2026_07_24.md` (active).
-- **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** G1.run-full-history
-  — extend the bounded-window seed to the full 2018→today per-instrument universe (~190M rows fleet-wide), per the
-  operator's unconditional 2026-08-08 approval (NA-corpus blocker digest round 5, id=53). See the batch doc for the full
-  scoped todo (dry-run-first sizing check, VM launch per vm-launcher-runbook, post-run verify); do not
-  duplicate-dispatch from here.
+- [x] ✅ [DATA] P2. **DONE 2026-08-11/16 (batch2 reconciliation)** — G1.run-full-history: extended the bounded-window
+  `expected_unattempted` seed to the full 2018→today universe, via VM `--apply-write` (no single commit — VM-launched
+  batch seeding per `launch-expected-universe-v2-historical-backfill-vm.sh`). All 5 AGs fully seeded + post-run
+  verified: cefi 11,516,896 eu (captured 5,627,008 preserved); tradfi 450,743 eu (captured 4,676,872); prediction 5,475
+  eu (cqg-bundle-grain, captured 428,289); sports 2,510,499 eu (captured 2,260,520); defi 38,894,569 eu total
+  2018-2026 (VMs `expected-universe-v2-defi-20260810-212538` [2025: 17,578,560 rows] +
+  `expected-universe-v2-defi-20260810-225807` [2026H1: 2,358,166 rows]). Final verify 2026-08-11: 0 pending shards,
+  consolidator `streak=0`. Was: EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`
+  (archived).
 - [x] ✅ [INFRA] P1. (**APPLIED 2026-06-11, autonomous run** — `tofu apply` vs `terraform/state/prod`: **16 added / 0
       changed / 0 destroyed**; all 5 `lifecycle-catalogue-regen-<ag>` Cloud Run jobs + 5 ENABLED 01:00-UTC schedulers
       verified via `gcloud run jobs list`/`scheduler jobs list`; cefi smoke execution triggered + watched. THREE
