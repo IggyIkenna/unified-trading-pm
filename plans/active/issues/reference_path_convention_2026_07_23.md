@@ -139,7 +139,7 @@ estimate_calibrated_ai_days: 1.6
       positives** so they stop tripping this checker forever: `plans/PLAN_FORMAT.md` and
       `/codex/06-coding-standards/cursor-rules-system.md` each had a literal fake nested-path example in prose — a
       real-looking substring the checker correctly flags as dangling since it isn't a real file (nor should it be,
-      it's illustrating the naming CONVENTION) — rewrote both to the `/codex/<section>/<doc>.md` angle-bracket
+      it's illustrating the naming CONVENTION) — rewrote both to the /codex/<section>/<doc>.md angle-bracket
       placeholder style CLAUDE.md itself already uses, which the checker's path-character regex cannot match
       through. **Also neutralized 6 more genuinely-dead in-prose citations** (in `trading_system_audit_prompt.md`
       x2, `signal_leasing_preaudit_manifest_2026_04_20.md` x2, `refactor_g3_5_codex_sync_consistency_agents_2026_
