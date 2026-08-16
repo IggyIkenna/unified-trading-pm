@@ -22,6 +22,7 @@ related: [sports_odds_api_data_type_casing_standardization_2026_08_15]
 parent_epic: sports_master
 source: interactive-session
 created: 2026-08-15
+last_updated: 2026-08-16
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -70,22 +71,25 @@ real, unreviewed scope expansion, not "finishing the same task." Per this worksp
 scope change that goes beyond the documented plan gets logged and left for a real decision, not silently absorbed into
 an in-flight dispatch.
 
-## Open questions for whoever picks this up
+## Todos
 
-1. Is `footystats.py`'s `canonical_sports_is_data_type("ODDS") or "ODDS"` pattern already normalizing correctly in most
-   cases (the function call succeeding), with the uppercase literal only a fallback for something that should never
-   happen in practice? Or is the fallback actually hit often, meaning footystats has its OWN uppercase-row population as
-   real as odds_api's? **Not measured — this doc is a scoping flag, not an audit.**
-2. Does `betfair_adapter.py`'s uppercase write represent a real, currently-accruing population, or could it be phantom
-   (same class of finding as the two already-resolved phantom-uppercase populations found 2026-07-26 and 2026-08-14)?
-3. Given MDPS already treats `["odds","trades","ODDS","TRADES"]` as accepted-equivalent — is a full casing unification
-   actually the right end-state, or does the ecosystem already have a working case-insensitive normalization layer that
-   makes "there are two casings" a non-problem in practice, and the real fix is just making the FEW remaining
-   exact-match consumers (like the odds_api-specific ones already fixed) case-tolerant, rather than rewriting every
-   writer?
-4. `unified_api_contracts/registry/schema_spec.py:434`'s separate `data_type="ODDS"` entry — same question as the
-   `data_type_capability.py` one already resolved for odds_api: is this entry a real, used, exact-match consumer, and
-   does it need the same live-check treatment before any casing decision is made for it?
+- [ ] [DIAG] P2. Measure whether `footystats.py`'s `canonical_sports_is_data_type("ODDS") or "ODDS"` fallback is
+      actually hit in practice (i.e. does footystats have its own live uppercase-row population, or does the
+      canonicalization call already succeed in the overwhelming majority of cases). Not measured — this doc was a
+      scoping flag, not an audit. (repo: instruments-service)
+- [ ] [DIAG] P3. Determine whether `betfair_adapter.py`'s uppercase `"ODDS"` write represents a real,
+      currently-accruing population or a phantom write (same class as the two already-resolved phantom-uppercase
+      populations found 2026-07-26 and 2026-08-14). (repo: market-tick-data-service)
+- [ ] [DECISION][OPERATOR] P2. Given MDPS already treats `["odds","trades","ODDS","TRADES"]` as accepted-equivalent,
+      decide whether full casing unification (rewrite every uppercase writer) is the right end-state, or whether the
+      ecosystem already has a working case-insensitive normalization layer that makes "there are two casings" a
+      non-problem in practice — in which case the real fix is just making the few remaining exact-match consumers
+      (like the odds_api-specific ones already fixed) case-tolerant, not rewriting every writer. This is a scope
+      decision, not a measurement.
+- [ ] [DIAG] P3. Confirm whether `unified_api_contracts/registry/schema_spec.py:434`'s separate `data_type="ODDS"`
+      entry is a real, used, exact-match consumer — same question as the `data_type_capability.py` entry already
+      resolved for odds_api — and needs the same live-check treatment before any casing decision is made for it.
+      (repo: unified-api-contracts)
 
 ## What NOT to assume
 
@@ -94,3 +98,12 @@ an in-flight dispatch.
   consumers. Each needs its own scoping pass, not a blind extension of the odds_api plan's phases.
 - Do not conflate this with the `instrument_type=="ODDS"`/`data_type=="TRADES"` axis from the K1/K2 incident — different
   fields, different meaning, already has its own (troubled) history.
+
+## Progress Log
+
+- 2026-08-16 (slot-2, data_engineering, "docs only, no writes" session): Found while sweeping unread sports-domain
+  issue docs for orphaned findings — this doc's "Open questions for whoever picks this up" section was bare numbered
+  prose, never converted to `- [ ]` todos (the workspace HARD RULE this exact ritual exists to catch). Converted all
+  4 questions into tracked `- [ ] [DIAG]`/`[DECISION][OPERATOR]` todos with priority + repo, no content change beyond
+  format. No measurement/investigation performed this session (docs-only scope) — the underlying questions remain
+  unanswered, only now trackable.
