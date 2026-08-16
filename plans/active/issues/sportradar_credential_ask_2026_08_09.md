@@ -28,6 +28,7 @@ related:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/02-data/external-data-always-available-rule.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-08-09
 author: agent (slot-19)
