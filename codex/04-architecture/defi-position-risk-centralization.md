@@ -53,11 +53,19 @@ An archetype needs this pattern if it posts on-chain collateral and/or borrows a
 for pure supply-side/LP positions (deposit capital, earn yield, no borrowing, no liquidation exposure) — those
 archetypes correctly have no health-factor-style gate.
 
-As of 2026-08-16, exactly two archetypes qualify: `CARRY_STAKED_BASIS` (`staked_basis.py`, when its `LST_AS_MARGIN`
-structure posts the LST as real on-chain-derived perp margin) and `CARRY_RECURSIVE_STAKED` (`recursive_staked.py`,
-a genuine `STAKE→LEND→BORROW→STAKE...` recursive loop). `rotation_lending.py` and the `defi_lp/*.py` family are
-supply-side only and correctly excluded. Re-verify this list whenever a new DeFi archetype is added — don't assume
-it's still exactly these two.
+As of 2026-08-16, exactly two archetypes qualify for OWN-leverage risk gating: `CARRY_STAKED_BASIS`
+(`staked_basis.py`, when its `LST_AS_MARGIN` structure posts the LST as real on-chain-derived perp margin) and
+`CARRY_RECURSIVE_STAKED` (`recursive_staked.py`, a genuine `STAKE→LEND→BORROW→STAKE...` recursive loop).
+`rotation_lending.py` and the `defi_lp/*.py` family are supply-side only and correctly excluded. Re-verify this
+list whenever a new DeFi archetype is added — don't assume it's still exactly these two.
+
+**A second, related use case needs the same pattern**: archetypes that monitor OTHER wallets' health factor to
+spot third-party liquidation opportunities — `arbitrage_structural/liquidation_capture.py` and
+`mev/liquidation_bundle.py` — currently each reimplement the identical gate independently rather than sharing one.
+The call shape differs (candidate-wallet parameter, not client-scoped), but it should route through the same
+underlying module, not a third and fourth bespoke implementation. A purpose-built circuit breaker,
+`strategy_service/circuit_breakers/liquidation_proximity_circuit.py`, looks designed for exactly this and has zero
+callers anywhere — decide whether to wire it in as the shared gate or retire it, per the issue doc's todos.
 
 ## The centralized module (current state — not yet complete)
 

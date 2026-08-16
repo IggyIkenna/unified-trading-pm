@@ -356,13 +356,26 @@ same tick. That is the difference between an implementation that works and one t
       needs explicit authorisation. This mirrors the existing direction-and-scope-aware kill-switch philosophy
       ([autonomous-recovery-matrix](/codex/04-architecture/autonomous-recovery-matrix.md)) rather than inventing a
       second policy. Worth an explicit ruling because "hot reload" usually implies symmetry, and here symmetry is wrong.
-- [ ] [AGENT] P1. **Reconcile the three config loaders before centralising onto one.**
-      `config.py::load_strategy_config()` is **local-file only** (`Path(path).exists()` + `yaml.safe_load`, falling back
-      to a hardcoded default Pure Lending config), while `engine/core/config_loader.py::ConfigLoader` is the GCS/JSON
-      path with caching and risk-block validation, and
-      `engine/core/strategy_config_loader.py::load_strategy_config(strategy_id)` is a third. **The name
-      `load_strategy_config` is reused for two different functions with different substrates** — a centralisation that
-      leaves all three in place has not centralised anything.
+- [x] [AGENT] P1. ✅ **PARTIALLY RESOLVED, RE-VERIFIED 2026-08-16 — the naming collision is fixed; the real
+      duplication is a path-convention divergence, not a name clash.** `engine/core/strategy_config_loader.py`'s
+      function was renamed `load_strategy_config_gcs()` on 2026-08-13 specifically to resolve this todo's literal
+      name collision (its own docstring cites this issue doc). Four live config-loading entry points remain,
+      verified against current code:
+      - `config.py:361` `load_strategy_config()` — local YAML only, hardcoded "Pure Lending" fallback at line 390.
+        `config.py:579` `load_config()` is a dead alias — zero callers found anywhere in the tree.
+      - `engine/core/config_loader.py:310` `ConfigLoader.load_config()` / `load_config_from_path()` — GCS,
+        `configs/{strategy_id}.json`, with caching + risk-block validation.
+      - `engine/core/strategy_config_loader.py:44,88` `load_strategy_config_gcs()` / `load_strategy_config_by_type()`
+        — GCS, but a **different path shape**: `configs/strategies/{strategy_id}.json` (extra `strategies/`
+        segment), and hardcodes `asset_group="cefi"` in its bucket resolution.
+      - `cli/grid_generator.py:508` `load_base_config_from_gcs(gcs_path)` — GCS, arbitrary full path, no fixed
+        prefix convention at all.
+      **The actual remaining duplication**: two different GCS path conventions for what's conceptually the same
+      `strategy_id → config.json` lookup, no shared precedence rule between any of the four, and a dead local-YAML
+      path with a hardcoded fallback that should probably be deleted rather than centralised.
+      `strategy_config_loader.py:140` `get_strategy_params()` is the one place param resolution (schema defaults,
+      wired-flag, wizard round-trip) is already centralized regardless of which loader produced the raw dict — a
+      reasonable seam to build a single loader behind, rather than inventing a new one.
 
 ## Progress Log
 

@@ -1,19 +1,26 @@
 ---
 doc_type: issue
 title: >-
-  DeFi-leverage archetypes' liquidation kill-gate reads the wrong data source — the correct centralized module
-  exists but nothing calls it
+  Every health-factor-shaped liquidation gate reads an ad-hoc source — 4 archetypes across 3 families, plus a
+  purpose-built circuit breaker that's completely unused
 summary: >-
-  `CARRY_STAKED_BASIS` and `CARRY_RECURSIVE_STAKED` — the only two DeFi archetypes that take on-chain leverage
-  (post collateral / borrow against it) — both gate liquidation risk on `features.get("health_factor")`, a generic
-  features-service value that carries no wallet-specific meaning and has never been populated with real data. The
-  correct centralized module (`DeFiHealthAggregator` / `positions_health.py`, already client_id-scoped) exists but
-  is never called from the strategy engine — it's HTTP-only, execution-service-facing. Also found: the centralized
-  module itself isn't fed by any live source (only tests call its update path), a stub on-chain Aave adapter in
-  strategy-service returns `NotImplementedError`, and the data model is missing LTV/borrow-capacity/liquidation-price
-  fields an archetype would need. Filed per operator direction to establish a strategy-agnostic, venue-agnostic
-  centralized pattern for private on-chain position/risk reads, after two rounds of investigation surfaced this
-  while scoping the Elysium carve-out's excluded `health_factor` field.
+  Two related use-cases of the same field, both broken the same way. Own-leverage risk gating — `CARRY_STAKED_BASIS`
+  and `CARRY_RECURSIVE_STAKED`, the only two DeFi archetypes that take on-chain leverage — gate liquidation risk on
+  `features.get("health_factor")`, a generic features-service value that carries no wallet-specific meaning and has
+  never been populated with real data. Third-party liquidation-candidate monitoring — `arbitrage_structural`'s
+  `liquidation_capture.py` and `mev`'s `liquidation_bundle.py` — independently reimplement the identical
+  "health-factor < threshold" pattern to spot OTHER wallets' liquidatable positions, each with its own inline gate.
+  The correct centralized module (`DeFiHealthAggregator` / `positions_health.py`, already client_id-scoped) exists
+  but is never called from the strategy engine — it's HTTP-only, execution-service-facing — and a purpose-built
+  `liquidation_proximity_circuit.py` circuit breaker exists with zero callers anywhere outside its own package
+  `__init__.py`. Also found: the centralized module itself isn't fed by any live source (only tests call its update
+  path), a stub on-chain Aave adapter in strategy-service returns `NotImplementedError`, and the data model is
+  missing LTV/borrow-capacity/liquidation-price fields an archetype would need. A broader sweep across all other
+  strategy families (kill-switch handling, vol_trading's risk gates) found those correctly centralized — this
+  pattern is confined to health-factor-shaped liquidation gates specifically, not a systemic failure. Filed per
+  operator direction to establish a strategy-agnostic, venue-agnostic centralized pattern for private on-chain
+  position/risk reads, after three rounds of investigation surfaced and then precisely scoped this while scoping
+  the Elysium carve-out's excluded `health_factor` field.
 status: open
 nature: issue
 asset_group: [defi]
@@ -31,8 +38,8 @@ author: interactive-session
 parent_epic: infrastructure_master
 priority: P1
 estimate_class: infra
-estimate_baseline_ai_days: 6
-estimate_calibrated_ai_days: 4.8
+estimate_baseline_ai_days: 8
+estimate_calibrated_ai_days: 6.4
 assigned_role:
 assigned_vm: NA
 execution_scope: local-only
@@ -60,19 +67,23 @@ source: >-
 
 ## Finding
 
-Exactly two archetypes in strategy-service take genuine on-chain DeFi leverage (post collateral, borrow against
-it) — everything else (`rotation_lending.py`, all three `defi_lp/*.py` engines, every non-DeFi archetype) is
-supply-side/LP-only or CEX-margin, confirmed by an exhaustive search for borrow/collateral/lend logic:
+Exactly two archetypes take genuine on-chain DeFi leverage (post collateral, borrow against it) — everything else
+(`rotation_lending.py`, all three `defi_lp/*.py` engines, every non-DeFi archetype) is supply-side/LP-only or
+CEX-margin, confirmed by an exhaustive search for borrow/collateral/lend logic. **Two more archetypes, in two other
+families, independently reimplement the identical gate for a related but distinct purpose — spotting OTHER
+wallets' liquidatable positions rather than gating our own leverage:**
 
-| Archetype | File | Leverage mechanism |
+| Archetype | File | Use case |
 | --- | --- | --- |
-| `CARRY_STAKED_BASIS` | `strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py` | `LST_AS_MARGIN` mode posts the LST as real on-chain-derived perp margin |
-| `CARRY_RECURSIVE_STAKED` | `strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py` | Genuine `STAKE→LEND→BORROW→STAKE...` recursive loop |
+| `CARRY_STAKED_BASIS` | `strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:419` | Own-leverage risk: `LST_AS_MARGIN` mode posts the LST as real on-chain-derived perp margin |
+| `CARRY_RECURSIVE_STAKED` | `strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py:115,447` | Own-leverage risk: genuine `STAKE→LEND→BORROW→STAKE...` recursive loop |
+| (arbitrage_structural) | `strategy_service/engine/strategies/v2/arbitrage_structural/liquidation_capture.py:81-97` | Third-party monitoring: own `max_health_factor` param gate, identical "HF < threshold → act" logic to capture others' liquidations |
+| (mev) | `strategy_service/engine/strategies/v2/mev/liquidation_bundle.py:153,266-283` | Third-party monitoring: `features.get(f"liq_candidate_health_factor_{cid}")`, inline `candidate.health_factor >= 1` gate |
 
-**Both read their liquidation kill-gate from the same wrong source**: `features.get("health_factor")` —
-`staked_basis.py:419`, `recursive_staked.py:115` (entry gate) and `:447` (exit/unwind gate, `_check_family2_health_kill`).
-That key comes from features-service's generic per-tick features pipeline. A separate investigation this session
-found the pipeline function that was believed to populate it (`_process_health_factor()` in
+**All four read from the generic per-tick features pipeline, ad hoc.** For the first two, that's literally
+`features.get("health_factor")` — `staked_basis.py:419`, `recursive_staked.py:115` (entry gate) and `:447`
+(exit/unwind gate, `_check_family2_health_kill`). A separate investigation this session found the pipeline
+function that was believed to populate it (`_process_health_factor()` in
 `features-service/features_service/onchain/engine/orchestrator.py`) has a **false docstring** — it claims to poll
 Aave's `getUserAccountData()` per wallet, but actually reads the same generic MTDS `rate_indices` data every
 sibling Aave feature calculator uses, with no wallet parameter anywhere. The value has never carried real
@@ -81,9 +92,21 @@ safe constant because "the dedicated health_factor feature group carries no nume
 `strategy_service/cli/handlers/paper_run_handler.py:26-28,343`).
 
 **`recursive_staked.py` copied the pattern deliberately, not accidentally** — its own docstring (lines 436-439)
-says it reuses "the same `health_factor` feature / `min_health_factor`" as `staked_basis.py`. Any future third
-DeFi-leverage archetype is likely to copy the same broken precedent unless a correct centralized call is
-established as the pattern to copy instead.
+says it reuses "the same `health_factor` feature / `min_health_factor`" as `staked_basis.py`. `liquidation_capture.py`
+and `liquidation_bundle.py` show the same instinct independently arising a second and third time, for a different
+purpose, in different families — this is a precedent problem, not a one-off bug.
+
+**A purpose-built fix already exists and sits completely unused**: `strategy_service/circuit_breakers/liquidation_proximity_circuit.py`
+looks purpose-built for exactly this gate, but `grep -rln "liquidation_proximity_circuit" strategy_service` returns
+nothing outside its own package `__init__.py` — zero archetypes call it, including the four above.
+
+**What's confirmed NOT broken — this is a scoped pattern, not systemic.** A broader sweep across every other
+strategy family found risk-gating done correctly elsewhere: kill-switch handling is centralized in
+`BaseArchetypeEngineV2` (`engine/strategies/v2/base.py:40-43,249-284`) and every archetype inherits it uniformly;
+`vol_trading`'s `RiskGates`/`PortfolioRiskGate` (`vol_trading/portfolio_risk_gate.py`) are shared, single-instance
+objects threaded through the family's allocators, not reimplemented per-archetype. Several other archetype-specific
+gates checked (stat_arb_pairs' stop-loss z-score, defi_lp/vault.py's drawdown gate) are genuinely archetype-specific
+with no duplicate elsewhere — correctly left alone.
 
 ## The correct centralized module exists — but nothing calls it, and nothing feeds it
 
@@ -131,6 +154,15 @@ Even once wired, the centralized data model can't yet serve everything an archet
 - [ ] [AGENT] P0. **Switch `staked_basis.py:419` and `recursive_staked.py:115,447` to the centralized source**,
       once (a) and the live feed exist. This is the actual liquidation-risk fix — until this lands, both
       archetypes' kill-gates are not protecting against real liquidation risk.
+- [ ] [AGENT] P1. **Switch `liquidation_capture.py:81-97` and `liquidation_bundle.py:153,266-283` to the same
+      centralized source**, once it exists — these read OTHER wallets' health factor (candidates to liquidate), so
+      the call shape differs from the own-position gates above (needs a candidate-wallet parameter, not
+      client-scoped), but should route through the same underlying module rather than a fourth bespoke
+      implementation.
+- [ ] [AGENT] P1. **Decide `liquidation_proximity_circuit.py`'s fate.** It looks purpose-built for this exact gate
+      and has zero callers. Either wire it in as the shared kill-gate all four archetypes above call, or determine
+      why it was never adopted (superseded design, incomplete, wrong interface) and delete it if so — don't leave
+      a working-looking, unused circuit breaker sitting alongside four bespoke reimplementations of what it does.
 - [ ] [AGENT] P1. **Extend the centralized data model**: add LTV, borrow-capacity, and liquidation-price to
       `DeFiAggregatedHealth`/`ProtocolHealthBreakdown`, or unify with `PositionHealthSnapshot`'s fields. Fix the
       `AAVE_V3`-hardcoded liquidation-threshold lookup in `positions_health.py:70-72` to resolve per-position
@@ -160,3 +192,11 @@ Even once wired, the centralized data model can't yet serve everything an archet
   §A4 already excludes `health_factor` from that plan's data-scope, since no DeFi-side leverage is taken in the
   contracted strategies), but real production-risk-relevant for `staked_basis.py`'s live `LST_AS_MARGIN` structure
   if it's currently trading.
+- **2026-08-16 (second pass)** — Operator asked whether the audit covered every strategy family, not just DeFi. A
+  third agent-dispatched sweep found two more instances of the identical pattern for a related but distinct
+  purpose (`liquidation_capture.py`, `liquidation_bundle.py` — third-party liquidation-candidate monitoring, not
+  own-leverage gating) plus a purpose-built, completely unused circuit breaker
+  (`liquidation_proximity_circuit.py`). The same sweep also checked every other family for similar duplication and
+  found none — kill-switch handling and vol_trading's risk gates are correctly centralized, confirming this is a
+  scoped pattern (4 files, 3 families) rather than a systemic one. Title, summary, findings and todos updated to
+  the real scope in the same edit. Estimate revised from 6/4.8 AI-days to 8/6.4 to reflect the added fix surface.
