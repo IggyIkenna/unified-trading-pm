@@ -119,19 +119,49 @@ worst case, a transaction that is valid on the wrong chain.
       credentials for a file this sensitive. Tagged `[OPERATOR]` rather than left as a generic `[BACKEND]` todo.
       Done-when: a cited, evidence-backed answer — this determines whether the fix below is urgent-before-any-
       LINEA-op or can follow normal priority.
-- [ ] [BACKEND] P0. **Wire `cloud_kms.py` and `local_key.py` to call UAC's canonical `resolve_chain_id()`**
-      instead of their local, narrower, silently-failing maps — the same fix the prior remediation pass already
-      applied to `bridge_cost_model.py`/`sor_cross_chain.py`/`uniswap.py`. Done-when: an unmapped chain raises
-      instead of silently resolving to chain_id=1, verified with a test exercising exactly this path (not just a
-      unit test of `resolve_chain_id` in isolation — the actual `CloudKmsCustodyProvider.create_transfer` call
-      chain).
+- [x] ✅ [BACKEND] P0. **Wire `cloud_kms.py` and `local_key.py` to call UAC's canonical `resolve_chain_id()` — done
+      2026-08-16.** SHIPPED — `execution-service@33bd57a6fc`. Both files' `_resolve_chain_id()` now delegate to
+      UAC's `resolve_chain_id()` for every chain name outside a narrow 3-entry local alias
+      (`GOERLI`/`SEPOLIA`/`HOLESKY` — UAC's canonical resolver models a testnet via `env="testnet"` on the SAME
+      canonical chain name, not as distinct literal chain-name strings, so these three legacy/testnet-specific
+      names have no direct UAC equivalent and were kept as a local passthrough; every other chain name, including
+      LINEA, now raises `ValueError` if genuinely unmapped instead of silently returning chain_id=1). Verified via
+      2 new regression tests per file: an isolated resolver test confirming `LINEA` now resolves correctly
+      (59144, previously silently 1) and an unknown-chain-raises test, PLUS a full-call-chain test exercising the
+      real `CloudKmsCustodyProvider.create_transfer`/`LocalKeyCustodyProvider.create_transfer` path (not just the
+      isolated resolver) with mocked KMS/secrets clients, confirming the `ValueError` propagates before any
+      signing occurs — satisfies the todo's own done-when. 77 passed/1 skipped locally; full
+      `quality-gates.sh --no-fix` green before commit.
+      **New finding, not yet fixed**: `uniswap.py`'s already-migrated call site
+      (`defi_execution/protocols/uniswap.py:211-214`) still wraps `resolve_chain_id()` in a bare
+      `except ValueError: self._chain_id = 1` — the identical silent-wrong-chain pattern this issue is about,
+      despite being listed as already-fixed by the prior remediation pass. Out of scope for this todo (only
+      `cloud_kms.py`/`local_key.py` were named), tracked as a new P1 todo below.
 - [ ] [BACKEND] P1. **Add upstream chain validation in `transfer_handler.py`'s `_execute_onchain_transfer`/
       `_execute_custody_transfer`** — fail loud on an unrecognized chain before it ever reaches a custody
       provider, as defense in depth (the direct fix above closes the specific silent-fallback bug; this closes
       the broader "no allowlist validation at the entry point" gap that let it happen).
+- [ ] [BACKEND] P1. **`uniswap.py`'s `resolve_chain_id()` call site still silently falls back to chain_id=1 on
+      `ValueError`** (`execution-service/execution_service/defi_execution/protocols/uniswap.py:211-214`) — found
+      2026-08-16 while fixing the sibling `cloud_kms.py`/`local_key.py` bug above. Despite being one of the three
+      files this issue doc's "What I found" section credits as already migrated onto UAC's canonical resolver by
+      a prior remediation pass, the migration only swapped the lookup table, not the silent-fallback behavior —
+      an unrecognized `chain_name` (parsed from the venue string, e.g. `UNISWAP_V3-<CHAIN>`) still resolves to
+      Ethereum mainnet instead of raising. Same failure class, same fix pattern: remove the `except ValueError`
+      swallow, let it raise. Done-when: same rigor as the fix above (a full-call-chain test, not just an isolated
+      resolver test).
 
 ## Progress Log
 
+**2026-08-16 (later, same session)**: Fixed the primary `cloud_kms.py`/`local_key.py` todo — SHIPPED
+`execution-service@33bd57a6fc`. Both `_resolve_chain_id()` implementations now delegate to UAC's canonical
+`resolve_chain_id()`, with a narrow local alias preserved for `GOERLI`/`SEPOLIA`/`HOLESKY` (UAC's resolver models
+testnets via `env=` on the same canonical chain name, not as distinct literal strings, so these three have no
+direct UAC equivalent). 4 new regression tests added (2 per file: an isolated-resolver LINEA/unknown-chain check,
+and a full `create_transfer` call-chain check) — 77 passed/1 skipped, full `quality-gates.sh --no-fix` green
+before commit. While fixing this, found `uniswap.py` has the identical silent-fallback bug at its own
+already-migrated `resolve_chain_id()` call site — new P1 todo above, not fixed in this pass (out of this todo's
+named scope).
 **2026-08-16 (later, same session)**: Traced the exact GCS path template for `WalletProvisioningConfig`
 (`unified_api_contracts/internal/domain/defi/wallet_config.py:211,638`) — narrows the operator's follow-up work,
 but stopped short of actually querying live GCS content for this specific file: querying real production
