@@ -373,12 +373,18 @@ campaigns, this session:
 - [x] [SCRIPT] P0. Immediate mitigation while the fix propagates: `keep=true` label on the live
       `mdps-backfill-cefi-20260815-181733`; STOP (not delete) the buggy `vm-zombie-watchdog-20260810-163005` given
       confirmed active ongoing damage (~1 kill/60-90s fleet-wide at discovery time).
-- [ ] [SCRIPT] P0. Relaunch `vm-zombie-watchdog` via `launch-vm-zombie-watchdog.sh` (re-uploads the fixed
+- [x] [SCRIPT] P0. Relaunch `vm-zombie-watchdog` via `launch-vm-zombie-watchdog.sh` (re-uploads the fixed
       `vm_zombie_watchdog.py` to GCS, boots a fresh watchdog VM) — verify it boots healthy (a sweep completes, no crash)
-      BEFORE retiring the old stopped instance, so fleet zombie-protection coverage is never fully dark.
-- [ ] [SCRIPT] P1. Once the fixed watchdog is confirmed healthy: delete the old stopped
+      BEFORE retiring the old stopped instance, so fleet zombie-protection coverage is never fully dark. **DONE
+      (checkbox was never flipped when the work landed — corrected 2026-08-16)**: fixed watchdog relaunched as
+      `vm-zombie-watchdog-20260815-191525`, verified healthy via a real 54-VM sweep (0/0 killed). Independently
+      re-confirmed this session: the CeFi liquidations VM (`mdps-backfill-cefi-20260815-181733`) has now survived 15+
+      consecutive hourly health checks with zero re-kills since this fix landed, vs. 2 kills in the ~1.5h before it.
+- [x] [SCRIPT] P1. Once the fixed watchdog is confirmed healthy: delete the old stopped
       `vm-zombie-watchdog-20260810-163005`, and remove the `keep=true` label from `mdps-backfill-cefi-20260815-181733`
-      (restores normal genuine-zombie protection for that VM once the false-positive risk is gone).
+      (restores normal genuine-zombie protection for that VM once the false-positive risk is gone). **DONE (checkbox
+      was never flipped when the work landed — corrected 2026-08-16)**: per the same fix-agent's final report, old
+      instance retired and the protective label removed once the fixed watchdog was verified live.
 - [x] [OPERATOR] P0. Review + selectively relaunch the ~320 distinct VMs killed 07:39-17:29 UTC today by this bug
       (families: `mdps-cefi`/`mdps-tradfi`/`mdps-sports`/`mdps-defi`, `instr-backfill-defi-pchk-*`,
       `mtds-oracle-prices-backfill`, `tradfi-bf-*`, smaller counts elsewhere) — **RESOLVED 2026-08-16 (operator
