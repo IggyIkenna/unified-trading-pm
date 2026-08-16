@@ -195,13 +195,23 @@ Two independent causes, both now fixed:
       pre-existing WIP hadn't added): fixed by adding `related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]`
       to the `gcp_service_accounts_registry_diverged…` doc and appending `/plans/active/ui_consolidated_closeout_2026_07_30.md`
       to the `unified_trading_system_ui_block_list…` doc's existing `related:` list — re-check now 0 new orphans.
-- [ ] [DOCS] P3. **Resolve the `[ci, cross-cutting]` dual-tag on
+- [x] ✅ [DOCS] P3. **Resolve the `[ci, cross-cutting]` dual-tag on
       `/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** to a single owner.
       Two prior audits (2026-08-09 Finding 4, 2026-08-10 Finding 2) both read the content as closer to
       `infrastructure`/`meta` than `ci` — i.e. the `ci` half may itself be wrong, not just the `cross-cutting` half.
       **RETAGGED from `[OPERATOR]` per `task_template.md` finding U**: this is a named-doc, named-field content call a
       worker can make and evidence, not a business/spend judgment, a credential gap, or an irreversible mutation. **Done
-      when**: a single `asset_group` value with the deciding content cited in the Progress Log.
+      when**: a single `asset_group` value with the deciding content cited in the Progress Log. — unified-trading-pm
+      (this commit). Retagged `[ci, cross-cutting]` → `[meta]`. Content is entirely about the plan-corpus's OWN
+      pre-commit tooling — `check_line_caps.sh`'s over-cap carve-out vs. `validate_plan_links.py`'s corpus-wide
+      broken-link scan deadlocking on an archival edit, resolved via a `plan-completion-and-archival-discipline.md`
+      carve-out fix — not a CI/CD pipeline/workflow-template matter (this batch's own todo 2/3 already reserve `ci` for
+      that) and not general cloud/VM infra. Matches this same batch's todo 4 precedent
+      (`governance_sweep_deferred_followups_2026_08_06.md` → `[meta]`, also a plan-corpus-governance doc). `docspec.py
+      --check --doc-type issue` clean (hard=0 soft=0); `check_ag_closeout_linkage.py` shows 1 pre-existing orphan
+      (`sportradar_credential_ask_2026_08_09.md`, unrelated file, baseline drift predating this task) — no new orphan
+      from this retag, and the doc is `plans/archive/**` (closed record, outside the gated/linkage corpus per
+      `doc-frontmatter-schema.md` §1) so no closeout-family `related:` link is needed.
 - [ ] [DOCS] P3. **Retag `/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
       from `[defi]` to `[ui]` or `[cross-cutting]` by content — its `repos:` is
       `[unified-api-contracts, unified-trading-system-ui]` and the content is strategy-archetype DRIFT venue cleanup,
