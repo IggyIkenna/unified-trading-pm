@@ -27,7 +27,7 @@ related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
-    /plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
+    /plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
     /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
@@ -86,7 +86,7 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
       `quality-gates.sh` green. Not independently re-verified against a fresh live blob sample (needs LDR→main
       promotion + Cloud Build rebuild first) — corrupted historical rows are re-fetchable, so the routine catalogue
       regen cadence corrects them once deployed, satisfying this todo's re-captureable-window OR-clause. Full evidence +
-      Progress Log: `/plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`
+      Progress Log: `/plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`
       (archived same session).
 - [x] ✅ [CONFIG] P2. Close the sports trigger-tier residual gap — add `odds_t12h`, `odds_t4h`, `odds_t2h` forward
       snapshot triggers to `deployment-service/configs/sports-trigger-tiers.yaml`'s `pre_match.triggers` (following the

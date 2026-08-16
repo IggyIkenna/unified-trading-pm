@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [aiohttp, json, encoding, charset, mojibake, dp-catalog-001, follow-up]
 related:
   [
-    /plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
+    /plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
@@ -45,7 +45,7 @@ context_scope:
   [
     instruments_service/reference_data/adapters/sports/adapters/base.py,
     instruments_service/reference_data/adapters/sports/adapters/api_football.py,
-    /plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
+    /plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
   ]
 ---
 

@@ -20,7 +20,7 @@ summary: >-
   — skip + count the corrupted row, log once, continue rolling up the other ~99,487 files — the same
   shard-level-failure-isolation discipline this codebase already applies to other per-blob loops in this same file (see
   _iter_sports_ftp_snapshots' own "skip vanished/malformed blob" warnings).
-status: open
+status: archived
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -65,7 +65,6 @@ source:
 resolved_by: ["instruments-service@497c4f5e"]
 locked_by:
 locked_since:
-archive_exempt: true
 context_scope:
   [
     instruments-service/scripts/build_instrument_catalogue.py,
@@ -75,6 +74,12 @@ context_scope:
     /plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md,
   ]
 ---
+
+> **📦 ARCHIVED 2026-08-16 — RESOLVED.** Every todo done (P1 crash-isolation fix, P2 promotion-verification, P3
+> upstream-encoding-defect trace+fix), unlocked, no dependents blocking. Final fix: instruments-service@5f2f3ca619
+> (pinned `encoding="utf-8"` on every `resp.json(content_type=None)` call site in the sports adapters — see the P3 todo
+> below for full root-cause evidence). Successor: none — self-contained fix, no follow-on doc needed (a narrow
+> non-sports fleet-audit follow-up was filed separately as `aiohttp_json_charset_guessing_audit_2026_08_16.md`).
 
 > **✅ UNBLOCKED 2026-08-08 — the promotion blocker cleared; the verification todo is now runnable.** This doc's
 > remaining verification todo was gated on
