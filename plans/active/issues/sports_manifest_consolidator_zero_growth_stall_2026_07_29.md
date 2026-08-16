@@ -474,6 +474,40 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. Fingerprint match:
   `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` — matched literal: static `rows_out` + nonzero
   `dedup_dropped` reasoning error (already cross-linked in this doc's own 2026-08-05 entry above, not a fresh find).
+- **2026-08-16 (slot-32, data_engineering, `sports_satellite_ao_dispatch_batch12_2026_08_09-153` [DIAG] P3
+  dispatch) — the 23 sentinel-free missing days are RESOLVED: 0 residual today, in BOTH candidate manifest
+  buckets.** Wrote
+  `market-tick-data-service/scripts/sports/investigate_23_sentinel_free_odds_gaps_2026_08_16.py` (read-only, single
+  column-pruned `read_availability_index` call) and reproduced this doc's own 2x2 classification
+  (`(has odds_api row) x (has ODDS_API sentinel row)`) over the exact `2020-06-06..2026-04-15` window the original
+  595/572/23 numbers were computed against:
+  - `instruments-store-sports-prd-central-element-323112` (the bucket this doc's own root-cause section queried):
+    547 days now missing `source=odds_api` (down from 595 — real backfill progress since 07-30), and **all 547**
+    (100%) carry a `venue=ODDS_API` sentinel row — 0 sentinel-free.
+  - `market-data-tick-sports-prd-central-element-323112` (the bucket `get_tick_data_bucket()`/
+    `check_shard_freshness` — i.e. the LIVE freshness-check + backfill-fleet target — actually reads/writes): 247
+    days missing `source=odds_api`, 246/247 (99.6%) sentinel-covered, 0 sentinel-free (the single non-sentinel day is
+    a genuinely-never-attempted date, unrelated to the sentinel-collision mechanism this doc tracks).
+  - Checked whether the 0-residual result reflects NEW post-2026-07-30 sentinel writes (i.e. "the in-flight
+    backfill/MDPS rollup just caught up") vs the sentinel rows having existed all along but only recently become
+    VISIBLE in the canonical: every `ODDS_API` sentinel row's `written_at` in the instruments-store bucket predates
+    2026-07-30T00:00Z (0 rows with a later `written_at`). Conclusion: **the 23 originally-unexplained days were not
+    a distinct root cause** — they were the SAME `check_shard_freshness` ODDS_API-sentinel-collision mechanism this
+    doc already diagnosed and fixed (`market-tick-data-service@362e64e3`), just with the MDPS odds-horizon-bucket
+    rollup's sentinel row for those specific 23 days sitting in an unconsolidated per-VM shard (real, pre-07-30
+    `written_at`) that the manifest consolidator had not yet merged into the canonical `availability_index.parquet`
+    at the moment of the 07-29/30 census — the exact "shard exists, canonical hasn't absorbed it yet" lag this doc's
+    own § "Root cause" and the sibling § "Diagnostic caveats" in `manifest-consolidator-ssot.md` already document as
+    a real, self-healing phenomenon, not a new failure mode. No code fix needed; no new backfill needed for these 23
+    days specifically.
+  - **Secondary finding, filed separately** (out of this todo's diagnostic-only scope, not fixed inline): the two
+    buckets disagree by ~300 days on odds_api coverage for the identical window (547 vs 247 missing) — filed as
+    `/plans/active/issues/sports_odds_api_is_bucket_coverage_lags_tick_bucket_2026_08_16.md`, likely the same
+    cross-bucket-mirror-sync gap `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md` already tracks
+    for the `trades`/`TRADES` data_type.
+  - Checkbox flipped in `sports_satellite_ao_dispatch_batch12_2026_08_09.md:153` (this todo's actual tracker per the
+    2026-08-12 correction below) citing this entry. Repos: market-tick-data-service (new read-only script, no
+    prod-affecting code change).
 
 ## Follow-ups
 
