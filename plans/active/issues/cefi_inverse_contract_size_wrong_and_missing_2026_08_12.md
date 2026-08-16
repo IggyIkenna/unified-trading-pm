@@ -275,7 +275,7 @@ days.
       restart it just to "keep it running" if it's genuinely still healthy; checkpoint-resume is proven correct
       across iterations so a restart is cheap if actually needed, but isn't free (redoes the last <24h of dates and
       costs a boot cycle) so don't force one without a reason.
-- [ ] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
+- [x] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
       as `attempted_failed`" is WRONG — directly measured earlier in this campaign (a prior session, same day) that the
       VM's own per-VM manifest shard had **0 `attempted_failed` rows** despite these exact `SchemaContractNotFoundError`
       occurrences being present in its log. Root cause: `SchemaContractNotFoundError` is NOT caught by the shard-level
@@ -288,20 +288,77 @@ days.
       bundle-file-defect case to raise `MalformedTickFieldError` instead (so it's honestly recorded + retryable), or
       widen the shard-isolation catch handler to also record `SchemaContractNotFoundError`. Original finding stands
       otherwise (root cause + narrow blast radius correct).
-- [ ] [DATA] P3. NEW, SEPARATE, narrow finding surfaced mid-4th-re-derive (2026-08-14, unrelated to contract_size/
+      **DECIDED + SHIPPED 2026-08-16** (RESTORED — see "doc-regression" Progress Log entry below; the na-eligibility-audit
+      RECLASSIFY-SPLIT commit `20f4f6f893` accidentally un-checked this + the sibling item below and deleted their
+      shipped-evidence text, most likely from operating on a stale base of this file): widened the shard-level
+      failure-isolation catch in `_process_all_timeframes` (`live_workers_chain.py`) to also catch
+      `SchemaContractNotFoundError` alongside `MalformedTickFieldError`/`UpstreamTimestampBiasError`, routing it through
+      `record_failed_for_shard` (honestly recorded + retryable). The loud signal is preserved, not hidden:
+      `SchemaContractNotFoundError` gets its own ERROR-level per-shard log line
+      (asset_group/venue/instrument_type/data_type) via a new `_log_typed_shard_error` helper, on top of the existing
+      ERROR-level `log_event` already fired at the raise site (`canonical_writer.py`'s own `except
+      SchemaContractNotFoundError` handler — untouched). Regression test added:
+      `tests/unit/test_live_workers_typed_error_routing.py::test_schema_contract_not_found_routes_to_record_failed`
+      (proves no unhandled propagation + `record_failed_for_shard` called with `error="SchemaContractNotFoundError"`).
+      Shipped: `market-data-processing-service@bc9706cdb5`.
+- [x] [DATA] P3. NEW, SEPARATE, narrow finding surfaced mid-4th-re-derive (2026-08-14, unrelated to contract_size/
       margin_type):
       `No SchemaContract registered for asset_group='cefi' instrument_type='<SYMBOL>' data_type='liq_agg_15s' venue='BINANCE-FUTURES'`
-      — 8 distinct symbols (AVAX/LTC/ATOM/BTC/UNI/DOGE/ADA/ETHUSDT), ~16 total occurrences, 2021-01-31..2021-02-08 only.
-      Root cause NOT yet confirmed but strongly suspected: the raw
-      `venue=BINANCE-FUTURES/.../data_type=liquidations/ticks.parquet` BUNDLE file (multiple instruments per file, not
-      per-instrument) has a malformed per-row `instrument_type` column containing the SYMBOL string instead of
-      `PERPETUAL` for these specific rows — a likely raw MTDS historical data-quality issue for this exact 9-day window,
-      not an MDPS code bug (MDPS's fail-closed `SchemaContract` lookup is working as designed, refusing to guess). NOT
-      "correctly recorded as `attempted_failed`" — see the correction above, this failure class is currently invisible
-      to the manifest entirely. Needs: (1) confirm the raw bundle file's actual `instrument_type` column content for
-      one of these symbol/dates to verify the hypothesis, (2) if confirmed, either a targeted content-fix (same
-      methodology as Finding 1a) or accept as honest historical absence. Very small blast radius (16 occurrences vs the
-      thousands-of-shards P0 findings above) — does not block calling Findings 1/2/3 verified.
+      — an EARLIER partial sample of this doc saw 8 distinct symbols (AVAX/LTC/ATOM/BTC/UNI/DOGE/ADA/ETHUSDT), ~16
+      occurrences, 2021-01-31..2021-02-08 only; that window/symbol set was NOT the full extent (see ROOT CAUSE below).
+      **VERIFICATION 2026-08-16 (session 1) — hypothesis REFUTED.** Read the actual raw GCS objects
+      (`market-data-tick-cefi-prd-central-element-323112`, resolved via `get_write_bucket_name`/`get_storage_client` per
+      the UTL helper, never inline `gs://`) with pandas for all 8 originally-affected symbols on `2021-02-01`, plus
+      BTC/AVAX on the window boundary dates (`2021-01-31`, `2021-02-08`) and two control dates outside the window
+      (`2021-01-15`, `2021-02-15`). The **per-instrument** `venue=BINANCE-FUTURES/.../data_type=liquidations/
+      BINANCE-FUTURES:PERPETUAL:{SYM}-USDT@LIN.parquet` objects were clean at every symbol/date sampled — no bundling, no
+      `instrument_type` column at all (columns `[exchange, symbol, timestamp, local_timestamp, id, side, price, amount,
+      data_type, instrument_id]`), `instrument_id` uniformly well-formed. This refuted the original "malformed raw bundle
+      row" hypothesis and redirected suspicion to MDPS's own candle-derivation code — but the exact code path was not yet
+      located in that session.
+      **ROOT CAUSE CONFIRMED 2026-08-16 (session 2 — this dispatch).** The per-instrument files verified above are NOT
+      the files that actually triggered the error. A **separate, STALE legacy bundle file** sits at the exact same GCS
+      hive prefix ALONGSIDE the per-instrument files:
+      `raw_tick_data/by_date/day=2021-01-31/pipeline_mode=batch_tardis/asset_group=cefi/venue=BINANCE-FUTURES/
+      instrument_type=perpetual/data_type=liquidations/ticks.parquet` (confirmed still present, `last_modified
+      =2026-06-27`, 44,272 rows spanning **17** symbols — ADA/ATOM/AVAX/BNB/BTC/DOGE/DOT/ETH/LINK/LTC/LUNA/MATIC/NEAR/
+      SOL/TRX/UNI/XRP-USDT — one legacy pre-2024-migration multi-instrument dump, columns
+      `[exchange, symbol, timestamp, local_timestamp, id, side, price, amount, data_type, instrument_type]`: note NO
+      `instrument_id` column, and `instrument_type` is correctly `'perpetual'` on this file too — the raw content was
+      never the defect). `ticks.parquet` IS MDPS's own documented "multi-instrument bundle" filename sentinel
+      (`gcs_path_utils.extract_instrument_id_from_blob_path` / `live_workers_chain._is_chain_data`), so MDPS correctly
+      routes it to `_process_chain_timeframe_by_symbol` (`live_workers_chain.py`) to split by the `symbol` column and
+      write one candle file per instrument. **The bug**: that function synthesised the per-symbol `instrument_id` as a
+      bare 2-segment `f"{venue}:{symbol}"` (e.g. `"BINANCE-FUTURES:BTCUSDT"`) — never including the TYPE segment, even
+      though the bundle's own `instrument_type` column (or the blob path's `instrument_type=` hive segment) already had
+      it. This 2-segment id then reaches `_infer_instrument_type`'s legacy-id fallback
+      (`canonical_writer_shaping.py`, the final `parts = instrument_id.split(":"); return parts[1]` branch, written for
+      an assumed 3-segment `VENUE:TYPE:SYMBOL` shape) — for a 2-segment id, `parts[1]` is the SYMBOL, not the TYPE, so
+      the SchemaContract lookup used `instrument_type='BTCUSDT'` (the wire ticker) instead of `'PERPETUAL'`, failing loud
+      every time. **Confirmed against the LIVE VM log**, not just static tracing: SSH'd (read-only) into
+      `mdps-cefi-2021-20260813-174738` (asia-northeast1-c, still running) and grepped its own
+      `/tmp/vm-exec-5128.log` for `data_type='liq_agg_15s' venue='BINANCE-FUTURES'` — **13 occurrences across 13
+      distinct 2021 dates** (`2021-01-31, 02-03, 02-04, 02-08, 03-17, 03-18, 03-20, 03-24, 03-25, 04-03, 04-04, 04-07,
+      04-08` — materially wider than the original 9-day sample), 8 distinct `instrument_type` values seen
+      (`BNBUSDT/BTCUSDT/DOTUSDT/LTCUSDT/LUNAUSDT/SOLUSDT/TRXUSDT/UNIUSDT`) — every single one a literal wire ticker from
+      a stale bundle's `symbol` column, matching the mechanism exactly (partial symbol/date overlap with the original
+      8-symbol sample is expected: each backfill sweep only hits whichever stale-bundle dates it processes in that run).
+      A synthetic repro against the REAL downloaded `2021-02-01 AVAX-USDT@LIN` per-instrument file (confirming it is
+      NOT the trigger) resolved `instrument_type='PERPETUAL'` correctly regardless of the starting id — isolating the
+      defect to the bundle-split path specifically, not the per-instrument path.
+      **FIXED**: `_process_chain_timeframe_by_symbol` now reads the bundle's own `instrument_type` column (new
+      `_resolve_bundle_instrument_type` helper, uppercased) and synthesises the proper 3-segment
+      `VENUE:TYPE:SYMBOL` id when available; when genuinely absent it falls back to the pre-fix 2-segment shape
+      unchanged (honest-unresolved, never guessed — same convention the sibling id renormalizers already use).
+      Regression tests: `tests/unit/test_live_workers_coverage.py::TestProcessChainTimeframeBySymbol::
+      test_instrument_type_column_produces_canonical_3segment_id` (real affected symbol `BTCUSDT` -> synthesises
+      `BINANCE-FUTURES:PERPETUAL:BTCUSDT`) and `::test_missing_instrument_type_column_stays_honest_unresolved_2segment`
+      (regression guard: column absent -> unchanged 2-segment shape, proves the fix doesn't fabricate a TYPE). Full
+      `quality-gates.sh` green (2447 passed, 2 skipped). Shipped: `market-data-processing-service@a3ff10f0dd`. Blast
+      radius beyond what's fixed: the STALE `ticks.parquet` bundle files themselves are not deleted by this change
+      (out of scope — a separate GCS cleanup/migration decision, not a code defect) and any date this VM already
+      processed before the fix landed still needs a re-attempt to pick up the corrected id (manifest rows for these are
+      `attempted_failed` per the shard-isolation widening above, so they retry automatically on the next sweep).
 - [x] [SCRIPT] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
       `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 1. Original text: NEW 2026-08-16:
       `aggregate_from_15s_efficient` (`fast_candle_aggregation.py:333-359`) fires its
@@ -315,6 +372,15 @@ days.
       widen the existing `mark_price_mean` check). Low priority — output data is correct, this is pure log-noise
       cleanup (659K lines is real cost in log volume/scan time for anyone debugging this VM, but not a correctness
       issue).
+      **FIXED 2026-08-16** (RESTORED — see doc-regression Progress Log entry below, this evidence was deleted by the
+      na-eligibility-audit extraction commit along with the checkbox): `_honest_absence_frame` now also matches on
+      presence of `liquidation_count` / `liquidation_notional_usd` (OR'd with the existing `mark_price_mean` check), so
+      a genuine zero-liquidation window's null open/close no longer trips the guard. Trades/book_snapshot_5 (no
+      exemption columns) keep the real protection unchanged. Tests added in `tests/unit/test_fast_candle_aggregation.py`
+      (`TestLiquidationsHonestAbsenceNanGuardExemption`): (a) `test_liquidations_zero_window_does_not_warn` — a
+      liquidations-shaped frame with a legit zero window does NOT warn; (b) `test_dense_adapter_leading_nan_still_warns`
+      — regression guard proving the ORIGINAL bug case (a dense adapter with a leading NaN and none of the exemption
+      columns) still DOES warn. Shipped: `market-data-processing-service@bc9706cdb5`.
 
 ## Lesson
 
@@ -331,3 +397,20 @@ uncommitted across a checkpoint boundary, even mid-task.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-16** [body-hash:8aa962571f5348dd]: RECLASSIFY-SPLIT — extracted bounded item(s) 1 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 4 items remain genuinely NA (1 [OPERATOR] Tardis-tier spend decision, 1 [SCRIPT] P0 monitor-to-completion stood down to proactive-check cadence not bounded-now, 2 [DATA] P3 investigation-not-yet-confirmed items). Doc stays assigned_vm: NA.
+- **DOC-REGRESSION found + fixed 2026-08-16 (this dispatch)**: the na-eligibility-audit RECLASSIFY-SPLIT commit
+  `20f4f6f893` (immediately above) accidentally reverted TWO already-shipped, verified fixes back to unchecked `[ ]`
+  and deleted their shipped-evidence text (the `SchemaContractNotFoundError` shard-isolation widening and the
+  liquidations NaN-warning exemption, both genuinely shipped `market-data-processing-service@bc9706cdb5` per commit
+  `16b57fd3ad` on this same doc) — most likely the audit operated on a base copy of this file that predated commit
+  `0f22d65ede`/`16b57fd3ad` landing, then its own write overwrote the newer content on push. It ALSO deleted the
+  "VERIFICATION 2026-08-16 — hypothesis REFUTED" investigation paragraph entirely. Restored both `[x]` items + their
+  evidence, and preserved the REFUTED-hypothesis narrative inline within the new root-cause writeup below (superseded,
+  not silently dropped) — this is exactly the class of loss `git show <commit> -- <path>` catches; worth a general
+  caution for any future doc-splitting/extraction tooling to diff against the file's OWN latest commit before writing,
+  not an in-memory/stale copy.
+- **Root cause LOCATED + FIXED 2026-08-16 (this dispatch, `/autonomous`)**: the `liq_agg_15s` SchemaContractNotFoundError
+  finding (2 items above) is CLOSED — see its own checkbox for the full root cause (a stale legacy `ticks.parquet`
+  multi-instrument bundle file, MDPS's own `_process_chain_timeframe_by_symbol` synthesising a malformed 2-segment
+  `instrument_id`), fix, regression tests, and evidence. Confirmed via live SSH read of the actual backfill VM's own
+  log (`mdps-cefi-2021-20260813-174738:/tmp/vm-exec-5128.log`), not just static code tracing. Shipped:
+  `market-data-processing-service@a3ff10f0dd`.
