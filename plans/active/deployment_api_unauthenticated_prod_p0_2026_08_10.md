@@ -615,6 +615,11 @@ are unaffected.
   — needs the operator to retest (ideally after a hard-refresh/incognito window, to rule out a tab that was already open
   before the cache fix landed).
 
+  - [ ] [OPERATOR] P3. **ADDED 2026-08-16 (plan_reconciler agt-8fc5a6, zero-checkbox conversion).** Retest Google
+        sign-in end-to-end (hard-refresh/incognito) and confirm it completes post the popup-auth + Cache-Control fixes
+        above — the paragraph directly above this todo describes real, still-open verification work with no tracked
+        checkbox anywhere in this doc.
+
   **Found, flagged, no operator decision yet — not actioned**: 3 stale tagged Cloud Run revision URLs
   (`prd-sa-precutover`, `predeploy-verify`, `sports-fix-verify`) on `uts-shared-deployment-api`, pointing at old
   revisions (`00417`/`00435`/`00448`) with 0% traffic, left over from past debug sessions. Harmless (no traffic, no cost
