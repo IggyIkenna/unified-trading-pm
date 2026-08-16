@@ -57,7 +57,6 @@ context_scope:
     /codex/06-coding-standards/config-reloader-pattern.md,
     /codex/04-architecture/tier-and-import-architecture.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
-    strategy-service/EXTRACTION_AUDIT.md,
   ]
 ---
 
@@ -226,3 +225,7 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
 the operator then widened the scope to registry hardening, config abstraction, full venue e2e wiring and a smoke-test
 bar, framed as track (a) — "get the system to full capability and into a shape that makes carve-out doable". Shape
 (umbrella + children) and split (LOCAL design / AO mechanical) both operator-chosen the same day.
+
+**2026-08-16 — dead reference dropped.** `strategy-service/EXTRACTION_AUDIT.md` was cited in `context_scope` but does
+not exist in the repo (working tree or git history, confirmed by full recursive search) — removed. See the child plan's
+Progress Log for the independent spot-check of the numbers this file was meant to back.

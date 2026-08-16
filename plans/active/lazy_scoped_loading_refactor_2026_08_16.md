@@ -11,7 +11,7 @@ summary: >-
   lazy factory.py alone does NOT solve it — live collateral calls still import UAC and pull the whole graph. Carve-out
   prerequisite: land this before or alongside the carve-out so later updates do not re-derive a frozen snapshot against
   a moving, eagerly-coupled target. SIT needs no changes.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [strategy, execution]
@@ -45,7 +45,6 @@ context_scope:
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
     /codex/04-architecture/tier-and-import-architecture.md,
-    strategy-service/EXTRACTION_AUDIT.md,
   ]
 ---
 
@@ -63,7 +62,8 @@ that is already scoped, rather than re-deriving a frozen snapshot against a movi
 
 ## The three layers, measured
 
-Source: `strategy-service/EXTRACTION_AUDIT.md` (internal audit, 2026-08-15/16).
+Source: `strategy-service/EXTRACTION_AUDIT.md` was cited as the source (internal audit, 2026-08-15/16) but does not
+exist in the repo (working tree or history) — spot-checked independently instead by reading the actual code (see 2026-08-16 Progress Log entry); the numbers below held up.
 
 | Layer                  | What is eager                                                                     | Cost   | Blast radius            |
 | ---------------------- | ----------------------------------------------------------------------------------- | ------ | ----------------------- |
@@ -114,3 +114,14 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
 discoverable under its own name rather than buried in a plan titled "carve-out stubbed strategy service" — the biggest
 item here (UAC) has fleet-wide blast radius well beyond strategy-service, and someone scanning plan titles for it would
 not have found it.
+
+**2026-08-16 — status flipped to active; dead source reference dropped and independently re-verified.** Picking up W1.
+`strategy-service/EXTRACTION_AUDIT.md`, cited as this plan's evidentiary source, does not exist anywhere in
+strategy-service (working tree or git history — confirmed via full recursive case-insensitive search, not gitignored,
+simply never committed). Removed the reference from `context_scope` and the "measured" line above rather than leaving a
+dangling pointer. Spot-checked the execution-service claims directly against the code instead: `algorithms/algorithms.py`
+has exactly 7 module-level eager imports (adaptive_twap, almgren_chriss, hybrid_optimal, passive_aggressive,
+pov_dynamic, twap, vwap) matching the plan's count; `adapters/algorithm_factory.py` uses a real `TYPE_CHECKING`-gated
+lazy pattern. Both hold up despite the missing source doc. Have not yet spot-checked the strategy-service `factory.py`
+or UAC `registry/__init__.py` / `internal/__init__.py` claims the same way — do that before treating those numbers as
+verified, not just plausible.
