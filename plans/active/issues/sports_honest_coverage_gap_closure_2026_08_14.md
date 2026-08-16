@@ -387,24 +387,47 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       `market-tick-data-service@a4a20fc7`, already shipped and is live — only this supplementary doc/test artifact is
       stranded). `git stash pop` (or `apply` + selective `git checkout stash@{N} -- <path>` if other content has since
       landed in the same file), re-run QG, ship via quickmerge. Low risk, small, does not block anything else.
-- [ ] [DATA] P1. **odds_api's actual 278-day backfill gap is STILL not closed** — separate from all the bug-fixing this
-      session did (case-mismatch/source-venue misclassification fixed, casing-migration premise found false). The
-      backfill VM itself (`mtds-backfill-odds-1`) never got a confirmed clean multi-hour run: every attempt this
-      session hit either the pre-existing unroot-caused silent-hang bug or died within ~20 minutes with zero log
-      output (see `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`'s 2026-08-16 entry). As of this
-      writing `gcloud compute instances describe mtds-backfill-odds-1 --zone=asia-northeast1-c` shows `RUNNING`, but
-      that is NOT reliable evidence of real progress this session already caught OS-level-RUNNING-while-workload-dead
-      once — SSH in and check for a live MTDS python process + fresh log lines before trusting it. Real root cause of
-      the fast silent-exit is still unconfirmed. See `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the
-      original gap tracking.
-- [ ] [DATA] P2. **Weather VM (`weather-backfill-20260815-011036`) was SPOT-preempted, not completed — relaunch
-      needed.** Confirmed via its deployment record (`deployments/archive/2026-08-15/5b9c3450-592d-47bc-84bb-
-      48a33bc022f2.json`): `status=failed`, `exit_code=125` (the standard vm-vanished sentinel, same signature as
-      every other preempted VM this session — not a workload crash), `completed_at=2026-08-15T16:10:03Z`. Relaunch
-      with the same date range (`2024-01-03 2026-08-02` — resumes from measured progress via existing skip-logic,
-      does not replay from day 0). Once it completes cleanly: run
-      `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` (required to materialize
-      empty_confirmed rows, per that launcher's own printed instruction — NOT yet run as of this session's end).
+- [ ] [OPERATOR] P0. **REAL ROOT CAUSE FOUND 2026-08-16, supersedes the "silent-hang, unroot-caused" framing below —
+      `mtds-backfill-odds-1` is NOT hanging.** SSH'd into the VM directly (`gcloud compute ssh ... --tunnel-through-iap`)
+      at 18:24Z, 1.5h after its startup script reported `exit status 0`: no MTDS python process running, load avg
+      0.00, and `/home/ikennaigboaka/logs/mtds-backfill.log` (708 bytes, last written 16:57:28Z — i.e. within seconds
+      of boot) shows the actual terminal line: `[vm-exec] admission HELD by alert-driven revocation — skipping run
+      (exit 75)`. This is Phase 5 of `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` working exactly
+      as designed — a launcher preflight (`revocation_admission_cli.py`) correctly declines to run when a hold marker
+      exists, exit 75 (`EX_TEMPFAIL`), logged as a clean skip not a crash. Read the actual marker
+      (`vm-census/admission-hold/mtds-backfill-odds-1.json` in `deployment-scripts-central-element-323112`, via UTL's
+      `get_storage_client()` — never `gsutil`/`gcloud storage`):
+      ```json
+      {"action": "deps_drain", "alert_identity": "DP-VM-002", "rationale": "The silent-zero class — the VM is gone
+      having captured nothing, so downstream is about to read data that does not exist. The motivating case for this
+      whole module.", "requested_at": "2026-08-15T17:54:20Z", "target": "mtds-backfill-odds-1"}
+      ```
+      **This is the SAME alert (`DP-VM-002`, exit_code_fleet_monitor's silent-zero detector) reacting to an EARLIER
+      dead run of this exact VM NAME on 2026-08-15** — and because the launcher family reuses the fixed VM name
+      `mtds-backfill-odds-1` across relaunches (rather than a per-launch timestamped name), the hold from that one
+      bad run has been silently blocking **every subsequent relaunch** ever since, each one self-exiting in seconds.
+      **This is a likely self-deadlock in the revocation design for this alert class**: the hold is meant to
+      auto-clear via `RevocationActuator.release()` inside `meta_watchers.reconcile_resolved()` once the alert is no
+      longer "active", but DP-VM-002 fires on VM *termination* (edge-triggered) — there is no positive signal a
+      blocked VM can ever produce to prove the condition cleared, because admission blocks it before it can run.
+      Did NOT clear the marker myself — this is a live safety mechanism I do not have full confidence reasoning about
+      unilaterally (need to confirm whether the reconcile sweep is even scheduled/running, and whether the original
+      silent-zero cause has actually been fixed since 2026-08-15 before assuming a relaunch will succeed this time).
+      **Recommended action for the operator**: (1) confirm via `cli.py --mode meta` logs or its scheduler whether the
+      resolve sweep is running at all for this target; (2) if intentionally-stale, clear
+      `vm-census/admission-hold/mtds-backfill-odds-1.json` manually (delete via UTL, not gsutil) and relaunch — the
+      actuation budget caps re-firing at 2/day so this is not a thrash risk; (3) separately, consider giving this
+      launcher family a timestamped VM name so a future hold can't block ALL future relaunches under the same name.
+      See `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the original gap tracking. The
+      previously-suspected "silent hang" framing in `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`
+      may itself need revisiting — at least this occurrence was admission-held, not hung; worth checking whether
+      earlier "silent hang" occurrences in that doc were actually the same admission-hold pattern misread as a hang.
+- [x] ✅ [DATA] P2. **Weather VM relaunched 2026-08-16** — confirmed the prior VM (`weather-backfill-20260815-011036`)
+      was SPOT-preempted (`exit_code=125`, `completed_at=2026-08-15T16:10:03Z`, per its deployment record). Relaunched
+      as `weather-backfill-20260816-192237` with the same date range (`2024-01-03 2026-08-02`); verified via SSH the
+      `instruments_service` workload process is actually running (PID 5401, accumulating CPU time), not just
+      OS-level RUNNING. Once it completes: run `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh`
+      to materialize `empty_confirmed` rows.
 - [ ] [SCRIPT] P1. **SFI still 112 `attempted_failed`, unstarted** — see the existing SFI todo above in this doc for
       the full retry mechanism (7 dates, no new code needed, `DEPLOYMENT_ENV=prod` required). Not touched this session
       beyond re-confirming the count is unchanged.
@@ -414,8 +437,8 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
 | Item | State / why deferred | Blocked on |
 | --- | --- | --- |
 | UAC pinning-test stash (above) | Not done — real work, quick | Nobody — pick it up first, it's the cheapest |
-| odds_api 278-day backfill (above) | Not done — needs a real root-cause dig into the fast silent-exit, or just more relaunch attempts | Nobody, but genuinely uncertain-duration work |
-| Weather VM completion + rescan (above) | Cannot be done yet until VM's terminal status is confirmed | An external check (deployment record), then possibly a relaunch |
+| odds_api 278-day backfill (above) | Root cause NOW KNOWN (stale admission-hold, not a hang) — clearing the hold is a judgment call on a live safety mechanism | Operator decision — see the P0 item above |
+| Weather VM completion + rescan | Relaunched 2026-08-16, confirmed live — rescan script still pending until it completes | Nobody — just wait for completion |
 | SFI 7-date retry (above) | Not done — mechanically simple, just never executed | Nobody |
 | api_football derived-entity backlog reclassification `--apply` (748,363→ now merged; the SEPARATE 72,955 genuine-gap cells from the original FIXTURES_OUTCOMES dry-run) | Operator-owned — needs a decision on the 72,955 unprovable cells, not a mechanical retry | Operator review of the original dry-run counts (see the FIXTURES_OUTCOMES todo higher in this doc) |
 | Broader multi-venue `ODDS`/`odds` casing pattern (betfair, footystats) found but explicitly out-of-scope this session | Already tracked elsewhere, not lost | See `plans/active/issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md` — a peer session already filed this independently |
