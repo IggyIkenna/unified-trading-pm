@@ -106,15 +106,69 @@ what a child plan measures against, and what a new-venue rollout follows step by
 
 **Readiness states** (a venue is at the highest state whose rows all pass):
 
-- **`BACKTESTABLE`** — steps 1–5 + 11. We can research and backtest it honestly. **This is the floor for every venue in
-  the universe.**
-- **`PAPER-READY`** — + steps 6–9 with paper mode proven.
-- **`LIVE-READY`** — + live mode proven. **Live credentials are the ONLY thing this plan does not require** — every
-  other step must be complete and testable without them.
+- **`BACKTESTABLE`** — steps 1-3, 5, 11, 13-15. We can research and backtest it honestly. **The floor for every venue
+  in the universe.** Needs no venue credentials.
+- **`PAPER-READY`** — + steps 4, 6-10, 16. **Requires REAL live connectors for reading market data**, plus real
+  paper/testnet execution accounts. Also requires a settled, RECORDED answer to: does this venue have a testnet, how
+  does it behave, or must we simulate it through our own matching engine in a way that stays as close as possible to
+  both backtest and live? Per venue, written down, not assumed.
+- **`LIVE-READY`** — + live execution credentials and live mode proven.
 
-> **Credentials are not an excuse to descope.** Per the workspace's external-data rule, exhausting the free path is a
-> credential ask, never a reason to skip the build. Build the full path; mark it `BLOCKED-CREDENTIALS` if it cannot be
-> RUN.
+> **Credentials gate RUNNING, never BUILDING.** Exhausting the free path is a credential ask, not a descope. Build the
+> full path; mark `BLOCKED-CREDENTIALS` if it cannot be RUN. What separates the states is which ACCOUNTS exist, not
+> which code exists.
+
+## GRANULARITY — what the data supports, declared per venue (operator ruling 2026-08-16)
+
+Readiness is not binary per venue; it is bounded by **what granularity the data actually has**. This is the section
+that makes the registry worth presenting: it answers _"this is what's available, this is the granularity, this is what
+you can do with it."_
+
+### The normalisation rule
+
+> **HARD RULE: strategy-service NEVER reads market-tick-data-service directly.** It reads through features-service or
+> market-data-processing-service, so it always receives a normalised shape. Everything a strategy consumes arrives as a
+> candle-like structure — which is why strategy-side granularity reduces to _which candle series exist, at what
+> interval_.
+
+Verified 2026-08-16: the rule HOLDS today — strategy-service's only mention of MTDS is a docstring cross-reference, not
+an import. But it is **convention, not enforcement**; nothing fails if someone adds the import.
+
+### Execution matching is bounded by the same data, and must FAIL CLOSED
+
+The fidelity vocabulary already exists — `L2_MBP` > `CANDLE_BOOK_COLS` > `L1_MBP` > `L0_TOB`, plus `AMM` and
+`ALPHA_ZERO`, with `execution_fidelity.py` mapping each tier to the data it needs. What is missing is a per-venue
+declaration of **which tier is actually achievable**, and enforcement that nothing asks for a richer one.
+
+- A venue with only bars cannot support queue-aware matching. Attempting it produces a **fabricated** fill quality —
+  the same failure class as a simulated connector reporting a live fill.
+- The correct behaviour is to **refuse at the execution-service layer**, not to match as though tick data existed.
+- Deviations are **per instrument and per data type**, not per venue — one venue can carry full depth for its majors
+  and bars only for the long tail. The registry must express that, never a venue-level average.
+- Non-orderbook markets substitute their own shape — time-sliced odds snapshots stand in for ticks. That is a distinct
+  matching class, not a degraded orderbook, and should be modelled as such.
+
+### Contract steps added by this ruling
+
+| #   | Step                     | What "done" means                                                                                                                            |
+| --- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 13  | **Granularity declared** | Per (venue x instrument-type x data-type): the interval/depth the data actually supports, exceptions expressed at the level they occur.         |
+| 14  | **Derivation path**      | How candles are made and aggregated from it, and which candle series each consuming feature group reads.                                        |
+| 15  | **Trigger frequency**    | Strategy-service tick cadence and MDPS derivation cadence are consistent with the declared granularity — nothing triggers faster than its data. |
+| 16  | **Matching class**       | The achievable fidelity tier, declared. Execution REFUSES a richer tier rather than approximating one.                                          |
+
+- [ ] [AGENT] P0. **Gate the normalisation rule.** Add a check that fails if strategy-service imports
+      market-tick-data-service. It holds today by convention only; the gate makes it durable and costs almost nothing.
+- [ ] [OPERATOR] P0. **Where does the granularity declaration live?** Keyed per (venue x instrument-type x data-type),
+      must express exceptions at that granularity, read by both MDPS and execution-service. Most likely an extension of
+      the UAC venue capability record rather than a new registry — but that is a shape call, and it should be made
+      before population, because population is the expensive half.
+- [ ] [AGENT] P0. **Make execution fail closed on fidelity.** Today the tier clamps DOWN silently, which is right for a
+      backtest and wrong for a live/paper caller that assumed better. Decide per path — clamp-and-record versus refuse —
+      and make refusal the default when a caller explicitly requests a tier the venue cannot serve.
+- [ ] [AGENT] P1. **Publish the granularity view.** Render it as a table a human can read: venue, instrument type, data
+      type, granularity, achievable matching class. This is what makes "what can we actually do here" answerable without
+      reading code — and it is the same table we can show a counterparty.
 
 ## Workstreams — each forks to its own child plan
 
