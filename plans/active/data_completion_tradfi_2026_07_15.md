@@ -604,6 +604,11 @@ Re-audited 2026-07-21:
 
 ## Progress Log
 
+- **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator re-confirmation)**: E7's verify-then-delete
+  ruling re-confirmed still current. Extracted to
+  `/plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch, since this
+  doc stays `assigned_vm: NA`.
+
 > **Folded in 2026-07-24** from the M-1 coordinator's (`data_completion_to_100_all_ag_2026_06_21.md`) shared Progress
 > Log (plan line-cap remediation, `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` bucket-(d) split,
 > operator-approved) — every TradFi-lane-tagged dated entry, moved verbatim, in original chronological order. M-1
