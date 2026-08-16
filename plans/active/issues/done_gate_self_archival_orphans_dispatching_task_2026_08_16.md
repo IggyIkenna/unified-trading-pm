@@ -28,6 +28,7 @@ locked_by:
 resolved_by:
 source: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/verify.py, agent-orchestrator/scripts/orchestrator/reconcile_done_gate_rejections.py]
 depends_on: []
+drift_direction: advance-code
 ---
 
 # /done M3 gate vs. self-archival-cancelled TaskRow (2026-08-16)

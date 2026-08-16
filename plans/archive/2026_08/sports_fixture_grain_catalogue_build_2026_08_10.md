@@ -7,7 +7,7 @@ summary: >-
   per-fixture manifest-schema extension, write build_sports_fixture_catalogue_from_manifest(), wire the reference-data
   adapters into the catalogue build, and run the post-phase codex alignment check. Gated on P1 contracts (archived);
   deliberately NOT gated on P2 data migration per the operator's dispatch ruling.
-status: active
+status: complete # archived 2026-08-16 — all 5 todos done, no locked_by
 nature: design
 asset_group: [sports]
 stage: [data]
@@ -123,16 +123,13 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
       catalogue (honest absence, not an error), (c) `expected_unattempted` is correctly seeded per-fixture. **Done
       when**: the function exists, is called from `build_instrument_catalogue()` for `asset_group == "sports"`
       (alongside — not replacing — the existing league-grain call), and `quality-gates.sh` is green.
-- [ ] [CODE] P3. **Wire the reference-data adapters into the sports catalogue build.** `build_instrument_catalogue.py`
-      currently calls ONLY `build_sports_catalogue_from_manifest()` for sports — it never invokes any adapter's
-      `get_instruments()` (unlike DeFi/CeFi paths), so fixture/team/player/Betfair-runner `InstrumentRecord`s are never
-      rolled into the catalogue. Extend the sports path to also call the relevant adapters (`api_football_reference.py`
-      for fixtures, `betfair.py` for Betfair runners once BETFAIR is wired into the sports fetch pipeline — see
-      `betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` for the Betfair-specific gating item). Confirm whether
-      the manifest-only path (no direct adapter calls) remains the intended SSOT — the catalogue plan's own P3
-      adapter-invocation todo leaves both outcomes open. **Done when**: the adapters are invoked (or a documented
-      decision NOT to invoke them is recorded with rationale), and the catalogue row count is verified against a real
-      GCS read of the output.
+- [x] ✅ [CODE] P3. **Wire the reference-data adapters into the sports catalogue build.** — Investigated + documented
+      decision (no code change) in Progress Log below (2026-08-16). Verdict: the manifest/
+      by_date-snapshot-only path (no direct live `adapter.get_instruments()` call from `build_instrument_catalogue.py`)
+      IS the intended SSOT, and API-Football is already effectively wired via the snapshot rollup path — confirmed by
+      a real prod GCS read (544,768 total sports catalogue rows: fixture=432,829, player=104,381, team=7,200,
+      league=358). Betfair genuinely has 0 rows (not wired into any write path, cross-repo-gated, out of scope — see
+      Progress Log). **Done when** criterion satisfied: decision recorded with rationale + real GCS read.
 - [x] ✅ [REVIEW] P3. **Post-phase codex alignment check.** — instruments-service@0f2a798c65
       `/codex/02-data/availability-manifest-and-data-status.md` and `/codex/02-data/honest-coverage-model.md` need a
       corresponding update (HARD RULE "post-phase codex audit"). Also update
@@ -280,3 +277,46 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
   multi-axis correction banner's "10× manifest inflation" warning was about making `fixture_id` a FULL shard axis for
   ALL data_types including league-scoped ones — this design scopes per-fixture rows to fixture-scoped data_types only,
   where `fixture_id` is already the GCS path partition key.
+
+- **2026-08-16 (slot 7, todo 4 — reference-data adapter wiring decision)** — Investigated the todo's premise
+  ("`build_instrument_catalogue.py` never invokes any adapter's `get_instruments()` unlike DeFi/CeFi paths") and found
+  it's **stale relative to the current codebase**: a full-file grep of `build_instrument_catalogue.py` finds **zero**
+  `get_instruments()` calls anywhere in the file, for any asset_group. Every asset_group (cefi/defi/tradfi/prediction,
+  not just sports) rolls catalogue rows up from previously-written `by_date` snapshots or the manifest — never a live
+  adapter call inside this builder. The premise "unlike DeFi/CeFi paths" does not hold today.
+
+  **Decision: no code change — the manifest/by_date-snapshot-only path IS the intended SSOT**, consistent with every
+  other asset_group's pattern. Evidence:
+
+  1. **API-Football is already effectively wired**, just not directly. `ApiFootballReferenceDataAdapter.get_instruments()`
+     (`instruments_service/reference_data/adapters/sports/adapters/api_football_reference.py`) is invoked by
+     `instruments_service/engine/orchestrator/sports_reference_fixtures_write.py`, which writes the fetched
+     fixture/team/player reference data to `sports_reference/by_date/`. `build_sports_fixture_team_player_catalogue()`
+     (shipped 2026-07-09, already wired into `build_instrument_catalogue()`'s sports path since before this plan was
+     authored — see `sports_reference_fixtures_write.py`'s output feeding `_iter_sports_ftp_snapshots`) already rolls
+     those exact snapshot files up into catalogue rows. So the adapter's output already reaches the catalogue — via the
+     snapshot files it writes, the same indirection pattern every other asset_group uses.
+  2. **Betfair genuinely is NOT wired into any write path** — `BetfairReferenceDataAdapter` only appears in the generic
+     `reference_data/router.py` + `reference_data/factory.py` registration, never in an orchestrator write path (unlike
+     `ApiFootballReferenceDataAdapter`, which has a dedicated writer). This matches the archived
+     `/plans/archive/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` finding ("Betfair reference-data
+     fetching is not wired into the production sports pipeline today — confirmed 0 Betfair rows in the real
+     `prod/catalog.parquet`"), which that issue closed BY-DESIGN 2026-07-12 pending cross-repo coordination
+     (strategy-service + execution-service both depend on the current Betfair instrument_id delimiter shape) — wiring
+     Betfair into the fetch pipeline is genuinely cross-repo work, correctly out of scope for this instruments-service-
+     only catalogue todo.
+  3. **Real GCS read of the output** (read-only, via `storage.download_bytes()` against the live promoted catalogue —
+     no rollup re-run):
+     `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet` — **544,768 total rows**:
+     `fixture=432,829`, `player=104,381`, `team=7,200`, `league=358`. No `betfair`/`runner` instrument_type present —
+     confirms finding 2. All 432,829 fixture rows currently carry a blank `venue` (`""`) — this promoted catalogue
+     predates todo-3's `build_sports_fixture_catalogue_from_manifest()` ship (instruments-service@8c08ccacba, same day
+     as this entry's authoring), which is the function that stamps real per-venue (bookmaker) values on
+     manifest-derived fixture rows; these 432,829 rows are from the older (2026-07-09)
+     `build_sports_fixture_team_player_catalogue()` FTP path, which has no per-venue distinction (observed fixture
+     metadata, not per-bookmaker odds). The next scheduled catalogue-rollup run will pick up todo-3's manifest-derived
+     fixture rows alongside these — not a defect of this todo, just a freshness note for whoever next inspects catalogue
+     row venue values.
+
+  **No follow-up todo needed** — the Betfair gap is already tracked (closed-by-design, cross-repo) in its own archived
+  issue doc; re-opening it is a decision for whoever picks up the Betfair wiring work, not this plan.
