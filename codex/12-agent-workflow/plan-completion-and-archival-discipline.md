@@ -66,7 +66,7 @@ but all todos are done — should I unlock it?") but MUST NEVER unlock autonomou
    where they were).
 6. Clear the lock (if one existed) and confirm the move. **The destination path depends on `doc_type` (resolved
    2026-08-16 — this doc previously contradicted itself, using both forms in its own worked examples below;
-   `archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md` has the full corpus
+   [`archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`](/plans/archive/issues/archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md) has the full corpus
    measurement — 1484 issue docs already at flat `plans/archive/issues/` vs 296 at the dated form, ~83%/17%)**: a
    `doc_type: issue` doc moves to flat **`plans/archive/issues/`**, per
    [`issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md) — the authoritative, internally

@@ -108,7 +108,7 @@ Then archive. The `git log` history preserves the issue forever; the parent plan
 ## Composition with other rules
 
 - **Archive path differs from `doc_type: plan` (resolved 2026-08-16,
-  `archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`)**: the flat
+  [`archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`](/plans/archive/issues/archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md))**: the flat
   `plans/archive/issues/` path this doc states above is specific to `doc_type: issue` — a `doc_type: plan` doc (e.g. a
   finalize plan) archives to the dated `plans/archive/<YYYY_MM>/` instead, per
   [`plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)

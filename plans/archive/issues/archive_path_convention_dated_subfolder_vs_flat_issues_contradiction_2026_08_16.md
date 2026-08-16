@@ -15,7 +15,7 @@ summary: >-
   archival-discipline SSOT's majority wording and is what this same session used for several retags), while at least
   one doc was independently archived this same session to flat `plans/archive/issues/` citing issue-doc-lifecycle.md
   explicitly as the authority. Neither actor was wrong per the SSOT they read — the SSOTs themselves disagree.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -41,7 +41,7 @@ source: >-
   slot-16 (infra), discovered mid-task while archiving 3 different issue docs across a single 2026-08-16 session and
   noticing they landed under two different path shapes depending on which SSOT the actor happened to read.
 author: slot-16
-resolved_by:
+resolved_by: unified-trading-pm@c92b0a49eb
 locked_by:
 locked_since:
 context_scope:
@@ -50,6 +50,13 @@ context_scope:
     /codex/11-project-management/issue-doc-lifecycle.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-16** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule, to the flat path — fittingly, per this very doc's own resolved convention. Resolution
+> evidence in `resolved_by:` (unified-trading-pm@c92b0a49eb) — both SSOTs now state the doc_type split explicitly.
+> Single-repo case (plan-of-record in this same worktree), so the checkbox flip and this `git mv` land in the same
+> commit per the 2026-08-10-narrowed same-commit-flip+archival sanction.
 
 # Archive path convention: dated-subfolder vs. flat `plans/archive/issues/` — two SSOTs disagree
 
@@ -90,19 +97,21 @@ not a data-correctness one — low urgency, but worth resolving before the corpu
 
 ## Todos
 
-- [ ] [DOCS] P3. **Resolve which archive path convention is canonical for `doc_type: issue`** — read both SSOTs in
+- [x] ✅ [DOCS] P3. **Resolve which archive path convention is canonical for `doc_type: issue`** — read both SSOTs in
       full, pick one (recommend flat `plans/archive/issues/`, since issue-doc-lifecycle.md is the more specific,
       internally-consistent SSOT for this doc type), and fix the losing SSOT's wording (including
       `plan-completion-and-archival-discipline.md`'s own internal self-contradiction between its ritual-step wording
       and its own worked examples). **Done when**: both SSOTs agree, and the choice is stated explicitly (not left
-      implicit via "the ritual says X but the examples say Y").
-- [ ] [SCRIPT] P3. **Measure the live corpus split** — count how many issue docs currently sit under
+      implicit via "the ritual says X but the examples say Y"). — RESOLVED: flat `plans/archive/issues/` is canonical
+      for `doc_type: issue` (see Progress Log for evidence + the exact edits).
+- [x] ✅ [SCRIPT] P3. **Measure the live corpus split** — count how many issue docs currently sit under
       `plans/archive/*/issues/` (dated) vs. `plans/archive/issues/` (flat), and decide whether a one-time normalization
       pass (moving the minority form to match the winning convention from the todo above) is worth the referrer-fixup
       cost, or whether grandfathering existing docs in place (only enforcing the winning convention going forward) is
       the pragmatic call given `plans/archive/**` is explicitly outside the gated corpus per
       `doc-frontmatter-schema.md` §1 ("archives are closed records, never ship-blocking"). **Done when**: a count is
-      reported and a normalize-vs-grandfather decision is recorded with rationale.
+      reported and a normalize-vs-grandfather decision is recorded with rationale. — 1484 flat, 296 dated (290 under
+      `2026_08/`, 6 under `2026_07/`) — GRANDFATHER, see Progress Log.
 
 ## Progress Log
 
@@ -110,3 +119,34 @@ not a data-correctness one — low urgency, but worth resolving before the corpu
   across 3 issue docs in one session; not itself blocking any of that work, filed as a clean follow-up rather than
   resolved inline (a fleet-wide SSOT wording fix is outside this session's task scope per `infra.md`'s "file an issue
   doc + escalate — do not absorb unplanned scope").
+- **2026-08-16 (slot-14, infra) — resolved.** Read both SSOTs in full. `issue-doc-lifecycle.md`'s state-machine table
+  states flat `plans/archive/issues/` 4 separate times (once per terminal state: ACKED-INTO-PLAN/-CODE/-OUT-OF-SCOPE/
+  -AS-INVALID), with zero internal contradiction. `plan-completion-and-archival-discipline.md`'s general step-6
+  ritual wording said dated `plans/archive/<YYYY_MM>/`, but its own 4 concrete worked-example citations split 2/2
+  (lines 82, 108 flat; lines 164, 251 dated — the filing doc only caught the first 2, not all 4). Counted the LIVE
+  corpus directly (`find plans/archive/issues -maxdepth 1 -name '*.md' | wc -l` vs the dated subdirs): **1484 issue
+  docs at flat `plans/archive/issues/`, 296 at a dated `plans/archive/<YYYY_MM>/issues/`** (290 under `2026_08/`, 6
+  under `2026_07/`) — flat is the overwhelming majority (~83%) and matches the more specific, internally-consistent
+  SSOT. Note: `scripts/plan-hygiene/check_create_only_archive_commits.py`'s own docstring claims "real archivals land
+  in DATED directories" (as of its 2026-08-10 coverage-widening fix) — that read as a recent, narrow-sample
+  observation contradicted by the full corpus history above, not evidence dated is actually canonical; left the
+  script's docstring as-is (functionally harmless either way, since it now matches BOTH shapes defensively) rather
+  than editing code comments outside this task's two named SSOTs.
+  - **Verdict: flat `plans/archive/issues/` is canonical for `doc_type: issue`.** Dated `plans/archive/<YYYY_MM>/`
+    remains canonical for every other `doc_type` (plan, epic finalize docs, etc.) — the two SSOTs were never actually
+    in conflict about DIFFERENT doc types, only ambiguous about where the boundary was.
+  - **Fix applied**: `plan-completion-and-archival-discipline.md` step 6 now states the doc_type split explicitly
+    (with the corpus count) instead of a single unscoped dated-path statement; added a one-line disambiguating
+    parenthetical to the single-repo-finalize-plan section (which specifically covers `doc_type: plan`, not issue,
+    but uses the dated form as its worked example and could otherwise be over-read as universal).
+    `issue-doc-lifecycle.md` gets a reciprocal cross-reference in its "Composition with other rules" section stating
+    the same split from its own side, so a reader landing on either doc gets the full picture. Both `last_reviewed`
+    bumped to 2026-08-16.
+  - **Normalize vs. grandfather (todo 2)**: **GRANDFATHER.** Moving 296 dated docs to flat would require 296
+    `git mv`s plus a corpus-wide referrer-fixup pass (`check_reference_paths.py` for every doc citing one of those
+    296 paths) — real cost, zero functional benefit, on CLOSED records `doc-frontmatter-schema.md` §1 explicitly
+    scopes out of the gated/ship-blocking corpus. Existing docs stay exactly where they are; only NEW issue-doc
+    archivals are expected to use flat going forward per the now-corrected SSOT wording. No mechanical enforcement
+    added for this (out of scope for a docs-only resolution) — a future `/archive-candidates-audit`-style sweep could
+    optionally flag NEW dated-form issue-doc archivals if drift resumes, but that is a fresh, separate follow-up, not
+    filed here since there is no evidence yet that the corrected SSOT wording alone won't hold.
