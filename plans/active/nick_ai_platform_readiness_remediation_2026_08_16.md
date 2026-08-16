@@ -210,12 +210,30 @@ and wins** — a disagreement is itself a finding, not a tie to break quietly. D
 coverage-*start-dates* (an interval) — step 13 asks for the achievable *fidelity tier*, a different axis (the
 tradfi sub-agent's pre-audit read conflated these; correct that reading here, don't repeat it).
 
-- [ ] [AGENT] P0. **Extend `VenueCapabilityRecord` with the instrument-type axis + granularity/exceptions fields**,
-      seeded from a reconciliation of the live manifest, `VENUE_DATA_TYPE_CAPABILITIES`, and the readiness-contract's
-      own fidelity vocabulary (`execution_fidelity.py`: `L2_MBP` > `CANDLE_BOOK_COLS` > `L1_MBP` > `L0_TOB`, plus
-      `AMM`/`ALPHA_ZERO`). Cite every manifest-vs-code disagreement found, don't silently resolve them. Done-when: the
-      extended registry populates for at least the 5 asset groups' declared venues, `quality-gates.sh --no-fix`
-      green, and the umbrella plan's own open P1 ("Publish the granularity view") can render from it.
+- [x] [AGENT] P0. ✅ Done 2026-08-16 — `unified-api-contracts@693e823adb`. **Extend `VenueCapabilityRecord` with the
+      instrument-type axis + granularity/exceptions fields**, seeded from a reconciliation of the live manifest,
+      `VENUE_DATA_TYPE_CAPABILITIES`, and the readiness-contract's own fidelity vocabulary. Built ADDITIVELY rather
+      than mutating `VenueCapabilityRecord` in place (that dict has ~192 manually authored entries across 2 files with
+      no instrument_type key anywhere in its shape — a repo-wide breaking migration outside this todo's scope): new
+      module `unified_api_contracts/registry/venue_granularity.py` (+ `venue_granularity_seed.py` for the literal seed
+      data, split out the same way `defi_venue_capabilities.py` was split from `market_data_categories.py`) declares
+      `GranularityRecord`/`VenueDataTypeGranularity`/`get_granularity(venue, instrument_type, data_type)`, using the
+      REAL vocabulary — `unified_api_contracts.internal.domain.matching_engine.BookType` (6 members: `L2_MBP` >
+      `CANDLE_BOOK_COLS` > `L1_MBP` > `L0_TOB`, plus `AMM`/`ALPHA_ZERO`) — not the 3-member `ExecutionFidelityTier`
+      the dispatch prompt's own text named (that closed enum has no `L0_TOB`/`AMM`/`ALPHA_ZERO` members; `BookType` is
+      the one that does). Seeded: fresh live pulls of `_index/availability_index.parquet` for cefi/tradfi/sports/
+      prediction (401/362/315/199MB, via UTL `download_from_storage` — the existing single-file manifest-index read
+      path, not a corpus walk) reconciled against `VENUE_DATA_TYPE_CAPABILITIES`; DeFi seeded from code only
+      (`DEFI_VENUE_DATA_TYPE_CAPABILITIES`) since its index measured 6.8GB (~17x every other AG) and a fresh pull
+      would have crossed into the single-walk-discipline-banned territory. 412 populated `(venue, data_type)` cells
+      across all 5 asset groups (187 manifest-sourced + 225 code-sourced). Every manifest-vs-code disagreement found is
+      cited in `GRANULARITY_DISAGREEMENTS` (10 entries) — including the flagship finding: COINBASE-SPOT has 49,638
+      real captured `book_snapshot_5` rows since 2020-01-01 even though `MVP_SCOPE['cefi']` declares it `{trades}`-only
+      — plus 8 over-declared cells (code says captured, manifest measured 0 rows), a new undeclared `depth_of_book_10`
+      data_type at 4 major CeFi venues, and the sports derived/retired-type exclusion category. 17 unit tests
+      (`tests/unit/test_venue_granularity.py`) cover query resolution, the instrument_type-exception override
+      mechanism, registry population per asset_group, and that the disagreement citations are actually present, not
+      just in code comments. Full `quality-gates.sh --no-fix`: ALL QUALITY GATES PASSED (270s).
 
 ## W4 — Per-AG BACKTESTABLE blockers
 
@@ -279,6 +297,34 @@ path, mark `BLOCKED-CREDENTIALS` where it can't run · do not edit the artifact 
 before they reach a client document.
 
 ## Progress Log
+
+**2026-08-16 — W3 granularity registry shipped.** `unified-api-contracts@693e823adb`. Built the step-13 granularity
+declaration as a NEW additive registry (`venue_granularity.py` + `venue_granularity_seed.py`) rather than mutating
+`VenueCapabilityRecord` in place — that dict's ~192 entries have no instrument_type key anywhere in their shape, so
+reshaping it live was out of scope; the new registry expresses the (venue x instrument_type x data_type) axis via a
+per-(venue, data_type) default + per-instrument_type exceptions, proven queryable by 17 unit tests. Corrected a
+citation drift while building it: this todo's own text (and the umbrella plan's GRANULARITY section) both named
+`execution_fidelity.py`'s vocabulary as `L2_MBP > CANDLE_BOOK_COLS > L1_MBP > L0_TOB` plus `AMM`/`ALPHA_ZERO`, but
+`execution_fidelity.py`'s actual `ExecutionFidelityTier` enum is a DIFFERENT, narrower 3-member closed enum
+(`L2_TICK`/`CANDLE_BOOK_COLS`/`OHLC_BAR`) with none of those 6 names — the real 6-member vocabulary lives in
+`unified_api_contracts.internal.domain.matching_engine.BookType`, which this registry uses instead. Real reconciliation
+against a FRESH manifest pull (cefi/tradfi/sports/prediction — 401/362/315/199MB `_index/availability_index.parquet`
+files via UTL `download_from_storage`, the existing single-file manifest-index read path) found 10 disagreement
+findings, all cited in `GRANULARITY_DISAGREEMENTS` rather than silently resolved — the standout: COINBASE-SPOT has
+49,638 real captured `book_snapshot_5` rows since 2020-01-01 even though `MVP_SCOPE['cefi']` declares it `{trades}`-only
+(execution_fidelity() therefore always clamps it to OHLC_BAR); also a previously-undeclared `depth_of_book_10` data_type
+(10-level CeFi depth, richer than `book_snapshot_5`'s 5-level) with real captured rows at 4 major venues and zero
+mention anywhere in `VENUE_DATA_TYPE_CAPABILITIES` or `MVP_SCOPE`. DeFi's own `_index/availability_index.parquet`
+measured 6.8GB (~17x every other asset_group's) — deliberately NOT pulled fresh this session (single-walk discipline:
+a multi-GB ad-hoc download to seed one registry crosses out of "reuse the existing read path"); DeFi's 225 rows are
+seeded from `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (source="code"), disclosed as a real, non-silent gap in this session's
+reconciliation completeness rather than presented as manifest-verified. Also found `market_data_categories.py`'s own
+`BASE_GRANULARITY_BY_DATA_TYPE` constant is named "granularity" but encodes a data_type's TEMPORAL SAMPLING CADENCE
+(step 14/15 territory), not this module's step-13 fidelity-tier/depth concern — a naming collision worth a doc note
+for whoever tackles steps 14/15, not fixed here (renaming a live imported constant was out of scope). Cross-referenced
+into `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`'s "Publish the granularity view" P1 todo
+(that todo can now render from this registry). Full `unified-api-contracts` `quality-gates.sh --no-fix`: ALL QUALITY
+GATES PASSED (270s, 17/17 new tests green).
 
 **2026-08-16 — W4 Sports mock-config half done (step-8 registry-contradiction half still open — see checkbox).**
 `deployment-api@8239f10a77`. Wired `deployment-api/deployment_api/routes/sports_venues.py`'s `GET /sports/venues`

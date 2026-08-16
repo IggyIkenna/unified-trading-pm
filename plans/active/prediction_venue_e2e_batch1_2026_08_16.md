@@ -76,12 +76,14 @@ source: >-
       the P1 item below.
 - [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across the same 4 rows. A position adapter
       resolves in batch, live AND paper; the venue is declared in the archetype/slot catalogues that can legitimately
-      trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit. **Expect most or all
-      prediction rows to show `archetype_consumers=NONE`** per `generate_venue_work_list.py` — the 5 confirmed
-      `StrategyArchetype` members today (`ARCHETYPE_FEATURE_GROUPS`) are all DeFi yield archetypes, so this step
-      cannot pass for prediction until the archetype-declaration backlog covers a prediction-consuming archetype;
-      record as `BLOCKED-ON:archetype-declaration-backlog`, never silently skip. Done-when: same per-row verdict
-      discipline.
+      trade it; an execution adaptor handles every `InstructionActionV2` those archetypes emit. **Verified wrong,
+      2026-08-16**: this todo originally claimed "expect NONE, DeFi-only archetypes" — false. All 4 prediction rows
+      (`KALSHI`/`POLYMARKET` × `book_snapshot_5`/`trades`) actually show a real consumer via
+      `MARKET_MAKING_PREDICTION` (needs `polymarket_market_microstructure`, fed by `book_snapshot_5`) and
+      `MARKET_MAKING_CONTINUOUS`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` (via `trades`) — confirmed live via
+      `generate_venue_work_list.py`. **None of prediction's 4 rows are `BLOCKED-ON:archetype-declaration-backlog`**;
+      this step is genuinely dispatchable for all 4. Done-when: same per-row verdict discipline (re-verify live
+      before dispatch — the registry moves fast).
 - [ ] [BACKEND] P0. **Step 9 per unit — transfers**, across the same 4 rows. Every applicable `BusTransferType`
       has a working rail, instruments-service through execution-service. Done-when: same per-row verdict discipline.
 - [ ] [BACKEND] P1. **Record every gap found across steps 1-9 above as its own tracked todo** in this file — never

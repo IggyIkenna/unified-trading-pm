@@ -201,7 +201,13 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       passing `max_tier` (zero production callers do today). QG: `✅ ALL QUALITY GATES PASSED`.
 - [ ] [AGENT] P1. **Publish the granularity view.** Render it as a table a human can read: venue, instrument type, data
       type, granularity, achievable matching class. This is what makes "what can we actually do here" answerable without
-      reading code — and it is the same table we can show a counterparty.
+      reading code — and it is the same table we can show a counterparty. **The registry to render from now exists**
+      (2026-08-16, `unified-api-contracts@693e823adb`,
+      `/plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md` W3):
+      `unified_api_contracts.registry.venue_granularity.VENUE_GRANULARITY_CAPABILITIES` +
+      `get_granularity(venue, instrument_type, data_type)`, 412 populated `(venue, data_type)` cells across all 5 asset
+      groups (instrument_type expressed as a default + per-instrument exceptions, not a literal per-triple row) — this
+      todo is now purely a rendering task, not a data-population one.
 
 ## STRATEGY CONSUMABILITY — a venue with no consumer is not ready (operator ruling 2026-08-16)
 
@@ -270,6 +276,11 @@ per-feature-group input requirements, already exists.
       `odds` 31, `staking_yields` 26, `lst_rates` 19, etc.) — expected given only 5 of 59 `StrategyArchetype` members
       are declared in `ARCHETYPE_FEATURE_GROUPS` today (54 `UNDECLARED_ARCHETYPES`), so most captured data has no
       archetype to consume it yet — a scope gap, not a bug, tracked separately by the archetype-declaration backlog.
+      **Correction, 2026-08-16 (later, interactive session)**: `ARCHETYPE_FEATURE_GROUPS` moves fast — a same-day
+      re-measurement found 40/60 declared (not 5/59), spanning every asset_group (not DeFi-only), and a fresh
+      `generate_venue_consumability_report.py` run showed 30/192 fully pass + 161/192 have orphans (not 9/172). Do
+      not cite either historical figure above as current — re-run the script; this whole section moves as fast as
+      the registry does. See `venue_e2e_wiring_2026_08_16.md`'s "Derive the work list" todo for the discovery.
       **But one real bug surfaced by the report, fixed in the same change**: `required_inputs.py`'s `"lst_yields"`
       feature_group declared its required input as `data_type="lst_yields"` (self-referential) instead of
       `data_type="lst_rates"` (the raw exchange-rate ticks it's actually computed from — confirmed via
