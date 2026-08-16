@@ -198,19 +198,26 @@ Split the 1,814 objects into the two classes above and resolve each:
   had partially reverted, this count would exceed 280). Did not have time this session to also regenerate the
   verify-report (needs a full read-only pass over 280 objects' content, not a quick op) or run `--apply` — next
   session's first move is named in the table below.
+- **2026-08-16 (slot-23, continuation 2)** — Regenerated the verify-report per the deferred table's row 1:
+  `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report /tmp/classify_report_2026_08_16.jsonl
+  --report /tmp/verify_report_2026_08_16.jsonl` (read-only, backgrounded standalone, completed exit 0). **Result:
+  280/280 lines, all `disposition=no-migrate-first`** (bare_rows=7,915,337, matched_rows=7,478,332,
+  unmatched_rows=437,005) — confirms the population todo 3 targets is unchanged since todo 2's purge. Launched the
+  fold script's dry-run (no `--apply`) against this fresh report to measure `rows_added` before writing, rather than
+  trusting the `428,933` figure already in todo 3's text (that figure predates this verify-report regen and was not
+  re-measured against it).
 
 ## Deferred work after 2026-08-16
 
 | Item | State | Blocked on |
 | --- | --- | --- |
-| Regenerate verify-report: `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16.jsonl` (read-only, **no** `--apply`/`--confirm-prod-delete`) | Not done | Nobody — real work, pick up next |
-| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16.jsonl` | Not done | The verify-report regen above |
+| Regenerate verify-report: `verify_bare_league_legacy_orphan_content_2026_08_16.py --orphan-report /tmp/classify_report_2026_08_16.jsonl --report /tmp/verify_report_2026_08_16.jsonl` (read-only, **no** `--apply`/`--confirm-prod-delete`) | **Done 2026-08-16 (slot-23)** — 280/280 lines, all `disposition=no-migrate-first` (matched_rows=7,478,332, unmatched_rows=437,005, bare_rows=7,915,337) | — |
+| `fold_divergent_bare_league_legacy_orphans_2026_08_16.py --apply --verify-report /tmp/verify_report_2026_08_16.jsonl --report /tmp/fold_apply_2026_08_16.jsonl` | Dry-run (no `--apply`) launched against the regenerated verify-report to measure a fresh `rows_added` baseline before writing (the `428,933` figure quoted in todo 3's text above predates this verify-report regen — not re-verified as still accurate, so re-measuring rather than trusting it per measurement-claims discipline) | The dry-run's own completion |
 | Post-apply re-verify the 280 days now resolve `fully_redundant` | Not done | The `--apply` run above |
 | Purge the newly-redundant bare objects (mirror `purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`'s §3a pattern: fresh `gcs_bucket_soft_delete_retention_seconds >= 604800` check same-run, `--confirm-prod-delete`) | Not done | The post-apply re-verify above |
 | Flip this todo `[x]` with the purge script's SHA + object/byte counts, then archive this doc (last open item) | Not done | The purge above |
 | `sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md` todo 1 ("Scope the duplication") | Not done, independently pickup-able | Nothing — unrelated to this chain |
 
-**Recommended next item**: the verify-report regen (row 1) — it's the direct unblock for everything else in this
-chain, is read-only (no delete-safety gating needed), and per the lesson above, `--apply`-performing GCS scripts on
-this host have been externally killed mid-run before when combined into one process; run it as its own standalone
-step and confirm the report file exists with 280 lines before moving to `--apply`.
+**Recommended next item**: once the dry-run confirms a sane `rows_added` figure with zero errors across all 280 days,
+proceed straight to `--apply` (MERGE-only write, row-loss guard, idempotent — safe to re-run) as its own standalone
+background step, per the same host lesson noted above (don't combine steps into one process).
