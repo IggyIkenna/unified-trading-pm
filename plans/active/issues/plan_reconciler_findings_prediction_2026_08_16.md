@@ -203,6 +203,16 @@ grace status fresh rather than assuming still-blocked; most are now outside the 
       itself is grace-protected (33min old at run time) despite not being a prediction-tranche doc per se.
       **RE-CHECKED 2026-08-16 (Phase -1)**: still grace-protected — target's last commit is now 17:03:07+0100
       (16:03:07Z), ~5.5h old at re-check time (<12h). Left open, not fixed.
+- [ ] [DOCS] P2. `prediction_consolidated_closeout_2026_07_18.md` (hub) — does not reference
+      `prediction_venue_e2e_batch1_2026_08_16.md` anywhere, though that plan's `_finalize` sibling already lists the
+      hub in its own `related:` frontmatter (one-directional linkage — child cites parent, parent doesn't cite
+      child). **FOUND 2026-08-16 (plan_reconciler, prediction-tranche, fresh same-day dispatch `agt-64e465`)**:
+      confirmed via `grep -in "venue_e2e\|venue e2e"` against the hub (0 hits) vs
+      `prediction_venue_e2e_batch1_2026_08_16_finalize.md:18`'s `related:` entry. **NOT fixed — grace-protected**:
+      hub's last commit is 16:41:24Z, ~5.5h old at check time (22:13Z), <12h. Add batch1 (+ its finalize sibling) to
+      the hub's child-plan list once out of grace. (Note: `batch1`'s own `parent_epic` is `infrastructure_master`,
+      not `predictions_master` — this is an asset_group-scoped cross-reference gap on the hub, not an epic-ownership
+      question.)
 
 ## Codex corrections applied
 
@@ -456,3 +466,33 @@ in this same run.
     reads it next. **Flagging prominently for operator attention** per the same big-finding/governance-concern
     triage this doc's original run already correctly applied — this is carried into the aggregate Phase -1 report,
     not silently dropped.
+- **2026-08-16 (plan_reconciler, prediction-tranche, fresh same-day dispatch `agt-64e465`, slot 30)**: Phase -1
+  re-check of this doc against fresh corpus state (~22:13Z, several hours after the prior dispatch/Phase-1 pass's
+  last activity). **Scope decision**: the tranche already received a full 7-hunter Phase 0-7 pass today (`agt-23fdbb`
+  + its Phase -1 follow-up); re-running the full hunter fan-out same-day would duplicate that coverage for near-zero
+  marginal value — the 14 corpus commits landed since `agt-23fdbb`'s 17:24:06Z last commit are either (a) this doc's
+  own already-documented Phase -1/na-eligibility-audit entries (4 of the 14), or (b) live, self-reconciling
+  AO-dispatch-batch progress on `prediction_venue_e2e_batch1_2026_08_16.md` (steps 1-9 sweep, flip+evidence
+  disciplined, correctly grace-protected from external edits) — consistent with the sharded-cadence design intent
+  that a same-day re-dispatch of an already-covered tranche should be a bounded freshness check, not a duplicate full
+  sweep. Did a targeted pass instead:
+  - **`BLK-e7b0e8da` — re-checked across all 3 known channels** (`/api/state` blocked_queue: 0 matches;
+    `/api/slots/30/messages`: `{"messages":[]}`; `/api/activity?limit=20`: 0 mentions) at ~22:17Z — still
+    absent/unresolved from every one; the disputed entry in `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`
+    is textually unchanged since the last check. Not re-litigated or unilaterally reverted — an automated pass
+    unilaterally reverting a disputed "was this automated pass authorized" entry would repeat the exact problem
+    being flagged, the same restraint the predecessor correctly applied. This dispatch did not itself ask this
+    question, so STEP 8's loop-and-wait contract does not bind this session to it — carrying it forward faithfully
+    (already durably filed + escalated) rather than re-escalating a duplicate `/blocked` or looping on a question 2+
+    prior sessions across many hours already exhausted every available channel for.
+  - **1 new finding**: hub (`prediction_consolidated_closeout_2026_07_18.md`) does not yet reference the newly
+    forked `prediction_venue_e2e_batch1_2026_08_16.md` (0 grep hits for "venue_e2e"/"venue e2e"), though that plan's
+    `_finalize` sibling already cites the hub in its own `related:` frontmatter — added to the grace-blocked
+    findings list above (hub last touched 16:41:24Z, ~5.5h old, correctly not edited).
+  - Fresh `run_hygiene_sweep.sh --ci` (this dispatch's own STEP 1, ~21:50Z): reproduced the same 3 hard failures the
+    predecessor already root-caused as non-prediction (tradfi dangling-refs, 1 tradfi AG-closeout orphan,
+    corpus-wide NA-ratchet growth) — no new prediction-attributable hygiene regression.
+  - No other new prediction-tranche contradictions found.
+  **This dispatch asked no new blocked-questions** — completing via `/done` per STEP 8's "immediately if you asked
+  none" clause; `BLK-e7b0e8da` remains the one standing operator-attention item, already durably tracked above, not
+  lost.
