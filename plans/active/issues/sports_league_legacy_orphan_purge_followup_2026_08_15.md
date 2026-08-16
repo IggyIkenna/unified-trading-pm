@@ -124,19 +124,28 @@ Split the 1,814 objects into the two classes above and resolve each:
       script (`purge_confirmed_bare_league_legacy_orphans_2026_08_16.py`) that skips re-verification for
       already-confirmed days and only does the small fixed set of REST calls needed to delete, completing the full
       1,534-object purge in under 90s.
-- [ ] [DATA] P3. **RESCOPED 2026-08-16 (slot-23)** — the 280 `bare_no_league` days that FAILED content-verify (real
-      unmatched content, not present in canonical `batch_odds_api`) need investigation + fold-in, not the "genuine
-      per-league cells" framing this todo originally had (todo 1 already established 0 `per_league_cell` orphans
-      exist — this is a different population, discovered by todo 2's content-verify, not todo 1's structural
-      classification). Root-cause WHY these 280 days' legacy rows have no canonical match (scrape-cadence gap in the
-      2026-07-17 merge? A genuinely later addition to the legacy population after that merge ran? A key-matching
-      false-negative in this session's row-key logic — re-spot-check a few before assuming it's real data loss).
-      Full per-day unmatched-row detail is in `market-tick-data-service@2471d18f`'s
-      `verify_bare_league_legacy_orphan_content_2026_08_16.py` `--report` output format (re-run against the 280
-      `no-migrate-first` days only — cite them from a fresh read of that script's report, not re-derived from
-      scratch). If genuinely unique, fold the 437,005 rows into canonical (mirroring
-      `merge_migrated_odds_into_canonical_2026_07_17.py`'s read-split-merge pattern), then re-verify a twin resolves
-      before considering a follow-up delete of these remaining 280 bare objects. (repo: market-tick-data-service)
+- [ ] [DATA] P3. **RESCOPED 2026-08-16 (slot-23), root-cause CONFIRMED same session** — the 280 `bare_no_league` days
+      that FAILED content-verify (real unmatched content, not present in canonical `batch_odds_api`) needed
+      investigation + fold-in, not the "genuine per-league cells" framing this todo originally had (todo 1 already
+      established 0 `per_league_cell` orphans exist — this is a different population, discovered by todo 2's
+      content-verify, not todo 1's structural classification). **Root cause, live-measured 2026-08-16 (slot-23) —
+      NOT a key-matching false-negative, NOT a total per-instrument absence: a genuine scrape-cadence/coverage gap.**
+      Spot-checked 3 days spanning the full range (2020-06-10 earliest, 2022-02-20 middle, 2026-02-13 latest): in
+      every case the unmatched rows' own `instrument_id` IS present in canonical with its earlier ticks matching
+      exactly on `(bm_time, price, point)`; only that instrument's LATEST one-to-few ticks for the day are missing
+      from canonical. The legacy footystats-sourced migration's capture window ran slightly later than
+      `batch_odds_api`'s live capture consistently — real, unique market data, not noise. Unmatched-row distribution
+      (bookmaker/league mix, ~0.4%-9.6% of a day's rows) is proportional to each bookmaker/league's overall
+      representation, consistent with a small per-instrument tail gap rather than a systematic venue-naming/key bug.
+      **Fold-in shipped**: `fold_divergent_bare_league_legacy_orphans_2026_08_16.py`
+      (market-tick-data-service, this session) mirrors `merge_migrated_odds_into_canonical_2026_07_17.py`'s
+      read-split-merge pattern, targeting the canonical `data_type=odds` cell family (measured live:
+      `bookmaker_key := instrument_id[1].lower()`, `league_id := instrument_id[3]` case-matched against the
+      existing cell, `fixture_id := ''`, `available_at := bm_time + 5s` — all measured 100% on a live sample, the
+      `available_at` rule identical to the July script's). MERGE-never-overwrite with the same row-loss guard.
+      3-day dry-run sample confirmed `rows_added` exactly matches each day's `unmatched_rows` from the verify
+      report. Full 280-day dry-run + `--apply` run + post-apply re-verify + optional bare-object purge are this
+      todo's remaining steps (see Progress Log for live status). (repo: market-tick-data-service)
 
 ## Progress Log
 
