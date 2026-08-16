@@ -159,3 +159,21 @@ narrower-than-registry bug affecting `oracle_prices`/`dex_pool_state`, and confi
 resolves an unmapped chain to `chain_id=1` instead of failing loud — confirmed REACHABLE-BUT-GATED (not dead
 code, unlike the cefi sibling), with a real provisioned custody path and `AAVE_V3-LINEA` already live-wired
 elsewhere in execution-service. Escalated to a dedicated P0 issue doc + the operator directly.
+
+**2026-08-16 — slot 12: dispatched onto this same "Steps 1-5" scope after it had already landed; shipped a
+complementary structural cross-check instead of duplicating.** SHIPPED — `unified-api-contracts@5770b51a72`
+(`scripts/verify_defi_venue_e2e_steps1_5.py`, permanent/re-runnable). By the time this session's `/boot` resolved,
+todo #1 above (`unified-trading-pm@285cefec7a`) had already shipped a more thorough, registry-grounded sweep — not
+duplicating it. The new script instead runs a different, cheaper, FILE-PRESENCE-based structural check per defi
+row (200 rows, reused verbatim from `generate_venue_work_list.py`): does an `instruments-service` adapter file
+exist matching the venue (step 2), does an MTDS handler file reference both the venue and data_type tokens (step
+3, manifest reconciliation explicitly NOT live-checked), does a `live/connectors/*_ws.py` file match the venue
+(step 4, distinguishing real adapters from declared `_scaffold_ws.py` stubs), does any UAC
+`FEATURE_REQUIRED_INPUTS` entry declare the data_type for a defi feature_group (step 5). Measured this run: step2
+170/200 PASS; step3 54 PASS / 29 PARTIAL / 117 FAIL; step4 19 PASS / 181 FAIL; step5 59 PASS / 141 NONE. Broadly
+consistent with the peer sweep's headline numbers (adapter/live-coverage gaps large, feature consumption narrow)
+via an independent method (filename/text presence vs. `VENUE_TO_ADAPTER_KEY` registry lookup) — a useful standing
+cross-check for future re-runs of this batch, not a substitute for the registry-grounded analysis already landed.
+No new gap todos added from this run: its FAIL/NONE counts are structurally consistent with the already-tracked
+gaps above (the 22-venue adapter gap, the ~13% live coverage, the narrow feature dispatch) rather than revealing a
+distinct defect class.
