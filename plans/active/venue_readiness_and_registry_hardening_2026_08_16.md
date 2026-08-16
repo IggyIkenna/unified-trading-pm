@@ -262,6 +262,13 @@ per-feature-group input requirements, already exists.
       not a clean UAC SSOT — consolidating that is separate scope, not blocking this check.
 - [ ] [AGENT] P1. **Report the unconsumed set.** Data types captured but consumed by no archetype are either a missing
       strategy or wasted capture cost. Either is worth knowing; neither is visible today.
+- [ ] [AGENT] P2. **Consolidate `venue_universe` into a clean UAC SSOT.** Currently per-slot comma-separated strings
+      scattered across `strategy-service/strategy_service/engine/strategies/v2/archetype_slots_*.py` (confirmed via
+      grep 2026-08-16) — not derivable as a clean `archetype -> venues` map today. Needed only to implement the
+      *stricter* "every archetype tied to the venue" direction described in the motivating § STRATEGY CONSUMABILITY
+      prose above; the shipped contract-step-17 check (`unified-api-contracts@5a74178360`) implements the weaker
+      "at least one archetype" version, which is the one actually promoted to the contract table (row 17) and does
+      not need this. Natural fit for W4 ("venue e2e wiring") once that workstream forks.
 
 | #   | Step                       | What "done" means                                                                                                       |
 | --- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
