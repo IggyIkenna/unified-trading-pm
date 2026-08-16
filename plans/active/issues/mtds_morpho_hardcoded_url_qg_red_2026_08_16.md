@@ -8,6 +8,7 @@ summary: >-
   market_tick_data_service/cli/handlers/_oracle_prices_constants.py, unrelated
   to the diff that hit it.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -77,10 +78,19 @@ per the gate's own error message. Verify `unified_api_contracts.registry`
 actually has a "morpho" entry resolving to this same URL before swapping (if
 it doesn't, register it there first — do not hand-roll a second literal).
 
-- [ ] [DATA] P1. Replace the hardcoded `_MORPHO_BLUE_API_URL` literal in
+- [x] ✅ [DATA] P1. Replace the hardcoded `_MORPHO_BLUE_API_URL` literal in
       `market_tick_data_service/cli/handlers/_oracle_prices_constants.py`
       with `get_evm_protocol_rest_url("morpho")` from
       `unified_api_contracts.registry` (registering the "morpho" entry in UAC
       first if it doesn't already exist) so `no_hardcoded_venue_urls.sh`
       passes and quickmerge pushes to market-tick-data-service unblock.
-      (repos: market-tick-data-service, unified-api-contracts)
+      (repos: market-tick-data-service, unified-api-contracts) —
+      market-tick-data-service@8b0cedce63. The "morpho" entry already existed
+      in `unified_api_contracts.registry.capability_declarations._defi`
+      (`EVM_DEFI_REST_URLS["morpho"]["api_url"] = "https://blue-api.morpho.org"`,
+      exposed via `get_evm_protocol_rest_url`) — no UAC registration needed.
+      `_MORPHO_BLUE_API_URL` now derives as
+      `f"{get_evm_protocol_rest_url('morpho')}/graphql"`, the same pattern
+      `morpho_adapter.py`'s `MORPHO_API_URL` already used.
+      `scripts/qg/no_hardcoded_venue_urls.sh` verified passing +
+      `quality-gates.sh` green on the shipped SHA.
