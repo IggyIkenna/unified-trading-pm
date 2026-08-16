@@ -77,7 +77,7 @@ resolved_by: >-
   at ingest); both registered in /codex/02-data/canonical-cutover-register.md §6e +
   /codex/02-data/non-canonical-path-inventory.md row 22. The still-open historical raw-object migration (shapes
   #3/#3b/#4, explicitly registered `no-migrate-first`, not yet done) is absorbed by the still-active
-  /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md (todo 4b) -- not lost, tracked there.
+  /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md (todo 4b) -- not lost, tracked there.
 locked_by:
 estimate_class: research
 estimate_baseline_ai_days: 3
@@ -88,7 +88,7 @@ depends_on: []
 ---
 
 > **🟢 RESOLVED 2026-07-28 (ACKED-INTO-PLAN)** — schema extension + writer fix shipped; the still-open historical
-> migration is absorbed by `/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (see `resolved_by`
+> migration is absorbed by `/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (see `resolved_by`
 > above). Archived per `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # POLYMARKET legacy dual-write path trees + oracle-blind non-canonical estate (prediction raw-tick)

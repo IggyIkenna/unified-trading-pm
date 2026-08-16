@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [ao, backlog-dispatch, concurrency, duplicate-dispatch, resumable-script, prediction, gcs-cost]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
@@ -53,7 +53,7 @@ context_scope:
   [
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
     agent-orchestrator/server/config.py,
   ]

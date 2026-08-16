@@ -2,7 +2,7 @@
 doc_type: issue
 title: prediction_satellite_ao_dispatch_batch4 — archival prerequisite (migrate Deferred sections, then archive)
 summary: >-
-  `/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` reached zero open top-level todos 2026-08-14
+  `/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` reached zero open top-level todos 2026-08-14
   (4b-iii — shape #4 merge+delete — was the last one, verified complete: VM
   `canonical-migration-prediction-shape4-merge-20260812-221112` EXIT_STATUS=0, 799,510 objects, 737,828 deleted, 61,682
   correctly kept as honest non-canonical). Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §
@@ -19,9 +19,10 @@ scope: [engineer]
 tags: [prediction, archival, plan-hygiene, ao-dispatch, batch4, batch5]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-14"
 author: slot-18 (data_engineering)
@@ -36,7 +37,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

@@ -664,7 +664,7 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
       catalogue also carries real cqg (rides the 1.2 Kalshi recent-window enumeration). Deep history is the
       bulk-tick-seed (no per-date catalogue) → covered by the BATCH re-walk above. Repo: instruments-service.
       Provenance: operator partition-completeness Q 2026-06-23. **EXTRACTED — sole executing owner is
-      [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
+      [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
       `[SCRIPT] P2` "cqg recent-window catalogue re-enumeration with the already-fixed classifier" todo**
       (`status: active`, `assigned_vm: planning`), which names this item verbatim as its `Source:`. batch6's duplicate
       copy of the same extraction was resolved 2026-07-31 (checked `[x]` in place with a "DUPLICATE — not independently

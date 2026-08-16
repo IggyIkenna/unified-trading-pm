@@ -22,9 +22,10 @@ scope: [engineer, admin]
 tags: [safe-doc-push, prek, data-loss-near-miss, cross-slot, plan-hygiene, recovery]
 related:
   [
-    /plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-16
 last_updated: "2026-08-16"
@@ -46,9 +47,11 @@ locked_since:
 context_scope:
   [
     scripts/dev/safe-doc-push.sh,
-    /plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # safe-doc-push orphaned prek patch: recovered a completed cross-slot fix, root cause still open
@@ -71,10 +74,11 @@ this session:
 
 - `scripts/dev/safe-doc-push.sh` (+50/-6): a new `rebase_failure_is_content_conflict()` classifier in
   `autostash_rebase_reconcile`, closing the exact bug class described in
-  `/plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` — a non-content rebase
+  `/plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` (archived since — this doc
+  was in `plans/active/issues/` when slot-16 wrote this note) — a non-content rebase
   failure (e.g. the literal git usage error "Cannot rebase onto multiple branches", `index.lock`) used to be treated as
   a genuine content conflict and hard-exit 3; now it's classified and retried instead.
-- `plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` (+31/-3): the doc's own
+- `plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md` (+31/-3, archived since): the doc's own
   todo 1 flipped `[x]`, plus a **"slot-14 (infra) 2026-08-16 — root-caused + fixed"** Progress Log entry describing 5
   empirically-reproduced scenarios, the actual root cause, the fix, and a new regression suite
   `tests/test_safe_doc_push_rebase_failure_classification.bats` (claimed 6/6 passing, sibling suite re-run 9/9 green,
@@ -140,7 +144,7 @@ pins (5 named test cases + a `bash -n` check).
       list), locate or rewrite `tests/test_safe_doc_push_rebase_failure_classification.bats` per this doc's "What's
       still missing" section, run the full `quality-gates.sh` (this is a `scripts/dev/` code change, not a pure
       doc/plan-flip), and ship via `quickmerge --agent --files 'scripts/dev/safe-doc-push.sh
-      plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md
+      plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md
       tests/test_safe_doc_push_rebase_failure_classification.bats'`. Commit message MUST credit the recovery lineage
       (cite this issue doc + the original slot-14 authorship) rather than presenting it as new work. **Done when**: the
       fix is live on `origin/live-defi-rollout`, QG green, and the stash is dropped only after the push is verified

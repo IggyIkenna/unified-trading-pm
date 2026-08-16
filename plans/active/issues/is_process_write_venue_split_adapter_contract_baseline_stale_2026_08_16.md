@@ -24,6 +24,9 @@ source: >-
   scripts/purge_tradfi_ice_dropped_universe_parquets_2026_08_16.py) — Pass-1 quality-gates.sh on instruments-service
   fails STEP "IS-MTDS CONTRACT INTEGRITY" / check_adapter_contract_regression, blocking quickmerge for any
   instruments-service change until fixed.
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # instruments-service process_write.py split leaves adapter_contract_baseline stale

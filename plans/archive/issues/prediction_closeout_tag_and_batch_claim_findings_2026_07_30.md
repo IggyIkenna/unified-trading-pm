@@ -32,7 +32,7 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
@@ -124,7 +124,7 @@ the three line-cap-split forks, so its dual tag was never assessed here and stay
 
 ## Finding 2 — batch4 and batch6 both claim the same cqg re-enumeration item
 
-- [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
+- [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
   (`status: active`) todo 3: "**cqg recent-window catalogue re-enumeration with the already-fixed classifier**" —
   `Source: prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P2 "cqg partition-completeness — recent-window
   catalogue re-enumeration"), still `[ ]`.

@@ -19,7 +19,7 @@ related:
   [
     plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
-    /plans/active/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md,
+    /plans/archive/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md,
   ]
 created: 2026-07-03
 author: unknown
@@ -405,7 +405,7 @@ above are otherwise fully reproducible via the shipped CLI.
             now include `oracle_prices` and exclude `perp_trades`. Full `quality-gates.sh` green (427s,
             `.qg_last_passed_sha=768c6f9325eb235ca9da5caad4f3bb4459bcf4f9`); 88/88 tests pass in the affected module;
             landed on `live-defi-rollout`, ancestry-verified. Follow-up (venue_mapping.DataTypeConfig deletion) filed as
-            its own doc — `issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md` — rather than a new
+            its own doc — `plans/archive/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md` — rather than a new
             checkbox in THIS doc, so this doc's own todos stay fully closed for the finalize plan's `gate_on_depends`
             (this doc's gated finalize companion only waits on THIS doc's checkboxes, not on unrelated dead-code cleanup).
 
@@ -467,7 +467,7 @@ above are otherwise fully reproducible via the shipped CLI.
   shipped `unified-api-contracts@768c6f93` (VENUS/SOLEND `oracle_prices` widening + regression test, QG green, landed +
   ancestry-verified on `live-defi-rollout`). Flipped the `[SCRIPT]` checkbox to done with evidence. This doc now has
   ZERO open todos. Filed the deferred `venue_mapping.DataTypeConfig` deletion follow-up as its own doc
-  (`issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`) rather than reopening this doc — keeps the
+  (`plans/archive/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`) rather than reopening this doc — keeps the
   finalize plan's `gate_on_depends` condition genuinely satisfied. Proceeding to the finalize plan's `[REVIEW]`
   re-verification + `[DOC]` archival todos in the same session.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

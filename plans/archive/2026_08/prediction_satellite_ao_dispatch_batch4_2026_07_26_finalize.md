@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [prediction, ao-dispatch, close-out, batch-4, satellite-docs, archival]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -44,7 +44,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

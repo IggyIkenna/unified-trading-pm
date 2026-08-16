@@ -31,7 +31,7 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md,
     /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/archive/issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md,

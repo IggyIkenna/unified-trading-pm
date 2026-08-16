@@ -29,8 +29,9 @@ tags: [safe-doc-push, prek, cross-slot, host-gate, root-cause, agent-orchestrato
 related:
   [
     /plans/active/issues/safe_doc_push_cross_slot_prek_patch_orphans_completed_fix_2026_08_16.md,
-    /plans/active/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
+    /plans/archive/issues/safe_doc_push_false_positive_rebase_multiple_branches_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-16
 last_updated: "2026-08-16"

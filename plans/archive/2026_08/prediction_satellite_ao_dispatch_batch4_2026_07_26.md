@@ -16,7 +16,7 @@ summary: >-
   (operator/time/human-gated) — NOT re-drafted here, cited in the Deferred section. `status: draft` — a skill-drafted AO
   batch is never auto-shipped; flipping to `active` to dispatch is an operator decision (CLAUDE.md "Plan destination —
   ASK BEFORE CREATING").
-status: active
+status: complete # (was: active) 2026-08-16 — all 5 todos done, archived
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -73,6 +73,11 @@ context_scope:
 ---
 
 # Prediction satellite AO batch 4 — un-triaged sibling-doc gap extraction
+
+> **📦 ARCHIVED 2026-08-16 — complete.** All 5 todos done (including the 4b-iii shape-#4 merge+delete, completed
+> 2026-08-14), no `locked_by`. Paired finalize `prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`
+> already archived alongside (2026-08-16). Archived per the standard 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); corpus referrers repointed to this path.
 
 > **Status: active — operator-dispatched (2026-07-28+).** Drafted autonomously by the `/ag-closeout-audit prediction`
 > scheduled run (2026-07-26) as a `status: draft` skill-drafted batch (never auto-shipped per CLAUDE.md's "Plan

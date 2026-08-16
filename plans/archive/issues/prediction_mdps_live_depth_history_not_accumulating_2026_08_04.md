@@ -33,7 +33,7 @@ tags: [prediction, mdps, depth-history, live-data, book_snapshot_5, candle-adapt
 related:
   [
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: "2026-08-04"
