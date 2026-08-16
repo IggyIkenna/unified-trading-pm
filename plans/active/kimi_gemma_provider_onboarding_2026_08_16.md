@@ -313,13 +313,37 @@ had already run. Treat every todo below as net-new work, not a resume.
       schema is designed, extend it to cover Kimi and NVIDIA/Gemma rather than building a second parallel schema —
       cross-link, don't duplicate. Done when: both providers have a concrete field mapping in that schema (tracked
       as this todo, not a new design doc).
-- [ ] [REVIEW] P3. Document the DeepSeek-price-rise-insurance rationale concretely: at what real DeepSeek $/1M rate
+- [x] [REVIEW] P3. ✅ Document the DeepSeek-price-rise-insurance rationale concretely: at what real DeepSeek $/1M rate
       would each of Kimi/NVIDIA-Gemma actually become the cheaper choice, given the real published rates gathered
       above — a one-time comparison table, not a routing implementation (routing itself stays out of scope per this
       plan's Why section). Done when: a real breakeven table exists in the Progress Log, citing the rates gathered
-      in the live-verify todos, not re-derived from memory.
+      in the live-verify todos, not re-derived from memory. **DONE 2026-08-16** — table added to the Progress Log
+      below, citing the exact rates already registered in `model_pricing.py`.
 
 ## Progress Log
+
+### 2026-08-16 — DeepSeek-price-rise-insurance breakeven table
+
+Real published rates, cited to `server/model_pricing.py` (all $/1M tokens):
+
+| Model                 | Input | Output | Cache-read | vs DeepSeek v4-flash off-peak ($0.22/$0.66) | vs DeepSeek v4-pro peak ($1.32/$3.96) |
+| ---------------------- | ----- | ------ | ---------- | ---------------------------------------------- | ---------------------------------------- |
+| DeepSeek v4-flash (off-peak, current cheapest tier) | $0.22 | $0.66  | $0.007     | baseline                                        | —                                         |
+| DeepSeek v4-pro (peak, current priciest common tier) | $1.32 | $3.96  | $0.044     | —                                                | baseline                                  |
+| Kimi k2.6              | $0.95 | $4.00  | $0.16      | 4.3x pricier input, 6.1x pricier output          | ~roughly at parity already (0.95 vs 1.32 input CHEAPER, 4.00 vs 3.96 output ~even) |
+| Kimi k2.7-code          | $0.95 | $4.00  | $0.19      | same as k2.6                                     | same as k2.6                              |
+| Kimi k3                | $3.00 | $15.00 | $0.30      | 13.6x pricier input, 22.7x pricier output        | 2.3x pricier input, 3.8x pricier output   |
+| Gemma (NVIDIA NIM, both variants) | $0    | $0     | $0         | always cheaper (free) — no breakeven exists      | always cheaper (free) — no breakeven exists |
+
+**Reading it honestly**: against DeepSeek's CURRENT cheapest real tier (flash, off-peak — most of the fleet's actual
+traffic per the peak/off-peak split), DeepSeek would need to get roughly **4-6x more expensive** before Kimi k2.6/
+k2.7-code became the cheaper per-token choice, and **14-23x** before Kimi k3 would. But against DeepSeek's pro
+tier during PEAK hours specifically, Kimi k2.6/k2.7-code are **already roughly at parity today** — meaning a
+DeepSeek price rise isn't even required for a narrow slice of real fleet traffic (pro-tier, peak-hour) to already
+be a toss-up. Gemma via NVIDIA NIM has no breakeven point at all — it's free regardless of what DeepSeek charges,
+so its "insurance" value is about capacity/availability (a free fallback if DeepSeek has an outage or hits a real
+rate limit), not price. This table is a one-time snapshot, not a live routing decision — routing itself stays out
+of scope per this plan's Why section.
 
 ### 2026-08-16 — credentials provisioned, first live smoke tests
 
