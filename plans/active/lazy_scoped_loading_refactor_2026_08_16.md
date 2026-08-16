@@ -125,6 +125,21 @@ lazy pattern. Both hold up despite the missing source doc. Have not yet spot-che
 or UAC `registry/__init__.py` / `internal/__init__.py` claims the same way — do that before treating those numbers as
 verified, not just plausible.
 
+**2026-08-16 — scoping finding on Layer 3: `algorithms.py` laziness alone is insufficient.**
+`execution_service/__init__.py` (the package root) does `from execution_service.algorithms.algorithms import
+(AdaptiveTWAPExecAlgorithm, ...)` at its own module level (lines 40-48), re-exporting all 7 classes in its `__all__`.
+A `from X import Y` statement resolves `Y` immediately at import time regardless of whether `algorithms.py` itself is
+made lazy internally (e.g. via PEP 562 module `__getattr__`) — so `import execution_service` (which anything touching
+this package does) still eagerly pulls the full 7-algorithm chain through the package root, independent of what
+`algorithms.py` looks like. The real fix needs `execution_service/__init__.py` to also switch to a PEP 562
+`__getattr__` re-export (this works for both `import execution_service; execution_service.TWAPExecAlgorithm` AND
+`from execution_service import TWAPExecAlgorithm` — the latter falls back to `getattr(package, name)` when the name
+isn't already a submodule in `sys.modules`). Zero consumers in execution-service itself do
+`from execution_service import <algo>ExecAlgorithm` directly (checked), but this repo's fleet-wide consumers are not
+visible from this checkout — editing the package root's public API surface is a bigger, more fleet-facing change than
+the todo's "smallest change" framing implied. **Not yet made this edit** — flagging before touching
+`execution_service/__init__.py`'s `__all__` surface without fleet-wide consumer visibility.
+
 **2026-08-16 — baseline import cost measured (todo 1 done).** Fresh venvs, first import in each process, `sys.modules`
 delta + `time.perf_counter()` wall time. Numbers:
 
