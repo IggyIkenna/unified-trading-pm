@@ -273,21 +273,36 @@ issue's scope); flagged as a follow-up todo below.
       that doc for the evidence. No cleanup action taken; this todo is root-cause-only, a follow-up cleanup-scope
       decision is a new, not-yet-filed item since it needs a genuine root cause first, not just this negative
       evidence. (repo: market-tick-data-service)
-- [ ] [DATA] P1. Once the fix + cleanup above are done, re-attempt the full CF-8 captured-row backfill on BOTH surfaces
+- [ ] [DATA] P1. **UNBLOCKED 2026-08-16 — both prerequisites now confirmed done; execution not yet attempted.** Once the
+      fix + cleanup above are done, re-attempt the full CF-8 captured-row backfill on BOTH surfaces
       (MDPS ~285K rows minus whatever the 2 already-landed groups covered correctly; IS ~458K rows) plus the bundled
       CF-3/CF-4 legacy-row cleanup (3,833 rows) — this is the ORIGINAL scope of
       `cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`'s P3 todo, not yet completed. Reuse the
       memory-bounded helper scripts this session added (`_sports_is_captured_stream_read_2026_08_15.py`,
       `_sports_is_captured_backfill_from_subset_2026_08_15.py`) for the IS surface — they only changed the READ path
       (streaming/filtering), not the write path, so they inherit whatever fix lands on `_write_captured_rows()`
-      automatically. (repo: market-tick-data-service)
-- [ ] [INFRA] P2. Close the maintenance-window gap: a direct `gcloud run jobs execute <job-name>` bypasses
-      `scheduler_maintenance.py`'s pause entirely (it only pauses the Cloud Scheduler trigger, not the Cloud Run job
-      itself). Consider either (a) `--wait`-based collision detection/warning when a caller runs
-      `gcloud run jobs execute` against a job with a live maintenance window (would need the launcher script or a
-      wrapper to check `maintenance_status()` first), or (b) documenting the direct-execution path as "ALSO check
-      `--status` before running" in the same places the scheduler pause/resume guidance already lives. Scope/design not
-      decided — routing to operator/infra owner. (repo: deployment-service or unified-trading-pm docs)
+      automatically. Fix landed+ancestor-confirmed (`e0b34e77fd`, see todo above); cleanup executed+verified (13,371
+      phantom rows removed, `>>> VERIFY PASSED`, see todo above). **Deliberately deferred, 2026-08-16**: this is a
+      full-corpus write on a surface that has regressed live production data 3x (see the sibling `available_at` doc's
+      Finding 1/2 + service_name-dedup history), and the maintenance-window direct-invocation gap below is still open —
+      operator direction was docs-only this turn; hold the actual backfill for a dedicated, reviewed maintenance window.
+      (repo: market-tick-data-service)
+- [ ] [INFRA] P2. **DESIGN PROPOSED 2026-08-16 (not built/reviewed/executed)**: close the maintenance-window gap: a
+      direct `gcloud run jobs execute <job-name>` bypasses `scheduler_maintenance.py`'s pause entirely (it only pauses
+      the Cloud Scheduler trigger, not the Cloud Run job itself). Consider either (a) `--wait`-based collision
+      detection/warning when a caller runs `gcloud run jobs execute` against a job with a live maintenance window
+      (would need the launcher script or a wrapper to check `maintenance_status()` first), or (b) documenting the
+      direct-execution path as "ALSO check `--status` before running" in the same places the scheduler pause/resume
+      guidance already lives. **Cross-referenced 2026-08-16**: the primitive this needs already exists —
+      `unified-trading-library@4ddc59c9`'s `maintenance_window` module (`acquire`/`read`/`release_maintenance_window`,
+      CAS-based, TTL-expiring) + `deployment-service@1090c3e`'s `scheduler_maintenance.py --status` CLI (see the
+      sibling `sports_cf8_available_at_backfill_regression_2026_07_13.md` doc's P2 todo, shipped 2026-07-14) — option
+      (a) is already built for the SCHEDULER pause path, just not wired to the direct-`gcloud run jobs execute` path.
+      Cheapest close: a thin wrapper (or a check inside the VM-launcher scripts that call `gcloud run jobs execute`)
+      calling `read_maintenance_window()` first and refusing/warning on a live foreign window unless `--force`,
+      mirroring `resume_after_maintenance()`'s own `MaintenanceWindowActiveError` refusal. Not implemented this
+      session (design-only) — needs review before building, given this exact collision class has recurred 3x. (repo:
+      deployment-service or unified-trading-pm docs)
 - [x] [DATA] P2. **Root cause FOUND, 2026-08-15 (slot-2)**: blank-`timeframe` ODDS_API rows are **blank-by-design, not
       a bug**. The live per-date manifest writer `_write_shard_counts_to_manifest`
       (`market_tick_data_service/engine/orchestrator/manifest_finalize.py:323`, invoked from `_write_date_manifest`
