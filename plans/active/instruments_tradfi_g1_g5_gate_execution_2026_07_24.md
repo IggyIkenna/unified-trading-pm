@@ -155,7 +155,8 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (the 11-cluster `ES_OPT_PARENTS`
       set lives in that script's sourced `cme-expiry-calendars.sh`) — see the corrected invocation in the new todo
       below.
-- [ ] [DATA] P0. **UNBLOCKED 2026-08-09** — the databento billing-suspension gate below is lifted for this item: S&P
+- [x] ✅ [DATA] P0. **VERIFIED CLOSED 2026-08-16 (na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b)** — see
+      the verification note at the end of this item's own citation below. **UNBLOCKED 2026-08-09** — the databento billing-suspension gate below is lifted for this item: S&P
       options are explicit in-scope work per the MVP-of-MVP ruling
       (/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md), and Databento was live-verified
       reachable the same day (real `metadata.list_datasets` + `ES.FUT ohlcv-1m` pulls both succeeded). Prior gate
@@ -186,7 +187,12 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       as of 2026-08-07T~04:46Z, and has since been **completed and ARCHIVED** (path updated 2026-08-10; its todo #2 is
       `[x]` there with evidence). This item stays open until someone verifies that outcome against this plan's own gate
       — read the archived plan's Progress Log, do not assume it is still being tracked live.
-- [ ] [DATA] P1. **UNBLOCKED 2026-08-09** — same unblock as the launch todo above (S&P options in-scope per
+      **VERIFIED 2026-08-16 (na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b)**: directly read
+      `plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` live — `status: archived` confirmed,
+      its ES_OPT launch todo (line 141, "UNBLOCKED 2026-08-09 — S&P options...") is `[x]` ✅ with cited evidence.
+      Closing this checkbox to match.
+- [x] ✅ [DATA] P1. **VERIFIED CLOSED 2026-08-16 (na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b)** — see
+      the verification note at the end of this item's own citation below. **UNBLOCKED 2026-08-09** — same unblock as the launch todo above (S&P options in-scope per
       /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md; Databento live-verified reachable).
       **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator ruling
       above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES futures
@@ -198,6 +204,9 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       above into the same `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction
       — that plan is now **completed and ARCHIVED** (path updated 2026-08-10), not a live tracking session — see the
       citation above for detail.
+      **VERIFIED 2026-08-16 (na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b)**: same direct read as the
+      launch item above confirms batch6's todo #2 (which combined this manifest-verify with the launch) is `[x]` ✅.
+      Closing this checkbox to match.
 - [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
       US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
       `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +
@@ -227,6 +236,15 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 - **Loop drivers:** watchdog b9ermg8qr (Databento lock → ES_OPT) + the 3 agents' completion notifications.
 
 ---
+
+## na-eligibility-audit log
+
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, 2 stale items closed.** 4 open
+  todos re-read end-to-end. Closed the ES_OPT launch todo + its manifest-verify-wiring sibling — both were flagged by
+  a prior pass as "stays open until someone verifies [batch6's] outcome"; independently read
+  `plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` live and confirmed `status: archived` +
+  its combined todo `[x]` with evidence. Remaining 2 open todos (P2 residual catalogue-leg purge needing separate
+  operator confirmation; the all-AG foundation-drive NEXT items) stay genuinely open. `assigned_vm` unchanged.
 
 ## Historical progress log (tradfi track, moved verbatim from the umbrella 2026-07-24)
 

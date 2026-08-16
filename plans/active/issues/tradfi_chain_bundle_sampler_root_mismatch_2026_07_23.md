@@ -276,7 +276,10 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       dry-run counts cited for both populations, `--apply` migration completes with before/after evidence (mirroring
       Surface A-D's own done-when bar), `tradfi_roots.py` + its tests converged, `quality-gates.sh` green in both
       `unified-api-contracts` and `market-tick-data-service`.
-- [ ] [DATA] P2-OPERATOR-DECISION. **NEW 2026-08-07 (found via an unrelated sub-agent task's quality-gates run)**:
+- [x] ✅ [DATA] P2-OPERATOR-DECISION. **RULED + EXTRACTED 2026-08-16 (na-eligibility-audit follow-up Q&A round 8) →
+      `/plans/active/tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md` (+ finalize).** Checkbox flip was
+      missed when the Progress Log entry below was written — fixed here (na-eligibility-audit 2026-08-16, dispatch
+      agt-45ad7b, caught this citing-not-flipped gap). **NEW 2026-08-07 (found via an unrelated sub-agent task's quality-gates run)**:
       `unified-api-contracts@00b2de54`'s sector-identity convergence broke the LIVE raw-Databento-symbol reverse
       derivation
       `market-tick-data-service/market_tick_data_service/scripts/rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::derive_canonical_id_for_row`
@@ -414,6 +417,12 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, stale-item closed.** 4 open
+  todos re-read end-to-end. Closed the P2-OPERATOR-DECISION reverse-derivation todo (Progress Log entry directly below
+  already recorded its extraction to `tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md`, checkbox flip
+  was missed — fixed). The hunter-flagged "todo 2 DONE 2026-08-14" claim did NOT independently verify against this
+  doc's own live content — not acted on. Remaining 3 todos (CBOE/VX cross-venue P1-OPERATOR-DECISION, GCS/manifest
+  migration P1, dead-code-wiring P2) stay genuinely open. `assigned_vm` unchanged.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator ruling)**: raw→canonical
   (`canonicalize_raw_tradfi_id`) RULED authoritative — the reverse-derivation fix (recovering the raw root token
   from a canonical name) must be built FROM the forward mapping, not maintained as a separate function. Extracted
