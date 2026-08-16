@@ -260,13 +260,21 @@ these gate readiness to carve, not the carve-out's own content.
       independent question.** Rationale: so that updating the carve-out later doesn't mean re-deriving a frozen
       snapshot against a moving, eagerly-coupled main-system target — if `factory.py`'s archetype registration is
       already lazy/scoped by the time the carve-out exists, keeping it in sync with main-system changes stays
-      cheap. **Scope note, so this isn't treated as free**: the extraction audit (strategy-service's
-      `EXTRACTION_AUDIT.md`) found this refactor doesn't stop at strategy-service — the two real archetypes' live
+      cheap. **Scope note, so this isn't treated as free**: the cited source doc (strategy-service's `EXTRACTION_AUDIT.md`)
+      does not exist anywhere in the repo (working tree or git history — confirmed 2026-08-16, see
+      `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log). Its dependent claim held up on
+      independent spot-check anyway: this refactor doesn't stop at strategy-service — the two real archetypes' live
       collateral calls mean a genuinely lazy service also needs an equivalent UAC-side refactor
       (`unified_api_contracts`'s `internal`/`registry` `__init__.py` eagerly loads ~240k lines regardless), which
       has fleet-wide blast radius, not a local one. Both approaches are now wanted together, not compared as
       alternatives — this raises total pre-ship scope above what §A2's "well-bounded" note assumed when it was
       written, and is worth the operator seeing stated plainly rather than absorbed silently.
+- [ ] [AGENT] P2. **Drop the remaining dead `EXTRACTION_AUDIT.md` citations in this plan** (lines ~153, ~301, ~362 as
+      of 2026-08-16) — the file does not exist anywhere in strategy-service (working tree or git history; confirmed
+      2026-08-16, see `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` Progress Log). One occurrence (the
+      §A5 P0 prerequisite above) is already fixed. Spot-check each dependent claim against the actual code before
+      rewriting its citation, the way the fixed occurrence and the child plan's Layer-3/Layer-1 claims were — don't
+      just strip the file name and leave an unverified claim standing.
 
 ## B. What the expansion adds, and therefore what the carve-out must account for
 
