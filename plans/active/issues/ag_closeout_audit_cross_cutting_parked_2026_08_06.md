@@ -85,7 +85,7 @@ context_scope:
     /plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md,
     /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
     /plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md,
-    /plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md,
+    /plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
@@ -182,7 +182,7 @@ deployment-api/deployment-ui) was forked into its own plan
 archival ritual — it has been sitting `status: active` despite being self-declared archival-ready, past its deploy
 verification.
 
-### 5. `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` — mistagged on BOTH axes, likely real owner `ci` or `infra`
+### 5. `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` — mistagged on BOTH axes, likely real owner `ci` or `infra`
 
 **Doc state**: `status: open`, `asset_group: [defi, cross-cutting]` (dual-tag, found via this run's corpus-wide
 Orthogonality HARD CHECK, not the Phase-1 candidate list), `parent_epic: plan_hygiene_master`.
@@ -251,7 +251,7 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
       evidence, no genuine judgment call blocking it): retagged, banner added, moved to
       `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`, all 6 corpus referrers fixed. See that
       doc's own Progress Log for the full ritual trail.
-- [ ] [DOCS] P3. Retag `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
+- [ ] [DOCS] P3. Retag `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
       `asset_group` `[defi, cross-cutting]` → `[ci]` or `[infrastructure]` (finding 5, owning tranche TBD by content) —
       leave to whichever of those two tranches' own audit claims it first. Done when: the tag is corrected to a single
       real tranche and the doc is folded into that tranche's closeout membership.

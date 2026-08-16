@@ -313,7 +313,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       — `locked_since` predates `created` by 2 months (impossible); `locked_by` is a branch name, not an owner
 - [ ] [REVIEW] P3. (P2) plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:87,96 — Phase-3 checkbox still asserts
       an opus-gating requirement the doc's own later section already retired
-- [ ] [REVIEW] P3. (P2) plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md:131-138 — todo
+- [ ] [REVIEW] P3. (P2) plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md:131-138 — todo
       2 checked "Implemented" citing a literal unresolved `<sha>` placeholder
 - [ ] [REVIEW] P3. (P2) plans/active/prediction_consolidated_closeout_2026_07_18.md:183,186 — closeout ground-truth
       stale vs phase children

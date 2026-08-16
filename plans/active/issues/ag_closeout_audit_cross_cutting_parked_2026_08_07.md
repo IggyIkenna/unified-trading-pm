@@ -228,7 +228,7 @@ lives in the 2026-08-06 doc; the open todos there remain the single source of tr
 - **`plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`** — real owner `ui`.
   Still `asset_group: [cross-cutting]` today. Bonus finding from 2026-08-06 stands: very likely already resolved on
   `main` (`unified-trading-system-ui@3c2efb2c`), needs verify-and-archive not a fresh fix.
-- **`plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`** — mistagged on both axes
+- **`plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`** — mistagged on both axes
   (`[defi, cross-cutting]`), real owner `ci` or `infrastructure` (ambiguous, needs whichever tranche's audit claims it
   first). Found via the Orthogonality HARD CHECK, not Phase 1. Still dual-tagged today, unchanged.
 

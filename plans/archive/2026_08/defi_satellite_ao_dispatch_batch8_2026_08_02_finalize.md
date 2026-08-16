@@ -66,7 +66,7 @@ these until batch8 is fully done.**
       prod force+skip proof," and
       [`lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`](/plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md)
       carries the ready-to-apply evidence as actionable todos (gated on the `[OPERATOR]` line-cap policy decision in
-      [`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md)).
+      [`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md)).
       The batch8 evidence itself is preserved verbatim in batch8's own `[x] ✅` todo. — unified-trading-pm (no code
       change; doc-only reconciliation recorded here and in the cited issue docs).
 - [x] ✅ [DOC] P2. Deferred items re-checked: **(a) Composite-venue fold — RESOLVED.** Batch6 shipped
