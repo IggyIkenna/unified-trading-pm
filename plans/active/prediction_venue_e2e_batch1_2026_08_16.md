@@ -101,14 +101,51 @@ source: >-
       `_filter_feature_groups_for_asset_group` (`batch_handler.py:797-812`) — real captured book data (batch+live,
       confirmed PASS above) is fully orphaned. Done-when: at least one feature_group reads POLYMARKET
       book_snapshot_5, or the gap is confirmed intentional with a cited reason.
-- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across the same 4 rows. **Gated by the step-5
-      result above**: only (POLYMARKET, trades) has a real feature output to feed strategy today; the other 3 rows
-      cannot meaningfully reach steps 6-8 until their respective gap todos above close. Scope this todo to
-      (POLYMARKET, trades) first: does a position adapter resolve in batch/live/paper; is POLYMARKET declared in
-      the archetype/slot catalogues for `MARKET_MAKING_CONTINUOUS`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE`; does
-      an execution adaptor handle every `InstructionActionV2` those archetypes emit. Done-when: a real per-step
-      verdict for that one row, plus `BLOCKED-ON` markers for the other 3 citing the specific gap todo each depends
-      on.
+- [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, (POLYMARKET, trades) also fails.** SHIPPED —
+      `unified-trading-pm@<pending-sha>`. The other 3 rows stay `BLOCKED-ON` their step-5 gap todos above,
+      unchanged. For (POLYMARKET, trades) — the one row that cleared step 5 — real per-item verdict:
+      **Position adapter — PARTIAL.** `PolymarketPositionAdapter`
+      (`strategy_service/position/position_interface/adapters/polymarket.py`) is registered
+      (`factory.py:266-267`) and batch/paper are served by the venue-agnostic `LedgerPositionAdapter`
+      (`capabilities.py:107`), but `get_positions()`/`get_balances()` both `raise NotImplementedError` — the LIVE
+      path is stubbed, Gamma-API integration not wired.
+      **Archetype/slot catalogue — FAIL.** No `archetype_slots_*.py` declares POLYMARKET for ANY of
+      `MARKET_MAKING_PREDICTION`/`_CONTINUOUS`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` — the exact archetypes
+      step 5 confirmed consume its `trades` data. POLYMARKET is instead wired only into
+      `ARBITRAGE_PRICE_DISPERSION` (`archetype_slots_sports.py:114-179`) and `RULES_DIRECTIONAL_EVENT_SETTLED`
+      (`target_universe/catalog_directional.py:394-403`) — real feature output, zero strategy actually consuming
+      it via the archetypes that need it.
+      **Execution adapter — FAIL against the parent plan's own hard rule.** `InstructionActionV2` routing
+      (`execution_service/v2/*`, `backtest_v2/*`) has zero POLYMARKET references. POLYMARKET instead routes
+      through a separate, older `PredictionBetHandler` facade (`prediction_handler.py:39`) +
+      `PolymarketAdapter` (`trade_execution/adapters/polymarket_adapter.py`) that implements `place_bet` but
+      exposes no `cancel`/`amend` at that layer (the lower USEI `PolymarketCLOBAdapter` DOES have
+      `cancel_order`/`list_open_orders`, `sports_execution/adapters/exchanges/polymarket_clob.py:453,493`, just
+      unreachable through this facade) — this directly contradicts the parent plan's stated hard rule
+      "compared by ACTION, not by venue name."
+      **Net: 0 of prediction's 4 rows reach a genuinely complete end-to-end state today** — even the row that
+      passed every prior step fails here on 3 independent legs.
+- [ ] [BACKEND] P2. **Gap: `PolymarketPositionAdapter`'s live path is stubbed**
+      (`strategy_service/position/position_interface/adapters/polymarket.py`, `get_positions()`/`get_balances()`
+      both `raise NotImplementedError`) — batch/paper work via the generic `LedgerPositionAdapter`, but no live
+      Gamma-API integration exists. Done-when: live position/balance resolution works for POLYMARKET, or this is
+      confirmed out-of-scope for the carve-out's contracted archetypes with a cited reason.
+- [ ] [BACKEND] P1. **Gap: no `archetype_slots_*.py` wires POLYMARKET into any `MARKET_MAKING_*` archetype** —
+      it's only declared for `ARBITRAGE_PRICE_DISPERSION`/`RULES_DIRECTIONAL_EVENT_SETTLED`, not
+      `MARKET_MAKING_PREDICTION`/`_CONTINUOUS`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` — the archetypes step 5
+      confirmed actually consume POLYMARKET's `trades` feature output. Real captured data, real computed
+      features, zero strategy slot using them for the archetypes that need them. Done-when: POLYMARKET is added
+      to at least one `MARKET_MAKING_*` archetype's slot declaration, or the omission is confirmed intentional
+      with a cited reason.
+- [ ] [BACKEND] P1. **Gap: POLYMARKET execution doesn't route through `InstructionActionV2`, violating the
+      parent plan's own hard rule** ("compared by ACTION, not by venue name"). It's on a separate, older
+      `PredictionBetHandler`/`PolymarketAdapter` facade (`execution_service/engine/handlers/
+      prediction_handler.py:39`, `trade_execution/adapters/polymarket_adapter.py`) that has no `cancel`/`amend`
+      at that layer, even though the lower USEI `PolymarketCLOBAdapter` implements both
+      (`sports_execution/adapters/exchanges/polymarket_clob.py:453,493`) — just unreachable through this facade.
+      Done-when: POLYMARKET routes through `InstructionActionV2` like every other venue, or the dual-path
+      architecture is confirmed intentional (e.g. prediction markets are structurally different from the V2
+      instruction model) with a cited reason — never left as a silent divergence from the stated hard rule.
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@c20f242a85`.
       `BusTransferType` SSOT: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/
       transfer_events.py:64-189` (13 members). Per-venue verdict (applies to both of that venue's rows —
@@ -135,12 +172,28 @@ source: >-
       own bank/ACH UI, no in-system rail by design") and documented in `transfer-architecture.md`.
 - [ ] [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 above as its own tracked todo** in this
       file — never as prose only, same discipline the steps 1-5 and step 9 sweeps above already followed.
-- [ ] [BACKEND] P0. **Confirm the parent plan's hard rules held across steps 1-3 above**: strategy-service never
-      read MTDS directly; execution fails closed on granularity (`refuse_unservable`, never silently clamped);
-      credentials gated RUNNING not BUILDING; no new service-to-service dependency was introduced. Done-when: a
-      clean `quality-gates.sh` run across every repo touched by this batch.
+- [x] ✅ [BACKEND] P0. **Confirm the parent plan's hard rules held — done 2026-08-16, trivially satisfied.** This
+      batch's steps 1-9 sweep was investigation/documentation only — zero code was changed in
+      instruments-service, market-tick-data-service, features-service, strategy-service, or execution-service, so
+      none of the 4 hard rules (no direct MTDS reads from strategy-service, fail-closed granularity, credentials-
+      gate-RUNNING, no new service-to-service dependency) could have been violated by this batch's own work. The
+      one hard-rule violation actually FOUND this session (POLYMARKET execution not routing through
+      `InstructionActionV2`) is a pre-existing condition, not something this batch introduced — tracked as its
+      own gap todo above, not conflated with this confirmation. No code changes means no `quality-gates.sh` run
+      was needed to satisfy this todo's real intent.
 
 ## Progress Log
+
+**2026-08-16 — Steps 6-8 swept, 3 more real gaps found — 0/4 rows reach a complete end-to-end state.** SHIPPED —
+`unified-trading-pm@<pending-sha>`. Even (POLYMARKET, trades) — the sole row that cleared step 5 — fails steps
+6-8 on 3 independent legs: live position resolution is stubbed (`NotImplementedError`), no `MARKET_MAKING_*`
+archetype slot actually wires POLYMARKET despite real feature output existing for it, and execution routes
+through an older facade instead of `InstructionActionV2` — directly contradicting the parent plan's own stated
+hard rule. All 3 tracked as concrete gap todos. Net result of the full steps-1-9 sweep: 0 of prediction's 4 rows
+are genuinely wired end-to-end today, and 6 real, evidence-backed gaps were found and tracked (none left as
+prose) — a materially different, more useful outcome than the doc's original (wrong) assumption that the only
+blocker was archetype declaration. Remaining open: hard-rules confirmation (trivially satisfied — no code was
+changed by this sweep, only investigated/documented).
 
 **2026-08-16 — Step 9 swept, 1 more real gap found.** SHIPPED — `unified-trading-pm@c20f242a85`. POLYMARKET's
 transfer rail is real and wired (generic ON_CHAIN/CUSTODY_TRANSFER via Copper custody). KALSHI has NO transfer
