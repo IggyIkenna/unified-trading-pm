@@ -102,7 +102,7 @@ source: >-
       confirmed PASS above) is fully orphaned. Done-when: at least one feature_group reads POLYMARKET
       book_snapshot_5, or the gap is confirmed intentional with a cited reason.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, (POLYMARKET, trades) also fails.** SHIPPED —
-      `unified-trading-pm@<pending-sha>`. The other 3 rows stay `BLOCKED-ON` their step-5 gap todos above,
+      `unified-trading-pm@8bfa440ac1`. The other 3 rows stay `BLOCKED-ON` their step-5 gap todos above,
       unchanged. For (POLYMARKET, trades) — the one row that cleared step 5 — real per-item verdict:
       **Position adapter — PARTIAL.** `PolymarketPositionAdapter`
       (`strategy_service/position/position_interface/adapters/polymarket.py`) is registered
@@ -185,7 +185,7 @@ source: >-
 ## Progress Log
 
 **2026-08-16 — Steps 6-8 swept, 3 more real gaps found — 0/4 rows reach a complete end-to-end state.** SHIPPED —
-`unified-trading-pm@<pending-sha>`. Even (POLYMARKET, trades) — the sole row that cleared step 5 — fails steps
+`unified-trading-pm@8bfa440ac1`. Even (POLYMARKET, trades) — the sole row that cleared step 5 — fails steps
 6-8 on 3 independent legs: live position resolution is stubbed (`NotImplementedError`), no `MARKET_MAKING_*`
 archetype slot actually wires POLYMARKET despite real feature output existing for it, and execution routes
 through an older facade instead of `InstructionActionV2` — directly contradicting the parent plan's own stated
