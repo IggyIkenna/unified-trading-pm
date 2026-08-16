@@ -187,10 +187,10 @@ in the container's `unified-trading-pm` worktree before the container exits.
       silently skipping `_check_phantom` via the same `_PHANTOM_CLI` absence (check its recent execution logs first —
       don't assume); if confirmed, decide + implement option A or a scope change for phantom specifically. Repo:
       e2e-testing / instruments-service / deployment-service (image build).
-- [ ] [CODE] P1. Set a container-local git identity before the escalation issue-doc commit-and-push step in
+- [x] ✅ [CODE] P1. Set a container-local git identity before the escalation issue-doc commit-and-push step in
       `_dp_common.py` (or the Dockerfile), so a genuine RED finding's auto-filed issue doc actually persists instead
       of being silently dropped when the ephemeral Cloud Run container exits. Verify with a planted non-v9 row +
-      confirm the issue doc lands on `origin/live-defi-rollout`. Repo: e2e-testing.
+      confirm the issue doc lands on `origin/live-defi-rollout`. Repo: e2e-testing. — e2e-testing@7edd1a3d03
 - [ ] [CODE] P3. Once (1) is fixed, re-run `uts-prod-dp-manifest-hygiene-changed` and `-full` and confirm
       `DP_DIVERGENT_EMPTY`/`DP-COVERAGE`-class findings, if any exist in the real manifests, now surface for the
       first time — this may itself uncover a backlog of real, previously-invisible divergence findings worth a
@@ -205,6 +205,23 @@ in the container's `unified-trading-pm` worktree before the container exits.
       Repo: e2e-testing (`scripts/audit/_dp_common.py`).
 
 ## Progress Log
+
+- **2026-08-16 (ui_developer worker, slot-5)**: Shipped todo (3) — `e2e-testing@7edd1a3d03`. Added a
+  best-effort identity check immediately before the `git commit` step in
+  `_commit_and_push_pm_artifacts` (`scripts/audit/_dp_common.py`): `git config --get user.email` probes
+  whether ANY identity resolves (local/global/system); only when it does NOT does the code set a distinct
+  `dp-audit-bot <dp-audit-bot@noreply>` identity via `git config user.name`/`user.email` (repo-local, not
+  `--global`), so a real local worker/operator PM clone's own per-slot commit identity
+  (`ikennaigboaka [slot-N·host]`) is never overwritten. Verification: could not re-trigger a live Cloud Run
+  run with a planted non-v9 row from this slot (no container access), so verified via unit tests instead —
+  updated `test_commit_and_push_invokes_git_when_dot_git_present` (identity already present → only the probe
+  fires, never a bot-identity set, proving local dev is unaffected) and added
+  `test_commit_and_push_sets_bot_identity_when_missing` (identity absent → `config user.name`/`user.email`
+  fire with the `dp-audit-bot` values BEFORE `add`/`commit`, reproducing the exact fix for the live
+  `unable to auto-detect email address (got 'root@localhost.(none)')` failure this doc documents). Full
+  `bash scripts/quality-gates.sh` green on the committed SHA (sentinel verified == HEAD) before shipping via
+  quickmerge. Did NOT re-verify a live Cloud Run job — that's still open follow-up if the operator wants
+  in-container confirmation; the unit coverage is the practical verification available from a worker slot.
 
 - **2026-08-16 (backend_engineer worker, slot-12)**: Shipped todo (1). Re-implemented the environment-aware
   `_DIVERGENCE_CLI` fallback (local-dev sibling path, then container-flat `_WORKSPACE_ROOT/scripts/...` fallback) in
