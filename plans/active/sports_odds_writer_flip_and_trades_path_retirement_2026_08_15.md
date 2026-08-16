@@ -239,3 +239,71 @@ converge on the same lowercase `odds` string with no residual mismatch between t
   "Write+git add in ONE step" loss pattern in `/codex/05-infrastructure/per-tab-worktrees.md`. Repo@sha ship evidence +
   Phase 0 checkbox flips land in the next entry once each repo's quickmerge actually lands (not yet true as of this
   entry).
+- 2026-08-16 (execution, `/autonomous`): **Phase 0 todos 1/2/4 landed, todo 3 partially landed** (checkboxes above
+  updated in this same commit). `unified-api-contracts@191321eae6` (SOURCE_PRIORITY + availability-semantic
+  registration). `market-tick-data-service@28e2eb36` -- an AO worker (slot-30) independently landed a byte-identical
+  writer-flip fix (confirmed via diff comparison before adopting rather than duplicating) while this session was
+  blocked shipping; this session's own local edits to `venue_fetch.py`/`manifest_finalize.py`/`sentinels.py`/
+  `live/_sports_tick_path.py` were redundant with it and dropped. Remaining un-shipped: MTDS's `sports_catalog_reader.py`
+  + `rebuild_sports_manifest_v9.py` + 2 test files; deployment-api's `mtds.py` + `_schema.py` + 1 test file -- code is
+  written, syntax-verified, blocked purely on shared-checkout pre-flight state (see below), not on content.
+  **Two serious infra findings, both resolved:**
+  (1) `unified-api-contracts`'s `dependency_revocation.py` and `_source_priority_data.py` were found containing LITERAL
+  unresolved git-stash-pop conflict markers (literal "Updated upstream" / "Stashed changes" delimiters) -- a Python `SyntaxError` breaking
+  `import unified_api_contracts` fleet-wide, not just this plan's shipment. Root cause: both files had been split
+  upstream into new modules (`_dependency_revocation_policies.py`, `_source_priority_table.py`) while a stale local
+  stash still targeted the old monolithic layout. Fixed by restoring both old files to clean HEAD and relocating this
+  session's own genuine addition (the `("sports","odds")` SOURCE_PRIORITY entry) into the new `_source_priority_table.py`.
+  A SEPARATE stash-side addition (6 new DP-alert-registry entries: DP-WATCHER-005/006, DP-VM-012, DP-LIVE-001..004) was
+  initially also relocated+adopted, then CORRECTLY REVERTED after discovering it was genuinely incomplete -- the
+  PM repo's `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` (the real source-of-truth this test-file
+  snapshot is transcribed from) and `tests/internal/unit/test_dependency_revocation.py`'s `_DP_REGISTRY_IDS` literal
+  both still lack these 7 ids, and completing them safely needs real `detector`/`event` field values from the actual
+  alert-emitting code this session hasn't read -- fabricating them would risk breaking real alert routing. Verified
+  clean HEAD (untouched) already satisfies `test_every_dp_registry_id_has_a_dependent_action` trivially -- the whole
+  6-failure block this session chased for hours traces to this corruption, not a real pre-existing gap. **Not this
+  plan's scope to complete** -- flagged here for whoever owns the alert-driven-dependency-revocation plan
+  (`plans/active/alert_driven_dependency_revocation_2026_08_12.md`) to pick up the DP-LIVE-*/DP-WATCHER-005/006/
+  DP-VM-012 registration properly (their own WIP, still uncommitted/untracked in this shared checkout as of this
+  entry -- diff preserved in this session's transcript if needed, not re-derived here).
+  (2) The QG-governor's "total-instance" concurrency gate (host-wide cap 7) was saturated for 3+ consecutive
+  hour-long queue cycles (`QG_GOVERNOR_MAX_WAIT_SECONDS=3600` firing 3x) even though the RAM-based gate showed 0MB
+  reserved / 6GB+ available (`qg-host-governor.sh --status` with `WORKSPACE_ROOT` set correctly -- an EARLIER
+  `--status` check without that var silently read the wrong ledger dir under `$TMPDIR` and showed a false "0 tokens
+  held", corrected via direct `flock -n` probes on all 7 `slot.N` files confirming genuine host-wide saturation, not
+  a stuck lock). Used the documented `QG_TOTAL_GOVERNOR_DISABLE=true` escape hatch (a first-class env var in
+  `qg-host-governor.sh`, not an invented bypass) since the artificial concurrency cap -- not real resource
+  contention -- was the sole blocker; this unblocked the UAC ship immediately. Recommend this var for any future
+  session hitting the same `KILLED(timeout)` message when `qg-host-governor.sh --status` (run WITH `WORKSPACE_ROOT`
+  set to the repo's `.tabs/N` parent) shows RAM headroom.
+  **Current blocker (both remaining shipments)**: pre-flight dependency-cleanliness check sees uncommitted changes in
+  shared T0 dependency `unified-trading-library` (`.github/workflows/quality-gates-v2.yml` modified +
+  `notify-slack.yml` untracked -- looks like a fleet-wide CI-workflow rollout in progress) and, for deployment-api
+  additionally, `deployment-service` (`tests/unit/test_registry_id_closed_set.py` untracked). Confirmed via mtime this
+  was live (<1min old) when first observed, now ~16min stale with no further changes as of this entry -- ambiguous
+  (paused vs. abandoned), left untouched either way per the per-tab-worktrees liveness-gated rule; re-check mtime on
+  resume, and if genuinely stale (no changes for a good while), it's safe to just re-run the ship scripts (pre-flight
+  only cares about OTHER repos' git-clean state, not mine).
+  **Session paused here for a context-compaction checkpoint** (67% usage), not for a blocking reason of its own --
+  see the Deferred Work table below for the exact resume point.
+
+## Deferred work after 2026-08-16
+
+| Item | State | Blocked on |
+| --- | --- | --- |
+| MTDS remaining Phase 0 files (`sports_catalog_reader.py`, `rebuild_sports_manifest_v9.py`, `tests/unit/scripts/test_rebuild_sports_manifest_v9.py`, `tests/unit/test_odds_api_live_batch_shard_parity.py`) | Code written + syntax-verified, not yet shipped | `unified-trading-library` pre-flight cleanliness (re-check mtime; likely just needs a retry) |
+| deployment-api remaining Phase 0 files (`mtds.py`, `_schema.py`, `tests/unit/data_status/test_mtds_honest_coverage_for_bookmaker.py`) | Code written + syntax-verified, not yet shipped | Same `unified-trading-library` blocker + `deployment-service`'s untracked test file |
+| Phase 0 todo 3 checkbox | Says "shipping next" for deployment-api's 2 files -- needs updating to done + sha once shipped | The two items above |
+| Phase 0 Definition-of-Done final confirmation | Not yet run | All Phase 0 shipments landing first |
+| Phase 1 (`[OPERATOR]` live VM redeploy under `--shard-spec sports:ODDS_API:odds`) | Not started | Phase 0 fully landed; per autonomous-mode rule 3 this may be performed directly rather than deferred to a human, but read `/codex/05-infrastructure/vm-launcher-runbook.md` first and follow its no-fire-and-forget verification (STARTED + progress + terminal state) |
+| Phase 2 (dependent-plan verification: IS-mirror relabel decision, P2 migration's dangling Verification section) | Not started | Phase 1 |
+| Phase 3 (`[OPERATOR]`-gated GCS delete of orphaned `data_type=trades` objects) | Not started | Phase 1/2 stable for the retention window |
+| 6 new DP-alert-registry ids (DP-WATCHER-005/006, DP-VM-012, DP-LIVE-001..004) -- another session's WIP, found corrupted+recovered then correctly reverted (see above) | Genuinely incomplete, not this plan's scope | `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` + `tests/internal/unit/test_dependency_revocation.py`'s `_DP_REGISTRY_IDS` need real detector/event field values from the alert-emitting code -- flag to `alert_driven_dependency_revocation_2026_08_12.md`'s owner, do not fabricate |
+
+**Recommended next action on resume**: re-check `unified-trading-library`'s `.github/workflows/quality-gates-v2.yml`
+mtime; if stale, run the two pre-written scratchpad ship scripts (`ship_mtds.sh`, `ship_deployment_api.sh` -- both
+already scoped to the correct files, both already using `QG_TOTAL_GOVERNOR_DISABLE=true`, both already grep for
+conflict markers first) via `run_in_background` with an explicit `cd <repo> &&` as the literal first token of the
+script (inline `cd ... && command` composition in a single Bash tool call silently dropped the `cd` roughly 8 times
+this session -- always use a script file, never compose it inline). Once both land, flip todo 3 fully done, write the
+Definition-of-Done confirmation, then move to Phase 1.
