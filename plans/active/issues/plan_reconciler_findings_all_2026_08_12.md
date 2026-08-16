@@ -441,11 +441,14 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [x] ✅ [REVIEW] P3. (P2) plans/active/prediction_consolidated_closeout_2026_07_18.md:183,186 — closeout ground-truth
       stale vs phase children. **DONE (verified 2026-08-16)**: both cited rows already carry `CORRECTED 2026-08-12
       (/plan-reconcile)` annotations reconciling the ground-truth against their source docs — fixed same-day.
-- [ ] [REVIEW] P3. (P3) plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_10.md:66 — self-contradiction re
-      batch10. **CHECKED 2026-08-16**: doc's later Progress Log entries (2026-08-10, slot 24) read as internally
-      consistent — batch10 status is tracked coherently ("batch10 remains the correct live dispatch") with no visible
-      contradiction in the current text; likely already resolved by a later same-day entry, but left open since the
-      original line-66 citation could not be re-confirmed verbatim against a moved/renamed doc in a fast pass.
+- [x] ✅ [REVIEW] P3. (P3) plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_10.md:66 — self-contradiction
+      re batch10. **DONE (verified 2026-08-16 by plan_reconciler agt-23fdbb, tranche=prediction)**: the cited doc moved
+      to `plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_10.md` (`status: resolved`) — its
+      line-66 Progress Log entry is sequential dated history across 3 same-day runs (slot 26 `all`, slot 24 sharded,
+      slot 25 `_r2` strict-coverage-bar correction), not a live self-contradiction; the apparent orphan-count delta is
+      explicitly reconciled as methodological in the `_r2` successor doc's own frontmatter summary
+      ("the delta vs the prior '0 orphans' is methodological, not a fresh finding set"). A resolved issue doc narrating
+      its own history is excluded from the contradiction class per this skill's own Phase 1 rule.
 - [x] ✅ [REVIEW] P3. (P2) plans/active/sports_consolidated_native_ao_extract_2026_07_25.md:15,49 — frontmatter
       status:active vs body draft banner. **DONE (verified 2026-08-16)**: banner already reads "Status: active —
       operator-approved 2026-07-26" with the stale "Status: draft" text struck through — fixed.
