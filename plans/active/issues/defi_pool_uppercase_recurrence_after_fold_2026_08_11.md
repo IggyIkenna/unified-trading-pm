@@ -406,16 +406,35 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       25,353 fresh uppercase-`POOL` rows written post-fix as a direct consequence. FIX APPLIED this session
       (tarball refreshed + verified). See Progress Log for full evidence + the new `[OPERATOR]` follow-up todo for
       already-running stale VMs this fix cannot retroactively reach.
-- [ ] [DIAG] P2. Scope the corpus-wide non-canonical `processed_candles/.../instrument_type=` uppercase-path
-      population for cefi/tradfi/prediction (the resolved DIAG todo above confirmed the bug is fleet-wide, not
-      defi-only, but only sampled 2-3 days per asset_group via delimiter-descent — not a stratified full-corpus
-      sample). Mirror the defi DIAG todo's methodology
-      (`market-data-processing-service/scripts/scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`'s
-      stratified day-sample approach, reusing each asset_group's own day-enumeration idiom) — one script per
-      asset_group or a generalized asset_group-parameterized version. Per-asset_group corpus day-count, sample
-      size, and projected total object count are all currently UNKNOWN for cefi/tradfi/prediction (only the defi
-      figure, ~17.4M, is scoped). Feeds the `[OPERATOR]` migration-plan-destination todo below, whose scope should
-      be widened from "defi only" to "every affected asset_group" once this lands.
+- [x] ✅ [DIAG] P2. Scope the corpus-wide non-canonical `processed_candles/.../instrument_type=` uppercase-path
+      population for cefi/tradfi/prediction — **RESOLVED 2026-08-17 (slot 6, infra).** Wrote a generalized,
+      asset_group-parameterized sibling script (unlike defi, cefi/tradfi/prediction each carry MULTIPLE distinct
+      `instrument_type` values and different `pipeline_mode`s, so this version discovers `pipeline_mode=` per
+      sampled day via a cheap delimiter listing rather than hardcoding it, and classifies objects by the CASE of
+      their own `instrument_type=` value rather than a fixed string):
+      `market-data-processing-service/scripts/scope_processed_candles_instrument_type_uppercase_corpus_cefi_tradfi_prediction_2026_08_17.py`.
+      Same walk-discipline as the defi sibling — one delimiter-descent day-enumeration call per asset_group, then a
+      stratified 8-day sample (never a corpus walk), run interactively under `run-bounded-analysis.sh` (read-only
+      `list_blobs`, small memory footprint, no manifest writes). Results, ALL uppercase, 0 or near-0 lowercase —
+      confirms the bug is fleet-wide with no evidence of a partial/already-fixed subset:
+      - **cefi** (`market-data-tick-cefi-prd-central-element-323112`): 2,684 corpus days (2019-03-30..2026-08-16),
+        8-day sample (0.3%) = 20,216 uppercase / **0** lowercase, avg 2,527/day → **projected ≈6.78M objects**.
+        Uppercase `instrument_type` values seen: FUTURE/OPTION/PERPETUAL/SPOT_PAIR (`batch_tardis`), PERPETUAL
+        (`batch_extended`, `batch_hyperliquid`).
+      - **tradfi** (`market-data-tick-tradfi-prd-central-element-323112`): 1,815 corpus days
+        (2020-01-01..2026-08-07), 8-day sample (0.4%) = 26,558 uppercase / **6** lowercase (all 6 on one sampled
+        day, 2024-02-09 — an isolated exception, not evidence of a clean subset), avg 3,319.8/day → **projected
+        ≈6.03M objects**. Uppercase values: COMBO/EQUITY/ETF/FUTURE/OPTION/UD (`batch_databento`).
+      - **prediction** (`market-data-tick-pred-prd-central-element-323112`, resolved via the dedicated
+        `market-data-tick-prediction` bucket kind — prediction has no per-asset_group entry under the generic
+        `market-data` kind, a naming trap this script had to route around): 263 corpus days
+        (2025-03-14..2026-08-16), 8-day sample (3.0%) = 16,104 uppercase / **0** lowercase, avg 2,013/day →
+        **projected ≈529K objects**. Uppercase value: PREDICTION_MARKET (`batch_databento`, `batch_polymarket_clob`).
+      - **Combined fleet-wide projection (defi + cefi + tradfi + prediction) ≈ 17.4M + 6.78M + 6.03M + 0.53M ≈
+        30.7M objects** (order-of-magnitude, sample-based across all four figures — NOT an exact count; the
+        `[OPERATOR]` migration-plan-destination todo below should get a precise per-asset_group VM-scale count as
+        its own first step, per that todo's existing text). market-data-processing-service@61294cec19
+        (script committed this session).
 - [ ] [OPERATOR] P2. Now that the defi `processed_candles/.../instrument_type=POOL/` population is scoped (~17.4M
       objects projected, order-of-magnitude, one confirmed `data_type=dex_pool_swaps`, both known `pipeline_mode`s
       affected — see the resolved defi-scoping DIAG todo above) — AND cefi/tradfi/prediction are now CONFIRMED
@@ -666,3 +685,16 @@ delete, but the same evidentiary bar applies given real financial data is at sta
     flagging this prominently for the operator/main agent — the corpus contamination this doc already scoped at
     ~17.4M objects (defi alone) was GROWING in real time during this session, across potentially a dozen concurrent
     VMs, until this fix landed.
+- **2026-08-17 (slot 6, infra)**: resolved the cefi/tradfi/prediction corpus-scoping `[DIAG]` P2 todo. Generalized
+  the defi sibling scoper into an asset_group-parameterized script (discovers `pipeline_mode=` per sampled day
+  rather than hardcoding it, classifies by `instrument_type=` CASE rather than a fixed value string — needed
+  because these three asset_groups each carry multiple distinct `instrument_type` values, unlike defi's single
+  POOL/pool axis). Ran interactively (read-only, bounded, under `run-bounded-analysis.sh`), 8-day stratified sample
+  per asset_group. Results: cefi 20,216/20,216 sampled objects uppercase (0 lowercase) → projected ≈6.78M; tradfi
+  26,558 uppercase / 6 lowercase (isolated, one sampled day) → projected ≈6.03M; prediction 16,104/16,104 uppercase
+  (0 lowercase) → projected ≈529K. Combined with defi's already-scoped ≈17.4M, fleet-wide projection ≈30.7M objects
+  (sample-based, order-of-magnitude). Confirms the fleet-wide DIAG finding from the prior session with actual
+  per-asset_group sizing — see the resolved todo above for full detail and the naming trap found along the way
+  (prediction resolves via the dedicated `market-data-tick-prediction` bucket kind, not the generic `market-data`
+  kind's per-asset_group dict). Script committed this session, QG green, shipped via quickmerge. Next: the
+  `[OPERATOR]` migration-plan-destination todo above is now unblocked with real sizing for all four asset_groups.
