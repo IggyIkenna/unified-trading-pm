@@ -117,3 +117,10 @@ source: >-
     Todo 2 (archival) stays correctly blocked on todo 1. This finalize plan stays `active`; re-attempt the
     reconciliation once the tracked blockers (dex_swaps migration, POOL-uppercase writer-fix live-confirmation,
     dex_pools regrowth) actually clear.
+- **2026-08-17 (slot-12, backend_engineer, review-craft dispatch) — redispatched same day, re-verified, no change:
+  independently confirmed all 3 blocking issue docs (`defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`,
+  `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`,
+  `defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md`) are still `status: open`. Nothing new to
+  execute within this reconciliation task's own scope — the axes stay genuinely non-canonical and each blocker is
+  correctly gated (`assigned_vm: NA`, judgment-heavy) elsewhere, not fixable inline here. No checkbox change.
+  Released as GATED (not a genuine blocker — this task's own done-when condition simply isn't met yet).
