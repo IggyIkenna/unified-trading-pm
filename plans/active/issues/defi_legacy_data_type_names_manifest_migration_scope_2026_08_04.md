@@ -255,3 +255,36 @@ context_scope:
   check).
 - **na-eligibility-audit 2026-08-16** [body-hash:a72416208cabee9e]: KEEP-NA, valid — The sole open todo (dex_swaps -> dex_pool_swaps real content migration, NOT a safe rename per a live-run DIAG that found up to 84% legacy-only content on some venue/chain pairs) has been repeatedly corroborated too_large_or_risky across four prior touchpoints (2026-08-04 x2, na-eligibility-audit 2026-08-07, round11-sweep 2026-08-09) as genuinely judgment-heavy: it requires root-causing an unexplained recent multi-venue gap cluster plus a full five-part delete-safety proof before any GCS-level change.
 - **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — sole open todo now DEPENDENCY_BLOCKED on the separately-dispatched defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md (status: active) resolving first, then the five-part delete-safety proof. Checked today's plan_reconciler_findings_defi_2026_08_17.md "2025 vs 2026 date typo propagation" flag against this doc — refuted (both docs agree on 2025), no bearing on this verdict. Doc stays assigned_vm: NA.
+- **2026-08-17 (slot 9, data_engineering, `defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md`) — ROOT-CAUSED:
+  the ~2025-07-27..2025-08-06+ recent multi-venue gap cluster is CLOSED, not a live-writer bug.** Bounded live
+  manifest reads (`pyarrow.dataset`, columns-projected, filtered to the 9 flagged `(venue,chain)` pairs
+  (`AERODROME_V3/BASE`, `CAMELOT_V3/ARBITRUM`, `PANCAKESWAP_V3/{BASE,ETHEREUM}`, `SUSHISWAP_V3/{AVALANCHE,
+  ETHEREUM}`, `UNISWAP_V3/{ARBITRUM,BASE,OPTIMISM}`) + `{dex_swaps, dex_pool_swaps}`, date range
+  2025-06-01..2025-12-31 — not a corpus walk) against
+  `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`:
+  - **As of 2026-08-17, ZERO legacy-only dates remain for all 9 pairs** — legacy `dex_swaps` and canonical
+    `dex_pool_swaps` both show the identical 214/214 dates for 2025-06-01..2025-12-31 (previously the
+    2026-08-04 DIAG above found this exact window as the "RECENT ~130-140-day gap" bucket).
+  - **Root cause: the gap was a transient snapshot artifact of the `mtds-dex-swaps-backfill` VM's in-progress
+    chronological historical re-crawl, caught mid-flight by the original 2026-08-04 DIAG — not a stopped/lagging
+    canonical writer and not a still-active legacy writer.** The canonical `dex_pool_swaps` rows for the exact
+    2025-07-27..2025-08-06 window carry `attempted_at` timestamps of `2026-08-04T09:08:53Z` through
+    `2026-08-10T22:01:50Z` (34,074 rows) — i.e. this specific window was captured in the days immediately
+    following (and during) the original DIAG's read, as the backfill VM's chronological walk passed through it.
+    Corroborated by `/plans/archive/2026_08/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`:
+    the predecessor `-2` VM (before consolidation into the current `mtds-dex-swaps-backfill`) was assigned range
+    `2025-05-12..2025-12-14` and "ran the stale pre-fix binary until ~2026-08-07T15:22Z" — squarely explaining
+    why the window closed within days of the DIAG.
+  - **(a) refuted**: no `mtds-dex-swaps-*` VM is currently running (`gcloud compute instances list` empty,
+    checked 2026-08-17); current `dex_swaps_handler.py` source has written only the canonical `dex_pool_swaps`
+    label since the 2026-06-02 rename (`market-tick-data-service@0a3a7071`, "collapse DeFi dex pool/swap
+    data_type to canonical on-disk name") — no code path can emit the legacy label today.
+  - **(b) refined, not confirmed as stated**: the canonical writer did not "stop" — a still-in-progress backfill
+    campaign simply hadn't reached this date range yet at DIAG time, and has since caught up.
+  - **Scope note — does NOT resolve the broader migration**: this closes ONLY the "recent
+    ~2025-07-27..2025-08-06+" cluster the rootcause plan was scoped to. It does NOT resolve the broader
+    `dex_swaps` → `dex_pool_swaps` content-migration scope (the OLD/scattered 2023-era legacy-only dates on 22
+    of 24 `(venue,chain)` pairs, up to 84% legacy-only on `SUSHISWAP_V3/ARBITRUM`, per the original 2026-08-04
+    DIAG above) — that remains open, still needs its own five-part delete-safety proof before any GCS-level
+    change, per this doc's standing caution. The still-open `[DATA] P2` todo above is unaffected by this finding
+    except that its "root-cause the gap cluster first" precondition is now satisfied for the recent-window half.
