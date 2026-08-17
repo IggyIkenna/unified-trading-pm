@@ -16,3 +16,19 @@
 # slot worktrees track origin/live-defi-rollout. Keeping this line caused
 # every agent-orchestrator slot to appear as "diverged" in ff-pull reports.
 # agent-orchestrator main
+
+# unified-trading-ci: single-branch repo (main only), workspace-manifest.json
+# declares integration_branch=main (2026-08-07,
+# unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md) and
+# agent-orchestrator's own _REPO_INTEGRATION_BRANCH dict mirrors it (fixed
+# 2026-08-08, 8b4c737). THIS file — a separate, hand-maintained registry read
+# only by slot-cron-ff-pull.sh, never auto-derived from the manifest like the
+# other two — never got the matching row, so every 5-minute --all-slots cron
+# tick (laptop + orchestrator VM) defaulted this repo to live-defi-rollout and
+# fast-forward-merged that branch's content into slots' local `main`, which
+# only stayed clean while the two branches were FF-compatible; once
+# live-defi-rollout carried a commit not yet on main, every slot's `main`
+# permanently diverged from origin/main and quarantined under FM5 in
+# autospawn's branch-state gate — reproduced ~every 5 min across 30+ slots
+# 2026-08-17 03:26-05:1x UTC (unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md).
+unified-trading-ci main

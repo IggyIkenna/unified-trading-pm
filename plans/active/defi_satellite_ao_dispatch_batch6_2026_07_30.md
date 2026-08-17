@@ -195,7 +195,7 @@ flip and is corrected here (slot-14).
       established pattern for covering the residual delta. The 2026-07-10 precedent (63.9M-row full apply) remains the
       SSOT for this class of work — the catalogue expansion is a resumption of that approval, not a new-scale decision.
       Repo: deployment-service (VM launch). Source: this todo's own "Done when" bar, cross-referenced against
-      `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`.
+      `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`.
 
 - [x] ✅ [DATA] P2. Execute the pre-2026-07-22 `gas_fees` historical venue-prefix migration, steps (a)+(b) only —
       completed 2026-07-30 (slot-7, data_engineering), verified 2026-08-05 (slot-10): (a) bounded per-venue scoping: 10
@@ -604,7 +604,7 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 - `issues/defi_code_codex_drift_2026_05_27.md` — D15's HYPERLIQUID/ASTER legacy-to-canonical AG migration is "explicitly
   not yet scoped" and needs a dedicated VM-backed plan authored first — an authoring decision, not a worker-executable
   step today.
-- `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` — the `_INSTRUMENT_TYPE_ALIASES` vs legacy
+- `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` — the `_INSTRUMENT_TYPE_ALIASES` vs legacy
   `venue_mapping.DataTypeConfig` SSOT contradiction for A_TOKEN/DEBT_TOKEN needs an explicit operator/engineering ruling
   before scoping; the 63.9M-row seed-apply completion itself is gated behind that + the manifest purge.
 - `issues/defi_lst_empty_marker_hardcoded_venue_2026_07_27.md` — the physical-marker-write-vs-manifest-only architecture
@@ -660,7 +660,7 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 
 - `defi_migration_audit_log_2026_07_24.md`'s DELETE-duplicate-orphan-buckets item — needs explicit operator sign-off per
   the GCS delete-safety HARD RULE, not a batch todo.
-- `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s 63.9M-row seed-apply completion — large-scale, gated
+- `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s 63.9M-row seed-apply completion — large-scale, gated
   behind the manifest purge + glued-id rebuild; belongs in its own dedicated plan/monitored VM run, not a single batch
   todo.
 - `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`'s §6.3 capability-completion (11 of 14 UAC-declared
@@ -743,7 +743,7 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   residual diagnostic/hardening/cross-cutting follow-ups, cross-linked against 3 same-day sibling manifest-memory
   incidents; not duplicating its todos here). Split the todo's checkbox — the catalogue-expansion scope is DONE (flipped
   `[x]`); the denominator-recompute half of the original "Done when" bar is split into a new `[DATA] P2` follow-up
-  (needs the SAME VM-dispatch pattern `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` already established
+  (needs the SAME VM-dispatch pattern `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` already established
   for this exact class of large manifest write, not a quick in-session step).
 - 2026-08-01 (slot-16, data_engineering): **Closed** the composite-venue fold `[DATA] P1` todo (5,332 legacy objects, 9
   venues, `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`). Shipped

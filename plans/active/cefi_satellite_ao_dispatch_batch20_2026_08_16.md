@@ -37,7 +37,7 @@ related:
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md,
     /plans/active/issues/plan_reconciler_findings_cefi_2026_08_16.md,
-    /plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -106,10 +106,29 @@ source: >-
       `plans/active/issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md`.
       Done-when: `quality-gates.sh` passes and a re-run against the DP-VM-003 shard proves identical output to the
       unsliced read at lower memory.
-- [ ] [CODE] P1. Backfill historical CeFi/TradFi manifest rows with the corrected per-`instrument_type` split
-      (pre-2026-07-07 writer-fix rows are still blended+blank). Source:
+- [x] ✅ [CODE] P1. **DONE 2026-08-17 (slot-18, backend_engineer)** — Backfill historical CeFi/TradFi manifest rows
+      with the corrected per-`instrument_type` split. Source:
       `plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (line 516).
-      Done-when: a manifest read over the affected date range shows the corrected per-instrument_type split, not
+      **`instruments-service@5efb94424e`.**
+
+      **Live re-verify found the todo's premise stale before writing any fix.** DERIBIT (cefi) and CME
+      (tradfi) — the two venues this doc's own live-evidence section named — were BOTH already fully split
+      by real `instrument_type` for every pre-2026-07-07 date (DERIBIT: 2019-03-30..2026-07-06,
+      OPTION/FUTURE/PERPETUAL/COMBO/SPOT_PAIR, genuine multi-row-per-date structure; CME: 0 captured+blank
+      rows), presumably via prior forward-work re-touching those dates. A corpus-wide sweep of the FULL
+      cefi (85,214 rows) + tradfi (27,579 rows) manifests for `capture_status==captured AND
+      instrument_type=='' AND date<2026-07-07` found exactly **1 residual row across both asset groups**:
+      `BITFINEX-SPOT`, `2023-12-16`, `instrument_count=284` — every other BITFINEX-SPOT row (2,697 of
+      them) correctly carries `SPOT_PAIR`, confirming a single-type venue with one never-stamped row, not
+      a genuine multi-type blend.
+
+      Wrote `scripts/backfill_cefi_tradfi_instrument_type_split_2026_08_16.py` (safe single-type-venue
+      inference: backfills a blank row only when every OTHER row for that venue carries exactly one
+      distinct non-blank `instrument_type`; a genuinely ambiguous multi-type venue would be left untouched
+      + reported loudly — none found live). Dry-run confirmed the 1-row scope; `--apply --confirm` shipped
+      it with the standard captured-count safety gate (56,732 before/after, unchanged) and a post-run
+      re-read verification. **Done-when satisfied**: a fresh manifest read over both asset groups shows 0
+      blank captured rows for `date < 2026-07-07` — the corrected per-instrument_type split, not
       blended/blank rows.
 - [ ] [SCRIPT] P2. Re-derive the original "four preemptions" narrative from the raw `uts-prod-dp-exit-code-monitor`
       Cloud Run Job source log text (not just a paraphrase) to confirm vs. definitively refute whether those four
@@ -170,7 +189,7 @@ source: >-
       stomps a caller-exported `YEARS_OVERRIDE` env var back to empty because the internal working variable and the
       plausible-but-wrong caller-facing name collide. Fix: rename the internal variable (e.g. `_YEARS_SCOPE`), or add
       an explicit guard that errors loudly instead of silently discarding the caller's intent. Source:
-      `plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`.
+      `plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`.
       Done-when: a caller-exported `YEARS_OVERRIDE` reaches the launcher intact in a re-run, or the loud-error guard
       fires instead of silent discard.
 

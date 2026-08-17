@@ -26,7 +26,7 @@ related:
   [
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md,
-    /plans/active/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md,
+    /plans/archive/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 parent_epic: tradfi_master

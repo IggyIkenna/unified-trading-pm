@@ -706,3 +706,34 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   both `[ ]`, unchanged). Gate (`-005`'s "genuinely completes, measured exit") remains unmet — declining `-005` and
   skipping via `reason_code: "GATED"` per the established mechanism (slot-13's finding, 2026-08-02); no `park_now`,
   consistent with the 2026-08-15 finding that periodic re-verify beats parking for this task.
+
+- **2026-08-17T05:28Z (slot-16, infra craft, dispatched on the 10th-relaunch `[INFRA] P1` todo)**: Followed the todo's
+  own pre-launch checklist. **N=1 Tardis cap check FAILED — a different Tardis-consuming VM already holds the slot,
+  so the 10th relaunch is correctly NOT launched this turn.** `gcloud compute instances list --filter="name~cefi-queue"`
+  confirmed still empty (no 10th relaunch exists). But a broader fleet scan found
+  `cefi-binance-futures-2026-heavy-20260817-010713` (RUNNING, `asia-northeast1-c`, created `2026-08-17T00:11:46 UTC`) —
+  metadata confirms `VM_TARDIS_CONSUMER=1`, `VM_TASK=cefi-coverage-backfill`, `VM_VENUE=BINANCE-FUTURES`,
+  `VM_START_DATE=2026-04-20`, `VM_END_DATE=2026-08-16` — a SEPARATE, narrower-scoped (single-venue, ~119-day window,
+  non-`SINGLE_VM_QUEUE` naming) coverage-backfill launch, not part of this chain's own 10-relaunch history (which uses
+  the `cefi-queue-heavy-binancefutu-x17-*` `SINGLE_VM_QUEUE` combined-VM name). The shared guard's own authoritative
+  counter confirms it: `tardis_running_vm_count` (sourced directly from `tardis-concurrency-guard.sh`, not re-derived)
+  returned `1`. AWS `describe-instances` (running/pending) showed only the two standing orchestrator VMs — no AWS-side
+  Tardis consumer. Fetched this VM's own progress via UTL `download_from_storage` (per the hook-blocked
+  `gcloud storage`/`gsutil` rule — confirmed live: the sandbox's `block_destructive_commands.py` hook refused a direct
+  `gcloud storage cat` on a GCS object): `PROGRESS.json` → `{"last_completed_date":"2026-06-07","monotonic":true,
+  "updated":"2026-08-17T04:58:42Z"}`; `run.log` (163,262 lines) tail at `05:27:39Z` shows live `Tardis streaming
+  success`/`StreamingParquetWriter: uploaded` activity on `date=2026-06-08/09/10` — genuine compute, not a hang, ~3
+  days advanced in the ~29min between the two reads (≈6.2 days/hr). Position: day ~49/119 (~41%) of its own
+  `2026-04-20..2026-08-16` scope; remaining ~67 days at the observed rate ≈ **~10-11h to complete** — a genuine
+  multi-hour wait, not something to hold this session/slot open for (per async-wait-discipline's
+  size-to-job guidance — an unknown-precision multi-hour ETA doesn't warrant a synchronous in-session wait).
+  **Per the Tardis N=1 hard cap (`/codex/05-infrastructure/vm-launcher-runbook.md` § "Tardis Concurrent-VM Cap") and
+  this craft's "NEVER LAUNCH BLIND" north-star, did NOT launch the 10th relaunch** — a concurrent N=2 launch risks the
+  documented mutual-403 storm + false `attempted_failed` manifest corruption (measured 2026-07-16: N=3 produced
+  37,212 false-af rows in 8h). Did NOT invoke `FORCE=1` (operator-only override per the launcher's own header comment;
+  no operator ruling covers overriding the cap here). Todo remains open — the 10th relaunch should proceed once this
+  competing VM completes or is confirmed dead (re-check `gcloud compute instances list --filter="name~cefi-binance-futures-2026-heavy-20260817-010713"`
+  / `tardis_running_vm_count`), whichever a future infra-craft dispatch finds first. Skipping via
+  `reason_code: "GATED"` (own done-when condition — N=1 cap clear — not yet met; not a genuine ambiguity needing
+  `/blocked`), no `park_now` given the ~10-11h ETA exceeds `dispatch_cooldown_max_eta_minutes` (180min default) —
+  periodic re-verify (the established pattern throughout this doc) will catch the cap clearing.

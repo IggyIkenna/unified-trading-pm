@@ -8,7 +8,7 @@ summary:
   expected universe have NO manifest row at all — the Phase-3.D backward-fill apply-write was evidently never run (or
   never completed) for defi. Until seeded, defi coverage denominators (data-status honest-coverage) silently exclude
   these cells. The enumerator's own halt message gates the fix on operator review of the write volume."
-status: open
+status: resolved
 nature: record
 asset_group: [defi]
 stage: [data]
@@ -18,7 +18,7 @@ tags: [manifest, expected-unattempted, enumerator, honest-coverage, defi, backlo
 related:
   [
     plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
-    /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
+    /plans/archive/2026_08/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
     /plans/archive/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md,
   ]
 created: 2026-07-03
@@ -38,7 +38,7 @@ last_updated: "2026-08-08"
 locked_by:
 locked_since:
 resolved_by:
-context_scope: [unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/possible_manifest.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, instruments-service/scripts/enumerate_expected_universe.py, /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md]
+context_scope: [unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/possible_manifest.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, instruments-service/scripts/enumerate_expected_universe.py, /plans/archive/2026_08/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md]
 ---
 
 > **🟢 2026-07-10 RESOLVED — fresh operator decision made at the real v2 scale (Option A, full 63,876,053-row apply,
@@ -53,6 +53,12 @@ context_scope: [unified-api-contracts/unified_api_contracts/registry/market_data
 > anything. **No apply-write was executed** — every run in this re-verification was scan-only (zero manifest mutations).
 
 # DeFi expected_unattempted backlog ≥1M — enumerator halt-safety (found 2026-07-03)
+
+> **🟢 ARCHIVED 2026-08-17** — every todo across this doc and its gated finalize companion is done; the doc's
+> `locked_by`/`locked_since` lock was already cleared (2026-08-08). The confirmed-dead `venue_mapping.DataTypeConfig`
+> cleanup this doc's SSOT ruling triggered has already landed and archived separately
+> (`plans/archive/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`) — no further follow-up work.
+> Successor: none. Original path: `plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`.
 
 ## Evidence
 
@@ -465,3 +471,14 @@ above are otherwise fully reproducible via the shipped CLI.
   re-verification + `[DOC]` archival todos in the same session.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-17 (slot-16, data_engineering craft, dispatched via the finalize plan's `[DOC]` archival todo)**: archived per
+  the standard 6-step ritual — zero open todos (both this doc's own todos and the gated finalize companion's `[REVIEW]`/
+  `[OPERATOR]` todos are done), `locked_by`/`locked_since` confirmed empty. Moved to
+  `plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` alongside the finalize doc's own archival
+  (`plans/archive/2026_08/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`) in the same commit.
+  Codex-alignment check: no codex update needed — the SSOT ruling this doc established (`market_data_categories` over
+  `venue_mapping.DataTypeConfig`) is now moot as a standing contract, since the losing side
+  (`venue_mapping.DataTypeConfig`) has ITSELF already been deleted
+  (`plans/archive/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`) — there is no remaining
+  ambiguity for a codex doc to prevent. Fixed every corpus-active literal-path referrer (8 files) to the new archived
+  paths — see the finalize doc's own Progress Log for the full referrer list.

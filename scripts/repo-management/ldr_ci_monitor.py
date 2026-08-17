@@ -421,6 +421,12 @@ def evaluate_fleet(manifest: dict, repos: list[str], limit: int) -> tuple[list[d
             # Attribution is only fetched for a RED transition (a handful per tick at most), so
             # the extra compare/commits gh calls never approach the unconditional-dispatch cost.
             attribution = attribute_red(repo, sha, limit) if level == RED else ""
+            # Alert-linkage (2026-08-17, mirrors quality-gates-v2.yml's streak_start_sha): the
+            # PRE-overwrite ldr_ci_status_sha is the sha the just-cleared RED period was last
+            # read against — citing it on the RECOVERED line lets a human directly correlate
+            # this INFO post back to the CRITICAL that named the same sha, instead of having to
+            # cross-reference timestamps by eye. Read BEFORE apply_levels() overwrites it below.
+            prev_sha = manifest_repos[repo].get("ldr_ci_status_sha") or "" if level == GREEN else ""
             transitions.append(
                 {
                     "kind": "red" if level == RED else "recovered",
@@ -430,6 +436,7 @@ def evaluate_fleet(manifest: dict, repos: list[str], limit: int) -> tuple[list[d
                     "url": url,
                     "sha": sha,
                     "attribution": attribution,
+                    "prev_sha": prev_sha,
                 }
             )
     return transitions, new_levels, new_shas
@@ -477,7 +484,9 @@ def build_report(transitions: list[dict]) -> tuple[bool, str, str]:
         for t in recovered:
             short = (t["sha"] or "")[:8]
             url = f" <{t['url']}|gate run>" if t["url"] else ""
-            lines.append(f"  • `{t['repo']}`@`live-defi-rollout` RED → *GREEN* ({short}){url}")
+            prev_sha = t.get("prev_sha") or ""
+            incident = f" (incident since `{prev_sha[:8]}`)" if prev_sha and prev_sha != t["sha"] else ""
+            lines.append(f"  • `{t['repo']}`@`live-defi-rollout` RED → *GREEN* ({short}){url}{incident}")
     alert = bool(red or recovered)  # red transitions + recoveries both post; severity differs
     severity = "CRITICAL" if red else "INFO"
     report = "\n".join(lines) if lines else "No LDR CI transitions detected."

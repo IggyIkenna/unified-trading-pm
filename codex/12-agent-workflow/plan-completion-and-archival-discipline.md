@@ -20,12 +20,15 @@ related:
     /codex/12-agent-workflow/canonical-plan-flow.md,
     /codex/12-agent-workflow/pre-task-plan-conflict-check.md,
     plans/PLAN_FORMAT.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md,
+    /plans/active/issues/plan_reconciler_findings_prediction_2026_08_16.md,
   ]
 created: 2026-07-28
-authoritative_for: [plan archival-when-done ritual, todos-not-prose rule]
+authoritative_for: [plan archival-when-done ritual, todos-not-prose rule, finalize-plan no-double-gate rule]
 referenced_by: [CLAUDE.md § "Plans — format + authoring discipline"]
 owner:
-last_reviewed: 2026-08-16
+last_reviewed: 2026-08-17
 code_refs:
 ---
 
@@ -76,6 +79,49 @@ but all todos are done — should I unlock it?") but MUST NEVER unlock autonomou
 
 `run_hygiene_sweep.sh` + `regenerate_active_plan_inventory.py` catch a stale-active-but-fully-checked plan on their own
 cadence, but that is the SAME "caught later, not at completion time" pattern this doc exists to stop relying on.
+
+### No-double-gate: a finalize plan ships `status: active` from the start (RULED 2026-07-30)
+
+**A finalize plan — the `depends_on: [<batch>]` + `gate_on_depends: true` companion every AO-dispatched plan requires
+(`plans/active/task_template.md` §4, "Every AO-dispatched plan needs a gated finalize plan") — is authored
+`status: active` immediately, never `status: draft`.** `gate_on_depends: true` already machine-holds every one of its
+tasks until the upstream batch plan's own todos are `done` (`_wire_gate_on_depends_prereqs` in
+`regen_backlog_from_plan.py` covers both an already-`active` upstream, via `prereqs.completed_tasks`, and a
+still-`draft` upstream, via a derived `gate-upstream-open:<stem>` condition read off the upstream file directly) — so a
+finalize plan genuinely cannot dispatch early regardless of its own `status`. Stacking `status: draft` on top of that
+machine gate creates a SECOND gate guarding the identical release condition, and unlike `gate_on_depends` it has no
+automatic release: someone has to notice the upstream is done and manually flip `draft`→`active`, and nothing prompts
+that flip.
+
+**The failure this closes**: a 2026-07-30 corpus audit found 46 finalize plans stuck in `status: draft` this way, most
+with their upstream batch plan already `done` and even archived weeks earlier — the manual flip was never made, so the
+reconciliation/archival work the finalize plan exists to perform sat invisible to the AO backlog indefinitely. Shipped
+in `unified-trading-pm@233ebd6148` ("remove redundant status:draft double-gate on finalize plans"): flipped the 43
+AO-track (`assigned_vm: planning`) finalize plans found stuck in `draft` to `active` (2 `assigned_vm: NA` docs were left
+untouched — NA plans aren't AO-ingested regardless of `status`, so the bug doesn't reach them); updated
+`cursor-configs/skills/ag-closeout-audit/SKILL.md` to stop instructing `status: draft` on the finalize-plan sibling
+(only the batch plan itself — genuinely unreviewed content — still needs `draft` + explicit operator approval); and
+added `scripts/quality_gates/check_finalize_plan_coverage.py`'s ratcheted `draft_gate_violation_count` check so this
+authoring mistake can't silently regress.
+
+**The general "no-double-gate" rule, beyond finalize plans specifically**: once a plan/todo is already held by a
+genuine MACHINE gate — `gate_on_depends: true` (cross-plan), `sequential: true` (intra-plan), or a documented
+prerequisite condition read by the dispatcher — do not also add a second, manual gate (`status: draft`, a prose "🔴
+BLOCKED, don't dispatch" banner) guarding the exact same release condition. A second manual gate stacked on a working
+machine gate adds no additional safety, but does add a step a human/agent must remember to perform once the real gate
+clears — and at fleet scale that step reliably gets forgotten (see the 46-plan measurement above). If two independent
+conditions genuinely must both clear before dispatch, encode BOTH as real machine gates (e.g. two `depends_on`
+entries, or a `gate_on_depends` plus a separately-tracked prerequisite condition) rather than one machine gate plus one
+manual one.
+
+**Worked example — the exact gap this section closes.** `/plan-reconcile`'s prediction-tranche sweep
+(`/plans/active/issues/plan_reconciler_findings_prediction_2026_08_16.md`, P2 item) found that both
+`/plans/active/data_pipeline_check_mdps_features_2026_07_20.md` and its finalize doc,
+`/plans/active/data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md`, independently cited "the
+2026-07-30 ruling that finalize plans ship `status: active` from the start" as settled convention — correctly, and in
+agreement with actual fleet-wide practice (see any batch8/9/10-era finalize plan for the same pattern) — yet a
+corpus-wide `codex/` grep turned up zero hits for the rule anywhere. Genuine codex gap, not staleness: this section is
+the missing SSOT the two plans were already, correctly, assuming existed.
 
 ### The archival commit itself must not drop the rename's delete side (RULED 2026-08-08)
 

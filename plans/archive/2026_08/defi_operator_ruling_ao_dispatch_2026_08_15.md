@@ -48,11 +48,17 @@ locked_since:
 resolved_by:
 ---
 
+> **ARCHIVED 2026-08-17** — all 3 todos done, unlocked, closed out via the standard 6-step ritual (finalize doc
+> `defi_operator_ruling_ao_dispatch_2026_08_15_finalize.md` archived alongside). Every corpus referrer has been
+> fixed to point at the archive path. This doc is retained for provenance only.
+
 # DeFi phoenix delete + orphan-bucket delete verify + live-poller scoping
 
 ## Todos
 
-- [ ] [DATA] P2. **RETAGGED 2026-08-16 (operator ruling, na-eligibility-audit follow-up round 4): this is a
+- [x] ✅ [DATA] P2. **DONE 2026-08-17 — resolved: NOT a real contradiction; SKIPPED the deletion (the original
+      "UAC-excluded venue" premise was factually wrong).** Full evidence in this doc's Progress Log below.
+      **RETAGGED 2026-08-16 (operator ruling, na-eligibility-audit follow-up round 4): this is a
       read-then-compare task, not an operator judgment call — dispatch it, do not gate it.** Reconcile before
       deleting: `cross_ag_live_capture_parity_2026_08_14.md` line 148-151 claims `PHOENIX-SOLANA` is "not in current
       UAC `VENUES_BY_ASSET_GROUP` at all" (verified live, 168-venue universe) and its REST API was deprecated
@@ -108,4 +114,52 @@ resolved_by:
   `/plans/active/defi_live_poller_phased_build_2026_08_15.md`. `status: draft` on the new plan — it needs an operator
   ruling on dispatch cadence (filed as a follow-up todo in that plan) before any tranche is extracted into an
   AO-dispatchable batch.
+
+- **2026-08-17 (slot 9, data_engineering, task `defi_operator_ruling_ao_dispatch-7dde9fa028b0`)**: todo 1 closed —
+  resolved the `PHOENIX-SOLANA` contradiction and **SKIPPED the `phoenix_ws.py` deletion**. Live-verified against
+  `unified-api-contracts` (workspace `.venv`, both registries imported directly):
+
+  ```
+  PHOENIX-SOLANA in ALL_DEFI_VENUES: True   (170 total members)
+  PHOENIX-SOLANA DEFI_VENUE_PHASE: pipeline
+  PHOENIX-SOLANA in VENUES_BY_ASSET_GROUP['defi']: False   (103 members, unchanged)
+  PHOENIX-SOLANA in VENUE_TO_ASSET_GROUP: defi
+  ALL_DEFI_VENUES - VENUE_TO_ASSET_GROUP.keys(): set()   (empty — the 2026-08-09 registry-gap fix holds)
+  ```
+
+  **Not a real contradiction — two docs correctly describing two different registries.** `PHOENIX-SOLANA` genuinely
+  is, and has consistently been (confirmed already present as of the 2026-08-09 registry-gap doc, predating the
+  2026-08-14 "not in UAC at all" claim), a member of `ALL_DEFI_VENUES` — just `DEFI_VENUE_PHASE="pipeline"`
+  (batch/backfill-only), correctly excluded from the narrower live-phase `VENUES_BY_ASSET_GROUP["defi"]` by design
+  (unrelated to the dead REST API). `VENUE_TO_ASSET_GROUP["PHOENIX-SOLANA"] == "defi"` today, per the fix already
+  shipped in the registry-gap doc (`unified-api-contracts@7b96791e`).
+
+  **The original deletion rationale is factually wrong on both counts it cited**: (1) "venue doesn't exist in UAC
+  at all" — false, per above; (2) "dead REST API" — moot, `phoenix_ws.py`
+  (`market-tick-data-service/market_tick_data_service/live/connectors/phoenix_ws.py`) never depends on
+  `api.phoenix.trade`; it's a fully-implemented Jupiter-quote-polling adapter built specifically to route around
+  that dead REST API (`lite-api.jup.ag/swap/v1/quote?dexes=Phoenix`), with proper reconnect/backoff semantics — not
+  scaffold/stub code. It IS actively imported via `connectors/__init__.py::register_all()`'s standard rollout list
+  (not orphaned/unreferenced).
+
+  **Why it's still currently unreachable at dispatch time — a different, fixable reason**: it registers under the
+  bare lowercase venue key `"phoenix"` (`register_ws_feed_connector(venue="phoenix", ...)`), and
+  `resolve_ws_feed_venue_key()`'s exact/`.lower()`/`.upper()` lookup chain
+  (`market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py:63-85`) cannot
+  bridge `"phoenix"` → the canonical `"PHOENIX-SOLANA"` dispatch key it would be looked up under — the exact same
+  resolver-mismatch bug class already fixed for `curve`/`morpho`/`orca`/`raydium` (re-registered under their full
+  canonical chain-suffixed key). Phoenix was left unfixed at the time solely because of the now-refuted "doesn't
+  exist" premise.
+
+  **Decision: SKIPPED the deletion.** Deleting a real, working, purpose-built connector on a refuted premise would
+  destroy real reusable work for no valid remaining reason. Corrected the stale claim + resolved the source
+  `[OPERATOR]` todo in place — `/plans/active/cross_ag_live_capture_parity_2026_08_14.md` (see its 2026-08-17
+  correction block + Progress Log entry, same commit). **Two genuine follow-up decisions remain, deliberately NOT
+  resolved here** (out of this bounded task's scope — the first is mechanical but only meaningful paired with the
+  second, which is a real priority/resourcing call, not mine to make unilaterally): (1) apply the same
+  canonical-key re-registration fix as curve/morpho/orca/raydium; (2) whether to promote `PHOENIX-SOLANA` from
+  `DEFI_VENUE_PHASE="pipeline"` to `"live"` in `market_data_categories.py` so live dispatch actually selects it in
+  the first place. No code shipped for this todo (the correct action was to NOT change `phoenix_ws.py`); the
+  shipped change is the doc corrections above (unified-trading-pm).
+
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

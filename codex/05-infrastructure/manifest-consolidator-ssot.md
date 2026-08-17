@@ -608,6 +608,21 @@ terraform locals via `gen_consolidator_catalog.py`, so a new consolidator auto-a
   actively-written bucket at audit time) stay on `*/1`. The liveness watchdog (below) was split into a matching
   fast/slow tier pair so the hourly-cadence buckets don't false-trip `CONSOLIDATOR_DOWN` ~5min into every gap.
 
+  **`CONSOLIDATOR_LOCK_TTL_SECONDS` is NOT a proxy for how much real merge work a bucket does per cycle — measure
+  actual execution durations before reasoning about cadence (2026-08-16, withdrawn cadence-thinning proposal,
+  `manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`).** A high lock TTL (e.g. 9000s for
+  `market-data-defi`/`market-data-cefi`, 4200s for `instruments-sports`) was initially read as "these buckets are
+  mostly idle no-op polling on their per-minute cron tick, so the cron could safely be thinned" — the TTL is sized for
+  the WORST-CASE cycle (a large anti-join merge after a backlog), not the TYPICAL one, so a generous TTL says nothing
+  about how often a bucket is actually doing real work. Pulling real `gcloud run jobs executions list` timestamps
+  (`status.startTime`/`status.completionTime` — see the field-path gotcha in
+  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`) showed `defi` and `instruments-sports` completing
+  real, fast (30-56s) merges on nearly every ~60-75s tick — genuinely frequent work, not idle polling — directly
+  contradicting the TTL-based inference. **The rule: before recommending a cadence change (thin a cron, extend a
+  timeout) based on how "idle" a schedule looks from its config (lock TTL, timeout budget, stall-alert-cycles), pull
+  the actual execution history for that specific bucket first — config headroom and real utilization are independent
+  measurements, and a generous one does not imply a low one.**
+
 - **Backlog + oldest-pending** — `per_vm_shard_backlog` returns `(pending, total, oldest_pending_at)` from ONE prefix
   list: pending shards, fan-in width, and the oldest un-absorbed shard's age ("how long has the merge been behind").
 - **Absolute index snapshot** — row count (cheap parquet-footer ranged read, never downloads the whole index) + file
@@ -768,6 +783,37 @@ bucket's consolidator cron first, run the reclass, then RESUME (steps 1 and 6 of
 additive or purely rule-derived the reclass logic is. "The script only changes `capture_status` values, it doesn't touch
 row count" is not a reason to skip the pause — the race is on the read-modify-write, not on whether rows are added or
 removed.
+
+## Rebuild scripts can resurrect a RETIRED venue's manifest rows — de-scoping ≠ deleting (2026-08-15)
+
+**A venue removed from forward-dispatch (`VENUE_DATA_TYPE_CAPABILITIES`/`expected_coverage.py`) is not the same as a
+venue purged from GCS.** A per-VM-shard rebuild/rescan utility (e.g.
+`market_tick_data_service/scripts/rebuild_tradfi_manifest.py` — "scans `gs://.../raw_tick_data/by_date/day=*/…` and
+emits one `ManifestWriter.add()` call per parquet found, tagged `capture_status=CAPTURED`") is **venue-agnostic**: it
+discovers whatever objects physically exist on disk and does not consult `VENUE_DATA_TYPE_CAPABILITIES` /
+`EXPECTED_DATA_TYPES_BY_VENUE` (or any other "is this venue still expected?" signal) before re-registering them. If a
+venue's forward-dispatch capability is narrowed or removed (a retirement decision) but its already-captured
+historical GCS objects are never explicitly deleted, the NEXT time the rebuild script runs against that bucket it
+faithfully re-discovers those objects and re-stamps them with a FRESH `attempted_at`/`written_at` = the rebuild's own
+run time — resurrecting rows that every piece of code commentary describes as "fully purged", with no live vendor
+fetch involved.
+
+**Confirmed live, 2026-08-15**: the tradfi tick-data manifest showed 661 `captured` `futures_chain` + 81 `captured`
+`ohlcv_1m` rows for ICE with `attempted_at` timestamped that same day, contradicting every code comment asserting
+ICE-via-databento was purged after the 2026-07-13 `expected_coverage.py` narrowing. Traced via `gcs_describe_object`
+and ruled out a live-dispatch bug (`_DATABENTO_VENUES`/`VENUE_DATA_TYPE_CAPABILITIES` correctly gate ICE out of every
+live fetch path today): the backing GCS objects' real `last_modified` was **2026-07-20**, ~26 days before the
+manifest rows' `attempted_at` — `rebuild_tradfi_manifest.py` had re-discovered pre-retirement objects that were never
+deleted and re-stamped them as if freshly captured. Full incident:
+`/plans/active/issues/retirement_completeness_pollutant_reverify_ice_still_live_2026_08_15.md`.
+
+**Practical implication**: a venue retirement is not complete until the historical GCS objects are ALSO deleted (per
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), not just filtered from the manifest or de-enumerated
+from the forward-dispatch config — purging the manifest ROWS alone is insufficient, because the next corpus-rescan
+rebuild will simply re-discover and re-stamp the same underlying objects. This is the same structural class as the
+"deletion-resurrection gap" documented above for the CANONICAL index (§ "Surgical ROW REMOVAL"), but the trigger here
+is different: not a manual surgical edit being undone, but a routine rebuild re-discovering objects a retirement
+decision never actually deleted.
 
 ## Composes with
 

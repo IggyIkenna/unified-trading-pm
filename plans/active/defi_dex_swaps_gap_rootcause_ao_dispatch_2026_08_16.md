@@ -56,7 +56,10 @@ resolved_by:
 
 ## Todos
 
-- [ ] [DATA] P2. **Root-cause the ~2025-07-27..2025-08-06+ multi-venue gap cluster.** For the affected venues
+- [x] ✅ [DATA] P2. **DONE 2026-08-17 — root-caused: the gap was a transient in-progress-backfill snapshot, now
+      CLOSED, not a live-writer bug.** Full finding + evidence filed in
+      `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`'s Progress Log (2026-08-17 entry).
+      **Root-cause the ~2025-07-27..2025-08-06+ multi-venue gap cluster.** For the affected venues
       (`AERODROME_V3/BASE`, `CAMELOT_V3/ARBITRUM`, `PANCAKESWAP_V3/{BASE,ETHEREUM}`, `SUSHISWAP_V3/{AVALANCHE,ETHEREUM}`,
       `UNISWAP_V3/{ARBITRUM,BASE,OPTIMISM}`): determine (a) is a legacy `dex_swaps`-emitting writer still active
       today for any of these venues (check `dex_swaps_handler.py` deployment/dispatch history, not just current
@@ -70,6 +73,26 @@ resolved_by:
 
 ## Progress Log
 
+- **2026-08-17 (slot 9, data_engineering) — ROOT-CAUSED, gap CLOSED.** Bounded live manifest reads
+  (`pyarrow.dataset`, columns-projected, filtered to the 9 flagged `(venue,chain)` pairs + `{dex_swaps,
+  dex_pool_swaps}`, date range 2025-06-01..2025-12-31 — not a corpus walk) against
+  `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` found **ZERO
+  legacy-only dates remaining for all 9 pairs as of today** — legacy `dex_swaps` and canonical `dex_pool_swaps`
+  both show the identical 214/214 dates for 2025-06-01..2025-12-31. Root cause: the 2026-08-04 DIAG that
+  originally flagged this cluster caught the `mtds-dex-swaps-backfill` VM's chronological historical re-crawl
+  mid-flight — the canonical rows for the exact 2025-07-27..2025-08-06 window carry `attempted_at` timestamps of
+  `2026-08-04T09:08:53Z` through `2026-08-10T22:01:50Z` (34,074 rows), i.e. this window was captured in the days
+  immediately following (and during) the original DIAG read as the backfill's chronological walk passed through
+  it — corroborated by the predecessor `-2` VM's assigned range `2025-05-12..2025-12-14`
+  (`/plans/archive/2026_08/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`). **(a) refuted**:
+  no `mtds-dex-swaps-*` VM is currently running (`gcloud compute instances list` empty, checked 2026-08-17); no
+  code path can emit the legacy label today (`_DEX_SWAPS_DATA_TYPE` collapsed to canonical
+  `market-tick-data-service@0a3a7071`, 2026-06-02). **(b) refined, not confirmed as stated**: the canonical
+  writer did not "stop" — an in-progress backfill campaign simply hadn't reached this date range yet at DIAG
+  time and has since caught up. This closes ONLY the recent cluster this plan was scoped to; the broader
+  dex_swaps → dex_pool_swaps content-migration scope (scattered 2023-era legacy-only dates on 22 of 24 pairs,
+  up to 84% on `SUSHISWAP_V3/ARBITRUM`) remains open and unresolved — full finding filed in the source doc's
+  Progress Log. Not proceeding to migration design in this dispatch, per scope.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling — scoped)**: operator asked to dispatch
   the dex_swaps migration; scoped down to only the bounded root-cause step per repeated `too_large_or_risky`
   corroboration in the source doc (see summary above) — the full migration is NOT dispatched by this plan.

@@ -87,13 +87,21 @@ source: >-
       capture means no historical replay/backtest for this data_type. Done-when: a batch collector exists (mirroring
       `PolymarketAdapter._build_book_snapshot_5_rows`, `polymarket_adapter.py:347`) or this is explicitly ruled
       out-of-scope with a cited reason.
-- [ ] [BACKEND] P1. **Gap: `features-service`'s PREDICTION ingest path structurally excludes KALSHI entirely.**
-      `_ingest_prediction`/`_list_polymarket_parquets` (`features_service/cross_instrument/cli/handlers/
-      batch_handler.py:117-129,167-176`) hard-filter to `venue=POLYMARKET` — KALSHI trades and book_snapshot_5 are
-      both real, captured (batch+live for trades; live-only for book), but orphaned at the feature layer regardless.
-      Done-when: KALSHI is ingested alongside POLYMARKET for PREDICTION (or the exclusion is confirmed intentional
-      with a cited reason — e.g. KALSHI's `polymarket_market_microstructure` fit is genuinely different and needs
-      its own calculator, not a blind extension of the filter).
+- [x] ✅ [BACKEND] P1. **Gap: `features-service`'s PREDICTION ingest path structurally excludes KALSHI entirely —
+      fixed 2026-08-17.** SHIPPED — `features-service@c5ad65df10`. `_ingest_prediction` now lists+loads every venue
+      in `PREDICTION_VENUES = (POLYMARKET, KALSHI)` (moved to new `engine/prediction_ingest.py` to stay under
+      `batch_handler.py`'s line cap), tagging each row with its own `venue` axis. KALSHI's real trade schema is
+      genuinely different from POLYMARKET's (`ticker`/`count`/`available_at` vs `condition_id`/`size`/`timestamp` —
+      confirmed live against `market_tick_data_service/.../kalshi_adapter.py`'s `_annotate_kalshi_ticker` +
+      `polymarket_adapter.py`'s trade-row construction), so a blind filter extension would have silently corrupted
+      `PolymarketMicrostructureCalculator`'s `condition_id` grouping with KALSHI's null-condition_id rows. Fixed
+      both halves: `_input_df_for_group` now filters each single-venue microstructure group to its own venue's rows
+      before compute, and a new `KalshiMicrostructureCalculator` (`kalshi_market_microstructure` feature_group,
+      registered in both calculator registries + `feature_builder_registry.py` + `config.py` +
+      `feature_definitions.yaml` + the PREDICTION asset_group allowlist) gives KALSHI trades an actual consumer
+      instead of leaving them orphaned. Scope note: KALSHI `book_snapshot_5` stays orphaned — that's the separate
+      P1 gap todo below ("no feature_group consumes POLYMARKET book_snapshot_5"), unaffected by this fix (trades
+      only). QG green (18456 passed), sentinel-verified on `origin/live-defi-rollout`.
 - [ ] [BACKEND] P1. **Gap: no feature_group consumes POLYMARKET book_snapshot_5.**
       `PolymarketMicrostructureCalculator` is trades-only (`polymarket_microstructure_calculator.py:36-37`), and
       the generically-applicable book-consuming groups (`book_depth_bands`/`liquidity_walls`/`order_flow_inference`/
@@ -101,6 +109,16 @@ source: >-
       `_filter_feature_groups_for_asset_group` (`batch_handler.py:797-812`) — real captured book data (batch+live,
       confirmed PASS above) is fully orphaned. Done-when: at least one feature_group reads POLYMARKET
       book_snapshot_5, or the gap is confirmed intentional with a cited reason.
+- [ ] [BACKEND] P2. **Triage stale abandoned WIP in `.tabs/8/features-service-clean-check`** (found by a review
+      agent 2026-08-17, 15.9 days stale, 9 files staged: deletes `kalshi_microstructure_calculator.py` +
+      `prediction_ingest.py`; edits `batch_handler.py`/`config.py`/`orchestrator.py`/`feature_builder_registry.py`/
+      `feature_definitions.yaml`/`test_batch_handler.py`). Looks like an earlier, abandoned attempt at the KALSHI
+      PREDICTION-ingest P1 gap todo above — but that todo is already SHIPPED (`unified-trading-pm@fd06d1dee`-era
+      fix ADDED `KalshiMicrostructureCalculator` + moved logic into a new `engine/prediction_ingest.py`), whereas
+      this stale WIP stages DELETES of those exact two files. Strong signal this is a superseded, now-dangerous
+      duplicate — committing it as-is would likely REVERT the shipped fix. Done-when: a fresh triage confirms
+      superseded-by-shipped-fix and discards the stale WIP (`git stash`/reset, not a blind restore), OR a closer
+      read finds the staged deletes target genuinely different dead code and the WIP is salvaged instead.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, (POLYMARKET, trades) also fails.** SHIPPED —
       `unified-trading-pm@8bfa440ac1`. The other 3 rows stay `BLOCKED-ON` their step-5 gap todos above,
       unchanged. For (POLYMARKET, trades) — the one row that cleared step 5 — real per-item verdict:
@@ -123,8 +141,16 @@ source: >-
       `cancel_order`/`list_open_orders`, `sports_execution/adapters/exchanges/polymarket_clob.py:453,493`, just
       unreachable through this facade) — this directly contradicts the parent plan's stated hard rule
       "compared by ACTION, not by venue name."
+      **Correction 2026-08-17 (see the dedicated gap todo below, now resolved)**: this verdict was wrong — the
+      grep was scoped only to literal `execution_service/v2/*`/`backtest_v2/*` paths and missed
+      `adapters/sports_factory.py` + `sports_execution/routing.py`, the actual venue-registration layer those
+      directories call into. POLYMARKET's LIVE path routes through `InstructionActionV2`'s `ATOMIC` variant
+      exactly like every other sports/prediction venue, reaching the real `PolymarketCLOBAdapter` (place AND
+      cancel, traced end-to-end). `PredictionBetHandler`/legacy `PolymarketAdapter` is real but backtest-only
+      (never serves live traffic, shared identically with KALSHI) — full evidence in the gap todo below.
       **Net: 0 of prediction's 4 rows reach a genuinely complete end-to-end state today** — even the row that
-      passed every prior step fails here on 3 independent legs.
+      passed every prior step fails here on 2 independent legs (position stub, archetype wiring); the 3rd
+      (execution adapter) was a false verdict, corrected above.
 - [ ] [BACKEND] P2. **Gap: `PolymarketPositionAdapter`'s live path is stubbed**
       (`strategy_service/position/position_interface/adapters/polymarket.py`, `get_positions()`/`get_balances()`
       both `raise NotImplementedError`) — batch/paper work via the generic `LedgerPositionAdapter`, but no live
@@ -137,15 +163,37 @@ source: >-
       features, zero strategy slot using them for the archetypes that need them. Done-when: POLYMARKET is added
       to at least one `MARKET_MAKING_*` archetype's slot declaration, or the omission is confirmed intentional
       with a cited reason.
-- [ ] [BACKEND] P1. **Gap: POLYMARKET execution doesn't route through `InstructionActionV2`, violating the
-      parent plan's own hard rule** ("compared by ACTION, not by venue name"). It's on a separate, older
-      `PredictionBetHandler`/`PolymarketAdapter` facade (`execution_service/engine/handlers/
-      prediction_handler.py:39`, `trade_execution/adapters/polymarket_adapter.py`) that has no `cancel`/`amend`
-      at that layer, even though the lower USEI `PolymarketCLOBAdapter` implements both
-      (`sports_execution/adapters/exchanges/polymarket_clob.py:453,493`) — just unreachable through this facade.
-      Done-when: POLYMARKET routes through `InstructionActionV2` like every other venue, or the dual-path
-      architecture is confirmed intentional (e.g. prediction markets are structurally different from the V2
-      instruction model) with a cited reason — never left as a silent divergence from the stated hard rule.
+- [x] ✅ [BACKEND] P1. **Re-investigated 2026-08-17 — NOT a gap: POLYMARKET's LIVE path already routes through
+      `InstructionActionV2` (the `ATOMIC` variant) exactly like every other sports/prediction venue.** The
+      steps-6-8 verdict was based on a grep scoped literally to `execution_service/v2/*` + `backtest_v2/*` paths
+      for the string "POLYMARKET", which missed the actual venue-registration layer those directories call INTO.
+      Full evidence, traced end-to-end: POLYMARKET is registered in `execution_service/adapters/
+      sports_factory.py:23-52`'s `_LIVE_VENUE_CONFIGS` (`data_source="polymarket_clob"`) identically to
+      `kalshi`/`betfair`/`matchbook`; `SportsExecutionRouter._build_polymarket`
+      (`sports_execution/routing.py:212-221`) constructs the real, network-calling `PolymarketCLOBAdapter`
+      (`sports_execution/adapters/exchanges/polymarket_clob.py`); the live `AtomicInstruction` leg-executor
+      (`execution_service/v2/atomic_leg_executor.py`) — one of the 11 `StrategyInstructionV2` variants keyed by
+      `InstructionActionV2.ATOMIC` (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/
+      enums.py:452-474`) — drives every leg through `SportsAdapter.place_bet`/`cancel_bet`
+      (`adapters/sports_adapter.py:48-115`), which venue-key-dispatches (`self._betting["polymarket"]`) straight
+      to `PolymarketCLOBAdapter.place_order`/`cancel_order` (`polymarket_clob.py:453,476`) — cancel confirmed
+      reachable too (`atomic_leg_executor.py:526` calls `self._adapter.cancel_bet(outcome.venue, bet_id)` for the
+      compensation/unwind leg). The `PredictionBetHandler`/legacy `PolymarketAdapter` facade this todo originally
+      flagged is real but confined ENTIRELY to the backtest engine: `HandlerRegistry`/`InstructionRouter`
+      (`engine/routing/`) is only ever instantiated from `engine/backtest/engine/{setup,core}.py` and
+      `engine/transfers/wiring.py` (transfers, unrelated) — zero construction site anywhere of an
+      `OperationType.PREDICTION_BET` `ExecutionInstruction` outside that backtest wiring, so this facade never
+      serves live traffic. It shares this backtest-only path identically with KALSHI
+      (`SUPPORTED_VENUES = {"POLYMARKET", "KALSHI"}`, `engine/handlers/prediction_handler.py:74-77`) — not a
+      POLYMARKET-specific divergence — and exists as a deliberate paper/backtest matching-engine price simulator
+      per operator ruling 2026-08-16 (`nick_ai_platform_readiness_remediation_2026_08_16.md` W4-Prediction,
+      `_REAL_DEPTH_VENUES={"POLYMARKET"}` depth-walked simulated fills), mirroring the sports-wide pattern where
+      every venue shares one `PaperBettingAdapter` in paper mode (`_PAPER_VENUE_KEYS`,
+      `sports_factory.py:21`) rather than hitting a real adapter. Cancel/amend correctly don't apply to an
+      instant simulated fill. **Verdict: dual-path architecture confirmed intentional per the done-when's own
+      escape hatch — live routes through `InstructionActionV2`/`ATOMIC` like every venue, paper/backtest routes
+      through a shared simulator like every venue. No silent divergence from the parent plan's hard rule. No code
+      change needed.**
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@c20f242a85`.
       `BusTransferType` SSOT: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/
       transfer_events.py:64-189` (13 members). Per-venue verdict (applies to both of that venue's rows —
@@ -178,12 +226,36 @@ source: >-
       instruments-service, market-tick-data-service, features-service, strategy-service, or execution-service, so
       none of the 4 hard rules (no direct MTDS reads from strategy-service, fail-closed granularity, credentials-
       gate-RUNNING, no new service-to-service dependency) could have been violated by this batch's own work. The
-      one hard-rule violation actually FOUND this session (POLYMARKET execution not routing through
-      `InstructionActionV2`) is a pre-existing condition, not something this batch introduced — tracked as its
-      own gap todo above, not conflated with this confirmation. No code changes means no `quality-gates.sh` run
-      was needed to satisfy this todo's real intent.
+      one apparent hard-rule violation flagged this session (POLYMARKET execution not routing through
+      `InstructionActionV2`) was itself a false verdict, corrected 2026-08-17 (see the execution-adapter gap todo
+      above) — POLYMARKET's live path does route through `InstructionActionV2`. No code changes means no
+      `quality-gates.sh` run was needed to satisfy this todo's real intent.
 
 ## Progress Log
+
+**2026-08-17 — Execution-adapter gap re-investigated and closed: NOT a gap.** No commit needed (pure
+investigation/documentation; zero code changed in execution-service or any sibling repo). The steps-6-8 sweep's
+"POLYMARKET execution doesn't route through `InstructionActionV2`" verdict was based on a grep scoped only to
+literal `execution_service/v2/*`/`backtest_v2/*` paths for the string "POLYMARKET" — it missed
+`execution_service/adapters/sports_factory.py` + `execution_service/sports_execution/routing.py`, the actual
+venue-registration layer those v2 directories call into. Traced the full live call chain end-to-end: POLYMARKET is
+registered in `sports_factory.py:23-52`'s `_LIVE_VENUE_CONFIGS` identically to `kalshi`/`betfair`/`matchbook`;
+`SportsExecutionRouter._build_polymarket` (`routing.py:212-221`) constructs the real `PolymarketCLOBAdapter`; the
+live `AtomicInstruction` leg-executor (`v2/atomic_leg_executor.py`) — keyed by `InstructionActionV2.ATOMIC`
+(`unified-api-contracts/.../architecture_v2/enums.py:452-474`) — drives every leg through
+`SportsAdapter.place_bet`/`cancel_bet` straight to `PolymarketCLOBAdapter.place_order`/`cancel_order`
+(`polymarket_clob.py:453,476`), cancel confirmed reachable via the compensation/unwind leg
+(`atomic_leg_executor.py:526`). The `PredictionBetHandler`/legacy `PolymarketAdapter` facade this todo flagged is
+real but confined entirely to the backtest engine (`HandlerRegistry`/`InstructionRouter` only ever instantiated
+from `engine/backtest/engine/{setup,core}.py`; zero live construction site of an `OperationType.PREDICTION_BET`
+instruction anywhere) — shared identically with KALSHI, not a POLYMARKET-specific divergence, and a deliberate
+paper/backtest matching-engine simulator per operator ruling 2026-08-16
+(`nick_ai_platform_readiness_remediation_2026_08_16.md` W4-Prediction). Resolved via the todo's own "confirmed
+intentional with a cited reason" escape hatch. Corrected the stale FAIL verdict in the steps-6-8 todo above in the
+same edit (per CLAUDE.md's "a doc that misled you is a finding — fix it in the same turn" rule) rather than leaving
+it to re-mislead the next reader. Remaining open in this batch: `PolymarketPositionAdapter` live-path stub (P2),
+no `MARKET_MAKING_*` archetype wiring (P1), KALSHI batch `book_snapshot_5` collector (P2), KALSHI has no transfer
+rail (P1).
 
 **2026-08-16 — Steps 6-8 swept, 3 more real gaps found — 0/4 rows reach a complete end-to-end state.** SHIPPED —
 `unified-trading-pm@8bfa440ac1`. Even (POLYMARKET, trades) — the sole row that cleared step 5 — fails steps

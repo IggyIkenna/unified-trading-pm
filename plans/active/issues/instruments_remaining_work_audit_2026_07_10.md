@@ -417,7 +417,7 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
 ### P1
 
 7. **DeFi expected_unattempted backlog ≥1M cells**
-   `plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` Operator-gated manifest-seeding write never
+   `plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` Operator-gated manifest-seeding write never
    applied; `BLOCKED-OPERATOR-DECISION` on apply-scope; 1 VERIFY P2 todo to check other asset groups.
 
 8. **Honest-coverage shard dimension model is wrong for definitional data** (Decision Gate D6)

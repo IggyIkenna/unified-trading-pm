@@ -46,7 +46,7 @@ check_ao_dispatch_visibility_gate: FAILED
 whose disk-vs-backlog dispatch visibility dropped without a declared
 `BLOCKED-*`/`DEFERRED-BY-DESIGN`/stretch marker at the start of their line:
 
-1. `plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` — "[SCRIPT] P0. Measure p95
+1. `plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` — "[SCRIPT] P0. Measure p95
    and max shard duration per launcher family from `vm-logs/` run.log PROGRESS…"
 2. `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md` — "[DOC] P2.
    Re-check the Deferred/excluded population for cleared gates. batch6 excluded 11 docs across
@@ -129,9 +129,15 @@ remedy text.
       `BLOCKED-OPERATOR-DECISION` marker text while preserving the same historical context. Verified
       `check_ao_dispatch_visibility_gate.py --json` now shows `accidental_exclusions: 3` (down from
       the pre-fix 6, confirming this doc no longer appears in the excluded set).
-- [ ] [REVIEW] P1. Classify
+- [x] ✅ [REVIEW] P1. Classify
       `issues/cefi_ccxt_withdraw_stub_returns_false_confirmed_2026_08_16.md`'s flagged todo (repo:
-      unified-trading-pm).
+      unified-trading-pm) — 2026-08-17 (slot-13, review-craft): legitimate exception, not an
+      accidental exclusion — the todo itself genuinely requires operator-provisioned sandbox API
+      credentials before it can dispatch (`BLOCKED-CREDENTIALS`), but the marker sat mid-sentence
+      ("... `AsyncMock`. `BLOCKED-CREDENTIALS` until the operator provisions sandbox keys.") rather
+      than opening the checkbox line's head, so `_is_declared()` correctly classified it accidental
+      per its "must open the checkbox line" rule. Fixed by moving `BLOCKED-CREDENTIALS:` to the head
+      of the description (right after `[BACKEND] P1.`) — no semantic change to the todo's content.
 - [ ] [REVIEW] P1. Classify
       `issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`'s
       flagged todo (repo: unified-trading-pm).
@@ -176,3 +182,10 @@ remedy text.
   patterns) while still reading as undeclared to `_is_declared()`. Fixed by moving a `BLOCKED-OPERATOR-DECISION`
   marker (confirmed present in `_BLOCKED_TOKEN_RE`'s alternation, so this won't also trip the "ineffective
   declaration" axis) to the head of the description.
+- **2026-08-17 (slot-13, review-craft)**: classified item 5
+  (`issues/cefi_ccxt_withdraw_stub_returns_false_confirmed_2026_08_16.md`). Verdict: legitimate exception
+  (declared, not accidental) — same bug class as item 3: the todo genuinely needs operator-provisioned sandbox
+  API credentials before `build_transfer_wiring` can be exercised end-to-end, and its own text already said
+  `BLOCKED-CREDENTIALS`, but the marker sat mid-sentence rather than opening the checkbox line's head, so
+  `_is_declared()` correctly classified it accidental. Fixed by moving `BLOCKED-CREDENTIALS:` to the head of the
+  description (right after `[BACKEND] P1.`) — no semantic change to the todo's content or done-when.

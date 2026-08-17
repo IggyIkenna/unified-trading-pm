@@ -136,7 +136,29 @@ context_scope:
           backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP,
           throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
 
-- [ ] [DATA] P1. **UNBLOCKED 2026-08-15** — the MVP backfill readiness gate above is now `[x]` done (2026-08-15,
+- [x] ✅ [DATA] P1. **DONE 2026-08-17 (slot-17, data_engineering) — post-full-backfill reconciliation RUN checkpoint
+      executed against PROD, both raw-tick and candles layers, Tier-1 in-session.** Reports:
+      `/plans/audit/results/data_pipeline_reconciliation_tradfi_2026_08_17.md` (+ `.json`, raw-tick) and
+      `/plans/audit/results/data_pipeline_reconciliation_tradfi_candles_2026_08_17.md` (+ `.json`, candles). Summary:
+      corpus grew 5.9M→14.5M manifest rows since the 07-24 baseline (consistent with the 2026-08-15 MVP backfill
+      closing); 2 of the 07-24 report's 3 escalated findings are now resolved (ICE/KRX Yahoo-venue provenance
+      mis-stamp fully fixed; FX manifest instrument_id 0%→72.4% well-formed) — the FX ohlcv_24h provenance-mislabel
+      piece remains open, unchanged in proportion. The candle layer's 07-25 headline finding (near-total
+      manifest-population disconnect, 73 stale rows) is fully RESOLVED — 6.72M current manifest rows through
+      2026-08-16. A large apparent id-form regression (99.3%→85.1%) was investigated and found to be a methodology
+      artifact (the already-ratified CME/CBOE null-instrument_id chain-bundle pattern at greater post-backfill
+      volume, not a real defect) — corrected id-form is 99.95% clean, no regression; documented as new hazard H8 in
+      `reference-tradfi.md` (fixed inline, same commit) alongside a previously-undocumented `venue=FRED` addition.
+      Remaining findings (FX provenance residual, `_quarantine/` continued growth ≥400K→≥500K capped, a new
+      unregistered `_migration_backup_2026_07_25/` location, a small multi-token-equity-symbol id gap, phantom-audit
+      staleness) tracked as new todo checkboxes in
+      `/plans/active/issues/tradfi_reconciliation_2026_08_17_findings_2026_08_17.md` — none rise to the
+      operator-escalation bar (data-correctness/cross-repo/SSOT-contradiction). No operator escalation needed.
+      Inherits P0's same flagged-citation caveat above (not independently re-checked this pass).
+
+      <details><summary>Prior text (superseded, kept for history)</summary>
+
+      **UNBLOCKED 2026-08-15** — the MVP backfill readiness gate above is now `[x]` done (2026-08-15,
       manifest-verified), so this todo's dependency precondition is met. NOT executed as part of that gate's own
       verification pass (out of scope — that pass was measurement-only, this todo requires actually RUNNING
       `/data-pipeline-reconciliation --asset-group tradfi` against PROD, a separate action). Still open, now genuinely
@@ -156,6 +178,7 @@ context_scope:
       reconciliation run cited). Definition of done: a dated reconciliation report path cited, covering both the
       raw-tick and candles layers, with any finding either resolved or explicitly carried forward as a new tracked todo.
       Inherits P0's same flagged-citation caveat above (not independently re-checked).
+      </details>
 
 ## Codex SSOTs (read before touching this workstream)
 
@@ -165,6 +188,20 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-17 (slot-17, data_engineering, P1 post-full-backfill reconciliation checkpoint, DONE)**: ran
+  `/data-pipeline-reconciliation --asset-group tradfi` against PROD, both raw-tick and `--layer candles`, Tier-1
+  in-session (no VM launched). Reports: `/plans/audit/results/data_pipeline_reconciliation_tradfi_2026_08_17.md` (+
+  `.json`) and `/plans/audit/results/data_pipeline_reconciliation_tradfi_candles_2026_08_17.md` (+ `.json`). Full
+  detail in the reports' own Verdict sections; short version: 2/3 of the 07-24 escalated findings resolved (ICE/KRX
+  provenance fully fixed, FX manifest instrument_id 0%→72.4%), the candle layer's 07-25 headline manifest-population
+  disconnect fully resolved (73→6.72M current rows), and a naive id-form check's apparent regression
+  (99.3%→85.1%) was root-caused to a methodology gap (the already-ratified CME/CBOE null-instrument_id chain-bundle
+  pattern, not a real defect — corrected figure 99.95%, documented as new hazard H8 in `reference-tradfi.md`, fixed
+  inline same commit, alongside a previously-undocumented `venue=FRED` addition). New issue doc for the residual,
+  non-inline-fixable findings (FX ohlcv_24h provenance mislabel still open, `_quarantine/` continued growth,
+  a new unregistered `_migration_backup_2026_07_25/` location, a small multi-token-equity-symbol id gap, phantom-audit
+  staleness): `/plans/active/issues/tradfi_reconciliation_2026_08_17_findings_2026_08_17.md`. No operator escalation
+  — nothing found rises to the data-correctness/cross-repo/SSOT-contradiction bar.
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, whole-doc → planning.** Both
   remaining todos (P1 post-full-backfill `/data-pipeline-reconciliation --asset-group tradfi` run; P3 add the 3
   already-passing `TestIsBundledChainShardCboeCorrection` tests now that `mtds_deployment_env_race_survives_single_worker_2026_07_23.md`

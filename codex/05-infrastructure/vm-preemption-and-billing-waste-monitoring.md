@@ -59,6 +59,25 @@ before this doc (2026-07-24 gap analysis, `data_pipeline_e2e_milestones_gate_202
    automated gate that consults `classify_venue_error()`'s `action` field to stop re-attempting a
    structurally-FAIL-classified shard. Each re-attempt costs real compute/API billing for a call that will never
    succeed.
+3. **An under-scoped relaunch actuator fanning out ONE terminated shard's relaunch into the whole fleet.** A relaunch
+   actuator that invokes a launcher script without threading through the terminated VM's own scope (asset_group/year)
+   can fall through to the launcher's own unscoped "no args given" default — turning one relaunch into a full-fleet
+   launch, each subsequent preemption compounding the same way. **Confirmed live 2026-08-15**: the `mdps-*` backfill
+   fleet exploded to 676 simultaneously-running VMs against an expected ~28 (`mdps-{cefi,tradfi,defi,sports,
+prediction}-{2019..2026}`, ~20-30x fan-out) — `launch-mdps-sharded-backfill.sh` resolves its scope from POSITIONAL
+   CLI args, not env vars, and `scripts/recovery/relaunch_backfill_vm.py`'s `_default_run_launcher` invoked it with
+   ZERO args (relying on an env-var replay the launcher never populated via `lc_write_launch_params`), so every
+   relaunch of one terminated `(asset_group, year)` cell launched all 5 asset_groups × all configured years. Compounded
+   by a second, structural gap: no dispatch-cell dedup existed anywhere in the relaunch/escalation path (unlike
+   `wave_launcher.py`'s own `running_cell_keys()`), so even a correctly-scoped relaunch could still double-dispatch
+   against a cell a currently-running VM already covers. **The lesson generalizes**: a relaunch actuator must be scoped
+   to, and deduped against, the exact logical unit of work it is replacing — never assume env-var replay covers a
+   launcher that resolves its own scope from positional CLI args instead. Fixed `deployment-service@4d96b24adb`
+   (CLI-arg scoping via `relaunch_cli_args()` + honoring `_stamp_relaunch`'s claim-dedup return value + cell-coverage
+   suppression in `exit_code_fleet_monitor.sweep()`) and `deployment-service@6f2f8e02bf` (migrated the
+   `RelaunchStalledVm` budget to the same durable `ShardedState` primitive the other two relaunch actuators already
+   used, closing the same architectural class proactively). Full incident:
+   `/plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`.
 
 ## The contract
 

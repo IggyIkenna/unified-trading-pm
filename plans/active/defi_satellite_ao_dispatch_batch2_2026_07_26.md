@@ -677,7 +677,7 @@ context_scope:
   13 covering-plan-set docs for every file/mechanism name in the 4 uncovered §6 items (`jupiter.py`,
   `governance_params_event_poller`, `onchain_event_poller`, `alchemy_adapter`, `thegraph_ws_adapter`, `helius_solana`,
   `native_staking_handler`). Only one hit:...
-- **`plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`**: Confirmed the Phase-1 finding: lines
+- **`plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`**: Confirmed the Phase-1 finding: lines
   325-332 carry an unchecked
   `- [ ] [DATA] P2. Reconcile _INSTRUMENT_TYPE_ALIASES ... against the legacy venue_mapping.DataTypeConfig table` item,
   and grepping the exact mechanism name `_INSTRUMENT_TYPE_ALIASES` across the full covering-plan set (consolidated

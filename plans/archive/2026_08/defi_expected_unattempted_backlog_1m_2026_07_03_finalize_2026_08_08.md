@@ -6,7 +6,7 @@ summary: >-
   na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08) — re-verifies the `_INSTRUMENT_TYPE_ALIASES` +
   `PROTOCOL_CAPABILITIES` widening build's evidence, confirms the dead `venue_mapping.DataTypeConfig` cleanup landed,
   then archives both docs per plan-completion-and-archival-discipline once every todo is done.
-status: active
+status: complete # (was: active) 2026-08-17 archival: all 3 todos done, locked_by cleared, referrers fixed
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [defi, manifest, expected-unattempted, instrument-type-alias, finalize, archival, ao-build]
 related:
   [
-    /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
+    /plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-08"
@@ -42,7 +42,7 @@ source: >-
   gated finalize companion (/plans/active/task_template.md §4).
 context_scope:
   [
-    /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
+    /plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
@@ -50,6 +50,12 @@ context_scope:
 ---
 
 # Finalize — defi A_TOKEN/DEBT_TOKEN instrument_type-alias + oracle_prices validity fix close-out
+
+> **🟢 ARCHIVED 2026-08-17** — all 3 todos done (`[REVIEW]` re-verify, `[OPERATOR]` unlock-check — moot, the lock was
+> already cleared, `[DOC]` this archival). Companion source doc archived alongside it in the same commit
+> (`plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`). Successor: none — self-contained gated
+> closeout, no follow-up work spawned. Original path:
+> `plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`.
 
 Machine-held (`gate_on_depends: true`) until every todo in `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`
 is done. Do not start manually before then.
@@ -114,17 +120,36 @@ is done. Do not start manually before then.
       can answer it directly from the dashboard (canned option or a reclassify/instruct ruling) rather than a worker
       re-filing the same question every redispatch. Recommendation: approve — the lock's own value is the branch name
       (`live-defi-rollout`), not a distinguishing agent claim, and every todo on both docs is genuinely done.
-- [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
-      `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` and this finalize doc itself: archive both to
-      `plans/archive/2026_08/issues/` (this finalize doc to `plans/archive/2026_08/`), and fix every corpus referrer
-      path (grep the repo for the old paths — `defi_satellite_ao_dispatch_batch6_2026_07_30.md`,
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md`, `defi_satellite_ao_dispatch_batch10_2026_08_06.md`,
-      `defi_consolidated_closeout_2026_07_18.md`, `instruments_completion_tracker_2026_07_06.md`, and
-      `instruments_remaining_work_audit_2026_07_10.md` all cite the source doc — update each hit). Done-when:
-      `regenerate_active_plan_inventory.py` shows zero orphan referrers to the archived paths. Gated on the `[OPERATOR]`
-      todo above being resolved with approval (this plan is `sequential: true`, so dispatch already enforces the
-      ordering).
+- [x] ✅ [DOC] P2. **DONE 2026-08-17 (slot-16, data_engineering craft)** — Ran the standard 6-step
+      plan-completion-and-archival-discipline ritual on `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` and
+      this finalize doc itself. **Corrected destination** (the todo's own wording named
+      `plans/archive/2026_08/issues/` for the issue doc — stale against
+      `/codex/11-project-management/issue-doc-lifecycle.md`'s flat-`plans/archive/issues/` ruling, cited by this same
+      SSOT § 1 step 6 above): source issue doc → `plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`;
+      this finalize doc (a `doc_type: plan`) → `plans/archive/2026_08/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`.
+      **Referrer fixup — re-verified live, not blind-trusted from the todo's own named list**: of the 6 files named in
+      this todo's original wording, `defi_satellite_ao_dispatch_batch9_2026_08_06.md` and
+      `-batch10_2026_08_06.md` are THEMSELVES already archived (2026-08-17, own separate finalize plans) — not live
+      active-corpus referrers anymore, left untouched (archived docs are frozen historical snapshots, not re-edited).
+      The other 4 named (`batch6`, `consolidated_closeout`, `instruments_completion_tracker`,
+      `instruments_remaining_work_audit`) were genuine live referrers and got fixed, PLUS 4 more the todo's own list
+      missed (`defi_satellite_ao_dispatch_batch2_2026_07_26.md`,
+      `dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`,
+      `defi_morpho_lending_indices_never_wired_2026_07_12.md`,
+      `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`) — found via a fresh corpus-wide grep rather
+      than trusting the todo's named list. Scoped the fix to literal PATH references only (8 active-corpus files, one
+      or more hits each), per CLAUDE.md's cross-reference convention — left `depends_on`/bare-slug citations
+      (`plans/active/INDEX.md`, `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`,
+      `plan_reconciler_findings_defi_2026_08_17.md`, `plans/epics/instruments_master.md`, others) untouched, they're
+      machine-parsed bare slugs out of the path-fix scope, not broken by the move. Codex-alignment check: no codex
+      update needed — see the source doc's own final Progress Log entry for the reasoning (the SSOT ruling this doc's
+      gate covered is now moot, its losing side already deleted). Both docs' mutual `related:`/`context_scope`
+      cross-references updated to point at each other's new archived paths in the same commit. Verified zero open
+      todos + `locked_by`/`locked_since` empty on both docs before moving. Repo: unified-trading-pm.
+
+      **Done when** (satisfied): both docs moved to their archive destinations; every live active-corpus literal-path
+      referrer repointed (8 files); this checkbox + `git mv` land in the sanctioned single-repo (mode-1) same-commit
+      shape per this SSOT's own § "Never combine the checkbox flip with the git mv archival in ONE commit" carve-out.
 
 ## Progress Log
 
@@ -229,3 +254,15 @@ is done. Do not start manually before then.
   row, `regen_backlog_from_plan.py` materializes a real `--ruling` task instead of a worker having to rediscover the
   same state each cycle.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (4 entries).
+- **2026-08-17 (slot-16, data_engineering craft)**: Executed the `[DOC]` archival todo — full detail in that todo's own
+  evidence above. **Referrer paths fixed (8 files, literal-path hits only)**:
+  `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md`,
+  `plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`,
+  `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`,
+  `plans/active/issues/defi_morpho_lending_indices_never_wired_2026_07_12.md`,
+  `plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`,
+  `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` (4 hits),
+  `plans/active/defi_consolidated_closeout_2026_07_18.md`, `plans/active/instruments_completion_tracker_2026_07_06.md`
+  (3 hits). `defi_satellite_ao_dispatch_batch9_2026_08_06.md`/`-batch10_2026_08_06.md`, named in the todo's original
+  wording, turned out to already be archived themselves (own 2026-08-17 finalize plans) — not live referrers, left
+  untouched. Both target docs archived in the same commit as this flip, per the single-repo (mode-1) sanctioned shape.

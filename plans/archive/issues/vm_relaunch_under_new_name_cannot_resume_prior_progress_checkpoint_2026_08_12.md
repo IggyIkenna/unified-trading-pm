@@ -10,7 +10,7 @@ summary: >-
   mechanism to read the DEAD VM's checkpoint file. Net effect: the relaunch silently re-walks from the original
   START_DATE instead of resuming from the last completed date, wasting real API calls/wall-clock (idempotent re-fetch,
   not data-corrupting, but a real cost this workspace's own resume-checkpoint contract is supposed to prevent).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -82,14 +82,24 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
 
 ## Todos
 
-- [ ] [INFRA] P2. Give `launch-cefi-sharded-backfill.sh` (and any sibling launcher using the same per-VM-named
-      `PROGRESS.json` pattern) a way for a manual/auto relaunch to discover and resume from the PRIOR VM's checkpoint
-      for the same logical job (same venue/scope/date-range) — e.g. a stable job-id-keyed checkpoint path independent of
-      the VM's own instance name, or an explicit `--resume-from-vm=<prior-vm-name>` flag that reads that VM's
-      `PROGRESS.json` before starting. Mirrors the intent already proven for SPOT-preemption auto-relaunch
-      (`spot-vms-for-backfill.md`'s resume-checkpoint contract) — this closes the gap for a MANUAL relaunch under a
-      genuinely new name, which the auto-relaunch path may not hit the same way. **Still open** — 2026-08-16's
-      relaunch (see next entry) worked around this manually (explicit `START_DATE`), not by fixing the gap itself.
+- [x] ✅ [INFRA] P2. **SHIPPED 2026-08-17** — `deployment-service@71bfa99e60`. Added
+      `RESUME_FROM_VM=<dead-vm-instance-name>` to `launch-cefi-sharded-backfill.sh`: when set (and no explicit
+      `START_DATE`), the launcher now calls a new `scripts/recovery/print_resume_start_date.py` (reuses the SAME
+      `read_progress_checkpoint` reader the automated `RelaunchPreemptedVm` sweep already trusts — no reimplemented
+      monotonic-safety logic) to read the dead VM's `PROGRESS.json` and derive `START_DATE` automatically. Fails
+      LOUD (non-zero exit, clear stderr) rather than silently replaying from genesis when the checkpoint is
+      missing/non-monotonic. An explicit `START_DATE` always wins (least surprise). Purely additive/opt-in — unset,
+      the rest of the launcher is byte-identical to before. **Verified against real production data, not just unit
+      logic**: correctly resolved `2026-06-07` for the currently-live `cefi-binance-futures-2026-heavy-20260817-010713`
+      and `2026-04-14` for the dead `cefi-okx-swap-2026-heavy-20260812-225944` this doc's own "What was found" section
+      cites (exact match to the manually-recorded value) — real end-to-end proof, not a mock. Caught + fixed one real
+      bug during this verification: the FIRST implementation resolved the bucket via
+      `deployment_service.vm_prefix_registry.VM_PREFIX_TO_BUCKET` (the per-venue DATA bucket registry) — wrong
+      registry, silently 404s reading `PROGRESS.json`, which actually lives in the separate
+      `deployment-scripts-<project>` LOG bucket; fixed to match the `_log_bucket()` convention already duplicated
+      across `cli.py`/`check_vm_cli.py`/`heartbeat_sidecar_reliability_cli.py`/`deadman_poster.py`. 4 scenarios
+      tested end-to-end (known-good VM resolves + exports `START_DATE`; unknown VM fails loud with exit 1; unset
+      `RESUME_FROM_VM` is a true no-op; an explicit `START_DATE` overrides `RESUME_FROM_VM`).
 - [x] ✅ [INFRA] P3. **ANSWERED 2026-08-14 — confirmed SPOT preemption, not OOM; rightsizing checked, no action
       needed.** See correction above for the full evidence (4 VM deaths, ~2,838 combined RESOURCE_SAMPLE lines, 0
       OOM_KILLED lines). Separately ran `/vm-resource-rightsizing-check` on the current `e2-highmem-16` default: CPU is

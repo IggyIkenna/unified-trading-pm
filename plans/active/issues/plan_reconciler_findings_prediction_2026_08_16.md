@@ -285,13 +285,18 @@ substitution, no HARD-STOP governance area, no new measurement.
       round7 2026-08-08, round11 2026-08-09) recommended "a dedicated cross-cutting close+archive pass" over a week
       ago; still doesn't exist. Out of prediction-tranche scope — routed to the cross-cutting tranche's own
       reconciliation pass (noted inline in the doc, `unified-trading-pm@5c22fa45d8`).
-- [ ] [OPERATOR] P2. `data_pipeline_check_mdps_features_2026_07_20.md` / `..._finalize.md` — both cite "the
+- [x] ✅ [DOC] P2. `data_pipeline_check_mdps_features_2026_07_20.md` / `..._finalize.md` — both cite "the
       2026-07-30 ruling that finalize plans ship `status: active` from the start... no-double-gate precedent" as
       established convention (2 independent active plans agree with each other and with actual fleet-wide practice),
       but a corpus-wide codex grep found **zero hits** for this ruling anywhere in `codex/`. Genuine codex GAP (not
       staleness — nothing to correct, something to add), so outside the STEP 5.f2 mechanical carve-out (that
       carve-out is substitution-only, never new content) — routed for an operator-ruled codex addition, not applied
-      here.
+      here. **RESOLVED 2026-08-17 (operator-approved codex addition)**: new section "No-double-gate: a finalize plan
+      ships `status: active` from the start (RULED 2026-07-30)" added to
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, sourced from the `233ebd6148` origin
+      commit + the ~15 already-citing satellite/finalize plans across the corpus (the 2 docs named here reworded the
+      same ruling without the literal "no-double-gate" term, which is why the original literal-term grep missed them)
+      — `unified-trading-pm@2f6c1332fa`.
 - [ ] [REVIEW] P2. `instruments_remaining_work_audit_2026_07_10.md:374-377` — self-flags an unresolved cross-doc
       contradiction: D6 (approved 2026-07-07 per a sibling doc) still shows "⏳ OPEN" in
       `instruments_completion_tracker_2026_07_06.md`'s Decision Gates table. That target doc is NOT a

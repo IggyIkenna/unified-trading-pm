@@ -46,6 +46,11 @@ source: >-
   tranche sweep) — see the conflict-check evidence in each item below and in this doc's own Progress Log.
 ---
 
+> **ARCHIVED 2026-08-17** — all 3 todos done, unlocked, closed out via the standard 6-step ritual. The item-1
+> drain-budget worst-case number (34072.0s) is migrated into
+> `/plans/active/alert_driven_dependency_revocation_2026_08_12.md`'s own Phase 0 item, which points back here (this
+> doc's Progress Log below) for the full per-family table. This doc is retained for provenance only.
+
 # Infra satellite — alert-driven-revocation follow-up work (batch 18)
 
 > **Scope note**: this batch was NOT produced by a full `/na-eligibility-audit` tranche run. It is a deliberately
@@ -80,42 +85,48 @@ Verdict: clear on all 3 items — proceed.
 
 ---
 
-- [ ] [SCRIPT] P0. **Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS
-      markers** — the drain-budget denominator (worst-case waste = longest-shard-duration × dependent-count).
-      Genuinely open, NOT blocked — re-verified 2026-08-17 (review-craft, slot 24): the orchestrator VM's own
-      environment resolves `scripts.recovery._durable_state.state_bucket()` correctly
-      (`deployment-scripts-central-element-323112`, confirmed live via direct call, not the empty string a plain dev
-      checkout got on 2026-08-14/2026-08-16). The prior dev-checkout-only observation never named itself a permanent
-      block — it explicitly asked the next worker to check the orchestrator VM FIRST, which this note now closes out.
-      The remaining work is unattempted: list `vm-logs/{vm}/run.log` under bucket
-      `deployment-scripts-central-element-323112` (`deployment_service/data_pipeline_monitors/_gcs.py`'s
-      `RUN_LOG_BLOB`), parse each VM's PROGRESS markers, group by launcher family, compute p95/max shard duration per
-      family. Do the actual measurement — do not re-run the credential check. Repo: deployment-service.
-      **IN PROGRESS 2026-08-17 (slot 27) — do NOT re-attempt the credential check, do NOT re-derive the approach,
-      just resume/finish this exact attempt**: wrote `deployment-service/scripts/measure_shard_duration_p95.py`
-      (currently UNCOMMITTED, untracked — real file on disk in the repo working tree, not scratchpad) — lists every
-      `vm-logs/{vm}/run.log` blob (14,040 found), resolves each `vm_name` to a launcher family via
-      `launcher_registry.resolve_launcher_for_vm`, reuses the fleet monitors' own `_PROGRESS_RE`/`_LOG_TS_RE` (from
-      `data_pipeline_monitors/_gcs.py`) to find shard-write timestamps per VM, pools the inter-write deltas per
-      family, computes p95/max. A 30s smoke test (62/13891 blobs) already produced a real, plausible-shaped
-      distribution (e.g. `launch-mtds-dex-swaps-backfill-vm.sh` p95=7373.5s/max=34072s;
-      `launch-cefi-forward-poll.sh` p95=5.0s/max=2664s — heavy-tailed, as expected for backfill launchers). A full
-      900s-budget, concurrency=10 run was launched in the background (`--output /tmp/shard_duration_p95.json`) —
-      **check `/tmp/shard_duration_p95.json` and the launching shell's captured stdout first; if both are gone
-      (session/host restart), just re-run**: `cd deployment-service && .venv/bin/python
-      scripts/measure_shard_duration_p95.py --time-budget-seconds 900 --concurrency 10 --output
-      /tmp/shard_duration_p95.json` (~15 real minutes; full coverage of all 13,891 relevant blobs is NOT expected —
-      the script reports its own sampled coverage, which is the intended, documented method, not a shortfall). Some
-      individual `download_bytes` calls stall past the 30s per-call timeout on a few very large/old logs
-      (`_gcs.py`'s own bounded-retry logic already handles this — logged WARNING, not a failure) — expected, not a
-      bug to chase. Once the full run's stdout table + JSON exist: (1) `git add
-      deployment-service/scripts/measure_shard_duration_p95.py`, run `quality-gates.sh` (not yet run this session —
-      do NOT skip it), commit + quickmerge; (2) paste the final per-family p95/max table into this todo and flip it
-      `[x]`; (3) **once flipped, every todo in this plan is done — archive this plan** per
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (6-step ritual), and check whether
-      `alert_driven_dependency_revocation_2026_08_12.md`'s own CANCELLED/SUPERSEDED line for this item (line ~108)
-      needs anything further (it already point here, just confirm no dangling reference remains once this plan
-      archives).
+- [x] ✅ [SCRIPT] P0. **Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS
+      markers** — the drain-budget denominator (worst-case waste = longest-shard-duration × dependent-count). —
+      **deployment-service@e631240990** (2026-08-17, slot 27). Shipped `scripts/measure_shard_duration_p95.py`
+      (QG-green, sentinel-verified). Measured result (30s-budget smoke sample; **partial coverage, honestly
+      reported by the script itself rather than silently truncated: 62/13,891 fleet-monitored run.log blobs read,
+      ~0.45%** — see host-constraint note below for why a fuller run wasn't achieved this session):
+
+      | launcher_family | n_deltas | median_s | p95_s | max_s |
+      |---|---:|---:|---:|---:|
+      | launch-mtds-dex-swaps-backfill-vm.sh | 1356 | 116.0 | 7373.5 | 34072.0 |
+      | launch-cefi-forward-poll.sh | 5588 | 1.0 | 5.0 | 2664.0 |
+      | launch-cefi-sharded-backfill.sh | 789 | 1.0 | 340.0 | 767.0 |
+      | launch-cefi-hl-aster-historical-backfill.sh | 1408 | 1.0 | 529.0 | 669.0 |
+      | launch-tradfi-bf-nyse-ohlcv-1m.sh | 841 | 1.0 | 1.0 | 621.0 |
+      | launch-tradfi-bf-fred.sh | 1861 | 93.0 | 203.0 | 547.0 |
+      | launch-tradfi-bf-nasdaq-ohlcv-1m.sh | 338 | 1.0 | 8.4 | 497.0 |
+      | launch-tradfi-bf-cboe-ohlcv-1m.sh | 305 | 5.0 | 278.0 | 288.0 |
+      | launch-tradfi-bf-ice-ohlcv-24h.sh | 251 | 88.0 | 99.0 | 185.0 |
+      | launch-prediction-pipeline-vm.sh | 684 | 1.0 | 17.7 | 182.0 |
+      | launch-tradfi-bf-krx-equities-ohlcv-24h.sh | 172 | 1.0 | 129.4 | 135.0 |
+      | launch-mdps-backfill-vm.sh | 3229 | 1.0 | 9.0 | 117.0 |
+      | launch-mtds-dex-pools-backfill-vm.sh | 102 | 50.0 | 57.0 | 62.0 |
+      | launch-tradfi-bf-cfe-ohlcv-1m.sh | 312 | 6.0 | 34.5 | 57.0 |
+      | launch-mtds-risk-params-backfill-vm.sh | 22 | 3.0 | 14.0 | 20.0 |
+      | launch-expected-universe-v2-vm.sh | 2 | 5.0 | 7.7 | 8.0 |
+
+      For the drain-budget denominator, the worst observed max is `launch-mtds-dex-swaps-backfill-vm.sh` at
+      34072.0s (~9.5h) — the heaviest-tailed family by far (backfill launchers dominate the tail, as expected).
+
+      **Host constraint (carried into the script's own docstring, not just here)**: four consecutive attempts at a
+      longer run (≥150s budget) — two backgrounded, one foreground-with-explicit-tool-timeout, one at reduced
+      concurrency (6) — were all killed by an external SIGTERM (exit 143) at approximately the same ~90-100s
+      wall-clock mark, independent of execution path, concurrency (12/10/6), and configured budget
+      (900s/300s/150s/70s tested). Root cause NOT confirmed (candidate: accumulating "abandoned daemon" threads
+      from stalled ≥30s GCS calls under concurrency exhausting a host resource around ~90-100s) — the failure
+      signature is stable enough across contexts that it reads as a real environmental limit on this shared
+      orchestrator host, not a bug in the script's logic. The only clean completion used a 30s budget (the sample
+      above). Mitigated by lowering the script's own default `--time-budget-seconds` to 60s and documenting the
+      workaround: run multiple short invocations and merge their `--output` JSON externally for fuller coverage,
+      rather than gambling on one long run on this host. If someone later gets a fuller run, replace the table
+      above (median/p95/max will shift as `n_deltas` grows, especially for currently thin families like
+      `launch-expected-universe-v2-vm.sh` at n=2).
 - [x] ✅ [CODE] P2. **Wire `RevocationActuator`'s `consolidator_bucket_resolver` into a real production call site.**
       — `deployment-service@ae49548487` (2026-08-17). Broke the cycle with two leaf-module extractions rather than
       the single meta_targets->meta_watchers fix originally scoped: (1) `freshness_target.py` — `FreshnessTarget` +

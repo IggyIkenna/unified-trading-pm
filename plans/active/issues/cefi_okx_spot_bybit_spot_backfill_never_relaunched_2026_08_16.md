@@ -22,7 +22,7 @@ tags: [cefi, tardis, spot-preemption, backfill-gap, okx-spot, bybit-spot]
 related:
   [
     /plans/active/cefi_tardis_date_concurrency_2026_08_16.md,
-    /plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     /plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md,
   ]
 parent_epic: cefi_master
@@ -41,7 +41,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/cefi_tardis_date_concurrency_2026_08_16.md,
-    /plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---

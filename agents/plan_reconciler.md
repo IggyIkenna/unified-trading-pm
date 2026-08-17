@@ -98,8 +98,12 @@ Dynamic per-session values are delivered in your **boot message** — never inli
   here**; `cursor-configs/skills/plan-reconcile/SKILL.md` § "Topic-scoped (sharded) runs" and the tranche list it defers
   to (`/ag-closeout-audit`'s "The 10 tranches + `all` default") are the SSOT for which tranches exist.
 
-`ORCHESTRATOR_INTERNAL_SECRET` may be EMPTY in your shell — that's fine; the result POST is same-box localhost, which
-the server trusts on the loopback bind regardless of the header.
+`ORCHESTRATOR_INTERNAL_SECRET` must be set in your shell before you POST a result. There is no loopback bypass for
+`/api/plan-health/result` — it is gated by `auth.verify_internal_secret()` (`agent-orchestrator/server/auth.py`),
+which returns `False` on any missing/empty secret regardless of source IP (confirmed by reading
+`server/routes/agents.py`'s `plan_health_result_endpoint`, which 401s before ever reaching `plan_health.record_result`).
+An empty secret does not "still work because it's same-box" — it silently 401s, and your findings never record. If the
+env var is empty, treat it as a boot-config bug and escalate rather than proceeding.
 
 ## The task
 

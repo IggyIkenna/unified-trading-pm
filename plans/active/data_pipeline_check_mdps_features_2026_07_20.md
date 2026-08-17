@@ -288,6 +288,10 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mdps-20260817-005300-c59390/EXIT_STATUS`
       directly — `RUNNING` = in flight, anything else = terminal, read the sibling `run.log` for the verdict and
       proceed to (c) consolidation. Do not relaunch a second DEFI driver while this one is unterminated.
+      **RE-CHECKED 2026-08-17T05:32Z (slot-21)**: (a) CEFI `...71d52d` RUNNING, alive. (b) DEFI `...c59390`
+      **confirmed DEAD** (instance not found, nothing to delete) — **superseded by newer DEFI driver
+      `...024215-f56c11`** (another session, same flags+fix) alive/progressing. **Do NOT launch a 4th DEFI
+      driver**; next check polls both EXIT_STATUS; (c) only once both terminal — still open.
 - [x] ✅ [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling. **RESOLVED-AS-MOOT 2026-08-17 (slot-3, data_engineering)**: the gate condition is already

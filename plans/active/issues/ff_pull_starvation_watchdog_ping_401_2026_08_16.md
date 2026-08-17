@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title: "FF-pull starvation watchdog 401 — ROOT-CAUSED + FIXED on the operator's laptop (11 slots, stale per-slot .orch_token); planning VM's 33 slots checked and confirmed unaffected"
+title: "orch_token 401 silenced BOTH the FF-pull starvation ping AND the server-side git-staleness Slack page — ROOT-CAUSED, credentials fixed fleet-wide (11 laptop slots; VM's 33 confirmed unaffected), resolve_token_for_slot() hardened (unified-trading-pm@8f59e8a32d)"
 summary: >-
   `slot-git-status-report.sh`'s FF-pull starvation watchdog (`check_starvation_for_slot`,
   `ff-starvation-detect.sh`) was correctly detecting real starvation episodes (a dirty local edit colliding with
@@ -141,6 +141,33 @@ The 11 slots checked/fixed above are all on the OPERATOR'S LAPTOP (`/Users/.../u
   Left untouched (not verified as safe to delete this session).
 - **Conclusion: the VM's 33 slots do not need the laptop's fix — they were never affected.**
 
+## Correction: this also silenced the SERVER-SIDE git-staleness Slack page, not just the starvation ping (2026-08-17)
+
+Operator asked whether this pages Slack (for either operator) and whether a proactive check across slots is
+cheap enough to add. Both already exist — but were both silently defeated by this same bug:
+
+- **A real Slack page already exists**: `notify_git_staleness_red` / `notify_git_staleness_resolved`
+  (`agent-orchestrator-alerts` channel, PAGE severity, 30-min-red threshold, 4h re-remind, clean close) — this
+  is orchestrator-server-side, driven by the git-status snapshots `post_snapshot()` uploads every tick, and is
+  entirely separate from the client-side starvation ping investigated above.
+- **It never fired for the affected slots because `post_snapshot()` was ALSO 401-ing on the same stale token**
+  — confirmed in `/tmp/slot-git-status-report.501.log`: `[fail] slot 5 — HTTP 401; body: {"detail":"invalid or
+  expired token"}` starting **19:43:50Z**, earlier than the starvation-specific pings (20:13Z), because
+  snapshots upload every tick regardless of dirty state. The server had zero live data for the 8 affected
+  slots during the whole stale-token window — it structurally could not have paged on data it never received.
+- **A proactive near-expiry warning ALSO already exists** (`check_token_expiry_for_slot`, enabled by default,
+  warns 3 days before a token's `exp`) — built specifically after a prior, near-identical incident
+  (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`). It delivers its warning via the SAME
+  `post_starve_ping` mechanism authenticated with the SAME (possibly-already-expired) token — so once a token
+  is fully expired rather than merely near-expiry, this warning's own delivery 401s too. Confirmed on the
+  laptop: `.tabs/.token-expiry-state/` exists but is empty (mtime `Aug 10` — this feature was deployed ~2.5
+  months AFTER the token's `2026-05-27` expiry, so it never got the chance to warn in time, and has been
+  silently re-failing its own warning every 5 minutes since).
+- **No new cron/check needed** — decoding a JWT's `exp` claim is a local base64 operation, zero network calls,
+  zero rate-limit exposure; the existing 3-day warning is already cheap and already runs every tick. The real
+  gap was `resolve_token_for_slot()` trusting the first readable file regardless of validity — see the FIXED
+  code todo below.
+
 ## Todos
 
 - [x] ✅ [OPS] P1. **FIXED 2026-08-16 (interactive session, slot-5)** — slot 5's stale per-slot `.orch_token`
@@ -150,22 +177,37 @@ The 11 slots checked/fixed above are all on the OPERATOR'S LAPTOP (`/Users/.../u
       2, 3, 4, 6, 7, 8), fixed all the same way as slot 5, confirmed slots 9-11 already correct. Separately
       checked the `planning` VM's 33 slots (operator asked about slots up to 33) — confirmed unaffected, see
       "Scope clarification" above. See "Root cause" above for the laptop mechanism.
+- [x] ✅ [BACKEND] P3. **FIXED 2026-08-17 (interactive session) — `unified-trading-pm@8f59e8a32d`, quickmerge,
+      QG-green, landed on live-defi-rollout.** Hardened `resolve_token_for_slot()`
+      (`scripts/dev/slot-git-status-report.sh`) with a new `_token_is_expired()` helper (reuses
+      `decode_jwt_exp()`, "can't decode = can't tell = don't skip" contract preserved) — a positively-confirmed-
+      expired candidate is now skipped in favor of the next fallback instead of being returned blindly, with a
+      `[token-expired-skip]` log line (correctly routed to stderr, not stdout, since the function's stdout is
+      its return channel via command substitution — caught and fixed via a 4-scenario isolated unit test before
+      shipping: expired-per-slot-falls-through, no-per-slot-unaffected, valid-per-slot-used-directly, and a
+      JWT-shape integrity check on the fallthrough result). This is the generalizable fix — a stale per-slot
+      file can no longer silently shadow a healthy fallback for the life of that file.
 - [ ] [OPERATOR] P3. Re-check the `planning` VM's `~/.orch_token` before `2026-08-23T20:33:48Z` (~6 days from
       filing) — it's currently valid but shorter-lived than the laptop's; confirm whatever's supposed to refresh
       it actually fires, or refresh it manually if not.
-- [ ] [BACKEND] P3. Harden `resolve_token_for_slot()` to skip an expired candidate and fall through to the next
-      one (it already has `decode_jwt_exp()` available — currently only used elsewhere for a different check;
-      wire it into the resolution order itself) instead of using the first FILE it finds regardless of validity
-      — this is the actual generalizable fix that prevents this class of silent shadowing recurring per-slot.
 - [ ] [BACKEND] P3. Find or create whatever's supposed to keep `.orch_token` files fresh across slots (a
       rotation cron, a re-mint-on-expiry hook) — a 3-month-stale credential with no apparent alarm suggests
       nothing is currently minding token freshness at all.
-- [ ] [DOC] P3. Consider whether the watchdog itself should escalate differently (e.g. fall back to a Slack
-      webhook, or write a local marker file) when the orchestrator ping fails repeatedly, so a future credential
-      lapse doesn't silently degrade to zero visibility again the same way this one did.
+- [ ] [BACKEND] P3. `check_token_expiry_for_slot`'s own warning delivery is still vulnerable to the same class
+      of failure (it authenticates via the same token it's warning about) — once the hardening above is live
+      fleet-wide, re-evaluate whether this is still a real gap (a near-expiry warning now naturally resolves
+      via a healthy fallback token before full expiry) or already closed as a side effect.
 
 ## Progress Log
 
+- **2026-08-17 (interactive session, cont. — code fix)**: operator asked whether this alerts Slack and whether
+  a proactive check is cheap enough to add fleet-wide. Found BOTH already exist (server-side
+  `notify_git_staleness_red` Slack page; client-side `check_token_expiry_for_slot` 3-day warning) and were both
+  silently defeated by the same stale-token bug (confirmed `post_snapshot()` was also 401-ing since 19:43Z, so
+  the server had no data to page on). Implemented + unit-tested (4 scenarios, isolated harness, caught a real
+  stdout/stderr bug in my own first draft before shipping) the generalizable fix: `resolve_token_for_slot()` now
+  skips a positively-confirmed-expired candidate and falls through, instead of trusting the first readable
+  file. Shipped via quickmerge, QG-green, `unified-trading-pm@8f59e8a32d` on live-defi-rollout.
 - **2026-08-17 (interactive session, cont.)**: operator asked whether slots 9-33 were checked and whether this
   was laptop or AO scope. Confirmed the laptop has exactly 11 slots (nothing higher). Checked the AO `planning`
   VM read-only via SSM — it has its own separate 33-slot pool, none of which carry a per-slot `.orch_token`

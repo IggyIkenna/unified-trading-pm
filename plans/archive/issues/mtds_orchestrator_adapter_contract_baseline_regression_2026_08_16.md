@@ -9,9 +9,9 @@ summary: >-
   caused by, or fixable from, an unrelated PR. Blocks every subsequent
   market-tick-data-service quickmerge until either the missing contract-call site is
   restored or the baseline is regenerated with an explicit intentional-change rationale.
-status: open
+status: resolved
 nature: issue
-resolved_by:
+resolved_by: "market-tick-data-service@6fefa63676"
 locked_by:
 asset_group: [cefi]
 stage: [data]
@@ -111,3 +111,21 @@ site) the filer explicitly declined to resolve alone, citing risk of masking a r
 intentional design change without the F1-F8 refactor author's context — a genuine unresolved judgment call, not a
 bounded worker-alone task. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+
+## RESOLVED UPSTREAM — 2026-08-17
+
+Re-ran the gate standalone from a synced checkout:
+`python3 scripts/quality_gates/check_adapter_contract_regression.py --workspace-root <root>` →
+**OK — 378 baselined file(s) at or above minimum.** The count recovered at source; whoever owned the
+orchestrator refactor restored it. No baseline edit was made here.
+
+**Why regenerating the baseline would have been the WRONG fix**, recorded because it is the tempting
+option under deadline: this gate counts
+`classify_venue_error|ADAPTER_FETCH_FAILED|record_captured|record_empty|record_failed` per file and
+exists because a prior incident silently wiped 31 `classify_venue_error` calls. A count DROP is
+therefore a genuine shard-level-failure-isolation regression, not bookkeeping — confirm-and-regenerate
+would have permanently encoded a correctness bug as the new normal. Restore-the-call-site was the
+correct branch, and upstream took it.
+
+The MTDS external surface this blocked shipped immediately afterward with no rework:
+`market-tick-data-service@6fefa63676`, verified at origin by reading the blobs back.

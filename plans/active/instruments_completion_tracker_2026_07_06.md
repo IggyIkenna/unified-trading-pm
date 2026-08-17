@@ -24,7 +24,7 @@ related:
     /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     issues/cefi_layer1_denominator_gaps_2026_07_03.md,
-    issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
+    /plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     /plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md,
     issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
@@ -278,7 +278,7 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       1-day smoke verified first. No enumerator edit (read/run only). **CORRECTION (2026-07-25, per
       `archive/issues/canonical_closeout_open_questions_2026_07_18.md` C2c):** the 1,380,376-row figure above (and the
       62.06% Layer-2 defi coverage_pct derived from it at line ~634) is the **retired v1 grain**. The v2 SSOT (locked
-      issue `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, corroborated by
+      issue `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, corroborated by
       `defi_consolidated_closeout_2026_07_18.md`'s ~63.9M seed figure) puts the real DeFi `expected_unattempted` backlog
       at **~63.9M cells**, not 1.38M — this DONE checkbox and the 62.06% figure are the v1 milestone only, not the final
       denominator; the v2 backlog is open work tracked under Track-3 in
@@ -694,7 +694,7 @@ reconciling + signing off, not redoing.)_
   `migration_verification_orphan_safety_2026_06_10.md` · `instruments_mtds_subset_consistency_remediation_2026_06_17.md`
 - **Capture:** `data_completion_to_100_all_ag_2026_06_21.md`
 - **Open corrections:** `issues/cefi_layer1_denominator_gaps_2026_07_03.md` ·
-  `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` · `issues/cefi_universe_capture_rule_2026_06_23.md`
+  `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` · `issues/cefi_universe_capture_rule_2026_06_23.md`
 - **Resolved / map:** `issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md` ·
   `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md`
 - **New from the 2026-07-07 ASTER/CEFI audit:** `issues/aster_mtds_failure_count_regression_2026_07_07.md` (🔴

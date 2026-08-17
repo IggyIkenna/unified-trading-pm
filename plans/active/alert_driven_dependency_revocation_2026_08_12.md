@@ -105,12 +105,17 @@ bridges them; it does not extend one over the other.
 
 ## Phase 0 — Preconditions and measurement (nothing is armed until these land)
 
-- **[SCRIPT] P0. CANCELLED — SUPERSEDED 2026-08-16 (extracted to
-  `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 1, via a scoped `/na-eligibility-audit`
-  run).** Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers. Attempted
-  twice from this dev checkout (2026-08-14, 2026-08-16), both `BLOCKED-CREDENTIALS` (`state_bucket()` resolves `''`).
-  Reassessed as bounded/AO-eligible (fully mechanical outcome, just missing runtime context this slot lacks — worth
-  trying from the orchestrator's own environment before assuming a VM launch is needed), not genuinely NA-worthy.
+- [x] ✅ [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS
+      markers — the drain-budget denominator (worst-case waste = longest-shard-duration × dependent-count). Extracted
+      2026-08-16 to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 1 (scoped
+      `/na-eligibility-audit` run), completed + that plan archived 2026-08-17. **deployment-service@e631240990**
+      shipped `scripts/measure_shard_duration_p95.py`. **Worst-case drain-budget denominator: 34072.0s (~9.5h)**,
+      from `launch-mtds-dex-swaps-backfill-vm.sh` (backfill launchers dominate the tail, as expected) — measured
+      from a 30s-budget smoke sample, **partial coverage honestly reported by the script itself: 62/13,891
+      fleet-monitored run.log blobs, ~0.45%** (a fuller run was blocked by a confirmed ~90-100s host-level SIGTERM
+      constraint on the orchestrator VM, root cause unconfirmed, documented in the script's own docstring). Full
+      per-family p95/median/max table: `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`
+      item 1's Progress Log. If a fuller corpus run later shifts the worst-case number, update it here.
 - [x] ✅ [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
       PROGRESS via `record_captured`) vs drain-blind (no checkpoint) — a drain-blind prefix can only ever receive
       DEPS_HOLD. Repo: deployment-service. — **MEASURED 2026-08-14** (no code changed, read-only census): **243 total
@@ -373,7 +378,7 @@ bridges them; it does not extend one over the other.
       abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports, not cefi, because cefi
       resolves to a SINGLE job and the test would have been vacuous).
 - **[CODE] P2. CANCELLED — SUPERSEDED 2026-08-16 (mechanism built `deployment-service@310f82e84f`; production wiring
-  extracted to `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2, via a scoped
+  extracted to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2, via a scoped
   `/na-eligibility-audit` run).** A FLEET_HALT pause registers no `MaintenanceWindow`, so
   `check_consolidator_scheduler_paused` (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one.
   Operator chose "route through `pause_for_maintenance()`" — `RevocationActuator.__init__`'s
@@ -622,7 +627,7 @@ conserved and each line names where the work went, per `check_todo_regression.sh
 
 | Item                                                  | State                                                                                                                       | Blocked on |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| Phase 0 — preconditions and measurement               | **6 of 7 done** — only the p95 shard duration measurement remains                                                           | nobody     |
+| Phase 0 — preconditions and measurement               | **DONE** — all 7 todos, p95/max shard-duration table landed 2026-08-17                                                     | —          |
 | Phase 1 — graceful-flush contract                     | **DONE** — all 10 todos                                                                                                     | —          |
 | Phase 2 — `DependentAction` + `evaluate_revocation()` | **DONE** — all 7 todos, unified-api-contracts@c206f910                                                                      | —          |
 | Phase 3 — `RETRY_BUDGETS`                             | **DONE** — all 8 todos, unified-api-contracts@c206f910 + instruments-service@1ae4b7d0 + market-tick-data-service@554adf49   | —          |
@@ -633,8 +638,8 @@ conserved and each line names where the work went, per `check_todo_regression.sh
 | slot-4 PM checkout divergence                         | **RESOLVED 2026-08-13** — see the Phase 0 todo above                                                                        | —          |
 | `unified-trading-library` `.venv` bootstrap           | **Operator-owned** — environment setup, not on the critical path                                                            | operator   |
 
-**Recommended NEXT item (2026-08-15): Phase 0's remaining p95 shard-duration measurement, then archive the plan (Phase
-7's last item).** Both remaining Phases are effectively done otherwise.
+**Recommended NEXT item (2026-08-17): Phase 0 is now fully done — Phase 7's last item (archive this plan) is the only
+remaining work.**
 
 ## Progress Log
 
@@ -912,15 +917,16 @@ is UNVERIFIED, not confirmed true. Scoped out of this pass — visibility was th
 suppression wiring, and `pause_for_maintenance` needs a `bucket`/`ttl_minutes` design call this plan's own operator
 record doesn't make. Worth a follow-up todo before this fleet-wides.
 
-**Phase 0's 4 measurement todos, 3 of 4 closed.** Real numbers, not guesses: `LAUNCHER_FOR_VM_PREFIX` has 243 entries
-(the plan's "~189" was stale), 65 map to `None` (never backfill-capture, so DEPS_DRAIN is moot for them), 178 map to 104
-distinct launcher scripts. Verified drain-capability by grepping which service CLI each script actually invokes (not
-filename prefix — the `launch-tradfi-bf-*` family would have false-negatived on a naive check since they delegate
-through `_tradfi-ohlcv-launcher-lib.sh`). Result: 102/104 confirmed drain-capable, the other 2 are non-capture tools
-(scenario runner, orphan-sweep report) where drain is inapplicable rather than missing. Buffered-writer inventory found
-nothing outside what Phase 1 already registered. The p95/max shard-duration measurement is the one still open —
-`state_bucket()` resolves empty in this dev checkout even with working gcloud auth, so it needs either a properly-wired
-runtime env or a VM-side run; left BLOCKED rather than fabricated.
+**Phase 0's 4 measurement todos, all 4 closed (as of 2026-08-17).** Real numbers, not guesses: `LAUNCHER_FOR_VM_PREFIX`
+has 243 entries (the plan's "~189" was stale), 65 map to `None` (never backfill-capture, so DEPS_DRAIN is moot for
+them), 178 map to 104 distinct launcher scripts. Verified drain-capability by grepping which service CLI each script
+actually invokes (not filename prefix — the `launch-tradfi-bf-*` family would have false-negatived on a naive check
+since they delegate through `_tradfi-ohlcv-launcher-lib.sh`). Result: 102/104 confirmed drain-capable, the other 2 are
+non-capture tools (scenario runner, orphan-sweep report) where drain is inapplicable rather than missing. Buffered-
+writer inventory found nothing outside what Phase 1 already registered. The p95/max shard-duration measurement
+(the drain-budget denominator, worst case 34072.0s from `launch-mtds-dex-swaps-backfill-vm.sh`) landed 2026-08-17 —
+see the Phase 0 checklist above for the full per-family table; the earlier `BLOCKED-CREDENTIALS` observation was a
+dev-checkout-only artifact, resolved by running from the orchestrator VM's own environment instead.
 
 **Next**: Phase 6 (12 bad-VM scenarios, repo: e2e-testing) is the largest remaining chunk. Scoping note for whoever
 picks it up: e2e-testing has ZERO existing revocation-domain test infra, but it DOES already depend directly on

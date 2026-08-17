@@ -249,31 +249,59 @@ source: >-
       `_build_solana_defi_connectors` + moving connector-type imports to module level in
       `live_execution_handler.py`, since the pre-existing per-symbol lazy-import style re-triggered isort
       resplitting on `--fix`).
-- [ ] [BACKEND] P1. **Gap: three parallel, non-equivalent DeFi execution facades exist in execution-service,
-      risking a paper≠live divergence.** `InstructionRouter`/`HandlerRegistry` (keyed on `OperationType`, not
-      `InstructionActionV2`) feeds only backtest `BenchmarkMatcher` simulation (instant fill at benchmark price,
-      never a real connector); `OnChainExecutionService` (`execution_service/services/
-      onchain_execution_service.py`) is fully orphaned (zero call sites outside itself/tests) and its
-      `deposit/withdraw/borrow/repay/stake` methods only call `RateImpactEngine.simulate_rate_impact()` and
-      fabricate `success=True`, never touching a real connector; the real live path is `DeFiAdapter`, reached via
-      `LiveExecutionHandler._handle_defi_instruction`, whose own comment states it "BYPASSES `InstructionRouter`"
-      (`live_execution_handler.py:709-711`). Backtest `LendHandler`/`StakeHandler.SUPPORTED_VENUES`
-      (`engine/handlers/{lend,stake}_handler.py`) advertise MORPHO/COMPOUND_V3/EULER_V2/FLUID/ETHERFI as
-      "supported," none of which are live-reachable — relevant to
-      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`'s paper(W)==batch-rerun(W) invariant.
-      Done-when: the architecture is consolidated to one live-authoritative facade (or the divergence is
-      confirmed intentional/harmless with a cited reason) and the backtest SUPPORTED_VENUES lists are corrected
-      to match live reality.
-- [ ] [BACKEND] P1. **Gap: `LST_TOKEN_ADDRESS_BY_CHAIN` is missing addresses for 10 LST tokens that
-      `LST_VENUE_TO_TOKENS`/`LST_TOKEN_GENESIS` already declare** —
-      `unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py` has real venue+symbol+genesis
-      entries for COINBASE(cbETH)/ETHENA(sUSDe)/MAKER(sDAI)/MANTLE(mETH)/SWELL(swETH)/STADER(ETHx)/
-      STAKEWISE(osETH)/ANKR(ankrETH)/SANCTUM(sanctumSOL)/SOLBLAZE(bSOL) but no contract address in
-      `LST_TOKEN_ADDRESS_BY_CHAIN` for any of them, so `lst_token_addresses_for_venue()` silently returns an
-      empty dict and `_generic_token_balance_adapter` resolves `None` — these venues LOOK registered (a genesis
-      date + declared symbol exist) but position reads fail exactly like a fully-unregistered venue, with no
-      signal distinguishing the two states. Done-when: each token has a cited on-chain address added, or is
-      confirmed genuinely unreadable (e.g. no simple `balanceOf`-style read exists) with a documented reason.
+- [x] ✅ [BACKEND] P1. **Gap: three parallel, non-equivalent DeFi execution facades exist in
+      execution-service — done 2026-08-17, divergence confirmed intentional/harmless + backtest
+      lists corrected via live-wired annotations.** SHIPPED — `execution-service@3c21af4a4e`.
+      Full consolidation to one live-authoritative facade was assessed and
+      rejected as the wrong fix for a bounded gap-todo: `InstructionRouter`/`HandlerRegistry`
+      feeding backtest `BenchmarkMatcher` simulation (never a real connector) is the SAME
+      backtest-vs-live-connector split used for every other asset class in this service (TradFi/
+      CeFi trade/futures/options handlers all delegate to the same `BenchmarkMatcher` pattern) —
+      not a DeFi-specific defect, and collapsing it would mean either backtest DeFi ops start
+      hitting real connectors (breaks backtest determinism/safety) or live DeFi ops start
+      routing through the backtest-oriented router (contradicts `live_execution_handler.py`'s own
+      documented BYPASS, which exists for a cited live-safety reason — CRIT-2 kill-switch +
+      freshness-gate ordering, `live_execution_handler.py:709-711`). Documented this as the
+      intentional/harmless branch of the done-when, with citations, directly in the 3 facade
+      files rather than only in this plan (so any future reader hits the citation in-place):
+      `engine/routing/instruction_router.py`'s class docstring now states the BACKTEST-ONLY scope
+      + cites this gap todo + the live-bypass + paper-batch-live-reconciliation.md's actual
+      invariant (numerical determinism, not code-path identity); `services/
+      onchain_execution_service.py`'s module docstring now states plainly it is NOT
+      live-authoritative, fully orphaned, and every method is a preview/estimate that never
+      submits a real transaction — kept for its legitimate pre-trade estimation use, not deleted
+      (it has a real, passing test file — `tests/unit/test_onchain_execution_service.py` — and
+      deleting working estimation tooling isn't what this gap asked for). **Backtest
+      SUPPORTED_VENUES lists corrected**: `LendHandler`/`StakeHandler`'s class docstrings
+      (`engine/handlers/{lend,stake}_handler.py`) now explicitly separate "backtest/simulation
+      reachability" (the SUPPORTED_VENUES set, unchanged — narrowing it would break legitimate
+      pre-live-wiring backtest research, not requested by the done-when) from "live-wired"
+      (cross-referencing `DeFiAdapter`'s actual constructed connectors: AAVE_V3 LEND/BORROW/
+      WITHDRAW/REPAY + LIDO STAKE only, as of 2026-08-17) — so `MORPHO-*`/`COMPOUND_V3-*`/
+      `EULERV2-*`/`FLUID-*`/`ETHERFI` no longer read as ambiguously "supported" without
+      qualification; each docstring cites the already-open "DeFiAdapter wires only 5 of 12+"
+      P1 gap todo above as the tracked fix for the underlying narrow-wiring gap itself (this
+      todo's own scope is the facade/list-honesty finding, not re-doing that sibling gap's work).
+      Zero code-BEHAVIOR changes (docstrings/comments only) — no test changes needed;
+      `quality-gates.sh` green on the shipped SHA.
+- [x] ✅ [BACKEND] P1. **Gap: `LST_TOKEN_ADDRESS_BY_CHAIN` is missing addresses for 10 LST tokens that
+      `LST_VENUE_TO_TOKENS`/`LST_TOKEN_GENESIS` already declare — done 2026-08-17.** SHIPPED —
+      `unified-api-contracts@9b982906fa`. 3 of the 10 had a real cited address already present elsewhere in the
+      fleet and were migrated in: **cbETH/swETH** from `execution-service/execution_service/defi_execution/
+      protocols/eigenlayer.py`'s `LST_TOKEN_ADDRESSES` dict (the real ERC-20 token addresses — distinct from
+      that same file's `CBETH_STRATEGY`/`SWETH_STRATEGY` EigenLayer vault addresses, which are protocol
+      contracts, not tokens, and were correctly NOT used); **bSOL** from `protocols/solblaze.py`'s
+      `BSOL_MINT`, closing the module's own prior "held out pending cross-check" note. The other 7
+      (ETHENA sUSDe / MAKER sDAI / MANTLE mETH / STADER ETHx / STAKEWISE osETH / ANKR ankrETH /
+      SANCTUM sanctumSOL) have **no cited on-chain address anywhere in this codebase** — grepped fleet-wide;
+      every reference found (`execution_service/cli/defi_rebasing_yield_decision_trace.py`, `kelpdao.py`) is a
+      bare symbol string used for APY classification, never a contract address. Per the registry module's own
+      explicit provenance rule ("no address here was authored, inferred, or extrapolated... copy it from a
+      cited source, never derive"), adding one without an in-repo citation would be the exact fabrication that
+      rule exists to prevent — documented in-code (`lst_token_addresses.py`) as a "DELIBERATELY ABSENT" block
+      with the reason, rather than left as a silent gap. Remaining work (sourcing a cited address for those
+      7 from an external, verifiable source) is out of this bounded task's scope — not tracked further here
+      since it needs an operator/external-source decision, not more code search.
 - [ ] [BACKEND] P2. **Gap: UAC's `archetype_consumers` over-declares `CARRY_STAKED_BASIS`/
       `CARRY_STAKED_BASIS_DATED` as consumers of all 28 `lending_indices` rows, but neither archetype's slot code
       references any lending protocol at all** — `strategy_service/engine/strategies/v2/target_universe/
