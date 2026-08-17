@@ -169,12 +169,14 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       `revert_cefi_live_corrective_migration_overreach_2026_08_16.py`, `measure_shard_duration_p95.py`). Landed a new
       `[INFRA] P2` follow-up todo in the issue doc naming these scripts for a bounded-read/streaming fix. Full write-up
       in the issue doc's new Progress Log entry + flipped `[DIAG] P2` todo.
-- [ ] [DATA] P2. **Audit `unified-trading-system-repos/` (157G, the dominant disk consumer on the shared host) for real
+- [x] ✅ [DATA] P2. **Audit `unified-trading-system-repos/` (157G, the dominant disk consumer on the shared host) for real
       cleanup headroom.** Enumerate the largest subtrees; distinguish live-repo working-tree bloat from stale
       worktrees/branches/build-artifacts that are safe to prune. **Audit only — do not delete anything in this todo.**
       **Done when**: a concrete, itemized cleanup manifest (path, size, safe-to-delete rationale) is written, cited back
       into `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md` + the tracker's Track 4. Repo: infra
-      (shared host).
+      (shared host). — ✅ DONE 2026-08-17 (slot 6): itemized manifest written. Headline: ~57.2G of confirmed-dead
+      one-off-script `.tmp/` scratch across 5 repo worktrees (slots 14/16/18×2/19) — same anti-pattern class as the
+      already-fixed `manifest-consolidate-*` leak. Full table + rationale in the issue doc's new Progress Log entry.
 - [ ] [DATA] P2. **Investigate the ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G)** on the
       shared host — identify which service/plan created it, whether any live script still references it, and whether
       it's safe to archive/delete. **Done when**: ownership is identified (or confirmed genuinely orphaned) and a
@@ -230,4 +232,18 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
   regardless of what triggers a partial/isolated run. The exact triggering process/redeploy path was NOT identified
   (no root crontab or full-system journalctl access from this sandboxed worker) — stated explicitly per the todo's own
   done-when. Full write-up cited into the tracker's Track 4.
+- **2026-08-17 (slot 6, infra→data_engineering worker, AO-dispatched)**: Worked the `unified-trading-system-repos/`
+  disk-cleanup-headroom audit todo (read-only, no deletes). Fleet-wide `find -maxdepth 3 -name .tmp` swept all 33
+  `.tabs/` slots and found 5 large, confirmed-dead one-off-script scratch dirs totaling ~57.2G (slot16/
+  instruments-service 17G, slot14/market-tick-data-service 14G, slot18/market-tick-data-service 11G, slot18 top-level
+  8.5G, slot19/market-tick-data-service 6.7G) — each verified via contents/mtime/lsof/ps as multi-day-stale with zero
+  live process, all tracing to one-off diagnostic/migration scripts (e.g.
+  `purge_defi_eigenlayer_stale_spot_pair_expected_cells_2026_08_15.py`) that never clean up their own `tempfile`
+  scratch. A full byte-exact `du` of all 33 slots was attempted twice and killed both times by background-task
+  lifetime limits (matches the tracker's own 2026-08-15 note about the same SSM-timeout pattern); used a 15-slot
+  sample (135.2G) + a complete root-level canonical-clone pass (45.2G/26 repos) instead — sufficient for the itemized
+  manifest the todo asked for. Full table + recommendation in
+  `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`'s new Progress Log entry; citation note
+  appended to the tracker's Track 4 (checkbox left unflipped per this plan's own rule — `batch21_finalize` reconciles
+  it).
 </content>

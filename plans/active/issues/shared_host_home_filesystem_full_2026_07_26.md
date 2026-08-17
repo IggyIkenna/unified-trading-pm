@@ -95,14 +95,21 @@ specific to any one task.
       which has no §3a-style reversibility carve-out for any command class it blocks, local or cloud). Nothing to
       reclassify or fix; flipping done since the underlying ask is satisfied by passage of time, not by a gating change.
       The broader `unified-trading-system-repos/` audit (DATA P2 todo below) is unaffected and still open.
-- [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, the dominant consumer) for real cleanup headroom —
-      orphaned `.venv` directories from decommissioned/renamed slots, stale `node_modules`, build artifacts, or
-      duplicate git objects that `git gc`/`git prune` could reclaim — WITHOUT touching any repo's actual tracked content
-      or another slot's live worktree. Read-only audit first; any actual cleanup needs its own scoped, reviewed todo.
-      **Supporting data (slot-4, 2026-07-27T~07:20Z)**: a `du -sh` top-consumer pass (killed early by host pressure
-      before completing, so partial) already shows the pattern this todo anticipates — `unified-trading-system-ui`
-      (`node_modules`) at 1.8-3.3G repeated across at least 7 different `.tabs/N/` slots, `features-service` `.venv`s at
-      1.7-1.8G repeated across at least 5 slots — real duplicated build-artifact weight per slot, not one bad actor.
+- [x] ✅ [DATA] P2. **DONE 2026-08-17 (slot 6, infra→data_engineering worker, AO-dispatched,
+      `ao_satellite_ao_dispatch_batch21_2026_08_16.md` todo 6).** Audited `unified-trading-system-repos/` for real
+      cleanup headroom (read-only — no deletes performed). **Headline finding: ~57.2G of confirmed-dead one-off-script
+      scratch under `.tmp/` dirs inside 5 live repo worktrees**, the same anti-pattern class as the already-fixed
+      `manifest-consolidate-*` orchestrator-VM leak (2026-08-08 incident) — see the full itemized manifest in the
+      Progress Log below. Supersedes the "orphaned .venv/node_modules/git-object" hypothesis this todo originally
+      anticipated: venvs/node_modules ARE duplicated per-slot as expected by the Path-B reference-clone design (not a
+      genuine cleanup target), but the `.tmp/` scratch leak was not previously known at this scale.
+      **Supporting data (slot-4, 2026-07-27T~07:20Z, superseded/subsumed by this pass)**: a `du -sh` top-consumer pass
+      (killed early by host pressure before completing, so partial) already showed the pattern this todo anticipated —
+      `unified-trading-system-ui` (`node_modules`) at 1.8-3.3G repeated across at least 7 different `.tabs/N/` slots,
+      `features-service` `.venv`s at 1.7-1.8G repeated across at least 5 slots — real duplicated build-artifact weight
+      per slot, not one bad actor. Confirmed still true (2026-08-17 slot-16 sample: `.venv` 0.9-1.3G/repo,
+      `node_modules` 2.4G + `.next` 323M for unified-trading-system-ui) but NOT the dominant single-item finding this
+      pass — the `.tmp/` scratch leak is.
 - [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G) and
       `/home/ubuntu/tmp/` (413M, generic — lower confidence than the named slot dirs) before proposing any action on
       either.
@@ -414,3 +421,57 @@ this needs automation rather than an agent noticing.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **2026-08-17 (slot 6, infra→data_engineering worker, AO-dispatched, `ao_satellite_ao_dispatch_batch21_2026_08_16.md`
+  todo 6)**: Full read-only audit of `unified-trading-system-repos/` (no deletes performed, per this todo's own
+  instruction). Host state at measurement: `df -h /home` = `678G 483G 195G 72% /home` — healthier than every historical
+  reading in this thread, no acute crisis.
+
+  **Itemized cleanup manifest:**
+
+  *High-value, low-risk — confirmed-dead scratch, safe to delete (~57.2G total):* a fleet-wide
+  `find .tabs -maxdepth 3 -type d -name .tmp` sweep (complete, all 33 slots covered) found 13 `.tmp/` dirs; 8 are
+  empty/negligible (4-200KB), 5 are large and all trace to the same root cause — a one-off/dated diagnostic or
+  migration Python script creating `tempfile`-style scratch subdirectories that were never cleaned up on exit. Each was
+  individually verified: contents (mkdtemp-pattern subdirs holding `.parquet`/log scratch), newest-file mtime (days
+  stale, not hours), `lsof +D` (zero open handles), and `ps aux` (no live process touching the path or matching the
+  script name) — same verification bar as the VM-delete-guardrail liveness check, applied to local scratch.
+  | Path | Size | Age at measurement | Source | Rationale |
+  |---|---|---|---|---|
+  | `.tabs/16/instruments-service/.tmp/` | 17G | ~1.6 days (newest mtime 2026-08-15 18:06Z) | `instruments-service/scripts/purge_defi_eigenlayer_stale_spot_pair_expected_cells_2026_08_15.py` (dated one-off) | 3 `eigenlayer_spot_pair_purge_*` mkdtemp dirs, no live process, script name is self-dated/one-off |
+  | `.tabs/14/market-tick-data-service/.tmp/` | 14G | ~4.4 days | `pool_casing_fold_*` / `probe2_*` scratch dirs | no live process, multi-day stale |
+  | `.tabs/18/market-tick-data-service/.tmp/` | 11G | ~6.1 days | `count_check_*` scratch dirs | no live process, multi-day stale |
+  | `.tabs/18/.tmp/` (top-level, not repo-scoped) | 8.5G | ~6.1 days | `count_verify_*` scratch dirs | no live process, multi-day stale |
+  | `.tabs/19/market-tick-data-service/.tmp/` | 6.7G | ~6.0 days | `slot19_defi_count_*` scratch dirs | no live process, multi-day stale |
+
+  This is the SAME anti-pattern class as the already-fixed `manifest-consolidate-*` orchestrator-VM scratch leak
+  (2026-08-08 incident, `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2, TTL-reaper shipped
+  `unified-trading-pm@699f53832`) — a new instance, now inside individual slot repo working trees rather than the
+  shared orchestrator VM tmp. **Recommended fix, same shape as before**: either a TTL reaper for `.tmp/`-pattern dirs
+  under `.tabs/*/*/`, or require one-off audit/migration scripts to clean up their own `tempfile`/mkdtemp scratch in a
+  `finally` block. A one-time manual delete of the 5 confirmed-dead dirs above would reclaim 57.2G immediately but is
+  NOT performed by this audit — `block_destructive_commands.py` refuses recursive-rm for autonomous workers regardless
+  of confirmed staleness (same guardrail this doc's earlier entries hit repeatedly); this is an `[OPERATOR]` or a
+  separately-scoped cleanup todo.
+
+  *Expected, lower-value — per-slot build-artifact duplication (not a genuine cleanup target):* root-level canonical
+  (read-only) clones total ~45.2G across 26 repos (largest: `agent-orchestrator/` 5.1G, `unified-trading-system-ui/`
+  3.6G, `ml-service/` 2.6G, `e2e-testing/` 2.5G, `system-integration-tests/` 2.4G). `.tabs/` per-slot clones: sampled
+  15 of 33 slots (a full `du` was attempted twice and killed both times by background-task lifetime limits — matches
+  this tracker's own 2026-08-15 note that SSM `du` against this same tree "kept exceeding timeouts even at 200s");
+  the 15-slot sample alone already totals 135.2G (range 1.8G-22G/slot, most of the variance explained by the `.tmp`
+  leaks above, not by real per-slot difference). A depth-2 breakdown of slot 16 confirms the 2026-07-27 finding still
+  holds: `.venv` dirs (0.9-1.3G each, one per Python repo per slot) and `node_modules`/`.next`
+  (`unified-trading-system-ui`: 2.4G `node_modules` + 323M `.next`) are the dominant non-`.tmp` per-slot consumers —
+  fully regenerable (`uv sync` / `npm install`), duplicated ~1:1 across all 33 slots BY DESIGN of the Path-B
+  independent-worktree model, and NOT safely deletable from a single-slot audit session (would break that slot's live
+  work). `.git` dirs sampled small relative to working trees (28-99M) — the `git clone --reference` alternates are
+  working as intended, not duplicating object storage. Not re-flagging the already-known stray
+  `/home/ubuntu/united-trading-system-repos` typo'd empty dir (12KB, flagged in the tracker's 2026-08-15 entry) —
+  negligible, no new information.
+
+  **Net recommendation** (audit only, nothing deleted): (1) the 57.2G `.tmp` scratch table above is the real,
+  itemized, high-confidence cleanup target — route to `[OPERATOR]` or a dedicated cleanup todo for the actual delete;
+  (2) file a TTL-reaper follow-up (root-cause fix, mirroring the manifest-consolidate-* precedent) so this doesn't
+  silently regrow; (3) venv/node_modules duplication is expected/by-design, not actionable without a shared-cache
+  redesign, out of scope here. Cited into the tracker's Track 4 (citation only, checkbox left to the batch21 finalize
+  plan per this batch's own rule) and `ao_satellite_ao_dispatch_batch21_2026_08_16.md`'s own checkbox flipped.

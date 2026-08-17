@@ -413,7 +413,11 @@ context_scope:
       genuine follow-up if the operator wants the data surfaced visually, not just available over the WS feed. Source:
       `/plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`.
 - [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, dominant disk consumer) for real cleanup headroom. Source:
-      `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`.
+      `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`. — Evidence (checkbox left for
+      `batch21_finalize` to reconcile): DONE 2026-08-17 (slot 6) via
+      `ao_satellite_ao_dispatch_batch21_2026_08_16.md` todo 6 — itemized manifest found ~57.2G of confirmed-dead
+      one-off-script `.tmp/` scratch across 5 repo worktrees (slots 14/16/18×2/19), same anti-pattern class as the
+      already-fixed `manifest-consolidate-*` leak. Full detail in the issue doc's Progress Log.
 - [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G). Source: same doc.
 - **[SCRIPT] P3. CANCELLED — SUPERSEDED 2026-08-15 (reconciliation sweep, this session).** Was: bump `PYRIGHT_TIMEOUT`
   if a QG kill recurs. Already closed 2026-08-12 by `/plan-reconcile`: the kill DID recur (9 occurrences,
