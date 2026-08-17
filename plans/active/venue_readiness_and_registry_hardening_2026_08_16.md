@@ -117,6 +117,39 @@ what a child plan measures against, and what a new-venue rollout follows step by
 > full path; mark `BLOCKED-CREDENTIALS` if it cannot be RUN. What separates the states is which ACCOUNTS exist, not
 > which code exists.
 
+### Shipped evidence — Nick AI readiness remediation cross-references (2026-08-17)
+
+Reconciled from `/plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md`'s W3-W5 (its own W2 finalize
+todo asked for step-row citations, not a duplicate log — full narrative stays in that plan's Progress Log). Mapped
+by the table's real step NAMES, not by number, after finding that plan's own "steps 9/10 for CeFi, 11/8 for Sports,
+4 for Prediction" shorthand didn't fully match this table when checked directly (step 4 "Market data — live" does
+not fit the Polymarket item — see below).
+
+- **Step 9 (Execution — transfers)**: CeFi `VENUE_WALLET_CAPABILITIES` now covers 25/25 canonical cefi venues (was
+  partial) — `unified-api-contracts@a0e6f3b9e7`.
+- **Step 10 (Error semantics)**: CeFi error-classification extended to 6 new venue families
+  (bitfinex/bitget/coinbase_cde/pacifica/extended/lighter) — same commit, `unified-api-contracts@a0e6f3b9e7`.
+- **Step 8 (Execution — instruction)**: Sports `is_venue_executable()` was a bare passthrough of the
+  reference-data axis (`VENUE_TO_ADAPTER_KEY`) despite a 2026-08-08 ruling to make it a separate executable
+  predicate — fixed via new `SPORTS_EXECUTION_ADAPTER_VENUES` frozenset —
+  `unified-api-contracts@96ef3e173f`. Back/lay action-mapping confirmed (not a schema gap, already correct via
+  `BET_BACK`/`BET_LAY` `CompatibilityEntry` rows) — `unified-api-contracts@4753c4bbcd`.
+- **Step 11 (Config)**: Sports `GET /sports/venues` wired off its hardcoded `live_not_configured` stub onto real
+  Secret Manager probes for the 4 adapter-backed venues — `deployment-api@8239f10a77`.
+- **PAPER-READY clause** ("must we simulate through our own matching engine... written down, not assumed"): answered
+  for POLYMARKET — wired into the existing `MatchingEngineExecutionProvider`/`L2DepthProvider` depth-walk path for
+  real VWAP fills in `PredictionBetHandler`, replacing a flat-markup heuristic — `execution-service@0e1b7b98dd`. Not
+  a step-4 item; step 4 is live *market data*, not execution simulation — cited here instead of forcing a wrong
+  mapping.
+- **Step 13 (Granularity)**: see the GRANULARITY section immediately below — `unified-api-contracts@693e823adb`.
+  **Not yet sufficient for the artifact's coverage denominator** — that additive registry expresses fidelity tier
+  per (venue, data_type) with per-instrument_type *exceptions*, which is a different fact from an *enumeration* of
+  which instrument_types exist per (venue, data_type). The latter is what the coverage denominator needs (a venue
+  carrying `trades` on both spot and perp is 2 real cells, not 1) and is tracked separately as
+  `system_readiness_master.md` W3's "Land the instrument_type axis on `VenueCapabilityRecord`" P0 item — confirmed
+  by direct read of `unified-api-contracts/scripts/generate_venue_universe_denominator.py`, which still computes
+  the 2-tuple denominator from `VENUE_DATA_TYPE_CAPABILITIES` alone as of this citation.
+
 ## GRANULARITY — what the data supports, declared per venue (operator ruling 2026-08-16)
 
 Readiness is not binary per venue; it is bounded by **what granularity the data actually has**. This is the section

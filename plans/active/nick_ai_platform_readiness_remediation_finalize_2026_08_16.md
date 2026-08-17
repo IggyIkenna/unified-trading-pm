@@ -58,19 +58,30 @@ context_scope:
 
 ## Todos (execute in order — `sequential: true`)
 
-- [ ] [DOC] P0. **Refresh `/codex/02-data/honest-coverage-model.md`'s certified Layer-1 table** for defi/tradfi/
+- [ ] [DOC] P0. **BLOCKED-ON:system_readiness_master (W3 "Land the instrument_type axis on `VenueCapabilityRecord`")**
+      — **Refresh `/codex/02-data/honest-coverage-model.md`'s certified Layer-1 table** for defi/tradfi/
       sports/prediction, using the FINAL state after the main plan's W1/W3/W4 work has landed — not the 2026-08-16
       pre-audit snapshot, which will itself have moved (e.g. W3 changes what step-13 reports; W4-Sports may change
       the sports Layer-1 completeness if the registry-contradiction fix touches captured-data reachability). Re-run
       the same live `coverage.json` read the pre-audit used (never re-implement); cite the fresh date + generated_at
       timestamp. Done-when: every row in the codex table carries a 2026-08-16-or-later date, `safe-doc-push.sh`
-      lands it.
-- [ ] [REVIEW] P1. **Reconcile evidence into the sibling plans.** For every `[x]` item in the main remediation plan:
-      confirm its `<repo>@<sha>` citation resolves, then add one cross-reference line into
-      `venue_readiness_and_registry_hardening_2026_08_16.md`'s relevant contract-step row (step 13 for W3, steps 9/10
-      for W4-CeFi, step 11/8 for W4-Sports, step 4 for W4-Prediction) — that plan's own readiness-contract table is
-      the durable home for "is this step real now," not a second copy here. Do not re-verify by re-reading the shipped
-      code in full; a resolving commit reference is sufficient evidence at this stage.
+      lands it. **2026-08-17: confirmed genuinely blocked, not just cautioned** — the venue-universe denominator
+      (`unified-api-contracts/scripts/generate_venue_universe_denominator.py`) still computes `(venue, data_type)`
+      2-tuples only; any coverage % refreshed before the instrument_type-axis work lands would need redoing. That
+      work is now tracked as a P0 item in `/plans/epics/system_readiness_master.md` W3, owned by a different live
+      session — do not duplicate it here.
+- [x] [REVIEW] P1. ✅ Done 2026-08-17. **Reconciled evidence into the sibling plan** —
+      `unified-trading-pm@<pending, see commit below>`. Added a "Shipped evidence" cross-reference section to
+      `venue_readiness_and_registry_hardening_2026_08_16.md` immediately after its readiness-contract table, mapped
+      by the table's real step NAMES (not the guessed numbers this todo's own text used, which didn't fully match —
+      "step 4" does not fit the Prediction item; cited against the PAPER-READY clause instead). All 6 shas verified
+      to resolve. Found in the process: this finalize plan's own earlier W3 checkbox read as "done, axis extended"
+      but the extension (`venue_granularity.py`) is a fidelity-tier query with per-instrument_type *exceptions*, not
+      an *enumeration* of which instrument_types exist per (venue, data_type) — a different fact, and NOT what the
+      artifact's coverage denominator needs. Confirmed directly:
+      `unified-api-contracts/scripts/generate_venue_universe_denominator.py` still computes the 2-tuple denominator
+      from `VENUE_DATA_TYPE_CAPABILITIES` alone. This correction is now recorded in the cross-reference section
+      itself so it isn't re-misread the same way again.
 - [ ] [REVIEW] P1. **Check whether the W2 scaffold has been reviewed.** Re-read the main plan's W2 item — if the
       operator has marked up the [Archetype Feature
       Scaffold](https://claude.ai/code/artifact/c6c345e7-10fb-4679-b9d2-6eada7fc3f6c) and a follow-up declaration
@@ -101,3 +112,19 @@ operator-ruled finding directly in the main plan's W3 section on 2026-08-17 — 
 (read the main plan's W3 section in full before starting W6 — this may change what "final" coverage numbers actually
 are, separately from anything tracked in this finalize plan). This session did not investigate that thread further
 — it's another session's active work, not re-derived or duplicated here.
+
+**2026-08-17 — reconciliation todo done; W6 now formally BLOCKED-ON, not just cautioned.** Confirmed 2 other live
+`claude` processes share this exact slot's checkout (PIDs verified via `lsof` cwd, matching the SessionStart
+collision warning) — one of them is almost certainly the author of both the W3 banner and a brand-new epic,
+`/plans/epics/system_readiness_master.md` (created 2026-08-17, P0, target 2026-08-25), which already lists both
+nick_ai plans in its own `related_plans` and carries "Land the instrument_type axis on `VenueCapabilityRecord`" as
+its own W3 P0 todo, citing the same operator ruling. Did NOT attempt to build that axis myself — real collision
+risk (same slot, same registry files) and it is now clearly owned elsewhere. Instead: (1) corrected an
+over-optimistic reading of my own earlier W3 completion note — `venue_granularity.py` answers a fidelity-tier
+query, not an instrument_type-set enumeration, confirmed by reading `generate_venue_universe_denominator.py`
+directly (still 2-tuple-only); (2) shipped the "reconcile evidence into sibling plans" todo, adding a cross-reference
+section to `venue_readiness_and_registry_hardening_2026_08_16.md` mapped by the table's real step names (the
+finalize todo's own guessed step numbers didn't fully match — step 4 doesn't fit the Prediction item, cited against
+the PAPER-READY clause instead); (3) added an explicit `BLOCKED-ON:system_readiness_master` marker to the W6 todo
+above. Remaining open in this plan: W6 itself (blocked as stated) and the "check W2 scaffold review" todo (asked
+the operator directly in-session rather than trying to infer it from files). Archival stays gated on both.
