@@ -84,7 +84,7 @@
     "market-data-processing-service": "0.30.5",
     "e2e-testing": "0.41.22",
     "agent-orchestrator": "0.100.3",
-    "greeks-service": "0.18.50",
+    "greeks-service": "0.18.51",
     "trading-agent-service": "0.13.0",
     "strategy-service": "0.71.10",
     "ml-service": "0.58.30",
