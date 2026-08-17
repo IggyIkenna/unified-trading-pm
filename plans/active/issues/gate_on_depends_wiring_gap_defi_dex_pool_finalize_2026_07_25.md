@@ -745,6 +745,7 @@ note above already covers. Independently re-verified before declining:
   `- [ ]` todo — a violation of the workspace's own "every follow-up is a todo, never prose" rule. Added the todo above
   so it's dispatchable rather than perpetually re-discovered in prose across future bounces. Doc stays open, NOT
   archived.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:c6cb81431286c616]: KEEP-NA, valid — 5 of 6 grep-matched checkbox lines are fenced-code-block quotes of an archived upstream plan (tracked tooling false-positive), not real open items; the one genuine item (root-cause the zero-derived-parent-row dispatch-gate mechanism) is live-dispatch-critical-path agent-orchestrator machinery under active investigation, per a 2026-07-31 operator directive routing AO-machinery docs to local-only.
 
 ## 2026-08-08 recurrence — another distinct plan pair (defi_expected_unattempted_backlog_1m_2026_07_03), zero-derived-parent-row again, new sub-bullet shape
 

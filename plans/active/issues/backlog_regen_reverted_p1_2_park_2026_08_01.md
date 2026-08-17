@@ -192,3 +192,4 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   (cross-referenced in this doc, not reclassifying) shows the bug class now spans both the hand-edit AND
   sanctioned-API-park mechanisms — widening the eventual fix's scope, not narrowing today's classification.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:086d99f24bbc2f5b]: KEEP-NA, valid — sole remaining item is an unscoped design fork (repo ownership + mechanism undecided), independently re-verified across 5 prior audit passes.

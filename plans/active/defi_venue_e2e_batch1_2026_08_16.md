@@ -231,14 +231,24 @@ source: >-
       Evidence: `unified-api-contracts@03ff79e8b8` (InstructionActionV2 WITHDRAW/REPAY) +
       `unified-api-contracts@73a7594285` (BENCHMARK_FILL_MODE_BY_ACTION follow-up) +
       `execution-service@b8115edffc` (dispatch + routing-gate + tests).
-- [ ] [BACKEND] P1. **Gap: execution-service's live `DeFiAdapter` wires only 5 of 12+ fully-built protocol
-      connectors** — `defi_execution/protocols/` has complete, real connector modules for `morpho.py`,
-      `kamino.py`, `etherfi.py`, `marinade.py`, `puffer.py`, `rocket_pool.py`, `solblaze.py`, but
-      `LiveExecutionHandler._build_defi_adapter` (`execution_service/cli/handlers/live_execution_handler.py:
-      500-541`) only ever constructs `uniswap, aave, lido, symbiotic, jupiter` — the same dispatch-table-
-      narrower-than-registry pattern already tracked for features-service above. Done-when: each connector is
-      either wired into `_build_defi_adapter` and exercised, or its exclusion is confirmed intentional with a
-      cited reason.
+- [x] ✅ [BACKEND] P1. **Gap: execution-service's live `DeFiAdapter` wires only 5 of 12+ fully-built protocol
+      connectors — DONE 2026-08-17 (slot-25).** SHIPPED — `execution-service@f6535b12a2`. Wired 6 of the 7
+      remaining connectors into `DeFiAdapter.__init__`/`ensure_connected`/dispatch and
+      `LiveExecutionHandler._build_defi_adapter`: `morpho.py` (LEND/BORROW/WITHDRAW/REPAY via `market_id`, not
+      per-asset — new `_execute_morpho_lending`), `kamino.py` (same 4 ops via `KaminoDepositParams`/
+      `KaminoBorrowParams`, requires explicit `reserve_address`/`market_address` in instruction params — fails
+      loud rather than guessing an on-chain address, new `_execute_kamino_lending`), `etherfi.py`/`puffer.py`/
+      `rocket_pool.py`/`marinade.py` (STAKE/UNSTAKE — Puffer uses `deposit`/`withdraw`, not `stake`/`unstake`,
+      a different verb than the other three; new per-connector `_execute_*_staking` methods). `solblaze.py`
+      **intentionally excluded** — its own module docstring ("Live-capability status") confirms
+      `stake()`/`unstake()` stay simulation-only (`supports_live=False` by design, needs the `spl-stake-pool`
+      SDK which isn't a repo dependency); constructing it with `is_live=True` raises
+      `SimulationOnlyConnectorError` (confirmed live via a first QG run that caught exactly this). 20 new unit
+      tests in `tests/unit/test_defi_adapter.py` (7 connector fixtures + dispatch/fail-loud/ensure_connected
+      coverage). Full `quality-gates.sh` green (file/function-size gates required extracting
+      `_build_solana_defi_connectors` + moving connector-type imports to module level in
+      `live_execution_handler.py`, since the pre-existing per-symbol lazy-import style re-triggered isort
+      resplitting on `--fix`).
 - [ ] [BACKEND] P1. **Gap: three parallel, non-equivalent DeFi execution facades exist in execution-service,
       risking a paper≠live divergence.** `InstructionRouter`/`HandlerRegistry` (keyed on `OperationType`, not
       `InstructionActionV2`) feeds only backtest `BenchmarkMatcher` simulation (instant fill at benchmark price,

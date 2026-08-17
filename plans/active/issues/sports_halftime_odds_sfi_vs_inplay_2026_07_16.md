@@ -312,3 +312,14 @@ already-fixed-but-unflipped** — every one is genuinely still open.
   RECLASSIFY trigger without a scoped implementation plan first. Not KEEP-NA-STALE either: this work is not duplicated
   in any active `assigned_vm: planning` doc.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-17** [body-hash:46e7e1330121583f]: KEEP-NA, valid — sole open item (2,436 deleted
+  T-0 shard manifest reconciliation) re-examined against the `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` closing-the-loop
+  rule: the stated blocker (in-flight bucket cutover) remains confirmed-stale (merged 2026-07-17), and no active
+  `assigned_vm: planning` doc claims this work — but no concretely-scoped script/approach exists yet, and this
+  touches the same manifest/consolidator machinery that regressed twice on the sibling
+  `sports_cf8_available_at_backfill_regression_2026_07_13.md` surface. This is now the **3rd consecutive
+  na-eligibility-audit pass** (2026-07-30, 2026-08-09, 2026-08-17) parking this exact item without resolution —
+  escalating per the skill's "must not sit flagged forever" rule: recommend an explicit operator ruling on whether to
+  (A) scope + dispatch a bounded flip-script mirroring the precedented `remove_football_phantom_rows_2026_08_05.py`/
+  `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py` pattern, or (B) rule this stays human-owned given the
+  surface's regression history — not resolved by this pass either way, carried into this run's Phase 5 report.

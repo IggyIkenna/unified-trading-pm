@@ -389,3 +389,4 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   `dmesg`/`journalctl -k` access this identity does not have, or an operator to grant kernel-ring-buffer read access) —
   both unresolved as of this pass, content otherwise unchanged since 2026-08-07.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:18c1653905a55832]: KEEP-NA — item 1 (best-effort root-cause the 49.3G/16G swap peak) is ALREADY claimed by the active `ao_satellite_ao_dispatch_batch21_2026_08_16.md` (its own still-open todo cites this doc by path); leave open, do not duplicate. Item 2 (kernel dmesg/journalctl root access) stays KEEP-NA, genuinely CREDENTIAL_BLOCKED — agent slots lack root-level host access.

@@ -19,10 +19,10 @@ related:
     /plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
@@ -86,3 +86,11 @@ own open todos — DeFi's separate canonical-orthogonality candidates found in t
 that plan's existing "audit the data-type vocabulary for near-duplicates" / "audit for orphaned data types" P0
 todos, so those are not duplicated here).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **RECLASSIFY, whole-doc.** All 4 open
+  findings are bounded, worker-determinable code/schema/investigation tasks (find-a-writer-and-fix-a-column-mapping;
+  register 2 known-schema SchemaContracts against a same-shape cefi precedent; 2 bounded diagnose-one-of-N-hypotheses
+  investigations) that were simply never assessed for AO eligibility since filing — no operator gate, no
+  `depends_on`, no redirect banner, no prior audit pass on this doc, and this doc's own filing entry confirms
+  non-duplication against the rest of the corpus. Flipped `assigned_vm: NA -> planning` +
+  `execution_scope: local-only -> orchestrator-agent` in place (frontmatter above); companion finalize plan:
+  `nick_ai_audit_data_quality_findings_2026_08_16_finalize_2026_08_17.md`.

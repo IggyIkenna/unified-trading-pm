@@ -208,3 +208,4 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   magnet). A single-item doc whose only content is an anti-batch instruction cannot be satellite-extracted without
   violating the instruction itself.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:f91ba0117fea57b5]: KEEP-NA, valid — sole remaining todo is a standing opportunistic-retag instruction under an explicit 2026-08-06 operator ruling against batching it; never-relitigate case (a)/(c) applies directly.

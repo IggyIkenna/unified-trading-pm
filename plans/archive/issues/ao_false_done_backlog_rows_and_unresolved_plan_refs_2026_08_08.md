@@ -19,7 +19,7 @@ summary: >-
   reopening 14 tasks would have deepened the starvation rather than relieved it. The 1,013 unresolved plan_refs are a
   much larger and separate signal — most are expected (rows pointing at since-archived plans) but the count has never
   been characterised, so it is carried here as its own audit todo rather than assumed benign.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -46,7 +46,12 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: advance-process
-resolved_by:
+resolved_by: >-
+  na-eligibility-audit 2026-08-17 (ao tranche) — all 14 false-done-row verdicts + both Follow-ups are [x] with hard
+  evidence (commit shas / live GET /api/backlog verification, per-item Progress Log trail above); zero open todos
+  remain (live grep confirmed 0 matches). Companion finalize plan
+  `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md`'s own todo 3 ("archive the
+  parent doc, and only then") is this same action.
 locked_by:
 depends_on: []
 source: >-
@@ -55,6 +60,10 @@ source: >-
   the diagnosis surfaced underneath it.
 context_scope: [/codex/12-agent-workflow/commit-push-flip-rule.md, agent-orchestrator/scripts/orchestrator/audit_false_done.py, agent-orchestrator/scripts/orchestrator/audit_cron_notify.py, agent-orchestrator/server/routes/backlog.py]
 ---
+
+> 🟢 **ARCHIVED / RESOLVED 2026-08-17** (na-eligibility-audit, ao tranche) — all 14 false-done rows + both Follow-ups
+> closed with hard evidence, 0 open todos. See `resolved_by:` above. Finalize:
+> `/plans/archive/2026_08/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md`.
 
 # `audit-false-done` standing breach — 14 false-done rows + 1,013 unresolved plan_refs
 
@@ -528,3 +537,4 @@ plan + verifying the `done_sha`, never from the row's status alone.
   items are already covered elsewhere; re-flipping would be a pointless duplicate dispatch against work with nothing
   left to do. Not re-flipping.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:97d9d44319e9f43d]: ARCHIVE — every checkbox (14 false-done-row verdicts + both Follow-ups) is [x] with hard evidence (commit shas / live API verification); zero open todos remain (live grep confirms 0 matches), no locked_by. Archived per the 6-step ritual to plans/archive/issues/ (doc_type: issue).

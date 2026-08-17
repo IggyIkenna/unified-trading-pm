@@ -876,3 +876,7 @@ issue's scope); flagged as a follow-up todo below.
   this doc is now closed; the sole remaining open item is the operator-coordinated production backfill
   re-execution (line ~276) — correctly untouched, out of scope for this pass.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:d15fb2febbfa0f76]: KEEP-NA, valid — sole open item ([DATA] P1,
+  re-attempt the CF-8 captured-row backfill) is explicitly operator-gated: both prerequisites are confirmed done, but
+  the doc's own text holds execution "for a dedicated, reviewed maintenance window" given 3 documented production
+  incidents on this exact surface. Not duplicated in any active `assigned_vm: planning` doc.

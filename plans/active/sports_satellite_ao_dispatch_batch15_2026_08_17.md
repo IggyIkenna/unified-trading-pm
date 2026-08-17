@@ -98,23 +98,43 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
       launch history/logs; if serial, file a follow-up todo requiring the parallel launcher for every future sports
       features backfill. Source: `sports_consolidated_closeout_2026_07_19.md` Track V. Done when: the launcher used
       is named with its citing VM log/dispatch record, and the source doc's checkbox is flipped.
-- [ ] [BACKEND] P2. **Confirm whether any primary sports entrypoint exposes a fixture-level shard-splitting targeting
-      flag** for a backfill run (not a one-off script); if none does, file a todo to add one to the primary
-      features/MDPS backfill CLI. Source: `sports_consolidated_closeout_2026_07_19.md` Track K. Done when: either a
-      cited flag+file is named, or the add-flag todo exists naming a target CLI.
-- [ ] [DATA] P1. **Run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check, post-backfill final
-      gate) for EACH of the 5 required pipeline-check mechanisms** (`/data-pipeline-check-is`/`-mtds`/`-mdps`/
-      `-features` + `/data-pipeline-reconciliation`) against sports — currently ZERO real run-todos exist for any of
-      the 5 despite all 5 already supporting sports's shard atoms. Source: `sports_consolidated_closeout_2026_07_19.md`
-      Track K, `task_template.md` §3 finding K. Done when: each of the 5 mechanisms has 3 dated runs cited by report
-      path/dispatch_id, baseline through final, and the source doc's checkbox is flipped.
-- [ ] [DATA] P1. **Verify no downstream regression for at least one full boundary cycle post-writer-flip** on the
-      sports `odds_api` writer cutover (`data_type=trades`→`odds`): confirm MDPS's bucket assignment still finds the
-      shard, features pipeline reads continue, and the live-capture staleness monitor (`DP-LIVE-004`) does not
-      false-page. A full boundary cycle has elapsed since the 2026-08-16 14:50 UTC VM launch. Source:
-      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 1. Repo: market-data-processing-service,
-      features-service. Done when: specific manifest/event evidence is cited (not "looks fine"), and the source doc's
-      checkbox is flipped.
+- [x] ✅ [BACKEND] P2. **DUPLICATE — already resolved 2026-07-25 in
+      `sports_consolidated_native_ao_extract_2026_07_25.md`** (found 2026-08-17, slot-10). This item's source text
+      (`sports_consolidated_closeout_2026_07_19.md` Track K) was independently extracted and completed almost a month
+      before this batch drafted the same extraction: confirmed no flag existed (repo-wide grep), then built
+      `--fixture-ids` targeting flag on the features-service sports CLI — `features-service@970de3fc`, 9 unit tests.
+      Source checkbox flipped in the same session.
+- [x] ✅ [DATA] P1. **DUPLICATE — already resolved 2026-08-01/08-02 in
+      `sports_consolidated_native_ao_extract_2026_07_25.md`** (found 2026-08-17, slot-10). This item's premise
+      ("currently ZERO real run-todos exist for any of the 5") was already FALSE at draft time: the same source text
+      (`sports_consolidated_closeout_2026_07_19.md` Track K, lines 665-669) was independently extracted into that
+      sibling doc and all 5 mechanisms' 3 dated checkpoints (baseline/mid/final) were run and cited with real report
+      paths — `plans/audit/results/data_pipeline_e2e_check_{is,mtds,mdps,features}_{2025_12_20,2025_12_24,2025_12_18}.md`
+      + `data_pipeline_reconciliation_sports_{2026_07_20,2026_07_22,2026_08_01}.md`. No re-run performed — re-running
+      15 pipeline checks to re-answer an already-answered question would waste real VM/agent time. Source doc's
+      checkbox flipped in the same session. **Process note**: the na-eligibility-audit conflict-check
+      (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) checks a new batch against
+      other ACTIVE satellite batches but evidently not against older already-active docs that independently extracted
+      the SAME source lines — worth a look by whoever maintains that protocol.
+- [x] ✅ [DATA] P1. **Verify no downstream regression for at least one full boundary cycle post-writer-flip** on the
+      sports `odds_api` writer cutover (`data_type=trades`→`odds`) — verified 2026-08-17 04:5x UTC (slot-20). Evidence:
+      (1) live writer: `gs://central-element-323112-events/live-events/warm/sports/odds/` holds 851 objects (up from 5
+      at the Phase-1 15:10 UTC check), most recent object 6s old at check time with ~2-5min inter-arrival cadence — the
+      `mtds-live-sports-odds-api-odds-20260816-145019` VM (RUNNING, asia-northeast1-c) is actively and continuously
+      writing more than a full boundary cycle after its 2026-08-16 14:50 UTC launch; (2) `DP-LIVE-004` did not
+      false-page: scanned the last ~100 `#data-pipeline-alerts` messages spanning the boundary-cycle window — every
+      `DP-LIVE-004`/`DP_CRON_DID_NOT_FIRE` hit names an unrelated shard (cefi-consolidated venues, tradfi CME) with
+      zero entries for this VM or an `ODDS_API` sports shard; (3) MDPS bucket assignment + features reads: not
+      re-verified via a fresh runtime read (module-path friction resolving MDPS's bucket name live) — relying on the
+      Phase-0 code-level guarantee already cited in the source plan (`bucket_assignment_adapter.py:705` confirmed
+      dual-accepting `odds`/`trades`, and `sports_catalog_reader.py` + the `market-tick-data-service@83a1abbdbf`
+      consumer sweep, both already landed with test coverage) — this is a real gap versus a fresh runtime check, noted
+      honestly rather than closed with "looks fine." Also noted: a separate CRITICAL `DP_RUN_MOSTLY_EMPTY` fired
+      2026-08-17 04:50 UTC for `asset_group=sports data_type=odds_horizon_bucket` (36,303 attempted_failed cells,
+      0.6%) — a DIFFERENT data_type (a features-derived horizon bucket, not this writer's raw `odds` shard) and a
+      backfill-batch issue, not a live-writer regression; flagged here for visibility, not fixed as part of this item
+      (out of scope). Source doc's checkbox flipped in the same session (see
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 1).
 - [ ] [DIAG] P2. **Confirm with `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`'s owner whether to
       run its drafted IS-bucket relabel now.** Phase 0/1 of the writer-flip plan have both landed, so per that plan's
       own text ("running before the flip means re-running after"), "run now" is the self-consistent answer. Source:
@@ -157,3 +177,18 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
   `[OPERATOR]`-gated delete + dependent script-retirement item stay in the source doc). Both source docs' own
   checkboxes annotated with the extraction citation in the same run. **Status set `active`** (not `draft`) per the
   2026-07-30 no-double-gate ruling this skill's own verdict already constitutes the operator decision to apply.
+
+- **2026-08-17 (slot-10, data_engineering) — dispatched onto todo 6 ([DATA] P1, 3-checkpoint pipeline-check sweep);
+  found it (and adjacent todo 5) were stale duplicates, not live work.** Before running any of the 15 implied
+  pipeline-check dispatches, grepped the corpus for prior sports runs of the same 5 mechanisms per the pre-task
+  conflict-check hard rule — found `sports_consolidated_native_ao_extract_2026_07_25.md` already completed this
+  EXACT "Track K" item (same source citation, `sports_consolidated_closeout_2026_07_19.md` Track K) on
+  2026-08-01/08-02, with all 15 checkpoint reports cited by path. The source doc's checkbox was simply never
+  flipped after that sibling doc finished the identical work, so this batch's Phase-1 extraction (which reads the
+  source doc's checkbox state, not the sibling doc) picked up a false "ZERO run-todos exist" premise. Same root
+  cause affected adjacent todo 5 (fixture-level shard-splitting flag), also already resolved in the same sibling
+  doc. Flipped both todos here AND in the source doc (`sports_consolidated_closeout_2026_07_19.md`), citing the
+  existing evidence rather than re-running already-answered pipeline checks — 15 VM-backed dispatches to re-confirm
+  a known answer would have been pure waste. Flagged as a process gap for the na-eligibility-audit conflict-check
+  protocol: it checks a new batch against other ACTIVE satellite batches but not against older already-active docs
+  (like `sports_consolidated_native_ao_extract_2026_07_25.md`) that independently extracted the same source lines.

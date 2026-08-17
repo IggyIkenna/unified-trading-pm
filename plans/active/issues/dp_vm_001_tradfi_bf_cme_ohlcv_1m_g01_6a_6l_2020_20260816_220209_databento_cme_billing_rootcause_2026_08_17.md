@@ -40,7 +40,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
-    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/tradfi_bf_cme_ohlcv_1m_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
@@ -154,13 +154,14 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
       correct the sibling docs' hypothesis and record a fresh confirmation. Once billing is restored, the
       `g01-6a-6l-2020` shard (and its 2020-06-10-onward remainder) needs a fresh relaunch — not urgent to track
       separately, the family's normal backfill-completion sweep will pick it up once the AG billing gate lifts.
-- [ ] [BACKEND] P3. Optional hardening, not blocking: the in-VM stall watchdog currently can't distinguish "hung
-      call" from "correctly-fast-failing on a known billing/entitlement error" — both surface as generic
-      `exit_code=137`/`WORKER_STALLED`. A cheap improvement would be to special-case a `402`/`account_delinquent`
-      response into a distinct terminal state (e.g. `DEPLOYMENT_FAILED cause=billing_blocked`) so the fleet monitor
-      and future escalations don't need to re-pull `run.log` to tell the two apart — every DP-VM-001 stall
-      escalation for this family so far (three same-day/same-week incidents) has had to do this same manual
-      run.log read.
+- [x] ✅ [BACKEND] P3. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 3.** Optional hardening, not blocking: the in-VM
+      stall watchdog currently can't distinguish "hung call" from "correctly-fast-failing on a known
+      billing/entitlement error" — both surface as generic `exit_code=137`/`WORKER_STALLED`. A cheap improvement
+      would be to special-case a `402`/`account_delinquent` response into a distinct terminal state (e.g.
+      `DEPLOYMENT_FAILED cause=billing_blocked`) so the fleet monitor and future escalations don't need to re-pull
+      `run.log` to tell the two apart — every DP-VM-001 stall escalation for this family so far (three
+      same-day/same-week incidents) has had to do this same manual run.log read.
 
 ## Progress Log
 
@@ -176,3 +177,7 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
   two same-shard sibling docs' "poison instrument" hypothesis and appended a fresh-confirmation entry to the P0
   billing doc's Progress Log (same edit session). No code changed.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **RECLASSIFY, per-todo split.** Todo 2
+  (optional watchdog hardening) is bounded/deterministic — extracted, see checkbox above. Todo 1 (pay invoice) stays
+  NA — verbatim duplicate of `tradfi_databento_account_billing_suspended_2026_08_09.md`'s own P0 OPERATOR todo. Doc
+  stays `assigned_vm: NA`.

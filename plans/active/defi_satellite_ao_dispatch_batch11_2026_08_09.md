@@ -25,7 +25,7 @@ tags: [defi, ao-dispatch, satellite-extraction, batch-11, orphan-extraction]
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
     /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,

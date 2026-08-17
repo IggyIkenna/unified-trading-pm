@@ -1,22 +1,23 @@
 ---
 doc_type: issue
-title: "FF-pull starvation watchdog operator-ping delivery was HTTP 401 on slot 5 — ROOT-CAUSED + FIXED (stale per-slot .orch_token); slots 3/4 likely need the same fix"
+title: "FF-pull starvation watchdog 401 — ROOT-CAUSED + FIXED on the operator's laptop (11 slots, stale per-slot .orch_token); planning VM's 33 slots checked and confirmed unaffected"
 summary: >-
   `slot-git-status-report.sh`'s FF-pull starvation watchdog (`check_starvation_for_slot`,
   `ff-starvation-detect.sh`) was correctly detecting real starvation episodes (a dirty local edit colliding with
   incoming origin content, blocking `slot-cron-ff-pull.sh`'s auto-heal) — confirmed live for `.tabs/5/unified-
   trading-pm` (starved 20:13:27Z-21:10:21Z, 42 commits behind, well past both the 25-commit and 3-tick paging
   thresholds) — but every ping attempt to `${ORCH_URL}/api/slots/<N>/message` was returning HTTP 401, logged as
-  `[starve-ping-fail]`. **ROOT-CAUSED for slot 5**: `resolve_token_for_slot()` checks the PER-SLOT
-  `.tabs/<N>/.orch_token` file before the home-dir `~/.orch_token` fallback — slot 5's per-slot token had `exp:
-  2026-05-27` (expired ~3 months ago, JWT `exp` claim decoded directly), silently shadowing the still-valid
-  `~/.orch_token` (`exp: 2026-09-09`) that would otherwise have been used. **FIXED for slot 5** (2026-08-16):
-  replaced the stale per-slot token with the valid home-dir one; verified live with a direct
-  `POST /api/slots/5/message` call — now returns HTTP 200 (previously 401). Slots 3 and 4 showed the identical
-  401 pattern in the shared log (`/tmp/slot-git-status-report.501.log`, since at least 19:28Z) and likely have
-  the same stale-per-slot-token root cause, but their `.tabs/3/.orch_token` / `.tabs/4/.orch_token` files were
-  NOT touched this session — those are different slots' checkouts, not mine to reach into without the operator
-  present/confirming (per the multi-agent slot-boundary rule).
+  `[starve-ping-fail]`. **ROOT-CAUSED**: `resolve_token_for_slot()` checks the PER-SLOT `.tabs/<N>/.orch_token`
+  file before the home-dir `~/.orch_token` fallback. Operator asked to check all 11 slots (2026-08-17): 8 of 11
+  (`.tabs/{1,2,3,4,5,6,7,8}`) had a per-slot `.orch_token` with the IDENTICAL expired `exp: 2026-05-27T15:40:57Z`
+  claim (a single provisioning batch, not independent staleness) silently shadowing the healthy
+  `~/.orch_token` (`exp: 2026-09-09T08:09:17Z`). Slots 9, 10, 11 have NO per-slot token file at all and were
+  already correctly falling through to the valid home-dir one — no fix needed there. **FIXED for all 8 affected
+  slots** (2026-08-16/17): each stale token backed up to `.orch_token.expired-2026-05-27.bak` alongside it and
+  replaced with the valid home-dir token; verified live via direct `POST /api/slots/<N>/message` calls for
+  slots 1, 3, 5, 7 — all now return HTTP 200 (previously 401). Slots 2, 4, 6, 8 got the identical file swap but
+  were not individually re-verified via a live call (same source/target content as the verified ones, so treated
+  as equivalent — flagged in Progress Log, not blindly assumed silently).
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -88,39 +89,70 @@ the DELIVERY half is silently swallowing every alert — functionally equivalent
 except it looks like one exists (misleading). This is exactly the kind of gap that lets a slot drift for hours
 before an operator notices, same failure class as the incidents the mechanism was built to prevent.
 
-## Root cause (found + fixed, slot 5 only)
+## Root cause (found + fixed, all 8 affected slots)
 
 `resolve_token_for_slot()` (`scripts/dev/slot-git-status-report.sh:444-465`) resolution order is: explicit
 `TOKEN_FILE` → per-slot `${TABS_DIR}/<N>/.orch_token` → `~/.orch_token` → `/tmp/orch_token` → (loopback-only
-anonymous). Slot 5's per-slot `.orch_token` (dated `Aug 16` mtime but actually minted long before — decoded JWT
-`exp` claim: `2026-05-27T15:40:57Z`) was silently shadowing the healthy `~/.orch_token` (`exp:
-2026-09-09T08:09:17Z`) sitting one fallback level down — the resolver never got far enough to try it. This is a
-pure stale-local-credential bug, nothing wrong on the orchestrator/server side, and nothing wrong with the
-watchdog's detection logic.
+anonymous). Every affected slot's per-slot `.orch_token` decoded to the SAME JWT `exp` claim
+(`2026-05-27T15:40:57Z`) — a single provisioning batch that was never refreshed, not 8 independent staleness
+events — silently shadowing the healthy `~/.orch_token` (`exp: 2026-09-09T08:09:17Z`) sitting one fallback
+level down. The resolver never got far enough to try the home-dir fallback for any of them. This is a pure
+stale-local-credential bug, nothing wrong on the orchestrator/server side, and nothing wrong with the watchdog's
+detection logic.
 
-**Fix applied (slot 5, 2026-08-16)**: backed up the expired per-slot token to
-`.tabs/5/.orch_token.expired-2026-05-27.bak`, copied the valid `~/.orch_token` content into
-`.tabs/5/.orch_token` (mode 600 preserved). Verified live: `POST /api/slots/5/message` with the new token now
-returns `200` (was `401`).
+**Fix applied (all 8 affected slots, 2026-08-16/17)**: for each of `.tabs/{1,2,3,4,5,6,7,8}`, backed up the
+expired per-slot token to `.orch_token.expired-2026-05-27.bak` alongside it, then copied the valid
+`~/.orch_token` content in (mode 600 preserved). Verified live via `POST /api/slots/<N>/message` for slots 1,
+3, 5, 7 (spot-check, not all 8, to avoid spamming every slot inbox with a diagnostic message) — all returned
+`200` (was `401`). Slots 2, 4, 6, 8 got the identical byte-for-byte token swap but weren't individually
+re-curled. Slots 9, 10, 11 had no per-slot token file and needed no change — confirmed already falling through
+correctly to the valid `~/.orch_token`.
 
 ## What I did NOT do
 
-- Did NOT touch slots 3 or 4's `.orch_token` files, even though the identical 401 pattern in the shared log
-  strongly suggests the same stale-per-slot-token cause — those are different slots' checkouts (potentially
-  live/in-use by another session right now), out of bounds for me to reach into without the operator present.
 - Did NOT change `resolve_token_for_slot()`'s resolution order or add expiry-awareness (e.g. skip an expired
   per-slot token and fall through to the next candidate) — that's a real hardening opportunity (see todo below)
-  but is a shared-script change affecting the whole fleet, not a same-turn fix for my own stale file.
-- Did NOT investigate why slot 5's per-slot token was ~3 months stale in the first place (no rotation cron found
-  for `.orch_token` files specifically) — worth checking if one is supposed to exist.
+  but is a shared-script change affecting the whole fleet, not a same-turn file swap.
+- Did NOT investigate why 8 slots' per-slot tokens were minted in the same stale batch and never refreshed in
+  ~3 months with no apparent alarm — no rotation cron found for `.orch_token` files specifically; worth
+  checking if one is supposed to exist (see todo below).
+- Did NOT spot-check slots 2, 4, 6, 8 with a live call after the swap — same source (`~/.orch_token`) and same
+  mechanism as the 4 verified slots, but noting the gap rather than silently claiming full verification.
+
+## Scope clarification: laptop vs. the `planning` VM (2026-08-17)
+
+The 11 slots checked/fixed above are all on the OPERATOR'S LAPTOP (`/Users/.../unified-trading-system-repos/.tabs/{1..11}`)
+— that machine only has 11 slots, confirmed via directory listing. Separately checked the AO `planning` VM
+(`i-0c9b283b31d6b5ca7`, read-only via SSM) since it runs the same cron/watchdog per `per-tab-worktrees.md`
+("operator laptops + every VM") and the operator asked about slots up to 33:
+
+- The VM has its OWN, separate slot pool: **33 numbered slot directories**,
+  `/home/ubuntu/unified-trading-system-repos/.tabs/{1..33}` — a different host, different slot numbering, not
+  an extension of the laptop's 1-11.
+- **None of the 33 VM slots have a per-slot `.orch_token` file** (`find .tabs/ -mindepth 2 -maxdepth 2 -iname
+  .orch_token` returned nothing) — so the VM never had the shadowing bug the laptop had; every VM slot
+  correctly falls through to `~/.orch_token`.
+- The VM's `~/.orch_token` (home-dir) is currently **valid**: `exp: 2026-08-23T20:33:48Z` (~6 days out from
+  today) — shorter-lived than the laptop's freshly-copied one (`2026-09-09`), worth a re-check before it lapses,
+  but not an active problem now.
+- Found one orphaned `.tabs/.orch_token` (sitting directly in `.tabs/`, NOT inside a numbered subdirectory,
+  mtime May 20 — same stale batch) — this path doesn't match `resolve_token_for_slot()`'s lookup order at all
+  (per-slot means `.tabs/<N>/.orch_token`, not `.tabs/.orch_token`), so it's dead/unconsulted, not a live bug.
+  Left untouched (not verified as safe to delete this session).
+- **Conclusion: the VM's 33 slots do not need the laptop's fix — they were never affected.**
 
 ## Todos
 
-- [x] ✅ [OPS] P1. **FIXED 2026-08-16 (interactive session, slot-5)** — stale per-slot `.orch_token` replaced with the
-      valid `~/.orch_token`; verified via a live `200` response. See "Root cause" above.
-- [ ] [OPERATOR] P2. Check `.tabs/3/.orch_token` and `.tabs/4/.orch_token` (and any other slot) for the same
-      stale-per-slot-token pattern (decode the JWT `exp` claim, compare against `~/.orch_token`'s) and refresh
-      any that are expired, mirroring the slot-5 fix above.
+- [x] ✅ [OPS] P1. **FIXED 2026-08-16 (interactive session, slot-5)** — slot 5's stale per-slot `.orch_token`
+      replaced with the valid `~/.orch_token`; verified via a live `200` response.
+- [x] ✅ [OPERATOR] P2. **FIXED 2026-08-17 (interactive session) — superseded the original ask.** Checked all
+      11 laptop slots per operator request, not just 3/4: found the identical expired token on 7 more slots (1,
+      2, 3, 4, 6, 7, 8), fixed all the same way as slot 5, confirmed slots 9-11 already correct. Separately
+      checked the `planning` VM's 33 slots (operator asked about slots up to 33) — confirmed unaffected, see
+      "Scope clarification" above. See "Root cause" above for the laptop mechanism.
+- [ ] [OPERATOR] P3. Re-check the `planning` VM's `~/.orch_token` before `2026-08-23T20:33:48Z` (~6 days from
+      filing) — it's currently valid but shorter-lived than the laptop's; confirm whatever's supposed to refresh
+      it actually fires, or refresh it manually if not.
 - [ ] [BACKEND] P3. Harden `resolve_token_for_slot()` to skip an expired candidate and fall through to the next
       one (it already has `decode_jwt_exp()` available — currently only used elsewhere for a different check;
       wire it into the resolution order itself) instead of using the first FILE it finds regardless of validity
@@ -134,9 +166,19 @@ returns `200` (was `401`).
 
 ## Progress Log
 
+- **2026-08-17 (interactive session, cont.)**: operator asked whether slots 9-33 were checked and whether this
+  was laptop or AO scope. Confirmed the laptop has exactly 11 slots (nothing higher). Checked the AO `planning`
+  VM read-only via SSM — it has its own separate 33-slot pool, none of which carry a per-slot `.orch_token`
+  (so none were shadowing their home-dir fallback); VM's `~/.orch_token` is valid until `2026-08-23`. VM
+  confirmed unaffected by this bug — see "Scope clarification" section above.
+- **2026-08-17 (interactive session)**: operator asked to check all 11 slots. Found the same expired
+  (`2026-05-27`) per-slot token on 7 more slots (1, 2, 3, 4, 6, 7, 8) beyond the already-fixed slot 5 — all one
+  provisioning batch, not independent staleness. Fixed all 8 the same way (backup + replace with
+  `~/.orch_token`), confirmed slots 9-11 already correct (no per-slot file), live-verified 4 of the 8 (1, 3, 5,
+  7) via direct `200` responses. Fleet-wide token-shadowing bug now resolved; the generalizable code fix
+  (expiry-aware fallback) and the "why did nothing rotate this" question remain open below.
 - **2026-08-16 (interactive session, slot-5)**: filed after the operator asked why a starved PM repo wasn't
   auto-healed given the documented cron/watchdog — traced to detection working correctly but delivery 401'ing.
   Root-caused to a stale per-slot `.orch_token` (expired 2026-05-27) shadowing a valid `~/.orch_token`
-  (2026-09-09) in the resolver's fallback order. Fixed for slot 5, verified live (401→200). Slots 3/4 likely
-  affected too but not touched — flagged as an operator todo since those checkouts aren't mine to reach into.
+  (2026-09-09) in the resolver's fallback order. Fixed for slot 5, verified live (401→200).
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries — dropped a `/tmp/` log path, not a durable reference).

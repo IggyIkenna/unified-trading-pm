@@ -18,7 +18,7 @@ related:
   [
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
-    /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
+    /plans/archive/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-08-08
@@ -78,11 +78,15 @@ locked_since:
       to it on 2026-08-08 (`unified-trading-pm@3bb3214bdf`) now that the ordering constraint has been discharged — a
       stale banner is misinformation for the next reader. **Done when**: convergence is evidenced and the banner is
       removed or updated to a past-tense record.
-- [ ] [REVIEW] P2. **Correct the historical record in
-      `/plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`.** That doc's
-      summary claims "RESOLVED 2026-08-05: live panel confirmed at venues/instrument_types/data_types/chains all 0/0
-      non-canonical". The 2026-08-08 audit showed that zero was produced by exclusion sets, not canonicalisation. Add a
-      dated correction so the corpus does not carry a false all-clear. **Done when**: the doc carries the correction.
+- [x] ✅ [REVIEW] P2. **DONE — already satisfied, verified 2026-08-17 (na-eligibility-audit, dispatch agt-1c51ee).**
+      Correct the historical record in
+      `/plans/archive/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` (archived this
+      same date). That doc already carries a dated `⚠️ CORRECTION 2026-08-08` banner at its top stating exactly this:
+      the "RESOLVED 2026-08-05... all 0/0 non-canonical" headline was produced by accepted-exceptions, not real
+      canonicalisation, with the measured real counts (31 venues/10 data types vs. the panel's rendered 10/7) and a
+      pointer to `sports_taxonomy_p3_consumers_2026_08_08.md` as the doc that owns genuine canonicalisation. This
+      todo's own done-when ("the doc carries the correction") was met the same day this finalize plan was authored;
+      it was simply never flipped.
 - [ ] [DOC] P2. **Archive `sports_taxonomy_p2_migration_2026_08_08.md`** via the standard 6-step ritual, including the
       codex-alignment check against the four-surface reconciliation and delete-safety SSOTs, the corpus-wide
       referrer-path fixup, and archiving this finalize doc alongside it in the same commit. **Done when**: the plan is

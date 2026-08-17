@@ -63,7 +63,18 @@ description:
   code shape (e.g. eager fallback-file resolution that never handled same-file constants) — re-run the FULL suite after
   any compliance fix, not just the check being satisfied. §2b covers ship-time host-contention retry discipline (retry
   once with `IGNORE_TIMEOUT` on a confirmed-clean pure-duration timeout, stop immediately on a DIFFERENT failure
-  signature) and cross-session collision handling (verify before accepting a peer's blame/credit misattribution). **When
+  signature), a `--isolated` quickmerge escalation for repeated silent reverts under extreme contention, and
+  cross-session collision handling (verify before accepting a peer's blame/credit misattribution). Also (2026-08-16): (s)
+  a repo-wide plan-hygiene/doc-corpus ratchet (dangling refs / AG-closeout linkage / create-only-archive-commit guard)
+  blocking every push+promote-PR regardless of diff content — often self-heals on a fresh pull, else a targeted
+  body-text linkage fix; (t) an asymmetric-alerting bookend (see (m)) over-firing because it approximates "did the
+  CRITICAL fire" via a raw status proxy instead of the SAME debounce gate the CRITICAL itself is subject to — gate the
+  bookend on the same elapsed-time condition. §0d also now covers monitor-cadence lag (a missing recovery post can be
+  legitimate lag on a relaxed cron, not brokenness) and §4 covers completing a clean-but-arm-failed auto-merge directly.
+  New §8/§9 (2026-08-16, standing/daily-cadence checks, not required on a narrow pasted-alert pass): a GH Actions
+  spend/self-hosting-migration audit keyed off per-repo visibility, and a CI-VM resource-health check delegating to
+  `/vm-resource-rightsizing-check` + `/vm-preemption-billing-waste-audit` for burst/underutilization/scale-down signals.
+  **When
   a fix reveals a
   whole bug CLASS, not just one instance, the auto-fix mandate extends to building the structural prevention for that
   class in the SAME pass** — a local dev-parity flag, a hardened detector, an extended liveness check — not just
@@ -73,7 +84,9 @@ description:
   `/ci-reconcile`, "unblock the CI alerts", "fix these
   Slack CI alerts at the root", "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline
   actually unblocked", "check if CI escalation caught this", "check the runner fleet / Cloud Build health", "make sure
-  nothing is left unresolved", "harden this so it doesn't need an agent next time".
+  nothing is left unresolved", "harden this so it doesn't need an agent next time", "check gh Actions spend", "what can
+  we self-host or throttle to cut CI billing", "how's the CI VM's resource health", "any persistent alerts that aren't
+  auto-resolving".
 ---
 
 # /ci-reconcile — fleet CI/CD reconciliation and root-cause fix
@@ -239,6 +252,15 @@ the matching GREEN return is an asymmetric-alerting gap (the reader has no way t
 incident ever cleared) — worth a one-line mention in § 7 even when it isn't the main incident, since it's the same
 "silence isn't evidence" principle § 6 already applies to monitor health, now applied to individual incident resolution.
 
+**Before concluding a missing recovery post means "stuck" or "broken," check the monitor's own poll cadence first**
+(2026-08-16). A monitor on a relaxed cron (e.g. `ldr-ci-monitor.yml`'s hourly `0 * * * *`, throttled down from `*/30`
+for cost — same throttle-vs-lookback family as (l)) can only detect and post a recovery on its NEXT tick — a repo that
+flips red→green one minute after a check ran will show no RESOLVED post for up to that full interval, even though the
+mechanism is working exactly as designed. Compute the gap yourself (`gh run list --workflow=<monitor>.yml --limit 2
+--json createdAt` for the monitor's own last-run time vs. the target repo's actual recovery timestamp from § 0) before
+treating a missing bookend as a finding — it's only a real gap if the monitor has already had a full interval to post
+and still hasn't.
+
 ## 0e. Expect a concurrent `/ci-reconcile` session — reconcile with it, don't silently duplicate or trust it blindly
 
 This skill is invoked from many places (a scheduled AO job, an operator-triggered laptop session, another slot's own
@@ -351,7 +373,16 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   `--regenerate-baseline`/equivalent and diff the result against git HEAD line-by-line before shipping — see (j) for why
   an ungated regenerate is dangerous). Never hand-edit a `DO NOT manually edit — auto-generated` baseline file's content
   by guessing the format; either use the tool's own regenerate path or make the minimal targeted edit that matches
-  exactly what a regenerate would produce for that one entry.
+  exactly what a regenerate would produce for that one entry. **Confirmed recurrence (2026-08-16,
+  `market-tick-data-service` orchestrator refactor `bd07cfc3`)**: same checker, same file shape — a per-date-concurrency
+  refactor deleted a code comment that happened to contain the literal string `classify_venue_error()` while the actual
+  call site (`classification = classify_venue_error(venue, ...)`) stayed untouched a few lines away. Verify by diffing
+  the SPECIFIC pattern's line numbers before/after the flagged commit (`git show <sha>~1:<file> > /tmp/before;
+git show <sha>:<file> > /tmp/after; grep -n '<pattern>' /tmp/before /tmp/after`) rather than reading the whole diff —
+  this pinpoints in seconds whether the vanished match was a functional call or prose. **This checker has now
+  false-positived on two independent, unrelated repos/commits** — if it recurs a third time, stop re-baselining
+  instance-by-instance and actually build the AST-walk the checker's own docstring already names as the fix, per this
+  skill's "harden the class" mandate.
 - **(j) `--regenerate-baseline` (or an equivalent full-corpus-walk mode) picks up leftover history-rewrite checkout
   directories as if they were live sibling repos** (2026-08-11). Tell: this workspace's local dev tree keeps
   `<repo>.stale-pre-history-rewrite-<timestamp>Z` directories alongside the real repos (leftover artifacts from a past
@@ -503,6 +534,39 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   **After any codex-compliance/QG-gate fix, re-run the FULL suite before shipping — not just the one check you were
   satisfying** — a green single-check re-run is not evidence the fix didn't regress a neighbor.
 
+- **(s) A repo-wide plan-hygiene/doc-corpus ratchet (not code, not YAML) blocks the SAME shared QG job every push and
+  every promote-PR uses, entirely unrelated to the diff actually being shipped** (2026-08-16, PM). Tell: the failing
+  selector is the `checks` QG slice, and the actual failure line is one of `scripts/plan-hygiene/check_*.py` —
+  `check_reference_paths.py` (dangling `/plans`/`/codex` refs vs. baseline), `check_ag_closeout_linkage.py` (a
+  single-AG doc with no body-level mention in its AG's `<ag>_consolidated_closeout_*.md`), or
+  `check_create_only_archive_commits.py` (a `git commit --only` archival that dropped the rename-delete half) — none of
+  which have anything to do with the commit CI is blaming. On a high-velocity, high-contention repo these often
+  **self-heal**: `git pull --ff-only` first, then re-run the specific failing checker locally
+  (`python3 scripts/plan-hygiene/check_<name>.py`) before touching anything — a concurrent session may have already
+  fixed it (confirmed live: 2 of 3 simultaneous failures tonight cleared on a fresh pull alone). For a genuine,
+  persistent violation: `check_ag_closeout_linkage.py` requires a BODY-text (not frontmatter — `related:` YAML doesn't
+  count) mention of the orphaned doc's exact filename STEM somewhere in its AG's closeout doc; the fix is a short,
+  honest entry in that doc's running audit-log section citing the orphan(s) by full stem (worked example:
+  `unified-trading-pm@a0a88cc642`, 3 tradfi orphans fixed with one entry in `tradfi_consolidated_closeout_2026_07_18.md`
+  — verify locally with the checker before shipping, a partial/abbreviated filename citation like `"...
+_finalize.md"` silently fails the substring match).
+- **(t) An asymmetric-alerting BOOKEND (see (m)) approximates "did the original CRITICAL actually fire" via a raw status
+  proxy instead of replicating the SAME debounce/cooldown gate the CRITICAL itself is subject to — so the bookend fires
+  far more often than the alert it claims to be resolving** (2026-08-16, PM `ldr-to-main-promote.yml`). Tell: the
+  CRITICAL notifier has its own debounce (e.g. `notify-qg-fail`'s promote-branch gate only fires once a failure streak
+  clears a 30-min `duration_min` threshold, `python-quality-gates-v2.yml`), but the bookend job that later closes/
+  supersedes the same artifact decides "was this red enough to have alerted" from a cheaper, debounce-blind signal (a
+  raw `statusCheckRollup` FAILURE conclusion, no elapsed-time check) — at a promote cadence close to or faster than the
+  debounce window, MOST individual promote-PR failures never actually clear the debounce and no CRITICAL ever posts, yet
+  the bookend still claims "RESOLVED, had posted a CRITICAL" for nearly every one of them. Confirm by checking the
+  CRITICAL notifier's own `if:` condition for a companion debounce job (`needs.<debounce-job>.outputs.still_failing`)
+  and comparing its threshold to the bookend's detection window. Fix: gate the bookend on the SAME condition, not the
+  proxy — here, requiring the failing check's own `startedAt` to be at least as old as the debounce threshold before
+  counting it as "was red" (worked example: `unified-trading-pm@a0a88cc642`'s `_STALE_FAIL_STARTED`/`_STALE_FAIL_AGE_MIN`
+  elapsed-time gate in `ldr-to-main-promote.yml`, replacing a bare `statusCheckRollup` FAILURE check). Don't just accept
+  a bookend's own "had posted a CRITICAL" framing as ground truth (§ 0) without checking this — it's a claim, not a fact,
+  exactly like every other alert text this skill exists to re-verify.
+
 ## 2. Fix (b), (c), (d) directly in the target repo
 
 Standard single-repo fix path: root-cause, fix, `bash scripts/quality-gates.sh --no-fix`,
@@ -543,6 +607,19 @@ thank you for a fix you didn't make) rather than silently accepting either blame
 record for whoever reads `git blame`/commit messages later. Never touch another session's live uncommitted WIP to "help"
 unblock them, even with good intentions — that's exactly the collision this workspace's multi-agent safety rules exist
 to prevent.
+
+**Repeated silent reverts (a fix that keeps landing, then vanishing, or landing stale) is EXTREME contention, not
+ordinary retry noise — switch to `--isolated` (2026-08-16)**. Under sustained multi-session load on a shared checkout, a
+peer's own stash/reconcile cycle can revert your uncommitted edit within SECONDS of it landing, sometimes multiple
+attempts in a row. Signal: `git stash list | wc -l` climbing fast, or the same content failing to appear on
+`origin/<branch>` after quickmerge reported success. `quickmerge.sh --isolated` commits from a private worktree snapshot
+taken at invocation, immune to a peer's concurrent working-tree churn — it is opt-in on a laptop (NOT the default; auto-
+OFF on the AO VM), so reach for it explicitly the moment a ship silently reverts or lands stale content twice in a row,
+rather than repeating the same non-isolated attempt. Always verify content directly on `origin` after ANY ship under
+suspected contention (`git fetch` + `git show origin/<branch>:<path> | grep <marker>`), never trust `rc=0`/log text
+alone — see `/codex/05-infrastructure/per-tab-worktrees.md` for the full measured incident (0/6 landed non-isolated vs.
+6/6 isolated) and mechanism detail; this skill's own auto-fix ships are exactly the kind of unattended, must-actually-
+land commit this protects.
 
 ## 3. Fix (a) and (e) via the template, never a per-repo hand-edit
 
@@ -599,6 +676,12 @@ its live state is more current than the alert text.
   (`scripts/cicd/ldr_to_main_fleet_promote.sh` / the `ldr-to-main-promote-fleet.yml` workflow, `*/15`) is actually
   firing and succeeding (`gh run list --workflow=<it> --limit 5`). If it's healthy and just hasn't ticked yet, don't
   force anything — report expected clear time. If a run is failing, root-cause that same as any other CI failure.
+- **Auto-merge ARM FAILED, but the PR itself is fine** (2026-08-16): `notify-arm-failed`-class alerts ("PR exists +
+  provenance-clean but needs a MANUAL `gh pr merge --auto`") mean the auto-merge API call itself didn't stick — not that
+  anything is wrong with the PR's content. Check first, don't deep-dive: `gh pr checks <n> --repo <r>` — if every
+  required check is `pass` and `gh pr view <n> --json mergeable,mergeStateStatus` shows `MERGEABLE`/`CLEAN`, just
+  complete it directly: `gh pr merge <n> --repo <r> --auto --merge`. Only investigate branch-protection/
+  `allow_auto_merge` settings if the checks themselves aren't actually green.
 
 ## 5. Cross-check the AO escalation system — don't let a real gap go unfixed silently
 
@@ -707,6 +790,50 @@ swept (sweep 3, from the `scripts/self-hosted-runners/*.sh` grep + live SSM chec
 not a prose summary that asks the reader to trust the sweep happened. This is the concrete fix for the failure mode that
 motivated § 0b/§ 0c: the reader should be able to look at the list and see for themselves that nothing was skipped,
 rather than taking "unblocked" on faith.
+
+## 8. Daily-cadence checks — GH Actions spend + self-hosting migration audit
+
+Run this section on a standing/daily invocation (not required on a narrow "fix this one pasted alert" pass). Origin
+(2026-08-16 operator ask): repo visibility has been changing (some repos made public then private again, `unified-
+trading-pm` itself staying the heavy exception for now) — GH-hosted Actions minutes are FREE AND UNLIMITED on a public
+repo (see (l)) but billed per-minute-by-runner-size on a private one, so a repo's real cost profile can flip without any
+workflow change.
+
+```bash
+gh api repos/<owner>/<repo> --jq '.private'                          # per-repo: is this one billed at all right now?
+gh api /users/<owner>/settings/billing/actions 2>/dev/null \
+  || gh api /orgs/<owner>/settings/billing/actions                   # account-level minutes-used-this-cycle
+python3 scripts/generate-workflow-catalog.py                         # regenerate (§ 0b) — Trigger column shows every
+                                                                       #   schedule(...) workflow's cadence at a glance
+```
+
+For every PRIVATE repo: cross-reference its `schedule(...)` workflows' cadence against § 0b's catalog and flag the
+highest-frequency / longest-runtime ones as migration candidates — either to a self-hosted runner (this workspace
+already runs a glue-runner pool, § 0c) or to a relaxed cadence (apply (l)'s pairing rule: never throttle a cron without
+widening its lookback/dedup window in the same change). **Self-hosting is not free either** — check § 9 before
+recommending it; moving spend from GH billing to an underutilized self-hosted box is only a win if that box has
+genuine spare capacity, not a wash that just hides the cost. Report per-repo: current visibility, heaviest
+`schedule(...)` workflows by frequency, and a concrete recommendation (throttle / self-host / leave as-is + why) — never
+just "spend is up," a number with no actionable next step isn't a finding.
+
+## 9. Daily-cadence checks — CI VM resource health
+
+Also a standing/daily check, not required on a narrow pass. Don't reimplement rightsizing logic here — this skill's job
+is to point at the right existing tool with the right target, not duplicate `/vm-resource-rightsizing-check`'s (any VM
+run >30min) or `/vm-preemption-billing-waste-audit`'s (preemption/billing-waste sweep) logic:
+
+```bash
+/vm-resource-rightsizing-check   # or invoke directly against the known CI/glue-runner host(s), § 0c: i-042a6332509482556
+/vm-preemption-billing-waste-audit
+```
+
+Look specifically for: (1) a **burst pattern** — CPU/mem spiking during a known-heavy window (a fleet-wide promote
+sweep, a workflow-template rollout) but otherwise idle, which argues for right-SIZING (smaller instance) rather than
+adding capacity; (2) **sustained under-utilization** — flat-low CPU/mem across the whole lookback window on a box sized
+for peak load, a scale-DOWN candidate; (3) **genuine sustained pressure** — the opposite signal, an argument AGAINST
+migrating more workflows onto this host per § 8's self-hosting suggestion. If no rightsizing/preemption skill run has
+happened on this specific host in the last 24h, that itself is the finding — say so rather than reporting stale data as
+current.
 
 ## Under `/autonomous` — poll, don't wait to be pasted an alert
 

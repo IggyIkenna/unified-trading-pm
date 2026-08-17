@@ -6,7 +6,7 @@ summary: >-
   + `gate_on_depends: true` until all 17 of that doc's remaining todos (14 per-row REOPEN-or-FLIP verdicts + 3
   follow-ups) are done. Confirms `systemctl start audit-false-done.service` exits 0 with no new false-done rows
   introduced by the triage itself, before archiving.
-status: active
+status: archived
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -15,13 +15,13 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, false-done, audit, close-out, archival, plan-hygiene]
 related:
   [
-    /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
+    /plans/archive/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /plans/epics/orchestrator_master.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-17"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,12 +43,14 @@ source: >-
   §4's finalize-plan-coverage rule (every AO plan needs a paired gated finalize).
 context_scope:
   [
-    /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
+    /plans/archive/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/PLAN_FORMAT.md,
   ]
 ---
+
+> 🟢 **ARCHIVED 2026-08-17** (na-eligibility-audit, ao tranche) — all 3 todos done, parent doc archived per todo 3.
 
 # audit-false-done 14 rows + 1,013 unresolved plan_refs — finalize
 
@@ -71,13 +73,21 @@ context_scope:
       `deployment_scripts_bucket_soft_delete_retention_drift-002`). **Done when**: each spot-checked row's verdict is
       independently confirmed correct, or a discrepancy is reopened/corrected with evidence. **VERIFIED 2026-08-10 (slot
       11, review)**: all 4 spot-checks independently CONFIRMED the verdicts — full evidence in Progress Log.
-- [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
+- [x] ✅ [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08` and repoint every referrer; clear any lock if
       set. Then physically move the parent doc under `plans/archive/2026_08/`. **Done when**:
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows no
       NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
-      doc. Repo: unified-trading-pm.
+      doc. Repo: unified-trading-pm. — **DONE 2026-08-17 (na-eligibility-audit, ao tranche)**: confirmed the parent
+      doc's own live grep shows 0 open `- [ ]` todos (all 14 false-done-row verdicts + both Follow-ups `[x]` with hard
+      evidence). Archived per the 6-step ritual: `status: open → resolved` + `resolved_by:` filled,
+      `doc_type: issue` so moved to flat `plans/archive/issues/` (not the dated `plans/archive/2026_08/` this todo's
+      text names — `issue-doc-lifecycle.md`'s state-machine table is the authoritative path rule for issue docs, per
+      `plan-completion-and-archival-discipline.md` step 6). Corpus-wide referrers repointed:
+      `content_derived_backlog_task_ids_2026_08_08.md` (×2), `plans/epics/orchestrator_master.md` (×1, this finalize
+      plan's own entry). This finalize plan itself is now archived alongside it (all 3 todos done, unlocked, per the
+      "archive the moment a plan is genuinely done" rule) — moved to `plans/archive/2026_08/`.
 
 ## Codex SSOTs
 
@@ -134,3 +144,9 @@ context_scope:
   (line 104, `[x]`, explicitly "NOT the final drain"); the real final-drain todo (line 114) is still `- [ ]`, date-gated
   to on/after 2026-08-09. All 4 ids are absent from the live 3,168-row backlog. No discrepancy to reopen or correct.
 - **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17 (ao tranche, dispatch agt-614193)**: Todo 3 done — the parent doc's own live grep
+  confirmed 0 open todos (last real work closed sometime after the 2026-08-10 spot-check pass, via the doc's own
+  routine self-correction pattern documented in its Progress Log). Ran the 6-step archival ritual on the parent doc
+  (→ `plans/archive/issues/`, `status: resolved`) and, since all 3 of THIS finalize plan's own todos are now done and
+  it carries no lock, archived this finalize plan too (→ `plans/archive/2026_08/`) rather than leaving a fully-done
+  plan sitting `active`, per `plan-completion-and-archival-discipline.md` §1.

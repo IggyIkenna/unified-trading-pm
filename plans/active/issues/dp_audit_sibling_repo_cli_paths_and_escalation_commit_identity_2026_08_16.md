@@ -195,14 +195,14 @@ in the container's `unified-trading-pm` worktree before the container exits.
       `DP_DIVERGENT_EMPTY`/`DP-COVERAGE`-class findings, if any exist in the real manifests, now surface for the
       first time — this may itself uncover a backlog of real, previously-invisible divergence findings worth a
       follow-up triage pass. Repo: e2e-testing.
-- [ ] [CODE] P2. `_dp_common.py`'s `file_escalation_issue` template has drifted from the current
+- [x] ✅ [CODE] P2. `_dp_common.py`'s `file_escalation_issue` template has drifted from the current
       `doc-frontmatter-schema.md` — a fresh escalation doc it wrote on 2026-08-16 (RED cefi finding, first real
       escalation since (1) above shipped) was missing `doc_type`/`summary`/`status`/`nature`/`asset_group`/`stage`/
       `repos`/`scope`/`tags`/`related`/`priority`/`resolved_by`, all present in older archived instances (e.g.
       `plans/archive/issues/manifest_hygiene_red_2026_07_14.md`) — so every auto-commit of a genuine RED finding has
       been failing `plan-hygiene`'s frontmatter-schema check (compounding, not caused by, the git-identity issue in
       (3) above). Hand-fixed the one instance in `unified-trading-pm@1c8ceabfb8`; the generator itself is still stale.
-      Repo: e2e-testing (`scripts/audit/_dp_common.py`).
+      Repo: e2e-testing (`scripts/audit/_dp_common.py`). — e2e-testing@c05ec220ec
 
 ## Progress Log
 
@@ -286,3 +286,39 @@ in the container's `unified-trading-pm` worktree before the container exits.
   08:00 UTC run (or an operator-triggered `gcloud run jobs execute`) will be the first real confirmation that
   `_check_phantom` actually classifies against production manifests, not just that the CLI resolves.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+
+- **2026-08-17 (data_engineering worker, slot-24)**: Shipped todo (5) — `e2e-testing@c05ec220ec`. Read
+  `doc-frontmatter-schema.md` + `docspec.py`'s `PER_TYPE["issue"]` (ground truth: universal core
+  doc_type/title/summary/status/nature/asset_group/stage/repos/scope/tags/related/created + issue-type
+  parent_epic/priority/source required, assigned_vm/resolved_by/locked_by optional-present,
+  context_scope/author elective) and rewrote `file_escalation_issue`'s frontmatter block in `_dp_common.py`
+  to emit every previously-missing field: `doc_type: issue`, a `summary` auto-derived from `what_i_found`
+  (whitespace-collapsed, truncated to 200 chars + `...`), `status: open` (a freshly-filed issue's correct
+  initial state — `resolved_by` present-but-empty alongside it, since docspec's `Req.C` only requires
+  `resolved_by` once `status: resolved`), `nature: process` (matching both real historical instances —
+  `manifest_hygiene_red_2026_07_14.md` archived + the `2026_08_16` hand-fix — over the SSOT prose's
+  literal "issue" suggestion, since both are valid NATURE enum values and precedent-matching seemed the
+  safer restoration target), `asset_group` from the existing `asset_groups` param (falls back to the
+  `cross-cutting` enum value when a caller passes none, e.g. a non-AG-partitioned escalation), `stage:
+  [meta]`, `repos: [{target_repo}]` (already an existing param), `scope: [engineer, admin]`, `tags`
+  (data-pipeline/daily-audit/slug-derived — non-empty, since an empty `tags:` list is NOT in docspec's
+  `_valid_empty` sanctioned set the way `repos`/`related` are, so it would SOFT-fail), and `related: []`.
+  Also switched `title`/`summary` YAML embedding from raw f-string interpolation to `json.dumps(...)`
+  (JSON-string escaping is a valid subset of YAML double-quoted-scalar escaping) — the pre-existing
+  `title: "{title}"` pattern would have corrupted the frontmatter block on any title containing a literal
+  `"`, a latent bug in the exact code path this fix already touches. Verified against the real validator
+  contract: added `test_file_escalation_issue_frontmatter_matches_schema` (parses the generated frontmatter
+  with `yaml.safe_load` and asserts every field docspec requires is present + correctly valued, including
+  the `>200`-char summary-truncation path and the `resolved_by: null` present-but-empty case) and
+  `test_file_escalation_issue_asset_group_defaults_to_cross_cutting` (the `asset_groups=()` fallback).
+  Confirmed all 3 real callers (`manifest_hygiene_daily.py`, `drilldown_reconciliation_guard.py`,
+  `reprobe_new_empty_confirmed.py`) always pass `asset_groups=` and rely on the `target_repo` default
+  (`market-tick-data-service`) or a caller-specific override — neither behavior changed by this fix. Full
+  `bash scripts/quality-gates.sh` green on the committed SHA (sentinel re-verified == HEAD after the
+  commit-then-QG ordering fix) before shipping via quickmerge; post-push ancestry verified
+  (`e2e-testing@c05ec220e` is an ancestor of `origin/live-defi-rollout`). Did NOT re-trigger a live Cloud
+  Run hygiene run to observe a real auto-filed doc pass plan-hygiene's `check_frontmatter_schema.py` gate
+  end-to-end in production — that's the next `uts-prod-dp-manifest-hygiene-*` execution's own confirmation,
+  not reproducible from a worker slot without container access (same limitation the slot-5 git-identity fix
+  for todo (3) already noted). Remaining open todo (4)/P3 (re-run + confirm `DP_DIVERGENT_EMPTY` findings
+  now surface for real) is unaffected by this fix and still open.

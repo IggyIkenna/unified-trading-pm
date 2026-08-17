@@ -17,7 +17,7 @@ tags: [defi, mdps, candles, backfill, spot-preemption, verification]
 related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
   ]
 created: "2026-08-06"
 parent_epic: defi_master
@@ -25,7 +25,7 @@ priority: P2
 author: slot-9 (data_engineering)
 source:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md (todo 10),
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch9_2026_08_06.md (todo 10),
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md (todo 15),
   ]
 assigned_vm: planning
@@ -36,7 +36,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-context_scope: [/plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md, /plans/active/data_pipeline_check_mdps_features_2026_07_20.md, deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh, market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py, /codex/05-infrastructure/spot-vms-for-backfill.md, /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md]
+context_scope: [/plans/archive/2026_08/defi_satellite_ao_dispatch_batch9_2026_08_06.md, /plans/active/data_pipeline_check_mdps_features_2026_07_20.md, deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh, market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py, /codex/05-infrastructure/spot-vms-for-backfill.md, /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md]
 ---
 
 # DeFi MDPS candle backfill fleet — terminal verification (2026-08-06)

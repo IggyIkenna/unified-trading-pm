@@ -96,3 +96,25 @@ this file cleanly (`git checkout --`, verified clean, 1000L).
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA, valid — both items re-read,
+  no change.** Item 1 (split the source doc) remains genuine content-judgment work, now more overdue (the source
+  doc, `data_completion_tradfi_2026_07_15.md`, is now 1014 lines, up from 1000 at this issue's filing). Item 2
+  (`>=` vs `>` design call) is LIKELY already answered in the live script — `check_line_caps.sh`'s
+  `SMALL_MARKER_APPEND` (line ~238) and `SINGLE_TODO_FLIP` (line ~270) carve-out preconditions both already use
+  `-ge`, landed via commits `1f65e146466` (2026-08-09) and `2efd6f0ca17` (2026-08-15) respectively — both predating
+  this issue's 2026-08-16 filing. Not closing item 2 unilaterally here (this audit did not independently re-attempt
+  the original blocked edit to confirm live), but flagging this as a strong, evidenced lead: whoever next touches
+  this doc should attempt a live-reproduction test (a single-hunk marker-append or single-todo-flip against
+  `data_completion_tradfi_2026_07_15.md`, now well over the 1000L cap) before routing item 2 to the script owner
+  for a fresh design decision — the design call reads as already made and shipped, only the "confirm it live and
+  close" step is missing.
+- **CONFIRMED live 2026-08-17** (same audit run, immediately after writing the marker above): this session flipped
+  `data_completion_tradfi_2026_07_15.md`'s own item 15 checkbox as an ISOLATED single-hunk edit (1 hunk, 1 removed
+  checkbox + 1 added checkbox) — landed cleanly via `safe-doc-push.sh`, zero line-cap hook rejection
+  (`unified-trading-pm@8f823c84a0`). A companion marker-only append (0 deletions, 4 additions, 0 checkbox lines) to
+  the SAME over-cap doc ALSO landed cleanly in a separate commit (`unified-trading-pm@20a9c5916d`) — SMALL_MARKER_APPEND
+  fired too. Both carve-outs confirmed working exactly as coded on this exact target doc. The 2026-08-16 original
+  blocked attempt most likely failed because it bundled the checkbox flip AND the marker append into ONE commit
+  (2 hunks) — SINGLE_TODO_FLIP requires `HUNK_COUNT=1`, so a combined diff qualifies for neither carve-out even
+  though each half alone does. Item 2 (confirm `>=` vs `>` with the script owner) can very likely close now citing
+  this live proof — recommend the owner do that rather than reopening it as a fresh design question.

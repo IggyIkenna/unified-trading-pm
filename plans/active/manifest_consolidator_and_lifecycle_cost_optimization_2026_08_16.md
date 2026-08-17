@@ -227,29 +227,24 @@ context_scope:
       long-running processes, a different execution shape than the bounded-backfill population the watchdog was
       proven against. Decide whether the same periodic re-check should apply to them (plausibly yes — a stale
       consolidator is just as meaningful mid-live-run) and wire if so. Repos: deployment-service.
-- [ ] [INFRA] P1. **Terraform-drift finding — market-data-cefi resource fix not actually codified** (discovered
+- [x] ✅ [INFRA] P1. **Terraform-drift finding — market-data-cefi resource fix not actually codified** (discovered
       2026-08-16 while shipping the watchdog-extension todo above; unrelated to that todo's own scope, surfaced only
       because a concurrent session's dirty `terraform/gcp/manifest_consolidator_scheduler.tf` had to be checked
       before it was safe to ship). This plan's own todo-1 Progress Log entry below states the live P0
       `market-data-cefi` incident fix was "**Shipped** via `quickmerge --agent --files
-      'terraform/gcp/manifest_consolidator_scheduler.tf'`" — **verified 2026-08-16 this is not true of the current
-      file**: `manifest_consolidator_cpu`/`manifest_consolidator_memory` locals contain only `"market-data-defi"`,
-      not `"market-data-cefi"`; `git log origin/live-defi-rollout -- terraform/gcp/manifest_consolidator_scheduler.tf`
-      shows no commit past the pre-existing `36a0423e` (instruments-sports timeout bump, unrelated, predates this
-      session). **Production is NOT currently at risk** — `gcloud run jobs describe
-      uts-prod-manifest-consolidator-market-data-cefi --region=asia-northeast1` confirms the emergency
-      `cpu=8/memory=32Gi` live fix (`gcloud run jobs update`) is still active on the deployed job; only the `.tf`
-      CODE state is missing it. The risk is a FUTURE one: once `deployment_service_prod_terraform_drift_2026_08_07`
-      unblocks and someone runs `tofu apply`, a `.tf` that still defaults `market-data-cefi` to 4vCPU/16Gi would
-      silently revert live production back to the config that caused the original 3+-hour outage. **Not caused by
-      this session's own shipping step** — forensics: dangling-commit archaeology on the shared `deployment-service`
-      checkout (`git fsck --unreachable`) found the reconcile-time snapshots this session's own `quickmerge` run took
-      (both the working-tree and index trees of its auto-stash) already show the file in its CURRENT no-fix state,
-      before this session ever committed anything — so the diff was already absent from the working tree by the time
-      this session's quickmerge ran; whatever happened to it happened earlier / in a different session. Re-author +
-      ship the `.tf` diff (cpu/memory/timeout/lock_ttl/stall_alert_cycles overrides for `market-data-cefi`, exact
-      values documented in the todo-1 Progress Log entry below) as part of resolving the terraform-drift blocker —
-      do not let it get silently dropped a second time. Repos: deployment-service.
+      'terraform/gcp/manifest_consolidator_scheduler.tf'`" — **verified 2026-08-16 this was not true at the time**:
+      `manifest_consolidator_cpu`/`manifest_consolidator_memory` locals contained only `"market-data-defi"`, not
+      `"market-data-cefi"`; `git log origin/live-defi-rollout -- terraform/gcp/manifest_consolidator_scheduler.tf`
+      showed no commit past the pre-existing `36a0423e` (instruments-sports timeout bump, unrelated, predates this
+      session). Production was never at risk in the interim — `gcloud run jobs describe
+      uts-prod-manifest-consolidator-market-data-cefi --region=asia-northeast1` confirmed the emergency
+      `cpu=8/memory=32Gi` live fix (`gcloud run jobs update`) stayed active on the deployed job the whole time; only
+      the `.tf` CODE state was missing it, which would have silently reverted production on the next `tofu apply`
+      once `deployment_service_prod_terraform_drift_2026_08_07` unblocked. **Not caused by this session's own
+      shipping step** — forensics: dangling-commit archaeology on the shared `deployment-service` checkout
+      (`git fsck --unreachable`) found the reconcile-time snapshots this session's own earlier `quickmerge` run took
+      already showed the file in its no-fix state before this session ever committed anything — whatever happened to
+      it happened earlier / in a different session. Repos: deployment-service.
       - **Independent corroboration (2026-08-16, a separate concurrent session resolving the
         `deployment_service_prod_terraform_drift_2026_08_07` blocker above)**: hit this exact resource
         (`module.manifest_consolidator_job["market-data-cefi"]`, same 8vCPU/32Gi-live-vs-4vCPU/16Gi-committed shape)
@@ -257,64 +252,32 @@ context_scope:
         applied), found this doc's own uncommitted `manifest_consolidator_scheduler.tf` WIP already fixing it
         mid-session and left it untouched (multi-agent "live claim -> PROTECT"), and re-verified live via
         `gcloud run jobs describe uts-prod-manifest-consolidator-market-data-cefi --format=json` immediately before
-        writing this note: `resources.limits = {cpu: "8", memory: "32Gi"}` — still correct, not reverted. This todo
-        itself is left open/unchecked — the `.tf` codification this todo asks for is not yet confirmed committed as
-        of this note.
-            deployment-service. **DONE 2026-08-16** — `deployment-service@53a40b270a`. Extended to 5 families via a new
-            §5c block + shared bash resolver in `setup-data-pipeline-vm.sh` (ground-truthed against the 18-job
-            `manifest_consolidator_scheduler.tf` locals, not a re-guessed formula): `instruments_service` (~49
-            launchers, incl. most sports fixture/enrichment launchers — `instruments-store-{ag}`, all 5 AGs),
-            `market_data_processing_service` (reuses the MTDS-download bucket — MDPS candle derivation writes the
-            SAME `market-data-tick-{ag}` bucket), `features_service` (`features-{ag}`, cefi/defi/tradfi/sports/
-            calendar — prediction excluded, no consolidator), `strategy_service` (one flat `strategy-store` bucket,
-            every AG except prediction), `execution_service` (one flat `execution-store` bucket, unconditional). See
-            full Progress Log entry below for the complete accounting of what stayed excluded and why (grouped, not
-            itemized) plus 3 new follow-up todos it produced (below) and an unrelated but significant collision
-            finding discovered while shipping.
-
-- [ ] [INFRA] P3. **ml_service consolidator-watchdog wiring** (excluded from the 2026-08-16 extension above) —
-      determine whether ml-store's 5 object-key prefixes (models/predictions/configs/training-artifacts/artifacts)
-      can be derived per-launcher (e.g. a dedicated `VM_ML_TARGET` metadata key) so `launch-ml-training-vm.sh`/
-      `launch-ml-vm.sh` can opt into the watchdog for the one prefix (`training-artifacts`, folded into `ml-store`)
-      that actually has a consolidator. Repos: deployment-service.
-- [ ] [INFRA] P3. **Compound-VM_SERVICE watchdog coverage** (excluded above) — `launch-mdps-features-live.sh` and
-      `launch-prediction-pipeline-vm.sh` each write more than one consolidator-covered bucket per run;
-      `CONSOLIDATOR_WATCHDOG_BUCKET` only supports a single target. Either add multi-bucket support to
-      `vm-exec-with-gcs-tee.sh`'s watchdog or make an explicit per-launcher primary-bucket call. Repos:
-      deployment-service.
-- [ ] [INFRA] P3. **Bespoke `*_daily_cron` VM_SERVICE watchdog coverage** (excluded above) —
-      `cefi_fwd_daily_cron`/`cefi_onchain_fwd_daily_cron`/`cefi_perp_funding_daily_cron`/`tradfi_fwd_daily_cron`/
-      `funding_ensemble_daily_cron` use bespoke non-standard `VM_SERVICE` literals; confirm each one's actual write
-      target (several look MTDS/MDPS-shaped and may already resolve to an already-covered bucket) before wiring.
-      Repos: deployment-service.
-- [ ] [INFRA] P3. **Continuous/live launcher watchdog coverage** (excluded above) — `mtds-live*`,
-      `*-forward-poll`, `prediction-live`, `perp-clob-live` are self-relaunching, `VM_SHUTDOWN_ON_COMPLETION=false`
-      long-running processes, a different execution shape than the bounded-backfill population the watchdog was
-      proven against. Decide whether the same periodic re-check should apply to them (plausibly yes — a stale
-      consolidator is just as meaningful mid-live-run) and wire if so. Repos: deployment-service.
-- [ ] [INFRA] P1. **Terraform-drift finding — market-data-cefi resource fix not actually codified** (discovered
-      2026-08-16 while shipping the watchdog-extension todo above; unrelated to that todo's own scope, surfaced only
-      because a concurrent session's dirty `terraform/gcp/manifest_consolidator_scheduler.tf` had to be checked
-      before it was safe to ship). This plan's own todo-1 Progress Log entry below states the live P0
-      `market-data-cefi` incident fix was "**Shipped** via `quickmerge --agent --files
-      'terraform/gcp/manifest_consolidator_scheduler.tf'`" — **verified 2026-08-16 this is not true of the current
-      file**: `manifest_consolidator_cpu`/`manifest_consolidator_memory` locals contain only `"market-data-defi"`,
-      not `"market-data-cefi"`; `git log origin/live-defi-rollout -- terraform/gcp/manifest_consolidator_scheduler.tf`
-      shows no commit past the pre-existing `36a0423e` (instruments-sports timeout bump, unrelated, predates this
-      session). **Production is NOT currently at risk** — `gcloud run jobs describe
-      uts-prod-manifest-consolidator-market-data-cefi --region=asia-northeast1` confirms the emergency
-      `cpu=8/memory=32Gi` live fix (`gcloud run jobs update`) is still active on the deployed job; only the `.tf`
-      CODE state is missing it. The risk is a FUTURE one: once `deployment_service_prod_terraform_drift_2026_08_07`
-      unblocks and someone runs `tofu apply`, a `.tf` that still defaults `market-data-cefi` to 4vCPU/16Gi would
-      silently revert live production back to the config that caused the original 3+-hour outage. **Not caused by
-      this session's own shipping step** — forensics: dangling-commit archaeology on the shared `deployment-service`
-      checkout (`git fsck --unreachable`) found the reconcile-time snapshots this session's own `quickmerge` run took
-      (both the working-tree and index trees of its auto-stash) already show the file in its CURRENT no-fix state,
-      before this session ever committed anything — so the diff was already absent from the working tree by the time
-      this session's quickmerge ran; whatever happened to it happened earlier / in a different session. Re-author +
-      ship the `.tf` diff (cpu/memory/timeout/lock_ttl/stall_alert_cycles overrides for `market-data-cefi`, exact
-      values documented in the todo-1 Progress Log entry below) as part of resolving the terraform-drift blocker —
-      do not let it get silently dropped a second time. Repos: deployment-service.
+        writing this note: `resources.limits = {cpu: "8", memory: "32Gi"}` — still correct, not reverted.
+      - **DONE 2026-08-16** — `deployment-service@38790807`, direct-push dirty-deps carve-out (the
+        `unified-api-contracts` blocker was still live at ship time — same 3 untracked files, unchanged across two
+        prior quickmerge attempts this session; `Quickmerge: direct-carveout-dirty-deps` trailer per
+        `/codex/08-workflows/ci-cd-flow.md`). Codifies the `market-data-cefi` 8vCPU/32Gi/7200s-timeout/9000s-TTL/
+        195-stall-cycles fix plus the timeout-floor extension to the other 10 hourly-cadence buckets (see the
+        timeout-floor Progress Log entry below for that half). `deployment-service` QG green (full run, exit 0,
+        sentinel `106409b8` == HEAD at push time). This flip also fixed a duplicate-content corruption in this exact
+        section — the same class of accidental duplication found independently in `manifest-consolidator-ssot.md`
+        and `plans/active/INDEX.md` this session; see the Lessons section for the pattern.
+- **[INFRA] P3. CANCELLED — SUPERSEDED 2026-08-16 (interactive session).** Duplicate of the "ml_service
+  consolidator-watchdog wiring" todo above — an accidental verbatim re-append, not distinct scope. Removed here to
+  conserve todo-count history; the live todo is the one above.
+- **[INFRA] P3. CANCELLED — SUPERSEDED 2026-08-16 (interactive session).** Duplicate of the "Compound-VM_SERVICE
+  watchdog coverage" todo above — an accidental verbatim re-append, not distinct scope. Removed here to conserve
+  todo-count history; the live todo is the one above.
+- **[INFRA] P3. CANCELLED — SUPERSEDED 2026-08-16 (interactive session).** Duplicate of the "Bespoke `*_daily_cron`
+  VM_SERVICE watchdog coverage" todo above — an accidental verbatim re-append, not distinct scope. Removed here to
+  conserve todo-count history; the live todo is the one above.
+- **[INFRA] P3. CANCELLED — SUPERSEDED 2026-08-16 (interactive session).** Duplicate of the "Continuous/live launcher
+  watchdog coverage" todo above — an accidental verbatim re-append, not distinct scope. Removed here to conserve
+  todo-count history; the live todo is the one above.
+- **[INFRA] P1. CANCELLED — SUPERSEDED 2026-08-16 (interactive session).** Duplicate of the "Terraform-drift finding"
+  todo above (which also carried a corrupted trailing fragment misplaced from the watchdog-extension todo's own DONE
+  note) — an accidental verbatim re-append, not distinct scope. Removed here to conserve todo-count history; the
+  live (now done) todo is the one above.
 
 ## Progress Log
 

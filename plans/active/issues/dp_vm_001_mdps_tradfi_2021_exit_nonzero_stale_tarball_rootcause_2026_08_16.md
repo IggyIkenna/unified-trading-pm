@@ -32,7 +32,7 @@ related:
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
-    /plans/active/issues/dp_vm_001_mdps_tradfi_2025_exit_nonzero_page_2026_08_16.md,
+    /plans/archive/issues/dp_vm_001_mdps_tradfi_2025_exit_nonzero_page_2026_08_16.md,
     /plans/archive/issues/dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_mdps_tradfi_2026_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
@@ -214,3 +214,7 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   2 genuinely independent failures needing their own follow-up (tracked in their own docs). Shipped via
   `safe-doc-push.sh` (docs-only change, no code).
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA, valid — reaffirms 2026-08-16
+  audit's split, no change.** Todo 1 (operator relaunch-now decision) and todo 3 (tarball-refresh-cadence design
+  question) both still genuinely operator/design-gated; todo 2 already extracted+archived via batch14. `assigned_vm`
+  unchanged.

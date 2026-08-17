@@ -241,24 +241,21 @@ this session found:
       against a window with zero prior errors on either side; the risk this check guards against — silent content
       divergence — has no plausible mechanism here since neither run failed or partially wrote) — noted as a gap, not
       blocking, given the stronger direct evidence (0 errors either run).
-- [ ] [BACKEND] P0. **NEW — found live during the preemption-drill prep, not yet root-caused.** The contiguous-
-      completion watermark ARMS successfully (`"SPOT-resume checkpoint armed"` logged, confirmed) but never actually
-      EMITS — 0 occurrences of the `[[VM_PROGRESS]]` marker in a canary run that cleared 3 full calendar dates with
-      real captures (`cefi-binance-futures-2026-heavy-20260817-002832`). Traced as far as confirming: (a) `VM_NAME`
-      IS exported correctly per-chunk (`setup-data-pipeline-vm.sh:2274`, `VM_NAME="${VM_NAME}-cN" python ...`), so
-      `_resolve_on_vm()` should pass; (b) `--start-date` IS passed correctly per chunk; (c) `record_date_completed`
-      is wired at `engine/orchestrator/__init__.py:717`, right after the manifest write, matching the design. Did
-      NOT find the exact silent-failure point — candidates not yet ruled out: an exception inside
-      `record_date_completed`'s try/except being swallowed (it's deliberately best-effort/never-raises, so a bug
-      there is invisible by design), or `_normalized_date` not matching the format `_is_iso_date`/`_range_start`
-      comparison expects. **Consequence is bounded, not data-loss**: with zero watermark AND the old max-seen mode
-      apparently superseded (not coexisting), a preemption mid-concurrent-run currently has NO checkpoint at all —
-      falls back to replaying from `--start-date`, the exact pre-existing behavior this whole plan traces back to,
-      not a new regression in data correctness. Proceeding with Phase 3's relaunch regardless (throughput fix is
-      independently proven safe via 2 clean canary runs); this bug blocks ONLY the preemption-resume improvement,
-      tracked here for whoever picks it up next — start by adding a diagnostic log inside
-      `record_date_completed`'s `except Exception:` block (currently silent) to catch what's actually being
-      swallowed.
+- [x] ✅ [BACKEND] P0. **CLOSED 2026-08-17 — NOT A BUG, false alarm from insufficient observation time.** Re-checked
+      the live `cefi-binance-futures-2026-heavy-20260817-010713` run.log directly (via UTL `get_storage_client`,
+      never gsutil): the watermark emitted its FIRST `[[VM_PROGRESS]] last_completed_date=2026-04-20 monotonic=true`
+      at `2026-08-17 00:54:59` — literally the moment the anchor date (`--start-date=2026-04-20`) itself finished —
+      and has emitted 35 clean lines since, `monotonic=true` throughout, most recently
+      `last_completed_date=2026-06-07`; `PROGRESS.json` confirms the same
+      (`{"last_completed_date":"2026-06-07","monotonic":true,...}`), and `EXIT_STATUS` reads `RUNNING` (log tail
+      shows live capture of 2026-06-08/09/10 as of 05:21 UTC). Root cause of the original diagnosis: the mechanism is
+      documented BY DESIGN to anchor on the range-start date specifically (`_advance_watermark_locked`: "Nothing is
+      claimed until the range's FIRST date is itself complete") — under `--batch-date-concurrency 3`, later
+      in-flight dates can finish before the anchor date does, so a run checked before the anchor date lands will
+      always show 0 emissions even though it's working correctly. The preemption-drill-prep check happened too
+      early, not because of an actual defect. No code change needed; the `except Exception:` swallow-diagnostic
+      idea was never required. Evidence: `vm-logs/cefi-binance-futures-2026-heavy-20260817-010713/{run.log,
+      PROGRESS.json,EXIT_STATUS}` in `gs://deployment-scripts-central-element-323112/`.
 - [ ] [DATA] P2. **Deferred, not done this session** — step to concurrency 6 and re-measure. Concurrency=3 is already
       confirmed clean and delivering a genuine ~1.5x speedup (2 independent canary runs); stepping further is a
       real, separate follow-up test, not blocking the real relaunch below. Do NOT jump straight to TradFi's 20 —
@@ -282,20 +279,41 @@ Raising `TARDIS_MAX_CONCURRENT_DOWNLOADS` above 32 — that number is a measured
 (`market_tick_data_service/config/service_config.py`); date concurrency is the lever this plan pulls, not the fetch
 cap.
 
-## Deferred work after 2026-08-16
+## Deferred work after 2026-08-17
 
-| Item                                                                                                                                                                                                                                                                                             | Priority | Owner / next step                                                                                                                                                          |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 0 duty-cycle measurement was never run (the plan gates the rest of the work on it). Phases 1+2 shipped anyway because they are correctness fixes that stand on their own — but the Phase-0 "if duty cycle > 85%, re-scope to F2 only" decision point is still unanswered before the canary. | P1       | Run it against the live `cefi-binance-futures-2026-heavy-*` run.log before/alongside the Phase 3 baseline run.                                                              |
-| Phase 3 (launcher flag, VM stop, baseline/canary runs) — deliberately NOT touched this session per operator scope.                                                                                                                                                                              | P0       | Handled separately; read the 🟢 banner above Phase 3 first for the two fail-closed preconditions.                                                                           |
+Phase 0, 1, 2, and 3 are all done with evidence recorded in their own sections above (Phase 0 line 88, Phase 3's
+Progress Log entries) — the two rows previously listed here (Phase-0-never-run, Phase-3-not-touched) are stale as of
+this session and have been removed rather than left to mislead a future reader. What's genuinely still open:
 
-- [ ] [BACKEND] P2. **UTL follow-up — instance-scope `ParallelPerSymbolRunner`'s in-flight semaphore.**
-      `run()` mints a fresh `asyncio.Semaphore(self._max_concurrent)` on every call
-      (`unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py`), so the "max
+| Item                                                                                                                | Priority | Owner / next step                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Concurrency step-up to 6 and re-measure (line 259).                                                                | P2       | Actionable once the Tardis N=1 slot frees — currently occupied by the live BINANCE-FUTURES 2026 backfill (~316 days left at the observed pace). |
+| UTL `ParallelPerSymbolRunner` in-flight semaphore hoist to per-instance/per-process scope (line 289).              | P2       | Actionable now, independently of the Tardis slot — a standalone UTL design/code change, not gated on anything running.    |
+| Phase 4 — widen concurrency further if the per-date long-tail fetch latency dominates (line 271), optional/conditional. | P3       | Not yet evaluated; only relevant if the concurrency-6 result (above) shows the tail, not the prologue/epilogue, still dominates. |
+
+- [ ] [BACKEND] P2. **UTL follow-up — instance-scope `ParallelPerSymbolRunner`'s in-flight semaphore. INVESTIGATED
+      2026-08-17, NOT a drop-in fix — needs a real design decision before touching it.** `run()` mints a fresh
+      `asyncio.Semaphore(self._max_concurrent)` on every call
+      (`unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py:229`), so the "max
       in-flight tasks" knob is per-CALL, not per-process — which is why F5 had to be a config-time guard rather than
-      a real bound. Hoisting it to a per-instance (or per-process) semaphore would let date concurrency and
-      `TARDIS_MAX_INFLIGHT_TASKS` be tuned independently instead of having to divide one by the other. Flagged in
-      the original design as the bigger, separate UTL change; not required for Phase 3.
+      a real bound. **Traced the actual call-site shape before assuming this is a small change**: the runner
+      INSTANCE is already correctly a process-wide pooled singleton — `TardisAdapter._init_runner_slots` docstring:
+      "Runners are created lazily on first download_batch call and reused across all subsequent dates" (backed by
+      `_get_tardis_adapter()`'s own module-global `_tardis_adapter` pool in
+      `market_tick_data_service/adapters/umi_tick_provider.py`). So a naive hoist of the semaphore from `run()` to
+      `__init__` (instance-scope) WOULD share it correctly across all dates — but that's exactly the problem: TradFi
+      already runs `--batch-date-concurrency 20` live in production today, with each of those 20 concurrent dates'
+      `run()` call currently getting its OWN full-size semaphore (today's *effective* in-flight bound is
+      `20 × tardis_max_inflight_tasks`). Hoisting to instance-scope would silently collapse that to just
+      `tardis_max_inflight_tasks` — a ~20x cut to TradFi's live, already-tuned effective concurrency, not a bug fix.
+      **This needs an explicit design decision, not a patch**: either (a) make the process-level cap the real
+      absolute value and re-tune `tardis_max_inflight_tasks` config per asset class to compensate (TradFi, Deribit
+      DVOL, CeFi all need new, individually-computed values), or (b) keep call sites computing
+      `max_concurrent × date_concurrency` at construction time (centralizing today's manual-division burden into one
+      place instead of removing it). Do not implement either without picking one and updating every call site's
+      config value in the same change — a partial hoist would be a live production throughput regression for
+      TradFi, discovered only after the fact. Flagged in the original design as the bigger, separate UTL change;
+      not required for Phase 3.
 
 ## Progress Log
 
@@ -344,6 +362,16 @@ cap.
   `deployment-service`'s working tree carried unrelated foreign WIP (5 terraform files) blocking tarball builds
   throughout Phase 3 — handled each time via a scoped, named `git stash push`/`pop` around just the build step,
   content verified byte-identical before/after, never touched.
+- 2026-08-17 (resumption, same initiative) — **Closed the watermark-emission P0 as a false alarm.** Re-read the live
+  production VM's `run.log`/`PROGRESS.json`/`EXIT_STATUS` directly (UTL `get_storage_client`, not gsutil): the
+  watermark emitted correctly the moment the anchor date (`2026-04-20`) completed and has continued cleanly since —
+  35 emissions, `monotonic=true` throughout, checkpoint now at `2026-06-07`, VM confirmed `RUNNING` and actively
+  capturing 2026-06-08/09/10. The mechanism was never broken; it is documented BY DESIGN to require the range-start
+  date specifically before it can anchor, and the original check happened before that date had finished under
+  concurrency=3 (later in-flight dates can legitimately complete first). No code change made. The Tardis N=1 slot
+  remains occupied by this real backfill (full 2026 range, ~316 days still ahead at the observed pace), so the
+  concurrency-6 step-up and the OKX-SPOT/BYBIT-SPOT relaunches (tracked in the sibling issue doc) stay genuinely
+  blocked, not actionable yet.
 
 ## Progress Log (na-eligibility-audit)
 

@@ -136,7 +136,7 @@ source: >-
       `ARCHETYPE_TO_DEPLOYMENT_PROFILE`) so `topology_enforcement.load_topology_requirements()` no longer raises
       `FileNotFoundError` for either. Updated the README gap table to a closed-gap statement. —
       unified-trading-pm@b3eefb806d.
-- [ ] [DOC] P2. **Residual gaps (2)(3)(4) — still open, each a judgment call / operator ruling, not AO-eligible.** (2)
+- [ ] [DOC] P2. BLOCKED-OPERATOR-DECISION — **Residual gaps (2)(3)(4) — still open, each a judgment call / operator ruling.** (2)
       `runtime-topology.yaml` `isolation_policies.strategy-service` `default: shared` — but the (now-correct)
       `co_located_vm` archetype docs declare `strategy-service: isolated`, so `_check_isolation()` would raise "topology
       declares default=shared" on boot; the decision artifact's item 6 commits the execution plan to wire a

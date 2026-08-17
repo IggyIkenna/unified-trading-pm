@@ -117,8 +117,13 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
       archived copy's own checkbox now reads `[x]`, shipped `instruments-service@22a5f197` (new
       `_is_retired_tradfi_catalogue_row()` predicate + the 3 named constants) — this pointer resolves too, not just the
       reference.
-- [ ] [INFRA] P2. **Once the filter above ships + is verified (dry-run a manual regen, confirm the 4 legs stay
-      excluded), re-enable both schedulers** (`gcloud scheduler jobs resume`). Do not re-enable before the filter lands.
+- [x] ✅ [INFRA] P2. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 5** (reworded there to mandate
+      `scheduler_maintenance.py`'s guarded `resume_after_maintenance()` helper instead of a raw
+      `gcloud scheduler jobs resume` call, per this doc's own tracked 2026-06-27 incident on this exact job — see
+      the DIAG P2 entry below). Original ask: once the filter above ships + is verified (dry-run a manual regen,
+      confirm the 4 legs stay excluded), re-enable both schedulers (`gcloud scheduler jobs resume`). Do not
+      re-enable before the filter lands.
 - [x] ✅ [DIAG] P2. **ANSWERED 2026-08-09** (data_engineering worker, slot 18, via
       `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2): **"something later silently
       re-enabled it" — confirmed, and it was NOT a Terraform/deploy-time reset.** Pulled the Cloud Audit Logs (Admin
@@ -183,6 +188,12 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **RECLASSIFY, per-todo split.** The
+  re-enable todo's gating dependency (build-time filter) shipped + was reference-verified today
+  (`instruments-service@22a5f197`) — extracted, reworded to mandate the guarded `resume_after_maintenance()` path
+  given this doc's own tracked unguarded-resume incident (see checkbox above). Todo at L178 (standing health-check
+  design question) stays genuinely open/design-gated, unchanged across every prior audit pass. Doc stays
+  `assigned_vm: NA`.
 - **2026-08-08, filed** (round5-cross-cutting-audit, id=52) — discovered mid-execution of the operator-approved 4-leg
   tradfi catalogue purge, not from a dedicated audit. Both schedulers protectively paused same session; the purge itself
   completed successfully (see `instruments_completion_tracker_2026_07_06.md`'s todo for full evidence). This doc tracks

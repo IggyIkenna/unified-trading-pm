@@ -41,7 +41,7 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /plans/active/issues/cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
-    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]

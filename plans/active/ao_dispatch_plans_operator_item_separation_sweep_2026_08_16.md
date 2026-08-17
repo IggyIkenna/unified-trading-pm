@@ -175,3 +175,4 @@ tracked, just no longer blocking the AO plan's own archival or reading as "why i
   sampled hits, 4 concrete examples) come from a same-session Explore-agent research pass, not a full corpus run —
   Phase 1 replaces this estimate with the real complete list.
 </content>
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:1a4a951d09a2ddd0]: KEEP-NA, valid — explicit operator ruling on record that per-doc classification in this sweep is itself the judgment-call deliverable, not AO-dispatchable, even though individual Phase-0/1/3 tooling todos are mechanical in isolation.

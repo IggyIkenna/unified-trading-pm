@@ -332,23 +332,64 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       a full precise count + the actual COPY-to-canonical-lowercase migration both belong on a dedicated VM per
       `/codex/05-infrastructure/vm-launcher-runbook.md` (heavy I/O never runs on the shared host), not this
       interactive session. market-data-processing-service@c22556ef66 (script committed this session).
-- [ ] [DIAG] P2. Check whether the SAME `canonical_writer.py`/`_infer_instrument_type` casing-conflation bug also
-      affects cefi/tradfi/prediction `processed_candles/` writes — their canonical id grammars ALSO embed an
-      uppercase type token (§3b applies fleet-wide, not defi-only) and `canonical_writer.py` is shared cross-
-      asset-group code (this session confirmed a tradfi-specific branch in the SAME function, `:266`). NOT verified
-      this session — flagging as a plausible, unchecked risk per CLAIM ≤ MEASUREMENT, not a confirmed finding.
-- [ ] [DIAG] P2. Root-cause WHY `_prune_consolidated_shards` left 9/21 defi market-data per-VM shards un-drained
-      past their provable merge cutoff (see the resolved DIAG todo above) — config (`CONSOLIDATOR_PRUNE_SHARDS`/
-      `_MAX_PER_CYCLE`) and IAM delete permission are both already ruled out. Candidates not yet checked: an
-      exception in `_delete_one`'s per-shard delete swallowed as a skip (its `except Exception` only counts
-      `NotFound`/`404` as success — a `PreconditionFailed` from a concurrent rewrite is a legitimate skip-and-retry-
-      next-cycle, but a different, unexpected exception type would ALSO silently skip with nothing logged besides
-      the WARNING for the outer listing failure, which is a different code path); or the `state`-mode snapshot
-      simply caught the bucket mid-cycle (shards land continuously; a from-a-slightly-earlier merge's already-
-      completed prune pass may not have run again yet at read time — re-check with 2-3 snapshots spaced ~10-15 min
-      apart, past the defi cadence's own ~31-32min real-merge interval, before concluding this is a persistent
-      stall rather than normal in-cycle lag). Once root-caused, re-close per the same "captured-outranks
-      resurrection risk" concern documented in "What I found" item 6's last bullet. (repo: unified-trading-library)
+- [x] ✅ [DIAG] P2. Check whether the SAME `canonical_writer.py`/`_infer_instrument_type` casing-conflation bug also
+      affects cefi/tradfi/prediction `processed_candles/` writes — **RESOLVED 2026-08-17 (slot-24, ui_developer):
+      CONFIRMED, fleet-wide, not defi-only.** Live-verified via bounded delimiter-descent GCS probes (day ->
+      pipeline_mode -> timeframe -> data_type -> instrument_type prefix listing only, no corpus walk) against all
+      three buckets: **cefi** (`market-data-tick-cefi-prd-central-element-323112`, days 2026-07-01/2026-08-01,
+      pipeline_modes hyperliquid/tardis/aster/extended, data_type=trades) — 100% `instrument_type=PERPETUAL`
+      (uppercase), 0 lowercase, every sampled prefix; **tradfi**
+      (`market-data-tick-tradfi-prd-central-element-323112`, day 2026-07-01, pipeline_mode=batch_databento) — 100%
+      uppercase across EQUITY/ETF/FUTURE/COMBO instrument_types, 0 lowercase; **prediction**
+      (`market-data-tick-pred-prd-central-element-323112`, days 2026-08-01/2026-08-15,
+      pipeline_mode=batch_kalshi) — 100% `instrument_type=PREDICTION_MARKET` (uppercase), 0 lowercase. Root cause
+      confirmed shared (not coincidental): read `output_path_helpers.py::build_canonical_candle_object_path` +
+      UTL `unified_trading_library/config_interface/paths/registry.py::build_canonical_candle_path` — the SAME
+      template embeds `instrument_type=` for EVERY `MarketAssetGroup` (cefi/tradfi/defi/prediction/sports), no
+      asset_group gating at all, confirmed by a live cefi worked example in that function's own docstring. The
+      2026-08-16 `market-data-processing-service@94215e9cd9` fix (lowering `instrument_type` at the ONE physical
+      path-builder call site in `canonical_writer.py`) is called from the SAME shared `write_candle_parquet`, so it
+      is ALSO asset_group-agnostic — it already protects cefi/tradfi/prediction going forward once confirmed live;
+      no separate code fix needed for this todo. **Side finding**: 0 lowercase objects found across every sampled
+      (asset_group, day) pair including days AFTER the fix landed (2026-08-15 for prediction) — consistent with the
+      sibling `[SCRIPT]` re-retirement todo's finding that MDPS has not processed fresh candle writes since the fix
+      landed; the fix's live-confirmation gate is the SAME open blocker across all four asset_groups, not
+      defi-specific. **NOT corpus-scoped** (3 sample days per AG via delimiter-descent, not the stratified
+      full-corpus sample the defi DIAG todo below ran) — see the new follow-up todo below. Also a stale-doc finding:
+      `canonical-cutover-register.md` §6d claims the `processed_candles/` `instrument_type=` segment is "PENDING —
+      no migration has run" for cefi/tradfi (only "prediction already carries it") — this is CONTRADICTED by the
+      code (the segment has always been unconditionally in the template) and by this session's live probe (cefi/
+      tradfi objects with `instrument_type=` already exist back to at least 2026-07-01); flagged here per the "a
+      doc that misled you is a finding" HARD RULE — not corrected in the register itself this session (out of
+      scope for a DIAG todo; leaving a pointer here for whoever next touches §6d). Scratchpad probe (read-only
+      `list_blobs` delimiter-descent only, never shipped — mirrors the 2026-08-16 root-cause session's own probe
+      precedent): `probe_cross_ag_candles_casing_2026_08_17.py`.
+- [x] ✅ [DIAG] P2. Root-cause WHY `_prune_consolidated_shards` left 9/21 defi market-data per-VM shards un-drained
+      past their provable merge cutoff — **RESOLVED 2026-08-17 (slot 20, infra): NOT a `_prune_consolidated_shards`
+      code bug — a lock-contention / long-merge-starvation pattern.** See Progress Log entry for full evidence
+      (live-verified against prod, not inferred): the function itself is correct (a direct live call drained the
+      entire eligible backlog with zero errors on the first attempt); the actual Cloud Run job runs every ~1 min
+      (not the ~31-32min this todo assumed) but a currently-held `consolidator.lock` (holder `1-6831d99c`, held
+      since 2026-08-17T04:51:10Z, already 33.7min old at read time — at/past this bucket's own documented 24-30min
+      merge ceiling) makes every OTHER concurrent tick return early via the "locked" no-op path BEFORE ever reaching
+      `_prune_consolidated_shards` (not even the shard listing). Prune's effective cadence is therefore gated by
+      merge-COMPLETION frequency, not cron frequency — and this bucket rarely goes idle (e.g.
+      `mtds-oracle-prices-backfill` alone lands a fresh per-VM shard roughly every ~9 min), so a long or
+      occasionally-orphaned merge (a previously-incident'd failure class for this exact lock mechanism, see the
+      "Lock-orphan blind spot" comment at `manifest_consolidator.py:382-406`) lets several cron-minutes' worth of
+      eligible shards accumulate before the next completed merge's prune call sweeps them. (repo:
+      unified-trading-library)
+- [ ] [DIAG] P3. Confirm whether the `consolidator.lock` holder observed 2026-08-17 (instance `1-6831d99c`,
+      acquired 04:51:10Z) is a genuinely-orphaned lock (Cloud Run killed/crashed the execution without reaching
+      `finally: _release_lock`) vs. a legitimately still-running long merge — re-check
+      `_index/consolidator.lock`'s content + age against the defi bucket; once its age exceeds
+      `CONSOLIDATOR_LOCK_TTL_SECONDS` (9000s/150min) the next tick reclaims it automatically and this resolves
+      itself, but if the SAME instance id keeps reappearing after every reclaim (recurring orphan, e.g. a
+      chunked-merge OOM/crash repeating on retry) that is the durable fix this doc's resolved DIAG todo above
+      flags as the actual mechanism, not just a one-off. If confirmed recurring, consider whether
+      `_check_consolidation_stall`'s lock-skip path (`_check_stall_on_lock_skip`,
+      `CONSOLIDATOR_STALL_ALERT_CYCLES=195` for this bucket) is actually accumulating toward a page for it. (repo:
+      unified-trading-library)
 - [ ] [DIAG] P3. Retry this doc's `logs`-mode Cloud Logging check (script
       `unified-trading-library/scripts/check_defi_consolidator_prune_backlog.py logs --project
       central-element-323112`) once the shared `ReadRequestsPerMinutePerProject`/`PerUser` (60/min) Cloud Logging
@@ -364,15 +405,29 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       build-triggering push has occurred since. Root-cause and, if it's a real stall, file the fix; if it's benign,
       note why and close. This blocks the gated `[SCRIPT]` re-retirement todo below from ever being confirmable via
       deploy evidence. (repo: unified-trading-pm or whichever repo owns the Cloud Build trigger investigation)
-- [ ] [OPERATOR] P2. Now that the `processed_candles/.../instrument_type=POOL/` population is scoped (~17.4M objects
-      projected, order-of-magnitude, one confirmed `data_type=dex_pool_swaps`, both known `pipeline_mode`s affected —
-      see the resolved DIAG todo above), decide plan destination for the actual migration (COPY-to-canonical-lowercase
-      per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5, never a blind rename/move) per
+- [ ] [DIAG] P2. Scope the corpus-wide non-canonical `processed_candles/.../instrument_type=` uppercase-path
+      population for cefi/tradfi/prediction (the resolved DIAG todo above confirmed the bug is fleet-wide, not
+      defi-only, but only sampled 2-3 days per asset_group via delimiter-descent — not a stratified full-corpus
+      sample). Mirror the defi DIAG todo's methodology
+      (`market-data-processing-service/scripts/scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`'s
+      stratified day-sample approach, reusing each asset_group's own day-enumeration idiom) — one script per
+      asset_group or a generalized asset_group-parameterized version. Per-asset_group corpus day-count, sample
+      size, and projected total object count are all currently UNKNOWN for cefi/tradfi/prediction (only the defi
+      figure, ~17.4M, is scoped). Feeds the `[OPERATOR]` migration-plan-destination todo below, whose scope should
+      be widened from "defi only" to "every affected asset_group" once this lands.
+- [ ] [OPERATOR] P2. Now that the defi `processed_candles/.../instrument_type=POOL/` population is scoped (~17.4M
+      objects projected, order-of-magnitude, one confirmed `data_type=dex_pool_swaps`, both known `pipeline_mode`s
+      affected — see the resolved defi-scoping DIAG todo above) — AND cefi/tradfi/prediction are now CONFIRMED
+      (not just risked) to carry the same non-canonical uppercase-path population fleet-wide (see the resolved
+      cross-AG DIAG todo above, corpus size TBD pending the new cefi/tradfi/prediction scoping todo above) — decide
+      plan destination for the actual migration (COPY-to-canonical-lowercase per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5, never a blind rename/move) per
       CLAUDE.md's "ask before creating" rule — AO-dispatched (`assigned_vm: planning`) vs human (`assigned_vm: NA`) —
-      then author the dedicated plan this issue's DIAG todo already recommended. The migration itself is genuinely
-      corpus-scale (order 10M objects) and belongs on a dedicated VM per
-      `/codex/05-infrastructure/vm-launcher-runbook.md`, not an interactive slot session. A precise (non-sampled)
-      corpus-wide count should be the plan's own first step, not assumed from this todo's 2.1%-sample projection.
+      then author the dedicated plan this issue's DIAG todos already recommended, scoped to EVERY affected
+      asset_group, not defi-only. The migration itself is genuinely corpus-scale (order 10M+ objects across
+      multiple asset_groups) and belongs on a dedicated VM per `/codex/05-infrastructure/vm-launcher-runbook.md`,
+      not an interactive slot session. A precise (non-sampled) corpus-wide count per asset_group should be the
+      plan's own first step, not assumed from any todo's sample-based projection.
 
 ## Progress Log
 
@@ -476,6 +531,20 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   Skipped with `reason_code=GATED` again. Next worker: same as slot-32's guidance — re-check
   `MAX(written_at)` once genuine new `dex_pool_swaps` capture activity resumes; if the freshest post-fix row is
   lowercase, the gate is satisfied.
+- **2026-08-17 (slot 24, ui_developer)**: resolved the `[DIAG]` P2 "does this bug affect cefi/tradfi/prediction too"
+  todo. Bounded, read-only delimiter-descent GCS probe (`probe_cross_ag_candles_casing_2026_08_17.py`, not shipped)
+  against all three live prod buckets confirmed 100% uppercase `instrument_type=` path segments under
+  `processed_candles/` for cefi (PERPETUAL), tradfi (EQUITY/ETF/FUTURE/COMBO), and prediction (PREDICTION_MARKET)
+  across every sampled day (2026-07-01, 2026-08-01, 2026-08-15) — 0 lowercase objects found anywhere, including
+  days after the 2026-08-16 fix landed. Confirmed via code read (`output_path_helpers.py` + UTL
+  `registry.py::build_canonical_candle_path`) that the path builder and the fix are BOTH asset_group-agnostic (one
+  shared template/call site for all `MarketAssetGroup` values), so this is the fleet-wide manifestation of the SAME
+  root cause already fixed for defi, not a separate bug — the existing fix already covers it going forward once
+  confirmed live. Filed a new corpus-scoping DIAG todo (cefi/tradfi/prediction are NOT YET corpus-scoped, unlike
+  defi's ~17.4M-object sample-based projection) and widened the `[OPERATOR]` migration-plan-destination todo's
+  scope from defi-only to every affected asset_group. Also flagged (not corrected — out of scope for this DIAG
+  todo) that `canonical-cutover-register.md` §6d's "cefi/tradfi processed_candles instrument_type= segment is
+  PENDING, no migration run" claim is stale/contradicted by both the code and this session's live probe.
 - **2026-08-17 (slot 25, backend_engineer)**: resolved the `[DIAG]` P2 corpus-wide scoping todo. Wrote
   `market-data-processing-service/scripts/scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`, a
   walk-disciplined stratified-sample scoper reusing `backfill_defi_dex_pool_swaps_source_correction.py`'s own
@@ -496,3 +565,46 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   `[OPERATOR]` P2 todo for plan-destination + the dedicated migration plan itself (genuinely corpus-scale,
   belongs on a dedicated VM, not this interactive session) per this doc's own recommendation. Script committed,
   QG green, shipped via quickmerge.
+- **2026-08-17 (slot 20, infra)**: resolved the `[DIAG]` P2 `_prune_consolidated_shards` un-drained-backlog todo,
+  live-verified against prod (no code change — a live-diagnosis task). Confirmed by direct measurement, not
+  inference:
+  - `state`-mode re-check found 7/19 shards still eligible-but-present (down from slot-5's 9/21 — genuinely
+    shrinking, not frozen), all 7 from a SINGLE writer (`mtds-oracle-prices-backfill`, sequential shard names
+    `c255`-`c261`, one new shard roughly every ~9 min) — ruling out "many different VMs all individually stuck"
+    in favor of "one prolific writer + a draining-too-slowly prune cadence."
+  - Ruled out every candidate this doc's todo listed as "not yet checked": no bucket retention policy / object
+    hold / lifecycle rule on the shard prefix; `testIamPermissions` confirms `storage.objects.delete` for the
+    ambient identity; and — the decisive test — **manually invoking the exact production
+    `_prune_consolidated_shards(client, bucket, cutoff=...)` live against the real defi bucket pruned all 6
+    remaining eligible shards on the FIRST call, zero errors, zero exceptions.** This rules out the `_delete_one`
+    silent-exception-swallow hypothesis (the function is not buggy — it works correctly when it runs) and rules
+    out "just a snapshot artifact" in the naive sense (the backlog did not resolve itself over ~90+ min of
+    per-minute cron ticks before I intervened).
+  - **Actual mechanism, found by checking `gcloud run jobs executions list`** (a data source this doc's prior
+    sessions hadn't used — sidesteps the Cloud Logging read-quota exhaustion blocking the `logs`-mode todo
+    entirely): the Cloud Run job fires every **~1 minute**, not the ~31-32min this doc's todo assumed. Each
+    execution's own `_index/latest.json` report (`schema_version:1`, written every run — another data source not
+    previously read) showed `"error_reason": "locked"` at the exact time of my check. Read `_index/
+    consolidator.lock` directly: held by instance `1-6831d99c` since `2026-08-17T04:51:10Z` — 33.7 min old at
+    read time, i.e. already at/past this bucket's own documented 24-30min merge-duration ceiling
+    (`CONSOLIDATOR_LOCK_TTL_SECONDS=9000`/150min override, set deliberately high per the code's own comment at
+    `manifest_consolidator.py:356-365` because defi's chunked merge legitimately runs that long). Per
+    `consolidate()`'s control flow, the "locked" early-return happens BEFORE either prune call site (before even
+    the shard listing) — so while one execution holds the lock, no other tick can prune, no matter how often cron
+    fires. Combined with a writer (`mtds-oracle-prices-backfill`) landing new shards ~every 9 min (keeping
+    `changed_paths` non-empty almost every tick, so the bucket rarely takes the fast idle no-op-prune branch
+    either), pruning's REAL cadence is bounded by how often a full merge actually COMPLETES, not by the 1-min cron
+    tick — and the code's own "Lock-orphan blind spot" comment (`manifest_consolidator.py:382-406`) already
+    documents this exact failure shape (a SIGKILLed holder bypasses `finally: _release_lock`, leaving a "fresh"
+    lock that blocks everything for up to the full TTL) as a previously-incident'd, recurring risk for this
+    mechanism.
+  - **Side effect, disclosed explicitly**: my diagnostic call to the real `_prune_consolidated_shards` function
+    against the live defi bucket drained its then-current eligible backlog (6 shards) as a natural consequence of
+    calling the exact, already-safe (conditional `if_generation_match` delete, dedup-protected) production
+    function — not a novel/riskier action, and not something a next cycle wouldn't have done on its own once the
+    lock clears. No irreversible/unsafe action taken.
+  - **Not resolved this session** (filed as a new P3 DIAG todo): whether the CURRENT lock holder (`1-6831d99c`,
+    still held as of this session's last check) is a genuinely orphaned/crashed execution or a legitimately
+    still-finishing long merge — that needs either watching it clear past its TTL or a fresh re-check, and if the
+    SAME instance id recurs after being reclaimed, that would confirm a recurring orphan (the durable-fix-worthy
+    case) rather than an isolated slow cycle.

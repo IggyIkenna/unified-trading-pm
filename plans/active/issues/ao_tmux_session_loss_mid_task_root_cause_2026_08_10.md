@@ -660,3 +660,4 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
     crash/kill without a separate journal/`slot_done` cross-reference, done by hand this session — todo filed above to
     close that gap in the tool itself.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:861ed334074db2b1]: KEEP-NA, valid — status: open, active live-incident investigation with a documented history of premature-closure self-corrections; remaining items are genuine unresolved root-cause work plus operator-gated live-infra decisions.

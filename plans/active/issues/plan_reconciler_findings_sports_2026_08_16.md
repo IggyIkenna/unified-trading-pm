@@ -118,5 +118,8 @@ should be pointing sharded workers at their slot clone.
   the same day by ag_closeout_audit_sports_parked_2026_08_16.md's own dead-lock/staleness finding. Awaiting the
   standing plan-reconciler.timer to naturally re-run /plan-reconcile sports — per async-wait-discipline this
   should not be manually force-triggered.
+- **na-eligibility-audit 2026-08-17** [body-hash:0a1e5beaab50e7ea] (dispatch agt-1c51ee, second same-day pass):
+  reconfirmed independently — same verdict. Hash refreshed (prior marker's stored hash had drifted from the live
+  body with no substantive content change since; not investigated further here).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

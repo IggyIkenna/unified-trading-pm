@@ -322,6 +322,7 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
   90097, and `context_window_for("claude-sonnet-4-6")` evaluated **in that process** returns `200000`. Verifying the new
   code is loaded in the RUNNING process (not merely present on disk) is deliberate: the previous attempt was reported
   live while the process predated it.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:1be52e05bdc6eb3a]: KEEP-NA — item 5 (re-run the 60-minute context-signal validation) is ALREADY claimed by the active `ao_satellite_ao_dispatch_batch21_2026_08_16.md` (its todo 1 cites this doc by path, still open there too); leave open, do not duplicate. Items 1-4 stay KEEP-NA valid — live-dispatch-critical-path watchdog machinery still being actively characterized, per 5+ prior audit passes.
 
 ## Follow-ups from the 2026-08-08 root-cause session
 

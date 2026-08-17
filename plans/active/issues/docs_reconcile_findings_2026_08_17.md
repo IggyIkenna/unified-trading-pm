@@ -76,19 +76,8 @@ on one active issue doc). This doc captures what's NOT auto-fixable this run.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic** (`scripts/plan-hygiene/fix_frontmatter.py`
-      `get_first_paragraph_after_heading()`, lines ~245-294, called at ~646-654 only `if not has_field(new_fm,
-      "summary")`). Two confirmed defects: (a) hard-cuts mid-word at 197 chars with a literal `" ..."` suffix when no
-      sentence/space boundary is found in budget -- produced summaries that stop before the doc's actual point is ever
-      reached (~30 confirmed instances, e.g. `plans/archive/issues/sports_league_id_out_of_universe_overcapture_
-      2026_06_24.md`'s summary cuts at "…legacy duplicates of canoni…", losing the doc's real finding, a 36%
-      out-of-universe over-capture rate); (b) locks onto the FIRST `". "`/`"! "`/`"? "` in the source paragraph even
-      when that leaves most of the 197-char budget unused, producing dangling lead-ins that stop right before the
-      actual content (7 confirmed instances, incl. one on an ACTIVE open doc --
-      `plans/active/issues/mtds_is_historical_quickmerge_bypass_backlog_2026_08_16.md`, already hand-fixed directly in
-      this sweep since it's live/retrieved). Fix direction: widen the sentence-boundary search to use more of the
-      197-char budget before falling back to a hard cut, and prefer a hard cut mid-clause (not mid-word) as the last
-      resort.
+- [x] ✅ [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic** — extracted (conflict-checked, clear) to
+      `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 2. Track dispatch/completion there, not here.
 - [ ] [OPERATOR] P3. **Decide whether to backfill the ~1,115 inadequate archived-doc summaries this produced.**
       1,114 of 1,115 confirmed-inadequate summaries (from a corpus-wide sweep of 5,235 in-scope docs) are in
       `plans/archive/` -- dead history outside the live L0-L4 retrieval flow, not the codex/agents/active-plans
@@ -153,3 +142,7 @@ whoever owns that MDPS finding sees the breadcrumb if they come looking for thei
 2026-08-14 and now lives at `/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_
 2026_08_10.md`. A hardcoded path string in `scripts/quickmerge.sh`'s own output, not a doc-corpus finding -- too small
 to chase down the exact call site in this sweep, noting so it doesn't re-mislead the next agent who greps for it.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:dcddeb426a48300f]: RECLASSIFY (per-todo split) — the `fix_frontmatter.py` summary-truncation fix is conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 2; the 2 [OPERATOR] scope-decision items and the half-bounded dead-link item stay KEEP-NA.

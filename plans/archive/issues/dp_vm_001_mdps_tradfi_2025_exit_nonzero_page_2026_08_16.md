@@ -17,7 +17,7 @@ summary: >-
   (2026-08-14 x2, 2026-08-15 x2, this one 2026-08-16) — reinforcing the prior recommendation that this pattern warrants a
   dedicated root-cause pass on the tradfi MDPS backfill launcher/adapter rather than continuing to treat each occurrence
   as an isolated page.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -165,4 +165,14 @@ class of failure repeatedly.
   `[OPERATOR]` todo above (root-cause-and-decide) is now answerable with this evidence — leaving the checkbox as-is
   since the decide half is still genuinely operator-gated, but the root-cause half is DONE. Full cross-VM roundup
   (incl. the 2 refuted VMs) recorded in the 2021 sibling doc's Progress Log.
+
+- **na-eligibility-audit 2026-08-17 (tradfi tranche, dispatch agt-d99b5c) — ARCHIVE.** This doc's purpose (page +
+  diagnose `mdps-tradfi-2025-20260815-020059`'s `exit_code=1` failure) is fulfilled: root cause confirmed (stale
+  MDPS tarball, self-resolved by the routine 2026-08-16 11:06 rebuild) and the sole remaining substantive
+  work — preventing recurrence via a tarball-refresh-cadence policy change — is tracked as its own design-gated
+  item in the sibling `dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md` doc, not
+  unique to this VM. `status: resolved` above; archiving per the standard 6-step ritual (`doc_type: issue` →
+  flat `plans/archive/issues/` per `issue-doc-lifecycle.md`'s 2026-08-16 ruling). Referrers fixed: the 2 still-active
+  ones (`dp_vm_001_mdps_tradfi_2021_...md`, `tradfi_satellite_ao_dispatch_batch14_2026_08_16_finalize.md`); the 2
+  already-archived referrers are left untouched as frozen historical record (fact-vs-path convention).
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

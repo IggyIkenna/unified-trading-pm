@@ -250,3 +250,4 @@ source:
   UI/endpoint work remains undone; only the "is this still blocked" verdict changed, from blocked-upstream-design to
   ready-to-dispatch.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:2c7f98d3f07fe05b]: KEEP-NA, valid — item 1 is live-tracked verbatim in the active epic `escalation_and_disaster_recovery_master`'s own todo list (checkbox stays open only as a pointer, per a 2026-08-07 citation-fix); item 2 is explicitly scoped as a future-plan recommendation, not this doc's own execution; item 3 is void pending a retest-gate condition.

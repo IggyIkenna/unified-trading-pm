@@ -64,3 +64,4 @@ activity.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:66be0dcee560b804]: KEEP-NA-STALE (already-duplicated) — CORRECTED from an initial KEEP-NA(plain) read: this doc's sole open todo (batch agents/main.md STEP 2A + STEP 2.5) is ALREADY claimed verbatim by the active `ao_satellite_ao_dispatch_batch22_2026_08_16.md` (its todo 4 cites this doc directly). Not reclassifying — already tracked there.

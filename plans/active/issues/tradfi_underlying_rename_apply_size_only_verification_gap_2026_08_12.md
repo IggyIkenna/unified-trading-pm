@@ -81,3 +81,6 @@ would be destroyed with no real content-equivalence proof.
   doc as its source. Flipped done in the batch plan citing that SHA; no new code shipped. The "What's blocked" section
   above is now stale-marked rather than deleted, since it's still useful provenance for why the check existed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA, valid.** Sole open item
+  (todo 2, the `full`-mode launch decision) is an explicit, self-cited real prod-bucket delete gated per
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — textbook human-only. `assigned_vm` unchanged.

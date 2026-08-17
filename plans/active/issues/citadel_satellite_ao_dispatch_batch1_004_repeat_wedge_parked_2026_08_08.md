@@ -216,3 +216,7 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
   priority-tier amplification, same root cause now fixed). That doc's own Progress Log already independently reached the
   same conclusion (slot 33: "the wedge looks environment/timing-triggered"). Its todo 1 can be flipped citing this
   cross-check as evidence if desired; not doing so here — this session's scope is this doc's todo only.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:63c0490dc6e560eb]: KEEP-NA, valid — root-cause todo already done; both remaining items need an operator-only dashboard unpark action this interactive session has no write access to trigger.

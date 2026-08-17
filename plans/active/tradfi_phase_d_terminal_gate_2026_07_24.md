@@ -142,10 +142,10 @@ context_scope:
       `/data-pipeline-reconciliation --asset-group tradfi` against PROD, a separate action). Still open, now genuinely
       dispatchable. **UNBLOCKED 2026-08-10** — same databento resolution as the MVP backfill readiness gate above; this
       todo's remaining blocker is purely its dependency on that gate above (and, transitively, the chain-bundle
-      follow-up it's still blocked on — see that todo's note). Prior gate (superseded, kept for history):
-      ~~BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on databento account
-      billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
+      follow-up it's still blocked on — see that todo's note). Prior gate (superseded, kept for history — depended on
+      the MVP backfill readiness gate above, itself formerly gated on the now-resolved databento account billing
+      suspension, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md).
       **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
       (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded; real metered `GLBX.MDP3`/`XCBF.PITCH` pulls
       both succeeded — see `/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`).

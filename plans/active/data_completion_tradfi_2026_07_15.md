@@ -992,9 +992,11 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   summarized inline in this doc's own Progress Log; kept the existing 6-entry set (M-1 coordinator + 3 codex SSOTs + 2
   source scripts) rather than adding a 7th, since the issue doc's key facts are already inline here.
 
-- [ ] [SCRIPT] P3. **Live re-verification sweep, deferred from the now-archived
-      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` issue doc
-      (2026-08-16).** Three narrow fixes shipped there but were never confirmed against a fresh live backfill run:
+- [x] ✅ [SCRIPT] P3. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 1.** Live re-verification sweep, deferred from the
+      now-archived `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`
+      issue doc (2026-08-16). Three narrow fixes shipped there but were never confirmed against a fresh live
+      backfill run:
       (1) `ohlcv_24h` SchemaContract alias for future/equity/options_chain/index (`unified-api-contracts@079d48ff`) —
       confirm a `--data-types ohlcv_24h` request no longer crashes for those instrument_types; (2) ETF
       `ohlcv_1m`/`trades` SchemaContract registration (`unified-api-contracts@0228afe52a`) — confirm a fresh request
@@ -1012,3 +1014,7 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       CME OPTION instrument specifically (not just ETF, per item 2 above) to confirm whether the fine-timeframe
       OPTION crash is still live post-fix — this was not directly re-verified this session (the evidence VM
       predates the fix), only flagged so the sweep's scope covers it.
+
+  **na-eligibility-audit 2026-08-17**: item 15 RECLASSIFIED, extracted to
+  `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 1 (checkbox above). Items 1/3-14 re-read, unchanged
+  standing verdicts (operator/credential/design/dependency-gated). Doc stays `assigned_vm: NA`.

@@ -133,3 +133,4 @@ Operator reported agents "keep respawning without finishing their tasks and burn
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:9534953f4daf58bc]: KEEP-NA, valid — 2 open items are an unresolved investigation into the actual DeepSeek-side crash mechanism (possibly needing vendor engagement) and an explicit operator decision on reverting a tuning flag; neither bounded/deterministic.

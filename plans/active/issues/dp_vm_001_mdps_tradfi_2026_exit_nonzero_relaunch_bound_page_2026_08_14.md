@@ -149,3 +149,12 @@ guidance both point the same direction: stop and page.
   fix — out of this todo's scope (confirm/refute the specific adapter hypothesis, not root-cause every VM from
   scratch); the `[OPERATOR]` relaunch-vs-wait decision above and the SchemaContract gap both remain open follow-ups.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA, valid.** Todo 1 (operator
+  relaunch-vs-wait) stays genuinely gated. Todo 2 (BACKEND diagnostic): its root cause is now DONE (confirmed missing
+  `tradfi`/`OPTION`/CME `SchemaContract` on fine timeframes) and cross-referenced into
+  `data_completion_tradfi_2026_07_15.md`'s own live-re-verification todo — stale-duplicated-elsewhere, not an
+  independent reclassify candidate; citation already present in this doc's own 2026-08-16 batch14 entry above.
+  **Correction to the record**: the prior 2026-08-16 marker on this doc read "sole open todo" — this was a miscount
+  (2 todos were open then too, both plain `- [ ] `, not an indentation/star-bullet edge case); flagging for
+  corpus-hygiene awareness, not re-litigating the verdict itself (KEEP-NA was still correct either way).
+  `assigned_vm` unchanged.

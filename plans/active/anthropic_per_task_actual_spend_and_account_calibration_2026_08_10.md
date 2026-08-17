@@ -606,7 +606,8 @@ less on that account.
 > **2026-08-17 line-cap extraction**: the 2026-08-10 diagnosis + first (uncorrected) calibration pass + feasibility
 > probe + laptop-contamination probe + corrected-denominator re-run + cache-transfer reasoning that used to sit here
 > moved verbatim to
-> `anthropic_per_task_actual_spend_and_account_calibration_progress_log_history_2026_08_17.md` (this plan hit the
+> `/plans/archive/2026_08/anthropic_per_task_actual_spend_and_account_calibration_progress_log_history_2026_08_17.md`
+> (this plan hit the
 > 1000-line hard cap). Every figure still in active use (32.2x/15.5x/6.1x corrected multipliers, the 190x reference
 > measurement) is already restated at its point of use in the Todos and the 2026-08-16/08-17 entries below — nothing
 > downstream depends on the narrative staying inline.
@@ -673,7 +674,8 @@ and posting its output (or confirming zero laptop sessions) here, not on blind r
 > code it describes as blocked has since shipped, see the Todos' `[x]` marks), both "Session lessons" sections, the AO
 > account-rotation timeline + cache-accounting verification, the ~190x CONTROLLED MEASUREMENT derivation, the
 > cost-structure breakdown, and the RETRACTION establishing no account is certifiably laptop-free all moved verbatim to
-> `anthropic_per_task_actual_spend_and_account_calibration_progress_log_history_2026_08_17.md` alongside the block
+> `/plans/archive/2026_08/anthropic_per_task_actual_spend_and_account_calibration_progress_log_history_2026_08_17.md`
+> alongside the block
 > above. The 190x figure and the >= 32.2x fleet-floor framing are already live in the Todos (e.g. todo 6's own
 > wording); several of the general session lessons are now also captured structurally in
 > `/codex/06-coding-standards/tool-call-batching.md`.
@@ -715,18 +717,3 @@ Sonnet-5-heavy siblings once correctly denominated), which is itself informative
 is the outlier-within-Pro, not evidence that Pro categorically reads ~1000x. The sibling doc's open `[OPERATOR]` todo
 ("Investigate the sub-d 1047x outlier") stands unchanged — this session did not touch that doc's todos, only used it as
 a cross-reference to answer this plan's own confirm/refute question.
-
-### 2026-08-17 (slot-10, data_engineering) — todo 11 re-checked a third time, blocker #2 (todo 21) still unresolved
-
-Re-dispatched onto todo 11 (task id `anthropic_per_task_actual_spend_and_account_calibration-827796b01804`). This
-slot also runs directly on the orchestrator VM, so VM-side data (`state.db`, `account_usage_history`) is reachable
-with no SSM hop — same as the two prior sessions, so blocker #1 (SSM `AccessDeniedException`) does not apply here
-either. Grepped the full `plans/` corpus for `laptop_login_identity_log` and confirmed no run output has been
-posted anywhere since the 2026-08-17 slot-21 check earlier today — the situation is unchanged. The done-when still
-requires todo 21's operator-only laptop-side sampler (`~/.claude/laptop_login_identity_log.jsonl`) to show zero
-laptop sessions on `sub-a-ikenna`/`sub-e-odum3default`, and that is data this VM cannot produce under any identity.
-**Not flipping todo 11** — releasing via `/skip-current-task` with `reason_code: GATED`. **Third same-two-day
-dispatch of this exact blocker** (2026-08-15 slot-4, 2026-08-17 slot-21, 2026-08-17 slot-10) — worth a human call on
-whether to PARK this task (`priority: 999` + a prerequisite condition gated on the operator posting the sampler log,
-per `agents/RULES.md` §4) rather than let it keep re-dispatching on the standard GATED cooldown; backlog-config
-edits are main-agent/operator-owned per that section's own heading, not something this worker role does directly.

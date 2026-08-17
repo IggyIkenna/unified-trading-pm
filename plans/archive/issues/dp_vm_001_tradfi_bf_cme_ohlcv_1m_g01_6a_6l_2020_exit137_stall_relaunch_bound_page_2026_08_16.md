@@ -16,7 +16,7 @@ summary: >-
   timestamps (a separate, already-in-flight relaunch wave for other shards in the family, not this VM). This worker
   did NOT relaunch and did NOT pull `run.log` content to diagnose the in-container stall root cause this session — it
   files this doc and pages the operator per the escalation's explicit instruction.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -112,15 +112,18 @@ poison instrument/date range in that group/chain/year combination) rather than a
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260816-162556`'s shard
-      (tradfi/CME/g01-6a-6l/2020 1m OHLCV) per the recommended decision above; the `tradfi-bf-cme-ohlcv-1m-` family
-      relaunch bound is already exhausted for today (2/2, per this escalation's own context).
-- [ ] [BACKEND] P2. Pull + read `run.log` for both `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260815-200147` and
-      `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260816-162556` (SAME shard, one day apart) via
-      `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess),
-      compare failure signatures, and fix at the root — if it's a shared code defect, bound the offending call with
-      `asyncio.wait_for` at the per-shard level per the shard-isolation SSOT; if it's a poison-instrument/date issue
-      specific to this shard, isolate + skip it per shard-level failure isolation.
+- [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) — evidence:
+      this doc's own 2026-08-17 Progress Log correction entry below.** Root cause is now known: the tracked
+      Databento CME `402 account_delinquent_invoice` billing block
+      (`tradfi_databento_account_billing_suspended_2026_08_09.md`, still `status: blocked`) — a relaunch will hit
+      the identical wall until that P0 clears, so this is no longer a live relaunch-vs-wait decision, it's a
+      wait-on-billing dependency tracked in that doc. Original ask: decide relaunch-vs-wait for this shard.
+- [x] ✅ [BACKEND] P2. **CLOSED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) — evidence:
+      this doc's own 2026-08-17 Progress Log correction entry below.** Root cause identified: the Databento billing
+      block above, not a shared code defect and not a poison-instrument/date issue (this todo's own two candidate
+      branches) — the adapter returned promptly with a 402, it did not hang, so `asyncio.wait_for` bounding is very
+      unlikely to be the real fix per that same correction entry. No code fix needed here. Original ask:
+      pull+compare run.log for both same-shard attempts and fix at the root.
 
 ## Progress Log
 
@@ -153,3 +156,9 @@ poison instrument/date range in that group/chain/year combination) rather than a
   "bound the offending call with `asyncio.wait_for`" branch as very unlikely to be the real fix — the adapter
   returned promptly with a 402, it did not hang.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA-stale-items, closed with
+  evidence.** Both open items are resolved-in-substance by this doc's own 2026-08-17 correction entry above (root
+  cause = tracked Databento billing block, not a code defect or poison-instrument) — closed both, see checkboxes
+  above. Doc now has 0 open todos — `status: resolved` above, archiving per the standard 6-step ritual
+  (`doc_type: issue` → flat `plans/archive/issues/` per `issue-doc-lifecycle.md`). Referrers fixed: the 4 still-active
+  sibling docs that cite this one.

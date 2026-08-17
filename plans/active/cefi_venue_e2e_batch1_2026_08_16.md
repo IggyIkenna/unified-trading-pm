@@ -214,18 +214,27 @@ source: >-
       ("bid-ladder near liq price", per the manifest's `hyperliquid` PARTIAL cell) is unimplemented new archetype
       design — tracked as quant_dev/backend follow-ups in
       `plans/active/issues/liquidation_capture_cefi_bid_ladder_variant_unbuilt_2026_08_17.md`.
-- [ ] [BACKEND] P1. **Gap: `CARRY_BASIS_DATED`/`_INV` — BYBIT has zero presence, BINANCE-FUTURES's own
-      `futures_chain` data isn't actually the archetype's futures leg, and the capability matrix claims Coinbase
-      support that doesn't exist in the real generator (matrix/code drift)** — `target_universe/catalog_carry.py`
-      pairs `"spot_venue":"binance"` with `"future_venue":"deribit"` for the crypto leg (`catalog_carry.py:93-100,
-      830-872`); BINANCE only ever plays the spot role, never the futures role its own `futures_chain` row would
-      imply, and BYBIT never appears in either function. The capability manifest
-      (`archetype_capability_manifest.json:524-543,2003-2020`) separately claims `venue_ids` including `coinbase`
-      for both archetypes — coinbase appears nowhere in the real generator functions (only under the sibling
-      `CARRY_BASIS_PERP` archetype). Done-when: either BYBIT is added to the real slot generator (or the omission
-      is confirmed intentional), BINANCE-FUTURES's futures-leg role is clarified against real code (not just the
-      spot-leg token), and the matrix's coinbase claim is corrected to match the real generator or the generator
-      is extended to actually cover it.
+- [x] ✅ [BACKEND] P1. **Gap: `CARRY_BASIS_DATED`/`_INV` — BYBIT had zero presence, BINANCE-FUTURES's own
+      `futures_chain` data wasn't actually the archetype's futures leg, and the capability matrix claimed Coinbase
+      support that doesn't exist in the real generator (matrix/code drift) — done 2026-08-17.** SHIPPED —
+      `strategy-service@a2fcb36e0d` + `unified-api-contracts@e64a408c49`. `generate_venue_work_list.py` confirmed
+      BYBIT declares real captured `futures_chain` data with `CARRY_BASIS_DATED`/`_INV` as consumers (not a CSV
+      false-positive like the `LIQUIDATION_CAPTURE`/`MARKET_MAKING_PREDICTION` findings elsewhere in this batch) —
+      a genuine omission, not intentional. Extended `catalog_carry.py`'s crypto dated-basis loop (both
+      `build_carry_basis_dated()` and `build_carry_basis_dated_inv()`) to add BYBIT as a second spot-leg venue
+      alongside BINANCE, both paired against Deribit as the sole dated-future leg — same spot-only role BINANCE
+      already played (BINANCE-FUTURES's own `futures_chain` data is confirmed NOT the future leg; Deribit's dated
+      crypto futures/options book is, documented in a code comment at the call site). The new bybit-deribit rows
+      stay honestly excluded from paper drivability (`_BASIS_DATED_SATISFIABLE_VENUE_PAIRS` left unchanged —
+      binance-deribit raw-tick satisfiability is verified, bybit-deribit is not, so it's excluded the same way
+      every other unverified pair already is, not silently assumed). Corrected the manifest's `venue_ids` for both
+      archetypes' CEFI `dated_future` cell: removed the stale `coinbase` claim (confirmed real only under the
+      sibling `CARRY_BASIS_PERP`), added `bybit`. Manifest regenerated via
+      `scripts/generate_archetype_capability_manifest.py --write` (the committed JSON is a deterministic
+      round-trip of the live Pydantic registry — hand-editing it directly fails `test_manifest_is_round_trip_stable`).
+      3 pre-existing tests updated for the new row counts (16→18 `CARRY_BASIS_DATED`, 3→5 `_INV`) and the new
+      honestly-skipped bybit rows: `test_basis_dated_catalog_config_contract.py`,
+      `test_paper_universe.py::test_basis_dated_archetypes_are_drivable_only_for_binance_deribit_crypto_rows`.
 - [x] ✅ [BACKEND] P1. **Record every NEW gap found during steps 6-8 — done 2026-08-16.** 5 genuinely new gaps
       tracked above (2 escalated as dedicated P0 issue docs given the live-money-risk shape, matching this plan's
       own step-9 precedent): CEFI live position dispatch broken 9/12, CEFI live execution dispatch broken 9/12

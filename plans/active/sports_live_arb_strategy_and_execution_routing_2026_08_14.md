@@ -309,3 +309,7 @@ concurrent session's index/working-tree state, so this write bypasses that check
   Independently cross-corroborated by ag_closeout_audit_sports_parked_2026_08_16.md ("Parked — dependency-gated").
   RECOMMEND FOLLOW-UP: re-audit once BOTH prerequisite docs land — 11 of 16 items (all but the design-judgment item and
   the explicit [OPERATOR] promotion-gate item) become genuine RECLASSIFY/split candidates at that point.
+- **na-eligibility-audit 2026-08-17** [body-hash:810f8a7668f535c4] (dispatch agt-1c51ee, second same-day pass):
+  reconfirmed independently — same verdict, KEEP-NA valid, both prerequisites still open. Hash refreshed (prior
+  marker's stored hash had drifted from the live body despite no substantive content change since it was written;
+  same class as the cefi-tranche "re-drifted incremental-skip marker hash" fix — not investigated further here).

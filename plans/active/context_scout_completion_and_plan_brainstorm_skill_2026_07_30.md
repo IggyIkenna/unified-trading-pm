@@ -192,6 +192,7 @@ choice (human-executed, not AO-dispatched).
   progress recorded there as of 2026-08-01: `NEVER_SCOUTED` reduced 609→386). This doc's own checkbox simply never got a
   pointer back to that extraction. Added the citation inline above; `assigned_vm` correctly stays `NA` here — flipping
   it would dispatch a duplicate of already-active work.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:63f48294b17750c5]: KEEP-NA-STALE (already-duplicated) — sole open todo (context_scope corpus backfill) is verbatim the same item as `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s own todo 1, independently re-verified live (that doc still active, its todo 1 still open). Not reclassifying.
 
 ## Codex SSOTs
 

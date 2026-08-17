@@ -8,8 +8,8 @@ summary: >-
   `anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`'s Progress Log to bring that still-active
   plan back under the line-cap hard gate (was 1014L). Every figure this history still feeds forward is already
   restated at its point of use in the parent plan; nothing here is the current SSOT for anything actionable.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
@@ -37,6 +37,10 @@ superseded_by:
 depends_on:
 source: "line-cap extraction, 2026-08-17 (slot-21) — see parent plan's 'Deferred work after 2026-08-10' entry"
 ---
+
+> 🟢 **ARCHIVED 2026-08-17** (na-eligibility-audit, ao tranche) — 0 tracked todos, pure Progress-Log-history extraction
+> per `task_template.md`'s Finding-J convention. Parent plan:
+> `/plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`.
 
 # Progress Log history — Anthropic per-task actual spend calibration
 
@@ -354,3 +358,7 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:6ceab83d2ca79e5c]: ARCHIVE — zero todos ever tracked; pure Progress-Log-history extraction, doc's own banner states its full scope is backup detail only. Archived per the 6-step ritual to plans/archive/2026_08/ (status: complete, nature: record) per task_template.md's own Finding-J convention.

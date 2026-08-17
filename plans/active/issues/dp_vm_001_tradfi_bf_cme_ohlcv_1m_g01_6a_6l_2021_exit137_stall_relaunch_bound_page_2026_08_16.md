@@ -34,7 +34,7 @@ related:
   [
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
@@ -142,15 +142,21 @@ same-shard VM noted above.
       (tradfi/CME/g01-6a-6l/2021 1m OHLCV) per the recommended decision above; the `tradfi-bf-cme-ohlcv-1m-` family
       relaunch bound is already exhausted for today (2/2, per this escalation's own context). Check the
       already-RUNNING `g01-6a-6l-2021-20260816-220230` VM FIRST — it may already be resolving this.
-- [ ] [BACKEND] P2. Pull + read `run.log` for `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2021-20260816-200155` via
-      `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess),
-      compare its failure signature against the 2020-shard stalls tracked in the sibling issue docs, and fix at the
-      root — if it's a shared code defect across `g01-6a-6l-*` years, bound the offending call with
-      `asyncio.wait_for` at the per-shard level per the shard-isolation SSOT; if it's a poison-instrument/date issue
-      specific to one shard, isolate + skip it per shard-level failure isolation.
+- [x] ✅ [BACKEND] P2. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 4** (reworded there to check the confirmed
+      Databento CME billing-block signature FIRST, before this todo's original two branches — the sibling
+      2020-shard `g01-6a-6l` stalls both turned out to be billing-caused, not code defects). Original ask: pull +
+      read `run.log` for `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2021-20260816-200155`, compare its failure signature
+      against the 2020-shard stalls, and fix at the root — if it's a shared code defect across `g01-6a-6l-*` years,
+      bound the offending call with `asyncio.wait_for` at the per-shard level; if a poison-instrument/date issue,
+      isolate + skip it.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **RECLASSIFY, per-todo split.** Todo 2
+  (run.log pull+diagnose) is bounded/deterministic — extracted, reworded to check the now-confirmed billing-block
+  signature first (see checkbox above). Todo 1 (operator relaunch decision, including checking the already-running
+  replacement VM) stays genuinely gated. Doc stays `assigned_vm: NA`.
 - 2026-08-16 (slot 5, data_pipeline_failure escalation agt-9d6668): Received escalation for DP-VM-001
   `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2021-20260816-200155` exit_code=137, flagged by the escalation as stall-induced,
   not OOM. Checked for an existing issue doc naming this VM/shard — none found (all same-family docs target the

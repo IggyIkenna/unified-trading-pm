@@ -165,8 +165,17 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
       `quality-gates.sh` green. Scope note: the dedicated dual-acceptance + negative-control regression-test todo
       below is separate — my tests here cover this todo's own change, not that todo's full negative-control
       requirement.
-- [ ] [BACKEND] P1. Add regression tests pinning dual-acceptance (both shapes pass `canonical_path_violations()` during
-      the window) plus a negative control (a third, made-up shape still fails). `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P1. Add regression tests pinning dual-acceptance (both shapes pass `canonical_path_violations()` during
+      the window) plus a negative control (a third, made-up shape still fails). `quality-gates.sh` green. —
+      unified-api-contracts@4e4a772bfd. Added `test_cefi_chain_dual_acceptance_pins_both_shapes_canonical` +
+      `test_tradfi_chain_dual_acceptance_pins_both_shapes_canonical` (pin the EXACT empty-list
+      `canonical_path_violations() == []` return for BOTH the legacy shape, `instrument_type=<chain-token>`, and the
+      corrected shape, `data_type=<chain-token>`, cefi + tradfi, `options_chain`/`futures_chain`) plus
+      `test_cefi_chain_third_made_up_shape_still_fails` (negative control: an invented `options_bundle` token — neither
+      blessed shape — is not chain-detected, routes to the ordinary single-instrument id-form check, and is correctly
+      rejected for a non-canonical-id filename). All 3 new tests pass; existing 141 `test_partition_paths.py`/
+      `test_partition_path_is_canonical.py` tests unmodified. `quality-gates.sh` green
+      (`.qg_last_passed_sha=4e4a772bfdf55336dbf38aeb0cbb62e75a044362`).
 
 ### Phase 2 — writer + adjacent consumers migrate together (gated on Phase 1 landing)
 

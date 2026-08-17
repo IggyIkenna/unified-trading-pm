@@ -82,14 +82,40 @@ Verdict: clear on all 3 items — proceed.
 
 - [ ] [SCRIPT] P0. **Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS
       markers** — the drain-budget denominator (worst-case waste = longest-shard-duration × dependent-count).
-      **BLOCKED-CREDENTIALS in every dev checkout tried so far** (`scripts.recovery._durable_state.state_bucket()`
-      resolves to `''` — the bucket name resolves from runtime-only deploy-time config no dev slot carries).
-      Re-attempted twice (2026-08-14, 2026-08-16), same result both times. This is why it's dispatched here rather
-      than left NA: the outcome itself is fully mechanical (read PROGRESS markers, compute p95/max, no judgment call)
-      — what's missing is RUNTIME CONTEXT a dev checkout doesn't have. If the orchestrator VM's own environment
-      resolves `state_bucket()` correctly (worth checking FIRST, before assuming another VM launch is needed), this
-      is a same-day close. If it doesn't, the worker's job is to say so precisely (what env var/config IS present vs
-      needed) rather than fake a result — do not report BLOCKED-CREDENTIALS as done. Repo: deployment-service.
+      Genuinely open, NOT blocked — re-verified 2026-08-17 (review-craft, slot 24): the orchestrator VM's own
+      environment resolves `scripts.recovery._durable_state.state_bucket()` correctly
+      (`deployment-scripts-central-element-323112`, confirmed live via direct call, not the empty string a plain dev
+      checkout got on 2026-08-14/2026-08-16). The prior dev-checkout-only observation never named itself a permanent
+      block — it explicitly asked the next worker to check the orchestrator VM FIRST, which this note now closes out.
+      The remaining work is unattempted: list `vm-logs/{vm}/run.log` under bucket
+      `deployment-scripts-central-element-323112` (`deployment_service/data_pipeline_monitors/_gcs.py`'s
+      `RUN_LOG_BLOB`), parse each VM's PROGRESS markers, group by launcher family, compute p95/max shard duration per
+      family. Do the actual measurement — do not re-run the credential check. Repo: deployment-service.
+      **IN PROGRESS 2026-08-17 (slot 27) — do NOT re-attempt the credential check, do NOT re-derive the approach,
+      just resume/finish this exact attempt**: wrote `deployment-service/scripts/measure_shard_duration_p95.py`
+      (currently UNCOMMITTED, untracked — real file on disk in the repo working tree, not scratchpad) — lists every
+      `vm-logs/{vm}/run.log` blob (14,040 found), resolves each `vm_name` to a launcher family via
+      `launcher_registry.resolve_launcher_for_vm`, reuses the fleet monitors' own `_PROGRESS_RE`/`_LOG_TS_RE` (from
+      `data_pipeline_monitors/_gcs.py`) to find shard-write timestamps per VM, pools the inter-write deltas per
+      family, computes p95/max. A 30s smoke test (62/13891 blobs) already produced a real, plausible-shaped
+      distribution (e.g. `launch-mtds-dex-swaps-backfill-vm.sh` p95=7373.5s/max=34072s;
+      `launch-cefi-forward-poll.sh` p95=5.0s/max=2664s — heavy-tailed, as expected for backfill launchers). A full
+      900s-budget, concurrency=10 run was launched in the background (`--output /tmp/shard_duration_p95.json`) —
+      **check `/tmp/shard_duration_p95.json` and the launching shell's captured stdout first; if both are gone
+      (session/host restart), just re-run**: `cd deployment-service && .venv/bin/python
+      scripts/measure_shard_duration_p95.py --time-budget-seconds 900 --concurrency 10 --output
+      /tmp/shard_duration_p95.json` (~15 real minutes; full coverage of all 13,891 relevant blobs is NOT expected —
+      the script reports its own sampled coverage, which is the intended, documented method, not a shortfall). Some
+      individual `download_bytes` calls stall past the 30s per-call timeout on a few very large/old logs
+      (`_gcs.py`'s own bounded-retry logic already handles this — logged WARNING, not a failure) — expected, not a
+      bug to chase. Once the full run's stdout table + JSON exist: (1) `git add
+      deployment-service/scripts/measure_shard_duration_p95.py`, run `quality-gates.sh` (not yet run this session —
+      do NOT skip it), commit + quickmerge; (2) paste the final per-family p95/max table into this todo and flip it
+      `[x]`; (3) **once flipped, every todo in this plan is done — archive this plan** per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (6-step ritual), and check whether
+      `alert_driven_dependency_revocation_2026_08_12.md`'s own CANCELLED/SUPERSEDED line for this item (line ~108)
+      needs anything further (it already point here, just confirm no dangling reference remains once this plan
+      archives).
 - [x] ✅ [CODE] P2. **Wire `RevocationActuator`'s `consolidator_bucket_resolver` into a real production call site.**
       — `deployment-service@ae49548487` (2026-08-17). Broke the cycle with two leaf-module extractions rather than
       the single meta_targets->meta_watchers fix originally scoped: (1) `freshness_target.py` — `FreshnessTarget` +
@@ -134,3 +160,9 @@ Verdict: clear on all 3 items — proceed.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)
+- **2026-08-17 (slot 24, review-craft)**: classified item 1's flagged
+  `ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` exclusion — verified live that
+  `state_bucket()` resolves on the orchestrator VM (bucket `deployment-scripts-central-element-323112`), so the
+  todo was genuinely open, not a legitimate block. Rewrote the todo to drop the stale `BLOCKED-CREDENTIALS`
+  phrasing (which was tripping the AO dispatch-visibility parser's undeclared-marker exclusion) so it dispatches
+  normally; the actual p95/max shard-duration measurement remains unattempted for a future SCRIPT-craft worker.

@@ -97,9 +97,22 @@ source: >-
       (writes `/etc/systemd/system`, needs root on the `planning` VM), same posture as its sibling installers; the
       first live daily tick is still pending.
 
-- [ ] [INFRA] P2. **Re-baseline `qg_resource_baseline.json`** — committed values are measured 3.6-5.5x stale versus
+- [x] ✅ [INFRA] P2. **Re-baseline `qg_resource_baseline.json`** — committed values are measured 3.6-5.5x stale versus
       current cgroup peaks. Source: `plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`
-      (line ~605). Gate: baseline file reflects current measured peaks, re-verified live.
+      (line ~605). Gate: baseline file reflects current measured peaks, re-verified live. **DONE 2026-08-17 (slot 6,
+      infra-craft) — unified-trading-pm@9c4e9e4c46.** Re-ran `scripts/dev/measure-qg-baseline.sh --env vm --force`
+      across all 25 repos the committed baseline should track (the 24 pre-existing + `agent-orchestrator`, previously
+      absent entirely per this todo's own Source doc) — done as 3 separate foreground passes after backgrounded runs
+      proved unreliable in this session (repeatedly killed mid-run; a self-heartbeating wrapper didn't fix it either —
+      root cause undetermined, plain foreground calls with generous timeouts worked reliably). `jobs=2/3` concurrency
+      per the source doc's "not `measured_concurrency: 1`" ask. Both UI repos re-measured (the flagged-implausible
+      22MB/541MB `local` entries are now backed by fresh `vm` entries: `unified-trading-system-ui` 3821MB,
+      `deployment-ui` 743MB). Blocked mid-ship by a pre-existing, unrelated `check_ao_dispatch_visibility_gate` red
+      (corpus-wide undeclared-exclusion drift, confirmed via stash test to have zero relation to this diff) — filed
+      `plans/active/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` +
+      repo-blocker RB-e08a525b per RULES.md §4b; resolved collectively by the fleet (concurrent slots fixing the
+      flagged docs) before I could finish my own partial fix, gate green again (5 ≤ baseline 0 + buffer 5) as of this
+      ship.
 
 - [ ] [INFRA] P2. **Stagger `ldr-to-main-promote-fleet.yml`'s per-repo fan-out** rather than firing all repos
       simultaneously on each tick. **NOTE (2026-08-16, retag not stale-content):** the tick cadence itself was

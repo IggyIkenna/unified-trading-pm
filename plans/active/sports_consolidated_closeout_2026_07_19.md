@@ -881,15 +881,12 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       in this repo's `git log`). New `pipeline_middle_leg_check.py` asserts real CONTENT at each leg (not just
       presence); 19 unit tests incl. one deliberate-break case per leg, each confirming the overall report fails while
       other legs still run (shard-level isolation).
-- [ ] [BACKEND] P2. Confirm whether any primary sports entrypoint (not a one-off script) exposes a genuine fixture-level
-      targeting flag for shard-splitting a backfill run; if none does, file a todo to add one to the primary
-      features/MDPS backfill CLI. **Done when**: either a cited flag + file is named, or the add-flag todo exists with a
-      named target CLI.
-- [ ] [DATA] P1. Run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check, post-backfill final
-      gate) for EACH of the 5 required mechanisms (`data-pipeline-check-is`/`-mtds`/`-mdps`/`-features` +
-      `/data-pipeline-reconciliation`) against sports — currently ZERO real run-todos exist for any of the 5 despite all
-      5 already supporting sports's shard atoms (task_template.md §3 finding K). **Done when**: each of the 5 mechanisms
-      has 3 dated runs cited by report path/dispatch_id, baseline through final.
+- [x] ✅ [BACKEND] P2. **ALREADY DONE**, resolved in `sports_consolidated_native_ao_extract_2026_07_25.md` (found
+      2026-08-17, slot-10) — `--fixture-ids` flag built on the features-service sports CLI, `features-service@970de3fc`.
+- [x] ✅ [DATA] P1. **ALREADY DONE**, resolved 2026-08-01/08-02 in `sports_consolidated_native_ao_extract_2026_07_25.md`
+      (found 2026-08-17, slot-10) — all 15 dated checkpoint reports cited there; checkbox just never flipped here.
+      Process note: na-eligibility-audit's conflict-check doesn't cross-check older already-active docs — worth a
+      look.
 
 ## Track D — CODEX: doc alignment · P1 (CLOSED, extracted 2026-07-25)
 
@@ -959,30 +956,22 @@ section above, which conflated answered and open items):
 - **League_id migration prod-apply + delete** (decision 7) — scheduling, not a question, but the actual window needs
   picking.
 - **CF-8 maintenance window** (decision 11) — same, scheduling.
-- ~~**Sports ODDS_API capture pipeline dormancy investigation** (decision 8) — needs AWS IAM access this session didn't
-  have; genuinely the top-priority next action.~~ — **stale, DONE** (Track H's 1st `[DIAG] P0` todo, `[x]` since 07-27,
-  resolved w/o AWS IAM, `pm@3d48c7a9b`; na-eligibility-audit 2026-08-08).
-- **§O diagnoses before any relabel** (Track O's 2 `[DIAG]` items — "Root-cause the 112,277 `attempted_failed` rows..."
-  and "Locate the emitter of the 139,620 `venue=ODDS_API, source=api_football, empty_confirmed` rows...") — root-cause
-  the 112,277 `attempted_failed` triplet and the 139,620 `empty_confirmed` emitter before relabeling either; these are
-  engineering diagnosis work, not a pure operator ask, but flagged here since a premature relabel would be
-  irreversible-adjacent.
-- ~~`sports_master_closeout_2026_07_21.md` entry-point relationship field (decision 9)~~ — **stale, this was DONE** (see
-  Track X's decision-9 todo above, `[x]` since 2026-07-23) — no operator input was actually needed, the
-  `entry_point_for:` field addition was mechanical. Left struck-through rather than deleted so the "this section used to
-  list it" fact stays visible (finding C, caught in the same pass as the Track X flip).
+- ~~**Sports ODDS_API capture pipeline dormancy investigation** (decision 8)~~ — stale, DONE (Track H `[DIAG] P0`,
+  `[x]` since 07-27, resolved w/o AWS IAM, `pm@3d48c7a9b`).
+- **§O diagnoses before any relabel** (Track O's 2 `[DIAG]` items) — root-cause the 112,277 `attempted_failed`
+  triplet and the 139,620 `empty_confirmed` emitter before relabeling either; engineering diagnosis, not a pure
+  operator ask, flagged since a premature relabel would be irreversible-adjacent.
+- ~~`sports_master_closeout_2026_07_21.md` entry-point relationship field (decision 9)~~ — stale, DONE (Track X, `[x]`
+  since 2026-07-23; mechanical, no operator input needed).
 
 - **2026-07-27** — Discoverability fix (`na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` Phase 4): 4
-  sports-tagged docs reclassified `assigned_vm: NA → planning` this session were not mentioned anywhere in this hub —
-  the "orphan invisible to sweep" bug class fixed twice before. Added here for future tranche-sweep discoverability:
+  sports-tagged docs reclassified NA→planning were untracked in this hub — added:
   `issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`,
   `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`,
   `issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`,
-  `issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md`. None were tracked in any Track
-  above; all are now `assigned_vm: planning` and live in the AO backlog. (A 5th candidate,
-  `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`, was ALSO reclassified this session but no
-  longer needs a Sources mention — a real AO worker already claimed, resolved, and archived it mid-session, per
-  `unified-trading-pm@4be5cf08f`.)
+  `issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` (all `assigned_vm: planning`, live
+  in the AO backlog). A 5th candidate (`mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`) needed no
+  mention — already claimed/resolved/archived mid-session, `unified-trading-pm@4be5cf08f`.
 
 ## Progress Log
 
@@ -998,10 +987,13 @@ section above, which conflated answered and open items):
 > `/plans/archive/2026_08/sports_consolidated_closeout_progress_log_history_2026_08_10.md` to bring this doc back under
 > the 1000-line hard cap. New entries append below the kept 2026-08-09 (round11) entry.
 
-- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-confirmed the standing ⛔ 2026-07-23 operator
-  ruling against a direct `assigned_vm` flip still holds (naive concurrent dispatch would corrupt this plan's own
-  prose-only cross-track sequencing; citation + `gate_on_depends: true` on 3 forked children still present in the
-  frontmatter). This closeout continues to be fed by the established per-item satellite-extraction cadence (batches
-  1-12, most recently `sports_satellite_ao_dispatch_batch11_2026_08_09.md`/`batch12` today, both of which reference this
-  doc's Tracks without duplicating them) rather than a whole-doc flip — consistent with every prior audit pass. No new
-  extractable item found beyond what batch9-12 already claimed. No flip.
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — standing ⛔ 2026-07-23 operator ruling against a
+  direct `assigned_vm` flip still holds (naive concurrent dispatch would corrupt this plan's prose-only cross-track
+  sequencing). Fed by the established per-item satellite-extraction cadence (batches 1-12) rather than a whole-doc
+  flip, consistent with every prior audit pass. No new extractable item found beyond batch9-12. No flip.
+
+- **na-eligibility-audit 2026-08-17** (agt-1c51ee): RECLASSIFY-split verdict — ⛔ banner stands; 11 open items already
+  covered by existing extraction docs (citations not yet annotated here) + 2 bounded-unclaimed items (lines 580/582)
+  newly extracted to `sports_satellite_ao_dispatch_batch16_2026_08_17.md`. **NOT applying the 11 citation fixes this
+  pass** (doc was over the 1000L cap) — referred to `/plan-reconcile`; full citation list in this run's chat report.
+- **2026-08-17 (slot-10)**: flipped 2 stale Track K duplicates (see those todos) + condensed prose to stay under 1000L.

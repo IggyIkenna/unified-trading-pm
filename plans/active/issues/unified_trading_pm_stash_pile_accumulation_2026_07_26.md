@@ -327,6 +327,7 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` (confirmed still live today per this
   sweep's own `SUB_AGENT_MANDATORY_RULES.md`) — reinforces, not weakens, the case for leaving the mechanical drop to the
   operator with a fresh count check immediately before each loop.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:b1d09123e77d38fa]: KEEP-NA, valid — both remaining todos are `git stash drop` executions categorically hard-blocked for autonomous workers by `block_destructive_commands.py`; policy block, not a worker judgment call.
 
 ## Deferred work after 2026-08-12
 

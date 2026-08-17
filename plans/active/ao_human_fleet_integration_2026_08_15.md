@@ -707,3 +707,4 @@ investigation confirmed are both achievable with existing primitives:
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (14 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ffc453bde60eb30a]: KEEP-NA, valid — all 6 open todos are Harsh's (explicit 2026-08-15/08-16 operator ruling: physically impossible from this session) or Ikenna's (blocked on all 314 live backlog tasks currently carrying a blocked_reason). Note: the 6 checkboxes are 3 near-verbatim duplicate pairs from repeated autonomous-loop ticks — a housekeeping dedup is worth a future pass, not actioned here (content not wrong, no hard evidence one supersedes another).

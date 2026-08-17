@@ -113,12 +113,13 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Make an unresolvable `--only` path a hard error** in `_run_only()` — print the attempted absolute
-      path, exit non-zero. Add a regression test asserting non-zero exit for a non-existent path.
-- [ ] [SCRIPT] P2. **Print offending references on failure even under `--quiet`** in `_run_only()`, `_run_diff_base()`
-      and the corpus-wide path, so no invocation can fail without saying why.
-- [ ] [SCRIPT] P3. **Retire the `--quiet`-workaround rationale in `find_moved_doc_referrers.sh`'s header** once defect 2
-      is fixed, and re-check whether that script still has a reason to exist.
+- [x] ✅ [SCRIPT] P1. **Make an unresolvable `--only` path a hard error** in `_run_only()` — extracted (conflict-checked,
+      clear) to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 3. Track dispatch/completion there, not here.
+- [x] ✅ [SCRIPT] P2. **Print offending references on failure even under `--quiet`** — extracted (conflict-checked,
+      clear) to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 4. Track dispatch/completion there, not here.
+- [x] ✅ [SCRIPT] P3. **Retire the `--quiet`-workaround rationale in `find_moved_doc_referrers.sh`'s header** —
+      extracted (conflict-checked, clear) to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 5. Track
+      dispatch/completion there, not here.
 - [ ] [AGENT] P3. **Decide whether fenced code blocks should be exempt** from `BARE_CODEX_RE`, or whether the glob
       workaround becomes the documented convention. Record the ruling in
       [cross-reference-path-convention](/codex/11-project-management/cross-reference-path-convention.md).
@@ -126,3 +127,4 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:63676f449612beab]: RECLASSIFY (per-todo split) — 3 well-specified deterministic script fixes (hard-error on unresolvable --only path; print offending refs under --quiet; retire the --quiet workaround rationale) are conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` items 3-5. The 4th item (fenced-code-block BARE_CODEX_RE exemption decision) stays KEEP-NA, an open design-judgment call.

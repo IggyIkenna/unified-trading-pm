@@ -34,7 +34,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-09
+last_updated: 2026-08-17
 locked_since:
 context_scope:
   [
@@ -539,361 +539,36 @@ produced reports) — see the plan diff in the same commit as this issue doc.
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 
-- 2026-08-02 (slot-12, review craft, dispatched on todo `-003`): Picked up todo 3 (`-003`) again. Independently
-  verified:
-  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260801-120637 --zone=asia-northeast1-c` → NOT
-  FOUND. `gcloud compute operations list --filter="targetLink:cefi-queue-heavy-binancefutu-x17-20260801-120637"` shows
-  `insert` DONE `2026-08-01T05:06:52-07:00` then `delete` DONE `2026-08-01T05:40:49-07:00` — **no `preempted` op**, a
-  different death mode than the 3 prior VMs in this chain. `run.log` tail confirms the actual cause: a
-  `[vm-exec] WORKER_STALLED (no-progress-marker): no progress in 1811s (threshold=1800s)` watchdog kill at
-  `2026-08-01T12:40:27Z` (`exit_code=137`), immediately followed by `VM_SHUTDOWN_ON_COMPLETION=true` self-delete — the
-  VM stalled processing `date=2020-02-16`/`2020-02-17` (both showing
-  `SHARD_INCOMPLETE ... wrote 0, missing: [all 11 venues]`, i.e. a hung fetch, not a clean stop) and was killed by its
-  own watchdog rather than GCP preempting it. `PROGRESS.json` last write:
-  `{"last_completed_date":"2020-02-11",...,"updated":"2026-08-01T12:37:20Z"}` — reached only ~day 48/2373 (~2%), less
-  progress than the prior (4th) VM's own predecessor runs typically covered before dying.
-  `gcloud compute instances list --filter="name~cefi-queue"` returns empty — no 5th relaunch has occurred; the VM has
-  been dead ~27h as of this check (`2026-08-02T15:32Z`). `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`
-  confirmed still 3/5 done (`-004`/`-005` both `[ ]`, unchanged) — the gate this todo waits on ("genuinely completes,
-  measured exit") remains unmet. Filed a new `[INFRA] P1` todo above for the 5th relaunch, noting the new WORKER_STALLED
-  failure mode (distinct from the 3 preemptions before it) for whoever picks it up — the stall pattern (11/11 venues
-  missing on the date it hung) may warrant a closer look at whether this is a Tardis-side transient or a genuine hang,
-  but that is not gating a relaunch. Declining todo 3 and skipping this task rather than holding the slot for a
-  multi-day backfill, per the same posture as all 12 prior entries above (slot-7/9/10/13/3/12/2/14/16/15 across
-  2026-07-30/31/08-01).
-
-- 2026-08-02T15:57Z (slot-10, review craft, dispatched on todo `-003`): Picked up todo 3 (`-003`) again — the **13th
-  consecutive review-craft dispatch** to this same unmet gate. Independently re-verified:
-  `gcloud compute instances list --filter="name~cefi-queue"` returns empty — no 5th relaunch has been launched.
-  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260801-120637 --zone=asia-northeast1-c` → NOT
-  FOUND (consistent with slot-12's finding). The 5th-relaunch `[INFRA] P1` todo slot-12 filed is now **~27h+ old with no
-  pickup** — the VM has been dead since `2026-08-01T12:40:27Z` (WORKER_STALLED kill) with zero replacement launched.
-  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done (`-004`/`-005` both `[ ]`,
-  unchanged) — the gate remains unmet. **Process note**: the live backlog (`GET /api/backlog`) currently shows an entry
-  `cefi_track2_backfill_vm_preempted_no_recovery-004` as `status: done, dispatched_to: 3` with the CURRENT 5th-relaunch
-  brief text — but slot 3 is actively working a wholly unrelated task
-  (`cf_manifest_audit_first_full_rollup_findings-001` per `/api/state`) and the doc's own todo list still shows the 5th
-  relaunch as `[ ]` unchecked. This is the same positional-ID collision class the doc's own 2026-07-30 slot-3 entry
-  already flagged (todo-list edits shift position, and a stale `done`/sha from whatever PREVIOUSLY occupied that
-  position number carries over) — **not** evidence the 5th relaunch actually happened; the doc + a fresh `gcloud` check
-  are the ground truth here, not the backlog row. Not filing a separate issue for the ID-collision pattern (already
-  known, no new fix in hand), but this may explain why the `[INFRA]` todo isn't being picked up — if the dispatcher's
-  own eligibility check is reading the stale `done` status for this slot, the real still-open todo may not be surfacing
-  to infra-craft workers at all. Flagging exactly this hypothesis to main below, alongside the standing parking
-  recommendation for `-003` (unactioned since slot-15's ask, now escalation #3). Declining todo 3 and skipping this task
-  rather than holding the slot for a multi-day backfill, per the same posture as all 13 prior entries above.
-
-- 2026-08-02 (slot-13, review craft, dispatched on todo `-003`): Picked up todo 3 (`-003`) again — the **14th
-  consecutive review-craft dispatch** to this same unmet gate. Independently re-verified:
-  `gcloud compute instances list --filter="name~cefi-queue"` → empty, no VM running.
-  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260801-120637 --zone=asia-northeast1-c` → NOT
-  FOUND (matches slot-12/slot-10's findings — the 4th VM, killed by its own `WORKER_STALLED` watchdog at
-  `2026-08-01T12:40:27Z`, has not been replaced). `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed
-  still 3/5 done (`-004`/`-005` both `[ ]`, unchanged) — the gate remains unmet.
-
-  **Checked slot-10's ID-collision hypothesis directly via `GET /api/backlog`**: the 5th-relaunch `[INFRA]` todo is now
-  `cefi_track2_backfill_vm_preempted_no_recovery-006`, `status: queued`, `dispatched_to: None` — it reads correctly as
-  an open, undispatched task (not masked behind a stale `done` row at a shifted position). Slot-10's specific hypothesis
-  (the dispatcher reading a stale `done` status for this position) does not hold at this snapshot; the todo is simply
-  sitting in queue, presumably behind higher-priority work or awaiting an infra-craft slot pickup — no fix needed there.
-
-  **Root cause of the escalation stalemate (new finding)**: read `server/models/slots.py`'s `SkipCurrentTaskRequest` and
-  `server/state_store/cooldown.py` directly. `/skip-current-task` takes an optional `reason_code` ∈
-  `{BLOCKED, PARKED, GATED, OTHER}` (default `OTHER`) that, for `BLOCKED`/`PARKED`/`GATED`, arms a FLEET-scoped dispatch
-  cooldown (12min base / 60min extended on repeat) AND counts toward a durable **auto-park** escalation
-  (`dispatch_cooldown_auto_park_skip_threshold=3`) that, once crossed, sets `priority=999` + `priority_override=true` +
-  attaches a `cefi_track2_backfill_vm_preempted_no_recovery-003__parked` prerequisite — i.e. the EXACT standing
-  recommendation slot-16/slot-15 have been asking main/operator to hand-apply since 2026-07-31, already built into the
-  skip endpoint itself. None of the 13 prior declines appear to have exercised this — every one just "declined and
-  skipped", which (per `routes/slots_ops.py:801-818`) only records a per-slot exclusion (`OTHER` default) with **zero
-  fleet effect**, which is exactly why the same unmet gate kept getting redispatched to a fresh slot every few hours
-  instead of ever cooling down or parking. This is not a backlog.yaml hand-edit (still main/operator-only per RULES.md)
-  — it's the documented parameter of the very API this role is supposed to call to decline a task, so using it here is
-  in-scope for a review-craft skip.
-
-  Declining todo 3 (gate still unmet) and skipping this task via `/skip-current-task` with `reason_code: "GATED"` — the
-  task's cooldown snapshot (prereqs/completed_tasks/priority/brief) is unchanged since any prior arm, so this should
-  either arm/extend the fleet cooldown or, if 2 prior GATED-reason skips already happened for this key, cross the
-  auto-park threshold and park the task fleet-wide until the backfill genuinely completes. No chat-to-main escalation
-  filed this round — the mechanism itself now does what the 3 prior escalations asked for; if it does NOT auto-park
-  after this skip (i.e. this is only the 1st/2nd GATED-coded decline despite 13 prior OTHER-coded ones), the next
-  review-craft dispatch should just repeat `reason_code: "GATED"` and it will accumulate normally.
-
-- 2026-08-02 (slot-16, review craft — adopted per per-task craft rule, dispatched on todo `-003`): Picked up todo 3
-  (`-003`) again — the **15th consecutive review-craft dispatch** to this same unmet gate. Independently re-verified:
-  `gcloud compute instances list --filter="name~cefi-queue"` → empty, no VM currently running (the 4th VM,
-  `cefi-queue-heavy-binancefutu-x17-20260801-120637`, remains dead since its `WORKER_STALLED` kill
-  `2026-08-01T12:40:27Z`, per slot-12/slot-13's findings). `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`
-  confirmed still 3/5 done (`-004`/`-005` both `[ ]`, unchanged) — the gate this todo waits on remains unmet.
-
-  **Checked the 5th-relaunch todo's live dispatch state** (`GET /api/backlog`):
-  `cefi_track2_backfill_vm_preempted_no_recovery-006` now reads `status: dispatched, dispatched_to: 6` — an infra-craft
-  slot has already picked it up and is presumably working the 5th relaunch now, so no duplicate `[INFRA]` todo or
-  chat-escalation needed this round.
-
-  Declining todo 3 and skipping via `/skip-current-task` with `reason_code: "GATED"`, continuing the pattern slot-13
-  established — this is the 2nd GATED-coded decline (slot-13's was the 1st), so per the
-  `dispatch_cooldown_auto_park_skip_threshold=3` mechanism this should extend the fleet cooldown but not yet cross the
-  auto-park threshold; the next GATED-coded decline (3rd) should trigger the actual auto-park. Not filing a fresh
-  chat-to-main escalation — slot-13's mechanism finding + this confirmation is sufficient context for whoever picks up
-  the next dispatch.
-
-- 2026-08-02 (slot-6, infra craft, dispatched on todo `-006`, the 5th-relaunch todo): Completed the 5th relaunch — full
-  evidence in the flipped todo above. Summary: found + worked around a same-day launcher behavior change
-  (`deployment-service@4fff44f`) that broke blind reproduction of the prior `LAUNCH_PARAMS.json` env (`START_DATE`'s
-  year-scoped validation, previously 2026-only, is now enforced for every year); the fix was to omit `START_DATE`
-  entirely, which is behavior-equivalent to the pre-`4fff44f` no-op for every 2020-2025 shard. Verified N=1 Tardis cap
-  clear both clouds fresh (not reused from the earlier failed attempt), verified by code inspection (not just the slow
-  dry-run) that exactly 1 VM would result, and launched `cefi-queue-heavy-binancefutu-x17-20260802-165422`
-  (`2019-01-01..2026-08-01` scope, widened by DERIBIT's new 2019 shard from `4fff44f`). Confirmed STARTED (RUNNING/SPOT)
-  and genuine PROGRESS (`PROGRESS.json` monotonic-advancing to `2019-03-11`, `run.log` `RESOURCE_SAMPLE cpu=93.7%` —
-  real compute). Todo `-003` (POST-BACKFILL re-run gate) remains correctly blocked — this VM is only ~2.5% through its
-  scope. This is now the 5th distinct relaunch of this backfill chain across 2026-07-27/28/30/31/08-01/08-02, with 3
-  prior preemptions + 1 watchdog stall-kill; no change yet to this issue doc's own "Recommended decision" question
-  (whether a fresh accepted coverage% is more valuable than continuing this preemption-prone backfill) — still an open
-  question for whoever next reconciles this chain, not something I'm resolving unilaterally from an `[INFRA]` relaunch
-  task.
-
-- 2026-08-02T17:50Z (slot-15, review craft, dispatched on todo `-003`): Picked up todo 3 (`-003`) again — the **16th
-  consecutive review-craft dispatch** to this same unmet gate. Independently re-verified:
-  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260802-165422 --zone=asia-northeast1-c` →
-  `RUNNING` (SPOT, the 5th relaunch, still alive since slot-6's 16:54:22Z launch — no preemption/stall yet).
-  `PROGRESS.json` confirms continued monotonic advance:
-  `{"last_completed_date":"2019-05-13",...,"updated":"2026-08-02T17:43:22Z"}` — target scope is `2019-01-01..2026-08-01`
-  (~2769 days) and current position is only `2019-05-13` (day ~133, ~4.8%) — the gate this todo waits on ("genuinely
-  completes, measured exit") remains unmet. `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still
-  3/5 done (`-004`/`-005` both `[ ]`, unchanged) via direct grep. `GET /api/backlog` confirms `-003` is still
-  `priority: 20`, no `prereqs` — not yet auto-parked despite slot-13's 1st and slot-16's 2nd `GATED`-coded declines.
-  Declining todo 3 and skipping via `/skip-current-task` with `reason_code: "GATED"` (continuing slot-13/slot-16's
-  established mechanism-aware pattern, not the plain per-slot `OTHER` default) — this is the 3rd `GATED`-coded decline,
-  which per `dispatch_cooldown_auto_park_skip_threshold=3` (`server/state_store/cooldown.py`) should cross the auto-park
-  threshold and finally park this task fleet-wide behind the backfill's actual completion, ending the 16-dispatch
-  redispatch loop.
-
-- **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 4) — added `launch-cefi-sharded-backfill.sh`,
-  the launcher every relaunch entry in this doc's Progress Log invokes and the file whose `VM_TASK`/`PROGRESS.json`
-  behavior the root-cause fixes above actually touched.
-- **context-scout 2026-08-03 (re-scout)**: added `agent-orchestrator/server/state_store/cooldown.py` (6 entries) — the
-  most recent Progress Log entry's own "root cause of the escalation stalemate" finding lives there.
-
-- **2026-08-04 (main agt-1756f6)** — **5th VM is dead; recovery has gone silent; now gating 213 tasks.** While tracing
-  why the fleet busy-count was low, found the idle slots all reporting
-  `idle: 213 task(s) blocked on task cefi_track2_coverage_backfill_checkpoints-004`, whose blocker resolves to
-  `prerequisite cefi-track2-backfill-vm-terminated not set`. Ground-truthed the backfill VM state from this host:
-  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260802-165422 --zone=asia-northeast1-c` → **NOT
-  FOUND**; `gcloud compute operations list --filter="targetLink~...165422"` shows `insert` DONE
-  `2026-08-02T10:22:36-07:00` (= 17:22 UTC) then **`delete` DONE `2026-08-02T21:19:06-07:00`** (=
-  `2026-08-03T04:19 UTC`) — the 5th VM ran ~11h and self-deleted (same `WORKER_STALLED`+`VM_SHUTDOWN_ON_COMPLETION` mode
-  as the 4th, per slot-15's last entry it was at `2019-05-13`/~4.8% when last seen alive).
-  `gcloud compute instances list --filter="name~cefi-queue"` → **empty** (no VM in any zone). So the chain is now **5
-  deaths in 8 days** with the VM dead ~24h+ and **no 6th relaunch dispatched**. Critically, the two mechanisms that
-  previously drove recovery have both gone quiet: (1) `-003` is now auto-parked (slot-15's 3rd `GATED` skip crossed
-  `dispatch_cooldown_auto_park_skip_threshold=3`, confirmed via `/api/backlog/parked`
-  - the `auto_unpark__cefi_track2_backfill_vm_preempted_no_recovery-003` prereq sitting `false`) — good for stopping
-    review-craft churn, but it also means no slot is re-encountering the gate to notice the VM died; and (2) the
-    5th-relaunch `[INFRA]` todo (`-006`) is `done`. Net: nothing is currently driving a 6th recovery, so this would sit
-    silently gating 213 downstream tasks indefinitely. Did NOT flip `cefi-track2-backfill-vm-terminated` (the backfill
-    genuinely did not complete — flipping would unblock 213 tasks onto ~5%-complete foundation data, violating the
-    verify-milestones-before- GREEN + data-pipeline-correctness HARD RULEs) and did NOT launch a 6th VM (after a
-    measured 5× failure that is now a strategy call, not a mechanical relaunch). Added the `[OPERATOR] P1` decision-gate
-    todo above to route decision-B to the operator with the concrete 5×-failure evidence + the live 213-task blast
-    radius. Staying in the poll loop; will surface this to the operator/review channel as a big finding.
-- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
-- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged -- sole open todo (`-003`)
-  remains gated on the 2026-08-06 ON_DEMAND VM (`deployment-service@b83256f` fix) genuinely completing.
-- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 6 entries confirmed resolving on disk; content
-  unchanged.
-
-- 2026-08-08 (slot-9, review craft, dispatched on todo `-003`): Independently re-verified:
-  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260806-163512 --zone=asia-northeast1-c` → **NOT
-  FOUND**. `gcloud compute operations list --filter="targetLink~cefi-queue-heavy-binancefutu-x17-20260806"` shows
-  `insert` DONE `2026-08-06T09:35:26-07:00` (= 16:35:26 UTC, the ON_DEMAND launch) then `delete` DONE
-  `2026-08-06T10:09:47-07:00` (= 17:09:47 UTC) — no `preempted` op (STANDARD/ON_DEMAND), runtime ~34 min. `run.log` tail
-  confirms: `WORKER_STALLED (no-progress-marker): no progress in 1841s (threshold=1800s)` at `date=2019-10-22`,
-  `exit_code=137`, `VM_SHUTDOWN_ON_COMPLETION=true` self-delete. Distinctive: the stall date was fully pre-flight
-  skipped (`Pre-flight: 1/1 venues have captured shards for date=2019-10-22`;
-  `Completeness check: 1/1 venue(s) excluded`) — watchdog fired 1841s AFTER the pipeline fast-skipped the entire day
-  (kernel stack: `do_wait`, waiting on a child). `PROGRESS.json` last:
-  `{"last_completed_date":"2019-10-21","monotonic":true,"updated":"2026-08-06T17:09:16Z"}` — ~295/2769 days (~10.7%) of
-  scope done. `gcloud compute instances list --filter="name~cefi-queue"` → empty. No current VM running.
-  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done (`-004`/`-005` both `[ ]`,
-  unchanged). Filed new `[INFRA] P1` todo above (7th relaunch + investigate WORKER_STALLED root cause before
-  relaunching). Gate unmet — declining todo 3 and skipping via `reason_code: "GATED"` per established pattern.
-
-- 2026-08-08 (slot-21, review craft, dispatched on todo `-003`): Independent re-verify (2nd dispatch today):
-  `gcloud compute instances list --filter="name~cefi-queue"` → empty — no VM running. `[INFRA] P1` 7th-relaunch todo
-  (filed by slot-9 today) still `[ ]` — no 7th VM has been launched yet.
-  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` still 3/5 done (inferred unchanged; `-004`/`-005` both
-  `[ ]`). Gate unmet — declining and skipping via `reason_code: "GATED"` per established pattern.
-
-- 2026-08-08 (slot-2, review craft, dispatched on todo `-003`): Independent re-verify (3rd dispatch today):
-  `gcloud compute instances list --filter="name~cefi-queue"` → empty — no VM running (confirms slot-9/slot-21's
-  findings; the 6th VM, ON_DEMAND `cefi-queue-heavy-binancefutu-x17-20260806-163512`, remains dead since its
-  `WORKER_STALLED` self-delete `2026-08-06T17:09:47 UTC`). Live backlog (`GET /api/backlog`) confirms `-003` is
-  `status: dispatched, priority: 20`, no `prereqs` set — not currently auto-parked (the 2026-08-04 auto-park has since
-  lapsed/been cleared) — and the 7th-relaunch todo `-007` (INFRA craft) is `status: queued`, still not picked up.
-  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done via direct grep (`-004`/`-005` both
-  `[ ]`, unchanged). Gate ("genuinely completes, measured exit") remains unmet — declining todo `-003` and skipping via
-  `reason_code: "GATED"` per the established pattern (slot-13's mechanism finding, 2026-08-02).
-
-- 2026-08-08 (slot-19, review craft, dispatched on todo `-003`): Independent re-verify (4th dispatch today):
-  `gcloud compute instances list --filter="name~cefi"` (broad match, not just `cefi-queue-*`) shows 8 live `cefi-*` VMs
-  (`canonical-migration-cefi-late-renames-…`, `cefi-fwd-…`, `cefi-hyperliquid-2025-…`, `cefi-lighter-zksync-2026-…`,
-  `mdps-backfill-cefi-…` ×2, `mdps-features-live-cefi-…`, `mtds-live-cefi-consolidated-…`) — **none** named
-  `cefi-queue-*`, confirming no 7th relaunch of this specific coverage-backfill chain has been launched (consistent with
-  slot-9/slot-21/slot-2's findings; the 6th VM remains dead since its `2026-08-06T17:09:47 UTC` `WORKER_STALLED`
-  self-delete). `GET /api/backlog` confirms `-003` is `status: dispatched, dispatched_to: 19`, no `prereqs`; the
-  7th-relaunch `[INFRA] P1` todo `-007` is still `status: queued, dispatched_to: None` — **now the 4th consecutive
-  review-craft dispatch today to find `-007` un-picked-up** (filed by slot-9 earlier today, still untouched through
-  slot-21's, slot-2's, and now this check). `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still
-  3/5 done via direct grep (`-004`/`-005` both `[ ]`, unchanged). Gate ("genuinely completes, measured exit") remains
-  unmet — declining todo `-003` and skipping via `reason_code: "GATED"` per the established pattern. Not filing a fresh
-  chat-to-main escalation for the `-007` pickup lag specifically (same low-signal single-cycle lag class the doc already
-  tracks; worth escalating only if it persists past today).
-
-- 2026-08-08 (slot-3, review craft, dispatched on todo `-003`): Independent re-verify (5th dispatch today):
-  `gcloud compute instances list --filter="name~cefi-queue"` → empty — no VM running. Broader `name~cefi` check shows 7
-  live `cefi-*` VMs, none matching `cefi-queue-*` (confirms the 6th VM, ON_DEMAND
-  `cefi-queue-heavy-binancefutu-x17-20260806-163512`, remains dead since its `2026-08-06T17:09:47 UTC` `WORKER_STALLED`
-  self-delete; no 7th relaunch exists). `GET /api/backlog` confirms `-003` is `status: dispatched, dispatched_to: 3`,
-  priority 20, and the 7th-relaunch `[INFRA] P1` todo `-007` is still `status: queued, dispatched_to: None` — now the
-  **5th consecutive review-craft dispatch today** to find `-007` un-picked-up (filed by slot-9 this morning; still
-  untouched through slot-21, slot-2, slot-19, and now this check).
-  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done via direct grep (`-004`/`-005` both
-  `[ ]`, unchanged). Gate ("genuinely completes, measured exit") remains unmet — declining todo `-003` and skipping via
-  `reason_code: "GATED"` per the established pattern. The `-007` pickup lag has now persisted the full day (5
-  consecutive misses since this morning) — per slot-19's own stated threshold ("worth escalating only if it persists
-  past today"), this crosses that bar; posting a chat-to-main ping flagging `-007` specifically needs an infra-craft
-  slot, separate from this decline.
-
-- 2026-08-08 (slot-16, review craft, dispatched on todo `-003`): Independent re-verify (6th dispatch today):
-  `gcloud compute instances list --filter="name~cefi-queue"` → empty — no VM running (confirms slot-9/21/2/19/3's
-  findings; 6th VM still dead since `2026-08-06T17:09:47 UTC`). `GET /api/backlog` confirms `-003`
-  `status: dispatched, dispatched_to: 16`, priority 20; `-007` (7th-relaunch INFRA todo) still
-  `status: queued, dispatched_to: None` — now the **6th consecutive review-craft dispatch today** to find `-007`
-  un-picked-up. `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done via direct grep
-  (`-004`/`-005` both `[ ]`, unchanged). Gate remains unmet — declining todo `-003` and skipping via
-  `reason_code: "GATED"` per the established pattern.
-
-- 2026-08-08 (slot-10, review craft, dispatched on todo `-003`): Independent re-verify (7th dispatch today):
-  `gcloud compute instances list --filter="name~cefi-queue"` → empty (exit 0) — no VM running, confirms slot-9/21/2/19/
-  3/16's findings; the 6th VM remains dead since its `2026-08-06T17:09:47 UTC` `WORKER_STALLED` self-delete.
-  `GET /api/backlog` confirms `-003` `status: dispatched, dispatched_to: 10`, priority 20;
-  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done via direct grep (`-004`/`-005` both
-  `[ ]`, unchanged). Gate ("genuinely completes, measured exit") remains unmet.
-
-  **Root-caused the `-007` (7th-relaunch INFRA todo) all-day stall — new finding, not just another "still un-picked-up"
-  count.** `GET /api/backlog` on `-007` shows `target_slot: 4, affinity: "high"` — per RULES.md § "Slot affinity",
-  `affinity: high` means ONLY slot 4 can ever claim it, every other slot skips past indefinitely. `GET /api/state` on
-  slot 4: `worker_alive: false`, `tmux_alive: false`, `status/phase: idle`, and critically `last_spawned_at`
-  (`2026-08-08T18:25:35Z`) is AFTER `last_ping` (`2026-08-08T18:19:58Z`) — i.e. slot 4 was respawned and has never
-  successfully booted/pinged since. `-007` is bound to a slot that cannot currently claim anything; it was never being
-  "missed" by the fleet, it is structurally undispatchable until slot 4 comes back alive or the binding is cleared. This
-  is consistent with RULES.md's documented Reassign-endpoint behavior (`target_slot=<self>, affinity=high` is the
-  DEFAULT when a slot calls `/reassign` on its own task) — plausible that slot 4 self-reassigned `-007` to itself at
-  some point today, then died before claiming it, orphaning the binding. Posted to role=main
-  (`/api/agents/by-role/main/message`, msg id 4338) recommending either a force-respawn of slot 4 or a
-  `/api/slots/<live-infra-slot>/reassign` to rebind `-007` to a live slot — this is a backlog-tuning action, main/
-  operator-only per RULES.md § "Backlog-edit hygiene", not something a review-craft dispatch can hand-apply. Declining
-  todo `-003` and skipping via `reason_code: "GATED"` per the established pattern — the VM-completion gate itself is
-  unchanged, but the `-007` root-cause finding is new and actionable for whoever reads this next.
-
-- 2026-08-08T20:22Z (slot-23, review craft — adopted per per-task craft rule, dispatched on todo `-003`): Independent
-  re-verify (8th dispatch today): `gcloud compute instances list --filter="name~cefi-queue"` → empty; broader
-  `name~cefi` shows 5 live `cefi-*` VMs (`cefi-fwd-…`, `mdps-backfill-cefi-…` ×2, `mdps-features-live-cefi-…`,
-  `mtds-live-cefi-consolidated-…`), none matching `cefi-queue-*` — confirms the 6th VM remains dead since its
-  `2026-08-06T17:09:47 UTC` `WORKER_STALLED` self-delete; no 7th relaunch exists yet. `GET /api/backlog` confirms `-003`
-  `status: dispatched, dispatched_to: 23`, priority 20; `-007` (7th-relaunch INFRA todo) still
-  `status: queued, dispatched_to: None, target_slot: 4, affinity: high`. Re-checked slot-10's root-cause finding
-  directly: `GET /api/state` on slot 4 → `status: killed, worker_alive: false, tmux_alive: false, phase: killed`,
-  `last_spawned_at: 2026-08-08T20:17:21Z` (a further respawn attempt since slot-10's 18:25Z snapshot) with `last_msg`
-  showing it resumed an UNRELATED task (`sports_taxonomy_p1_capture_and_contracts-020`) — slot 4 has been respawned at
-  least twice since orphaning `-007`'s binding and is dead again now, so the stuck `affinity: high` binding on `-007`
-  remains unresolved; slot-10's msg 4338 recommendation to main (force-respawn slot 4 or reassign `-007` off it) has not
-  yet been actioned ~2h later. `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done via
-  direct grep (`-004`/`-005` both `[ ]`, unchanged). Gate ("genuinely completes, measured exit") remains unmet — not
-  re-pinging main (slot-10's still-fresh, un-actioned ping already covers it; a 2nd ping this soon adds no new
-  information). Declining todo `-003` and skipping via `reason_code: "GATED"` per the established pattern.
-
-- 2026-08-08T21:31Z (slot-22, review craft, dispatched on todo `-003`): Independent re-verify (9th dispatch today) —
-  **the `-007` stall is resolved: a 7th relaunch VM is now RUNNING.**
-  `gcloud compute instances list --filter="name~cefi-queue"` → `cefi-queue-heavy-binancefutu-x17-20260808-213038`
-  RUNNING, `asia-northeast1-c`. `gcloud compute instances describe` confirms `scheduling.provisioningModel=STANDARD`
-  (ON_DEMAND, not SPOT — continuing the operator's 2026-08-06 option-(b) ruling) and `creationTimestamp` =
-  `2026-08-08T14:30:47-07:00` (= `21:30:47 UTC`) — i.e. the VM is **~1 minute old** at check time (`21:31:37 UTC`), no
-  `PROGRESS.json`/`run.log` published yet (too early — `gcloud storage cat` on both returned no-match, expected for a VM
-  this fresh, not a failure signal). `GET /api/backlog` confirms `-007`
-  `status: dispatched, dispatched_to: 21, target_slot: 8, affinity: high` — no longer stuck on the dead slot-4 binding
-  slot-10/slot-23 flagged (target_slot moved 4→8 and a live slot claimed it), so main/operator appears to have actioned
-  the reassignment recommendation. `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done
-  via direct grep (`-004`/`-005` both `[ ]`, unchanged). Gate (`-003`'s "genuinely completes, measured exit") remains
-  unmet — a VM 1 minute into a ~2769-day-scope backfill is nowhere near completion. Declining todo `-003` and skipping
-  via `reason_code: "GATED"` per the established pattern. Worth noting for the next dispatch: this is finally a LIVE,
-  freshly-launched VM again after the 6th VM's `2026-08-06T17:09:47 UTC` death — check its `PROGRESS.json` (should exist
-  within a few minutes) rather than assuming another all-day stall.
-
-- 2026-08-08T21:41Z (slot-21, infra craft, dispatched on todo `-007`): Completed todo `-007` (7th relaunch). Before
-  relaunching, investigated the WORKER_STALLED root cause per the todo's own instruction rather than blind-relaunching.
-  Found the dead 6th VM's `LAUNCH_PARAMS.json` carried `TARDIS_CONCURRENCY_LEASE=1` with no `STALL_TIMEOUT_SEC`
-  override, launched while a concurrent `cefi-fwd-*` VM held the workspace-wide Tardis lease.
-  `tardis_concurrency_lease_max_wait_seconds` (MTDS `service_config.py`) defaults to exactly 1800s — the SAME default as
-  the shell watchdog's `STALL_TIMEOUT_SEC` — so the lease-acquire blocking wait (zero log output the whole time) and the
-  watchdog's own 1800s no-progress timer raced on identical clocks; the watchdog won at 1841s. This is precisely the
-  2026-07-14 incident pattern `launch-cefi-sharded-backfill.sh`'s own comment already documented ("For lease-ON launches
-  into a busy fleet set e.g. 3900") but never enforced as a default — a caller had to remember it. Separately, confirmed
-  the stall-kill diagnostic itself was useless on every prior occurrence in this chain: `CMD_PID` is always the outer
-  bash chunk-loop wrapper, which is blocked in `wait()` for its own children whenever the command is alive at all, so a
-  py-spy/`/proc` stack dump of `CMD_PID` alone shows only `do_wait` regardless of what the real python worker is stuck
-  on (confirmed against every prior WORKER_STALLED entry in this doc — none ever showed anything but `do_wait`).
-
-  Shipped 2 fixes, both QG-verified + quickmerged to `live-defi-rollout`:
-  - `deployment-service@78da8126` — stall-dump now walks every descendant PID of `CMD_PID` (via `pgrep -P`, 6 levels
-    deep) and dumps each live one via py-spy/`/proc` stack instead of just `CMD_PID`, so the next stall is actually
-    diagnosable.
-  - `deployment-service@f735ff23` — both `launch-cefi-sharded-backfill.sh` metadata-building paths (the per-shard
-    direct-launch path and the `SINGLE_VM_QUEUE` flush path the 6th VM actually used) now auto-default
-    `STALL_TIMEOUT_SEC=3900` whenever `TARDIS_CONCURRENCY_LEASE=1` is set and the caller hasn't passed an explicit
-    override — turning the 2026-07-14 comment's advice into an enforced default. An explicit caller override still wins
-    (verified via an isolated 3-case snippet test: lease-on/no-override→3900, lease-off→unchanged,
-    lease-on/explicit→respected).
-
-  7th relaunch: `cefi-queue-heavy-binancefutu-x17-20260808-213038` (`asia-northeast1-c`, ON_DEMAND/STANDARD — continuing
-  the operator's 2026-08-06 option-(b) ruling, not SPOT; `FORCE=1` Tardis-cap override, same justification as the 6th VM
-  since `cefi-fwd-20260808-123230` was still running; scope `2019-01-01..2026-08-07`, 17 venues, `heavy`/
-  `trades;book_snapshot_5`, reproducing the 6th VM's `LAUNCH_PARAMS.json` env with no `START_DATE` override so the
-  manifest-driven skip-if-fresh fast-forwards through the ~295 already-captured days). Also passed
-  `MACHINE_TYPE_HEAVY=e2-highmem-16` explicitly (same value the unset default already resolves to) purely to SKIP
-  `registry_machine_floor()`'s per-venue-iteration python-subprocess call in the queue-build loop — noticed this because
-  the FIRST launch attempt (no override) took >20s/venue-year and was killed by a background-task duration ceiling
-  before ever reaching VM creation (confirmed via `gcloud compute operations list` — no insert op existed); the override
-  made the identical queue build finish in under a minute with the same resulting VM. Not fixing
-  `registry_machine_floor()`'s per-iteration subprocess cost now (out of this todo's scope) — flagging it here as a
-  real, reproducible slowness finding for a future follow-up.
-
-  **Verified, not just launched**: `gcloud compute instances describe` → `RUNNING`, `provisioningModel=STANDARD`.
-  `LAUNCH_PARAMS.json` for the new VM confirms `STALL_TIMEOUT_SEC=3900` actually landed (not just present in source).
-  `PROGRESS.json` genuinely advancing: `{"last_completed_date":"2019-02-11","monotonic":true,...}` at chunk 6/397, ~4
-  min after creation, `run.log` showing live `ServiceRuntime`/`ResourceProfiler` output, not idle. Independently
-  cross-confirmed by slot-22's `-003` re-verify entry above (same VM, same RUNNING state, filed concurrently). `-003`
-  (POST-BACKFILL gate) remains correctly gated — a VM minutes into a ~2769-day scope is nowhere near completion; not
-  touching it. Repo: deployment-service.
-
-- 2026-08-08T22:40Z (slot-26, review craft — adopted per per-task craft rule, dispatched on todo `-003`): Independent
-  re-verify (10th dispatch today): `gcloud compute instances list --filter="name~cefi-queue"` →
-  `cefi-queue-heavy-binancefutu-x17-20260808-213038` `RUNNING`, `asia-northeast1-c`,
-  `scheduling.provisioningModel=STANDARD` (ON_DEMAND, continuing the operator's 2026-08-06 option-(b) ruling),
-  `creationTimestamp=2026-08-08T14:30:47-07:00` (= `21:30:47 UTC`) — ~1h9min old at check time (`22:40:02 UTC`).
-  `PROGRESS.json` → `{"last_completed_date":"2020-04-13","monotonic":true,"updated":"2026-08-08T22:39:33Z"}` — genuinely
-  advancing (matches slot-21's chunk-6/397 reading ~1h earlier at `2019-02-11`), now ~day 469/2769 (~17%) of the
-  `2019-01-01..2026-08-07` scope, mostly the manifest-driven skip-if-fresh fast-forwarding through the ~295+ days
-  already captured by relaunch attempts 1-6 — real new-work progress rate is much lower than the raw date-jump suggests.
-  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done via direct grep (`-004`/`-005` both
-  `[ ]`, unchanged). Gate (`-003`'s "genuinely completes, measured exit") remains unmet — a VM ~17% through a ~2769-day
-  scope, with no terminal exit yet, is not a completion. `GET /api/backlog` confirms `-003`
-  `status: dispatched, dispatched_to: 26`, priority 20, no `prereqs` — not currently auto-parked. Declining todo `-003`
-  and skipping via `reason_code: "GATED"` per the established pattern (slot-13's mechanism finding, 2026-08-02). Not
-  filing a fresh chat-to-main ping — nothing new to report beyond continued genuine progress on the 7th (ON_DEMAND) VM,
-  which slot-21/slot-22 already surfaced ~1h ago.
+- **2026-08-02→08-08 (13th-26th consecutive review-craft dispatches, condensed 2026-08-17 for line-cap compliance, no
+  findings lost)**: 14 declines of `-003` across this window, each independently re-verifying VM state via `gcloud`
+  and confirming `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` still 3/5 done — all skipped via
+  `reason_code: "GATED"`. Substantive findings preserved: **(1) escalation-cooldown mechanism** (slot-13,
+  2026-08-02) — `/skip-current-task`'s `reason_code` ∈ `{BLOCKED,PARKED,GATED,OTHER}` (default `OTHER`, which per
+  `server/state_store/cooldown.py` has ZERO fleet effect); `GATED` arms a fleet cooldown and, after 3 consecutive
+  `GATED` declines (`dispatch_cooldown_auto_park_skip_threshold=3`), auto-parks the task — this is why every decline
+  from slot-13 onward explicitly uses `reason_code: "GATED"` instead of the prior 13 declines' silent default.
+  **(2) ID-collision false alarm** (slot-10 hypothesized, slot-13 disproved same day) — a stale backlog row at a
+  shifted todo-position looked like a masked relaunch; ground truth (`gcloud` + doc grep) was the actual arbiter, not
+  the backlog row; no fix needed. **(3) 5th relaunch** (slot-6, 2026-08-02): `cefi-queue-heavy-binancefutu-x17-20260802-165422`
+  — worked around a same-day `START_DATE` year-validation break (`deployment-service@4fff44f`) by omitting the flag
+  entirely; died ~11h later (`WORKER_STALLED`+self-delete) at ~4.8% (day~133/2769) per slot-15's last-alive read.
+  **(4) 2026-08-04 (main, agt-1756f6)**: found the 5th VM's death had gone silent — auto-park (finding 1) + the
+  relaunch todo already being `done` meant NOTHING was driving a 6th recovery while 213 downstream tasks sat gated;
+  did not flip the completion prerequisite (would misrepresent ~5%-complete data) and did not launch a 6th VM
+  unilaterally after a 5th consecutive failure; filed the `[OPERATOR] P1` decision-gate todo instead. **(5) 6th
+  relaunch** (slot-10, 2026-08-06, operator option-(b) ruling — ON_DEMAND not SPOT): `cefi-queue-heavy-binancefutu-x17-20260806-163512`
+  — fixed an `ON_DEMAND=false` unconditional-override bug (`deployment-service@b83256f`); died ~34min later
+  (`WORKER_STALLED` at a fully-honest-absence date) at ~10.7% (day~295/2769). **(6) `-007` (7th-relaunch todo)
+  all-day dispatch stall root-caused** (slot-10, 2026-08-08): bound via `target_slot:4, affinity:high` to a slot
+  that had respawned-but-never-rebooted; posted to main; resolved same day when main rebound it to a live slot
+  (slot-22 confirmed). **(7) 7th relaunch** (slot-21, 2026-08-08, `cefi-queue-heavy-binancefutu-x17-20260808-213038`,
+  ON_DEMAND): root-caused + fixed the 6th VM's death as a lease-acquire/stall-watchdog clock race (both defaulted to
+  1800s) — `deployment-service@78da8126` (stall-dump now walks descendant PIDs, not just the blocked bash wrapper)
+  + `f735ff23` (auto-bumps `STALL_TIMEOUT_SEC` to 3900 under `TARDIS_CONCURRENCY_LEASE=1`); verified
+  `STALL_TIMEOUT_SEC=3900` landed + genuine PROGRESS advance. Reached ~17% (day~469/2769) before its own death (see
+  below) — mostly skip-if-fresh fast-forward through prior runs' captured days, not new-work rate.
+- **context-scout 2026-08-03/03(re-scout)/05/07/07(batch11)**: refreshed context_scope (5→6 entries: added
+  `launch-cefi-sharded-backfill.sh`, `agent-orchestrator/server/state_store/cooldown.py`); unchanged thereafter.
 
 - [x] ✅ [INFRA] P1. **DONE 2026-08-09 (slot-29, infra craft)** — Fixed `STALL_PROGRESS_REGEX` (defaulted to `uploaded`,
       never matching honest-absence stretches → false stalls). Broadened to `uploaded|Processed date=`, mirroring the
@@ -993,8 +668,41 @@ produced reports) — see the plan diff in the same commit as this issue doc.
       dry-run confirmed 1 VM. Launched `cefi-queue-heavy-binancefutu-x17-20260815-220349`, `tardis-guard` 1/1. Verified
       STARTED (`RUNNING` ~45s) + PROGRESS (2 UTL reads, `2019-01-14`→`2019-02-04`, monotonic). `-003` blocked.
 
+- [ ] [INFRA] P1. **10th relaunch of the cefi coverage-backfill VM** — the 9th VM
+      (`cefi-queue-heavy-binancefutu-x17-20260815-220349`) died `2026-08-16T15:14:50 UTC`, ~4-5min after a
+      `compute.instances.migrateOnHostMaintenance` live-migration event, ~17h10m after its `2026-08-15T22:04:03 UTC`
+      launch — a failure mode distinct from the 3 preemptions / 2 WORKER_STALLED kills already catalogued above (worth
+      a closer look at whether the maintenance-migration itself is implicated, but not blocking a relaunch). No
+      replacement VM has been launched since (confirmed empty `name~cefi-queue` as of 2026-08-17). Confirm N=1 Tardis
+      cap clear both clouds, fetch the 9th VM's own `LAUNCH_PARAMS.json` (via UTL `download_bytes`, never
+      `gcloud storage`/`gsutil` directly — hook-blocked) and reproduce its env verbatim (do not blind-reproduce an
+      older relaunch's params — this chain has repeatedly hit env-drift bugs, e.g. the `START_DATE` year-validation
+      break on 2026-08-02), dry-run first, then launch. Verify STARTED (RUNNING within ~1-2min) and genuine PROGRESS
+      (2+ successive `PROGRESS.json`/`run.log` reads showing monotonic advance) before considering this todo done.
+      Repo: deployment-service. **Done when**: a 10th VM is confirmed RUNNING with progress climbing over 2+
+      successive checks, cited in this doc's Progress Log.
+
 - **2026-08-15T21:53Z (slot-7, dispatched on `cefi_track2_coverage_backfill_checkpoints-005`)**: Re-verified — 8th VM
   dead 4 days, undocumented until now (todo above); both docs' Progress Logs went quiet after 2026-08-10, the
   silent-stall class the 2026-08-04 entry warned about (flagging, not re-diagnosing). `okxspot-x2-20260815-151408`
   (todo 6's supplement) also ran+terminated (15:15-15:49Z), unchecked — out of scope. Declining `-005`, skip
   `reason_code: "GATED"` (no `park_now` — this gap just proved periodic re-verify beats parking).
+
+- **2026-08-17 (slot-18, backend_engineer craft adopted for this data_engineering-tagged dispatch, dispatched on
+  `cefi_track2_coverage_backfill_checkpoints-005`)**: Re-verified before touching the gate, per the plan's standing
+  2026-07-28 operator ruling. **9th VM is also dead — gate still unmet.**
+  `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260815-220349 --zone=asia-northeast1-c` → NOT
+  FOUND. `gcloud compute operations list --filter="targetLink~cefi-queue-heavy-binancefutu-x17-20260815"` shows
+  `insert` DONE `2026-08-15T15:04:03-07:00` (= `22:04:03 UTC`, matches slot-24's 9th-relaunch launch), a
+  `compute.instances.migrateOnHostMaintenance` DONE `2026-08-16T08:10:03-07:00`, then `delete` DONE
+  `2026-08-16T08:14:50-07:00` (= `15:14:50 UTC`) — died ~17h10m after launch, ~4-5min after a host-maintenance live
+  migration (plausibly the migration itself triggering the death, a failure mode distinct from the 3 preemptions / 2
+  WORKER_STALLED kills already catalogued in this doc — not root-caused further here, out of this dispatch's craft
+  scope). `gcloud compute instances list --filter="name~cefi-queue"` confirmed empty (broader `name~cefi` sweep also
+  shows no `cefi-queue-*` VM among the live fleet) — no 10th relaunch exists yet, and the 9th VM has now been dead
+  ~24h with no replacement. Filed the 10th-relaunch `[INFRA] P1` todo below (per the same "every follow-up is a
+  tracked todo" pattern the doc's own prior entries establish) rather than leaving this as a prose recommendation.
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` confirmed still 3/5 done via direct grep (`-004`/`-005`
+  both `[ ]`, unchanged). Gate (`-005`'s "genuinely completes, measured exit") remains unmet — declining `-005` and
+  skipping via `reason_code: "GATED"` per the established mechanism (slot-13's finding, 2026-08-02); no `park_now`,
+  consistent with the 2026-08-15 finding that periodic re-verify beats parking for this task.

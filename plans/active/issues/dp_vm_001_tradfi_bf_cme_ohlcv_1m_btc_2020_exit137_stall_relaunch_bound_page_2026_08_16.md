@@ -31,7 +31,7 @@ related:
   [
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
@@ -138,13 +138,23 @@ operator weighing against the shard-specific hypothesis the `g01-6a-6l-2020` sib
 - [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `tradfi-bf-cme-ohlcv-1m-btc-2020-20260816-180410`'s shard
       (tradfi/CME/btc/2020 1m OHLCV) per the recommended decision above; the `tradfi-bf-cme-ohlcv-1m-` family
       relaunch bound is already exhausted for today (2/2, per this escalation's own context).
-- [ ] [BACKEND] P1. Pull + read `run.log` for all four `tradfi-bf-cme-ohlcv-1m-` DP-VM-001 incidents open
-      today/yesterday (`es-2020-20260815-030216`, `g01-6a-6l-2020-20260815-200147`,
-      `g01-6a-6l-2020-20260816-162556`, `btc-2020-20260816-180410`) via
+- [x] ✅ [BACKEND] P1. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2** (narrowed to the two VMs in this 4-VM ask NOT
+      already root-caused as billing-blocked — `es-2020` + `btc-2020`; the other two,
+      `g01-6a-6l-2020-20260815-200147` and `g01-6a-6l-2020-20260816-162556`, are confirmed billing-caused, see
+      `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`
+      — do not re-dispatch those two). Original ask: pull + read `run.log` for all four `tradfi-bf-cme-ohlcv-1m-`
+      DP-VM-001 incidents open today/yesterday via
       `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess),
       compare failure signatures across shards, and fix at the root — if it's a shared code defect, bound the
       offending call with `asyncio.wait_for` at the per-shard level per the shard-isolation SSOT; if genuinely
       shard-specific, isolate + skip the poison instrument-date per shard-level failure isolation.
+- [ ] [OPERATOR] P2. **Converted from prose 2026-08-17 (na-eligibility-audit, tradfi tranche) — was "Recommended
+      decision" item 3 above, never a tracked checkbox (workspace hard rule: every follow-up is a `- [ ]` todo,
+      never prose).** Consider whether the `tradfi-bf-cme-ohlcv-1m-` family's `≤2/(vm-prefix,day)` relaunch bound
+      should temporarily tighten to a "diagnose-before-3rd-relaunch-family-wide" gate, given 3 distinct shards of
+      this launcher family stalled within 24h (`es-2020`/`g01-6a-6l-2020` on 2026-08-15, `g01-6a-6l-2020` again +
+      `btc-2020` on 2026-08-16) — a policy decision for the operator, not a worker.
 
 ## Progress Log
 
@@ -158,3 +168,7 @@ operator weighing against the shard-specific hypothesis the `g01-6a-6l-2020` sib
   3-distinct-shards-in-24h pattern as a candidate family-wide (not per-shard) defect, and paging the operator via
   `/blocked` per the escalation's explicit instruction. No code changed this session.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **RECLASSIFY, per-todo split.** Todo 2
+  (BACKEND run.log pull+diagnose) extracted, narrowed to exclude the 2 VMs already billing-root-caused elsewhere —
+  see checkbox above. Todo 1 (operator relaunch decision) stays genuinely gated. "Recommended decision" item 3
+  converted to a tracked `[OPERATOR]` todo (was untracked prose). Doc stays `assigned_vm: NA`.

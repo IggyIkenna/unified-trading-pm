@@ -296,3 +296,4 @@ same-corpus dependencies). Instead:
   marker, or building the per-todo same-file `prereqs` mechanism the 2026-07-30 slot-6 entry recommended) remains a
   genuine `agent-orchestrator` design question, not something this audit's own scope authorizes deciding unilaterally.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ed5262c1f0adb2ae]: KEEP-NA, valid — sole remaining item is a self-labeled genuine agent-orchestrator design fork, not decidable unilaterally by an audit pass.

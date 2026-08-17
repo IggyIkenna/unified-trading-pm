@@ -199,3 +199,19 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   to the operator.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+- **data_pipeline_failure escalation 2026-08-17 (`agt-0e4c67`, DP-WATCHER-006/DP_CLOUD_RUN_JOB_FAILED)**: dispatched on a
+  fresh `uts-prod-blrs-daily-determinism` Cloud Run Job failure (1 failed task, ~154m old at dispatch). Live diagnosis
+  (execution `uts-prod-blrs-daily-determinism-jm2mn`, 2026-08-17T02:32:12Z, `NonZeroExitCode`) confirms this is the SAME
+  already-documented root cause, not a new defect: Stage 0 aborted on `Missing upstream data for 2026-08-16` — the same
+  three artifacts named throughout this doc (execution config snapshot, ML t1-recon `_SUCCESS`, strategy t1-recon
+  `_SUCCESS`), still absent because their producer chain is still unimplemented/unwired per the "2026-07-14 update" +
+  "Conclusion" above. `resolve_bucket_name()`/config-loading itself is healthy (bucket resolves correctly to
+  `recon-prd-central-element-323112`/`execution-store-prd-central-element-323112`, consistent with the July fix) — no
+  bucket-env mismatch, no code regression. No fix applied (would be a guess at multi-repo feature work this doc's own
+  2026-07-14 investigation already scoped out and its 07-30/08-03/08-06 audits already recommended promoting, not
+  re-diagnosing). Not re-filing a duplicate `/blocked` — `BLK-8bb28da4` (2026-08-10) is still open and unresolved;
+  re-raising the same question would just add noise. Flagging: since the scheduler runs this job daily (0 2/6 * * *
+  depending on env) and the producer gap is unchanged, this is a recurring daily DP-WATCHER-006 page, not a one-off —
+  worth the operator's attention alongside the original promote-now recommendation, since every day it stays unpromoted
+  is another guaranteed page with no actionable new information.

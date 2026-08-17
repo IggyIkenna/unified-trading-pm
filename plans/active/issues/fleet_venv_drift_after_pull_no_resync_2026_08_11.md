@@ -176,3 +176,4 @@ leaves the environment behind, silently, forever.
   self-corrections above.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:b994af48da532610]: KEEP-NA, valid — structural incident fully resolved (7/8 done); sole remaining item is host-state-specific foreign WIP in two shared PM clones, resolvable only by the owning sessions or the operator.

@@ -127,3 +127,4 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   single busy self-hosted glue runner while verifying an unrelated fix's downstream CI. Root cause not reachable this
   session (AWS IAM gap, confirmed live, matches the sweep's §0c host-dispatched-watchdog coverage gap). No code changed.
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:c92f713e54e5825d]: KEEP-NA, valid — genuinely open live-infra investigation blocked by a real IAM gap (ssm:SendCommand/sts:AssumeRole denied for ikenna-worker, confirmed live). No tracked checkboxes exist yet (prose-only follow-on steps) — a separate hygiene gap outside this audit's scope.

@@ -250,3 +250,4 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   provider-agnostic-mechanism-vs-provider-specific-data-accuracy gap in `context_lifecycle.py`, Grok 4.6's 500K
   context ceiling confirmed live (hard-enforced, no self-compaction), and `calibrate_account_value.py`'s deliberate
   (not buggy) reset-window-dropping design. No code written yet — investigation + plan authoring only.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ee26e6744e46c17e]: KEEP-NA, valid — explicit dated operator ruling on record: 'human plan, not AO-dispatched' for the whole doc's live-testing/design-call content (multi-provider billing/context research).

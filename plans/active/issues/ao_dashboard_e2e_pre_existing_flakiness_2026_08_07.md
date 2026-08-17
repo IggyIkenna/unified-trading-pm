@@ -300,3 +300,4 @@ shipped independently or these findings would still be sitting entirely undocume
   genuinely open — no re-run confirmation exists against either fix yet, so this todo cannot fully close until that
   lands. Doc-level disposition unchanged (checkbox stays with the finalize plan per this doc's own governance rule).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:40a2ff1bc4fc6d52]: KEEP-NA-STALE (already-duplicated) — the active `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md` (status: active, gate_on_depends: true) is directly performing this doc's own items 1-3 reconciliation; checkboxes deliberately left unflipped per that batch's own governance rule pending its reconciliation pass. Not reclassifying.

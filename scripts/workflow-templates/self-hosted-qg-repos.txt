@@ -81,7 +81,36 @@
 # free-hosted-minutes-for-public-repos + fork-PR-security-exposure reasoning as the 17-repo revert
 # above, now applied to PM's own workflows.
 #
-# Remaining 7 are PRIVATE and genuinely need self-hosting for billing:
+# instruments-service + unified-api-contracts + market-data-processing-service RE-ADDED 2026-08-14
+# (operator-directed billing migration): all three were flipped PRIVATE first (verified via
+# `gh repo view --json visibility`), THEN their self-hosted pools were (re-)installed on
+# ci-escalation-runner-vm-1 (i-042a6332509482556) and confirmed `online` via the live GitHub API —
+# private-before-self-hosted, the correct order per the fork-PR-RCE lesson above, never the reverse.
+# Their pools already existed (dormant since the 2026-08-05 revert, disabled not deleted); the admin
+# GH_PAT Secret Manager read failed once on ubuntu's ambient gcloud account (stale WIF token,
+# unrelated to the per-repo isolated GLUE_GCLOUD_CONFIG dirs which were healthy) — fixed by resetting
+# the active account, not by touching any repo's isolated config. GLUE_COUNT=1/WRITER_COUNT=0 each,
+# matching every other non-PM/non-AO repo's pool shape. Remaining public repos with a dormant-but-
+# still-installed pool from the same 2026-08-05 revert (system-integration-tests, trading-agent-service,
+# unified-trading-library, unified-trading-api, fund-administration-service, greeks-service,
+# ibkr-gateway-infra, batch-live-reconciliation-service, alerting-service, client-reporting-api,
+# deployment-api, deployment-service) are candidates for the identical treatment once each is flipped
+# private — not yet done, do not add them here until their own visibility flip is confirmed first.
+#
+# trading-agent-service + deployment-api + deployment-service + unified-trading-library RE-ADDED
+# 2026-08-14 (same operator-directed sweep, same session, later same day): same order (private flip
+# verified first, then dormant pool re-installed + confirmed `online` via GitHub API), same
+# GLUE_COUNT=1/WRITER_COUNT=0 shape. Host load checked before/after each install (peaked ~load avg
+# 0.14-0.7 across the whole 4-repo batch, no contention) — unified-trading-library specifically
+# carries prior host-thrashing revert history (2026-07-28, see above) so its install was done last,
+# after confirming the other three landed clean. Remaining public repos with a dormant pool
+# (system-integration-tests, unified-trading-api, fund-administration-service, greeks-service,
+# ibkr-gateway-infra, batch-live-reconciliation-service, alerting-service, client-reporting-api) —
+# operator explicitly held back fund-administration-service and batch-live-reconciliation-service
+# from this sweep; the rest are simply not yet actioned. Same rule: do not add any of them here until
+# its own visibility flip is confirmed first.
+#
+# Remaining 14 are PRIVATE and genuinely need self-hosting for billing:
 agent-orchestrator
 strategy-service
 e2e-testing
@@ -89,3 +118,10 @@ features-service
 market-tick-data-service
 execution-service
 ml-service
+instruments-service
+unified-api-contracts
+market-data-processing-service
+trading-agent-service
+deployment-api
+deployment-service
+unified-trading-library
