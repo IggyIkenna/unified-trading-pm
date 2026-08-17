@@ -97,8 +97,13 @@ remedy text.
       tripping the dispatch-visibility parser's undeclared-marker exclusion; it now dispatches
       normally. The actual p95/max shard-duration measurement is still unattempted work for a
       future SCRIPT-craft worker.
-- [ ] [REVIEW] P1. Classify `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md`'s
-      flagged todo (repo: unified-trading-pm).
+- [x] ✅ [REVIEW] P1. Classify `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md`'s
+      flagged todo (repo: unified-trading-pm). — 2026-08-17 (slot-5, review-craft): genuinely open, not a
+      legitimate exception — `_PERMANENT_NON_DISPATCHABLE_RE` false-matched the literal substring
+      "not-AO-eligible" inside todo 2's own text, which was naming one of batch6's 6 exclusion-category
+      LABELS for OTHER docs, not asserting this todo itself is non-dispatchable. Fixed by renaming the
+      category label to "non-AO-eligible" (regex requires literal "not", not "non" — confirmed via direct
+      regex test) — no semantic change. Full evidence in the finalize plan's own Progress Log.
 - [ ] [REVIEW] P1. Classify
       `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`'s flagged todo
       (repo: unified-trading-pm).
@@ -124,3 +129,13 @@ remedy text.
   resolves to `deployment-scripts-central-element-323112` here). Fixed by rewriting the todo to drop the
   undeclared-marker phrasing rather than adding a declared `BLOCKED-*` marker, since declaring it would have
   permanently suppressed dispatch of work that is actually available now.
+- **2026-08-17 (slot-5, review-craft)**: classified item 2 (`prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md`).
+  Verdict: genuinely open (accidental exclusion), same bug class as item 1 but a different regex —
+  `_PERMANENT_NON_DISPATCHABLE_RE`'s `not[\s-]+AO[\s-]+eligible` pattern matched the substring "not-AO-eligible"
+  inside todo 2's own enumeration of batch6's 6 exclusion-category names, mistaking a category LABEL for a live
+  self-declared exclusion. Verified live via `GET /api/backlog` that this plan's tasks are actually present +
+  correctly gated (`queued`, `blocked_reason` citing `gate_on_depends: upstream plan ... still has open todos on
+  disk`) — the marker bug was a separate false signal on top of the working prereq gate, not masking a real
+  dispatch gap. Fixed by renaming the category label ("not-AO-eligible" → "non-AO-eligible") rather than adding a
+  declared marker, since this todo's real gating is already correctly handled by `gate_on_depends` and a declared
+  marker would duplicate/conflict with that mechanism.

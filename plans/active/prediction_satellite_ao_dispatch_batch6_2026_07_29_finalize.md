@@ -81,7 +81,7 @@ context_scope:
       citations recorded in this plan's own Progress Log, and batch4's RULED section is updated.
 
 - [ ] [DOC] P2. **Re-check the Deferred/excluded population for cleared gates.** batch6 excluded 11 docs across 6
-      categories (self-dispatching, claimed-elsewhere, too-large, not-AO-eligible, sports-owned, housekeeping). Since
+      categories (self-dispatching, claimed-elsewhere, too-large, non-AO-eligible, sports-owned, housekeeping). Since
       time will have passed by the point this finalize runs, re-check each: (a) did
       `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` and
       `features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`'s self-dispatched items
@@ -140,3 +140,15 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added the gate_on_depends wiring-gap tracking doc
   (this plan's own Progress Log names it as the root cause the gate never held -- load-bearing, not previously scoped) +
   the batch4-finalize sibling this plan's pattern mirrors.
+- **2026-08-17 (slot-5, review-craft)**: classified todo 2's flagged accidental exclusion (dispatch of
+  `ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` item 2). Root cause: `_PERMANENT_NON_DISPATCHABLE_RE`
+  in `agent-orchestrator/server/regen_backlog_from_plan.py` false-matched the literal substring "not-AO-eligible" inside
+  todo 2's own parenthetical enumeration of batch6's 6 exclusion categories — the phrase names a CATEGORY LABEL for
+  OTHER excluded docs, not a live assertion about this todo's own dispatchability. Verified live: the finalize plan's
+  own tasks are actually present + correctly gated in the backlog (`queued`, `blocked_reason` citing
+  `gate_on_depends: upstream plan ... still has open todos on disk`) — the marker-exclusion bug is a separate,
+  additional false trigger on top of the (working) prereq gate. Fix: renamed the category label to "non-AO-eligible"
+  (regex requires literal "not"+"AO"+"eligible", not "non"+"AO"+"eligible" — confirmed both forms via direct regex
+  test) — no semantic change, same category, no longer trips the exclusion regex. This todo's own dispatch stays
+  correctly withheld regardless (still gated on batch6's 3 remaining open todos via `gate_on_depends`), so no change
+  to actual dispatch timing — only removes the false accidental-exclusion signal.
