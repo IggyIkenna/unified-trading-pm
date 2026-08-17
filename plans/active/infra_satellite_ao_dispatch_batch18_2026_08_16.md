@@ -108,6 +108,17 @@ Verdict: clear on all 3 items — proceed.
       the script reports its own sampled coverage, which is the intended, documented method, not a shortfall). Some
       individual `download_bytes` calls stall past the 30s per-call timeout on a few very large/old logs
       (`_gcs.py`'s own bounded-retry logic already handles this — logged WARNING, not a failure) — expected, not a
+      **CORRECTION (same session, ~90s later)**: that first 900s background attempt was killed by an external
+      `SIGTERM` (exit 143, `Terminated`) after only ~90s — root cause NOT confirmed (possibly a harness background-
+      task lifetime tied to the issuing turn/tool-call sequence rather than true OS-level detachment; the process
+      was launched correctly via the harness's own backgrounding, not `nohup`/`&`, so this is NOT the known
+      orphan-reap trap). **Do not assume a long `run_in_background` Bash call survives many subsequent foreground
+      tool calls in the same turn/session on this harness** until that's confirmed either way — if re-attempting,
+      either (a) launch it and then do nothing else (no other Bash calls) until it completes/notifies, or (b) run it
+      with `nohup ... disown` from a genuinely detached shell if (a) proves unreliable again, checking the orphan-
+      reap risk first. A shorter budget (e.g. 300s) run to `/tmp/` first, then extend if it survives, de-risks this.
+      Next attempt was re-launched at ~05:28 with a 300s budget to test the survival hypothesis before spending a
+      full 15 min on a run that keeps dying early — check `/tmp/shard_duration_p95.json` mtime/content first.
       bug to chase. Once the full run's stdout table + JSON exist: (1) `git add
       deployment-service/scripts/measure_shard_duration_p95.py`, run `quality-gates.sh` (not yet run this session —
       do NOT skip it), commit + quickmerge; (2) paste the final per-family p95/max table into this todo and flip it
