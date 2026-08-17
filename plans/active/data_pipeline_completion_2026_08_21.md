@@ -91,6 +91,58 @@ three ways — so the gate set is authored once and quoted three times, rather t
 
 ---
 
+## SUCCESS CRITERIA — the Friday deliverable (operator's own wording, specified)
+
+These are the acceptance criteria for the deliverable, distinct from the readiness gates below. The gates say what
+"ready" means per shard; these say what "done" means for Friday.
+
+### S1 — Manifest: CANONICAL
+
+- **Zero non-canonical entries in Distinct Values in the deployment UI.** That surface is the named acceptance
+  check — not a grep, not a script's own opinion. If Distinct Values shows a non-canonical value, the criterion fails.
+- **Human sign-off on every shard name.** No shard names that are not truly orthogonal and could be unified. This is
+  a judgment call by construction and cannot be delegated to a checker — see gate B20.
+- Cross-reference: the merge/migrate/purge machinery is
+  [`/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`](/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md)
+  steps 18–19 (CANONICAL ORTHOGONALITY).
+
+### S2 — Paths: CANONICAL, and reconciled BOTH ways
+
+- **Every GCS path follows the same structure as the code** and the canonical structure we expect.
+- **Every path entry is recorded in the manifest in canonical format** — and this is the half most easily skipped:
+  it is **bidirectional**. Manifest→path (does every manifest entry have an object?) *and* path→manifest (does every
+  object have a manifest entry?). "Cross every entry" means both directions; an object in GCS with no manifest row is
+  invisible to every coverage number we quote.
+- Method: the four-surface reconciliation procedure, manifest-driven — **not a new whole-corpus walk** (gate B13).
+  Orphan detection has its own SSOT (`/codex/02-data/orphan-object-detection.md`).
+
+> **MEASURED 2026-08-17 — S2 currently FAILS, with a number.** A bounded 4,000-blob sample of the cefi
+> instruments-store found **1,000 non-canonical objects** (no `pipeline_mode=`/`asset_group=` segment, a *different
+> size* from their canonical twin — so different content, not duplicates) and **270 `.bak` files in prod**. Roughly a
+> third of sampled objects. Full per-AG re-measure is tracked in
+> [`/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`](/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md).
+> Sports additionally uses a different path grammar (`day=/league=/venue=`, no `pipeline_mode`/`asset_group`), so
+> "follows the same structure" is not yet true across asset groups.
+
+### S3 — Schemas: conformant, LOCKED and VERSIONED
+
+- **Every GCS object conforms to its declared schema.**
+- **Schemas are locked and versioned** — a schema change is a deliberate, versioned act, not a drift that downstream
+  readers discover. This is what makes a stored object safe to read years later.
+- **Currently unverified**: the 51-column instruments schema exists and is populated, but whether it is *locked and
+  versioned* has not been established. Treat as an open gap until measured, not as satisfied because a schema exists.
+- Note the distinct failure this prevents: the 2026-04-14 incident where 85 `entity=fixtures_schedule` shards silently
+  carried an instrument-catalogue shape instead of fixtures data, undetected until a downstream column projection
+  failed. Conformance checking is what catches a *wrong-shape* write, which no coverage number ever will.
+
+- [ ] [DATA] P0. **Verify S1** — Distinct Values in the deployment UI shows zero non-canonical values, per AG.
+- [ ] [OPERATOR] P0. **Sign off S1's shard-name orthogonality.** Human judgment, explicitly not delegable.
+- [ ] [DATA] P0. **Verify S2 in BOTH directions**, per AG, off the manifest — manifest→path and path→manifest.
+- [ ] [DATA] P0. **Establish whether S3's schemas are locked and versioned**, and if not, what locking them requires.
+      This is the criterion with the least existing evidence.
+
+---
+
 ## Data pipeline readiness — BATCH
 
 Operator draft, preserved. **Items marked `+ADDED` are proposed additions**, each traced to a measured incident rather
