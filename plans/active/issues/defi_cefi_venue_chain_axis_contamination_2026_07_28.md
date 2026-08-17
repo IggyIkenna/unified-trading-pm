@@ -618,6 +618,21 @@ doc for the full history).
   `[DATA]`/data_engineering — not actioned here, left for the infra-role dispatch that todo already names). My own
   task remains correctly GATED on step 1. No delete executed, no code shipped. Released `reason_code=GATED`.
 
+- **slot-12 2026-08-17T02:35Z (data_engineering, task `defi_cefi_venue_chain_axis_contamination-345201378396`,
+  step-3 physical-delete re-check — same-day repeat of slot-33's check above)**: Fresh-pulled repos, re-verified both
+  gates independently. (1) **Gate 2 (in-flight defi rebuild) CLEAR**: `gcloud compute instances list
+  --filter="name~canonical-migration"` returns empty. (2) **Gate 1 (corpus freshness) still FAIL**: bounded UTL
+  `list_blobs` probe (`unified_trading_library.cloud_interface.get_storage_client` +
+  `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`, single-prefix-per-(day,venue,data_type),
+  not a corpus walk) of `market-data-tick-defi-prd-central-element-323112` for all 6 `catalog_carry.py` venues × both
+  data_types × 2026-08-13..17: **0 matched objects, every cell**. (3) Re-confirmed the blocking `[INFRA] P1` fix
+  (`tardis-concurrency-guard.sh` staging into `deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh`) is
+  still unshipped: fresh `grep -n "tardis-concurrency-guard.sh" scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` on
+  `origin/live-defi-rollout` → 0 hits. No new information versus slot-33's same-day check — logged for the dispatch
+  audit trail per this doc's own re-check convention, not because anything changed. Fixing the `[INFRA]`/
+  deployment-service blocker directly is out of this task's `[DATA]`/data_engineering craft+repo scope (already
+  separately tracked as its own todo above). No delete executed, no code shipped. Released `reason_code=GATED`.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
