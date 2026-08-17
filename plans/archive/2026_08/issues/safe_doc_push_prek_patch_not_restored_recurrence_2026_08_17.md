@@ -9,7 +9,7 @@ summary: >-
   patch after a successful retried push" symptom fired again 2026-08-17, but this time the confirmed-lost content is
   a DIFFERENT slot's real shipped-believed work (a code fix + new regression test), not a doc-only checkbox flip like
   the original incident. Found incidentally while shipping an unrelated archival task.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, ao]
 stage: [meta]
@@ -35,7 +35,7 @@ estimate_calibrated_ai_days: 0.3
 assigned_role: infra
 drift_direction: none
 depends_on: []
-resolved_by:
+resolved_by: slot-13-2026-08-17
 locked_by:
 locked_since:
 supersedes:
@@ -53,6 +53,11 @@ context_scope:
 ---
 
 # safe-doc-push.sh orphaned-prek-patch recurrence — confirmed real code+test loss
+
+> **🟢 ARCHIVED 2026-08-17 — COMPLETE.** Both todos shipped/verified: (1) root-caused + fixed the cross-slot
+> orphaned-prek-patch restore gap (`unified-trading-pm@ea2f3ea8c6`); (2) re-verified `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s
+> stagger todo — the previously-lost work was independently redone and landed for real under
+> `unified-trading-pm@23499c954f` (confirmed ancestor of origin, regression test passes 6/6 live). No further action.
 
 ## What I found
 
@@ -126,13 +131,17 @@ redone from scratch, since only its DESCRIPTION survived, not its code.
       Cite this doc + the 2 patches' md5 (`527608ea9e64b09163217ea7c3f3df46`) as reproduction evidence if the
       `~/.cache/prek/patches/` files are still present on the orchestrator VM's shared filesystem when picked up.
       — unified-trading-pm@ea2f3ea8c6. See Progress Log for the root-cause finding + fix.
-- [ ] [INFRA] P2. Re-verify `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s `[INFRA] P2` "Stagger
-      `ldr-to-main-promote-fleet.yml`'s per-repo fan-out" todo — it is still genuinely `- [ ]` open (slot 20's
-      believed-complete work never actually landed). Either redo the `STAGGER_SECONDS`
-      (`LDR_MAIN_PROMOTE_STAGGER_SECONDS`) fix to `scripts/cicd/ldr_to_main_fleet_promote.sh` + the regression test
-      described in the recovered patch text above (available in this doc's "What I found" section as a spec), or
-      confirm via `git log` that it landed under a different SHA than the placeholder suggests before assuming a
-      full redo is needed. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-17 (slot-13, infra craft)** — Re-verified `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s
+      "Stagger `ldr-to-main-promote-fleet.yml`'s per-repo fan-out" todo. **No redo needed**: the todo is already
+      `- [x]` DONE citing a real SHA (`unified-trading-pm@23499c954f`), NOT the unresolved `\<sha\>` placeholder this
+      doc's "What I found" section flagged — the work was independently redone (or the original commit completed)
+      under a fresh SHA after the original patch-loss. Confirmed genuinely landed, not just doc-side: `git merge-base
+      --is-ancestor 23499c954f origin/live-defi-rollout` → ancestor confirmed; `grep -n STAGGER
+      scripts/cicd/ldr_to_main_fleet_promote.sh` shows `STAGGER_SECONDS="${LDR_MAIN_PROMOTE_STAGGER_SECONDS:-3}"` +
+      the `sleep "$STAGGER_SECONDS"` call site (matches the recovered patch's described spec);
+      `scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh` exists and, run live, passes **6/6**
+      (structural: env-overridable + sleep-after-launch; functional: measured inter-launch gap >= stagger,
+      stagger=0 opt-out completes in 15ms). Repo: unified-trading-pm (verification only, no code changed).
 
 ## Progress log
 
@@ -170,3 +179,10 @@ redone from scratch, since only its DESCRIPTION survived, not its code.
   `${PREK_HOME:-$HOME/.cache/prek}/patches` so the safety net covers both shapes again.
   Did not action todo 2 (out of this task's assigned scope — `[INFRA] P2`, a separate re-verify/redo of slot 20's
   lost `ldr_to_main_fleet_promote.sh` work); left it open for its own dispatch.
+- 2026-08-17 (slot-13, infra craft, todo 2): Re-verified — no redo needed. `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s
+  stagger todo is already `[x]` DONE under a real SHA (`23499c954f`, confirmed ancestor of origin), distinct from the
+  unresolved placeholder this doc originally flagged — someone (slot 20 or a subsequent redo) landed the fix for
+  real. Verified live: `STAGGER_SECONDS`/`LDR_MAIN_PROMOTE_STAGGER_SECONDS` present in
+  `scripts/cicd/ldr_to_main_fleet_promote.sh`, and the regression test
+  (`scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh`) exists and passes 6/6 when run directly.
+  Both todos in this issue doc are now done; no further action needed here.
