@@ -72,15 +72,7 @@ source: >-
   fix that" mid-session under `/autonomous`; investigated, implemented, tested, and shipped autonomously per operator
   authorization (SUB_AGENT_MANDATORY_RULES.md + AUTONOMOUS_AGENT_RULES.md applied for the duration).
 drift_direction: advance-code
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_options_adapter.py,
-    market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_base_client.py,
-    market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_stream_client.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/tardis_options_chain_backfill_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/deribit_options_chain_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/main.py,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_options_adapter.py, market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_base_client.py, market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_stream_client.py, market-tick-data-service/market_tick_data_service/cli/handlers/tardis_options_chain_backfill_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/deribit_options_chain_handler.py, market-tick-data-service/market_tick_data_service/cli/main.py]
 ---
 
 # Tardis options_chain adapter — credential unblock, real implementation, dispatch wiring
@@ -217,3 +209,7 @@ adapter fix.
 - [ ] [AGENT] P3. `adapters/tradfi/yahoo_finance_adapter.py` has the same `get_write_bucket_name("tick-data", ...)` stale-
       domain bug found in `deribit_options_chain_handler.py` — unrelated to CeFi/Tardis, needs its own verification
       of Yahoo-adapter behavior before fixing. market-tick-data-service.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

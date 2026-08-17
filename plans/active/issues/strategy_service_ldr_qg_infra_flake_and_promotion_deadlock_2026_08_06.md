@@ -74,15 +74,7 @@ source:
     wall_type ldr_qg_failure,
     failing run https://github.com/IggyIkenna/strategy-service/actions/runs/30949045415,
   ]
-context_scope:
-  [
-    /codex/08-workflows/ci-cd-flow.md,
-    /codex/15-runbooks/devops-ci-walls.md,
-    unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml,
-    unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
-    unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh,
-    agent-orchestrator/server/routes/slots_worker.py,
-  ]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, /codex/15-runbooks/devops-ci-walls.md, unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml, unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh, unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh, agent-orchestrator/server/routes/slots_worker.py]
 ---
 
 # strategy-service LDR→main: QG "red" was infra flake; promotion deadlocked by broken backmerge on main
@@ -766,3 +758,4 @@ process itself in this pass).
   and leaving the runner-pool-capacity / dispatch-storm-mutex follow-ups above as the likely fix path. Did NOT attempt
   `--hotfix-to-main` (operator-only `QUICKMERGE_HOTFIX_TO_MAIN_OK=1`, not available to an agent) or any manual
   intervention in the promoter/SIT workflows themselves.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

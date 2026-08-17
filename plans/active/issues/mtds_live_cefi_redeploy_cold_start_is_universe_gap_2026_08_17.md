@@ -26,6 +26,9 @@ assigned_vm: planning
 priority: P2
 locked_by:
 resolved_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Live-CeFi VM cold start hits an empty IS universe until the 13:30 UTC daily refresh

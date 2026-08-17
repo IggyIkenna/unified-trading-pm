@@ -49,13 +49,7 @@ priority: P2
 drift_direction: advance-code
 depends_on: []
 archive_exempt: true # 0 open todos by design (monitoring + docs done); backfill fix/relaunch tracked in tradfi_vix_backfill_launch_failed_2026_08_10.md
-context_scope:
-  [
-    /plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md,
-    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
-    /plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md,
-    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
-  ]
+context_scope: [/plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md, /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md, /plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md, /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md]
 ---
 
 # VIX futures full-history backfill
@@ -138,3 +132,4 @@ which is authoritative.
   is now fully resolved + archived — all 7 relaunched VIX VMs completed terminally and the manifest shows real captured
   CBOE/VIX rows spanning 2020-06-01→2026-08-07 with zero gaps for 2020-2025. Path references in this doc updated
   accordingly (the doc moved from `plans/active/issues/` to `plans/archive/issues/`).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

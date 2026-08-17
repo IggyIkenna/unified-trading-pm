@@ -89,14 +89,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope:
-  [
-    /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
-    deployment-api/deployment_api/routes/data_status/_distinct_values.py,
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
-    market-data-processing-service/market_data_processing_service/app/core/live_workers.py,
-  ]
+context_scope: [/plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md, deployment-api/deployment_api/routes/data_status/_distinct_values.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py, market-data-processing-service/market_data_processing_service/app/core/live_workers.py]
 ---
 
 > **⚠️ CORRECTION 2026-08-08 — this doc's "0/0 non-canonical, RESOLVED" all-clear is MISLEADING and must not be read as
@@ -383,6 +376,8 @@ confirming before scoping a re-stamp for it.
   not a reclassification: dispatching this doc's own copy of the todo would race the already-designed batch10
   extraction. No `assigned_vm` change. Let the batch10 -> batch10-finalize pipeline run its course (pending operator
   flip from draft to active); this doc self-closes through that path.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
 
 ## Deferred work after 2026-08-05
 

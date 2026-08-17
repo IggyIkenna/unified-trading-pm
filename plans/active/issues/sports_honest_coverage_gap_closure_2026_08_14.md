@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: "Sports honest-coverage gap closure — 2026-08-14"
-status: resolved
+status: open
 priority: P1
 assigned_vm: NA
 execution_scope: local-only
@@ -476,6 +476,34 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       `SPORTS Tier-2 sentinel fan-out: provider=ODDS_API date=2020-06-06 rows=1173`), manifest shards updating,
       moving through subsequent dates — the 278-day gap backfill is genuinely running now, not just OS-level
       RUNNING. Loop continues monitoring it same as weather.
+- [ ] [DATA] P2. **Odds VM preempted twice since relaunch (2026-08-16/17); a possible freshness-skip concern
+      surfaced during monitoring, INVESTIGATED BUT NOT CONFIRMED — needs a fresh, more careful look, not a repeat of
+      this session's approach.** Timeline: `mtds-backfill-odds-20260816-230355` (the fix-verification relaunch) and
+      its successor `mtds-backfill-odds-20260816-235352` both vanished from `gcloud` (not found) after a few hours —
+      consistent with routine SPOT preemption (`--instance-termination-action=DELETE` self-deletes on preemption,
+      no graceful shutdown log expected) — NOT re-litigated as a new admission-hold occurrence, that fix is confirmed
+      separately above. **The open question**: while monitoring, `TickDataHandler._apply_freshness_skip()`
+      (`market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py:606`) was found to pass
+      `max_age_hours=_CONCURRENT_LAUNCH_DEDUP_WINDOW_HOURS` (10 minutes) to `check_shard_freshness()` — and that
+      constant's OWN doc-comment (line 65-72) explicitly says "this is NOT a correctness window" and exists only to
+      dedupe two processes racing the same shard within minutes of each other. Using a 10-minute window as the
+      GATE for "should this historical (days/weeks-old) capture be treated as already-done" looks, on its face, like
+      a mismatch between documented intent and actual use — if real, it would mean this handler's skip-if-fresh path
+      can never recognize anything older than 10 minutes as fresh, and would re-attempt every date/league on every
+      relaunch regardless of true capture state. **Live-checked this specific worry and could NOT confirm it**: a
+      candidate example (BUNDESLIGA on 2020-06-14 with 4 bookmakers already captured, log showing "~960 credits"
+      about to be spent) could not be re-located in the VM's own full saved log on a second, more careful pass — the
+      claim outran what I could actually re-verify, so I am not asserting it as confirmed. What DID verify cleanly:
+      real fetches in the live log show variable, plausible costs tied to actual match schedules (`credits_used=0`
+      on no-fixture days, `credits_used=480` for a real 9-fixture BUNDESLIGA day, `remaining=2755046` — a large
+      account balance, not visibly draining fast). **Do not relaunch the odds VM again without either (a) resolving
+      this open question first, or (b) an explicit operator go-ahead** — a notification was already sent asking
+      whether to pause-and-investigate or continue; no answer received as of this entry. If picking this up: read
+      `check_shard_freshness()`'s full body (`unified-trading-library/unified_trading_library/manifest_writer/
+      _queries.py:163`) end-to-end (not just the docstring) to see exactly how `written_at` vs `max_age_hours`
+      combines with `capture_status`/`schema_version` in the actual `is_fresh` computation, and watch ONE single
+      already-captured (date, league) pair through a live re-run to see its ACTUAL completion line (not just the
+      pre-fetch "N calls needed" estimate) before concluding either way.
 - [x] ✅ [DATA] P2. **Weather VM relaunched 2026-08-16** — confirmed the prior VM (`weather-backfill-20260815-011036`)
       was SPOT-preempted (`exit_code=125`, `completed_at=2026-08-15T16:10:03Z`, per its deployment record). Relaunched
       as `weather-backfill-20260816-192237` with the same date range (`2024-01-03 2026-08-02`); verified via SSH the
@@ -502,7 +530,7 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
 | Item | State / why deferred | Blocked on |
 | --- | --- | --- |
 | UAC pinning-test stash (above) | Not done — real work, quick | Nobody — pick it up first, it's the cheapest |
-| odds_api 278-day backfill (above) | Root cause NOW KNOWN (stale admission-hold, not a hang) — clearing the hold is a judgment call on a live safety mechanism | Operator decision — see the P0 item above |
+| odds_api 278-day backfill (above) | Admission-hold self-deadlock FIXED + hardened (24h TTL). New open question: a possible freshness-skip-window mismatch, investigated but not confirmed — see the new P2 item above | Operator decision on pause-vs-continue (notified, no answer yet); resolving the freshness question doesn't need the operator, just more careful reading |
 | Weather VM completion + rescan | Relaunched 2026-08-16, confirmed live — rescan script still pending until it completes | Nobody — just wait for completion |
 | SFI 7-date retry (above) | Done 2026-08-16 — data + manifest shard both correct | Nobody — waiting only on the standing consolidator's next cycle |
 | api_football derived-entity backlog reclassification `--apply` (748,363→ now merged; the SEPARATE 72,955 genuine-gap cells from the original FIXTURES_OUTCOMES dry-run) | Operator-owned — needs a decision on the 72,955 unprovable cells, not a mechanical retry | Operator review of the original dry-run counts (see the FIXTURES_OUTCOMES todo higher in this doc) |

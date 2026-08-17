@@ -43,14 +43,7 @@ source: [code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01-w
 resolved_by:
 locked_by:
 archive_exempt: true
-context_scope:
-  [
-    /codex/05-infrastructure/vm-tarball-deployment.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md,
-    deployment-service/scripts/vm/setup-cefi-live-consolidated-vm.sh,
-    market-tick-data-service/market_tick_data_service/live/connectors/aster_book_liq_ws.py,
-  ]
+context_scope: [/codex/05-infrastructure/vm-tarball-deployment.md, /codex/02-data/data-pipeline-correctness-hard-rule.md, /plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md, deployment-service/scripts/vm/setup-cefi-live-consolidated-vm.sh, market-tick-data-service/market_tick_data_service/live/connectors/aster_book_liq_ws.py]
 depends_on: []
 ---
 
@@ -368,6 +361,8 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
   follow-ups (heartbeat status field + `_publish_boundary_event`) — doc now 0 open todos. Set `archive_exempt: true` as
   a bridge: archival (git mv + banner + 7-file/10-ref corpus referrer sweep) is out of this reconciliation's scope and
   is a candidate for a dedicated archival pass; kept in `plans/active/` as a complete incident record until then.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
 
 ## Follow-ups
 

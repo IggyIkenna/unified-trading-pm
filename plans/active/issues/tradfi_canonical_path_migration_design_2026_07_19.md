@@ -28,15 +28,7 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
-    unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/epics/tradfi_master.md,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py, unified-api-contracts/unified_api_contracts/canonical/partition_paths.py, /plans/active/tradfi_consolidated_closeout_2026_07_18.md, /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/epics/tradfi_master.md]
 ---
 
 # TradFi Canonical Path Migration — Orphan-Proof Design
@@ -859,3 +851,4 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
   `market_tick_data_service/scripts/audit_tradfi_cme_combo_cell_dispositions_2026_08_11.py` (shipped
   `market-tick-data-service@ff5642a2`) over the same corpus window. Noting this so the eventual archival pass doesn't
   inherit a silently-broken reference.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

@@ -141,6 +141,29 @@ file an issue") already points here, but the reasoning is worth recording:
       the same batch14 todo 9** (its second clause: "investigate whether the 15 subprocess-per-date timeouts... share
       the same manifest-consolidator-contention root cause"). Checkbox here flips once batch14 todo 9 lands.
 
+- [ ] [DATA] P2. **Determine whether the IS-side sports blank-timeframe population is the SAME bug class as this
+      doc's staleness-guard race, or an independent pre-existing population.** A 2026-08-15 dry-run-only diagnostic
+      (`is_full_sibling_check_2026_08_15.log`, self-stamped "DRY-RUN ONLY — never writes to GCS or the manifest",
+      never promoted/committed — regenerable from the same read-only scan pattern against
+      `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 128 row groups /
+      15,749,946 total rows) found **899,508 / 1,070,440 rows (84.0316%) of `data_type=odds_horizon_bucket` have a
+      blank `timeframe` field**, `written_at` spanning `[2026-06-19T15:15:47.232577+00:00,
+      2026-08-15T01:31:45.308451+00:00]` — i.e. the population predates and outlives this doc's 2026-08-15/16
+      staleness-guard incident window, so it is NOT fully explained by it. The dry-run's own stated open question
+      (still unresolved): is this the same bug class as this doc's MDPS derive-side staleness race, a pre-existing
+      population from an unrelated writer bug, or something else? Needs a fresh **read-only** re-run of the same
+      dry-run scan (script not promoted to `scripts/` — see below) plus a `written_at`-by-day histogram compared
+      against known incident windows before it can be classified. **No `--apply`/write attempted or proposed** — this
+      todo is diagnosis-scope only.
+      - Incidental finding from the same log's per-venue breakdown of non-blank-timeframe rows: **mixed-case venue
+        string duplication** — e.g. `BETVICTOR` (16451 rows) coexists with a separate `betvictor` (184 rows) venue
+        value, similarly `UNIBET` (11784) vs `unibet` (264); not previously flagged in any of the 23 committed docs
+        referencing `odds_horizon_bucket`/blank-timeframe (checked via
+        `grep -rl 'blank-timeframe\|blank_timeframe\|odds_horizon_bucket' plans/active/issues/`, 2026-08-17). Likely a
+        separate normalization-layer bug (uppercasing not applied/reverted somewhere in the venue-string write path)
+        from the blank-timeframe issue above — flagging here since it surfaced in the same scan, not asserting they
+        share a root cause.
+
 ## Progress Log
 
 - 2026-08-16 — Filed by escalation agt-e65b3f (data_pipeline_failure worker, slot 4). Full diagnosis above; did not fire
@@ -153,3 +176,12 @@ file an issue") already points here, but the reasoning is worth recording:
   batch14 (drafted the same day) already claims this exact ground. Citation-only fix, not a reclassification. Doc
   stays `assigned_vm: NA`.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **pre-compact audit 2026-08-17 (slot 2)**: `/pre-compact` Step 1 scratchpad sweep found an unpromoted 85.6MB
+  dry-run-only log (`is_full_sibling_check_2026_08_15.log`) with a specific, dated blank-timeframe measurement not
+  captured verbatim anywhere in the 23 docs already referencing this topic (confirmed via
+  `grep -rn '899508|is_full_sibling_check' plans/ codex/` → zero hits before this edit). Added as new todo above
+  (topically closest doc in the tracked chain) rather than a fresh issue doc, since it directly extends this doc's own
+  "same bug class?" question. Session operated under standing "docs only, no writes" scope — this is a doc-only
+  edit, no production query/write performed or proposed. The source scratchpad log itself was NOT promoted to
+  `scripts/`/committed (regenerable read-only dry-run; promoting the harness is left for whoever picks up the new
+  todo, since it needs a fresh re-run anyway to get a current histogram).

@@ -46,13 +46,7 @@ estimate_class: research
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    market-tick-data-service/scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py,
-  ]
+context_scope: [/plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md, /codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md, market-tick-data-service/scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py]
 depends_on: []
 ---
 
@@ -402,3 +396,4 @@ consolidator, snapshot, CAS edit, force-consolidate, ≥4-cycle durability check
 `[OPERATOR]` execution todo filed, gated on sign-off — not executed this session per the todo's own instruction.
 Did NOT touch the `[DIAG] P2` writer-fix-verify or `[DIAG] P2` odds-capture-stall todos — both remain open,
 independent of this removal plan.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

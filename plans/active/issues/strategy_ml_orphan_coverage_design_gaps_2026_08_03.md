@@ -43,15 +43,7 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
-    /codex/02-data/orphan-object-detection.md,
-    strategy-service/strategy_service/engine/core/cloud_strategy_storage.py,
-    strategy-service/strategy_service/engine/core/gcs_storage_service.py,
-    ml-service/ml_service/training/app/core/training_orchestrator.py,
-  ]
+context_scope: [/plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md, /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md, /codex/02-data/orphan-object-detection.md, strategy-service/strategy_service/engine/core/cloud_strategy_storage.py, strategy-service/strategy_service/engine/core/gcs_storage_service.py, ml-service/ml_service/training/app/core/training_orchestrator.py]
 depends_on: []
 ---
 
@@ -245,3 +237,4 @@ just (c).
     the "wire up" ruling to "ephemeral, no sweep" (matching `backtest_results`/`ml_models`) since no real data source
     exists and inventing one is fabrication. **(C)** wire `strategy_orders` from execution-service's real fill data
     instead of strategy-service — a different repo/flow, out of this todo's declared repos, much larger scope.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

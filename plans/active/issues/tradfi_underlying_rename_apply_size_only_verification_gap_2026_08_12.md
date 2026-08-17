@@ -33,11 +33,7 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_underlying_display_names_2026_08.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_underlying_display_names_2026_08.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 ---
 
 # Short-code underlying rename --apply withheld — size-only verification gap
@@ -84,3 +80,4 @@ would be destroyed with no real content-equivalence proof.
   `crc32c` content compare (kept size-check only for the freshly-copied-by-us branch) + 2 unit tests, citing this same
   doc as its source. Flipped done in the batch plan citing that SHA; no new code shipped. The "What's blocked" section
   above is now stale-marked rather than deleted, since it's still useful provenance for why the check existed.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

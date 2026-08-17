@@ -53,12 +53,7 @@ source:
     "side-finding while executing tradfi_satellite_ao_dispatch_batch7_2026_08_06.md todo 1, slot-15 worker session
     2026-08-09, task tradfi_satellite_ao_dispatch_batch7-001",
   ]
-context_scope:
-  [
-    /codex/02-data/availability-manifest-and-data-status.md,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py,
-  ]
+context_scope: [/codex/02-data/availability-manifest-and-data-status.md, market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py, market-tick-data-service/market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py]
 ---
 
 # TradFi CME `instrument_type=FUTURE` blank-instrument_id population — distinct from the chain-bundle fix
@@ -330,3 +325,4 @@ Not urgent (static, not actively growing) but real and unaddressed.
   P3 worker's unilateral call) rather than leave the reopened checkbox in the same overstated state that triggered
   this REOPENED banner originally — the rebuild's own scope (writer-fix verification) IS genuinely done; the
   live-manifest-recount half is a distinct, larger, gated piece of work.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

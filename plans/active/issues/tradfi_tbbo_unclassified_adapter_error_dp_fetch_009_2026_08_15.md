@@ -69,6 +69,7 @@ estimate_calibrated_ai_days: 0.48
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
+context_scope: [/plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md, /codex/02-data/tradfi-databento-sourcing-ssot.md, market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py, market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/tradfi.py]
 last_updated: 2026-08-15
 parent_epic: tradfi_master
 priority: P1
@@ -299,3 +300,4 @@ answer):**
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 4 is explicitly
   `[OPERATOR]`-tagged; doc's own text states plainly this is "a genuine design/scope decision, not a mechanical bug."
   Genuinely operator-gated. `assigned_vm` unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

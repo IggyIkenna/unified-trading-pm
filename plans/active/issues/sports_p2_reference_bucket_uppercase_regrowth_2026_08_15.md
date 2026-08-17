@@ -40,6 +40,7 @@ locked_by:
 locked_since:
 drift_direction: advance-code
 depends_on: []
+context_scope: [/plans/active/sports_taxonomy_p2_migration_2026_08_08.md, /codex/02-data/four-surface-reconciliation-procedure.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, instruments-service/instruments_service/engine/orchestrator/, /plans/active/sports_consolidated_closeout_2026_07_19.md]
 ---
 
 # Sports reference-bucket 19-token restamp — live regrowth after the closing verification
@@ -157,3 +158,4 @@ confirm the writer stopped.
   to widen, not narrow, but still reads as sustained promote-pipeline lag under continuous LDR growth, not a stall (no
   error signal, no stuck PR). Same conclusion as every prior check: genuinely still gated. P1 restamp remains outside
   this session's authorization regardless. GATED-skipping again.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

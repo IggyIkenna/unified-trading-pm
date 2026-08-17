@@ -321,3 +321,4 @@ archival — no live Databento dependency).
   `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`.
   Did not re-page the operator — this doc's existing P0 `[OPERATOR]` invoice todo already covers the ask; this is
   corroboration, not a new event. No code changed.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (1 entries).

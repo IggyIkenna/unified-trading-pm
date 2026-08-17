@@ -40,8 +40,7 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [instruments-service/scripts/cleanup_legacy_twins.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
+context_scope: [instruments-service/scripts/cleanup_legacy_twins.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 ---
 
 # tradfi legacy-twin delete candidates: 0/900 already absent, unexplained
@@ -142,3 +141,4 @@ protocol asks to be investigated before being waved off.
   or whether that's a distinct question its own investigation never asked. Per the shared conflict-check protocol —
   **PARKING as BLOCKED-OPERATOR-DECISION** rather than guessing which side is right: does the 2026-08-15 doc's dry-run
   already cover this, or does P2 still need a fresh, targeted check? `assigned_vm` unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

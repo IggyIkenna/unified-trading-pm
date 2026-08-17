@@ -234,3 +234,14 @@ N>1 Tardis VMs is a confirmed mutual-403 storm per `vm-launcher-runbook.md`). Re
 verification remain open — pick up once the fleet check shows the Tardis slot free
 (`gcloud compute instances list --filter="name~'^(cefi|tradfi)-.*-(heavy|light)-'"` returns nothing RUNNING), then run
 the relaunch command above and verify per the todo.
+
+### Re-checked, cap still occupied — 2026-08-17 (slot-21, data_engineering)
+
+Re-dispatched onto this same todo. Fleet check (`gcloud compute instances list --filter="name~'^(cefi|tradfi)-.*-
+(heavy|light)-'"`) shows the **identical** VM slot-3 found — `cefi-binance-futures-2026-heavy-20260817-010713` — still
+`RUNNING` (same name, same zone `asia-northeast1-c`), so the Tardis 1-concurrent-VM cap is unchanged and the relaunch
+is still fail-closed-refused if attempted. Not re-verifying `run.log` progress independently (slot-3's check was hours
+ago, same session day, and a preempted VM would read `TERMINATED` here, not `RUNNING` — no need to spend an SSH round
+trip re-confirming liveness slot-3 already established). Not forcing past the cap. Releasing again with
+`reason_code: GATED` rather than busy-polling a multi-hour VM from an interactive slot — resume condition unchanged:
+the fleet check above returning nothing `RUNNING` for the cefi/tradfi heavy/light pattern.

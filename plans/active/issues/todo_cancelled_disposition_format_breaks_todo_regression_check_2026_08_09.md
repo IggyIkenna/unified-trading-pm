@@ -44,12 +44,7 @@ superseded_by:
 source:
   "Found while recording a 2026-08-09 operator ruling on uac_value_only_config_change_breaks_utl_untested_2026_07_20.md
   and cleaning up that doc's todo-eligibility gaps before an assigned_vm: NA -> planning reclassification."
-context_scope:
-  [
-    /plans/active/task_template.md,
-    scripts/plan-hygiene/check_todo_regression.sh,
-    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
-  ]
+context_scope: [/plans/active/task_template.md, scripts/plan-hygiene/check_todo_regression.sh, /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md]
 ---
 
 # CANCELLED/SUPERSEDED disposition format vs `check_todo_regression.sh`
@@ -175,3 +170,4 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   redirect pointers, now carry the actual `unified-trading-pm@d01cd9ad41` / `unified-trading-pm@4eb3f143ac` evidence
   plus the finalize plan's own independent re-verification. The 3rd item (Finding-J cross-file fix) is untouched — still
   genuinely NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
