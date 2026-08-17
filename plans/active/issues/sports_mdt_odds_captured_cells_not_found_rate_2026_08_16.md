@@ -324,14 +324,59 @@ below (stop the writer, relabel the existing population, investigate the coincid
       -resolved relabel-plan todo above. Done when: operator sign-off is recorded, the pre-drop re-derivation +
       snapshot exist, the CAS write + force-consolidate complete with 0 errors, and a re-measurement confirms 0
       residual rows (or explains any residual).
-- [ ] [DIAG] P2. Investigate whether real sports `odds` data_type capture (`pipeline_mode=batch_odds_api,
-      data_type=odds`) went silent starting 2026-07-26 — the last `date` value across all 527,541 `data_type=odds`
-      captured cells is 2026-07-26, with zero rows since, exactly coinciding with when this doc's original 15.4x
-      row-count-growth baseline was measured. Determine whether this is a genuine capture outage (needs a live-service
-      check + relaunch) or an expected data-source change (e.g. all odds now routed through a differently-named
-      data_type). Source: this doc's todo 1 finding (2026-08-16). Done when: a written verdict states whether real
-      odds capture is currently live or stalled, with evidence (a live service log/health check or a fresh manifest
-      read showing post-2026-07-26 `data_type=odds` rows), and if stalled, a follow-up todo is filed to restore it.
+- [x] ✅ [DIAG] P2. **DONE 2026-08-17 (slot-6, `infra`).** Verdict: **NOT a capture outage — a silent
+      MANIFEST-RECORDING gap** while the real fetch/write keeps succeeding. Evidence:
+      1. **GCS write side is live, right now.** `uts-prod-sports-scheduler` (Cloud Run Job, `*/5 * * * *`,
+         confirmed via `gcloud scheduler jobs describe` + `gcloud run jobs executions list`, all recent runs
+         `succeededCount=1`) fires fixture-proximate `odds_t*` triggers (`odds_t24h`…`odds_t1h`) that dispatch
+         `uts-prod-market-tick-data-service-fast-t1-recon`. Its live logs (execution
+         `uts-prod-market-tick-data-service-fast-t1-recon-jwrqq`, 2026-08-17T00:06-00:07Z, ~15 min before this
+         investigation) show `Odds API batch complete: date=2026-08-17 leagues=MLS rows=2591 credits_used=780`
+         followed by dozens of `StreamingParquetWriter: uploaded …` lines writing real objects to
+         `market-data-tick-sports-prd-central-element-323112/raw_tick_data/by_date/day=2026-08-17/
+         pipeline_mode=batch_odds_api/asset_group=sports/venue={V}/league_id=MLS/fixture_id={F}/
+         instrument_type=odds/data_type=odds/ticks.parquet` — the raw ODDS_API vendor fetch is alive and paid
+         (`remaining=2811392` credits).
+      2. **The manifest has recorded zero rows for this exact shard since 2026-07-26**, confirmed via a fresh
+         `read_availability_index` read (single bounded read, no GCS walk) against the freshly-consolidated index
+         (`_index/availability_index.parquet`, GCS `updated=2026-08-17T11:09:37Z` — the consolidator itself is
+         healthy and current, ruling out "stale index" as the cause): 527,541 `(pipeline_mode=batch_odds_api,
+         data_type=odds, capture_status=captured)` rows total, max `date=2026-07-26`, 0 rows on/after 2026-07-27.
+         Sibling `batch_odds_api` data_types (`odds_snapshot`, `odds_movement`, `arbitrage_opportunity`,
+         `odds_horizon_bucket`) DO have fresh rows through 2026-08-17 — only the raw `data_type=odds` /
+         `fixture_id=`-scoped shard is affected.
+      3. **Correlates with, but is not resolved by, the 2026-08-09 fixture_id-routing fix**
+         (`market-tick-data-service@cf855ff0`, `sports_odds_af_shard_reconciliation_defect_2026_08_09.md`) —
+         `manifest_finalize.py`'s `_write_shard_counts_to_manifest` now correctly routes the fixture_id through
+         `underlying_key`→`fixture_id` for `(itype_key=="odds", data_type_key=="odds")` shards, and this fix IS
+         live in the currently-deployed image (`market-tick-data-service:latest`/`0.143.2`, built
+         2026-08-17T10:32:03Z, i.e. hours after this investigation's own log evidence above — confirming the
+         fix-bearing code was already the one running when the jwrqq execution wrote those objects). Yet a direct
+         manifest query for ANY row with a non-empty `fixture_id` column (the fix's own signature) finds max date
+         **2026-06-09** — i.e. not one fixture-scoped manifest row has EVER landed since the fix shipped, despite
+         the write path visibly executing (evidence #1). The gap is therefore downstream of `venue_writer.add(...)`
+         itself (no per-shard exception isolation exists at that call site per the code's own comment, and the job
+         exits 0/succeeded, so it is not a raised-and-swallowed exception either) — most likely in the
+         `_ManifestWriterPool` flush/close path or a consolidator-side collapse of the fixture-scoped row into an
+         earlier bare-path row's dedup key. Not root-caused further in this session (out of this todo's DIAG scope).
+      Verdict: **real capture is LIVE, not stalled** — but manifest coverage for `data_type=odds` has been
+      **silently lying (false-negative absence) since 2026-07-26**, a `honest-absence-downstream-handling.md`
+      Class-1-shaped violation (in-flight write success, no manifest marker) rather than the Class-3/false-
+      `captured` pattern this doc's earlier todos found for `odds_horizon_bucket`. Follow-up filed below.
+
+- [ ] [CODE] P1. Root-cause and fix why `market-tick-data-service`'s `_write_shard_counts_to_manifest` /
+      `_ManifestWriterPool` (`market_tick_data_service/engine/orchestrator/manifest_finalize.py`,
+      `_manifest_bucket.py`) is not landing manifest rows for `(pipeline_mode=batch_odds_api, data_type=odds,
+      fixture_id≠"")` shards, despite the 2026-08-09 fixture_id-routing fix being live in production and the
+      corresponding GCS parquet objects being written successfully every ~5 minutes (see this doc's now-resolved
+      DIAG P2 todo above for full evidence — a manifest query for any non-empty-`fixture_id` row finds nothing
+      newer than 2026-06-09, while the GCS write side is confirmed live as of 2026-08-17). Suspect the
+      `_ManifestWriterPool` flush/close lifecycle or a consolidator-side dedup collapse against a pre-fix bare-path
+      row sharing the same `(venue, league_id, day)` key — both need checking. Source: this doc's DIAG P2 finding
+      (2026-08-17). Done when: the root cause is identified and fixed, `quality-gates.sh` is green, and a fresh
+      manifest read after the fix has run through at least one live capture cycle confirms new
+      `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` rows are landing with dates past
+      the fix's deploy timestamp.
 
 ## Progress Log
 
@@ -417,3 +462,16 @@ consolidator, snapshot, CAS edit, force-consolidate, ≥4-cycle durability check
 Did NOT touch the `[DIAG] P2` writer-fix-verify or `[DIAG] P2` odds-capture-stall todos — both remain open,
 independent of this removal plan.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+**2026-08-17 (slot-6, `infra`)** — closed the last open `[DIAG] P2` todo (real `data_type=odds` capture-stall
+question). Confirmed via live `gcloud scheduler`/`gcloud run`/log inspection that `uts-prod-sports-scheduler` is
+firing `odds_t*` fixture-proximate triggers every ~5 min and `uts-prod-market-tick-data-service-fast-t1-recon` is
+successfully fetching + writing real ODDS_API parquet objects (paid credits consumed) to the canonical
+`fixture_id=`-scoped path, right up to minutes before this investigation. But a fresh manifest read (bounded, off
+the freshly-consolidated index) shows ZERO `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)`
+rows since 2026-07-26, and zero rows with a non-empty `fixture_id` column since 2026-06-09 — despite the
+fixture_id-routing fix (`market-tick-data-service@cf855ff0`, 2026-08-09) being live in the currently-deployed image.
+Verdict: real capture is NOT stalled; the MANIFEST is silently under-reporting it (a Class-1-shaped honest-absence
+violation — successful write, no manifest marker), root cause not yet identified (suspect
+`_ManifestWriterPool` flush/close or a consolidator-side dedup collapse). Filed a new `[CODE] P1` follow-up todo to
+root-cause and fix. Did not attempt the fix itself (DIAG-scoped task; the fix is a distinct, larger investigation).
