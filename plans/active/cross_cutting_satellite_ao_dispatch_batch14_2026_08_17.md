@@ -76,12 +76,31 @@ source: >-
       phrasing names a doc that is NOT cited on any currently-open checkbox in the same file. Repo: unified-trading-pm.
       Source: `plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md`. —
       unified-trading-pm@c2add0eabe, see Progress Log below.
-- [ ] [CODE] P2. Register Unity's 10 child books as canonical sports venues from the UAC SSOT
+- [x] ✅ [CODE] P2. Register Unity's 10 child books as canonical sports venues from the UAC SSOT
       `unified_api_contracts/internal/unity_child_books.py` (3ET, BETFAIR, BROKER5, CROWN, MATCHBOOK, SBO, SHARPBET,
       VX, BETDEX, IBC), reusing the existing BETFAIR/MATCHBOOK venue tokens rather than minting Unity-specific
       duplicates. DoD: 8 net-new venues registered, and a test asserts the venue set is derived FROM
       `UNITY_CHILD_BOOKS` so adding a child book is a data change, not a code change. Repo: unified-api-contracts.
-      Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+      Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`. —
+      unified-api-contracts@724e2d11db. Registered the 8 net-new tokens (3ET, BROKER5, CROWN, SBO, SHARPBET, VX,
+      BETDEX, IBC) as literals in `VENUES_BY_ASSET_GROUP["sports"]` + `VENUE_TO_ADAPTER_KEY` (NO_ADAPTER_YET,
+      matching every other sports venue) — NOT a live splice from `UNITY_CHILD_BOOK_VENUES`, because that import
+      direction is a real circular import (`architecture_v2/__init__.py`'s own `collateral_registry.py` submodule
+      imports FROM `unified_api_contracts.registry`, so `registry/market_data_categories.py` is already mid-load by
+      the time that chain would reach back into it — confirmed via a direct cold-import reproduction:
+      `ImportError: cannot import name 'CommissionStructureType' from partially initialized module
+      'unified_api_contracts.internal.architecture_v2'`, reproduced from 4 different cold entry points). Added
+      `UNITY_CHILD_BOOK_VENUES` (derived from `UNITY_CHILD_BOOKS`) to `unity_child_books.py` and
+      `tests/unit/test_unity_sports_venue_registration.py`, which imports both modules (no cycle risk in a test
+      file) and asserts the registered set stays in sync with `UNITY_CHILD_BOOK_VENUES` — this is the DoD's
+      "derived from" invariant, enforced as a test rather than a load-time splice. Also updated 3 pre-existing tests
+      whose hardcoded 31-sports-venue assumption this registration changes (`test_venue_adapter_keys.py`'s sentinel
+      set, `test_data_status_registries.py`'s declared-capability count — the latter exempts the 8 new venues'
+      still-pending capability entries via `_UNITY_PENDING_CAPABILITY_VENUES`, since that's the separate,
+      next-in-sequence item 4 todo below). Fixed one unrelated pre-existing red found while running full QG
+      (`test_mtds_venue_coverage_cascade_invariant.py`, `PHOENIX-SOLANA` stale ratchet-baseline entry — verified
+      byte-identical on a clean tree via `git stash`, small/mechanical per RULES.md § 4b, fixed inline). Full
+      `bash scripts/quality-gates.sh` green before shipping.
 - [ ] [CODE] P2. Give the Unity books capability entries with `route=broker:UNITY`, `batch = none`, `live = none`
       (flips to wired in the MTDS plan). DoD: no batch backfill is implied for any Unity book; operator ruling
       2026-08-14 is that no history is needed beyond what Odds API already captures. Depends on the prior todo's
