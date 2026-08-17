@@ -58,6 +58,7 @@ context_scope:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    deployment-service/deployment_service/data_pipeline_monitors/scheduler_maintenance.py,
   ]
 source: >-
   Drafted by the 2026-08-17 /na-eligibility-audit tradfi-tranche scheduled dispatch (dispatch agt-d99b5c). Authored
@@ -207,3 +208,4 @@ source: >-
   pair) already root-caused as billing-blocked — dispatching the original 4-VM wording would have had a worker
   re-discover that finding from scratch. Todo 4 and Todo 5 reworded from their source docs' literal text for the
   same reason (avoid re-testing an already-disproven hypothesis / repeating a documented incident).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

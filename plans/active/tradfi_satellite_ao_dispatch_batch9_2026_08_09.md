@@ -210,3 +210,4 @@ is deliberately thin; reported honestly rather than padded.
   rather than superseding. Updated this todo's own annotation above to cite the now-resolved `ohlcv_24h` half and
   isolate the ONE genuinely remaining gap (`vix_features` required-input consumption, never checked by any session in
   this chain) — todo stays `- [ ]`, not a false-done flip.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

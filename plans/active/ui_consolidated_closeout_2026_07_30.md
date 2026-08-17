@@ -380,3 +380,4 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   can't resolve alone). 5th consecutive audit pass reaching this verdict. Minor non-blocking note: frontmatter
   `last_updated: 2026-08-09` lags the doc's own more recent edits by about a week — worth a bump next legitimate
   touch.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

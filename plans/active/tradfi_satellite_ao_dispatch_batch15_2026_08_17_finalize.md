@@ -97,3 +97,4 @@ source:
 
 - **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): drafted alongside the batch, gated on
   its completion per the AO-dispatched finalize-plan-coverage rule.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
