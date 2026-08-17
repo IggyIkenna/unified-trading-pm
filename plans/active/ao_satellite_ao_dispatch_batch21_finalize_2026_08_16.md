@@ -82,10 +82,23 @@ source: >-
       6 tracker checkboxes (Track 1: 60-min context-signal validation; Track 2: na-eligibility-audit re-run +
       skills-benchmark artifact update; Track 4: memory-peak root-cause, disk-cleanup audit, `mdps_bench_data_fullmonth`
       ownership), each citing the source doc + concrete numbers. Full detail in the tracker's own new Progress Log entry.
-- [ ] [REVIEW] P1. **Re-check the tracker's own `depends_on` list and archival status.** Now that batch21's items have
-      landed, check whether `ao_open_work_consolidated_tracker_2026_08_14.md`'s Notes-section `depends_on` list can
-      shrink, and whether any of the 5 source docs touched by the reconcile todo above now show zero open todos and
-      become archival candidates — if so, run the 6-step archival ritual on them.
+- [x] ✅ [REVIEW] P1. **Re-check the tracker's own `depends_on` list and archival status.** — 2026-08-17 (slot 3,
+      review worker, AO-dispatched). Directly checked all 10 `depends_on` entries in
+      `ao_open_work_consolidated_tracker_2026_08_14.md`'s frontmatter (the Notes section's list is the same 10, restated
+      as prose) against their live open-todo counts (not the tracker's stale copy): `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25`
+      (4 open), `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30` (4 open),
+      `ao_satellite_ao_dispatch_batch3_2026_07_31` (1 open), `context_scout_completion_and_plan_brainstorm_skill_2026_07_30`
+      (1 open), `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02` (2 open),
+      `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25` (1 open), `shared_host_home_filesystem_full_2026_07_26`
+      (1 open), `content_derived_backlog_task_ids_2026_08_08` (3 open), `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31`
+      (5 open), `l2_book_microstructure_capture_2026_07_13` (1 open). **Result: all 10 still carry ≥1 open todo — the
+      `depends_on` list CANNOT shrink yet, and none are archival candidates.** This includes the 4 docs touched by
+      todo 2's reconcile pass above: that pass flipped one SPECIFIC checkbox each reflected in the tracker, but each of
+      those 4 source docs carries other, unrelated open todos of its own (confirmed by direct read, not just count —
+      e.g. `slot_recurring_wedge...` still has its 60-min re-validation window open;
+      `ao_scheduled_skills_benchmark...`'s broader ruled-decision-ledger ask is explicitly noted as still-open in that
+      doc per todo 1's Progress Log entry above) — so the reconcile work correctly did not trigger any archival. No
+      changes needed to the tracker itself; this todo's deliverable is the verification, recorded here.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`, then re-run the active-plan inventory
@@ -99,6 +112,11 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-17 (slot 3, review worker, AO-dispatched)**: Worked todo 3 (depends_on re-check). Directly checked all 10
+  `depends_on` entries' live open-todo counts (not the tracker's stale copy) — all 10 still carry ≥1 open todo, so the
+  tracker's `depends_on` list cannot shrink yet and none of the 4 docs touched by todo 2's reconcile pass became
+  archival candidates. Full per-doc breakdown in the flipped checkbox above. Todo 4 (archive the batch plan) remains
+  for the next sequential step.
 - **2026-08-17 (slot 20, review worker, AO-dispatched)**: Worked todo 2 (reconcile evidence). Read all 4 named source
   docs directly and confirmed each already carried its own flipped checkbox with concrete evidence from the batch21
   workers. Flipped the 6 corresponding tracker checkboxes in `ao_open_work_consolidated_tracker_2026_08_14.md` (Track 1
