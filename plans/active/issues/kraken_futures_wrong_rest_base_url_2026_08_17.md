@@ -109,11 +109,36 @@ code path.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Confirm real-world reachability of `KrakenCeFiAdapter(futures=True)`** — grep every
-      construction site (factory/adapter-registry code) to determine whether anything in production actually
-      instantiates it with `futures=True` today, mirroring the reachability-first approach the parent issue's own
-      P0 todo used. Done-when: a cited LIVE-REACHABLE or DEAD-CODE-TODAY verdict with the construction site(s)
-      named (or their absence confirmed).
+- [x] ✅ [BACKEND] P0. **Confirm real-world reachability of `KrakenCeFiAdapter(futures=True)` — LIVE-REACHABLE,
+      confirmed 2026-08-17.** No code shipped (investigation-only; done-when is a cited verdict).
+      **Construction site**: `execution_service/trade_execution/factory.py:423-431`
+      (`_create_direct_rest_adapter`'s `elif venue_str == "kraken-futures":` branch) unconditionally constructs
+      `KrakenCeFiAdapter(futures=True, ...)` — `"kraken-futures"` is a member of the module-level `DIRECT_REST_VENUES`
+      set (`factory.py:57`). **Reachability chain, traced live**: `venue_str, inferred_futures =
+      _resolve_venue_str(venue)` (factory.py:510) routes through `_split_venue_suffix` (factory.py:166-190) — Kraken
+      is NOT in `_FUTURES_TOGGLE_BASES` (that set is binance/okx/bybit only, confirmed via the function's own
+      docstring: "a compound venue like KRAKEN-SPOT/BITGET-FUTURES ... must not be split"), so `"KRAKEN-FUTURES"`
+      flows through UNCHANGED to `venue_str = "kraken-futures"` rather than being stripped to `"kraken"` +
+      `inferred_futures=True` the way Binance would be — it lands in `_create_direct_rest_adapter`'s dedicated
+      `"kraken-futures"` branch exactly as written. **Real production entry point** (not test-only):
+      `execution_service/cli/handlers/live_execution_handler.py:357`
+      (`_create_orchestrator_for_venue`) calls `get_order_adapter(venue=venue_lower, ...)` where `venue_lower =
+      venue.lower()` and `venue` derives from a live instruction's own `str(instruction.venue).upper()`
+      (`live_execution_handler.py:343`) — i.e. any real trading instruction carrying `venue="KRAKEN-FUTURES"` reaches
+      this exact code path. Secondary construction site:
+      `execution_service/engine/modes/live/matching_engine.py:198` (`create_live_matching_engine`), same
+      `get_order_adapter` call. **Not structurally blocked like TradFi**: UAC's own `_KRAKEN_FUTURES`
+      `SourceCapability` (`unified-api-contracts/unified_api_contracts/registry/capability_declarations/_cefi.py:1020-1061`)
+      fully declares `place_order`/`cancel_order` `supported` on BOTH mainnet and testnet (no `supported=False` guard
+      the way TradFi's capability declarations block `place_order` at the `validate_operation` preflight,
+      `factory.py:531`) — so nothing in the preflight chain stops a real `place_order("KRAKEN-FUTURES", ...)` call
+      from reaching the misrouted adapter. Ironically, that SAME UAC capability record already carries the CORRECT
+      Futures base URLs (`base_urls={"mainnet": "https://futures.kraken.com", "testnet":
+      "https://demo-futures.kraken.com"}`) that the adapter itself never reads — worth citing as the reference source
+      when todo 2 below implements the real transport. **The only current gate is `BLOCKED-CREDENTIALS`** (no real
+      Kraken API key loaded — `ADAPTER_CREDENTIALS_STATUS` in `kraken_rest_mapping.py:88`), which per workspace hard
+      rule gates RUNNING, never BUILDING — it does not change the reachability verdict: the code path is real and
+      would fire the moment credentials land, not dead code waiting on a caller that doesn't exist.
 - [ ] [BACKEND] P0. **Implement the real Kraken Futures REST transport** — either a new `futures.kraken.com`-aware
       branch inside `KrakenRestTransportMixin` (selected by `self.futures`) or a dedicated
       `KrakenFuturesCeFiAdapter` class (matching the docstring's original intent), implementing the distinct
@@ -134,3 +159,18 @@ code path.
   — the amend implementation for `KrakenCeFiAdapter` necessarily inherits this pre-existing gap (documented inline
   at the call site with a pointer to this issue) rather than silently fixing the whole class's transport layer as
   unplanned scope within that session.
+- **2026-08-17 — reachability confirmed LIVE-REACHABLE, not dead code.** No commit needed in execution-service
+  (pure investigation; zero code changed). Traced the full live call chain: `"KRAKEN-FUTURES"` is a real
+  `DIRECT_REST_VENUES` member that survives `_resolve_venue_str`/`_split_venue_suffix` unsplit (Kraken isn't in the
+  binance/okx/bybit-only `_FUTURES_TOGGLE_BASES` set) and lands in `_create_direct_rest_adapter`'s dedicated
+  `"kraken-futures"` branch, which unconditionally builds `KrakenCeFiAdapter(futures=True)`
+  (`execution_service/trade_execution/factory.py:423-431`). Reached from the real live production entry point
+  `live_execution_handler.py::_create_orchestrator_for_venue` (venue sourced from a live instruction's own
+  `instruction.venue` field, not a test fixture). UAC's `_KRAKEN_FUTURES` capability record fully enables
+  `place_order`/`cancel_order` on both mainnet/testnet with no structural block (unlike TradFi's
+  `supported=False` guard) — nothing in the preflight chain stops a real call from reaching the misrouted adapter;
+  the only current gate is `BLOCKED-CREDENTIALS`, which per CLAUDE.md gates RUNNING not BUILDING. Full evidence +
+  citations recorded in the todo item above. Todo 2 (implement the real Futures transport) is now the next
+  actionable item — noting for whoever picks it up that UAC's own `_KRAKEN_FUTURES` capability record already
+  carries the correct `https://futures.kraken.com` / `https://demo-futures.kraken.com` base URLs as a ready
+  reference.
