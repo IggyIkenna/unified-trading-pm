@@ -484,6 +484,18 @@ forced faster. For that floor, use **one** tracked `run_in_background` task that
 you); do not wrap a one-call status check in a polling loop, and do not chain short waiters (sawtooth). Direct-check →
 conclude → move on. Composes with § "Watcher coverage" + the "Don't over-watch + no-sawtooth" rule in CLAUDE.md.
 
+**`gcloud run jobs executions list --format="table(...)"` needs the `status.` prefix — bare field names silently return
+empty (codified 2026-08-16).** `--format="table(name,startTime,completionTime)"` prints EMPTY for `startTime`/
+`completionTime` on real, completed executions — not an error, just blank cells, which reads as "no timestamp data" or
+even "these executions never actually ran." The real fields live one level down: `status.startTime`/
+`status.completionTime` (confirmed by cross-checking `gcloud run jobs executions describe --format=json`, where the
+same values appear correctly under `status.*`). This is a genuine measurement trap, not a "no data" signal — the same
+shape as the `wc -l`-equality trap above: a query that LOOKS like it asked the right question returns a value that
+looks like a valid (if boring) answer, with nothing about the output signalling the field path was wrong. Before
+concluding anything from a `gcloud run jobs executions list` table — especially a negative ("no timestamps", "never
+ran") — verify against one `executions describe --format=json` first to confirm the field paths you're using in the
+table format actually exist at that path.
+
 ## Backfill progress = the TARGET ARTIFACT, entity-scoped — never activity (HARD RULE, codified 2026-07-18)
 
 A backfill/migration monitor MUST key on **objects of the requested type appearing in the window**, not on any activity

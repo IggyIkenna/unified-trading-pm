@@ -608,6 +608,21 @@ terraform locals via `gen_consolidator_catalog.py`, so a new consolidator auto-a
   actively-written bucket at audit time) stay on `*/1`. The liveness watchdog (below) was split into a matching
   fast/slow tier pair so the hourly-cadence buckets don't false-trip `CONSOLIDATOR_DOWN` ~5min into every gap.
 
+  **`CONSOLIDATOR_LOCK_TTL_SECONDS` is NOT a proxy for how much real merge work a bucket does per cycle — measure
+  actual execution durations before reasoning about cadence (2026-08-16, withdrawn cadence-thinning proposal,
+  `manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`).** A high lock TTL (e.g. 9000s for
+  `market-data-defi`/`market-data-cefi`, 4200s for `instruments-sports`) was initially read as "these buckets are
+  mostly idle no-op polling on their per-minute cron tick, so the cron could safely be thinned" — the TTL is sized for
+  the WORST-CASE cycle (a large anti-join merge after a backlog), not the TYPICAL one, so a generous TTL says nothing
+  about how often a bucket is actually doing real work. Pulling real `gcloud run jobs executions list` timestamps
+  (`status.startTime`/`status.completionTime` — see the field-path gotcha in
+  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`) showed `defi` and `instruments-sports` completing
+  real, fast (30-56s) merges on nearly every ~60-75s tick — genuinely frequent work, not idle polling — directly
+  contradicting the TTL-based inference. **The rule: before recommending a cadence change (thin a cron, extend a
+  timeout) based on how "idle" a schedule looks from its config (lock TTL, timeout budget, stall-alert-cycles), pull
+  the actual execution history for that specific bucket first — config headroom and real utilization are independent
+  measurements, and a generous one does not imply a low one.**
+
 - **Backlog + oldest-pending** — `per_vm_shard_backlog` returns `(pending, total, oldest_pending_at)` from ONE prefix
   list: pending shards, fan-in width, and the oldest un-absorbed shard's age ("how long has the merge been behind").
 - **Absolute index snapshot** — row count (cheap parquet-footer ranged read, never downloads the whole index) + file

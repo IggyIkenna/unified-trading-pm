@@ -176,6 +176,39 @@ the exact shape before writing it down.
 appeared in the codex SSOT _and_ in the code docstring against a registry of 17 — so cross-checking doc against code
 CONFIRMED the error. Corroboration between two derived artefacts is not verification; only the registry is.
 
+## Duplicate-content corruption — verify a large text block isn't already present before appending (three instances, 2026-08-16)
+
+**A large multi-paragraph Edit/append is a claim that the content is NEW — verify that before landing it, not after.**
+Three independent instances in one session, all the same shape: a big chunk of prose (a codex-doc correction, a plan
+todo bullet, an auto-generated index block) got appended a second time, verbatim or near-verbatim, onto content that was
+already there — in `/codex/05-infrastructure/manifest-consolidator-ssot.md` (a 60-line "CORRECTED 2026-08-16" block,
+committed once in `d85158ab02`, then re-appended uncommitted on top of itself — `grep -c` for a distinctive phrase found
+2 occurrences where 1 was correct), in this session's own tracking plan (a ~40-line todo block duplicated with a
+corrupted fragment spliced into one copy), and in `/plans/active/INDEX.md` (an auto-generated block regenerated 5-6 times
+without clearing the previous run — `_Auto-generated ... 350 plans_` / `352 plans` / `303 plans` / `314 plans` /
+`284 plans` / `285 plans` stacked as six consecutive header lines, each with its own duplicated `### cefi (N)` section
+and duplicated plan-entry bullets beneath it).
+
+**Why this evades the obvious checks**: the resulting file is still valid markdown/YAML, `docspec.py`/frontmatter
+checks pass (they check schema, not content uniqueness), and a diff against HEAD looks like a normal-shaped addition
+(N new lines) rather than an error — nothing about the diff's SHAPE signals duplication. The tell is in the CONTENT: a
+distinctive phrase or count that should be unique appears twice.
+
+**The rule**: before committing any Edit that appends or re-states more than a few lines of prose to an existing doc —
+especially one you (or a dispatched agent) may have touched earlier in the same session, or one a concurrent session
+might also be touching — grep the target file for a short, distinctive substring from the NEW content
+(`grep -c "<distinctive phrase>" <file>`) and confirm it returns 1, not 2+. This is a two-second check that would have
+caught all three instances above before they ever reached a diff. For a doc you suspect might already have the content
+committed, also check `git show HEAD:<path> | grep -c "..."` — the working-tree copy can carry a duplicate that HEAD
+does not (i.e., the correct content already shipped and your local edit is redundant), which is a DIFFERENT, cheaper fix
+(`git restore` the file) than merging two genuinely-diverged copies.
+
+**For auto-generated files specifically** (the INDEX.md case): a doubling pattern across MULTIPLE stacked headers is
+evidence the regenerator script itself has a concurrency bug (two sessions running it against the same working tree
+without a lock, each appending instead of the generator doing a clean truncate-and-rewrite) — this is a finding to file
+against the generator, not something to hand-fix by deleting duplicate text, since the underlying race will just
+reproduce it. See `/plans/active/issues/plan_index_regenerator_concurrent_write_duplication_2026_08_16.md`.
+
 ## Where it bit (2026-08-10, the incident this doc was written from)
 
 Propagating a one-line workflow fix to the repos carrying `plan-alignment-agent.yml`, the agent ran `wc -l`, saw five
