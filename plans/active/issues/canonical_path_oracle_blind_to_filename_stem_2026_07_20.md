@@ -313,6 +313,40 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       colon-embedded case `build_instrument_id` now guards (§ 7 item 2), never wraps a colon-less symbol into
       `VENUE:ITYPE:SYMBOL` at all. Verify against `derive_row_instrument_id`
       (`market-tick-data-service/.../adapters/cefi/tardis_shared.py`) and the EXTENDED adapter's own id derivation.
+      **PARTIAL 2026-08-16 (slot-33)**: the EXTENDED-STARKNET/perpetual leg (249/479 = 52% of the population, the
+      majority) is confirmed root-caused and FIXED — `market-tick-data-service@ded8ae5d8b`.
+      `_umi_extended.py::_extended_canonical_symbol` produced only the venue-native `BASE-QUOTE@LIN` shape and was
+      written straight into the `instrument_id` column with no `VENUE:TYPE:` prefix (unlike the sibling
+      `_umi_aster.py::_canonical_aster_instrument_id`, which already emits `ASTER:PERPETUAL:BASE-QUOTE@LIN`, and
+      `tardis_shared.py`'s own `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` convention — confirmed against
+      `test_hyperliquid_s3.py`/`test_hyperliquid_s3_coverage.py`). Added `_extended_canonical_instrument_id()` and
+      routed every row-dict `instrument_id` field through it (candles/funding/trades/book/OHLCV) while `symbol` keeps
+      the unwrapped venue-native form; updated `test_extended_candles.py`'s assertion. **The `derive_row_instrument_id`
+      half of the hypothesis does NOT hold**: read `unified_api_contracts/internal/reference/canonical_id_builder.py`'s
+      `build_instrument_id` — every non-passthrough branch (incl. the colon-less catalogue-miss fallback FUTURE/PERPETUAL
+      paths in `tardis_shared.py`) unconditionally wraps as `VENUE:TYPE:SYMBOL`; there is no "never wraps a colon-less
+      symbol" path in that function. So the remaining OKX-FUTURES/FUTURE (224) + DERIBIT/FUTURE (6) batch_tardis bare-id
+      population (230/479 = 48%) is NOT explained by this todo's stated hypothesis and was NOT root-caused this
+      session (out of the 1-hour budget once the confirmed EXTENDED fix + verification was done) — tracked as a fresh
+      todo below with the corrected starting hypothesis. Checkbox stays `[ ]` — 52% of the named population fixed, 48%
+      still open.
+
+- [ ] [SERVICE] P2. Root-cause the remaining OKX-FUTURES/FUTURE (224) + DERIBIT/FUTURE (6) bare-wire-symbol
+      `batch_tardis` population (found in the §7 P1 restated-verdict census above; NOT the EXTENDED-STARKNET leg, which
+      is fixed — see the item above). **Ruled out**: `derive_row_instrument_id`
+      (`market-tick-data-service/.../adapters/cefi/tardis_shared.py`) → `build_canonical_instrument_id` →
+      `build_instrument_id` (`unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py`)
+      always wraps a single-instrument FUTURE row as `VENUE:FUTURE:SYMBOL[-...]` regardless of quote_asset/margin_type —
+      there is no un-wrapped fallback for this path, so the "catalogue-miss fallback never wraps" theory is wrong here.
+      **Untested candidate causes to check next**: (1) the catalogue short-circuit —
+      `resolve_cefi_instrument_id()`/`catalog_id_resolver.py` returns the catalogue's OWN precomputed id verbatim on a
+      3-tuple hit (`derive_row_instrument_id`'s `_catalog_id` short-circuit, tardis_shared.py:397-399) — if the
+      instruments-service catalogue itself stores a non-canonical/bare id for some DERIBIT/OKX-FUTURES FUTURE
+      instruments, this would bypass `build_instrument_id` entirely; (2) these could be stale objects written BEFORE
+      the 2026-07-20 fixes landed, still present in the `2026-07-20..2026-07-27` sampled census window, not a live
+      ongoing defect. Distinguish (1) vs (2) by checking object `time_created` against the fix-landing timestamps, then
+      by tracing a live sample row through `resolve_cefi_instrument_id` with logging/a repro script before assuming
+      either.
 - [x] [DATA] P2. Decide the id grammar for `defi` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; `prediction` stays out
       of scope (its own future closeout). **DONE `unified-api-contracts@502ef57e`**: not a new decision — the DeFi
       instrument-uid grammar was already ratified in `plans/active/defi_consolidated_closeout_2026_07_18.md`'s
