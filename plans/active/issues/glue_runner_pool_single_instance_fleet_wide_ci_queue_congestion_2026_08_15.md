@@ -193,6 +193,34 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   observation for whoever next reviews this doc, not unilaterally re-prioritized here. Provenance: cicd escalation
   agt-723f23, features-service (no PR).
 
+- **slot-3 2026-08-17 ~17:40Z (interactive session)**: picked up the `[OPERATOR]` follow-up below — this session's AWS
+  identity (`arn:aws:iam::427895769566:user/admin_od`) DOES have working `ssm:SendCommand`/`ssm:DescribeInstanceInformation`
+  access to the glue-runner host (unlike `ikenna-worker`, blocked in every prior attempt) — confirmed `i-042a6332509482556`
+  (region `ap-northeast-1`, matches `172.31.3.59` = `glue-ip-172-31-3-59-1` exactly, resolving this doc's own
+  unconfirmed-host-identity caveat). **Root cause now confirmed at the host level** (`scripts/self-hosted-runners/ssm-run.sh`):
+  this is NOT "one runner for the whole fleet" — there are ~25 separate `github-glue-runner-<repo>@glue-1.service` systemd
+  units (one dedicated runner per repo, e.g. `github-glue-runner-deployment-service@glue-1.service`), all running as
+  processes on this SAME single EC2 host, sharing one egress IP. Each is a **JIT/ephemeral runner by explicit design**
+  (unit-file comment: "Never give up restarting (the glue-* pool exits after every single job by design)"; run.sh:
+  "glue-*: one job per process, restart to re-register"). Confirmed directly: `deployment-service`'s glue-1
+  `_work/_actions` cache directory **does not exist** — every single job re-downloads `actions/checkout@v4` (and every
+  other action) fresh from `codeload.github.com`, for every one of the ~25 per-repo runners, all from the same host IP.
+  When enough repos' quality-gates-v2 fire in the same window (the `*/30` `ldr-to-main-promote-fleet.yml` tick, or
+  several repos' hourly `workflow_dispatch` re-checks landing close together — exactly the pattern the 2026-08-17
+  escalations agt-3378e5/agt-8c192b/agt-723f23 above independently observed), the AGGREGATE per-IP codeload request rate
+  trips GitHub's 429. This is standard, documented GitHub Actions behavior for `--ephemeral`/JIT-registered runners (the
+  working directory is torn down between jobs by design, for job-to-job isolation) — not a misconfiguration bug, a real
+  architecture tradeoff. The infra ALREADY has a proven alternative pattern in the same unit-template family: the
+  `writer-N` runners (e.g. `github-glue-runner-ao@writer-1.service`) are "long-lived, restart only on crash" — NOT
+  ephemeral — so their `_work/_actions` would naturally persist across jobs. **Did not implement a fix this session**:
+  switching the QG-slice runners from ephemeral to long-lived is a genuine fleet-wide CI-security-posture decision (job
+  isolation guarantee vs. this congestion), not a narrow bug fix — flagged for operator decision rather than unilaterally
+  changed on a host that also runs the agent-orchestrator (`github-glue-runner.slice` comment: "protects the
+  agent-orchestrator"). Verified the congestion is BURSTY/self-clearing, not a sustained outage: `gh api
+  repos/IggyIkenna/deployment-service/actions/runners` showed `busy:false` at check time (no backlog), and a single
+  fresh `quality-gates-v2` dispatch against current LDR head was attempted to confirm — see Follow-ups for the outcome
+  once observed. Also confirms disk is NOT the constraint (290G root, 107G avail, 64% used).
+
 ## Follow-ups (tracked work, not prose)
 
 - [ ] [OPERATOR] P1. From a session/identity WITH `ssm:SendCommand`/`ssm:DescribeInstanceInformation` on the
