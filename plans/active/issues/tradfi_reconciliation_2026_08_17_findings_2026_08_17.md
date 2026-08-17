@@ -41,6 +41,7 @@ context_scope:
     /plans/audit/results/data_pipeline_reconciliation_tradfi_candles_2026_08_17.md,
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
     /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch16_2026_08_17.md,
   ]
 ---
 
@@ -158,3 +159,4 @@ engineering-latitude choice, not an authority-level call. Item 7 is a one-line "
   optimism on this one item is not taken at face value per this skill's explicit "stay skeptical of a todo's own
   self-framing" guidance. Doc stays `assigned_vm: NA` for this remaining item (per-todo split — the doc itself is
   never whole-doc-reclassified when a mix like this exists).
+- **context-scout 2026-08-17**: populated context_scope (5 entries).

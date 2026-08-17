@@ -496,3 +496,4 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   resolves.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

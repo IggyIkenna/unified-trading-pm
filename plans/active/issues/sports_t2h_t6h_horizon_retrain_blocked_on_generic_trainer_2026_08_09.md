@@ -136,3 +136,5 @@ doesn't reflect the actual production training pipeline, which is worse than rep
   tracked as P3 in the odds_targets issue doc; once it lands, re-run the 5 VMs and report the rmse/mae/r2-per-outcome-
   per-horizon delta here.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged — no doc content change since the
+  2026-08-14 marker.

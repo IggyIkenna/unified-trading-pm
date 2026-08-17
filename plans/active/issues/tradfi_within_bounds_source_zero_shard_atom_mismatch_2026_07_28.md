@@ -390,3 +390,4 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   re-confirmed (10th consecutive pass).** 3 open todos re-read end-to-end; count reconciled (3/3). Todo 1's citation to
   `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` remains accurate. Todo 3 (naming-drift reconcile) stays
   conditionally-scoped; todo 4 stays sequenced after todo 1. Nothing to reclassify.
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.

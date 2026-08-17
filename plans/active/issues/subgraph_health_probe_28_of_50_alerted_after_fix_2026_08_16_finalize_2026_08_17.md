@@ -68,3 +68,4 @@ Machine-held (`gate_on_depends: true`) until the todo in
 
 - **2026-08-17 (na-eligibility-audit, defi tranche)**: finalize plan authored alongside the RECLASSIFY flip of the
   source issue doc, per `task_template.md`'s finalize-plan-coverage rule.
+- **context-scout 2026-08-17**: populated context_scope (2 entries).

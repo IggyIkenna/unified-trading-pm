@@ -1003,3 +1003,6 @@ just belongs on a different layer than instrument_type does, and conflating the 
 > 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real
 > capture path for vs. retire the aspirational genesis date'; the deployment-api PREDICTION_DATA_TYPE_META retirement
 > (finding 5) is also deferred as 'a separate follow-up' with no tracked todo.
+- **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged. Doc is pre-existing over the
+  1000L hard cap (1005L) — this append is a zero-deletion, single-line, non-checkbox marker, matching
+  `check_line_caps.sh`'s documented small-marker-append exception; context_scope itself left untouched.
