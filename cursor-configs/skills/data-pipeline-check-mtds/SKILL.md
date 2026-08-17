@@ -34,18 +34,24 @@ report line is ambiguous, not proof of anything.
 Per `/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
 skill:
 
-- **Oracle routing — GAP, not yet routed.** MTDS's `--legs …,canonical` leg (§3, "The canonical-shape regression") is
-  TRADFI-ONLY and asserts a bespoke id-form regex (`unified_api_contracts.assert_tradfi_derivative_ids_canonical`),
-  never the UAC path-structure oracle `canonical_path_violations()`. Unlike IS/MDPS/features, MTDS's write target
-  (`raw_tick_data/by_date/…`) IS exactly the oracle's covered prefix, and as of `unified-api-contracts@d40c5d7d`
-  (2026-07-20, refined `@1cd27478` 2026-07-23) the oracle also covers CEFI/DEFI filename id-form, not just structure —
-  well before this audit date. **Every non-TRADFI shard records `skipped/canonical_shape_check_is_tradfi_only` and
-  gets ZERO canonical-shape checking today.** Tracked as a new follow-up todo on the dispatching plan (see its
-  Progress Log) rather than fixed inline here — extending a shipping checker's leg is real code work, not a doc audit.
-- **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: id-FORM is checked for TRADFI shards only
-  (regex above); CEFI/DEFI/sports/prediction filenames are **unchecked** by this skill. `instrument_type`/`data_type`/
-  `venue`/`chain` VALUES are compared only for internal self-consistency against the shard's own manifest row, never
-  against an independent canonical source — **declared unchecked** as independent value validation.
+- **Oracle routing — FIXED (2026-08-17), no longer a gap.** At audit time (2026-08-16), MTDS's `--legs …,canonical`
+  leg (§3, "The canonical-shape regression") was TRADFI-ONLY, asserting a bespoke id-form regex
+  (`unified_api_contracts.assert_tradfi_derivative_ids_canonical`) and never the UAC path-structure oracle
+  `canonical_path_violations()`, even though MTDS's write target (`raw_tick_data/by_date/…`) IS exactly the oracle's
+  covered prefix and the oracle had covered CEFI/DEFI filename id-form since `unified-api-contracts@d40c5d7d`
+  (2026-07-20, refined `@1cd27478` 2026-07-23) — well before this audit date. That gap was closed the next day:
+  `market-tick-data-service@f90bf09a37` added `_run_oracle_canonical_leg`, dispatched from `_run_canonical_leg` for
+  `asset_group in {CEFI, DEFI}`, routing each shard's real written test-bucket objects through
+  `canonical_path_violations(require_pipeline_mode=True)` (path structure + filename id-form, no re-implemented
+  regex) — verified live in the current tree (`grep` of `scripts/pipeline_e2e_check.py` confirms the dispatch + the
+  oracle import; 6 unit tests including 2 negative controls, per that todo's own evidence). TRADFI still uses the
+  bespoke regex leg (unaffected, out of the oracle's scope by design — no per-instrument-type axis); SPORTS stays
+  `skipped` (declared out of scope, unaffected by this fix).
+- **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: id-FORM is now checked for TRADFI (regex
+  above) AND CEFI/DEFI (oracle, per the fix above); sports/prediction filenames remain **unchecked** by this skill.
+  `instrument_type`/`data_type`/`venue`/`chain` VALUES are compared only for internal self-consistency against the
+  shard's own manifest row, never against an independent canonical source — **declared unchecked** as independent
+  value validation (the oracle itself is value-blind on these axes, per its own documented scope).
 - **Banner** (§ "Interpreting verdicts while the raw→canonical instrument-id migration is in flight", and its
   restatement near "Ground truth is the VM run.log"): **re-verified 2026-08-16, still accurate** — same CEFI
   migration status as the IS skill's banner. Kept as-is.

@@ -109,10 +109,22 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
       `LST_ADDRESS_SOURCE` or `MIGRATED_TO_UAC_LOOKUP` — consistent with the pair being outside the registry
       entirely, not merely un-migrated. No code changed — verification-only, matches the ruling exactly, ruling still
       correctly not implemented.
-- [ ] [REVIEW] P2. **Re-check the skills audit's verdicts against the oracle's own blind spots.** The oracle is
+- [x] ✅ [REVIEW] P2. **Re-check the skills audit's verdicts against the oracle's own blind spots.** The oracle is
       path-structure-only and value-blind, so a skill that now calls it is still not checking filename instrument_id
       or the `instrument_type`/`data_type`/`venue`/`chain` values. Confirm each skill either checks those separately
       or explicitly declares them unchecked — "routes through the oracle" alone is not the bar.
+      — **All four `Canonical-oracle audit (2026-08-16)` sections re-read against this bar; three were already
+      correct, one was stale and fixed this session (`unified-trading-pm@<pending-sha>`).** IS, features, MDPS each
+      correctly declare filename id-form / instrument_type / data_type / venue / chain either N/A (axis doesn't exist
+      in that checker's shard atom/path grammar) or explicitly **unchecked** — meets the bar as written, no change
+      needed. **MTDS's section was stale**: it still read "GAP, not yet routed" for CEFI/DEFI oracle routing, but the
+      dispatching plan's own sibling P1 todo (extend the canonical leg) shipped the fix the day after this audit was
+      written — `market-tick-data-service@f90bf09a37` added `_run_oracle_canonical_leg`, live-verified in the current
+      tree (`grep` of `scripts/pipeline_e2e_check.py` confirms the dispatch to `canonical_path_violations()` for
+      `asset_group in {CEFI, DEFI}`). Updated the SKILL.md section to state the fix is shipped (id-form now checked
+      for TRADFI+CEFI+DEFI, not TRADFI-only) while keeping the value-blind declaration unchanged — the oracle itself
+      never checks `instrument_type`/`data_type`/`venue`/`chain` VALUES independently, so that half of the audit's
+      original verdict was already correct and still holds.
 - [ ] [DOC] P2. Run the standard 6-step archival ritual on `venue_readiness_ao_dispatch_batch1_2026_08_16` once every
       todo is `[x]` and unlocked, including the corpus-wide referrer-path fixup.
 - [ ] [DOC] P3. For each parent doc touched: if reconciling left it with zero open todos, it is ALSO an archival
@@ -149,3 +161,16 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
   through `required_lst_address()`; and the drift-invariant test's `LST_ADDRESS_SOURCE`/`MIGRATED_TO_UAC_LOOKUP`
   dicts have no entry for either symbol. Full detail in the flipped checkbox above. Next open item is the P2
   "re-check the skills audit's verdicts against the oracle's own blind spots" todo.
+
+- **2026-08-17 (slot 26, review) — REVIEW P2 "re-check the skills audit's verdicts against the oracle's own blind
+  spots" flipped, one stale doc fixed.** Read all four `Canonical-oracle audit (2026-08-16)` sections
+  (`data-pipeline-check-{is,mtds,features,mdps}/SKILL.md`) against the bar (checks id-form/values separately or
+  declares them explicitly unchecked — "routes through the oracle" alone isn't enough). IS/features/MDPS were
+  already correct. MTDS's section had gone stale: it still said CEFI/DEFI oracle routing was "GAP, not yet routed",
+  but this plan's own sibling P1 todo shipped that exact fix the day after the audit was written
+  (`market-tick-data-service@f90bf09a37`) without the audit doc being updated to match — live-verified via `grep` of
+  the current `pipeline_e2e_check.py` that `_run_oracle_canonical_leg` really dispatches through
+  `canonical_path_violations()` for CEFI/DEFI before editing. Updated the SKILL.md section
+  (`unified-trading-pm@<pending-sha>`) to state the fix is shipped; left the value-blind declaration unchanged since
+  that half was already accurate. Only the `[DOC] P2` archival-ritual todo and its sibling `[DOC] P3` remain open in
+  this plan.
