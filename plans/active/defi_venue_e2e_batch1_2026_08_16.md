@@ -138,11 +138,23 @@ source: >-
       each calculator is registry-reachable via `_dispatch_feature_group` end-to-end with mocked data and
       produces real, non-empty feature output (peg-deviation bps, IL pct, drift bps) for at least one defi venue —
       satisfying the done-when. Full `quality-gates.sh` green on the shipped SHA.
-- [ ] [BACKEND] P2. **Gap: `dex_pool_swaps` and `staking_yields` have no feature_group consumer at all** — unlike
-      the dispatch-table gap above, these are genuinely unimplemented (no calculator reads `dex_pool_swaps`
-      anywhere; `staking_yields`'s only near-match, `lst_staking_calculator.py`, is an unrelated live DefiLlama
-      pull that bypasses the manifest and also isn't dispatched). Done-when: a real implementation exists and is
-      wired, or the gap is confirmed intentional with a cited reason.
+- [x] ✅ [BACKEND] P2. **Gap: `dex_pool_swaps` and `staking_yields` have no feature_group consumer at all** —
+      done 2026-08-17. SHIPPED — `features-service@492a0f14`. Both were genuinely unimplemented, confirmed by
+      cross-repo grep (features-service/unified-api-contracts/market-tick-data-service) that both are real,
+      currently-captured MTDS raw `data_type`s, not vaporware. Two new calculators added following the exact
+      registry→CLI→dispatch→`_process_*` pattern established by the sibling P0 fix above:
+      `DexPoolSwapFlowCalculator` (`feature_group="dex_pool_swap_flow"`, reads the `dex_pool_swaps` canonical
+      feed across Uniswap V3/Curve/Balancer, emits per-swap notional/direction/fee-bps) and
+      `ProtocolStakingApyCalculator` (`feature_group="protocol_staking_apy"`, reads the `staking_yields`
+      canonical feed across 13 Ethereum venues + JITORESTAKING on Solana per `staking_yields_handler.py`'s
+      own venue registry, emits APY pct/bps + TVL — distinct from the pre-existing `lst_staking_calculator.py`,
+      which does a live, manifest-bypassing DefiLlama pull for Lido/EtherFi only). Wired into
+      `FEATURE_GROUPS` (CLI), `_dispatch_feature_group` + two new `_process_*` orchestrator methods, and
+      `calculators/__init__.py`. New wiring test `tests/onchain/unit/test_dex_pool_swaps_and_staking_yields_wiring.py`
+      (4 tests, all passing) proves registry registration, CLI listing, and end-to-end dispatch-and-write with
+      concrete numeric feature assertions for both. Golden-fixture `resolve_build_order()` list updated for the
+      2 new phase-0 calculators. Full `quality-gates.sh` green on the shipped SHA; verified reachable on
+      `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, 0/45 rows reach a genuinely complete
       end-to-end state.** SHIPPED — `unified-trading-pm@9f23cf22e5`. 2 parallel research passes (strategy-
       service archetype/slot + position-adapter chain-suffix mechanics; execution-service `InstructionActionV2`
@@ -405,3 +417,19 @@ adding a key on the older comment's strength alone. No code shipped (correctly �
 already-cited-reason branch of the done-when, not a code fix); this batch's own hard-rule confirmation todo above
 already established zero code changes for steps 1-5/9, and this todo continues that pattern.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+
+**2026-08-17 — `dex_pool_swaps`/`staking_yields` gap closed, real implementation shipped.** SHIPPED —
+`features-service@492a0f14`. AO worker task (backend_engineer role) on the P2 gap flagged by the 2026-08-16 full
+contract sweep. Confirmed both `dex_pool_swaps` and `staking_yields` are real, currently-captured MTDS raw
+`data_type`s (not vaporware) via cross-repo grep, so built genuine calculators rather than citing an intentional
+gap: `DexPoolSwapFlowCalculator` (`feature_group="dex_pool_swap_flow"`) and `ProtocolStakingApyCalculator`
+(`feature_group="protocol_staking_apy"`), following the exact registry→CLI→dispatch→`_process_*` wiring pattern
+the earlier dispatch-table-narrower-than-registry P0 fix established (same recurring bug class: registry
+registration alone is insufficient, the CLI `FEATURE_GROUPS` list + `_dispatch_feature_group` if/elif chain need
+separate wiring). New wiring test (4 tests) + golden-fixture `resolve_build_order()` update. Full `quality-gates.sh`
+green; 8 consecutive QG runs were killed mid-run by `qg-host-governor.sh`'s RAM-pressure watchdog before the 9th
+succeeded — root-caused to genuine shared-host memory contention from concurrent AO worker sessions (not a defect
+in the shipped code); confirmed via reading the watchdog source and cross-checking two earlier killed-but-not-
+killed-during-tests runs' logs that the new tests had already passed on the identical tree content. Remaining open
+in this plan: 2 other P2 todos (over-broad UAC `archetype_consumers` for `lending_indices`, AAVE-PLASMA identity
+ambiguity) — out of scope for this task, left for a future dispatch.
