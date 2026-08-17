@@ -19,7 +19,7 @@ tags: [cefi, entity-rename, chain-relabel, options-chain, futures-chain, migrati
 related:
   [
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch19_2026_08_13.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch19_2026_08_13.md,
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]

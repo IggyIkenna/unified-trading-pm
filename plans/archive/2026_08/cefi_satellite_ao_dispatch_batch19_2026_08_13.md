@@ -12,7 +12,9 @@ summary: >-
   touched by this batch (checkbox reconciliation back into each source doc happens in the paired finalize plan).
   Conflict-checked against every existing active batch/finalize plan for this tranche via basename-citation
   cross-reference before drafting — no item here duplicates ground an existing dispatched Todos entry already claims.
-status: active
+  **ARCHIVED 2026-08-16** — every todo done (2026-08-15); checkbox reconciliation into source docs completed by
+  `cefi_satellite_ao_dispatch_batch19_2026_08_13_finalize.md`.
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]

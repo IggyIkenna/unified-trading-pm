@@ -705,7 +705,9 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   that tracked todo per CLAUDE.md's "every follow-up is a todo, never prose" rule. No archival — doc is a live,
   still-active investigation.
 
-- [ ] [SCRIPT] P3. **Root-cause + fix `mtds_chunk_loop.sh`'s `PROGRESS.json` GCS upload call** — confirmed silently
+- [x] ✅ [SCRIPT] P3. **RECONCILED 2026-08-16 (cefi_satellite_ao_dispatch_batch19_2026_08_13_finalize.md, slot 21) —
+      already SHIPPED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`, checkbox here never flipped.**
+      Root-cause + fix `mtds_chunk_loop.sh`'s `PROGRESS.json` GCS upload call — confirmed silently
       stopped firing after chunk 17 on `mtds-backfill-odds-smallchunk2-20260807` while `run.log`'s own
       `PROGRESS: chunk=N` lines kept advancing normally through at least chunk 21 (2026-08-07T23:47Z finding above).
       Monitoring-only impact today (no data loss — `run.log` is the reliable cross-check per this doc's own rule-1b
@@ -713,7 +715,15 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
       as an explicit todo (`na-eligibility-audit` 2026-08-08) rather than left as a prose "worth a look next time" note.
       **Done when**: the upload call's failure mode is identified (e.g. a swallowed exception, a once-per-VM-lifetime
       guard misfiring, a stale path) and fixed, with a regression check that `PROGRESS.json` keeps advancing across ≥20
-      consecutive chunks on a fresh run. Repo: deployment-service.
+      consecutive chunks on a fresh run. Repo: deployment-service. — **SHIPPED deployment-service@41856de513**
+      (2026-08-15). Root cause: `HAD_FAILURE` in `mtds_chunk_loop.sh`'s generator is a sticky flag that, once set by
+      any earlier chunk/league failure or low-memory skip, latches for the rest of the run BY DESIGN (protects the
+      `[[VM_PROGRESS]]` resume checkpoint), which also silences `[[VM_PROGRESS]]` — and therefore the PROGRESS.json
+      GCS upload — forever, even while later chunks kept succeeding. Fix: added an unconditional
+      `[[VM_LIVENESS]] last_chunk_seen=N/TOTAL` marker per chunk, independent of `HAD_FAILURE`, and taught
+      `vm-exec-with-gcs-tee.sh`'s watchdog to merge it into PROGRESS.json's `last_chunk_seen`/`updated` fields without
+      ever advancing `last_completed_date` (resume-checkpoint semantics unchanged). Two new regression tests in
+      `test_vm_launcher_scripts.py` (`TestMtdsChunkLoopLivenessMarker`). Full `quality-gates.sh` green (1270s).
 
 - [x] [SCRIPT] P3. **DONE 2026-08-10 — `deployment-service@ca2ecd5706`.** Add a memory-aware pre-launch gate INSIDE
       `mtds_chunk_loop.sh`'s own subprocess loop — corrected scope, `/plan-brainstorm`'d 2026-08-10 (main, Claude Code
