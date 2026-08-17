@@ -122,16 +122,25 @@ source: >-
       finding don't exist as real calculators in this codebase — only `book_depth_bands`/`liquidity_walls`/
       `liquidation_clusters`/`composite_sr`/`flow_interaction` are real RAW_BOOK/TRADE_GROUPS members). 11 new
       regression tests across both files, QG green (346s, exit 0), sentinel-verified on `origin/live-defi-rollout`.
-- [ ] [BACKEND] P2. **Triage stale abandoned WIP in `.tabs/8/features-service-clean-check`** (found by a review
-      agent 2026-08-17, 15.9 days stale, 9 files staged: deletes `kalshi_microstructure_calculator.py` +
-      `prediction_ingest.py`; edits `batch_handler.py`/`config.py`/`orchestrator.py`/`feature_builder_registry.py`/
-      `feature_definitions.yaml`/`test_batch_handler.py`). Looks like an earlier, abandoned attempt at the KALSHI
-      PREDICTION-ingest P1 gap todo above — but that todo is already SHIPPED (`unified-trading-pm@fd06d1dee`-era
-      fix ADDED `KalshiMicrostructureCalculator` + moved logic into a new `engine/prediction_ingest.py`), whereas
-      this stale WIP stages DELETES of those exact two files. Strong signal this is a superseded, now-dangerous
-      duplicate — committing it as-is would likely REVERT the shipped fix. Done-when: a fresh triage confirms
-      superseded-by-shipped-fix and discards the stale WIP (`git stash`/reset, not a blind restore), OR a closer
-      read finds the staged deletes target genuinely different dead code and the WIP is salvaged instead.
+- [x] ✅ [BACKEND] P2. **Triage stale abandoned WIP in `.tabs/8/features-service-clean-check` — done 2026-08-17
+      (slot 1): already gone, nothing to discard.** No code shipped (pure investigation). Live-checked the exact
+      worktree (`.git` pointer confirms `gitdir: .../features-service/.git/worktrees/features-service-clean-check`,
+      the same path the finding named): `git status` is clean on `live-defi-rollout`, up to date with origin, HEAD
+      `360cfdcb` — no 9-file staged WIP present, and `kalshi_microstructure_calculator.py` +
+      `engine/prediction_ingest.py` both EXIST on disk (matching the shipped fix, not deleted), confirming the
+      worktree correctly reflects the shipped state, not the abandoned duplicate. Root cause: this worktree's
+      orchestrator pre-spawn dirty-state gate (`DirtyStateResolution.COMMIT_AND_PUSH`, `plans/epics/
+      orchestrator_master.md` § "Fresh-spawn dirty-commit (Phase 3A)") auto-commits any WIP left behind as a
+      `chore(orphan-wip)` commit and resets to origin on every slot-8 respawn — measured firing **~100+ times**
+      between 2026-08-01 and 2026-08-17 in this worktree's reflog (often multiple times per hour), so an
+      uncommitted 9-file stage could not have survived 15.9 days unswept. Checked the 4 most recent orphan-wip
+      commits (`ffef105c`/`355cf310`/`27150d2f`/`1d7b5b38`, spanning 2026-08-16→17) for a match — none touch the
+      6 named files (all are unrelated Dockerfile-digest/symbiotic-restaking-calculator diffs), so the described
+      WIP was already swept by an earlier respawn cycle, not one of these. `.agent-claim` shows slot 8 is
+      currently LIVE (`expires_at` in the future) — did not touch/write anything in `.tabs/8`, read-only
+      investigation only, per the multi-agent safety rule. Done-when's "confirms superseded-by-shipped-fix and
+      discards the stale WIP" is satisfied by there being nothing left TO discard — the worktree already reflects
+      the shipped, correct state.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, (POLYMARKET, trades) also fails.** SHIPPED —
       `unified-trading-pm@8bfa440ac1`. The other 3 rows stay `BLOCKED-ON` their step-5 gap todos above,
       unchanged. For (POLYMARKET, trades) — the one row that cleared step 5 — real per-item verdict:
@@ -275,6 +284,17 @@ source: >-
       `quality-gates.sh` run was needed to satisfy this todo's real intent.
 
 ## Progress Log
+
+**2026-08-17 — stale WIP triage in `.tabs/8/features-service-clean-check`: already gone, nothing to discard
+(slot 1).** No code shipped (pure investigation, this doc's checkbox flip is the only artifact). Live-verified the
+exact worktree the review agent flagged: `git status` clean on `live-defi-rollout`, up to date with origin,
+`kalshi_microstructure_calculator.py` + `engine/prediction_ingest.py` both present matching the shipped fix (not
+deleted). This worktree's orchestrator dirty-state gate auto-commits+resets any leftover WIP on nearly every
+slot-8 respawn (~100+ `chore(orphan-wip)` commits in its reflog across 2026-08-01→17) — the described 9-file
+stage could not have survived 15.9 days unswept; the 4 most recent orphan-wip commits don't match it either, so it
+was already cleared by an earlier respawn cycle before this task ever dispatched. Full evidence in the todo below.
+Remaining open in this batch: `PolymarketPositionAdapter` live-path stub (P2), no `MARKET_MAKING_*`-adjacent
+archetype wiring beyond the fixed `MARKET_MAKING_CONTINUOUS` slot.
 
 **2026-08-17 — KALSHI batch book_snapshot_5 collector shipped.** SHIPPED —
 `market-tick-data-service@6e428204f9`. Closed the "live connector, no batch collector" gap by mirroring
