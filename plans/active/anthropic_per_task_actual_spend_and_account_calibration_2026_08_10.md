@@ -715,3 +715,18 @@ Sonnet-5-heavy siblings once correctly denominated), which is itself informative
 is the outlier-within-Pro, not evidence that Pro categorically reads ~1000x. The sibling doc's open `[OPERATOR]` todo
 ("Investigate the sub-d 1047x outlier") stands unchanged — this session did not touch that doc's todos, only used it as
 a cross-reference to answer this plan's own confirm/refute question.
+
+### 2026-08-17 (slot-10, data_engineering) — todo 11 re-checked a third time, blocker #2 (todo 21) still unresolved
+
+Re-dispatched onto todo 11 (task id `anthropic_per_task_actual_spend_and_account_calibration-827796b01804`). This
+slot also runs directly on the orchestrator VM, so VM-side data (`state.db`, `account_usage_history`) is reachable
+with no SSM hop — same as the two prior sessions, so blocker #1 (SSM `AccessDeniedException`) does not apply here
+either. Grepped the full `plans/` corpus for `laptop_login_identity_log` and confirmed no run output has been
+posted anywhere since the 2026-08-17 slot-21 check earlier today — the situation is unchanged. The done-when still
+requires todo 21's operator-only laptop-side sampler (`~/.claude/laptop_login_identity_log.jsonl`) to show zero
+laptop sessions on `sub-a-ikenna`/`sub-e-odum3default`, and that is data this VM cannot produce under any identity.
+**Not flipping todo 11** — releasing via `/skip-current-task` with `reason_code: GATED`. **Third same-two-day
+dispatch of this exact blocker** (2026-08-15 slot-4, 2026-08-17 slot-21, 2026-08-17 slot-10) — worth a human call on
+whether to PARK this task (`priority: 999` + a prerequisite condition gated on the operator posting the sampler log,
+per `agents/RULES.md` §4) rather than let it keep re-dispatching on the standard GATED cooldown; backlog-config
+edits are main-agent/operator-owned per that section's own heading, not something this worker role does directly.
