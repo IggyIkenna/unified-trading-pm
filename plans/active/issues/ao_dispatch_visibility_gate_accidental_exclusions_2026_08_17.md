@@ -104,9 +104,20 @@ remedy text.
       LABELS for OTHER docs, not asserting this todo itself is non-dispatchable. Fixed by renaming the
       category label to "non-AO-eligible" (regex requires literal "not", not "non" — confirmed via direct
       regex test) — no semantic change. Full evidence in the finalize plan's own Progress Log.
-- [ ] [REVIEW] P1. Classify
+- [x] ✅ [REVIEW] P1. Classify
       `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`'s flagged todo
-      (repo: unified-trading-pm).
+      (repo: unified-trading-pm) — 2026-08-17 (slot-16, review-craft): legitimate exception, not an
+      accidental exclusion — the todo's own text genuinely asserts a judgment call requiring an
+      operator ruling, traceable to the decision artifact
+      `/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`,
+      for gaps (2)(3)(4) (a real `runtime-topology.yaml` isolation default vs.
+      declared-archetype conflict, a VOL premium-vs-distributed call, and a portfolio/yield basic-vs-standard
+      call — all explicitly deferred to the same ruling), but the marker
+      sat mid-sentence inside a bold aside rather than opening the checkbox line, so
+      `_is_declared()` (agent-orchestrator `server/dispatch_visibility_report.py`) correctly classified it
+      accidental per its "must open the checkbox line" rule. Fixed by moving a `BLOCKED-OPERATOR-DECISION`
+      marker (a token already recognized by `_BLOCKED_TOKEN_RE`) to the head of the description, dropping
+      only the redundant "not AO-eligible" phrase — no semantic change to the residual-gaps content itself.
 - [x] ✅ [REVIEW] P1. Classify `tradfi_phase_d_terminal_gate_2026_07_24.md`'s flagged todo (repo:
       unified-trading-pm) — note its own text says "UNBLOCKED 2026-08-15", likely just needs the
       stale exclusion-affecting marker removed/updated. — 2026-08-17 (slot-20, review-craft):
@@ -154,3 +165,14 @@ remedy text.
   parser scans for, so it was mistaken for a live declared exclusion. Fixed by rewriting the historical note to
   keep the same context without the literal marker string. Confirmed via
   `check_ao_dispatch_visibility_gate.py --json`: `accidental_exclusions` dropped to 3.
+- **2026-08-17 (slot-16, review-craft)**: classified item 3
+  (`strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`). Verdict: legitimate exception
+  (declared, not accidental) — read `_is_declared()` in `agent-orchestrator/server/dispatch_visibility_report.py`
+  to confirm the exact rule: a marker must open the checkbox line's head (right after the `[TAG] P<n>.`
+  cluster), not merely appear anywhere in the block. This todo's own text ("each a judgment call / operator
+  ruling, not AO-eligible") genuinely asserts non-dispatchability for 3 real open sub-gaps, each explicitly
+  deferred to an operator ruling by the linked decision artifact — but the marker phrase sat mid-sentence, so
+  it correctly tripped `_is_non_dispatchable()` (the "not AO-eligible" / "needs an operator ruling" permanent
+  patterns) while still reading as undeclared to `_is_declared()`. Fixed by moving a `BLOCKED-OPERATOR-DECISION`
+  marker (confirmed present in `_BLOCKED_TOKEN_RE`'s alternation, so this won't also trip the "ineffective
+  declaration" axis) to the head of the description.
