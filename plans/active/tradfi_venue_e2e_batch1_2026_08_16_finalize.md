@@ -58,9 +58,18 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. For every completed todo in `tradfi_venue_e2e_batch1_2026_08_16.md`, re-verify its cited
-      evidence (commit sha resolves as an ancestor of `origin/live-defi-rollout`, cited report/run actually
-      resolves). Done-when: all 5 of that batch's todos have independently re-confirmed evidence.
+- [x] ✅ [REVIEW] P1. **Independently re-verified — 2026-08-17.** All 7 of that batch's todos re-confirmed
+      (brief's "5" was stale — batch has 7 checked todos). 3 distinct cited SHAs, all confirmed ancestors of
+      `origin/live-defi-rollout` AND diff-content-checked against their claims: `unified-trading-pm@48f83481ce`
+      (steps 1-5 + step 9 investigation write-up, docs-only), `features-service@be2af7b191`
+      (`CrossVenueCalculator._resolve_baseline_venue()` dominant-venue fallback +
+      `test_cross_venue_calculator_missing_baseline_multi_venue_uses_dominant` present), `strategy-service@ff6c00870a`
+      (`get_position_adapter()` `"ibkr" | "cme" | "cboe" | "nasdaq" | "nyse" | "ice" | "fx"` match arm +
+      `test_factory_tradfi_venues_route_to_ibkr` present). Cross-referenced citations all resolve: `data_completion_
+      tradfi_2026_07_15.md` (Yahoo-interim), `service_config_ownership_and_instruction_contract_2026_08_12.md:487`
+      (`IBKR_FUND_MOVE` unfinished-capability), `plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_
+      ruling_citation_2026_08_03.md`, `plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` —
+      no dangling citations found.
 - [ ] [REVIEW] P1. Once `tradfi_venue_e2e_batch1_2026_08_16.md` has zero open todos, run the standard 6-step
       archival ritual on it and this finalize plan. Done-when: both docs are under `plans/archive/`, and
       `regenerate_active_plan_inventory.py` reports zero orphan referrers to either.
@@ -71,3 +80,11 @@ source: >-
       with evidence.
 
 ## Progress Log
+
+**2026-08-17 — todo 1 (evidence re-verification) done.** Re-verified all 7 checked todos in
+`tradfi_venue_e2e_batch1_2026_08_16.md` (brief cited "5", stale — actual count is 7). All 3 distinct cited SHAs
+(`unified-trading-pm@48f83481ce`, `features-service@be2af7b191`, `strategy-service@ff6c00870a`) confirmed
+ancestors of `origin/live-defi-rollout` via `git merge-base --is-ancestor`, and each commit's diff content
+independently checked against its claim (not just the commit message). All cross-referenced doc citations
+resolve. No discrepancies found. Batch plan itself now shows 0 open todos — next finalize todo (archival
+ritual) is dispatchable.
