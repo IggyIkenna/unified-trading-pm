@@ -196,7 +196,7 @@ in the container's `unified-trading-pm` worktree before the container exits.
       first time — this may itself uncover a backlog of real, previously-invisible divergence findings worth a
       follow-up triage pass. Repo: e2e-testing. — confirmed live 2026-08-17, see Progress Log + new todos (6)/(7)
       below for two DISTINCT bugs surfaced by this re-run.
-- [ ] [CODE] P2. `detect_manifest_divergence.py`'s classification CSV (`divergence_<date>.csv`) is never found on disk
+- [x] ✅ [CODE] P2. `detect_manifest_divergence.py`'s classification CSV (`divergence_<date>.csv`) is never found on disk
       by `manifest_hygiene_daily.py` inside `e2e-audit:latest` in PRODUCTION (confirmed live 2026-08-17, both
       `-changed` and `-full` runs, all 5 AGs: `divergence CSV ... not found (CLI may have failed or been scoped out)`
       immediately after every `invoking divergence: ...` line) — even though the CLI now RESOLVES + RUNS (todo (1)
@@ -376,3 +376,32 @@ in the container's `unified-trading-pm` worktree before the container exits.
   change in `e2e-testing`, out of a re-run-and-confirm task's own scope; see the two new todos above for the
   concrete fix directions. Fresh-pulled the PM worktree (`git fetch` + `ff-only`) before this edit; no code
   shipped this task (pure plan-flip + Progress Log, PM repo only).
+
+- **2026-08-17 (infra worker, slot-12)**: Shipped the P2 divergence-CSV-not-found todo —
+  `unified-trading-library@e024bf5923`. Root cause confirmed by direct code inspection (not one of the three
+  candidates listed in the todo): `detect_manifest_divergence.py`'s `WORKSPACE_ROOT = Path(__file__).resolve().
+  parents[2]` hardcodes the LOCAL-DEV directory depth (`<workspace_root>/unified-trading-library/scripts/<file>.py`,
+  where `parents[2]` is `<workspace_root>`). Inside `e2e-audit:latest`, `manifest_hygiene_daily.py`'s
+  `_DIVERGENCE_CLI` fallback (todo 1's fix, `e2e-testing@c3da78786d`) invokes this SAME script from
+  `/app/scripts/detect_manifest_divergence.py` — one directory SHALLOWER, since `unified-trading-library`'s own
+  Dockerfile `WORKDIR /app` + `COPY . .` lands the repo directly at `/app/*` with no `unified-trading-library/`
+  nesting. The old fixed `parents[2]` there resolves to `/` (filesystem root, one level too high), so `_OUT_DIR`
+  computed an unreachable `/unified-trading-pm/plans/audit/results/...` path that never matched what
+  `manifest_hygiene_daily.py`'s `_divergence_csv_path()` (via `_dp_common.py`'s `_WORKSPACE_ROOT`) actually expects:
+  `/app/unified-trading-pm/plans/audit/results/...`. Fixed by detecting the layout from the script's OWN parent
+  directory name (`_SCRIPT_DIR.parent.name == "unified-trading-library"` → local-dev depth, `parents[1]`; else →
+  container depth, `parent`) rather than a fixed `parents[N]` offset — mirrors the environment-aware pattern
+  `_DIVERGENCE_CLI` itself already uses, but keyed off a static fact (the file's own location) instead of a
+  dynamically-created output directory that may not exist yet on first run. Verified via a standalone Python check
+  (not `.exists()` alone) simulating BOTH layouts: real local-dev path resolves to
+  `.tabs/12/unified-trading-pm/plans/audit/results` (unchanged, correct); a simulated `/app/scripts/<file>.py`
+  container path resolves to `<root>/app/unified-trading-pm/plans/audit/results` — i.e. one level BELOW the
+  script's own `scripts/` dir, matching `_dp_common.py`'s `AUDIT_RESULTS_DIR` computation exactly. Confirmed the
+  existing `tests/unit/test_detect_manifest_divergence.py` patches `detect_manifest_divergence._OUT_DIR` directly
+  (not `WORKSPACE_ROOT`), so this change doesn't affect that test's isolation. Full `bash scripts/quality-gates.sh
+  --no-fix` green on the committed SHA (sentinel verified == HEAD) before shipping via quickmerge; post-push
+  ancestry verified (`e024bf59` is an ancestor of `origin/live-defi-rollout`). Did NOT re-trigger a live Cloud Run
+  hygiene run to confirm the CSV lands in production — that's the natural follow-up when
+  `uts-prod-dp-manifest-hygiene-changed`/`-full` next runs (or an operator-triggered `gcloud run jobs execute`),
+  not reproducible from a worker slot without container access (same limitation prior Progress Log entries on this
+  doc already noted for their own in-container fixes).
