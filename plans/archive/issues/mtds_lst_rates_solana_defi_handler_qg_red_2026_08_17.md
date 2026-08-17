@@ -95,13 +95,13 @@ commit regressed it), plus the lst_rates test-bucket mock gap.
 
 ## Resolution evidence (2026-08-17)
 
-Full `bash scripts/quality-gates.sh --no-fix` re-run on `live-defi-rollout` HEAD=767c4208 (background task
-`bq9q6svx7`, exit code 0): unit-test suite result `11063 passed, 28 skipped, 1 xpassed, 17 warnings in 173.25s`
-(scratchpad log `qg_mtds_rb3d968cff.log` line 335) — **zero** `FAILED` entries in the pytest short-test-summary
-section; both named tests ran (confirmed `test_lst_rates_handler.py::test_query_rate_with_retry_re_raises_after_...`
-present in the slowest-25-durations list at line 294) with no failure recorded. Full gate exited 0 end-to-end
-(basedpyright clean for market-tick-data-service's own tree, cross-AG shard validation passed, all downstream
-checks passed). RB-3d968cff is cleared.
+Full `bash scripts/quality-gates.sh --no-fix` re-run on `live-defi-rollout` HEAD=767c4208, exit code 0: unit-test
+suite result `11063 passed, 28 skipped, 1 xpassed, 17 warnings in 173.25s (0:02:53)` — zero `FAILED` entries in the
+pytest short-test-summary section; both named tests ran (confirmed `test_lst_rates_handler.py`'s retry test present
+in the slowest-25-durations list) with no failure recorded. Full gate exited 0 end-to-end (basedpyright clean for
+market-tick-data-service's own tree, cross-AG shard validation passed, all downstream checks passed). RB-3d968cff
+is cleared. Reproducible by re-running `quality-gates.sh --no-fix` at or after this HEAD — the run log itself was
+scratchpad-only and does not persist past this session.
 
 ## Progress Log
 
