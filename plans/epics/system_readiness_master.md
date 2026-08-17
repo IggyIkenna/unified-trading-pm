@@ -251,10 +251,12 @@ The registry must answer commercial and operational questions, not just "does th
       `margin_event_emitter.py`'s own docstring names execution-service, alerting-service and
       risk-and-exposure-service as consumers whose position-awareness is currently coupled to strategy-service's
       uptime for no domain reason. Deliberately deferred — not blocking this epic's 2026-08-25 target. Full
-      reasoning and the target topology: `/codex/04-architecture/runtime-deployment-topology.md` (Layer 6). The
-      same un-split gap likely applies to `risk-and-exposure-service` and `pnl-attribution-service`, named in the
-      same doc's Layer 6 as separate target services that also don't exist as separate repos today — worth scoping
-      as one extraction decision rather than three.
+      reasoning and the target topology: `/codex/04-architecture/runtime-deployment-topology.md` (Layer 6).
+- [ ] [OPERATOR] P3. **Target 2027 — decide whether to extract `risk-and-exposure-service` and
+      `pnl-attribution-service` into their own deployed services**, per the same Layer 6 target topology in
+      `/codex/04-architecture/runtime-deployment-topology.md`. Same un-split gap as PBM (both currently live inside
+      strategy-service/UTL, not as separate repos), but a materially later target than PBM (operator ruling
+      2026-08-18) — scope as its own decision when the time comes, not bundled with the PBM extraction above.
 
 ## W8 — Weightings, declared not inferred
 
