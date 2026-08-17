@@ -129,3 +129,4 @@ source: >-
   inline: the hook is client-side-only (no server telemetry), so a future firing is only discoverable in that session's
   own transcript — informational, not actioned as a new todo (out of this plan's scope). 1 todo remains open (the 6-step
   archival, `[DOCS]`) — doc stays `status: active`.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified all 5 still resolve; unchanged.

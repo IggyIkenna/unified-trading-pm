@@ -45,13 +45,9 @@ context_scope:
   [
     /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md,
-    deployment-api/deployment_api/routes/data_status/_coverage_scope.py,
+    /plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
     deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
-    deployment-api/deployment_api/services/data_status/rollup_cache.py,
-    deployment-api/deployment_api/services/data_status/manifest.py,
-    deployment-api/deployment_api/services/data_status/coverage.py,
-    deployment-api/deployment_api/services/data_status/mtds.py,
-    deployment-api/deployment_api/services/data_status/instrument_coverage.py,
+    deployment-api/deployment_api/services/data_status,
   ]
 source:
   [
@@ -595,3 +591,10 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   "every entry" bar is structurally unreachable until that separate issue is fixed, not just a matter of more elapsed
   time. Todo 7 stays open, now pointing at the right owning doc instead of a vague "wait longer."
 - **na-eligibility-audit 2026-08-17** [body-hash:0f44e44dea3cbcb3]: KEEP-NA, valid -- Rollup-worker MVP/could-exist dual-scope parity plan -- 8 of 9 todos shipped and independently live-verified (extensive dated Progress Log with Cloud Logging/GCS evidence through 2026-08-13). The one remaining open todo (transition compat-shim cleanup) is explicitly marked BLOCKED as of 2026-08-13: its own done-when is 'structurally unreachable' until a separate, larger regression is fixed, and the todo's own text redirects ownership -- 'that issue doc now owns the root-cause + fix; this todo resumes once it's resolved' (criterion c, redirect + dependency), pointing at data_status_rollup_ml_service_full_blob_missing_2026_07_26.md.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- trimmed from 9 (the 5 individual
+  `services/data_status/*.py` engine files collapsed to the covering directory, per this skill's minimal-list target);
+  corrected the blocking-issue-doc path to its now-ARCHIVED location (`/plans/archive/2026_08/issues/
+  data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` -- status: archived, no superseded_by) -- both this
+  doc's todo 7 text and the most recent na-eligibility-audit pass (2026-08-17, same day) still cite the old un-prefixed
+  name as if it were an open active doc; worth a human check on whether todo 7 is now unblocked, not resolved here
+  (out of this skill's scope to edit todo prose).

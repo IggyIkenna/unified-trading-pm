@@ -91,3 +91,4 @@ or explicitly re-parked with a stated reason.
 
 - **2026-08-10** — Authored alongside batch 1. Gated via `depends_on` + `gate_on_depends: true`; will not dispatch until
   batch 1's todos land.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) — first scout pass; genuinely code-free `*_finalize` gate, codex+plan-only is correct.

@@ -41,7 +41,9 @@ locked_by:
 context_scope:
   [
     /plans/archive/issues/mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md,
-    market-tick-data-service/market_tick_data_service/engine/connectors/websocket_streaming_handler.py,
+    market-tick-data-service/market_tick_data_service/live/connector_registry.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
+    market-tick-data-service/market_tick_data_service/live/connectors,
   ]
 locked_since:
 resolved_by:
@@ -166,3 +168,8 @@ resolved_by:
   an operator decision, not further engineering work — leaving this checkbox unflipped would only re-dispatch
   the same already-answered investigation to another slot. The fallback-removal half is tracked and will not be
   silently dropped: `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- corrected a dead pointer (the prior
+  `engine/connectors/websocket_streaming_handler.py` path does not exist; real path is
+  `cli/handlers/websocket_streaming_handler.py`), and added the `connector_registry.py` (WS_FEED_CONNECTOR_FACTORIES
+  definition site) and the `connectors/` directory (covers every per-venue file named in this doc's todo/Progress Log).

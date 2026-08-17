@@ -62,7 +62,7 @@ context_scope:
     agent-orchestrator/server/codex_bridge_server.py,
     agent-orchestrator/scripts/orchestrator/calibrate_account_value.py,
     agent-orchestrator/server/model_pricing.py,
-    agent-orchestrator/server/orm.py,
+    /plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 ---
@@ -308,3 +308,6 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   (token counts × published rate), not difficulty-shaped (turns/compaction/context/repos as future routing signals) —
   kept separate, not merged, since they answer different questions. No code written this session — doc-only.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ee26e6744e46c17e]: KEEP-NA, valid — explicit dated operator ruling on record: 'human plan, not AO-dispatched' for the whole doc's live-testing/design-call content (multi-provider billing/context research).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- swapped the generic `orm.py` entry for
+  `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`, the doc's own Why section names as "the reusable
+  PRECEDENT this plan should generalize, not a gap to fill from scratch"; other 4 source files re-verified, still resolve.

@@ -33,7 +33,12 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 10, 2026-08-16"
 locked_by:
-context_scope: [/plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md,
+    /plans/archive/issues/mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -42,3 +47,7 @@ resolved_by:
 
 - [ ] [REVIEW] P2. Confirm the canonicalization landed with evidence (QG green, fallback removed, no live
       venue-key lookup miss); flip the source todo to done; archive this plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
