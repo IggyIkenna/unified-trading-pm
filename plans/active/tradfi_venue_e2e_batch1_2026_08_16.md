@@ -91,13 +91,17 @@ source: >-
       `ARBITRAGE_PRICE_DISPERSION` can never be satisfied for ANY tradfi venue despite being declared a consumer —
       genuinely new finding, tracked as its own todo below (not found in existing plan corpus, checked via grep
       before filing).
-- [ ] [BACKEND] P1. **Gap: `CrossVenueCalculator` hardcodes `baseline_venue="BINANCE-SPOT"`, never tradfi-aware**
-      (`features-service/cross_instrument/config.py:95-99`, `cross_venue_calculator.py:142-145`) — every tradfi
-      row hits the "baseline venue not found" branch and returns empty features, so `ARBITRAGE_PRICE_DISPERSION`
-      can never be satisfied for CBOE/CME/NASDAQ/NYSE despite `ohlcv_1m` being a declared input. Done-when: the
-      calculator is asset-group-aware (a tradfi-appropriate baseline, or a per-AG baseline config) and a fresh run
-      shows non-empty features for at least one tradfi venue, or the exclusion is confirmed intentional
-      (ARBITRAGE_PRICE_DISPERSION genuinely doesn't apply to tradfi) with a cited reason.
+- [x] ✅ [BACKEND] P1. **Gap: `CrossVenueCalculator` hardcodes `baseline_venue="BINANCE-SPOT"`, never tradfi-aware**
+      — SHIPPED `features-service@be2af7b191`. `_calculate_features` now resolves the baseline venue via a new
+      `_resolve_baseline_venue()`: uses the configured `baseline_venue` when present in the input, otherwise falls
+      back to the most-frequent venue actually present in the data instead of unconditionally returning empty
+      features (`cross_venue_calculator.py`). This is asset-group-aware without a static per-AG mapping — a tradfi
+      dataset that never carries `BINANCE-SPOT` (CME/NASDAQ/NYSE/CBOE) now gets a real baseline instead of
+      `cross_venue_spreads`/`ARBITRAGE_PRICE_DISPERSION` silently going empty. Added
+      `test_cross_venue_calculator_missing_baseline_multi_venue_uses_dominant` (asserts non-zero spreads from the
+      dominant-venue fallback across multiple distinct venues) and updated the pre-existing single-venue
+      missing-baseline test's docstring to reflect the new self-spread-fallback semantics (numeric assertion
+      unchanged — still zero, now for the right reason). Full local `quality-gates.sh` green.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — strategy and execution — done 2026-08-16.** Investigation only,
       zero code changed. Real per-row verdict for the 4 CBOE/CME/NASDAQ/NYSE `ohlcv_1m` rows in scope (the other
       12 stay `BLOCKED-ON:archetype-declaration-backlog`, unchanged from steps 1-5):
