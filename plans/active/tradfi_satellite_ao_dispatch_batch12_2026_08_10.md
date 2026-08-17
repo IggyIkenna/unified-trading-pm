@@ -55,6 +55,7 @@ context_scope:
     /plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
   ]
 depends_on: []
 source: >-
@@ -151,3 +152,4 @@ venue-availability preflight gate) — no overlap.
   snapshot. Full same-day methodology (why a fresh 52-agent Phase 1 fan-out was NOT re-run, and how the gap was found
   instead) recorded in this pass's Phase 2 report and cross-referenced in
   `ag_closeout_audit_tradfi_parked_2026_08_10.md`.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

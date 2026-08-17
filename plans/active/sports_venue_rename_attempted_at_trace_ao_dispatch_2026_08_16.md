@@ -41,6 +41,7 @@ context_scope:
   [
     /plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md,
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 locked_since:
 resolved_by:
@@ -65,3 +66,6 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 10, operator ruling)**: extracted from
   `sports_track_o_attempted_at_keys_extinct_2026_08_14.md` for AO dispatch, since the parent doc stays
   `assigned_vm: NA`.
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries) -- added
+  `sports_consolidated_closeout_2026_07_19.md`, the confirmed owner of "Track C" (the split mechanism this doc's own
+  todo says to check), named but not linked in the todo's own prose.

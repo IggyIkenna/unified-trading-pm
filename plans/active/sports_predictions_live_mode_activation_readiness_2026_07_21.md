@@ -69,9 +69,8 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/04-architecture/promote-workflow-architecture.md,
-    /plans/archive/2026_08/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
-    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
-    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    /plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md,
+    /codex/04-architecture/backtest-groups.md,
   ]
 ---
 
@@ -421,3 +420,7 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   2026-08-08 OPERATOR RULING banner. Never re-litigated. Note for a future pass: the REVIEW promote-workflow todo is
   gate-clear per a 2026-08-11 entry — may be worth an operator-driven look at splitting the paper-only leg out, but not
   unilaterally actioned given the standing whole-doc ruling.
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries) — dropped the 2 archived docs that served the now-
+  `[x]` Todo 2/Todo 3 (MTDS connector, launcher exec-dispatch, both closed 2026-08-07) and `setup-data-pipeline-vm.sh`
+  (also tied to that now-closed launcher work); swapped in the Group-C harness doc (now landed, the gate the sole
+  remaining real-work Todo 5 names) and its governing Group-B/C codex.

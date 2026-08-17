@@ -370,3 +370,4 @@ here.
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid — established ruling not
   re-litigated (5th consecutive pass).** 6 of 7 open todos covered by the standing multi-times-reaffirmed ruling; the
   7th stays flagged, not promoted, same reasoning. `assigned_vm` unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

@@ -2,9 +2,11 @@
 doc_type: plan
 title: cefi satellite AO dispatch batch 21 — 2026-08-17
 summary: >-
-  Extraction batch from the cefi tranche's 2026-08-17 /na-eligibility-audit run — 2 conflict-cleared,
-  bounded/deterministic todos pulled from 2 source docs (RECLASSIFY_SPLIT bounded items; each source doc's
-  remaining open items stay assigned_vm: NA and are unaffected). Each todo cites its exact source doc; this run
+  Extraction batch from the cefi tranche's 2026-08-17 /na-eligibility-audit run — 3 conflict-cleared,
+  bounded/deterministic todos pulled from 3 source docs (RECLASSIFY_SPLIT bounded items; each source doc's
+  remaining open items stay assigned_vm: NA and are unaffected; item 3 added by a later same-day dispatch,
+  agt-a7567d, after a same-date verdict-marker tie-break bug in the inventory script was fixed, surfacing a
+  previously hash-masked source doc). Each todo cites its exact source doc; this run
   flipped the extracted checkbox in each source doc at authoring time to cite this batch, matching the
   na-eligibility-audit skill's Phase 3 "per-todo split" extraction mechanics. Conflict-checked against every
   existing active batch/finalize plan for this tranche (incl. batch20), the cefi consolidated-closeout docs, and
@@ -25,6 +27,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md,
     /plans/active/issues/dp_fetch_009_cefi_depth_of_book_10_corrective_migration_overreach_2026_08_16.md,
+    /plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md,
   ]
 created: "2026-08-17"
 last_updated: "2026-08-17"
@@ -33,8 +36,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
-estimate_baseline_ai_days: 0.5
-estimate_calibrated_ai_days: 0.2
+estimate_baseline_ai_days: 0.7
+estimate_calibrated_ai_days: 0.3
 assigned_role: backend_engineer
 effort: low
 drift_direction: advance-code
@@ -45,7 +48,9 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/issues/dp_fetch_009_cefi_depth_of_book_10_corrective_migration_overreach_2026_08_16.md,
+    market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py,
+    /plans/active/issues/dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 source: >-
@@ -90,6 +95,15 @@ source: >-
       legitimately emits the same `error_reason`). Source:
       `plans/active/issues/dp_fetch_009_cefi_depth_of_book_10_corrective_migration_overreach_2026_08_16.md` item 3.
       Done-when: the script's docstring/header carries a comment pointing at the finding doc's path.
+- [ ] [RESEARCH] P2. Live-verify + enumerate the 76 confirmed-live crypto OKX-FUTURES `ruleType=xperp` base symbols
+      (excluding the 28 already-known equity/ETF ones already in `_OKX_FUTURES_XPERP_EQUITY_BASES`) via
+      `/api/v5/public/instruments?instType=FUTURES`, then add them to `_OKX_FUTURES_XPERP_EQUITY_BASES` (or a
+      sibling crypto set) in `market-tick-data-service`'s `okx_futures_ws.py` so `_instrument_to_okx_futures_inst_id`
+      stops emitting the plain non-XPERP wire form for them (same silent-mis-subscribe failure mode the 28 equity
+      symbols had before their own fix, `market-tick-data-service@3acdd478e5`). Source:
+      `plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` item ([RESEARCH] P2, added
+      2026-08-16). Done-when: the crypto base-symbol set is populated and
+      `test_okx_futures_live_batch_id_parity.py` (or a new parity case) proves at least one crypto xperp id round-trips.
 
 ## Progress Log
 
@@ -105,3 +119,21 @@ source: >-
   deployed but live behavior still violates the cooldown) filed separately:
   `/plans/archive/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (RESOLVED + archived
   2026-08-17).
+- **na-eligibility-audit 2026-08-17 (cefi tranche, dispatch agt-a7567d, same-day follow-up run)**: added item 3
+  (OKX-FUTURES 76-crypto-xperp-symbol enumeration), a RECLASSIFY_PER_TODO_SPLIT candidate from
+  `okx_futures_instid_marker_convention_mismatch_2026_07_30.md`, conflict-checked clear against this batch's own
+  existing items, batch20, the consolidated-closeout docs, and the wider active corpus (`grep -rl xperp`) before
+  adding. That source doc was invisible to dispatch agt-af111e's earlier same-day pass — its prior marker
+  incorrectly read as hash-current due to a same-date inline-citation tie-break bug in
+  `generate_na_doc_tranche_inventory.py`, fixed at the root this same run
+  (`na_eligibility_same_date_marker_tiebreak_keeps_first_not_last_2026_08_17.md`). Source doc's own checkbox
+  flipped to cite this item.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) — swapped the generic
+  na-eligibility-audit SKILL.md pointer for the sole remaining open todo's actual Source doc + its named target
+  script, matching this doc's now-narrowed remaining scope (item 1 closed this session). Fingerprint match: item 1's
+  cited sha `alerting-service@cd60a3e595` and revision `dp-alerting-subscriber-00103-zhw`/build
+  `821c691f-8da4-426e-b7b1-9d0614097064` also appear in
+  `plans/active/issues/dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md` (open, filed same day),
+  which documents the SAME DP_CRON_DID_NOT_FIRE storm recurring hours after this batch's item-1 verification —
+  added as a 3rd entry so a future reader of this batch sees the current (still-open) state of that residual, not
+  just the stale "deploy chain is clean" snapshot in this doc's own Progress Log.

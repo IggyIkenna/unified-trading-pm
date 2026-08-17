@@ -952,3 +952,4 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

@@ -169,17 +169,14 @@ the IaC config; the third is a Cloud Run job module removal.
       **Live-verified**: `tofu plan` for every applied resource now shows 0 diff (confirmed via 2 further full-repo
       plan runs post-apply); `data_pipeline_meta_watchers_job` confirmed 0-diff throughout (matches live 32Gi/cpu8).
       Follow-ups tracked below, not left implicit.
-      - [ ] [INFRA] P2. Retry the 3 `google_monitoring_alert_policy.cloud_run_service_crash_loop` creates
-            (`central-market-data-tardis-loader`, `market-data-query-service`, `uts-prod-data-status-rollup-svc`) —
-            `ENV=prod bash tofu.sh apply -target='google_monitoring_alert_policy.cloud_run_service_crash_loop'` once
-            the `run.googleapis.com/container/restart_count` metric is queryable for these 3 services (still 404ing as
-            of 2026-08-16 22:20 UTC after 3 retries over ~30min — may need longer than GCP's stated "up to 10
-            minutes", or may need at least one real restart event to index). Repo: deployment-service.
-      - [ ] [INFRA] P3. Re-add `cost_snapshot_cron`'s `X-API-Key` header (`cost_snapshot_scheduler.tf`) sourced from a
-            proper Secret Manager reference (never a hardcoded literal in `.tf` — the live value is currently a raw
-            string on the scheduler job, not yet in Secret Manager) — now load-bearing since `DISABLE_AUTH=false`
-            went live; without it the 12h cost-snapshot cron 401s silently and `/ops/costs` serves an
-            increasingly-stale cache. Repo: deployment-service.
+      - [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+            item 2.** ~~Retry the 3 `google_monitoring_alert_policy.cloud_run_service_crash_loop` creates
+            (`central-market-data-tardis-loader`, `market-data-query-service`, `uts-prod-data-status-rollup-svc`)~~ —
+            not yet executed, tracked there. Repo: deployment-service.
+      - [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+            item 3.** ~~Re-add `cost_snapshot_cron`'s `X-API-Key` header (`cost_snapshot_scheduler.tf`) sourced from a
+            proper Secret Manager reference~~ — not yet executed, tracked there; now load-bearing since
+            `DISABLE_AUTH=false` went live. Repo: deployment-service.
       - [ ] [INFRA] P3. Resolve `deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md` (own doc,
             not duplicated here) — still open, still oscillating labels between two module definitions on every
             untargeted apply.
@@ -255,3 +252,8 @@ the IaC config; the third is a Cloud Run job module removal.
     memory bumps), and the `liquidation-events`/`risk-params` output-map additions. No other memory/cpu/env changes
     found beyond the two already discussed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:3781134250532e10]: RECLASSIFY_SPLIT — extracted 2 of
+  3 remaining sub-items (retry the 3 crash-loop alert-policy creates; re-add cost_snapshot_cron's X-API-Key header)
+  to `infra_satellite_ao_dispatch_batch18_2026_08_17.md` items 2-3 (not yet executed). The 3rd sub-item (resolve the
+  t1_recon duplicate-module doc) is a pure forward-pointer to its own doc, not independent content — left as-is. Doc
+  stays `assigned_vm: NA`.

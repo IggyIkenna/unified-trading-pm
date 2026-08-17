@@ -67,7 +67,7 @@ context_scope:
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
     unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
-    /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
+    market-tick-data-service/scripts/backfill_bare_underlying_future_manifest_ids_2026_08_17.py,
   ]
 ---
 
@@ -388,6 +388,33 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       (1,956/20,134), `--apply` NOT run — see Progress Log for the full status and the shared-host-contention blocker
       that limited this session's scan progress (resolved via repo-blocker RB-17f1c27c; the script itself is
       unaffected and ready for the remaining `--report`-checkpointed chunks + a final `--apply-from-report`).
+      **DISCOVERY 100% COMPLETE 2026-08-17 (slot-7, data_engineering) — `market-tick-data-service@7c03fff2dd`
+      (bugfix, see Progress Log). `--apply` NOT run — blocked, see the new todo below.** Full discovery ran to
+      completion this session (20,134/20,134): `ok_split` 9,975 · `ok_single` 7,709 (17,684 correctable, 87.8%) ·
+      `phantom_no_object` 2,259 (different defect, untouched) · `object_non_canonical` 116 (untouched, see the
+      DERIBIT/trades stem-defect todo above — 26 of these were already known, the rest are the same class) ·
+      `content_mismatch` 75 (new verdict, sample-content-verify caught the stem/column disagreeing — untouched by
+      design). Two `--apply`/`--apply-from-report --apply` attempts were killed by the shared host's
+      resource-watchdog (peak RSS ~15.9-16.2GB vs. its 4096MB cap — `_apply()`'s
+      `pd.read_parquet(io.BytesIO(blob.download_as_bytes()))` loads the FULL canonical manifest into memory
+      unfiltered, not a bounded/columnar read); the watchdog's own kill message is explicit: "Do not re-spawn on
+      planning VM. Offload this workload to a spot VM." Not retried a third time per that directive — new todo
+      below.
+- [ ] [INFRA] P2. **New finding (2026-08-17, slot-7) — `_apply()`'s manifest write-back cannot run on the shared
+      planning VM.** `backfill_bare_underlying_future_manifest_ids_2026_08_17.py --apply`/`--apply-from-report --apply`
+      reads the ENTIRE canonical `_index/availability_index.parquet` into memory via
+      `pd.read_parquet(io.BytesIO(blob.download_as_bytes()))` before filtering/rewriting — measured peak RSS
+      15.9-16.2GB, confirmed killed twice by the host's resource-watchdog (4096MB cap; kill records
+      `/dev/shm/resource-watchdog/kills/4037316.json`, `4100168.json`). The watchdog's own message: "Do not
+      re-spawn on planning VM. Offload this workload to a spot VM." Discovery is 100% complete and durable enough
+      for this (see the item above) — 17,684 correctable rows are known and ready to apply; only the WRITE step is
+      blocked. Two options, either closes this: (a) dispatch `--apply-from-report <report>.jsonl --apply` to a
+      dedicated one-off VM per `/codex/05-infrastructure/vm-launcher-runbook.md` (the report itself will need
+      re-generating first — see the durable-handoff-location todo above, since no session's report has survived to
+      hand off yet); or (b) rewrite `_apply()` to a bounded/columnar rewrite (e.g. DuckDB against the downloaded
+      file on disk rather than `pd.read_parquet` on an in-memory `BytesIO`, per the DuckDB-over-pandas precedent in
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md`) so a future in-session `--apply` can succeed under
+      the 4GB cap. Repo: market-tick-data-service (+ VM dispatch is cross-cutting infra work, not this repo).
 - [ ] [DATA] P3. **New finding (2026-08-17, slot-22) — no durable cross-session handoff location exists for a
       `--report` JSONL checkpoint file, so every session's discovery progress on THIS backfill has been lost at
       session end (slot-19's report gone before slot-22 started; slot-22's own report will be gone once this
@@ -594,3 +621,41 @@ script's own footprint — a THIRD data_engineering worker retrying the identica
 differently while slot-3's issue persists. The dedicated-VM dispatch path (`/codex/05-infrastructure/vm-launcher-
 runbook.md`) is now the recommended path over further in-session chunking, or wait until slot-3's runaway script is
 independently resolved.
+
+### 2026-08-17 (slot-7, data_engineering) — discovery completed 100%; found + fixed a real bug; `--apply` genuinely
+### blocked (not host contention this time — the write step itself is unbounded)
+
+Verified slot-3's contention had cleared (`ps aux` showed no matching process; `free -h` showed 18-21GB available)
+before starting, per the prior session's own recommendation. Foreground-chunked discovery (2000-3000 rows/chunk,
+`run-bounded-analysis.sh`-wrapped, 6G cap) resumed from slot-22's 5,556 baseline — but that baseline was NOT actually
+reachable this session either (confirmed the durability gap the P3 todo below already tracks: slot-22's own report
+lived in ITS scratchpad, not mine); started a fresh report in this session's own scratchpad
+(`_scratch_slot7/backfill_bare_underlying_report.jsonl`) instead. `run_in_background` chunks were repeatedly killed
+by something outside this session's visibility (no resource-watchdog record for those PIDs, memory was healthy each
+time) — root cause not identified, worked around by switching to synchronous foreground chunks (each under the
+tool's own ~9min budget), which completed reliably. Hit a REAL bug mid-run: `int(row.get("row_count") or 0)` raises
+`ValueError: cannot convert float NaN to integer` on a NaN `row_count` (`NaN or 0` evaluates to `NaN`, not `0`,
+since NaN is truthy) — this aborted the whole `ThreadPoolExecutor` future-collection loop, killing an
+otherwise-clean chunk outright. Fixed with a `pd.notna()` guard, QG-verified, shipped
+`market-tick-data-service@7c03fff2dd`. Resumed chunking post-fix with zero further crashes.
+**Discovery reached 20,134/20,134 (100%, a first for this todo)**: `ok_split` 9,975 · `ok_single` 7,709 (17,684
+correctable) · `phantom_no_object` 2,259 · `object_non_canonical` 116 · `content_mismatch` 75 (new verdict, not seen
+in any prior partial run — the sampled content-verify catching a stem/column disagreement; correctly excluded from
+`ok`, not investigated further this session — belongs with the `object_non_canonical`/DERIBIT-trades stem-defect
+finding above if it recurs at scale). Ran `--apply-from-report --apply` twice — BOTH killed by the shared host's
+resource-watchdog with an actual kill record this time (unlike the earlier `run_in_background` mystery-kills):
+peak RSS 16.2GB then 15.9GB against the watchdog's 4096MB cap, message "Do not re-spawn on planning VM. Offload this
+workload to a spot VM." Root cause identified by reading `_apply()`: it downloads the FULL canonical manifest
+(`pd.read_parquet(io.BytesIO(blob.download_as_bytes()))`) unfiltered before matching/rewriting — this is NOT
+transient host contention like the two prior sessions hit, it is this function's own unbounded-memory design. Did
+NOT retry a third time per the watchdog's explicit directive. Filed the finding as a new `[INFRA] P2` todo above
+(two closing options: dedicated-VM dispatch, or a DuckDB-bounded rewrite of `_apply()`) rather than attempting a
+rushed fix to a live production-manifest write path under memory pressure. **Not flipping this todo's checkbox** —
+discovery is complete but the done-when (rows actually re-keyed) is still not met; VM launches are infra-craft
+scope, out of this data_engineering session's remit per `agents/data_engineering.md` `does_not`.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — swapped the resolved sibling finding
+  (`batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`, now `status: resolved`) for
+  `backfill_bare_underlying_future_manifest_ids_2026_08_17.py`, the script driving all three of today's active
+  discovery/apply sessions directly above (currently blocked on the shared host's memory watchdog). Other 5 entries
+  re-verified, unchanged.

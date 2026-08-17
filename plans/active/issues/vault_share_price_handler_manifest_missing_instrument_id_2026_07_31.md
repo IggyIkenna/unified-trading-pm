@@ -53,7 +53,8 @@ locked_since:
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_lst_rates_write.py,
+    market-tick-data-service/scripts/rename_vault_venue_canonical.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
   ]
 ---
@@ -189,3 +190,6 @@ for this exact multi-instrument-per-group shape.
   the gate. Filed the historical GCS-path+manifest migration (the pre-fix `MORPHO_VAULTS`-spelled backlog,
   2026-05-01 onward) as a new, distinct Follow-up above — the existing `rename_vault_venue_canonical.py` script is
   manifest-column-only and insufficient alone. Status stays `open` pending that follow-up.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — swapped in the pending migration script
+  (`rename_vault_venue_canonical.py`) and the delete-safety codex doc it must follow, dropped `_lst_rates_write.py`
+  (its pattern-reference is now stale — the instrument_id fix it modeled is already shipped and verified).

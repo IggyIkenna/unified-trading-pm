@@ -66,11 +66,12 @@ assigned_vm: planning
 depends_on: []
 context_scope:
   [
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
     unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
+    /plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md,
   ]
 ---
 
@@ -398,6 +399,14 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   needed from this task — the gap is already being worked by this newer fleet. Re-pointed the open Follow-up below at
   this fleet instead of the now-dead 2026-08-15 one. Skipped `reason_code: GATED` again — the done-condition still
   isn't met (fleet still running, multi-hour remaining, exceeds this task's `est_hours: 1.0`).
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — dropped `_read_index.py` (that follow-up closed as
+  a stale duplicate) and added `cefi_hl_aster_batch_data_gaps_2026_06_22.md`, the live parent doc this doc's own
+  Progress Log now repeatedly cross-references as tracking the sole remaining open HYPERLIQUID-reverify Follow-up.
+  Fingerprint match (step 4a): the exact VM name `cefi-hyperliquid-2023-20260816-020053` quoted in this doc's own
+  2026-08-16 slot-23 entry also appears in `hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md`
+  (that doc already cites this one back). The "19-VM fleet" this doc's Follow-up is watching was actually a 298-VM P0
+  runaway-billing-waste incident, cleaned to 8 keepers (1/cell) the same day. Added as a 6th context_scope entry so the
+  next worker on the HYPERLIQUID re-verify Follow-up sees the fleet's real current state, not the stale "19 VMs" framing.
 
 ## Follow-ups
 

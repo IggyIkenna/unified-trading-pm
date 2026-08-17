@@ -45,6 +45,7 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     scripts/workflow-templates/rollout-workflow-templates.sh,
     scripts/quality_gates/detect_template_drift.py,
+    /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
   ]
 ---
 
@@ -197,3 +198,5 @@ DATA, git-log-first diagnostic runbook for future recurrences): a standing condi
 one-off task -- and it is demonstrably still live and correct: the 2026-08-06 Progress Log entry documents a DIFFERENT
 (tradfi-tranche) auditor actually following this exact step during a real recurrence of the underlying
 stale-drift-vs-active-migration pattern, and correctly used the doc's own prescribed carve-out.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

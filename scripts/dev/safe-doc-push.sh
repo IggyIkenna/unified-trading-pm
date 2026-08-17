@@ -43,6 +43,12 @@
 #      a genuine content conflict (needs a human, not a robot retry) or a pre-commit hook
 #      rejection unrelated to drift.
 #
+# ⚠ RISK: the final push sends the CURRENT BRANCH TIP, not just this run's doc commit -- any
+# commit(s) ALREADY sitting ahead of origin before this script ran ride along too, landing on
+# origin/$BRANCH without ever passing quality-gates.sh or quickmerge's --agent sentinel (this
+# script runs neither, by design). Guarded by exit 16 below (refuses by default; override with
+# SDP_ALLOW_UNRELATED_AHEAD=1 once you've independently verified those commits are safe to carry).
+#
 # USAGE:
 #   bash scripts/dev/safe-doc-push.sh "<commit message>" --files "path1 path2 ..." [branch]
 #   branch defaults to live-defi-rollout. Message becomes the full commit message.

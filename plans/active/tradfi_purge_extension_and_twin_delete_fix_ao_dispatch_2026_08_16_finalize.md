@@ -42,3 +42,7 @@ resolved_by:
 - [ ] [REVIEW] P2. Confirm the residual-leg purge landed with evidence and the canonical_twin_path() lookup-bug
       investigation concluded (fixed + re-measured, or found to be a false lead) with the fresh coverage % recorded
       in `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`; archive that plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (1 entry).

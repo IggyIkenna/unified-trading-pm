@@ -914,3 +914,5 @@ sports/prediction-track blocker.
   (not-applicable — re-confirmed 0 open todos via a fresh full read + grep; every prose "[ ]" mention is historical
   narration, not a live checkbox). `archive_exempt: true` defers the archival call to `/archive-candidates-audit`, not
   this skill. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.

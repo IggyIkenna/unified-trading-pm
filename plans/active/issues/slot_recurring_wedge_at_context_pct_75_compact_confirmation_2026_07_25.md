@@ -473,3 +473,9 @@ full per-event detail beyond the summary above.
   settled enough for a bounded worker fix. Not re-litigated.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:09af26bd4b7aa636]: KEEP-NA, valid — item 5
+  (60-min context-signal re-validation, cited by the earlier same-day marker above) is now DONE (closed today, PASS
+  on both criteria — see "2026-08-17 validation window" section above). The remaining 4 items (auto-submit /compact
+  confirmation, force-kill-vs-retry-cap ordering, context-plateau detection, re-check learned windows once fleet
+  fully on sonnet-5) stay KEEP-NA valid — live-dispatch-critical-path watchdog machinery still being actively
+  characterized, consistent with 5+ prior audit passes' caution on this exact doc.

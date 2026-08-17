@@ -20,7 +20,7 @@ related:
   [
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md,
+    /plans/archive/2026_08/cloud_run_job_execution_status_watcher_design_2026_08_16.md,
   ]
 created: 2026-08-12
 author: claude-agent
@@ -45,7 +45,7 @@ context_scope:
 > **🟢 ARCHIVED 2026-08-16** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
 > ACKED-INTO-CODE rule. Every todo done: root cause fixed + verified live (`instruments-service@61c6710db1`,
 > `deployment-service@4966bc8509`/`c45bfea303`), alerting-coverage gap confirmed and scoped as its own design plan
-> (`/plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md`) rather than left open here.
+> (`/plans/archive/2026_08/cloud_run_job_execution_status_watcher_design_2026_08_16.md`) rather than left open here.
 
 ## What was found
 
@@ -232,7 +232,7 @@ mechanism, currently and repeatedly failing.
       design task, not a bounded fix — scope it as its own plan (repo: likely `unified-trading-pm`/`deployment-service`,
       registry update in `/codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml`) rather than folding into
       this issue. Not blocking this issue's resolution. **DONE 2026-08-16 (slot 17)**: scoped as a LOCAL design plan —
-      `/plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md` (design sketch + open questions;
+      `/plans/archive/2026_08/cloud_run_job_execution_status_watcher_design_2026_08_16.md` (design sketch + open questions;
       the real AO-dispatchable implementation plan forks from it once those are resolved).
 
 - [x] ✅ [CODE] P1. **New follow-up, filed 2026-08-12 (interactive session)** — the job's SLIM candidate pre-check
@@ -383,7 +383,7 @@ mechanism, currently and repeatedly failing.
 - **2026-08-16 (slot 17, infra craft)**: picked up the still-open `[INFRA] P3` follow-up (Cloud Run Job execution-status
   watcher has no tracking doc). Per the todo's own instruction, scoped it as a separate LOCAL (`assigned_vm: NA`) design
   plan rather than folding an open-ended cross-cutting design task into this issue —
-  `/plans/active/cloud_run_job_execution_status_watcher_design_2026_08_16.md` (design sketch mirroring `DP-VM-001`'s
+  `/plans/archive/2026_08/cloud_run_job_execution_status_watcher_design_2026_08_16.md` (design sketch mirroring `DP-VM-001`'s
   `exit_code_fleet_monitor.py`, open questions on scope/cadence/registry-shape, linked bidirectionally). Flipping the
   todo above; the real implementation work forks into an AO-dispatchable plan once that design doc's open questions are
   resolved.

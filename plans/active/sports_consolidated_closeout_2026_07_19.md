@@ -997,3 +997,4 @@ section above, which conflated answered and open items):
   newly extracted to `sports_satellite_ao_dispatch_batch16_2026_08_17.md`. **NOT applying the 11 citation fixes this
   pass** (doc was over the 1000L cap) — referred to `/plan-reconcile`; full citation list in this run's chat report.
 - **2026-08-17 (slot-10)**: flipped 2 stale Track K duplicates (see those todos) + condensed prose to stay under 1000L.
+- **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries, all resolve).

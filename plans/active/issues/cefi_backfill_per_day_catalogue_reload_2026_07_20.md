@@ -191,3 +191,6 @@ This profiling run was strictly read-only: zero code changes, zero GCS/manifest 
   release-tag minter, a wholly different subsystem (`post_cutover_silent_assumption_sweep_2026_07_23.md`). No
   criterion bounds the sole open item. No reclassification.
 - **na-eligibility-audit 2026-08-16** [body-hash:7537092b6116b0f1]: KEEP-NA, valid — Full end-to-end read (192 lines) confirms exactly 1 open todo, matching both the Phase-0 inventory and a fresh grep.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — re-verified all 5 entries resolve on
+  disk and remain accurate; content since the last marker was `na-eligibility-audit` re-confirmations only (no new
+  dependencies).

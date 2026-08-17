@@ -352,3 +352,4 @@ every category, not just conflicts) to match that.
   for `data_status_tab_and_downloads_remediation`'s 5 cleared items is now load-bearing per this todo's finding, not
   optional.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

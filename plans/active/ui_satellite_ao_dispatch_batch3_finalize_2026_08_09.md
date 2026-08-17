@@ -69,3 +69,7 @@ context_scope:
       this finalize doc archives alongside it in the same commit.
 
 ## Progress Log
+
+- **context-scout 2026-08-17**: refreshed context_scope (2 entries) — matches the doc's own `related:` field exactly
+  (the parent batch doc it is gated on, and the source doc its todo 1 reconciles into); code-free finalize gate, no
+  source path applicable.

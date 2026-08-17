@@ -7,7 +7,7 @@ summary: >-
   silently for 15 consecutive daily runs (2026-07-29..08-12) with zero page. This plan scopes the design of a
   fleet-wide Cloud Run Job execution-status watcher (mirroring DP-VM-001's exit_code-aware VM fleet monitor,
   generalized to `gcloud run jobs executions list`) before committing to a bounded AO-dispatchable implementation.
-status: active
+status: cancelled
 nature: design
 asset_group: [meta]
 stage: [meta]
@@ -21,7 +21,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -47,6 +47,26 @@ context_scope:
     /plans/archive/issues/understat_eu_typing_sweep_daily_job_oom_2026_08_12.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-17 (na-eligibility-audit, ui tranche, dispatch agt-96972b) — CANCELLED, fully moot.** The
+> generic Cloud Run Job execution-status watcher this plan exists to design is ALREADY LIVE in production, independent
+> of this plan: **DP-WATCHER-006**
+> (`deployment-service/deployment_service/data_pipeline_monitors/cloud_run_job_failure_watcher.py`, shipped
+> `deployment-service@302dcef3` 2026-08-07, refined `@a9d19692` 2026-08-14 — BOTH before this plan was filed
+> 2026-08-16) reads the Cloud Run Job execution history for every job in `cloud_run_job_registry.CLOUD_RUN_JOBS`
+> (guard-tested against every `terraform/gcp/*_scheduler.tf` job stem) and pages when the most recent execution
+> failed — including `understat-eu-typing-sweep` (`cloud_run_job_registry.py:234`), the exact job whose silent OOM
+> streak motivated this plan. Registered + `status: active` in `/codex/05-infrastructure/data-pipeline-alerts.md`:190
+> and `.registry.yaml`:626 (codex was already accurate — only this plan's premise was stale). Every one of this
+> plan's 5 "open questions" already has a shipped, evidenced answer: scope = `cloud_run_job_registry.CLOUD_RUN_JOBS`;
+> cadence = the existing `cli.py` periodic sweep (lines 843-846); dedup = the standard `emit_finding()`/
+> `route_finding()` pipeline + a `MissTracker` consecutive-miss gate; category = stayed `DP-WATCHER`; actuator =
+> shipped `PAGE_OPERATOR`-only, no auto-recover, by explicit design. Root cause of the stale premise: the originating
+> issue's DATA todo (`understat_eu_typing_sweep_daily_job_oom_2026_08_12.md`) probed only GCP-native/Terraform
+> monitoring-policy surfaces and never checked deployment-service's own code-level watcher registry, where
+> DP-WATCHER-006 had already lived for 5 days — a wrong-vocabulary absence-probe miss. Independently re-verified live
+> 2026-08-17 (file existence, registry line, `cli.py` wiring, codex status) before archiving, not just trusting a
+> classifier's say-so.
 
 ## Why this plan exists
 

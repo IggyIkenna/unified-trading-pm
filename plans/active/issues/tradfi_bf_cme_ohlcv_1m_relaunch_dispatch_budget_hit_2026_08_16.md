@@ -203,3 +203,18 @@ a repeat of the `cefi-aster-` pollution issue.
   independent mechanism re-covered it this time. Per RB-INFRA-RELAUNCH, did not relaunch. Paged the operator via
   `/blocked` with this update (FYI + recurrence-pattern flag naming the now-6th occurrence; no new decision
   blocking beyond the two open todos below). No code changed this session.
+- 2026-08-17 (slot 16, data_pipeline_failure escalation agt-938528): Received escalation for DP-VM-008
+  `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2025-20260817-130324` preempted, `tradfi-bf-cme-ohlcv-1m-` family again at 2/2
+  relaunch dispatches today (same fresh-day counter as the slot-1/4/8 entries above — this is the family's 7th
+  same-mechanism relaunch-block in 3 calendar days). Checked `plans/active/issues/` for an existing open issue
+  doc — this one, still open with both operator todos below unresolved — appending here rather than filing a
+  near-duplicate. `gcloud compute instances list --project=central-element-323112
+  --filter="name~'^tradfi-bf-cme-ohlcv-1m'"` (whole-project, all zones, 18 RUNNING/STOPPING instances in the
+  current ~13:10-13:16 UTC wave, groups g05/g06/g07 only) confirmed the exact preempted VM name is gone
+  (exact-name filter returns zero rows) AND that no `g01-*` instance of any shard/year exists anywhere in the
+  fleet right now (`^tradfi-bf-cme-ohlcv-1m-g01` filter also returns zero rows) — the current wave doesn't even
+  cover the g01 group at all. Matches the ORIGINAL 2026-08-16 `g02-6m-cl-2024`, slot-4 `eth-2022`, and slot-8
+  `g04-ho-ng-2026` shape: confirmed gone, genuinely un-relaunched, no independent mechanism re-covered it this
+  time. Per RB-INFRA-RELAUNCH, did not relaunch. Paged the operator via `/blocked` with this update (FYI +
+  recurrence-pattern flag naming the now-7th occurrence; no new decision blocking beyond the two open todos
+  below). No code changed this session.

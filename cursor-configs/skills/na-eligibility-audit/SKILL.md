@@ -192,12 +192,12 @@ marker is re-read in full every single run, forever).
    first: report it and route it through the normal conflict path (Phase 2 / operator ruling), never let
    last-writer-wins pick the answer.
 
-**Machine-enforcement is a tracked follow-up, deliberately NOT shipped with this rule.** Once the hand-applied rule has
-been validated over a few real runs, `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` should emit an explicit
-`owning_tranche` field per doc so a worker filters to the docs it owns instead of re-deriving the mapping inline. That
-work is the `[SCRIPT] P2` todo already tracked in
-`/plans/archive/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md` — do not open a
-second one here.
+**Machine-enforcement SHIPPED 2026-07-31 (`unified-trading-pm@afedd21eb`, corrected 2026-08-17 — this section
+previously said the field was "deliberately NOT shipped," which stopped being true the day after it was written).**
+`scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` now emits an explicit `owning_tranche` field per doc
+(derived from `parent_epic` via a static `EPIC_TO_TRANCHE` table) — read it directly from the Phase 0 JSON instead of
+re-deriving the mapping inline. Tracked in
+`/plans/archive/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md`.
 
 ### NEVER `git stash` as one of several concurrent sharded tranche workers (HARD, added 2026-07-30)
 

@@ -55,9 +55,9 @@ context_scope:
   [
     /plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md,
     /codex/02-data/honest-coverage-model.md,
-    market-tick-data-service/market_interface/adapters/tradfi/tardis_bulk_download.py,
-    market-tick-data-service/market_interface/adapters/tradfi/tardis_adapter.py,
-    market-tick-data-service/cefi_futures_chain_symbology.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_bulk_download.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py,
+    market-tick-data-service/market_tick_data_service/cefi_futures_chain_symbology.py,
     market-tick-data-service/configs/venue_data_types.yaml,
   ]
 ---
@@ -251,3 +251,6 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
   quickmerge runs were externally killed mid-run, one foreground 10-min call never even cleared the queue) — no code
   issue, purely host contention; eventually cleared. Todo 1 (the gated DERIBIT re-capture) remains open, still blocked
   on the N=1 Tardis-slot cap per the prior entries — not re-checked this dispatch (out of scope for todo 2).
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — corrected 3 entries whose paths were missing the
+  `market_tick_data_service/` package-directory segment (didn't resolve on disk as written); same 6 targets, paths
+  fixed.

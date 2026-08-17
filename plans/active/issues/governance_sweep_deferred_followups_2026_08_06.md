@@ -271,3 +271,4 @@ different task than writing the ruling:
   fork-PR-approval GitHub UI click with no API path), 1 bounded-but-gated-by-the-whole-doc-rule DIAG item, and 1
   editorial line-cap trim needing human judgment -- whole doc stays NA.
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:1b2b82f1cd31bf0e]: KEEP-NA, valid — all 3 remaining open todos carry explicit dated operator rulings confirming they stay open (live-trading go-ahead hard-stop; fork-PR-approval needs a manual GitHub UI click; a line-cap trim needs editorial judgment).

@@ -67,3 +67,4 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator ruling)**: extracted from
   `tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md` for AO dispatch, since the parent doc
   stays `assigned_vm: NA`.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

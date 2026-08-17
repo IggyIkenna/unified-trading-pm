@@ -32,7 +32,11 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 9, 2026-08-16"
 locked_by:
-context_scope: [/plans/active/sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -42,3 +46,8 @@ resolved_by:
 - [ ] [REVIEW] P2. Confirm the finding landed in both cited docs' Progress Logs with evidence; if it's a real
       dispatch bug (not just the Big Finding #3 dual-registration artifact), file a follow-on fix todo; archive
       this plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (2 entries) — `*_finalize` gate doc; added the archival-ritual
+  codex doc alongside the gating parent (this doc's own todo ends in "archive this plan once done and unlocked").

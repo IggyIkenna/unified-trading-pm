@@ -23,10 +23,10 @@ priority: P2
 source:
   "Discovered auditing an unrelated 2-file CI-workflow ship (.github/workflows/quality-gates-v2.yml + a new
   notify-slack.yml) that needed unified-trading-library's own quality-gates.sh green before it could ship."
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: NA
+execution_scope: orchestrator-agent
 model_tier: default
 thinking_tier: medium
 estimate_class: research
@@ -36,10 +36,17 @@ last_updated:
 supersedes:
 superseded_by:
 depends_on:
-assigned_role:
+assigned_role: infra
+effort: medium
 drift_direction:
 locked_since:
-context_scope: []
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    unified-trading-library/tests/config_interface/,
+    unified-trading-library/tests/cloud_interface/,
+    unified-trading-library/.github/workflows/quality-gates-v2.yml,
+  ]
 ---
 
 ## Finding
@@ -91,3 +98,11 @@ rather than force-shipped past a red gate.
       session independently confirmed for `agent-orchestrator`) but was never shipped because the full-repo gate
       couldn't go green for the unrelated reason above. Ship via
       `bash scripts/quickmerge.sh "<message>" --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/notify-slack.yml'`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:16a3edebe7baa883]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. Fresh doc (2026-08-15), no prior audit history, no gate/banner/lock. Todo 1 is a
+  diagnose-and-fix task with a stated methodology and a crisp done-when; todo 2 is a mechanical ship once todo 1
+  clears. No design/judgment call.
+- **context-scout 2026-08-17**: populated context_scope (4 entries).

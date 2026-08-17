@@ -47,7 +47,11 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
-  [/codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md]
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -159,3 +163,6 @@ urgency, and warrants its own scoped implementation + test pass.
   sufficient"), tighter than this doc's own todo 2 text (`--start-floor 2000-01-01`) — the batch doc is the live
   dispatch vehicle and its narrower text controls; this doc's stale wording is citation-only pointer text, not
   independently executed, so left as-is rather than editing a doc whose content isn't the dispatch source of truth.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) — added `engine/orchestrator/__init__.py`
+  (market-tick-data-service), the file the doc's own body names as `is_venue_available()`'s home and the actual fix
+  target of the still-open P3 relaunch todo; the 2 codex entries re-verified, unchanged.

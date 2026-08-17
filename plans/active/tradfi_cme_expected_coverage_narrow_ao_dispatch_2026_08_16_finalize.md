@@ -41,3 +41,7 @@ resolved_by:
 
 - [ ] [REVIEW] P3. Confirm the narrowing landed with evidence (QG green both repos, denominator math verified);
       flip the source `[DESIGN] P3` todo to done; archive this plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (1 entry).

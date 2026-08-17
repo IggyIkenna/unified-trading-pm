@@ -20,6 +20,14 @@ resolved_by: ""
 locked_by: ""
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+    unified-api-contracts/tests/test_execution_service_venue_coverage_cascade_invariant.py,
+    unified-api-contracts/tests/data/execution_service_venue_reachability_baseline.json,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
+  ]
 ---
 
 # uac_kamino_venue_reachability_cascade_regression_2026_08_15
@@ -96,3 +104,8 @@ reading would have forced a rushed wiring fix during an unrelated ship.
 baseline') stays open until the P0 dispatcher-wiring work in
 `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` lands and both venues can be removed from the
 reachability baseline in that same change, per the ratchet convention this doc's body states above.
+- **context-scout 2026-08-17**: populated context_scope (5 entries) — including a fingerprint match:
+  `venue_readiness_and_registry_hardening_2026_08_16.md` independently records the identical
+  `unreachable_defi_venues: ["morpho", "kamino"]` baseline content (`unified-api-contracts@88a71f8e`) and the same
+  test file, actively tracking the wiring work that would let both venues leave the baseline (this doc's own sole
+  open todo). context_scope added on both docs.

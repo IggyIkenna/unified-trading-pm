@@ -32,7 +32,12 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 8, 2026-08-16"
 locked_by:
-context_scope: [/plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+    /plans/active/issues/gate_on_depends_checks_completion_not_outcome_2026_08_17.md,
+    /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -67,3 +72,4 @@ resolved_by:
   effort that would clear it is now archived without a tradfi-specific fix. Backlog re-confirmed: no newer
   delete-execution task exists (only this confirm-task). Same conclusion holds — not flipping E7, not archiving,
   releasing GATED again.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

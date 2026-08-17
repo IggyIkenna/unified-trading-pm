@@ -604,3 +604,4 @@ context_scope:
     more days (~6.9 days total). Run.log 140,286 lines, actively growing. Done-when (VM exit 0, manifest rows written)
     unmet. Did NOT flip checkbox, did NOT launch a duplicate. Declining via `/skip-current-task` `reason_code=GATED` —
     ETA ~5.5 days.
+- **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries) — all 5 citations still resolve.

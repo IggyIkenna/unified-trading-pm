@@ -42,6 +42,8 @@ context_scope:
     /plans/epics/manifest_master.md,
     /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    market-tick-data-service/market_tick_data_service/scripts/,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
   ]
 locked_by:
 locked_since:
@@ -125,3 +127,4 @@ Text below is moved verbatim from `plans/epics/manifest_master.md` (was lines 22
   correcting one bare `active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` cross-reference to the
   leading-slash repo-root-relative convention.
 - **na-eligibility-audit 2026-08-17** [body-hash:d5da20f6b18619f3]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (workspace-grep audit for legacy gs:// bucket references) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 11. Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — added the live `ManifestWriter.add` call-site paths named in Todo 1 (the scripts/ dir covering 3 of 4 live call sites, plus the most recently-enhanced 4th).

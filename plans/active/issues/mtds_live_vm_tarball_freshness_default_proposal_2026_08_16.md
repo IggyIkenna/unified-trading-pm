@@ -174,3 +174,4 @@ instead of implicit via the shared library.
   auto-vs-enforce tradeoff above) rather than folded into this session, since the todo's own done-when only required
   the proposal doc to exist.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:0df0d853988b1b0d]: KEEP-NA, valid — doc's own author explicitly set assigned_vm: NA pending an operator read of an auto-vs-enforce policy tradeoff on live-trading-adjacent infra.

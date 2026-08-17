@@ -759,3 +759,11 @@ process itself in this pass).
   `--hotfix-to-main` (operator-only `QUICKMERGE_HOTFIX_TO_MAIN_OK=1`, not available to an agent) or any manual
   intervention in the promoter/SIT workflows themselves.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:1d62a3191fa5037a]: KEEP-NA, valid — 0 open
+  checkboxes (verified via grep), but the prose-only-remaining-work trap is real here: the "Fleet-wide audit" and
+  "Recurrence risk" sections describe genuinely unresolved items never converted to tracked todos (e.g. the
+  agent-orchestrator LDR→main promotion still blocked on its own deleted-workflow reference, PR #814 left open per
+  this doc's own text; the instruments-service PR #1092 v2 failure "not chased further"). Flagging for a future
+  `/plan-reconcile` pass to convert to tracked `- [ ]` items per the findings-closure HARD RULE — out of this skill's
+  own mandate (assigned_vm classification, not corpus-wide prose-vs-checkbox reconciliation) to author them here
+  without a full re-verification read.

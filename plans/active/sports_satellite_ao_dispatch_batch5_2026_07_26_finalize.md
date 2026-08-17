@@ -264,3 +264,5 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the actual root-cause doc for this plan's
   own multi-dispatch GATED stall (dispatcher never derives a fresh task for the reworded batch5 zombie-tick todo).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- 4th scout pass; re-verified all 6
+  entries still resolve on disk and remain the correct minimal set; unchanged.

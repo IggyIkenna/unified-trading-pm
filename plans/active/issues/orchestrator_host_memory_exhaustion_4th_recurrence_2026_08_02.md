@@ -156,24 +156,11 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
       survives 15 days later; both then-live candidates were already ruled out same-day. Redirected to the todo's own
       fallback ("check for any newly-observed high-memory process") via `ao_satellite_ao_dispatch_batch21_2026_08_16.md`
       item 5 — see that Progress Log + the new follow-up todo below for the concrete finding.
-- [ ] [INFRA] P2. **Wrap or streamify the CEFI-manifest-scale scripts in `market-tick-data-service/scripts/` that are
-      the dominant current source of resource-watchdog kills** — found 2026-08-17 while root-causing the item above:
-      queried `journalctl -u resource-watchdog` + `/var/log/snapshots/kill_*.txt` (the live enforcement mechanism's own
-      kill corpus) for the last 7 days: 187 kills total (`KILL #146`-`#332`), 25 of them individually >10GB RSS (peak
-      20.2GB), concentrated on slots 6 (49 kills), 2 (22), 25 (13), 27 (10), 14 (10). Every inspected >10GB snapshot's
-      `/proc/<pid>/cmdline` names one of 4 scripts, all in `market-tick-data-service/scripts/`:
-      `normalize_instrument_type_casing.py --index-only --dry-run` (up to 15.2GB), `audit_cefi_manifest_noncanonical_
-      enumeration_2026_07_18.py` (5.5-5.9GB), `revert_cefi_live_corrective_migration_overreach_2026_08_16.py` (up to
-      19.5GB), `measure_shard_duration_p95.py` (5-10GB, scales with `--concurrency`). Each materializes a full
-      CEFI-scale manifest/index into memory rather than a streamed/chunked read — the exact RULES.md §1
-      heavy-compute-on-shared-host violation class, now named at the individual-script level for the first time.
-      **Verdict**: resource-watchdog is containing the symptom correctly (no repeat of the pre-watchdog aggregate
-      49.3G/16G-swap crash-loop since going live) but is having to kill these same few scripts dozens of times a week —
-      fixing the scripts (stream the manifest read, or wrap in `scripts/dev/run-bounded-analysis.sh`) would eliminate
-      the kill volume at the source rather than relying on the reaper every time. **Done when**: each of the 4 named
-      scripts either reads its manifest/index in a bounded/streamed fashion or is wrapped in
-      `run-bounded-analysis.sh`, and a 7-day post-fix kill-log check shows zero kills attributable to these script
-      names. Repo: market-tick-data-service.
+- [x] ✅ [INFRA] P2. **EXTRACTED 2026-08-17 (na-eligibility-audit, later same day) → `ao_satellite_ao_dispatch_batch23_2026_08_17.md`
+      item 6 — bounded-read/streaming fix for the 4 named CEFI-manifest scripts** (`normalize_instrument_type_casing.py`,
+      `audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`, `revert_cefi_live_corrective_migration_overreach_2026_08_16.py`,
+      `measure_shard_duration_p95.py`). Full finding (187 kills/7d, 25 >10GB RSS, per-script sizes) preserved in this
+      doc's own 2026-08-17 Progress Log entry below. Track dispatch/completion in the batch plan, not here.
 - [ ] [OPERATOR] P2. **Confirm or rule out kernel-level OOM-killer activity via `dmesg`/`journalctl -k` with root access
       on the host.** Every read attempt so far has hit ring-buffer permission denial ("dmesg still permission-denied on
       this host (inconclusive, not ruled out)" -- recurring across the ~18:08Z, ~18:40Z, and 2026-08-06 Progress Log
@@ -429,3 +416,8 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   above. Net verdict: resource-watchdog is containing the symptom (no repeat aggregate 49.3G/16G-swap crash-loop since
   going live), but is having to kill this same script family dozens of times/week — fixing them at the source is the
   actionable next step. Cited back into the tracker's Track 4 and `ao_satellite_ao_dispatch_batch21_2026_08_16.md`.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:3919b6b9c8b29c8a]: RECLASSIFY (per-todo split) — the
+  new [INFRA] P2 CEFI-manifest-script streaming fix (found today via this doc's own root-cause work above) is
+  conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 6. The [OPERATOR] P2
+  dmesg/journalctl root-access item stays KEEP-NA — genuinely CREDENTIAL_BLOCKED, agent slots lack root-level host
+  access.

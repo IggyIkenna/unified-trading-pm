@@ -62,7 +62,14 @@ depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
-context_scope: [/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
+context_scope:
+  [
+    /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/sports_satellite_ao_dispatch_batch15_2026_08_17.md,
+  ]
 ---
 
 ## What I found
@@ -510,6 +517,12 @@ already caught once.
   `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md`. No repo code changes this session (read-only
   script re-runs only, no new script written).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added
+  `/plans/active/sports_satellite_ao_dispatch_batch15_2026_08_17.md` on a confirmed evidence fingerprint match: this
+  doc's Part-3 pass and that batch's todo 5 independently cite the identical live-VM literal
+  `mtds-live-sports-odds-api-odds-20260816-145019` as verification the odds_api writer-flip cutover is clean -- same
+  underlying incident, different investigations (found while scouting the batch15 doc; appended after this same
+  day's earlier context-scout pass above).
 
 
 ## Context scout

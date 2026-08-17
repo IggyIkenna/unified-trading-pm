@@ -118,3 +118,9 @@ process long-dead) vs a live session's genuine in-flight scratch — only then i
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:2a2570b34efd7403]: content fully resolved — both
+  todos already `[x]` DONE, no prose-only remaining work found on full read. Not archived: `archive_exempt: true`
+  (own frontmatter) blocks the ritual pending the referencing parent plan
+  (`infra_satellite_ao_dispatch_batch15_2026_08_10.md`) reaching a terminal status — a standing, documented bridge,
+  not overridden here (out of this skill's mandate; route to `/archive-candidates-audit` if that parent plan has
+  since archived).

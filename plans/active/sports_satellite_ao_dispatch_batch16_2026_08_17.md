@@ -102,3 +102,5 @@ carries an `[OPERATOR]` tag or a design/judgment call; both are bounded, worker-
   `sports_satellite_ao_dispatch_batch15_2026_08_17_finalize.md`'s identical deferral for its own 11 items). **Status
   set `active`** (not `draft`) per the 2026-07-30 no-double-gate ruling this skill's own verdict already constitutes
   the operator decision to apply.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) -- re-verified all 3 entries still
+  resolve on disk; no change.

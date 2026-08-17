@@ -160,3 +160,9 @@ prior design history verbatim from the parent plan's Progress Log.)_
   unresolved.
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:c157de4d901e534d]: KEEP-NA-STALE-DUPLICATE (re-confirmed)
+  — the sole open todo was already extracted 2026-08-16 to
+  `deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16.md` (+ finalize), which stays
+  `assigned_vm: planning`. That extraction doc's own 2 todos are still open (no shipped sha yet), so this doc's
+  checkbox is not pre-flipped — the citation already lives in this doc's 2026-08-16 Progress Log entry. Doc correctly
+  stays NA per that same entry's operator ruling.

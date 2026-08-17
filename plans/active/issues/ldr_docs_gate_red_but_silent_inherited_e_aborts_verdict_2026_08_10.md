@@ -31,8 +31,9 @@ priority: P1
 source: >-
   /ci-reconcile § 0b standing-monitor sweep, 2026-08-10 — `ldr-docs-gate` was the one red monitor of 23, and had posted
   nothing to #ci-failures in the entire sweep window.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 drift_direction: advance-infra
 depends_on: []
 locked_by:
@@ -131,3 +132,4 @@ when the violation list is empty.
   been found from the Slack channel, since the defect's whole effect is the absence of a Slack message. Concrete support
   for this skill's own § 6 rule that silence is not evidence of health.
 - **context-scout 2026-08-17**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:c88a527ed1719554]: RECLASSIFY (whole-doc) -- all 3 remaining open todos are bounded/deterministic CI-infra hygiene with the root cause and fix pattern already proven in this doc's own "What shipped" section: document a known GH-Actions gotcha, run a fully-specified fleet-wide `rg` sweep + apply the proven `set +e` fix, add a meta-assertion CI check. No operator gate, no design ambiguity. Flipped `assigned_vm: NA -> planning`, `execution_scope -> orchestrator-agent`, `assigned_role: backend_engineer` (all 3 todos are `[BACKEND]`). Conflict-check clear (grepped active planning docs + cross_cutting_consolidated_closeout_2026_07_25.md, no prior claim on this content). Companion finalize plan: `ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10_finalize_2026_08_17.md`. Cross-cutting tranche audit.

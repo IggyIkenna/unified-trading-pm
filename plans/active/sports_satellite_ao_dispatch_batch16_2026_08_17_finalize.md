@@ -76,3 +76,5 @@ context_scope:
   task here until batch16's own 2 todos are done. Authored `status: active` (not `draft`), same no-double-gate
   reasoning as batch16 itself. This finalize plan's todo 1 additionally owns the source-doc citation-flip that
   batch16's own extraction pass could not perform directly due to the source doc's line-cap state.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries) -- re-verified both entries still
+  resolve on disk; no change.

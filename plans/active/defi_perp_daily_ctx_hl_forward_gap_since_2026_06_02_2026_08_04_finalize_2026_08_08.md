@@ -120,3 +120,4 @@ Machine-held (`gate_on_depends: true`) until every todo in
   suite (11001 passed, 0 failed) stayed green; `[DIAG] P3` was confirmed run with its finding recorded in the source
   issue doc. No mis-citation found — nothing needed correcting in the source doc. `[DOC] P2` (the archival ritual) is
   the plan's remaining todo — not in this task's scope.
+- **context-scout 2026-08-17**: re-verified context_scope, no change needed (4 entries).

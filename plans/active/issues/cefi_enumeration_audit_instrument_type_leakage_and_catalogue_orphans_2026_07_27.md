@@ -57,8 +57,8 @@ context_scope:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py,
-    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
-    market-tick-data-service/scripts/migrate_cefi_dated_perps_margin_marker_2026_07_09.py,
+    market-tick-data-service/scripts/migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_margin_marker.py,
   ]
 ---
 
@@ -248,8 +248,13 @@ adjacent axis the same script happens to also report). **Both findings investiga
           migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
           Repos: instruments-service, market-tick-data-service.
 
-- [ ] [DATA] P2. **SCRIPT WRITTEN + DRY-RUN VERIFIED 2026-08-17 (slot-24) — NOT YET COMMITTED/SHIPPED, blocked on
-      repo-blocker `RB-3d968cff`** (market-tick-data-service `quality-gates.sh` fails on 2 PRE-EXISTING unit tests
+- [x] ✅ [DATA] P2. **SHIPPED 2026-08-17 (slot-24) — market-tick-data-service@15d4777f45** ("feat(cefi): extend
+      margin-marker coverage to BYBIT/COINBASE-FUTURES/BITGET-FUTURES dated perps"), landed on `live-defi-rollout`
+      once repo-blocker `RB-3d968cff` cleared (resolved same day, see
+      `plans/archive/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`). Post-push ancestry verified;
+      `ahead=0`. The `--apply` corpus migration itself is NOT part of this todo's scope — that's the separate P2 todo
+      immediately below. **SCRIPT WRITTEN + DRY-RUN VERIFIED 2026-08-17 (slot-24)** (market-tick-data-service
+      `quality-gates.sh` had failed on 2 PRE-EXISTING unit tests
       unrelated to this diff — `test_solana_defi_handler.py::TestCollectProtocol::test_writes_data_to_gcs`,
       `test_lst_rates_handler.py::test_process_writes_canonical_partition_per_protocol_chain` — verified via
       `git stash` + re-run on clean HEAD; see
@@ -327,6 +332,14 @@ adjacent axis the same script happens to also report). **Both findings investiga
 
 ## Progress Log
 
+- **2026-08-17 (slot-24, shipment)**: repo-blocker `RB-3d968cff` (market-tick-data-service QG RED, unrelated to this
+  diff) cleared same day — see `plans/archive/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`. Shipped
+  the 3 previously dry-run-verified margin-marker files via quickmerge:
+  `market-tick-data-service@15d4777f45` ("feat(cefi): extend margin-marker coverage to
+  BYBIT/COINBASE-FUTURES/BITGET-FUTURES dated perps"), landed on `live-defi-rollout`, post-push ancestry verified,
+  `ahead=0`. First P2 todo flipped done. Second P2 todo (the corpus-scale `--apply` VM dispatch) remains open — not
+  operator-gated, needs a dedicated VM per the heavy-I/O HARD RULE; re-verify bucket soft-delete retention live before
+  `--apply` since the 2026-08-08 check may be stale.
 - **2026-08-16 (na-eligibility-audit follow-up, operator ruling — resolves the round5-vs-round7 conflict)**:
   **round5's reclassification stands** — the P2 marker-format-migration todo is ordinary AO-dispatchable work, not
   operator-gated. Whichever active plan currently owns `cefi_satellite_ao_dispatch_batch10_2026_08_08` content (that
@@ -409,3 +422,7 @@ adjacent axis the same script happens to also report). **Both findings investiga
   `mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`); the 3 files (script + `tardis_margin_marker.py`
   extension + unit tests) sit uncommitted in slot-24's working tree pending the blocker clearing. Do not re-flip the
   todo above to done until a real sha exists.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — swapped the now-superseded pattern-reference
+  script and the long-resolved batch5 plan for today's actually-shipped migration script
+  (`migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py`) and the `tardis_margin_marker.py` module it
+  extends.

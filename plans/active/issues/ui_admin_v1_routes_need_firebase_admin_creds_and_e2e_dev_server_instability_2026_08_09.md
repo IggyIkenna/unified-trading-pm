@@ -149,3 +149,9 @@ just the ones in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
   claim: `next.config.mjs` `serverExternalPackages` + `dev:mock` `NODE_OPTIONS` heap cap). Todos 1 (Firebase Admin
   credential/emulator decision) and 3 (re-run gated on both) remain genuinely open — this doc stays `status: open`, NOT
   an archival candidate.
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:a468923c53cc8830]: KEEP-NA, valid — todo 1 (Firebase
+  Admin credential-vs-emulator decision) is explicitly self-framed as an operator/infra decision with no ruling on
+  record; todo 3 is dependency-blocked on it. Live-verified 2026-08-17: `ci.yml`'s e2e job still has no
+  FIREBASE_ADMIN_CREDENTIAL/emulator step and `mock-handler.ts` still routes `/api/v1/` to the real server unchanged —
+  gap confirmed still live, not stale.
+- **context-scout 2026-08-17**: populated context_scope (6 entries).

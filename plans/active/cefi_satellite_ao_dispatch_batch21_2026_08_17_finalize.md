@@ -76,3 +76,4 @@ source: >-
 
 - **na-eligibility-audit 2026-08-17 (cefi tranche, dispatch agt-af111e)**: authored alongside the batch, gated from
   the start.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

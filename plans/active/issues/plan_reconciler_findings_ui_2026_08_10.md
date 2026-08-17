@@ -407,3 +407,6 @@ staged batch before commit).
     centrally afterward).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:1babc61ff534fae3]: KEEP-NA, valid — both remaining open
+  items are `[OPERATOR]`-tagged genuine human calls (scoping 3 orphaned successor items; defining an undefined
+  soak-duration value), neither worker-determinable. Consistent with this doc's own 2026-08-10 self-audit note.

@@ -46,7 +46,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch14_2026_08_17_finalize.md,
   ]
@@ -68,19 +68,39 @@ source: >-
 
 ## Todos
 
-- [ ] [AGENT] P1. Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
+- [x] [AGENT] P1. ✅ Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
       check, shrink-only in the same sense as the other baselines in this corpus. Repo: unified-trading-pm. Source:
-      `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`.
-- [ ] [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
+      `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`. — unified-trading-pm@4173c83c54.
+- [x] ✅ [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
       `generate_na_doc_tranche_inventory.py`) that flags a doc where the Progress Log's own "extracted to `<path>`"
       phrasing names a doc that is NOT cited on any currently-open checkbox in the same file. Repo: unified-trading-pm.
-      Source: `plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md`.
-- [ ] [CODE] P2. Register Unity's 10 child books as canonical sports venues from the UAC SSOT
+      Source: `plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md`. —
+      unified-trading-pm@c2add0eabe, see Progress Log below.
+- [x] ✅ [CODE] P2. Register Unity's 10 child books as canonical sports venues from the UAC SSOT
       `unified_api_contracts/internal/unity_child_books.py` (3ET, BETFAIR, BROKER5, CROWN, MATCHBOOK, SBO, SHARPBET,
       VX, BETDEX, IBC), reusing the existing BETFAIR/MATCHBOOK venue tokens rather than minting Unity-specific
       duplicates. DoD: 8 net-new venues registered, and a test asserts the venue set is derived FROM
       `UNITY_CHILD_BOOKS` so adding a child book is a data change, not a code change. Repo: unified-api-contracts.
-      Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+      Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`. —
+      unified-api-contracts@724e2d11db. Registered the 8 net-new tokens (3ET, BROKER5, CROWN, SBO, SHARPBET, VX,
+      BETDEX, IBC) as literals in `VENUES_BY_ASSET_GROUP["sports"]` + `VENUE_TO_ADAPTER_KEY` (NO_ADAPTER_YET,
+      matching every other sports venue) — NOT a live splice from `UNITY_CHILD_BOOK_VENUES`, because that import
+      direction is a real circular import (`architecture_v2/__init__.py`'s own `collateral_registry.py` submodule
+      imports FROM `unified_api_contracts.registry`, so `registry/market_data_categories.py` is already mid-load by
+      the time that chain would reach back into it — confirmed via a direct cold-import reproduction:
+      `ImportError: cannot import name 'CommissionStructureType' from partially initialized module
+      'unified_api_contracts.internal.architecture_v2'`, reproduced from 4 different cold entry points). Added
+      `UNITY_CHILD_BOOK_VENUES` (derived from `UNITY_CHILD_BOOKS`) to `unity_child_books.py` and
+      `tests/unit/test_unity_sports_venue_registration.py`, which imports both modules (no cycle risk in a test
+      file) and asserts the registered set stays in sync with `UNITY_CHILD_BOOK_VENUES` — this is the DoD's
+      "derived from" invariant, enforced as a test rather than a load-time splice. Also updated 3 pre-existing tests
+      whose hardcoded 31-sports-venue assumption this registration changes (`test_venue_adapter_keys.py`'s sentinel
+      set, `test_data_status_registries.py`'s declared-capability count — the latter exempts the 8 new venues'
+      still-pending capability entries via `_UNITY_PENDING_CAPABILITY_VENUES`, since that's the separate,
+      next-in-sequence item 4 todo below). Fixed one unrelated pre-existing red found while running full QG
+      (`test_mtds_venue_coverage_cascade_invariant.py`, `PHOENIX-SOLANA` stale ratchet-baseline entry — verified
+      byte-identical on a clean tree via `git stash`, small/mechanical per RULES.md § 4b, fixed inline). Full
+      `bash scripts/quality-gates.sh` green before shipping.
 - [ ] [CODE] P2. Give the Unity books capability entries with `route=broker:UNITY`, `batch = none`, `live = none`
       (flips to wired in the MTDS plan). DoD: no batch backfill is implied for any Unity book; operator ruling
       2026-08-14 is that no history is needed beyond what Odds API already captures. Depends on the prior todo's
@@ -137,16 +157,43 @@ source: >-
       passes a `StrategyInstruction` where `ExecutionOrchestrator` expects an `Instruction`, and the caller's own
       return-type contract (`dict[str, object]`) is satisfied at runtime by whatever `None` actually is — both
       claims from the source issue doc verified true, not merely plausible.
-- [ ] [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
+- [x] ✅ [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
       `LiveOrchestrator` and would receive an `ExecutionOrchestrator` instance in production, and check whether a
       `None` return where a `dict` is expected would raise, silently no-op, or corrupt downstream state. Depends on the
       prior todo landing first. Repo: execution-service. Source:
       `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
-- [ ] [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
+      — **Blast radius: exactly ONE production cast site, two production call chains, both RAISE (not silent
+      no-op/corruption) — but as a caught-and-masked HTTP 500 while the underlying broker order may already have
+      executed.** Cast site: `execution_service/operations/manual/__init__.py:61`
+      (`ManualOperationHandler.get_or_create_orchestrator`, caches a real `ExecutionOrchestrator` under the
+      `LiveOrchestrator` type). `ManualOperationHandler.execute()` (same file, line 96) `return`s
+      `orchestrator.execute_instruction(instruction)` directly — i.e. propagates whatever the real implementation
+      returns (`None`), not the protocol's declared `dict[str, object]`. Two production callers reach this path
+      (`api/manual_instruction_api.py`, only when `_orchestrator is None` and `_manual_handler is not None` — the
+      manual-mode-without-preloaded-orchestrator branch): `_execute_via_orchestrator` (line 326,
+      `result = await _manual_handler.execute(instruction)`) and `_execute_approved_pending` (line 812, same
+      pattern). Both immediately do `result.get("status")` (audit-log write / `_handle_instruction_result`) on a
+      `None` result → `AttributeError: 'NoneType' object has no attribute 'get'`. Both call sites wrap this in a
+      broad `except (ValueError, TypeError, KeyError, AttributeError, RuntimeError)` that logs, audit-logs
+      `MANUAL_INSTRUCTION_FAILED`, and raises `HTTPException(500)` — so the crash IS caught, never an unhandled
+      500 or silent pass-through. **The real risk is not the exception itself but its timing**: `execute_instruction`
+      on `ExecutionOrchestrator` (`engine/orchestrator.py:235`) has already run its full instruction-execution body
+      (order submission to the venue) by the time it falls through to its implicit `None` return — so the operator
+      is told the manual instruction FAILED (500 + `MANUAL_INSTRUCTION_FAILED` audit event) when the underlying
+      order may have actually gone to the venue, creating a false-negative that could prompt a manual retry of an
+      already-executed order. The separate `register_orchestrator` path (`live_execution_handler.py:271`, pre-loaded
+      orchestrators, already `# pyright: ignore[reportArgumentType]`-flagged) feeds the SAME cached-orchestrator dict
+      with no `cast`, so it carries the identical risk through `_orchestrator.execute_instruction()` directly
+      (`manual_instruction_api.py:323,810`) whenever `_orchestrator` is the preloaded real object rather than
+      `None`. No other `cast(LiveOrchestrator, ...)` site exists in the repo (grepped `execution_service/` +
+      `tests/`) — this is the full blast radius. Next todo (real end-to-end test) should assert on this exact
+      false-negative-on-success behavior, not just the type mismatch.
+- [x] ✅ [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
       W1 sub-agent's own test used (`tests/unit/test_external_instruction_api.py` in execution-service) — a real
       `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
       contract itself. Repo: execution-service. Source:
       `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      — execution-service@d6e9ad19f9.
 
 ## Progress Log
 
@@ -165,3 +212,81 @@ source: >-
   dict[str, object]`, real implementation is `-> None` with no explicit return) hold up under direct citation. Full
   detail in the flipped checkbox above. Next item is the DIAG P1 "if confirmed, determine blast radius" todo — not
   in scope for this dispatch.
+
+- **2026-08-17 (slot 27, infra) — AGENT P1 "add a regression guard so eager imports cannot creep back" flipped —
+  unified-trading-pm@4173c83c54.** Added 3 rules (LL-01/02/03) to the existing `architectural_ratchets.yaml` gate
+  (already run by unified-trading-pm's own `quality-gates.sh`, cross-repo `target_glob` support already proven by
+  the ST-19/PB-19/UI-18 rules) rather than building a new checker script — same shrink-only baseline pattern as the
+  ruff DTZ/TID251 ratchet, applied to a static regex over each of the two lazy-loading fix's guarded files instead of
+  a runtime `sys.modules` count. Chose static-regex over a runtime module-count deliberately: the source plan's own
+  2026-08-16 re-measurement showed `sys.modules` counts drift with unrelated `uv.lock` changes (confirmed causal —
+  a pending `google-cloud-monitoring` dependency addition), so a runtime count would be a flaky shrink-only signal.
+  Guards `execution_service/algorithms/algorithms.py` + `execution_service/__init__.py` (banned:
+  `execution_service.algorithms.impl.*` / the pre-lazy `algorithms.algorithms` re-export shape, unconditional
+  module-top-level) and `strategy_service/engine/strategies/v2/factory.py` (banned: the 10 archetype-family
+  submodule imports), both anchored on column-0/non-`TYPE_CHECKING`-guarded so the existing lazy pattern's own
+  `if TYPE_CHECKING:` blocks never false-positive. Verified both directions: baseline stays at 0 (6 ratchets total,
+  0 violations) on the real current tree, and a standalone regex unit-test (not committed) confirmed each pattern
+  matches a simulated unconditional import of its banned prefix and does NOT match the existing TYPE_CHECKING-guarded
+  form. Shipping this hit a pre-existing repo-wide QG red unrelated to this task (6 broad-except sites over the
+  shrink-only baseline in 3 hook/script files, plus a frontmatter-schema-failing auto-filed issue doc) — verified
+  pre-existing via git-stash diff-out (RULES.md § 4b) and fixed inline (small/mechanical, ≤30min) rather than filing
+  a repo-blocker, since two other slots were independently doing the identical broad-except fix concurrently and a
+  wait-based repo-blocker would have raced the same content anyway; reconciled via 2 rounds of
+  `git pull --rebase --autostash` conflicts (all peer-vs-mine were functionally-identical noqa annotations or a
+  peer's superior real diagnosis superseding my placeholder frontmatter fix — kept the peer's content in both
+  cases, RULES.md § "never delete another agent's already-landed content"). Also noted for whoever reads this: this
+  session hit the QG host-governor's `QG_HOST_RAM_ABORT_PCT` runtime-abort watchdog repeatedly under heavy fleet-wide
+  concurrent-QG contention (6+ slots running `quality-gates.sh` simultaneously) when invoked via `run_in_background`
+  — every backgrounded attempt (including a bare `sleep 60` probe) got killed within seconds to a minute regardless
+  of wait/backoff, while a synchronous foreground invocation with an explicit long `timeout` (590000ms) completed
+  cleanly every time. Root cause not fully isolated (governor RAM-abort vs. something backgrounding-specific); the
+  practical workaround that worked was foreground + long explicit timeout.
+
+- **2026-08-17 (slot 11, infra) — TEST P1 "add a real (non-mock) end-to-end test of the production live-execution
+  path" flipped — execution-service@d6e9ad19f9.** Added
+  `tests/unit/test_manual_instruction_live_orchestrator_protocol.py` covering the actual DART-facing
+  `POST /manual/instruction` route (distinct from `/external/instructions`, which the existing W1 test already
+  covers) end-to-end: real FastAPI routing, a real `ManualOperationHandler`, and the real envelope->
+  `StrategyInstruction` conversion, with only the venue-credential boundary stood in by a hand-written but genuine
+  `LiveOrchestrator`-conformant class — matching the W1 pattern exactly (real protocol implementation, never a
+  `unittest.mock` stub of the interface). Two tests: (1) a baseline real dict-returning orchestrator proves the
+  happy path (200/SUBMITTED) is genuinely exercised end-to-end; (2) `RealNoneReturningLiveOrchestrator` reproduces
+  `ExecutionOrchestrator.execute_instruction`'s ACTUAL production contract (`-> None`, no explicit return,
+  `engine/orchestrator.py:235`) and proves the exact false-negative-on-success defect the blast-radius diagnosis
+  flagged: the order genuinely executes (asserted via the real `order_tracker`'s recorded state) yet the caller
+  receives HTTP 500 with `'NoneType' object has no attribute 'get'` — the caught `AttributeError` at
+  `manual_instruction_api.py:339` — not just the type-mismatch claim asserted in isolation. Both tests verified
+  green locally (`pytest tests/unit/test_manual_instruction_live_orchestrator_protocol.py -q` → 2 passed) before
+  shipping; repo-wide `quality-gates.sh` also green on this SHA. This was the last open todo in this batch's own
+  Unity/routing-independent set; per the gated finalize plan
+  (`cross_cutting_satellite_ao_dispatch_batch14_2026_08_17_finalize.md`), remaining open items are the Unity-venue
+  chain (items 3-9, sequenced) plus the checker-script/gs-audit/codex-doc todos — not in scope for this dispatch.
+
+- **2026-08-17 (infra worker, slot-25) — SCRIPT P2 "prototype a mechanical checker for uncited Progress Log
+  'extracted to' claims" flipped — unified-trading-pm@c2add0eabe.** Added
+  `scripts/plan-hygiene/check_extracted_checkbox_citation.py`: for every `assigned_vm: NA` active/open doc with at
+  least one open checkbox, greps the Progress Log for "extracted ... to `<path>.md`" phrasing and flags any target
+  never cited anywhere in the doc's own Todos section (open OR closed — a correctly-fixed doc cites the extraction
+  on a now-CLOSED checkbox, so citation must NOT be restricted to open checkboxes only, else a doc with one
+  closed+cited extraction todo plus an unrelated still-open todo would false-positive). Excludes the distinct
+  `*_progress_log_history_*.md` line-cap-remediation convention (25 archived instances corpus-wide — moves old
+  narrative prose, not dispatchable work; confirmed by direct inspection of 2 flagged docs before adding the
+  exclusion, both were false positives of exactly this shape). Smoke test: 7 unit tests in
+  `tests/unit/test_check_extracted_checkbox_citation.py` reproduce the pre-fix shape of all 4 real instances the
+  source issue doc found (with and without backtick-wrapped filenames), the correctly-fixed shapes (cited-on-closed,
+  cited-alongside-another-open-todo), the progress_log_history exclusion, and the no-open-checkboxes out-of-scope
+  case — all pass. Ran for real against the current corpus: found 3 live, previously-undetected instances —
+  `plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` (extracted to
+  `ao_satellite_ao_dispatch_batch10_2026_08_09.md`), `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md`
+  (extracted to `sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md`), and
+  `plans/active/sports_live_arb_strategy_and_execution_routing_2026_08_14.md` (extracted to
+  `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md`). Did NOT fix these 3 — routing them is the
+  source doc's own separate DOC P3 follow-up todo ("route each to its owning tranche's next
+  `/na-eligibility-audit` pass"), not this dispatch's scope. Full `bash scripts/quality-gates.sh` green before
+  shipping.
+
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — swapped the generic na-eligibility-audit
+  SKILL.md pointer for `venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`, the source doc 7 of
+  the 9 remaining open items (the sequenced Unity-venue chain) are extracted from; the 3 non-Unity items landed this
+  session.

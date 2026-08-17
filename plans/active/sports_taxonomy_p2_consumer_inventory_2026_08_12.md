@@ -476,3 +476,5 @@ pipeline (the migration plan's actual purge target) → `league_id=` canonical, 
   exception — actively cited as the consumer checklist by 2 still-active migration plans
   (sports_taxonomy_p2_migration_2026_08_08.md, sports_taxonomy_p3_consumers_2026_08_08.md), updated as recently as
   2026-08-16. Archiving would break live citations from in-flight plans.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- 2nd scout pass; re-verified all 4
+  entries still resolve on disk; unchanged.

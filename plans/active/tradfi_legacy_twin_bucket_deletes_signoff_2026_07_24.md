@@ -40,6 +40,7 @@ context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/scripts/cleanup_legacy_twins.py,
+    /plans/active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md,
     /plans/archive/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
@@ -383,3 +384,4 @@ restated here.
   `gcs_describe_object`, fix reuses an existing derivation helper + an existing UAC SSOT, crisp done-when) -- but per
   the whole-doc RECLASSIFY rule, 1-of-2 bounded keeps the doc KEEP-NA; flagging for a future `/ag-closeout-audit`
   satellite-extraction pass (not this skill's mechanism) rather than promoting unilaterally. `assigned_vm` unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

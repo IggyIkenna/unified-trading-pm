@@ -125,6 +125,62 @@ gone quiet or the streak has reset." Run live from an interactive session with A
 
 ## Todos
 
+- [x] [OPERATOR] P1. **RESOLVED same escalation (agt-f2579b) — NOT repo-specific, and NOT a PAT/permission problem:
+      confirmed live GitHub.com platform outage.** The "repo-specific, not a global rate-limit/outage" framing below
+      was written from an incomplete sample (checked ticks through ~14:09Z, before the outage's Actions/API impact had
+      widened). Rechecking two LATER fleet-promote ticks (`32039246679` 14:30Z, `32039828169` 14:39:59Z) shows
+      `LDR tree='ERR_LDR'` for essentially EVERY SIT-covered repo in the SAME run — unified-api-contracts,
+      unified-trading-library, instruments-service, execution-service, features-service,
+      market-data-processing-service, market-tick-data-service, ml-service, strategy-service, trading-agent-service,
+      deployment-api, deployment-service, e2e-testing — not MTDS alone, and each logged
+      `ancestor-cleanup <repo>: skipped (empty LDR_SHA — cannot safely identify an ancestor)`, confirming the SAME
+      `gh api repos/$OWNER/$REPO/commits/live-defi-rollout` call (`ldr_to_main_fleet_promote.sh:638`) was failing
+      fleet-wide, not for one repo. Root cause: `curl -sS https://www.githubstatus.com/api/v2/status.json` +
+      `.../incidents/unresolved.json` show a live, ACTIVE, critical-impact "Incident with GitHub.com" (started
+      `2026-08-17T13:40:03Z`, unresolved at time of this check) with `Actions=major_outage`,
+      `Pull Requests=major_outage`, `Issues=major_outage`, `API Requests=degraded_performance`,
+      `Webhooks=partial_outage` — this is why the App-token `gh api` call started failing right around 13:32-14:09Z
+      and is still failing past 14:39Z: it's GitHub's own platform, not this repo's credentials. **No OPERATOR action
+      needed** — do not spend time on the fine-grained-PAT repo-access-list check this todo originally recommended;
+      the fleet self-recovers the moment GitHub's own incident resolves and a `gh api commits/...` call succeeds
+      again. The one legitimate follow-up (the swallowed-error logging gap that made this ambiguous to diagnose at
+      all) is captured as a fresh P3 todo below instead of re-opening this one.
+      ~~NEW 2026-08-17 (cicd escalation agt-f2579b) — persistent `ERR_LDR` tree-read failure for
+      `market-tick-data-service` specifically, distinct from the moving-tree race, cascading to 9 other repos'
+      promotions.~~ (superseded by the correction above; original text preserved for the record) `ldr_to_main_fleet_promote.sh:638` (`gh api repos/$OWNER/$REPO/commits/live-defi-rollout`) has
+      returned empty (`LDR_TREE` degrading to the `ERR_LDR` sentinel, line 641) for market-tick-data-service on every
+      tick from ~13:32Z through at least 14:09Z (3+ consecutive ticks, 40+ min) while succeeding for all other ~22
+      SIT-covered repos in the SAME runs — repo-specific, not a global rate-limit/outage. Line 1029's "retry next
+      tick" is the intentional fail-closed design (safe — no incorrect promotion, no data loss), but this has now
+      outlasted a normal transient-rate-limit window. Cannot root-cause further from this session: my own `gh` token
+      also 403s on this exact endpoint for OTHER (working) repos too (`Resource not accessible by personal access
+      token`), so it can't be used to probe whether `GH_PAT_FOR_ARM` (`secrets.GH_PAT`, a fine-grained PAT) has lost
+      per-repo `Contents:read` access specifically for market-tick-data-service — that requires GitHub
+      Settings→Developer settings→fine-grained token repo-access-list inspection, outside this session's tool access.
+      **Concrete symptom to check first**: does `GH_PAT`'s configured repository list still include
+      market-tick-data-service (compare against a working repo like unified-api-contracts)? If the PAT list is
+      correct, check GitHub's secondary-rate-limit status for that token around 13:32Z. Cascading impact while open:
+      the promoter's dep-order/Tier-A gate blocks any repo depending on market-tick-data-service from promoting too —
+      measured 2026-08-17T14:09Z: `deployment-api`, `deployment-service`, `execution-service`, `features-service`,
+      `market-data-processing-service`, `strategy-service`, `trading-agent-service`, `unified-api-contracts`,
+      `unified-trading-library` all accumulated 3-4 straight SIT-gate-blocked ticks purely from this cascade, not
+      independent breaks. No orphaned promote PR for market-tick-data-service throughout (`gh pr list --search
+      "chore(promote)"` empty). Separately, and NOT the same finding: this occurrence's ORIGINAL trigger (streak
+      4→8+ before this was found) WAS a real regression — `test_mtds_venue_coverage_cascade_invariant.py`'s
+      `PHOENIX-SOLANA` ratchet-baseline staleness — already fixed inline by a concurrent, unrelated session
+      (`unified-api-contracts@724e2d11`, 13:45:45Z); at least 2 subsequent SIT rounds re-failed on it anyway purely
+      because their UAC checkout happened seconds-to-minutes before that fix landed (one run's checkout preceded the
+      fix by only 34s) — not a masked second bug, just unlucky timing against the documented race. **Do not close this
+      todo on the PHOENIX-SOLANA fix alone** — the ERR_LDR finding is the reason the gate is STILL blocked as of
+      14:09Z+ even with the real regression already fixed.
+- [ ] [SCRIPT] P3. **`ldr_to_main_fleet_promote.sh:638`'s `gh api repos/$OWNER/$REPO/commits/live-defi-rollout \
+      2>/dev/null || echo '{}'` silently swallows the real error, making a live GitHub platform outage
+      indistinguishable from a genuine per-repo API regression in the workflow's own log** (found diagnosing the
+      2026-08-17 ~14:45Z `ERR_LDR` occurrence above — required an out-of-band `githubstatus.com` check to confirm the
+      cause, purely because the step log carried no error text). Echo the captured stderr (or at minimum the HTTP
+      status) to the step log before falling back to `{}`, so a future occurrence is diagnosable from the run log
+      alone without needing to cross-reference GitHub's status page. `ldr_to_staging_promote.sh` likely has the same
+      pattern if it shares this helper — check both call sites in the same change. Repo: unified-trading-pm.
 - [x] [DEVOPS] P2. **`promotion_lag_monitor.py` reported every BLOCKED promote PR as "cause unknown".** ✅ Root cause:
       `_open_promote_pr()` read the PR **list** endpoint, which GitHub does not populate with `mergeable`/
       `mergeable_state` (only `GET /pulls/{number}` does — mergeability is computed on demand). `_promote_pr_cause`'s
@@ -271,6 +327,38 @@ exercise either (no PR ever went stale).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 
+**cicd escalation agt-f2579b, 2026-08-17 ~14:45Z** (`sit_gate_stuck` wall, `market-tick-data-service` 4 straight
+SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32028104167`): **NOT the documented moving-tree race —
+a distinct root cause, live-diagnosed.** Sequence: the escalating tick's own `SIT GATE BLOCK` was the ordinary race
+(`sit_validated_tree` behind LDR tree, SIT-on-LDR already dispatched). Local `uv run pytest
+tests/test_mtds_venue_coverage_cascade_invariant.py` on the current `live-defi-rollout` tip (UAC+MTDS siblings)
+**passed (3 passed)**, confirming the one genuine SIT failure seen in this window (run `32034285923`, 13:17Z,
+`test_mtds_batch_venues_have_live_coverage_no_new_regressions` — "1 venue(s) in the ratchet baseline now HAVE live
+coverage and must be removed from it") was already fixed on LDR by the time I checked — no code fix needed from this
+occurrence. But the streak did NOT converge on its own this time (flat at 8, then the detector started flagging
+7 MORE repos — deployment-api, deployment-service, market-data-processing-service, ml-service, trading-agent-service,
+features-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library). Root cause:
+starting ~14:30Z, `ldr_to_main_fleet_promote.sh`'s per-repo `gh api repos/$OWNER/$REPO/commits/live-defi-rollout` call
+(L638) began failing for every SIT-covered repo, and the script's `2>/dev/null || echo '{}'` swallows the real error —
+the code just silently degrades to `LDR_TREE=ERR_LDR` (L639-641) and fail-CLOSES every repo, which is why the whole
+fleet went stuck simultaneously rather than just MTDS. Confirmed via `https://www.githubstatus.com/api/v2/status.json`:
+a live, ACTIVE, critical-impact "Incident with GitHub.com" (started 13:40:03Z, unresolved as of this diagnosis) with
+Actions=major_outage, Pull Requests=major_outage, Issues=major_outage, API Requests=degraded_performance,
+Webhooks=partial_outage. This is an **external GitHub platform outage**, not a code bug in any covered repo and not
+something a push to `live-defi-rollout` can fix — the fleet will self-recover once GitHub's own incident resolves and
+the next scheduled tick's `gh api commits/...` call succeeds again. No code pushed from this escalation. An earlier
+partial pass of this same escalation had already logged an `[OPERATOR]` todo for this symptom but scoped it as
+MTDS-specific and recommended a fine-grained-PAT repo-access-list check — corrected in place (not deleted) once the
+broader fleet-wide pattern + the live `githubstatus.com` incident were confirmed; see that todo for the full
+correction. New P3 todo added for the swallowed-error logging gap that made this harder to diagnose than it needed to
+be. **Converged**: re-ran `sit_gate_stuck_detector.py` live at ~16:59Z (githubstatus.com still reporting
+`indicator=major` at that exact moment — the fleet recovered before GitHub's own incident fully resolved, meaning
+enough individual `gh api commits/...` calls started succeeding again even mid-outage): `sit-gate stuck detector:
+healthy (no repo has 3+ consecutive SIT GATE BLOCK ticks)`. No further action needed from this escalation.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
 **cicd escalation agt-b4293e, 2026-08-17 ~10:44Z** (`sit_gate_stuck` wall, `market-tick-data-service` 4 straight
 SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`, escalating run
 `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32021413430`): Live-diagnosed via `gh run view --log` on
@@ -290,3 +378,54 @@ escalation covers, not investigated here as it's outside `sit_gate_stuck` scope)
 cleanup) are unchanged/still open — this occurrence did not exercise either (no PR ever went stale). This is the 5th
 consecutive occurrence of this exact wall type all resolving to "self-converges, no code fix" — the pattern is now
 well-established across 5 different repos (deployment-api, execution-service, market-tick-data-service ×2, this one).
+
+**cicd escalation agt-f2579b, 2026-08-17 ~13:00Z (6th occurrence, market-tick-data-service, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32028104167`): BREAKS the "self-converges, no code fix"
+pattern — two DISTINCT real findings, one already fixed by another session, one still open and NOT fixable from this
+session.** Streak climbed unusually (4→8+, 5th occurrence's median was ~15-25 min to converge; this one ran 40+ min
+without converging) so live-diagnosed via `gh run view --log-failed` on the actual `full-workspace-sit` runs instead of
+assuming the moving-tree race. **Finding 1 (the original trigger, now fixed)**: run `32034285923` (13:17:20Z→13:30:09Z)
+genuinely FAILED (not cancelled) on
+`test_mtds_venue_coverage_cascade_invariant.py::test_mtds_batch_venues_have_live_coverage_no_new_regressions` —
+`PHOENIX-SOLANA` gained a live connector but was still listed in the ratchet baseline
+(`unified-api-contracts/tests/data/mtds_batch_live_coverage_baseline.json`), which only ratchets down. Root-caused via
+`git log`/`git show` on the baseline file; found it was ALREADY fixed, concurrently, by an unrelated session
+(`unified-api-contracts@724e2d11`, 13:45:45Z, "register Unity's 10 child books..." — fixed this inline per the
+findings-triage rule as a small unrelated cleanup). Two subsequent SIT rounds (`32035579457`,
+`32036536815`'s early portion) still failed on the SAME already-fixed assertion purely because their UAC checkout
+predated 13:45:45Z by seconds-to-minutes (one by only 34s) — confirms the doc's own "SIT validates whatever LDR is now"
+framing, not a masked second bug. **Finding 2 (NEW, still open, filed as todo 1 above)**: independent of the above,
+`market-tick-data-service`'s own `LDR_COMMIT_JSON` read in `ldr_to_main_fleet_promote.sh` has returned `ERR_LDR`
+(empty/failed `gh api commits/live-defi-rollout`) on every tick from ~13:32Z through 14:09Z+ (checked directly via
+`gh run view --log`, not inferred), while the SAME calls succeed for all ~22 other SIT-covered repos in the identical
+runs. This — not the moving-tree race — is why the gate stayed BLOCKED for market-tick-data-service even after
+Finding 1's fix landed and a SIT round (`32036536815`) actually SUCCEEDED against the fixed tree: the promoter can
+never register that success because it can't read a real LDR tree to compare against. Cascaded via the dep-order/Tier-A
+gate to block 9 dependent repos (deployment-api, deployment-service, execution-service, features-service,
+market-data-processing-service, strategy-service, trading-agent-service, unified-api-contracts,
+unified-trading-library) — all independently confirmed innocent (their own SIT/CI is fine; they're purely waiting on
+market-tick-data-service's dep-order gate). Could not root-cause further: my own interactive `gh` token 403s on
+`commits/{ref}` for EVERY repo tested including ones the workflow's own `GH_PAT_FOR_ARM` succeeds on, so it's useless
+for isolating whether that PAT specifically lost repo-scoped access to market-tick-data-service — that diagnosis needs
+GitHub's fine-grained-PAT settings UI, outside this session's tool access. No orphaned promote PR existed throughout.
+Exiting with the wall still technically open (detector shows 10 repos stuck) but with both real root causes identified
+and documented — the remaining blocker is genuinely operator-scoped, not a code fix I'm withholding.
+
+**Same escalation agt-f2579b, continued after a session restart (~15:00Z-15:25Z) — corrects Finding 2 above: it is
+GitHub-platform-wide, not MTDS-token-specific.** By 15:01Z-15:25Z the streak had grown to 12 repos, all converged at the
+SAME count (8), meaning every tick since had failed identically fleet-wide, not just for market-tick-data-service.
+Live-diagnosed the newest failures (`full-workspace-sit` runs `32040998095` 15:01Z, and `ci-status-update` sub-runs it
+dispatched, e.g. `32042008085` for trading-agent-service) via `gh run view --log-failed`: the actual failure is
+`codeload.github.com` returning 502/`503 Service Unavailable` when the `ci-status-update.yml` runner tries to download
+the `google-github-actions/auth@v3` action tarball — a GitHub Actions **platform-level** availability issue (action
+tarball download, not our workflow logic), hitting `alerting-service`/`deployment-api`/`deployment-service`/
+`greeks-service`/`market-data-processing-service`/`ml-service`/`strategy-service`/`trading-agent-service`'s
+`ci-status-update` dispatches indiscriminately — not scoped to market-tick-data-service or its LDR-tree read at all.
+This supersedes Finding 2's token-access hypothesis as the CURRENT active cause (that hypothesis may still be worth a
+follow-up, but is not what's blocking convergence right now). Nothing in this repo fleet can fix a GitHub-side 502/503
+on `codeload.github.com` — this is squarely the "self-heals once the platform recovers" case CLAUDE.md's async-wait
+discipline describes, not a masked bug to keep chasing. Root-cause code fix (PHOENIX-SOLANA baseline, Finding 1) is
+confirmed shipped and verified (`unified-api-contracts` live-defi-rollout content checked directly, 0 occurrences).
+Closing out this escalation on that basis — the next `cicd` dispatch (if the streak is still non-zero once GitHub's
+platform issue clears) should re-run `sit_gate_stuck_detector.py` fresh rather than re-diagnose from this doc's Finding
+2, which is now superseded.

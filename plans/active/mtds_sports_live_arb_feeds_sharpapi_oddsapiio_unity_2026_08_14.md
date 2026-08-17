@@ -36,14 +36,12 @@ effort: xhigh
 drift_direction: advance-code
 context_scope:
   [
+    /codex/02-data/live-data-persistence-and-event-log.md,
     market-tick-data-service/market_tick_data_service/live/connectors/,
-    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
     market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/fixture_id_resolver.py,
     e2e-testing/scripts/sports/live_arb_scanner.py,
-    e2e-testing/scripts/sports/LIVE_PUBSUB_README.md,
-    e2e-testing/docs/sports/LIVE_ODDS_PROVIDERS.md,
-    unified-api-contracts/unified_api_contracts/internal/unity_child_books.py,
+    /plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
   ]
 depends_on: [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14]
 gate_on_depends: true
@@ -302,3 +300,4 @@ sports cell that we actually have a provider for.
   connector can claim them"). No active planning doc duplicates this content (checked). RECOMMEND FOLLOW-UP: re-audit
   once the prerequisite doc resolves — 15 of 16 items are concrete build/port/test/deploy work with explicit DoDs, a
   strong future RECLASSIFY-whole-doc candidate at that point (item 14 keeps its normal [OPERATOR] VM-launch tag).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — curated to the highest-value 6 (live-manifest-path codex anchor + build-target source paths + the prior WSFeedConnector gap issue) from the doc's original 8-entry source-only list; first scout pass.

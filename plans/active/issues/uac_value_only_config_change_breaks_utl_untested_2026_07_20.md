@@ -48,7 +48,7 @@ resolved_by:
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    .github/workflows/python-quality-gates-v2.yml,
+    unified-trading-ci/.github/workflows/python-quality-gates-v2.yml,
     scripts/cicd/detect_breaking_change.py,
     /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
@@ -520,3 +520,8 @@ scoping. `locked_by: live-defi-rollout` unchanged, not this run's to clear. No `
   (`unified_trading_ci_lint_red_shellcheck_findings_2026_08_09.md`) rather than folding an unrelated fix into this ship.
   Did NOT run a live forced-UAC-value-change end-to-end proof (no safe throwaway edit staged this session) — left as an
   optional follow-up if the operator wants that beyond the code-level verification.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — fixed a dead pointer: `.github/workflows/
+  python-quality-gates-v2.yml` (bare, no repo prefix, and did not resolve in any of this doc's own `repos:` — the
+  content-sentinel logic it names moved to the `unified-trading-ci` repo in the 2026-08-06 extraction the doc's own
+  Progress Log records) is now `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`, confirmed
+  resolving on disk. Other 5 entries unchanged.

@@ -50,10 +50,10 @@ context_scope:
   [
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/routes/agents.py,
-    agent-orchestrator/server/config.py,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/plan_health.py,
-    agent-orchestrator/dashboard/src,
+    /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 ---
 
@@ -154,3 +154,7 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
   `/plans/active/ao_open_work_consolidated_tracker_2026_08_14.md` that still read "NOT YET SHIPPED" for the
   already-landed `human_claim` fix (`agent-orchestrator@d13788ec2f`) — condensed in place, pointed here for the new
   work instead of duplicating.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- kept the 4 source files this doc's
+  own body names directly (the shipped fix + Todo 1's exact 2 generalization targets), swapped `server/config.py`
+  and `dashboard/src` (lower-precision/single-todo-only) for the sibling reserved-slot-bypass issue doc Todo 2 cites
+  by path and the worker-liveness codex SSOT, neither previously included.

@@ -566,6 +566,11 @@ fi
 #   ST-19: no standalone backtest engine in strategy-service without V2EngineOrchestrator
 #   PB-19: no mode-branching in PBMS engine/core
 #   UI-18: no React/Next/Vite/Webpack package.json in any Python service repo
+#   LL-01/02/03: lazy_scoped_loading_refactor_2026_08_16.md regression guard — no
+#     unconditional eager top-level import of the heavy algorithm/archetype-family
+#     submodules back into execution-service's algorithms.py/__init__.py or
+#     strategy-service's factory.py (see architectural_ratchets.yaml for why this
+#     is a static-import check, not a runtime module-count).
 # Current baseline 0 — any new violation in any rule = regression.
 ARCH_RATCHETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_architectural_ratchets.py"
 if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
@@ -833,6 +838,29 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
             echo "   required field or an unresolvable epic. parent_epic (plans) + assigned_vm (epics) +" >&2
             echo "   epic (audit) must be non-empty + resolve. See plans/PLAN_FORMAT.md + plans/audit/README.md" >&2
             _post_gate_fail "frontmatter-schema"
+        fi
+    fi
+fi
+
+# ── Post-gates: Archive-safety ratchet (active plan's related: must not cite an archived plan) ──
+# check_active_refs_archived_plans.py, operator ruling 2026-08-17 — reuses the SAME
+# $_fm_scoped_list this section already computed (zero extra file-discovery cost) so a
+# push that doesn't touch the doc trees pays nothing extra either. SSOT: the archival
+# ritual step 5, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
+ARCHIVE_REF_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_active_refs_archived_plans.py"
+if [ -f "$ARCHIVE_REF_CHECKER" ]; then
+    if [ -z "${_fm_scoped_list:-}" ] || [ -z "${_fm_scoped_list// /}" ]; then
+        log_success "Archive-safety ratchet skipped (no doc changes in your changeset)"
+    else
+        echo "Running archive-safety ratchet (related: must not cite plans/archive/, --only)..."
+        # shellcheck disable=SC2086
+        if python3 "$ARCHIVE_REF_CHECKER" --quiet --only $_fm_scoped_list; then
+            log_success "Archive-safety ratchet passed (scoped to your changeset)"
+        else
+            echo "❌ Archive-safety ratchet failed — a related: entry cites a /plans/archive/... path." >&2
+            echo "   Migrate the durable fact/pointer into a codex doc and repoint the related: entry" >&2
+            echo "   there instead — see the archival ritual step 5." >&2
+            _post_gate_fail "archive-safety-ratchet"
         fi
     fi
 fi

@@ -82,3 +82,4 @@ context_scope:
 ## Progress Log
 
 - **2026-08-10 (ag_closeout_auditor, slot 22, dispatch agt-a19d1f)**: created alongside batch12, same run.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

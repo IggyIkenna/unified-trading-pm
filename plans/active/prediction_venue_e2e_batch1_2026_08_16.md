@@ -49,10 +49,10 @@ superseded_by:
 context_scope:
   [
     /plans/active/venue_e2e_wiring_2026_08_16.md,
-    /codex/06-coding-standards/integration-testing-layers.md,
-    /codex/04-architecture/shard-level-failure-isolation.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     unified-api-contracts/scripts/generate_venue_work_list.py,
+    strategy-service/strategy_service/position/position_interface/adapters/polymarket.py,
+    features-service/features_service/cross_instrument/engine/prediction_ingest.py,
   ]
 source: >-
   Forked from `venue_e2e_wiring_2026_08_16.md`'s "Fork per-asset-group dispatch batches" P0 todo, 2026-08-16
@@ -122,16 +122,25 @@ source: >-
       finding don't exist as real calculators in this codebase — only `book_depth_bands`/`liquidity_walls`/
       `liquidation_clusters`/`composite_sr`/`flow_interaction` are real RAW_BOOK/TRADE_GROUPS members). 11 new
       regression tests across both files, QG green (346s, exit 0), sentinel-verified on `origin/live-defi-rollout`.
-- [ ] [BACKEND] P2. **Triage stale abandoned WIP in `.tabs/8/features-service-clean-check`** (found by a review
-      agent 2026-08-17, 15.9 days stale, 9 files staged: deletes `kalshi_microstructure_calculator.py` +
-      `prediction_ingest.py`; edits `batch_handler.py`/`config.py`/`orchestrator.py`/`feature_builder_registry.py`/
-      `feature_definitions.yaml`/`test_batch_handler.py`). Looks like an earlier, abandoned attempt at the KALSHI
-      PREDICTION-ingest P1 gap todo above — but that todo is already SHIPPED (`unified-trading-pm@fd06d1dee`-era
-      fix ADDED `KalshiMicrostructureCalculator` + moved logic into a new `engine/prediction_ingest.py`), whereas
-      this stale WIP stages DELETES of those exact two files. Strong signal this is a superseded, now-dangerous
-      duplicate — committing it as-is would likely REVERT the shipped fix. Done-when: a fresh triage confirms
-      superseded-by-shipped-fix and discards the stale WIP (`git stash`/reset, not a blind restore), OR a closer
-      read finds the staged deletes target genuinely different dead code and the WIP is salvaged instead.
+- [x] ✅ [BACKEND] P2. **Triage stale abandoned WIP in `.tabs/8/features-service-clean-check` — done 2026-08-17
+      (slot 1): already gone, nothing to discard.** No code shipped (pure investigation). Live-checked the exact
+      worktree (`.git` pointer confirms `gitdir: .../features-service/.git/worktrees/features-service-clean-check`,
+      the same path the finding named): `git status` is clean on `live-defi-rollout`, up to date with origin, HEAD
+      `360cfdcb` — no 9-file staged WIP present, and `kalshi_microstructure_calculator.py` +
+      `engine/prediction_ingest.py` both EXIST on disk (matching the shipped fix, not deleted), confirming the
+      worktree correctly reflects the shipped state, not the abandoned duplicate. Root cause: this worktree's
+      orchestrator pre-spawn dirty-state gate (`DirtyStateResolution.COMMIT_AND_PUSH`, `plans/epics/
+      orchestrator_master.md` § "Fresh-spawn dirty-commit (Phase 3A)") auto-commits any WIP left behind as a
+      `chore(orphan-wip)` commit and resets to origin on every slot-8 respawn — measured firing **~100+ times**
+      between 2026-08-01 and 2026-08-17 in this worktree's reflog (often multiple times per hour), so an
+      uncommitted 9-file stage could not have survived 15.9 days unswept. Checked the 4 most recent orphan-wip
+      commits (`ffef105c`/`355cf310`/`27150d2f`/`1d7b5b38`, spanning 2026-08-16→17) for a match — none touch the
+      6 named files (all are unrelated Dockerfile-digest/symbiotic-restaking-calculator diffs), so the described
+      WIP was already swept by an earlier respawn cycle, not one of these. `.agent-claim` shows slot 8 is
+      currently LIVE (`expires_at` in the future) — did not touch/write anything in `.tabs/8`, read-only
+      investigation only, per the multi-agent safety rule. Done-when's "confirms superseded-by-shipped-fix and
+      discards the stale WIP" is satisfied by there being nothing left TO discard — the worktree already reflects
+      the shipped, correct state.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, (POLYMARKET, trades) also fails.** SHIPPED —
       `unified-trading-pm@8bfa440ac1`. The other 3 rows stay `BLOCKED-ON` their step-5 gap todos above,
       unchanged. For (POLYMARKET, trades) — the one row that cleared step 5 — real per-item verdict:
@@ -164,11 +173,21 @@ source: >-
       **Net: 0 of prediction's 4 rows reach a genuinely complete end-to-end state today** — even the row that
       passed every prior step fails here on 2 independent legs (position stub, archetype wiring); the 3rd
       (execution adapter) was a false verdict, corrected above.
-- [ ] [BACKEND] P2. **Gap: `PolymarketPositionAdapter`'s live path is stubbed**
-      (`strategy_service/position/position_interface/adapters/polymarket.py`, `get_positions()`/`get_balances()`
-      both `raise NotImplementedError`) — batch/paper work via the generic `LedgerPositionAdapter`, but no live
-      Gamma-API integration exists. Done-when: live position/balance resolution works for POLYMARKET, or this is
-      confirmed out-of-scope for the carve-out's contracted archetypes with a cited reason.
+- [x] ✅ [BACKEND] P2. **Gap: `PolymarketPositionAdapter`'s live path is stubbed — fixed 2026-08-17 (slot 9).**
+      SHIPPED — `strategy-service@890ca8a4ce`. Both legs now work: `get_positions()` calls the real Gamma API
+      (`GET gamma-api.polymarket.com/positions?user=...`) with L2 HMAC-SHA256 auth headers mirroring
+      execution-service's live, real-trading `polymarket_clob.py::_build_l2_headers` byte-for-byte (separate
+      implementation, no cross-service import, per T4) — not a stub, no credential blocker (auth is HMAC over
+      already-held API key/secret, same shape every other CEX adapter in this factory already uses).
+      `get_balances()` reads the wallet's USDC.e (bridged USDC, Polygon PoS) ERC-20 balance via a raw
+      `balanceOf()` eth_call through the existing `_defi_rpc.read_erc20_balance` helper — Polymarket has no
+      venue-side balance endpoint, so the ERC-20 balance IS the balance (same dependency-light approach
+      `generic_token_balance.py` already uses). Constructor gained a `config` param (DeFi RPC resolution,
+      lazily resolved — only `get_balances()` needs it), threaded through `factory.py`'s `case "polymarket":`
+      via the existing `_defi_config(k)` helper. 5 new unit tests (positions mapping, L2 HMAC header
+      verification, USDC.e balance read, combined account snapshot) plus fixed 2 pre-existing integration
+      tests that constructed the adapter without the new required `config` kwarg. QG green (6113 passed, exit
+      0), sentinel-verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P1. **Fixed 2026-08-17 — POLYMARKET wired into `MARKET_MAKING_CONTINUOUS`.** SHIPPED —
       `strategy-service@dc3c0219`. `MARKET_MAKING_PREDICTION`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` were
       confirmed NOT usable (no engine registered in `ARCHETYPE_ENGINE_REGISTRY` for any of the three —
@@ -276,6 +295,17 @@ source: >-
 
 ## Progress Log
 
+**2026-08-17 — stale WIP triage in `.tabs/8/features-service-clean-check`: already gone, nothing to discard
+(slot 1).** No code shipped (pure investigation, this doc's checkbox flip is the only artifact). Live-verified the
+exact worktree the review agent flagged: `git status` clean on `live-defi-rollout`, up to date with origin,
+`kalshi_microstructure_calculator.py` + `engine/prediction_ingest.py` both present matching the shipped fix (not
+deleted). This worktree's orchestrator dirty-state gate auto-commits+resets any leftover WIP on nearly every
+slot-8 respawn (~100+ `chore(orphan-wip)` commits in its reflog across 2026-08-01→17) — the described 9-file
+stage could not have survived 15.9 days unswept; the 4 most recent orphan-wip commits don't match it either, so it
+was already cleared by an earlier respawn cycle before this task ever dispatched. Full evidence in the todo below.
+Remaining open in this batch: `PolymarketPositionAdapter` live-path stub (P2), no `MARKET_MAKING_*`-adjacent
+archetype wiring beyond the fixed `MARKET_MAKING_CONTINUOUS` slot.
+
 **2026-08-17 — KALSHI batch book_snapshot_5 collector shipped.** SHIPPED —
 `market-tick-data-service@6e428204f9`. Closed the "live connector, no batch collector" gap by mirroring
 `PolymarketAdapter._build_book_snapshot_5_rows` — Kalshi's yes/no ladders fold to a canonical YES book via the same
@@ -342,3 +372,8 @@ POLYMARKET book data), both now tracked as P1 gap todos, not left as prose. Step
 first, with the other 3 explicitly `BLOCKED-ON` their respective gap todo. Confirms the earlier archetype-count
 correction was right to make: the real blocker for prediction was never archetype declaration, it was these 2 code
 gaps — a different root cause than what this doc originally (wrongly) assumed.
+
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) — swapped 2 general codex SSOTs
+  (integration-testing-layers, shard-level-failure-isolation) for the 2 concrete open-gap source targets (the
+  POLYMARKET live position-adapter stub, and the shipped `prediction_ingest.py` the stale-WIP triage todo compares
+  against).

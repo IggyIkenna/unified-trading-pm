@@ -29,6 +29,14 @@ resolved_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md,
+    market-tick-data-service/market_tick_data_service/instrument_availability_paths.py,
+    market-tick-data-service/market_tick_data_service/live/_is_universe.py,
+    deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
+  ]
 ---
 
 # Live-CeFi VM cold start hits an empty IS universe until the 13:30 UTC daily refresh
@@ -98,3 +106,7 @@ since either closes the gap.
       launchers reading the same `instrument_availability/by_date/day=<today>` path) noting the `is-daily-enum-*`
       13:30 UTC dependency, so a future redeploy done before that time is a documented, expected tradeoff rather
       than a surprise. Repo: deployment-service.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (5 entries).

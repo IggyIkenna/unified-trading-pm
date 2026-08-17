@@ -161,3 +161,9 @@ Two independently-shippable angles:
   `ag_closeout_audit_infra_parked_2026_08_09.md` finding 6 — recommendation B taken). Frontmatter updated; content
   unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:49f9e413a4f2ed6d]: KEEP-NA, valid — todo 1
+  ([DESIGN] P2) genuinely needs a design call on threshold/signal, stays NA. Todo 2 (relaunch dex_swaps fold) is
+  confirmed the SAME underlying action as `defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md`'s
+  own relaunch todo (this doc's own text already forward-points there) — that doc is in turn now tracked via
+  `defi_satellite_ao_dispatch_batch14_2026_08_16.md` (see this run's marker on that doc). Not independently
+  extracted — would duplicate an already-dispatched claim.

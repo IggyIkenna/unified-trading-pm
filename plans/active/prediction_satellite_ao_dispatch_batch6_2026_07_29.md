@@ -91,9 +91,9 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
+    /plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md,
     /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
-    /plans/archive/2026_08/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
-    /plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py,
     instruments-service/instruments_service/reference_data/adapters/prediction/fixture_match.py,
   ]
 ---
@@ -794,3 +794,13 @@ sports-odds/sports-registry content with zero prediction-market-specific work â€
 > â€” mechanical line-cap split (this doc was 1001 lines, 1 over the 1000-line hard cap; no Todos/Deferred content moved
 > or altered, and no `depends_on`/finalize-gate change needed since this doc keeps its filename and every still-open
 > item). Source: `/plans/archive/2026_08/issues/prediction_satellite_batch6_line_cap_blocks_commits_2026_08_15.md`.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- both Kalshi issue docs (credential
+  secret-name mismatch, mass attempted_failed) are now RESOLVED/archived and no longer where this doc's open work
+  lives; swapped in the current live tracker for the only open `[INFRA]` item
+  (`issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`, `status: open`) plus its adapter
+  file, kept batch4 (heavily cross-referenced RULED/duplicate-resolution context) and fixture_match.py (the pattern
+  the open Football/per-event `[DESIGN]` item would extend). Note: the dropped mass-attempted_failed entry's path had
+  already been corrected to its archived location by a peer edit found on re-read immediately before this edit
+  (was `plans/active/issues/...` when first read this session) -- not this pass's fix, just confirming the swap
+  target was current.

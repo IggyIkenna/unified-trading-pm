@@ -29,11 +29,12 @@ context_scope:
     scripts/quality-gates-base/base-library.sh,
     /codex/08-workflows/ci-cd-flow.md,
   ]
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 assigned_role: cicd
+effort: low
 drift_direction: unknown
 depends_on: []
 ---
@@ -145,3 +146,7 @@ material share of that session's budget — hence this doc, so the next session 
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:bb54de155acb8854]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. Root cause already fixed (`unified-trading-pm@c389fe9dc`); both remaining open
+  todos (fail-loudly on silent no-commit exit; check AO-VM host-specificity) are bounded and deterministic, no gate
+  found.

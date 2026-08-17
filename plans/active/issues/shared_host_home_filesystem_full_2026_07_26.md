@@ -25,8 +25,10 @@ author: unknown
 priority: P1
 parent_epic: infrastructure_master
 source: "slot 2, discovered mid-task via a git-push ENOSPC failure, 2026-07-26 ~19:10 UTC"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
+effort: low
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -498,3 +500,8 @@ this needs automation rather than an agent noticing.
   silently regrow; (3) venv/node_modules duplication is expected/by-design, not actionable without a shared-cache
   redesign, out of scope here. Cited into the tracker's Track 4 (citation only, checkbox left to the batch21 finalize
   plan per this batch's own rule) and `ao_satellite_ao_dispatch_batch21_2026_08_16.md`'s own checkbox flipped.
+
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:7255d1d09e920801]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. Direct read confirms exactly 1 open todo remains (investigate `/home/ubuntu/tmp/`
+  413M) — same bounded shape as its 2 now-DONE sibling investigations in this doc, explicitly deferred (not yet
+  covered) by `ao_satellite_ao_dispatch_batch21_2026_08_16.md`'s own text. No conflict found.

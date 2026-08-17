@@ -28,6 +28,8 @@ context_scope:
   [
     /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 ---
 
@@ -517,12 +519,75 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       `instruments_service` workload process is actually running (PID 5401, accumulating CPU time), not just
       OS-level RUNNING. Once it completes: run `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh`
       to materialize `empty_confirmed` rows.
-- [ ] [SCRIPT] P2. **Run the sports manifest rescan once the weather VM completes** — pulled out of prose in the item
-      above into its own tracked todo (was buried as a follow-up sentence, not a checkbox — the workspace's own
-      "every follow-up is a `- [ ]` todo, never prose" rule). Not yet actionable: `weather-backfill-20260816-192237`
-      is still running as of 2026-08-17 (last checked at date=2025-08-17 of its 2024-01-03..2026-08-02 range, genuine
-      forward progress, not stalled). When it completes: `bash deployment-service/scripts/vm/launch-sports-manifest-
-      rescan-vm.sh` to materialize `empty_confirmed` rows.
+- [x] ✅ [SCRIPT] P2. **Weather VM completed + rescan launched, 2026-08-17.** `weather-backfill-20260816-192237`
+      finished cleanly: log shows `[[VM_PROGRESS]] last_completed_date=2026-08-02 monotonic=true` (the full
+      `2024-01-03..2026-08-02` range), `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED exit_code=0`, clean
+      self-delete — a genuine completion, not a preemption. Launched
+      `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` immediately after
+      (`sports-manifest-rescan-20260817-144852`) to materialize `empty_confirmed` rows from the new captures.
+- [ ] [SCRIPT] P2. **Two rescan attempts down to the SAME root cause — third attempt (`sports-manifest-rescan-
+      20260817-155832`) in flight, verify THIS one completes.** Attempt 1 (`...144852`) died silently (stale
+      `EXIT_STATUS=RUNNING`, no terminal log line). Attempt 2 (`...152312`) died with a clean, self-diagnosing
+      failure: `DEPLOYMENT_FAILED cause=consolidator_down reason=CONSOLIDATOR_DOWN
+      bucket=instruments-store-cefi-prd-central-element-323112 age_sec=2396 budget_sec=1800` (exit_code=137) — the
+      `ag=CEFI` tag from attempt 1 was real, not cosmetic: this sports rescan has a cross-asset-group health-check
+      that watches the CEFI instruments-store consolidator too, and self-kills if it looks stale.
+      **Likely a genuine threshold mismatch, not a real CEFI outage**: `instruments-store-cefi-prd`'s consolidator
+      cron (`uts-prod-manifest-consolidator-instruments-cefi-cron`) runs `0 * * * *` — HOURLY, confirmed earlier
+      this session — so a 1800s (30min) staleness budget is tighter than that bucket's own normal cadence and will
+      spuriously trip partway through almost every hour. Checked `instruments-store-cefi-prd`'s `_index/latest.json`
+      directly: `last_run_at=2026-08-17T14:01:09Z, success=true` — a normal, successful run, just old relative to
+      the watchdog's 30min window, not evidence of a real outage. **Did NOT touch the watchdog threshold** — it's
+      shared infrastructure code whose full blast radius (how many other buckets/rescans depend on the current
+      1800s default, why it was set there) I haven't investigated; a wrong change here risks breaking the
+      protection for buckets where 30min genuinely IS the right threshold. Retried attempt 3 near the top of the
+      hour so CEFI's cron should have a fresh run by the time the watchdog checks. If attempt 3 ALSO fails on this
+      same cause: this needs a real fix (either loosen this specific bucket's watchdog budget to match its actual
+      hourly cadence, or tighten the CEFI cron itself) rather than another blind retry — file a proper issue doc
+      rather than retrying a fourth time.
+      **Attempt 3 (`...155832`) did NOT hit that same cause — a DIFFERENT, unambiguous root cause: genuine OOM.**
+      No `DEPLOYMENT_FAILED`/`DEPLOYMENT_COMPLETED` terminal line, just heartbeats stopping cold at
+      `Progress: 93400/142894` (~65%, further than either prior attempt). Pulled the deployment record directly
+      (`deployments/archive/2026-08-17/a103a13e-...json`, not just the log): `host_metrics_window` shows
+      `mem_pct` pinned at **99.4-99.5% across the ENTIRE 15-minute sampled window**, from the very first sample —
+      not a late-developing leak, memory-starved from near the start. `reap_reason=vm_not_running,
+      workload_alive=true` — the process was still running when the instance itself vanished (host-level OOM
+      eviction, not the app exiting cleanly). Root cause: the launcher's own default `WORKERS="16"`
+      (`launch-sports-manifest-rescan-vm.sh:76`) on its `--machine-type=e2-standard-4` (4 vCPU/16GB) — 16 parallel
+      workers on a 4-vCPU box is oversubscribed for this job's per-worker memory footprint. **This is a genuine
+      retry-with-a-fix, not the blind 4th-retry the note above warns against** (different cause, not the
+      consolidator-watchdog one) — relaunched as `sports-manifest-rescan-20260817-165755` with `--workers 4`
+      (matching vCPU count).
+      **Attempt 4's `--workers 4` fix was WRONG — corrected in the same tick, not left standing.** SSH'd in directly
+      (not just log-watching) while it sat at the identical `93400/142894` progress point attempt 3 died at,
+      heartbeats still ticking: `ps aux` showed exactly ONE `rescan_sports_fixtures_canonical.py` process at
+      94% RSS (`free -h`: 15Gi/15Gi used, 57Mi available) — `--workers` controls IN-PROCESS concurrency
+      (threads/async), not separate OS processes, so reducing it does nothing to the size of whatever dataset this
+      script loads into memory. The real constraint is the machine's 16GB RAM, not worker count. Confirmed by
+      re-reading: the launcher never had a `--machine-type` override at all — hardcoded `e2-standard-4` with no
+      escape hatch. **Fixed properly**: added `--machine-type` override to `launch-sports-manifest-rescan-vm.sh`
+      (`deployment-service@a06dffebdf`, QG green, mirrors the launcher's existing `--workers`/`--vm-name`-style
+      override pattern) — did NOT touch the hardcoded DEFAULT yet, same "verify before committing" discipline as
+      the workers attempt. Attempt 4 died on its own (OOM) shortly after the SSH check, as expected. Relaunched as
+      attempt 5, `sports-manifest-rescan-20260817-175102`, with `--machine-type e2-highmem-4` (32GB, double RAM)
+      `--workers 4`.
+      **Attempt 5 made REAL further progress, not a repeat of the same wall — the doubled RAM genuinely fixed the
+      scan-phase OOM.** Log shows `Progress: 142800/142894` then `Scan complete: 47053527 per-(date, league_id)
+      FIXTURES rows across 142894 blobs` — the entire scan finished. It THEN got SIGKILLed (`exit_code=137`)
+      moments later, `DEPLOYMENT_FAILED`, self-deleted. This is a DIFFERENT, LATER stage's memory pressure — the
+      post-scan aggregation/write of 47M rows, not the scan itself — so this is genuine incremental progress, not
+      the same failure recurring, and doesn't trigger the "stop retrying blindly" condition from the note above
+      (that condition was for OOMing at the SAME stage again). Relaunched as attempt 6,
+      `sports-manifest-rescan-20260817-183559`, `--machine-type e2-highmem-8` (64GB, double again) `--workers 4`.
+      **This is the last size-escalation attempt before switching to a real code fix, not an open-ended ladder**:
+      if attempt 6 ALSO OOMs (at this same post-scan stage or later), the fix is a streaming/chunked write in
+      `rescan_sports_fixtures_canonical.py` for the 47M-row aggregation (don't hold it all in memory to write
+      once), not another machine-size jump — file that as its own properly-scoped follow-up rather than continuing
+      to escalate machine size. If this completes: raise the launcher's hardcoded default machine-type from
+      `e2-standard-4` to whichever size actually worked, in the same commit as closing this todo.
+      Check `vm-logs/sports-manifest-rescan-20260817-183559/run.log` for a clean `DEPLOYMENT_COMPLETED
+      exit_code=0`, and spot-check that the weather VM's new captures show up as `empty_confirmed` (not still
+      `expected_unattempted`) in the manifest afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
@@ -556,6 +621,10 @@ live SSH-based root-cause session or patience with more relaunches).
 ## Progress Log
 
 - **context-scout 2026-08-15**: populated context_scope (2 entries).
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — added the sole actionable open item's own
+  script (`launch-sports-manifest-rescan-vm.sh`) plus the manifest-consolidator SSOT it depends on; the prior
+  2-entry list had zero source-path coverage despite the doc naming dozens of scripts across its many closed
+  sub-findings.
 - **na-eligibility-audit 2026-08-17** [body-hash:cef44b24fc1e387e]: KEEP-NA, valid — sole open item ([DATA] P2,
   odds-VM freshness-skip-window investigation) is open-ended diagnostic work, explicitly "investigated but not
   confirmed" per the doc's own text, with an operator notification already pending (no answer yet) — not a

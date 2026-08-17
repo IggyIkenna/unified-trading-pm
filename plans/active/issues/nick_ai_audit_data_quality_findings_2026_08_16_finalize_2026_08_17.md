@@ -70,3 +70,4 @@ source: >-
 
 - **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): drafted alongside the whole-doc
   RECLASSIFY, gated on its completion per the AO-dispatched finalize-plan-coverage rule.
+- **context-scout 2026-08-17**: refreshed context_scope (2 entries).

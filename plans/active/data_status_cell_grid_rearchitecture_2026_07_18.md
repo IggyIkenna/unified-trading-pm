@@ -185,3 +185,8 @@ real fix is to never load the whole manifest per request.
   the 2026-08-08 Progress Log entry as the actual `_read_index_cached`/`_build_manifest_category` rearchitecture
   target), dropped `mtds_data_status_page_parity_2026_07_21.md` (the doc's own text explicitly disclaims it as a
   different, non-memory root cause that "does not belong to this plan").
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:520cecb45b937315]: KEEP-NA, valid — todo 2 (bound vs
+  stream vs precompute) remains a genuine unresolved 3-way architecture judgment call every later todo (3-7) depends
+  on (`sequential: true`, added by plan_reconciler 2026-08-10, functions as the machine-readable gate). 5th
+  consecutive audit pass reaching this verdict; `ui_satellite_ao_dispatch_batch1_2026_08_06.md` explicitly defers this
+  doc's todo 2 back here rather than extracting it.

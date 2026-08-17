@@ -177,7 +177,8 @@ reasoning above.
       `AAPL-USD_UM_XPERP-310613` ↔ `OKX-FUTURES:FUTURE:AAPL-USD@LIN-20310613` parity. Source: `[RESEARCH] P2` above
       (2026-08-07). Needs `[OPERATOR]` decision on (a)/(b)/(c) before implementation — tagging `[OPERATOR]` until
       decided.
-- [ ] [RESEARCH] P2. **NEW 2026-08-16 (slot 6, follow-up gap from the `[DATA]`/`[OPERATOR] P1` fix above).** The
+- [x] ✅ EXTRACTED — see `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 3 (na-eligibility-audit 2026-08-17,
+      cefi tranche, conflict-checked clear). Original: [RESEARCH] P2. **NEW 2026-08-16 (slot 6, follow-up gap from the `[DATA]`/`[OPERATOR] P1` fix above).** The
       shipped `_OKX_FUTURES_XPERP_EQUITY_BASES` set in `okx_futures_ws.py` only enumerates the 28 confirmed
       equity/ETF-like xperp base symbols from `[RESEARCH] P2`'s 2026-08-07 finding (AAPL AMD AMZN GOOGL META MSFT
       NVDA TSLA AAOI BILL COIN CRCL EWY HOOD INTC MRVL MSTR MU PLTR QCOM QQQ SAMSUNG SKHYNIX SNDK SOFTBANK SOXL
@@ -248,6 +249,7 @@ reasoning above.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-16** [body-hash:204e1fba79b30ecd]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-17 (cefi tranche)** [body-hash:6fb3d5716bd463b0]: RECLASSIFY-SPLIT — extracted the newly-added [RESEARCH] P2 item (76 crypto xperp base-symbol enumeration, added 2026-08-16 after this doc's prior marker) to `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 3, conflict-checked clear (no other active doc claims this ground). The [SCRIPT] P1 item stays NA on its own repeatedly-established "nominal-only, do not re-litigate" ruling (`cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md` todo 1) — not re-opened. Doc stays assigned_vm: NA for that remaining item. Note: this doc's prior marker looked hash-current under the pre-fix inventory script because a same-dated INLINE CITATION of the marker convention inside the [OPERATOR] P1 todo's own text (line ~129 area, no `[body-hash:]` tag) was being matched as if it were a real, later marker — fixed at the root by a concurrent same-day dispatch (`unified-trading-pm@b57b839a6b`, sports-tranche discovery of the identical bug, independently confirmed here on cefi content).
 - **2026-08-16 (slot 6, backend_engineer)**: `[OPERATOR] P1` DONE — `market-tick-data-service@3acdd478e5` (via
   `cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md`), QG green (10968 passed, 0 failed). Filed new
   `[RESEARCH] P2` above for the 76 unenumerated crypto xperp base symbols — genuine remaining gap, not fully closed

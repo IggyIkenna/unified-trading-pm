@@ -42,3 +42,7 @@ resolved_by:
 - [ ] [REVIEW] P2. Confirm Track C's venue-vocab cleanup landed with evidence, and the live-writer check on the
       raw-keyed league_id population came back clean (or, if it found an active writer, that writer is fixed before
       Track V's delete proceeds); archive that plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: re-verified context_scope (1 entry), unchanged.

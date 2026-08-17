@@ -35,7 +35,7 @@ What still must be PROD-verified is the **INPUT**: the raw ticks the derivation 
 
 ## Canonical-oracle audit (2026-08-16)
 
-Per `/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
+Per `/plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
 skill:
 
 - **Oracle routing**: N/A, not a gap — this is the CORRECT design, not an omission. The candle namespace

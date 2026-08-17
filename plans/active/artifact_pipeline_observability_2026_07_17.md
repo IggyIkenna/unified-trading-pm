@@ -56,7 +56,7 @@ depends_on:
 source: operator request 2026-07-17 (interactive, tab-2)
 assigned_role: infra
 drift_direction: advance-code
-context_scope: [/codex/05-infrastructure/dual-cloud-image-builds.md, /codex/05-infrastructure/vm-tarball-deployment.md, /codex/06-coding-standards/ui-testing-layers.md]
+context_scope: [/codex/05-infrastructure/dual-cloud-image-builds.md, /codex/05-infrastructure/vm-tarball-deployment.md, /codex/06-coding-standards/ui-testing-layers.md, deployment-api/deployment_api/services/artifact_pipeline, deployment-ui/src/pages/ArtifactPipeline.tsx]
 ---
 
 # Artifact pipeline observability — build → artifact → deploy lineage
@@ -991,3 +991,8 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **2026-08-16**: vuln-scan todo DONE. GCP AR `SCANNING_DISABLED` (API off, not flipped — billing call). AWS ECR
   `scanOnPush` true on 9/20 repos, 0 actual scans (parked since 2026-06-27). No findings either side. Open-items: 10.
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:fb83087f6d31c0d6]: KEEP-NA, valid — doc stays NA (dense,
+  operator-reviewed in-flight build). Of 4 open items: 2 genuine deferred build/design work, 1 dependency-blocked
+  (needs a net-new VM-launch-as-deploy provider), 1 confirmed stale duplicate (misattributed-VM-origin correction,
+  already extracted to `ui_satellite_ao_dispatch_batch3_2026_08_09.md` item 3 — that batch's own copy hasn't shipped
+  yet either, so not pre-flipped here; its gated finalize twin owns reconciling this checkbox once it does).

@@ -12,7 +12,7 @@ summary: >-
   implements. Found 2026-08-17 while researching amend_order's real per-venue wiring for the P2 todo above — the
   class's own docstring even says "For futures testnet, use KrakenFuturesCeFiAdapter", a class that does not exist
   anywhere in this repo, suggesting the futures-specific implementation was planned but never built.
-status: open
+status: archived
 nature: issue
 asset_group: [cefi]
 stage: [execution]
@@ -55,6 +55,10 @@ context_scope:
     execution-service/execution_service/trade_execution/adapters/kraken_rest_mapping.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-17** — all 3 todos closed (P0 reachability confirmation, P0 real Futures transport
+> implementation, P1 fleet-wide multi-product-adapter audit — found none). Shipped:
+> `execution-service@843fc31e38`.
 
 # KRAKEN-FUTURES silently uses the Kraken SPOT REST API today
 
@@ -140,15 +144,21 @@ code path.
       Kraken API key loaded — `ADAPTER_CREDENTIALS_STATUS` in `kraken_rest_mapping.py:88`), which per workspace hard
       rule gates RUNNING, never BUILDING — it does not change the reachability verdict: the code path is real and
       would fire the moment credentials land, not dead code waiting on a caller that doesn't exist.
-- [ ] [BACKEND] P0. **Implement the real Kraken Futures REST transport** — either a new `futures.kraken.com`-aware
-      branch inside `KrakenRestTransportMixin` (selected by `self.futures`) or a dedicated
-      `KrakenFuturesCeFiAdapter` class (matching the docstring's original intent), implementing the distinct
-      APIKey/Authent auth scheme per Kraken's official Futures API docs
-      (`https://docs.kraken.com/api-reference/order-management/edit-order`,
-      `https://docs.kraken.com/api/docs/futures-api/trading/order-management/`). Done-when: `place_order`/
-      `cancel_order`/`get_order_status`/`amend_order` for `futures=True` genuinely hit
-      `https://futures.kraken.com/derivatives/api/v3/...`, verified via a unit test asserting the request URL/host,
-      not just that a mock was called.
+- [x] ✅ [BACKEND] P0. **Implement the real Kraken Futures REST transport** — `execution-service@843fc31e38`.
+      Added a `futures.kraken.com`-aware branch (selected by `self.futures`) rather than a dedicated
+      `KrakenFuturesCeFiAdapter` class: `KrakenRestTransportMixin` gained
+      `_do_futures_private_post`/`_do_futures_private_get` (`kraken_rest_transport.py`) implementing the distinct
+      APIKey/Authent HMAC-SHA512 signing scheme (`_sign_kraken_futures_request`, `kraken_rest_mapping.py`) against
+      `futures.kraken.com`/`demo-futures.kraken.com` (per `self.testnet`); a new `KrakenFuturesOrderMixin`
+      (`kraken_futures_orders.py`, split out to keep the adapter module under the 900-line file cap, mirroring the
+      existing mapping/transport split) implements `_place_order_futures`/`_cancel_order_futures`/
+      `_amend_order_futures`/`_get_order_status_futures` mapped through `sendorder`/`cancelorder`/`editorder`/
+      `openorders`. `place_order`/`cancel_order`/`amend_order`/`get_order_status` on `KrakenCeFiAdapter` now dispatch
+      on `self.futures` to the real Futures path instead of silently falling through to Spot. Done-when met: 8 new
+      unit tests in `test_kraken_adapter.py::TestFuturesTransportRouting` assert the actual request URL/host per
+      operation (mainnet `https://futures.kraken.com/derivatives/...`, testnet `demo-futures.kraken.com`, plus a
+      `futures=False` regression guard confirming Spot still hits `api.kraken.com`) — not just that a mock was
+      called. `bash scripts/quality-gates.sh` green on the shipped commit.
 - [x] ✅ [BACKEND] P1. **Audit for the same class of gap on any other multi-product adapter in this repo** — swept
       2026-08-17, **found none**. All 24 files in `execution_service/trade_execution/adapters/` checked via
       `grep -ln futures *.py` for constructor-level product-toggle flags, then read individually:
@@ -177,6 +187,15 @@ code path.
   — the amend implementation for `KrakenCeFiAdapter` necessarily inherits this pre-existing gap (documented inline
   at the call site with a pointer to this issue) rather than silently fixing the whole class's transport layer as
   unplanned scope within that session.
+- **2026-08-17**: Todo 2 (real Futures transport) shipped — `execution-service@843fc31e38`. Hit an unrelated
+  pre-existing `qg_red` on execution-service mid-session (`test_solana_amm_depth_provider_canonical_path.py::
+  test_canonical_prefix_literal_shape`, confirmed pre-existing via stash+clean-tree re-run) — filed
+  `solana_amm_depth_provider_canonical_prefix_test_failing_2026_08_17.md` + declared repo-blocker `RB-8a873f55`,
+  which resolved via the backend's RepoHealthWatcher. A second gate (STEP 5.101 empty-string-fallback baseline)
+  also went red from unrelated trunk drift (`scripts/validate_uniswap_fills*.py`) after pulling in the fix; annotated
+  with `# noqa: qg-empty-fallback` per the gate's own opt-out (shipped in the same push,
+  `execution-service@18104642`) rather than raising the baseline. `bash scripts/quality-gates.sh` green on the final
+  commit before shipping.
 - **2026-08-17 — reachability confirmed LIVE-REACHABLE, not dead code.** No commit needed in execution-service
   (pure investigation; zero code changed). Traced the full live call chain: `"KRAKEN-FUTURES"` is a real
   `DIRECT_REST_VENUES` member that survives `_resolve_venue_str`/`_split_venue_suffix` unsplit (Kraken isn't in the

@@ -23,8 +23,10 @@ related:
 created: "2026-08-15"
 author: ikennaigboaka [slot-16]
 priority: P3
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
+effort: medium
 drift_direction: advance-code
 estimate_class: research
 depends_on: []
@@ -32,7 +34,13 @@ parent_epic: infrastructure_master
 resolved_by:
 source: "cefi_residual_ao_dispatch_2026_08_15_finalize.md re-verification session, 2026-08-15"
 locked_by:
-context_scope: [/codex/05-infrastructure/gcs-object-operations.md]
+context_scope:
+  [
+    /codex/05-infrastructure/gcs-object-operations.md,
+    unified-trading-library/unified_trading_library/cloud_interface,
+    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
+    /plans/active/issues/cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md,
+  ]
 ---
 
 # `cloud_interface` stale-read finding — misled a VM stall diagnosis
@@ -83,3 +91,15 @@ Three plausible mechanisms, none confirmed or ruled out:
 - [ ] [DOC] P3. **If confirmed client-side caching**: document the workaround (e.g. `blob.reload()` or a cache-busting
       query param) in `/codex/05-infrastructure/gcs-object-operations.md`, and note it as a caveat anywhere the codebase
       polls a live-updating GCS object for freshness/health (VM watchdogs, log tailers). (repo: unified-trading-pm)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:be800b4106c15bf3]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. Both open todos are bounded, deterministic engineering work with a stated
+  reproduction method and done-when; no operator gate, banner, or `depends_on` found. Conflict-check clean — a
+  same-day cefi-tranche `/na-eligibility-audit` run independently found this doc, correctly deferred to infra
+  ownership per the Phase-0 primary-owner rule, and took no action on it (see
+  `cefi_satellite_ao_dispatch_batch21_2026_08_17.md`'s own Progress Log).
+- **context-scout 2026-08-17**: populated context_scope (4 entries) -- expanded from the sole codex SSOT to add the
+  UTL `cloud_interface` module and the `vm-exec-with-gcs-tee.sh` wrapper (both named in the doc's own root-cause
+  hypotheses), plus the sibling shard-24 wedge-diagnosis issue doc cited under "Why it matters".

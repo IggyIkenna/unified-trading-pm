@@ -190,3 +190,4 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:dc0bb2e0143e9767]: KEEP-NA, valid — 0 open todos, all 4 resolved+verified; frontmatter carries `archive_exempt: true` with a stated rationale (operator-visible historical-blast-radius record) — a deliberate keep-open-as-record, not an oversight, so not archived.
+- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:d890e6336d5fe5bb]: KEEP-NA, valid — re-affirms the marker above, no change in substance.

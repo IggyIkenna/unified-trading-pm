@@ -215,3 +215,5 @@ context_scope:
   prediction_phase_d_formal_smoke_and_backfill_2026_07_24]` + `gate_on_depends: true` gate is still live (both
   prerequisites re-verified `status: active`); both items are also independently genuine multi-file design/build work
   on live dispatch-critical arb-matching machinery. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.

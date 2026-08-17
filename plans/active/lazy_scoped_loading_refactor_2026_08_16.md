@@ -45,6 +45,9 @@ context_scope:
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
     /codex/04-architecture/tier-and-import-architecture.md,
+    unified-api-contracts/unified_api_contracts/registry/__init__.py,
+    strategy-service/strategy_service/engine/strategies/v2/factory.py,
+    execution-service/execution_service/algorithms/algorithms.py,
   ]
 ---
 
@@ -285,3 +288,4 @@ this doc-only todo). Recorded as a measurement trap for whoever next touches exe
 against a `.venv` without this pending lock change, not silently smoothed into a false "the fix worked, numbers went
 down" narrative.
 - **na-eligibility-audit 2026-08-17** [body-hash:113cba0b6fa4629e]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (regression guard for eager imports) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 1. Doc stays assigned_vm: NA for its other genuinely operator-gated/design items (the layer-2 UAC restructure needs an operator ruling on scope first). Cross-cutting tranche audit.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — added the 3 source paths named in the doc's own three-layer summary (UAC registry/__init__.py, strategy-service's archetype factory, execution-service's algorithms.py); was codex+plan-only before.

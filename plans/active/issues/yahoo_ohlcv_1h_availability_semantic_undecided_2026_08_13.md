@@ -51,9 +51,10 @@ source: >-
 depends_on: []
 context_scope:
   [
+    market-tick-data-service/scripts/measure_yahoo_1h_equity_emission_latency_2026_08_14.py,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/availability_semantics.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
   ]
 ---
 
@@ -184,3 +185,6 @@ So the lookahead risk the original text worried about is modelled by an existing
   planning`, `execution_scope → orchestrator-agent`, `effort: max` added. **Also corrected `assigned_role: data_engineer
   → data_engineering`** — the prior value was a near-miss of no registered role (registry has `data_engineering.md`,
   not `data_engineer.md`) that would have silently mis-routed dispatch.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — swapped the already-shipped UAC registry files
+  for the remaining-work targets: the ready-to-run latency-measurement script (P3) and the codex doc to update (P2),
+  plus the billing-suspension doc explaining why Yahoo is the interim source.

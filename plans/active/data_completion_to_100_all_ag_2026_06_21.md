@@ -893,3 +893,4 @@ disposition (re-audited 2026-07-21):
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate -- the intervening
   commits (prosewrap de-corruption, dangling-archive-ref remediation, plan-reconcile deferred-backlog sweep) were
   referrer-path/formatting fixes; all 6 entries re-verified to resolve on disk.
+- **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries).

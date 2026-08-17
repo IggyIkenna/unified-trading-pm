@@ -31,7 +31,12 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit defi tranche, 2026-08-17 (dispatch agt-f4fef7)"
 locked_by:
-context_scope: [/plans/active/issues/defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md]
+context_scope:
+  [
+    /plans/active/issues/defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md,
+    /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
+    /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
+  ]
 locked_since:
 ---
 
@@ -46,3 +51,6 @@ locked_since:
 
 - **na-eligibility-audit 2026-08-17 (defi tranche, dispatch agt-f4fef7)**: authored as the gated finalize companion
   for the source doc's RECLASSIFY (whole-doc, conflict-clear — see that doc's own Progress Log entry).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) -- added the two sibling recurrence
+  docs (`dex_pools` rebuild-rescan class, `POOL`-uppercase live-writer class) the source issue doc's own todo names
+  as the two mechanism classes to compare this regrowth against.

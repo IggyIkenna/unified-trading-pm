@@ -37,6 +37,8 @@ context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh,
+    /plans/active/issues/ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
   ]
 source: >-
   Discovered 2026-08-09 (slot-5, data_engineering) while checking whether new work was queued for this slot after the
@@ -229,3 +231,7 @@ on shared AWS infra, not something to self-grant.
   watchdog-specific host log tail stayed uncovered, reported as a coverage gap. No new information on the IAM gap
   itself; fourteen days unresolved.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ef79a2d4eaf2fa48]: KEEP-NA, valid — sole open item is an IAM grant to a specific human-named identity (ikenna-worker) on shared AWS infra, explicitly distinct from the orchestrator's-own-identity self-service precedent; 14 independent confirmations over 8 days, no self-service path.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added `ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md`
+  (fingerprint match: byte-identical `AccessDeniedException`/`ssm:SendCommand`/`ikenna-worker` evidence against the SAME
+  instance ARN `i-0c9b283b31d6b5ca7`, already cross-linked bidirectionally via `related:`, now also carries this doc's
+  14 independent confirmations) and the self-service-identity codex SSOT both docs' investigations turn on.

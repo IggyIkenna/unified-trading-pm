@@ -270,6 +270,25 @@ minutes later, any of THOSE that ran long enough get false-killed too → repeat
 own kill log was. Bug 1 and Bug 2's fixes (unscoped-launcher CLI scoping + cell-level dedup) remain necessary and
 correct regardless of which of the two triggers actually fired first — they close the AMPLIFICATION step either way.
 
+> **CORRECTION (2026-08-17, slot-8, backend_engineer) — this correlation theory is REFUTED, not just unproven.** The
+> re-derivation this section calls for was done (`cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 5, full
+> evidence there). The raw `uts-prod-dp-exit-code-monitor` Cloud Run Job log names the exact terminated-VM instances
+> (run-ts included): `mdps-cefi-2019-20260815-050114`, `mdps-cefi-2020-20260815-041556`,
+> `mdps-cefi-2021-20260815-020059`, `mdps-cefi-2022-20260815-050114`, `mdps-cefi-2022-20260815-050859` — **different
+> run-ts (`05xxxx`/`04xxxx`/`02xxxx`, pre-dawn launches) from the watchdog-kill VMs this section names above
+> (`12xxxx` run-ts, noon launches)**. The "VM-identity match is exact" claim above does not hold once the raw log is
+> read for full VM names rather than just year. All 5 exact VMs cross-checked against three independent full-day
+> (2026-08-15T00:00-23:59Z) log sources: a real GCE-system `compute.instances.preempted` audit-log operation exists
+> for every one of them (HOURS before the monitor's dispatch — consistent with relaunch-budget lag, not coincidence);
+> zero `reason=zombie_finished_not_shutdown` watchdog-kill hits for any of them; zero `uts-prd-sa`
+> `compute.instances.delete` hits for any of them. The `is_preempted` signal itself (`exit_code_fleet_monitor.py` →
+> `_classify.py` → `_compute_ops.make_preemption_op_checker`, or the in-guest GCS marker gated on the GCE metadata
+> server's `instance/preempted` value, `scripts/vm/lib/launcher_common.sh:825-827`) is GCE-system-authoritative and
+> structurally cannot be produced by a `compute.instances.delete` call — the mechanism this section speculates the
+> watchdog spoofed cannot actually be spoofed that way. **Verdict: the four original dispatch events were genuine SPOT
+> reclaims, not watchdog false-kills.** Bug 1/Bug 2's fixes are unaffected either way, per this section's own closing
+> sentence.
+
 ### The fix
 
 `deployment-service/scripts/vm/vm_zombie_watchdog.py`: added `_read_exit_status_terminal_code()`, which downloads and
@@ -570,3 +589,5 @@ not historically scoped beyond this session's 1-day sweep; and the tarball-insta
 `launch-vm-zombie-watchdog.sh` is a separate, real bug worth its own fix.
 - **na-eligibility-audit 2026-08-16** [body-hash:ab4937fd4fed9448]: RECLASSIFY-SPLIT — extracted bounded item(s) 5, 6, 7 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 2 items remain genuinely NA ([OPERATOR] P0 cron re-enable pending a multi-step deploy-propagation verification chain, [OPERATOR] P1 historical false-kill scope-back investigation). Doc stays assigned_vm: NA.
 - **na-eligibility-audit 2026-08-17** [body-hash:a6abdc8b393969de]: KEEP-NA, valid — Reaffirmed. Sole open item ([OPERATOR] P0, re-enable uts-prod-dp-exit-code-monitor-cron, line 337) is a multi-step live-infra verification-then-action chain explicitly deferred by the doc's own author to avoid recreating the 676-VM incident on a still-unpatched deployed image. Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:69fc0e707556c5ad]: KEEP-NA, valid — reaffirmed, hash drift only. Sole open item ([OPERATOR] P0, re-enable uts-prod-dp-exit-code-monitor-cron) OPERATOR_QUESTION — multi-step live-infra verification-then-action chain, author-deferred to avoid recreating the 676-VM incident on a still-unpatched deployed image. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries).

@@ -41,6 +41,12 @@ source: >-
   performed by slot-15 (data_engineering) 2026-08-16.
 drift_direction: advance-code
 archive_exempt: true
+context_scope:
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md,
+    /plans/archive/2026_08/issues/prediction_satellite_batch6_line_cap_blocks_commits_2026_08_15.md,
+  ]
 ---
 
 # Prediction satellite AO batch 6 — full Progress Log (split out)
@@ -289,3 +295,6 @@ archive_exempt: true
   design, `archive_exempt: true`). Pure historical-record companion to
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s Progress Log; correctly exempted from archival per its
   own frontmatter justification. No action needed.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) -- first pass; pure historical-record
+  split doc (0 open todos, `archive_exempt: true`), so the minimal list is its 2 sibling plans (the main batch6 doc
+  and its finalize) plus the line-cap issue doc that caused the split.

@@ -233,3 +233,4 @@ and verified independent of the code-ship — this is a shipping-mechanics gap o
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added `bucket_assignment_adapter.py`, the todo 1
   STOP condition's actual root-caused file (`_get_dedup_columns` excludes `league_id`); dropped the epic doc.
+- **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.

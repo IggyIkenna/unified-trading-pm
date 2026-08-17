@@ -73,3 +73,7 @@ source: >-
       banner, corpus-wide referrer-path fixup, codex-alignment check), then archive this finalize plan too. Done when:
       both docs are under `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan referrers to
       either.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

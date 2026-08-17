@@ -369,3 +369,4 @@ job's per-category input adapters for the reconciliation-derived categories, per
   (escalation-N=3 days, `assigned_vm` default planning) -- a checkbox flip, no new source/codex reference introduced;
   the Stage-4 source path + 5 plan/codex links remain accurate.
 - **na-eligibility-audit 2026-08-17** [body-hash:691d5e3b57d01ef0]: KEEP-NA, stale-item corrected -- closed 1 of 5 open items (file the dead-mode-kwarg bug as its own issue doc): already filed, plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md (dated 2026-08-15) describes precisely this. Doc stays assigned_vm: NA for its 4 remaining items -- this is a design plan whose own S5 banner frames all follow-ups as build-phase, not yet scoped for AO dispatch. Cross-cutting tranche audit.
+- **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries).

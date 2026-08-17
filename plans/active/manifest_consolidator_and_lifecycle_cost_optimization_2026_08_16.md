@@ -106,7 +106,9 @@ context_scope:
       warning); it had shrunk to 8-add/12-change/0-destroy on its own, plus 2 NEW live-vs-committed capacity/cadence
       gaps beyond the already-known meta-watchers one — found + fixed both, applied everything safe, full detail in
       `deployment_service_prod_terraform_drift_2026_08_07.md`. The block is genuinely lifted.
-- [ ] [INFRA] P2. **Author the Terraform diff for the 52-bucket lifecycle strip** — **PARTIALLY DONE 2026-08-16**
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 6 (combined with the near-duplicate instance of this same todo below and the Cost-gain tracking todo
+      further down — all one dispatched item).** Not yet executed — tracked there. [INFRA] P2. **Author the Terraform diff for the 52-bucket lifecycle strip** — **PARTIALLY DONE 2026-08-16**
       (same session as the drift resolution above): only `portfolio-state-*` → STRIP shipped + applied — the one call
       with unambiguous operator-decision evidence already in this doc's text. Did **NOT** attempt the other ~50
       working-data buckets this todo's own "once the above unblocks" framing implied were ready to go: the "full
@@ -123,16 +125,15 @@ context_scope:
         confirmed cold-start-dominated verdict for all genuinely-light buckets (no resource change), and a live P1
         incident found + fixed (`market-data-cefi` failing every hourly cycle on a 1800s timeout against a 161K-shard
         backlog) — resolved via a live `gcloud run jobs update` stopgap + `.tf` codification, verified green.
-- [ ] [INFRA] P2. BLOCKED-ON:deployment_service_prod_terraform_drift_2026_08_07 — **Do not edit
-      `manifest_consolidator_scheduler.tf` (resource sizing) or any `lifecycle_rule` block in
-      `deployment-service/terraform/gcp/{canonical_buckets,main}.tf` (the 52-bucket lifecycle strip) until the existing
-      36-add/17-change/4-destroy pending drift is resolved or the new diff is proven to isolate cleanly via
-      `-target`.** That issue doc already found live-vs-committed CPU/memory mismatches on OTHER jobs
-      (`data_pipeline_meta_watchers_job` 32Gi/cpu8 live vs 16Gi/cpu4 committed) that a blind full apply would have
-      silently reverted — the same risk class applies to stacking a new consolidator/lifecycle diff on top of an
-      unreviewed pending state. Done-when: the drift issue is resolved (applied or explicitly re-scoped) OR a
-      `-target`-scoped plan proves this plan's diff alone, isolated from the pending drift, is safe to apply.
-- [ ] [INFRA] P2. **Author the Terraform diff for the 52-bucket lifecycle strip** once the above unblocks. Bucket list +
+- [x] ✅ **CLOSED 2026-08-17 (na-eligibility-audit, infra tranche) — gate condition satisfied.** This todo's own
+      done-when ("the drift issue is resolved... OR...") is now true: `deployment_service_prod_terraform_drift_2026_08_07.md`'s
+      todo 1 is `[x] ✅ RESOLVED 2026-08-16` (full apply landed, live-verified 0-diff), and this SAME doc's own todo
+      above (BLOCKED-ON:deployment_service_prod_terraform_drift_2026_08_07, the duration-vs-allocation review) already
+      recorded the block as genuinely lifted the same day. ~~BLOCKED-ON:deployment_service_prod_terraform_drift_2026_08_07
+      — Do not edit `manifest_consolidator_scheduler.tf`... until the existing pending drift is resolved.~~
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 6 (near-duplicate of the earlier instance of this same todo above — same underlying task, combined into one
+      dispatched item, not extracted twice).** Not yet executed — tracked there. [INFRA] P2. **Author the Terraform diff for the 52-bucket lifecycle strip** once the above unblocks. Bucket list +
       per-bucket disposition (STRIP/KEEP/UNCLEAR) is in the Progress Log below — do not re-derive, the classification
       is done. Two operator-facing calls already made and documented (not to be silently reversed): `portfolio-state-*`
       → STRIP (live risk state, not a report); `recon-*` → KEEP (report-shaped despite being on the operator's
@@ -149,7 +150,9 @@ context_scope:
       sequentially (a `unified-trading-library` code change), not just a Terraform locals rewrite. Re-scope as a
       code+infra change, not infra-only, before estimating. Same drift-blocker gate as the todo above applies.
       Done-when: either confirmed-already-shipped elsewhere (cite commit) or a scoped code+infra diff exists.
-- [ ] [REVIEW] P3. **Cost-gain tracking** — after any change above ships, re-run the same `bq query` shape used to
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 6 (folded into the same dispatched item as the Terraform-diff todos above — sequential follow-on, not
+      independent).** Not yet executed — tracked there. [REVIEW] P3. **Cost-gain tracking** — after any change above ships, re-run the same `bq query` shape used to
       measure the 2026-07-30 cadence fix (before/after daily cost split on `resource.name LIKE '%manifest-consolidator%'`
       / the relevant bucket set in `billing_export.gcp_billing_export_v1_resource_...`) to confirm the actual $ delta
       matches the estimate. BigQuery aggregate queries are NOT the I/O this plan avoids — only raw per-object GCS reads
@@ -207,7 +210,9 @@ context_scope:
             itemized) plus 3 new follow-up todos it produced (below) and an unrelated but significant collision
             finding discovered while shipping.
 
-- [ ] [INFRA] P3. **ml_service consolidator-watchdog wiring** (excluded from the 2026-08-16 extension above) —
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 7 (combined with the Bespoke `*_daily_cron` watchdog todo below into one dispatched item, to avoid a
+      same-file concurrent-edit risk).** Not yet executed — tracked there. [INFRA] P3. **ml_service consolidator-watchdog wiring** (excluded from the 2026-08-16 extension above) —
       determine whether ml-store's 5 object-key prefixes (models/predictions/configs/training-artifacts/artifacts)
       can be derived per-launcher (e.g. a dedicated `VM_ML_TARGET` metadata key) so `launch-ml-training-vm.sh`/
       `launch-ml-vm.sh` can opt into the watchdog for the one prefix (`training-artifacts`, folded into `ml-store`)
@@ -217,7 +222,9 @@ context_scope:
       `CONSOLIDATOR_WATCHDOG_BUCKET` only supports a single target. Either add multi-bucket support to
       `vm-exec-with-gcs-tee.sh`'s watchdog or make an explicit per-launcher primary-bucket call. Repos:
       deployment-service.
-- [ ] [INFRA] P3. **Bespoke `*_daily_cron` VM_SERVICE watchdog coverage** (excluded above) —
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 7 (combined with the ml_service watchdog todo above into one dispatched item).** Not yet executed — tracked
+      there. [INFRA] P3. **Bespoke `*_daily_cron` VM_SERVICE watchdog coverage** (excluded above) —
       `cefi_fwd_daily_cron`/`cefi_onchain_fwd_daily_cron`/`cefi_perp_funding_daily_cron`/`tradfi_fwd_daily_cron`/
       `funding_ensemble_daily_cron` use bespoke non-standard `VM_SERVICE` literals; confirm each one's actual write
       target (several look MTDS/MDPS-shaped and may already resolve to an already-covered bucket) before wiring.
@@ -625,3 +632,15 @@ context_scope:
     resource sizing + the 11-bucket timeout floor) sit together in ONE ready-to-ship diff at
     `.tabs/4/deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`, QG-green, waiting only on that
     other session's own commit.
+
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5d942a38ce4c3053]: RECLASSIFY_SPLIT — extracted 3
+  items to `infra_satellite_ao_dispatch_batch18_2026_08_17.md` (item 6: the 45-bucket lifecycle-strip Terraform diff
+  + cost-gain tracking, combining the near-duplicate instance of the terraform-diff todo found in this doc — flagged
+  as a real duplication, not re-extracted twice; item 7: ml_service + bespoke-cron watchdog wiring, merged into one
+  todo to avoid a same-file concurrent-edit risk). Also closed one stale gate as moot (its own precondition doc
+  resolved same-day, checkbox never flipped). Remaining open items (18-jobs consolidation re-scope, cold-start
+  investigation, periodic OOM re-check, continuous-launcher design decision) are genuine judgment/investigation
+  work — doc stays `assigned_vm: NA`. This doc is large and has documented its own concurrent-edit duplication
+  history (see Progress Log above) — edits here were made conservatively, touching only the specific todo anchors
+  needed for this run's extraction, not restructuring the doc.
+- **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.

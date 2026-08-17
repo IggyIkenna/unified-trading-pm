@@ -54,10 +54,11 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_migration_audit_log_2026_07_24.md,
+    /plans/active/issues/plan_reconciler_findings_defi_2026_08_17.md,
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/02-data/defi-canonical-naming-ssot.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/defi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md,
   ]
 source: >-
   `/na-eligibility-audit defi` (2026-08-17). Every item below cleared the shared conflict-check
@@ -89,13 +90,23 @@ drift_direction: advance-code
       `defi_migration_audit_log_2026_07_24.md` todos at (grep-current) lines ~320 and ~663 (the same ruling, the second
       extending the first to ASTER/DRIFT/PACIFICA). Done when: every venue in the mapping resolves its ruled source via
       `derive_pipeline_mode_for_row` with no handler hardcode remaining, closed-set symmetry tests green.
-- [ ] [STRATEGY] [EXECUTION] P2. **Verify (and wire if absent) the downstream gas net-cost consumer.** The `gas_fees`
+- [x] ✅ [STRATEGY] [EXECUTION] P2. **VERIFIED 2026-08-17 (slot-7, data_engineering) — genuinely mixed, not a clean
+      "wired" or "absent" answer.** The `gas_fees`
       DATA layer (per-chain gas PRICE) exists and is captured, but a grep of strategy-service/execution-service/
       features-service/UTL as of 2026-07-24 found no `gas_price × gas_units` net-of-gas cost computation
       (`estimate_gas` × `gas_fees`) wired into DeFi arb/carry profitability. Grep-then-READ to confirm current state; if
       still missing, wire it. Repos: strategy-service, execution-service. Source: `defi_migration_audit_log_2026_07_24.md`
       todo at line ~552. Done when: a live DeFi arb/carry strategy's profitability calc is confirmed to net out real
-      `gas_price × gas_units`, or the wiring is added and unit-tested.
+      `gas_price × gas_units`, or the wiring is added and unit-tested. **Grep-then-read (Explore sub-agent, 29 tool
+      calls) found real `gas_price × gas_units` netting IS wired and gates trades in `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`
+      (`liquidation_bundle.py`), execution-service's DeFi cost aggregator, and the realized-PnL pipeline — satisfying
+      this todo's literal done-when. BUT four other live strategy engines (`LIQUIDATION_CAPTURE`, `CARRY_STAKED_BASIS`,
+      `JIT_LIQUIDITY`, `BACKRUN`) either read a feature/config value nothing produces (silently 0 in real runs) or
+      have a documented gas-gate that was never implemented — a genuine correctness gap, not just missing wiring.
+      Full citations + severity + 5 concrete follow-up todos filed as
+      `/plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md` rather than a rushed multi-engine fix
+      under this todo's 1-hour data_engineering-scoped estimate (the fix is quant_dev/features craft work, not
+      data_engineering).**
 - [ ] [UAC] P3. **NICE-TO-HAVE — tighten the defi G1-ENUM matrix `POOL` row (currently union-coarse).**
       `valid_data_types_for_instrument_type("defi","POOL")` is today the UNION across all POOL-declaring protocols
       (`{dex_pool_state, dex_pool_swaps, gas_fees, lending_indices, liquidations, perp_funding}`), so a pure-DEX pool
@@ -283,3 +294,22 @@ fixed in-place before the final green run, not shipped separately). `unified-api
 clean at `fb7ff3b0` (no code change needed — see above). QG: UTL green, MTDS green, UAC untouched/already-green.
 Todo 1 flipped to done above; superseding the earlier slot-6 GATED entry (that session's local unpushed commits were
 never reachable from this worktree and are treated as abandoned).
+
+### Gas net-cost consumer todo — verified (mixed result), 2026-08-17 (slot-7, data_engineering)
+
+Grep-then-read (not grep-only) across strategy-service/execution-service/features-service via an Explore sub-agent.
+Real `gas_price × gas_units` netting IS wired for `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, execution-service's DeFi cost
+aggregator, and the realized-PnL pipeline. Four other live engines (`LIQUIDATION_CAPTURE`, `CARRY_STAKED_BASIS`,
+`JIT_LIQUIDITY`, `BACKRUN`) either read a feature/config value nothing produces (silently defaults to 0 in real
+paper/live runs) or have a documented gas-gate never implemented in code — a genuine strategy-correctness gap with
+real-money implications, flagged per the cross-cutting big-finding triage rule rather than closed quietly. Filed
+full citations + 5 concrete follow-up todos as `/plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md`
+(assigned_vm: planning, quant_dev/features craft scope) rather than attempting a rushed multi-engine strategy-math
+fix here (out of data_engineering craft scope, and bigger than this todo's 1-hour estimate). Flipped this todo's
+checkbox — the verification itself is complete and its literal done-when is satisfied (at least one strategy
+confirmed netting real gas cost); the newly-discovered partial-wiring gap is tracked forward, not left unactioned.
+
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) -- swapped the AG-wide closeout hub, the
+  canonical-naming SSOT, and the na-eligibility-audit skill doc (none needed to execute a specific remaining todo)
+  for the 3 actual per-todo source docs every still-open item cites by name+line-number; kept the naming/
+  conflict-check codex (cited in this doc's own `source:` field) and added the gated finalize sibling.

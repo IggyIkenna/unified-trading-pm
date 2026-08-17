@@ -224,6 +224,8 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   Verified with a fresh `workflow_dispatch` on the fixed HEAD (run 31403341423) — see the run's conclusion. This is the
   same coverage hole from the other direction: a red monitor that pages nobody (ldr-docs-gate) and a monitor whose own
   output is unparseable so it fails before it can alert (this one) are the same class.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) — re-verified all 5 still resolve and accurately
+  target the sole remaining open item (the `[OPERATOR]` webhook-population + e2e Slack-delivery follow-up).
 
 ## Follow-ups
 

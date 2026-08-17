@@ -78,6 +78,7 @@ context_scope:
 ## Progress Log
 
 - **2026-08-16 (slot 5, review)**: created alongside batch9, same session.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
 
 ## Codex SSOTs
 

@@ -76,3 +76,4 @@ drift_direction: advance-code
 - 2026-08-09 (targeted satellite-batch extraction, RECLASSIFY-sweep follow-up): drafted alongside batch9,
   `status: active`, gated via `depends_on` + `gate_on_depends: true`. No work started — waiting on batch9's dispatch
   - completion.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

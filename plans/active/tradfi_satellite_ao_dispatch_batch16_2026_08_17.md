@@ -144,3 +144,4 @@ source: >-
 
 - **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-071b5c): drafted alongside the source doc's
   checkbox flips, gated finalize plan authored in the same commit per the AO-dispatched finalize-plan-coverage rule.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

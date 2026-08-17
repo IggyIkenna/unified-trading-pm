@@ -491,3 +491,5 @@ confirmed-missing via independent post-write dry-runs, flip todo 1's checkbox wi
   dispatch-anomaly investigation first. Caveat: 56-VM `mdps-sports` backfill in-flight on the same bucket (2026-08-10);
   historical-estate gaps are real, but re-run the census post-convergence. Todo 4 flipped; result written into the
   source doc's E8 section (`/plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- re-verified all 6 entries still
+  resolve on disk; no change.

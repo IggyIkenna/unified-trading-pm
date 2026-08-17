@@ -34,6 +34,7 @@ context_scope:
   - /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md
   - scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh
   - scripts/self-hosted-runners/ci-vm-resource-watchdog.sh
+  - /plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md
 created: 2026-08-16
 author: claude-agent
 last_updated: 2026-08-16
@@ -130,3 +131,7 @@ needed" assumption and fix this for every future hourly run, not just this one).
   consistent with a live, actually-spawning dispatch loop (not just a healthy HTTP process), though this is a
   weaker signal than the direct `tmux list-sessions` check §5 calls for and should not be treated as a full
   substitute going forward.
+
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added `check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`
+  (fingerprint match: byte-identical `AccessDeniedException`/`ssm:SendCommand`/`ikenna-worker` evidence against the SAME
+  instance ARN `i-0c9b283b31d6b5ca7`, already cross-linked bidirectionally via `related:`).

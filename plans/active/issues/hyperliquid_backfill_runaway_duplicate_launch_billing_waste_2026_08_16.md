@@ -59,6 +59,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/issues/cefi_hl_aster_vm_resource_downsize_2026_08_10.md,
     /plans/archive/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py,
   ]
 ---
 
@@ -237,6 +238,37 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
       — closes the gap for both `trades` and `liquidations` data_types on ASTER. 2 regression tests added
       (`tests/unit/test_symbol_rules_column_aliases.py`). QG green (`.qg_last_passed_sha` verified == HEAD). Shipped:
       market-tick-data-service@3ac51c9826.
+- [x] ✅ [SCRIPT] P0. **NEW 2026-08-17 (slot-3 interactive session) — recurrence confirmed LIVE, root-caused to a
+      gap the 2026-08-16 fixes never closed, fixed + cleaned up.** Operator asked why hyperliquid/aster VMs keep
+      duplicating; live `gcloud compute instances list` found 35 VMs (16 `cefi-aster-*` + 19 `cefi-hyperliquid-*`)
+      RUNNING across the same 8 (venue,year) cells as the original incident, ~19h after the 2026-08-16 cleanup —
+      NOT a leftover, an actively-regrowing fleet. Root cause: the singleton-guard fix
+      (`lc_metadata_singleton_check`) doesn't block this, because a checkpoint-resumed relaunch's `VM_START_DATE`
+      always differs from the terminated VM's own; and the mdps incident's cell-level dedup (`cell_key_for_vm` in
+      `deployment_service/data_pipeline_monitors/_classify.py`) was scoped ONLY to `mdps-*` names — its own
+      docstring's "every launcher besides MDPS runs one VM per job" assumption was wrong for
+      `launch-cefi-hl-aster-historical-backfill.sh`, which year-shards identically. The hourly
+      `uts-prod-dp-exit-code-monitor-cron` (`0 * * * *`, ENABLED) kept dispatching relaunches for HYPERLIQUID/ASTER
+      cells a different VM already covered, uncontested, ever since. **Fix**: extended `cell_key_for_vm` to also
+      recognize `cefi-{venue}-{tag}-{RUN_TS}` for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET (regression
+      tests added in `tests/unit/test_mdps_fleet_duplicate_relaunch_dedup.py`). QG green (342s). Shipped:
+      deployment-service@540cb8cef5 (LDR). **Cleanup**: verified all 35 VMs healthy via GCS heartbeat/run.log first
+      (zero HYPERLIQUID errors, genuine new-row captures on every sampled VM — real backfill need, wasteful
+      duplicate execution, same verdict as the original incident), then kept the oldest/most-progressed VM per cell
+      (8 keepers, matching the prior cleanup's own selection method) and deleted the other 27 in one batched
+      `gcloud compute instances delete`. Post-delete: exactly 8 VMs remain, all RUNNING. **Residual risk, tracked as
+      a new todo below**: this fix landing on LDR does not make it live in the running
+      `uts-prod-dp-exit-code-monitor` Cloud Run Job (same "landing on main DEPLOYS NOTHING" gap the sibling mdps
+      incident hit) — did not pause the cron itself (broad blast radius across every data-pipeline family, an
+      [OPERATOR]-gated call per the mdps precedent, not narrowly scoped to this one bug).
+- [ ] [OPERATOR] P1. **NEW 2026-08-17**: once `deployment-service`'s LDR→main promotion completes and
+      `deployment-api` rebuilds+redeploys (check
+      `gcloud run jobs describe uts-prod-dp-exit-code-monitor --project=central-element-323112
+      --region=asia-northeast1 --format="value(metadata.labels.'run.googleapis.com/lastUpdatedTime')"` is AFTER
+      2026-08-17T13:00Z, when deployment-service@540cb8cef5 shipped), re-check
+      `gcloud compute instances list --filter="name~'^cefi-hyperliquid' OR name~'^cefi-aster'"` stays at 8 (one per
+      cell) across a few hourly cron ticks rather than climbing again — confirms the cell-dedup fix is genuinely
+      live, not just landed on LDR. (repo: deployment-service, verification only)
 - [ ] [INFRA] P3. **Resource-rightsizing finding, 2026-08-16** (operator-requested, mirrors
       `/vm-resource-rightsizing-check`): self-reported `RESOURCE_SAMPLE` telemetry from 4 sampled `e2-highmem-4`
       (4 vCPU / 32GB) keeper VMs' `run.log` (n=1347-1593 samples each, full VM lifetime) shows memory pinned at
@@ -385,3 +417,21 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   `cefi/trades_adapter.py` (consumes `amount`). Fix: one-line addition to `_COLUMN_ALIASES` mirroring the existing
   `size`→`amount` copy semantics; 2 regression tests added. QG green, shipped
   market-tick-data-service@3ac51c9826.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **slot-3 2026-08-17 (interactive session, operator-directed)**: operator asked why hyperliquid/aster VMs keep
+  duplicating. Live-verified the fleet was NOT actually clean (35 VMs across 8 cells, not the doc's claimed 8) —
+  root-caused to `cell_key_for_vm` (`_classify.py`) never having been extended to the `cefi-hl-aster` launcher family
+  when the sibling mdps fix built it 2026-08-15 (that fix's own docstring wrongly assumed only MDPS year-shards).
+  Confirmed via code read (`launch-cefi-hl-aster-historical-backfill.sh`'s `VENUES`/year-shard loop, `_launch_vm`'s
+  `cefi-{venue}-{tag}-{RUN_TS}` naming) and via `gcloud scheduler jobs list` (`uts-prod-dp-exit-code-monitor-cron`,
+  hourly, ENABLED — matches the observed ~hourly duplicate-creation cadence). Fixed `cell_key_for_vm` to also match
+  this family; added regression tests; QG green (342s); shipped deployment-service@540cb8cef5. Verified all 35 live
+  VMs' health/progress via GCS (`vm-heartbeat/<name>.txt` + `vm-logs/<name>/run.log`, Python `google.cloud.storage`
+  SDK, not gsutil/gcloud-CLI object reads, per the hard GCS-object-read rule) before touching anything — every VM
+  healthy, capturing real new rows. Kept the oldest VM per (venue,year) cell (8 keepers), deleted the other 27 in one
+  batched `gcloud compute instances delete`; post-delete fleet re-verified at exactly 8, all RUNNING. Captured
+  pre-delete bulk instance metadata JSON to the session scratchpad before deleting (lightweight forensics,
+  proportionate to this incident's lower uncertainty vs. the original 521-VM investigation). Did NOT pause
+  `uts-prod-dp-exit-code-monitor-cron` — confirmed via `gcloud run jobs describe` that the live Cloud Run Job image
+  (last redeployed 2026-08-17T12:56:18Z) predates this fix, so the fix is not yet actually live; flagged as a new
+  [OPERATOR] P1 todo above rather than unilaterally pausing a fleet-wide cron for a narrowly-scoped bug.

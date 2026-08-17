@@ -47,9 +47,9 @@ source: >-
 context_scope:
   [
     strategy-service/strategy_service/position/position_interface/factory.py,
-    strategy-service/strategy_service/position/core/reconciliation_engine.py,
+    strategy-service/strategy_service/position/position_interface/routing.py,
+    strategy-service/strategy_service/position/position_interface/capabilities.py,
     execution-service/execution_service/trade_execution/factory.py,
-    execution-service/execution_service/cli/handlers/live_execution_handler.py,
     unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py,
   ]
 ---
@@ -317,3 +317,6 @@ and is worth surfacing to that doc's owner. No other plan or issue doc tracks th
   2 independent research passes across strategy-service and execution-service converged on the identical root
   cause. Both specific claims (the position-factory `match` statement and the execution-factory `CCXT_VENUES` set)
   independently spot-checked by direct file read before filing.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) — swapped `reconciliation_engine.py`/
+  `live_execution_handler.py` (both P0s they anchor are now shipped) for `routing.py`/`capabilities.py`, the exact
+  two files the doc's remaining open P3 todos target.

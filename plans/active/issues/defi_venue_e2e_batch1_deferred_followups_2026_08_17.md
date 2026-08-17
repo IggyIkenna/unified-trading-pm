@@ -42,6 +42,12 @@ locked_since:
 source: >-
   Migrated from defi_venue_e2e_batch1_2026_08_16.md's own "not tracked further here" prose deferrals, found while
   running that plan's finalize archival ritual (defi_venue_e2e_batch1_2026_08_16_finalize.md).
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py,
+    strategy-service/strategy_service/engine/strategies/v2/archetype_slots_defi.py,
+    /plans/active/venue_e2e_wiring_2026_08_16.md,
+  ]
 ---
 
 # Two deferred follow-ups from the defi venue e2e batch 1 sweep
@@ -81,3 +87,14 @@ NA` is correct; not auto-dispatchable as-is.
       fields), but no slot anywhere currently selects Plasma as a chain. This is a new-scope decision (which
       chain to target next), not a bug fix. Done-when: operator decides yes/no; if yes, a bounded implementation
       todo is filed against strategy-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:acc8ffd9ffd8d9a3]: KEEP-NA, valid — both open items are
+  explicitly `[OPERATOR]`-tagged with clear rationale already in this doc's own "Recommended decision" section:
+  todo 1 needs an authoritative external source for on-chain token addresses (the registry's own provenance rule
+  forbids an inferred/authored address), todo 2 is a new-scope strategic decision (add Plasma-chain archetype
+  coverage or not) rather than a bug fix. Neither is worker-determinable. `grep -cE '^[[:space:]]*[-*] \[ \]'` = 2,
+  matching.
+- **context-scout 2026-08-17**: populated context_scope (3 entries) — the two named source files (the LST address
+  registry; the archetype/slot catalogue) plus the current active parent tracking plan for venue e2e wiring work.

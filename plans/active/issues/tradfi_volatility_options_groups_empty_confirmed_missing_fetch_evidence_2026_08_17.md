@@ -57,7 +57,7 @@ source: >-
   verify tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md todo 2 (real-throughput capture).
 context_scope:
   [
-    features-service/features_service/volatility/core/data_loader.py,
+    features-service/features_service/volatility/engine/feature_group_service.py,
     /plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
@@ -106,3 +106,10 @@ assumed.
 - [ ] [CODE] P2. Once diagnosed: either thread proper `FetchEvidence` through so `record_empty` succeeds
       (genuine absence case), or switch the call to `record_failed` with the correct `RecordFailedReason` (masked
       failure case). **Repo: features-service.**
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (3 entries) — swapped the originally-listed `data_loader.py`
+  (the doc's own text explicitly says this session did not read it and the bug is not there) for
+  `engine/feature_group_service.py`, confirmed via grep to be the actual `record_empty(...)` call site that
+  dispatches to `_calculate_options_iv`/`_calculate_options_term_structure`.

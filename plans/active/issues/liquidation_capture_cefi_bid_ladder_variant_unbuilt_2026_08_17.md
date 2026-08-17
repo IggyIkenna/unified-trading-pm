@@ -29,6 +29,14 @@ priority: P3
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/liquidation_capture.py,
+    strategy-service/strategy_service/engine/strategies/v2/archetype_slots_defi.py,
+    unified-api-contracts/scripts/generate_venue_work_list.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json,
+    /plans/archive/2026_08/cefi_venue_e2e_batch1_2026_08_16.md,
+  ]
 ---
 
 # What I found
@@ -80,3 +88,5 @@ forward paths, tracked as follow-ups rather than done here:
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (cefi tranche)** [body-hash:b5bfdc3cca5afe6d]: KEEP-NA, valid — first audit pass (fresh doc, created 2026-08-17, no prior marker). Both open items sit on either side of one undecided build/no-build fork. Item 1 (design + implement a real CEFI LIQUIDATION_CAPTURE variant) GENUINE_WORK — brand-new archetype/signal design, quant_dev craft, not a slot-declaration wiring gap. Item 2 (downgrade the capability manifest's PARTIAL→BLOCKED cell if the variant is never pursued) DEPENDENCY_BLOCKED — mechanically trivial once triggered, but its trigger condition (a decision NOT to pursue item 1) is not yet made; doc frames both paths as still-live options. Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:dc77ef79f6a7a88a]: KEEP-NA, valid — re-confirmed, hash drift only (no new staleness). Same 2 open items as the first-pass marker above: item 1 GENUINE_WORK (brand-new CEFI archetype/signal design), item 2 DEPENDENCY_BLOCKED (trigger condition — a decision not to pursue item 1 — still unmade). Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

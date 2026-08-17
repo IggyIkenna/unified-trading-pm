@@ -46,6 +46,9 @@ related:
   ]
 context_scope:
   - agent-orchestrator/server/escalation.py
+  - .github/workflows/cloud-build-router.yml
+  - /codex/04-architecture/agent-orchestrator-alerting.md
+  - /codex/08-workflows/ci-cd-flow.md
 created: 2026-08-16
 author: claude-agent
 last_updated: 2026-08-16
@@ -162,3 +165,5 @@ Suggested next steps for whoever picks this up:
      long since self-resolved. Whether that's the SAME watcher as `cloud_build_router_failure` under a different
      name, or a genuinely separate detection path, was not determined this pass.
 - **na-eligibility-audit 2026-08-17** [body-hash:e9290d617eb11557]: KEEP-NA, valid -- Sole open todo is root-causing why the AO's own cloud_build_router_failure escalation classifier fired for only 1 of 5 identical failures. The todo lists three possible root-cause shapes (repo-subset watch, over-broad dedup, trigger-shape mismatch) that must be determined by direct code read, not assumed, and the doc's own text says explicitly: 'Needs /ci-reconcile or hands-on agent-orchestrator engineering -- not a mechanical fix.' This touches agent-orchestrator/server/escalation.py -- the AO's own alerting/escalation dispatch-critical-path machinery -- and the correct fix depends on undetermined findings, matching the bounded-outcome-bar warning against treating investigative work on critical-path machinery as a clean bounded item.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added the `cloud-build-router.yml` workflow the
+  incident's own escalation trigger references, plus the AO-alerting and CI/CD-flow codex SSOTs from `related:`.

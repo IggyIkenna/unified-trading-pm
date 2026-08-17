@@ -59,6 +59,7 @@ context_scope:
     /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
     /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md,
   ]
 ---
 
@@ -137,3 +138,5 @@ P0 POOL-recurrence work already in flight.
   place (no rename); `assigned_role: data_engineering` already correct. Paired with
   `plans/active/defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md` (`depends_on` +
   `gate_on_depends: true`, `status: active`).
+- **context-scout 2026-08-17**: populated context_scope (4 entries) — the two sibling recurrence-mechanism docs, the
+  delete-safety protocol the root-cause todo's GCS sampling must follow, and the paired gating finalize plan.

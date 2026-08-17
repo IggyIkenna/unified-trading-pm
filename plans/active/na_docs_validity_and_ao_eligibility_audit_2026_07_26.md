@@ -770,3 +770,4 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   precedent) — it is a Phase-0-only benchmark, not a fresh full verdict pass. This doc's own 13-open-item count is
   unaffected (still round11/round-10-scoped, unchanged, see the two entries above). Cited into the tracker's
   Track 2.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- re-verified all 6 still resolve; unchanged.

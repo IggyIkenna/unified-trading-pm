@@ -244,3 +244,5 @@ smoke-green foundation gate would be premature).
   (manifest/data-status, data-pipeline-correctness, manifest-consolidator) span the Tracks' common themes and remain the
   minimal correct set.
 - **na-eligibility-audit 2026-08-17** [body-hash:7cda79971680ad6c]: KEEP-NA, valid -- Zero open todos of its own (pure pointer/index hub over 15 source docs across Tracks 14, 18-22, forked from the parent closeout's line-cap trim). A direct prior na-eligibility-audit (2026-08-10) already examined this exact 0-todo situation and explicitly ruled it is NOT an archive candidate, because by design it never duplicates its source docs' own checkboxes and several sources were confirmed still genuinely open on direct read. This is a standing citation-eligible ruling on this exact doc, honored rather than re-derived.
+- **context-scout 2026-08-17**: re-verified context_scope, no change needed (3 entries) -- still a pure pointer/index
+  hub with no code target of its own; the 3 existing codex SSOTs remain the minimal correct set.

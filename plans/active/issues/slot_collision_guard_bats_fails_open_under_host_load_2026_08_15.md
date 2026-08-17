@@ -124,8 +124,19 @@ this case and will send the next agent hunting a regression in unrelated files.
       pattern (bounded 5s, falls through to let the assertion fail rather than `skip`, since this file's fixture — a
       direct hook-output warning check, not a block/allow status code — has lower false-positive-vs-false-negative
       asymmetry risk). Verified: 10/10 pass standalone. Repo: unified-trading-pm.
-- [ ] [CODE] P2. Consider caching or narrowing the per-pid `lsof` walk (batch one `lsof` over all candidate pids rather
-      than one call per pid) so detection stays inside its budget under load. Repo: unified-trading-pm.
+- [x] ✅ [CODE] P2. Consider caching or narrowing the per-pid `lsof` walk (batch one `lsof` over all candidate pids rather
+      than one call per pid) so detection stays inside its budget under load. — `slot-collision-detect.sh` gains
+      `_cwd_of_batch <pid...>`: resolves via `/proc/<pid>/cwd` per pid first (no subprocess), then batches whatever
+      `/proc` could not resolve into exactly ONE `lsof -a -d cwd -p pid1,pid2,... -Fn` call instead of one `lsof`
+      invocation per leftover pid. `foreign_claude_pids()` now collects all `pgrep -f claude` candidates first, then
+      resolves them in one `_cwd_of_batch` pass. `_cwd_of` (the single-pid function) is left untouched — it's a
+      separate public contract `scripts/dev/slot-cron-ff-pull.sh` sources directly and has its own test asserting its
+      call count, so only the pretooluse-guard/session-start-collision detector's own multi-pid walk was batched.
+      New coverage: `tests/test_slot_collision_detect_lsof_batching.bats` (4/4 pass) — directly asserts N unreadable
+      pids produce exactly 1 `lsof` call (not N), the /proc fast path spawns 0 `lsof` calls, and
+      `foreign_claude_pids` still finds a live peer end-to-end through the batched path. Regression: all three
+      existing consumers of this lib still pass — pretooluse guard 17/17, session-start-collision 10/10,
+      slot-cron-ff-pull venv-resync 6/6. Repo: unified-trading-pm.
 - [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and
       it is wrong for load-induced flakes. Point at this issue from the BATS hard-fail line. Repo: unified-trading-pm.
 

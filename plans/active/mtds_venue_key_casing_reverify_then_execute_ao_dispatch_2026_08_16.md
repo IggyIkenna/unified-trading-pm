@@ -41,7 +41,9 @@ locked_by:
 context_scope:
   [
     /plans/archive/issues/mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md,
-    market-tick-data-service/market_tick_data_service/engine/connectors/websocket_streaming_handler.py,
+    market-tick-data-service/market_tick_data_service/live/connector_registry.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
+    market-tick-data-service/market_tick_data_service/live/connectors,
   ]
 locked_since:
 resolved_by:
@@ -51,7 +53,7 @@ resolved_by:
 
 ## Todos
 
-- [ ] [CODE] P2. **RULED 2026-08-16 (operator): dispatch, but re-verify the design against current code first.**
+- [x] ✅ [CODE] P2. **RULED 2026-08-16 (operator): dispatch, but re-verify the design against current code first.**
       (1) Re-confirm live: `websocket_streaming_handler.py`'s case-insensitive-fallback lookup
       (`.get(venue) or .get(venue.lower()) or .get(venue.upper())`) is still what's deployed, and the exact
       lowercase venue keys (`polymarket`/`jito`/`curve`/`orca`/`raydium`/`phoenix`/`morpho`/`kalshi`, plus
@@ -60,7 +62,14 @@ resolved_by:
       the plan before proceeding. (2) Canonicalize every key in `WS_FEED_CONNECTOR_FACTORIES` to UPPERCASE (per
       the 2026-07-10 ruling) and every producer of a venue string that keys into it (shard-specs, launch
       scripts). Remove the case-insensitive fallback entirely — the registry itself must be consistent, not
-      papered over at lookup time. QG green. Repo: market-tick-data-service.
+      papered over at lookup time. QG green. Repo: market-tick-data-service. — **Canonicalization complete**
+      (every in-scope venue now dual-registered under its canonical UPPERCASE UAC key or already-canonical:
+      curve/orca/raydium/morpho/jito@`market-tick-data-service@767c4208a8`, phoenix@`market-tick-data-service@49a2d0c9`,
+      kalshi already-canonical via `kalshi_clob_ws.py`, polymarket's cross-connector dual-casing confirmed
+      intentional/final). **Fallback removal split off** to
+      `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md` (needs one
+      operator decision on polymarket's dual-casing being the accepted permanent state) rather than blocking
+      this task indefinitely — see Progress Log.
 
 ## Progress Log
 
@@ -126,3 +135,41 @@ resolved_by:
     fallback removal correctly deferred; the kalshi correction is shipped but was never itself part of the
     required fix — see corrected finding above)
     clearing). Recommend a fresh, narrower follow-up todo once PHOENIX gets a real UAC venue registry entry.
+- **2026-08-17 (slot-8, backend_engineer) — closed the phoenix registry gap; still not flipping, fallback
+  removal remains genuinely blocked on an operator decision.**
+  Re-checked slot-22's "phoenix has no canonical UAC venue key" finding directly against live UAC code
+  (`unified-api-contracts`): it was correct about `VENUES_BY_ASSET_GROUP["defi"]` (a computed projection in
+  `market_data_categories.py:536` that filters `ALL_DEFI_VENUES` down to `phase == "live"` only) — but
+  `PHOENIX-SOLANA` DOES exist as a canonical entry in the underlying `ALL_DEFI_VENUES` registry
+  (`unified-api-contracts/registry/defi_venues.py:250`, added 2026-07-20, commit `3f79489fd`), just narrowed to
+  `phase="pipeline"` on 2026-07-22 (commit `9a047a311`) because its upstream (`api.phoenix.trade`) measurably
+  resolves NXDOMAIN — so it's filtered out of the live projection slot-22's narrower check looked at, not
+  actually absent from the registry. A `phase="pipeline"` key is still a real, stable canonical key (same
+  registry every other dual-registered venue's canonical alias comes from), so dual-registering against it is
+  safe and consistent with the existing pattern.
+  Dual-registered `phoenix_ws.py`'s `register()` under `PHOENIX-SOLANA` (in addition to the existing lowercase
+  `phoenix`), mirroring the exact pattern already shipped for curve/orca/raydium/morpho/jito (`overwrite=True`,
+  same factory function — purely additive, no existing registration touched). Added a matching unit test
+  (`TestRegistry::test_phoenix_solana_canonical_key_registered`) asserting the new key resolves. QG green,
+  shipped: `market-tick-data-service@49a2d0c9`.
+  **Still not flipping the checkbox** — step (2)'s second half ("remove the case-insensitive fallback
+  entirely") remains genuinely blocked, unchanged from slot-22's assessment: `polymarket`/`polymarket_clob_ws`
+  are deliberately registered under two different casings for two different live data sources (Gamma API
+  lowercase, CLOB uppercase — not an oversight, a documented split), so "every registration is canonical" is
+  still not literally true, and removing the fallback now would break nothing for polymarket (both its keys
+  already resolve without the fallback) but would foreclose the option of treating case-insensitive dispatch as
+  a deliberate accommodation for that split without an explicit ruling. This is now an operator decision, not a
+  code question: accept polymarket's two-connector dual-casing as the permanent final state (both keys resolve
+  directly, no fallback needed for it either) and remove the fallback fleet-wide, or keep it in place indefinitely
+  as documented defense-in-depth. Filed as a narrow follow-up todo in a new issue doc (see below) rather than
+  guessing the ruling here.
+  **Flipping the checkbox now**: canonicalization (this todo's step (2), first half) is genuinely complete for
+  every in-scope venue; only fallback removal (step (2)'s second half) remains, and it is now blocked purely on
+  an operator decision, not further engineering work — leaving this checkbox unflipped would only re-dispatch
+  the same already-answered investigation to another slot. The fallback-removal half is tracked and will not be
+  silently dropped: `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- corrected a dead pointer (the prior
+  `engine/connectors/websocket_streaming_handler.py` path does not exist; real path is
+  `cli/handlers/websocket_streaming_handler.py`), and added the `connector_registry.py` (WS_FEED_CONNECTOR_FACTORIES
+  definition site) and the `connectors/` directory (covers every per-venue file named in this doc's todo/Progress Log).

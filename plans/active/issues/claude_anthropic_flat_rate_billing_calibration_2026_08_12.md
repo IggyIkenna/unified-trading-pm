@@ -327,3 +327,5 @@ averaged together.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:2d53a08f692bc520]: KEEP-NA, valid — explicit operator ruling: this entire initiative is human-driven, proceed only in operator-present sessions; covers the dispatch mechanism for the whole doc, including individually-bounded-looking items.
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries), unchanged -- the account-usage/poller/pricing
+  modules still cover the doc's remaining investigation todos (sub-d outlier, sub-f window reset).

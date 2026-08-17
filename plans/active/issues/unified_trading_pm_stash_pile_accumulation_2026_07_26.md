@@ -36,6 +36,8 @@ context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
     agent-orchestrator/scripts/hooks/block_destructive_commands.py,
+    scripts/dev/safe-doc-push.sh,
+    scripts/plan-hygiene/check_conflict_markers.sh,
     /codex/06-coding-standards/quality-gates-memory-governance.md,
   ]
 ---
@@ -472,3 +474,5 @@ precisely because they were corrupt. Do not read the unique/stale split as work-
       (2) NEGATIVE (control) — a file genuinely conflicted at entry → exit 6 unchanged, content left as-is, hook
       DID run. The stash-pile-growth side effect of the extreme-pile quarantine branch and the 5 operator-owned
       zero-loss discards above are unchanged by this fix, as scoped.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

@@ -169,3 +169,10 @@ precondition-satisfied but not yet executed to completion. Per `/codex/15-runboo
   hard rule since the underlying relaunch is not yet complete and both failure signatures are worth tracking separately
   from the source doc's original (already-resolved) stale-fallback concern.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:e05a7064c41c987a]: KEEP-NA-STALE (already-duplicated)
+  — all 3 open todos (relaunch with fixed workers; capture serial console if zero-heartbeat recurs; investigate the
+  lock-reclaim gap) are already claimed as ONE combined todo in `defi_satellite_ao_dispatch_batch14_2026_08_16.md`
+  (not yet executed there). Checkboxes annotated with that citation rather than re-extracted — the batch14 finalize
+  plan's own review todo already flags this exact source-doc-not-yet-flipped gap; this run closes it from the infra
+  side. Doc stays `assigned_vm: NA` (its own scope is now fully superseded by the batch14 claim, not independently
+  actionable).

@@ -72,3 +72,7 @@ resolved_by:
 
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 9, operator ruling)**: extracted as a standalone
   investigation per operator's explicit choice to NOT assume the same root cause as Big Finding #3.
+- **context-scout 2026-08-17**: populated context_scope (3 entries) — re-verified all 3 resolve; a fingerprint grep on
+  this doc's cited VM name (`canonical-migration-sports-drop-stale-20260810-100832`) and its measured counts
+  (42,920 / 15,981) confirms both other matching docs (`sports_satellite_ao_dispatch_batch12_2026_08_09.md`,
+  `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`) are already in this list.

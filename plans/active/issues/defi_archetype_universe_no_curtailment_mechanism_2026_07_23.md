@@ -44,7 +44,7 @@ context_scope:
     execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
     strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
-    /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md,
+    /plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md,
   ]
 ---
 
@@ -901,3 +901,6 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   added `--archetypes`/`--venue-allowlist`/`--currency-allowlist` CLI flags to `run_paper`'s `service_entry.py`,
   threaded into `PaperUniverseConfig` via `build_paper_universe_config`, with 16 unit tests + green
   `quality-gates.sh --no-fix`. No further hygiene action needed on this item.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — swapped the archived MVP_SCOPE investigation doc
+  for the active extraction plan (`defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md`) now owning the
+  doc's one ruled-but-not-yet-shipped remaining scope; the doc itself is at 0 open checkboxes, archive-ready.

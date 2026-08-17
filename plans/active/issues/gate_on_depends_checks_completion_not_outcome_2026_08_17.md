@@ -35,7 +35,13 @@ execution_scope: local-only
 assigned_role:
 drift_direction: none
 depends_on: []
-context_scope: [/plans/active/task_template.md]
+context_scope:
+  [
+    /plans/active/task_template.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16_finalize.md,
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+  ]
 ---
 
 # gate_on_depends checks completion, not outcome
@@ -88,3 +94,7 @@ decision.
 - [ ] [DOC] P3. Decide + document (in `task_template.md`, near the existing `gate_on_depends` section) whether/how
       a gated finalize plan should be protected from this class of premature dispatch, per one of the three
       options above (or another). Repo: unified-trading-pm.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

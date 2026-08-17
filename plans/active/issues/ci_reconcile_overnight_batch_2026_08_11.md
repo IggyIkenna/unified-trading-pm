@@ -52,6 +52,7 @@ related:
 context_scope:
   - agent-orchestrator/server/escalation.py
   - /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md
+  - scripts/self-hosted-runners/setup-glue-runners.sh
 created: 2026-08-11
 author: claude-agent
 last_updated: 2026-08-11
@@ -501,3 +502,5 @@ evidence.
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:e37fc89d1e2e07b9]: KEEP-NA, valid -- 3 open follow-ups from a large CI reconciliation session. The two AO wall_type additions each require a new escalation-worker prompt template + routing decision -- the doc's own Structural Findings section explicitly labels this 'a design change, not a same-pass mechanical fix', which is genuine judgment work, not a bounded build. The third item (fix 7 failing glue-slot-refresh systemd units) already has its code fix SHIPPED, but live application/verification is explicitly [BLOCKED-PERMISSIONS]: the doc verifies in detail that this session's AWS identity has no ssm:SendCommand and no self-service IAM path to grant it, distinct from the two documented self-service identities -- a genuine non-self-serviceable credential/access gap, not a trading-service-account permission-denied that would be agent-self-serviceable.
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries) -- added `setup-glue-runners.sh`, the concrete
+  fix target for the one still-open, already-shipped-but-unverified follow-up (item C's `gh auth setup-git` fix).

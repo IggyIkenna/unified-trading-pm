@@ -31,7 +31,11 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
-context_scope: [/cursor-configs/skills/na-eligibility-audit/SKILL.md]
+context_scope:
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 supersedes: na_eligibility_audit_defi_blocks_2026_08_16
 source: >-
   /na-eligibility-audit defi (2026-08-17, dispatch agt-e2dde1, slot 14) — Phase 1b consolidation across all 23
@@ -129,3 +133,21 @@ carried on this list was itself stale. Closed off the list, not re-carried.
   already-adequately-narrowed; line ~406 narrowed with fresh live code evidence, correction applied inline, real
   residual re-carried forward — see above). Ratchet checked at run end (see plan-flip evidence in this run's
   `/done` payload).
+- **2026-08-17 (na-eligibility-audit, defi tranche, dispatch agt-4b4e7b, slot 9 — third same-day incremental
+  pass)**: Phase 0 found only 6 of 60 defi-tranche docs in scope (54 already-verdicted-and-unchanged). Of those 6:
+  1 defi-owned doc with real content — `defi_venue_e2e_batch1_deferred_followups_2026_08_17.md` (brand new, both
+  todos cleanly `[OPERATOR]`-tagged with rationale already in its own text) — verdicted KEEP-NA, valid, marker
+  written, shipped `unified-trading-pm@8d01dab9f5`; 2 defi-owned zero-open-todo report artifacts (this doc and its
+  2026-08-16 predecessor) — outside the verdict rubric's "≥1 open todo" population, no action needed; 3 non-owned
+  docs read + reported only per the primary-owner rule (`defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md`
+  and `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`, both infra-owned, checkbox
+  counts verified via grep, verdicts unchanged from prior passes; `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`,
+  cefi-owned — confirmed the stale-tally flagged by the first 2026-08-17 pass above is now resolved, cefi's own
+  same-day marker already reaffirms the single genuinely-open item). Mandatory carry-forward item
+  `defi_migration_audit_log_2026_07_24.md` line ~406 deliberately NOT re-touched this pass — its `[body-hash:…]`
+  and marker are already current as of agt-f4fef7's own pass earlier today (content unchanged since), so
+  re-opening it would duplicate same-day work rather than reflect new information; still carried forward for the
+  next calendar-day run (or a dispatched worker) to execute the live schema_version/pipeline_mode
+  manifest-distribution check its own text calls for. No new operator questions or MISCLASSIFIED_LIKELY_AO_ELIGIBLE
+  items surfaced this pass. Ratchet checked at run end (see this run's `/done` evidence).
+- **context-scout 2026-08-17**: refreshed context_scope (2 entries).

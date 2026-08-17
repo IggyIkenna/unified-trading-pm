@@ -42,8 +42,10 @@ context_scope:
   [
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /codex/12-agent-workflow/commit-push-flip-rule.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
+    /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
+    /plans/active/issues/defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md,
   ]
 source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored in
@@ -124,3 +126,7 @@ source: >-
   execute within this reconciliation task's own scope — the axes stay genuinely non-canonical and each blocker is
   correctly gated (`assigned_vm: NA`, judgment-heavy) elsewhere, not fixable inline here. No checkbox change.
   Released as GATED (not a genuine blocker — this task's own done-when condition simply isn't met yet).
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- dropped `commit-push-flip-rule.md` (a
+  workspace-universal rule already covered by SUB_AGENT_MANDATORY_RULES.md, not doc-specific) and added the 3
+  concrete blocking issue docs the 2026-08-17 reconciliation entries above name as the actual live blockers on this
+  finalize's own done-when condition; kept the source plan, archival-discipline codex, and canonical-naming SSOT.

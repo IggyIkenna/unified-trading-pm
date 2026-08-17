@@ -32,7 +32,7 @@ related:
   ]
 created: 2026-08-15
 author: data_engineering (slot 27)
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -184,11 +184,23 @@ already-executed, irreversible deletion rather than a migration to perform.
       GCS/Cloud-Logging admin-activity check for the buckets' pre-deletion object count — deferred to the follow-up todo
       below rather than attempted here (no code/script exists to act on; this was an investigation task). Repo:
       market-tick-data-service / instruments-service. Owner: vm-defi. parent_epic: defi_master.
-- [ ] [OPERATOR] P2. **Decide whether the Aave 2022-03..10 / marinade mSOL gap (Session 2 findings above) needs a GCP
-      Cloud-Logging admin-activity check for the 2026-07-10 deletion of `evm-defi-prd`/`solana-defi-prd`** (to confirm
-      the buckets were genuinely 0 objects at delete time, not just "0 code callers") — or whether the 2026-06-08
-      audit's "unique data" claim is itself accepted as stale/superseded, matching the pattern already found for
-      KAMINO/SOLEND lending (fabricated, not unique). No GCS write proposed here. parent_epic: defi_master.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-17 (blocked-questions backlog live check, BLK-op-…-63a43022315d answered
+      FINAL).** Ran the Cloud-Logging admin-activity check. `gcloud logging read` confirms the exact deletion
+      events: `evm-defi-prd-central-element-323112` deleted 2026-07-12T22:23:14Z, `solana-defi-prd-…` deleted
+      2026-07-12T22:29:37Z (both by ikenna@odum-research.com via `gcloud storage rm`, both succeeded — **note:
+      actual deletion date is 2026-07-12, not the "2026-07-10" the cloud-providers.yaml comment claims**, a minor
+      stale-date correction). Checked whether GCS Data Access audit logging (which would show individual
+      `storage.objects.delete` calls) is enabled: it is NOT — `gcloud projects get-iam-policy` returns empty
+      `auditConfigs` project-wide, and a broad `storage.objects.*` log query over the full 30-day retained window
+      returned ZERO entries anywhere in the project. Cloud Logging therefore has no object-level history for any
+      bucket in this project. What IS provable: `storage.buckets.delete` structurally refuses a non-empty bucket
+      (409), so both successful deletes are dispositive proof of 0 objects at that literal instant — but this
+      cannot rule out a client-side recursive `rm -r` having wiped real content moments earlier with no log trail.
+      **DECISION: RESOLVED-UNRESOLVABLE** — no further evidence is obtainable by any means (buckets gone 36 days,
+      any soft-delete window long expired); accepting the ambiguity, matching the pattern already found for
+      KAMINO/SOLEND (turned out fabricated, not unique) rather than the "unique data" claim. No GCS action needed —
+      nothing left to protect or migrate. Follow-up (non-urgent, not filed as a new todo here): enabling GCS Data
+      Access audit logging on prod buckets would prevent this blind spot recurring. parent_epic: defi_master.
 - [ ] [DATA] P2. **Only after both above are closed**: re-run the five-part delete proof
       (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1) against the CORRECTED list — `solana-defi{,-prd}`
       / `evm-defi{,-prd}` / the 4 empty `*-test-*` DeFi buckets — and execute per §3a's reversibility-qualified
@@ -199,3 +211,8 @@ already-executed, irreversible deletion rather than a migration to perform.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **2026-08-17 (blocked-questions backlog live check)**: answered `BLK-op-defi_orphan_bucket_delete_list_includes_canonical_bucket-63a43022315d`
+  FINAL via `POST /api/blocked/{id}/answer` (HTTP 200). Ran the Cloud-Logging admin-activity check the P2 todo asked
+  for — see that todo's resolution text above for full findings. Net: RESOLVED-UNRESOLVABLE (no further evidence
+  obtainable; buckets irreversibly gone), plus a minor stale-date correction (actual deletion 2026-07-12, not
+  2026-07-10).

@@ -27,6 +27,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/2026_08/sports_odds_api_data_type_casing_standardization_2026_08_15.md,
+    /plans/active/sports_satellite_ao_dispatch_batch14_2026_08_16.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py,
+    unified-api-contracts/unified_api_contracts/registry/data_type_capability.py,
+  ]
 ---
 
 # The uppercase/lowercase "ODDS"/"odds" data_type split is wider than just odds_api
@@ -148,3 +155,11 @@ an in-flight dispatch.
   34, no action needed there.
 - **na-eligibility-audit 2026-08-17** [body-hash:10630b9891d84b9a]: KEEP-NA-STALE (already-duplicated) — item 1 (betfair_adapter.py uppercase ODDS census) already extracted verbatim into sports_satellite_ao_dispatch_batch14_2026_08_16.md (status:draft, not yet active); item 2 is an explicit [OPERATOR][DECISION] casing-unification-end-state item, batch14 explicitly excludes it from extraction. Do not reclassify — would duplicate batch14 once it activates.
 - **context-scout 2026-08-17**: populated context_scope (0 entries -- lean-frontmatter doc, no context_scope key).
+- **context-scout 2026-08-17** (re-scout, same day): populated context_scope (4 entries) — supersedes the entry
+  immediately above. The doc's body names multiple concrete, still-open source targets (`betfair_adapter.py`,
+  `data_type_capability.py`) plus the two docs this exact finding is scoped against
+  (`sports_odds_api_data_type_casing_standardization_2026_08_15`, the plan this doc's title is "wider than"; and
+  `sports_satellite_ao_dispatch_batch14_2026_08_16`, where item 1 was already extracted per the audit entry above) —
+  "lean frontmatter" is not one of this skill's code-free exemptions (dispatch-batch coordinator / finalize gate /
+  design-proposal / meta-audit-of-docs), so the prior 0-entry verdict was an under-scout, not a correct minimal
+  result.

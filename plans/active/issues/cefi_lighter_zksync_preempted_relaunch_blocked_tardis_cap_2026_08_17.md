@@ -52,6 +52,7 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
     deployment-service/scripts/vm/tardis-concurrency-guard.sh,
     deployment-service/scripts/recovery/relaunch_backfill_vm.py,
@@ -234,3 +235,6 @@ state at current preemption volume?).
   previously-visible 2). Declining `FORCE=1` for the same reason as every prior entry. Skipping via
   `reason_code=GATED`. Filed a P2 follow-up todo for a fleet-wide sweep (this session found this ONE launcher by
   accident, not via a deliberate audit — there may be other launchers with the same undercounting gap).
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries, was 5) — added
+  `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, the doc this issue's own "Why I did not force it"
+  section cites as the established precedent for the same decline-and-wait posture.

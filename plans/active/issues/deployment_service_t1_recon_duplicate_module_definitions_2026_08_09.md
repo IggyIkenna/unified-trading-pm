@@ -142,7 +142,8 @@ because:
       their `.tf` block (state-rm-then-delete-code, never delete-code-then-plan, to avoid an accidental destroy plan on
       a live job), remove the corresponding `import` blocks from `_imports_reconcile.tf`, then verify a fresh
       `tofu plan` shows zero diff for these 2 jobs.
-- [ ] [INFRA] P1. **NEW 2026-08-15 (slot-7)** — `_imports_reconcile.tf`'s `alerting_paging_cron` import block is dead:
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 4.** Not yet executed — tracked there. [INFRA] P1. **NEW 2026-08-15 (slot-7)** — `_imports_reconcile.tf`'s `alerting_paging_cron` import block is dead:
       target `projects/central-element-323112/locations/asia-northeast1/jobs/uts-prod-alerting-paging-cron` returns
       live `NOT_FOUND` (`gcloud scheduler jobs describe`, confirmed 2026-08-15) — matches the exact "import whose `to`
       resource no longer exists in config errors `tofu plan`/`apply`" pattern the file's own header comments already
@@ -191,3 +192,8 @@ because:
   project — a live-verified structural risk (proven via the exact same aliasing bug just found+fixed for the single
   `t1_batch` SA), not yet known to have caused actual contamination. See the 2 new todos above.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:1d867f790bcab399]: RECLASSIFY_SPLIT — extracted the
+  dead `alerting_paging_cron` import-block removal to `infra_satellite_ao_dispatch_batch18_2026_08_17.md` item 4
+  (not yet executed; confirmed-dead via live NOT_FOUND, matches an established in-file precedent, no judgment
+  needed). The other 3 items (canonical-module choice, its dependent state-rm, and the ~20-import structural risk)
+  are genuine `[OPERATOR]` judgment calls — doc stays `assigned_vm: NA`.

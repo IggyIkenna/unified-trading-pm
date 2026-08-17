@@ -141,3 +141,4 @@ guidance both point the same direction: stop and page.
   `mdps-cefi-2019-20260816-111308`, is **currently RUNNING** — the shard is NOT abandoned/exhausted-bound as the
   stale framing suggested; a 4th attempt is actively in flight. This does not yet confirm the shard is complete
   (the running VM hasn't reached a terminal state) — the `[OPERATOR]` todo stays open pending that outcome.
+- **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:771f4cdd20a5f11f]: KEEP-NA, valid — re-confirmed after the 2026-08-17 backend_engineer entry (run.log root-caused, verify-only) and the further relaunch-chain update above. Sole open item ([OPERATOR] P1, relaunch-vs-wait) OPERATOR_QUESTION/DEPENDENCY_BLOCKED — pending the terminal outcome of the currently-RUNNING 4th relaunch attempt (mdps-cefi-2019-20260816-111308), not yet reached. Doc stays assigned_vm: NA.

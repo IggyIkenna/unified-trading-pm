@@ -48,7 +48,12 @@ locked_since:
 supersedes:
 superseded_by:
 source: Authored alongside the parent plan per this workspace's mandatory finalize-plan rule (task_template.md §4).
-context_scope: [/plans/active/venue_e2e_wiring_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/venue_e2e_wiring_2026_08_16.md,
+    /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
+    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+  ]
 ---
 
 # Venue e2e wiring — finalize
@@ -77,3 +82,7 @@ context_scope: [/plans/active/venue_e2e_wiring_2026_08_16.md]
   ingested immediately but machine-held until every parent task is done. Note the parent itself is `status: draft`
   pending the universe denominator, so this finalize will stay gated until the parent is flipped to `active` and
   worked.
+
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries) — added the umbrella parent (todo 1 reconciles
+  into its contract-step evidence) and the read-vs-execute-asymmetry issue doc (todo 4 names it explicitly);
+  code-free finalize gate, no source path applicable.

@@ -897,3 +897,4 @@ operator activation.
   blocking real pre-2020 history on the Yahoo Treasury-INDEX series) and the
   `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` / `tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md`
   AO-dispatch pair. Content itself unreviewed by this entry — this fixes the linkage gap only.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

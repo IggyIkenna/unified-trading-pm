@@ -22,9 +22,11 @@ tags: [contract_size, liquidations, tardis, instruments-service, cefi-inverse]
 related: [data_pipeline_alert_storm_root_cause_batch_2026_08_10, cefi_consolidated_closeout_2026_07_18]
 context_scope:
   [
+    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     unified-api-contracts/unified_api_contracts/registry/cefi_inverse_contract_multipliers.py,
     market-data-processing-service/market_data_processing_service/app/adapters/cefi/liquidations_adapter.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
   ]
 created: 2026-08-12
 author: claude-agent
@@ -249,32 +251,40 @@ days.
 - [ ] [SCRIPT] P0. Monitor the (relaunched) liquidations re-derive to completion, same 3-way verification rigor as every
       prior attempt in this batch (log counters + manifest `written_at` + GCS `last_modified` — a clean exit code alone
       has already proven insufficient multiple times this batch). Confirm zero non-zero-rc dates before calling this
-      closed. **STATUS 2026-08-16 13:56 UTC**: on its 5th VM iteration, `mdps-backfill-cefi-20260815-181733`
-      (`e2-standard-4`, on-demand), healthy, zero `SchemaContractNotFoundError`/`Traceback` hits across the whole run
-      so far, currently `2022-06-08` of the `2020-01-01..2026-01-31` range (day 890/2223, ~40%) at ~7 min/date and
-      still gradually climbing. **ETA: ~6-10 days from now, i.e. landing roughly 2026-08-22..2026-08-26** — the wide
-      range is because pace keeps climbing through higher-volume periods (the Nov-2022 FTX collapse and the 2023-2024
-      bull run are both still ahead of it). Prior 4 iterations were killed by an unrelated bug
-      (`vm_zombie_watchdog.py` false-positiving on long-running jobs — fixed + shipped
-      `deployment-service@149374355e`, see `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`, now
-      resolved/checkboxes flipped) — this iteration has NOT been killed since that fix landed
-      (~19h uninterrupted as of this note). **Output spot-checked and looks correct**: pulled
-      `BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN` 15m liquidation candles for 2022-05-01 — prices match real BTC levels
-      (~$37-38K), OHLC internally consistent, liquidation volume tracks visible volatility, and the 22/96 windows with
-      zero liquidations are cleanly `null` (not zero/garbage) — honest absence, not corruption; the scattered (not
-      block-contiguous) shape of the zero-liquidation windows across a full day further supports genuine sparsity over
-      an upstream collection gap. **Active hourly monitoring stood down 2026-08-16** — nothing else in this doc or
-      `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` is blocked on this VM finishing, and the zombie-watchdog
-      fix (the only thing that was actually killing it) is verified stable, so there's no value in checking every
-      hour for the next ~week. **Next agent, whenever this is picked up again (proactively around the ETA window
-      above, or whenever this doc is next touched for any reason)**: SSH `find /tmp -maxdepth 1 -name
-      "vm-exec-*.log"` on `mdps-backfill-cefi-20260815-181733` for current progress/errors. If the date range is
-      complete (reaches `2026-01-31` with exit code 0), run the full 3-way verification below and close this todo. If
-      it died/got killed again (check `gcloud compute instances describe ... --format="value(status)"` and the
-      Compute Engine operations log for a delete op + its `user`), diagnose why before blindly relaunching — do NOT
-      restart it just to "keep it running" if it's genuinely still healthy; checkpoint-resume is proven correct
-      across iterations so a restart is cheap if actually needed, but isn't free (redoes the last <24h of dates and
-      costs a boot cycle) so don't force one without a reason.
+      closed. **STATUS 2026-08-17 16:26 UTC**: relaunched 2026-08-16 16:24 UTC as `mdps-backfill-cefi-20260816-162418`
+      (`e2-standard-4`, on-demand, **`--date-concurrency 2`** — doubled from the prior single-threaded iteration per
+      operator instruction), healthy, **zero `SchemaContractNotFoundError`/`Traceback` hits across the entire run**.
+      Currently `2023-04-01` of the `2020-01-01..2026-01-31` range (day 1187/2223, ~53.4%).
+      **Measured pace, two windows** (both from the live log, `date=YYYY-MM-DD` markers, not estimated): first 14.3h
+      (2020-01-01→2022-10-22, 1026 dates) averaged ~50s/date (71.7 dates/hr); the next 10.66h
+      (2022-10-22→2023-04-01, 161 dates — spanning the Nov-2022 FTX collapse) slowed to ~238s/date (15.1 dates/hr),
+      confirming the expected volume-driven slowdown. 1036 dates remain, still including the FULL 2023-2024 bull run
+      and 2024-2026 (likely higher volume still).
+      **ETA, bracketed by the two measured paces**: optimistic (full-run avg, 47.5 dates/hr) ≈ 21.8h remaining →
+      **~2026-08-18 14:00 UTC**; conservative (most recent slower pace, 15.1 dates/hr) ≈ 68.6h remaining →
+      **~2026-08-20 11:00 UTC**. Central expectation: **completes 2026-08-19 to 2026-08-20**. Treat this as a genuine
+      range, not a point estimate — pace will keep moving as it crosses further volatility regimes.
+      **Do not poll this hourly — that is a wasted session** (explicit operator instruction 2026-08-17: this VM
+      running is not itself work, a continuously-polling session babysitting it end-to-end provides zero value over
+      one that checks in at the right moment). **Next agent/session, do this**: don't check before
+      **2026-08-18 ~12:00 UTC** at the earliest (the optimistic-case floor). SSH
+      `find /tmp -maxdepth 1 -name "vm-exec-*.log"` on `mdps-backfill-cefi-20260816-162418` (zone
+      `asia-northeast1-c`, `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`), grep
+      `date=20` markers for current position and `Traceback\|SchemaContractNotFoundError` for errors. If the date
+      range is complete (reaches `2026-01-31` with exit code 0), run the full 3-way verification below and close this
+      todo. If not yet complete by **2026-08-20 ~18:00 UTC** (past the conservative bound with margin), that's a real
+      stall signal — diagnose (check `gcloud compute instances describe ... --format="value(status)"` + the Compute
+      Engine operations log for an unexpected delete) before deciding whether to relaunch; checkpoint-resume is
+      proven correct across iterations so a restart is cheap if genuinely needed, but isn't free (redoes the last
+      <24h of dates and costs a boot cycle) — don't force one just because it's still running past a soft estimate.
+      **Related, already resolved**: the `uts-prod-dp-exit-code-monitor-cron` fleet-wide auto-recovery cron (paused
+      earlier in this campaign pending a deployment-api rebuild — see
+      `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`) was re-enabled 2026-08-17 after verifying the fix's
+      content (not just commit ancestry — the LDR→main promotion squash-merges, so `git merge-base --is-ancestor`
+      against the original commit sha is the WRONG check and will falsely say "not promoted" forever; verify actual
+      file content on `origin/main` instead) was live in the deployed Cloud Run Job image, then confirmed via two
+      clean hourly firings (00:00 and 01:00 UTC, both dispatched correctly-scoped single-cell relaunches, fleet count
+      stayed flat 14-16 `mdps-*` VMs, no explosion) — this CeFi VM is not itself at risk from that cron now.
 - [x] [DATA] P3. **CORRECTION 2026-08-16**: the claim below that `SchemaContractNotFoundError` is "correctly recorded
       as `attempted_failed`" is WRONG — directly measured earlier in this campaign (a prior session, same day) that the
       VM's own per-VM manifest shard had **0 `attempted_failed` rows** despite these exact `SchemaContractNotFoundError`
@@ -415,3 +425,7 @@ uncommitted across a checkpoint boundary, even mid-task.
   log (`mdps-cefi-2021-20260813-174738:/tmp/vm-exec-5128.log`), not just static code tracing. Shipped:
   `market-data-processing-service@a3ff10f0dd`.
 - **na-eligibility-audit 2026-08-17** [body-hash:f9e2a037984a3a3c]: KEEP-NA, valid — Reaffirmed. 8 of 10 todos [x] with hard sha evidence. 2 remaining: an [OPERATOR] Tardis-tier spend decision, and a monitor-to-completion task gated on a still-running VM (ETA ~2026-08-22..26) with an open-ended diagnose-if-it-dies-again branch. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries, was 3) — added the sourcing P0 plan
+  (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`) and `live_workers_chain.py`, the file most of this
+  doc's later root-cause work (SchemaContractNotFoundError routing, the 2-segment instrument_id bug) actually
+  touched.

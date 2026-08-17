@@ -6,7 +6,7 @@ summary: >-
   the two reachability issue docs, which sit in local-only or draft parents and so were never ingested. Each has a
   named symbol or file, a stated done-when, and an outcome a worker can reach alone — the design calls those docs also
   carry are deliberately NOT here. Every todo touches a different file set, so they run concurrently by default.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data, strategy, execution]
@@ -55,8 +55,22 @@ context_scope:
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
     /codex/06-coding-standards/integration-testing-layers.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
+    system-integration-tests/scripts/run_cross_repo_invariants.sh,
+    unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-17.** All six dispatched todos plus the definition-of-done review are `[x]`, independently
+> re-verified (see the finalize plan's Progress Log), and the plan is unlocked — archived per the standard 6-step
+> ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Codex-alignment check: no new
+> durable contract to record — every shipped item (SIT invariants #25/#26, the LST address SSOT migration, the
+> close-all `/manual/instruction` migration, MTDS's oracle-canonical-leg extension) implements an already-established
+> pattern documented elsewhere, not a new one. One deferred item found on this doc's own frontmatter-fix todo (the
+> READ-side "8" count possibly being stale post-Kamino) migrated to a real tracked todo in its true parent,
+> `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`, rather than left as prose.
+> Corpus-wide referrers (4 `data-pipeline-check-*` SKILL.md docs + the finalize plan's `related`/`context_scope`)
+> repointed to this archived path. Finalize:
+> [[venue_readiness_ao_dispatch_batch1_finalize_2026_08_16]].
 
 # Venue readiness AO dispatch batch 1
 
@@ -294,3 +308,9 @@ already stated in the body — `~16 genuinely live` (execute) and `8` (read) —
 flipped checkbox above. This was the last open todo in this plan — all six now flipped, definition-of-done review
 already independently re-verified the other five (slot 13). Per the archival HARD RULE (every todo done + unlocked
 → archive immediately), this plan should be archived in the same session that ships this flip.
+
+**context-scout 2026-08-17**: refreshed context_scope (6 entries) — kept the 2 parent issue docs and 2 codex SSOTs
+(SIT invariants + the canonical oracle the skills-audit todo covers), added 2 source paths covering the doc's two
+main technical threads: the SIT-invariant wiring hub (`run_cross_repo_invariants.sh`, touched by 2 of 6 todos) and
+the LST address SSOT registry (`lst_token_addresses.py`, touched by 2 of 6 todos plus the finalize doc's eETH/rsETH
+review).

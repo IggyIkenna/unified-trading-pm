@@ -824,3 +824,9 @@ duplicating a new issue doc. Skipping via `reason_code: GATED` per this doc's es
   active investigation via ongoing recurrence notes (most recently 2026-08-09) — genuinely not yet bounded to a single
   fix, consistent with every prior pass on this doc.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:daaa1b128dcd0006]: KEEP-NA, valid —
+  re-affirms the earlier same-day marker above (content edited after it was written, substance unchanged). 5 of 6
+  grep-matched checkbox lines remain fenced-code-block quotes of an archived upstream plan (tracked tooling
+  false-positive), not real open items; the 1 genuine item (root-cause the "zero-derived-parent-row" dispatch-gate
+  mechanism) is live-dispatch-critical-path agent-orchestrator machinery under active investigation, per the standing
+  2026-07-31 operator directive routing AO-machinery docs to local-only.

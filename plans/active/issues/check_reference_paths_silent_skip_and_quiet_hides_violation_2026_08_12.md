@@ -31,6 +31,8 @@ related:
 context_scope:
   - scripts/plan-hygiene/check_reference_paths.py
   - scripts/plan-hygiene/run_hygiene_sweep.sh
+  - scripts/plan-hygiene/find_moved_doc_referrers.sh
+  - /plans/active/ao_satellite_ao_dispatch_batch23_2026_08_17.md
 created: 2026-08-12
 last_updated: 2026-08-12
 parent_epic: agent_operating_framework_master
@@ -128,3 +130,6 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:63676f449612beab]: RECLASSIFY (per-todo split) — 3 well-specified deterministic script fixes (hard-error on unresolvable --only path; print offending refs under --quiet; retire the --quiet workaround rationale) are conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` items 3-5. The 4th item (fenced-code-block BARE_CODEX_RE exemption decision) stays KEEP-NA, an open design-judgment call.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added `find_moved_doc_referrers.sh` (the doc's
+  own P3 todo's fix target) and `ao_satellite_ao_dispatch_batch23_2026_08_17.md` (where the 3 extracted script fixes
+  are now tracked for dispatch/completion, per this same audit pass's own retag above).

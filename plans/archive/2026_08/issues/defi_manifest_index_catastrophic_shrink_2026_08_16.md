@@ -55,11 +55,14 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 source: data_pipeline_failure escalation agt-d2c3cc (side-finding, not the escalation's own scope)
-resolved_by: slot-32 (2026-08-16, root-cause investigation — bucket-confusion false alarm, no data loss)
+resolved_by:
+  slot-32 (2026-08-16, root-cause investigation — bucket-confusion false alarm, no data loss); independently
+  re-confirmed 2026-08-17 (operator-approved P0 on stale BLK-46f447dc, unrelated slot) — same verdict, fresh
+  live measurement
 locked_by: ""
 created: "2026-08-16"
 author: slot-32
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -207,3 +210,48 @@ tick-data bucket's cited figure, concluding a shrink that never happened.**
   data loss occurred anywhere. Retracted the doc's premise, resolved all 4 recommended-decision todos as moot/covered,
   flipped `status: resolved`. No code changes needed — the consolidator behaved correctly throughout; this was purely
   a same-session bucket-identification error, not an infrastructure defect.
+- **2026-08-17 (independent re-verification, prompted by the operator approving a P0 on the STALE `BLK-46f447dc`
+  blocked question, unrelated slot)**: The operator approved a P0 ("freeze consolidator writes, check reversibility,
+  root-cause the merge bug") on 2026-08-17 in response to `BLK-46f447dc` — a blocked question filed 2026-08-16 by a
+  worker on an unrelated task, escalating the ORIGINAL (pre-retraction) finding above. That blocked question was
+  apparently never re-visited after slot-32's same-day retraction landed (`unified-trading-pm@64eed6c4e0`,
+  2026-08-16T18:34Z, ~2h20m after the original P0 filing) — the operator was very likely answering a stale question
+  about an incident already diagnosed as a false alarm before their approval landed. Searched the live AO backlog
+  (`check-ao-backlog-status.sh "46f447dc"`) for the blocked-question id itself: 0 matches (blocked-question ids are
+  not task ids/plan_refs/titles, so this doesn't confirm answered/open either way; the AO dashboard's `/api/blocked/*`
+  routes are `AUTHED_DEPS`-gated and this session has no dashboard JWT, so its live state could not be directly
+  confirmed from here — flagging for the operator/a session with dashboard access to close explicitly if still open).
+  Independently re-measured BOTH buckets fresh, live, via UTL `gcs_describe_object` +
+  `gcs_bucket_soft_delete_retention_seconds` (`unified_trading_library.cloud_interface`) — no subprocess
+  gcloud/gsutil:
+  - `gs://instruments-store-defi-prd-central-element-323112/_index/availability_index.parquet`: size=3,914,854 bytes,
+    last_modified=2026-08-17T15:01:29.661Z, generation=1786978889651629. A second, independent read via
+    `pyarrow.fs.GcsFileSystem` + `pq.ParquetFile(...).metadata.num_rows` (footer-only, no full-file scan) confirms
+    **138,753 total rows** — up only +141 rows from the 2026-08-16 measurement (138,612) over ~23 hours, i.e. normal
+    small incremental growth, not a shrink and not a jump toward 159M. This bucket has never been anywhere near 159M
+    rows.
+  - `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (the bucket the
+    original "~159M rows/~6.8GiB" figure actually describes): size=7,265,426,420 bytes (~6.77 GiB),
+    last_modified=2026-08-17T15:49:47.473Z, generation=1786981787460717 — grown from the ~6.66 GiB measured
+    2026-08-16, confirming it is intact and still actively being written, not frozen or shrunk.
+  - **Reversibility, both buckets**: `gcs_bucket_soft_delete_retention_seconds()` returns **604800** (7 days) for
+    both `instruments-store-defi-prd-central-element-323112` and `market-data-tick-defi-prd-central-element-323112`
+    — matches the 2026-07-27 fleet-wide sweep baseline in
+    `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Even in a genuine-shrink counterfactual, a prior
+    generation would have been recoverable within a 7-day window — moot here since no shrink occurred.
+  - **Write path**: confirmed healthy and NOT frozen — freezing was never warranted and would have been actively
+    harmful (blocks real captures from merging, triggers false staleness alerts). Both consolidator Cloud Scheduler
+    crons are `ENABLED` on their documented cadence: `uts-prod-manifest-consolidator-instruments-defi-cron`
+    (`0 * * * *`, hourly, matches the `AG_STALENESS_BUDGET_SEC["defi"]=3600` override in
+    `manifest-consolidator-ssot.md`) and `uts-prod-manifest-consolidator-market-data-defi-cron` (`*/1 * * * *`).
+  - **Root-cause corroboration**: re-confirmed the shrink-guard defense-in-depth the retraction cited is real code,
+    not an asserted claim — `_INDEX_SHRINK_GUARD_PCT` / `ManifestIndexShrinkRefusedError` live in
+    `unified-trading-library/unified_trading_library/manifest_writer/_writer.py` (the legacy-CAS writer path), and
+    `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD = 0.001` (0.1%, observability-only) is real in
+    `unified_trading_library/manifest_consolidator.py:2145`.
+  - **Verdict**: the 2026-08-16 retraction stands, now independently corroborated by a second, later,
+    differently-tooled measurement (fresh `gcs_describe_object` + a second independent pyarrow footer read, vs. the
+    retraction's own `gcs_describe_object` re-check) — no data loss occurred, no code changes needed, no restore
+    action is warranted (there is nothing to restore from), and no freeze was applied (none was needed). The only
+    open loose end is confirming `BLK-46f447dc` itself shows answered/resolved in the AO dashboard — not this doc's
+    substance — left for the operator or a session with dashboard JWT access.

@@ -128,3 +128,79 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   session (AWS IAM gap, confirmed live, matches the sweep's §0c host-dispatched-watchdog coverage gap). No code changed.
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:c92f713e54e5825d]: KEEP-NA, valid — genuinely open live-infra investigation blocked by a real IAM gap (ssm:SendCommand/sts:AssumeRole denied for ikenna-worker, confirmed live). No tracked checkboxes exist yet (prose-only follow-on steps) — a separate hygiene gap outside this audit's scope.
+- **cicd escalation agt-3378e5 2026-08-17 ~13:53Z (slot 8)**: NEW manifestation of this same single-runner capacity gap
+  — `codeload.github.com` 429 (Too Many Requests) downloading `actions/checkout@v4` on `glue-ip-172-31-3-59-1`, not a
+  queue/disk/cache-hang symptom. deployment-service promote PR #1036 (LDR→main, head 782975f4, wall agt-3378e5)
+  quality-gates-v2 failed 3x in a row (run 32034350306, attempts 1-3, ~13:18Z/13:46Z/13:51Z), every attempt dying at
+  the SAME "Set up job" step of the "QG slice (tests)" job with `Failed to download archive
+  '.../actions/checkout/tar.gz/11d5960a...'` after 3 backoff retries (~22s/~13-29s). Confirmed NOT a code break: full
+  local `bash scripts/quality-gates.sh` on the exact PR head sha (782975f4) passed clean (`✅ ALL QUALITY GATES PASSED
+  (261s)`, only pre-existing warn-tolerance ratchet warnings). Confirmed fleet-wide correlation: execution-service,
+  features-service, instruments-service, and strategy-service all also failed quality-gates-v2 in the same ~13:18-13:31Z
+  window (`gh run list --workflow quality-gates-v2.yml`), while other repos (alerting-service, unified-trading-library)
+  succeeded either side of that window — consistent with a burst of concurrently-dispatched promote-PR CI runs (likely
+  the `ldr-to-main-promote-fleet.yml` `*/30` tick) all landing on the SAME single glue runner and its action-download
+  cache not persisting the `actions/checkout` tarball between jobs, so every job re-downloads it fresh and the
+  cumulative per-IP request volume trips GitHub's codeload rate limit. Re-confirmed the IAM gap this doc already
+  names is unchanged: `aws sts get-caller-identity` = `arn:aws:iam::427895769566:user/ikenna-worker` (same identity as
+  the 2026-08-15 finding); `aws ssm describe-instance-information` still `AccessDeniedException`. No code fix exists
+  or is needed on `deployment-service` — this wall will clear once the runner's action-download congestion drains (or
+  the runner gets a persistent `_work/_actions` cache so it stops re-fetching `actions/checkout` every job). Provenance:
+  cicd escalation agt-3378e5, deployment-service#1036.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged.
+
+- **cicd escalation agt-8c192b 2026-08-17 ~14:07Z (slot 4)**: THIRD manifestation of the same single-glue-runner
+  congestion — instruments-service `live-defi-rollout` quality-gates-v2 red at commit `a1754003466946c0e5b7b71ad4a5b58`
+  (run 32034365453, wall_type=ldr_qg_failure, `#0` no PR). Root cause identical to agt-3378e5 above: job logs (fetched
+  via the `/actions/runs/{id}/logs` zip endpoint — the per-job `/jobs` and `/check-runs` endpoints both 403 for this
+  session's GH_PAT, "Resource not accessible by personal access token", an Actions-permission gap on the PAT distinct
+  from its already-granted Workflows:read/write scope) show "QG slice (tests)" dying in "Set up job" downloading
+  `actions/checkout@v4` from `codeload.github.com` → 429 after 3 backoff retries. Confirmed NOT a code break: full local
+  `bash scripts/quality-gates.sh` on the exact HEAD sha (a1754003) passed clean (`✅ ALL QUALITY GATES PASSED (118s)`,
+  sentinel written for that exact sha). Re-triggered the workflow live (`gh workflow run quality-gates-v2.yml --ref
+  live-defi-rollout`, run 32038587130) to double-check — it ALSO failed, same signature (`codeload.github.com` 429 on
+  `actions/checkout`/`actions/setup-python` during "Set up job"), confirming the congestion is still ongoing ~1h after
+  agt-3378e5's finding, not a one-off blip that already cleared. No code fix exists or is needed on instruments-service.
+  This escalation will retry-poll for a clean quality-gates-v2 run and close once the runner congestion drains — it
+  does not duplicate the [OPERATOR] follow-up already tracked below. Provenance: cicd escalation agt-8c192b,
+  instruments-service (no PR).
+
+- **cicd escalation agt-723f23 2026-08-17 ~14:31Z (slot 3)**: FOURTH manifestation of the same single-glue-runner
+  congestion — features-service `live-defi-rollout` quality-gates-v2 red at commit `6392c07ceb43a2bc7e3f8956d5bc080524ed2a78`
+  (original wall run 32034350333, wall_type=ldr_qg_failure, `#0` no PR; a subsequent ldr-ci-monitor re-check run
+  32038016611 at 14:08:59Z also failed). Confirmed NOT a code break: full local `bash scripts/quality-gates.sh` on the
+  current live-defi-rollout HEAD (20d71ed0, one commit past the escalating commit) passed clean (exit 0, verified via
+  the process's own `$?` — the captured log merely stopped mid-stream after STEP 5.104 with no failure banner, an
+  unflushed-buffer artifact of the backgrounding wrapper, not a real crash). The failing commit itself only bumped the
+  Dockerfile's pinned `BASE_IMAGE_DIGEST` (both old and new digests verified resolvable in Artifact Registry via
+  `gcloud artifacts docker images describe`); a full read of the reusable `python-quality-gates-v2.yml` confirms this
+  digest/Dockerfile is not referenced anywhere in the CI gate, ruling out any causal link. Re-triggered live
+  (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`, run 32039215897) to get a clean signal against
+  current HEAD — it ALSO failed. Job logs (fetched via the `/actions/runs/{id}/logs` zip endpoint, same as agt-8c192b —
+  the per-job `/jobs` and `/check-runs` endpoints both still 403 for this session's GH_PAT) show the identical
+  signature: "QG slice (tests)" Set up job dying on `actions/checkout@v4` download — `codeload.github.com` 429 (Too
+  Many Requests), then a 502, then a third 429, hard-failing after 3 backoff attempts (14:31:04Z-14:32:30Z). Confirms
+  the congestion is STILL ongoing ~40min after agt-8c192b's finding — 4 distinct repos hit within ~1.5h
+  (deployment-service, instruments-service, features-service, plus the original 2026-08-15 e2e-testing/
+  market-tick-data-service queueing). No code fix exists or is needed on features-service; not retrying further from
+  this session (each retry adds another `actions/checkout` download to the same congested IP, working against the
+  fix rather than toward it) — leaving this for the existing `[OPERATOR]` follow-up below and the next external
+  ldr-ci-monitor check. Also confirmed (informational, not actioned): this session's AWS identity (`ikenna-worker`)
+  hit the same `ssm:SendCommand AccessDeniedException` on `i-042a6332509482556` attempting to inspect the runner's
+  local diagnostic logs; did not attempt an `sts:AssumeRole` self-grant given this doc's existing finding that this
+  identity is not the self-service-blessed one. Given the escalating recurrence rate (4 confirmations in ~1.5h vs. the
+  original single 2026-08-15 observation), this may now warrant re-weighing P1 vs. a harder operator page — left as an
+  observation for whoever next reviews this doc, not unilaterally re-prioritized here. Provenance: cicd escalation
+  agt-723f23, features-service (no PR).
+
+## Follow-ups (tracked work, not prose)
+
+- [ ] [OPERATOR] P1. From a session/identity WITH `ssm:SendCommand`/`ssm:DescribeInstanceInformation` on the
+      glue-runner host (or console access), check whether the self-hosted runner's `_work/_actions` action-download
+      cache is being wiped between jobs (ephemeral/containerized runner re-provisioned per job would explain why
+      EVERY quality-gates-v2 job re-downloads `actions/checkout@v4` fresh, not just the first job after a cold boot).
+      If confirmed, either (a) make the actions cache persistent across jobs on this runner, or (b) provision
+      additional runner capacity so a single IP isn't accumulating enough codeload requests/hour to trip GitHub's
+      rate limit. This is the SAME capacity gap as this doc's original P1 finding, now with a second concrete
+      symptom (codeload 429 on `actions/checkout`, 2026-08-17) in addition to the original queue-depth/duration
+      symptom (2026-08-15).

@@ -79,3 +79,5 @@ context_scope:
   mandatory gated-finalize-plan rule (task_template.md §4). `depends_on`+`gate_on_depends: true` machine-holds every
   task here until batch15's own 11 todos are done. Authored `status: active` (not `draft`), same no-double-gate
   reasoning as batch15 itself.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries) -- re-verified both entries still
+  resolve on disk; no change.

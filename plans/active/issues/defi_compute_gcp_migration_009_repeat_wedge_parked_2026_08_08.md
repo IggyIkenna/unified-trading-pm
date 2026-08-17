@@ -121,3 +121,4 @@ reaching the point where a compact would be needed.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ebbf8125d1073a15]: KEEP-NA, valid — live incident parked pending an external fleet-wide root-cause investigation; operator explicitly re-confirmed 'stays parked' 2026-08-09, not yet safe to unpark.
+- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:f184f4183d316225]: KEEP-NA, valid — re-affirms the marker above, no change in substance.

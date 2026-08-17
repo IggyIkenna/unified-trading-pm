@@ -454,3 +454,4 @@ operator-owned BTC 2026-05-01 leave-both residual (no action pending).
   done) but left as-is: flipping to a terminal status trips `check_terminal_status_archived`, which forces archival —
   out of scope for this doc-reconciliation pass given `archive_exempt: true` is set with no BRIDGE comment explaining
   why archival was deferred. Leaving the status/archival decision to the next toucher with archival authority.
+- **context-scout 2026-08-17**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [venue-readiness, ao-dispatch, finalize]
 related:
   [
-    /plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md,
+    /plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md,
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
   ]
@@ -46,7 +46,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: Authored alongside the parent plan per this workspace's mandatory finalize-plan rule (task_template.md §4).
-context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
+context_scope:
+  [
+    /plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md,
+    /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
+    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+    /plans/active/venue_smoke_test_bar_2026_08_16.md,
+  ]
 ---
 
 # Venue readiness AO dispatch batch 1 — finalize
@@ -125,8 +131,31 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
       for TRADFI+CEFI+DEFI, not TRADFI-only) while keeping the value-blind declaration unchanged — the oracle itself
       never checks `instrument_type`/`data_type`/`venue`/`chain` VALUES independently, so that half of the audit's
       original verdict was already correct and still holds.
-- [ ] [DOC] P2. Run the standard 6-step archival ritual on `venue_readiness_ao_dispatch_batch1_2026_08_16` once every
+- [x] ✅ [DOC] P2. Run the standard 6-step archival ritual on `venue_readiness_ao_dispatch_batch1_2026_08_16` once every
       todo is `[x]` and unlocked, including the corpus-wide referrer-path fixup.
+      — **Done (slot 4, backend_engineer).** All 7 checkboxes (6 dispatched todos + definition-of-done review)
+      confirmed `[x]` and `locked_by:` empty before starting. **Step 1 (migrate deferred items)**: found one
+      un-tracked deferral in the doc's own frontmatter-fix todo ("whether 8 itself is now slightly stale post-Kamino
+      … left for a future pass") — added a real `- [ ] [DATA] P3.` todo to its true parent,
+      `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`, rather than leaving it prose. The other two
+      prose-looking deferrals in this batch were already properly tracked elsewhere and needed no migration: the
+      `gate_on_depends` side finding already has its own filed issue doc with a real `- [ ]` todo
+      (`gate_on_depends_checks_completion_not_outcome_2026_08_17.md`), and invariant 2's "106 of 159" baseline-doc
+      staleness (noted in THIS finalize plan's own REVIEW P1 checkbox, not batch1's) is out of scope for this
+      specific todo — it belongs to a future reconciliation pass on this plan, not batch1's archival. **Step 2**:
+      added the `> **🟢 ARCHIVED 2026-08-17.**` banner + flipped `status: active` → `complete`. **Step 3-4
+      (codex-alignment)**: checked `integration-testing-layers.md` (no per-invariant-number list to update) and
+      `four-surface-reconciliation-procedure.md` (doesn't reference MTDS's checker implementation status) — nothing
+      shipped by batch1 establishes a new durable contract; every item implements an already-documented pattern
+      (LST SSOT, SIT invariant framework, canonical oracle). **Step 5 (corpus-wide referrer fixup)**: grepped the
+      whole corpus for the old path; repointed the 4 `data-pipeline-check-*` SKILL.md docs' leading-slash citations
+      and this finalize plan's own `related`/`context_scope` frontmatter to `/plans/archive/2026_08/…`; left
+      bare-slug prose mentions in Progress Log entries (venue_smoke_test_bar, the two reachability issue docs, the
+      gate_on_depends issue doc's `source:` field) untouched as historical record, matching the convention that only
+      leading-slash `/plans/...` paths are live pointers requiring repoint. `plans/active/INDEX.md` is
+      auto-generated (never hand-edited) — regenerated via `scripts/plans/regenerate_active_plan_index.py`.
+      `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` is itself an already-archived historical
+      snapshot — left frozen, not updated. **Step 6**: `git mv` to `plans/archive/2026_08/`, no lock to clear.
 - [ ] [DOC] P3. For each parent doc touched: if reconciling left it with zero open todos, it is ALSO an archival
       candidate — run the ritual, not just a checkbox flip.
 
@@ -174,3 +203,16 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
   (`unified-trading-pm@06d3a9062c`) to state the fix is shipped; left the value-blind declaration unchanged since
   that half was already accurate. Only the `[DOC] P2` archival-ritual todo and its sibling `[DOC] P3` remain open in
   this plan.
+
+- **2026-08-17 (slot 4, backend_engineer) — `[DOC] P2` archival-ritual todo flipped, `venue_readiness_ao_dispatch_batch1_2026_08_16`
+  archived.** Full detail in the flipped checkbox above. One genuinely un-tracked deferral found and migrated to a
+  real todo (`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`'s new READ-side re-count item); the
+  other two candidate deferrals were already properly tracked and needed no action. Archived doc moved to
+  `plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md`; 6 corpus referrers repointed (4
+  SKILL.md docs + this plan's own `related`/`context_scope`); `INDEX.md` regenerated via its own script (never
+  hand-edited). Only the `[DOC] P3` "archive any zero-open-todo parent" todo remains open in this plan.
+
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — added the 3 parent docs this finalize
+  reconciles evidence back into (named explicitly in its own todos and Progress Log), and corrected the first
+  entry to the archived path since the batch1 parent plan was archived by the same-day archival-ritual entry
+  above.

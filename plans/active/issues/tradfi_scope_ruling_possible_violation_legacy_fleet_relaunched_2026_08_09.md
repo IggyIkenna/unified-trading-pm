@@ -156,7 +156,12 @@ this cron is paused or fixed, the singleton lock may never naturally clear.
       `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md:191-198` shows `deploy@48f55e934b`, `_cme_root_universe()` now
       consults the `MVP_SCOPE` SSOT instead of parsing the launcher script's hardcoded `CME_ROOTS`. The durable fix is
       in place; re-enabling the cron no longer reproduces this violation.
-- [ ] [OPERATOR] P2. **CORRECTED 2026-08-12 (/plan-reconcile): retagged `[INFRA]` → `[OPERATOR]`** — this doc's own
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-17 — moot, nothing left to kill** (see Progress Log): live
+      `gcloud compute instances list --filter='name~"^tradfi-bf-"'` shows ZERO `tradfi-bf-*` VMs of any kind currently
+      running — the NASDAQ/NYSE 2023/2024/2025 relaunch wave and the CME duplicate pairs this todo asked about are all
+      gone (naturally completed/self-deleted or previously killed; no attributable audit-log trail either way). The
+      Cloud Scheduler job (`uts-prod-tradfi-wave-launcher-cron`) remains PAUSED, unchanged since 2026-06-24. **CORRECTED
+      2026-08-12 (/plan-reconcile): retagged `[INFRA]` → `[OPERATOR]`** — this doc's own
       Progress Log repeatedly states the kill/no-kill call "is not mine to make" and is a "scope/cost-tradeoff judgment
       call, not a technical one" (see the 13:07Z and 12:47Z entries below), which is exactly the `[OPERATOR]` bar (a
       genuine business/value judgment with no data-derivable answer), not an `[INFRA]` mechanical task. **Determine
@@ -310,3 +315,4 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **2026-08-17 (blocked-question backlog re-verification, answering `BLK-op-tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched-567fcb0927db`)**: re-checked live GCE state before answering (operator instruction: "pretty sure by now they're already killed, but check. Kill if not."). `gcloud compute instances list --filter='name~"^tradfi-bf-"'` (project `central-element-323112`, run via the `planning` VM's ambient `unified-trading-sa` identity over AWS SSM) returned **zero rows** — no NASDAQ/NYSE 2023/2024/2025 shards, no CME `g01`/duplicate shards, nothing matching the `tradfi-bf-*` family at all (51 total GCE instances in the project, only 1 tradfi-named — `mtds-live-tradfi-cme-trades-20260809-163443`, a live-service VM unrelated to this backfill fleet). Cross-checked `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron`: still `state: PAUSED`, `userUpdateTime` unchanged at `2026-06-24T22:44:03Z` — no new launches have been generated since. `gcloud compute operations list --filter="operationType=delete AND targetLink~tradfi-bf-cme"` shows a fresh wave of CME-shard delete operations on 2026-08-15 (unrelated CME dedup activity, not this doc's NASDAQ/NYSE set); no matching delete operations for `nasdaq`/`nyse` were retrievable in the queryable operations-list window (GCE operation history rolls off after a few weeks — the live instance list, which is authoritative for "is anything still running", is what this determination rests on, not the operations log). **Verdict: nothing to kill — already gone.** No VM action taken (none running to act on). Flipped the P2 action item to done above. Answered `BLK-op-tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched-567fcb0927db` via `POST /api/blocked/{id}/answer` with this evidence (`from_role=operator`, `disposition=final`).

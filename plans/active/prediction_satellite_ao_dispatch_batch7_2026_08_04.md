@@ -128,3 +128,5 @@ reasoning: `ag_closeout_audit_prediction_parked_2026_08_04.md`.
   2026-08-16 completion) — corrected in frontmatter above. Completion evidence lives in the source doc's own Progress
   Log (`archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`, `status:
   resolved`, 0 open todos, banner "🟢 ARCHIVED 2026-08-16").
+- **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged — still the sole `available_at`
+  consumer-check todo's source doc, code target, and manifest-status codex SSOT.

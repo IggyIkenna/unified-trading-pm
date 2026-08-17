@@ -79,3 +79,5 @@ source: >-
       `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan referrers to either.
 
 ## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

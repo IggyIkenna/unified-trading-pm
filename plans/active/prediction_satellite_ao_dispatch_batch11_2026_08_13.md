@@ -41,6 +41,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -89,3 +90,9 @@ source: >-
 None — every item drafted here already cleared the conflict-check. Items that did NOT clear (genuinely operator-gated,
 time-gated, or too-large-for-a-batch-todo) were left in their source docs and are not duplicated here; see the
 2026-08-13 audit's full classification data for the complete list.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added
+  prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md, the explicit `Source:` doc both todos cite and the gate
+  they're waiting on.

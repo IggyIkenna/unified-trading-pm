@@ -42,7 +42,13 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 sequential: false
 locked_by:
-context_scope: [/QUALITY_GATE_BYPASS_AUDIT.md, scripts/quality-gates-base/base-service.sh, scripts/quality-gates.sh]
+context_scope:
+  [
+    /QUALITY_GATE_BYPASS_AUDIT.md,
+    /plans/archive/issues/pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md,
+    scripts/quality-gates-base/base-service.sh,
+    scripts/repo-management/ci_failure_watcher.py,
+  ]
 resolved_by:
 source: >-
   Discovered 2026-08-09 (slot-24) as a drive-by while fixing the 21 literal `except Exception:` occurrences
@@ -182,3 +188,7 @@ Two independent tracks:
   is out of scope for an except-narrowing todo). Worth flagging as a general pattern for todo 3's remaining ~50 sites
   across 29 files: narrowing `except Exception as X:` to include `ImportError` can trip STEP 5.94 the same way — check
   both ratchets after each file, not just STEP 5.5.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) — added the sibling doc this finding
+  was discovered while shipping (`pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`) and the concrete
+  file fixed in-session (`ci_failure_watcher.py`); dropped `scripts/quality-gates.sh` (the entry-point wrapper —
+  `base-service.sh` already carries the actual STEP 5.5 regex this finding is about).

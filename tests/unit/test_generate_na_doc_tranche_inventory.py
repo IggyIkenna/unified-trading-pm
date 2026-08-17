@@ -548,6 +548,41 @@ def test_incremental_skip_true_when_stored_hash_matches(monkeypatch, tmp_path):
     assert rec["verdict_marker_date"] == "2026-08-01"
 
 
+def test_incremental_skip_true_when_latest_same_date_marker_hash_matches(monkeypatch, tmp_path):
+    """Two verdict markers dated the SAME day must resolve to the LATER one (by document
+    position), not the first-encountered one, when `_latest_verdict_marker` picks `best`.
+
+    Live bug, confirmed 2026-08-17 across multiple same-day-audited sports-tranche docs
+    (e.g. sports_live_arb_strategy_and_execution_routing_2026_08_14.md): a doc gets a second
+    same-day verdict marker appended by a later audit pass. The tie-break used to be strict
+    `date > best[0]`, so finditer's top-to-bottom (= write-order) walk left `best` pinned on
+    the FIRST same-day marker's stored hash — even when a subsequent pass's own freshly
+    computed body hash exactly matched the SECOND (later, correct) marker's stored hash.
+    Result: incremental_skip incorrectly reported False, forcing a needless full re-read.
+    """
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    doc = _write_hash_doc(tmp_path, "same_day_tiebreak_2026_07_01.md", title="same day tiebreak")
+    current = MOD.body_content_hash(doc.read_text(encoding="utf-8"))
+    stale_hash = MOD.body_content_hash("---\n---\nstale earlier-pass body\n")
+    # First same-day marker (as if written by an earlier pass, before the body reached its
+    # current state) — deliberately a hash that does NOT match current.
+    first_marker = f"- **na-eligibility-audit 2026-08-01** [body-hash:{stale_hash}]: KEEP-NA, valid — first pass\n"
+    # Second same-day marker, appended LATER (so it appears later in the doc): its stored
+    # hash matches the CURRENT body — this is the one the tie-break must select.
+    second_marker = f"- **na-eligibility-audit 2026-08-01** [body-hash:{current}]: KEEP-NA, valid — second pass\n"
+    doc.write_text(
+        doc.read_text(encoding="utf-8") + first_marker + second_marker,
+        encoding="utf-8",
+    )
+
+    records = _run_json()
+    rec = _hash_record(records, "same_day_tiebreak_2026_07_01.md")
+    assert rec["incremental_skip"] is True, (
+        f"expected skip via the LATER same-day marker; stored(current)={current}, "
+        f"got body_content_hash={rec['body_content_hash']}"
+    )
+
+
 def test_incremental_skip_false_when_body_changed_after_marker(monkeypatch, tmp_path):
     """A doc whose body changed after the verdict marker must report incremental_skip=False
     even though a [body-hash:…] is present — the stored hash no longer matches.
