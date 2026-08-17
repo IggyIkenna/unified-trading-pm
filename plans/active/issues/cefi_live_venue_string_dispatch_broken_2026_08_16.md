@@ -140,11 +140,33 @@ specific factory-dispatch gap (grepped `plans/active/` + `plans/active/issues/` 
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Fix `strategy_service/position/position_interface/factory.py::_get_cefi_adapter`** so all 12
-      canonical dash-form venue tokens (and ideally every cefi venue, not just these 12) resolve to a real
+- [x] ✅ [BACKEND] P0. **Fix `strategy_service/position/position_interface/factory.py::_get_cefi_adapter`** so all
+      12 canonical dash-form venue tokens (and ideally every cefi venue, not just these 12) resolve to a real
       adapter. Done-when: `get_position_adapter(venue, mode=LIVE)` succeeds for every canonical cefi venue ID
       without a `ValueError`, and a regression test using dash-form tokens exists (the current suite only covers
-      bare lowercase forms).
+      bare lowercase forms). **Correction to this todo's own citation**: no test file at
+      `tests/position/position_interface/integration/test_adapter_factory.py` exists in this checkout —
+      confirmed via a repo-wide `get_position_adapter` grep, zero hits before this fix. `get_position_adapter`
+      had ZERO existing dispatch-test coverage of any kind, not "bare-forms-only" coverage as originally claimed.
+      **Fixed — `strategy-service@9027c2f5a9`**. Added missing `match` arms: `bybit_spot`/`bybit_futures` (was
+      bare-only), `okx_spot`/`okx_futures`/`okx_swap` (was bare-only), `coinbase_spot` and `kraken`/`kraken_spot`/
+      `kraken_futures` (had NO case at all before this fix — always fell through to `None` → the generic
+      "Unknown venue" error). Coinbase/Kraken route through the existing generic `CCXTPositionAdapter`
+      (`exchange_id="coinbase"`/`"kraken"`/`"krakenfutures"` — confirmed all three are real, distinct CCXT
+      exchange classes; Kraken Futures is a genuinely separate product/API from Kraken spot, never conflated).
+      **Deeper correctness finding, mirroring the execution-side fix**: `COINBASE-FUTURES`/`COINBASE-CDE` now
+      raise a specific `ValueError` (no position-read adapter for those market types) instead of either the old
+      generic error or silently reading Coinbase's spot balance as if it were futures/CDE data.
+      **Real collision found and fixed mid-pass**: bare `"coinbase"` is a SEPARATE, pre-existing venue token in
+      `LST_VENUE_TO_TOKENS` (`unified_api_contracts/registry/capability_declarations/_defi_lst.py` — Coinbase's
+      cbETH liquid-staking receipt token), routed through `_generic_token_balance_adapter`. An initial version of
+      this fix added bare `"coinbase"` to the new CEFI case (matching the execution-side fix's shape), which
+      broke `test_a_venue_with_no_known_address_is_not_routed` — caught by the full QG run before shipping,
+      fixed by scoping the CEFI case to `"coinbase_spot"` only (bare `COINBASE` was never one of the 12 in-scope
+      venues anyway; only `BYBIT` bare had that in-scope ambiguity, and it doesn't collide). 20 new/updated
+      tests (`tests/unit/position/test_position_adapter_factory.py`, all 6 pre-existing LST-routing tests in
+      `tests/position/position_interface/unit/test_factory_generic_token_balance_routing.py` reconfirmed green).
+      6067 passed/248 skipped, full `quality-gates.sh --no-fix` green before commit.
 - [x] ✅ [BACKEND] P0. **Fix `execution_service/trade_execution/factory.py::get_order_adapter`'s `CCXT_VENUES` /
       `DIRECT_REST_VENUES` dispatch** the same way. Done-when: `get_order_adapter` succeeds for every canonical
       cefi venue ID this sweep covered, with a regression test using dash-form tokens. **Fixed —
@@ -183,6 +205,12 @@ specific factory-dispatch gap (grepped `plans/active/` + `plans/active/issues/` 
 
 ## Progress Log
 
+- **2026-08-17 (later, same session)**: Fixed the position-factory P0 todo —
+  `strategy-service@9027c2f5a9`. Both P0s in this issue doc are now closed; only the P1 shared-helper todo and
+  P2 non-CEFI audit remain open. Mid-fix, caught (via the full QG run, before shipping) a real collision: bare
+  `"coinbase"` is a separate pre-existing LST-issuer venue token (cbETH) that an early version of this fix
+  would have silently broken by intercepting it as the CEFI exchange route — scoped the fix to
+  `"coinbase_spot"` only to resolve it cleanly.
 - **2026-08-17**: Fixed the execution-side P0 todo — `execution-service@fcc6bbcc2c`. Also found and closed a
   deeper correctness risk while fixing the ValueError: a naive suffix-strip would have silently routed
   COINBASE-FUTURES/COINBASE-CDE orders through the spot-only CoinbaseCCXTAdapter instead of failing loud — both
