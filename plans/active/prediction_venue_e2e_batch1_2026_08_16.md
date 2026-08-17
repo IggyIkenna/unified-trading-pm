@@ -102,13 +102,21 @@ source: >-
       instead of leaving them orphaned. Scope note: KALSHI `book_snapshot_5` stays orphaned — that's the separate
       P1 gap todo below ("no feature_group consumes POLYMARKET book_snapshot_5"), unaffected by this fix (trades
       only). QG green (18456 passed), sentinel-verified on `origin/live-defi-rollout`.
-- [ ] [BACKEND] P1. **Gap: no feature_group consumes POLYMARKET book_snapshot_5.**
-      `PolymarketMicrostructureCalculator` is trades-only (`polymarket_microstructure_calculator.py:36-37`), and
-      the generically-applicable book-consuming groups (`book_depth_bands`/`liquidity_walls`/`order_flow_inference`/
-      `microstructure`/`flow_interaction`) are all filtered out of PREDICTION by
-      `_filter_feature_groups_for_asset_group` (`batch_handler.py:797-812`) — real captured book data (batch+live,
-      confirmed PASS above) is fully orphaned. Done-when: at least one feature_group reads POLYMARKET
-      book_snapshot_5, or the gap is confirmed intentional with a cited reason.
+- [x] ✅ [BACKEND] P1. **Gap: no feature_group consumes POLYMARKET book_snapshot_5 — DONE 2026-08-17 (slot-21).**
+      SHIPPED — `features-service@a14db662b9`. Root cause was a genuine schema mismatch, not a filter-list
+      oversight: POLYMARKET's on-disk book rows carry `ts_ms` (not `timestamp`), no `mid_price` column, and
+      dict-shaped `bids`/`asks` levels (`[{"price": str, "size": str}, ...]`) — none of which the raw-book
+      calculators' `[timestamp, instrument_key, bids, asks, mid_price]` contract accepts as-is (confirmed
+      `instrument_key` was already generic via `instrument_id`). Added
+      `CrossInstrumentRawDataLoader._normalize_prediction_book_schema` (PREDICTION-only) to derive `timestamp`
+      from `ts_ms`, `mid_price` from best_bid/best_ask (one-sided-book safe), and convert levels to float pairs;
+      admitted `book_depth_bands` into the PREDICTION allowlist. `liquidity_walls`/`composite_sr`/
+      `liquidation_clusters` stay excluded — support/resistance and leveraged-liquidation semantics don't
+      obviously map to a [0,1]-priced prediction market and need their own review, even though this schema fix
+      would technically unblock them too (`order_flow_inference`/generic `microstructure` cited in the original
+      finding don't exist as real calculators in this codebase — only `book_depth_bands`/`liquidity_walls`/
+      `liquidation_clusters`/`composite_sr`/`flow_interaction` are real RAW_BOOK/TRADE_GROUPS members). 11 new
+      regression tests across both files, QG green (346s, exit 0), sentinel-verified on `origin/live-defi-rollout`.
 - [ ] [BACKEND] P2. **Triage stale abandoned WIP in `.tabs/8/features-service-clean-check`** (found by a review
       agent 2026-08-17, 15.9 days stale, 9 files staged: deletes `kalshi_microstructure_calculator.py` +
       `prediction_ingest.py`; edits `batch_handler.py`/`config.py`/`orchestrator.py`/`feature_builder_registry.py`/
