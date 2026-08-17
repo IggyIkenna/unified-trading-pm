@@ -10,7 +10,7 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, provenance, ci_reconciler]
 created: 2026-08-16
 last_reviewed: 2026-08-16
-summary: "Found during a `/ci-reconcile` sweep (2026-08-16, ~03:20-03:40Z). ..."
+summary: "MTDS + instruments-service each carry 8 bypass commits (dated 2026-07-13, ~1 month old at filing) that reached live-defi-rollout without a Quickmerge trailer -- not currently blocking anything live, but spans 4 distinct commit identities so per /ci-reconcile's size/authorship gate this needs an operator decision (bulk-bless vs re-ship-each vs show-and-wait), not an auto-fix."
 related: []
 execution_scope: orchestrator-agent
 priority: P2
