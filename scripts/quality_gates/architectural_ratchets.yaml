@@ -30,3 +30,34 @@ ratchets:
     banned_pattern: '"(react|next|vite|webpack)"\s*:'
     owner: per-service-team
     rule_doc: "cursor-configs/CLAUDE.md § Cross-Cutting Rules › UI (TypeScript) specifics — 'UI is its own repo'"
+
+  # LL-01/02/03: lazy/scoped loading refactor regression guard (item 1 of
+  # plans/active/cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md,
+  # extracted from plans/active/lazy_scoped_loading_refactor_2026_08_16.md). Each
+  # target file was converted to a lazy re-export (PEP 562 __getattr__ / a
+  # Mapping-backed lazy registry) specifically so importing it does not eagerly
+  # pull the heavy family/algorithm submodules — a runtime sys.modules count
+  # was rejected as the ratchet signal because that plan's own re-measurement
+  # showed it drifts with unrelated uv.lock/dependency changes (see that plan's
+  # 2026-08-16 Progress Log "execution-service is higher than its own baseline"
+  # entry); a static, unconditional module-top-level import is deterministic
+  # regardless of what else is installed, so these three ratchets flag any
+  # NEW unconditional (non-`TYPE_CHECKING`-guarded, column-0) import of the
+  # exact submodules each file's docstring already says never to re-add eagerly.
+  - name: LL-01-execution-algorithms-no-eager-impl-import
+    target_glob: "execution-service/execution_service/algorithms/algorithms.py"
+    banned_pattern: '(?m)^from execution_service\.algorithms\.impl\.'
+    owner: execution-service
+    rule_doc: "/plans/active/lazy_scoped_loading_refactor_2026_08_16.md (Layer 3)"
+
+  - name: LL-02-execution-init-no-eager-algo-import
+    target_glob: "execution-service/execution_service/__init__.py"
+    banned_pattern: '(?m)^from execution_service\.algorithms\.(impl\.\w+ import|algorithms import)'
+    owner: execution-service
+    rule_doc: "/plans/active/lazy_scoped_loading_refactor_2026_08_16.md (Layer 3)"
+
+  - name: LL-03-strategy-factory-no-eager-family-import
+    target_glob: "strategy-service/strategy_service/engine/strategies/v2/factory.py"
+    banned_pattern: '(?m)^from strategy_service\.engine\.strategies\.v2\.(ml_directional|rules_directional|carry_and_yield|arbitrage_structural|defi_lp|event_driven|market_making|mev|stat_arb_pairs|vol_trading) import'
+    owner: strategy-service
+    rule_doc: "/plans/active/lazy_scoped_loading_refactor_2026_08_16.md (Layer 1)"

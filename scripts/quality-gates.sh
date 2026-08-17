@@ -566,6 +566,11 @@ fi
 #   ST-19: no standalone backtest engine in strategy-service without V2EngineOrchestrator
 #   PB-19: no mode-branching in PBMS engine/core
 #   UI-18: no React/Next/Vite/Webpack package.json in any Python service repo
+#   LL-01/02/03: lazy_scoped_loading_refactor_2026_08_16.md regression guard — no
+#     unconditional eager top-level import of the heavy algorithm/archetype-family
+#     submodules back into execution-service's algorithms.py/__init__.py or
+#     strategy-service's factory.py (see architectural_ratchets.yaml for why this
+#     is a static-import check, not a runtime module-count).
 # Current baseline 0 — any new violation in any rule = regression.
 ARCH_RATCHETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_architectural_ratchets.py"
 if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
