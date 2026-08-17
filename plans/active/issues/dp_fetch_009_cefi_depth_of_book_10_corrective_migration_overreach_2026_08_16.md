@@ -211,3 +211,33 @@ larger data-correctness regression riding on the same commit.
   proof either way) and did not change any code this session — this is a NEW, previously-undocumented finding that
   meaningfully narrows todo 2, not a duplicate dispatch. No GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor`
   (authoring slot) with this outcome.
+- **2026-08-17 (`data_pipeline_failure` escalation worker, slot 13, task `agt-4ed756`)**: received a THIRD DP-FETCH-009
+  dispatch for `cefi/book_snapshot_5`, this time explicitly flagged by the monitor itself as
+  `STATIC BACKLOG — no new attempted_failed activity in 1d; already-tracked, not a fresh regression`
+  (15,775/172,371 attempted_failed, 9.2%) — flat-to-slightly-down vs the prior entry's 15,884/173,890, consistent with
+  the monitor's own static-backlog framing (no growth, no active regression). Found this doc via the pre-task
+  conflict-check grep (same doc as the prior two dispatches). Re-verified (cheap, git-only, no manifest read this
+  session) that all three governing commits remain ancestors of `origin/live-defi-rollout`:
+  `market-tick-data-service@f134d16595c3e5d1761ec76a7f40041535a6f4e3` (Tier-3 guard), `@338d91f0` (migration script),
+  `@d0e2194cb6` (live-side revert). Attempted to advance the prior entry's own recommended next step (direct-GCS
+  existence sampling for the anomalous `batch_aster`/`batch_hyperliquid` sub-population) but stopped short of it:
+  reconstructing the canonical GCS path for an arbitrary manifest row requires `build_partition_path()` +
+  `_file_stem_for()` (`tardis_shared.py`), which for chain instrument_types needs expiry/quote/margin markers not
+  present on the manifest row itself — a wrong reconstruction would silently mis-report "no file at this path" for a
+  file that's actually at a slightly different path, which is not a safe basis for a data-correctness judgment call.
+  Separately, grepped for the `check_shard_freshness(..., retry_failed=True)` self-correction mechanism this doc's
+  "What it matters" section leans on to argue batch is safe to leave attempted_failed (unlike live) — **no function
+  named `check_shard_freshness` or a `retry_failed` parameter exists anywhere in `market_tick_data_service/`
+  currently** (grepped fresh this session, both exact identifiers, 0 hits). This doesn't necessarily mean the
+  self-correction claim is false (the mechanism may exist under a different name/signature this grep didn't
+  match — not confirmed either way this session), but it means the doc's own safety argument for deferring the batch
+  population is currently UNVERIFIED against live code, which is worth resolving before anyone leans on it further.
+  Did not revert anything, did not change any code, no GCS/manifest write, no VM launch — same restraint as the prior
+  dispatch, for the same reason (insufficient proof either way, and now also an unverified self-correction premise).
+  **Recommendation**: this is the third escalation dispatch against the same static, unresolved todo-2 population in
+  ~24h with no forward progress on the actual fix (only narrowing/re-confirmation each time) — the remaining work
+  (per-launcher GCS sampling + confirming/refuting the self-correction mechanism) has now exceeded one-shot escalation
+  scope twice. Suggest main/operator consider converting todo 2 into a properly scoped dedicated local plan (per
+  `context-scout`/`na-eligibility-audit`'s own note that it "brushes against the plan-authoring rule's manifest-write
+  gating") rather than continuing to re-dispatch ad hoc against the same static backlog. Pinged `dp-fleet-monitor`
+  (authoring slot) with this outcome.
