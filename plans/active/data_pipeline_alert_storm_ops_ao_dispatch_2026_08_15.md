@@ -173,3 +173,4 @@ resolved_by:
   different slot (`slot-2·laptop`) — checked the content diff against `origin/main`'s tip and it's byte-identical
   (already landed upstream under a different SHA), so it's a harmless stale local artifact, not lost work; left
   untouched as out-of-scope for this task.
+**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

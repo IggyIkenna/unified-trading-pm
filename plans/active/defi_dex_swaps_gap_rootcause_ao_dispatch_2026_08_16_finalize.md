@@ -44,3 +44,7 @@ resolved_by:
       `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`'s Progress Log with evidence; if a live
       writer is found still active, file a follow-on issue to stop/redirect it BEFORE any migration plan is
       authored; archive this plan once done and unlocked.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (1 entries)

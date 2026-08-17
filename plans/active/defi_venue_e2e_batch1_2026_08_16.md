@@ -366,3 +366,4 @@ overriding citation ("not in IS-producible set despite having rows"). Deferred t
 adding a key on the older comment's strength alone. No code shipped (correctly — the gap resolves via the
 already-cited-reason branch of the done-when, not a code fix); this batch's own hard-rule confirmation todo above
 already established zero code changes for steps 1-5/9, and this todo continues that pattern.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

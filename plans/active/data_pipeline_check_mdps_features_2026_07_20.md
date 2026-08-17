@@ -609,6 +609,7 @@ Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-servi
 > this plan had grown back over its 1000-line hard cap after the todo-14 codex-audit entry above. Nothing summarized or
 > lost; every still-open todo referenced by those entries (8's remaining scope, 9b, 11) stays tracked in this file's own
 > `## Todos` section, not in the extracted narrative.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 
 ## Deferred work after 2026-07-27
 

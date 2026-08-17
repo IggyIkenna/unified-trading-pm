@@ -126,3 +126,4 @@ plan's gate is clear and it is ready for dispatch.
   batch9's operator-approval flip to `active` and subsequent dispatch.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries)
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

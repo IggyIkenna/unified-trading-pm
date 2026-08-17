@@ -508,6 +508,7 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   the corresponding extraction todo in `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` in the same commit (per the
   shared conflict-check protocol §3.4, "already-shipped elsewhere, checkbox just never flipped").
 - **na-eligibility-audit 2026-08-16** [body-hash:add50697ab60b2c8]: KEEP-NA, valid (parked CONFLICT) — 10 of 12 originally-flagged RECLASSIFY_SPLIT candidates were already-shipped duplicates of `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` items (stale checkboxes now fixed with citations, per conflict-check protocol step 4 -- not a reclassification). The remaining 2 (MDPS per-date sharding, MDPS VM rightsizing) are individually bounded/CLEAR but were explicitly marked OUT-OF-SCOPE by batch19's own 2026-08-13 operator-scoping instruction -- not re-litigated here, left annotated + NA pending that scoping decision changing. Full conflict-check evidence in this run's Phase-1 classification output.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 

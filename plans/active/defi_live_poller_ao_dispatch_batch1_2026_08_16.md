@@ -33,7 +33,12 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 4, 2026-08-16 (dispatch cadence ruling)"
 locked_by:
-context_scope: [/plans/active/defi_live_poller_phased_build_2026_08_15.md]
+context_scope:
+  [
+    /plans/active/defi_live_poller_phased_build_2026_08_15.md,
+    market-tick-data-service/market_tick_data_service/live/connectors/dex_swap_uniswap_v3_ws.py,
+    market-tick-data-service/market_tick_data_service/live/connectors/aave_liquidations_ethereum_ws.py,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -58,3 +63,4 @@ resolved_by:
   `defi_live_poller_phased_build_2026_08_15.md` Tranche 0. Tranches 1-4 (39 venues) stay in the parent plan pending
   the TVL-snapshot re-verification of tranche ordering — do not extract those until this batch's base classes land
   and that ordering is confirmed against real DefiLlama data.
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

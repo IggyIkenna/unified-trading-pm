@@ -528,3 +528,4 @@ is the single place to scan them all in one pass.
   reclassification signal.
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed -- still a standing tracking/index
   surface, no source path applies.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

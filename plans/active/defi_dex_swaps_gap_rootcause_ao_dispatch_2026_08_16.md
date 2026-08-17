@@ -73,3 +73,4 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling — scoped)**: operator asked to dispatch
   the dex_swaps migration; scoped down to only the bounded root-cause step per repeated `too_large_or_risky`
   corroboration in the source doc (see summary above) — the full migration is NOT dispatched by this plan.
+**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

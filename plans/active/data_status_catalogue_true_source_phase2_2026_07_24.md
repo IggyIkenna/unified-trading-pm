@@ -159,3 +159,4 @@ prior design history verbatim from the parent plan's Progress Log.)_
   remains self-described architecturally open-ended with the prediction /catalogue 79-row-collapse prerequisite still
   unresolved.
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

@@ -374,3 +374,4 @@ context_scope:
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed -- the batch9 extraction/archival
   since the last pass didn't change this doc's own remaining-scope reading list (registry-mode flip + stretch
   launch-spec-persist, both already covered by the alerts registry + alerts codex entries already present).
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

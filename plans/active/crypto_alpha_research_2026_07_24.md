@@ -635,3 +635,4 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-16** [body-hash:10d1f1a5151d4f00]: KEEP-NA, valid — Read the full 633-line doc end-to-end (not just checkbox count). 16 of the 22 open checkboxes (lines 274, 346, 350, 354, 358, 397, 401, 405, 442, 446, 497, 549, 553, 570, 586, 589) are verbatim restatements of the five §C bullet-g…
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

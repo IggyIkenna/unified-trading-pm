@@ -82,3 +82,4 @@ resolved_by:
   `assigned_vm: NA`. Both naming concerns (venue='', instrument_type='team') the audit flagged as "unresolved
   decisions" turned out to already be resolved REASONS the shortcut was reverted, not open questions — the real
   remaining work is the architectural build already specced in the source doc.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

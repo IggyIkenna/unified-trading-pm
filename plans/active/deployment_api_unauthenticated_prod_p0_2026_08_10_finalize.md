@@ -86,3 +86,4 @@ Gated behind `deployment_api_unauthenticated_prod_p0_2026_08_10.md`. Do not star
 
 - **2026-08-10** — Authored alongside the P0. Gated via `depends_on` + `gate_on_depends: true`.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (2 entries).
+**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

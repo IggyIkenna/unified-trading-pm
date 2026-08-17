@@ -41,3 +41,7 @@ resolved_by:
 
 - [ ] [REVIEW] P3. Confirm the fix landed with evidence (non-zero captured rows for k-prefix coins post-fix);
       flip the source `[FIX] P3` todo to done; archive this plan once done and unlocked.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (1 entries)

@@ -38,9 +38,10 @@ source: "na-eligibility-audit follow-up Q&A round 12, 2026-08-16 — operator ru
 locked_by:
 context_scope:
   [
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
     /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    market-tick-data-service/market_tick_data_service/_onchain_perp_batch_symbols.py,
-    market-tick-data-service/market_tick_data_service/hyperliquid_s3.py,
+    market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
   ]
 locked_since:
 resolved_by:
@@ -63,3 +64,4 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 12, operator ruling)**: extracted from
   `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md` for AO dispatch, since the parent doc stays
   `assigned_vm: NA` (cannot flip as a unit — other items in that doc are already ruled/shipped separately).
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

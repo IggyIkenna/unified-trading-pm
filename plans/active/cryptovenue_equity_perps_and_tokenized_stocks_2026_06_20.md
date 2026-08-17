@@ -532,6 +532,7 @@ note). No decision or code changed by this move — pure content relocation.
   flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE as future-extraction candidates (mirrors this doc's own 2026-08-09 extraction
   pattern for 4 other items), not enough to flip the whole doc.
 - **na-eligibility-audit 2026-08-16** [body-hash:89b292f04aa54ea9]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
 ## Temporary states + their canonical follow-up plans
 

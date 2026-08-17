@@ -33,7 +33,11 @@ supersedes:
 superseded_by:
 source: "GATE C reverify dispatch, 2026-08-16 — apply-write plan's own finalize-plan hygiene requirement"
 locked_by:
-context_scope: [/plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md,
+    /plans/active/defi_migration_audit_log_2026_07_24.md,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -45,3 +49,7 @@ resolved_by:
       plan's 3 todos; confirm the master coordinator's Gate-State Board + `defi_migration_audit_log_2026_07_24.md`
       GATE C section were updated to reflect the verified-complete state; archive the parent plan once done and
       unlocked.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

@@ -191,6 +191,7 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   `param_schema` block; R1 full-catalogue venue/instrument pickers; wire values through `strategy_config_loader`;
   food-chain parameterization (exec-algo / risk ladder / collateral posting mode / source routing). The UI manifest copy
   is already synced + ready; commit it with the render code.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 
 ## Phase A follow-ups (discovered during build)
 

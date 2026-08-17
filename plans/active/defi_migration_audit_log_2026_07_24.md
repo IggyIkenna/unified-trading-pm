@@ -965,3 +965,4 @@ speed-note (both deferred optimisations, non-blocking).
   the on-disk `_index` had already reached 100% v9 organically via routine writes. Full findings + a new
   capture-cron-staleness issue doc + a follow-on `--apply-write` plan are linked in the banner. Source:
   `/plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md`.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

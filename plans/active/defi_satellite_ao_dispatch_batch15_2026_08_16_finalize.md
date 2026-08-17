@@ -65,3 +65,4 @@ source: >-
 ## Progress Log
 
 - **2026-08-16 (na-eligibility-audit, defi tranche)**: drafted alongside batch15 in the same turn.
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

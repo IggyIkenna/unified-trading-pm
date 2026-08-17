@@ -32,7 +32,11 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 11, 2026-08-16"
 locked_by:
-context_scope: [/plans/active/deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -42,3 +46,7 @@ resolved_by:
 - [ ] [REVIEW] P3. Confirm the projection landed with evidence (QG green, explorer shows exists_in_catalogue vs
       captured correctly for sports/prediction/cefi/defi/tradfi); flip the source todo to done; archive this
       plan once done and unlocked.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

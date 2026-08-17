@@ -285,6 +285,7 @@ PRODUCTION VM's own pinned binary is on the same pre-Skills version — new todo
 not a DeepSeek-specific gap — the shell-out fallback was a reasonable improvisation given a structurally absent
 capability.) Cost: ~$0.01
 ($4.93→$4.92), confirmed via `GET /user/balance` before/after.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
 ## Phase 2 — multi-provider generalization + external-ideology reconciliation (2026-07-30)
 
