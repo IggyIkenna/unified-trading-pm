@@ -64,6 +64,8 @@ context_scope:
     /codex/06-coding-standards/integration-testing-layers.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    unified-api-contracts/scripts/generate_venue_work_list.py,
   ]
 ---
 
@@ -248,3 +250,8 @@ work regardless), `prediction_venue_e2e_batch1` 7 open. Skipped `venue_e2e_wirin
 "auto_unpark__venue_e2e_wiring-0fc22529c882"`). **Follow-up still open**: `venue_e2e_wiring-f798d2829e48` remains
 unparked — whichever slot it dispatches to next should park it the same way, or main/operator can pre-park it via
 `manual_park` directly rather than waiting for a live dispatch to catch it.
+
+**context-scout 2026-08-17**: refreshed context_scope (6 entries) — kept the 3 codex SSOTs (integration-testing-layers,
+shard-level-failure-isolation, instruments-service-as-ssot-for-mtds) and the umbrella parent, added 2 source paths the
+doc's own "Derive the work list" todo names directly: the `VENUE_DATA_TYPE_CAPABILITIES` registry file and the
+re-runnable `generate_venue_work_list.py` script.

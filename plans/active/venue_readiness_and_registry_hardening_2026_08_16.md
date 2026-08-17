@@ -57,6 +57,7 @@ context_scope:
     /codex/06-coding-standards/config-reloader-pattern.md,
     /codex/04-architecture/tier-and-import-architecture.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
+    /plans/active/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md,
   ]
 ---
 
@@ -826,6 +827,24 @@ reader. Table rewritten to drop both resolved items and reflect that "Add contra
 actionable P0.
 
 - **na-eligibility-audit 2026-08-17** [body-hash:2d0818123cc6d9f1]: RECLASSIFY candidate PARKED (conflict) -- stays KEEP-NA. The 'Declare capability for the 8 undeclared DeFi venues' todo (lines 574-580) bundles 2 sub-cases the conflict-check split apart: (a) the 5 ALCHEMY-{ARBITRUM,BASE,ETHEREUM,OPTIMISM,POLYGON} gas_fees entries directly contradict an already-shipped fix in the active issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md (unified-api-contracts@21a7e5c305, 2026-08-09), which DELETED those exact composite-spelling keys as phantom declarations no writer could ever match (the real MTDS writer emits bare 'ALCHEMY' + a separate chain= column) -- re-adding them as worded would reintroduce a pattern deliberately removed; (b) the other 3 venues (FLUID-ARBITRUM, SUSHISWAP_V2/V3-ARBITRUM) show no such contradiction. BLOCKED-OPERATOR-DECISION: needs an explicit ruling on the Alchemy/gas_fees portion -- OPTION A: teach the denominator script to resolve gas_fees via bare-venue+chain-column grain (matching the shipped design) rather than composite per-chain keys [WORKER REC -- keeps the phantom-key fix intact]; OPTION B: deliberately re-declare a different-shaped composite record for Alchemy gas_fees with an explicit cross-reference to the 2026-08-09 removal (if there's a reason the removal doesn't apply to declaration-only capability records). Not flipped; not guessed. Cross-cutting tranche audit conflict-check finding.
+
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — added a fingerprint match found while scouting
+  a different batch: `issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md` independently records
+  the identical `unreachable_defi_venues: ["morpho", "kamino"]` baseline content
+  (`unified-api-contracts@88a71f8e`) and the same `test_execution_service_venue_coverage_cascade_invariant.py` test
+  this plan's own Progress Log traces above — that doc's sole open todo (close it once morpho/kamino leave the
+  baseline) is this plan's own wiring work reaching completion. context_scope added on both docs; this doc's other 5
+  entries and remaining content not otherwise re-scouted this pass (out of the assigned batch's scope).
+
+- **context-scout 2026-08-17 (full pass)**: independently re-verified all 6 entries (the fingerprint-match entry
+  above plus the other 5) against this doc's own body text — the carve-out plan (the doc's stated purpose), the
+  reachability audit issue (contract step 12's basis), config-reloader-pattern (cited by name in the Design-rulings
+  section), tier-and-import-architecture (the strategy-service-never-reads-MTDS hard rule), shard-level-failure-
+  isolation (cited by name in the Error-code-SSOT-shape ruling: "shard-level failure isolation and the
+  DependentAction ladder"). All still resolve; list unchanged (6 entries, at the target cap) — this doc's own
+  remaining scope (1 open P1 todo, otherwise waiting on its 5 forked children) is thin enough that the existing
+  plan/codex pointers outweigh adding a source path.
+
 ## Deferred work after 2026-08-16
 
 **2026-08-16 correction**: this table previously listed W3/W4/W5 and both `[OPERATOR]` design rulings as unresolved.

@@ -46,7 +46,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: Authored alongside the parent plan per this workspace's mandatory finalize-plan rule (task_template.md §4).
-context_scope: [/plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
+context_scope:
+  [
+    /plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md,
+    /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
+    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+    /plans/active/venue_smoke_test_bar_2026_08_16.md,
+  ]
 ---
 
 # Venue readiness AO dispatch batch 1 — finalize
@@ -205,3 +211,8 @@ context_scope: [/plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_0
   `plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md`; 6 corpus referrers repointed (4
   SKILL.md docs + this plan's own `related`/`context_scope`); `INDEX.md` regenerated via its own script (never
   hand-edited). Only the `[DOC] P3` "archive any zero-open-todo parent" todo remains open in this plan.
+
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — added the 3 parent docs this finalize
+  reconciles evidence back into (named explicitly in its own todos and Progress Log), and corrected the first
+  entry to the archived path since the batch1 parent plan was archived by the same-day archival-ritual entry
+  above.

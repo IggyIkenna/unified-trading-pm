@@ -692,6 +692,9 @@ blocked-model-variant MM engines + 2 sta...
   (operator constraint), or an unbuilt ML model-variant (genuine ML-training judgment call) -- no cheat-sheet precedent
   applies.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries, unchanged) — only change since the last scout is
+  the 2026-08-12 corpus-wide `locked_by:` placeholder clear (no substantive content diff); all 6 entries re-verified
+  to still resolve and remain the correct minimal set.
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 

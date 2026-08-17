@@ -47,7 +47,11 @@ locked_since:
 supersedes:
 superseded_by:
 source: Authored alongside the parent plan per this workspace's mandatory finalize-plan rule (task_template.md §4).
-context_scope: [/plans/active/venue_smoke_test_bar_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/venue_smoke_test_bar_2026_08_16.md,
+    /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
+  ]
 ---
 
 # Venue smoke-test bar — finalize
@@ -72,3 +76,6 @@ context_scope: [/plans/active/venue_smoke_test_bar_2026_08_16.md]
 - **2026-08-16** — Authored alongside the parent plan. `status: active` with `depends_on`+`gate_on_depends: true` —
   ingested immediately but machine-held until every parent task is done. The parent is `status: draft` pending the
   universe denominator, so this stays gated until the parent is flipped to `active` and worked.
+
+- **context-scout 2026-08-17**: refreshed context_scope (2 entries) — added the umbrella parent (todo 2 reconciles
+  into its contract step 3); code-free finalize gate, no source path applicable.

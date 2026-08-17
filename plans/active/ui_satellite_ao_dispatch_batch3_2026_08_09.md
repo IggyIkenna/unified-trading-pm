@@ -133,3 +133,8 @@ drift_direction: advance-docs
   registry-wide `scanType=BASIC`, `scanOnPush=true` on 9/20 repos but 0 findings anywhere — sampled images return null
   scan status, consistent with the AWS estate's known parking since 2026-06-27. No findings summary exists on either
   side. Full detail recorded in the source doc's own checkbox + this todo's citation above.
+
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries) — re-verified all 3 existing entries (source doc,
+  batch1 precedent, tarball-deployment codex) against the doc's own `related:` field and body "Codex SSOTs" section;
+  unchanged, all resolve. Genuinely code-free (3 read/report/file actions, no implementation), matching this skill's
+  satellite-batch-coordinator exemption.

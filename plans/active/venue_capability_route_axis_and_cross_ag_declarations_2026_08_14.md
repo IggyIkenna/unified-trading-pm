@@ -37,13 +37,12 @@ effort: xhigh
 drift_direction: advance-code
 context_scope:
   [
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py,
     unified-api-contracts/unified_api_contracts/registry/_odds_api_maps.py,
-    unified-api-contracts/unified_api_contracts/registry/sports_bookmaker_league_coverage.py,
-    unified-api-contracts/unified_api_contracts/internal/unity_child_books.py,
-    /codex/02-venues/unity-integration.md,
     e2e-testing/docs/sports/LIVE_ODDS_PROVIDERS.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md,
   ]
 depends_on:
 supersedes:
@@ -540,7 +539,16 @@ re-running its own existing refresh script (see below), not a registry rename.
    source records which region the recorded `accuracy`/`is_exchange` numbers were actually measured against; flagged
    inline in the code, not silently resolved.
 
+- **na-eligibility-audit 2026-08-17** [body-hash:b65472084a73f315]: RECLASSIFY (per-todo split) -- extracted 7 bounded items (Unity child-book registration + capability wiring, NOVIG/PROPHETX/ONEXBET routing, BETOPENLY honest-absence declaration, drift-guard test, UAC parity gate extension, parity re-measurement) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md items 3-9. Doc stays assigned_vm: NA for its remaining items (priority-14 arb-book registration and provider-availability re-confirmation, both needing a live subscription-state check first; the BETFAIR_EX/SB codex-prose reconciliation). Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-17** [body-hash:cae9f0a97e1496ba]: KEEP-NA, valid -- Doc already underwent RECLASSIFY (per-todo split) earlier today: 7 bounded items extracted to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md items 3-9, each cited inline at its checked-off todo (lines 204/209/222/225/230/233/236). The 3 remaining open items are the deliberately-retained remainder: priority-14 arb-book registration (line 213) depends on line 218's provider-availability re-confirmation (doc's own text: sourcing data known-stale); line 218 needs a live vendor subscription-state check, not just a code/manifest read; line 238 needs per-mention investigative judgment across 7 codex citations, declined for bundling with the other 7 mechanical extractions by the prior pass. Re-confirmed on independent re-read, cross-cutting tranche audit.
+
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — trimmed from 7 to 6: dropped 3 entries covering
+  now-shipped P0/P1 work (`venue_adapter_keys.py`, `sports_bookmaker_league_coverage.py`, `unity_child_books.py` +
+  unity-integration.md — Unity's remaining scope moved to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md`
+  per the na-eligibility-audit entry directly above, confirmed on disk), added 2 of the doc's own "Codex SSOTs this
+  plan must not contradict" entries most relevant to what's left. Final list matches the doc's actual remaining scope
+  (priority-14 arb-book registration, provider-availability re-confirmation, BETFAIR_EX/SB reconciliation) rather than
+  its now-mostly-shipped P0/P1 history.
 ## Deferred work after 2026-08-14
 
 | Item                                                                                                              | State                                                             | Blocked on                                                                            |
