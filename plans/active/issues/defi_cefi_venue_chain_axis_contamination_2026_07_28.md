@@ -343,7 +343,33 @@ in this read-only audit pass (time-bounded scope).
       async-wait discipline, a 9-11h wait does not belong in this single-task session; verifying the actual first fire
       + corpus-freshness recovery is the follow-up todo immediately below. **Repo: deployment-service** (VM launch
       only, no code change).
-- [ ] [INFRA] P1. **NEW 2026-08-16 (slot-17) — the two 2026-08-15 cron-host launches (task -1b75e9a1f3d4)
+- [x] ✅ [INFRA] P1. **DONE 2026-08-17 (slot-17) — both root causes fixed + shipped, live VMs hot-fixed;
+      corpus-freshness itself still gated on the sibling verification todo below (needs a fire to actually land).**
+      SHIPPED — `deployment-service@fb87cb2e1c` (+ `deployment-service@10edddb2` folded into the same push). (1)
+      **Guard-script fix**: added `tardis-concurrency-guard.sh` staging to both the one-shot install step and the
+      recurring cron line in `launch-cefi-fwd-daily-cron-vm.sh`, per the fix below. Deeper root cause found beyond
+      what this todo scoped: `create-code-tarballs.sh`'s bare-launcher publish loop only globs `launch-*.sh` + `lib/
+      *.sh` — `tardis-concurrency-guard.sh` matches neither, so even a manual publish run would have kept dropping it
+      silently. Fixed that loop too (explicit extra-helpers publish list) and published the file to GCS directly via
+      UTL `upload_to_storage` (bounded single-object write, not a subprocess `gsutil`) since the publish script itself
+      is manual-only and not due to run. **Hot-fixed the live `cefi-fwd-daily-cron-20260815-212910` VM**: staged the
+      guard script at `/opt/deployment-service/scripts/vm/` and rewrote `/etc/cron.d/cefi-fwd-daily` to fetch it each
+      fire, so tomorrow's 09:00 UTC fire works without waiting on a manual `create-code-tarballs.sh` run. (2)
+      **`cefi-perp-funding-daily-cron` root cause PINNED** (was "not pinned" in this todo's original text): live
+      `xxd`/crontab read confirmed the `--start-date`/`--end-date`/log-fallback date formats
+      (`%F`/`%FT%TZ`) were UNESCAPED in the cron.d heredoc — cron truncates a command at the first bare `%` and feeds
+      the remainder to the command's stdin, so the ENTIRE compound command (including the `|| echo ... FAILED`
+      fallback) silently never ran end-to-end, matching every observed symptom (0 `CRON[...]` exec lines, no log file
+      created) despite a syntactically-valid crontab. This is the exact same bug CLASS the `cefi-fwd` twin was already
+      fixed for (2026-08-09 incident) — this cron's crontab was simply missing that escape. Fixed to `\%F`/`\%FT\%TZ`
+      in `launch-cefi-perp-funding-daily-cron-vm.sh`, mirroring the fwd script exactly; **hot-fixed the live
+      `cefi-perp-funding-daily-cron-20260815-212924` VM's crontab** directly (confirmed via a fresh `xxd`/cat read
+      post-fix — correct escaping present) so tomorrow's 07:00 UTC fire actually runs. Neither fix has had its first
+      live fire verified yet (both next fires are hours out from this session) — that verification is the sibling
+      "follow-up: verify the two cron hosts... actually FIRED" todo below, unchanged in scope. **Repo:
+      deployment-service.**
+
+- [x] ✅ [INFRA] P1 (superseded original text, kept for record). **NEW 2026-08-16 (slot-17) — the two 2026-08-15 cron-host launches (task -1b75e9a1f3d4)
       cannot clear the step-1 corpus-freshness gate as configured; root-caused via live SSH + source read, not
       guessed.** (1) **`cefi-fwd-daily-cron-20260815-212910`'s 09:00 UTC `launch-cefi-forward-poll.sh` fire FAILS
       every day** — live log (`/var/log/cefi-fwd-cron.log`, first lines) shows
@@ -458,6 +484,18 @@ in this read-only audit pass (time-bounded scope).
           todo's "no further action needed" claim without reading that doc first.
 
 ## Progress Log
+
+- **slot-17 2026-08-17 (task -1b75e9a1f3d4 fix)**: fixed + shipped both root causes named in the todo above —
+  `deployment-service@fb87cb2e1c` (+ `10edddb2` in the same push). cefi-fwd: staged the missing
+  `tardis-concurrency-guard.sh` at both the one-shot install step and the recurring cron line, and fixed the deeper
+  gap that caused it (`create-code-tarballs.sh`'s bare-launcher publish glob never covered non-`launch-*.sh`/non-`lib/`
+  helpers); published the file to GCS directly via UTL `upload_to_storage`. cefi-perp-funding: pinned the previously
+  unpinned mechanism — an unescaped `%F`/`%FT%TZ` in the cron.d heredoc, the same bug class already fixed on the
+  cefi-fwd twin for a 2026-08-09 incident, silently truncating the ENTIRE compound command (explains the observed 0
+  exec lines + no log file). Both live cron-host VMs hot-fixed via SSH (guard staged + crontab rewritten on
+  `cefi-fwd-daily-cron-20260815-212910`; crontab rewritten on `cefi-perp-funding-daily-cron-20260815-212924`) so
+  tomorrow's fires don't wait on a manual `create-code-tarballs.sh` run. First live fire of either fix not yet
+  observed this session (both next fires are hours out) — that's the sibling cron-fire-verification todo, unchanged.
 
 Progress Log entries 2026-07-30 through 2026-08-10 moved **verbatim** — nothing summarized, rewritten, or dropped — to
 `/plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md` (line-cap remediation — see that
