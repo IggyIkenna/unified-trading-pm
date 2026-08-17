@@ -397,14 +397,15 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       under contention — confirm whether the `ManifestConsolidator: pruned N consolidated per-VM shard(s)` INFO
       line has appeared at all in the job's recent run history, which would date how long the backlog above has
       been accumulating. (repo: unified-trading-library)
-- [ ] [DIAG] P2. Confirm `gcloud builds list --project=central-element-323112` shows a FRESH successful build for
-      `market-data-processing-service` (any build at all, fleet-wide in this project) — the 2026-08-17 (slot 32)
-      session below found the last build in the whole project was `2026-08-16T19:39:42Z`, i.e. BEFORE
-      `94215e9cd9` even landed, and still >30h stale at read time. This is a single snapshot, not a confirmed
-      root-cause — could be a genuine Cloud Build trigger/deploy-pipeline stall (cicd craft), or simply no
-      build-triggering push has occurred since. Root-cause and, if it's a real stall, file the fix; if it's benign,
-      note why and close. This blocks the gated `[SCRIPT]` re-retirement todo below from ever being confirmable via
-      deploy evidence. (repo: unified-trading-pm or whichever repo owns the Cloud Build trigger investigation)
+- [x] ✅ [DIAG] P2. Confirm `gcloud builds list --project=central-element-323112` shows a FRESH successful build for
+      `market-data-processing-service` — **RESOLVED 2026-08-17 (slot 13): the premise was checking the wrong
+      signal.** MDPS deploys its batch/backfill compute via **VM TARBALL snapshot**, never Cloud Build, in this
+      project — confirmed via 11+ live `mdps-*` VMs whose own instance metadata invokes
+      `python -m market_data_processing_service` directly, zero MDPS Cloud Run services, and zero MDPS Cloud Build
+      history. The REAL gate (the tarball) had NOT been refreshed since the fix commit landed — live-confirmed
+      25,353 fresh uppercase-`POOL` rows written post-fix as a direct consequence. FIX APPLIED this session
+      (tarball refreshed + verified). See Progress Log for full evidence + the new `[OPERATOR]` follow-up todo for
+      already-running stale VMs this fix cannot retroactively reach.
 - [ ] [DIAG] P2. Scope the corpus-wide non-canonical `processed_candles/.../instrument_type=` uppercase-path
       population for cefi/tradfi/prediction (the resolved DIAG todo above confirmed the bug is fleet-wide, not
       defi-only, but only sampled 2-3 days per asset_group via delimiter-descent — not a stratified full-corpus
@@ -428,6 +429,21 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       multiple asset_groups) and belongs on a dedicated VM per `/codex/05-infrastructure/vm-launcher-runbook.md`,
       not an interactive slot session. A precise (non-sampled) corpus-wide count per asset_group should be the
       plan's own first step, not assumed from any todo's sample-based projection.
+- [ ] [OPERATOR] P1. Decide disposition for `mdps-*` VMs that were already RUNNING (and therefore already pinned to
+      stale pre-fix code) at the time this session refreshed the MDPS tarball (`2026-08-17T10:56:11Z`) — see the
+      resolved Cloud-Build-staleness DIAG todo above + Progress Log for the specific VM list found this session
+      (`mdps-defi-2025-20260817-000343`, `mdps-backfill-cefi-20260816-162418`,
+      `mdps-backfill-cefi-pcskip-20260817-104034-3b4e68`, `mdps-cefi-2019` through `mdps-cefi-2026` (7 VMs), and two
+      apparently LONG_LIVED `mdps-features-live-{cefi,defi}-20260807-*` VMs running since 2026-08-06). **Re-enumerate
+      the CURRENT live fleet first** — this list is a point-in-time snapshot and will be stale by the time this todo
+      is picked up (some may have already self-deleted on completion per `EPHEMERAL_BATCH` lifecycle). For each
+      still-running: kill+relaunch now (loses in-flight progress — e.g. `mdps-defi-2025` was ~11h into a
+      multi-hour full-year backfill at read time — but guarantees no further non-canonical writes) vs. let it
+      finish and schedule a corrective re-pass over exactly the shards it touched after
+      `2026-08-16T23:31:54Z` (the fix commit's landing time) — a cost/schedule tradeoff needing operator judgment,
+      not a mechanical DIAG. The LONG_LIVED `mdps-features-live-*` pair is the more urgent half (no natural
+      self-termination to bound the exposure window). (repo: deployment-service for the kill/relaunch action;
+      market-data-processing-service if a corrective re-pass script is needed)
 
 ## Progress Log
 
@@ -608,3 +624,45 @@ delete, but the same evidentiary bar applies given real financial data is at sta
     still-finishing long merge — that needs either watching it clear past its TTL or a fresh re-check, and if the
     SAME instance id recurs after being reclaimed, that would confirm a recurring orphan (the durable-fix-worthy
     case) rather than an isolated slow cycle.
+- **2026-08-17 (slot 13) — resolved the `[DIAG]` P2 Cloud-Build-staleness todo; ROOT CAUSE FOUND (different from what
+  the todo assumed) + LIVE FIX APPLIED.** The todo's own premise — "check `gcloud builds list` for a fresh MDPS
+  build" — was checking the wrong signal. **MDPS's actual `dex_pool_swaps` candle-write compute never goes through
+  Cloud Build in this project**: confirmed zero `gcloud run services list` entries for MDPS, zero MDPS Cloud Build
+  history across a 30-build project-wide sweep (matches slot-10's finding), and — the decisive piece —
+  `gcloud compute instances list --filter='name~"mdps"'` found 11+ RUNNING `mdps-*` VMs whose own instance metadata
+  (`VM_BACKFILL_CMD`) shows them invoking `python -m market_data_processing_service --operation process --mode batch
+  ...` directly, confirming MDPS deploys via **VM tarball snapshot**
+  (`/codex/05-infrastructure/vm-tarball-deployment.md` — MDPS is explicitly named as an opt-in tarball-fleet service
+  repo), not Cloud Build/Cloud Run. Tarball refresh is a SEPARATE MANUAL step (`create-code-tarballs.sh`) that does
+  NOT run automatically on commit — nobody ran it after `94215e9cd9` landed.
+  - **Direct live confirmation the fix was NOT deployed**: re-ran slot-32/slot-10's manifest probe
+    (`verify_mdps_casing_fix_live_via_manifest_2026_08_17.py`, under `run-bounded-analysis.sh`) — found **25,353
+    fresh uppercase-`POOL` `dex_pool_swaps` rows written AFTER the fix commit** (`written_at` up to
+    `2026-08-17T09:24:51Z`, ~1.5h before this check), directly superseding slot-32/slot-10's earlier "MDPS hasn't
+    processed any writes since the fix" read — it HAS been writing continuously, just still on pre-fix code (their
+    reads were simply timed before the backfill resumed). The likely direct source:
+    `mdps-defi-2025-20260817-000343` (RUNNING, `VM_OPERATION=backfill-defi`, `VM_ASSET_GROUP=DEFI`, full
+    2025-01-01..2025-12-31 backfill), launched `2026-08-17T00:03:46Z` — 32min AFTER the fix landed on LDR but
+    before any tarball refresh, so it fetched stale code at boot regardless of the fix's LDR landing time.
+  - **FIX SHIPPED THIS SESSION**: ran `bash deployment-service/scripts/vm/create-code-tarballs.sh --include
+    market-data-processing-service`. Verified via the sanctioned `download_from_storage` SDK path (never raw
+    `gsutil` — blocked by the workspace guardrail) that the refreshed
+    `code/market-data-processing-service-code.manifest.json` now pins commit `ae9279130...`, and confirmed
+    `git merge-base --is-ancestor 94215e9cd9 ae9279130...` succeeds — **the fix IS now included**. Tarballs are
+    per-REPO, not per-asset_group (`VM_SERVICE` selects the tarball, not `VM_ASSET_GROUP`), so this ONE refresh
+    covers every asset_group's future MDPS VM boots (cefi/tradfi/defi/prediction alike), not just defi.
+  - **NOT resolved — new `[OPERATOR]` follow-up todo filed above**: every `mdps-*` VM already RUNNING at refresh
+    time (`2026-08-17T10:56:11Z`) already fetched its tarball at boot and will NOT pick up this fix without a
+    relaunch. Found at least: `mdps-defi-2025-20260817-000343` (mid a full-year defi backfill),
+    `mdps-backfill-cefi-20260816-162418`, `mdps-backfill-cefi-pcskip-20260817-104034-3b4e68`, `mdps-cefi-2019`
+    through `mdps-cefi-2026` (7 VMs, one per year), and two apparently LONG_LIVED
+    `mdps-features-live-{cefi,defi}-20260807-*` (running since 2026-08-06 — if MDPS-adjacent, these predate even
+    the original bug fix by 10 days and may have been writing non-canonical paths the whole time they've been up).
+  - **Also unresolved**: the gated `[SCRIPT]` re-retirement todo above still can't be marked "fix confirmed live" —
+    that requires observing an ACTUAL fresh lowercase-pathed write, which needs a NEW VM boot (or the current ones
+    finishing + a fresh one launching) AFTER `2026-08-17T10:56:11Z` specifically, not a re-check of the same
+    stale-VM-driven population slot-32/slot-10 already sampled.
+  - Per CLAUDE.md's "big finding" rule (data-correctness, cross-repo, actively ongoing during investigation):
+    flagging this prominently for the operator/main agent — the corpus contamination this doc already scoped at
+    ~17.4M objects (defi alone) was GROWING in real time during this session, across potentially a dozen concurrent
+    VMs, until this fix landed.
