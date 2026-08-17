@@ -69,9 +69,22 @@ context_scope:
 > **Deadline: Friday 2026-08-21. Owner: Ikenna.** Parent epic:
 > [`/plans/epics/system_readiness_master.md`](/plans/epics/system_readiness_master.md).
 >
-> **Checkpoint — EOD Tuesday 2026-08-18**: every shard records a BATCH, PAPER and LIVE readiness stage across all
-> services from instruments-service through features-service, across all asset groups, broken down by shard. Recording
-> the state is the Tuesday deliverable; *achieving* it is not.
+> **Checkpoint — EOD Tuesday 2026-08-18 — TWO dumps.** Recording the state is the Tuesday deliverable; *achieving* it
+> is not.
+>
+> 1. **Readiness state dump** — every shard records a BATCH, PAPER and LIVE readiness stage across all services from
+>    instruments-service through features-service, all asset groups, broken down by shard. Derived, with `unverified`
+>    wherever no real check exists — a legitimate value that must be used, not worked around.
+> 2. **Honest coverage dump** — how much data coverage exists per shard. **This is information we ALREADY HAVE**: a dump
+>    of the manifest, not a measurement campaign.
+>
+> **Neither is blocked by the `instrument_type` axis.** That axis changes the GRANULARITY at which coverage can be
+> expressed — from `(venue, data_type)` to the full 3-tuple — not whether today's coverage can be dumped. Conflating the
+> two would defer a Tuesday deliverable behind a Friday dependency for no reason.
+>
+> **Both must be SKILLS, not one-off reports** — the coverage dump runs at today's grain now and RE-RUNS at 3-tuple once
+> the axis lands. As a skill that upgrade is a re-run; as a hand-built report it is a rebuild, and the rebuild is where a
+> stale figure survives into a client document.
 >
 > **Friday target**: all shards at **BATCH** readiness pending backfill completion.
 
@@ -297,6 +310,17 @@ The BATCH draft's final line was truncated mid-sentence — *"All of the data pi
 except for f…"*. Read as **"except for full honest coverage (B8), pending backfill completion"**, which is consistent
 with the Friday target above. Confirm or correct; it is the definition of the Friday deliverable, so it should not rest
 on my inference.
+
+## Tuesday dumps — the two skills
+
+- [ ] [SKILL] P0. **Readiness state-dump skill** — derived per (venue x mode) across IS -> features, printing
+      `unverified` where a check does not exist. Tuesday deliverable 1. Same artefact the parent epic's W1/W20 name, and
+      the one a handover reader runs for themselves rather than trusting a table someone typed.
+- [ ] [SKILL] P0. **Honest-coverage dump skill** — per-shard coverage read from the manifest at whatever grain the
+      registry currently supports, four capture states reported separately (B16), denominator stated. Tuesday
+      deliverable 2. Re-runs at 3-tuple grain once the `instrument_type` axis lands — no rebuild.
+- [ ] [DATA] P1. **Re-run both dumps after the axis lands and diff against the Tuesday output.** The diff is the
+      evidence that the granularity upgrade changed what we can say, and it is where a previously-hidden gap surfaces.
 
 ## Progress Log
 
