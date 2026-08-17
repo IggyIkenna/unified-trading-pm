@@ -61,8 +61,8 @@ context_scope:
 
 ## Todos (execute in order — `sequential: true`)
 
-- [ ] [DOC] P0. **BLOCKED-ON:system_readiness_master (W3 "Land the instrument_type axis on `VenueCapabilityRecord`")**
-      — **Refresh `/codex/02-data/honest-coverage-model.md`'s certified Layer-1 table** for defi/tradfi/
+- [ ] [DOC] P0. **UNBLOCKED 2026-08-18** (`system_readiness_master` W3 landed `unified-api-contracts@d19866d339`,
+      353→660 triples) — **Refresh `/codex/02-data/honest-coverage-model.md`'s certified Layer-1 table** for defi/tradfi/
       sports/prediction, using the FINAL state after the main plan's W1/W3/W4 work has landed — not the 2026-08-16
       pre-audit snapshot, which will itself have moved (e.g. W3 changes what step-13 reports; W4-Sports may change
       the sports Layer-1 completeness if the registry-contradiction fix touches captured-data reachability). Re-run
@@ -131,6 +131,15 @@ finalize todo's own guessed step numbers didn't fully match — step 4 doesn't f
 the PAPER-READY clause instead); (3) added an explicit `BLOCKED-ON:system_readiness_master` marker to the W6 todo
 above. Remaining open in this plan: W6 itself (blocked as stated) and the "check W2 scaffold review" todo (asked
 the operator directly in-session rather than trying to infer it from files). Archival stays gated on both.
+
+**2026-08-18 — W6's blocker cleared.** `system_readiness_master.md` W3's "Land the instrument_type axis" item
+shipped `unified-api-contracts@d19866d339` (2026-08-17): denominator re-measured 353 `(venue, data_type)` pairs →
+660 `(venue, instrument_type, data_type)` triples (12 cells, 3.4%, disclosed unresolved). The stale "353" figure at
+this Progress Log's line 113 above is a historical record of what was true when written — left as-is rather than
+edited, since it accurately describes that day's state. Proceeding to execute W6 now using the two dump skills
+(`/honest-coverage-dump`, `/readiness-state-dump`) that `data_pipeline_completion_2026_08_21.md` shipped for exactly
+this re-measurement — see that plan's "Tuesday dumps" section for the shared "re-run after the axis lands" todo,
+which this session's W6 work also satisfies (one re-run, two plans' evidence).
 - **na-eligibility-audit 2026-08-17** [body-hash:e69f016a4e685458]: KEEP-NA, valid -- Gated finalize companion (depends_on + gate_on_depends: true on the main nick_ai remediation plan) -- criterion (b) applies directly. Of its 3 open todos: todo 1 (W6 codex refresh) carries an explicit 2026-08-17 BLOCKED-ON marker redirecting the actual instrument_type-axis prerequisite work to a DIFFERENT doc, /plans/epics/system_readiness_master.md W3, 'owned by a different live session -- do not duplicate it here' (criterion c, redirect); todo 2 depends on the OPERATOR's own external review status of a Claude.ai artifact (explicitly described as 'operator-paced'); todo 3 (archive both plans) is gated on todos 1-2 completing first, per its own text ('once every todo above is done and unlocked').
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added `/plans/epics/system_readiness_master.md`
   (the epic W6 is now formally `BLOCKED-ON`, per this doc's own 2026-08-17 Progress Log), the sibling
