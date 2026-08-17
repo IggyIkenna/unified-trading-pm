@@ -426,3 +426,20 @@ tracked-but-missing shape.
   already-committed case, a distinct code path from the one pass-2 fixed.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **2026-08-17 (na_eligibility_auditor, dispatch agt-614193, slot 30)**: Sixth data point against the residual-gap
+  todo, and a NEW variant: a PURE DELETION (`git rm`, no corresponding new path in the same operation at all — the
+  archive-path content had already landed via an EARLIER, separate commit) hit the identical
+  `sdp_recover_named_from_any_stash()` false-positive slot-20 flagged 2026-08-16, twice in a row, non-transient
+  (`exit 14` both times, identical `🔧 recovered <path> from stash@{0} -- it was missing from disk AND the index`
+  log line, identical post-recovery `❌ per-file verification failed: deletion of named file did not reach
+  origin/live-defi-rollout`). Confirms the false-positive is not specific to "rename" shapes (slot-20's case) —
+  ANY named `--files` path that is legitimately, correctly absent from disk+index (rename source OR a plain prior
+  deletion) can trigger it once an extreme-quarantine cycle is active. Recovery: verified via `diff` that both
+  resurrected old-path copies were a strict content subset of the canonical, already-landed archive-path versions
+  (no data loss risk), then used this doc's own precedented workaround (`git rm` + directly-supervised
+  `git pull --ff-only` + `git commit` + `git push`, bypassing the wrapper for just this one operation) —
+  landed clean (`unified-trading-pm@0aa0689a27`), pre-commit hooks all green, verified via
+  `git merge-base --is-ancestor` against origin. Did not attempt a fix or fresh repro this session (out of this
+  one-shot audit task's scope) — flagging for whoever next investigates the residual-gap todo: the false-positive
+  trigger condition may be broader than "caller pre-staged/committed a rename" — worth testing a plain `git rm`
+  (no new path at all) against the current `sdp_recover_named_from_any_stash()` implementation directly.
