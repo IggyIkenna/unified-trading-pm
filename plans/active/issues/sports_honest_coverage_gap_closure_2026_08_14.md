@@ -575,3 +575,8 @@ live SSH-based root-cause session or patience with more relaunches).
   Considered and declined RECLASSIFY: staying NA rather than promoting the whole doc's `assigned_vm` for one
   VM-gated, not-yet-actionable script-run todo. Re-flag once the weather VM completes and the rescan is either run
   or explicitly self-justified.
+- **na-eligibility-audit 2026-08-17** [body-hash:b7030f67db7baaab] (dispatch agt-6574d2, third same-day pass, sports
+  tranche): reconfirmed — same verdict, KEEP-NA valid. Sole open item ([SCRIPT] P2 sports-manifest-rescan) not
+  independently re-checked for VM-completion status this pass (live-infra check is out of this audit's scope).
+  Repeated same-day re-audit here was a `_latest_verdict_marker` tie-break bug, now fixed
+  (`generate_na_doc_tranche_inventory.py`) — should stop recurring.

@@ -319,3 +319,9 @@ concurrent session's index/working-tree state, so this write bypasses that check
   `incremental_skip` still reported `false` — a sharper data point on the same hash-drift anomaly flagged on sibling
   sports docs today; worth a real look by whoever next touches `generate_na_doc_tranche_inventory.py`'s hash logic.
   Not re-adding a `[body-hash:...]` tag given a verified-exact-match anchor already exists two lines above.
+- **na-eligibility-audit 2026-08-17** [body-hash:810f8a7668f535c4] (dispatch agt-6574d2, fourth same-day pass, sports
+  tranche): reconfirmed independently — same verdict, KEEP-NA valid, both prerequisites still open. Root-caused the
+  hash-drift anomaly the two markers above flagged: `_latest_verdict_marker`'s date tie-break used strict `>`, so two
+  same-day markers left `best` pinned on the FIRST one's stored hash instead of the correct later one — fixed this
+  run (`generate_na_doc_tranche_inventory.py`, `>` → `>=`, regression test added reproducing this exact doc's
+  symptom). Should be the last redundant same-day marker here.

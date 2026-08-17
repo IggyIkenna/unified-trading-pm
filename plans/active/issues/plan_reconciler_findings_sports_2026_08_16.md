@@ -126,5 +126,10 @@ should be pointing sharded workers at their slot clone.
   same-day anchors already exist above); noting only that the repeated same-day hash-drift pattern across several
   sports docs today (a marker's stored hash not matching a freshly-recomputed one despite no content change) looks
   like a real incremental-skip mechanism inefficiency worth a look — not investigated further in this dispatch.
+- **na-eligibility-audit 2026-08-17** [body-hash:0a1e5beaab50e7ea] (dispatch agt-6574d2, fourth same-day pass, sports
+  tranche): reconfirmed — same verdict, KEEP-NA valid, not an archive candidate despite 0 open todos. Root-caused the
+  hash-drift pattern flagged above: `_latest_verdict_marker`'s tie-break kept the first same-date marker instead of
+  the latest — fixed this run (`generate_na_doc_tranche_inventory.py`, regression test added) — should stop
+  recurring.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
