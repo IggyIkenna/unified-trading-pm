@@ -209,15 +209,25 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       `enum-universe-tradfi-20260709-020218`); IS catalogue done 2026-07-06
       (`catalogue-rollup-tradfi-20260706T154714Z`). All 5 AGs canonical, `migration_verification_orphan_safety` V6/G4
       closed.
-- [ ] [DATA] P1. Legacy-twin **deletes** (defi / tradfi / pred; cefi already done, **sports is NOT done** — 0 of 34,385
-      `B_legacy_duplicate` rows pass the 5-part proof per `sports_legacy_duplicate_triage_2026_07_22.md`) in a quiet
-      window. **STILL OPEN (reconciled 2026-07-28)** — none of this todo's named archived children cover it; the tradfi
-      leg was forked out verbatim to `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`. **No
-      longer operator-gated as of 2026-07-28** — the §3a reversibility carve-out
-      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended) now covers hard-stop #2
-      (legacy-object-delete-after-copy) once Part 5's twin-coverage proof independently confirms 100% canonical-twin
-      coverage; that child plan's todo has been retagged and re-dispatched with the fresh-check dispatch shape (see its
-      own text), not this tracker's own work to execute.
+- [x] ✅ [DATA] P1. Legacy-twin **deletes** (defi / tradfi / pred; cefi already done). **DONE 2026-08-16 — reconciled
+      against `/plans/archive/2026_08/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md`
+      (all 5 todos `[x]`, finalize gate confirmed 2026-08-17).** Tradfi tracked + resolved separately in
+      `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`. Results: **prediction** — 0
+      `B_legacy_duplicate` candidates, trivially clear, nothing to delete. **defi** — 1,080 candidates, all
+      `venue=CURVE/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_state` (38 days, 2021-01/02); after fixing two
+      real tooling bugs (schema-width-blind crc32c compare, manifest-cell-lookup gap), the corrected verdict is 837
+      deletable / 243 blocked (77.5% twin-coverage) — **short of Part 5's required 100%, so no asset_group-wide
+      `--apply` was run; delete gate does NOT clear for defi.** Of the 243 blocked, 38 are stale ghost entries in a
+      3-week-old candidate report (legacy objects already gone from GCS — tooling now detects this) and 205 are 6
+      real, still-existing CURVE/ETHEREUM pool addresses with zero canonical twin on any sampled day — a genuine,
+      independently-verified permanent `no-migrate-first` population, not a registration gap. **Sports — FRESH
+      RE-CHECK CONFIRMS STILL NOT DONE, no change from the 2026-07-22 triage**: both live call sites
+      (`instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures.py:133`,
+      `deployment-service/deployment_service/cli/utils/data_status_sports.py:42,74,327`) are still present unchanged,
+      so the categorical Part-4 "loudly-broken reader" blocker still applies verbatim (per the delete-safety protocol,
+      Part 4 overrides Part 1/2/5 regardless) — sports stays NOT eligible for delete; no Part 5 twin-coverage
+      re-measurement was needed since neither reader changed. No further action pending on this todo; a future sports
+      delete attempt requires those two call sites to be migrated off the legacy path first.
 
 ## Stage 2 — Denominator correctness (the core; cefi leads)
 
@@ -731,3 +741,8 @@ content post-line-cap-split.
   methodology, the systemic unregistered-handler audit's widen-scope addendum) -- consistent with the 2026-08-03
   verdict.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-17 (slot-5, review — finalize gate)**: closed the legacy-twin deletes Stage-1 todo. Confirmed all 5 todos in
+  `legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md` landed with evidence (VM run ids,
+  exit codes, commit shas, verdict counts — not just checkboxes). Updated this tracker's Stage 1 todo with the final
+  numbers (prediction 0 candidates/clear; defi 837/1080=77.5% twin-coverage, gate does not clear; sports still fails,
+  categorical Part-4 blocker unchanged). Archiving the parent + finalize plans next.

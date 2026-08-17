@@ -6,7 +6,7 @@ summary: >-
   groups that pass the 5-part delete-safety proof (defi, prediction; tradfi already tracked separately, cefi already
   done), excluding sports (0 of 34,385 rows passed as of the 2026-07-22 triage). Operator separately asked for a FRESH
   sports re-check, believing the current picture may be more solid — that is its own todo here, not assumed to pass.
-status: active
+status: complete
 nature: process
 asset_group: [defi, prediction, sports]
 stage: [data]
