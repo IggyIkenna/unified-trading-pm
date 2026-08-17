@@ -136,12 +136,22 @@ def _latest_verdict_marker(text: str) -> tuple[str, str | None] | None:
     Returns (date, stored_hash) where stored_hash is None for pre-hash-extension
     markers (written before [body-hash:…] was added to the marker format).
     Returns None when the doc has no verdict marker at all.
+
+    Ties on `date` are broken by DOCUMENT POSITION, not just discarded: markers are always
+    appended (never inserted above an earlier one), so finditer's top-to-bottom walk already
+    visits same-date markers in write order — the strict `>` below must become `>=` so a
+    later same-day marker's `best` assignment actually takes effect instead of losing to the
+    already-stored earlier one. Confirmed live 2026-08-17 (multiple sports-tranche docs under
+    same-day multi-pass audits): a marker's freshly-recomputed body hash EXACTLY matched the
+    LATEST same-day marker's stored hash, yet `incremental_skip` still reported False, because
+    the strict `>` had frozen `best` on the FIRST same-day marker's (different, since-updated)
+    hash instead of ever reaching the later one.
     """
     best: tuple[str, str | None] | None = None
     for m in _VERDICT_MARKER_RE.finditer(text):
         date = m.group(1)
         stored = m.group(2)  # None when no [body-hash:…] tag
-        if best is None or date > best[0]:
+        if best is None or date >= best[0]:
             best = (date, stored)
     return best
 
