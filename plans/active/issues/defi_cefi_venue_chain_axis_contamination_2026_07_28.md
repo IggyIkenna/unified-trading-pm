@@ -600,6 +600,24 @@ doc for the full history).
   correctly GATED on step 1 (+ the still-outstanding fresh 5-part delete-safety proof once it does land). No delete
   executed, no code shipped. Released `reason_code=GATED`.
 
+- **slot-33 2026-08-17 (data_engineering, task `defi_cefi_venue_chain_axis_contamination-345201378396`, step-3
+  physical-delete re-check)**: Fresh-pulled all repos (clean, no doc drift). Re-verified both gates fresh. (1)
+  **Gate 2 (in-flight defi rebuild) CLEAR**: `gcloud compute instances list --filter="name~canonical-migration"`
+  returns empty — no `canonical-migration-defi-rebuild-*` instance running. (2) **Gate 1 (corpus freshness) still
+  FAIL**: bounded UTL `list_blobs` probe (Python via `unified_trading_library.cloud_interface.get_storage_client`,
+  single-prefix-per-(day,venue,data_type), not a corpus walk) of `market-data-tick-defi-prd-central-element-323112`
+  at the exact writer-shape prefix
+  `raw_tick_data/by_date/day={D}/pipeline_mode=batch_tardis/asset_group=cefi/venue={VENUE}/instrument_type=perpetual/data_type={perp_funding|perp_daily_ctx}/`
+  for all 6 `catalog_carry.py` venues × both data_types × 2026-08-13..17: **0 matched objects, every cell** —
+  `funding_window()` still returns empty for current days. Step 1 remains un-landed, unchanged since slot-17's
+  2026-08-16 check. **Root-cause confirmation**: re-checked slot-17's filed `[INFRA] P1` fix
+  (`tardis-concurrency-guard.sh` never staged to the fwd-cron VM) — `grep -n "tardis-concurrency-guard.sh"
+  deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` still returns **zero hits**: the fix has NOT been
+  shipped yet, so the 09:00Z forward-poll cron is still expected to fail every fire and the corpus-freshness gate
+  cannot clear until that lands (out of this task's craft/repo scope — `[INFRA]`/deployment-service, not
+  `[DATA]`/data_engineering — not actioned here, left for the infra-role dispatch that todo already names). My own
+  task remains correctly GATED on step 1. No delete executed, no code shipped. Released `reason_code=GATED`.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
