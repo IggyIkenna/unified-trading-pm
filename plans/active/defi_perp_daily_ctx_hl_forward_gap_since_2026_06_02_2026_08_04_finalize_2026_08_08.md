@@ -57,7 +57,7 @@ Machine-held (`gate_on_depends: true`) until every todo in
 
 ## Todos
 
-- [ ] [REVIEW] P2. Re-verify the build's evidence: (1) the `[CODE] P2` todo's cited commit shipping the new HL `/info`
+- [x] ✅ [REVIEW] P2. Re-verify the build's evidence: (1) the `[CODE] P2` todo's cited commit shipping the new HL `/info`
       mark-price/volume/OI fetch in `_perp_funding_hyperliquid.py`, wired into `_collect_hyperliquid()`'s existing
       per-coin loop — confirm via `git log`/`git show` against a fresh `git pull --ff-only origin live-defi-rollout` on
       `market-tick-data-service` (don't trust the build todo's own evidence line uncritically); (2) confirm the write
@@ -68,6 +68,37 @@ Machine-held (`gate_on_depends: true`) until every todo in
       `perp_funding` tests stayed green; (4) confirm the `[DIAG] P3` follow-up (CeFi Tardis `perp_funding_corpus.py`
       writer re-check) was actually run and its finding recorded, not left as an open question. Done-when: all 4 points
       independently re-verified with cited evidence; any mis-citation found is corrected in the source doc directly.
+      **RE-VERIFIED 2026-08-17 (slot-9, review) — all 4 points independently confirmed, no mis-citation found:**
+      1. `market-tick-data-service@f5753479` confirmed present on a fresh `git pull --ff-only origin live-defi-rollout`
+         (`git log --oneline -1 f5753479` resolves; `git show --stat` matches the cited file list). The commit's diff
+         shows `_collect_hyperliquid()` now calls `_collect_perp_daily_ctx()` at its tail (gated on `recorder is not
+         None`), which itself calls the new `_fetch_asset_ctxs()` (HL `/info` `metaAndAssetCtxs`) and writes via the
+         new `_write_hyperliquid_perp_daily_ctx_rows()` — confirmed wired into the existing per-coin-batch loop, not a
+         parallel/duplicate path.
+      2. Confirmed by direct read: `_collect_perp_daily_ctx()` writes via `_write_hyperliquid_cefi_rows(...,
+         data_type="perp_daily_ctx", ...)` which calls `build_cefi_partition_path(venue="HYPERLIQUID",
+         instrument_type=InstrumentType.PERPETUAL, data_type=data_type, ...)`; `perp_funding_handler.py`'s diff shows
+         the caller passes `bucket = get_write_bucket_name("market_data", "cefi")` and
+         `recorder = DefiManifestRecorder(..., asset_group="cefi", ...)` through `_dispatch_protocol` →
+         `_collect_hyperliquid(..., recorder=recorder, chain_for_manifest=chain_for_manifest, attempted_at=attempted_at)`
+         — the CeFi partition shape, not the old dead-bucket convention.
+      3. Bounded manifest read (`read_availability_index_safe(get_write_bucket_name("market_data", "cefi"),
+         columns=["date","venue","data_type","capture_status","row_count","written_at","source"],
+         filters=[("venue","==","HYPERLIQUID"),("data_type","==","perp_daily_ctx"),("date",">","2026-06-01")])`, row-group
+         pushdown, no whole-corpus walk) returned 7 real `capture_status=captured` rows, one per day
+         2026-08-09..2026-08-15, 232 rows/day, `source=hyperliquid` — the forward gap is genuinely closed in
+         production. `market-tick-data-service`'s full unit suite (`bash scripts/quality-gates.sh --test --no-fix`,
+         includes `tests/unit/test_perp_funding_hyperliquid.py`) ran green: **11001 passed, 28 skipped, 1 xpassed, 0
+         failed**. (The QG run's separate live-mode network smoke matrix shows unrelated `FAIL`s for
+         BINANCE-FUTURES/BYBIT/DERIBIT `perp_funding` — pre-existing "no network in this sandbox" L1-only blocks, not
+         HYPERLIQUID/perp_daily_ctx, and not a regression from this change.)
+      4. `[DIAG] P3` confirmed actually run and its finding recorded: the source issue doc's 2026-08-15 Progress Log
+         entry (slot-23, data_engineering) documents the CeFi Tardis `perp_funding_corpus.py` writer re-check in full —
+         historical run confirmed (2026-05-16..22), promotion+cron code shipped 2026-08-06, but a fresh 2026-08-15
+         bounded probe found the corpus still not fresh, root-caused to the `cefi-perp-funding-daily-cron-*` VM never
+         having been launched (+ the forward-poll cron host terminated) — not left as an open question; a concrete
+         `[DATA] P1` follow-up was filed in the sibling `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` doc
+         rather than duplicated here, per that entry's own note.
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` and this finalize doc itself: archive
@@ -82,3 +113,10 @@ Machine-held (`gate_on_depends: true`) until every todo in
 - **2026-08-08 (na-eligibility-audit round7 RECLASSIFY sweep)**: finalize plan authored alongside the RECLASSIFY flip of
   the source issue doc, per `task_template.md`'s finalize-plan-coverage rule.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (4 entries).
+- **2026-08-17 (slot-9, review)**: `[REVIEW] P2` closed. All 4 re-verification points independently confirmed (see
+  inline evidence on the checkbox above): commit `market-tick-data-service@f5753479` present on origin/live-defi-rollout
+  and correctly wired; write path uses the CeFi partition shape (not the dead-bucket convention); a bounded manifest
+  read confirmed 7 real captured `perp_daily_ctx` rows for HYPERLIQUID (2026-08-09..15, 232 rows/day); the full unit
+  suite (11001 passed, 0 failed) stayed green; `[DIAG] P3` was confirmed run with its finding recorded in the source
+  issue doc. No mis-citation found — nothing needed correcting in the source doc. `[DOC] P2` (the archival ritual) is
+  the plan's remaining todo — not in this task's scope.
