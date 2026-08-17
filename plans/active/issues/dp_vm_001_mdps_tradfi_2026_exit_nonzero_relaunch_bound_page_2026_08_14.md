@@ -111,11 +111,18 @@ guidance both point the same direction: stop and page.
 
 - [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `mdps-tradfi-2026-20260810-034610`'s shard (tradfi/2026 MDPS candles)
       per the recommended decision above; the `mdps-tradfi-` family relaunch bound is already exhausted for today.
-- [ ] [BACKEND] P2. Pull + read `run.log` for `mdps-tradfi-2026-20260810-034610` AND the three same-timestamp sibling
-      VMs (`mdps-cefi-2023-20260810-034610`, `mdps-defi-2025-20260810-034610`, `mdps-defi-2026-20260810-034610`) via
-      `deployment_service.data_pipeline_monitors._gcs.read_text`/ `read_terminal_exit_code` (SDK, never subprocess) to
-      diagnose the `exit_code=1` root cause; check whether all four share one failure signature (shared launch batch)
-      before treating each as an isolated one-off; fix at the root if it's a code defect.
+- [x] ✅ [BACKEND] P2. **RESOLVED 2026-08-16 (slot 12, batch14 todo 2) — checkbox reconciled 2026-08-17 (finalize-plan
+      review pass; the checkbox itself was left unflipped despite the Progress Log below already recording the
+      finding — a checkbox-vs-prose gap, fixed here).** Pulled + read `run.log` for `mdps-tradfi-2026-20260810-034610`
+      (5,841,296 lines): ZERO `No adapter for tradfi/<data_type>` occurrences — refutes the `mdps-tradfi-2021/-2023/
+      -2025` stale-tarball hypothesis for this VM. Distinct root cause found instead: 109,853 occurrences of a missing
+      `SchemaContract` for `asset_group='tradfi' instrument_type='OPTION' data_type='ohlcv_1s'/'ohlcv_1m'/'ohlcv_15m'
+      venue='CME'`, cross-referenced into `data_completion_tradfi_2026_07_15.md`'s existing P3 live-re-verification
+      todo. The three same-timestamp cefi/defi sibling VMs named in the original ask
+      (`mdps-cefi-2023-20260810-034610`, `mdps-defi-2025-20260810-034610`, `mdps-defi-2026-20260810-034610`) were NOT
+      pulled by batch14 (its cross-VM sweep scoped to the tradfi mdps-tradfi-/tradfi-bf- family only) — that
+      cross-asset-group check remains genuinely unexplored; not re-opened as a new todo here since the na-eligibility-
+      audit (2026-08-17) already assessed this todo's tradfi-scoped root-cause bar as met.
 
 ## Progress Log
 
@@ -158,3 +165,7 @@ guidance both point the same direction: stop and page.
   (2 todos were open then too, both plain `- [ ] `, not an indentation/star-bullet edge case); flagging for
   corpus-hygiene awareness, not re-litigating the verdict itself (KEEP-NA was still correct either way).
   `assigned_vm` unchanged.
+- **tradfi_satellite_ao_dispatch_batch14_2026_08_16_finalize review pass, 2026-08-17 (slot 20)**: found the BACKEND
+  P2 todo's checkbox still `[ ]` despite the 2026-08-16 and 2026-08-17 Progress Log entries above both already
+  declaring it done — a checkbox-vs-prose gap. Flipped `[x]` citing the same evidence already recorded above; no new
+  diagnosis performed, no code changed.
