@@ -66,7 +66,7 @@ context_scope:
 > [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
 > archive-immediately rule. The write-race incident itself was corrected same-day (2026-08-12, todos 1-2), root-caused +
 > CAS-gated in code (2026-08-12, todo 3, `market-tick-data-service@6b557144`), and the coordination gate is now codified
-> in the data SSOT (2026-08-15, todo 4, `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "Manifest-write
+> in the data SSOT (2026-08-15, todo 4, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "Manifest-write
 > coordination gate"). No content rewritten below this banner.
 
 # Inverted `dex_pool_fees` flip from a write race (2026-08-12)

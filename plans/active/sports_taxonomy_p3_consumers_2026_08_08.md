@@ -241,11 +241,11 @@ spelling variant survives, which is the entire point of the panel". It does not.
 ### ML
 
 - [x] ✅ [CODE] P0. **Wire ml-service `--family` to actually scope SPORTS training** (operator ruling 2026-08-08, see
-      `/plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`). Today it is
+      `/plans/archive/2026_08/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`). Today it is
       REQUIRED and validated for `--asset-group SPORTS` but `grep '\.family'` returns zero hits outside argparse — all 5
       documented family values produce identical behaviour. Each family must scope leagues and target-types (e.g.
       `pregame_clv_family` → CLV targets over the pre-match horizon set). Resolves
-      `/plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s sole open todo. —
+      `/plans/archive/2026_08/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s sole open todo. —
       **DONE 2026-08-09** (slot-22, `backend_engineer`): `ml-service@bfdcff2`. Added
       `SPORTS_FAMILY_LEGACY_TARGET_TYPES` + `legacy_target_types_for_families()` in `family_router.py`, mapping each of
       the 5 `SportsMLPresets` families to the legacy `target_type` key(s) it owns (`pregame_xg_family`→xg,

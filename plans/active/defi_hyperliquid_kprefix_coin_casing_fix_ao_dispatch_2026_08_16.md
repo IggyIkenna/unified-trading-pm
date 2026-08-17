@@ -18,6 +18,7 @@ tags: [defi, hyperliquid, casing, k-prefix, canonicalization]
 related:
   [
     /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"

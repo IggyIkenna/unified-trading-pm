@@ -17,9 +17,9 @@ tags: [sports, consumers, finalize, archival, distinct-values, ml]
 related:
   [
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
-    /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
+    /plans/archive/2026_08/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
-    /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
+    /plans/archive/2026_08/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
     /plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,

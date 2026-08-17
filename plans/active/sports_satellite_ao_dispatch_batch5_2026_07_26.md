@@ -63,7 +63,7 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
+    /plans/archive/2026_08/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py,
     features-service/scripts/sports/verify_ml_readiness.py,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,

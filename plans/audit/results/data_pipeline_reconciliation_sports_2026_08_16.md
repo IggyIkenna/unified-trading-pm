@@ -11,7 +11,7 @@ stage: [data]
 repos: [market-tick-data-service, instruments-service, unified-api-contracts]
 scope: [engineer]
 tags: [reconciliation, canonicalisation, sports, audit]
-related: [/plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md]
+related: [/plans/archive/2026_08/issues/sports_honest_coverage_gap_closure_2026_08_14.md]
 created: 2026-08-16
 last_updated: 2026-08-16
 execution_scope: orchestrator-agent
@@ -94,7 +94,7 @@ oracle sample was attempted against it this pass.
 - **Non-canonical-path-inventory cross-check** for the two `sports_reference/` prefixes above not completed.
 - **Delete-suggestion sweep (Phase 2 / § 4a-4b)** not run — no deletes suggested, none evaluated.
 - The **odds_api casing/backfill situation** is tracked separately and in much greater depth in
-  `/plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md` (root-caused 2026-08-16: a stale
+  `/plans/archive/2026_08/issues/sports_honest_coverage_gap_closure_2026_08_14.md` (root-caused 2026-08-16: a stale
   admission-hold, not a canonicalisation defect) — not re-derived here.
 
 ## Verdict

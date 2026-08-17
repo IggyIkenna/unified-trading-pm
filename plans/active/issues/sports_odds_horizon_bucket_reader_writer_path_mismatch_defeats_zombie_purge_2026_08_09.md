@@ -37,7 +37,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
+    /plans/archive/2026_08/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     market-data-processing-service/scripts/reprocess_sports_odds.py,
     features-service/features_service/sports/data/gcs_reader.py,
@@ -56,7 +56,7 @@ locked_by:
 drift_direction: none
 context_scope:
   [
-    /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
+    /plans/archive/2026_08/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     market-data-processing-service/scripts/reprocess_sports_odds.py,
     features-service/features_service/sports/data/gcs_reader.py,

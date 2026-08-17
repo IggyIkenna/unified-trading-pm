@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT
-summary:
-  Databento sourcing SSOT — exactly 3 subscribed datasets (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH), a fail-closed
+summary: Databento sourcing SSOT — exactly 3 subscribed datasets (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH), a fail-closed
   schema+lookback allowlist so metered PAYG never fires silently, databento-first SOURCE_PRIORITY, and write-stamped
   source provenance.
 status: current
@@ -122,7 +121,7 @@ Confirmed by grepping every Databento adapter in `market-tick-data-service` and 
 zero hits. Databento's US-equities dataset (`DBEQ.BASIC`) exposes price/trade schemas only; it carries no dividends or
 corporate-actions schema at any tier we subscribe to — a genuine, permanent dataset gap, not a subscription-tier upsell.
 Consumers needing dividend yield (e.g. the crypto-venue equity-perp basis-arb NET-basis calculation — see
-[`carry-basis-perp.md`](../09-strategy/architecture-v2/archetypes/carry-basis-perp.md) § "Crypto-venue equity-perp basis
+[`carry-basis-perp.md`](/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md) § "Crypto-venue equity-perp basis
 variant") source it from **yfinance** instead: trailing-12mo dividend sum ÷ last close, computed directly from
 `Ticker.dividends` raw history — NOT the `info["dividendYield"]` field, which has a documented stale/pre-split bug (e.g.
 it read 0.45% for NVDA vs. the raw-history-derived 0.125%). This mirrors the established yfinance precedent already used

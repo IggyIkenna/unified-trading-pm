@@ -69,7 +69,7 @@ rule). Cannot tell which from this vantage point without deeper git-log archaeol
       **RESOLVED 2026-08-14 (slot 30).** `git log --all` found commit `1e1883ee6b` ("docs(codex): codify Databento
           billing-health verification requires a real scoped data-pull") and confirmed it IS an ancestor of
           `origin/live-defi-rollout` (it landed under a different mechanism than the orphaned patch pair, hence the patch's
-          original blind-`git apply --check` still reading clean at file-time). `codex/02-data/tradfi-databento-sourcing-ssot.md`
+          original blind-`git apply --check` still reading clean at file-time). `/codex/02-data/tradfi-databento-sourcing-ssot.md`
           carries the section live today at line 330. Separately, the plan-side checkbox flip the orphaned patch would have
           restored was ALSO already landed independently, via `37b0627acc` ("docs(plans): flip todo 2") +
           `8d67b7323b` ("docs(plans): fix SHA citation for todo 2") — `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s
