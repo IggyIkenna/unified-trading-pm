@@ -163,6 +163,24 @@ than a hypothesis — the operator asked specifically what past failures should 
 - [ ] [DATA] P0. **Verify B22 in BOTH directions**, per AG, off the manifest.
 - [ ] [DATA] P0. **Establish whether B23's schemas are locked and versioned** — the gate with the least evidence today.
 
+| B24 | **Minimum history declared per shard, and TRANSITIVE** `+ADDED` | Every shard declares the minimum history it needs to produce anything at all — and the requirement for a consumer is the **transitive closure** through the chain, not its own hop. | You cannot build a 1-year candle without a year of tick history, and you cannot compute a 10-period moving average over 1-year candles without **ten years** of candles beneath it. The requirement COMPOUNDS per hop; declaring it only at the last hop understates it by the depth of the chain. |
+| B25 | **Registration FAILS when declared config exceeds available history** `+ADDED` | A strategy/feature config asking for more lookback than measured coverage provides is rejected **at registration**, not at runtime. Declared lookback is checked against real honest coverage for that exact shard. | Otherwise we produce config that says what we want without ever checking the data exists to fulfil it — and the failure surfaces as quietly wrong numbers rather than an error. Composes with P12 (preflight registration) and B16 (denominator). |
+
+### History sufficiency — why it is a chain problem, not a per-shard number
+
+The dependency chain is `tick -> candle -> feature -> feature group -> archetype`, and **each hop multiplies rather than
+adds**. An archetype's real requirement is resolved by walking the whole chain — venue, feature group, and the
+individual feature within that group — and taking the deepest transitive need. A feature registry that records only
+"this feature needs 10 periods" is not enough; it must resolve to "therefore this shard needs N years of ticks at that
+granularity", which is what can then be checked against coverage.
+
+**This is what makes B25 enforceable.** Without the transitive resolution, a registration check can only compare a
+declared lookback against the immediately-upstream shard and will pass configs that are unsatisfiable further down.
+
+- [ ] [BACKEND] P0. **Encode minimum-history per shard and resolve the transitive closure per archetype**, across MDPS
+      and the feature registry — per venue, per feature group, and per feature within a group.
+- [ ] [BACKEND] P0. **Wire B25 as a registration-time gate** and prove it rejects a deliberately over-reaching config.
+
 ---
 
 ## Data pipeline readiness — PAPER
@@ -186,6 +204,14 @@ not diverge*.
 | P11 | **Read credentials present** | Live market-data read credentials exist. Note this is a *read* gate: PAPER needs real live data, not venue execution accounts. |
 | P12 | **Preflight input registration** | A shard's consumers fail at registration if a required input is absent — not at runtime, mid-run. |
 
+| P13 | **Gap-recovery policy declared per (SOURCE x STRATEGY)** | Two independent axes, and the policy is their cross product: (a) **can this source replay intraday at all** — some vendors permit it, some do not (Tardis on an academic subscription cannot replay intraday); (b) **does this strategy tolerate a gap** — some are indifferent, some are not. Declared per pair, never generalised. |
+
+> **Why this cannot be one global policy.** Neither axis alone determines the answer. A gap-tolerant strategy on a
+> replayable source needs no action; a gap-sensitive strategy on a non-replayable source has no recovery path at all and
+> must halt rather than silently continue on incomplete data. The other two combinations sit between. A single
+> "recover intraday" policy is unimplementable across that matrix, which is why it is declared per pair — and why the
+> non-replayable/gap-sensitive cell must be identified in advance rather than discovered during an outage.
+
 ---
 
 ## Data pipeline readiness — LIVE
@@ -208,6 +234,7 @@ pipeline readiness — they are deliberately absent here.
 | L10 | **Retention and lifecycle policy** | Declared per data type, and actually enforced, so live volume does not silently become an unbounded cost. |
 | L11 | **Production-scale cost model** | Cost at live volume, with headroom stated — the point where B17's per-shard spend becomes a run rate. |
 | L12 | **Access control and audit** | Who can read each shard, recorded and enforced; the data record itself immutable with audited status changes. |
+| L14 | **Intraday recovery EXERCISED, not designed** | For every (source x strategy) pair whose P13 policy claims intraday recovery, that recovery has actually been run and verified — and for pairs with no recovery path, the halt behaviour has been exercised. History matters across every service, so a recovery that has never been executed is a plan, not a control. |
 | L13 | **Reconciliation against venue-reported totals** | Where the venue publishes its own totals, our captured totals reconcile to them within a declared tolerance. This is the only gate that catches "we captured something, consistently, and it was wrong." |
 
 ---
