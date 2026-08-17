@@ -66,3 +66,64 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 10, operator ruling — scoped)**: extracted from
   `mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md`, with the operator's explicit re-verify-first
   instruction folded into the dispatched todo itself rather than a separate pre-step.
+- **2026-08-17 (slot-22, backend_engineer) — re-verified against live code per the operator's instruction; found
+  real, material drift; found kalshi's apparent gap was a FALSE POSITIVE (self-corrected after a failed attempted
+  fix); genuinely blocked on shipping even the safe doc-only correction by sustained host-wide resource
+  contention (7 quickmerge attempts, 0 landed).**
+  `git log --since=2026-08-13` on the named files found ONE relevant commit
+  (`market-tick-data-service@44db26bc`, 2026-08-14, "fix(live): reject unsupported data_type in cefi factories,
+  canonicalize DeFi venue keys") that already did MOST of this todo's step (2) for 5 of the 9 originally-scoped
+  venues: `curve`/`orca`/`raydium`/`morpho`/`jito` are now dual-registered under BOTH their legacy lowercase key
+  AND their canonical UPPERCASE UAC key (verified directly against `register_ws_feed_connector(...)` call sites in
+  each connector file). The resolver itself was also refactored into a shared `resolve_ws_feed_venue_key()`
+  helper (same exact/`.lower()`/`.upper()` fallback semantics, now reused by the e2e-testing smoke-matrix
+  validator too) — behaviorally unchanged, so the plan's "re-confirm the fallback is still deployed" check still
+  holds. `polymarket`/`polymarket_clob_ws` are unchanged: intentionally registered under TWO DIFFERENT casings for
+  TWO DIFFERENT connectors (Gamma API = lowercase, CLOB = uppercase) — this is a documented, deliberate split
+  (`polymarket_clob_ws.py`'s own `register()` docstring), not an oversight; treating it as "needs reconciling to
+  one key" would silently merge two live, distinct data sources.
+  - **Corrected finding — `kalshi` was NOT actually missing.** Initially found only lowercase `"kalshi"` registered
+    in `kalshi_ws.py` (a direct grep of `register_ws_feed_connector(venue=...)` call sites in that ONE file), and
+    attempted the same dual-registration fix as the other 5 venues. QG caught it: this broke 3 existing tests,
+    because `kalshi_clob_ws.py` (a SIBLING connector file, not grepped in the first pass) already registers a
+    data_type-aware factory under the canonical uppercase `"KALSHI"` key — it routes `trades` to
+    `kalshi_trades_ws` and `depth`/default to the CLOB book connector. Dual-registering `"KALSHI"` in
+    `kalshi_ws.py` too, with `overwrite=True`, silently clobbered that split. **Lesson**: grepping one connector
+    file per venue name is not sufficient when a venue has multiple connector files (ticker-poll vs CLOB vs
+    trades) — the registration search must be venue-wide (`grep -rn 'venue="KALSHI"\|venue="kalshi"'` across
+    `live/connectors/`), not per-file. Reverted the dual-registration attempt; kept a docstring note on
+    `kalshi_ws.py::register()` explaining why NOT to add it there, so a future session doesn't re-walk the same
+    dead end. **`kalshi` needs NO further work under this todo** — it is already correctly canonical-registered
+    (via `kalshi_clob_ws.py`), just not in the file a naive per-venue grep would check first.
+  - **Still NOT canonical-dual-registered, real blocker (do not guess)**: `phoenix` has NO entry anywhere in
+    `VENUES_BY_ASSET_GROUP` (checked every asset_group, not just `defi`) — there is no canonical UAC venue key to
+    register it under at all. Guessing one (e.g. `PHOENIX-SOLANA`) would introduce a key that doesn't match
+    whatever a real canonical shard-spec producer would actually emit, the exact class of bug this whole todo
+    exists to prevent. This needs the UAC venue registry to gain a real PHOENIX entry FIRST (a registry-ownership
+    decision, out of this repo's scope) before a canonical dual-registration can be added here.
+  - **Step (2)'s "remove the case-insensitive fallback entirely" — NOT done, correctly deferred.** The SIBLING
+    issue doc's own todo (`mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md`) is more precise than
+    this plan's summary: "keep the fallback in place during the transition... remove it only once every
+    registration is confirmed canonical." That condition is not met — `phoenix` has no canonical key to register
+    at all, and `polymarket`'s intentional dual-casing-by-design means a single "the registry itself must be
+    consistent" state was never the target for that venue. Removing the fallback now would break `phoenix` (its
+    only key is lowercase) and would not achieve the stated goal for `polymarket`. Deferring fallback removal
+    until phoenix has a real canonical key AND an explicit decision is made on whether polymarket's two-connector
+    split is itself the accepted final state (recommend: yes, document it as such, since it's a deliberate
+    two-data-source design, not debt).
+  - **Shipping status: BLOCKED by host contention, not by the change itself.** The corrective docstring-only edit
+    (`market-tick-data-service` local commit `8f8212e9`, QG-verified green once standalone before the revert
+    churn) could not be landed via quickmerge after 7 attempts over ~40 minutes: 2 attempts killed while queued
+    behind `qg-governor` (host-wide token cap), 2 attempts failed re-gate on DIFFERENT unrelated flaky/foreign
+    tests each time (`test_lst_rates_handler`, then `test_solana_defi_handler::test_writes_data_to_gcs` — the
+    latter reproduced standalone with a deterministic pipeline_mode mismatch, `batch_onchain_subgraph` expected
+    vs `batch_solana_rpc` actual, unrelated to `kalshi_ws.py` and tracked by other in-flight DeFi-canon-id plans
+    per a grep hit in `defi_track01_per_instrument_and_canon_id_2026_07_24.md` et al. — this looks like a peer
+    session's in-progress WIP on that handler, not a regression from this todo), and the last 2 attempts hit
+    `load average: 10.30` (measured via `uptime`) with a full-suite QG run taking >9m50s before being cut off —
+    a slot-15 `basedpyright` run and a slot-7 orphaned backfill process were both consuming CPU concurrently. The
+    local commit is safe (committed, verified content matches intent) but genuinely unpushed at session end —
+    tracked in the Deferred-work table, not silently dropped.
+  - **Not flipping the checkbox** — step (2) is genuinely partial (phoenix blocked on a registry decision;
+    fallback removal correctly deferred; the kalshi correction itself is unshipped pending host contention
+    clearing). Recommend a fresh, narrower follow-up todo once PHOENIX gets a real UAC venue registry entry.
