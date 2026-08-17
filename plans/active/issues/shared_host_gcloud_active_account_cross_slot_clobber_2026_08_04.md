@@ -120,14 +120,11 @@ per-slot isolated config (git-identity pattern, per-tab-worktrees.md); resolutio
 
 Two independent fix directions, either or both:
 
-- [ ] [INFRA] P2. Stop launcher scripts (and any script invoking `gcloud`) from depending on the ambient/global active
-      account at all — pin the identity PER-INVOCATION instead, e.g.
-      `gcloud --account=unified-trading-sa@... compute instances create ...` (gcloud supports a per-command `--account`
-      flag that overrides the active config without mutating shared state) or
-      `CLOUDSDK_CORE_ACCOUNT=unified-trading-sa@...` exported only within the launcher's own subshell. Audit
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 5.** ~~Stop launcher scripts (and any script invoking `gcloud`) from depending on the ambient/global active
+      account at all — pin the identity PER-INVOCATION instead~~ — not yet executed, tracked there. Audit
       `deployment-service/scripts/vm/lib/launcher_common.sh` and the `launch-*.sh` family for any bare `gcloud`
-      invocation that relies on ambient `core/account` and pin it explicitly. This removes the dependency on shared
-      mutable state entirely rather than just avoiding collisions. (repo: deployment-service)
+      invocation that relies on ambient `core/account` and pin it explicitly. (repo: deployment-service)
 - [ ] [INFRA] P3. Alternative/complementary: give each slot its own NAMED gcloud configuration
       (`gcloud config configurations create slot-<N>` + `CLOUDSDK_ACTIVE_CONFIG_NAME=slot-<N>` exported in each slot's
       shell profile / boot env) so `gcloud config set account` inside one slot only ever mutates that slot's own named
@@ -192,3 +189,8 @@ Two independent fix directions, either or both:
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:cdca924af3050eb4]: RECLASSIFY_SPLIT — extracted
+  fix-direction 1 (pin gcloud identity per-invocation) to `infra_satellite_ao_dispatch_batch18_2026_08_17.md` item 5
+  (not yet executed; bounded mechanical audit+fix, no design call needed on its own). Fix-direction 2 (per-slot
+  named gcloud configs, shared-blast-radius bootstrap infra) stays `assigned_vm: NA` — genuinely needs a direction
+  decision independent of direction 1 shipping. Doc stays NA overall.

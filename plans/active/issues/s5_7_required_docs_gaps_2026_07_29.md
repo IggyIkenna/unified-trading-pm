@@ -174,3 +174,7 @@ the dispatch-scope-eligibility ruling):
 - **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:48e12208c9ce4422]: content fully resolved — all 3
+  todos already `[x]` DONE with cited operator rulings, no prose-only remaining work on full read. Not archived:
+  `archive_exempt: true` (own frontmatter) blocks the ritual pending `codex_vs_repo_docs_ssot_audit_2026_06_01.md`
+  reaching a terminal status — a standing, documented bridge, not overridden here.

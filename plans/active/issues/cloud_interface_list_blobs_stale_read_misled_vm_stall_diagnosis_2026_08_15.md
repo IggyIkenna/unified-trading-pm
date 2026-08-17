@@ -23,8 +23,10 @@ related:
 created: "2026-08-15"
 author: ikennaigboaka [slot-16]
 priority: P3
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
+effort: medium
 drift_direction: advance-code
 estimate_class: research
 depends_on: []
@@ -83,3 +85,12 @@ Three plausible mechanisms, none confirmed or ruled out:
 - [ ] [DOC] P3. **If confirmed client-side caching**: document the workaround (e.g. `blob.reload()` or a cache-busting
       query param) in `/codex/05-infrastructure/gcs-object-operations.md`, and note it as a caveat anywhere the codebase
       polls a live-updating GCS object for freshness/health (VM watchdogs, log tailers). (repo: unified-trading-pm)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:be800b4106c15bf3]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. Both open todos are bounded, deterministic engineering work with a stated
+  reproduction method and done-when; no operator gate, banner, or `depends_on` found. Conflict-check clean — a
+  same-day cefi-tranche `/na-eligibility-audit` run independently found this doc, correctly deferred to infra
+  ownership per the Phase-0 primary-owner rule, and took no action on it (see
+  `cefi_satellite_ao_dispatch_batch21_2026_08_17.md`'s own Progress Log).

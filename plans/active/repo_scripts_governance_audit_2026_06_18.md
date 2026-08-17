@@ -209,10 +209,12 @@ a verdict). Heaviest:
       strategy-service DeFi tracers, `seed_demo_client`, `run_client_reporting_cutover`, `run_amm/lending_validation`,
       `backfill_vix_yahoo`, `run_weekly_pipeline`. (DELETE-cohort scripts are moot — removal moots the flaw.) Target:
       per-repo.
-- [ ] [AUDIT] P2. **PROMOTE-TO-CLI** — file the ~8 recurring-prod-logic scripts as their owning service's CLI subcommand
-      (`daily_update.py`→client-reporting-api; `collect_lst_seasonal_rewards_daily.py`/`check_pipeline_completeness.py`→
-      features-service; `measure_honest_coverage.py`/`verify_instrument_manifest_coverage.py`→instruments-service;
-      `run_weekly_pipeline.py`/`backfill_vix_yahoo.py`→e2e→service CLI). One small plan item per repo. Target: per-repo.
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      items 9-12 (one per repo).** ~~PROMOTE-TO-CLI — file the ~8 recurring-prod-logic scripts as their owning
+      service's CLI subcommand (`daily_update.py`→client-reporting-api;
+      `collect_lst_seasonal_rewards_daily.py`/`check_pipeline_completeness.py`→features-service;
+      `measure_honest_coverage.py`/`verify_instrument_manifest_coverage.py`→instruments-service;
+      `run_weekly_pipeline.py`/`backfill_vix_yahoo.py`→e2e→service CLI).~~ Not yet executed — tracked there.
 
 ## Phase 2 — ruff-lint pass on scripts/ [P2]
 
@@ -459,3 +461,12 @@ narrowest literal precondition passed.
   the gated items to blind dispatch. The standing recommendation is unchanged and still un-actioned: a targeted split of
   just the bounded items into a future infra batch — `/ag-closeout-audit`'s Phase-3 job, not an `assigned_vm` flip.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche): RECLASSIFY_SPLIT — extracted the PROMOTE-TO-CLI item (8
+  scripts, split per-repo per this doc's own "one small plan item per repo" instruction) to
+  `infra_satellite_ao_dispatch_batch18_2026_08_17.md` items 9-12 (not yet executed). Verified ungated on its own
+  merits — its own todo text carries no "GATED + REVIEWED" language unlike its DELETE/DEPRECATE siblings, and the
+  broader "human-judgment work" framing found elsewhere in the corpus
+  (`features_service_coverage_and_script_canon_2026_06_10.md`) was about the ORIGINAL, now-superseded whole-sweep
+  checkbox, not this already-scoped, already-classified promote list. The other 6 open items remain
+  gated/condition-blocked (campaign gates, an unmet fleet-wide precondition, sequencing after the delete pass) — doc
+  stays `assigned_vm: NA`.

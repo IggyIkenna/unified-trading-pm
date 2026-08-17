@@ -27,8 +27,9 @@ related:
 created: 2026-08-16
 author: claude-code (interactive session, discovered while diagnosing an unrelated plan-hygiene precommit failure)
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 priority: P2
 effort: low
 source:
@@ -116,3 +117,6 @@ containing a prior run's output), doesn't fully clear the old block, and writes 
 - **2026-08-16 (interactive session)**: Filed from a working-tree observation during an unrelated plan-hygiene
   diagnosis. Root cause is inferred from the symptom shape, not yet confirmed by reading the generator's source —
   whoever picks this up should verify the truncate-vs-append hypothesis before assuming the fix.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:a2e2e57f9a3e4ff3]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. All 3 todos are bounded, deterministic engineering work with stated done-when
+  criteria; no gate, banner, lock, or redirect found. Fresh 2026-08-16 filing with no prior audit history.

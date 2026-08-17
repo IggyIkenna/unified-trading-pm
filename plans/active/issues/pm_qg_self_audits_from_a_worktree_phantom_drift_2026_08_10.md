@@ -37,6 +37,7 @@ context_scope:
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
+effort: low
 ---
 
 # PM's QG self-audits from a worktree
@@ -109,3 +110,7 @@ the full gate.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:2bc91842138bdce6]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. Sole open todo is a precisely-scoped code fix (detect missing `LOCAL_DEPS` import
+  up front, print one clear line, exit) with an explicit done-when; root cause already diagnosed and the primary fix
+  already shipped. No conflict found against the active corpus.

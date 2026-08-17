@@ -389,12 +389,12 @@ data that's actually needed. This plan gets the evidence first.
       itself be a maintenance-drift risk (two sources of truth for the same mapping). Remaining work is UI-only — folded
       into the un-suppress-drilldown todo below, since "wire into the drilldown" only makes sense once that component is
       live.
-- [ ] [DATA] P0. **defi empty_confirmed breakdown + `EXPECTED_INSTRUMENT_NOT_LISTED` semantics — still open, agent was
-      running at session checkpoint time (2026-08-15), not yet reported.** Pick up where the dispatched investigation
-      left off — same method as the cefi/tradfi/prediction sibling breakdowns (grain, date/venue/data_type/
-      instrument_type/error_reason distribution via `read_availability_index`, column-projected + filtered; large
-      manifest, ~159M total rows, scope queries carefully). This is the single biggest unresolved empty_confirmed
-      population (78.7M, larger than captured 32.5M) and the highest-priority remaining audit gap.
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 1.** ~~defi empty_confirmed breakdown + `EXPECTED_INSTRUMENT_NOT_LISTED` semantics — still open, agent was
+      running at session checkpoint time (2026-08-15), not yet reported.~~ Not yet executed — tracked there. Same
+      method as the cefi/tradfi/prediction sibling breakdowns (grain, date/venue/data_type/instrument_type/error_reason
+      distribution via `read_availability_index`, column-projected + filtered; ~159M total rows, scope queries
+      carefully). Still the single biggest unresolved empty_confirmed population (78.7M, larger than captured 32.5M).
 
 ## Progress Log
 
@@ -502,3 +502,10 @@ data that's actually needed. This plan gets the evidence first.
   FUTURE bucket re-stamp, the BYBIT+KRAKEN-FUTURES bundling migration, the OKX-FUTURES live-writer fix, and the
   newly-filed BYBIT-FUTURES post-universe-resolve zero-capture root-cause (see
   `cross_ag_live_capture_parity_2026_08_14.md` for that last one's tracked todos).
+
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:c01242758aa55671]: RECLASSIFY_SPLIT — extracted the
+  sole remaining item (defi empty_confirmed breakdown pickup) to
+  `infra_satellite_ao_dispatch_batch18_2026_08_17.md` item 1 (not yet executed). Doc stays `assigned_vm: NA` — this
+  is a LOCAL/human plan by design (operator ruling 2026-08-15) and the extraction is a per-todo split, not a
+  whole-doc flip; the BYBIT/KRAKEN-FUTURES bundling migration and the catalogue-gap audit remain genuinely NA
+  (judgment/design-gated).

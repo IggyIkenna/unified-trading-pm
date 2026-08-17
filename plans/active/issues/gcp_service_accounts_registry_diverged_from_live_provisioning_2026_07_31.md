@@ -121,13 +121,17 @@ Two directions are both plausible and this is an architecture decision, not a bo
       track as its own sub-effort: provision the 17 missing per-service SAs + declared buckets via
       `sync_gcp_service_accounts.py`, re-point each Cloud Run service's runtime SA. No longer blocks the rest of this
       list.
-- [ ] [INFRA] P2. **Enumerate every live Cloud Run service's actual runtime SA + role set into the registry** (bounded,
-      determinable audit — `gcloud run services list` + `describe` per service, cross-reference
-      `gcloud projects get-iam-policy`). Sampled 7/~25 live services this pass; the rest are unaudited. (repo:
-      deployment-service)
-- [ ] [INFRA] P3. **Evaluate default-compute-SA usage as a security risk** given its broad
-      `secretmanager.secretAccessor` + `storage.admin` grants — at minimum, document which live services rely on it and
-      what secrets/buckets they can therefore reach that they don't need. (repo: deployment-service)
+- [x] ✅ **CLOSED 2026-08-17 (na-eligibility-audit, infra tranche) — already shipped, checkbox never flipped.**
+      `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s own todo 1 already dispatched and completed this
+      exact item — `deployment-service@f5ad937bee` (2026-08-13, 25 live Cloud Run rows / 23 distinct services across
+      9 runtime SAs enumerated into `live_runtime_bindings` + `live_runtime_sa_roles`). ~~Enumerate every live Cloud
+      Run service's actual runtime SA + role set into the registry~~ (repo: deployment-service)
+- [x] ✅ **CLOSED 2026-08-17 (na-eligibility-audit, infra tranche) — already shipped, checkbox never flipped.**
+      `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s own todo 2 already dispatched and completed this
+      exact item — `deployment-service@2062cb7ba1` (2026-08-15, `default_compute_sa_risk_assessment` added to
+      `gcp_service_accounts.yaml`; both broad roles confirmed unconditional; blast radius quantified: 105 buckets /
+      211 secrets reachable by all 10 default-compute-SA services). ~~Evaluate default-compute-SA usage as a security
+      risk~~ (repo: deployment-service)
 - [ ] [INFRA] P3. **If direction (a) is chosen**: provision the 17 missing per-service SAs + their declared buckets via
       `sync_gcp_service_accounts.py` (currently unimplemented — "PENDING per Phase 1.A operator implementation") and
       re-point each Cloud Run service's runtime SA. (repo: deployment-service)
@@ -155,3 +159,9 @@ Two directions are both plausible and this is an architecture decision, not a bo
   detail).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:8d29ba288c86de66]: KEEP-NA-STALE — closed 2 of 4
+  items above (already shipped via `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`, checkboxes here never
+  flipped to cite it). Remaining 2 items (todo 1's scoped-provisioning sub-effort + its near-duplicate restatement)
+  stay `assigned_vm: NA` — genuine large-scope provisioning/redeploy work, not a bounded worker todo despite the
+  2026-08-12 operator direction confirming the CHOICE of direction (a); the execution itself is still its own
+  sub-effort per the doc's own text.

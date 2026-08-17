@@ -23,6 +23,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.25
 assigned_role: infra
+effort: medium
 drift_direction: none
 source: Hit while shipping the tool-call batching hook; quickmerge STAGE 1 refused the commit, 2026-08-10.
 depends_on: []
@@ -107,3 +108,6 @@ version, and the real defect is upstream in minting rather than here.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5ca4525102390afb]: RECLASSIFY_WHOLE —
+  `assigned_vm: NA` → `planning`. All 3 open todos are bounded engineering tasks with stated done-when bars; no
+  operator gate, banner, or `depends_on` found. Root cause of the underlying incident already fixed.
