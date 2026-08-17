@@ -93,7 +93,7 @@ source: >-
       Done-when: a `COINBASE-FUTURES` live connector is registered, or the exclusion is confirmed intentional with
       a cited reason.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, 0 of 12 major venues reach a complete
-      end-to-end state.** SHIPPED — `unified-trading-pm@<this-commit>`. 3 parallel research passes — strategy-service
+      end-to-end state.** SHIPPED — `unified-trading-pm@4686d503ad`. 3 parallel research passes — strategy-service
       (positions), strategy-service + unified-api-contracts (archetype/slot declarations — the prediction batch's
       citation of `unified-api-contracts` for `archetype_slots_*.py` was itself stale; those files live in
       `strategy-service`, corrected here), and execution-service (order execution) — scoped to the BINANCE/BYBIT/
@@ -271,7 +271,7 @@ PERP/POLYMARKET-PERP scaffolds, EXTENDED-STARKNET's missing batch adapter and em
 `polymarket_market_microstructure`'s naming artifact) confirmed already tracked elsewhere, not duplicated.
 
 **2026-08-16 — steps 6-8 swept (12 major venues, 36 rows), 5 more real gaps found, 2 escalated as P0 issue
-docs — 0/12 venues reach a complete end-to-end state.** SHIPPED — `unified-trading-pm@<this-commit>`. 3 parallel
+docs — 0/12 venues reach a complete end-to-end state.** SHIPPED — `unified-trading-pm@4686d503ad`. 3 parallel
 research passes: strategy-service (positions), strategy-service + unified-api-contracts (archetype/slot
 declarations), execution-service (order execution). Batch+paper position read and CEFI's single-factory CCXT
 execution pattern are both genuinely healthy across all 12 venues; live position read, live order placement, and
