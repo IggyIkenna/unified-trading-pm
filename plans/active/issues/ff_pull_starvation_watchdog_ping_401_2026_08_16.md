@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title: "FF-pull starvation watchdog operator-ping delivery was HTTP 401 fleet-wide — ROOT-CAUSED + FIXED across all 11 slots (stale per-slot .orch_token, all minted same batch)"
+title: "FF-pull starvation watchdog 401 — ROOT-CAUSED + FIXED on the operator's laptop (11 slots, stale per-slot .orch_token); planning VM's 33 slots checked and confirmed unaffected"
 summary: >-
   `slot-git-status-report.sh`'s FF-pull starvation watchdog (`check_starvation_for_slot`,
   `ff-starvation-detect.sh`) was correctly detecting real starvation episodes (a dirty local edit colliding with
@@ -119,14 +119,40 @@ correctly to the valid `~/.orch_token`.
 - Did NOT spot-check slots 2, 4, 6, 8 with a live call after the swap — same source (`~/.orch_token`) and same
   mechanism as the 4 verified slots, but noting the gap rather than silently claiming full verification.
 
+## Scope clarification: laptop vs. the `planning` VM (2026-08-17)
+
+The 11 slots checked/fixed above are all on the OPERATOR'S LAPTOP (`/Users/.../unified-trading-system-repos/.tabs/{1..11}`)
+— that machine only has 11 slots, confirmed via directory listing. Separately checked the AO `planning` VM
+(`i-0c9b283b31d6b5ca7`, read-only via SSM) since it runs the same cron/watchdog per `per-tab-worktrees.md`
+("operator laptops + every VM") and the operator asked about slots up to 33:
+
+- The VM has its OWN, separate slot pool: **33 numbered slot directories**,
+  `/home/ubuntu/unified-trading-system-repos/.tabs/{1..33}` — a different host, different slot numbering, not
+  an extension of the laptop's 1-11.
+- **None of the 33 VM slots have a per-slot `.orch_token` file** (`find .tabs/ -mindepth 2 -maxdepth 2 -iname
+  .orch_token` returned nothing) — so the VM never had the shadowing bug the laptop had; every VM slot
+  correctly falls through to `~/.orch_token`.
+- The VM's `~/.orch_token` (home-dir) is currently **valid**: `exp: 2026-08-23T20:33:48Z` (~6 days out from
+  today) — shorter-lived than the laptop's freshly-copied one (`2026-09-09`), worth a re-check before it lapses,
+  but not an active problem now.
+- Found one orphaned `.tabs/.orch_token` (sitting directly in `.tabs/`, NOT inside a numbered subdirectory,
+  mtime May 20 — same stale batch) — this path doesn't match `resolve_token_for_slot()`'s lookup order at all
+  (per-slot means `.tabs/<N>/.orch_token`, not `.tabs/.orch_token`), so it's dead/unconsulted, not a live bug.
+  Left untouched (not verified as safe to delete this session).
+- **Conclusion: the VM's 33 slots do not need the laptop's fix — they were never affected.**
+
 ## Todos
 
 - [x] ✅ [OPS] P1. **FIXED 2026-08-16 (interactive session, slot-5)** — slot 5's stale per-slot `.orch_token`
       replaced with the valid `~/.orch_token`; verified via a live `200` response.
 - [x] ✅ [OPERATOR] P2. **FIXED 2026-08-17 (interactive session) — superseded the original ask.** Checked all
-      11 slots per operator request, not just 3/4: found the identical expired token on 7 more slots (1, 2, 3,
-      4, 6, 7, 8), fixed all the same way as slot 5, confirmed slots 9-11 already correct. See "Root cause"
-      above.
+      11 laptop slots per operator request, not just 3/4: found the identical expired token on 7 more slots (1,
+      2, 3, 4, 6, 7, 8), fixed all the same way as slot 5, confirmed slots 9-11 already correct. Separately
+      checked the `planning` VM's 33 slots (operator asked about slots up to 33) — confirmed unaffected, see
+      "Scope clarification" above. See "Root cause" above for the laptop mechanism.
+- [ ] [OPERATOR] P3. Re-check the `planning` VM's `~/.orch_token` before `2026-08-23T20:33:48Z` (~6 days from
+      filing) — it's currently valid but shorter-lived than the laptop's; confirm whatever's supposed to refresh
+      it actually fires, or refresh it manually if not.
 - [ ] [BACKEND] P3. Harden `resolve_token_for_slot()` to skip an expired candidate and fall through to the next
       one (it already has `decode_jwt_exp()` available — currently only used elsewhere for a different check;
       wire it into the resolution order itself) instead of using the first FILE it finds regardless of validity
@@ -140,6 +166,11 @@ correctly to the valid `~/.orch_token`.
 
 ## Progress Log
 
+- **2026-08-17 (interactive session, cont.)**: operator asked whether slots 9-33 were checked and whether this
+  was laptop or AO scope. Confirmed the laptop has exactly 11 slots (nothing higher). Checked the AO `planning`
+  VM read-only via SSM — it has its own separate 33-slot pool, none of which carry a per-slot `.orch_token`
+  (so none were shadowing their home-dir fallback); VM's `~/.orch_token` is valid until `2026-08-23`. VM
+  confirmed unaffected by this bug — see "Scope clarification" section above.
 - **2026-08-17 (interactive session)**: operator asked to check all 11 slots. Found the same expired
   (`2026-05-27`) per-slot token on 7 more slots (1, 2, 3, 4, 6, 7, 8) beyond the already-fixed slot 5 — all one
   provisioning batch, not independent staleness. Fixed all 8 the same way (backup + replace with
