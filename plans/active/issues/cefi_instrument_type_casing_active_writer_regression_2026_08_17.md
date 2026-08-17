@@ -159,18 +159,68 @@ is genuinely VM-scale work, not shared-host-scale:
       This does NOT itself shrink the existing 39,286-row residual (that's todo 2's `--apply` VM
       dispatch, gated behind this fix per the plan) — it stops new lowercase-cased rows from being
       minted going forward, which is this todo's own done-when.
-- [ ] [DATA] P2. Dispatch `scripts/normalize_instrument_type_casing.py --all-buckets --apply` (the
-      corrected, safety-fixed version shipped this session — mask restricted to genuine casing
-      variants, collision-dedup, timestamped backup) to a dedicated one-off VM per
-      `/codex/05-infrastructure/vm-launcher-runbook.md` (this is corpus-scale: 166,686 per-VM
-      shard objects + a 29.9M-row consolidated index — confirmed too large for the shared host,
-      both the full per-VM scan and even an index-only run failed/OOM'd here). Safe-idempotent
-      justification: dry-run first (now supported), backs up every blob before overwrite, dedups on
-      the real manifest row-key so no row can be silently duplicated, and a second run against an
-      already-normalized index is a clean no-op (changed=0). After apply, trigger the manifest
-      consolidator to rebuild the merged index (per the script's own docstring) and re-run the
-      enumeration audit to confirm 0 residual. Do this AFTER the P1 writer fix lands, or the count
-      will already be climbing again by the time the VM run starts.
+- [x] ✅ [DATA] P2. **DONE 2026-08-17 (slot-33, data_engineering craft)** — Added the dedicated VM
+      dispatch path + shipped it a dry-run against PROD, per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`.
+
+      **`deployment-service@8495b8a3e4`**: new `cefi-itype-casing-apply` category in
+      `launch-canonical-migration-vm.sh` (folds under the already-registered
+      `canonical-migration-` `VM_PREFIX_TO_BUCKET` catch-all, no new registry entry needed).
+      DRY-BY-DEFAULT via the tool's own `--dry-run` flag (generic else-branch append, no
+      special-casing needed — this tool has no `--apply` flag). `MACHINE_TYPE` defaults to
+      `e2-standard-16` given the corpus size (29.9M-row consolidated index).
+
+      **`market-tick-data-service@ccec3e5ebe`**: added `--workers` (ThreadPoolExecutor, default 8)
+      to the per-VM shard scan — the prior strictly-sequential loop over 166k+ objects would have
+      been hours of wall-clock on a dedicated VM; each blob is independently processed (own
+      download/transform/upload) so concurrent execution is safe, dedup/collision handling stays
+      per-blob.
+
+      **`market-tick-data-service@df55d85d85`**: follow-up fix — `--workers` above the `requests`
+      library's default connection-pool size of 10 caused constant "Connection pool is full,
+      discarding connection" churn (confirmed live on the dry-run VM at `--workers 16`). Mounts a
+      larger `HTTPAdapter` on both the main HTTP session and the separate OAuth token-refresh
+      session, mirroring
+      `migrate_prediction_instrument_id_wrap_2026_07_09._boost_connection_pool`'s already-proven
+      fix for the identical problem class.
+
+      **Dry-run VM dispatched + confirmed live+progressing** (STARTED + ongoing-progress, per the
+      no-fire-and-forget rule):
+      `canonical-migration-cefi-itype-casing-apply-20260817-130229` (asia-northeast1-c,
+      e2-standard-16, SPOT), launched on the pre-connection-pool-fix tarball
+      (`mtds-code@ccec3e5eb`). Confirmed via `run.log`: `DEPLOYMENT_STARTED`, then
+      `Scanning 169081 per-VM shards in gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/
+      (workers=16)` (close to the 166,686 baseline count, consistent with the still-active
+      writer-regression growth the P1 fix above only just stopped), heartbeats continuing every
+      ~60s as of 13:23 UTC. `market-data-tick-cefi-central-element-323112` (the legacy non-tiered
+      bucket name, first of the two `--all-buckets` targets) 404s — pre-existing, unrelated to this
+      session's changes; the real target `-prd-` bucket scans correctly.
+
+      This dry-run VM is still in-flight (169k objects at this scale is realistically 1.5-3h
+      wall-clock even at workers=16) — its own connection-pool churn (running the OLDER tarball)
+      will make it slower than a fresh run would be, but that's a dry-run inefficiency only, not a
+      correctness issue. Remaining chain tracked as new todos below rather than absorbed into this
+      one, per the one-task-per-session AO worker model.
+- [ ] [DATA] P2. Once `canonical-migration-cefi-itype-casing-apply-20260817-130229`'s dry-run
+      reaches a terminal state (check `run.log` for the final
+      `Grand total instrument_type values would be normalized: N` line + VM self-delete), review
+      the disposition — sane if `N` is in the same order of magnitude as the 39,286-row baseline
+      (some growth expected given the writer regression ran until the P1 fix landed). If sane,
+      launch the FULL `--apply` run (`bash launch-canonical-migration-vm.sh cefi-itype-casing-apply
+      <today> <today> full` from `deployment-service`) on a FRESH VM — do not reuse the dry-run VM's
+      name/tarball, so the run picks up the `df55d85d85` connection-pool fix. If the disposition is
+      surprising (order-of-magnitude off from 39,286, or errors in the log), diagnose before
+      applying — do not `--apply` on an un-reviewed dry-run.
+- [ ] [DATA] P2. After the `--apply` VM reaches a terminal state (0 exit, backups written, grand
+      total normalized matches the reviewed dry-run count), trigger the manifest consolidator to
+      rebuild the merged `_index/availability_index.parquet` (per the script's own docstring) —
+      see `/codex/05-infrastructure/manifest-consolidator-ssot.md` for the trigger mechanism.
+- [ ] [DATA] P2. Once the consolidator rebuild is confirmed complete, re-run
+      `market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`
+      (the same script this doc's own live re-count used) to confirm the casing residual is 0. If
+      not 0, diagnose before closing this issue doc out — a residual writer bug (the shipped P1 fix
+      only stops NEW rows; it doesn't retroactively fix any writer callsite this doc's own
+      root-cause trace didn't reach) is the most likely explanation for a nonzero post-apply count.
 
 ## Evidence
 
