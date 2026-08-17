@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "be4539ee82bff53d2e122e6e7846dc31417c8e7b"
+      "ldr_ci_status_sha": "1caa5f1022c4f7dd6f27e5f9b39651250d9c7f3a"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1560,7 +1560,7 @@
         "large_file_count": 19,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
       "ldr_ci_status_sha": "8fd72d10fab49a3cc9fb0a160a0c79ae5055f685"
     },
