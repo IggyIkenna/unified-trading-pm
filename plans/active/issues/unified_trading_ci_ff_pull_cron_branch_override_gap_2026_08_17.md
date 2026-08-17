@@ -96,14 +96,69 @@ context_scope:
 
 ## Fix shipped
 
-`unified-trading-pm@<pending-quickmerge-sha>` — added a `unified-trading-ci main` row to
-`scripts/dev/cron-branch-overrides.txt` (the file's own header literally says "Add a row when a repo's
-canonical integration branch is NOT live-defi-rollout" — this repo qualified since 2026-08-07 and no one had
-added it). The cron self-updates this file from `origin/live-defi-rollout` before every tick (see the
-crontab's `git show origin/$b:$d` snippet), so the fix propagates to every laptop + the orchestrator VM
-within one 5-minute cycle of landing, with no manual per-host action needed. Once the cron stops re-diverging
-each slot, AO's existing `heal_dead_slot_branch_quarantine` realign (already correct) should hold across the
-fleet without further intervention — self-healing, not something this doc's todos need to force per-slot.
+`unified-trading-pm@2b3601a545` (commit timestamp `2026-08-17T06:31:22+01:00` = `05:31:22 UTC` — this repo's
+local clocks run +01, so subtract 1h for UTC) — added a `unified-trading-ci main` row to `scripts/dev/cron-branch-overrides.txt` (the file's own
+header literally says "Add a row when a repo's canonical integration branch is NOT live-defi-rollout" — this
+repo qualified since 2026-08-07 and no one had added it). The cron self-updates this file from
+`origin/live-defi-rollout` before every tick, so the fix propagates to every laptop + the orchestrator VM
+within one 5-minute cycle of landing, with no manual per-host action needed.
+
+## Verification (2026-08-17, ~05:35-05:42 UTC — real re-check, not assumed clean)
+
+Confirmed the fix actually stopped the storm, not just shipped:
+
+- `cron-branch-overrides.txt` on live `origin/live-defi-rollout` carries the `unified-trading-ci main` row
+  (`git show origin/live-defi-rollout:scripts/dev/cron-branch-overrides.txt`).
+- Live per-slot re-check on the orchestrator VM (`GET /api/state` + a fresh `git fetch`+ahead/behind on every
+  slot's own `unified-trading-ci` clone, run twice ~2 min apart) found **zero NEW divergence** after the fix
+  landed: every slot that was still stuck on the stale noise SHA (`403c921...`) at first check either
+  self-healed via AO's own `heal_dead_slot_branch_quarantine` between the two checks (slot 10) or was fixed by
+  this session's own reconciliation (see below); a re-check of all 14 previously-diverged slots ~2 min later
+  showed all still clean (`0 ahead / 0 behind`, `head=c0d10ba6cfe4` = `origin/main` tip) — no re-divergence.
+- Last hour of `#agent-orchestrator-alerts` (`slack-read-channel.py agent-orchestrator-alerts 1`, re-pulled at
+  `05:41:18Z`): one ambiguous post-fix entry — slot-8 `DIVERGED ahead=3 behind=1` at `05:37Z` — but a direct
+  git check of slot 8 taken within ~1 min of that alert (and again 5 min later) showed it clean both times;
+  most likely the `slot-git-status-report.sh` reporter (fires `:02/:07/:12…` past the hour) caught a
+  transitional moment right as AO's heal cleared it, not a genuine new divergence. No `worktree NOT on
+  live-defi-rollout → spawns BLOCKED (FM5/FM7)` page (the actual autospawn-failure page shape from the
+  original incident) appears anywhere after `05:31:22 UTC` in the pulled window.
+- **Verdict: propagated and holding.** Not 100%-instantaneous (a few minutes of tail-end noise from
+  in-flight cron/heal cycles that started before the fix landed), but no evidence of continued re-divergence.
+
+## Idle-slot reconciliation (operator-directed, `ao-watchdog/SKILL.md` § 3g)
+
+Per-slot liveness (`GET /api/state` status + a `tmux list-sessions` cross-check, both fresh) then, for
+confirmed-idle slots only, a **verified** fast-forward-only realign (never blind): confirmed the slot's
+`unified-trading-ci` HEAD SHA exactly matched a `wip-preserve/slot-<N>-unified-trading-ci-diverged-*` ref
+already minted for THAT slot by AO's own auto-heal (`git ls-remote` lookup, not assumed) before discarding
+the local pointer, then `git fetch origin main && git checkout -B main origin/main` — the same recovery
+`heal_dead_slot_branch_quarantine` itself performs.
+
+- **Reconciled by me** (12 slots — idle or killed, zero live tmux session, dirty=false, HEAD matched the
+  known noise SHA `403c921...` exactly, preserve ref verified before touching): **4, 5, 15, 28, 29, 30, 31**
+  (status `idle`) and **11, 19, 23, 32, 33** (status `killed`, no live tmux session). All now `0 ahead / 0
+  behind` against `origin/main`, re-verified clean ~2 min later.
+- **Self-healed-via-AO before I reached it**: **slot 10** — showed `head=c0d10ba...` (already == `origin/main`)
+  on my second pass despite being `killed`/idle with no tmux session; AO's own heal cycle (likely triggered by
+  an autospawn attempt against the killed slot) fixed it independently in the ~2-3 min between my two checks.
+  My script correctly skipped it (head no longer matched the expected pre-fix noise SHA) rather than touching
+  an already-clean repo.
+- **Already clean, no divergence ever reached them or already resolved by another actor**: slots 6, 8, 13, 20,
+  24, 25 — `0/0` at first check. Slot 6 specifically carries a manually-named
+  `wip-preserve/slot-6-unified-trading-ci-stale-main-20260817` ref (not AO's own auto-heal naming pattern),
+  suggesting another session/agent already reconciled it before this check — left as-is, not re-touched.
+- **Still-live-left-alone (per policy — don't touch a live slot's checkout out of band)**: slots **1, 2, 3, 7,
+  9, 12, 14, 16, 17, 18, 21, 22, 26, 27** — all showed `slot_status: working` (or `stale` for slot 2, which
+  still carries an in-flight `current_task`) with a real dispatched task at check time, and most still carry
+  the stale noise SHA in their `unified-trading-ci` clone (harmless — nothing in their current task touches
+  that repo). Deliberately not reconciled: these workers were spawned *before* the cron re-diverged their
+  checkout mid-task, and touching a live session's clone out of band risks exactly the shared-index/collision
+  class this workspace's own multi-agent-safety rules exist to prevent. Their own next
+  respawn/resume will run `check_slot_branch_state` fresh and heal cleanly now that the cron is fixed — no
+  action needed unless one of them is still showing stale content days from now (would itself be a new,
+  separate finding).
+- **Genuinely needs operator input**: none. Every diverged slot found was either already self-healing,
+  reconciled with a verified-safe realign, or correctly left for its live worker.
 
 ## Left open — recommend as follow-up, not blocking this fix
 
@@ -133,9 +188,12 @@ fleet without further intervention — self-healing, not something this doc's to
 - [x] [SCRIPT] P1. Add `unified-trading-ci main` to `scripts/dev/cron-branch-overrides.txt` so
       `slot-cron-ff-pull.sh` stops defaulting this repo to `live-defi-rollout`. Repo: unified-trading-pm. —
       unified-trading-pm (this session, quickmerge pending).
-- [ ] [ADMIN] P2. After the fix has propagated (one cron cycle + one autospawn heal cycle, ~10-15 min), verify
-      no NEW `wip-preserve/slot-*-unified-trading-ci-*` branches appear on GitHub and the `#agent-orchestrator-alerts`
-      quarantine pages for this repo have stopped. Repo: unified-trading-ci (verification only, no code).
+- [x] [ADMIN] P2. After the fix has propagated, verify no NEW `wip-preserve/slot-*-unified-trading-ci-*`
+      branches appear on GitHub and the `#agent-orchestrator-alerts` quarantine pages for this repo have
+      stopped. Repo: unified-trading-ci — **verified 2026-08-17 ~05:35-05:42 UTC**: no re-divergence on any of
+      14 re-checked slots ~2 min apart, no new FM5/FM7 autospawn-failure page after `05:31:22 UTC`; see
+      "Verification" section above. Also reconciled the 12 idle/killed slots still carrying pre-fix stale
+      content (see "Idle-slot reconciliation" section) per operator direction.
 - [ ] [SCRIPT] P2. Add a CI/QG check asserting every `workspace-manifest.json` repo with
       `integration_branch != live-defi-rollout` has a matching row in `scripts/dev/cron-branch-overrides.txt`
       (mirrors agent-orchestrator's existing `test_branch_state_integration_branch_matches_manifest` pattern for
@@ -150,4 +208,11 @@ fleet without further intervention — self-healing, not something this doc's to
   32 distinct slots, 137 matching activity rows), local reflog inspection of this slot's own
   `unified-trading-ci` clone (7× `merge origin/live-defi-rollout: Fast-forward` onto local `main`,
   2026-08-13→2026-08-17), and direct inspection of all three branch-resolution registries. Shipped the
-  one-line data fix to `cron-branch-overrides.txt`.
+  one-line data fix to `cron-branch-overrides.txt` (`unified-trading-pm@2b3601a545`) + this issue doc
+  (`unified-trading-pm@853926e097`).
+- **2026-08-17 (slot-5, interactive, follow-up per operator direction)**: re-verified propagation with fresh
+  live measurements (not assumed) — no re-divergence across 14 re-checked slots, no new autospawn-failure
+  page post-fix. Reconciled 12 idle/killed slots per `ao-watchdog/SKILL.md` § 3g (liveness-gated,
+  preserve-ref-verified realign); 1 slot (10) self-healed independently before reconciliation reached it; 14
+  live/working slots deliberately left for their own workers. See "Verification" and "Idle-slot
+  reconciliation" sections above for full detail.
