@@ -167,15 +167,16 @@ source: >-
       | OKX-FUTURES | FAIL (unreachable under suffix) / PASS | FAIL — excluded from perp loop | FAIL (venue-string) / FAIL |
       | OKX-SPOT | FAIL (unreachable under suffix) / PASS | PASS (spot loop, vocab caveat) | FAIL (venue-string) / FAIL |
       | OKX-SWAP | FAIL / PASS | FAIL — excluded from perp loop | FAIL (self-mislabels FUTURES/SPOT) / FAIL |
-- [ ] [BACKEND] P0. **Gap: CEFI live position-read dispatch is broken for 9/12 major venues** —
+- [x] ✅ [BACKEND] P0. **Gap: CEFI live position-read dispatch is broken for 9/12 major venues** —
       `position_interface/factory.py::_get_cefi_adapter`'s venue-match statement only recognizes
       `binance`/`binance_futures`/`binance_spot` plus bare `bybit`/`okx`/`deribit`/`hyperliquid` — every canonical
       dash-suffixed BYBIT-SPOT/OKX-* token, plus all of COINBASE/KRAKEN, raise an unhandled `ValueError` that
       `ReconciliationEngine` silently swallows (per-position `except ValueError: continue`). Escalated + full
       detail: `plans/active/issues/cefi_live_venue_string_dispatch_broken_2026_08_16.md`. Done-when: all 12
       venues resolve to a real adapter under their canonical dash-form venue string, with a regression test using
-      dash-form tokens (existing test suite only covers bare lowercase forms).
-- [ ] [BACKEND] P0. **Gap: CEFI live order-placement dispatch is broken for 9/12 major venues, same root
+      dash-form tokens (existing test suite only covers bare lowercase forms). **Fixed —
+      `strategy-service@9027c2f5a9`**, full detail + tests in the linked issue doc's now-closed P0 todo.
+- [x] ✅ [BACKEND] P0. **Gap: CEFI live order-placement dispatch is broken for 9/12 major venues, same root
       cause as the position gap above** — `execution_service/trade_execution/factory.py`'s `CCXT_VENUES` set
       only recognizes bare venue base names, but callers pass the canonical dash-suffixed string, so
       `get_order_adapter` raises `ValueError: Unsupported venue` for everything except BYBIT and the two
@@ -184,8 +185,10 @@ source: >-
       `plans/active/issues/cefi_live_venue_string_dispatch_broken_2026_08_16.md`. Done-when: all 12 venues can
       place a live order under their canonical venue string; a shared venue-normalization helper is the preferred
       fix over patching both dispatch tables independently, since the same disease will recur at the next call
-      site otherwise.
-- [ ] [BACKEND] P0. **Gap: order cancel/amend are fake-success stubs for every CEFI venue** —
+      site otherwise. **Fixed — `execution-service@fcc6bbcc2c`**, full detail + tests in the linked issue doc's
+      now-closed P0 todo. The shared-normalization-helper preference is tracked as that doc's own open P1
+      follow-up, not done as part of this fix (each factory got its own local fix).
+- [x] ✅ [BACKEND] P0. **Gap: order cancel/amend are fake-success stubs for every CEFI venue** —
       `execution_service/api/manual_instruction_api.py`'s `/cancel` and `/amend` endpoints log an event and
       return a hardcoded `{"status":"CANCELLED"}`/`{"status":"AMENDED"}` without ever calling any exchange
       adapter; `amend` has zero real implementation anywhere in the codebase. A caller cannot distinguish "the
@@ -195,7 +198,10 @@ source: >-
       calls the real per-venue adapter's `cancel_order` (already genuinely implemented, just unreachable) and
       reports its real result; `amend` gets a real implementation or is explicitly documented as unsupported by
       every underlying venue API (verify per-venue before assuming) with the endpoint failing loud instead of
-      lying.
+      lying. **Fixed — `/cancel`: `execution-service@0cb7c767ba`; `/amend`: `execution-service@b8d225615b`**
+      (explicit refusal, not a real per-venue amend — CCXT's `editOrder=True` flag doesn't confirm true
+      exchange-native atomicity per venue; that verification is the linked issue doc's own open P2 follow-up).
+      Full detail + tests in the linked issue doc, both its P0s and its P1 now closed.
 - [ ] [BACKEND] P1. **Gap: `LIQUIDATION_CAPTURE` has zero CEFI archetype slot** — wired exclusively to DeFi
       protocols (Aave/Uniswap, `archetype_slots_defi.py:348-350`) despite 5 CEFI venues (BINANCE-FUTURES, BYBIT,
       COINBASE-FUTURES, KRAKEN-FUTURES, OKX-SWAP) declaring `liquidations` data with this as their only declared
