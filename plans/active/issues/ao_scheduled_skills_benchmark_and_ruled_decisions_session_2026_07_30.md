@@ -43,14 +43,7 @@ source: ["2026-07-30 AO scheduled-skills benchmark + ruled-decisions execution s
 resolved_by:
 locked_by:
 depends_on: []
-context_scope:
-  [
-    /cursor-configs/skills/plan-reconcile/SKILL.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /agents/na_eligibility_auditor.md,
-    /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
-    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
-  ]
+context_scope: [/cursor-configs/skills/plan-reconcile/SKILL.md, /cursor-configs/skills/na-eligibility-audit/SKILL.md, /agents/na_eligibility_auditor.md, /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md, /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md]
 ---
 
 # 2026-07-30 mega-session status ledger
@@ -418,3 +411,4 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   soft/low-value internal benchmark re-run asks (`/plan-reconcile` solo re-run, `/na-eligibility-audit` steady-state
   re-run), a PM-checkout-staleness follow-up gated on reading one scheduled skill's STEP 0, and a benchmark-artifact
   update gated on the other two landing first — none independently worker-executable as a bounded outcome.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

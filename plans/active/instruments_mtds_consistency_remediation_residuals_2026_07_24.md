@@ -67,15 +67,7 @@ source:
     "plans/active/issues/plan_line_cap_remediation_2026_07_23.md",
   ]
 drift_direction: advance-code
-context_scope:
-  [
-    /plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/02-data/pipeline-mode-partition.md,
-    e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py,
-    market-tick-data-service/market_tick_data_service/scripts/populate_v9_index_columns_inplace.py,
-    /codex/02-data/availability-manifest-and-data-status.md,
-  ]
+context_scope: [/plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/02-data/pipeline-mode-partition.md, e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py, market-tick-data-service/market_tick_data_service/scripts/populate_v9_index_columns_inplace.py, /codex/02-data/availability-manifest-and-data-status.md]
 ---
 
 # Instruments <-> MTDS F1-N9 consistency remediation -- residual continuation
@@ -997,3 +989,4 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
   `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` with the correct scoped ADD+REMOVE swap design (mirrors the
   sports K1K2 precedent) rather than risk a rushed live write against a 1h-estimated task that is actually a multi-day
   migration. No live changes made.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

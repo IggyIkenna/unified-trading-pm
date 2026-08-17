@@ -80,14 +80,7 @@ source: >-
   `/ag-closeout-audit cross-cutting` run 2026-08-06 (ag_closeout_auditor scheduled worker, dispatch `agt-681f2d`, slot
   6). Phase 0 via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (86 members, 6 covering docs, 6
   never-cited). Phase 1 Workflow (6 agents) classified all 6 `exclude_cross_cutting`; 2 fixed directly, 4 parked here.
-context_scope:
-  [
-    /plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md,
-    /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
-    /plans/archive/2026_08/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md,
-    /plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-  ]
+context_scope: [/plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md, /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md, /plans/archive/2026_08/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md, /plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md, /cursor-configs/skills/ag-closeout-audit/SKILL.md]
 ---
 
 # Parked findings — 2026-08-06 `/ag-closeout-audit cross-cutting` run
@@ -299,3 +292,4 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
   open findings (1/2/3/5) are all cross-tranche `asset_group` retag handoffs to `ui`/`infrastructure`/`ci`, explicitly
   scoped "owning-tranche fix, leave to X tranche's own audit" -- not this tranche's write by construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

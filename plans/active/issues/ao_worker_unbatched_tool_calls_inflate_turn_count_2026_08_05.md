@@ -40,14 +40,7 @@ source: ["interactive session, cost-per-task investigation, transcript sample vi
 drift_direction: advance-process
 estimate_class: research
 depends_on: []
-context_scope:
-  [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    agents/worker.md,
-    cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
-    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
-  ]
+context_scope: [/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, agents/worker.md, cursor-configs/SUB_AGENT_MANDATORY_RULES.md, /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md, /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md]
 ---
 
 # AO workers issuing independent tool calls one-per-turn instead of batching — measured, real
@@ -202,3 +195,4 @@ them"), but the instruction is not being followed in practice, at least in this 
   this sweep treats as a judgment call, not a mandate, elsewhere in this tranche — no committed threshold or mechanism,
   a genuine design fork. Items 1-2 already correctly executed + closed via
   `ao_satellite_ao_dispatch_batch7_2026_08_06.md`.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

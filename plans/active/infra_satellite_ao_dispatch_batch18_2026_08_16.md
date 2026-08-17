@@ -37,17 +37,7 @@ effort: medium
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py,
-    deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py,
-    deployment-service/deployment_service/data_pipeline_monitors/meta_targets.py,
-    deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
-    deployment-service/scripts/recovery/_durable_state.py,
-    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
-  ]
+context_scope: [deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py, deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py, deployment-service/deployment_service/data_pipeline_monitors/meta_targets.py, deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py, deployment-service/deployment_service/data_pipeline_monitors/escalation.py, deployment-service/scripts/recovery/_durable_state.py, /plans/archive/2026_08/revocation_arming_2026_08_14.md, /plans/active/alert_driven_dependency_revocation_2026_08_12.md]
 supersedes:
 superseded_by:
 depends_on: []
@@ -127,3 +117,7 @@ Verdict: clear on all 3 items — proceed.
       (already shipped) is what makes `release()` reachable for FLEET_HALT identities at all; this todo assumes that
       fix is live. Needs real tests (this is pause/resume behavior on production scheduler jobs, not a nicety) — mirror
       the existing `_pause_schedulers` test shapes in `tests/unit/test_revocation_actuator.py`. Repo: deployment-service.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)

@@ -38,14 +38,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-context_scope:
-  [
-    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
-    /plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md,
-  ]
+context_scope: [/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md, /plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md]
 source:
   [
     "operator session 2026-07-31 — 'check and see which are tracked and which are not tracked and update the tracker doc
@@ -214,3 +207,4 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   2026-08-06 operator ruling specifically chose opportunistic-only over a bulk pass to avoid a 23-file collision
   magnet). A single-item doc whose only content is an anti-batch instruction cannot be satellite-extracted without
   violating the instruction itself.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

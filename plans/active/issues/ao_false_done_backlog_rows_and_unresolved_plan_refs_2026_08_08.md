@@ -53,13 +53,7 @@ source: >-
   Operator-dispatched diagnosis of "whats overloading AO its crashing" (2026-08-08). The overload premise did not hold
   (load 0.69/8 cores, 25.8 GB of 31 GB free, zero OOM kills, NRestarts=0); this audit unit was one of the real defects
   the diagnosis surfaced underneath it.
-context_scope:
-  [
-    /codex/12-agent-workflow/commit-push-flip-rule.md,
-    agent-orchestrator/scripts/orchestrator/audit_false_done.py,
-    agent-orchestrator/scripts/orchestrator/audit_cron_notify.py,
-    agent-orchestrator/server/routes/backlog.py,
-  ]
+context_scope: [/codex/12-agent-workflow/commit-push-flip-rule.md, agent-orchestrator/scripts/orchestrator/audit_false_done.py, agent-orchestrator/scripts/orchestrator/audit_cron_notify.py, agent-orchestrator/server/routes/backlog.py]
 ---
 
 # `audit-false-done` standing breach — 14 false-done rows + 1,013 unresolved plan_refs
@@ -533,3 +527,4 @@ plan + verifying the `done_sha`, never from the row's status alone.
   actually landed in this doc's own frontmatter (still `NA` as of this read) — but this is now moot, since both real
   items are already covered elsewhere; re-flipping would be a pointless duplicate dispatch against work with nothing
   left to do. Not re-flipping.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

@@ -49,14 +49,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on:
-context_scope:
-  [
-    /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
-    /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
-    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
-    agent-orchestrator/server/dispatch.py,
-  ]
+context_scope: [/plans/epics/escalation_and_disaster_recovery_master.md, /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md, /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md, /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md, agent-orchestrator/server/dispatch.py]
 source:
   - "ao_dispatch_hardening_2026_07_16 Deferred tables (2026-07-16 + 2026-07-17), at its archival. Only the items with NO
     other home are carried here; the rest cite their existing owner and are deliberately not duplicated."
@@ -256,3 +249,4 @@ source:
   session's scope. This is a recommendation + spec extraction only. The todo's checkbox stays `- [ ]` since the actual
   UI/endpoint work remains undone; only the "is this still blocked" verdict changed, from blocked-upstream-design to
   ready-to-dispatch.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

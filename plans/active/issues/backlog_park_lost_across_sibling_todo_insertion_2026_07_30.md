@@ -39,12 +39,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
-    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-  ]
+context_scope: [/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md, /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md, agent-orchestrator/server/regen_backlog_from_plan.py]
 ---
 
 # Backlog park lost across a sibling-todo plan edit — 2026-07-30
@@ -173,3 +168,4 @@ not the dispatch-tooling gap). Suggested next steps:
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
   round11. Sole open item ([BACKEND] P3, whether to build a park-id-change alerting surface at all) remains an
   undecided open question with no stated done-when.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

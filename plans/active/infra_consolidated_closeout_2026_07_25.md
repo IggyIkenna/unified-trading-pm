@@ -40,14 +40,7 @@ assigned_role: infra
 drift_direction: none
 locked_by:
 locked_since:
-context_scope:
-  [
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /codex/06-coding-standards/quality-gates.md,
-    /codex/11-project-management/,
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
-  ]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /codex/06-coding-standards/quality-gates.md, /codex/11-project-management/, /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md]
 supersedes:
 superseded_by:
 depends_on: []
@@ -557,3 +550,4 @@ not data-pipeline).
   confirmed already registered above (2026-07-27 entry) with proper `[text](path)` links, not bare filenames — no edit
   needed there.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

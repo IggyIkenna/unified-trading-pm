@@ -51,15 +51,7 @@ source:
     extraction 2026-07-24)",
   ]
 drift_direction: advance-code
-context_scope:
-  [
-    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/02-data/honest-coverage-model.md,
-    instruments-service/scripts/build_instrument_catalogue.py,
-    instruments-service/scripts/enumerate_expected_universe.py,
-    instruments-service/scripts/migrate_instruments_store_v9.py,
-  ]
+context_scope: [/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md, /codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/honest-coverage-model.md, instruments-service/scripts/build_instrument_catalogue.py, instruments-service/scripts/enumerate_expected_universe.py, instruments-service/scripts/migrate_instruments_store_v9.py]
 ---
 
 # IS catalogue G1-root audit log
@@ -438,3 +430,4 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
   record; every open todo is gated (G1.run on the IS backfill + UAC accuracy + v9; G1.run-prediction on another plan's
   loader wiring; G1.run-full-history explicitly deferred pending the operator's already-approved-but-not-yet-executed
   dedicated VM-launch pass) -- consistent with 2026-08-02/08-06 verdicts.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

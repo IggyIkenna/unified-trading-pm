@@ -50,6 +50,7 @@ execution_scope: local-only
 priority: P1
 drift_direction: advance-code
 depends_on: []
+context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/dispatch.py, agent-orchestrator/tests/test_human_fleet_endpoints.py, /codex/04-architecture/agent-orchestrator-worker-liveness.md]
 ---
 
 # Review slot hijacked by the human-claim routes' missing `human_slot_ids()` guard
@@ -118,3 +119,4 @@ full existing `test_human_fleet_endpoints.py` (21 passed) and `test_dispatch_rev
   ordinary task. Root-caused to `server/routes/slots_worker.py`'s `human_claim`/`human_claim_check` missing the
   `human_slot_ids()` guard their siblings already have. Fix implemented + tested (diff left uncommitted per this
   session's read-only-live/code-fix-only scope) — see "Fix" section above.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

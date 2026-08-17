@@ -60,15 +60,7 @@ source:
   Drift orphan-cleanup task, 2026-07-16 — discovered via `rg -n -i 'drift|pacifica'
   unified_api_contracts/internal/architecture_v2/` while tracing why UI's `venue_set_variants` still lists Drift.
 resolved_by:
-context_scope:
-  [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md,
-    unified-api-contracts/unified_api_contracts/internal/architecture_v2/,
-    unified-trading-system-ui/lib/registry/ui-reference-data.json,
-    unified-api-contracts/scripts/generate_ui_reference_data.py,
-    unified-trading-system-ui/lib/architecture-v2/lifecycle.ts,
-  ]
+context_scope: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md, unified-api-contracts/unified_api_contracts/internal/architecture_v2/, unified-trading-system-ui/lib/registry/ui-reference-data.json, unified-api-contracts/scripts/generate_ui_reference_data.py, unified-trading-system-ui/lib/architecture-v2/lifecycle.ts]
 ---
 
 # architecture_v2 strategy-archetype subsystem still has live DRIFT venue references
@@ -270,3 +262,4 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
   (UI registry + its generator), not genuinely multi-domain. Added
   `related: [/plans/active/ui_consolidated_closeout_2026_07_30.md]` alongside the existing defi-closeout link so the
   doc has a path into its new tranche's closeout family (`check_ag_closeout_linkage.py` convention).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

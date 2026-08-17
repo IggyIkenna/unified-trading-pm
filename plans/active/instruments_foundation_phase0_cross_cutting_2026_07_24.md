@@ -45,15 +45,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/instruments_foundation_completeness_2026_06_24.md,
-    /codex/02-data/honest-coverage-model.md,
-    /codex/05-infrastructure/deployment-observability.md,
-    instruments-service/scripts/measure_honest_coverage.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
-    unified-api-contracts/unified_api_contracts/canonical/coverage_exclusions.py,
-  ]
+context_scope: [/plans/active/instruments_foundation_completeness_2026_06_24.md, /codex/02-data/honest-coverage-model.md, /codex/05-infrastructure/deployment-observability.md, instruments-service/scripts/measure_honest_coverage.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py, unified-api-contracts/unified_api_contracts/canonical/coverage_exclusions.py]
 supersedes:
 superseded_by:
 depends_on: []
@@ -572,3 +564,4 @@ wrong).
   open Phase-0 items sit behind GATE 0 (still NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra with genuine
   DESIGN-judgment items (expected-universe oracle venue-truth sourcing decision) that aren't cleanly bounded-outcome. No
   cheat-sheet precedent (IAM/reversible-delete/recurring-finding-job) applies to any open item here.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

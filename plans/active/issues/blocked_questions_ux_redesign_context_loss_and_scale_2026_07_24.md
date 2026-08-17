@@ -39,15 +39,7 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
-context_scope:
-  [
-    /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
-    agent-orchestrator/server/transcript_log.py,
-    agent-orchestrator/server/orm.py,
-    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
-    /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
-  ]
+context_scope: [/plans/epics/escalation_and_disaster_recovery_master.md, /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md, agent-orchestrator/server/transcript_log.py, agent-orchestrator/server/orm.py, /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md, /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md]
 ---
 
 ## The pain, in the operator's own framing
@@ -278,3 +270,4 @@ exists" section together before scoping the workstream.
   the history this correction owes: two `ui_developer` workers were dispatched onto the `[UI] P2` todo (slot-11 and
   slot-27, both 2026-08-08), each declined it as GATED on the backend dependency, and neither caught that the repo was
   wrong.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

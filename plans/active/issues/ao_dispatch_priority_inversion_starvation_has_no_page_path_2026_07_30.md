@@ -72,13 +72,7 @@ depends_on: []
 resolved_by:
 archive_exempt: true # archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
-context_scope:
-  [
-    /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
-    agent-orchestrator/server/dispatch_priority_inversion_watchdog.py,
-    /codex/04-architecture/agent-orchestrator-alerting.md,
-    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
-  ]
+context_scope: [/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md, agent-orchestrator/server/dispatch_priority_inversion_watchdog.py, /codex/04-architecture/agent-orchestrator-alerting.md, /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md]
 ---
 
 # AO dispatch priority-inversion / plan-slot starvation has no page path
@@ -206,3 +200,4 @@ this, each time invisible until someone reads the backlog by hand.
   `archive_exempt: true`. Independently re-verified the routing plan
   (`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`) still carries its own open `[REVIEW] P0` archival todo
   naming this doc — routing still valid, not stale. Consistent with 6+ prior markers.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

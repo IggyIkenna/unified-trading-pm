@@ -51,14 +51,7 @@ source: >-
   /api/backlog` (priority=20) and the live `data/config/backlog.yaml` entry (read-only, root `agent-orchestrator` clone)
   directly (`prereqs.prerequisites: []`), and independently re-verified the time-gate precondition is still unmet
   (~3h45m of the required 24h elapsed).
-context_scope:
-  [
-    /plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md,
-    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
-    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-    agents/RULES.md,
-  ]
+context_scope: [/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md, /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md, /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md, agent-orchestrator/server/regen_backlog_from_plan.py, agents/RULES.md]
 ---
 
 # Backlog regen reverted the manual park on P1.2 — recurrence of a previously-fixed bug class
@@ -198,3 +191,4 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   undecided), matching every prior pass and batch6's independent same-day classification. New 2026-08-09 evidence
   (cross-referenced in this doc, not reclassifying) shows the bug class now spans both the hand-edit AND
   sanctioned-API-park mechanisms — widening the eventual fix's scope, not narrowing today's classification.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

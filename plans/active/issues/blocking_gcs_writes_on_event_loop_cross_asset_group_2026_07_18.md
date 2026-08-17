@@ -36,15 +36,7 @@ depends_on: []
 source: ["three parallel read-only writer audits run after the 2026-07-18 CeFi disk/throughput investigation"]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
-    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
-    unified-trading-library/unified_trading_library/streaming/live_aggregator.py,
-    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
-    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py, market-tick-data-service/market_tick_data_service/live/websocket_runner.py, unified-trading-library/unified_trading_library/streaming/live_aggregator.py, /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md, /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md, market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py]
 ---
 
 # Blocking GCS writes on the event loop — cross-asset-group audit
@@ -233,3 +225,4 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   `quickmerge --agent --files market_tick_data_service/cli/handlers/evm_defi_collectors.py market_tick_data_service/cli/handlers/liquidations_handler.py market_tick_data_service/cli/handlers/liquidation_events_handler.py`,
   then flip this todo to `[x]` + the `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` todo with the shipped
   SHA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

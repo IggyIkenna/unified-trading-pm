@@ -54,15 +54,7 @@ source:
     "plan-hygiene split of instruments_foundation_completeness_2026_06_24.md, 2026-07-24 (operator-approved, see
     plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14)",
   ]
-context_scope:
-  [
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
-    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
-    instruments-service/scripts/build_instrument_catalogue.py,
-    deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
-  ]
+context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md, /codex/02-data/instruments-foundation-and-catalogue-completeness.md, /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md, /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md, instruments-service/scripts/build_instrument_catalogue.py, deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh]
 ---
 
 # Instruments Foundation — tradfi G1→G5 gate execution
@@ -747,3 +739,4 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (status: active) as the live dispatch vehicle -- matching this
   doc's own citation exactly. Todo 4 (residual catalogue-leg purge) stays OPERATOR_QUESTION, not bundled into the
   already-granted 4-leg go-ahead. `assigned_vm` unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

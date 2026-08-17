@@ -59,11 +59,7 @@ resolved_by:
 depends_on: []
 source:
   "infra_health_audit_findings_fix_2026_08_07.md todo 1 (Dedicated zombie sweep) — Cloud-Scheduler-dead-target class"
-context_scope:
-  [
-    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
-    /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
-  ]
+context_scope: [/plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md, /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md]
 ---
 
 # 38 asia-northeast1 (+1 europe-west1) Cloud Scheduler jobs with dead Cloud Run Job targets
@@ -424,3 +420,4 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   `t1-recon/ml/`) or retire the function is a product call, not resolvable by this DIAG-scoped todo alone — filed as
   a new `[OPERATOR]` todo. No deployment-service change shipped this pass; the ml-inference deletion is the only
   live-infra change.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

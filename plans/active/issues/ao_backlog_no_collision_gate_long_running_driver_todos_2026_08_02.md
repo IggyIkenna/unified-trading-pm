@@ -37,14 +37,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md,
-    agents/RULES.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-    agent-orchestrator/server/auto_park.py,
-    /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
-  ]
+context_scope: [/plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md, /agents/RULES.md, agent-orchestrator/server/regen_backlog_from_plan.py, agent-orchestrator/server/auto_park.py, /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md]
 ---
 
 # AO backlog regen has no collision/liveness gate for a todo whose completion depends on a multi-hour external driver -- 2026-08-02
@@ -162,3 +155,4 @@ even if nobody revisits it.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
   round11. Both open items remain genuine build-vs-extend dispatcher-design forks (matching heuristic, state-storage
   choice) per the 2026-08-03 marker's original analysis, still not mechanically specified.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

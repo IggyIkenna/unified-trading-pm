@@ -67,14 +67,7 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
-    /codex/02-data/honest-coverage-model.md,
-    deployment-api/deployment_api/services/data_status/breakdowns_core.py,
-    deployment-api/deployment_api/routes/data_status/_distinct_values.py,
-    unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
-  ]
+context_scope: [/plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md, /codex/02-data/honest-coverage-model.md, deployment-api/deployment_api/services/data_status/breakdowns_core.py, deployment-api/deployment_api/routes/data_status/_distinct_values.py, unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py]
 ---
 
 > **Verification-gap finding, not a confirmed bug — the whole point is we don't yet know.** Every finding in the two
@@ -359,3 +352,4 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole open item is an explicit
   portfolio-cost tradeoff decision (reconciliation cadence for 58 findings: full-trace vs spot-check), not a
   determinable fact. Reaffirmed by 6 prior independent passes.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

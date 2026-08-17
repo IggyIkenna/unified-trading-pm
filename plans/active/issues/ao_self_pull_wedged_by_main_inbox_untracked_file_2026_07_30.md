@@ -47,14 +47,7 @@ sequential: false
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/04-architecture/agent-orchestrator-alerting.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    agent-orchestrator/scripts/ao-self-pull.sh,
-    /agents/main.md,
-    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
-  ]
+context_scope: [/codex/04-architecture/agent-orchestrator-alerting.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, agent-orchestrator/scripts/ao-self-pull.sh, /agents/main.md, /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
 ---
 
 # What I found
@@ -278,3 +271,4 @@ follows correctly — only the webhook config is missing).
   item (set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in `.env.local` on the ROOT orchestrator checkout). Explicit hard
   boundary (`agents/RULES.md` § 1: no worker role may edit root clones) — same item cross-referenced in
   `operator_action_items_consolidated_2026_08_08.md`. 5 prior audits agree; no new facts found.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

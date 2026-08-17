@@ -58,14 +58,7 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1
 assigned_role: data_engineering
 drift_direction: advance-code
-context_scope:
-  [
-    /codex/02-data/honest-coverage-model.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/instruments_foundation_completeness_2026_06_24.md,
-    /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
-  ]
+context_scope: [/codex/02-data/honest-coverage-model.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/active/data_completion_to_100_all_ag_2026_06_21.md, /plans/active/instruments_foundation_completeness_2026_06_24.md, /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md]
 depends_on:
 locked_by:
 locked_since:
@@ -737,3 +730,4 @@ content post-line-cap-split.
   than being itself executable, and several open items remain genuine judgment work (Stage-3 Layer-1 re-measure
   methodology, the systemic unregistered-handler audit's widen-scope addendum) -- consistent with the 2026-08-03
   verdict.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
