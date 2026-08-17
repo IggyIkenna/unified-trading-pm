@@ -247,6 +247,39 @@ and wins** — a disagreement is itself a finding, not a tie to break quietly. D
 coverage-*start-dates* (an interval) — step 13 asks for the achievable *fidelity tier*, a different axis (the
 tradfi sub-agent's pre-audit read conflated these; correct that reading here, don't repeat it).
 
+- [x] [AGENT] P0. ✅ Done 2026-08-17 (operator ruling 2026-08-17, `/plans/epics/system_readiness_master.md` W3) —
+      `unified-api-contracts@d19866d339`. **Land the
+      instrument_type axis on the coverage DENOMINATOR itself** — distinct from the granularity/fidelity-tier item
+      below, which extended the CONCEPT for a different question (what tier is achievable in a cell already known to
+      exist). This item answers which (venue, instrument_type, data_type) cells exist at all. Additive, not a
+      mutation of `VENUE_DATA_TYPE_CAPABILITIES` (same repo-wide-migration reasoning the granularity item already
+      recorded): new module `unified_api_contracts/registry/venue_instrument_type_axis.py` inverts the existing,
+      already-tested G1-ENUM validity combinator (`VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` +
+      `valid_data_types_for_venue_instrument_type`) rather than a fresh hand-authored table — "what the code already
+      encodes," per the operator's seeding instruction. **Measured: 353 → 660 (venue, instrument_type, data_type)
+      triples** (12 (venue, data_type) cells, 3.4%, disclosed as unresolved rather than silently dropped or
+      force-matched — pre-existing G1-ENUM combinator gaps, e.g. FRED's `ohlcv_1d`/`yield_curve` have no covering
+      tradfi instrument_type roster entry). `generate_venue_universe_denominator.py` now reports BOTH — the old
+      2-tuple figure for comparison and the new 3-tuple figure as THE denominator. **Two real over-counting bugs
+      found and fixed while landing this, not fabricated as a clean inversion**: (1) a naive full-roster probe
+      multiplies every sports `odds` cell 5x — `fixture`/`exchange_odds`/`fixed_odds`/`prop` all list `"odds"` in
+      their valid-data_types set, but `market_data_categories.py`'s own comment marks them "future fixture-grain
+      scaffolding... NOT consulted by the real producer," unlike `("sports","odds")` itself (CONFIRMED against
+      1,806,527 real captured rows) — excluded the four scaffolding rows so every real bookmaker cell resolves to
+      exactly `{"odds"}`. (2) a naive DeFi probe over the full cross-protocol instrument_type union leaked unrelated
+      protocols' instrument_types onto each other via `valid_data_types_for_venue_instrument_type`'s own documented
+      "protocol doesn't declare this type → fall back to the global union" fallback (built for a different, forward,
+      use case) — measured live: `AAVE_V3-ETHEREUM` (lending-only) wrongly resolved `oracle_prices` to
+      `PERPETUAL`/`STAKING`/`SPOT_PAIR`/`SOLANA_VAULT` before the fix; narrowed the DeFi roster to each venue's OWN
+      protocol before probing, which also dropped total triples from a garbage 1365 to the correct 660. 10 new unit
+      tests (`tests/unit/test_venue_instrument_type_axis.py`) cover both regressions directly plus the full-registry
+      accounting invariant (every declared pair is either a triple or a disclosed unresolved cell, never silently
+      dropped). Full `quality-gates.sh --no-fix`: ALL QUALITY GATES PASSED (191s), sentinel
+      `8df50774f21bc5e75fc8e72752715acd4a375372` == HEAD at ship time.
+      **Docs still quoting the stale 353 figure, listed not edited per this dispatch's explicit boundary** (other
+      agents reading them this session): `/plans/active/venue_e2e_wiring_2026_08_16.md`,
+      `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`,
+      `/plans/active/nick_ai_platform_readiness_remediation_finalize_2026_08_16.md:113`.
 - [x] [AGENT] P0. ✅ Done 2026-08-16 — `unified-api-contracts@693e823adb`. **Extend `VenueCapabilityRecord` with the
       instrument-type axis + granularity/exceptions fields**, seeded from a reconciliation of the live manifest,
       `VENUE_DATA_TYPE_CAPABILITIES`, and the readiness-contract's own fidelity vocabulary. Built ADDITIVELY rather

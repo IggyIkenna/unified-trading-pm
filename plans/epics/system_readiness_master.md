@@ -183,9 +183,11 @@ The spine. Everything else feeds it.
       entering MTDS are different coverage questions, and coverage may be **better at one granularity and worse at
       another** for the same venue and data type. A single number across granularities hides exactly the fact a
       strategy needs.
-- [ ] [BACKEND] P0. **Land the instrument_type axis on `VenueCapabilityRecord`** — currently absent, which is why the
-      denominator is `(venue, data_type)` 2-tuples while numerators reach 3-tuples. Operator ruling 2026-08-17: land
-      the axis first, then measure once at full granularity. **Blocks every final coverage percentage.**
+- [x] [BACKEND] P0. ✅ Done 2026-08-17 — `unified-api-contracts@d19866d339`. **Land the instrument_type axis on the
+      coverage denominator** — new additive module `venue_instrument_type_axis.py` (inverts the existing G1-ENUM
+      combinator rather than mutating `VenueCapabilityRecord` in place). Denominator re-measured: 353 (venue,
+      data_type) pairs → 660 (venue, instrument_type, data_type) triples, 12 cells (3.4%) disclosed unresolved.
+      Full evidence: `/plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md` § W3.
 - [ ] [BACKEND] P1. **Declare exceptions at the granularity they occur** — venue / instrument_type / data_type, with
       the exception stated rather than implied by absence.
 
