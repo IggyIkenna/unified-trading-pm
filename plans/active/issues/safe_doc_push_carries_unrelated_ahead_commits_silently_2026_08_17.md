@@ -89,10 +89,10 @@ docs push.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Add a pre-push guard to `scripts/dev/safe-doc-push.sh`: before the final push, check for any
+- [x] ✅ [SCRIPT] P2. Add a pre-push guard to `scripts/dev/safe-doc-push.sh`: before the final push, check for any
       local commit ahead of origin that isn't the doc commit(s) this invocation just created; refuse (or warn
       + require an explicit `--i-know-this-carries-other-commits` style override) rather than silently pushing
-      them. Repo: unified-trading-pm.
+      them. Repo: unified-trading-pm. — unified-trading-pm@96b2224e2f
 - [ ] [DOC] P3. Add a one-line warning to `safe-doc-push.sh`'s own header docstring about this exact risk, so a
       future reader auditing the script (not just a QG-checker) sees it without needing this issue doc. Repo:
       unified-trading-pm.
@@ -102,3 +102,16 @@ docs push.
 - **2026-08-17 (slot-1, interactive)**: filed after the live incident described above. Did not attempt the
   fix myself in this session (script-behavior-change to a widely-used shared ship tool warrants its own
   focused session + testing, not a rushed addition while already mid-way through an unrelated task).
+- **2026-08-17 (slot-20, review-dispatched worker)**: shipped todo 1 — `unified-trading-pm@96b2224e2f`. Added a
+  pre-commit `ahead`-detection guard (exit 16, `SDP_ALLOW_UNRELATED_AHEAD=1` override) in the shared-index
+  reconcile branch of `safe-doc-push.sh`; fixed the one bats regression it caused
+  (`test_safe_doc_push_unmerged_retry_resurrection_guard.bats` "a clean checkout with no unmerged paths is
+  unaffected by the guard" — its shared `setup()` left an unpushed archival-rename commit on the local branch,
+  which the new guard correctly now refuses to carry; reset to `origin/live-defi-rollout` instead of the local
+  branch tip to make that test genuinely ahead=0). Also hit and resolved, in-flight, an unrelated live
+  `check_frontmatter_schema.py` corpus-red on `empty_reprobe_disagreement_all_2026_08_17.md` (missing/invalid
+  doc_type/status/asset_group/tags) — a peer session landed a corrected version of that doc while this session's
+  own docs-only attempt to fix the same thing was mid-push via `safe-doc-push.sh`; resolved the resulting merge
+  conflict by taking the peer's (more complete) landed version, no separate commit needed from this session.
+  Todo 2 (P3, header docstring warning) intentionally left open — smaller, independent scope, not required for
+  this task's done_definition.

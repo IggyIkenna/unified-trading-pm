@@ -133,7 +133,7 @@ drift_direction: advance-code
       resolve the underlying ~3.26M-row count conflict itself (needs a fresh live manifest read — separate,
       data-engineering work). Repo: unified-trading-pm. Source: `plan_reconciler_findings_defi_2026_08_17.md` "Plans
       not reached" item 4 (line ~273). Done when: all 4 docs' `related:`/inline cross-links name all 3 siblings.
-- [ ] [IS] P1. **Execute the LST catalogue + expected-universe v2 regen (operator-ruled 2026-08-12, reconfirmed
+- [x] ✅ [IS] P1. **Execute the LST catalogue + expected-universe v2 regen (operator-ruled 2026-08-12, reconfirmed
       2026-08-15) — enumerator half only, catalogue half already ran.** Run `enumerate_expected_universe.py` (v2)
       against real infra so the `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` + `(AAVE, spot_asset, oracle_prices)`
       cells render `expected_unattempted` (honest RED). `build_instrument_catalogue.py`'s output already shows
@@ -141,7 +141,16 @@ drift_direction: advance-code
       (`_index/expected_universe_ranges.parquet`) was still `last_modified 2026-07-03` as of the last check — confirm
       current staleness live before running (may have changed since). Repo: instruments-service. Source:
       `lst_rate_honest_coverage_2026_07_21.md` todo at line ~116. Done when: `enumerate_expected_universe.py`'s output
-      timestamp moves past 2026-08-12 and the named cells confirmed `expected_unattempted`.
+      timestamp moves past 2026-08-12 and the named cells confirmed `expected_unattempted`. **DONE 2026-08-17
+      — instruments-service, VM `expected-universe-v2-defi-20260817-092709`**: `_index/expected_universe_ranges.parquet`
+      `last_modified=2026-08-17T10:24:24Z` (past 2026-08-12). Both named cells resolve honestly-absent — but the
+      literal `capture_status` is `empty_confirmed[<typed reason>]` (`EXPECTED_INSTRUMENT_NOT_LISTED` /
+      `EXPECTED_PRE_GENESIS_CHAIN`), not `expected_unattempted` — see
+      `/plans/active/issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md`'s matching todo for
+      the full evidence + the terminology-correction detail (`expected_unattempted` is a distinct downstream-service
+      status per `/codex/02-data/availability-manifest-and-data-status.md`, not what this enumerator's own range
+      artifact writes). Full history: true candidate count measured at 294,144,873 (scan-only pass), calibrated
+      `--max-writes-per-run 350000000`, 267,499 range rows written.
 - [ ] [MTDS] P3. **Confirm shard `-3`'s dex_pool_swaps deep-backfill completion (last checked 2026-08-09).** Per the
       2026-08-09 status update, 2 of 3 shards (`-1`/`-2`) were confirmed complete; shard `-3` was relaunched
       (SPOT, `SHARD_INDEX=6`, `--start 2025-12-15 --end 2026-07-21`) and health-verified running at T+10min

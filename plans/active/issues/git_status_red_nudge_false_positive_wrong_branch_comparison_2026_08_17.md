@@ -34,6 +34,7 @@ resolved_by:
 locked_by:
 context_scope: []
 depends_on: []
+drift_direction: advance-code
 ---
 
 # GIT STATUS RED nudge false-positives on unified-trading-ci (wrong-branch comparison)

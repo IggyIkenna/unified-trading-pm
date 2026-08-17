@@ -48,6 +48,7 @@ context_scope:
     deployment-ui/src/pages/ArtifactPipeline.tsx,
   ]
 depends_on: []
+drift_direction: advance-code
 ---
 
 # Rollout-ratchet panel todo is mis-scoped [UI]-only — needs a backend counterpart, and overlaps an existing feature
@@ -163,16 +164,25 @@ craft-scoped worker mid-investigation.
       structure). **Not yet installed on the orchestrator VM** — same posture as its qg-baseline sibling installer:
       `[OPERATOR]`-run (writes `/etc/systemd/system`, needs root on `planning`); the first live daily tick is still
       pending. Repo: unified-trading-pm.
-- [ ] [CODE] P2. Wire `ruleset-drift-alert.yml` (the CORRECT workflow — see the correction in "What I found" above;
-      `rules-alignment-agent.yml` was a mis-citation) to ALSO write per-repo verdicts to a new
-      `ruleset_drift_verdicts` Firestore collection (currently Slack-paging only via `notify-slack.yml`). This one
-      CAN be a normal scheduled GitHub Actions workflow (mirror `version-coherence-check.yml`'s Firestore-auth
-      step) — `verify_branch_protection_check_names.py` reads via `GH_TOKEN`/`gh api`, no local checkout needed.
-      Repo: unified-trading-pm.
-- [ ] [CODE] P2. Add a deployment-api route (e.g. `GET /api/rollout-ratchet/overview`) reading both new verdict
-      collections via the existing generic `_verdict_store_reader.py`, mirroring `routes/version_coherence.py`'s
-      shape exactly (read-only proxy, never re-derive the verdict). Repo: deployment-api. Gated on the two todos
-      above (needs real collections to read).
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 (slot-9).** Wired `ruleset-drift-alert.yml` (the CORRECT workflow — see the
+      correction in "What I found" above; `rules-alignment-agent.yml` was a mis-citation) to ALSO write per-repo
+      verdicts to a new `ruleset_drift_verdicts` Firestore collection (currently Slack-paging only via
+      `notify-slack.yml`), additive alongside the existing Slack job. Added `--json` to
+      `verify_branch_protection_check_names.py` (gh-api based, no local sibling-repo checkout needed, so this
+      ships as a normal GH Actions job unlike the `detect_template_drift.py` sibling above); a new
+      `scripts/cicd/write_ruleset_drift_verdicts.py` driver mirroring `write_version_coherence_verdicts.py`'s
+      CAS-write pattern; `RULESET_DRIFT_COLLECTION` constant added to `verdict_store.py`; a Firestore-auth + write
+      step in `ruleset-drift-alert.yml` (mirrors `version-coherence-check.yml`'s auth step); 13 new unit tests
+      (`tests/unit/test_write_ruleset_drift_verdicts.py`, mirrors `test_write_template_drift_verdicts.py`'s
+      structure). Repo: unified-trading-pm.
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 (slot-27).** Added `GET /api/rollout-ratchet/overview` — reads both
+      `template_drift_verdicts` + `ruleset_drift_verdicts` via the existing generic `_verdict_store_reader.py`
+      (added `TEMPLATE_DRIFT_COLLECTION`/`RULESET_DRIFT_COLLECTION` constants there, mirroring
+      `VERSION_COHERENCE_COLLECTION`), mirroring `routes/version_coherence.py`'s shape exactly (read-only proxy,
+      independent per-collection `source` availability flags so a Firestore hiccup on one never blanks the
+      other). New `deployment_api/routes/rollout_ratchet.py`, registered in `main.py`; 5 new unit tests
+      (`tests/unit/test_rollout_ratchet_routes.py`, mirrors `test_change_freeze_routes.py`'s structure).
+      `deployment-api@46e04e0757`. — deployment-api@46e04e0757
 - [ ] [CODE] P2. Decide + implement the "running SHA vs `main` HEAD" comparison — either extend
       `/artifacts/running`'s `RunningResponse` with a `main_head_sha` + diff field, or add a new endpoint. Read
       `plans/active/artifact_pipeline_observability_2026_07_17.md` in full FIRST to avoid duplicating that feature's
@@ -207,3 +217,15 @@ craft-scoped worker mid-investigation.
   gate never confirmed green end-to-end is the repo-wide STEP 5.101 ratchet, which is unrelated to this diff. Once
   RB-8e49b4d2 resolves, a future push should still go through quickmerge normally — this note exists so nobody
   mistakes this SHA for a QG-verified quickmerge landing.
+- **2026-08-17 (slot-9, backend_engineer, orchestrator-dispatched)**: closed the `ruleset-drift-alert.yml` wiring
+  todo — `unified-trading-pm@263bbc59cb`. Pass-1 `quality-gates.sh` initially failed STEP 5.101 again (321 sites
+  > baseline 319), this time on 2 PRE-EXISTING, unrelated sites INSIDE the checker script itself
+  (`scripts/quality_gates/check_no_empty_string_fallback.py:253,462` — verified via `git blame` both are from
+  commit `13f17c203a1`, 2026-07-08, untouched by my diff). Root cause: the checker's own detection regex
+  (`\.get\(["'][\w]+["']\s*,\s*["']["']\)`) matched its own docstring/argparse-description TEXT describing the
+  `.get("key", "")` pattern as if it were a real call site — a self-referential false positive, not a genuine
+  fallback. Fixed with a targeted `# noqa: qg-empty-fallback` on each exact matching line (shipped as a separate
+  commit, `unified-trading-pm@5f532d9a67`→`c65a9d61c7` after a rebase); verified
+  `check_no_empty_string_fallback.py --scope unified-trading-pm` back to 319 (== baseline) before re-running
+  Pass-1 clean. Both commits landed via quickmerge `--agent` (SHA verified ancestor of
+  `origin/live-defi-rollout`).

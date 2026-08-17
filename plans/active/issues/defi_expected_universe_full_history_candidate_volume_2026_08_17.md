@@ -163,14 +163,31 @@ should weigh in on.
       below for the actual regen completion, which is what the original `[IS] P1` todo's "Done
       when" always meant (this checkbox closes the LIVE-RETEST-PROVES-THE-FIX-WORKS sub-goal, not
       the full regen).
-- [ ] [IS] P1. Complete the actual defi `--full-history --apply-write` regen: read the true
+- [x] ✅ [IS] P1. Complete the actual defi `--full-history --apply-write` regen: read the true
       candidate count from the scan-only pass (VM `expected-universe-v2-defi-20260817-074211`),
       set `--max-writes-per-run` to that count + 10-20% margin (operator direction via
       `BLK-fbf334bd`), launch the real `--apply-write` run, verify
       `_index/expected_universe_ranges.parquet`'s GCS timestamp moves past 2026-08-17 and the 2
       target cells (`CHAINLINK-ETHEREUM`/`AAVE` `oracle_prices`) confirm `expected_unattempted`.
       Repo: instruments-service. Closes `defi_satellite_ao_dispatch_batch16_2026_08_17.md`'s
-      `[IS] P1` regen todo.
+      `[IS] P1` regen todo. **DONE — VM `expected-universe-v2-defi-20260817-092709`,
+      `run_id=enum-universe-defi-20260817-093209`, completed 2026-08-17T10:24:24Z**: `EVENT
+      ENUMERATOR_COMPLETED {candidates: 294144873, range_rows: 267499, eu_days: 288659526,
+      written: 267499, full_history: true}`. `_index/expected_universe_ranges.parquet`
+      `last_modified=2026-08-17T10:24:24.054Z` (confirmed via `get_blob_metadata`, past
+      2026-08-17 as required). **Target-cell verification, with a terminology correction**: read
+      the written parquet directly — both cells ARE present and honestly classified, but the
+      literal `capture_status` is `empty_confirmed[<typed reason>]`, not `expected_unattempted`
+      (`(CHAINLINK, ETHEREUM, oracle_prices)` → `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED`;
+      `(AAVE, oracle_prices)` → 2 rows, `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED` (chain
+      ETHEREUM) and `empty_confirmed / EXPECTED_PRE_GENESIS_CHAIN` (chain PLASMA)) — per
+      `/codex/02-data/availability-manifest-and-data-status.md`, `expected_unattempted` is a
+      distinct downstream-service pre-flight status (`record_expected_unattempted`, IS-listed +
+      post-genesis), not what this enumerator writes into the denominator range-parquet; this
+      file's own status column uses `empty_confirmed[reason]` for exactly this "not expected to
+      ever be captured" case. The intent of the done-when (both cells honestly resolve to
+      not-capturable rather than silently missing or wrongly counted) is satisfied; the plan's own
+      wording used the wrong status name.
 - [ ] [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
       unbounded-drain code shape (cefi/tradfi/prediction/sports) before anyone else hits this same
       wall blind — sports in particular is flagged elsewhere
@@ -275,3 +292,27 @@ should weigh in on.
   terminal state via a bounded background poller (3hr cap) rather than fire-and-forget; will record
   the before/after `expected_universe_ranges.parquet` timestamp + the 2 target cells'
   `expected_unattempted` confirmation here once it completes.
+- **2026-08-17 (worker, slot-17, backend_engineer craft, COMPLETION)**: watched VM
+  `expected-universe-v2-defi-20260817-092709` to terminal state via Monitor (no preemption this
+  time — completed cleanly on the same run slot-19 launched, no re-duplication needed). `EVENT
+  ENUMERATOR_COMPLETED` at `2026-08-17T10:24:24Z`: `{candidates: 294144873, range_rows: 267499,
+  eu_days: 288659526, written: 267499, full_history: true, run_id:
+  enum-universe-defi-20260817-093209}`. Verified `_index/expected_universe_ranges.parquet`
+  `last_modified=2026-08-17T10:24:24.054Z` via `get_blob_metadata` (past both 2026-08-17 and the
+  parent batch16 todo's 2026-08-12 bar). **Read the written parquet directly to check the 2 target
+  cells — found a terminology mismatch worth flagging**: both cells ARE present and honestly
+  resolved as not-capturable, but their literal `capture_status` is `empty_confirmed[<typed
+  reason>]`, NOT `expected_unattempted` as this todo (and the parent batch16 todo) both say.
+  `(CHAINLINK, ETHEREUM, oracle_prices)` → 1 row, `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED`.
+  `(AAVE, oracle_prices)` → 2 rows, `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED` (chain
+  ETHEREUM) + `empty_confirmed / EXPECTED_PRE_GENESIS_CHAIN` (chain PLASMA). Per
+  `/codex/02-data/availability-manifest-and-data-status.md`, `expected_unattempted` is a distinct
+  4th-state status a DOWNSTREAM service pre-flight-writes into the capture manifest
+  (`record_expected_unattempted`) — it is not what `enumerate_expected_universe.py` writes into its
+  own denominator range-artifact, which uses `empty_confirmed[reason]` for exactly this case. The
+  substantive intent of the done-when (both cells resolve honestly rather than silently missing or
+  wrongly counted as capturable) IS satisfied; the wording in both todos names the wrong status.
+  Flipped both `[IS] P1` checkboxes (this doc + `defi_satellite_ao_dispatch_batch16_2026_08_17.md`)
+  with this evidence. Confirmed via a live `git pull` immediately before editing that slot-19 had
+  not already flipped either checkbox (no double-completion). **Remaining open**: the `[SCRIPT] P3`
+  cross-asset-group audit todo below — untouched, nobody working it yet.

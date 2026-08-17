@@ -32,7 +32,7 @@ related:
   [
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    /plans/active/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
+    /plans/archive/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/issues/cefi_hl_aster_vm_resource_downsize_2026_08_10.md,
   ]
 created: 2026-08-16
@@ -58,7 +58,7 @@ context_scope:
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/issues/cefi_hl_aster_vm_resource_downsize_2026_08_10.md,
-    /plans/active/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
+    /plans/archive/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
   ]
 ---
 

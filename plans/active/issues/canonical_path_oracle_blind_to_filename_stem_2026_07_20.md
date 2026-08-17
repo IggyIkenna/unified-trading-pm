@@ -547,3 +547,34 @@ eases. Once discovery reaches 20,134/20,134, `--apply-from-report` performs the 
 docstring's safety contract) — not run this session. **Not flipping the backfill checkbox** — the todo's own
 done-when (rows actually re-keyed) is not yet met; the script + partial validated discovery is real progress, not the
 finish line.
+
+### 2026-08-17 (slot-22, data_engineering) — resumed discovery, +2556 rows, then reproduced the SAME shared-host-contention block with root cause identified
+
+Resumed from a fresh scratchpad (slot-19's own `--report` file lives in that session's now-gone scratchpad, not
+committed anywhere durable — this is a repeatable cost of the current design: each session's discovery report is
+ephemeral and progress across sessions can't be reused without a durable, repo-relative report path). Chunk 1
+(`--limit 3000 --workers 6`, `ANALYSIS_MEM_CAP=6G`) completed CLEAN, no kill: verdict distribution `ok_split` 2297 ·
+`phantom_no_object` 557 · `ok_single` 80 · `object_non_canonical` 62 · `content_mismatch` 4 — report now at
+3000/20134. A follow-up multi-iteration background loop (self-checkpointing, 3000-row chunks, memory-gated between
+iterations) got partway into iteration 2 (report advanced 3000 → 5556) before its whole background task was
+externally killed. Three further single-chunk retries at shrinking size (3000/6, 1500/3, 2000/4 workers) were ALSO
+externally killed, report count unchanged at 5556 across all three.
+
+**Root cause identified this session (prior sessions only inferred "host-wide pressure" from `free -h`; this is the
+first direct confirmation)**: `journalctl`/`/dev/shm/resource-watchdog/kills/*.json` show the kills are NOT hitting
+this script's own PID — `slot-3`'s own unbounded script (`finalize_restamp.py`, a DIFFERENT task) was killed by the
+host's `resource-watchdog` twice in the same window for exceeding a 4096MB RSS cap (12.4GB then 12.5GB RSS,
+`KILL #371`/`#372`), and appears to be respawning and re-hitting the same cap in a loop. My own script's PID never
+appears in any `resource-watchdog` kill marker — the kills of MY background tasks are collateral host-wide distress
+from slot-3's repeated 12GB+ spikes, not this script exceeding its own (3-6G) cap. This is a DIFFERENT slot's
+unbounded script, out of this task's scope to fix (`agents/RULES.md` § "Never bulk-kill a peer's process" — and
+slot-3's process wasn't stale, it was actively (re)spawning).
+
+Report is at **5556/20134** (up from 1956 at the last checkpoint), safely on disk in this session's scratchpad.
+**Not flipping the checkbox** — same as every prior session, the done-when is not met. **Escalating the
+recommendation**: this is now the SECOND session (slot-19, then slot-22) to hit this exact wall via the in-session
+chunked-retry approach, with an identified external cause (a different slot's runaway process) rather than this
+script's own footprint — a THIRD data_engineering worker retrying the identical approach is unlikely to fare
+differently while slot-3's issue persists. The dedicated-VM dispatch path (`/codex/05-infrastructure/vm-launcher-
+runbook.md`) is now the recommended path over further in-session chunking, or wait until slot-3's runaway script is
+independently resolved.

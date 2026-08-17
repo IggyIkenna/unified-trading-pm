@@ -184,12 +184,59 @@ measurement" rule.
       tests in `tests/unit/test_manual_amend_explicit_refusal.py`. 8595 passed/21 skipped, full
       `quality-gates.sh --no-fix` green before commit. **New follow-up todo below** for the deferred per-venue
       verification, so this doesn't silently stay "good enough forever."
-- [ ] [BACKEND] P2. **Verify true native-atomic `editOrder` support per venue against each exchange's own API
+- [x] ✅ [BACKEND] P2. **Verify true native-atomic `editOrder` support per venue against each exchange's own API
       docs (not just CCXT's `has['editOrder']` flag), then wire a real amend for confirmed-atomic venues** —
       follow-up from the P1 above, which deliberately chose blanket refusal over guessing at atomicity. Done-when:
       a cited per-venue verdict (native-atomic / cancel+replace-emulated / unsupported) for each of the 12
       venues, with real amend wired for any confirmed-atomic ones and the explicit-refusal path kept for the
-      rest.
+      rest. **Fixed — `execution-service@eb0b0771d2`.** Per-venue verdicts, each checked against the exchange's
+      own official API docs and (where available) the vendored CCXT source's actual `edit_order()` implementation
+      (not just the `has` flag, which the P1 finding had already flagged as unreliable — and this session found a
+      concrete case of that: CCXT's `has['editOrder']` is actually `False` for ASTER, contradicting the P1
+      Progress Log's claim that "every one reports True" for all 12 — likely CCXT version drift since that check,
+      or an imprecise original claim; corrected here since I measured it directly):
+      - **BINANCE-SPOT**: native-atomic (cancel-replace variant) — `cancelReplace` is a single atomic exchange
+        call (no client-side race) but returns a NEW order ID, not an in-place modify.
+        [docs](https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#cancel-an-existing-order-and-send-a-new-order-trade)
+      - **BINANCE-FUTURES**: native-atomic, in-place (`PUT /fapi/v1/order` Modify Order, order ID retained).
+        [docs](https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Modify-Order)
+      - **BYBIT-SPOT / BYBIT-FUTURES**: native-atomic, in-place (`POST /v5/order/amend`, same endpoint across
+        categories). [docs](https://bybit-exchange.github.io/docs/v5/order/amend-order)
+      - **OKX-SPOT / OKX-FUTURES**: native-atomic, in-place (`POST /api/v5/trade/amend-order`, all instrument
+        types). [docs](https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-amend-order)
+      - **COINBASE-SPOT**: native-atomic, in-place (`POST /brokerage/orders/edit`, order_id retained).
+        [docs](https://docs.cloud.coinbase.com/advanced-trade/docs/apis/edit-order)
+      - **KRAKEN-SPOT**: native-atomic, in-place — Kraken's own "Atomic Amends" (`POST /0/private/AmendOrder`,
+        order identifiers unchanged, queue priority maintained where possible).
+        [docs](https://docs.kraken.com/api/docs/rest-api/edit-order/)
+      - **KRAKEN-FUTURES**: native-atomic endpoint exists (`POST .../derivatives/api/v3/editorder`,
+        [docs](https://docs.kraken.com/api-reference/order-management/edit-order)) but this adapter doesn't
+        reach it — see the new follow-up issue filed below.
+      - **HYPERLIQUID**: native-atomic, in-place (single signed L1 `modify` exchange action).
+        [docs](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#modify-multiple-orders)
+      - **UPBIT**: native-atomic (cancel-replace variant) — Upbit's own "Cancel and New Order" is a single atomic
+        exchange call, but returns a new order UUID, not an in-place modify.
+        [docs](https://global-docs.upbit.com/reference/cancel-and-new-order)
+      - **ASTER**: unsupported — confirmed no native amend endpoint exists at all (only place/cancel/query),
+        both via direct WebFetch of Aster's own official API docs and via CCXT's `has['editOrder'] == False` for
+        this venue specifically (the one venue where that flag is actually reliably negative). Kept the P1's
+        explicit-refusal path, now venue-specific (`UnsupportedOperationError`) instead of blanket.
+
+      Wired real `amend_order()` for all 11 confirmed-atomic venues through the same chain the P0 cancel fix
+      built (`BaseCLOBAdapter` → per-venue adapter → `OrderAdapter` → `OrderAdapterMatchingEngine` →
+      `ExecutionOrchestrator` → `/amend`), reusing a new shared `ccxt_amend_order()` helper in `ccxt_common.py`
+      for the 6 venues whose CCXT `edit_order()` needs a `fetch_order()` first (to supply the `type`/`side` CCXT's
+      signature requires but `AmendInstructionRequest` doesn't carry). `/amend` now returns `AMENDED` with the
+      real post-amend order state, `AMEND_FAILED` with the real adapter error, or `501` only for a genuinely
+      unsupported venue (Aster) or an unsupported matching engine — never a hardcoded status. Restricted to
+      single-order instructions (409 if an instruction has >1 open order — ambiguous which order a single
+      `new_quantity`/`new_price` would target). 7 new tests in `tests/unit/test_manual_amend_real_wiring.py`
+      (replaces the now-stale `test_manual_amend_explicit_refusal.py`), full `quality-gates.sh` green before
+      commit. **New follow-up issue filed** (out of this todo's scope, found during the research):
+      `kraken_futures_wrong_rest_base_url_2026_08_17.md` — `KrakenCeFiAdapter(futures=True)` routes every
+      private call (place/cancel/amend) through the Kraken **Spot** REST API, not the separate Kraken Futures
+      surface; KRAKEN-FUTURES trading is non-functional through this adapter today (fails loud, not a fake
+      success, so lower urgency than the stub bugs this doc chases, but still a real P0 gap).
 - [ ] [BACKEND] P2. **Audit whether any downstream state (order-tracking, position ledger) would show a stale
       "cancelled" order that is still actually live at the exchange** if this were ever hit before the fix lands
       — bounds the real-world blast radius the same way the withdraw-stub finding's equivalent todo did.
@@ -197,6 +244,21 @@ measurement" rule.
 
 ## Progress Log
 
+- **2026-08-17 (new session)**: Fixed the `/amend` P2 per-venue atomicity verification — `execution-service@eb0b0771d2`.
+  Checked all 12 venues against each exchange's own official API docs (WebSearch/WebFetch) plus the vendored
+  CCXT source's actual `edit_order()` bodies (not just the `has` flag). 11 of 12 confirmed native-atomic (some
+  in-place/same-order-id, some atomic-cancel-replace/new-order-id — both close the race-condition risk this
+  finding is actually about); only ASTER has none. Also corrected a small factual drift from the P1 Progress Log
+  entry below: CCXT's `has['editOrder']` is NOT `True` for all 12 as previously stated — it's `False` for ASTER
+  specifically in the currently-vendored CCXT version, confirmed by direct `.has` introspection, not just reading
+  the flag's docstring. Wired real per-venue `amend_order()` for the 11 confirmed venues through the same chain
+  the P0 cancel fix built, reusing a new shared `ccxt_amend_order()` helper for the 6 CCXT venues needing a
+  `fetch_order()`-then-`edit_order()` two-step (to supply `type`/`side` the request schema doesn't carry).
+  Restricted `/amend` to single-order instructions (409 otherwise — ambiguous target). 7 new tests, full QG
+  green. Found and filed a new, separate P0 issue during this work rather than absorbing it as unplanned scope:
+  `kraken_futures_wrong_rest_base_url_2026_08_17.md` (`KrakenCeFiAdapter(futures=True)` silently routes every
+  private call through the Kraken Spot REST API instead of the real Kraken Futures surface). Only the P2
+  downstream-state-audit todo remains open on this doc.
 - **2026-08-17 (even later still, same session)**: Fixed the `/amend` P1 — `execution-service@b8d225615b`.
   Chose explicit refusal (501) over an unverified per-venue modify-order call: CCXT's `editOrder=True` flag is
   present for all 12 venues but doesn't distinguish true exchange-native atomic amend from CCXT's own

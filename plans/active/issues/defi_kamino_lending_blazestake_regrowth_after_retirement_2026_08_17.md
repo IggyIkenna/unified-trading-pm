@@ -37,8 +37,8 @@ created: "2026-08-17"
 author: slot-4 (backend_engineer, adopted review craft for this dispatch)
 last_updated: "2026-08-17"
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: research
 estimate_baseline_ai_days: 0.3
@@ -123,3 +123,17 @@ P0 POOL-recurrence work already in flight.
   `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize.md` todo 1's live axis re-check. Not
   investigated further — out of scope for the reconciliation task, small enough to defer without blocking anything
   higher-priority.
+- **na-eligibility-audit 2026-08-17 (defi tranche, dispatch agt-f4fef7) [body-hash-pending]**: RECLASSIFY, whole-doc,
+  conflict-clear — sole open todo (`[DIAG] P3`, root-cause the small regrowth) is a bounded, worker-determinable
+  diagnostic (sample the regrown rows' underlying GCS objects directly, compare against the two already-confirmed
+  recurrence mechanisms) with no operator judgment call gating it. Conflict-check against the 4 required surfaces
+  clear: (a) `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize.md`'s 2 open `[REVIEW]` todos are
+  about reconciling/archiving that plan, not this investigation — and that finalize doc's own text (line ~107-110)
+  explicitly says this finding was "not previously tracked" and cites THIS doc as where it was filed; (b) no sibling
+  batch/finalize doc drafted this run; (c) zero mention in `defi_consolidated_closeout_2026_07_18.md`; (d) zero
+  competing claim in any `status: draft` satellite batch (`defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s
+  BLAZESTAKE mentions are prior-art citations of its retirement SCRIPT pattern for an unrelated venue retirement,
+  not a claim on this regrowth). Flipped `assigned_vm: NA -> planning`, `execution_scope -> orchestrator-agent` in
+  place (no rename); `assigned_role: data_engineering` already correct. Paired with
+  `plans/active/defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md` (`depends_on` +
+  `gate_on_depends: true`, `status: active`).

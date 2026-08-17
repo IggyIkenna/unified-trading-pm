@@ -235,20 +235,25 @@ source: >-
       money default-routing bug; both are now fixed. Also added a "Kalshi | Direct to trading | No" row to
       `/codex/04-architecture/transfer-architecture.md`'s "Other" venue table (unified-trading-pm doc, flipped in
       this same commit). QG green (373s, unified-api-contracts), sentinel-verified on `origin/live-defi-rollout`.
-- [ ] [BACKEND] P1. **Gap: KALSHI has ZERO position-read adapter in strategy-service at all** — confirmed via a
-      repo-wide `grep -rli kalshi strategy_service/position/`, zero hits: no adapter file, no import, no
-      `factory.py` case arm of any kind (unlike POLYMARKET, which has a real, registered — if live-stubbed —
-      `PolymarketPositionAdapter`). Found while auditing `cefi_live_venue_string_dispatch_broken_2026_08_16.md`'s
-      P2 todo ("does this same disease exist for non-CEFI major venues"): related to but distinct from that
-      issue's disease shape — cefi's bug was a real adapter unreachable behind a stale dispatch table; this is a
-      position-read feature that was never built at all for one of prediction's only 2 declared canonical venues
-      (`VENUES_BY_ASSET_GROUP["prediction"] = [POLYMARKET, KALSHI]`). Notable asymmetry: KALSHI DOES have a real,
-      wired LIVE order-execution path (`sports_factory.py`'s `_LIVE_VENUE_CONFIGS`, confirmed by the sports
-      batch's own step-9 finding — `betfair`/`matchbook`/`kalshi`/`polymarket` all real) — so KALSHI can be
-      traded live today but its resulting position can never be read back via `get_position_adapter`, the same
-      class of read/execute asymmetry `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` already
-      tracks elsewhere. Done-when: a `KalshiPositionAdapter` (or equivalent) is built and registered, or this is
-      confirmed out-of-scope for the carve-out's contracted archetypes with a cited reason.
+- [x] ✅ [BACKEND] P1. **Gap: KALSHI has ZERO position-read adapter in strategy-service at all — fixed
+      2026-08-17.** SHIPPED — `unified-api-contracts@cc807336c1` + `strategy-service@daafe3e29b`. Built
+      `KalshiPositionAdapter` (`strategy_service/position/position_interface/adapters/kalshi.py`) mirroring the
+      Polymarket/Betfair stub pattern — `get_balances()`/`get_positions()` raise `NotImplementedError` pending
+      httpx integration (RSA-PSS signed `KALSHI-ACCESS-KEY`/`-SIGNATURE`/`-TIMESTAMP` headers, mirroring
+      execution-service's real live-trading adapter's auth shape — a SEPARATE implementation, not a shared
+      import, per the T4 no-service-to-service-imports rule), while `map_positions_response`/
+      `map_balance_response` are real, tested mapping functions (`position_fp`'s sign resolves the YES/NO side;
+      `last_price_dollars` gives a live mark unlike Polymarket/Betfair). Registered in `factory.py`'s
+      `case "kalshi":` arm (kwargs `api_key_id`/`private_key_pem`, matching execution-service's own
+      `kalshi-api-key-id`/`kalshi-private-key-pem` secret names) and in
+      `capabilities.py::POSITION_READ_MODE_CAPABILITIES`. UAC prerequisite: exported `KalshiPosition`/
+      `KalshiBalance` from the top-level package (were UAC-internal-only) — this also flipped
+      `tests/test_strategy_position_read_mode_cascade_invariant.py`'s ratchet baseline (removed `KALSHI`/
+      `KALSHI-PERP` from `tests/data/strategy_position_read_mode_baseline.json`, both now show full
+      batch/live/paper coverage). 5 new unit + integration tests (factory registration, stub
+      NotImplementedError, position/balance mapping incl. multi-position YES/NO sign resolution). QG green both
+      repos (UAC 13332 passed / 384s; strategy-service 6084 passed / 117s), sentinel-verified on
+      `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 — done 2026-08-16, +1 more
       2026-08-17.** Fulfilled by the 3 gap todos added above during the steps 6-8 sweep (live position stub,
       missing archetype/slot wiring, execution not routing through `InstructionActionV2`) — none left as prose

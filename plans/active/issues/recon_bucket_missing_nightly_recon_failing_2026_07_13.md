@@ -226,3 +226,27 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   would add no information. Not re-filing a duplicate `/blocked` — `BLK-8bb28da4` (2026-08-10) is still open and
   unresolved. This confirms the "recurring daily page" flag from the prior entry: two separate escalation dispatches
   fired for one underlying failure, which will keep happening every day the producer chain stays unpromoted.
+
+- **data_pipeline_failure escalation 2026-08-17 (`agt-89fe96`, DP-WATCHER-006/DP_CLOUD_RUN_JOB_FAILED)**: a THIRD
+  dispatch on the same static alert (~438m old at this dispatch vs ~154m/`agt-0e4c67` and ~274m/`agt-ea1a56`) —
+  independently re-derived the full root-cause chain (live `gcloud run jobs executions describe` +
+  `gcloud logging read` on `uts-prod-blrs-daily-determinism-jm2mn`; `gcloud run jobs executions list`/`describe` on
+  the 3 producer jobs; terraform read of `t1_batch_scheduler.tf` + `audit03_cron_provisioning.tf`) BEFORE finding
+  this doc already contained the identical diagnosis in the "2026-07-14 update" section — confirms nothing has
+  changed: `uts-prod-execution-service-config-snapshot` and `uts-prod-ml-service-t1-recon` still return "Cannot find
+  job" (never provisioned), `uts-prod-strategy-service-t1-recon` still crashes identically (`ValueError: batch
+  operation requires --date...`, reconfirmed on all 5 daily runs 08-13..08-17, all `NonZeroExitCode`). No fix
+  applied — same reasoning as the two entries above (multi-repo feature work already scoped out + escalated, not a
+  one-shot-safe guess). Cross-checked the sibling doc `asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`:
+  its open `[OPERATOR]` todo (2026-08-15) already covers the same 2 missing Cloud Run Jobs from the scheduler side —
+  this entry is the confirming link that BLRS's daily Stage 0 failure is the ACTIVE, currently-paging downstream
+  consequence of that exact gap (that todo's own text flagged this as "not independently verified this pass" — now
+  it is). Not re-filing `/blocked` — `BLK-8bb28da4` (2026-08-10) still open, now 7 days unresolved.
+  **New observation**: three escalation-worker dispatches for one unchanged, statically-failed execution inside a
+  single day is itself worth flagging — each dispatch re-derives the same evidence from scratch at real token/slot
+  cost. Same shape as the `AlertDeduplicator`-defeat incidents already catalogued in
+  `/codex/05-infrastructure/data-pipeline-alerts.md` (DP-LIVE-004's volatile-detail-key case, `DP_CRON_DID_NOT_FIRE`'s
+  resolved-bookend-severity case) but on DP-WATCHER-006's escalation-dispatch path, which that doc's incident log
+  doesn't yet cover. Recommend a `/data-pipeline-alerts-reconcile` or `/escalation-queue-reconcile` pass check
+  whether DP-WATCHER-006 dispatches suppress against an already-open blocked-question/escalation for the same
+  target — did not investigate the dispatcher/dedup code myself (out of this one-shot role's scope).

@@ -72,14 +72,15 @@ source: >-
 
 ## Todos
 
-- [ ] [DATA] P1. **Root-cause + fix the FX `ohlcv_24h` `source=databento` mis-stamping** — the remaining piece of
-      the 2026-07-24 G2 finding after the sibling ICE/KRX Yahoo-venue provenance mis-stamp was already fixed this
-      same week. Re-stamp the 1,008 affected historical rows (out of 3,591 captured FX `ohlcv_24h` rows) once the
-      root cause is fixed, matching the SSOT's Yahoo-only routing for FX daily bars
-      (`/codex/02-data/tradfi-databento-sourcing-ssot.md`). Done when: root cause identified, fix shipped, and the
-      1,008 rows (or the then-current count if it has changed) are re-stamped `source=yahoo`. (repo:
-      market-tick-data-service) Source: `/plans/active/issues/tradfi_reconciliation_2026_08_17_findings_2026_08_17.md`
-      item 1.
+- [x] ✅ [DATA] P1. **Root-cause + fix the FX `ohlcv_24h` `source=databento` mis-stamping** — market-tick-data-service@81f5fb8f
+      (regression test proving the write-path is already correct at both call sites; no further code change
+      needed) + data repair executed live: 1,008 rows across 667 days — physical GCS objects moved
+      `pipeline_mode=batch_databento` → `batch_yahoo` (copy+verify+delete, delete-safety-gated) and manifest
+      `pipeline_mode`+`source` both restamped via a snapshot-first CAS write, self-verified 0 remaining. Root
+      cause + full evidence + a flagged KRW-USD regression concern (needs operator decision, not silently
+      touched):
+      `/plans/active/issues/tradfi_fx_ohlcv24h_databento_writepath_misplacement_2026_08_17.md`. Source:
+      `/plans/active/issues/tradfi_reconciliation_2026_08_17_findings_2026_08_17.md` item 1.
 
 - [ ] [DATA] P2. **Finish the FX manifest `instrument_id` "ticks"-literal backfill residual** (670 rows, down from
       983 on 07-24 — the 2026-08-04 restamp `market-tick-data-service@c86016f6` raised well-formed FX manifest ids
