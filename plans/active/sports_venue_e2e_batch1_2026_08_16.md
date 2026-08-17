@@ -128,13 +128,23 @@ source: >-
       `VENUE_WALLET_CAPABILITIES` entry and zero transfer-code references anywhere in
       `execution-service/execution_service/engine/transfers/` — no funding rail exists despite live trading
       capability existing. Tracked as its own gap todo below.
-- [ ] [BACKEND] P1. **Gap: `MATCHBOOK` has real, wired execution capability but no transfer rail at all** —
+- [x] ✅ [BACKEND] P1. **Gap: `MATCHBOOK` has real, wired execution capability but no transfer rail at all** —
       absent from `VENUE_WALLET_CAPABILITIES`
       (`unified-api-contracts/unified_api_contracts/internal/domain/execution_service/transfer_types.py`) and
       from every transfer-code path in `execution-service/execution_service/engine/transfers/`. Same class of gap
       as the prediction batch's KALSHI finding — a live-money correctness risk if trading is ever actually run
       against this venue with no way to fund/withdraw. Done-when: a real `VENUE_WALLET_CAPABILITIES` entry +
-      working rail is added, or confirmed intentional with a cited reason.
+      working rail is added, or confirmed intentional with a cited reason. — 2026-08-17
+      (unified-api-contracts@c61c0dd4): added a `MATCHBOOK` entry to `VENUE_WALLET_CAPABILITIES` (deposits_to=TRADING, trading_wallet_type=TRADING,
+      requires_internal_transfer=False) — same shape as the existing `BETFAIR` entry, matching
+      `unified_api_contracts.registry.venue_constants.SPORTS_EXCHANGE_VENUES`'s own grouping of MATCHBOOK with the
+      BETFAIR exchanges. Confirmed `execution-service/execution_service/engine/transfers/` has zero venue-specific
+      code for any Sports/Prediction venue (BETFAIR/POLYMARKET included) — dispatch for these non-CCXT venues is
+      entirely capability-registry-driven (`wiring.py` only builds live CCXT clients for
+      `_RESOLVABLE_TRADE_SCOPE_EXCHANGE_IDS`; a venue with no `ccxt_exchange_id` stays honestly not-wired, same as
+      BETFAIR today), so the registry entry alone closes the gap — no separate transfer-code path needed or
+      expected for this venue class. No test asserted `VENUE_WALLET_CAPABILITIES`'s contents/count, so nothing
+      else needed updating.
 - [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16.** 2 genuinely new gaps tracked above
       (uncovered odds venues, MATCHBOOK's missing transfer rail); 3 other apparent gaps (price-diff exclusion,
       ONEXBET dead code, BLOCKED-CREDENTIALS live connectors) confirmed already correctly handled/documented
