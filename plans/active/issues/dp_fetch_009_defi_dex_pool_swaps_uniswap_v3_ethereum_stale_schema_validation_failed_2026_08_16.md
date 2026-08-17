@@ -120,17 +120,21 @@ count/ratio).
       current write path, verifying zero exceptions and real row counts. Repo: market-tick-data-service. **DONE**
       this session — see Progress Log for per-date counts; real data + `record_captured` manifest rows written to
       `gs://market-data-tick-defi-prd-central-element-323112`.
-- [ ] [SCRIPT] P2. Build a dry-run-first reclassification script (mirroring
+- [x] [SCRIPT] P2. Build a dry-run-first reclassification script (mirroring
       `market-tick-data-service/scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py`'s shape) that
       snapshots the defi `_index/availability_index.parquet`, sizes the SCHEMA_VALIDATION_FAILED rows for
       `(asset_group=defi, data_type=dex_pool_swaps, venue=UNISWAP_V3, chain=ETHEREUM, date in
       [2025-01-09..2025-01-21])`, and reclassifies them to
       `error_reason=superseded_by_verified_recapture_success_2026_08_16` (excluded from DP-FETCH-009's count/ratio
-      by `SUPERSEDED_BY_REASON_PREFIX`) — gate `--apply` on a fresh reversibility check
-      (`softDeletePolicy.retentionDurationSeconds` on the target bucket) per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Given the index's scale (~159M rows), run the
-      sizing/apply pass on a dedicated VM per the heavy-I/O HARD RULE, not the shared host. Repo:
-      market-tick-data-service.
+      by `SUPERSEDED_BY_REASON_PREFIX`). **DONE** this session (agt-c57d2e, slot 6) —
+      `market-tick-data-service/scripts/reclass_defi_uniswap_v3_schema_validation_failed_stale_2026_08_17.py`,
+      shipped `market-tick-data-service@1b620c5485`. Repo: market-tick-data-service.
+- [ ] [SCRIPT] P2. Run the reclass script's `--apply` pass (todo above) on a dedicated VM, not the shared host —
+      the defi index is ~159M rows / ~6.8GiB, too large for a full read/write on this host per the heavy-I/O HARD
+      RULE. Gate `--apply` on a fresh reversibility check (`softDeletePolicy.retentionDurationSeconds` on the
+      target bucket) per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a before running. This is
+      the step that actually stops DP-FETCH-009 from re-paging on these 13 dates (short of the natural
+      ~2026-08-24 window-aging). Repo: market-tick-data-service.
 - [x] [DATA] P3. If DP-FETCH-009 re-fires for `defi/dex_pool_swaps` after this session's re-capture + before todo 2
       lands, confirm first whether it is these SAME 13 already-remediated dates re-aging into the trailing window
       (expected, self-resolves) vs. a genuinely NEW failing date/venue before treating it as a new incident. Repo:
@@ -221,3 +225,34 @@ count/ratio).
   non-numeric — skipped the authoring-slot ping per the role doc (no real originator slot to notify).
   `market-tick-data-service` and `unified-trading-pm` worktrees left clean.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+
+- **2026-08-17 (data_pipeline_failure escalation agt-c57d2e, slot 6)**: FOURTH re-fire (asset_group=defi,
+  data_type=dex_pool_swaps, 14055 attempted_failed of 8463757 attempted; "13691 attempted_failed row(s) in the
+  last 1d"). Read RULES.md + SUB_AGENT_MANDATORY_RULES.md + `/codex/05-infrastructure/data-pipeline-alerts.md`;
+  pre-task grep found this SAME doc. Checked the count-delta first per the prior sessions' own methodology:
+  `attempted_failed` is 14055 here vs 14036 in all three prior filings (+19) — NOT identical, unlike the second
+  and third filings. `market-tick-data-service` HEAD confirmed unchanged since the original investigation
+  (`git log c9bc8151..767c4208` — zero commits touching `dex_swaps_handler.py`/`_dex_swaps_queries.py`), ruling
+  out a code regression as the source of the +19 delta; most likely explanation is the trailing-window boundary
+  shifting one day forward (consistent with the third filing's own flagged total-`attempted` non-monotonicity
+  note) rather than a genuinely new failure, but not exhaustively proven (a fourth OOM-risking bounded re-read
+  was judged not worth it for a 0.1%-scale delta against an already-3x-confirmed root cause).
+  Given this is now the 4th escalation dispatched for the same known root cause, and todo 2 (the reclass script
+  — the actual fix for the repeated paging) was still unbuilt, built it this session rather than filing a fourth
+  "still the same issue" log entry alone:
+  `market-tick-data-service/scripts/reclass_defi_uniswap_v3_schema_validation_failed_stale_2026_08_17.py` —
+  dry-run-first, mirrors `reclass_cefi_no_batch_source_phantom_rows_2026_07_29.py`'s shape (closest live
+  precedent; the doc's originally-cited `reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py` was
+  already deleted per its own one-off `Delete-when` marker). The dry-run/sizing path uses the same OOM-safe
+  pyarrow `GcsFileSystem` + column-projection + Arrow-level-filter pattern
+  (`deployment-service/deployment_service/data_pipeline_monitors/cli.py::_make_streaming_index_reader`) this
+  issue's own diagnosis proved safe against this exact 159M-row index — confirmed columns via
+  `market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py` (`date`/`venue`/`chain`/
+  `data_type` row-key fields). `--apply` (the full read+write of the index) is deliberately NOT run by this
+  script invocation or this session — left for todo 2b below, per the heavy-I/O HARD RULE (needs a dedicated
+  VM). Ran `quality-gates.sh --no-fix` (exit 0, ruff auto-fixed formatting on first attempt, re-staged and
+  re-ran clean) and shipped via `quickmerge --agent --files` —
+  `market-tick-data-service@1b620c5485`, verified ancestor of `origin/live-defi-rollout`. Split todo 2 into
+  "build the script" (done, checked off) and a new todo 2b (run `--apply` on a VM — the step that actually
+  stops the paging). `$AUTHORING_SLOT=dp-fleet-monitor` is non-numeric — skipped the authoring-slot ping per the
+  role doc. `market-tick-data-service` and `unified-trading-pm` worktrees left clean.
