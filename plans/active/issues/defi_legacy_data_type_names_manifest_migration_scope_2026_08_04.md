@@ -289,3 +289,6 @@ context_scope:
     DIAG above) — that remains open, still needs its own five-part delete-safety proof before any GCS-level
     change, per this doc's standing caution. The still-open `[DATA] P2` todo above is unaffected by this finding
     except that its "root-cause the gap cluster first" precondition is now satisfied for the recent-window half.
+- **context-scout 2026-08-17**: re-scouted; context_scope unchanged (6 entries), still accurate — all 6 still resolve
+  and cover the sole remaining open item (the `dex_swaps` → `dex_pool_swaps` content migration, still gated on a
+  five-part delete-safety proof).

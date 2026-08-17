@@ -70,7 +70,7 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md,
-    /plans/archive/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch21_2026_08_17.md,
     alerting-service/alerting_service/core/dedup.py,
     alerting-service/alerting_service/notifiers/router.py,
     deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py,
@@ -176,3 +176,10 @@ checked against exact revision-swap timestamps to the second).
   rather than re-attempting the full live-trace root-cause (proportionate to a one-shot bounded sweep) — flagged P1
   for the next dispatch.
 - **na-eligibility-audit 2026-08-17 (cefi tranche, first audit pass)** [body-hash:49b09b47e001d79a]: KEEP-NA, valid — fresh doc (created today), no prior marker. All 3 open items are open-ended live-system root-cause investigation (a recurring DP_CRON_DID_NOT_FIRE storm whose two prior same-day fixes both independently verified compliant then regressed) — GENUINE_WORK, not bounded/deterministic. This doc's population is worked by the data_pipeline_alerts_reconciler's own 6-hourly scheduled sweep, not generic AO backlog dispatch. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries, unchanged count) — fingerprint match:
+  `alerting-service@cd60a3e595` and revision `dp-alerting-subscriber-00103-zhw`/build
+  `821c691f-8da4-426e-b7b1-9d0614097064` (this doc's cited first-fix evidence) also appear in
+  `plans/active/cefi_satellite_ao_dispatch_batch21_2026_08_17.md`'s item 1 (independently verified the same
+  deploy-chain that day); swapped in as a 2nd entry, dropping the now-redundant archived
+  `dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (its content is already fully re-narrated
+  in this doc's own "What was found" section above).
