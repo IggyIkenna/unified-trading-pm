@@ -145,10 +145,32 @@ source: >-
       BETFAIR today), so the registry entry alone closes the gap — no separate transfer-code path needed or
       expected for this venue class. No test asserted `VENUE_WALLET_CAPABILITIES`'s contents/count, so nothing
       else needed updating.
-- [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16.** 2 genuinely new gaps tracked above
-      (uncovered odds venues, MATCHBOOK's missing transfer rail); 3 other apparent gaps (price-diff exclusion,
-      ONEXBET dead code, BLOCKED-CREDENTIALS live connectors) confirmed already correctly handled/documented
-      in-code, not duplicated as new todos.
+- [ ] [BACKEND] P1. **Gap: `strategy_service/position/position_interface/factory.py::_get_other_adapter`'s bare
+      `"betfair"` case never matches sports's real canonical venue spellings** (`BETFAIR_EX_UK`, `BETFAIR_SB_UK`,
+      `BETFAIR_EX_EU` — this AG's own `VENUES_BY_ASSET_GROUP["sports"]` entries, confirmed via
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:574-576`). Same disease
+      shape as `cefi_live_venue_string_dispatch_broken_2026_08_16.md` (P2 audit, filed 2026-08-17): the real,
+      working adapter class (`BetfairPositionAdapter`, `strategy_service/position/position_interface/
+      adapters/betfair.py`) is registered and imported, but the factory's `match` statement only recognizes the
+      bare token `"betfair"` — `get_position_adapter(venue="BETFAIR_EX_UK", mode=LIVE)` normalizes to
+      `betfair_ex_uk` (`factory.py:441`, `venue.lower().replace("-", "_")`), matches no case arm, and raises
+      `ValueError: Unknown venue`. Already independently confirmed by this batch's own step-9 finding above
+      ("the 3 `BETFAIR_*` regional keys in this AG's list don't match the wired bare `"BETFAIR"` key either") but
+      never turned into its own tracked fix todo until now. Currently masked from production impact by the
+      steps-6-8 `BLOCKED-ON:archetype-declaration-backlog` gate (no archetype declares needing `odds` data yet,
+      so this dispatch path has never actually been exercised) — but the underlying factory bug is real today and
+      will surface the moment an archetype does declare sports position-read. Done-when: the factory recognizes
+      `BETFAIR_EX_UK`/`BETFAIR_SB_UK`/`BETFAIR_EX_EU` (and any other real canonical sports exchange venue with a
+      position-read need) without a `ValueError`, ideally via the same shared `split_venue_base_and_suffix`
+      helper the cefi fix built, or an explicit case-arm extension if the sports vocabulary doesn't fit that
+      helper's base+suffix shape.
+- [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16, +1 more 2026-08-17.** 2 genuinely new gaps
+      tracked above at filing time (uncovered odds venues, MATCHBOOK's missing transfer rail); 3 other apparent
+      gaps (price-diff exclusion, ONEXBET dead code, BLOCKED-CREDENTIALS live connectors) confirmed already
+      correctly handled/documented in-code, not duplicated as new todos. **+1 gap added 2026-08-17** (the BETFAIR
+      bare-token dispatch mismatch above), found while auditing `cefi_live_venue_string_dispatch_broken_2026_08_16.md`'s
+      P2 todo ("does this same disease exist for non-CEFI major venues") — a genuine hit for sports, not
+      previously filed as its own todo despite being named in this batch's own step-9 finding.
 - [x] ✅ [BACKEND] P0. **Confirm the parent plan's hard rules held — done 2026-08-16, trivially satisfied.** This
       batch's steps 1-5 and step 9 sweep was investigation/documentation only — zero code was changed in any
       touched repo.

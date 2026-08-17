@@ -1,0 +1,65 @@
+---
+doc_type: issue
+title: Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_17)
+summary: >-
+  Daily data-pipeline empty re-probe audit (`reprobe_new_empty_confirmed.py`, Wave 4b Phase 5 scripted→LLM escalation
+  hop) found cells across cefi/defi/prediction/sports/tradfi that became `empty_confirmed`+`SOURCE_RETURNED_ZERO` today
+  where the UAC coverage oracle expected data or a wired re-fetch returned rows, plus ambiguous cells with no oracle/
+  re-fetch signal. A non-empty ORACLE_EXPECTS_DATA/REPROBE_RETURNED_ROWS verdict is the operator's #1 failure class
+  (C1) — a real-empty misclassified as honest-absence, i.e. a code bug not a true gap — and needs a worker to trace the
+  adapter path and route to `record_failed`; AMBIGUOUS verdicts need judgment (real-gap vs new-venue) to extend the
+  oracle.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: [empty-reprobe, honest-absence, c1-misclassified-empty, data-pipeline-audit, oracle-disagreement]
+related:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
+created: 2026-08-17
+parent_epic: observability_master
+priority: P1
+source: [reprobe_new_empty_confirmed.py, data_pipeline_hardening_self_monitoring_2026_06_22.md]
+assigned_vm: planning
+resolved_by:
+locked_by: live-defi-rollout
+context_scope:
+author: reprobe_new_empty_confirmed.py (data-pipeline daily audit)
+---
+
+# Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_17)
+
+> Auto-filed by the daily data-pipeline audit `reprobe_new_empty_confirmed.py` (Wave 4b, Phase 5
+> scripted→LLM escalation hop). A deterministic candidate list was non-empty — the
+> verdicts below need a worker's judgment (real gap vs code bug, straggler
+> vs intentional new venue). See `/codex/05-infrastructure/data-pipeline-alerts.md`.
+
+## What I found
+
+The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous cells. AGs: cefi, defi, prediction, sports, tradfi.
+
+Candidate list(s) (deterministic, machine-written):
+
+- `/app/unified-trading-pm/plans/audit/results/empty_reprobe_tradfi_2026_08_17.csv`
+
+## Why it matters
+
+This is the operator's #1 failure class (C1): a real-empty misclassified as honest-absence. An ORACLE_EXPECTS_DATA / REPROBE_RETURNED_ROWS verdict means the data exists but we recorded empty — a code bug, not a true gap. AMBIGUOUS verdicts need judgment (oracle silent + no re-fetch hook).
+
+## Recommended decision
+
+For each disagreement: trace the adapter path that recorded the empty and route it to record_failed (thread fetch_evidence per Phase 1). For ambiguous: decide real-gap vs new-venue, extend the oracle. Per data_pipeline_hardening_self_monitoring_2026_06_22.md Phase 1/5.
+
+Cold-start context: read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
+in full + `/codex/05-infrastructure/data-pipeline-alerts.md` + the candidate CSV(s)
+above before acting.
+
+## Todos
+
+- [ ] [CODE] P1. Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_17) — diagnose + fix the root cause (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate CSV(s) above first (source `reprobe_new_empty_confirmed.py`).

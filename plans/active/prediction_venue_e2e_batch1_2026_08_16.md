@@ -235,9 +235,25 @@ source: >-
       money default-routing bug; both are now fixed. Also added a "Kalshi | Direct to trading | No" row to
       `/codex/04-architecture/transfer-architecture.md`'s "Other" venue table (unified-trading-pm doc, flipped in
       this same commit). QG green (373s, unified-api-contracts), sentinel-verified on `origin/live-defi-rollout`.
-- [x] ✅ [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 — done 2026-08-16.** Fulfilled by
-      the 3 gap todos added above during the steps 6-8 sweep (live position stub, missing archetype/slot wiring,
-      execution not routing through `InstructionActionV2`) — none left as prose only.
+- [ ] [BACKEND] P1. **Gap: KALSHI has ZERO position-read adapter in strategy-service at all** — confirmed via a
+      repo-wide `grep -rli kalshi strategy_service/position/`, zero hits: no adapter file, no import, no
+      `factory.py` case arm of any kind (unlike POLYMARKET, which has a real, registered — if live-stubbed —
+      `PolymarketPositionAdapter`). Found while auditing `cefi_live_venue_string_dispatch_broken_2026_08_16.md`'s
+      P2 todo ("does this same disease exist for non-CEFI major venues"): related to but distinct from that
+      issue's disease shape — cefi's bug was a real adapter unreachable behind a stale dispatch table; this is a
+      position-read feature that was never built at all for one of prediction's only 2 declared canonical venues
+      (`VENUES_BY_ASSET_GROUP["prediction"] = [POLYMARKET, KALSHI]`). Notable asymmetry: KALSHI DOES have a real,
+      wired LIVE order-execution path (`sports_factory.py`'s `_LIVE_VENUE_CONFIGS`, confirmed by the sports
+      batch's own step-9 finding — `betfair`/`matchbook`/`kalshi`/`polymarket` all real) — so KALSHI can be
+      traded live today but its resulting position can never be read back via `get_position_adapter`, the same
+      class of read/execute asymmetry `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` already
+      tracks elsewhere. Done-when: a `KalshiPositionAdapter` (or equivalent) is built and registered, or this is
+      confirmed out-of-scope for the carve-out's contracted archetypes with a cited reason.
+- [x] ✅ [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 — done 2026-08-16, +1 more
+      2026-08-17.** Fulfilled by the 3 gap todos added above during the steps 6-8 sweep (live position stub,
+      missing archetype/slot wiring, execution not routing through `InstructionActionV2`) — none left as prose
+      only. **+1 gap added 2026-08-17** (KALSHI's missing position-read adapter above), found while auditing the
+      cefi issue doc's P2 non-CEFI audit todo.
 - [x] ✅ [BACKEND] P0. **Confirm the parent plan's hard rules held — done 2026-08-16, trivially satisfied.** This
       batch's steps 1-9 sweep was investigation/documentation only — zero code was changed in
       instruments-service, market-tick-data-service, features-service, strategy-service, or execution-service, so
