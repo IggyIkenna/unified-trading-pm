@@ -23,7 +23,7 @@ related:
   [
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,

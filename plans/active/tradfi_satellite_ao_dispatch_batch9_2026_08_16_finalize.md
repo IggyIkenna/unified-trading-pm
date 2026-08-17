@@ -18,7 +18,7 @@ related:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_16.md,
     /plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-16"

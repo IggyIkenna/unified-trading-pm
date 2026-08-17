@@ -50,10 +50,10 @@ related_plans:
   - ../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md
   - ../active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md
   - ../active/tradfi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md
-  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md
-  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
-  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
-  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
+  - ../archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md
+  - ../archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
+  - ../archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
+  - ../archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-08-12
 locked_by: live-defi-rollout
@@ -879,22 +879,22 @@ extraction from the 2026-08-10 /ag-closeout-audit tradfi tranche pass
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: tradfi satellite AO batch 13 — finalize
 
-### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md)
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06`](../archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md)
 
 **status**: active · **estimate**: 0.6 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — fresh
 /ag-closeout-audit extraction (4 clean orphans)
 
-### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md)
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize`](../archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — finalize
 (reconcile source docs + resolve deferrals + archive)
 
-### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md)
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08`](../archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — fresh
 /ag-closeout-audit extraction (3 clean orphans)
 
-### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — finalize
 (reconcile source docs + resolve deferrals + archive)
