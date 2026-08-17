@@ -79,7 +79,8 @@ source: >-
       Evidence: cloudbuild=821c691f-8da4-426e-b7b1-9d0614097064. Deploy
       chain is clean — but live behavior is STILL broken (cooldown violated as of 07:06Z, ~6h15m post-deploy), a
       SEPARATE unresolved defect filed as
-      `plans/active/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (P1, 2 new todos).
+      `/plans/archive/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (P1, 2 new todos —
+      RESOLVED + archived 2026-08-17, see that doc's Progress Log).
 - [ ] [DATA] P3. Annotate
       `market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py` (still present,
       not yet deleted per its own `# Delete-when:` header) with a pointer to
@@ -102,4 +103,5 @@ source: >-
   closed — all 3 deploy-chain conditions confirmed (content-on-main, Cloud Build `821c691f-8da4-426e-b7b1-9d0614097064`,
   live revision `dp-alerting-subscriber-00103-zhw` @ 100% traffic, container-content-verified). Residual finding (fix
   deployed but live behavior still violates the cooldown) filed separately:
-  `plans/active/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md`.
+  `/plans/archive/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (RESOLVED + archived
+  2026-08-17).

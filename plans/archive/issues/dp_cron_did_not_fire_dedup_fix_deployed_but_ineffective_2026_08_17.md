@@ -30,7 +30,7 @@ summary: >-
   path that bypasses `route_event`'s `is_duplicate()` gate, a Pub/Sub redelivery quirk, or something not yet examined)
   needs a fresh, deeper investigation. Flagged for next dispatch — this is a live, currently-firing production alert
   storm (CRITICAL severity, paging every ~15min instead of every 30min), not a stale/theoretical concern.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, tradfi]
 stage: [live]
@@ -63,7 +63,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: slot 10, backend_engineer craft, task dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective-3243f3d899f0
 last_updated: 2026-08-17
 locked_since:
 context_scope:
@@ -157,8 +157,9 @@ backend_engineer deploy-chain verification task, not an open-ended runtime inves
       (Cloud Run instance/container start-time vs. sweep timestamps), and a direct trace of the `DP_CRON_DID_NOT_FIRE`
       delivery path in `router.py`/`_route_data_pipeline_event` for a second, dedup-bypassing route. (repo:
       alerting-service) — Evidence: `alerting-service@166f291f44`.
-- [ ] [SCRIPT] P2. Once root-caused, re-sample the live fire-cadence for the same identity to confirm the 1800s
-      cooldown is actually respected post-fix, and close this doc. (repo: alerting-service)
+- [x] ✅ [SCRIPT] P2. Once root-caused, re-sample the live fire-cadence for the same identity to confirm the 1800s
+      cooldown is actually respected post-fix, and close this doc. (repo: alerting-service) — Evidence: deploy chain
+      reverified clean + live fire-cadence confirmed 1800s-compliant post-fix, see Progress Log.
 
 ## Progress Log
 
@@ -205,3 +206,19 @@ backend_engineer deploy-chain verification task, not an open-ended runtime inves
   needs the fix to actually be LIVE first (LDR→main promote + a fresh Cloud Build + `dp-alerting-subscriber` revision
   — same 3-part deploy-chain check this doc's own history already establishes the pattern for) before it can be
   meaningfully re-sampled; left open for the next dispatch/sweep rather than attempted here.
+- **2026-08-17 (slot 10, backend_engineer craft, task dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective-3243f3d899f0)**:
+  todo 2 CLOSED. Deploy-chain re-verified clean, all 3 conditions with hard evidence: (1) content-on-main — `git show
+  origin/main:alerting_service/notifiers/router.py` contains the `severity = AlertSeverity.INFO if
+  details.get("resolved")` fix; (2) fresh Cloud Build `d6ab1c6f-645e-4dcf-86a7-6bc5454cdf8c` on the `alerting-service-build`
+  trigger, SUCCESS at `2026-08-17T08:47:58Z`, commit `1a8c49f447d8b7a578b531dfe44e1dd155a351da` == `origin/main` tip
+  at check time, produced image digest `sha256:7d18667756998faccae45a04a164566d41e62a5350bd5612682bba64e0df9770`; (3)
+  `dp-alerting-subscriber`'s live revision `dp-alerting-subscriber-00105-bkq` (created `2026-08-17T08:53:51Z`, 100%
+  traffic) confirmed running that exact digest (`gcloud run revisions describe`). Then re-sampled the same identity
+  (`mtds-live-cefi-consolidated-20260817-025031`/BYBIT-FUTURES/`book_snapshot_5`+`derivative_ticker`, via
+  `slack-read-channel.py data-pipeline-alerts`): fired at `09:06Z`, correctly SUPPRESSED at the `09:20/21Z` sweep
+  (other, unrelated DP_CRON_DID_NOT_FIRE identities fired normally in that same sweep, confirming the sweep itself ran
+  — this identity specifically was deduped), then fired again at `09:36Z` — exactly 30min after `09:06Z`, the exact
+  cadence a correctly-functioning 1800s cooldown produces. Both data_types show the identical pattern. CONFIRMED: the
+  1800s `DP_CRON_DID_NOT_FIRE` cooldown is now genuinely respected live. Updated
+  `/codex/05-infrastructure/data-pipeline-alerts.md`'s DP-LIVE-004 note with the full two-bug resolution (was stale,
+  describing only the still-open state as of the 06:38Z follow-up sweep). Doc fully resolved — archiving.
