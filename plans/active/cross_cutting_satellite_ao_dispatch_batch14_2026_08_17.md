@@ -168,11 +168,12 @@ source: >-
       `None`. No other `cast(LiveOrchestrator, ...)` site exists in the repo (grepped `execution_service/` +
       `tests/`) — this is the full blast radius. Next todo (real end-to-end test) should assert on this exact
       false-negative-on-success behavior, not just the type mismatch.
-- [ ] [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
+- [x] ✅ [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
       W1 sub-agent's own test used (`tests/unit/test_external_instruction_api.py` in execution-service) — a real
       `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
       contract itself. Repo: execution-service. Source:
       `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      — execution-service@d6e9ad19f9.
 
 ## Progress Log
 
@@ -221,3 +222,23 @@ source: >-
   of wait/backoff, while a synchronous foreground invocation with an explicit long `timeout` (590000ms) completed
   cleanly every time. Root cause not fully isolated (governor RAM-abort vs. something backgrounding-specific); the
   practical workaround that worked was foreground + long explicit timeout.
+
+- **2026-08-17 (slot 11, infra) — TEST P1 "add a real (non-mock) end-to-end test of the production live-execution
+  path" flipped — execution-service@d6e9ad19f9.** Added
+  `tests/unit/test_manual_instruction_live_orchestrator_protocol.py` covering the actual DART-facing
+  `POST /manual/instruction` route (distinct from `/external/instructions`, which the existing W1 test already
+  covers) end-to-end: real FastAPI routing, a real `ManualOperationHandler`, and the real envelope->
+  `StrategyInstruction` conversion, with only the venue-credential boundary stood in by a hand-written but genuine
+  `LiveOrchestrator`-conformant class — matching the W1 pattern exactly (real protocol implementation, never a
+  `unittest.mock` stub of the interface). Two tests: (1) a baseline real dict-returning orchestrator proves the
+  happy path (200/SUBMITTED) is genuinely exercised end-to-end; (2) `RealNoneReturningLiveOrchestrator` reproduces
+  `ExecutionOrchestrator.execute_instruction`'s ACTUAL production contract (`-> None`, no explicit return,
+  `engine/orchestrator.py:235`) and proves the exact false-negative-on-success defect the blast-radius diagnosis
+  flagged: the order genuinely executes (asserted via the real `order_tracker`'s recorded state) yet the caller
+  receives HTTP 500 with `'NoneType' object has no attribute 'get'` — the caught `AttributeError` at
+  `manual_instruction_api.py:339` — not just the type-mismatch claim asserted in isolation. Both tests verified
+  green locally (`pytest tests/unit/test_manual_instruction_live_orchestrator_protocol.py -q` → 2 passed) before
+  shipping; repo-wide `quality-gates.sh` also green on this SHA. This was the last open todo in this batch's own
+  Unity/routing-independent set; per the gated finalize plan
+  (`cross_cutting_satellite_ao_dispatch_batch14_2026_08_17_finalize.md`), remaining open items are the Unity-venue
+  chain (items 3-9, sequenced) plus the checker-script/gs-audit/codex-doc todos — not in scope for this dispatch.
