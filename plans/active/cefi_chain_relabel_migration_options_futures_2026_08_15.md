@@ -258,18 +258,23 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
       inside `_mkCefiMtdsHonest()`'s MOCK FIXTURE data arrays (seeding a realistic shape for local dev/Playwright),
       not route-handler logic. No deployment-ui commit — nothing to ship; this plan-doc flip is the complete
       evidence trail. See Progress Log for the full method.
-- [ ] [BACKEND] P2. market-data-processing-service: `app/utils/path_parsing.py::blob_matches_canonical_instrument_id_stems`
-      has a related, NOT-yet-fixed gap found during the file-discovery-matcher investigation above (see Progress Log):
-      for a TradFi instrument-id-filtered backfill request (a reference id like `CME:OPTION:ES`), the function's first
-      branch (`instrument_type={inst_lower}/` direct match) now ALSO matches the corrected shape's real-type segment
-      (`instrument_type=option/`) — but then requires the bundle filename to equal `{stem}.parquet` (an individual
-      instrument id), which a chain-bundle file never satisfies (it's `ticks.parquet`). It returns `False` without ever
-      falling through to `_tradfi_chain_bundle_match`'s underlying-root matcher — which DOES handle bundles correctly,
-      but is only reachable when the direct branch fails outright, not when it half-matches. Net effect: a
-      corrected-shape TradFi options/futures chain bundle becomes undiscoverable via instrument-id-filtered requests
-      (the whole-day scanner path fixed above is unaffected — this is a distinct code path). Needs the branch order
-      reworked so a bundle-shaped blob (no per-instrument stem match) falls through to the chain-bundle matcher instead
-      of short-circuiting on the direct instrument_type hit.
+- [x] ✅ [BACKEND] P2. market-data-processing-service: `app/utils/path_parsing.py::blob_matches_canonical_instrument_id_stems`
+      fixed. — market-data-processing-service@88db2842f9. Two changes were needed, not one: (1)
+      `blob_matches_canonical_instrument_id_stems`'s direct `instrument_type=` branch now falls through to
+      `_tradfi_chain_bundle_match` whenever the blob filename is a chain-bundle (`_is_chain_bundle_filename`),
+      regardless of whether the direct segment half-matched — closes the originally-described gap. (2) **Investigation
+      found `_tradfi_chain_bundle_match` itself was NOT actually bundle-shape-complete as the todo's own text assumed**:
+      it only ever checked the LEGACY `instrument_type={chain_token}/` segment (e.g. `instrument_type=options_chain/`)
+      — for the corrected shape the chain token lives at `data_type=`, not `instrument_type=` (confirmed against
+      `unified-api-contracts`'s `build_tradfi_partition_path` docstring: corrected-shape order is
+      `instrument_type={real_type}/data_type={chain_token}/underlying=.../ticks.parquet`), so even after fix (1) a
+      corrected-shape bundle still failed to match. Widened `_tradfi_chain_bundle_match` to check EITHER
+      `instrument_type={itype}/` OR `data_type={itype}/`, mirroring the "either axis" dual-shape-acceptance pattern
+      used throughout this migration (UAC's `is_chain` detection, MDPS's own `orchestration_scanner.py` whole-day
+      fix). 4 new regression tests in `tests/unit/test_path_parsing_chain_bundle_match.py` (corrected-shape OPTION/
+      FUTURE bundle match via fallthrough, non-bundle direct-hit unaffected — no regression, a genuinely-wrong
+      underlying still correctly misses). Full `quality-gates.sh` green (2128 passed,
+      `.qg_last_passed_sha=88db2842f99a454b727b5deee6b87cb088637c22`).
 
 ### Phase 3 — backfill existing GCS objects + manifest rows (gated on Phase 0's decision AND Phase 2 landing; delete-safety-gated)
 
@@ -426,3 +431,11 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   `mock-api.ts`'s chain-token references are confined to `_mkCefiMtdsHonest()`'s fixture-seed arrays. Matches
   the plan's own prediction ("likely... per deployment-api already normalizing"). No deployment-ui code changed;
   this plan-doc commit is the only artifact.
+- **2026-08-17 (slot 15, backend_engineer) — Phase 2 MDPS follow-up todo done, market-data-processing-service@88db2842f9.**
+  See the checkbox annotation above for the full change list. Key finding beyond the todo's own description: the
+  todo's text assumed `_tradfi_chain_bundle_match` "DOES handle bundles correctly" once reached — investigation
+  showed that was only true for the LEGACY shape; the corrected shape needed a second, distinct fix (checking
+  `data_type=` in addition to `instrument_type=` for the chain token) before the fallthrough alone would actually
+  resolve a corrected-shape bundle. Caught this by writing the regression tests FIRST against the real
+  `build_tradfi_partition_path` segment order (confirmed via UAC docstring, not assumed) and watching them fail
+  after only the branch-order fix — the fallthrough alone was insufficient. `quality-gates.sh` green.
