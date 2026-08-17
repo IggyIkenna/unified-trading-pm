@@ -62,7 +62,7 @@ context_scope:
     agent-orchestrator/server/codex_bridge_server.py,
     agent-orchestrator/scripts/orchestrator/calibrate_account_value.py,
     agent-orchestrator/server/model_pricing.py,
-    /plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md,
+    agent-orchestrator/server/orm.py,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 ---
@@ -241,19 +241,64 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       dashboard — the stated reason for building this at all: "some models are cheap per turn but need many turns;
       some are cheap per token but use lots of tokens" is only visible on real task data, not a synthetic single-prompt
       probe. Done when: a real dispatched task's turn count and token count are both visible in one place.
-- [ ] [UI] P1. New, operator-confirmed 2026-08-17 (clarifies/narrows the `[DATA] P1` unified-billing-schema todo above,
-      does not duplicate it): extend Codex's and GLM's account treatment to match Anthropic's subscription-shaped
-      weekly/5-hour + `boost_multiplier` machinery specifically — NOT DeepSeek's dollar-balance shape, NOT Gemini's
-      RPM/RPD shape. Operator's own framing: "Codex and GLM have exactly the same structure, or at least similar
-      enough to Anthropic in terms of the monthly subscription... we should just get the same thing right with the
-      boost or the same columns, because we're going to do a direct comparison of those once we put some tasks
-      through those models." Concretely: generalize `compute_claude_wallet_reconciliation()`/`ClaudeWalletPanel.tsx`
-      (already shipped for Anthropic, `agent-orchestrator@616450ffac`) to Codex and GLM, and extend
-      `dashboard/src/layout.tsx:4485`'s `isDeepseek`-only branch to a real `providerUsageKind(provider)` lookup so
-      Codex/GLM stop inheriting the raw `weekly_msg_limit=240` default (`server/accounts.py:142`) with no live signal
-      behind it. Done when: Codex and GLM accounts show the same weekly/5-hour + boost-multiplier columns as
-      Anthropic, computed from a real signal (not the hardcoded default), so a direct model-comparison view is
-      apples-to-apples once tasks start flowing to all three.
+- [ ] [SCRIPT] P1. New, operator-refined 2026-08-17, step 1 of the Codex/GLM subscription-model workstream below —
+      confirm real end-to-end task completion through AO's actual backlog/worker path (not a raw HTTP or direct-CLI
+      smoke test) for both GLM and Codex specifically. Check each account's current `account_status` first (may
+      already be `disabled`/paused per the same "register paused until routing exists" pattern used for
+      Kimi/Gemma, `kimi_gemma_provider_onboarding_2026_08_16.md` — not yet confirmed for GLM/Codex, do not assume
+      either way); if paused, that's an explicit operator call before unpausing, not a default action to take
+      unilaterally. Done when: at least one real backlog task exists in `task_usage` for a GLM account and one for a
+      Codex account, each completed through the normal `/done` gate (not a synthetic/manual row).
+- [ ] [REVIEW] P1. New, operator-refined 2026-08-17, step 2 — determine each provider's REAL usage-limit metric before
+      building any reconciliation math on top of it. Operator's own framing: "Codex usage limit and GLM's usage
+      limit: one's based on messages, I think, and one's based on tokens" — explicitly not yet verified, don't build
+      on the assumption. Check each vendor's own docs/account dashboard directly (same live-verification discipline
+      the sibling `kimi_gemma_provider_onboarding_2026_08_16.md` plan already used for model names/pricing — trust a
+      live source, not vendor marketing copy or memory). Done when: both GLM's and Codex's real usage-limit unit
+      (messages vs. tokens) and the real numeric cap are confirmed against a live source, cited by URL/screenshot,
+      not guessed.
+- [ ] [DATA] P1. New, operator-refined 2026-08-17, step 3 — build the wallet-reconciliation / `boost_multiplier`
+      calculation for GLM and Codex, generalizing `compute_claude_wallet_reconciliation()`
+      (`claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`, shipped `agent-orchestrator@616450ffac`) —
+      read real token usage plus the real usage-limit-percentage-consumed (from the todo above) and convert it into
+      an implied/API-equivalent spend, the same "what would this usage have cost as pay-per-token" shape Claude's
+      multiplier already computes. Depends on the usage-metric todo directly above — do not build against an assumed
+      metric. Also wire the display side: extend `dashboard/src/layout.tsx:4485`'s `isDeepseek`-only branch to a real
+      `providerUsageKind(provider)` lookup so Codex/GLM stop inheriting the raw `weekly_msg_limit=240` default
+      (`server/accounts.py:142`) with no live signal behind it, and render the same weekly/5-hour + boost-multiplier
+      columns Anthropic already has (`ClaudeWalletPanel.tsx`). Done when: a real computed `boost_multiplier` exists
+      for at least one GLM and one Codex account, backed by real usage data, and both render in the dashboard using
+      the same columns as Anthropic — apples-to-apples once tasks start flowing to all three, per the operator's
+      stated reason for doing this at all.
+- [ ] [REVIEW] P1. New, operator-refined 2026-08-17, step 4 — three-way reconciliation check for GLM and Codex: does
+      (a) AO's own computed implied-spend/usage-pct (from the todo above), (b) what the provider's own site/docs
+      state as the plan's limits and real consumption, and (c) the actual dollar amount paid for the subscription,
+      all agree? This is the "check that dollars spent are recorded correctly" check the operator asked for
+      explicitly, not just a one-sided computation. Done when: a real 3-way comparison table exists in this doc's
+      Progress Log for both GLM and Codex, with any mismatch explained (not silently dropped).
+- [ ] [UI] P2. New, operator-refined 2026-08-17 — for Gemma (NVIDIA NIM, free tier): explicitly SKIP the $/
+      boost-multiplier reconciliation above — operator's own words, "there's nothing to really reconcile with," and
+      it's genuinely $0 (see this plan's existing Non-goals section, same principle already applied to Gemini's free
+      tier). But still show REAL request/token counts on the dashboard, not a placeholder, an omitted panel, or a
+      copy of another provider's shape. Done when: Gemma's account row shows real usage numbers with no
+      reconciliation math attached, visibly distinct from the metered/subscription rows (not silently blank or
+      mislabeled as reconciled).
+- [ ] [UI] P2. New, operator-refined 2026-08-17 — add an operator-facing quick sanity-check surface: show "requests
+      tracked by AO" per account (GLM/Codex/Gemma first, but not exclusive to them) so the operator can manually spot
+      -check it against the provider's own console/dashboard. Operator's own framing: "It might make sense for an
+      operator to quickly check the UI to just see how many requests that shows versus what we're tracking." This is
+      deliberately a manual cross-check aid, not a new automated poller — no live "requests remaining" API is assumed
+      to exist for every provider (confirmed absent for Codex specifically, `FlatRateBoostPanel.tsx:9-16`). Done
+      when: an operator can view AO's tracked request count for a given account, with enough detail (account id,
+      window) to manually verify it against the vendor's own console.
+- [ ] [DATA] P3. New, operator-refined 2026-08-17 — forward-looking capacity question, explicitly gated on the
+      request-tracking sanity-check above being validated first (do not attempt before that todo is done — the
+      operator's own sequencing: "once we know we're tracking requests in the right way, what we really care about
+      is: is there enough requests to do a task"). Once tracking accuracy is confirmed, measure the real
+      requests-per-task consumption rate from actual dispatched tasks (per provider), to answer whether a given
+      plan's request/message allowance is sufficient capacity for the number of tasks intended to run through it.
+      Done when: a real measured requests-per-task figure exists for at least one subscription-shaped provider,
+      derived from real completed tasks, not estimated.
 - [ ] [DATA] P1. New (2026-08-17): join per-task compaction occurrence — whether a given `task_id` triggered
       `forced_precompact`/`forced_compact`/`forced_compact_ineffective` during its own run — onto a queryable
       per-task record. `ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md` already logs these
@@ -307,7 +352,18 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   plan's existing todos covered those four; the existing `[DATA] P1` unified-billing-schema todo is billing-shaped
   (token counts × published rate), not difficulty-shaped (turns/compaction/context/repos as future routing signals) —
   kept separate, not merged, since they answer different questions. No code written this session — doc-only.
+- **2026-08-17 — Codex/GLM boost-parity todo refined into a 7-step workstream**: operator broke the single
+  Codex/GLM-parity todo (added earlier the same day) into an explicit sequence: (1) confirm real end-to-end task
+  completion through AO for GLM/Codex specifically (not just a smoke test), (2) determine each provider's real
+  usage-limit metric — messages vs. tokens, not yet verified for either, don't assume — before doing any math on it,
+  (3) build the `boost_multiplier`/wallet-reconciliation calculation generalizing Claude's
+  `compute_claude_wallet_reconciliation()` once the metric is known, and wire the same dashboard columns Anthropic
+  already has, (4) a three-way check that AO's computed spend, the vendor's own stated docs/limits, and the actual
+  dollars paid all agree. Separately: Gemma should explicitly SKIP $ reconciliation (genuinely free, "nothing to
+  reconcile with") but still show real, non-placeholder usage numbers. Two more items added: an operator-facing
+  "requests tracked by AO" surface so the operator can manually spot-check AO's count against each vendor's own
+  console, and a forward-looking (explicitly gated on that surface being validated first) measurement of real
+  requests-per-task, to eventually answer whether a plan's request allowance covers the number of tasks intended to
+  run through it. Replaced the single prior todo with these 7, rather than leaving both (no work had landed against
+  the original yet). No code written this session — doc-only.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ee26e6744e46c17e]: KEEP-NA, valid — explicit dated operator ruling on record: 'human plan, not AO-dispatched' for the whole doc's live-testing/design-call content (multi-provider billing/context research).
-- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- swapped the generic `orm.py` entry for
-  `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`, the doc's own Why section names as "the reusable
-  PRECEDENT this plan should generalize, not a gap to fill from scratch"; other 4 source files re-verified, still resolve.
