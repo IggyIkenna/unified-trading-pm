@@ -7,7 +7,7 @@ summary: >-
   Extracts the two proven live-connector patterns (subgraph-polling, on-chain-liquidation) into
   reusable config-driven base classes, the prerequisite that unlocks Tranches 1-4 (39 venues) at
   N-config-rows-not-N-hand-written-files cost.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -15,7 +15,10 @@ repos: [market-tick-data-service]
 scope: [engineer]
 tags: [defi, live-capture, connector-pattern]
 related:
-  [/plans/active/defi_live_poller_phased_build_2026_08_15.md]
+  [
+    /plans/active/defi_live_poller_phased_build_2026_08_15.md,
+    /plans/archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md,
+  ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
 parent_epic: defi_master
@@ -45,6 +48,10 @@ resolved_by:
 ---
 
 # DeFi live-poller Tranche 0 — connector-pattern extraction
+
+> **🟢 ARCHIVED 2026-08-17 — COMPLETE.** Both base classes landed with independently-verified
+> zero-behavior-change regression evidence (see finalize plan's Progress Log). Tranche 0 checkboxes
+> flipped in `defi_live_poller_phased_build_2026_08_15.md`.
 
 ## Todos
 
