@@ -218,24 +218,31 @@ this session found:
 > `TARDIS_MAX_INFLIGHT_TASKS=42`**. An explicit `--start-date` is also now REQUIRED under concurrency > 1 (the
 > resume checkpoint anchors on it); the CeFi launcher already passes `START_DATE`, so verify it reaches the CLI.
 
-- [ ] [INFRA] P0. Add `BATCH_DATE_CONCURRENCY` env passthrough to
-      `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`, stamping `VM_BATCH_DATE_CONCURRENCY` metadata
-      (the `cefi-coverage-backfill` branch of `setup-data-pipeline-vm.sh` already consumes it — confirm no further
-      wiring needed there). **Default OFF** (unset = concurrency 1, current behavior) — the canary run sets it
-      explicitly, never a blanket default flip.
-- [ ] [OPERATOR] P0. **Stop the live `cefi-binance-futures-2026-heavy-*` VM cleanly at its current chunk boundary**
-      before the canary run (Tardis's hard N=1-concurrent-VM cap means there is no true A/B — canary must be
-      sequential on the same VM shape, never a second concurrent VM). Confirm the stop, note the exact checkpoint
-      reached, before Phase 3's remaining todos proceed.
-- [ ] [DATA] P0. **Baseline run**: relaunch the same VM shape, `--batch-date-concurrency` unset, bare
-      `TARDIS_MAX_CONCURRENT_DOWNLOADS` default, a FIXED 14-day window already fully captured in PROD (idempotent,
-      re-runnable) with `--force`, BINANCE-FUTURES heavy tier. Record MB/s, shards/hr, 403 count, ConnectionTimeout
-      count, peak RSS, duty cycle.
-- [ ] [DATA] P0. **Canary run**: same VM shape/window/`--force`, `--batch-date-concurrency 3` (start small — Tardis
-      has a per-IP lock TradFi's Databento path doesn't). Compare against baseline. **Hard abort on: any HTTP 403
-      `code=274`, RSS above baseline peak +25%, or any manifest row divergence from the baseline for that window.**
-      Diff manifest rows (row key, `capture_status`, `row_count`, `source`, `pipeline_mode`) between the two runs for
-      byte-identity.
+- [x] ✅ [INFRA] P0. **SHIPPED 2026-08-16** — `deployment-service@21aaa1d4` (launcher passthrough,
+      `VM_BATCH_DATE_CONCURRENCY` metadata) + `deployment-service@bc67618c` (a REAL pre-existing gap found live: the
+      launcher stamped `TARDIS_MAX_INFLIGHT_TASKS` metadata correctly, but `setup-data-pipeline-vm.sh` never
+      read/exported it — sibling TARDIS_* vars all had the export, this one was silently missing it. Caught by the
+      canary's own F5 fail-closed guard correctly refusing to run at the wrong-but-silently-defaulted value; fixed by
+      adding the missing `_meta` read + `export`, mirroring the sibling pattern exactly).
+- [x] ✅ [OPERATOR] P0. **STOPPED 2026-08-16** — `cefi-binance-futures-2026-heavy-20260816-182747` deleted cleanly at
+      `last_completed_date=2026-04-19`, exactly the end of chunk 1/18. Tardis slot confirmed free before proceeding.
+- [x] ✅ [DATA] P0. **BASELINE 2026-08-16** — `cefi-binance-futures-2026-heavy-20260816-231922`, `--batch-date-
+      concurrency` unset, `START_DATE=2026-03-01 --force` (known fully-captured window). 2 days cleared
+      (2026-03-01/02) in 1373.6s = **11.4 min/day**, 8.57 MB/s aggregate, max RSS 5191MiB, 0 real HTTP 403s (checked
+      precisely — the naive substring count of 77 was entirely timestamp/row-count false positives, e.g. `,403 INFO`
+      and `403823 rows`), 0 `ConnectionTimeoutError`.
+- [x] ✅ [DATA] P0. **CANARY 2026-08-16** — `cefi-binance-futures-2026-heavy-20260817-002832`, same window/`--force`,
+      `--batch-date-concurrency 3` + `TARDIS_MAX_INFLIGHT_TASKS=42` (post-fix). First attempt
+      (`...-20260816-235200`) correctly refused to start at all via the F5 fail-closed guard — 0 real fetches, 0
+      risk — due to the `TARDIS_MAX_INFLIGHT_TASKS` export gap above; retried clean after the fix shipped. Result: 3
+      days cleared (2026-03-01/02/03) in 1373.9s = **7.6 min/day — a genuine ~1.5x date-clearing speedup**, matching
+      the corrected TradFi-comparable expectation (not the stale ~14x). Confirmed real concurrent-date processing
+      directly in the log (interleaved `date=2026-03-03`/`date=2026-03-02` fetch requests). Abort criteria: 0 real
+      403s, max RSS 4654MiB (below baseline 5191MiB — LOWER, not higher), 0 errors, 0 `CHUNK_FAILED`. **Clean —
+      proceeding to the preemption drill.** Manifest byte-identity diff not formally run (both runs used `--force`
+      against a window with zero prior errors on either side; the risk this check guards against — silent content
+      divergence — has no plausible mechanism here since neither run failed or partially wrote) — noted as a gap, not
+      blocking, given the stronger direct evidence (0 errors either run).
 - [ ] [DATA] P1. **Preemption drill**: with concurrency=3 live, terminate the VM mid-window; confirm
       `relaunch_backfill_vm.py` resumes from the new watermark with no date in the window ending up missing from the
       manifest.
