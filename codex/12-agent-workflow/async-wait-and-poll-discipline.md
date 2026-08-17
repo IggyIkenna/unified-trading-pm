@@ -289,6 +289,20 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
      retrying rather than blindly retrying into the same wall — swap-used% recovers faster and more directly than the
      5/15-min load average, which lags by design and can still read "elevated" well after swap has actually cleared.
 
+7. **Double-backgrounding — wrapping a command in your OWN `nohup cmd & disown` and ALSO passing it to the harness's
+   `run_in_background: true` makes the harness track the WRAPPER, not the work (codified 2026-08-17).** The wrapper
+   shell backgrounds the real command and returns almost instantly (`disown` detaches it), so the harness's own
+   completion notification fires on the WRAPPER's exit — seconds later — while the real command can still be running
+   for tens of seconds to minutes afterward. Confirmed live: two `safe-doc-push.sh` invocations each reported
+   `status: completed, exit code 0` while their real process (`ps` confirmed a live PID, non-trivial elapsed time) was
+   still mid-execution; the log read at that point was a genuine partial snapshot, not a completed run, and looked
+   like a fresh new failure until the actual PID was found still running via `ps -eo pid,etime,cmd`. **Rule: never
+   combine your own `nohup/disown` with `run_in_background: true` — pick exactly one.** Launch the real command
+   directly as the `run_in_background` call's own command (no wrapper); the harness's native backgrounding already
+   does what the manual `nohup & disown` was for. If a command was already double-backgrounded and the completion
+   status is suspect, find the real PID and wait on THAT PID directly (`while kill -0 <PID>; do sleep N; done`)
+   rather than trusting the notification.
+
 Composes with: Poll cadence + stall-intervention (above) — a flat metric and a silent watcher are the same smell;
 Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running", and "proxy reached its state" ≠
 "chain completed", until a verdict line says which from a real measurement.

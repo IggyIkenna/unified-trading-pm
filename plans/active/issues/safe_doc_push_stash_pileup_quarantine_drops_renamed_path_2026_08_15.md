@@ -107,9 +107,29 @@ quarantine trigger and confirms the retry loop succeeds instead of exhausting.
       it the same way the isolated-worktree copy-and-rm fix already does. Add a regression test: stage a `git mv`
       archival rename, force the quarantine path (16+ synthetic stash entries), confirm the retry loop succeeds instead
       of exhausting all 6 attempts. (repo: unified-trading-pm)
+- [ ] [DATA] P3. **Re-derive and reapply a lost citation-fix edit to
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`** (a KEEP-NA-STALE-DUPLICATE checkbox
+      pointing at wherever the corresponding item's real extraction landed) — dropped by the SEVENTH data point below,
+      the exact content was never committed and is not preserved anywhere outside this todo's own description. The
+      doc is currently 1092L, over the 1000-line hard cap (pre-existing, not caused by the lost edit, which was
+      net-zero lines) — `check_line_caps.sh` blocks ANY commit touching it until it's split, so this can't land via
+      the normal path regardless; split it first (a separate, standing problem — grep `check_line_caps.sh`'s own
+      output for the current split candidates), then re-run a citation check against its open items before reapplying.
+      (repo: unified-trading-pm)
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17** [body-hash:08f17512841a6b51]: KEEP-NA, valid (classifier RECLASSIFY_WHOLE_DOC verdict OVERRIDDEN on conflict-check) -- the sole open todo (the post-fix RESIDUAL GAP on a git-mv'd rename hitting safe-doc-push.sh's stash-quarantine retry loop) is NOT bounded/mechanical as the classifier assumed: it has had 6 documented investigation passes across multiple sessions, none conclusive (slot-2 discovery 2026-08-15; slot-23/slot-17 both 'could not reproduce'; slot-20 hit a NEW variant 2026-08-16; and a 2026-08-17 na_eligibility_auditor dispatch, slot 30/agt-614193, found a SIXTH data point + a further new variant). This is an actively-worked, state-dependent/elusive repro bug -- reclassifying to assigned_vm:planning would open a competing claim on ground already under live investigation. Cross-cutting tranche audit conflict-check finding.
+- **na-eligibility-audit 2026-08-17 (slot 29/agt-be514e), SEVENTH data point, further new variant**: a plain modified
+  file (not a rename) deliberately excluded from a `safe-doc-push.sh` `--files` list via `git restore --staged`
+  (correctly leaving its working-tree content intact per this repo's own prescribed pattern) survived ONE
+  quarantine-then-pull round-trip intact, then was silently dropped (reverted to exactly `origin`'s content, zero
+  trace) by a SECOND quarantine cycle during a later push attempt in the SAME session — `git diff origin/...` showed
+  byte-for-byte match afterward, and neither attempt's log named the file in any "restored stale content" or similar
+  self-heal message the way the renamed-path variant does. So the failure isn't confined to renames: the quarantine
+  mechanism can silently drop ANY dirty file not in the current run's `--files`, across repeated cycles, with no
+  warning printed at all in this variant (contrast the renamed-path variant, which at least self-detects and logs).
+  Concrete cost: one real, small, uncommitted edit lost (see the new P3 todo above) — low-stakes this time, but the
+  mechanism doesn't distinguish low- from high-stakes content.
