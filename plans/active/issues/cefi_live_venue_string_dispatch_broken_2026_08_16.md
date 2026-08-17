@@ -145,9 +145,32 @@ specific factory-dispatch gap (grepped `plans/active/` + `plans/active/issues/` 
       adapter. Done-when: `get_position_adapter(venue, mode=LIVE)` succeeds for every canonical cefi venue ID
       without a `ValueError`, and a regression test using dash-form tokens exists (the current suite only covers
       bare lowercase forms).
-- [ ] [BACKEND] P0. **Fix `execution_service/trade_execution/factory.py::get_order_adapter`'s `CCXT_VENUES` /
+- [x] ✅ [BACKEND] P0. **Fix `execution_service/trade_execution/factory.py::get_order_adapter`'s `CCXT_VENUES` /
       `DIRECT_REST_VENUES` dispatch** the same way. Done-when: `get_order_adapter` succeeds for every canonical
-      cefi venue ID this sweep covered, with a regression test using dash-form tokens.
+      cefi venue ID this sweep covered, with a regression test using dash-form tokens. **Fixed —
+      `execution-service@fcc6bbcc2c`**. `_resolve_venue_str` now returns `(base_venue_str, inferred_futures)`;
+      a new `_split_venue_suffix` strips a `-SPOT`/`-FUTURES`/`-SWAP` suffix for the 3 venue families whose
+      adapter has a REAL `futures: bool` toggle (confirmed by reading each adapter class:
+      `BinanceCCXTAdapter`/`BybitCCXTAdapter` gate `defaultType=spot/future`; `OKXCCXTAdapter` gates
+      `defaultType=spot/swap` — OKX-FUTURES and OKX-SWAP both map to `futures=True`, a pre-existing
+      simplification not introduced here since the adapter doesn't yet distinguish dated futures from
+      perpetual swaps). `get_order_adapter` merges the inferred flag via `futures = futures or inferred_futures`
+      — an explicit caller-supplied `futures=True` is never downgraded, only ever upgraded from the default
+      `False` every existing production caller passes today.
+      **Deeper correctness finding, not just the ValueError**: naively stripping the suffix for EVERY venue
+      would have silently routed a `COINBASE-FUTURES`/`COINBASE-CDE` order through the existing spot-only
+      `CoinbaseCCXTAdapter` — its `futures` constructor param is a documented no-op ("Unused for Coinbase; kept
+      for API consistency with Binance"). Both now raise a specific `ValueError` naming the real reason instead
+      of either the old generic "Unsupported venue" or (far worse) silently misrouting a derivatives order as
+      spot. `COINBASE-SPOT` still resolves correctly (its own narrower suffix-strip path, since only the
+      FUTURES/CDE market types lack adapter support, not spot). `KRAKEN-SPOT`/`KRAKEN-FUTURES` (already-passing
+      compound `DIRECT_REST_VENUES` entries) confirmed unaffected. 14 new tests in
+      `tests/trade_execution/unit/test_factory_venue_dispatch.py`; 1 pre-existing integration test
+      (`test_uci_venue_enum_used_in_factory`) updated for `_resolve_venue_str`'s new tuple return shape. 8582
+      passed/21 skipped, full `quality-gates.sh --no-fix` green before commit.
+      **Position-factory P0 (strategy-service) is a separate, not-yet-started fix** — same root disease, but a
+      different service/file/adapter-family shape (position-read, not order-placement); do not treat this
+      execution-side fix as closing that todo too.
 - [ ] [BACKEND] P1. **Build one shared venue-token normalization helper** (canonical dash-form → whatever internal
       key a given adapter registry needs) instead of patching both dispatch tables independently — the same
       disease will recur at the next call site (or the next new venue) otherwise. Done-when: both factories above
@@ -159,6 +182,12 @@ specific factory-dispatch gap (grepped `plans/active/` + `plans/active/issues/` 
       follow-up if any hit.
 
 ## Progress Log
+
+- **2026-08-17**: Fixed the execution-side P0 todo — `execution-service@fcc6bbcc2c`. Also found and closed a
+  deeper correctness risk while fixing the ValueError: a naive suffix-strip would have silently routed
+  COINBASE-FUTURES/COINBASE-CDE orders through the spot-only CoinbaseCCXTAdapter instead of failing loud — both
+  now raise a specific, honest error. Position-factory P0 (strategy-service) and the shared-helper P1 remain
+  open.
 
 - **2026-08-16**: Filed during the cefi AG batch's steps 6+8 (position-read + execution) venue-readiness sweep —
   2 independent research passes across strategy-service and execution-service converged on the identical root
