@@ -248,8 +248,13 @@ adjacent axis the same script happens to also report). **Both findings investiga
           migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
           Repos: instruments-service, market-tick-data-service.
 
-- [ ] [DATA] P2. **SCRIPT WRITTEN + DRY-RUN VERIFIED 2026-08-17 (slot-24) — NOT YET COMMITTED/SHIPPED, blocked on
-      repo-blocker `RB-3d968cff`** (market-tick-data-service `quality-gates.sh` fails on 2 PRE-EXISTING unit tests
+- [x] ✅ [DATA] P2. **SHIPPED 2026-08-17 (slot-24) — market-tick-data-service@15d4777f45** ("feat(cefi): extend
+      margin-marker coverage to BYBIT/COINBASE-FUTURES/BITGET-FUTURES dated perps"), landed on `live-defi-rollout`
+      once repo-blocker `RB-3d968cff` cleared (resolved same day, see
+      `plans/archive/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`). Post-push ancestry verified;
+      `ahead=0`. The `--apply` corpus migration itself is NOT part of this todo's scope — that's the separate P2 todo
+      immediately below. **SCRIPT WRITTEN + DRY-RUN VERIFIED 2026-08-17 (slot-24)** (market-tick-data-service
+      `quality-gates.sh` had failed on 2 PRE-EXISTING unit tests
       unrelated to this diff — `test_solana_defi_handler.py::TestCollectProtocol::test_writes_data_to_gcs`,
       `test_lst_rates_handler.py::test_process_writes_canonical_partition_per_protocol_chain` — verified via
       `git stash` + re-run on clean HEAD; see
@@ -327,6 +332,14 @@ adjacent axis the same script happens to also report). **Both findings investiga
 
 ## Progress Log
 
+- **2026-08-17 (slot-24, shipment)**: repo-blocker `RB-3d968cff` (market-tick-data-service QG RED, unrelated to this
+  diff) cleared same day — see `plans/archive/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`. Shipped
+  the 3 previously dry-run-verified margin-marker files via quickmerge:
+  `market-tick-data-service@15d4777f45` ("feat(cefi): extend margin-marker coverage to
+  BYBIT/COINBASE-FUTURES/BITGET-FUTURES dated perps"), landed on `live-defi-rollout`, post-push ancestry verified,
+  `ahead=0`. First P2 todo flipped done. Second P2 todo (the corpus-scale `--apply` VM dispatch) remains open — not
+  operator-gated, needs a dedicated VM per the heavy-I/O HARD RULE; re-verify bucket soft-delete retention live before
+  `--apply` since the 2026-08-08 check may be stale.
 - **2026-08-16 (na-eligibility-audit follow-up, operator ruling — resolves the round5-vs-round7 conflict)**:
   **round5's reclassification stands** — the P2 marker-format-migration todo is ordinary AO-dispatchable work, not
   operator-gated. Whichever active plan currently owns `cefi_satellite_ao_dispatch_batch10_2026_08_08` content (that

@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [execution, order-management, financial-correctness, live-money-risk, stub-code, venue-readiness]
 related:
   [
-    /plans/active/cefi_venue_e2e_batch1_2026_08_16.md,
+    /plans/archive/2026_08/cefi_venue_e2e_batch1_2026_08_16.md,
     /plans/active/venue_e2e_wiring_2026_08_16.md,
     /plans/active/issues/cefi_ccxt_withdraw_stub_returns_false_confirmed_2026_08_16.md,
   ]
@@ -57,7 +57,7 @@ context_scope:
 > **🟢 ARCHIVED 2026-08-17** — all 4 todos closed (P0 reachability, P0 /cancel wiring, P1 amend refusal, P2
 > per-venue atomicity, P2 downstream-state audit). Follow-up fix work split into
 > `plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md` and
-> `plans/active/issues/kraken_futures_wrong_rest_base_url_2026_08_17.md`.
+> `plans/archive/issues/kraken_futures_wrong_rest_base_url_2026_08_17.md`.
 
 # Order cancel/amend HTTP endpoints are hardcoded fake-success stubs
 
