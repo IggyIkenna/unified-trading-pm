@@ -5,7 +5,9 @@ title: >-
 summary: >-
   Full `quality-gates.sh` run for an unrelated cefi marker-migration task surfaced 2 failing unit tests in
   market-tick-data-service. Verified pre-existing via stash/re-run on a clean tree at the same HEAD
-  (81f5fb8f) — byte-identical failures with the diff removed. Filed per RULES.md § 4b (repo-blocker protocol).
+  (81f5fb8f) — byte-identical failures with the diff removed. Filed per worker.md § "4b) BLOCKED ON THE REPO, not
+  your task — declare a repo-blocker" (repo-blocker protocol; the doc's own §4 is unrelated "Backlog-edit hygiene" —
+  corrected citation 2026-08-17).
 status: open
 nature: issue
 asset_group: [defi]
@@ -87,3 +89,14 @@ commit regressed it), plus the lst_rates test-bucket mock gap.
 
 - **2026-08-17 (slot-24)**: filed while shipping an unrelated cefi marker-migration task; verified pre-existing via
   stash/re-run, declared repo-blocker `qg_red` for market-tick-data-service.
+- **2026-08-17 (slot-24, follow-up)**: corrected the `RULES.md § 4b` citation above (no such section exists —
+  `unified-trading-pm/agents/RULES.md` §4 is unrelated "Backlog-edit hygiene"; the real repo-blocker protocol lives
+  in `unified-trading-pm/agents/worker.md` § "4b) BLOCKED ON THE REPO, not your task"). Also confirmed via that
+  protocol: **there is no bypass** — `quickmerge.sh` (lines 171, 419, 2582) always runs the full test suite
+  (`SKIP_TESTS`/`SKIP_TYPECHECK` are hardcoded empty; the `--skip-*` flags are rejected), so no slot can ship ANY
+  code change to market-tick-data-service — related or not — until this blocker clears. The 3 files for the
+  BYBIT/COINBASE-FUTURES/BITGET-FUTURES margin-marker work (tracked in
+  `cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`'s open `[DATA] P2` todo) stay
+  uncommitted in slot-24's working tree for this same reason — code+tests independently verified correct
+  (113/113 unit tests pass, ruff clean) but cannot commit until RB-3d968cff clears, per the "commit only from a
+  green tree" hard rule.
