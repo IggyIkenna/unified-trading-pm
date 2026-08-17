@@ -15,7 +15,8 @@ repos: [strategy-service, unified-api-contracts]
 scope: [engineer]
 tags: [cefi, liquidation_capture, archetype_slot, capability_manifest, plan-authoring]
 related:
-  - /plans/active/cefi_venue_e2e_batch1_2026_08_16.md
+  - /plans/archive/2026_08/cefi_venue_e2e_batch1_2026_08_16.md
+  - /plans/active/cefi_consolidated_closeout_2026_07_18.md
 created: "2026-08-17"
 author: worker-slot-11
 source:

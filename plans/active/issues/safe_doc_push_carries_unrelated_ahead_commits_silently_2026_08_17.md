@@ -26,6 +26,7 @@ related:
     /plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md,
     /plans/archive/issues/unified_trading_pm_empty_string_fallback_baseline_stale_2026_08_17.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-17
 author: backend_engineer (slot-1, interactive)
