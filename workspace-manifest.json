@@ -76,7 +76,7 @@
     "fund-administration-service": "0.9.64",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.103.5",
-    "market-tick-data-service": "0.142.0",
+    "market-tick-data-service": "0.143.0",
     "system-integration-tests": "0.15.5",
     "unified-api-contracts": "0.136.10",
     "unified-trading-library": "0.88.1",
@@ -87,7 +87,7 @@
     "greeks-service": "0.18.51",
     "trading-agent-service": "0.13.1",
     "strategy-service": "0.71.11",
-    "ml-service": "0.58.30",
+    "ml-service": "0.58.32",
     "alerting-service": "0.63.36",
     "unified-trading-api": "0.4.2",
     "client-reporting-api": "0.32.44"
@@ -2249,8 +2249,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.88.1",
-      "published_at": "2026-08-17T07:54:10Z",
+      "version": "0.88.2.dev1+gb4894798c",
+      "published_at": "2026-08-17T08:23:18Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
