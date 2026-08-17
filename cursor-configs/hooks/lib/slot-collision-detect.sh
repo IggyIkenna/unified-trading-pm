@@ -92,22 +92,59 @@ _ancestor_pids() {
   printf '%s' "${acc}"
 }
 
+# _cwd_of_batch <pid> [<pid> ...] -> "<pid> <cwd>" pairs on stdout, one per line, for every pid
+# whose cwd could be resolved. Tries /proc per-pid first (no subprocess, cheap even for many
+# pids); whatever's left over (macOS, or a /proc read that failed) is resolved with exactly ONE
+# `lsof -p pid1,pid2,...` call instead of one `lsof` invocation per leftover pid -- under host
+# load, N separate `lsof` fork+execs is what pushed foreign_claude_pids's walk past the caller's
+# 10s budget (measured load 48, then 164 twenty minutes later --
+# plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md).
+_cwd_of_batch() {
+  local pid v cwd_link leftover=()
+  for pid in "$@"; do
+    cwd_link="/proc/${pid}/cwd"
+    if [ -r "${cwd_link}" ]; then
+      v="$(readlink -f "${cwd_link}" 2>/dev/null || true)"
+      if [ -n "${v}" ]; then
+        printf '%s %s\n' "${pid}" "${v}"
+        continue
+      fi
+    fi
+    leftover+=("${pid}")
+  done
+  [ "${#leftover[@]}" -eq 0 ] && return 0
+  command -v lsof >/dev/null 2>&1 || return 0
+  # `-Fn` emits one `p<pid>` line per matched process followed by the `n<path>` line(s) for its
+  # matched fds; `-d cwd` restricts matches to exactly the cwd fd, so at most one `n` line follows
+  # each `p` line -- the awk below just needs to remember the most recent `p` to label each `n`.
+  lsof -a -d cwd -p "$(
+    IFS=,
+    printf '%s' "${leftover[*]}"
+  )" -Fn 2>/dev/null | awk '
+    /^p/ { pid = substr($0, 2); next }
+    /^n/ { if (pid != "") print pid, substr($0, 2) }
+  '
+}
+
 # foreign_claude_pids <slot_dir> -> PIDs (one per line) of live `claude` processes whose cwd is
 # inside <slot_dir>, EXCLUDING this process's own ancestry. Empty output means no collision.
 foreign_claude_pids() {
-  local slot_dir="$1" ancestors slot_real pid resolved
+  local slot_dir="$1" ancestors slot_real pid resolved candidates=()
   [ -n "${slot_dir}" ] || return 0
   command -v pgrep >/dev/null 2>&1 || return 0
   ancestors="$(_ancestor_pids)"
   slot_real="$(readlink -f "${slot_dir}" 2>/dev/null || echo "${slot_dir}")"
   for pid in $(pgrep -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
-    resolved="$(_cwd_of "${pid}")"
-    [ -z "${resolved}" ] && continue
+    candidates+=("${pid}")
+  done
+  [ "${#candidates[@]}" -eq 0 ] && return 0
+  while read -r pid resolved; do
+    [ -z "${pid}" ] && continue
     case "${resolved}" in
       "${slot_real}" | "${slot_real}"/*) printf '%s\n' "${pid}" ;;
     esac
-  done
+  done < <(_cwd_of_batch "${candidates[@]}")
 }
 
 # is_linked_worktree <dir> -> exit 0 iff <dir> is inside a LINKED git worktree (not the main
