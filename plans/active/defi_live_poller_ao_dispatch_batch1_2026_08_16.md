@@ -47,11 +47,15 @@ resolved_by:
 
 ## Todos
 
-- [ ] [DATA] P2. Extract `SubgraphPollingConnector`, a config-driven `WSFeedConnector` parameterized by
+- [x] ✅ [DATA] P2. Extract `SubgraphPollingConnector`, a config-driven `WSFeedConnector` parameterized by
       `(protocol, chain, subgraph_id, swap_query_template, pool_query_template)`, generalizing
       `dex_swap_uniswap_v3_ws.py`'s implementation. DoD: `UNISWAP_V3-ETHEREUM` re-implemented on top of the new base
       class with zero behavior change (regression: existing unit tests still pass unmodified). (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@5ef71f1084. Extracted `SubgraphPollingConnector` into
+      `_subgraph_polling_connector.py`; `UniswapV3DexSwapWSFeedConnector` now subclasses it with
+      protocol="uniswap_v3"/chain/queries/parsers. All 34 existing unit tests
+      (`test_dex_swap_uniswap_v3_ws_connector.py` + `test_aave_liquidations_ws_connector.py`) pass unmodified;
+      basedpyright clean (no blanket file-level suppression on the new module).
 - [ ] [DATA] P2. Extract `OnChainLiquidationPoller`, a config-driven `WSFeedConnector` parameterized by
       `(protocol, chain, rpc_resolver_key, contract_address, event_topic, log_parser)`, generalizing
       `aave_liquidations_ethereum_ws.py`'s implementation. DoD: `AAVE_V3-ETHEREUM` re-implemented on top of the new
