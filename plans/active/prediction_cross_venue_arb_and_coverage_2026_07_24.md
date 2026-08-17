@@ -443,3 +443,11 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
 - [x] [DESIGN] P1. CROSS-VENUE BLOCKER RESOLVED + VERIFIED 2026-06-23 — Kalshi catalogue cqg groups — see archive.
 - [x] [SCRIPT] P1. cqg partition-completeness — LIVE relaunch DONE 2026-06-23 — see archive.
 - [x] [SCRIPT] P2. cqg partition-completeness — recent-window catalogue re-enumeration VERIFIED COMPLETE — see archive.
+
+## Progress Log (cont'd)
+
+- **na-eligibility-audit 2026-08-17** [body-hash:898c2999fc103f29]: KEEP-NA, valid — 2 open, re-verified
+  (tarball-overwrite race at line ~172, infra/ci-scoped 2-option design question with no directive; fixture-pairing
+  residual nested todo, an open team-name-canonicalization provenance question this workspace's "no false pairs"
+  mandate keeps genuinely gated). Matches the 2026-08-09 marker and the 2026-08-16 plan_reconciler's independent
+  2-open-item recount. Doc stays NA.

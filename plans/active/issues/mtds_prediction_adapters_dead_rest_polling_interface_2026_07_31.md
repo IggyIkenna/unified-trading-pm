@@ -162,3 +162,7 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   this run corrects. The sole todo's `[x]` checkbox was already accurate. Good `/archive-candidates-audit` candidate
   (the equivalent sibling `is_polymarket_dead_fixture_cross_reference_2026_07_31.md` was archived on resolution; this
   one wasn't) — not archived here, out of this run's bounded scope.
+- **na-eligibility-audit 2026-08-17** [body-hash:1054cb4892c38d94]: KEEP-NA, valid (not-applicable — 0 open todos,
+  `archive_exempt: true`). Confirms the 2026-08-16 plan_reconciler correction: this doc is genuinely NOT an archive
+  candidate despite 0 open todos — `archive_exempt: true` is set in its own frontmatter and is the correct standing
+  marker per the archival-discipline codex SSOT. No action needed.

@@ -781,3 +781,8 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   (`archive_exempt: true` coordination hub; 4 Phase A-E children still open under their own docs, plus its own 0-todo
   status is by design, not a moot/ARCHIVE candidate — `archive_exempt: true` is the correct standing marker). Doc stays
   NA.
+- **na-eligibility-audit 2026-08-17** [body-hash:99cfcfb7b33bfe4a]: KEEP-NA, valid — 0 native open checkboxes
+  (coordination hub by design, `archive_exempt: true`, `gate_on_depends: false`), re-confirmed live via
+  `grep -cE '^- \[ \]'`. Agrees with the 07-30/07-31/08-04/08-06/08-08/08-10 markers. The prose-only "Deferred work
+  after 2026-07-18" section remains genuine operator/shared-file-gated work (no new `- [ ]` markup, still correctly
+  not surfacing in the checkbox count). Still the live index for its 4 Phase A-E children. Doc stays NA.

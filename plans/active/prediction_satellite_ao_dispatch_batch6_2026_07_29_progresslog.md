@@ -285,3 +285,7 @@ archive_exempt: true
   **`archive_exempt: true` justification**: this doc has 0 open todos by design — it is a permanent historical-record
   companion for the main doc's still-open work, not a completed unit of work in its own right. Archiving it would
   disconnect the main doc's Progress Log pointer from live-corpus retrieval.
+- **na-eligibility-audit 2026-08-17** [body-hash:6e3f0605c7425160]: KEEP-NA, valid (not-applicable — 0 open todos by
+  design, `archive_exempt: true`). Pure historical-record companion to
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s Progress Log; correctly exempted from archival per its
+  own frontmatter justification. No action needed.
