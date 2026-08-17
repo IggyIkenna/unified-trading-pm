@@ -2259,8 +2259,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.103.7.dev1+gabb6c28b4",
-      "published_at": "2026-08-17T08:52:03Z",
+      "version": "0.103.8.dev1+g388c21312",
+      "published_at": "2026-08-17T11:42:00Z",
       "registry": "artifact-registry"
     }
   }
