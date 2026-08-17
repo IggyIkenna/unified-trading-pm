@@ -178,19 +178,32 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
       cutover, not an active incident. Done-when: both call the real CCXT method, classify errors the same way
       `execute_withdrawal`/`execute_internal_transfer` do, and have regression tests mirroring
       `test_live_ccxt_withdraw.py`'s pattern.
-- [ ] [BACKEND] P2. **`TransferCoordinator`'s missing `CEX_WITHDRAW` handler-map entry is itself worth fixing**
-      independent of the adapter-wiring fix above — a caller that DOES construct a `TransferCoordinator` directly
-      (bypassing `HandlerRegistry`) would hit a `KeyError`, not a clean error. Done-when: `CEX_WITHDRAW` has a
-      registered handler (or the missing-key case fails loud with a clear message) in
-      `transfer_coordinator.py:148-150`. **Partial finding, 2026-08-16**: `_get_handler` already raises a clear,
-      named `KeyError` today ("No handler registered for transfer_type=... Wire execution-service protocol adapters
-      in TransferCoordinator.__init__.") — the "fails loud with a clear message" half of this done-when may already
-      be satisfied; still needs a decision on whether a real handler should be registered too (its module docstring
-      claimed CEX_WITHDRAW routed through `execution_service.adapters.order_adapter`, which has NO withdraw
-      function at all — corrected in `execution-service@868185565f`, was misleading, not a real routing target).
+- [x] ✅ [BACKEND] P2. **`TransferCoordinator`'s missing `CEX_WITHDRAW` handler-map entry — decided 2026-08-17: NO
+      duplicate handler, fail-loud KeyError is the correct final state.** Independent of the adapter-wiring fix
+      above — a caller that DOES construct a `TransferCoordinator` directly (bypassing `HandlerRegistry`) would
+      hit a `KeyError`, not a clean error. Done-when: `CEX_WITHDRAW` has a registered handler (or the missing-key
+      case fails loud with a clear message) in `transfer_coordinator.py`. **Partial finding, 2026-08-16**:
+      `_get_handler` (`transfer_coordinator.py:206-218`) already raises a clear, named `KeyError` today ("No
+      handler registered for transfer_type=... Wire execution-service protocol adapters in
+      TransferCoordinator.__init__.") — satisfies the "fails loud with a clear message" half of the done-when.
+      **Decision, 2026-08-17**: do NOT register a real handler here. `TransferCoordinator` is confirmed
+      dead-code-today (its only instantiation anywhere in the repo is a unit test, per the reachability chain in
+      `defi_cloud_kms_silent_wrong_chain_id_fallback_2026_08_16.md`'s sibling investigation) — the real,
+      production `CEX_WITHDRAW` path is `HandlerRegistry`/`engine.handlers.transfer_handler.TransferHandler`
+      (fixed this session, `execution-service@b9ddcd9193` + `58dbf04776`). Wiring a SECOND, parallel
+      `LiveCcxtTransferAdapter` integration into this unreachable coordinator would risk two divergent
+      CEX_WITHDRAW implementations drifting apart over time, not improve safety — the existing fail-loud
+      `KeyError` already prevents any silent-wrong behavior if this path is ever hit. Consolidating
+      `TransferCoordinator` onto the same adapter is future work IF this coordinator itself ever gets wired into
+      production, not a gap to close now.
 
 ## Progress Log
 
+- **2026-08-17 (later, same session)**: Closed the `TransferCoordinator` P2 todo — decision recorded, no code
+  change: do NOT register a real `CEX_WITHDRAW` handler in the dead-code-today coordinator, the existing
+  fail-loud `KeyError` is the correct final state given the real production path is `HandlerRegistry`/
+  `TransferHandler`. Only the bootstrap-wiring P1 (real adapter into `HandlerRegistry` at service startup,
+  needs live sandbox credentials) and the `get_transfer_status()`/`get_balance()` P1 remain open on this doc.
 - **2026-08-17**: Closed the downstream-reconciliation audit todo — answer NO, with evidence (no reconciliation
   component checks transfer outcomes; `get_balance()` is itself a blind stub). While auditing, found and fixed
   `execute_internal_transfer`'s identical silent-fallback bug plus `TransferHandler`'s identical missing
