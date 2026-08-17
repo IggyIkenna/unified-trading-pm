@@ -107,7 +107,7 @@ def _state_path(transcript_path: str, session_id: str) -> Path | None:
 def _load(path: Path) -> dict[str, object]:
     try:
         return json.loads(path.read_text())
-    except Exception:
+    except Exception:  # noqa: broad-except — corrupt/missing state file degrades to empty state, never a crash
         return {}
 
 
@@ -115,8 +115,7 @@ def main() -> int:
     try:
         raw = sys.stdin.read()
         payload: dict[str, object] = json.loads(raw) if raw.strip() else {}
-    except Exception:
-        # Fail OPEN: a malformed hook event is a harness bug, not something to wedge on.
+    except Exception:  # noqa: broad-except — fail OPEN: malformed hook event is a harness bug, not ours to wedge on
         return 0
 
     if payload.get("tool_name") != "Edit":

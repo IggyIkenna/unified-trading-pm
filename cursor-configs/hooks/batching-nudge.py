@@ -255,7 +255,7 @@ def _should_block(
 def main() -> None:
     try:
         payload = json.load(sys.stdin)
-    except Exception:
+    except Exception:  # noqa: broad-except — malformed/absent stdin JSON must no-op, never crash the hook
         return
 
     # Default missing hook_event_name to PostToolUse — this hook's sole event before the
@@ -459,7 +459,7 @@ def _reset(payload: dict[str, object], tool: str) -> None:
 def _load(path: Path) -> dict[str, object]:
     try:
         return json.loads(path.read_text())
-    except Exception:
+    except Exception:  # noqa: broad-except — corrupt/missing state file degrades to empty state, never a crash
         return {}
 
 
@@ -470,7 +470,7 @@ def _save(path: Path, state: dict[str, object]) -> None:
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(state))
         os.replace(tmp, path)
-    except Exception:
+    except Exception:  # noqa: broad-except — a lost write costs at most one missed nudge/block (see docstring)
         pass
 
 
