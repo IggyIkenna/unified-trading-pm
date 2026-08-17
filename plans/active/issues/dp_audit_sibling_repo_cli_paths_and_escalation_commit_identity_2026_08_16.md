@@ -183,10 +183,10 @@ in the container's `unified-trading-pm` worktree before the container exits.
       actually run inside `e2e-audit:latest`; verify locally against a real AG's manifest that `DP_DIVERGENT_EMPTY`
       classification actually executes (not just `.exists()` returning True) before shipping. Repo: e2e-testing. —
       e2e-testing@c3da78786d
-- [ ] [CODE] P2. Confirm live whether `uts-prod-dp-manifest-hygiene-full` (weekly, `--mode full`) has ALSO been
+- [x] ✅ [CODE] P2. Confirm live whether `uts-prod-dp-manifest-hygiene-full` (weekly, `--mode full`) has ALSO been
       silently skipping `_check_phantom` via the same `_PHANTOM_CLI` absence (check its recent execution logs first —
       don't assume); if confirmed, decide + implement option A or a scope change for phantom specifically. Repo:
-      e2e-testing / instruments-service / deployment-service (image build).
+      e2e-testing / instruments-service / deployment-service (image build). — e2e-testing@4ebd52dc27
 - [x] ✅ [CODE] P1. Set a container-local git identity before the escalation issue-doc commit-and-push step in
       `_dp_common.py` (or the Dockerfile), so a genuine RED finding's auto-filed issue doc actually persists instead
       of being silently dropped when the ephemeral Cloud Run container exits. Verify with a planted non-v9 row +
@@ -249,3 +249,39 @@ in the container's `unified-trading-pm` worktree before the container exits.
   OOM this escalation was dispatched for, and (1) in particular has a real design decision (A vs B above) that
   shouldn't be guessed by a one-shot alert-triage worker. Filed as `[CODE] P1/P1/P2/P3` todos rather than left as
   prose per the workspace's own findings-triage HARD RULE.
+
+- **2026-08-17 (backend_engineer worker, slot-8)**: Shipped todo (2) — `e2e-testing@4ebd52dc27`. Confirmed live
+  first: checked `uts-prod-dp-manifest-hygiene-full`'s MOST RECENT execution
+  (`uts-prod-dp-manifest-hygiene-full-dmsxx`, 2026-08-16T20:10-20:22Z, all 5 AGs — itself already AFTER todo (1)'s
+  `_DIVERGENCE_CLI` fix landed) via `gcloud logging read` — `phantom_captured_no_parquet: SKIPPED
+  (phantom_cli_absent)` fired on every asset_group, confirming (2) exactly as suspected. (Side note, not this todo's
+  scope but worth flagging: that SAME execution ALSO still showed `oracle_expects_but_empty: SKIPPED
+  (divergence_cli_absent)` for every AG — the deployed image at that point still predated `e2e-testing@c3da78786d`;
+  resolved incidentally by this todo's own image rebuild below, see verification.)
+  Implemented option A (vendor), not a scope change: audited `reconcile_phantom_manifest_rows_all.py`'s full 1991-line
+  import surface and found ZERO instruments-service-internal imports — only `unified_api_contracts` /
+  `unified_trading_library` / pandas / stdlib, all already present in the `e2e-audit:latest` base image — so the
+  "dependency closure" the issue doc's option-A framing warned about turns out to be empty; only the one file needs
+  vendoring. Added a `stage-workspace-deps` step to `cloudbuild-e2e-audit.yaml` (mirrors
+  `market-tick-data-service/cloudbuild.yaml`'s own existing sibling-repo-staging pattern — shallow `git clone` of
+  instruments-service into `.deps/`, same GH_PAT-from-Secret-Manager auth) + a guarded `RUN` hoist step in the
+  Dockerfile that copies the one script to `/app/instruments-service/scripts/...` — the SAME
+  `<root>/instruments-service/scripts/<file>` shape local multi-repo dev already has, so `_PHANTOM_CLI`'s EXISTING
+  path computation resolves with no code change (unlike `_DIVERGENCE_CLI`'s env-aware-fallback fix, no new path logic
+  was needed here at all). Verified in two stages, not `.exists()` alone: (a) LOCALLY — built the image with a
+  locally-staged `.deps/instruments-service` copy, confirmed `_PHANTOM_CLI.exists() == True` +
+  `_DIVERGENCE_CLI.exists() == True`, ran `manifest_hygiene_daily.py --mode full --smoke` clean, and invoked the
+  vendored CLI's `--help` directly inside the container (exercises every import — pandas/UAC/UTL — with no GCS
+  network/creds needed) to prove the subprocess mechanism genuinely works, not just that the file is present; (b)
+  PRODUCTION — submitted the real `cloudbuild-e2e-audit.yaml` build (`gcloud builds submit`,
+  `Evidence: cloudbuild=8575b934-bdab-4e66-a6a8-56e8c2bb45c9` resolves `SUCCESS` — its own smoke step, which runs all
+  4 audit scripts' `--smoke` including `--mode full`, gates the push), then `docker pull`ed the FRESHLY-PUSHED
+  `e2e-audit:latest` (digest `sha256:1aa54070c643d0696fdbd6c0b3000e82d0a57fb75c70745a27d175829c3ab9f3`) and confirmed
+  BOTH `/app/instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` AND
+  `/app/scripts/detect_manifest_divergence.py` are present on the real image now live in Artifact Registry — so both
+  (1) and (2)'s fixes are confirmed LIVE, not just committed, closing the exact "code fixed but image never rebuilt"
+  gap this doc's own history already hit twice (the stale-`ARG`/stale-build incidents on
+  `uts-prod-dp-manifest-hygiene-changed`). Did NOT re-trigger a live `uts-prod-dp-manifest-hygiene-full` Cloud Run
+  execution against real production data (that's todo (4)/P3's scope, gated on this fix landing) — next Sunday
+  08:00 UTC run (or an operator-triggered `gcloud run jobs execute`) will be the first real confirmation that
+  `_check_phantom` actually classifies against production manifests, not just that the CLI resolves.
