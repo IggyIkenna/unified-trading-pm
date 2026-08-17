@@ -107,9 +107,17 @@ remedy text.
 - [ ] [REVIEW] P1. Classify
       `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`'s flagged todo
       (repo: unified-trading-pm).
-- [ ] [REVIEW] P1. Classify `tradfi_phase_d_terminal_gate_2026_07_24.md`'s flagged todo (repo:
+- [x] ✅ [REVIEW] P1. Classify `tradfi_phase_d_terminal_gate_2026_07_24.md`'s flagged todo (repo:
       unified-trading-pm) — note its own text says "UNBLOCKED 2026-08-15", likely just needs the
-      stale exclusion-affecting marker removed/updated.
+      stale exclusion-affecting marker removed/updated. — 2026-08-17 (slot-20, review-craft):
+      genuinely open, not a legitimate exception — same bug class as items 1 and 2: the todo's own
+      superseded, struck-through `~~BLOCKED-OPERATOR-DECISION (...)~~` text (kept only for history,
+      already superseded by the "BILLING GATE LIFTED 2026-08-10" note right after it) was tripping
+      the parser's undeclared-marker exclusion even though the todo is explicitly "Still open, now
+      genuinely dispatchable". Fixed by rewriting the historical note to drop the literal
+      `BLOCKED-OPERATOR-DECISION` marker text while preserving the same historical context. Verified
+      `check_ao_dispatch_visibility_gate.py --json` now shows `accidental_exclusions: 3` (down from
+      the pre-fix 6, confirming this doc no longer appears in the excluded set).
 - [ ] [REVIEW] P1. Classify
       `issues/cefi_ccxt_withdraw_stub_returns_false_confirmed_2026_08_16.md`'s flagged todo (repo:
       unified-trading-pm).
@@ -139,3 +147,10 @@ remedy text.
   dispatch gap. Fixed by renaming the category label ("not-AO-eligible" → "non-AO-eligible") rather than adding a
   declared marker, since this todo's real gating is already correctly handled by `gate_on_depends` and a declared
   marker would duplicate/conflict with that mechanism.
+- **2026-08-17 (slot-20, review-craft)**: classified item 4 (`tradfi_phase_d_terminal_gate_2026_07_24.md`).
+  Verdict: genuinely open (accidental exclusion), same bug class as items 1 and 2 — a stale, already-superseded
+  struck-through `~~BLOCKED-OPERATOR-DECISION (...)~~` historical note (kept for history, immediately followed by
+  a "BILLING GATE LIFTED 2026-08-10" note documenting the resolution) still contained the literal marker text the
+  parser scans for, so it was mistaken for a live declared exclusion. Fixed by rewriting the historical note to
+  keep the same context without the literal marker string. Confirmed via
+  `check_ao_dispatch_visibility_gate.py --json`: `accidental_exclusions` dropped to 3.
