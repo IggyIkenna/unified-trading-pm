@@ -42,6 +42,7 @@ context_scope:
   [
     /plans/active/cefi_tardis_date_concurrency_2026_08_16.md,
     /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
@@ -123,3 +124,6 @@ running. Check `gcloud compute instances list` for the current cap-relevant flee
   yet; explicitly gated behind the Tardis N=1 slot, which was in continuous use by the BINANCE-FUTURES resume/canary
   work for the rest of this session.
 - **na-eligibility-audit 2026-08-17 (cefi tranche)** [body-hash:472458851b18a12a]: KEEP-NA, valid — first audit pass (fresh doc, created 2026-08-16, no prior marker). All 3 open items DEPENDENCY_BLOCKED on the same Tardis N=1 concurrent-VM slot occupied by the live BINANCE-FUTURES backfill tracked in the sibling `cefi_tardis_date_concurrency_2026_08_16.md` plan (~316 days remaining at observed pace). A fully-specified relaunch command exists (§ "Recommended relaunch shape") but is not yet practically actionable, and sequencing against the sibling in-flight investigation for the one shared VM is a real coordination judgment, not a mechanical dispatch. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries, was 3) — added
+  `cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md`, named in the doc's own "Recommended relaunch
+  shape" section as the bug class the per-venue solo-launch recommendation avoids.

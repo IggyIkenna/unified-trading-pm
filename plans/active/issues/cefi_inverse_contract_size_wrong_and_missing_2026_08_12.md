@@ -22,9 +22,11 @@ tags: [contract_size, liquidations, tardis, instruments-service, cefi-inverse]
 related: [data_pipeline_alert_storm_root_cause_batch_2026_08_10, cefi_consolidated_closeout_2026_07_18]
 context_scope:
   [
+    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     unified-api-contracts/unified_api_contracts/registry/cefi_inverse_contract_multipliers.py,
     market-data-processing-service/market_data_processing_service/app/adapters/cefi/liquidations_adapter.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
   ]
 created: 2026-08-12
 author: claude-agent
@@ -415,3 +417,7 @@ uncommitted across a checkpoint boundary, even mid-task.
   log (`mdps-cefi-2021-20260813-174738:/tmp/vm-exec-5128.log`), not just static code tracing. Shipped:
   `market-data-processing-service@a3ff10f0dd`.
 - **na-eligibility-audit 2026-08-17** [body-hash:f9e2a037984a3a3c]: KEEP-NA, valid — Reaffirmed. 8 of 10 todos [x] with hard sha evidence. 2 remaining: an [OPERATOR] Tardis-tier spend decision, and a monitor-to-completion task gated on a still-running VM (ETA ~2026-08-22..26) with an open-ended diagnose-if-it-dies-again branch. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries, was 3) — added the sourcing P0 plan
+  (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`) and `live_workers_chain.py`, the file most of this
+  doc's later root-cause work (SchemaContractNotFoundError routing, the 2-segment instrument_id bug) actually
+  touched.

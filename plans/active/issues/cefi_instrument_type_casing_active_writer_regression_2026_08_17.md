@@ -32,6 +32,15 @@ locked_by:
 resolved_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/cefi_casing_residual_ao_dispatch_2026_08_16.md,
+    /plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py,
+    market-tick-data-service/scripts/normalize_instrument_type_casing.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 ## What I found
@@ -232,3 +241,7 @@ is genuinely VM-scale work, not shared-host-scale:
   collision-dedup + backup + `--index-only` flag) — `market-tick-data-service@07861cf6`.
 - Root-cause candidate code refs: `partitioned_writer.py:401-414`, `tardis_shared.py:565`,
   `manifest_finalize.py:259-269` (`itype_key` in `base_row_key`).
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (6 entries).

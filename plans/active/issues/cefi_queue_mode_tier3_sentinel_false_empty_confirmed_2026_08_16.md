@@ -164,3 +164,5 @@ lines despite genuine fetch activity, which is what let this run silently for 17
   confirmed byte-identical via `git status` before/after) rather than force-including it via `--allow-dirty-tarball`
   or waiting indefinitely.
 - **na-eligibility-audit 2026-08-16** [body-hash:001b7452f28b77e7]: KEEP-NA, valid — Full end-to-end read (146 lines) confirms this is a same-day (2026-08-16), fully-executed incident-response issue doc, not a stale backlog item.
+- **context-scout 2026-08-17**: populated context_scope (4 entries) — field already carried accurate content from
+  filing; this is its first context-scout marker.

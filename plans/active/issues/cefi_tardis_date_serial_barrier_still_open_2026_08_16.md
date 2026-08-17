@@ -120,3 +120,6 @@ recovery to full-chunk replay or a page — this needs its own verification + fi
   (including a live TradFi production regression) that gate enabling it for CeFi. Operator ruled: human plan (not
   AO-dispatched), execute today, test on the live VM.
 - **na-eligibility-audit 2026-08-17** [body-hash:130f149e38436c8b]: KEEP-NA, valid. First audit pass (fresh doc, created 2026-08-16, no prior marker). Doc's own Progress Log carries an explicit dated operator ruling: human plan (not AO-dispatched), execute today, test on the live VM -- citation-hold class (a)-adjacent, covering the whole doc. Item 1 redirects to cefi_tardis_date_concurrency_2026_08_16.md. Items 2 (TradFi checkpoint verify) and 3 (stale-estimate correction) read individually bounded but are bundled under the same-day human-track ruling for a 1-day-old doc still being actively executed as a unit -- flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (low confidence) for next-run reassessment rather than extracted now. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged -- the linked design plan, the archived
+  throughput-collapse doc, and the two source paths (MTDS orchestrator barrier, UTL concurrency adapter) still cover
+  the doc's subject matter.

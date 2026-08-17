@@ -31,6 +31,7 @@ context_scope:
   - deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh
   - deployment-service/scripts/vm/launch-cefi-forward-poll.sh
   - /codex/05-infrastructure/deployment-observability.md
+  - unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
 parent_epic: infrastructure_master
@@ -157,3 +158,5 @@ depends_on: []
   timer elapsing. Added `ResourceProfiler.memory_warning_percent` as a public property (previously private-only) so
   the runner reads the SAME threshold the profiler fires warnings on instead of a separately-configured value that
   could drift. Backward-compatible: behaviour is unchanged when no profiler is wired or it hasn't sampled yet.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries, was 3) — added the `unified-trading-library`
+  `parallel_per_symbol_runner.py` module the 2026-08-16 memory-pressure follow-up shipped against.
