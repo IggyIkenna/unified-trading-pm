@@ -110,7 +110,7 @@ def main():
                 h = append_one(mod, e["path"], e["date"], e["suffix"])
                 print(f"OK hash={h} path={e['path']}")
                 ok += 1
-            except Exception as exc:
+            except Exception as exc:  # noqa: broad-except — one bad entry must not abort the rest of the batch
                 print(f"FAIL path={e['path']} error={exc}")
                 failed.append(e["path"])
         print(f"--- batch done: {ok}/{len(entries)} ok, {len(failed)} failed ---")
