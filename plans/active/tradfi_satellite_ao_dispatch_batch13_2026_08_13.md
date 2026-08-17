@@ -716,3 +716,5 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   refused to write rather than fabricate output. Checkbox stays unchecked — the blocker has shifted from infra to data
   availability for this specific window. Full evidence and next-step guidance in the todo's own UPDATE note above and in
   the issue doc's amended `[DATA] P1` todo.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

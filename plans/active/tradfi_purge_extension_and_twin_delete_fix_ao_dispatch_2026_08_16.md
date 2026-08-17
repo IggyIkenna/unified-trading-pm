@@ -41,6 +41,7 @@ context_scope:
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    instruments-service/scripts/cleanup_legacy_twins.py,
   ]
 locked_since:
 resolved_by:
@@ -116,3 +117,4 @@ resolved_by:
   `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` and `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
   The delete itself remains gated on 100% measured twin coverage post-fix — this plan does not authorize the delete,
   only the lookup-bug investigation that determines whether the current 0% measurement can be trusted.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

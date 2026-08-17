@@ -83,3 +83,4 @@ context_scope:
   changes needed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
