@@ -37,7 +37,15 @@ locked_by:
 source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
 archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
-context_scope: [/codex/04-architecture/tier-and-import-architecture.md, strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py, execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py, strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py, /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md]
+context_scope:
+  [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,
+    execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
+    /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md,
+  ]
 ---
 
 # DeFi strategy archetype universe — no curtailment mechanism, two unreconciled registries, one dead field
@@ -885,6 +893,7 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   worker todo), not blocked by any infra/credential/process precedent this round settled. No satellite-extraction
   candidate found. Doc stays `assigned_vm: NA` (KEEP-NA valid, round11). Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:6bb357488f3768d0]: KEEP-NA-STALE (already-duplicated), applied — 891-line issue doc, almost entirely shipped/checked off across Phases 0-5. Sole remaining open item (the MVP_SCOPE catalog-identity precondition, line ~693) was flagged in-doc as blocked on a scope/sequencing decision; this doc's own 2026-08-16 Progress Log entry records that ruling landing today (build for all ~26-29 archetypes now) and the resulting work extracted to /plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md (+ finalize, both confirmed live on disk: assigned_vm:planning, status:active, correct Source: citation). Converted the stale open checkbox to a citation marker this run (was never flipped despite the extraction already existing). Doc now has 0 open checkboxes remaining.
+- **na-eligibility-audit 2026-08-17**: ARCHIVE-ready, reconfirmed — 0 open todos (fence-aware grep). archive_exempt: true remains deliberately set per this doc's own note (flip-then-mv two-commit pattern, check_archive_candidates.sh convention) — not executed this run (out of this skill's scope; hand off to the dedicated archive-candidates-audit pass).
 - **CLOSED BY CITATION 2026-08-16 (defi_satellite_ao_dispatch_batch9_2026_08_06_finalize, source-doc reconciliation
   pass, slot 23, data_engineering)**: the "1 untracked prose-only item (CLI/operator plumbing to set already-shipped
   `PaperUniverseConfig` fields on `run_paper`)" flagged incidental-not-actioned by the 2026-08-06 na-eligibility-audit
@@ -892,4 +901,3 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   added `--archetypes`/`--venue-allowlist`/`--currency-allowlist` CLI flags to `run_paper`'s `service_entry.py`,
   threaded into `PaperUniverseConfig` via `build_paper_universe_config`, with 16 unit tests + green
   `quality-gates.sh --no-fix`. No further hygiene action needed on this item.
-- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

@@ -38,7 +38,7 @@ related:
     issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
     issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
     /plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
-    issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,

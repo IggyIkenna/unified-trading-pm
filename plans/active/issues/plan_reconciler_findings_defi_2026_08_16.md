@@ -277,3 +277,4 @@ once this doc is split.
     ordinary work, none newly flippable.
   This doc still carries genuine open work (no items resolved to zero) — stays in `plans/active/issues/`, unlocked.
   Continuing to today's fresh `defi`-tranche sweep in `plan_reconciler_findings_defi_2026_08_17.md`.
+- **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — 0 open todos confirmed (this is plan_reconciler's own run-journal, not a task-tracking doc); today's plan_reconciler Phase -1 pass (dispatch agt-5dedc7) re-checked every still-open item with no drift found. Doc stays assigned_vm: NA.

@@ -34,7 +34,7 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md, /plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16.md]
+context_scope: [/plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md]
 drift_direction: advance-code
 depends_on: []
 archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
@@ -81,7 +81,4 @@ disproportionately or doesn't match a named retirement's actual pool list, escal
       (2026-06-30..07-19) — confirm the drop matches a named retirement plan's actual pool-removal scope, or escalate
       as a capture gap. (repo: market-tick-data-service)
 - **na-eligibility-audit 2026-08-16** [body-hash:1091af386adf762e]: KEEP-NA-STALE (already-duplicated), applied — sole open todo (pool-count census) is verbatim-duplicated in defi_satellite_ao_dispatch_batch14_2026_08_16.md (status: draft, from the 2026-08-16 /ag-closeout-audit defi run). Converted the checkbox to a citation marker rather than reclassifying this doc (would open a second, redundant dispatch path once batch14 activates). Doc stays NA, 0 open checkboxes remaining.
-
-## Progress Log
-
-- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **na-eligibility-audit 2026-08-17**: KEEP-NA-STALE (already-duplicated), reconfirmed — citation to defi_satellite_ao_dispatch_batch14_2026_08_16.md:154 (status: draft) independently re-verified real (exact todo text match). Doc stays NA, 0 open checkboxes.

@@ -14,14 +14,23 @@ repos: [market-tick-data-service, deployment-service, alerting-service]
 scope: [engineer]
 tags: [data-pipeline, defi, subgraph, data-correctness, dp-watcher-006]
 created: "2026-08-16"
-related: [/codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/defi_consolidated_closeout_2026_07_18.md]
+related:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/subgraph_health_probe_28_of_50_alerted_after_fix_2026_08_16_finalize_2026_08_17.md,
+  ]
 parent_epic: observability_master
 priority: P1
 source: escalation agt-686a3e (DP-WATCHER-006 job-failure fix follow-up finding)
-assigned_vm: NA
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: data_engineering
+effort: medium
+thinking_tier: medium
+last_updated: "2026-08-17"
 resolved_by:
 locked_by:
-execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 ---
@@ -92,3 +101,13 @@ diff against). Both need a human/agent pass to distinguish before this is dismis
 Escalation: agt-686a3e (DP-WATCHER-006, `wall_type=data_pipeline_failure`). Fix: `deployment-service@<shipped-sha>`
 (see quickmerge commit). Filed by the escalation worker per findings-triage (outside-plan, data-correctness class —
 notify + issue doc, not silently dismissed).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17**: RECLASSIFY (whole-doc), applied — read end to end (1 open todo, grep-confirmed,
+  no prior verdict marker — first time seen by this skill). The sole todo has an explicit worker-determinable decision
+  rule and done-when (wait 2-3 more 6h sweeps past 2026-08-16 22:11 UTC, re-measure the alert rate, then either close
+  as cold-start noise or file a dedicated follow-up plan) — no open design call in its current scope. Conflict-checked
+  against every active defi/observability covering doc — zero prior claim found. Flipped `assigned_vm: NA` →
+  `planning`, `execution_scope: local-only` → `orchestrator-agent`, added `assigned_role: data_engineering`. Paired
+  with `subgraph_health_probe_28_of_50_alerted_after_fix_2026_08_16_finalize_2026_08_17.md` in the same turn.

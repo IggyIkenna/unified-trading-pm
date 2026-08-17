@@ -37,7 +37,7 @@ related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
     /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     /plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
     ../prediction_capture_incident_remediation_2026_07_06.md,
   ]
@@ -57,7 +57,7 @@ locked_by:
 context_scope:
   [
     /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/fluid_adapter.py,
   ]

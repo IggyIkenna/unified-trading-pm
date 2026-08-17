@@ -706,7 +706,7 @@ context_scope:
   covering-set doc (grep for test_collateral_validation.py, funding_ensemble_engine.py, CollateralValidationMixin,
   defi_enhancements across the full defi covering set returned zero hits — nothing else claims this ground). The blocker
   is a genuine three-way operator decision baked into the source doc...
-- **`plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`**: Confirmed via read: the doc's
+- **`plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`**: Confirmed via read: the doc's
   "Tracked follow-ups" section (lines 334-365) has 5 items. Item (1) HYPERLIQUID trades backfill re-run and item (3)
   delete retired perp_funding DeFi-routing residue ARE covered — item (3) verbatim in
   defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 462-471 (cites this doc as Source,...

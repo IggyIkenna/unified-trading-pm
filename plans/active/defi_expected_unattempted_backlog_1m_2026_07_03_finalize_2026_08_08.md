@@ -92,7 +92,14 @@ is done. Do not start manually before then.
           `is_valid_shard_key`/enumerator tests. Evidence: `unified-api-contracts@768c6f93`,
           `.qg_last_passed_sha=768c6f9325eb235ca9da5caad4f3bb4459bcf4f9`.
 
-- [ ] [OPERATOR] P2. **Ask the operator to unlock `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` for
+- [x] [OPERATOR] P2. **DONE (na-eligibility-audit 2026-08-17) — moot, the lock is already cleared.** Live-verified:
+      `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s frontmatter today shows `locked_by:` and
+      `locked_since:` both EMPTY (direct read, 2026-08-17) and 0 open todos (grep-confirmed). Per today's
+      `plan_reconciler_findings_defi_2026_08_17.md` "Plans not reached" item 1: `git log -p` independently confirmed
+      the lock was deliberately cleared in a commit carrying `last_updated: "2026-08-08"` — this ask is moot, no
+      operator unlock decision is needed. The `[DOC]` todo below is now unblocked (this plan is `sequential: true`,
+      so dispatch enforces the ordering automatically). Original ask preserved below for the audit trail: **Ask the
+      operator to unlock `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` for
       archival.** The doc carries a genuine `locked_by: live-defi-rollout` / `locked_since: 2026-07-03` lock (per
       `plans/PLAN_FORMAT.md` § "Plan Locking", a real lock field, not free text) and now has zero open todos — both this
       finalize doc's `[REVIEW]` todo above and the source doc's own `[SCRIPT]` todo are done (see Progress Log). Six
@@ -106,10 +113,7 @@ is done. Do not start manually before then.
       durable `BLK-op-*` blocked-queue row (`slot_id=0`) that survives regen ticks instead of expiring, and the operator
       can answer it directly from the dashboard (canned option or a reclassify/instruct ruling) rather than a worker
       re-filing the same question every redispatch. Recommendation: approve — the lock's own value is the branch name
-      (`live-defi-rollout`), not a distinguishing agent claim, and every todo on both docs is genuinely done. Done-when:
-      the operator's ruling is recorded (materializes as a `--ruling` task per the SSOT) and, on approval,
-      `locked_by`/`locked_since` are cleared on the source doc in the same commit that strips this todo's `[OPERATOR]`
-      tag.
+      (`live-defi-rollout`), not a distinguishing agent claim, and every todo on both docs is genuinely done.
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` and this finalize doc itself: archive both to

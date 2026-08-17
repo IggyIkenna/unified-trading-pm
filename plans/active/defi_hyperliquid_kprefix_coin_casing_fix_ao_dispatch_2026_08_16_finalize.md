@@ -12,7 +12,7 @@ tags: [defi, finalize]
 related:
   [
     /plans/active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"

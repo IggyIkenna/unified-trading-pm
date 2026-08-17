@@ -160,7 +160,7 @@ operator to pick up:
       `is-daily-enum-defi` (neither of the two candidates this todo named — both are unrelated/legacy jobs). The
       issue doc is closed as a false positive (the capture cron was never unhealthy) and archived to
       `/plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md`.
-- [ ] [DIAG] P3. **`operator_action_items_consolidated_2026_08_08.md`** — its `.tabs/2` stash-cleanup item claims
+- [x] [DIAG] P3. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** `operator_action_items_consolidated_2026_08_08.md` — its `.tabs/2` stash-cleanup item claims
       (as of 2026-08-08) a live unresolved 3-way git merge conflict in another slot's working tree; 9 days of
       subsequent Progress Log entries never re-verified it. Check `.tabs/2`'s current state (out of THIS run's
       scope — reading another slot's live tree needs that slot to be confirmed dead first, per multi-agent-safety
@@ -170,7 +170,7 @@ operator to pick up:
       semantically independent of todo 1's decision (GCS config-loader unification, venue-literal audit, a
       docstring fix, a 69-candidate inventory/classify task). Restructuring the dependency is a plan-authoring
       preference call, operator-gated per SKILL.md Modes § Calibration even under trust mode.
-- [ ] [DOC] P3. **`defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`** — correct its `sequential: true`
+- [x] [DOC] P3. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` — correct its `sequential: true`
       justification ("todo 4/archival must run last"): todo 4 already ran and archived batch3 on 2026-08-06 while
       todo 1 (source-doc reconciliation) is still open ~3 weeks later — the declared process order was violated in
       practice with no apparent ill effect. Low-risk cosmetic fix, not urgent.
@@ -253,14 +253,14 @@ proper channel (AO backlog check) BEFORE editing, not after.
 
 Tracked as todos (HARD RULE — every deferral is a `- [ ]`, never prose-only):
 
-- [ ] [DOC] P1. **`defi_expected_unattempted_backlog_1m_2026_07_03.md`'s `locked_by:` field** — confirmed via
+- [x] [DOC] P1. CONFLICT — already tracked in `defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`'s own `[OPERATOR]`+`[DOC]` todos (na-eligibility-audit 2026-08-17; that doc's stale `[OPERATOR]` unlock-ask was itself closed the same run — the lock is confirmed cleared, see that doc's Progress Log).** `defi_expected_unattempted_backlog_1m_2026_07_03.md`'s `locked_by:` field — confirmed via
       `git log -p`: the lock (`locked_by: live-defi-rollout`, `locked_since: 2026-07-03`) WAS deliberately cleared
       in a commit carrying `last_updated: "2026-08-08"`. Current state: no lock. The finalize plan's archival todos
       (which 7 prior dispatch cycles declined to act on citing this exact lock) may now be actionable — but
       actually running the archival needs a fresh full read confirming every todo is genuinely done first (the
       6-step ritual), not attempted this pass (time-boxed). High-confidence, concretely actionable — good next-pass
       pickup.
-- [ ] [DIAG] P2. **`defi_operator_ruling_ao_dispatch_2026_08_15.md`'s PHOENIX-SOLANA registry claim** — partially
+- [x] [DIAG] P2. CONFLICT — this exact registry-ambiguity resolution is already an open todo in `defi_operator_ruling_ao_dispatch_2026_08_15.md` (status: active, assigned_vm: planning) (na-eligibility-audit 2026-08-17).** `defi_operator_ruling_ao_dispatch_2026_08_15.md`'s PHOENIX-SOLANA registry claim — partially
       verified: PHOENIX-SOLANA DOES appear in `unified-api-contracts`'s `defi_venues.py` venue list + adapter
       mapping + `defi_venue_capabilities.py` (capability since 2023-02-01), so
       `uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`'s "IS present in ALL_DEFI_VENUES" claim checks
@@ -270,7 +270,7 @@ Tracked as todos (HARD RULE — every deferral is a `- [ ]`, never prose-only):
       `ALL_DEFI_VENUES` (both claims true of different registry structures, not actually a contradiction). One more
       grep resolves this, needed before the still-open dead-code-deletion todo in
       `defi_operator_ruling_ao_dispatch_2026_08_15.md:54` is actioned either way.
-- [ ] [DOC] P3. **Cross-link asymmetry among the 4 `dex_swaps` row-count-conflict docs** — 2 of the 4 docs
+- [x] [DOC] P3. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** Cross-link asymmetry among the 4 `dex_swaps` row-count-conflict docs — 2 of the 4 docs
       (`defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md`, `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`)
       still carry no reciprocal cross-link note, and the 2 that do have one disagree on membership (one lists only
       2 of the other 3 docs). Add/complete 4 cross-reference notes so a worker landing on any one of the 4 sees the
@@ -285,3 +285,20 @@ Corroborating only — already tracked elsewhere, no new todo (would duplicate e
 - Assorted P3 format/cosmetic items (missing `[ ]`/`[x]` checkbox brackets on several `CANCELLED — extracted...`
   bullets across multiple docs) all corroborate an ALREADY-tracked corpus-wide issue
   (`todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md` per hunter batch A).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17**: RECLASSIFY (per-todo split), applied — read end to end (8 open todos,
+  grep-confirmed). 3 items extracted (conflict-checked against every active defi covering doc, zero prior claims
+  found) to `defi_satellite_ao_dispatch_batch16_2026_08_17.md` (+ finalize, status: active): the `.tabs/2` stash-check
+  (line ~163), the batch3-finalize `sequential: true` text fix (line ~173), and the 4-doc cross-link completion
+  (line ~273). 2 items are CONFLICTS, not extracted — each already an open todo in another active `assigned_vm:
+  planning` doc, converted to citations rather than drafting a competing duplicate: the
+  `defi_expected_unattempted_backlog_1m_2026_07_03.md` locked_by/archival item (line ~256) is already tracked in
+  `defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`'s own `[OPERATOR]`+`[DOC]` todos — that
+  finalize doc's stale `[OPERATOR]` unlock-ask was itself closed this same run since the lock is now confirmed
+  cleared; the PHOENIX-SOLANA registry-ambiguity item (line ~263) is already tracked in
+  `defi_operator_ruling_ao_dispatch_2026_08_15.md` (status: active). Remaining 3 open items (line ~153 REVIEW-todo
+  scope call, line ~168 explicit `[OPERATOR]` gate, line ~278 AO-dispatch-readiness tagging judgment) stay KEEP-NA —
+  each is a genuine design/operator call per its own text. This doc's own remaining open work is now 0 items in
+  this session's population (all 8 resolved to extraction/conflict-citation/correctly-gated).

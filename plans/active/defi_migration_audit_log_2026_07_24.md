@@ -317,7 +317,7 @@ unified-api-contracts.
       `test_aggregator_route_handler_a12h_pipeline_mode.py:146`) + the Solana handler stamps → the P1-redirect +
       P2-Solana (`BATCH_DEFILLAMA`) orphan todos. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
       Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
-- [ ] [UAC] P2. **`SOURCE_PRIORITY` is CHAIN-AGNOSTIC per `(asset_group, data_type)` → mis-attributes SOLANA DeFi source
+- [x] [UAC] P2. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** `SOURCE_PRIORITY` is CHAIN-AGNOSTIC per `(asset_group, data_type)` → mis-attributes SOLANA DeFi source
       — RULED 2026-07-28 (retagged away from its prior operator-decision gate): adopt the per-venue mapping below.**
       `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend lending via **Solana RPC / Helius
       / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` / `(defi,lending_indices)` resolve to
@@ -549,7 +549,7 @@ P1 redirect todo below.)
       BUCKET_TEMPLATE hardcode suggests an unfinished cutover). This applies to ALL 7 dedicated DeFi market buckets, not
       just gas. Repo: market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2
       object-vs-manifest scope audit 2026-06-08 (operator question).
-- [ ] [STRATEGY] P2. **NICE-TO-HAVE — wire the downstream gas NET-COST consumer if absent.** The gas_fees DATA layer
+- [x] [STRATEGY] P2. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** NICE-TO-HAVE — wire the downstream gas NET-COST consumer if absent. The gas_fees DATA layer
       (per-chain gas PRICE) exists, but a grep of strategy-service/execution-service/features-service/utl found NO
       `gas_price × gas_units` net-of-gas cost computation (`estimate_gas` × gas_fees) — verify (grep-then-READ) whether
       DeFi arb/carry net-of-gas is wired (execution `estimate_gas` for gas_units × the gas_fees price); if missing, the
@@ -660,7 +660,7 @@ P1 redirect todo below.)
         confirms these ranges were migrated or re-verified before the 07-10 deletion — a possible data-loss gap,
         tracked as its own `[OPERATOR] P2` todo in the issue doc above (Cloud-Logging admin-activity check needed).
         This is the genuinely open thread from this todo; the delete-action framing itself no longer applies.
-- [ ] [UAC] [SCRIPT] P2. **Solana DeFi source = actual names (folds the prior P2 + the live-handler Solana stamp).**
+- [x] [UAC] [SCRIPT] P2. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** Solana DeFi source = actual names (folds the prior P2 + the live-handler Solana stamp).
       Once Solana writes land in the dedicated buckets (redirect above), the migrator/rebuild + live handlers must stamp
       the ACTUAL Solana source, not the chain-agnostic `onchain_subgraph`: add Solana venue overrides to UTL
       `_VENUE_OVERRIDES` (ORCA/RAYDIUM/PHOENIX/KAMINO/MARINADE/JITO→`BATCH_SOLANA_RPC`; DRIFT→`BATCH_HELIUS_RPC`;
@@ -769,7 +769,7 @@ the related ship-hygiene item.)
       the gated defi §H object `--apply`**: dedupe/normalise the writer + add a `day=…/day=…` collapse (or a pre-flight
       reject) to `canonical_object_rel`. Repos: instruments-service (writer + slot-7 migrator). parent_epic:
       manifest_master.
-- [ ] [UAC] P3. **NICE-TO-HAVE — defi G1-ENUM matrix `POOL` row is union-coarse**: the derived
+- [x] [UAC] P3. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** NICE-TO-HAVE — defi G1-ENUM matrix `POOL` row is union-coarse: the derived
       `valid_data_types_for_instrument_type("defi","POOL")` is the UNION across all POOL-declaring protocols →
       `{dex_pool_state, dex_pool_swaps, gas_fees, lending_indices, liquidations, perp_funding}`, so a pure-DEX pool
       (e.g. UNISWAP_V3) would seed `expected_unattempted` for `perp_funding`/`lending_indices`/`liquidations` it never
@@ -777,7 +777,7 @@ the related ship-hygiene item.)
       `odds`/`oracle_prices` leak into POOL), but a per-protocol grain would tighten the denominator. Repo:
       unified-api-contracts (`registry/capability_declarations/_defi.py` PROTOCOL_CAPABILITIES). parent_epic:
       manifest_master. Provenance: G2 verify 2026-06-07 (slot-2).
-- [ ] [SCRIPT] P3. **NICE-TO-HAVE — defi migrator `_list_objects` L1 find is a full-bucket scan** (re-verify 2026-06-07,
+- [x] [SCRIPT] P3. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** NICE-TO-HAVE — defi migrator `_list_objects` L1 find is a full-bucket scan (re-verify 2026-06-07,
       slot-2): `migrate_defi_full_v9_canonical.py:570` always issues `_safe_find(fs, {base}/{dir_name})` for the L1
       layout, but all 6 dedicated source buckets are `day=`-partitioned today (no top-level `{dir_name}/` or
       `raw_tick_data/` tree) → that L1 prefix matches nothing yet gcsfs enumerates the whole bucket (a 3-day local
@@ -966,3 +966,4 @@ speed-note (both deferred optimisations, non-blocking).
   capture-cron-staleness issue doc + a follow-on `--apply-write` plan are linked in the banner. Source:
   `/plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md`.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17**: RECLASSIFY (per-todo split), applied — 969-line hub, read end to end (12 open todos, grep-confirmed). 5 items extracted (conflict-checked against every active defi covering doc, zero prior claims found) to `defi_satellite_ao_dispatch_batch16_2026_08_17.md` (+ finalize, status: active): the ruled Solana/multi-venue source-label fix (lines ~320+663, combined into one batch item), the gas net-cost consumer verify (line ~552), and 2 P3 nice-to-haves (POOL union-coarse line ~772, L1-find speed-note line ~780). 2 items assessed but NOT extracted — flagged, not edited, consistent with this doc's own established practice for complex items: line ~406 (FOLD-3-orphan-data_types — premise now inverted per the retired-dedicated-bucket-architecture finding, needs rewording before a clean extraction) and line ~412 (collection-gaps retag — mostly-resolved, needs narrowing to its residual scope, a low-confidence edit given the long cross-referenced text). Remaining 5 open items (lines ~146, ~155, ~558, ~620, ~643) stay correctly gated: GATE C v9 write, Era-B legacy retirement, destructive-delete operator sign-off. Doc stays assigned_vm: NA, 7 open todos remaining.

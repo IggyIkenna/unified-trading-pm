@@ -418,7 +418,7 @@ remaining items besides the over-cap-gated one above).
 `issues/lighter_tardis_writerless_route_hang_2026_07_28.md`,
 `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`,
 `issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
-`issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
+`/plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
 
 **too_large_or_risky (3)** — itself a live multi-phase migration/investigation, risky to fold into one batch todo:
 `issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md`,

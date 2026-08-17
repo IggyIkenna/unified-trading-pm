@@ -16,7 +16,7 @@ summary:
   Tardis (wrong exchange slug hardcoded: `lighter-zksync` vs. the real `lighter`), so 3 of its 4 declared data_types
   have never produced a single real row, and even its one working native data_type (ohlcv_1m) is mislabeled by a
   separate venue-name-normalization bug and stopped being captured after 2026-05-05."
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data, meta]
@@ -65,7 +65,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 3
-last_updated: 2026-07-07
+last_updated: 2026-08-17
 supersedes:
 superseded_by:
 depends_on:
@@ -73,6 +73,14 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
 ---
+
+> **🗄️ ARCHIVED 2026-08-17** — status=resolved, 0 open todos. All findings across the 4 venues (HYPERLIQUID,
+> PACIFICA-SOLANA, EXTENDED-STARKNET, LIGHTER-ZKSYNC) fixed/shipped or resolved by explicit operator decision, with full
+> commit-sha evidence in the Todos below. The one remaining item (HYPERLIQUID k-prefix coin-case bug) was extracted
+> 2026-08-16 to its own AO-dispatch doc,
+> /plans/active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md (+ finalize) — track completion
+> there, not here. Archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule
+> (na-eligibility-audit 2026-08-17).
 
 > **NOTIFY-OPERATOR class finding — cross-repo data-correctness bugs, one venue (LIGHTER-ZKSYNC) fully non-functional
 > for 3 of 4 declared data_types.** None of these are placement/style questions — each is a real defect (wrong external
@@ -384,12 +392,14 @@ Two secondary findings:
       already produced 85-95% captured coverage both windows, gap correctly left unattempted; no code change (parser fix
       `market-tick-data-service@c48096e7`, 2026-07-13). Both plans' HL-trades-backfill todos target the same underlying
       gap; batch1's Progress Log is the record of the final closure.
-- [ ] [FIX] P3. **HYPERLIQUID k-prefix coin case-sensitivity** — `catalogue_symbols_for_venue`
+- [x] [FIX] P3. **HYPERLIQUID k-prefix coin case-sensitivity** — `catalogue_symbols_for_venue`
       (`_onchain_perp_batch_symbols.py:132`) `.upper()`s the segment while `_fill_to_trade_row`
       (`hyperliquid_s3.py:585`) does a case-SENSITIVE exact `coin` match, so `kPEPE`/`kBONK`/`kSHIB`/… requested via the
       ALL-catalogue path become `KPEPE` and drop every real `kPEPE` fill → those instruments record zero even after the
-      backfill. Majors (BTC/ETH) unaffected. Fix needs the canonical-vs-native HL coin-case convention resolved (risk of
-      a shard-key mismatch), so deferred from the unattended session.
+      backfill. Majors (BTC/ETH) unaffected. **Extracted 2026-08-16** (operator ruling — canonical uppercase
+      convention) to `/plans/active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md` (+ finalize,
+      status: active) — track completion there. Checkbox citation fixed na-eligibility-audit 2026-08-17 (was never
+      converted despite the extraction already existing, per this doc's own 2026-08-16 Progress Log entry).
 - [x] [CODE] P3. **Delete the retired perp_funding DeFi-routing residue** — remove the stale `hyperliquid`/`aster`/
       `lighter` entries from `_PROTOCOL_PIPELINE_SOURCE` (perp_funding_handler.py:188-194) + `_chain_map` (:244-249) and
       delete the spent one-off `scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` (its `asset_group=defi`
@@ -577,3 +587,13 @@ Two secondary findings:
   design call, untouched by any round11 precedent. No satellite-extraction candidate found. Doc stays `assigned_vm: NA`
   (KEEP-NA valid, round11).
 - **na-eligibility-audit 2026-08-16** [body-hash:7009da2197650f78]: KEEP-NA, valid — Single open [FIX] P3 todo remaining out of a 570-line, originally-extensive todo list (all other items resolved/dispatched-elsewhere with commit-sha evidence): HYPERLIQUID k-prefix coin case-sensitivity bug -- `kPEPE`/`kBONK`/`kSHIB` requested via the ALL-catalogue path get `.upper()`-cased to `KPEPE` etc.
+- **na-eligibility-audit 2026-08-17**: KEEP-NA-STALE (already-duplicated) — the sole remaining open todo (HYPERLIQUID
+  k-prefix coin-casing) was already extracted verbatim to
+  `/plans/active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md` (+ finalize) on 2026-08-16, but
+  this doc's own checkbox was never flipped to cite the extraction — fixed the citation (checkbox flipped `[x]` above).
+  That brought this doc to 0 open todos + unlocked, which trips `check_archive_candidates.sh` — archiving per the
+  6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): `status` flipped to
+  `resolved`, ARCHIVED banner added, `git mv` to `plans/archive/issues/`, and the 12 live `plans/active/**` corpus
+  referrers repointed to the new path (archived-corpus referrers left as historical record, out of scope per
+  `check_reference_paths`'s own `plans/active/*.md` broken-links scope). No new codex contract established by this
+  closure — every fix here was already reflected in its own commit/shipping doc.

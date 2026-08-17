@@ -457,7 +457,7 @@ flip and is corrected here (slot-14).
       doc — the ruling supersedes that deferral for these 2 items specifically; the HYPERLIQUID k-prefix coin-case
       question in the same doc remains genuinely design-gated and stays deferred below). Repo: market-tick-data-service
       / deployment-api (index rebuild). Done when: both operator-ruled actions are executed and verified. Source:
-      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`
+      `/plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`
 
       **CORRECTED 2026-08-12 (/plan-reconcile) — inline delete-safety citation** (was a bare "operator-RULED" date
           reference; the destructive step needs the actual reversibility citation inline, per
@@ -467,7 +467,7 @@ flip and is corrected here (slot-14).
           **Whoever executes this todo must re-verify `gcs_bucket_soft_delete_retention_seconds()` fresh in the same run
           before the actual delete** (cheap, keeps the finding-T check same-run for the destructive step itself) — but no
           fresh operator ask is needed to START this dispatch. Full context:
-          `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md:387-399`.
+          `/plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md:387-399`.
 
           **DONE 2026-08-15 (slot-11, data_engineering) — verified already-shipped-elsewhere, checkbox was stale (conflict-check
           protocol §3 item 4: "already-shipped, checkbox just never flipped").** Both items independently confirmed:

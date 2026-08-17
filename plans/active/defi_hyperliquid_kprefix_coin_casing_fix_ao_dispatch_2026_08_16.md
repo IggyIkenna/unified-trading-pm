@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [defi, hyperliquid, casing, k-prefix, canonicalization]
 related:
   [
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -39,7 +39,7 @@ locked_by:
 context_scope:
   [
     /codex/02-data/cross-asset-canonical-target-ssot.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
   ]

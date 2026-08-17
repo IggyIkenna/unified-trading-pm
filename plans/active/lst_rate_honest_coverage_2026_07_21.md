@@ -113,7 +113,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       unreachable local state. `quality-gates.sh` fully green (4760 passed, 0 failed, all 4 previously-red invariant
       tests now pass); full evidence in
       `plans/active/issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (resolved).
-- [ ] [IS] P1. **Regenerate catalogue + expected universe** — `build_instrument_catalogue.py` +
+- [x] [IS] P1. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** Regenerate catalogue + expected universe — `build_instrument_catalogue.py` +
       `enumerate_expected_universe.py` (v2); confirm the new `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` +
       `(AAVE, spot_asset, oracle_prices)` cells appear as `expected_unattempted` (honest RED). Verify #1 (CEX) needs no
       edit (no-op). — covered by the adapter registration above (shipped `instruments-service@fd0d12a9`); the AAVE
@@ -379,7 +379,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       blocking): `SANCTUM_INF_POOL_ACCOUNT`'s exact multi-year creation date via `getSignaturesForAddress` pagination
       needs paid archive-RPC access, not attempted this session — documented as a known limitation in the code comment,
       not silently dropped.
-- [ ] [MTDS] P3. **Retagged 2026-07-29: credential/launch gate confirmed cleared (not `BLOCKED-CREDENTIALS`) — NOT
+- [x] [MTDS] P3. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** Retagged 2026-07-29: credential/launch gate confirmed cleared (not `BLOCKED-CREDENTIALS`) — NOT
       flipping to done though: live-reverified right now
       (`gcloud compute instances list --filter="name~mtds-dex-swaps-backfill"`) shows `-1`/`-2` still RUNNING, matching
       this doc's own last status check (2026-07-26, multi-day-to-multi-week runway remaining). Genuinely still open.**
@@ -867,3 +867,4 @@ tarball once; always check the launcher's own freshness warning output, and if s
 - **2026-08-08 (doc-hygiene)**: Corrected Phase 5 #1's table row — cited doc's credential item is the-odds-api.com
   (sports, cleared 2026-08-03/07), not Tardis; this item's real OOM blocker was fixed 2026-07-26. In-place, still 998L.
 - **na-eligibility-audit 2026-08-16** [body-hash:c84fdaab8684f1c1]: KEEP-NA, valid — 868-line plan (self-reported at 998L as of 2026-08-08, near the 1000L hard cap -- flagged repeatedly by na-eligibility-audit 2026-08-03/2026-08-07 as requiring marker-only edits going forward), personally read end-to-end across both pages.
+- **na-eligibility-audit 2026-08-17**: RECLASSIFY (per-todo split), applied — doc now 869 lines (down from 998L as of 2026-08-08, well clear of the 1000L cap per today's /plan-reconcile extraction — the marker-only restriction from 2026-08-03/07 no longer applies), read end to end. 2 items extracted (conflict-checked, zero prior claims found) to `defi_satellite_ao_dispatch_batch16_2026_08_17.md` (+ finalize, status: active): the operator-ruled catalogue+enumerator v2 regen (line ~116, enumerator half still pending per live timestamp check) and the dex_pool_swaps shard -3 completion check (line ~382, last verified 2026-08-09). Remaining 2 open items (#1 CEX-spot backfill line ~250, #4 lst_yields backfill line ~282) stay correctly KEEP-NA — both explicit operator-owned boundaries per repeatedly-reaffirmed rulings, reconfirmed via today's cited plan_reconciler correction. Doc stays assigned_vm: NA, 2 open todos remaining.
