@@ -1,0 +1,19 @@
+# prune-shared-bare-repo-worktrees.service — oneshot; reclaims stale git-worktree admin entries
+# left in the shared bare-repo dep-clone cache (SHARED_BARE_ROOT) by job-cleanup.sh's/the
+# JIT-ephemeral wrapper's `_work` wipe.
+#
+# Epic: infrastructure_master
+# Lifecycle: permanent   Delete-when: shared bare-repo dep-clone fast path retired
+#
+# Driven by prune-shared-bare-repo-worktrees.timer. Host-wide, not tied to any single runner
+# pool — see prune-shared-bare-repo-worktrees.sh for the full rationale.
+[Unit]
+Description=Prune stale git-worktree entries in the shared bare-repo dep-clone cache
+
+[Service]
+Type=oneshot
+User=ubuntu
+Environment=SHARED_BARE_ROOT=/opt/glue-shared-bare-repos
+ExecStart=/usr/local/sbin/prune-shared-bare-repo-worktrees.sh
+# A failed sweep must be visible in `systemctl status`, not silently retried into oblivion.
+Restart=no
