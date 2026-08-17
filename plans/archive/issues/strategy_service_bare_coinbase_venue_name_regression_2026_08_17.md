@@ -7,7 +7,7 @@ summary: >-
   ("assert 'coinbase' == 'ccxt:coinbase'"). Verified pre-existing and unrelated to a concurrent
   POLYMARKET archetype-slot ship (isolated the failing test against the parent commit, before that
   diff, byte-identical failure). Blocks any future strategy-service quickmerge re-gate until fixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -32,7 +32,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: agt-ed7f9d
 source: prediction_venue_e2e_batch1_2026_08_16.md
 ---
 
@@ -82,8 +82,25 @@ craft, not archetype-slot wiring) to pick the right side of that fix.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `strategy-service`'s bare-`"coinbase"` `venue_name` regression —
+- [x] ✅ [BACKEND] P1. Fix `strategy-service`'s bare-`"coinbase"` `venue_name` regression —
       `get_position_adapter("coinbase", ...)` returns `venue_name="coinbase"` where
       `tests/unit/position/test_position_adapter_factory.py::TestCoinbaseKrakenNowSupported::test_bare_coinbase_is_not_intercepted_by_the_cefi_route`
       expects `"ccxt:coinbase"` — either fix the adapter's `venue_name` or update the test to
-      the new intended contract (repo: strategy-service).
+      the new intended contract (repo: strategy-service). — strategy-service@e44ced71
+
+## Progress Log
+
+- 2026-08-17 (cicd escalation agt-ed7f9d): resolved. The TEST was wrong, not the code —
+  `_generic_token_balance_adapter` (factory.py:301) sets `venue_name=v.lower()` for the bare
+  `"coinbase"` LST path by design (never the `"ccxt:"` prefix, which is the CCXT-adapter
+  naming convention only). The `"ccxt:coinbase"` assertion in
+  `test_bare_coinbase_is_not_intercepted_by_the_cefi_route` was a copy-paste duplicate of the
+  sibling `test_coinbase_spot_resolves_via_ccxt`'s assertion, introduced in the same commit
+  (32386ce1) that this doc's own analysis traced the failure to — and it directly contradicts
+  the test's own docstring ("not a specific outcome ... not something this test should couple
+  to"). Removed the erroneous assertion. Verified: local `quality-gates.sh` green (6073
+  passed, 0 failed, `✅ ALL QUALITY GATES PASSED`). Shipped via quickmerge —
+  strategy-service@e44ced71, ancestry-verified on origin/live-defi-rollout. Repo-blocker
+  RB-81272042 resolved (1 waiter notified). This unblocks promotion PR
+  strategy-service#610 (LDR→main) — the fleet promote cycle picks up the new LDR HEAD on its
+  next tick.

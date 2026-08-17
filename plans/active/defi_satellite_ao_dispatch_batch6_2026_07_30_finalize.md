@@ -77,11 +77,28 @@ context_scope:
       (HYPERLIQUID/ASTER delete) is still `[ ]` in the parent plan — its source doc
       (`non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`) is annotated as "dispatched to batch-6 (still
       open)" rather than closed. See Progress Log below for full reconciliation table.
-- [ ] [DOC] P2. Re-check the 2 conflict-gated Deferred items (`defi_venue_lst_rates_residual_2026_07_24.md`'s SUSHISWAP
-      classic-vs-V3 alias call; `issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s item-2 sweep vs
-      whole-doc operator-gate) — if the operator has ruled, resolve/close the parked note (fold into a batch7 todo if
-      the ruling produces new bounded work; otherwise mark resolved-no-action). Repo: unified-trading-pm. Done when:
-      both parked items have an explicit resolved/still-open verdict recorded.
+- [x] ✅ [DOC] P2. **DONE 2026-08-17 (slot-16, data_engineering).** Re-checked both conflict-gated Deferred items — both
+      resolved-no-action, neither produces new batch7 work. **(1) SUSHISWAP classic-vs-V3 alias
+      (`defi_venue_lst_rates_residual_2026_07_24.md`)**: operator ruled 2026-08-08 (fold bare `SUSHISWAP`→`SUSHISWAP_V3`
+      + migrate/purge); scoping the same day found the literal premise didn't hold (bare `SUSHISWAP` is 100%
+      `chain=ARBITRUM`, already-canonical data — zero Ethereum legacy rows to migrate); a follow-up operator ruling
+      2026-08-11 picked option (a) — close as verified no-op, redirect the real remaining scope (registering
+      `SUSHISWAP_V3-ARBITRUM` as a new canonical venue) to the already-tracked sibling issue
+      `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`. All 4 todos in the source doc are now
+      `[x]`, doc unlocked and marked `archive_exempt: true` (its own referrer-sweep archival pass is separately tracked
+      hygiene work, not blocking this verdict). **(2) `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s
+      item-2 sweep vs whole-doc operator-gate**: batch6's 2026-07-30 characterization was already stale by the time it
+      was written — the "item 2" 7-archetype sweep (`CARRY_FUNDING_DISPERSION`/`DEFI_LP_CONCENTRATED`/`DEFI_LP_POOL`/
+      `DEFI_LP_VAULT`) had already shipped 2026-07-24 (`strategy-service@03310bdf`'s systemic guardrail test covers all
+      4, confirmed clean); the checkbox itself was just stale-unflipped until `na-eligibility-audit 2026-08-01` flipped
+      it `[x]`. The doc-level operator-gate (batch5: "awaiting an operator prioritization call") has since substantially
+      cleared too: operator ruled 2026-08-08 on the P0 5-broken-archetype design decision (3 filed `[SCRIPT]` todos, all
+      since shipped + `[x]`) and 2026-08-09 on the liquidation-candidate-feed transport shape. As of the doc's own
+      2026-08-16 `na-eligibility-audit` re-confirmation, its sole remaining open checkbox is the `[DESIGN] P2`
+      pollable-candidate-registry item — independently re-confirmed (2026-08-09 slot-17 self-correction +
+      round9-reclassify-satellite-sweep) as genuinely NOT AO-dispatchable (a second design sub-decision on
+      features-service's per-candidate feature-naming shape + a 3-repo scoping pass remain outstanding), correctly held
+      `assigned_vm: NA`. No new bounded batch7 work to fold in for either item.
 - [ ] [DOC] P2. Re-check the 27-doc non-batchable Deferred taxonomy list for any operator-gated/time-gated item that has
       since cleared (an operator ruling landed, a gating VM/backfill completed, a dependent doc's status changed) — move
       any now-clear item into a fresh batch7 candidate list rather than re-triaging the whole corpus from scratch. Repo:
@@ -130,3 +147,11 @@ context_scope:
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-17 (slot-16, data_engineering)**: Completed todo 2 (re-check the 2 conflict-gated Deferred items). Both
+  resolved-no-action — full verdicts recorded inline on the checkbox above. Neither item produces new batch7 work: (1)
+  SUSHISWAP classic-vs-V3 was already fully resolved by two operator rulings (2026-08-08, 2026-08-11) — the source doc
+  `defi_venue_lst_rates_residual_2026_07_24.md` is now 4/4 done and `archive_exempt: true`; (2) the
+  `defi_catalog_engine_config_key_contract_drift_2026_07_23.md` "item 2" sweep was already shipped 2026-07-24 (its
+  checkbox was just stale-unflipped, corrected by `na-eligibility-audit 2026-08-01`), and that doc's whole-doc
+  operator-gate has since substantially cleared via 2026-08-08/09 rulings — its one remaining open item
+  (pollable-candidate-registry design) is correctly still human-gated, not a batch7 candidate.

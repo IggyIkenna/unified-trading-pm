@@ -119,12 +119,13 @@ redone from scratch, since only its DESCRIPTION survived, not its code.
 
 ## Todos
 
-- [ ] [CICD] P1. Root-cause why `safe-doc-push.sh`'s prek-patch restore step does not fire for a cross-slot orphaned
+- [x] ✅ [CICD] P1. Root-cause why `safe-doc-push.sh`'s prek-patch restore step does not fire for a cross-slot orphaned
       patch (a patch NOT created by the current invocation's own commit attempt) on a successful retried push. Fix so
       every patch with an in-window mtime is either restored or the failure is loud enough to page immediately (not
       just a post-hoc exit-9 warning after the destructive window has already passed). Repo: unified-trading-pm.
       Cite this doc + the 2 patches' md5 (`527608ea9e64b09163217ea7c3f3df46`) as reproduction evidence if the
       `~/.cache/prek/patches/` files are still present on the orchestrator VM's shared filesystem when picked up.
+      — unified-trading-pm@ea2f3ea8c6. See Progress Log for the root-cause finding + fix.
 - [ ] [INFRA] P2. Re-verify `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s `[INFRA] P2` "Stagger
       `ldr-to-main-promote-fleet.yml`'s per-repo fan-out" todo — it is still genuinely `- [ ]` open (slot 20's
       believed-complete work never actually landed). Either redo the `STAGGER_SECONDS`
@@ -138,3 +139,34 @@ redone from scratch, since only its DESCRIPTION survived, not its code.
 - 2026-08-17 (slot-16, data_engineering craft): Filed while shipping an unrelated archival task. Confirmed genuine
   cross-slot code+test loss (not just a doc checkbox); did not attempt to reconstruct the lost code myself (out of
   this task's scope); preserved the 4 orphaned patch files as evidence.
+- 2026-08-17 (slot-15, infra, todo 1 shipped — `unified-trading-pm@ea2f3ea8c6`): **Root cause**: the 2026-08-16
+  per-slot `PREK_HOME` scoping (`safe_doc_push_shared_prek_home_across_ao_vm_slots_2026_08_16.md`) closed the
+  shared-`~/.cache/prek/patches` collision ONLY for `scripts/dev/safe-doc-push.sh` and `scripts/quickmerge.sh`'s own
+  shared-index code paths. It never covered the **raw `git commit` + `git push`** path — the one `RULES.md` §2 /
+  `worker.md` §5-b2 explicitly sanction for a cross-repo PM plan-flip (edit the checkbox in the sibling PM worktree,
+  `git add` / `git commit` / `git push origin HEAD:live-defi-rollout` directly, bypassing both wrapper scripts by
+  design — it's the single highest-frequency mutation this repo sees, since every worker's `/done` does one). A raw
+  commit invokes prek purely through `.git/hooks/pre-commit` (confirmed: that hook is a bare generated shim, `exec
+  "$PREK" hook-impl ...`, with no `PREK_HOME` logic at all), so it always fell through to prek's unscoped
+  host-global default `~/.cache/prek`. Any two slots landing a raw plan-flip commit at the same moment share that
+  one `patches/` cache dir, and prek's own stash/restore of each other's unstaged out-of-scope edits can interleave
+  — reproducing, for the raw-commit path specifically, the exact cross-process race
+  (`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`) the 08-16 fix closed for the two wrapper
+  scripts only. This explains why the finder (slot 16, running `safe-doc-push.sh`, which since 08-16 exports its
+  own scoped `PREK_HOME=~/.cache/prek-slot-16`) still found a fresh orphan in the OLD global dir: its own run no
+  longer writes there at all post-scoping, so the only thing that CAN still land a fresh patch in that global dir is
+  a process that isn't going through either wrapper — i.e. a raw commit, consistent with slot 20's plan-flip being
+  exactly that shape.
+  **Fix** (`unified-trading-pm@ea2f3ea8c6`): (1) `scripts/dev/slot-cron-ff-pull.sh` — added a content-gated
+  self-heal (same pattern as the existing pre-push-guard heal in the same loop) that patches every clone's
+  prek-generated `.git/hooks/pre-commit` to export a per-slot `PREK_HOME` before `exec`ing prek, mirroring
+  `safe-doc-push.sh`/`quickmerge.sh`'s own scoping — converges fleet-wide within one 5-min cron sweep and re-heals
+  if a future `prek install` regenerates the hook without it. Verified the injected patch is syntactically valid
+  (`bash -n`) and idempotent (marker-gated) against this slot's own live hook before shipping. (2)
+  `scripts/dev/safe-doc-push.sh`'s `check_orphaned_prek_patches()` was hardcoded to scan the OLD global
+  `~/.cache/prek/patches` unconditionally — a related bug the 08-16 scoping fix introduced without updating this
+  checker: post-scoping, THIS run's own orphans land under `$PREK_HOME/patches` (its private per-slot dir), so the
+  hardcoded path was checking the wrong directory for a same-slot self-caused orphan. Changed to
+  `${PREK_HOME:-$HOME/.cache/prek}/patches` so the safety net covers both shapes again.
+  Did not action todo 2 (out of this task's assigned scope — `[INFRA] P2`, a separate re-verify/redo of slot 20's
+  lost `ldr_to_main_fleet_promote.sh` work); left it open for its own dispatch.

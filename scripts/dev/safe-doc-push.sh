@@ -1155,7 +1155,16 @@ verify_pushed_per_file() {
 # captured before any commit could have run) was created by THIS invocation and, having survived
 # to a successful push, was evidently never restored.
 check_orphaned_prek_patches() {
-  local dir="${HOME}/.cache/prek/patches" f mtime found=()
+  # PREK_HOME-aware (2026-08-17, safe_doc_push_prek_patch_not_restored_recurrence_2026_08_17.md):
+  # since the 2026-08-16 per-slot PREK_HOME scoping (§ "PER-SLOT PREK_HOME" above), THIS run's own
+  # prek patches land under $PREK_HOME/patches (a private per-slot dir), not the hardcoded global
+  # ~/.cache/prek/patches this check used to read unconditionally -- so a self-caused orphan from
+  # THIS run's own retry loop would have gone undetected here post-scoping. Checking the actual
+  # $PREK_HOME in effect for this run (falling back to prek's own unscoped default when PREK_HOME
+  # is unset, e.g. a non-slot/laptop checkout) covers both: a same-slot self-orphan (now correctly
+  # scoped) and a leftover from an unscoped concurrent process, e.g. a raw `git commit` outside
+  # this script (see that issue doc's root-cause finding).
+  local dir="${PREK_HOME:-${HOME}/.cache/prek}/patches" f mtime found=()
   [[ -d "$dir" ]] || return 0
   for f in "$dir"/*.patch; do
     [[ -e "$f" ]] || continue

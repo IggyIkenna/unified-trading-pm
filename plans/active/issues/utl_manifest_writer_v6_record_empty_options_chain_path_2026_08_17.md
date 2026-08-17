@@ -83,3 +83,23 @@ green, then full `quality-gates.sh`.
 
 _Filed 2026-08-17 by slot-6 (data_engineering), discovered running Pass-1 QG for
 `defi_satellite_ao_dispatch_batch16_2026_08_17.md` todo 1 (unrelated Solana pipeline_mode fix)._
+
+### Root cause narrowed + false-positive repo-blocker resolution — 2026-08-17 (slot-6)
+
+Narrowed the root cause: `_resolve_candidate_write_path` (`unified_trading_library/manifest_writer/_rows.py:55`) takes
+NO `underlying`/`quote_asset`/`margin_type` parameters at all — its only per-instrument lever is `instrument_id`
+(used solely to build `file_name`). The failing test's write is an EMPTY-cell record (no instrument captured), so
+whatever `record_empty()`'s caller passes as `instrument_id` is empty/`"_"`, and `candidate_parquet_paths()` has no
+other channel to emit the v6 `underlying=/quote=/margin=` tail — the check then correctly rejects the under-specified
+path it was itself given no way to build correctly. This is a genuine signature gap, not a simple field-threading typo,
+and touches shared core `manifest_writer` write-path logic used fleet-wide — did NOT attempt a fix given the blast
+radius and that it's fully out of scope for my dispatched todo.
+
+Declared repo-blocker `RB-1484c950` (`kind=qg_red`) and got a `watcher_green` resolution message ~15 min later. Before
+resuming, re-ran the exact failing test locally against the fresh-pulled `origin/live-defi-rollout` HEAD
+(`df3703ab`, confirmed via `git log`) — **still fails, byte-identical to the original repro**. This is a FALSE-POSITIVE
+resolution: the watcher's CI-green read did not reflect this repo's actual local-QG state at the HEAD it claims to
+cover. Re-declaring the blocker below since the repo is not actually fixed. Flagging for whoever owns
+`RepoHealthWatcher`/`ci_status()` staleness handling — this is the same failure CLASS as
+`repo_blocker_resolution_signal_false_positive_2026_07_28` (supposedly fixed 2026-07-30), recurring here on
+2026-08-17 for a different underlying defect.

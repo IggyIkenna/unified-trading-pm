@@ -103,20 +103,13 @@ context_scope:
 
 ## Track 1 — Worker liveness / failover / dispatch correctness
 
-- [ ] [OPERATOR] P1. **ROOT-CAUSED + FIX IMPLEMENTED, NOT YET SHIPPED (2026-08-16).** Operator-reported "review agent
-      keeps disappearing" — root cause: `server/routes/slots_worker.py`'s `human_claim`/`human_claim_check` (added
-      `ao_human_fleet_integration_2026_08_15`) never checked `human_slot_ids()` before binding a task to a slot, unlike
-      sibling endpoints `human_heartbeat`/`human_usage_push` which already do — so an ordinary Class-A backlog task got
-      bound onto the reserved review slot, wedged for ~30h, and no `role=review` agent ever registered (confirmed live
-      via SSM: `GET /api/agents` returned zero review rows, slot 2 showed a stale worker-style `current_task`/`plan_ref`
-      instead of review's boot loop). Fix: added the identical `human_slot_ids()` guard to both endpoints, 2 new
-      regression tests, full `test_human_fleet_endpoints.py` (21 passed) + dispatch-gate tests (10 passed) green —
-      diff sitting uncommitted in the `agent-orchestrator` working tree pending operator review/ship via
-      `quickmerge.sh`. Also flags a live-infra follow-up (does the currently-wedged slot 2 need manual recovery?) and a
-      second independent hardening gap (`ensure_review_agents` doesn't verify a "live" review slot is actually running
-      the review prompt vs. some stray session). Source:
-      `/plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md` — full evidence, root cause, diff
-      summary, and the 3 follow-up todos live there.
+- [x] [OPERATOR] P1. **DONE — shipped `agent-orchestrator@d13788ec2f`** (2026-08-16; this line was stale, still read
+      "NOT YET SHIPPED" — corrected 2026-08-17). Root cause + fix: `/plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md`
+      (2 remaining follow-up todos live there, not duplicated here). A SEPARATE, second review-slot gap found+fixed
+      2026-08-17 (silent no-account respawn skip in `ensure_review_agents` + a masking `role=review` self-registration
+      hole in `POST /api/agents/register`) — shipped `agent-orchestrator@7df307a411`; full detail + remaining follow-ups
+      (scheduler/cicd/escalation slot hardening, dashboard tagging, auto-dispatch branch-heal recovery) in
+      `/plans/active/issues/ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md`.
 - [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@3d2e368`** (2026-08-14, after this tracker's own authoring).
       `retire_orphaned_blocked_rows()` (`server/blocked_reconcile.py:564`) now called at both `reassign_slot`
       (`server/routes/slots_ops.py:763`) and `skip_current_task` (`:1060`) — the `auto_orphaned_slot_reassigned`

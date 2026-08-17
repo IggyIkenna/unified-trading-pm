@@ -321,4 +321,18 @@ archival — no live Databento dependency).
   `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`.
   Did not re-page the operator — this doc's existing P0 `[OPERATOR]` invoice todo already covers the ask; this is
   corroboration, not a new event. No code changed.
+- **2026-08-17 (slot 13, data_pipeline_failure escalation agt-d350cd, DP-LIVE-004 on
+  `mtds-live-tradfi-cme-trades-20260809-163443`) -- STILL `blocked`, same root cause, LIVE-side reconfirmation.**
+  `dp-fleet-monitor`'s `live_stream_watcher.check_live_capture_productivity` paged: the VM is `RUNNING` and actively
+  attempting (`last attempt 0.0h ago`) but CME trades last `captured` 5.3d ago (staleness budget 3d). This is the
+  exact live producer named in the 2026-08-14 entry above, and the same failure class as the 2026-08-15/08-16
+  BATCH-side 402s already logged in this doc -- the VM's connector went silent after the last confirmed
+  `api_key_deactivated`/`unpaid invoice` CRAM auth failure and has zero reconnect attempts since (the pre-existing
+  `[CODE] P2` todo above already tracks the connector's missing retry/backoff on a dead session as the reason this is
+  invisible to process-liveness checks). Did not attempt a code fix -- this is the SAME `BLOCKED-OPERATOR-DECISION`
+  the doc's open `[OPERATOR]` P0 "pay the invoice again" todo already covers, not a new or code-fixable failure mode;
+  masking it (relaunching the VM, or patching the connector to suppress the alert) would not restore capture while
+  the invoice stays unpaid. Did not re-page the operator via a fresh escalation -- this doc's existing P0 todo already
+  covers the ask, and 3 other sessions corroborated the same root cause in the last 48h; posted a bounded `/blocked`
+  pointing at this doc instead of duplicating the page. No code changed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (1 entries).
