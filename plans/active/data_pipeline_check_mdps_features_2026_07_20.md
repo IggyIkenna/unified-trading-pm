@@ -245,26 +245,36 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       115 real canonical captured cells — likely the already-tracked `service_name` DeFi-capture mismatch from
       `issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`) — split into its own issue rather than
       blocking this todo's OOM-fix scope on it. Repos: market-data-processing-service, deployment-service.
-- [ ] [DATA] P1. mdps-e2e-full-matrix-terminal-consolidation. Genuinely-remaining scope split from the todo above:
-      (a) confirm CEFI's driver reaches a terminal `EXIT_STATUS` (was still progressing as of 2026-08-17T00:xx UTC
-      — check before relaunching anything), (b) fix the DEFI service_name/capture-mismatch root cause per
-      `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md`'s 4 fix todos so DEFI's
-      re-run produces a REAL verdict instead of "PROVED NOTHING", (c) once (a)/(b) are terminal/fixed, consolidate
-      all 5 AGs' reports into one summary and close this plan's headline DeFi-MVP-ETA goal for real. Repos:
+- [x] ✅ [DATA] P1. mdps-e2e-defi-chain-axis-root-cause-fix. **DONE 2026-08-17 (slot-3, data_engineering)** — the
+      (b) root-cause slice of the "mdps-e2e-full-matrix-terminal-consolidation" scope below; (a)/(c) split into a
+      new todo immediately below since they're independently gated on external VM state, not on this fix.
+      Confirmed/refuted the issue doc's service_name hypothesis via a bounded DuckDB read (local downloaded
+      copy, `SET memory_limit`, never a full pandas materialization) against the real DEFI manifest: **REFUTED**
+      — the non-MTDS service_name rows are legitimate MDPS candle-OUTPUT rows (`DefiSwapAdapter` registers under
+      the same canonical `data_type="dex_pool_swaps"` as its raw input, by design), correctly excluded already.
+      **Real root cause**: DEFI's real captured rows carry a chain-LESS `venue` ("UNISWAP_V3") + separate `chain`
+      column ("ETHEREUM"), while `mdps_mvp_universe("defi")` returns a single chain-SUFFIXED venue string
+      ("UNISWAP_V3-ETHEREUM") — `_INPUT_INDEX_COLUMNS` never read `chain` at all, so `_captured_days_by_cell`
+      could never compose the matching key and every DEFI MVP shard reported zero captured input regardless of
+      real coverage (confirmed abundant real coverage exists once chain is accounted for, e.g.
+      UNISWAP_V3/ETHEREUM/dex_pool_swaps = 1.77M rows through 2026-08-13). Fixed: added `chain` to
+      `_INPUT_INDEX_COLUMNS`; `_captured_days_by_cell` now groups by `(venue, chain, data_type)` and composes
+      `f"{venue}-{chain}"` when non-blank, falling back to the bare venue for every other asset_group (chain is
+      always blank there per `SHARD_AXIS_MATRIX` — regression-tested, no behavior change outside DEFI). 3 new
+      tests (`tests/unit/test_pipeline_e2e_check_defi_chain_axis.py`). QG green (64s). **Evidence:
+      market-data-processing-service@fae666bef2.** Full corrected diagnosis:
+      `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` § Recommended decision
+      1/2.
+- [ ] [DATA] P1. mdps-e2e-full-matrix-terminal-consolidation. Genuinely-remaining scope, now that the (b)
+      root-cause is fixed (todo above): (a) confirm CEFI's driver
+      (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) reaches a terminal `EXIT_STATUS` — **checked 2026-08-17,
+      STILL RUNNING, not terminal; do NOT relaunch, just re-check before the next attempt**; (b) re-run DEFI's
+      `--legs force,skip --require-captured --auto-day` matrix with the chain-axis fix live to get a REAL verdict
+      (a fresh multi-minute-to-hour VM launch-and-wait, not attempted this session — the fix landing and a
+      full re-run producing a terminal result are different claims); (c) once (a)/(b) are terminal, consolidate
+      all 5 AGs' reports into one summary and close this plan's headline DeFi-MVP-ETA goal for real. Also pick up
+      issue-doc todo 3 (bound `_read_input_index_frame`'s read, P2 — separate, not blocking this todo). Repos:
       market-data-processing-service, unified-trading-library.
-      **(a)/(b) partial progress 2026-08-17 (slot-3, data_engineering)**: (a) checked — CEFI's driver
-      (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) is STILL RUNNING, not terminal; correctly did NOT
-      relaunch. (b) root-caused + fixed, but the actual root cause was DIFFERENT from what the issue doc's
-      original service_name hypothesis named: that hypothesis was REFUTED by a bounded DuckDB read against the
-      real manifest (the non-MTDS service_name rows are legitimate MDPS candle-output rows, correctly excluded
-      by design). The real cause: DEFI's real captured rows carry a chain-LESS `venue` + separate `chain` column,
-      while `mdps_mvp_universe("defi")` returns a chain-SUFFIXED venue string — `_captured_days_by_cell` never
-      read the `chain` column at all, so no DEFI MVP shard could ever match real coverage. Fixed + regression-tested
-      + shipped: `market-data-processing-service@fae666bef2`. Full evidence in the issue doc's Recommended
-      decision § 1/2. **Genuinely still open**: issue-doc todo 3 (bound `_read_input_index_frame`'s read, P2) and
-      todo 4 (re-run DEFI's force/skip matrix with the fix live to get a REAL verdict, then consolidate all 5 AGs'
-      reports — this is a fresh multi-minute VM launch-and-wait, not done in this session) — plus (a) reaching
-      terminal for CEFI. This checkbox stays open until all of (a)/(b)/(c) are genuinely complete.
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.
