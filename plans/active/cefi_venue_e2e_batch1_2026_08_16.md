@@ -87,11 +87,27 @@ source: >-
       Only orphan: `polymarket_market_microstructure` for `book_snapshot_5` — the same cross-AG naming-artifact
       already identified in the prediction batch (its real consumer is `microstructure`, a different feature_group),
       not a cefi implementation gap.
-- [ ] [BACKEND] P2. **Gap: `COINBASE-FUTURES` has a real batch collector but no live WS connector registered
+- [x] ✅ [BACKEND] P2. **Gap: `COINBASE-FUTURES` has a real batch collector but no live WS connector registered
       anywhere** in `market-tick-data-service/live/connectors/` — `coinbase_book_ws.py` is a helper imported by
       `coinbase_spot_ws.py`, not its own registered venue. A real hard-rule violation ("live for every batch").
       Done-when: a `COINBASE-FUTURES` live connector is registered, or the exclusion is confirmed intentional with
-      a cited reason.
+      a cited reason. **Connector registered — BLOCKED-CREDENTIALS, SHIPPED
+      `market-tick-data-service@75ef3ef084`.** Live-verified against production (no fixture):
+      `wss://ws-md.international.coinbase.com` (Coinbase INTX) accepts a structurally-valid
+      `{"type":"SUBSCRIBE","product_ids":[...],"channel":"<name>"}` message (unmarshal succeeds — confirmed via the
+      server's own "Failed to unmarshal" vs "Unable to authenticate" REJECT-reason distinction) but rejects EVERY
+      channel tested (`MATCHES`/`INSTRUMENTS`/`LEVEL1`/`TICKER`/`FUNDING`) with `"Unable to authenticate"`, including
+      with plausible `key`/`passphrase`/`signature`/`time` auth fields attached — unlike sibling COINBASE-SPOT/
+      COINBASE-CDE connectors, INTX exposes no public/unauthenticated market-data channel at all, and no INTX
+      credential is provisioned anywhere in this fleet (execution-service's transfer wiring only enumerates
+      `coinbaseinternational` as a CCXT withdraw-venue string, it loads no credential for it). New file
+      `coinbase_intx_ws.py` registers a Protocol-conforming BLOCKED-CREDENTIALS scaffold under venue key
+      `COINBASE-FUTURES` (mirrors the `EXTENDED-STARKNET`/`LIGHTER-ZKSYNC` precedent: connect/subscribe/unsubscribe/
+      close work today; `stream()` no-ops + logs the credential gap until real INTX API credentials land and
+      `_CREDENTIALS_AVAILABLE` is flipped) — deliberately does not fabricate an unverified WS auth signing scheme for
+      a live-trading-adjacent data path. Credential ask to unblock: a funded Coinbase International Exchange account
+      + issued API key/secret/passphrase, stored under a new GSM secret (suggested name
+      `coinbase-intx-api-credentials`).
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, 0 of 12 major venues reach a complete
       end-to-end state.** SHIPPED — `unified-trading-pm@4686d503ad`. 3 parallel research passes — strategy-service
       (positions), strategy-service + unified-api-contracts (archetype/slot declarations — the prediction batch's
