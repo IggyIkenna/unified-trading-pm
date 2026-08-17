@@ -291,13 +291,29 @@ this session and have been removed rather than left to mislead a future reader. 
 | UTL `ParallelPerSymbolRunner` in-flight semaphore hoist to per-instance/per-process scope (line 289).              | P2       | Actionable now, independently of the Tardis slot — a standalone UTL design/code change, not gated on anything running.    |
 | Phase 4 — widen concurrency further if the per-date long-tail fetch latency dominates (line 271), optional/conditional. | P3       | Not yet evaluated; only relevant if the concurrency-6 result (above) shows the tail, not the prologue/epilogue, still dominates. |
 
-- [ ] [BACKEND] P2. **UTL follow-up — instance-scope `ParallelPerSymbolRunner`'s in-flight semaphore.**
-      `run()` mints a fresh `asyncio.Semaphore(self._max_concurrent)` on every call
-      (`unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py`), so the "max
+- [ ] [BACKEND] P2. **UTL follow-up — instance-scope `ParallelPerSymbolRunner`'s in-flight semaphore. INVESTIGATED
+      2026-08-17, NOT a drop-in fix — needs a real design decision before touching it.** `run()` mints a fresh
+      `asyncio.Semaphore(self._max_concurrent)` on every call
+      (`unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py:229`), so the "max
       in-flight tasks" knob is per-CALL, not per-process — which is why F5 had to be a config-time guard rather than
-      a real bound. Hoisting it to a per-instance (or per-process) semaphore would let date concurrency and
-      `TARDIS_MAX_INFLIGHT_TASKS` be tuned independently instead of having to divide one by the other. Flagged in
-      the original design as the bigger, separate UTL change; not required for Phase 3.
+      a real bound. **Traced the actual call-site shape before assuming this is a small change**: the runner
+      INSTANCE is already correctly a process-wide pooled singleton — `TardisAdapter._init_runner_slots` docstring:
+      "Runners are created lazily on first download_batch call and reused across all subsequent dates" (backed by
+      `_get_tardis_adapter()`'s own module-global `_tardis_adapter` pool in
+      `market_tick_data_service/adapters/umi_tick_provider.py`). So a naive hoist of the semaphore from `run()` to
+      `__init__` (instance-scope) WOULD share it correctly across all dates — but that's exactly the problem: TradFi
+      already runs `--batch-date-concurrency 20` live in production today, with each of those 20 concurrent dates'
+      `run()` call currently getting its OWN full-size semaphore (today's *effective* in-flight bound is
+      `20 × tardis_max_inflight_tasks`). Hoisting to instance-scope would silently collapse that to just
+      `tardis_max_inflight_tasks` — a ~20x cut to TradFi's live, already-tuned effective concurrency, not a bug fix.
+      **This needs an explicit design decision, not a patch**: either (a) make the process-level cap the real
+      absolute value and re-tune `tardis_max_inflight_tasks` config per asset class to compensate (TradFi, Deribit
+      DVOL, CeFi all need new, individually-computed values), or (b) keep call sites computing
+      `max_concurrent × date_concurrency` at construction time (centralizing today's manual-division burden into one
+      place instead of removing it). Do not implement either without picking one and updating every call site's
+      config value in the same change — a partial hoist would be a live production throughput regression for
+      TradFi, discovered only after the fact. Flagged in the original design as the bigger, separate UTL change;
+      not required for Phase 3.
 
 ## Progress Log
 
