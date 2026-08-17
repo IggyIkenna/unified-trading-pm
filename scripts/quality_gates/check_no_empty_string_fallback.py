@@ -250,7 +250,7 @@ def write_baseline(
         '# Baseline for QG STEP 5.101 — .get("key", "") empty-string-fallback ratchet.\n'
         "#\n"
         "# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of\n"
-        "# `.get(\"key\", \"\")` / `.get('key', '')` empty-string-fallback call sites\n"
+        "# `.get(\"key\", \"\")` / `.get('key', '')` empty-string-fallback call sites\n"  # noqa: qg-empty-fallback — doc text describing the pattern, not a real call site
         "# (WITHOUT a `# noqa: qg-empty-fallback` marker) the gate tolerates in that\n"
         "# repo (tests/ + testing/ excluded). A repo whose live count EXCEEDS its\n"
         "# baseline fails CI — a NEW site landed; rewrite it to fail fast (raise, or\n"
@@ -459,7 +459,9 @@ def _resolve_scopes(workspace_root: Path, scope: str | None, source_dir: str | N
 
 
 def main(argv: Iterable[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description='.get("key", "") empty-string-fallback ratchet (QG STEP 5.101).')
+    parser = argparse.ArgumentParser(
+        description='.get("key", "") empty-string-fallback ratchet (QG STEP 5.101).'  # noqa: qg-empty-fallback — doc text describing the pattern, not a real call site
+    )
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--scope", default=None, help="Single repo dir name (per-repo QG mode).")
     parser.add_argument(
