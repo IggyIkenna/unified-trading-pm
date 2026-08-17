@@ -103,3 +103,12 @@ cover. Re-declaring the blocker below since the repo is not actually fixed. Flag
 `RepoHealthWatcher`/`ci_status()` staleness handling — this is the same failure CLASS as
 `repo_blocker_resolution_signal_false_positive_2026_07_28` (supposedly fixed 2026-07-30), recurring here on
 2026-08-17 for a different underlying defect.
+
+### Re-confirmed still blocking — 2026-08-17 (interactive slot 27)
+
+`quickmerge.sh`'s own re-gate hit the identical failure while shipping an unrelated `pipeline_e2e_check` fix
+(`consolidate_bucket` param on `launch_vm_and_wait`, for `dp_vm_001_mdps_pipelinecheck_test_bucket_no_consolidator_coverage_2026_08_17.md`)
+— confirmed pre-existing by stashing that diff and re-running just this test in isolation (fails byte-identical with
+and without). Still `origin/live-defi-rollout@df3703ab` at time of this confirmation. Operator direction (asked
+directly, interactive session): wait for AO to clear this rather than attempt the core `manifest_writer` fix myself —
+the shipment stays parked locally (uncommitted, nothing lost) until this clears.
