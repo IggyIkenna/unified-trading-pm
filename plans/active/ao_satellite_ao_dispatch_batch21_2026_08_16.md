@@ -153,14 +153,22 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       overwrite running without reaching the identity-var re-add) and a preventive fix shipped
       (`agent-orchestrator@bc9835a38d`). Exact trigger process not identified (no root crontab/journalctl access from
       this sandboxed worker), stated explicitly — see full write-up in the tracker's Track 4.
-- [ ] [DIAG] P2. **Best-effort root-cause the 49.3G/16G-swap memory peak on `planning` more precisely.** The
+- [x] ✅ [DIAG] P2. **Best-effort root-cause the 49.3G/16G-swap memory peak on `planning` more precisely.** The
       resource-watchdog enforcement is already shipped and live (`ReadinessWatchdog`,
       `agent-orchestrator@3b4a329`) — this is root-cause only, not new enforcement. Both previously-checked live
       candidate processes were ruled out; check for any newly-observed high-memory process across the last 3+ restarts.
       Explicitly best-effort — **done when**: either a plausible culprit is identified, or the investigation is judged
       infeasible within a bounded pass and closed as best-effort-exhausted (state which). Cite back into
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` + the tracker's Track 4.
-      Repo: agent-orchestrator / infra.
+      Repo: agent-orchestrator / infra. — ✅ DONE 2026-08-17 (slot 10): the original 2026-08-02 peak itself is
+      best-effort-exhausted (predates resource-watchdog, no forensic trail survives). Redirected to the fallback
+      ("newly-observed high-memory process") via resource-watchdog's own kill corpus: 187 kills/7d, 25 >10GB RSS (peak
+      20.2GB), concentrated on slots 6/2/25/27/14, all tracing to 4 unbounded CEFI-manifest scripts in
+      `market-tick-data-service/scripts/` (`normalize_instrument_type_casing.py`,
+      `audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`,
+      `revert_cefi_live_corrective_migration_overreach_2026_08_16.py`, `measure_shard_duration_p95.py`). Landed a new
+      `[INFRA] P2` follow-up todo in the issue doc naming these scripts for a bounded-read/streaming fix. Full write-up
+      in the issue doc's new Progress Log entry + flipped `[DIAG] P2` todo.
 - [ ] [DATA] P2. **Audit `unified-trading-system-repos/` (157G, the dominant disk consumer on the shared host) for real
       cleanup headroom.** Enumerate the largest subtrees; distinguish live-repo working-tree bloat from stale
       worktrees/branches/build-artifacts that are safe to prune. **Audit only — do not delete anything in this todo.**
@@ -181,6 +189,13 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 ## Progress Log
 
+- **2026-08-17 (slot 10, infra worker, AO-dispatched)**: Worked the 49.3G/16G-swap best-effort root-cause todo.
+  Original 2026-08-02 peak predates resource-watchdog (shipped 2026-08-05) — no forensic trail survives, closed
+  best-effort-exhausted. Redirected to the fallback: queried resource-watchdog's own kill corpus and found 187
+  kills/7d, 25 >10GB RSS, all tracing to 4 unbounded CEFI-manifest scripts in `market-tick-data-service/scripts/`.
+  Landed a new `[INFRA] P2` follow-up todo in
+  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` naming the scripts. Full
+  detail in that doc's Progress Log.
 - **2026-08-17 (slot 12, AO-dispatched)**: Worked the 60-minute context-signal validation re-run todo. Verified the
   fleet was clean-start (all `working` slots ≤60% context) before beginning — the exact precondition the 2026-08-08
   session's own follow-up demanded. Ran a background monitor (6× 10-min checkpoints) over the live `/api/activity`
