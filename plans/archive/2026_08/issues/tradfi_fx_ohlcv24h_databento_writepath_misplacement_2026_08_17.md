@@ -54,7 +54,6 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by: market-tick-data-service (script + test, see Progress Log)
-archive_exempt: true
 context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
@@ -67,14 +66,11 @@ context_scope:
 
 # TradFi FX ohlcv_24h databento write-path misplacement — 2026-08-17
 
-> **TRANSITIONAL COMMIT — `archive_exempt: true` is TEMPORARY, not a standing exemption.**
-> This doc is fully resolved (0 open todos) and WILL be archived in an immediate follow-up
-> commit. It is re-committed at this still-active path, un-archived, purely so the AO
-> worker's `/done` M3 same-path checkbox-flip verification can see the flip — a prior commit
-> that bundled the flip with the `git mv` archival in one step made the diff at this literal
-> path show only a deletion, which defeats that check (documented failure mode,
-> `unified-trading-pm/agents/RULES.md` § 2). See the Progress Log for the real archival
-> commit that follows.
+> **📦 ARCHIVED 2026-08-17 — this issue is fully resolved.** Both the 1,008-row FX ohlcv_24h
+> population and the flagged 1,947-row KRW-USD follow-up have been repaired and
+> independently self-verified (0 remaining mislocated objects, 0 remaining mislabeled rows,
+> 0 column inconsistencies). The write-path code fix + regression test already shipped
+> (`market-tick-data-service@81f5fb8f`-era commit). See the Progress Log for full detail.
 
 ## Root cause
 
@@ -270,3 +266,12 @@ is now applied + self-verified (see Progress Log).
   - Deleted the one-off repair script per its own `Delete-when` lifecycle marker (no code
     changes ship from this pass — it was a pure data repair; the write-path CODE fix and its
     regression test already shipped in the earlier pass above).
+- **2026-08-17 (AO worker, slot 3, data_engineering, archival)**: the checkbox-flip commit
+  (`unified-trading-pm@85ffede346`) was deliberately kept at the still-active path (with a
+  transitional `archive_exempt: true`) so the AO server's `/done` M3 same-path verification
+  could see it — bundling the flip with the archival `git mv` in one commit had made the
+  diff at the literal `plan_ref` path show only a deletion, which defeated that check
+  (`unified-trading-pm/agents/RULES.md` § 2). `/done` succeeded against `85ffede346`. This
+  follow-up commit performs the real archival: removes `archive_exempt`, restores the
+  `📦 ARCHIVED` banner, `git mv`s to `plans/archive/2026_08/issues/`, and fixes the one
+  corpus referrer (`tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 1's path).
