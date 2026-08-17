@@ -210,14 +210,17 @@ source: >-
       venue tables entirely. **No documented "not applicable" rationale exists** — this reads as a genuine
       unaddressed gap, not an intentional exclusion; tracked as its own todo below rather than assumed
       out-of-scope.
-- [ ] [BACKEND] P1. **Gap: KALSHI has no transfer rail at all** — absent from `VENUE_WALLET_CAPABILITIES`
-      (`unified-api-contracts/unified_api_contracts/internal/domain/execution_service/transfer_types.py:210-223`)
-      and from `/codex/04-architecture/transfer-architecture.md`'s venue tables, with no documented reason. Without
-      a `VENUE_WALLET_CAPABILITIES` entry, `classify_transfer_type("KALSHI", ...)` falls through to a CeFi-
-      withdrawal default despite Kalshi having no CCXT `withdraw()` support — a live-money correctness risk, not
-      just a missing feature, if ever actually invoked. Done-when: either a real `VENUE_WALLET_CAPABILITIES` entry
-      + working rail is added for KALSHI, or the exclusion is confirmed intentional (e.g. "Kalshi funds via its
-      own bank/ACH UI, no in-system rail by design") and documented in `transfer-architecture.md`.
+- [x] ✅ [BACKEND] P1. **Gap: KALSHI has no transfer rail at all — fixed 2026-08-17.** SHIPPED —
+      `unified-api-contracts@0ea4a852`. Added a real `VENUE_WALLET_CAPABILITIES["KALSHI"]` entry
+      (`transfer_types.py`) mirroring `BETFAIR`/`KALSHI-PERP`'s shape: `deposits_to=TRADING`,
+      `trading_wallet_type=TRADING`, `requires_internal_transfer=False`, no `ccxt_exchange_id`/`custody_provider`
+      (Kalshi is CFTC-regulated fiat funding — ACH/wire/debit, no on-chain custody, no CCXT `withdraw()`).
+      Correction to this todo's own premise: live-read of `classify_transfer_type()` shows a missing entry does
+      NOT silently fall through to CEX_WITHDRAW — the `from_cap is not None` guard already made it raise
+      `ValueError` for any unknown venue. The real gap was the missing capability entry + doc row, not a live-
+      money default-routing bug; both are now fixed. Also added a "Kalshi | Direct to trading | No" row to
+      `/codex/04-architecture/transfer-architecture.md`'s "Other" venue table (unified-trading-pm doc, flipped in
+      this same commit). QG green (373s, unified-api-contracts), sentinel-verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P1. **Record every NEW gap found while executing steps 6-8 — done 2026-08-16.** Fulfilled by
       the 3 gap todos added above during the steps 6-8 sweep (live position stub, missing archetype/slot wiring,
       execution not routing through `InstructionActionV2`) — none left as prose only.

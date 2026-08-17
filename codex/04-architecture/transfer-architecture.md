@@ -100,6 +100,7 @@ Each venue has a different wallet structure that determines whether an internal 
 | --------- | --------------------- | ----------------- |
 | CME, CBOE | Traditional brokerage | N/A (no crypto)   |
 | Betfair   | Direct to trading     | No                |
+| Kalshi    | Direct to trading     | No                |
 
 ## External Transfer: Two Flavours
 
