@@ -9,7 +9,7 @@ stage: [data]
 repos: [instruments-service]
 scope: [engineer]
 tags: [manifest, finalize]
-related: [/plans/active/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md]
+related: [/plans/archive/2026_08/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md]
 created: "2026-08-15"
 last_updated: "2026-08-15"
 parent_epic: instruments_master
@@ -28,7 +28,7 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A, 2026-08-15"
 locked_by:
-context_scope: [/plans/active/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md]
+context_scope: [/plans/archive/2026_08/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md]
 locked_since:
 resolved_by:
 ---

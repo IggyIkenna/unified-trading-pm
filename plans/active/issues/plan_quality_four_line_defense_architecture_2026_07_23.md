@@ -55,7 +55,7 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /plans/active/task_template.md,
-    /plans/active/issues/reference_path_convention_2026_07_23.md,
+    /plans/archive/issues/reference_path_convention_2026_07_23.md,
     scripts/plan-hygiene/run_hygiene_sweep.sh,
   ]
 ---
@@ -303,7 +303,7 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
           is the sole blocker"): **Reference path convention (ratchet)** — `check_reference_paths.py` shows 168 format
           violations (baseline 161) and 906 dangling-reference violations (baseline 901), both past their own
           shrinking-ratchet baseline. This is ordinary corpus drift from the fleet's normal commit velocity (already
-          tracked, `status: open`, at `/plans/active/issues/reference_path_convention_2026_07_23.md` — not duplicating
+          tracked, `status: open`, at `/plans/archive/issues/reference_path_convention_2026_07_23.md` — not duplicating
           it, not fixing it inline here, it's a large multi-file corpus backlog outside this todo's scope). The
           consequence: wiring the full sweep into `quality-gates.sh` TODAY would immediately hard-fail QG for every
           future plan/codex-touching commit workspace-wide, on debt this todo did not create — the exact failure mode the

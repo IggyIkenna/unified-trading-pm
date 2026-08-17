@@ -263,7 +263,7 @@ Flags are CANDIDATES, not findings — a "dangling" ref often resolves to `plans
   bare `related:` entry the 2026-07-23 migration left untouched; what the correct reference is when a doc has genuinely
   moved/been renamed/archived (the archival ritual's 6th step — grep every referrer, update each — is this skill's job
   to actually execute, not just check); and whether a dangling reference should be fixed (target existed, got lost) or
-  removed (the claim itself is stale). Backlog: `/plans/active/issues/reference_path_convention_2026_07_23.md`. **Caveat
+  removed (the claim itself is stale). Backlog: `/plans/archive/issues/reference_path_convention_2026_07_23.md`. **Caveat
   (2026-08-02)**: this framing assumes the mechanical checker at least SURFACES the flag for the skill to adjudicate —
   verified 2026-08-02 that for `check_reference_paths.py` specifically, its `--quiet`, ratchet-gated invocation here
   often does not (see Phase 1 hunter 8, "Moved-doc referrer hunter", for the closing mechanism).

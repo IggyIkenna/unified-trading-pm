@@ -39,7 +39,7 @@ related_plans:
   - ../active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md
   - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
   - ../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md
-  - ../active/reference_path_convention_2026_07_23_finalize_2026_08_08.md
+  - ../archive/2026_08/reference_path_convention_2026_07_23_finalize_2026_08_08.md
   - ../active/task_template.md
 last_updated: 2026-07-23
 locked_by: live-defi-rollout
@@ -449,8 +449,8 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 14.4 cal AI-days (class: research)
 **title**: >-
 
-### [`reference_path_convention_2026_07_23_finalize_2026_08_08`](../active/reference_path_convention_2026_07_23_finalize_2026_08_08.md)
-**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
+### [`reference_path_convention_2026_07_23_finalize_2026_08_08`](../archive/2026_08/reference_path_convention_2026_07_23_finalize_2026_08_08.md)
+**status**: complete (archived 2026-08-17) · **estimate**: 0.4 cal AI-days (class: infra)
 **title**: Cross-reference path convention cleanup backlog — finalize
 
 ### [`task_template`](../active/task_template.md)

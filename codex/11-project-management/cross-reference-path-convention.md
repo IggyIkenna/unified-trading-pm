@@ -16,7 +16,7 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, codex, references, cross-doc-links, quality-gates]
 related:
-  [/plans/PLAN_FORMAT.md, /plans/active/task_template.md, /plans/active/issues/reference_path_convention_2026_07_23.md]
+  [/plans/PLAN_FORMAT.md, /plans/active/task_template.md, /plans/archive/issues/reference_path_convention_2026_07_23.md]
 created: "2026-07-23"
 authoritative_for: [cross-reference-path-format]
 referenced_by: []
@@ -82,7 +82,7 @@ violation count exceeds the baseline (a NEW violation landed), never on the corp
 files normalized): 109 format violations (bare filenames the migration couldn't safely auto-resolve — ambiguous or
 genuinely dangling) and 1,286 existence violations (pre-existing dangling refs — docs describing
 planned-but-never-shipped codex content, refs to plans since renamed/archived under a different name). Full list +
-cleanup tracking: `/plans/active/issues/reference_path_convention_2026_07_23.md`. Ratchet DOWN as entries get fixed
+cleanup tracking: `/plans/archive/issues/reference_path_convention_2026_07_23.md`. Ratchet DOWN as entries get fixed
 (`--update-baseline` after fixing a batch) — never hand-raise a count.
 
 ## What `/plan-reconcile` covers that this mechanical check can't
