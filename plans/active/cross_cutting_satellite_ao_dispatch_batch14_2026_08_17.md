@@ -68,9 +68,9 @@ source: >-
 
 ## Todos
 
-- [ ] [AGENT] P1. Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
+- [x] [AGENT] P1. ✅ Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
       check, shrink-only in the same sense as the other baselines in this corpus. Repo: unified-trading-pm. Source:
-      `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`.
+      `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`. — unified-trading-pm@4173c83c54.
 - [ ] [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
       `generate_na_doc_tranche_inventory.py`) that flags a doc where the Progress Log's own "extracted to `<path>`"
       phrasing names a doc that is NOT cited on any currently-open checkbox in the same file. Repo: unified-trading-pm.
@@ -165,3 +165,33 @@ source: >-
   dict[str, object]`, real implementation is `-> None` with no explicit return) hold up under direct citation. Full
   detail in the flipped checkbox above. Next item is the DIAG P1 "if confirmed, determine blast radius" todo — not
   in scope for this dispatch.
+
+- **2026-08-17 (slot 27, infra) — AGENT P1 "add a regression guard so eager imports cannot creep back" flipped —
+  unified-trading-pm@4173c83c54.** Added 3 rules (LL-01/02/03) to the existing `architectural_ratchets.yaml` gate
+  (already run by unified-trading-pm's own `quality-gates.sh`, cross-repo `target_glob` support already proven by
+  the ST-19/PB-19/UI-18 rules) rather than building a new checker script — same shrink-only baseline pattern as the
+  ruff DTZ/TID251 ratchet, applied to a static regex over each of the two lazy-loading fix's guarded files instead of
+  a runtime `sys.modules` count. Chose static-regex over a runtime module-count deliberately: the source plan's own
+  2026-08-16 re-measurement showed `sys.modules` counts drift with unrelated `uv.lock` changes (confirmed causal —
+  a pending `google-cloud-monitoring` dependency addition), so a runtime count would be a flaky shrink-only signal.
+  Guards `execution_service/algorithms/algorithms.py` + `execution_service/__init__.py` (banned:
+  `execution_service.algorithms.impl.*` / the pre-lazy `algorithms.algorithms` re-export shape, unconditional
+  module-top-level) and `strategy_service/engine/strategies/v2/factory.py` (banned: the 10 archetype-family
+  submodule imports), both anchored on column-0/non-`TYPE_CHECKING`-guarded so the existing lazy pattern's own
+  `if TYPE_CHECKING:` blocks never false-positive. Verified both directions: baseline stays at 0 (6 ratchets total,
+  0 violations) on the real current tree, and a standalone regex unit-test (not committed) confirmed each pattern
+  matches a simulated unconditional import of its banned prefix and does NOT match the existing TYPE_CHECKING-guarded
+  form. Shipping this hit a pre-existing repo-wide QG red unrelated to this task (6 broad-except sites over the
+  shrink-only baseline in 3 hook/script files, plus a frontmatter-schema-failing auto-filed issue doc) — verified
+  pre-existing via git-stash diff-out (RULES.md § 4b) and fixed inline (small/mechanical, ≤30min) rather than filing
+  a repo-blocker, since two other slots were independently doing the identical broad-except fix concurrently and a
+  wait-based repo-blocker would have raced the same content anyway; reconciled via 2 rounds of
+  `git pull --rebase --autostash` conflicts (all peer-vs-mine were functionally-identical noqa annotations or a
+  peer's superior real diagnosis superseding my placeholder frontmatter fix — kept the peer's content in both
+  cases, RULES.md § "never delete another agent's already-landed content"). Also noted for whoever reads this: this
+  session hit the QG host-governor's `QG_HOST_RAM_ABORT_PCT` runtime-abort watchdog repeatedly under heavy fleet-wide
+  concurrent-QG contention (6+ slots running `quality-gates.sh` simultaneously) when invoked via `run_in_background`
+  — every backgrounded attempt (including a bare `sleep 60` probe) got killed within seconds to a minute regardless
+  of wait/backoff, while a synchronous foreground invocation with an explicit long `timeout` (590000ms) completed
+  cleanly every time. Root cause not fully isolated (governor RAM-abort vs. something backgrounding-specific); the
+  practical workaround that worked was foreground + long explicit timeout.
