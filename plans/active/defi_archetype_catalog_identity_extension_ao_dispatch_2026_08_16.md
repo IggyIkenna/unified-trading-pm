@@ -100,9 +100,22 @@ resolved_by:
       `unified-api-contracts` landing the new `venue_asset_group` module — a fresh LDR checkout of
       `strategy-service` without that module already on `unified-api-contracts`'s LDR would ImportError in CI;
       shipped `unified-api-contracts` first, verified it landed on origin, then shipped `strategy-service`.
-- [ ] [BACKEND] P2. **Part (3) of the original todo, split out — wire the real `is_mvp()`-backed `not_mvp_scope`
-      curtailment reason into `strategy_service/cli/handlers/paper_universe.py`'s `_resolve_drivable()`, alongside
-      the existing `curtailed_by_operator_constraint`.** NOT done in the above build: verified (not assumed) that
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-17 (Part 3a ONLY), `strategy-service@18a2e9e5` — wired the real
+      `is_mvp()`-backed `not_mvp_scope` curtailment reason into `strategy_service/cli/handlers/
+      paper_universe.py`'s `_resolve_drivable()`, alongside the existing `curtailed_by_operator_constraint`, for
+      the 7 archetypes where every drivable row resolves to a single, unambiguous, verified DeFi venue string
+      with no `base_ccy` axis needed: `CARRY_STAKED_BASIS`, `CARRY_STAKED_BASIS_DATED`, `CARRY_RECURSIVE_STAKED`,
+      `YIELD_STAKING_SIMPLE`, `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT`.** New
+      `_mvp_scope_reason_for_spec()` runs as the FINAL gate in the `or` chain, after drivability — it only
+      narrows specs that would otherwise already be driven, and only for archetypes it can resolve confidently
+      (an archetype absent from the new `_DEFI_MVP_VENUE_KEYS` map, or a spec whose venue doesn't confidently
+      resolve, is untouched). Zero behavior change for the current catalog: every covered row resolves
+      in-MVP-scope today (verified by a new regression test, `test_mvp_scope_reason_confirms_the_real_covered_
+      archetypes_stay_in_scope_today`), so this is correct wiring that only starts to matter if a covered
+      venue's `DEFI_VENUE_PHASE` ever narrows. **Part (3b) — every other archetype this todo originally
+      scoped — is split into 3 separate todos below, NOT done here.** The original scoping text below (this
+      session's own investigation, cross-verified against the prior 2026-08-17 slot-22 session's findings) is
+      preserved as the evidence trail for why the rest is split out rather than guessed:
       this needs MORE than the `instrument_type`/`asset_group` identity the above todo built — `is_mvp()` also
       requires (a) the EXACT canonical venue string `is_mvp()`'s per-asset-group rule actually checks membership
       against, not just a loosely-classified asset_group, and (b) a `base_ccy` argument that is CONFIRMED
@@ -113,7 +126,17 @@ resolved_by:
       this can be wired: (i) `TradFiMvpRule.venues == frozenset({"CME"})` ONLY — every `IBKR`-brokered row
       (`EVENT_DRIVEN`/`ML_DIRECTIONAL_CONTINUOUS`/`RULES_DIRECTIONAL_CONTINUOUS`/`STAT_ARB_*` tradfi rows) needs
       the NASDAQ/NYSE/ARCA/AMEX/BATS/KRX equity-basis carve-out branch in `is_mvp()`'s `TradFiMvpRule` handling
-      or it never resolves via the flat `venue in rule.venues` check at all; (ii) several DeFi rows carry only a
+      or it never resolves via the flat `venue in rule.venues` check at all — **RE-VERIFIED 2026-08-17 (this
+      session, independent of slot-22): moot for THIS wiring today.** None of `EVENT_DRIVEN`/
+      `ML_DIRECTIONAL_CONTINUOUS`/`RULES_DIRECTIONAL_CONTINUOUS`/`STAT_ARB_*` are in `E2E_UNIVERSE_ARCHETYPES`
+      (the paper book's default `config.archetypes`) NOR in `_ENGINE_DRIVABLE_ARCHETYPES` — every spec of theirs
+      is ALREADY honestly skipped with `engine_tick_builder_unwired` by the pre-existing drivability gate,
+      which now runs BEFORE the new mvp-scope check in `_resolve_drivable`'s `or` chain, so these archetypes
+      never reach an MVP-scope question at all (confirmed: `service_entry.py`/`paper_run_handler.py` always
+      construct `PaperUniverseConfig()` with the default `archetypes`; only an explicit operator
+      `--archetypes` CLI override could ever reach them, and even then the drivability gate intercepts first).
+      This item only becomes live if/when those archetypes' tick builders get wired — a separate, currently
+      out-of-scope initiative; (ii) several DeFi rows carry only a
       BARE lowercase protocol token (`"aave"`) or a bare chain name (`"ethereum"`) as their identity, neither of
       which is a valid `DeFiMvpRule.venues` member (canonical `PROTOCOL-CHAIN` strings like `AAVE_V3-ETHEREUM`) —
       needs a protocol+chain → canonical-venue resolver (a SEPARATE, narrower table from
@@ -123,6 +146,59 @@ resolved_by:
       wrong canonical-venue or base_ccy resolution would silently mis-curtail genuinely in-scope rows, which the
       parent issue doc's own Finding 1 explicitly calls out as WORSE than leaving the gap open. Repos:
       strategy-service, unified-api-contracts (if a shared canonical-venue resolver belongs there instead).
+- [ ] [BACKEND] P2. **Part (3b-i) — CeFi `base_ccy` verification + wiring for `CARRY_BASIS_DATED` /
+      `CARRY_BASIS_DATED_INV`.** Bounded, AO-dispatchable (no design judgment call — a verify-then-implement-
+      or-honestly-no-op task). Only the binance/bybit×btc/eth deribit-future rows reach drivable (4 rows per
+      archetype; `_basis_dated_config_satisfiable` excludes everything else) — `future_venue="deribit"`
+      resolves cleanly to the literal `CeFiMvpRule.venues` member `"DERIBIT"`; the candidate `base_ccy` key is
+      `future_instrument` (bare `"btc"`/`"eth"`, needs `.upper()`). Concretely: grep-verify `"BTC"` and `"ETH"`
+      are literal members of `CEFI_BASE_ASSET_UNIVERSE`
+      (`unified-api-contracts/unified_api_contracts/registry/cefi_instrument_universe.py`) — if confirmed, add
+      a small CeFi-specific resolver (parallel to `_DEFI_MVP_VENUE_KEYS`/`_resolve_defi_mvp_venue` in
+      `paper_universe.py`) covering ONLY these 2 archetypes' 8 drivable rows and wire it into
+      `_mvp_scope_reason_for_spec`; if NOT confirmed for some reason, document why and leave these 2 archetypes
+      out (do not guess). Repos: strategy-service, unified-api-contracts (read-only verification).
+- [ ] [BACKEND] P2. **[OPERATOR] Part (3b-ii) — BYBIT-FUTURES naming-gap fix + multi-venue `is_mvp()`
+      semantics decision, needed before `CARRY_BASIS_PERP` / `CARRY_FUNDING_DISPERSION` /
+      `ARBITRAGE_PRICE_DISPERSION` can be wired.** Genuine judgment calls, not a lookup — needs an operator
+      ruling before dispatch, same class as the original (i) TradFi/IBKR question. Two open sub-questions,
+      found 2026-08-17 (this session, NOT in the prior slot-22 investigation):
+      (1) **Bybit naming gap (NEW finding).** The catalog emits `"BYBIT-FUTURES"` as the perp venue
+      (`_CARRY_BASIS_PERP_VENUE_BUNDLES` / `_FUNDING_DISPERSION_VENUES` in `catalog_carry.py`), but
+      `CeFiMvpRule.venues` only declares bare `"BYBIT"` + `"BYBIT-SPOT"` (the rule's own docstring documents the
+      `BYBIT-SPOT↔BYBIT` pairing as Bybit's one exception to the `-FUTURES`-suffix convention every other
+      venue uses) — a direct `is_mvp("cefi", "BYBIT-FUTURES", ...)` call would incorrectly return False for a
+      row meant to stay in scope, affecting 13 `CARRY_BASIS_PERP` rows + all `CARRY_FUNDING_DISPERSION` Bybit
+      rows. Two candidate fixes, both real decisions: (a) extend `is_mvp()`'s `_CEFI_SUB_VENUE_BASES` fallback
+      (today OKX-only) to cover Bybit too — widens a shared, heavily-consumed predicate; (b) normalize
+      caller-side in `paper_universe.py` only. (2) **Multi-venue rows have no defined `is_mvp()` semantics.**
+      `is_mvp()` is single-venue by signature; several drivable row-families are inherently multi-venue with no
+      defined AND/OR/anchor rule: `CARRY_BASIS_PERP`'s multi-coin `venue`-rotation family + its comma-joined
+      `venues="binance,okx"` family (plus: bare `venue="binance"`/`"okx"` is itself spot-vs-futures-ambiguous,
+      unlike Hyperliquid's unsplit bare form); `ARBITRAGE_PRICE_DISPERSION`'s `cex_cex_arb` (2-token
+      `candidate_venues`) and `dex_dispersion` (5-7 tokens, sometimes spanning chains a listed venue doesn't
+      even operate on — e.g. a SOL/USDC row listing `UNISWAP_V3` first, which doesn't run on Solana at all, so
+      "first token wins" isn't just under-specified, it can pick an economically wrong venue). Separately,
+      `CARRY_BASIS_PERP` / `CARRY_FUNDING_DISPERSION` rows on `perp_venue`∈{`KALSHI-PERP`,`POLYMARKET-PERP`}
+      ARE confidently resolvable today with NO guess needed (neither string is a member of `CeFiMvpRule.venues`
+      — confirmed absent, so `is_mvp()` returns False decisively on the venue axis alone) — these could be
+      wired as a narrow first slice of this todo without waiting on (1)/(2), once dispatched. Repos:
+      strategy-service, unified-api-contracts (only if fix (a) is chosen for the Bybit gap).
+- [ ] [BACKEND] P2. **Part (3b-iii) — `YIELD_ROTATION_LENDING` structural venue resolver.** Structurally
+      unresolvable today, confirmed independently by both the prior slot-22 session and this session:
+      `asset_group_keys=("chain","chains_eligible")` (`catalog_yield_defi.py`) anchors `asset_group` on a bare
+      chain token (e.g. `"ethereum"`), which gives NO venue string at all (bare `"ETHEREUM"` is not a
+      `DEFI_VENUE_PHASE`/`ALL_DEFI_VENUES` member — every real entry is `PROTOCOL-CHAIN` shaped). The row's real
+      protocol identity lives in a separate `candidate_protocols` key (`"aave,compound,morpho"`, comma-joined,
+      no chain pairing), which `asset_group_keys` never references, and a naive `f"{protocol}-{chain}"` concat
+      does not match the registry's real canonical forms (e.g. `"aave"+"ETHEREUM"` != `"AAVE_V3-ETHEREUM"`).
+      Investigate (do not guess-implement) whether a real, per-protocol default-chain table can be built from
+      VERIFIED evidence — e.g. reading which chain each `candidate_protocols` token is ACTUALLY captured on in
+      real prod `lending_rates` GCS data (`CanonicalLendingSupplyApyProvider`'s own per-protocol coverage
+      spot-check, referenced in this plan's Progress Log, is a starting point) — rather than assuming a default.
+      All 10 in-scope rows (of 11; `_yield_rotation_lending_config_satisfiable` already excludes the
+      Kamino-only row) are blocked on this. Repos: strategy-service, unified-api-contracts (if the resolver
+      belongs in the shared registry).
 
 ## Progress Log
 
@@ -187,3 +263,23 @@ resolved_by:
   meaningfully more work than "wire a function call" — a canonical-venue resolver + a per-archetype base_ccy map,
   neither of which existed before and both of which are correctness-load-bearing for `is_mvp()`. See that todo's
   own body for the exact open sub-items.
+- **2026-08-17 (slot-8, backend_engineer) — Part (3a) shipped, Part (3b) split into 3 new todos.** Resumed
+  slot-22's session (its verification was thorough and cross-verified clean, not re-derived from scratch).
+  Found a scope-narrowing fact slot-22's own investigation had not checked: `_resolve_drivable()` is the ONLY
+  caller-path that needs an MVP-scope check, and it can run as the FINAL gate (after drivability) rather than a
+  first-pass filter — this means it only ever needs to resolve venues for the 13 `_ENGINE_DRIVABLE_ARCHETYPES`
+  (drivability's own `engine_tick_builder_unwired` check already excludes everything else, including the
+  TradFi/IBKR archetypes item (i) worried about). Used a forked sub-agent (full context inherited) to extract
+  the exact per-archetype config-key shapes for all 13 across `catalog_carry.py`/`catalog_staked_basis.py`/
+  `catalog_yield_defi.py`/`catalog_trading.py`, then independently re-verified the specific rows I intended to
+  implement against direct reads (not trusted secondhand) before writing any code. 7 of the 13 resolve
+  confidently to a single unambiguous DeFi venue with no `base_ccy` axis needed — shipped
+  (`strategy-service@43352916` + a QG-ratchet fix `strategy-service@b412c138`; see the flipped todo above for
+  the exact archetype list + the new `_mvp_scope_reason_for_spec`/`_resolve_defi_mvp_venue` functions). The
+  remaining 6 needed a genuine judgment call, a bounded-but-unverified sub-task, or a structural blocker — split
+  into 3 new todos below (3b-i/ii/iii) rather than guessed, per this doc's own repeated warning that a wrong
+  venue/currency resolution silently mis-curtails genuinely in-scope production rows. Also surfaced ONE new
+  finding neither this session nor slot-22 had before: a confirmed `BYBIT-FUTURES` vs. bare `BYBIT` naming gap
+  between the catalog and `CeFiMvpRule.venues` (todo 3b-ii) — a naive direct `is_mvp()` call on the catalog's
+  literal venue string would have produced a false-positive curtailment for 13+ real Bybit rows had it been
+  wired without noticing this.
