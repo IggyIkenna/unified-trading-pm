@@ -106,4 +106,3 @@ possibly specific to long push-queue waits — this run queued 287s, well past t
 
 - **context-scout 2026-08-15**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:b73b84b26df2de1b]: KEEP-NA, valid — todo 1 is explicitly [OPERATOR]-tagged (467-file blast radius, can't unilaterally confirm patch currency across concurrent sessions); todo 2 is open-ended root-cause investigation into a recurring concurrency bug with no stated done-when.
-- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:b73b84b26df2de1b]: KEEP-NA, valid — todo 1 is explicitly [OPERATOR]-tagged (467-file blast radius, can't unilaterally confirm patch currency across concurrent sessions); todo 2 is open-ended root-cause investigation into a recurring concurrency bug with no stated done-when.

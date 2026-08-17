@@ -190,4 +190,3 @@ in the same way and at the same time when they're the same physical connection.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5228931265ff90c4]: KEEP-NA, valid — sole open todo re-assessed fresh per the close-the-loop check: measured evidence now shows the race is common not rare, refuting the done-when's easy branch and leaving only a genuine design-judgment choice between 2 named mitigations.
-- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5228931265ff90c4]: KEEP-NA, valid — sole open todo re-assessed fresh per the close-the-loop check: measured evidence now shows the race is common not rare, refuting the done-when's easy branch and leaving only a genuine design-judgment choice between 2 named mitigations.

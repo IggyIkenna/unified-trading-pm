@@ -232,4 +232,3 @@ todo below.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:07ede18badf7abdb]: KEEP-NA, valid — explicit dated operator ruling cited in-doc (RULED 2026-07-28, reaffirmed 2026-08-06) — remaining work is a fresh three-way classification of a moving-target prod-terraform diff before any operator-level apply.
-- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:07ede18badf7abdb]: KEEP-NA, valid — explicit dated operator ruling cited in-doc (RULED 2026-07-28, reaffirmed 2026-08-06) — remaining work is a fresh three-way classification of a moving-target prod-terraform diff before any operator-level apply.
