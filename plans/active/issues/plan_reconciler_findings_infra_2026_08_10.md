@@ -413,3 +413,5 @@ referrer docs' commit ages first and complete the 6-step ritual if clear.
   archived.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:d24e167087f82a05]: KEEP-NA, valid — sole open item bundles a cross-slot audit plus a conditional fix to shared worktree-setup infra, explicitly deferred per the multi-agent-safety rule against acting on foreign git state blind.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:d24e167087f82a05]: KEEP-NA, valid — sole open item bundles a cross-slot audit plus a conditional fix to shared worktree-setup infra, explicitly deferred per the multi-agent-safety rule against acting on foreign git state blind.

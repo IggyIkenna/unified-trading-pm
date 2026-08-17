@@ -212,3 +212,4 @@ deliberate decision rather than changed mid-session.
   to add to an already-severe fleet-wide storm (21 concurrent instances at last check) rather than help it clear.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:2660ad0b240e84dc]: KEEP-NA, valid — doc's own "Deliberately NOT hot-patched" section covers both open todos — changes touch concurrency infra shared by every repo/host, needing a deliberate decision per CLAUDE.md's blast-radius rule.

@@ -118,3 +118,5 @@ eligibility logic.
   strategy families per operator direction. Agent-dispatched, read-only investigation; no code changed. The
   operator's original framing ("centralization is missing") was correct in spirit but pointed at the wrong
   evidence — `venue_capabilities.py` isn't being bypassed by the other 8 families, it was never built for them.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:4e09dc58212eb9a8]: KEEP-NA, valid — todo 1 is explicitly [OPERATOR] P1-tagged (generalize vs accept hardcoded catalog literals, a genuine unresolved design decision); todos 2-3 are textually gated on todo 1's outcome.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:4e09dc58212eb9a8]: KEEP-NA, valid — todo 1 is explicitly [OPERATOR] P1-tagged (generalize vs accept hardcoded catalog literals, a genuine unresolved design decision); todos 2-3 are textually gated on todo 1's outcome.
