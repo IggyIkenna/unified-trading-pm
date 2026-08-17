@@ -1,0 +1,152 @@
+{
+  "doc_type": "audit-result-json",
+  "asset_group": "tradfi",
+  "layer": "raw-tick",
+  "run_date": "2026-08-17",
+  "generated_at": "2026-08-17T05:46:00Z",
+  "mode": "read-only, Tier-1 in-session",
+  "prior_runs": [
+    "data_pipeline_reconciliation_tradfi_2026_07_20",
+    "data_pipeline_reconciliation_tradfi_2026_07_21",
+    "data_pipeline_reconciliation_tradfi_2026_07_24"
+  ],
+  "buckets": {
+    "gcp": {
+      "market-data": "market-data-tick-tradfi-prd-central-element-323112",
+      "instruments-store": "instruments-store-tradfi-prd-central-element-323112"
+    },
+    "aws": {
+      "market-data": "market-data-tick-tradfi-prd-427895769566",
+      "instruments-store": "instruments-store-tradfi-prd-427895769566",
+      "probed": false
+    }
+  },
+  "index_freshness": {
+    "availability_index_parquet": {
+      "size_mb": 364.26,
+      "rows": 14457858,
+      "blob_updated": "2026-08-17T05:26:52.595000+00:00"
+    },
+    "consolidator_lock_present": true,
+    "consolidator_lock_started_at": "2026-08-17T05:32:54.145111+00:00",
+    "latest_json": {
+      "last_run_at": "2026-08-17T05:36:41.672172+00:00",
+      "success": true,
+      "verdict": "empty",
+      "shards_scanned": 0,
+      "no_op": true,
+      "error_reason": "locked"
+    },
+    "phantom_audit_latest": { "phantom_count": 16997, "generated_at": "2026-07-30T06:34:52.936835+00:00" },
+    "reprobe_audit_latest": { "new_empties": 1, "disagreements": 0, "generated_at": "2026-08-16T09:02:42.633778+00:00" }
+  },
+  "census": {
+    "total_rows": 14457858,
+    "by_venue": {
+      "NYSE": 6151780,
+      "CME": 4640094,
+      "NASDAQ": 2842817,
+      "ICE": 417412,
+      "CBOE": 227404,
+      "FRED": 94649,
+      "KRX": 43471,
+      "FX": 31112,
+      "BARCHART": 9119
+    },
+    "by_pipeline_mode": {
+      "batch_databento": 14228314,
+      "batch_yahoo": 116520,
+      "batch_fred": 108145,
+      "batch_barchart": 4655,
+      "live_databento": 224
+    },
+    "by_capture_status": {
+      "captured": 8116669,
+      "empty_confirmed": 5124292,
+      "attempted_failed": 801636,
+      "expected_unattempted": 415261
+    }
+  },
+  "coverage_pct_lower_bound": 86.96,
+  "coverage_formula": "captured / (captured + attempted_failed + expected_unattempted), empty_confirmed EXCLUDED",
+  "coverage_prior_2026_07_24": 66.77,
+  "id_form": {
+    "naive_all_years_pct": 85.11,
+    "clean_excluding_ratified_chain_bundle_pattern_pct": 99.95,
+    "clean_n": 5082214,
+    "ratified_null_excluded_n": 889202,
+    "ratified_pattern_citation": "databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md",
+    "prior_2026_07_24_pct": 99.27
+  },
+  "fx_manifest_id_defect": {
+    "captured_rows": 3591,
+    "well_formed_n": 2601,
+    "well_formed_pct": 72.43,
+    "prior_2026_07_24_well_formed_pct": 0.0,
+    "residual_ticks_literal": 670,
+    "residual_wrong_prefix_yahoo_finance": 7
+  },
+  "provenance_mislabel": {
+    "ICE_ohlcv24h_INDEX_databento_captured": 0,
+    "ICE_ohlcv24h_INDEX_yahoo_captured": 1901,
+    "KRX_databento_captured": 0,
+    "KRX_yahoo_captured": 4365,
+    "FX_ohlcv24h_databento_captured": 1008,
+    "FX_ohlcv24h_yahoo_captured": 2583,
+    "FX_ohlcv24h_databento_fraction_pct": 28.08,
+    "prior_2026_07_24_FX_fraction_pct": 20.1,
+    "status": "ICE and KRX RESOLVED, FX unchanged"
+  },
+  "quarantine": {
+    "capped_count": 500000,
+    "capped_bytes_gb": 10.22,
+    "cap_hit_before_time_budget": true,
+    "elapsed_s": 41.4,
+    "prior_2026_07_24_capped_count": 400000
+  },
+  "new_locations": {
+    "_migration_backup_2026_07_25": { "capped_count": 20000, "capped_bytes_gb": 2.348, "registered": false },
+    "_audits": { "count": 2, "bytes_gb": 0.036 },
+    "vm-census": { "count": 1, "bytes_gb": 0.0 }
+  },
+  "ae2_combo_writer_reader": {
+    "status": "RESOLVED",
+    "writer": "market_tick_data_service/engine/orchestrator/symbol_rules.py:300",
+    "reader": "market_tick_data_service/reader.py:74",
+    "both_agree_on": ["options_chain", "futures_chain", "combo_chain"]
+  },
+  "new_findings": [
+    {
+      "type": "doc_coverage_gap",
+      "detail": "venue=FRED undocumented in reference-tradfi.md/SKILL.md",
+      "rows": 94649,
+      "fixed_inline": true
+    },
+    {
+      "type": "non_canonical_id",
+      "detail": "multi-token equity symbols BRK B / BF B",
+      "rows": 38,
+      "fixed_inline": false
+    },
+    {
+      "type": "non_canonical_axis_value",
+      "detail": "instrument_type=UNKNOWN, venue=CME, all attempted_failed",
+      "rows": 4142,
+      "fixed_inline": false
+    }
+  ],
+  "unchanged_findings": [
+    { "type": "non_canonical_axis_value", "detail": "venue=BARCHART, all empty_confirmed", "rows": 9119 },
+    { "type": "register_staleness", "detail": "_quarantine/ row 22 still stale, still growing" }
+  ],
+  "batch_massive_purge_confirmed_n": 0,
+  "s1_sample_oracle_violations": 0,
+  "s1_sample_n": 8,
+  "resolved_since_2026_07_24": [
+    "ICE ohlcv_24h/INDEX provenance mis-stamp",
+    "KRX provenance mis-stamp",
+    "AE-2-adjacent combo/combo_chain writer/reader disagreement",
+    "FUTURES/spot instrument_type typos (no longer present in census)"
+  ],
+  "escalated_to_operator": false
+}

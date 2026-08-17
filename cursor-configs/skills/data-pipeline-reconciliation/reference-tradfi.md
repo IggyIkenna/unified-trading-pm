@@ -22,6 +22,18 @@ of the id `@LIN` suffix.)
 Segment shape: `_AG_SEGMENT_SHAPE[TRADFI]` —
 `unified-api-contracts/unified_api_contracts/registry/possible_manifest.py:157` (identical to cefi; no `chain=`).
 
+## Venues
+
+Core: CME, NYSE, NASDAQ, ICE, CBOE, KRX, FX (chains + singles, see grain table below). Removed-vendor legacy residual:
+BARCHART (9,119 `empty_confirmed` rows as of 2026-08-17, removed from `VENUES_BY_ASSET_GROUP["tradfi"]` 2026-06-24,
+still present in the manifest vocabulary — cleanup tracked, not yet done).
+
+**`FRED`** (added 2026-08-17, first measured this reconciliation run — previously undocumented here) —
+macro/yield-curve data via `pipeline_mode=batch_fred`/`source=fred`, `instrument_type` in `{BOND, INDEX}`,
+`data_type` in `{yield_curve, ohlcv_1d, ohlcv_15m, ohlcv_1s, ohlcv_24h}`. Id shape is the standard
+`FRED:BOND:DFF-USD` / `FRED:INDEX:T10YIE-USD` form — measured 100% well-formed on the sampled captured rows, no
+canonicalisation issue. 94,649 manifest rows measured 2026-08-17 (17,264 `captured`).
+
 ## Buckets — resolve, never hand-build
 
 `resolve_bucket_name(cloud, kind, asset_group="tradfi", deployment_env="prd")`:
@@ -129,6 +141,32 @@ fraction per surface; the "0 canonical" figure is stale (codex contradiction, ab
 - **B4** — 4,655 retired-vendor `barchart` rows + 9,119 `BARCHART` venue rows + the `batch_barchart` pipeline_mode.
 
 Per `SKILL.md` § 3e, surface these with citations and a severity; do not resolve or migrate them.
+
+### H8 — Databento CME/CBOE `FUTURE`/`OPTION`-labeled manifest rows with `instrument_id=None` are RATIFIED, not a defect
+
+**Added 2026-08-17 (found while re-running the id-form check for the post-full-backfill reconciliation checkpoint —
+a naive re-run of the id-form regex check first mis-reported this as a regression, 99.3%→85.1%, before it was
+root-caused.)** Every Databento-sourced CME/CBOE dated FUTURE/OPTION contract is written to GCS as a
+`futures_chain`/`options_chain` **bundle** (per the already-ratified 2026-07-19 ruling below), NOT a flat
+per-contract path — verified live: `raw_tick_data/by_date/day=2026-08-07/.../venue=CME/` has ONLY
+`instrument_type=combo/` and `instrument_type=futures_chain/` children, **no** `instrument_type=future/` path
+exists. The **manifest**, however, independently stamps these same shard rows `instrument_type=FUTURE`/`OPTION`
+(the LOGICAL type, not the on-disk bundle grain) with `instrument_id=None` — by design, since bundle grain has no
+per-contract id (`underlying` is the key, not `instrument_id`).
+
+- **Do not** treat a manifest row with `instrument_type in {FUTURE, OPTION}` (venue CME or CBOE, `source=databento`)
+  and `instrument_id=None`/blank as a manifest-id defect or an `id-form` violation. This population is currently
+  **889,202 rows** (measured 2026-08-17: CME 864,698, CBOE 24,504 — 99.71% of CME's captured `FUTURE`-labeled
+  rows), overwhelmingly post-dating the 2026-08 MVP backfill.
+- **Ruling**: `plans/archive/issues/databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md` (status:
+  resolved) — Option A (per-root chain) ratified, checker fixed (`mtds@8e43da75`), writer intentionally UNCHANGED,
+  no migration. This H8 entry documents the SAME ruling from the reconciliation-skill's own id-form-check
+  perspective, since neither `SKILL.md` §3d nor this file previously named the carve-out explicitly, and a future
+  reconciliation pass would otherwise re-derive it from scratch (or worse, mis-report it as a regression the way
+  this run's first pass did).
+- **When measuring id-form for tradfi**, exclude rows matching `(venue in {CME, CBOE}) and (instrument_type in
+{FUTURE, OPTION}) and (instrument_id is None/blank) and (source == databento)` from the denominator before
+  computing a canonical-shape percentage — otherwise the check double-counts a by-design null as a defect.
 
 ### H7 — 2026-07-30 census re-run (Phase G) reproduces H6 unchanged, zero new findings
 

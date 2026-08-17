@@ -1,0 +1,42 @@
+{
+  "doc_type": "audit-result-json",
+  "asset_group": "tradfi",
+  "layer": "candles",
+  "run_date": "2026-08-17",
+  "generated_at": "2026-08-17T05:50:00Z",
+  "mode": "read-only, Tier-1 in-session",
+  "prior_run": "data_pipeline_reconciliation_candles_tradfi_2026_07_25",
+  "bucket": "market-data-tick-tradfi-prd-central-element-323112",
+  "day_prefix_count": 1815,
+  "day_prefix_count_prior_2026_07_25": 884,
+  "s1_oracle_sample": {
+    "sample_day": "2026-08-07",
+    "sample_n": 20,
+    "violations_lenient_mode": 0,
+    "violations_strict_mode": 0,
+    "note": "0 violations under require_candle_migration_complete=True as well as False -- sampled shape appears fully migrated"
+  },
+  "s3_manifest": {
+    "rows_this_run": 6720871,
+    "rows_prior_2026_07_25": 73,
+    "row_count_nonnull_pct": 100.0,
+    "row_count_nonnull_pct_prior": 83.6,
+    "written_at_min": "2026-06-22T05:51:07.344599+00:00",
+    "written_at_max": "2026-08-16T13:54:30.796227+00:00",
+    "written_at_max_prior_2026_07_25": "2026-06-22T12:12:27.944733+00:00",
+    "verdict": "RESOLVED -- was the campaign headline missing_row finding on 2026-07-25"
+  },
+  "s4_catalogue": "UNAVAILABLE by construction, unchanged",
+  "quarantine_residual_reused_figures": {
+    "P7_processed_objects_2026_07_23": 7646831,
+    "P8_live_objects_2026_07_23": 534679,
+    "gap_quarantine_objects": 7112152,
+    "note": "not re-measured this run, historical context only"
+  },
+  "new_findings": [],
+  "resolved_since_2026_07_25": [
+    "candle manifest population disconnect (headline finding)",
+    "instrument_type= path migration_pending status (sampled shape now clean under strict mode)"
+  ],
+  "escalated_to_operator": false
+}
