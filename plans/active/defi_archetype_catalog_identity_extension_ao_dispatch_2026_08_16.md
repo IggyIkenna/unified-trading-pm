@@ -194,21 +194,37 @@ resolved_by:
       — confirmed absent, so `is_mvp()` returns False decisively on the venue axis alone) — these could be
       wired as a narrow first slice of this todo without waiting on (1)/(2), once dispatched. Repos:
       strategy-service, unified-api-contracts (only if fix (a) is chosen for the Bybit gap).
-- [ ] [BACKEND] P2. **Part (3b-iii) — `YIELD_ROTATION_LENDING` structural venue resolver.** Structurally
-      unresolvable today, confirmed independently by both the prior slot-22 session and this session:
-      `asset_group_keys=("chain","chains_eligible")` (`catalog_yield_defi.py`) anchors `asset_group` on a bare
-      chain token (e.g. `"ethereum"`), which gives NO venue string at all (bare `"ETHEREUM"` is not a
-      `DEFI_VENUE_PHASE`/`ALL_DEFI_VENUES` member — every real entry is `PROTOCOL-CHAIN` shaped). The row's real
-      protocol identity lives in a separate `candidate_protocols` key (`"aave,compound,morpho"`, comma-joined,
-      no chain pairing), which `asset_group_keys` never references, and a naive `f"{protocol}-{chain}"` concat
-      does not match the registry's real canonical forms (e.g. `"aave"+"ETHEREUM"` != `"AAVE_V3-ETHEREUM"`).
-      Investigate (do not guess-implement) whether a real, per-protocol default-chain table can be built from
-      VERIFIED evidence — e.g. reading which chain each `candidate_protocols` token is ACTUALLY captured on in
-      real prod `lending_rates` GCS data (`CanonicalLendingSupplyApyProvider`'s own per-protocol coverage
-      spot-check, referenced in this plan's Progress Log, is a starting point) — rather than assuming a default.
-      All 10 in-scope rows (of 11; `_yield_rotation_lending_config_satisfiable` already excludes the
-      Kamino-only row) are blocked on this. Repos: strategy-service, unified-api-contracts (if the resolver
-      belongs in the shared registry).
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-17, `strategy-service@6d79dfe3df` — Part (3b-iii)
+      `YIELD_ROTATION_LENDING` structural venue resolver.** The todo's own investigation instruction ("read which
+      chain each `candidate_protocols` token is ACTUALLY captured on in real prod `lending_rates` GCS data —
+      `CanonicalLendingSupplyApyProvider`'s own per-protocol coverage spot-check is a starting point") turned out
+      to already have its answer VERIFIED and committed in that exact module:
+      `PROTOCOL_ID_TO_LENDING_RATES_PROTOCOL` (`canonical_lending_supply_apy_provider.py`, built for the
+      pre-existing drivability gate) maps catalog token -> real `lending_rates`-corpus protocol string —
+      `{"aave": "AAVE_V3", "compound": "COMPOUND_V3", "spark": "SPARK"}`, empirically verified against 5 real
+      prod-GCS days (module docstring), with `morpho`/`kamino` confirmed PERMANENT gaps (never appear in the
+      corpus at all). Those values ARE ALREADY the exact `ALL_DEFI_VENUES` canonical PROTOCOL-CHAIN prefix — no
+      naive `f"{protocol}-{chain}"` concat of the catalog's bare lowercase tokens needed (that's what would have
+      broken); this reuses the drivability gate's own verified evidence rather than re-deriving anything.
+      New `_resolve_yield_rotation_lending_mvp_venues()` (`paper_universe.py`): only resolves rows carrying a
+      singular `chain` key (9 of 10 in-scope rows — the 8 stablecoin-rotation rows + ETH row + wBTC row all
+      pair 2-3 candidate protocols against ONE explicit chain); for each candidate token present in
+      `PROTOCOL_ID_TO_LENDING_RATES_PROTOCOL`, builds `f"{prefix}-{chain.upper()}"` and keeps it only if it's a
+      literal `ALL_DEFI_VENUES` member (never trusted blind). The ONE remaining row (`chains_eligible`,
+      multi-chain cross-chain meta-rotation, 4 protocols x 5 chains with no explicit pairing) is deliberately
+      left UNRESOLVED — returns no venues, never a guess at which protocol runs on which chain. Wired into
+      `_mvp_scope_reason_for_spec` as a new branch: since this archetype ROTATES capital across candidate
+      protocols, a row stays in-scope iff AT LEAST ONE confidently-resolved candidate venue is MVP (mirrors
+      `_yield_rotation_lending_config_satisfiable`'s own "any candidate resolves" semantics for drivability).
+      5 new unit tests (`tests/unit/cli/handlers/test_paper_universe.py`): resolver-level (resolves the real
+      aave/compound rows, drops morpho, never guesses the cross-chain/kamino rows), and
+      `_mvp_scope_reason_for_spec`-level (every real drivable+resolvable row stays in-scope today; a synthetic
+      `COMPOUND_V3-SCROLL` venue — real registry member, `DEFI_VENUE_PHASE="pipeline"` not `"live"` — is
+      correctly curtailed with the typed `not_mvp_scope:asset_group=defi,venues=...` reason, confirming
+      `is_mvp()`'s own venue-membership check is actually reached, not bypassed). Also fixed a now-stale comment
+      block above `_DEFI_MVP_VENUE_KEYS` that still claimed this archetype was "structurally unresolvable" — it
+      was correct when written (before this todo), so left as-is would have misled the next reader. `strategy-service`
+      `quality-gates.sh --no-fix` GREEN (fresh, post-commit run: 6099 passed, sentinel matches shipped SHA).
 
 ## Progress Log
 
