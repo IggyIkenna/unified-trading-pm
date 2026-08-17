@@ -87,13 +87,21 @@ source: >-
       capture means no historical replay/backtest for this data_type. Done-when: a batch collector exists (mirroring
       `PolymarketAdapter._build_book_snapshot_5_rows`, `polymarket_adapter.py:347`) or this is explicitly ruled
       out-of-scope with a cited reason.
-- [ ] [BACKEND] P1. **Gap: `features-service`'s PREDICTION ingest path structurally excludes KALSHI entirely.**
-      `_ingest_prediction`/`_list_polymarket_parquets` (`features_service/cross_instrument/cli/handlers/
-      batch_handler.py:117-129,167-176`) hard-filter to `venue=POLYMARKET` — KALSHI trades and book_snapshot_5 are
-      both real, captured (batch+live for trades; live-only for book), but orphaned at the feature layer regardless.
-      Done-when: KALSHI is ingested alongside POLYMARKET for PREDICTION (or the exclusion is confirmed intentional
-      with a cited reason — e.g. KALSHI's `polymarket_market_microstructure` fit is genuinely different and needs
-      its own calculator, not a blind extension of the filter).
+- [x] ✅ [BACKEND] P1. **Gap: `features-service`'s PREDICTION ingest path structurally excludes KALSHI entirely —
+      fixed 2026-08-17.** SHIPPED — `features-service@c5ad65df10`. `_ingest_prediction` now lists+loads every venue
+      in `PREDICTION_VENUES = (POLYMARKET, KALSHI)` (moved to new `engine/prediction_ingest.py` to stay under
+      `batch_handler.py`'s line cap), tagging each row with its own `venue` axis. KALSHI's real trade schema is
+      genuinely different from POLYMARKET's (`ticker`/`count`/`available_at` vs `condition_id`/`size`/`timestamp` —
+      confirmed live against `market_tick_data_service/.../kalshi_adapter.py`'s `_annotate_kalshi_ticker` +
+      `polymarket_adapter.py`'s trade-row construction), so a blind filter extension would have silently corrupted
+      `PolymarketMicrostructureCalculator`'s `condition_id` grouping with KALSHI's null-condition_id rows. Fixed
+      both halves: `_input_df_for_group` now filters each single-venue microstructure group to its own venue's rows
+      before compute, and a new `KalshiMicrostructureCalculator` (`kalshi_market_microstructure` feature_group,
+      registered in both calculator registries + `feature_builder_registry.py` + `config.py` +
+      `feature_definitions.yaml` + the PREDICTION asset_group allowlist) gives KALSHI trades an actual consumer
+      instead of leaving them orphaned. Scope note: KALSHI `book_snapshot_5` stays orphaned — that's the separate
+      P1 gap todo below ("no feature_group consumes POLYMARKET book_snapshot_5"), unaffected by this fix (trades
+      only). QG green (18456 passed), sentinel-verified on `origin/live-defi-rollout`.
 - [ ] [BACKEND] P1. **Gap: no feature_group consumes POLYMARKET book_snapshot_5.**
       `PolymarketMicrostructureCalculator` is trades-only (`polymarket_microstructure_calculator.py:36-37`), and
       the generically-applicable book-consuming groups (`book_depth_bands`/`liquidity_walls`/`order_flow_inference`/
