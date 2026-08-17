@@ -14,7 +14,7 @@ summary: >-
   underlying fix were merged into one todo each to avoid a duplicate-dispatch collision); the remaining orphaned docs
   are non-batchable (operator-gated / time-gated / too-large-or-risky / human-only per the skill's taxonomy) and are
   listed in the Deferred section for the next iteration or an explicit operator ruling.
-status: active
+status: complete # 2026-08-17 archival sweep: all 20 todos [x], no locked_by
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -89,6 +89,11 @@ context_scope:
 ---
 
 # DeFi satellite AO batch 6 — 2026-07-30
+
+> **✅ ARCHIVED 2026-08-17 (slot-33, data_engineering).** All 20 todos `[x]`, no `locked_by`. No new batch7 candidates
+> surfaced (its gated finalize's todos 2-3 re-checked every Deferred item this same day and found none newly
+> dispatchable). Companion finalize: `defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md` (archived alongside
+> this doc). No successor batch supersedes this one specifically.
 
 **status: active — operator-approved and dispatching.** This batch was drafted autonomously by the scheduled
 `ag_closeout_auditor`; frontmatter `status` has since been flipped to `active` (2026-07-30, confirmed by real backlog

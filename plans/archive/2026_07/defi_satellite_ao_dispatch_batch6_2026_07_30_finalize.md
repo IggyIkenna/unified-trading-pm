@@ -7,7 +7,7 @@ summary: >-
   doc's checkboxes independently once its batch-6 todo lands, then re-check the Deferred conflict-gated/
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch6 via the
   standard 6-step ritual. status: draft until the operator approves batch6 itself.
-status: active
+status: complete # 2026-08-17 archival sweep: all 4 todos [x], no locked_by
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [defi, ao-dispatch, close-out, batch-6, satellite-docs, archival]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -54,6 +54,10 @@ context_scope:
 ---
 
 # DeFi satellite AO batch 6 — finalize
+
+> **✅ ARCHIVED 2026-08-17 (slot-33, data_engineering).** All 4 todos `[x]`, no `locked_by`. Archived alongside
+> `defi_satellite_ao_dispatch_batch6_2026_07_30.md` (also archived this session) — see that doc's own archived banner
+> for the batch's closure summary.
 
 > **CORRECTED 2026-08-12 (/plan-reconcile)**: this line previously read "status: draft — activated only after its parent
 > batch6 is operator-approved and dispatched", contradicting the frontmatter (`status: active`). Per
@@ -111,11 +115,22 @@ context_scope:
       waiting on (confirmed via `grep -n "^- \[x\]"` over the archived doc — the manifest cross-check and OOM-recurrence
       spot-checks both landed `[x]` DONE 2026-08-05/2026-08-16). Nothing to fold into batch7 — the source doc closed on
       its own before this re-check ran.
-- [ ] [DOC] P1. Archive `defi_satellite_ao_dispatch_batch6_2026_07_30.md` via the standard 6-step ritual (migrate any
-      residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
-      every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch6 is in
-      `plans/archive/2026_07/` (or the current month's archive dir) with a superseded_by/archived banner and zero
-      remaining referrers to its old `plans/active/` path.
+- [x] ✅ [DOC] P1. **DONE 2026-08-17 (slot-33, data_engineering).** Archived `defi_satellite_ao_dispatch_batch6_2026_07_30.md`
+      via the 6-step ritual: (1) no residual DEFERRED items needed migrating — todos 2-3 above already re-checked every
+      Deferred item this same day and found zero new batch7-dispatchable work; (2) archived banner + superseded_by
+      (none — no successor batch) added; (3) codex-alignment check — batch6's 20 todos were routine fixes/audits
+      (subgraph swap, catalogue expansion, KAMINO/KALSHI diagnostics, legacy-venue fold, perp_daily_ctx registration,
+      AAVE/FLUID-PLASMA onboarding, chain-collision trace, manifest read-site audit, HL/ASTER migration + RULE 11
+      relax) already covered by existing codex SSOTs (honest-absence-downstream-handling.md,
+      defi-canonical-naming-ssot.md, gcs-and-manifest-delete-safety-protocol.md) — no new contract to stub; (4) no
+      CLAUDE.md change needed for the same reason; (5) fixed the 2 active-corpus referrers with real path-shaped
+      citations to the old `/plans/active/` path
+      (`plans/active/issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md`,
+      `plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`) — `plans/archive/` is
+      explicitly excluded from `check_reference_paths.py`'s scope, so historical archived-doc mentions were left as
+      the frozen record they are; regenerated `plans/active/INDEX.md` + `plans/epics/defi_master.md` via their
+      generator scripts to drop/repoint the now-archived entries; (6) cleared (no lock existed). Both batch6 and this
+      finalize plan moved to `plans/archive/2026_07/` in the same session. Repo: unified-trading-pm.
 
 ## Progress Log
 
