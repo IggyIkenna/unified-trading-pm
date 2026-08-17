@@ -224,6 +224,12 @@ archival — no live Databento dependency).
 
 ## Progress Log
 
+- **2026-08-17 (slot 4, data_pipeline_failure escalation agt-990205)**: Fresh independent reconfirmation — DP-VM-001
+  on `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-090227` (+ same-day siblings `...btc-2021-...-090428` and
+  `...btc-2022-...-090626`) all show the `DatabentoAdapter: GLBX.MDP3 failed [402]: 402 account_delinquent_invoice`
+  signature in `run.log` (125-240 occurrences per VM), stalling forward progress until the in-VM watchdog killed
+  them (`exit_code=137`). Still `status: blocked` — no relaunch attempted per RB-INFRA-RELAUNCH. Full writeup in
+  `dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`.
 - **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (0 already
   resolved). The doc's own "Resolution path" prose ("Operator pays the outstanding Databento bill...") had never been
   formalized as a `- [ ]` checkbox despite `status: blocked`/`priority: P0` and being escalated in prose elsewhere

@@ -179,6 +179,25 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
 
 ## Progress Log
 
+- **2026-08-17 (slot 4, data_pipeline_failure escalation agt-990205)**: Received a fresh DP-VM-001 escalation for
+  `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-090227` (same `btc-2020` shard, later same day, launcher resolves to
+  `launch-tradfi-bf-cme-ohlcv-1m.sh` via `launcher_registry.resolve_launcher_for_vm`). Read `LAUNCH_PARAMS.json`
+  (`VENUE=CME, START_DATE=2020-01-01, END_DATE=2020-12-31, INSTRUMENT_IDS=BTC.FUT`), `PROGRESS.json`
+  (`last_completed_date=2020-03-24`, monotonic), and `run.log` (GCS SDK reads via `get_storage_client`, never
+  subprocess — `gsutil`/`gcloud compute` object/list calls are hook-blocked here). `run.log` shows the identical
+  `DatabentoAdapter: GLBX.MDP3/ohlcv_1m|1s failed [402]: 402 account_delinquent_invoice` signature repeating from
+  2020-03-25 through 2020-03-31 (each date writing a partial/`SHARD_INCOMPLETE` manifest with 0 CME rows), then no
+  further `PROGRESS.json` advance for 3961s until the in-VM watchdog fired `WORKER_STALLED` and self-terminated
+  (`exit_code=137`) — same proximate cause as this doc + the `g01-6a-6l-2020` sibling doc, confirmed via a 3rd
+  independent `run.log` pull. Cross-checked the wider fleet: the SAME-day `tradfi-bf-cme-ohlcv-1m-btc-2022-...-090626`
+  and `...btc-2021-...-090428` VMs (both also exit_code=137 today) show 125 and 179 occurrences respectively of the
+  identical `account_delinquent_invoice` string in their `run.log`s — this is an account-wide Databento billing
+  block, not shard-specific, confirming (again) `tradfi_databento_account_billing_suspended_2026_08_09.md` (still
+  `status: blocked`) is the correct root-cause doc and no separate operator decision is needed here. Per
+  RB-INFRA-RELAUNCH ("if it re-fails the SAME way twice... STOP relaunching, file an issue") — this is now the 2nd
+  consecutive stall for this exact `btc-2020` shard today (`...-060542` then `...-090227`, both billing-caused) —
+  did NOT relaunch. No new issue doc filed (this doc + the P0 billing doc + the `g01-6a-6l-2020` root-cause doc
+  already cover it). Posted a bounded `/blocked` pointing at both. No code changed.
 - **2026-08-17 (slot 12, data_pipeline_failure escalation agt-dfccf4)**: Received a fresh DP-VM-001 escalation for
   `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-060542` (same `btc-2020` shard, next day, family again at 2/2 relaunch
   dispatches). Checked `plans/active/issues/` — this doc still open, appending rather than filing a near-duplicate.
