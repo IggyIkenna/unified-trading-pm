@@ -20,7 +20,7 @@ related:
     /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-15"
+last_updated: "2026-08-16"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

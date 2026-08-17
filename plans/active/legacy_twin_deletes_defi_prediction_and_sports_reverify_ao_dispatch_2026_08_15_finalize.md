@@ -35,7 +35,9 @@ resolved_by:
 
 # Finalize — legacy-twin deletes (defi/prediction) + sports re-verify
 
-- [ ] [REVIEW] P2. Confirm both todos landed with evidence (defi/prediction delete-after-copy evidence, and the sports
+- [ ] [REVIEW] P2. Confirm all todos landed with evidence (defi/prediction delete-after-copy evidence, and the sports
       fresh twin-coverage measurement — NOT just "checked", the actual numbers against the 2 call sites and Part 5 %);
-      update `instruments_completion_tracker_2026_07_06.md` with the sports result either way; archive the parent plan
-      once done and unlocked.
+      the parent plan has grown from 2 headline todos to 5 (todos 3-5 were spawned as follow-up work during
+      execution) — confirm all 5, not just the original 2; update `instruments_completion_tracker_2026_07_06.md` with
+      the sports result either way; archive the parent plan once done and unlocked. [Reworded 2026-08-17
+      (plan_reconciler): "both" → "all" — the parent doc now has 5 todos, not 2.]

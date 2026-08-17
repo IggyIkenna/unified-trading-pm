@@ -341,9 +341,11 @@ four now route through the one helper.
 
 - [ ] [DATA] P3. Complete the full PREDICTION:delta_one benchmark throughput measurement — instruments-store bucket bug
       now fixed (`features-service@09be801b`) and the 40-min-timeout root cause is understood (see Progress Log
-      2026-08-16); still blocked on getting one genuine `EXIT_STATUS=0` completion. Check
-      `features-e2e-prediction-20260816-012950-eadb84`'s live state first (see Progress Log) before relaunching — it may
-      already be terminal.
+      2026-08-16); still blocked on getting one genuine `EXIT_STATUS=0` completion. **Updated 2026-08-17
+      (plan_reconciler)**: `features-e2e-prediction-20260816-012950-eadb84` is CONFIRMED terminal — OOM'd
+      (`exit_code=137`) per the slot-7 entry above, which supersedes slot-14's earlier tentative "not yet terminal"
+      read. A FRESH relaunch attempt is what's needed next (the live-state check this bullet asked for is already
+      done).
 - [ ] [SCRIPT] P3. Add a `("delta_one", "PREDICTION")` entry to `_FAMILY_TIMEOUT_OVERRIDES` in
       `features-service/scripts/pipeline_e2e_check.py` once a genuine measured completion exists (per that file's own
       "real measurements, not a blanket guess" discipline) — do not guess a number.
@@ -356,3 +358,6 @@ four now route through the one helper.
 
 > **2026-08-06 archive-candidate audit**: Benchmark [DATA] P3 todo marked [x] but 'Full benchmark measurement
 > (throughput number) needs a longer-running VM or dedicated benchmark leg' — the measurement itself never completed.
+> **RESOLVED 2026-08-17 (plan_reconciler)**: no longer an archive-candidate trap — the doc now carries 3 tracked
+> `- [ ]` Follow-ups (including this exact benchmark-completion item), so `status: open` is correct and this note is
+> historical only.

@@ -128,4 +128,4 @@ and is flagged, not diagnosed further, here.
   and instruments-service, a separate service). The in-scope half of this diagnosis (the monitoring gap that let this
   run silent — `live_stream_watcher.build_prediction_live_shards()` resolving the wrong GCS bucket kind and silently
   returning zero shards every sweep) was fixed directly in this session, not filed here — see
-  `deployment-service@<pending commit>` and the parity plan's Progress Log.
+  `deployment-service@ebeef843c9` (verified reachable ancestor of `origin/live-defi-rollout` — plan_reconciler 2026-08-17) and the parity plan's Progress Log.
