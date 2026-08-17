@@ -194,8 +194,22 @@ those stay local by construction and are deliberately absent.
 
 ## Definition of done
 
-- [ ] [REVIEW] P1. **Every todo above flipped with evidence** (`<repo>@<sha>`), and each cited commit re-verified to
-      resolve — not trusted from the plan's own copy of the line.
+- [x] ✅ [REVIEW] P1. **Every todo above flipped with evidence** (`<repo>@<sha>`), and each cited commit re-verified to
+      resolve — not trusted from the plan's own copy of the line. **Independently re-verified 2026-08-17 (slot 13)**,
+      all 5 flipped todos (the 6th, `[DOC] P2` frontmatter fix, remains open and is out of this review's scope — a
+      distinct craft/todo, not yet dispatched): every cited SHA confirmed a live `git merge-base --is-ancestor` of
+      `origin/live-defi-rollout` (`unified-api-contracts@86d5f5af46`, `@e9201d80`, `@6151de2a2a`;
+      `system-integration-tests@cce1adebc6`, `@c30e412851`; `execution-service@529af8d22c`, `@3800849e87`,
+      `@d981725c2`; `strategy-service@701dce1850`; `market-tick-data-service@f90bf09a37`); content spot-checked
+      against each claim (SIT invariants #25/#26 wired in `run_cross_repo_invariants.sh` exactly as described;
+      `marinade.py`/`jito_restaking.py`/`symbiotic.py` all route through the UAC-sourced
+      `SOLANA_LST_MINTS`/`required_lst_address()`; `close_all/_template.py` posts to `/manual/instruction`, no
+      `/api/orders`; MTDS's `_run_oracle_canonical_leg` dispatches through `canonical_path_violations()`); and the
+      cited test suites re-run live, all green (`test_strategy_position_read_mode_cascade_invariant.py` 4/4,
+      `test_lst_token_address_drift_invariant.py` 7/7, `test_manual_instruction_close_all_contract.py` 4/4,
+      `test_pipeline_e2e_cefi_defi_canonical.py` 8/8). Resolved the plan's `<pending-sha>` placeholder for the
+      skills-audit todo: `unified-trading-pm@04fec8f2c4` (ancestor-verified; `Canonical-oracle audit (2026-08-16)`
+      section confirmed present in all four `SKILL.md` files). No over-claims found; nothing reverted.
 
 ## Progress Log
 
@@ -248,3 +262,17 @@ consumed it — one shared fix point instead of 3 independent ones. Updated the 
 `unified_api_contracts.canonical_path_violations()`, 6 new unit tests including 2 negative controls (structural +
 id-form) and a venue-scoping test, both pre-existing byte-unchanged skip pins (tradfi/prediction test files)
 repointed to SPORTS-only. `quality-gates.sh` full green before shipping.
+
+**2026-08-17 (slot 13, review) — Definition-of-done REVIEW item flipped, all 5 done todos independently
+re-verified.** Dispatched against the `[REVIEW] P1` done_definition item. Did not trust any cited SHA/claim from the
+plan's own text: fetched all 6 touched repos fresh, confirmed every cited SHA (`unified-api-contracts@86d5f5af46`/
+`@e9201d80`/`@6151de2a2a`, `system-integration-tests@cce1adebc6`/`@c30e412851`, `execution-service@529af8d22c`/
+`@3800849e87`/`@d981725c2`, `strategy-service@701dce1850`, `market-tick-data-service@f90bf09a37`) is a live
+`git merge-base --is-ancestor` of `origin/live-defi-rollout`; spot-checked the actual diffs match each claim
+(invariants #25/#26 wired in `run_cross_repo_invariants.sh`, LST protocol modules route through the UAC-sourced
+lookup, close-all posts to `/manual/instruction` with zero `/api/orders` refs, MTDS's oracle-canonical dispatch
+exists); and re-ran every cited test suite live rather than reading the worker's self-report (4/4, 7/7, 4/4, 8/8, all
+green). Resolved the skills-audit todo's `<pending-sha>` placeholder to `unified-trading-pm@04fec8f2c4`
+(ancestor-verified). No over-claims found — nothing reverted, no worker pinged. The `[DOC] P2` frontmatter-fix todo
+remains genuinely open (a distinct, undispatched craft item) — out of scope for this review, not a finding against
+it.
