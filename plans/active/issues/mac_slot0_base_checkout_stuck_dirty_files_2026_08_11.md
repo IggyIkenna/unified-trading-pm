@@ -92,3 +92,4 @@ fast-forward).
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (2 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:232a39505df4eaf3]: KEEP-NA, valid — sole open todo asks the operator to decide commit-vs-discard for 3 specific uncommitted files across 3 repos — genuine judgment about human intent behind pre-existing edits.

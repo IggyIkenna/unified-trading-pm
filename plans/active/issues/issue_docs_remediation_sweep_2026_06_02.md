@@ -554,3 +554,4 @@ tracked here.
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, the live plan several rehomed items now cite).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5af62d8a8a9c192f]: KEEP-NA, valid — 6 open checkboxes: UAC axis-classification design call, 2 MTDS reconciliation items with embedded design forks, a strategy-service venue-addition needing domain expertise, 2 tofu-apply items under an explicit Operator-gated infra section. Separate finding (not verdict-changing): this doc's Progress Log cites a locked_by block across 5 entries that the current frontmatter does not actually carry (blank field) — flagging for whoever next touches archival reasoning here, not correcting the historical entries per append-only discipline.
