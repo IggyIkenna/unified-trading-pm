@@ -457,3 +457,5 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
   mitigation choice with 2 named options and no directive; a fixture-pairing registry-resolution design divergence
   flagged by an independent 2026-08-10 code-diff verification) — no bounded deterministic path, no active
   planning-doc duplicate found. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.

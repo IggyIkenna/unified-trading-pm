@@ -186,3 +186,5 @@ those categories have ANY surviving rows):
 (no per-item options+recommendation question needed this round). The only concrete remaining action is executing the
 already-implemented, already-held null-`instrument_type` stamp (disposition 1) — a `[SCRIPT]`-tagged execution todo,
 not a canonicalization-decision todo, so it is out of THIS todo's own scope rather than a loose end.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

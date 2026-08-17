@@ -63,6 +63,7 @@ context_scope:
     /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     deployment-api/deployment_api/routes/data_status/_catalogue.py,
     instruments-service/scripts/measure_honest_coverage.py,
+    deployment-ui/src/components/AxisValueCensus.tsx,
   ]
 ---
 
@@ -160,3 +161,7 @@ context_scope:
   (`deployment-ui@3fb6779` AxisValueCensus panel), though the CQG-axis addition the todo also names is confirmed
   still missing (0 `cqg`/`canonical_question_group` hits in either shipped file) — real residual scope survives once
   the gate clears. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added
+  deployment-ui/src/components/AxisValueCensus.tsx, the shipped panel the residual CQG-axis addition needs to land in
+  per the 2026-08-17 na-eligibility-audit finding directly above.

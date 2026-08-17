@@ -786,3 +786,4 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   `grep -cE '^- \[ \]'`. Agrees with the 07-30/07-31/08-04/08-06/08-08/08-10 markers. The prose-only "Deferred work
   after 2026-07-18" section remains genuine operator/shared-file-gated work (no new `- [ ]` markup, still correctly
   not surfacing in the checkbox count). Still the live index for its 4 Phase A-E children. Doc stays NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified, unchanged (coordination-hub, codex-only list).

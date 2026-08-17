@@ -730,3 +730,5 @@ context_scope:
   `--apply`, fixture-attribute historical backfill, instrument_type casing re-verify to 100%, 3x-cadence
   reconciliation top-up) stay NA — each still ends in an operator-held race-sensitive `_index` CAS `--apply`, an
   infra drain window, or a same-doc dependency. Doc stays NA (4 open items remain, down from 6).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
