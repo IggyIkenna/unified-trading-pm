@@ -233,13 +233,33 @@ below (stop the writer, relabel the existing population, investigate the coincid
       green. **Not yet done**: a fresh manifest read confirming zero NEW `(pipeline_mode=batch_odds_api,
       data_type=odds_horizon_bucket, capture_status=captured)` rows past this fix's deploy timestamp — needs the fix
       live in production for at least one capture cycle first; tracked as a follow-up below.
-- [ ] [DIAG] P2. Verify the `market-data-processing-service@3ae762e725` writer fix (todo above) is actually live and
-      effective: once the deploy has run through at least one sports odds capture cycle, read the manifest for
+- [x] ✅ [DIAG] P2. **DONE 2026-08-17 (slot-13).** Deploy-timing verdict (not yet a manifest-evidence verdict — the
+      fixed code has not run through a live capture cycle yet, see below): `3ae762e725` (committed
+      2026-08-16T23:19:50Z) is a confirmed ancestor of HEAD; it reached `main` via promote commit `bc55b99b`
+      (2026-08-17T02:54:47Z) and the corresponding Artifact Registry image
+      (`market-data-processing-service:bc55b99,0.30.4`, built/pushed 2026-08-17T02:58:33Z) is now the `:latest` tag
+      the Cloud Run Job `uts-prod-mdps-odds-horizon-bucket` (region `asia-northeast1`, project
+      `central-element-323112`) resolves at execution time. **However**, that job's most recent execution
+      (`uts-prod-mdps-odds-horizon-bucket-n24lc`, ran 2026-08-17T01:15:07Z–01:16:16Z) completed BEFORE the fixed image
+      became `:latest` at 02:58:33Z — it ran against the PRIOR image (`ba13a3b`, built 2026-08-16T21:08:55–22:18:58Z,
+      itself before the fix commit) and therefore still carries the phantom-`pipeline_mode` bug. The job runs on a
+      ~24h cadence (prior executions: 2026-08-13/14/15/16 all ~01:15Z) — **the fix has NOT yet run through any live
+      capture cycle**; the earliest opportunity is the next scheduled execution (~2026-08-18T01:15Z). Manifest
+      evidence (zero new phantom rows / new rows under the dedicated MDPS mode) is therefore not yet obtainable and is
+      deferred to the follow-up todo below, per this todo's own "or names the reason it isn't yet" done-condition.
+      Evidence: `git merge-base --is-ancestor 3ae762e725f5ac5e912a532614c4921ea6145bff HEAD` (true);
+      `gcloud artifacts docker images list ... --include-tags` (bc55b99/0.30.4/latest, 2026-08-17T02:58:33);
+      `gcloud run jobs executions list --job=uts-prod-mdps-odds-horizon-bucket` (last run 2026-08-17T01:15:07Z, prior
+      to the fix landing as `:latest`).
+- [ ] [DIAG] P2. Once the `uts-prod-mdps-odds-horizon-bucket` Cloud Run Job has completed a run scheduled AFTER
+      2026-08-17T02:58:33Z (the timestamp the fixed image `bc55b99`/`0.30.4` became `:latest`) — expected
+      ~2026-08-18T01:15Z or later per the job's ~24h cadence — read the manifest for
       `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` rows with
-      `attempted_at`/`written_at` past the deploy timestamp — expect ZERO new rows in that combination, and instead
-      see new rows landing under `pipeline_mode=batch_mdps_odds_horizon_bucket` (or the live/replay siblings) for the
-      same period. Source: this doc's writer-fix todo above. Done when: a written verdict + fresh manifest evidence
-      confirms the fix is live and no new phantom rows are landing, or names the reason it isn't yet.
+      `attempted_at`/`written_at` past that execution's start time: expect ZERO new rows in that combination, and
+      instead see new rows landing under `pipeline_mode=batch_mdps_odds_horizon_bucket` (or the live/replay siblings)
+      for the same period. Source: this doc's writer-fix-verify todo above (deploy-timing half done; this is the
+      manifest-evidence half). Done when: a written verdict + fresh manifest evidence confirms the fix is live and no
+      new phantom rows are landing, or names the reason it isn't yet.
 - [x] ✅ [DATA] P1. **DONE 2026-08-17 (slot-32, `data_engineering`).** Ran a genuine randomized, non-overlapping
       two-sample check (n=500 then n=5,000, `random_state=20260817`) over the full captured
       `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket)` population (3,745,896 → 3,746,422 rows across
