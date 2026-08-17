@@ -145,25 +145,18 @@ source: >-
       BETFAIR today), so the registry entry alone closes the gap — no separate transfer-code path needed or
       expected for this venue class. No test asserted `VENUE_WALLET_CAPABILITIES`'s contents/count, so nothing
       else needed updating.
-- [ ] [BACKEND] P1. **Gap: `strategy_service/position/position_interface/factory.py::_get_other_adapter`'s bare
-      `"betfair"` case never matches sports's real canonical venue spellings** (`BETFAIR_EX_UK`, `BETFAIR_SB_UK`,
-      `BETFAIR_EX_EU` — this AG's own `VENUES_BY_ASSET_GROUP["sports"]` entries, confirmed via
-      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:574-576`). Same disease
-      shape as `cefi_live_venue_string_dispatch_broken_2026_08_16.md` (P2 audit, filed 2026-08-17): the real,
-      working adapter class (`BetfairPositionAdapter`, `strategy_service/position/position_interface/
-      adapters/betfair.py`) is registered and imported, but the factory's `match` statement only recognizes the
-      bare token `"betfair"` — `get_position_adapter(venue="BETFAIR_EX_UK", mode=LIVE)` normalizes to
-      `betfair_ex_uk` (`factory.py:441`, `venue.lower().replace("-", "_")`), matches no case arm, and raises
-      `ValueError: Unknown venue`. Already independently confirmed by this batch's own step-9 finding above
-      ("the 3 `BETFAIR_*` regional keys in this AG's list don't match the wired bare `"BETFAIR"` key either") but
-      never turned into its own tracked fix todo until now. Currently masked from production impact by the
-      steps-6-8 `BLOCKED-ON:archetype-declaration-backlog` gate (no archetype declares needing `odds` data yet,
-      so this dispatch path has never actually been exercised) — but the underlying factory bug is real today and
-      will surface the moment an archetype does declare sports position-read. Done-when: the factory recognizes
-      `BETFAIR_EX_UK`/`BETFAIR_SB_UK`/`BETFAIR_EX_EU` (and any other real canonical sports exchange venue with a
-      position-read need) without a `ValueError`, ideally via the same shared `split_venue_base_and_suffix`
-      helper the cefi fix built, or an explicit case-arm extension if the sports vocabulary doesn't fit that
-      helper's base+suffix shape.
+- [x] ✅ [BACKEND] P1. **Gap: `strategy_service/position/position_interface/factory.py::_get_other_adapter`'s bare
+      `"betfair"` case never matches sports's real canonical venue spellings** — done 2026-08-17. SHIPPED —
+      `strategy-service@700fc6d442`. `BETFAIR_EX_UK`/`BETFAIR_SB_UK`/`BETFAIR_EX_EU` are 3-part underscore
+      tokens with no dash, so they don't fit `split_venue_base_and_suffix`'s single-dash-split shape (unlike
+      the cefi fix this mirrors) — used the explicit case-arm extension the done-when allowed instead: added
+      `"betfair_ex_uk" | "betfair_sb_uk" | "betfair_ex_eu"` to the existing `"betfair"` case arm, all routing to
+      the same `BetfairPositionAdapter` (they're sub-venues of one Betfair account/session — exchange vs
+      sportsbook, UK vs EU). Updated the docstring's supported-values list and the `ValueError` message's venue
+      list in the same commit. Added a parametrized regression test
+      (`test_factory_betfair_sports_canonical_sub_venues`, `tests/position/position_interface/unit/
+      test_adapters.py`) covering all 3 tokens. `quality-gates.sh` green (exit 0) on this exact HEAD before
+      shipping.
 - [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16, +1 more 2026-08-17.** 2 genuinely new gaps
       tracked above at filing time (uncovered odds venues, MATCHBOOK's missing transfer rail); 3 other apparent
       gaps (price-diff exclusion, ONEXBET dead code, BLOCKED-CREDENTIALS live connectors) confirmed already
@@ -225,3 +218,10 @@ dispatch against this exact todo with zero movement (2026-08-16 ×2, 2026-08-17 
 skipping with `reason_code: GATED` and `park_now: true` this time (mirroring the parent
 `venue_e2e_wiring_2026_08_16.md`'s own fix for the identical repeat-dispatch pattern) so this stops re-dispatching
 to fresh slots on transient cooldown expiry alone.
+
+**2026-08-17 — BETFAIR bare-token dispatch bug closed.** SHIPPED — `strategy-service@700fc6d442`. The 3-part
+underscore sports tokens (`BETFAIR_EX_UK`/`BETFAIR_SB_UK`/`BETFAIR_EX_EU`) don't fit `split_venue_base_and_suffix`'s
+single-dash-split shape, so used the done-when's explicit-case-arm-extension option: extended the existing
+`"betfair"` match arm in `_get_other_adapter` to also match all 3 sports tokens, routing to the same
+`BetfairPositionAdapter`. Updated the factory docstring + `ValueError` venue list, added a parametrized
+regression test covering all 3 tokens. `quality-gates.sh` green on the shipped HEAD.
