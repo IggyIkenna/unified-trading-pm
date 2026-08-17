@@ -842,6 +842,29 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Archive-safety ratchet (active plan's related: must not cite an archived plan) ──
+# check_active_refs_archived_plans.py, operator ruling 2026-08-17 — reuses the SAME
+# $_fm_scoped_list this section already computed (zero extra file-discovery cost) so a
+# push that doesn't touch the doc trees pays nothing extra either. SSOT: the archival
+# ritual step 5, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
+ARCHIVE_REF_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_active_refs_archived_plans.py"
+if [ -f "$ARCHIVE_REF_CHECKER" ]; then
+    if [ -z "${_fm_scoped_list:-}" ] || [ -z "${_fm_scoped_list// /}" ]; then
+        log_success "Archive-safety ratchet skipped (no doc changes in your changeset)"
+    else
+        echo "Running archive-safety ratchet (related: must not cite plans/archive/, --only)..."
+        # shellcheck disable=SC2086
+        if python3 "$ARCHIVE_REF_CHECKER" --quiet --only $_fm_scoped_list; then
+            log_success "Archive-safety ratchet passed (scoped to your changeset)"
+        else
+            echo "❌ Archive-safety ratchet failed — a related: entry cites a /plans/archive/... path." >&2
+            echo "   Migrate the durable fact/pointer into a codex doc and repoint the related: entry" >&2
+            echo "   there instead — see the archival ritual step 5." >&2
+            _post_gate_fail "archive-safety-ratchet"
+        fi
+    fi
+fi
+
 # ── Post-gates: Conflict-marker gate (plan hygiene — catches committed git conflict markers) ──
 # check_conflict_markers.sh lives ONLY in the pre-commit hook (run_hygiene_sweep.sh --precommit)
 # and in no CI/CD workflow or quality-gates.sh path. A pre-commit bypass (--no-verify, git rebase

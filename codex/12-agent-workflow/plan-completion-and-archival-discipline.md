@@ -58,15 +58,39 @@ but all todos are done — should I unlock it?") but MUST NEVER unlock autonomou
    reflect? Update the codex doc(s), or stub a new one, before the plan disappears from `plans/active/`.
 4. Update `CLAUDE.md`/codex on any genuinely new contract the plan shipped (not just "it happened," but "here's the rule
    going forward").
-5. **Update every referrer's path corpus-wide** — grep the whole corpus for the old doc's path and fix each hit (added
-   2026-07-23: the prior four steps never actually named this explicitly, so a plan could archive cleanly by its own 4
-   steps while every OTHER doc that linked to it silently broke — not a regression to fix, a gap that was simply missing
-   from the ritual until then). **If a referrer cites a specific fact or number from the doc being archived (not just
-   its path), confirm that fact already lives in a codex SSOT before the archive lands — migrate it there if it doesn't.
-   Never just repoint the citation at the archived plan itself**, which quietly turns a plan into the fact's only home
-   (near-miss 2026-07-28: a CLAUDE.md bullet citing specific cron-delivery measurements almost got repointed at an
-   archived plan instead of confirming the numbers were already recorded in `/codex/04-architecture/ci-alerting.md`,
-   where they were).
+5. **Archiving a plan means its durable content moves to codex — never just moves to `plans/archive/` and stays there
+   as the only home for what it knows** (sharpened 2026-08-17, generalizing the 2026-07-23/2026-07-28 versions of this
+   step below). The rule, stated plainly: **if you archive a plan, its information goes into codex.** Concretely, before
+   the `git mv` lands:
+   - Identify what this plan established that another doc (a still-active plan, or a future reader) would need —
+     a ruling, a measured number, a design decision, a recipe. If it's not ALREADY captured in a codex SSOT, write it
+     there now (a new doc, or a section in an existing one). This is the SAME step 3/4 codex-alignment check above,
+     restated as a hard precondition for step 6, not an optional follow-up.
+   - **Grep the whole corpus for the old doc's path and fix every hit** — but the fix is "repoint at the codex doc you
+     just wrote/confirmed," never "repoint at the archived plan itself." A referrer that still points at
+     `plans/archive/...` after this step is exactly the failure this rule exists to close: it quietly turns an archived
+     plan into a fact's only remaining home, invisible to anyone who doesn't already know to look in `plans/archive/`.
+   - This is not extra ceremony for its own sake — it's a forcing function. You cannot archive cleanly without touching
+     codex, which means archival becomes a recurring, low-friction trigger to keep codex actually current instead of
+     letting it rot while plans silently accumulate the fleet's real institutional knowledge instead.
+   - **You should still archive** — this rule is never a reason to leave a genuinely-done plan sitting `active`. Fix the
+     referrers as part of the SAME archival work, don't let "I'd have to update other docs" become an excuse to skip
+     § 1's archive-immediately rule.
+
+   **Mechanically enforced, not just prose**: `scripts/plan-hygiene/check_active_refs_archived_plans.py` (a shrinking
+   ratchet, wired `--only`-scoped into `quality-gates.sh` at zero added cost on a push that doesn't touch the doc trees)
+   fails a commit whose OWN `related:` frontmatter cites a `/plans/archive/...` path. It does not scan document PROSE —
+   citing an archived plan as historical evidence ("root-caused in `plans/archive/issues/<slug>.md`") is the CORRECT
+   end-state this rule produces once a fact has been migrated to codex citing its source, not a violation; the ratchet
+   targets the structural `related:` pointer specifically, the one meant to route a reader to current context. Seeded
+   2026-08-17 at 925 pre-existing hits (the corpus predates this rule by months) — see
+   `/plans/active/issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md` for the dispatched bulk-cleanup
+   effort working that baseline down; `--update-baseline` lowers it as each batch lands, never hand-raise it.
+
+   (Prior near-miss this generalizes, kept for context: 2026-07-28, a CLAUDE.md bullet citing specific cron-delivery
+   measurements almost got repointed at an archived plan instead of confirming the numbers were already recorded in
+   `/codex/04-architecture/ci-alerting.md`, where they were.)
+
 6. Clear the lock (if one existed) and confirm the move. **The destination path depends on `doc_type` (resolved
    2026-08-16 — this doc previously contradicted itself, using both forms in its own worked examples below;
    [`archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`](/plans/archive/issues/archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md) has the full corpus
