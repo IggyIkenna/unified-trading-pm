@@ -33,6 +33,7 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 4, 2026-08-16 (dispatch cadence ruling)"
 locked_by:
+archive_exempt: true
 context_scope:
   [
     /plans/active/defi_live_poller_phased_build_2026_08_15.md,
@@ -56,10 +57,16 @@ resolved_by:
       protocol="uniswap_v3"/chain/queries/parsers. All 34 existing unit tests
       (`test_dex_swap_uniswap_v3_ws_connector.py` + `test_aave_liquidations_ws_connector.py`) pass unmodified;
       basedpyright clean (no blanket file-level suppression on the new module).
-- [ ] [DATA] P2. Extract `OnChainLiquidationPoller`, a config-driven `WSFeedConnector` parameterized by
+- [x] ✅ [DATA] P2. Extract `OnChainLiquidationPoller`, a config-driven `WSFeedConnector` parameterized by
       `(protocol, chain, rpc_resolver_key, contract_address, event_topic, log_parser)`, generalizing
       `aave_liquidations_ethereum_ws.py`'s implementation. DoD: `AAVE_V3-ETHEREUM` re-implemented on top of the new
-      base class with zero behavior change. (repo: market-tick-data-service)
+      base class with zero behavior change. (repo: market-tick-data-service) —
+      market-tick-data-service@0eb87e61f9. Extracted `OnChainLiquidationPoller` into
+      `_onchain_liquidation_poller.py`; `AaveV3EthereumWSFeedConnector` now subclasses it with
+      protocol="aave_v3"/chain/contract/topic/log_parser config only — connect/subscribe/unsubscribe/
+      pop_reconnect_flag/stream/close are inherited, not redefined. `_parse_log_to_tick` unchanged.
+      Existing unit tests (`test_aave_liquidations_ws_connector.py`) pass unmodified; Pass-1
+      quality-gates.sh green on 0eb87e61 (basedpyright clean, no new suppressions).
 
 ## Progress Log
 
@@ -68,3 +75,7 @@ resolved_by:
   the TVL-snapshot re-verification of tranche ordering — do not extract those until this batch's base classes land
   and that ordering is confirmed against real DefiLlama data.
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-17 (AO worker, slot 11)**: todo 2 shipped — `OnChainLiquidationPoller` extracted,
+  `AAVE_V3-ETHEREUM` re-implemented on top with zero behavior change
+  (market-tick-data-service@0eb87e61f9). Both Tranche-0 todos now complete — plan archived this
+  turn per the completion-and-archival hard rule.
