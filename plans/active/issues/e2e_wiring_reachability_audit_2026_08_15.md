@@ -287,15 +287,19 @@ new scope, not a wiring bug in what already exists.
       now carries an explicit `mode: TradingMode` (+ `testnet` as the PAPER sub-mode selector), resolved per
       adapter-construction rather than a service-global, and `reconciliation_engine.py` gained a `leg:
       ReconVerdictType` guard so a paper-vs-batch (determinism) failure and a paper-vs-live (execution) failure alert
-      differently (`strategy-service@701dce1850`). **Not done**: the invariant itself — "assert a reader exists for
-      each mode a slot actually runs in" — is not yet wired into
-      `system-integration-tests/scripts/run_cross_repo_invariants.sh` as `INV-2x`. Invariants 1+3 already landed
+      differently (`strategy-service@701dce1850`). Invariants 1+3 already landed
       (`system-integration-tests@da65ae1`); invariant 3 was itself found deficient on review 2026-08-15 (compared
       venue names not instruction actions, never checked `supports_live`) and rewritten
       (`unified-api-contracts@e9201d80`). Invariant 4 (UAC↔execution LST address drift) is also landed
       (`unified-api-contracts@e9201d80`, `system-integration-tests@c30e412851`) — narrowed mid-session to just
       `mSOL`/SOLANA after Chunk A's address migration landed concurrently for all 6 ETHEREUM addresses
-      (`execution-service@d981725c2`). Invariant 2 is now unblocked, not yet shipped.
+      (`execution-service@d981725c2`). **The invariant itself, "assert a reader exists for each mode a slot actually
+      runs in", is now also wired — reconciled 2026-08-17 (slot 15, review), shipped via
+      `venue_readiness_ao_dispatch_batch1_2026_08_16`, not by this doc's own dispatch.** `unified-api-contracts@86d5f5af46`
+      + `system-integration-tests@cce1adebc6` wired it as invariant #26 in `run_cross_repo_invariants.sh` (both SHAs
+      independently re-verified this session as live ancestors of `origin/live-defi-rollout`, content spot-checked
+      against the actual `run_cross_repo_invariants.sh` entry). All four SIT invariants from this doc + the venue-coverage
+      issue are now shipped.
 - [x] [AGENT] P1. ✅ **Build the 4 bespoke position readers** — `strategy-service@701dce1850`. Morpho: real health
       factor via `position()`/`market()`/oracle `price()` on-chain reads (function selectors verified via
       `eth_utils.keccak`, not guessed). Pendle: PT-token balance + maturity, `position_type` liquid/locked by maturity
@@ -318,6 +322,17 @@ new scope, not a wiring bug in what already exists.
       stays a local literal, correctly — the UAC SSOT deliberately excludes it (no venue declaration resolves it yet,
       per that module's own docstring). Dict indexing (not the `Optional`-returning `lst_token_address()` helper) so a
       missing key fails loudly at import time rather than silently typing as `str | None`.
+      — **Addendum 2026-08-17 (slot 15, review): the 3 addresses this Chunk A migration left pending
+      (`marinade.py::MSOL_MINT`, `jito_restaking.py::JITOVSOL_MINT`, `symbiotic.py::DEFAULT_COLLATERAL_WSTETH`) are
+      now also migrated — Chunk B, shipped via `venue_readiness_ao_dispatch_batch1_2026_08_16`, not by this doc's own
+      dispatch.** `execution-service@529af8d22c` + `unified-api-contracts@6151de2a2a` (updated
+      `MIGRATED_TO_UAC_LOOKUP`/`LST_ADDRESS_SOURCE` for the 3 newly migrated entries; `LST_ADDRESS_SOURCE` is now
+      empty). Both SHAs independently re-verified this session as live ancestors of `origin/live-defi-rollout`; content
+      spot-checked (`execution-service@529af8d22c`'s commit message confirms Marinade/Jito-Restaking/Symbiotic as the
+      exact 3 modules, explicitly citing Chunk A's `execution-service@d981725c2` as the prior 6-address migration this
+      completes). The LST address SSOT migration for execution-service is now complete for every venue not
+      deliberately excluded (eETH/rsETH/bSOL, per the 2026-08-16 operator ruling recorded in
+      /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md).
 - [x] [AGENT] P2. ✅ **Fix `check_pytest_unit_dir_coverage.py`** — `unified-trading-pm@0428f5ee1f`. Root cause: v1
       only scanned `tests/<family>/unit/` shapes (the MTDS bug shape) and structurally could not see PM's own
       `scripts/plan-hygiene/` co-located `test_*.py` files — a different shape entirely, never in scope. v2 scans for
@@ -857,5 +872,14 @@ rendered as a broken grid, because that component expects `div > b + span`.
   blind-retrying the full quickmerge — cheaper and matches "poll on a progress metric, not activity." Detected the real
   fix (`unified-trading-pm@bb6faddb`) on the watchdog's first check; re-verified independently before flipping this
   todo (0 occurrences, real 1-line-deletion diff — not another hollow claim).
+- **2026-08-17 (slot 15, review) — reconciled two AO dispatch batch shipments back into this doc.**
+  `venue_readiness_ao_dispatch_batch1_2026_08_16` shipped both SIT invariant 2 and LST address SSOT migration
+  Chunk B (marinade/jito_restaking/symbiotic) as todos of its own, without cross-checking against this doc's already-
+  open invariant-2 todo or already-checked LST-migration todo. Flipped the invariant-2 todo to done and added an
+  addendum to the LST-migration todo, both independently re-verified: `unified-api-contracts@86d5f5af46` +
+  `system-integration-tests@cce1adebc6` (invariant 2), `execution-service@529af8d22c` + `unified-api-contracts@6151de2a2a`
+  (LST Chunk B) — all four SHAs confirmed live ancestors of `origin/live-defi-rollout`, content spot-checked, not
+  trusted from the batch plan's own copy of the evidence lines. Part of
+  `venue_readiness_ao_dispatch_batch1_finalize_2026_08_16`'s reconciliation todo.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:5e37fdbf35376aac]: KEEP-NA, stale-items corrected -- closed 2 items: (1) the FastAPI-Dockerfile-resolution todo (lines 773-786), already answered by the active nick_ai_platform_readiness_remediation_2026_08_16.md (same parent_epic infrastructure_master, dated the same day) confirming main.py is the deployed entrypoint via execution-service@3567e7a180; (2) the SIT-invariant-2 wiring todo (line 284), a triple-duplicate of the same shipped work already closed on venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md this same pass (unified-api-contracts@86d5f5af46 + system-integration-tests@cce1adebc6). Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit conflict-check finding.

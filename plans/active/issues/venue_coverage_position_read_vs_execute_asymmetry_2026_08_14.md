@@ -537,6 +537,15 @@ Kamino/Jupiter conflated the two.
       correct, not a bug** (measured 2026-08-15: `live` is `"deployed"` everywhere, `batch`/`paper` are `"none"`
       everywhere); the invariant's value is catching a future REGRESSION (e.g. a venue silently losing its live read
       path), not flagging today's known gap as new work — same ratchet semantics as invariant 1's 109→82-venue backlog.
+      — **Reconciled 2026-08-17 (slot 15, review), shipped via `venue_readiness_ao_dispatch_batch1_2026_08_16`, not
+      by this doc's own dispatch.** `unified-api-contracts@86d5f5af46` (new
+      `tests/test_strategy_position_read_mode_cascade_invariant.py` + `tests/data/strategy_position_read_mode_baseline.json`,
+      106-venue ratchet baseline) + `system-integration-tests@cce1adebc6` (wired as invariant #26 in
+      `run_cross_repo_invariants.sh`). Both SHAs independently re-verified this session as live ancestors of
+      `origin/live-defi-rollout` (not trusted from the batch plan's own copy) and content spot-checked: the invariant
+      #26 entry exists verbatim in `run_cross_repo_invariants.sh`, comparing `strategy_position_read_mode_baseline.json`
+      against `position_read_mode_availability()`. Ratchet-fail behavior was manually verified by the shipping session
+      (removed a venue from the baseline, confirmed the test fails, restored it).
 
 ## What sharing strategy-service actually conveys (measured 2026-08-14)
 
@@ -584,7 +593,7 @@ correct and is now verified at the ABC rather than inferred.
 | Measure what the generic token-balance reader closes of the ~27 gap                     | **Partly done**      | closes the LST-shaped share (Lido et al.); Kamino/Jupiter's non-balance-shaped positions still unmeasured                                                                                                                                                                                                                                                                                   |
 | Build generic reader + bespoke exceptions (both services)                               | **Done**             | `_evm_generic.py` (execution-service) + `generic_token_balance.py` (strategy-service), this session                                                                                                                                                                                                                                                                                         |
 | Lido / Marinade / Kamino / Jupiter position adapters                                    | **4 of 4 done, all shipped** | Lido (generic reader) + Marinade (`strategy-service@926be71046`) + Kamino (`strategy-service@70c3c05f5c`) done; Jupiter determined NOT to need one (swap-only venue, no persistent position)                                                       |
-| 3 directional SIT invariants                                                            | **2 of 3 shipped**   | invariant 1 (batch⟹live) + invariant 3 (strategy⟹execution reachability) SHIPPED 2026-08-15 as ratchet baselines — `unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`; invariant 2 UNBLOCKED 2026-08-15 (`strategy-service@926be71046` built the capability axis it needed) but not yet wired as its own ratchet baseline — separate todo                           |
+| 3 directional SIT invariants                                                            | **3 of 3 shipped**   | invariant 1 (batch⟹live) + invariant 3 (strategy⟹execution reachability) SHIPPED 2026-08-15 as ratchet baselines — `unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`; invariant 2 (MTDS⟹strategy position-read) SHIPPED 2026-08-17 via the AO dispatch batch — `unified-api-contracts@86d5f5af46` + `system-integration-tests@cce1adebc6`, see the flipped todo above           |
 | P0 dispatcher-wiring (Uniswap/Lido/Jupiter live + V2Router + RecursiveLoopOrchestrator) | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — see the flipped todo above for the full scope + the Solana signing-bug finding it surfaced                                                                                                                                                                                                                                                     |
 | Kamino borrow/repay + Jito jitoSOL connector                                            | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — both via real vendor APIs, not hand-rolled instruction bytes                                                                                                                                                                                                                                                                                   |
 | strategy-service batch/live/paper capability axis                                       | **Done, shipped**    | `strategy-service@926be71046`, 2026-08-15                                                                                                                                                                                                                                                                                                                                                   |
@@ -894,6 +903,16 @@ myself) and this issue's own precedent, **not fixing `LST_VENUE_TO_TOKENS` mysel
 just a different file. `archetype_feature_groups.py` remains uncommitted, code-complete, verified independently correct
 (3 files, `.tabs/29/unified-api-contracts`), blocked on this tree-wide gate, not on anything in those files. Will retry
 the quickmerge on a later pass once this settles.
+
+## Progress Log
+
+- **2026-08-17 (slot 15, review) — reconciled the AO dispatch batch's SIT invariant 2 shipment back into this doc.**
+  `venue_readiness_ao_dispatch_batch1_2026_08_16` shipped SIT invariant 2 as a todo of its own (a duplicate of this
+  doc's own copy, same duplication shape already seen elsewhere in that batch) without cross-checking against this
+  doc when it flipped. Flipped this doc's own invariant-2 todo + the deferred-work table row to match, both SHAs
+  (`unified-api-contracts@86d5f5af46`, `system-integration-tests@cce1adebc6`) independently re-verified as live
+  ancestors of `origin/live-defi-rollout` and content spot-checked, not trusted from the batch plan's own copy of the
+  evidence line. Part of `venue_readiness_ao_dispatch_batch1_finalize_2026_08_16`'s reconciliation todo.
 
 ## Context scout
 
