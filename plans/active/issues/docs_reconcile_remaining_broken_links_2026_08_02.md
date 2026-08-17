@@ -69,16 +69,22 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       content lives entirely inline in README.md instead (control-verified: `concurrency.md`, linked from the same
       table, DOES exist — so this is a real gap, not a resolution-logic bug). Fix: either extract the relevant README
       sections into the 4 real files, or strip the dead ToC/inline links and note the content is inline. **Re-verified
-      2026-08-05 (docs-reconcile): still no confident successor, left open.**
+      2026-08-05 (docs-reconcile): still no confident successor, left open.** **Re-verified 2026-08-17 (docs-reconcile,
+      hunter-5 broken-link triage): still no confident successor via `find` across the whole repo, left open.**
 - [ ] [DOCS] P3. `/codex/06-coding-standards/README.md` (×3: `./PREK_MIGRATION_WALKTHROUGH.md`,
       `configuration-management.md`, `formatting-standards.md`) — same table already has a precedent fix (line 61: a
       broken `STANDARDS.md` link was redirected to `adapter-dead-code-and-fallback-ban.md` on 2026-07-24), but no
       confident redirect target was found for these 3 (checked `config-types.md` as a candidate for #2 — it's itself a
       redirect stub pointing back at this same README, so using it would create a cycle). Needs a human who knows what
       these 3 were meant to cover. **Re-verified 2026-08-05 (docs-reconcile): still no confident successor, left open.**
-- [ ] [DOCS] P3. `/codex/06-coding-standards/ui-testing-layers.md` cites `../../../.claude/rules/workspace-workflow.md`
+      **Re-verified 2026-08-17 (docs-reconcile, hunter-5 broken-link triage): still no confident successor, left
+      open.**
+- [x] ✅ [DOCS] P3. `/codex/06-coding-standards/ui-testing-layers.md` cited `../../../.claude/rules/workspace-workflow.md`
       — no `rules/` subdir under `cursor-configs/`, no file named `workspace-workflow.md` anywhere in the repo.
-      **Re-verified 2026-08-05 (docs-reconcile): still absent everywhere, left open.**
+      **Fixed 2026-08-17 (docs-reconcile)**: repointed to `/codex/08-workflows/ci-cd-flow.md`'s current branch-model
+      section (`#branch-model--ldr-trunk--main-direct-staging-dormant-reversible`), with the citing prose updated to
+      describe the current staging-dormant model rather than the old "three-tier... staging convergence" framing.
+      `unified-trading-pm@ea375c7182`.
 - [x] ✅ [DOCS] P3. `/codex/07-security/mev-protection.md` cited the retired `plans/questions/` dir's
       `defi_readiness_catalogue_2026_05_08.md`. **Fixed 2026-08-05**: repointed to the retirement record
       (`plans/archive/questions_README_retired_2026_05_20.md`), which names the 2 real successors
@@ -96,7 +102,8 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       genuinely dead, no successor found anywhere (incl.
       `plans/archive/pre_commit_to_gha_version_bump_2026_03_11.plan.md` — thematically close but a migration PLAN, not
       the setup doc itself, so not used as a substitute target). Left open — this specific one needs prose written or
-      the link dropped, no evidence-backed target exists to repoint to.**
+      the link dropped, no evidence-backed target exists to repoint to.** **Re-verified 2026-08-17 (docs-reconcile,
+      hunter-5 broken-link triage): still genuinely dead, no successor found, left open.**
 - [x] ✅ [DOCS] P2. `cursor-rules/architecture/feature-producer-consumer-contract.mdc` cites codex `04-architecture`'s
       `feature-dictionary.md` — file does not exist anywhere in the repo, not a rename. **MOOT — the citing rule is no
       longer live.** `unified-trading-pm@b45eab084`/`@d4f7fab9d` (2026-08-02) archived the entire top-level

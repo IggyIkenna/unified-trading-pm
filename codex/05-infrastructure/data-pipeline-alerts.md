@@ -313,7 +313,7 @@ being a blocking special case.
 `deployment_service.data_pipeline_monitors.revocation_actuator. RevocationActuator` is the PUSH path — it consults the
 evaluator and writes a marker (`vm-logs/{target}/ DRAIN_REQUESTED.json` or `vm-census/admission-hold/{target}.json`); it
 carries no policy of its own (the anti-drift test `test_actuator_verdict_matches_the_evaluator_for_every_alert` iterates
-all 142 identities to prove it). `deployment_service.data_pipeline_monitors.revocation_gate` is the fail-closed BACKSTOP
+every identity in the current population to prove it). `deployment_service.data_pipeline_monitors.revocation_gate` is the fail-closed BACKSTOP
 — a running VM's heartbeat polls `drain_requested(target)` every tick
 (`unified_trading_library.lifecycle.HeartbeatDaemon(drain_check=...)`), and a launcher preflight / Cloud Run entrypoint
 calls `admission_blocked(target)` before starting work. A revocation survives even if the actuator never runs, dies

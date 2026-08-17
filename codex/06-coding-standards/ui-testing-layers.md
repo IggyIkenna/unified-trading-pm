@@ -545,9 +545,10 @@ the gate's behavior at main-merge quality gates; on `feat/*` branches the same g
 
 ## Gate Enforcement by Branch
 
-Mirrors the three-tier branch model from
-[`workspace-workflow.md`](../../../.claude/rules/workspace-workflow.md#quickmerge-mandatory-for-all-merges): `feat/*` →
-QG only, `staging` → convergence for breaking changes, `main` → always stable. UI is in early development and iterates
+Mirrors the branch model from
+[`ci-cd-flow.md`](/codex/08-workflows/ci-cd-flow.md#branch-model--ldr-trunk--main-direct-staging-dormant-reversible):
+`feat/*` → QG only, `staging` → dormant (reversible, routes a repo only on a major/breaking bump or explicit operator
+decision), `main` → always stable. UI is in early development and iterates
 rapidly; failures on feature branches must not slow down the inner loop, but main must stay green.
 
 | Branch              | Policy                                                                                               | Rationale                                                                                                      |

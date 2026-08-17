@@ -169,15 +169,28 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
       **`get_transfer_status()`/`get_balance()` remain unwired stubs** — tracked as a new P1 todo below, not
       fixed in this pass (read-only query paths, lower severity than a silent-false-success write path, and
       this todo's own done-when was the audit answer, not a full sweep of every stub in the file).
-- [ ] [BACKEND] P1. **Wire the remaining two `LiveCcxtTransferAdapter` stubs — `get_transfer_status()` and
+- [x] ✅ [BACKEND] P1. **Wire the remaining two `LiveCcxtTransferAdapter` stubs — `get_transfer_status()` and
       `get_balance()`** (`engine/transfers/live_ccxt_adapter.py:220-265`), found during the 2026-08-17 audit
-      above. `get_transfer_status()` always returns `PENDING` without calling `exchange.fetch_withdrawal()`;
-      `get_balance()` always returns `Decimal("0")` without calling `exchange.fetch_balance()`. Same
+      above. `get_transfer_status()` always returned `PENDING` without calling `exchange.fetch_withdrawal()`;
+      `get_balance()` always returned `Decimal("0")` without calling `exchange.fetch_balance()`. Same
       DEAD-CODE-TODAY reachability as the rest of this file (no production call site constructs
       `LiveCcxtTransferAdapter` yet, per the P1 bootstrap-wiring todo above) — must-fix-before-live-trading-
       cutover, not an active incident. Done-when: both call the real CCXT method, classify errors the same way
       `execute_withdrawal`/`execute_internal_transfer` do, and have regression tests mirroring
-      `test_live_ccxt_withdraw.py`'s pattern.
+      `test_live_ccxt_withdraw.py`'s pattern. **Fixed — `execution-service@23a99168c7`**.
+      `get_balance()`: calls the real `exchange.fetch_balance(params={"type": wallet_type})`, and now RAISES on
+      any ccxt error instead of returning `Decimal("0")` — a fetch failure and a genuine zero balance must never
+      look identical to a caller reconciling funds. `get_transfer_status()`: uses `fetchWithdrawals()` (the LIST
+      endpoint), not the by-id `fetchWithdrawal()` the original stub comment sketched — confirmed via a live
+      ccxt `has` check that `fetchWithdrawal` is unsupported (`False`/`None`) on 6 of the 8 configured CCXT
+      venues (only okx/upbit report `True`), while `fetchWithdrawals` is supported on 7 of 8 (all but aster);
+      searches every configured exchange, filters the returned list for the matching `id`, maps ccxt's unified
+      status vocabulary (`ok`/`pending`/`failed`/`canceled`) to `TransferStatus`, defaulting any unrecognized
+      status string to `PENDING` rather than guessing `CONFIRMED`. Known, documented limitation: most exchanges'
+      `fetchWithdrawals()` defaults to a recent window (no `since`/`limit` passed) — safe by construction (a
+      false "not found" never fabricates a status), not a silent-wrong-answer risk, but not exhaustive history.
+      12 new tests in `tests/unit/engine/test_live_ccxt_status_and_balance.py`. 8607 passed/21 skipped, full
+      `quality-gates.sh --no-fix` green before commit.
 - [x] ✅ [BACKEND] P2. **`TransferCoordinator`'s missing `CEX_WITHDRAW` handler-map entry — decided 2026-08-17: NO
       duplicate handler, fail-loud KeyError is the correct final state.** Independent of the adapter-wiring fix
       above — a caller that DOES construct a `TransferCoordinator` directly (bypassing `HandlerRegistry`) would
@@ -199,6 +212,11 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
 
 ## Progress Log
 
+- **2026-08-17 (even later still, same session)**: Fixed the last `LiveCcxtTransferAdapter` stub P1 —
+  `execution-service@23a99168c7`. `get_balance()`/`get_transfer_status()` now call the real CCXT methods
+  (`fetch_balance`/`fetchWithdrawals`); every method in this file now does something real instead of returning
+  a hardcoded placeholder. 12 new tests, full QG green. Only the bootstrap-wiring P1 (needs live sandbox
+  credentials, genuinely operator-gated) remains open on this doc.
 - **2026-08-17 (later, same session)**: Closed the `TransferCoordinator` P2 todo — decision recorded, no code
   change: do NOT register a real `CEX_WITHDRAW` handler in the dead-code-today coordinator, the existing
   fail-loud `KeyError` is the correct final state given the real production path is `HandlerRegistry`/

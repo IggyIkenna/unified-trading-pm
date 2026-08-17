@@ -193,6 +193,16 @@ worker's ability to read it back via the AO HTTP surface.
   Progress Log: a fresh session or the operator applying the answer directly to the 2 affected docs, or a
   [BACKEND]-scoped fix to todo 1/2 above followed by a re-check.
 
+- **2026-08-17 (plan_reconciler, defi tranche, dispatch agt-5dedc7)**: FOURTH live reproduction of Gap 2, same
+  shape as the 2026-08-16 agt-1a88e0 entry above. `POST /api/slots/28/blocked` (BLK-bddcd537) fired the harness-level
+  "Operator answered your BLOCKED question" notification; `GET /api/slots/28/messages` returned `{"messages":[]}`
+  (empty, not a 500 this time). `GET /api/activity?limit=30` found it immediately:
+  `{"event_type":"blocked_message_orphaned_by_reassign","slot_id":28,"task_id":"agt-5dedc7","details":{"current_task":null,"text":"[operator] BLOCKED Q answered: A"}}`
+  — same event type, same `current_task":null` shape as the prior reproduction, corroborating the
+  reassignment-tied hypothesis rather than a generic transient 500. The `/api/activity` workaround continues to be
+  reliable (4th time it has recovered an orphaned answer) — applied the answer (option A) successfully from it.
+  No new diagnostic lead beyond what agt-1a88e0 already recorded; filing as corroboration only, not re-opening any
+  closed todo.
 - **2026-08-16 (/plan-reconcile Phase -1, dedicated pass)**: root-caused Gap 1 by reading the live
   `agent-orchestrator` auth code directly (not trusting `agents/plan_reconciler.md`'s claim or this finding's
   reproduction alone, per the todo's own instruction). `POST /api/plan-health/result`
