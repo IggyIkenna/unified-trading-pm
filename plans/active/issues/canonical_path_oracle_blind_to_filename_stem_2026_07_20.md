@@ -384,6 +384,16 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       `/codex/02-data/four-surface-reconciliation-procedure.md` § 3). Scope this with a bounded, prefix-scoped GCS
       listing per the single-walk-discipline rule — do NOT open a new whole-corpus walk. Repo: market-tick-data-service
       (+ unified-trading-library manifest-writer helpers as needed).
+      **SCRIPT SHIPPED 2026-08-17 (slot-19) — `market-tick-data-service@9561184f09`.** Discovery pass PARTIAL
+      (1,956/20,134), `--apply` NOT run — see Progress Log for the full status and the shared-host-contention blocker
+      that limited this session's scan progress (resolved via repo-blocker RB-17f1c27c; the script itself is
+      unaffected and ready for the remaining `--report`-checkpointed chunks + a final `--apply-from-report`).
+- [ ] [DATA] P2. **New finding (2026-08-17, surfaced while backfilling the item above) — root-cause + fix a DIFFERENT,
+      deeper legacy stem defect on DERIBIT/trades.** Objects like `BTC-26JUN20.parquet` carry a bare `BASE-EXPIRY`
+      stem with NO `VENUE:ITYPE:` prefix at all (unlike the wrapped-but-bare-underlying case the rest of §7 tracks) —
+      confirmed on at least 2020-01..2020-02 dates (26 rows in a partial 1,956-row discovery sample). The backfill
+      script's `object_non_canonical` safety gate correctly refused to auto-correct these rather than trust a
+      non-canonical filename. Repo: market-tick-data-service.
 - [x] [DATA] P2. Decide the id grammar for `defi` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; `prediction` stays out
       of scope (its own future closeout). **DONE `unified-api-contracts@502ef57e`**: not a new decision — the DeFi
       instrument-uid grammar was already ratified in `plans/active/defi_consolidated_closeout_2026_07_18.md`'s
@@ -497,3 +507,43 @@ own tests pass (178 passed across the four canonical-path test modules).
   than originally estimated (20,134 rows, not 230) and still actively growing as of today — flagged as a genuine
   data-correctness finding, not a stale artifact. Split the already-written-rows backfill into a fresh `[DATA] P2`
   todo (below) since it is migration/backfill work, out of this todo's root-cause-and-fix scope.
+
+### 2026-08-17 (slot-19, data_engineering) — §7 backfill todo: script SHIPPED + validated, full-scale apply BLOCKED on shared-host contention
+
+Wrote `market-tick-data-service/scripts/backfill_bare_underlying_future_manifest_ids_2026_08_17.py` — dry-run by
+default, `--apply` to write, `--report <jsonl>` checkpoints every resolved row (resumable across chunked invocations,
+so a bounded/killed run never loses progress), `--apply-from-report` runs the write-back from an accumulated report.
+Bounded, prefix-scoped GCS listing per `(day, venue, instrument_type=future, data_type)` manifest row — no corpus
+walk. Verifies every discovered object's filename via the UAC `is_canonical_instrument_id` oracle before trusting it;
+the row-count used for each replacement is always read from the object's own parquet footer metadata, never assumed
+from the bad row.
+
+**Caught + fixed a real duplication bug during small-sample validation, before any `--apply` run**: a
+`(day,venue,data_type)` prefix bundles EVERY underlying active that day (e.g. both BTC- and ETH-dated DERIBIT
+futures), so two distinct bad rows sharing that prefix but different underlyings both resolved to the SAME merged
+object set and would each independently "correct" into it — silently duplicating every replacement row. Fixed by
+scoping the object listing to the bad row's own base-underlying token before deciding single-vs-split; re-running the
+25-row sample post-fix produced disjoint, correct corrections for `old='BTC'` vs `old='ETH'` groups on the same
+prefix.
+
+**Partial dry-run progress (resumable, NOT yet complete): 1,956/20,134 candidate rows resolved.** `ok_split` 1,461 ·
+`ok_single` 32 · `phantom_no_object` 437 (different defect — manifest says captured, no object under the prefix;
+correctly not touched, belongs to the phantom reconciler, not this script) · `object_non_canonical` 26 (see the new
+todo above). 1,493/1,956 (76%) of resolved rows are auto-correctable with real per-object row counts already read.
+
+**Full-scale completion is BLOCKED on shared-host memory contention, not a script defect.** Four consecutive attempts
+to run the discovery pass to completion on this orchestrator VM (workers 6/24/48, with and without an explicit 590s
+timeout, with and without `ScheduleWakeup`) were externally killed (`status: killed`; `free -h` showed only 8.6GB/30GB
+free with 4.6GB swap in use at the time) — consistent with the documented shared-host RAM-exhaustion incident class
+(`agents/data_engineering.md` STEP 0.56; prior incidents 2026-07-27/07-31/08-01). Lower concurrency (6 workers) did
+NOT avoid the kill, which reads as host-wide pressure from other concurrent agent work, not this script's own
+footprint. Every partial run's progress IS safely preserved — the `--report` JSONL is appended-to as each row
+resolves, verified by re-running and observing zero re-resolution of already-completed rows. **Recommended next
+step**: either dispatch the remaining discovery pass to a dedicated backfill VM per
+`/codex/05-infrastructure/vm-launcher-runbook.md` (this now qualifies as corpus-scale I/O, not a quick in-session
+check), or continue via several more small `--report`-checkpointed chunks directly here once host memory pressure
+eases. Once discovery reaches 20,134/20,134, `--apply-from-report` performs the actual write-back in one pass
+(re-verifies every targeted row against the live canonical manifest immediately before writing, per the module
+docstring's safety contract) — not run this session. **Not flipping the backfill checkbox** — the todo's own
+done-when (rows actually re-keyed) is not yet met; the script + partial validated discovery is real progress, not the
+finish line.

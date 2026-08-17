@@ -163,6 +163,17 @@ file an issue") already points here, but the reasoning is worth recording:
         separate normalization-layer bug (uppercasing not applied/reverted somewhere in the venue-string write path)
         from the blank-timeframe issue above — flagging here since it surfaced in the same scan, not asserting they
         share a root cause.
+      - **Follow-up confirms the same casing split exists WITHIN the blank-timeframe subset itself**, not just the
+        whole-dataset breakdown above: a second dry-run-only rescan scoped to the 899,508 blank-timeframe rows
+        (scratchpad-only, not promoted — same read-only pattern) shows both casing variants of most venues present in
+        that subset, e.g. `BETRIVERS`=5665 vs `betrivers`=69, `BETSSON`=5275 vs `betsson`=62,
+        `BETFAIR_SB_UK`=5217 vs `betfair_sb_uk`=72, `CORAL`=4684 vs `coral`=22, `UNIBET_UK`=2691 vs `unibet_uk`=25,
+        `CASUMO`=2808 vs `casumo`=5. Both casing variants carry blank timeframes in roughly the same lopsided
+        (uppercase-majority) proportion as the unscoped breakdown — i.e. this does NOT look like "only the lowercase
+        variant is blank" or vice versa, which weakly argues the casing-duplication bug and the blank-timeframe bug
+        are independent (both venue-name variants are equally exposed to whatever writes blank timeframes), rather
+        than the casing bug being the blank-timeframe bug's root cause. Not conclusive — still needs the
+        `written_at`-by-day histogram comparison this todo already calls for.
 
 ## Progress Log
 
@@ -185,3 +196,11 @@ file an issue") already points here, but the reasoning is worth recording:
   edit, no production query/write performed or proposed. The source scratchpad log itself was NOT promoted to
   `scripts/`/committed (regenerable read-only dry-run; promoting the harness is left for whoever picks up the new
   todo, since it needs a fresh re-run anyway to get a current histogram).
+- **pre-compact audit 2026-08-17 (slot 2), second pass**: scratchpad grew by 2 files since the prior pass
+  (`is_phantom_timeframe_audit_2026_08_16.log` — a duplicate re-run of the same 899,508/1,070,440 measurement above,
+  nothing new; `is_phantom_venue_split_2026_08_16.log` — genuinely new, confirmed via
+  `grep -rl 'is_phantom_venue_split|phantom_venue_split' plans/ codex/ docs/` → zero hits before this edit). Folded
+  the venue-split log's finding into the existing casing sub-bullet above rather than a new todo, since it's a direct
+  scoping refinement of that same open question. Doc-only edit, no production query/write performed or proposed —
+  still under standing "docs only, no writes" scope. Git state reverified this pass: `live-defi-rollout`,
+  `ahead=0`, clean tree, HEAD=`361051cac189733a0a46061a784fdbdbbe9b662a`.
