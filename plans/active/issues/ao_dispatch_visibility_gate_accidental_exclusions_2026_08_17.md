@@ -28,6 +28,8 @@ locked_by:
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
+drift_direction: advance-code
+depends_on: []
 ---
 
 # AO dispatch-visibility gate — 6 new undeclared (accidental) exclusions
