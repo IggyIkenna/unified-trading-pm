@@ -9,7 +9,7 @@ summary: >-
   commit gate blocks all execution-service shipping until this is fixed. Found 2026-08-17 while
   shipping kraken_futures_wrong_rest_base_url_2026_08_17.md's P0 (unrelated Kraken Futures
   transport work) — QG failed with this single test as the only failure.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [execution]
@@ -18,6 +18,7 @@ scope: [engineer]
 tags: [ci, quality-gates, test-failure, blocking, defi, gcs-paths, pipeline-mode]
 related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-17
+resolved: 2026-08-17
 author: interactive-session
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -29,7 +30,7 @@ estimate_calibrated_ai_days: 0.12
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: execution-service@1554abdf19
 locked_by:
 locked_since:
 supersedes:
@@ -96,17 +97,41 @@ stale needs the fix, not a suppression.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Diagnose + fix `test_canonical_prefix_literal_shape`** — determine whether
+- [x] ✅ [BACKEND] P1. **Diagnose + fix `test_canonical_prefix_literal_shape`** — determine whether
       `derive_pipeline_mode_for_row("raydium"/"orca", "defi", "dex_pool_state")` or
       `build_defi_partition_path(...)` changed shape since this test was last green, and whether
       `execution_service/providers/solana_amm_depth_provider.py`'s own runtime prefix-build is
       affected the same way (not just the test's independent reassembly). Fix whichever side is
       wrong — update the test's literal ONLY if the new shape is confirmed intentional/correct;
       otherwise fix the regressed function. Done-when: `bash scripts/quality-gates.sh` green in
-      execution-service with this test passing (not skipped/xfailed).
+      execution-service with this test passing (not skipped/xfailed). — **Shipped:
+      `execution-service@1554abdf19`.** The RESOLVER, not the test, was correct:
+      `unified-trading-library/unified_trading_library/pipeline_mode_resolver.py`'s
+      `_VENUE_ONLY_OVERRIDES` maps `RAYDIUM`/`ORCA` → `BATCH_SOLANA_RPC`, an intentional,
+      already-cited change ("RULED 2026-07-28, defi_satellite_ao_dispatch_batch16 todo 1" — each
+      protocol fetches over its own native REST API grouped under the `solana_rpc` source label,
+      not The Graph subgraph). The test's literal still pinned the pre-ruling
+      `batch_onchain_subgraph` shape and was never updated after that ruling shipped — a stale
+      test, not a regression. `solana_amm_depth_provider.py`'s own runtime prefix-build calls the
+      identical `derive_pipeline_mode_for_row` function, so **production was already correct**;
+      confirmed no writer/reader mismatch via MTDS's companion
+      `solana_defi_handler._SOLANA_PROTOCOL_SOURCE_OVERRIDES` table too (raydium/orca dex_pool_state
+      is single-source, no override needed there — comment in that file confirms). Fix: updated
+      both literal fixture strings in the test to `batch_solana_rpc`, plus the now-stale
+      `batch_onchain_subgraph` mentions in the test's own docstring/comments AND the same stale
+      comment in the provider file (misleading docs = a finding, fixed in the same commit). Both
+      tests in the file pass (`test_canonical_prefix_literal_shape`,
+      `test_load_date_uses_canonical_prefix_and_honest_absence`); full `bash scripts/quality-gates.sh`
+      green (171s) on `execution-service`, unblocking the repo-wide green-tree gate.
 
 ## Progress Log
 
 - **2026-08-17**: Filed while shipping kraken_futures_wrong_rest_base_url_2026_08_17.md's P0 —
   confirmed pre-existing via stash + clean-tree re-run (RULES.md § 4b protocol). Declaring a
   `qg_red` repo-blocker for `execution-service` via `POST /api/repo-blockers` in the same turn.
+- **2026-08-17 (slot 8, backend_engineer)** — Fixed and shipped. Full diagnosis + fix detail in
+  the flipped todo above — `execution-service@1554abdf19`. Root cause: the pipeline_mode resolver
+  was correct (RAYDIUM/ORCA dex_pool_state → `batch_solana_rpc`, an intentional 2026-07-28 ruling
+  already cited in `pipeline_mode_resolver.py`); the test's literal was the stale side. This repo
+  is now unblocked for the standard `quality-gates.sh` → `quickmerge --agent` flow — every other
+  worker's shipments to `execution-service` should stop hitting this failure.
