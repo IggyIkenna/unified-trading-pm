@@ -126,6 +126,57 @@ resolved_by:
 
 ## Progress Log
 
+- **2026-08-17 (slot-22, backend_engineer) — concrete verification of the part-(3) todo's (i)-(iii) open items;
+  NOT implemented, per the todo's own "do NOT guess" instruction.** Read `is_mvp()` in full
+  (`unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py`) plus the catalog builders
+  (`catalog_carry.py`, `catalog_yield_defi.py`, `catalog_trading.py`) and `_mvp_defi_venues()`
+  (`_mvp_scope_rules.py:316`, `= VENUES_BY_ASSET_GROUP["defi"]`, 103 canonical `PROTOCOL-CHAIN` strings). Findings,
+  each independently measured, not assumed:
+  - **(i) TradFi/IBKR — CONFIRMED real gap, and it's a design question, not a lookup gap.** The equity-basis
+    carve-out branch (`is_mvp()` lines ~380-392) already EXISTS in the code and checks
+    `_venue_root in ("NASDAQ","NYSE","ARCA","AMEX","BATS","KRX")` — the todo's framing ("needs the carve-out
+    branch... or it never resolves") is slightly stale; the branch is there. The real gap: every IBKR-brokered
+    catalog row's `venue` config value is the literal bare broker token `"ibkr"` (verified,
+    `catalog_trading.py:611,833,860,941` etc.) — never the real LISTING EXCHANGE the carve-out actually checks
+    against. IBKR is a broker, not an exchange; the catalog has no field carrying the real
+    NASDAQ/NYSE/ARCA/AMEX/BATS-per-symbol exchange today. Two candidate fixes are BOTH real design decisions, not a
+    lookup: (a) add `"IBKR"` itself to the carve-out's accepted venue-root set (broadens a shared, live
+    `is_mvp()` semantic used by every other IBKR-routed asset_group check, not just this archetype set — needs a
+    scope decision on whether that's correct for ALL IBKR-routed instruments or just these equity-basis rows), or
+    (b) build a real per-symbol exchange lookup (new data dependency, not currently captured anywhere). Neither is
+    safely guessable.
+  - **(ii) DeFi bare-token → canonical-venue resolver — CONFIRMED, with a MEASURED edge case that breaks the
+    obvious naive approach.** `staking_protocol`+`chain` config-key pairs (`catalog_carry.py`) DO compose cleanly
+    for most rows via a simple `f"{protocol}-{chain.upper()}"` concat — verified against the real
+    `VENUES_BY_ASSET_GROUP["defi"]` set: `LIDO`+`ethereum`→`LIDO-ETHEREUM` ✅, `JITO`+`solana`→`JITO-SOLANA` ✅,
+    `ETHERFI`+`ethereum`→`ETHERFI-ETHEREUM` ✅ (all 3 are real registry members). **But** `catalog_carry.py`'s
+    `lending_protocol: "KAMINO_SOLANA"` (a single already-chain-suffixed token) does NOT concat-resolve — the
+    registry's real member is `KAMINO-SOLANA` (hyphen, not underscore, and the naive concat would try to build
+    `KAMINO_SOLANA-<chain>` and fail). A uniform concat resolver would be WRONG for this row specifically —
+    exactly the class of bug the todo warned about, now with a concrete repro rather than a hypothetical. Also
+    confirmed a SEPARATE, harder shape: `catalog_yield_defi.py`'s `YIELD_ROTATION_LENDING` archetype's
+    `candidate_protocols` field is a comma-joined multi-value string with NO chain pairing at all (e.g.
+    `"aave,compound,morpho"`, `catalog_yield_defi.py:47`) — bare lowercase protocol names, zero chain context in
+    that field, needing either a separate per-protocol default-chain table or a different resolution strategy
+    entirely for this one archetype. A resolver good enough for the staking rows would silently mis-handle this
+    shape if applied uniformly.
+  - **(iii) Per-archetype `base_ccy` source key — NOT surveyed this session (ran out of budget after (i)/(ii));
+    the existing `_CURRENCY_IDENTITY_KEYS` map (`paper_universe.py:670-694`) is a Layer-3-curtailment map for a
+    DIFFERENT axis (`curtailed_by_operator_constraint`, operator allow/block-list) — it is a plausible STARTING
+    point (same underlying config-key intuition: `coin`/`instrument`/`native_asset`/`asset`) but its correctness
+    for `is_mvp()`'s specific `base_ccy` semantics (CeFi `base_ccys` set membership, TradFi `underliers`/
+    `option_underliers` set membership) has NOT been independently verified per archetype — do not assume it
+    transfers unchanged.
+  - **Net assessment**: this is NOT safely completable as a single "wire it up" session even with the concrete
+    evidence above — (i) needs an operator/design decision on carve-out scope, (ii) needs a per-archetype-family
+    resolver (at least 3 distinct shapes confirmed: clean-concat / underscore-mismatch / comma-joined-no-chain),
+    and (iii) is unverified. Recommending this stays split rather than force-implemented — a wrong resolver here
+    would silently mis-curtail genuinely in-scope production rows, which this doc's own Finding 1
+    (`defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`) explicitly calls out as WORSE than leaving
+    the gap open. Not flipping the checkbox. Recommend the next pass either (a) get an operator ruling on the (i)
+    carve-out-scope question first (the smallest, most decision-shaped blocker), or (b) scope (ii)+(iii) as their
+    own per-archetype-family verification pass before any code change.
+
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling)**: extracted from
   `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s "NEW finding 2026-07-28" todo; operator chose
   the full-scope option (all ~26-29 rows) over starting with the smaller already-drivable subset.
