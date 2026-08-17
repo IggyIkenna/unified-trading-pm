@@ -112,19 +112,17 @@ resolved_by:
     until phoenix has a real canonical key AND an explicit decision is made on whether polymarket's two-connector
     split is itself the accepted final state (recommend: yes, document it as such, since it's a deliberate
     two-data-source design, not debt).
-  - **Shipping status: BLOCKED by host contention, not by the change itself.** The corrective docstring-only edit
-    (`market-tick-data-service` local commit `8f8212e9`, QG-verified green once standalone before the revert
-    churn) could not be landed via quickmerge after 7 attempts over ~40 minutes: 2 attempts killed while queued
-    behind `qg-governor` (host-wide token cap), 2 attempts failed re-gate on DIFFERENT unrelated flaky/foreign
-    tests each time (`test_lst_rates_handler`, then `test_solana_defi_handler::test_writes_data_to_gcs` — the
-    latter reproduced standalone with a deterministic pipeline_mode mismatch, `batch_onchain_subgraph` expected
-    vs `batch_solana_rpc` actual, unrelated to `kalshi_ws.py` and tracked by other in-flight DeFi-canon-id plans
-    per a grep hit in `defi_track01_per_instrument_and_canon_id_2026_07_24.md` et al. — this looks like a peer
-    session's in-progress WIP on that handler, not a regression from this todo), and the last 2 attempts hit
-    `load average: 10.30` (measured via `uptime`) with a full-suite QG run taking >9m50s before being cut off —
-    a slot-15 `basedpyright` run and a slot-7 orphaned backfill process were both consuming CPU concurrently. The
-    local commit is safe (committed, verified content matches intent) but genuinely unpushed at session end —
-    tracked in the Deferred-work table, not silently dropped.
+  - **Shipping status: eventually landed after sustained host contention.** The corrective docstring-only edit
+    was blocked for ~50 minutes across 9 prior quickmerge attempts: 2 killed while queued behind `qg-governor`
+    (host-wide token cap), 2 failed re-gate on DIFFERENT unrelated flaky/foreign tests each time
+    (`test_lst_rates_handler`, then `test_solana_defi_handler::test_writes_data_to_gcs` — the latter reproduced
+    standalone with a deterministic pipeline_mode mismatch, `batch_onchain_subgraph` expected vs `batch_solana_rpc`
+    actual, unrelated to `kalshi_ws.py`; a peer session's fix for exactly this
+    (`market-tick-data-service@28959917`, "fix: Solana DeFi protocol source-label overrides for solana_rpc/
+    defillama") landed on origin mid-session and confirmed the diagnosis), and several more killed/timed-out at
+    `load average` 6-10 (measured via `uptime`) with slot-15 `basedpyright` and a slot-7 orphaned backfill process
+    both consuming CPU concurrently. **Shipped**: `market-tick-data-service@767c4208a8`.
   - **Not flipping the checkbox** — step (2) is genuinely partial (phoenix blocked on a registry decision;
-    fallback removal correctly deferred; the kalshi correction itself is unshipped pending host contention
+    fallback removal correctly deferred; the kalshi correction is shipped but was never itself part of the
+    required fix — see corrected finding above)
     clearing). Recommend a fresh, narrower follow-up todo once PHOENIX gets a real UAC venue registry entry.
