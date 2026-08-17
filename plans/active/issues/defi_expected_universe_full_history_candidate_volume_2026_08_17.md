@@ -215,3 +215,12 @@ should weigh in on.
   measurement pass first. Launched VM `expected-universe-v2-defi-20260817-074211`
   (`--scan-only 10000000000`) to measure the true candidate count safely; will size the real
   `--apply-write` run off its result next.
+- **2026-08-17 (worker, slot-21, infra craft)**: dispatched the same live-retest todo
+  independently and watched the SAME VM (`expected-universe-v2-defi-20260817-071454`, already
+  RUNNING from an earlier turn of this session) to its terminal state via a background poller —
+  corroborates slot-3's finding above byte-for-byte (`ENUMERATOR_FAILED`, 100,000,001 candidates
+  vs the 100M cap, `EXIT_STATUS=5`). Discovered at quickmerge-time that slot-3 had already
+  escalated (`BLK-fbf334bd`), gotten the operator's scan-only-first answer, and launched the
+  scan-only measurement VM — no independent `/blocked` filed to avoid duplicating an
+  already-answered escalation. Deferring to slot-3's Todos-section resolution above (the scan-only
+  pass + calibrated-run plan) as the current path forward; no further action taken this session.
