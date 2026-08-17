@@ -84,3 +84,4 @@ fix depends on a product/architecture call this doc doesn't have the authority t
   `mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md`'s Progress Log recommended, after
   closing the phoenix registry gap in that plan (`market-tick-data-service@49a2d0c9`) left polymarket's
   intentional dual-casing as the sole remaining blocker on fallback removal.
+- **na-eligibility-audit 2026-08-17** [body-hash:b7816f2287ce8a02]: KEEP-NA, valid -- Fresh doc (2026-08-17). Sole todo is an explicit [OPERATOR] binary product/architecture decision (accept polymarket's dual-casing split as permanent vs. treat as needing a narrower fallback) the doc's own text says it "doesn't have the authority to make." Both downstream code outcomes are fully pre-specified (websocket_streaming_handler.py:138-142); trivially AO-dispatchable once the operator answers. Cross-cutting tranche audit.

@@ -310,3 +310,4 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   this doc's own todos (both already closed, `archive_exempt` unaffected) — this entry exists so a future reader of
   this doc's Terraform-fix history sees the loop actually closed.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** [body-hash:295ec05691af3b04]: KEEP-NA, valid (content fully resolved, exemption confirmed) -- 0 open todos, all 4 "Suggested next steps" closed (2026-08-10/15 entries); doc's own text: "Genuinely 0 open todos." archive_exempt: true was deliberately set 2026-08-15 for referrer-link stability (9 live cross-references + complete multi-incident right-sizing history), NOT because work remains. No archival action taken -- doc is correctly configured in its intended terminal state.

@@ -96,4 +96,4 @@ full per-doc agentic classification pass to notice them incidentally, the way th
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-08-17** [body-hash:65eddac54ed20bf2]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (prototype a mechanical checker for un-cited extraction citations) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 2. Doc stays assigned_vm: NA for its remaining item. Cross-cutting tranche audit.
+- **na-eligibility-audit 2026-08-17** [body-hash:092494416dea3b5d]: KEEP-NA, valid -- Self-referential meta doc (about this same audit's own extraction-citation bug). Confirmed it does NOT exhibit its own documented bug: its checker-prototype todo is correctly closed citing cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 2. The 1 remaining item (route any further instances the checker finds to their owning tranche) is dependency-blocked on that checker actually running, which hasn't happened yet. Cross-cutting tranche audit.
