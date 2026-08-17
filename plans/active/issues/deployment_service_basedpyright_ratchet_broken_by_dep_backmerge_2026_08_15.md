@@ -281,3 +281,4 @@ independent of whether Todo 3's cache-hit investigation ever resolves the "why."
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:0196a6655c035b95]: KEEP-NA, valid -- Sole remaining todo is explicitly tagged [OPERATOR] with a BLOCKED-OPERATOR-DECISION marker: whether to relax the BASEDPYRIGHT_MAX_ERRORS ratchet ceiling from 1259 to 1261 against the workspace's own 'ratchet-only-goes-down' norm, or hold all deployment-service quickmerges. Two guessing passes plus a rigorous isolated-worktree bisection all failed to find a code-level culprit, and a cross-slot measurement note narrows but does not resolve the decision (1259 is reachable on another current tree, arguing against relaxing the ratchet yet).

@@ -113,3 +113,4 @@ progress that no single plan tracks to completion.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:6b8c25824bd0d572]: KEEP-NA, valid -- Fresh issue explicitly filed to correct a prior drafting audit's mis-scoping of a batch13 AO todo. Both remaining todos are explicitly sequenced: todo 1 behind a sibling issue doc's unresolved fix (axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md's unbounded-read performance bug in get_data_status_turbo_impl), todo 2 behind todo 1's own output (a completeness report). The doc's own text states the umbrella capture ask is an unbounded, multi-AG, many-VM-hours operation, not a worker-determinable outcome.

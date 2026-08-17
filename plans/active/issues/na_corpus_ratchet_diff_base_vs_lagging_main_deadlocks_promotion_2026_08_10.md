@@ -248,3 +248,4 @@ a normal ratchet into a self-reinforcing wall.
   for this escalation is the `ldr-ci-monitor` sentinel (not a numbered slot) — no slot-ping applicable per this role's
   skip-rule.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:f2fc0a2b8f9bc8cb]: KEEP-NA, valid -- Two remaining open todos on an otherwise heavily-shipped CI/promotion-mechanics incident doc. The first is explicitly framed as an operator decision the todo text itself says is 'not a unilateral backend change — it narrows a hard gate.' The second (resolving real-flow test coverage for the deploy-service and kill-switch-toggle journeys) is genuine engineering work; kill-switch-toggle in particular touches live-trading kill-switch machinery, so it is treated as care-requiring GENUINE_WORK rather than a slam-dunk mechanical task, not clearing the full bounded-outcome bar needed for a doc-level reclassify.

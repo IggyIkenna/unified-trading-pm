@@ -413,3 +413,4 @@ is a finding fixed on contact.
 **Not done, deliberately**: the artifact HTML was not touched — the operator reviews these numbers before they reach
 a client document, per this plan's own instruction. The "Build the artifact" and "Operator review" todos below
 remain unchecked, correctly blocked on that review.
+- **na-eligibility-audit 2026-08-17** [body-hash:13e6f20212196355]: KEEP-NA, valid -- Client-facing disclosure artifact with an explicit, hard disclosure boundary (archetypes-yes/edge-no, no commercial figures, code snippets limited to schemas/contracts) requiring ongoing editorial judgment against that boundary, not a mechanical build. All 7 pre-audit measurement todos are already done (checked). The 2 remaining todos are 'build the artifact' (content/design judgment applying the disclosure boundary to a large coverage dataset) and an explicit operator-review gate before any client-facing send. The doc's own Progress Log states this was deliberate.

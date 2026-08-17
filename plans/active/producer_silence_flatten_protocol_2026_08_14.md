@@ -196,3 +196,7 @@ measurement that justified the number.
       decision component has a non-test caller. Three separate systems in this estate were individually complete,
       individually tested, and collectively inert; this plan adds several more components to that surface. Repo:
       execution-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:d111b57d45b48364]: KEEP-NA, valid -- Operator risk-decision doc (2026-08-14) recording the producer-silence flatten protocol; the source field and intro blockquote explicitly cite the operator's own dated ruling as the doc's basis (NEVER-RE-LITIGATE criterion a). All 23 open todos are live-trading risk-management design+build work spanning execution-service/strategy-service/batch-live-reconciliation-service/alerting-service (net-delta calculators, post-trade-leverage trade selection, producer-liveness detection, the exposure-reduction unification per the cited /codex/04-architecture/exposure-reduction-unification.md design SSOT) -- genuine judgment-heavy work on live-dispatch-critical-path machinery, not mechanically bounded. One item is explicitly [OPERATOR]-tagged (SLA numbers); one downstream test depends on that SLA existing first.

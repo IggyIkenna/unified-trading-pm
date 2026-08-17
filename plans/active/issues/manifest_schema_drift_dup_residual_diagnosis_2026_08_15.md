@@ -87,3 +87,4 @@ incremental-merge enhancement is an operator/design call, not a worker-determina
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:34db568726207d9c]: KEEP-NA, valid -- Sole open todo is explicitly [OPERATOR]-tagged and the doc's own 'Recommended decision' section states in plain text that the choice between a scheduled periodic full-rebuild sweep vs. a narrower incremental-merge enhancement 'is an operator/design call, not a worker-determinable outcome, per CLAUDE.md's AO-eligible = outcome determinable by the worker alone rule' — citing the exact governing rule against itself. The doc explicitly declined to attempt a code change to the 3625-line, heavily production-incident-scarred manifest_consolidator.py.

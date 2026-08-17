@@ -529,3 +529,4 @@ is the single place to scan them all in one pass.
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed -- still a standing tracking/index
   surface, no source path applies.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:bf5ab4d74bda2f7b]: KEEP-NA, valid -- 0 open todos by design, not an archival signal -- explicit dated operator ruling (autonomous_session_operator_decisions_2026_07_25.md entry #10, resolved 2026-07-26 option A) plus archive_exempt: true frontmatter plus 4 prior na-eligibility-audit reaffirmations (2026-08-02, 08-06, 08-07, 08-08 round7 RECLASSIFY sweep) all confirm this is a standing tracking/index surface with an ongoing citation duty (cited reference surface for /plan-reconcile's hunter 6), not a completed plan awaiting archival. locked_by is empty in frontmatter -- not locked.

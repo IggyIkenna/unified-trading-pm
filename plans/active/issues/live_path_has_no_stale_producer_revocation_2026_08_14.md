@@ -235,3 +235,7 @@ none of them appear as todos in that plan.
 ## Progress Log addendum
 
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:97545a17d064f199]: KEEP-NA, valid -- The doc's main risk decision is already resolved into a dedicated plan (producer_silence_flatten_protocol_2026_08_14.md); its two superseded todos are already checked off here. The 3 remaining open items are the genuinely-not-covered remainder: todo 1 (wire dependency_health_policy to an actuator, sequenced probe-inject -> register-services -> kill-switch-bus wiring) touches live-trading kill-switch machinery directly — the doc itself documents the kill switch is in-process and structurally different depending on which service dies, so correctly wiring a new actuator onto it is safety-critical design work bundled as one item, not a bounded refactor. Todo 2 (anti-inertness CI guard) depends on todo 1 landing a real consumer to assert against. Todo 3 is an explicit [OPERATOR] tag needing a 3-way decision on the lightweight-launcher admission-gate question, and is stated as 'blocked on this decision, not further investigation.'
