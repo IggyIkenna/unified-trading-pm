@@ -2,8 +2,8 @@
 doc_type: issue
 title: >-
   DeFi manifest `instrument_type=POOL` (uppercase) `dex_pool_swaps` captured rows regrew from 0 (2026-08-05, fold
-  verified clean) to 7,930,863 (2026-08-11) — mechanism UNRESOLVED, blocks
-  `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2-4
+  verified clean) to 7,930,863 (2026-08-11) — mechanism ROOT-CAUSED 2026-08-16 (live `market-data-processing-service`
+  writer defect, see summary), blocks `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 2-4
 summary: >-
   `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 1 (2026-08-11) freshly measured 7,930,863
   `instrument_type=POOL` (uppercase) captured rows in `data_type=dex_pool_swaps` — directly contradicting

@@ -113,7 +113,7 @@ Per-interface resolution to specify. `FeatureProvider` · `PricingService` · `R
 - [ ] [AGENT] P2. **Specify `ExecutionService` as basic routing only.** The carved package's `execution-basic` and
       `adapters-lite` give order placement against a venue API. **Withheld:** execution algorithms, SOR, the
       venue-capability registry and the transfer rails.
-- [ ] [AGENT] P2. **Specify `PortfolioRiskService` local guard-rails vs withheld platform risk.** `risk-guards-local`
+- [x] [AGENT] P2. ✅ **Specify `PortfolioRiskService` local guard-rails vs withheld platform risk.** `risk-guards-local`
       gives the local circuit breakers the strategy needs to be safe standalone; cross-client portfolio risk and
       governance stay platform-side.
       **RULED 2026-08-16 (operator) — ship OUR LIVE VALUES, not conservative defaults.** Applies to drawdown control,

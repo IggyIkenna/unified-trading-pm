@@ -258,3 +258,22 @@ once this doc is split.
     self-explained in its own body text ("todo 2 ..."), likely already a non-issue; the specific elysium
     progress-table doc could not be pinpointed among 5 candidate docs matching "elysium" in a quick grep — left
     unresolved, low priority (original run: "none carry live-risk or data-correctness stakes").
+- **2026-08-17 (plan_reconciler /plan-reconcile Phase -1, dispatch `agt-5dedc7`, slot 28)**: re-checked every
+  STILL-OPEN item against fresh state (~24h after the 2026-08-16 Phase -1 pass) — no drift, nothing newly resolved,
+  nothing needing correction:
+  - `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`: still exactly 1005L, still over the 1000L hard
+    cap — genuine split work, still operator-gated, not attempted.
+  - `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e): still `[ ]` open, last touched
+    2026-08-16T23:36Z.
+  - `defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md`: still `status: open`, 3 open todos, last
+    touched 2026-08-16T11:05Z.
+  - `defi_turbo_api_hides_real_captured_data_2026_07_07.md`: still `status: open`, no `resolved_by`, last touched
+    2026-08-15.
+  - The 4 `dex_swaps` row-count-conflict docs: all 4 still `open`/`active` as before, cross-links from yesterday
+    intact; the row-count conflict itself is still unresolved (needs a fresh live manifest read — data-engineering
+    work, out of scope for doc reconciliation).
+  - `defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`: 5 open todos remain (the 2 "Recommended decision"
+    items yesterday's note named, plus 3 pre-existing DIAG/SCRIPT todos outside that section) — all genuine
+    ordinary work, none newly flippable.
+  This doc still carries genuine open work (no items resolved to zero) — stays in `plans/active/issues/`, unlocked.
+  Continuing to today's fresh `defi`-tranche sweep in `plan_reconciler_findings_defi_2026_08_17.md`.

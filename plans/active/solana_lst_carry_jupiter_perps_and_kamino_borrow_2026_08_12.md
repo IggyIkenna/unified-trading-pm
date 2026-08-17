@@ -340,7 +340,6 @@ no change at all.**
       `USDC_MARGIN_BUFFERED` fallback structure the engine already implements. This plan (Jupiter perps, Kamino
       borrow, Marinade/SOL side) is entirely orthogonal to the carve-out — pursue it or not on its own merits for
       the firm's own book, not as carve-out-gating work.
-      edit.
 - [ ] [SCRIPT] P3. **Resolve the `haircut_pct` unit ambiguity.** The field name is identical in `CollateralAcceptance`
       (FRACTION, `0.075`) and `AssetHaircut` (WHOLE PERCENT, `7.5`), with a single ×100 conversion in
       `_ah_from_venue_collateral()`. Values agree exactly (verified 2026-08-12, all 12 shared perp rows) — this is a

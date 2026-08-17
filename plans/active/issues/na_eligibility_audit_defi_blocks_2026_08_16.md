@@ -109,9 +109,12 @@ Still genuinely open, for the next run to re-assess against the primary RECLASSI
   `_process_health_factor()` docstring (`features-service/.../orchestrator.py:621-623`) — likely bounded/mechanical.
 - `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (cefi-owned): update a mockup tooltip
   explanation.
-- `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` (cefi-owned, 3 items): migrate `RelaunchStalledVm`'s
-  budget to `ShardedState`; re-derive the "four preemptions" narrative from raw logs; fix the watchdog's swallowed
-  pip-install failures.
+- `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` (cefi-owned, 1 item remaining): re-derive the "four
+  preemptions" narrative from raw logs. **CORRECTED 2026-08-17 (plan_reconciler)**: the other 2 originally-listed
+  items — migrating `RelaunchStalledVm`'s budget to `ShardedState`, and the watchdog's swallowed pip-install
+  failures — are both DONE (`deployment-service@6f2f8e02bf`, QG green before ship; verified live via
+  `git show 6f2f8e02bf:scripts/recovery/relaunch_stalled_vm.py | grep -c ShardedState` = 4), per that source doc's
+  own later Progress Log content which this carry-forward list hadn't picked up.
 - `solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`: auto-escalate repeat-skip tasks to a
   durable park after N repeats.
 - `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` (9 items): deliberately NOT promoted —

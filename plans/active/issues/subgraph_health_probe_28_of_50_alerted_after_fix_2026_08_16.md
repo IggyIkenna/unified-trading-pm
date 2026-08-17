@@ -76,6 +76,17 @@ diff against). Both need a human/agent pass to distinguish before this is dismis
   misclassifications in `_SCHEMA_FAMILIES`) — file as a dedicated follow-up plan at that point, not guessed now.
 - No action needed on the job/infra side — that part is fixed and verified.
 
+## Todos
+
+- [ ] [DIAG] P2. **Triage the 28/50 first-sweep alert cells once fingerprints stabilize.** Let the
+      `defi_data_quality_alerts` → alerting-service → `#data-pipeline-alerts` route run for 2-3 more 6h sweeps past
+      2026-08-16 22:11 UTC (cold-start `DEPLOYMENT_CHANGED` false-positives should clear once fingerprints seed).
+      Then re-measure the alert rate: if it has dropped to materially below ~10-15%, close this doc as resolved
+      (cold-start noise, no further action); if it stays materially above ~10-15%, that is a genuine
+      data-correctness finding — file a dedicated follow-up plan for per-protocol triage (distinguish
+      schema/query-family misclassification in `_SCHEMA_FAMILIES` from genuinely stale subgraphs) and link it here.
+      Done-when: either this doc is closed with the stabilized rate cited, or a follow-up plan is filed and linked.
+
 ## Provenance
 
 Escalation: agt-686a3e (DP-WATCHER-006, `wall_type=data_pipeline_failure`). Fix: `deployment-service@<shipped-sha>`
