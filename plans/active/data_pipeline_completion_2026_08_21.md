@@ -332,8 +332,30 @@ on my inference.
       carries populated `by_venue_instrument_type_data_type` (3,960 shards), so this dump already reads 3-tuple
       grain from the manifest side; re-run after the `VenueCapabilityRecord` axis lands on the declared-capability
       side to diff against today's output, no code change either way. Tuesday deliverable 2.
-- [ ] [DATA] P1. **Re-run both dumps after the axis lands and diff against the Tuesday output.** The diff is the
-      evidence that the granularity upgrade changed what we can say, and it is where a previously-hidden gap surfaces.
+- [x] [DATA] P1. ✅ Done 2026-08-18. **Re-ran both dumps after the axis landed and diffed against the Tuesday
+      output.** Result is a real, useful negative: **neither dump's numbers moved because of the axis landing.**
+      Checked why before accepting that at face value (see the codex correction below) — `expected_universe.py`
+      (Layer-1's actual EXPECTED builder) has always used `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` directly,
+      never `VenueCapabilityRecord`, so it was never blocked on the axis in the first place; the coverage.json read
+      (2026-08-17T00:49:33Z) also predates the axis commit (`d19866d339`, 2026-08-17T19:57:45Z) by ~19h, ruling out
+      even an accidental correlation. `readiness-state-dump`'s 288-venue/864-row output is byte-identical in shape
+      to its own original Tuesday verification (same `declared` leg source, `VENUE_DATA_TYPE_CAPABILITIES`, also
+      untouched by the axis). `honest-coverage-dump`'s numbers DID move vs. the 2026-07-03/08-12 codex baseline —
+      real ~6-week data drift, not a grain effect (used to refresh
+      `/codex/02-data/honest-coverage-model.md`'s certified table, see that doc for the full per-AG breakdown +
+      an explicit correction of this todo's own first-draft mis-attribution). Net: **the axis-landing work is real
+      and matters for the venue-universe DENOMINATOR** (`generate_venue_universe_denominator.py`, 353→660,
+      `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`) **but does not yet feed either dump** —
+      worth its own future todo if Layer-1/readiness should consume the new axis registry, not assumed here.
+      New follow-up filed: stray-tuple counts grew substantially since 2026-07-03 (defi 128→700, sports 24→755,
+      tradfi 52→70) at unchanged grain — root cause not identified in this pass, see next todo.
+- [ ] [DATA] P2. **Root-cause the stray-tuple count growth found while re-running the dumps above** (defi 128→700,
+      sports 24→755, tradfi 52→70 since 2026-07-03; cefi fell 104→82, prediction fell 17→4) — same
+      `(venue × instrument_type × data_type)` grain both measurements, so this is not a grain artifact. Candidates,
+      not yet distinguished: real new captures at venues UAC hasn't sanctioned yet, a UAC registry change that
+      narrowed what counts as EXPECTED, or a writer change. Feeds
+      `plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`, which already tracks the
+      underlying UAC↔writer contract gap this trend sits inside.
 
 ## Progress Log
 
