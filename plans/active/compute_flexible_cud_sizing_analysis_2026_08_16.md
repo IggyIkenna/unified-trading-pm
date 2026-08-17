@@ -89,3 +89,10 @@ data would resolve.
       resource-name population from one-off campaigns). If the live-service floor has stabilized (stopped growing
       week-over-week) rather than still climbing, size a CUD off its p10-p25 at that point. Done-when: a fresh
       30/90-day pull exists with a stable-or-not verdict, dated.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:f14bf5dee79894a1]: KEEP-NA, valid — doc is a
+  findings record + a single future-dated revisit todo, explicitly gated "no earlier than ~2026-09-15" and
+  requiring a stabilization judgment call on a still-growing cost baseline. Added this Progress Log section (doc
+  had none) so future incremental runs can skip it via the dated marker.
