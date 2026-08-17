@@ -88,3 +88,9 @@ decision.
 - [ ] [DOC] P3. Decide + document (in `task_template.md`, near the existing `gate_on_depends` section) whether/how
       a gated finalize plan should be protected from this class of premature dispatch, per one of the three
       options above (or another). Repo: unified-trading-pm.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:94e35689b7565fb2]: KEEP-NA, valid — first verdict; doc
+  created same day. Sole open item is an explicit 3-option plan-authoring-convention design question ("Needs an
+  operator/plan-authoring-convention call, not a worker decision" per the doc's own text) — not bounded/deterministic.

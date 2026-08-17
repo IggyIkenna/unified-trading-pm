@@ -11,7 +11,11 @@ summary: >-
   conflicted against a standing operator-direction redirect banner cited in `ag_closeout_audit_ao_parked_2026_08_16.md`
   and deliberately EXCLUDED — see that doc + this run's report. A 7th (`plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`,
   all 3 open todos) was found ALREADY claimed verbatim by the active `ao_satellite_ao_dispatch_batch22_2026_08_16.md`
-  and reclassified to KEEP-NA-STALE (already-duplicated) instead — not re-extracted here.
+  and reclassified to KEEP-NA-STALE (already-duplicated) instead — not re-extracted here. **Extended 2026-08-17,
+  later same day** (dispatch agt-8a918a, a fresh 2-hourly na-eligibility-audit re-run of this tranche) with one more
+  item — a CEFI-manifest-script streaming fix, source `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`
+  — found new on that run's fresh Phase 0 diff (didn't exist yet at this doc's original authoring) and
+  conflict-checked clear the same way. Now 6 items across 4 source docs.
 status: draft
 nature: process
 asset_group: [ao]
@@ -26,6 +30,7 @@ related:
     /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/docs_reconcile_findings_2026_08_17.md,
     /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
+    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-17"
@@ -50,6 +55,7 @@ context_scope:
     /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/docs_reconcile_findings_2026_08_17.md,
     /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
+    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 source: >-
@@ -85,6 +91,10 @@ are bounded, already-decided, and conflict-clear:
    path; print offending references on failure even under `--quiet`; retire the now-dead `--quiet`-workaround
    rationale once #4 ships) — each a well-specified, deterministic script change with a stated test to add. Source:
    `check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md`.
+6. **Wrap or streamify 4 named CEFI-manifest-scale scripts** in `market-tick-data-service/scripts/` that are the
+   dominant current source of `resource-watchdog` kills (187 kills/7d, 25 >10GB RSS) — a bounded fix with two named
+   remediation approaches (stream the read, or wrap in `run-bounded-analysis.sh`) and a stated verification method.
+   Source: `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` (added 2026-08-17, later same day).
 
 **Explicitly excluded** (named here so nobody re-derives them as candidates without reading why):
 
@@ -105,7 +115,9 @@ are bounded, already-decided, and conflict-clear:
 
 ## Rules for every worker on this plan
 
-- The 5 todos below are file-disjoint (different scripts/mechanisms) — safe to run concurrently, no `sequential: true`.
+- All 6 todos below are file-disjoint (different scripts/mechanisms; todo 6 touches a different repo entirely,
+  `market-tick-data-service`, vs todos 1-5's `agent-orchestrator`/`unified-trading-pm`) — safe to run concurrently,
+  no `sequential: true`.
 - Todos 3-5 all touch `scripts/plan-hygiene/check_reference_paths.py` (todos 3-4) or
   `scripts/plan-hygiene/find_moved_doc_referrers.sh` (todo 5) — todos 3 and 4 share `check_reference_paths.py` but
   touch disjoint functions (`_run_only`'s existence-check vs its failure-printing path); todo 5 is gated on todo 4
@@ -158,6 +170,16 @@ are bounded, already-decided, and conflict-clear:
       on it is checked. Source:
       `/plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md` todo "[SCRIPT]
       P3. Retire the --quiet-workaround rationale in find_moved_doc_referrers.sh's header". Repo: unified-trading-pm.
+- [ ] [INFRA] P2. **Wrap or streamify the 4 CEFI-manifest-scale scripts in `market-tick-data-service/scripts/`**
+      that are the dominant current source of `resource-watchdog` kills — `normalize_instrument_type_casing.py
+      --index-only --dry-run` (up to 15.2GB), `audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`
+      (5.5-5.9GB), `revert_cefi_live_corrective_migration_overreach_2026_08_16.py` (up to 19.5GB),
+      `measure_shard_duration_p95.py` (5-10GB, scales with `--concurrency`) — each materializes a full CEFI-scale
+      manifest/index into memory rather than a streamed/chunked read. **Done when**: each script either reads its
+      manifest/index in a bounded/streamed fashion or is wrapped in `scripts/dev/run-bounded-analysis.sh`, and a
+      7-day post-fix `journalctl -u resource-watchdog` check shows zero kills attributable to these script names.
+      Source: `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` todo
+      "[INFRA] P2. Wrap or streamify the CEFI-manifest-scale scripts...". Repo: market-tick-data-service.
 
 ## Codex SSOTs (read before starting)
 
@@ -170,3 +192,12 @@ are bounded, already-decided, and conflict-clear:
   Phase 3 — 5 conflict-clear, file-disjoint, bounded todos extracted from 3 source docs after Phase 2's conflict-check
   excluded 2 further candidates (a redirect-banner case and an already-claimed-by-batch22 case, both detailed above).
   `status: draft` per autonomous-mode safety rail; flipping to `active` is an operator decision.
+- **2026-08-17 (na_eligibility_auditor, dispatch agt-8a918a, later same day, autonomous)**: Extended with todo 6 — a
+  bounded CEFI-manifest-script streaming fix, source `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`,
+  found new on this run's fresh Phase 0 diff (post-dated batch23's original authoring). Conflict-checked clear:
+  grepped `market-tick-data-service/scripts/` script names + "resource-watchdog kill" against every active
+  `assigned_vm: planning` plan under `parent_epic: orchestrator_master`, `ao_consolidated_closeout_2026_08_12.md`,
+  and every `ao_satellite_ao_dispatch_batch*` (incl. this one) — only hit was `ao_satellite_ao_dispatch_batch21_2026_08_16.md`,
+  which merely records the finding's own discovery (its own todo already closed), not a competing dispatch of the
+  fix. Source doc's checkbox flipped citing this extraction; still `status: draft`, no re-approval needed for an
+  additive same-status edit.

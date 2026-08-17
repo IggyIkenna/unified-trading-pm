@@ -220,3 +220,6 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
   preserve-ref-verified realign); 1 slot (10) self-healed independently before reconciliation reached it; 14
   live/working slots deliberately left for their own workers. See "Verification" and "Idle-slot
   reconciliation" sections above for full detail.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:f8152204a83170e0]: KEEP-NA, valid — first verdict; doc
+  created same day, incident already resolved + verified live. Sole open item is an explicit [OPERATOR]-tagged
+  design call ("Decide whether to collapse registries... or keep them separate" — not blocking).

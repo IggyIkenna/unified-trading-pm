@@ -220,3 +220,4 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:63c0490dc6e560eb]: KEEP-NA, valid — root-cause todo already done; both remaining items need an operator-only dashboard unpark action this interactive session has no write access to trigger.
+- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:6fd2657b384ea727]: KEEP-NA, valid — re-affirms the marker above. The [OPERATOR]-tagged unpark item needs the operator to "agree with this read" before risking a re-wedge — an AO-dispatched worker's own curl access to the endpoint does not substitute for that judgment call.

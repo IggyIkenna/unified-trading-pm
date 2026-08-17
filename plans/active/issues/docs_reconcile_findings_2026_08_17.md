@@ -146,3 +146,4 @@ to chase down the exact call site in this sweep, noting so it doesn't re-mislead
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:dcddeb426a48300f]: RECLASSIFY (per-todo split) — the `fix_frontmatter.py` summary-truncation fix is conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 2; the 2 [OPERATOR] scope-decision items and the half-bounded dead-link item stay KEEP-NA.
+- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:b4806a67208c161e]: KEEP-NA, valid — re-affirms the marker above; content unchanged in substance since. The dead-link item's 2 bullets don't clear the per-todo bar as a whole (one is mechanical, one needs a write-vs-drop judgment call) — correctly not further split.

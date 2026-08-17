@@ -123,3 +123,4 @@ Live, directly-observed during routine blocked-queue sweeps:
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:7dcc5e45d0d9730d]: KEEP-NA, valid — substantive incident already resolved; sole remaining item is an open design question about task_template.md's authoring convention, not a bounded/deterministic outcome.
+- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:db5d4105ebc96dd4]: KEEP-NA, valid — re-affirms the marker above (content edited after it was written, substance unchanged).
