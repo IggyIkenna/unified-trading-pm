@@ -1371,6 +1371,42 @@ So turning isolation off on the VM removes overhead for a hazard it does not hav
 for the hazard it does. Both scripts therefore share ONE host gate: laptop → on, named VM → off, explicit flag/env wins
 either way.
 
+### Post-push, "did it land" and "is it still in my tree" are TWO questions (2026-08-17)
+
+A further thing isolation does not cover, and the one most likely to be mis-diagnosed. **Isolated mode commits from a
+private index, so your working tree is not the thing that got pushed.** A quarantine/autostash cycle can therefore sweep
+your LOCAL copy _after_ the content has already landed at origin. Every signal reads healthy: the push report is
+accurate, `ahead=0` is accurate, `git status` is clean — and the file is simply absent from disk.
+
+**Measured 2026-08-17**: a 237-line plan pushed as `unified-trading-pm@bf93d94b81`, content verified present at origin,
+and gone from the working tree minutes later. Restoring from origin proved it byte-identical — nothing had been lost.
+
+**This is the INVERSE of the destroyed-work rule stated elsewhere in this doc, and the two are easy to confuse.** They
+share three of four symptoms and need opposite responses:
+
+| Symptom set                                                          | Meaning                                       | Response                                          |
+| -------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------- |
+| `ahead=0` + clean tree + content **NOT** at origin                   | Work was **DESTROYED**                        | Recover from the printed ref — never plain re-run |
+| `ahead=0` + clean tree + content **AT** origin + file absent locally | **Nothing lost** — local copy swept post-push | Restore from origin                               |
+
+So verify BOTH, with two different commands — they answer different questions:
+
+```bash
+git cat-file -e origin/live-defi-rollout:<path>   # did it LAND?  (exit 0 = yes)
+test -f <path> && wc -l <path>                    # did the LOCAL copy SURVIVE?
+```
+
+The landing check is the one people run; **the survival check is the one that gets skipped.** Note `git status` being
+clean is not evidence either way — a file absent from both disk and index produces no porcelain output at all.
+
+**Order matters for recovery.** Confirm origin holds the newer content _before_ running
+`git checkout origin/live-defi-rollout -- <path>`; restoring first can overwrite good local work with a stale blob. The
+sequence is: prove it landed → then restore.
+
+**The failure this prevents** is not data loss — it is concluding the work is "gone" and rewriting it, which produces a
+second divergent version of a document that was safe the whole time. For a long design doc, that reconciliation costs
+more than the original authoring.
+
 ### Stale local content silently overwrites unrelated concurrent edits to the same file (2026-08-14)
 
 A THIRD hazard, distinct from both listed above — not a shared-index race, not commit-graph divergence. **Full-file

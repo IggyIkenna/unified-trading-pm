@@ -71,8 +71,8 @@ Massive-fka-Polygon.io** (`polygon` = the CHAIN).
   scripts COMMIT FROM AN ISOLATED WORKTREE** so a peer sharing your checkout can't revert your edits (0/6→6/6 measured):
   always-on in safe-doc-push; **`--isolated` in quickmerge is opt-in, NOT default** (laptop-only, auto-OFF on AO) —
   pass it once edits keep reverting under contention, that IS the fix (2026-08-16). Bakes in retry/mutex/flock/drift —
-  never re-improvise reconcile-retry. **`ahead=0` + clean tree ≠ landed** (≡ work DESTROYED
-  — verify `git show HEAD:<f>`; Write+`git add` in ONE step, where every measured loss sat). Ship scripts assert it:
+  never re-improvise reconcile-retry. **`ahead=0` + clean tree ≠ landed** (≡ DESTROYED **or** swept
+  — 2 checks, see SSOT; Write+`git add` in ONE step, where every measured loss sat). Ship scripts assert it:
   **quickmerge 10 / safe-doc-push 12 (nothing of yours to ship) · 13 (pushed, change absent) = RECOVER from the printed
   ref, never plain re-run**; 11=script defect; 5=safe. SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`. **QG
   concurrency is RESOURCE-based** (default `reservation`, 2026-08-10): weighs peak RSS vs RAM+CPU under one ledger
