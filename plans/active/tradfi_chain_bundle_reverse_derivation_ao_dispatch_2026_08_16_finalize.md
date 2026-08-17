@@ -41,3 +41,7 @@ resolved_by:
 
 - [ ] [REVIEW] P2. Confirm the fix landed with evidence (skipped test re-enabled and green); flip the source
       P2-OPERATOR-DECISION todo to done; archive this plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (1 entry).

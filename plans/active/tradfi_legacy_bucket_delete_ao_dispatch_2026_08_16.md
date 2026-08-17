@@ -44,6 +44,8 @@ context_scope:
   [
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
+    unified-trading-library/unified_trading_library/cf_manifest_audit.py,
   ]
 locked_since:
 resolved_by:
@@ -101,3 +103,4 @@ resolved_by:
   path-probe checker along the way (`unified-trading-library@a5e4765017`) since it was giving a false RED on
   CF-2-paths/CF-3-partition for this exact bucket. No GCS delete of any kind was executed this session — the
   irreversible action stays gated until CF-8 clears.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

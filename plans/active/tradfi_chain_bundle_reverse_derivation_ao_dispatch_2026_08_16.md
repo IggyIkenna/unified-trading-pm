@@ -44,6 +44,7 @@ locked_by:
 context_scope:
   [
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/tradfi_id_canonicalizer.py,
     market-tick-data-service/market_tick_data_service/scripts/rewrite_tradfi_chain_bundle_content_id_2026_07_25.py,
     market-tick-data-service/tests/unit/scripts/test_rewrite_tradfi_chain_bundle_content_id_2026_07_25.py,
   ]
@@ -72,3 +73,4 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator ruling)**: extracted from
   `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`'s P2-OPERATOR-DECISION todo, since the parent doc
   stays `assigned_vm: NA` (other todos in that doc remain genuinely dependency/operator-blocked).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
