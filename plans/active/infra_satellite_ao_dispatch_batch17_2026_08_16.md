@@ -94,7 +94,7 @@ follow-up batch once the operator rules (see `## Deferred`).
 
 ## Todos
 
-- [ ] [DATA] P1. **RULED 2026-08-16 (operator, na-eligibility-audit follow-up): option (a) — add optional
+- [x] ✅ [DATA] P1. **RULED 2026-08-16 (operator, na-eligibility-audit follow-up): option (a) — add optional
       `provisioning_model`/`instance_termination_action` params to `lc_gcloud_create` directly (backward compatible —
       omit both, unchanged behavior for the 10 current non-Spot callers).** Not (b) a parallel wrapper (avoids logic
       drift between two VM-launch code paths — a single source of truth is what makes the dedup/resume-from-progress
@@ -111,7 +111,21 @@ follow-up batch once the operator rules (see `## Deferred`).
       discipline `cursor-configs/CLAUDE.md` § "Launching VMs / infra" points at
       (`/codex/05-infrastructure/vm-launcher-runbook.md`) — this todo's done-when includes updating that runbook if the
       testing surfaces a gap in its documented guarantees, not just landing the provisioning-model code change.
-      Repo: deployment-service.
+      **Shipped**: added optional 9th/10th positional args `provisioning_model`/`instance_termination_action` to
+      `lc_gcloud_create` (`launcher_common.sh`) — additive-only, both real `gcloud compute instances create`
+      invocations only gain `--provisioning-model=…`/`--instance-termination-action=…` when non-empty; verified
+      byte-identical dry-run + real-invocation output when omitted (`TestSpotProvisioningParams`,
+      `test_backward_compatible_when_omitted` + `test_omitted_flags_never_appear_in_the_real_gcloud_invocation`).
+      Bundled requirement (1) — no code change needed: `RelaunchPreemptedVm` replays captured `LAUNCH_PARAMS.json`
+      independently of this wrapper, so the PROGRESS-checkpoint resume contract is unaffected by this change (verified
+      by reading the resume path, not just asserted). Bundled requirement (2) — wrote
+      `TestSpotIdempotentSkipExisting` (2 tests): confirms a second launch attempt against a shard whose VM is
+      RUNNING is refused by `lc_singleton_check` before `lc_gcloud_create` is ever reached (no duplicate create call),
+      and that a shard whose VM is no longer RUNNING is free to relaunch (duplicate *work*, not a duplicate *VM*, is
+      then prevented by the backfill's own manifest presence-skip downstream — documented explicitly in the test).
+      Updated `vm-launcher-runbook.md`'s Known Issues with the new params + what was verified. Full suite
+      (`test_vm_launcher_scripts.py`, 246 tests) green; `quality-gates.sh` green (245s). Shipped —
+      deployment-service@274233a891. Repo: deployment-service.
 
 - [ ] [OPERATOR] P1. **Resolve the `--metadata-from-file` design fork (47 of 149 launchers — not just "e.g. one
       shutdown script" as the source issue framed it).** `lc_gcloud_create` only accepts an inline `metadata_str`
@@ -387,3 +401,12 @@ exactly what this plan's own rules section says to avoid.
   there). Also: `live-defi-rollout` was under sustained push churn during this ship — quickmerge rebased my commit
   twice (274b858c → 575c0b28 → 1794ecd1fe), each requiring a fresh QG pass before the next push attempt; final SHA
   independently verified as an ancestor of `origin/live-defi-rollout`.
+- **data_engineering 2026-08-16 (slot 26)**: shipped todo 1 — added optional
+  `provisioning_model`/`instance_termination_action` params to `lc_gcloud_create` per the operator's option-(a) ruling
+  (deployment-service@274233a891, `test_vm_launcher_scripts.py` full suite 246 passed, `quality-gates.sh` green
+  245s). Verified both bundled requirements rather than just asserting them: preemption-recovery resume-from-PROGRESS
+  is unaffected (traced `RelaunchPreemptedVm`'s replay path — independent of this wrapper), and the
+  idempotent-skip-existing-without-`--force` contract holds under the new SPOT-enabled call shape (2 new regression
+  tests: refuses a duplicate against a RUNNING shard, permits relaunch once no longer RUNNING). Updated
+  `vm-launcher-runbook.md`'s Known Issues with what shipped + what was verified. This unblocks (but does not itself
+  perform) the 79-launcher SPOT-tier migration, which is still deferred to a follow-up batch per `## Deferred` above.

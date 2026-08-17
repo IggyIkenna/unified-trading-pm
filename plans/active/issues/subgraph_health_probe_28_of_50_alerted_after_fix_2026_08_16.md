@@ -21,6 +21,9 @@ source: escalation agt-686a3e (DP-WATCHER-006 job-failure fix follow-up finding)
 assigned_vm: NA
 resolved_by:
 locked_by:
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # subgraph-health-probe now functional — 28/50 cells alerted, needs triage

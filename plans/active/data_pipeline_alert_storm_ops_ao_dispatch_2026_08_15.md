@@ -99,12 +99,25 @@ resolved_by:
         `auth.py`) would have logged an exception; none did.
       **Done when met**: confirmed live, cited here. Repo: agent-orchestrator (host-level, `planning` VM) — no code
       diff, host/infra verification only.
-- [ ] [INFRA] P2. **Gated on the todo above landing**: once the live cutover to WIF is confirmed, formally revoke the
-      old static SA key (`gcloud iam service-accounts keys delete 4af7b762c69e34eda225428a0979c039db4ad18a
-      --iam-account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`) — deliberately NOT done in
-      this pass, since revoking a key possibly still relied on elsewhere is the one truly irreversible step here and
-      needs the cutover confirmed live first. Delete the local backup file only after the key itself is revoked
-      GCP-side. Repo: agent-orchestrator (host-level, `planning` VM).
+- [x] ✅ [INFRA] P2. **Gated on the todo above landing**: once the live cutover to WIF is confirmed, formally revoke
+      the old static SA key — **DONE 2026-08-16 (slot 22, infra)**. Re-verified the cutover FRESH before acting
+      rather than trusting the prior checkbox's now-hours-old record: `orchestrator.service` had restarted AGAIN
+      since that verification (new MainPID `2503824`, active since `22:36:29Z` — ~4h after the `18:46:18Z` restart
+      the prior checkbox recorded), which is itself stronger evidence than before since it confirms the WIF
+      credential survives a real restart, not just the one already observed. No `GOOGLE_APPLICATION_CREDENTIALS`
+      override in the new process env; zero credential/GCP-auth errors in `journalctl -u orchestrator` across 57+ min
+      of heavy fleet activity (dozens of slot spawns logged) on this new PID; ADC file still `type: external_account`
+      (WIF, not reverted); a fresh `gcloud secrets list --project=central-element-323112` call succeeded on the
+      ambient credential. Then ran the exact command this todo specified:
+      `gcloud iam service-accounts keys delete 4af7b762c69e34eda225428a0979c039db4ad18a
+      --iam-account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com --project=central-element-323112
+      --quiet` — succeeded (`deleted key [...] for service account [...]`). Confirmed via
+      `gcloud iam service-accounts keys list` that the key is now ABSENT (present pre-delete, gone post-delete; the
+      SA's other 6 keys unaffected). Deleted the local backup file
+      `~/.config/gcloud/application_default_credentials.json.static-key-backup.20260816T184438Z` per this todo's own
+      instruction, only after the GCP-side revocation succeeded. Re-confirmed `orchestrator.service` still `active`
+      and a live `gcloud secrets list` call still succeeds post-revocation — zero disruption. Repo: agent-orchestrator
+      (host-level, `planning` VM) — no code diff; evidence here + the live GCP IAM key list is the artifact.
 - [ ] [INFRA] P3. **New finding, out of scope for this pass**: `~/.aws/credentials` on the `planning` VM carries a
       SEPARATE static AWS IAM user credential (`ikenna-worker`, long-lived access key) that takes priority over the
       VM's own `uts-orchestrator-epic-role` instance-profile role in the AWS SDK's default credential chain — this is
@@ -146,3 +159,17 @@ resolved_by:
   since restarting. Cross-checked with a fresh `gcloud secrets list` (same ambient credential) and 9+ minutes of
   clean (0-exception) orchestrator logs. Next todo (revoke the old static SA key) is now unblocked for the
   dispatcher to pick up as its own separate task.
+- **2026-08-16 (slot 22, infra worker, AO-dispatched, resumed session)**: Revoked the old static SA key. Did not
+  trust the prior checkbox's verification alone — re-checked live and found `orchestrator.service` had restarted a
+  SECOND time since then (new MainPID `2503824`, up since `22:36:29Z`), which is actually stronger evidence: the WIF
+  credential now confirmed to survive a real restart, not just the one already on record. Zero credential/GCP-auth
+  errors in the journal across 57+ min of heavy fleet activity on the new PID; ADC file still `external_account`; a
+  fresh ambient-credential `gcloud secrets list` call succeeded. Ran the exact revoke command from the todo
+  (`--quiet`, non-interactive); confirmed via a before/after `gcloud iam service-accounts keys list` diff that the
+  target key id is gone and the SA's other 6 keys are untouched. Deleted the local backup file per the todo's own
+  gating (only after GCP-side revocation). Re-confirmed `orchestrator.service` active + a live GCP call still
+  succeeds post-revocation. Full evidence in the flipped checkbox above. Aside: found `unified-trading-ci` in this
+  slot's worktree sitting on branch `main` (not `live-defi-rollout`) with one unpushed commit authored by a
+  different slot (`slot-2·laptop`) — checked the content diff against `origin/main`'s tip and it's byte-identical
+  (already landed upstream under a different SHA), so it's a harmless stale local artifact, not lost work; left
+  untouched as out-of-scope for this task.

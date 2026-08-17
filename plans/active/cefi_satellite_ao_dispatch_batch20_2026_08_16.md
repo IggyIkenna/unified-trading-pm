@@ -29,7 +29,7 @@ tags: [cefi, ao-dispatch, satellite-batch, na-eligibility-audit]
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch19_2026_08_13.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch19_2026_08_13.md,
     /plans/active/issues/cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md,
     /plans/active/issues/dp_vm_001_mdps_cefi_2019_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md,

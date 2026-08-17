@@ -307,3 +307,17 @@ archival — no live Databento dependency).
   `NOT ACTIONABLE` in its batch plan rather than partially running it. No code changed; this doc's existing `[ ]` P0
   invoice todo already covers the fix. Did not re-page the operator — already paged same day (04:39:56Z entry above),
   this is corroboration not a new event.
+
+- **2026-08-17 (slot 4, data_pipeline_failure escalation agt-5af8eb, DP-VM-001 on
+  `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260816-220209`) — STILL `blocked`, reconfirmed ~19h after the 2026-08-15
+  entries above, same signature.** A fleet monitor flagged this VM's `exit_code=137` as a generic stall; this
+  worker pulled `run.log` (unlike the two same-day DP-VM-001 sibling docs for the same shard, which did not) and
+  found `DatabentoAdapter: GLBX.MDP3/ohlcv_1s failed [402]: 402 account_delinquent_invoice` on `2020-06-10` at
+  `2026-08-16T23:11:13Z`, after the shard had progressed cleanly through `2020-06-09` — the same CME/`GLBX.MDP3`
+  dataset-scoped signature as the 2026-08-15 entries, not a different failure mode. The billing block stopped
+  forward progress; the in-VM stall watchdog fired 3903s later and the VM self-terminated. Did not relaunch (would
+  blindly repeat the same failure). Full root-cause writeup + correction of the sibling docs' wrong "poison
+  instrument" hypothesis:
+  `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`.
+  Did not re-page the operator — this doc's existing P0 `[OPERATOR]` invoice todo already covers the ask; this is
+  corroboration, not a new event. No code changed.

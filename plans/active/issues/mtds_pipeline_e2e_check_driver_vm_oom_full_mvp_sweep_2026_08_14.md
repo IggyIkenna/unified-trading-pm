@@ -595,3 +595,14 @@ Two independent angles, not mutually exclusive:
   realistic completion window), NOT arming a background monitor — will do a direct one-shot poll before this session
   ends; if it hasn't reached `EXIT_STATUS` by then, hand off is this VM name + prefix above (check `EXIT_STATUS`
   directly before assuming stalled or launching a duplicate).
+- **2026-08-17 (plan_reconciler)**: Direct GCS check (`gcs_describe_object`/`download_from_storage`, not `gcloud`) on
+  `pipeline-e2e-check-mtds-20260815-172227-4ffa29` — **the prior hand-off's "almost certainly finished" assumption was
+  WRONG.** `EXIT_STATUS` still reads the boot-placeholder `"RUNNING\n"` (unchanged since 2026-08-15T17:26:31Z);
+  `run.log` stops cold at 2026-08-15T17:35:59Z (~13.5min after launch, 1/2987 shards processed), no further heartbeat.
+  This VM has been silently dead ~43h+ as of this check — a NEW, earlier-triggering silent-death signature (died
+  after only 1 shard, before either the ~52s pre-shard-loop OOM or the 3600s/14400s wall-clock-timeout classes
+  already diagnosed above) — not yet root-caused. **DEFI leg still NOT resolved; do not flip the todo below on this
+  VM.** Whoever picks this up next: a `run_in_background` GCS-poll monitor gets killed by the harness before an
+  hours-long run completes (every prior session's own finding) — a fresh DEFI launch needs either direct in-session
+  presence to poll to `EXIT_STATUS`, or this new earlier-death signature root-caused first, before a 4th blind
+  launch.

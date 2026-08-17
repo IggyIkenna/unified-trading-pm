@@ -210,3 +210,27 @@ and complementary: slot-15 identified the transition trigger (SPOT preemption), 
   correct value per `assigned_vm` (`planning` = the orchestrator VM executes it; `NA` = not dispatched). NO todo text,
   marker, or priority was altered — the exclusion markers were re-read and are correct and deliberate, not stale. Flip
   back to `planning` if and when the gate opens and the work becomes worker-determinable.
+
+### Config fix shipped — 2026-08-17 by slot-3 (data_engineering)
+
+**Shipped the worker-determinable part of Todo 2**: `configs/data-providers.yaml`'s `tardis.mode` was `auto`, and the
+auto-detect path (`CombinationCalculator._get_tardis_access_mode`, `deployment-service/deployment_service/calculators/
+shard_distribution.py`) probes for a DISTINCT `tardis-api-key-full` secret that has never existed in Secret Manager —
+so auto-detect was permanently resolving `perpetuals_only` and silently excluding every `spot_only_venues` entry
+(BINANCE-SPOT, COINBASE, UPBIT) from every new CeFi backfill VM scheduled through `shard_calculator.py`. Per the
+2026-08-16 na-eligibility-audit correction above (measurement already confirmed `tardis-api-key` carries full
+entitlement), pinned `mode: full_access` directly instead of relying on the never-created secret. Shipped:
+`unified-trading-pm@5223b9c7b9` (`configs/data-providers.yaml`).
+
+**Relaunch blocked by the Tardis 1-concurrent-VM cap, not by anything worker-determinable left undone.** Checked the
+live fleet before attempting the relaunch (`gcloud compute instances list --filter="name~'^(cefi|tradfi)-.*-(heavy|
+light)-'"`): `cefi-binance-futures-2026-heavy-*` is RUNNING and actively fetching real data (`run.log` showing live
+`StreamingParquetWriter: uploaded` lines for day=2026-03-03 of a full 2022-2026 BINANCE-FUTURES heavy shard as of this
+check) — this occupies the hard `TARDIS_MAX_CONCURRENT_VMS=1` cap (`tardis-concurrency-guard.sh`), so
+`VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh` would be
+refused (fail-closed by design) if run right now. At ~2 months of a ~7.5-month year processed in ~7.5h of wall-clock,
+this shard is genuinely still hours from done, not stuck. Not forcing past the cap (`FORCE=1` is operator-only, and
+N>1 Tardis VMs is a confirmed mutual-403 storm per `vm-launcher-runbook.md`). Relaunch + the ≥3-consecutive-day GCS
+verification remain open — pick up once the fleet check shows the Tardis slot free
+(`gcloud compute instances list --filter="name~'^(cefi|tradfi)-.*-(heavy|light)-'"` returns nothing RUNNING), then run
+the relaunch command above and verify per the todo.

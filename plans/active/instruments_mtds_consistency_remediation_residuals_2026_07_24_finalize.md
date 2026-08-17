@@ -12,7 +12,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [finalize, archival, instruments, mtds, manifest]
-related: [instruments_mtds_consistency_remediation_residuals_2026_07_24]
+related:
+  [
+    instruments_mtds_consistency_remediation_residuals_2026_07_24,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 created: "2026-08-09"
 parent_epic: instruments_master
 assigned_vm: planning

@@ -137,21 +137,55 @@ worst case, a transaction that is valid on the wrong chain.
       `except ValueError: self._chain_id = 1` — the identical silent-wrong-chain pattern this issue is about,
       despite being listed as already-fixed by the prior remediation pass. Out of scope for this todo (only
       `cloud_kms.py`/`local_key.py` were named), tracked as a new P1 todo below.
-- [ ] [BACKEND] P1. **Add upstream chain validation in `transfer_handler.py`'s `_execute_onchain_transfer`/
+- [x] ✅ [BACKEND] P1. **Add upstream chain validation in `transfer_handler.py`'s `_execute_onchain_transfer`/
       `_execute_custody_transfer`** — fail loud on an unrecognized chain before it ever reaches a custody
       provider, as defense in depth (the direct fix above closes the specific silent-fallback bug; this closes
-      the broader "no allowlist validation at the entry point" gap that let it happen).
-- [ ] [BACKEND] P1. **`uniswap.py`'s `resolve_chain_id()` call site still silently falls back to chain_id=1 on
+      the broader "no allowlist validation at the entry point" gap that let it happen). **Fixed —
+      `execution-service@6626aea5c9`**: added a module-level `_validate_chain(chain: str) -> str | None` helper
+      that resolves the chain via UAC's canonical `resolve_chain_id()` (mirroring the same narrow
+      `GOERLI`/`SEPOLIA`/`HOLESKY` testnet-alias set already used in `cloud_kms.py`/`local_key.py`, since UAC
+      models testnets via `env=` on the same canonical chain name rather than as distinct literal strings), and
+      wired a check at the top of both `_execute_onchain_transfer` and `_execute_custody_transfer` that returns
+      a clean `ExecutionResult` failure (never an uncaught exception) before the adapter/custody provider is
+      ever called. 4 new tests in `tests/unit/test_transfer_handler_chain_validation.py`: unrecognized-chain
+      rejection for both methods (asserting the fake adapter's `execute_onchain_transfer` was never invoked, not
+      just that the final result failed), a recognized-chain acceptance test, and a testnet-alias acceptance
+      test (confirms `SEPOLIA` isn't false-positive rejected). 8562 passed/21 skipped, full
+      `quality-gates.sh --no-fix` green before commit.
+- [x] ✅ [BACKEND] P1. **`uniswap.py`'s `resolve_chain_id()` call site still silently falls back to chain_id=1 on
       `ValueError`** (`execution-service/execution_service/defi_execution/protocols/uniswap.py:211-214`) — found
       2026-08-16 while fixing the sibling `cloud_kms.py`/`local_key.py` bug above. Despite being one of the three
       files this issue doc's "What I found" section credits as already migrated onto UAC's canonical resolver by
       a prior remediation pass, the migration only swapped the lookup table, not the silent-fallback behavior —
       an unrecognized `chain_name` (parsed from the venue string, e.g. `UNISWAP_V3-<CHAIN>`) still resolves to
       Ethereum mainnet instead of raising. Same failure class, same fix pattern: remove the `except ValueError`
-      swallow, let it raise. Done-when: same rigor as the fix above (a full-call-chain test, not just an isolated
-      resolver test).
+      swallow, let it raise. **Fixed — `execution-service@c3d63e4411`**: removed the swallow in
+      `UniswapConnector.__init__`; `self._chain_id` now comes straight from `resolve_chain_id(resolved_name, _env)`
+      with no except clause. Note this file never had the `GOERLI`/`SEPOLIA`/`HOLESKY` local-alias need the
+      `cloud_kms.py`/`local_key.py` fix required — its only local alias (`_CHAIN_NAME_ALIASES` in
+      `uniswap_encoding.py`) is `"ETH"->"ETHEREUM"`, unrelated to testnet naming, so no alias dict was added here.
+      2 new tests in `tests/defi_execution/unit/test_protocols.py`: a known-chain resolution check
+      (`UNISWAP_V3-ARBITRUM` → 42161) and, per the done-when, a full-call-chain test constructing
+      `UniswapConnector(venue="UNISWAP_V3-XYZUNKNOWNCHAIN")` directly (not an isolated resolver call) asserting
+      `ValueError` — since the resolution happens in `__init__`, the constructor call itself is the full call
+      chain here. 8546 passed/21 skipped, full `quality-gates.sh --no-fix` green before commit.
 
 ## Progress Log
+
+**2026-08-16 (even later still, same session)**: Fixed the `transfer_handler.py` defense-in-depth P1 todo —
+SHIPPED `execution-service@6626aea5c9`. Added a `_validate_chain()` helper (UAC `resolve_chain_id()` +
+mirrored testnet-alias set) and wired it into `_execute_onchain_transfer`/`_execute_custody_transfer` so an
+unrecognized chain fails loud with a clean `ExecutionResult` before the adapter/custody provider is ever
+called. 4 new tests, 8562 passed/21 skipped, full `quality-gates.sh --no-fix` green before commit. This closes
+every actionable-now todo from this issue doc — only the `[OPERATOR]`-owned live wallet-provisioning check
+remains open.
+
+**2026-08-16 (later still, same session)**: Fixed the `uniswap.py` P1 todo — SHIPPED `execution-service@c3d63e4411`.
+Removed the `except ValueError: self._chain_id = 1` swallow in `UniswapConnector.__init__`; an unrecognized venue
+chain suffix now raises instead of silently signing as Ethereum mainnet. 2 new tests added (known-chain resolution
++ full-constructor-call-chain unknown-chain-raises). Full `quality-gates.sh --no-fix` green (8546 passed/21
+skipped) before commit. This closes every actionable-now todo from this issue doc except the `transfer_handler.py`
+defense-in-depth P1 (still open) and the `[OPERATOR]`-owned live wallet-provisioning check.
 
 **2026-08-16 (later, same session)**: Fixed the primary `cloud_kms.py`/`local_key.py` todo — SHIPPED
 `execution-service@33bd57a6fc`. Both `_resolve_chain_id()` implementations now delegate to UAC's canonical

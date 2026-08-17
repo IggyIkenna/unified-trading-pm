@@ -21,11 +21,23 @@
 #
 # USAGE
 #   bash scripts/dev/measure-qg-baseline.sh --env local|vm [--repos "r1 r2 ..."]
-#                                           [--quick] [--out PATH]
+#                                           [--quick] [--out PATH] [--force]
 #   --env     REQUIRED. Which side this measurement represents (local dev box vs AWS worker VM).
 #   --repos   space-separated repo list (default: representative heavy/lib/small mix).
 #   --quick   pass --quick to quality-gates.sh (faster, still real).
 #   --out     baseline JSON path (default scripts/dev/qg_resource_baseline.json).
+#   --force   bypass the anomaly guard below — always promote. For a deliberate, reviewed
+#             manual re-baseline (the committed values ARE stale and you mean to bump them).
+#
+# ANOMALY GUARD (2026-08-16, qg_host_adaptive_resource_governor_2026_07_14.md "baseline
+# freshness loop" / governor Trigger 3): a repo whose freshly measured peak_rss_mb is
+# QG_BASELINE_ANOMALY_PCT (default 20) percent or more above its EXISTING committed value is
+# NOT auto-promoted — a jump that size means real growth or a measurement fluke, either way
+# worth a human look, not a silent bump (the exact instruments-service +182% case that
+# motivated this plan). Instead it fires a WARNING via qg-host-governor.sh's
+# _qg_governor_slack_alert() (best-effort — silent no-op with no webhook configured) and
+# leaves the committed entry untouched. --force bypasses this for a reviewed re-baseline. A
+# repo/env with NO existing committed value always promotes (nothing to compare against).
 #
 # The JSON is MERGED, not clobbered: re-running --env local leaves the vm entries intact,
 # and vice-versa. Shape:
@@ -39,20 +51,42 @@ WORKSPACE_ROOT="$(cd "${PM_ROOT}/.." && pwd)"
 
 ENV_TAG=""
 QUICK=""
+FORCE=""
 JOBS=1
 REPO_LIST="instruments-service unified-trading-library alerting-service deployment-api unified-api-contracts"
 OUT="${PM_ROOT}/scripts/dev/qg_resource_baseline.json"
+ANOMALY_PCT="${QG_BASELINE_ANOMALY_PCT:-20}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --env)   ENV_TAG="$2"; shift 2 ;;
         --repos) REPO_LIST="$2"; shift 2 ;;
         --quick) QUICK="--quick"; shift ;;
+        --force) FORCE="true"; shift ;;
         --jobs)  JOBS="$2"; shift 2 ;;
         --out)   OUT="$2"; shift 2 ;;
         *) echo "unknown arg: $1" >&2; exit 2 ;;
     esac
 done
+
+# Best-effort: only needed for the anomaly-guard's Slack alert. Absence (e.g. a bare
+# checkout without the governor file) must never break a measurement run.
+GOVERNOR_SCRIPT="${PM_ROOT}/scripts/quality-gates-base/qg-host-governor.sh"
+if [[ -f "$GOVERNOR_SCRIPT" ]]; then
+    # shellcheck source=/dev/null
+    source "$GOVERNOR_SCRIPT" 2>/dev/null || true
+fi
+
+# <repo> <env> <prior_mb> <new_mb> — fires the Trigger-3 WARNING via the shared governor
+# alert helper if it's available; silent no-op otherwise (mirrors this file's existing
+# graceful-degradation posture, e.g. the RUNNABLE-filter skip above).
+_qg_baseline_anomaly_alert() {
+    local repo="$1" env="$2" prior="$3" new="$4" pct
+    command -v _qg_governor_slack_alert >/dev/null 2>&1 || return 0
+    pct="$(awk -v p="$prior" -v n="$new" 'BEGIN{ if (p > 0) printf "%.0f", (n - p) * 100 / p; else print "?" }')"
+    _qg_governor_slack_alert "WARNING" "qg-baseline-stale:${repo}:${env}" "${QG_SLACK_BASELINE_ANOMALY_COOLDOWN_MIN:-1440}" \
+        "QG baseline-freshness: ${repo} (${env}) observed peak ${new}MB is +${pct}% above committed baseline ${prior}MB — NOT auto-promoted (>=${ANOMALY_PCT}% guard). Investigate real growth vs measurement noise, then re-baseline deliberately if legitimate: bash scripts/dev/measure-qg-baseline.sh --env ${env} --repos ${repo} --force"
+}
 [[ "$JOBS" =~ ^[0-9]+$ ]] && (( JOBS >= 1 )) || { echo "ERROR: --jobs must be a positive integer" >&2; exit 2; }
 
 case "$ENV_TAG" in
@@ -80,6 +114,7 @@ fi
 echo "════════════════════════════════════════════════════════════════════"
 
 QUICK_BOOL=$([[ -n "$QUICK" ]] && echo true || echo false)
+FORCE_BOOL=$([[ -n "$FORCE" ]] && echo true || echo false)
 
 # Run ONE repo's full QG (read-only) and write "wall rss_mb cpu ec" to $2. No JSON here
 # (JSON writes are serialized in the parent to avoid concurrent read-modify-write races).
@@ -106,32 +141,15 @@ measure_one() {
     echo "${wall} ${rss_mb} ${cpu_s} ${ec}" > "$resfile"
 }
 
-# Merge one repo's result into the JSON (called ONLY by the parent, serially).
+# Merge one repo's result into the JSON (called ONLY by the parent, serially). Prints
+# "PROMOTED <rss_mb>" or "ANOMALY <prior_mb> <rss_mb>" to stdout — the caller reads this to
+# decide whether to fire the anomaly alert (network/alerting stays in bash; this stays a
+# pure JSON read-compare-write, consistent with the file's existing no-network-in-python
+# design).
 merge_result() {
     local repo="$1" wall="$2" rss="$3" cpu="$4" ec="$5"
-    python3 - "$OUT" "$repo" "$ENV_TAG" "$wall" "$rss" "$cpu" "$ec" "$QUICK_BOOL" "$JOBS" "$TS" <<'PY'
-import json, sys, os
-out, repo, env, wall, rss, cpu, ec, quick, jobs, ts = sys.argv[1:11]
-data = {}
-if os.path.exists(out):
-    try:
-        with open(out) as f:
-            data = json.load(f)
-    except (json.JSONDecodeError, OSError):
-        data = {}
-data.setdefault(repo, {})[env] = {
-    "wall_s": float(wall),
-    "peak_rss_mb": int(rss),
-    "cpu_s": float(cpu),
-    "exit_code": int(ec),
-    "quick": quick == "true",
-    "measured_concurrency": int(jobs),
-    "measured_at_utc": ts,
-}
-with open(out, "w") as f:
-    json.dump(data, f, indent=2, sort_keys=True)
-    f.write("\n")
-PY
+    python3 "${SCRIPT_DIR}/qg_baseline_merge.py" \
+        "$OUT" "$repo" "$ENV_TAG" "$wall" "$rss" "$cpu" "$ec" "$QUICK_BOOL" "$JOBS" "$TS" "$FORCE_BOOL" "$ANOMALY_PCT"
 }
 
 # Filter to repos that actually have a gate script.
@@ -162,7 +180,14 @@ while (( idx < total )); do
         if [[ -f "$res" ]]; then
             read -r wall rss_mb cpu_s ec < "$res"
             echo "   ${repo}: wall=${wall}s peak_rss=${rss_mb}MB cpu=${cpu_s}s exit=${ec}"
-            merge_result "$repo" "$wall" "$rss_mb" "$cpu_s" "$ec"
+            merge_out="$(merge_result "$repo" "$wall" "$rss_mb" "$cpu_s" "$ec")"
+            case "$merge_out" in
+                ANOMALY*)
+                    read -r _ prior_mb new_mb <<< "$merge_out"
+                    echo "   ${repo}: ⚠️  ANOMALY — observed ${new_mb}MB is >=${ANOMALY_PCT}% above committed baseline ${prior_mb}MB (env=${ENV_TAG}) — NOT promoted, alerting instead of a silent bump"
+                    _qg_baseline_anomaly_alert "$repo" "$ENV_TAG" "$prior_mb" "$new_mb"
+                    ;;
+            esac
         else
             echo "   ${repo}: NO RESULT (measure_one produced no file)"
         fi

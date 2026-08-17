@@ -34,6 +34,8 @@ related:
   [
     /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # market-tick-data-service — adapter-contract-call baseline regression on live-defi-rollout HEAD

@@ -1,0 +1,23 @@
+# qg-baseline-daily-promote.timer — daily QG resource-baseline freshness promotion.
+#
+# Epic: infrastructure_master
+# Lifecycle: permanent   Delete-when: NA
+#
+# Cadence: once daily, at an off-the-hour minute (03:11 UTC) to avoid colliding with other
+# timers' round-number ticks on this same host (e.g. ldr-to-main-promote-heartbeat's
+# *:0/30). This is a full real quality-gates.sh sweep across every baselined repo
+# (measure-qg-baseline.sh, env=vm, jobs=3) — daily is frequent enough that baseline drift
+# never has more than a day to go unnoticed (matches the plan's own "we already run every
+# repo's QG most days" framing), while staying far below the cost of running it per-commit.
+[Unit]
+Description=Daily timer for the QG resource-baseline freshness promotion
+Documentation=unified-trading-pm/scripts/orchestrator/qg-baseline-daily-promote.sh
+Requires=qg-baseline-daily-promote.service
+
+[Timer]
+OnCalendar=*-*-* 03:11:00
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

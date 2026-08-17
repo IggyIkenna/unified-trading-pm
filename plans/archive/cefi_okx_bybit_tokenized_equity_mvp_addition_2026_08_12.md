@@ -99,7 +99,13 @@ and MVP-tagging needs.
       existing suffix branch) so the 56 OKX tokens actually get `is_equity_perp=True`/`tracks_equity=...` stamped at
       catalogue rollup — without this, the UAC universe+link registration above is necessary but not sufficient for the
       OKX symbols (the Bybit suffix form already works unmodified). Repo: instruments-service. —
-      instruments-service@9ca5801a2 (prefix branch added; 7 classifier assertions; QG green 5385 passed)
+      instruments-service@aa3ded23 (prefix branch added; QG green) — **citation corrected by review 2026-08-16**:
+      this checkbox previously cited `9ca5801a2`, a same-day follow-up commit that only fixes one stale GEV
+      classifier assertion ("test(instruments): GEV tracks_equity now resolves..."), not the prefix-branch feature
+      itself; `aa3ded23` ("feat(instruments): stamp OKX X<UNDERLYING> tokenized-equity SPOT_PAIR tags") is the real
+      evidence, independently verified ancestor of `origin/live-defi-rollout` with the described diff
+      (`_cefi_equity_tags` gains the `X<UNDERLYING>` prefix branch in `scripts/build_instrument_catalogue.py` +
+      matching test coverage).
 - [x] ✅ [SCRIPT] P1. instruments-service — register an `InstrumentRecord` for each confirmed tokenized-equity symbol
       dated to its REAL historical listing date from Todo 1 (not a blanket floor — mirrors the equity-perp sibling
       plan's own per-symbol-date discipline, motivated by the same regime/coverage-window correctness concern that
@@ -373,3 +379,18 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   `gcloud compute instances list --filter="name~cefi-queue-heavy-okxspot"` → `STATUS=STAGING` immediately after launch
   (transitioning to RUNNING as expected). No code shipped (none needed) — the launcher + universe/catalogue registration
   from Todos 1-5 already fully cover this launch. This was the plan's last open todo.
+
+- **2026-08-16 — reconciliation review (finalize plan's todo 1) — CLEAN, one citation corrected.** Slot-6 review.
+  Verified all 7 checkboxes: every cited SHA (`unified-api-contracts@7e9a5b5d1`, `@bfad33b58`,
+  `instruments-service@4eca07bac4`, `deployment-service@09955cb880`) confirmed a real ancestor of
+  `origin/live-defi-rollout` with content matching its described change; the two codex docs
+  (`mvp-scope-canonical.md`, `cefi-capture-universe.md`) confirmed to actually carry
+  `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE`. **One mis-citation found and fixed**: Todo 4's checkbox cited
+  `instruments-service@9ca5801a2` as the "prefix branch added" evidence, but that commit is a same-day follow-up
+  test fix (one stale GEV classifier assertion), not the feature commit — corrected in place to the real evidence,
+  `aa3ded23` (independently verified). Todo 6's launched VM (`cefi-queue-heavy-okxspot-x2-20260815-151408`) no
+  longer appears in `gcloud compute instances list` for the project, consistent with its own
+  `VM_SHUTDOWN_ON_COMPLETION=true` self-terminating after finishing (not re-verified against `PROGRESS.json` — a
+  future data-completeness pass over this backfill's actual coverage is out of this reconciliation's scope, which
+  is checkbox-evidence integrity, not data-completeness re-verification). No deferred/excluded item in this plan's
+  own text needs a new tracked follow-up. Reconciliation is clean — moving to the archival ritual.

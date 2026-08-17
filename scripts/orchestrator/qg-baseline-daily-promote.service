@@ -1,0 +1,21 @@
+[Unit]
+Description=Daily QG resource-baseline freshness promotion (governor Trigger 3)
+Documentation=unified-trading-pm/scripts/orchestrator/qg-baseline-daily-promote.sh
+After=network.target
+
+[Service]
+Type=oneshot
+# Runs as the same user as the other orchestrator cron units (pm-pull/reap-stale-blockers/
+# ldr-to-main-promote-heartbeat) so it shares the same host environment + Secret Manager
+# access path (needed only for the best-effort Slack webhook via qg-host-governor.sh).
+User=root
+EnvironmentFile=-/etc/orchestrator-env
+ExecStart=/usr/bin/env bash \
+    /home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/orchestrator/qg-baseline-daily-promote.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qg-baseline-daily-promote
+Environment=ORCHESTRATOR_TAG=orchestrator_master
+
+[Install]
+WantedBy=multi-user.target

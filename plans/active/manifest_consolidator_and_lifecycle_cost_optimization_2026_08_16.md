@@ -611,3 +611,54 @@ context_scope:
   directly instead of asking for it to be produced — the remaining ask is narrower now: a call on the 4 named/5
   physical UNCLEAR buckets, then `canonical_strip_lifecycle_kinds` can be extended from 1 kind (`portfolio-state`) to
   the full 47 in one pass.
+
+- **2026-08-17 (interactive session)**: three follow-up threads from the resource-sizing todo above, resolved with
+  real evidence rather than left as speculation.
+  - **10-jobs(IS+MTDS)/18-jobs-total→5-per-asset-group consolidation — OPERATOR REJECTED, not just unstarted.**
+    Reasoning: combining multiple buckets into one container invocation means sizing RAM for the worst-case bucket
+    in the group and running each bucket sequentially within one wall-clock window — directly contradicts the
+    already-confirmed finding that per-bucket resource sizing (heavy buckets get their own large allocation) is
+    what's actually working, and would make the market-data-cefi class of incident easier to reproduce, not harder.
+    Do not resurrect this idea without new evidence changing the RAM/time tradeoff.
+  - **Cadence-thinning for `market-data-defi`/`market-data-cefi`/`instruments-sports` (raised as a candidate, then
+    tested against real data, then WITHDRAWN)** — initial reasoning from lock-TTL config (9000s/9000s/4200s)
+    suggested these were mostly idle-polling gated by a long TTL, making a thinner cron "free." Live execution
+    timestamps (`gcloud run jobs executions list`, corrected field path `status.startTime`/`status.completionTime`
+    — the bare `startTime`/`completionTime` fields are empty, a gotcha worth remembering) contradicted this:
+    `market-data-defi` and `instruments-sports` were both running real, fast (30-56s) merges on essentially every
+    ~60-75s tick in the sampled window, not lock-gated no-ops. Cross-checked against Cloud Logging
+    (`gcloud logging read`) — a 45-minute window showed EVERY `defi` cycle logging `shards=0` (zero real merges),
+    confirming the frequent small merges are what keeps backlog from accumulating, not wasted polling. Thinning the
+    cron would increase backlog between checks — the same condition that caused the `market-data-cefi` incident —
+    not reduce risk. **Verdict: leave all three at their current cadence.** `market-data-cefi` already runs hourly
+    as configured (confirmed via timestamps: real cadence-aligned executions at 22:00, 23:00, plus several
+    off-hour manual verification triggers from this session's own agents, easy to mistake for organic traffic if
+    not cross-checked against who was actively triggering things).
+  - **"Is the consolidator re-pulling GB of canonical data on every cycle?" — checked against source, not logs
+    alone.** `unified_trading_library/manifest_consolidator.py`'s `consolidate()` does a cheap GCS *list* on
+    `_index/per_vm/` first (mtimes only, not shard content) to compute `shards_changed`; if that's zero it returns
+    `no_op_unchanged=True` (line ~907) *before* reaching `_duckdb_consolidate_and_write`, where the canonical
+    anti-join stream actually happens (gated `if ... shard_paths`, line ~3048). So a zero-shard cycle — confirmed
+    the common case for `defi` in the sampled window — never touches the canonical at all; the 9-56s durations seen
+    are list-overhead/cold-start, not a multi-GB re-read. When there GENUINELY are changed shards, the anti-join
+    does stream the full canonical (memory-bounded, not I/O-bounded) — necessary work when it happens, not waste.
+    **Verdict: the architecture already has the optimization this question was worried about; no fix needed.**
+  - **Timeout-floor bump — extended the existing, still-uncommitted `market-data-cefi` diff rather than opening a
+    second competing one on the same file** (re-verified the `unified-api-contracts` blocker is still live —
+    identical 3 untracked files, unchanged mtime pattern — before touching anything). Bumped
+    `manifest_consolidator_timeouts` for the 11 hourly-cadence buckets that were below a `>2x cadence` (7200s)
+    floor: `instruments-{cefi,tradfi,defi,prediction}` 1800→7200, plus NEW entries for `features-{cefi,defi,tradfi,
+    calendar}`/`strategy`/`execution`/`ml-training-artifacts` (previously falling through to the 300s default — an
+    hour between triggers, 5 minutes to finish) at 7200. **Deliberately excluded** the per-minute buckets
+    (`market-data-{sports,tradfi,prediction}`, `features-sports`) — real cadence there per the same evidence above,
+    and `market-data-sports` has an explicit 1800s staleness SLA a longer *timeout* has nothing to do with anyway.
+    Cost framing: a Cloud Run task timeout ceiling is free unless a run actually uses it, so this is pure insurance
+    against the same failure class that just took `market-data-cefi` down, applied fleet-wide instead of waiting for
+    each bucket to fail individually. `terraform fmt` run on the file after editing (real formatting delta, not a
+    mistake — don't revert). `quality-gates.sh --no-fix` green (`deployment-service`, 236s — flagged by the resource-
+    drift check as >2x the 106s baseline, consistent with the same host contention documented elsewhere in this
+    plan, not a new problem). Quickmerge attempted and confirmed blocked on the identical, unchanged
+    `unified-api-contracts` dependency — **not forced through**. Current state: both fixes (market-data-cefi
+    resource sizing + the 11-bucket timeout floor) sit together in ONE ready-to-ship diff at
+    `.tabs/4/deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`, QG-green, waiting only on that
+    other session's own commit.

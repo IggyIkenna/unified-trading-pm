@@ -64,12 +64,42 @@ plan's gate is clear and it is ready for dispatch.
 
 ## Todos
 
-- [ ] [DOC] P1. **Source-doc reconciliation**: for each of batch9's 17 todos, confirm the cited source doc's own open
-      item was actually flipped/closed-by-citation as that todo's Done-when specified (todos 1-17, one check each — most
-      todos already instruct flipping the source doc's own checkbox/status directly as part of their own Done-when, so
-      this is a verification pass, not new investigation). Repo: unified-trading-pm. Done when: every one of the 17
-      source docs listed in batch9's todos either shows the item closed in its own text, or a citation note pointing
-      back at the batch9 todo that closed it, with no orphaned "still looks open" gap.
+- [x] ✅ [DOC] P1. **Source-doc reconciliation** — **DONE 2026-08-16 (slot 23, data_engineering).** **Count correction**:
+      batch9 actually carries **18** top-level `- [x]` todo checkboxes (`grep -c '^- \[x\]' defi_satellite_ao_dispatch_batch9_2026_08_06.md`
+      = 18), not 17 as this doc's own text and batch9's frontmatter summary both claimed — the "17 distinct todos"
+      count is stale/miscounted; leaving the number here would just re-rot it, so it's corrected in this entry rather
+      than repeated. Checked all 18 source docs against their citing batch9 todo:
+      - **16/18 already correctly closed-by-citation or self-closed**, no action needed: `canonical_id_builder_retrofit_checklist_2026_07_08.md`
+        (archived, resolved), `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`
+        (archived, explicit batch9 citation), `defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md`
+        (items 1-4 + item-4 audit shipped, only the genuinely-separate `[HUMAN]` backfill-decision item remains open),
+        `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (archived, explicit citation),
+        `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (archived, resolved),
+        `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` (explicit citation, closed-by-citation not
+        reclassified, by design), `defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md` (archived, resolved),
+        `data_pipeline_check_mdps_features_2026_07_20.md` todo 15 (full terminal-outcome evidence confirmed present at
+        lines 911-914, matching batch9's own claim), `delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md`
+        (archived, explicit citation), `mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` (archived,
+        `status: complete`, explicit citation), `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md`
+        (Follow-ups section shows todo 9(b-c) closed 2026-08-09 slot-28, matching batch9's own citation),
+        `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` (archived, resolved),
+        `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md` (MORPHO_VAULTS follow-up
+        independently resolved 2026-08-16 by a separate slot-24 session, consistent with batch9's own "stays open per
+        alternate done-when" framing), `data_completion_defi_2026_07_15.md` (explicit citation),
+        `instruments_docs_audit_outstanding_items_2026_07_08.md` (explicit citation, C4 corrected), and the
+        self-contained "Document collateral down-sizing contract" todo (no separate source doc — closes by its own
+        cited commit SHAs).
+      - **2/18 had a genuine orphaned-citation gap — FIXED this run**: (1)
+        `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s "Confirm the launcher + parallelization plan" todo (its
+        Todo-3-position item) was still `[ ]` open with a stale 2026-08-03 na-eligibility-audit "not closing" note,
+        even though batch9 todo 11 had already answered its exact done-when (launcher + concurrency figure) —
+        flipped `[x]` with a citation back to batch9 todo 11. (2)
+        `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s 2026-08-06 na-eligibility-audit entry
+        flagged "1 untracked prose-only item (CLI/operator plumbing…)" as incidental/not-actioned — appended a
+        closing citation to batch9 todo 5's shipped `strategy-service@8ee9894e` CLI flags, which is exactly that
+        item. Both edits are pure append/checkbox-flip, no existing prose deleted (per the shared-doc anti-overwrite
+        rule). Evidence: unified-trading-pm@(this commit).
+      Zero remaining orphaned "still looks open" gaps found against batch9's 18 todos.
 - [ ] [DOC] P2. **Re-check the Deferred items**: (a) the 2 conflict-parked operator-decision-gated items
       (`defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s stall diagnosis,
       `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`'s split-vs-alternative — gated on

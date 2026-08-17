@@ -36,6 +36,9 @@ context_scope:
     /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
     execution-service/execution_service/cli/handlers/live_execution_handler.py,
   ]
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # execution-service's live-execution orchestrator: protocol mismatch, untested end-to-end

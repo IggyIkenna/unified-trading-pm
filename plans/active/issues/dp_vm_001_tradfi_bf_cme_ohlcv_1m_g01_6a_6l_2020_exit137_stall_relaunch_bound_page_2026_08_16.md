@@ -143,3 +143,18 @@ poison instrument/date range in that group/chain/year combination) rather than a
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 1 is an explicit
   [OPERATOR] relaunch-vs-wait judgment call. Todo 2 offers branching candidate hypotheses, not yet a committed bounded
   action. Genuinely operator-gated. assigned_vm unchanged.
+
+- **2026-08-17 (slot 4, data_pipeline_failure escalation agt-5af8eb) — CORRECTION to Todo 2's hypothesis, same
+  shard, third same-day/next-day occurrence.** A fresh DP-VM-001 finding on the SAME shard token
+  (`tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260816-220209`) let this worker pull `run.log` — something this doc's
+  own session and its 2026-08-15 sibling both explicitly skipped. Root cause is neither "a shared code defect" nor
+  "a poison-instrument/date issue specific to this shard" (Todo 2's two branches): it's the already-tracked
+  Databento CME/`GLBX.MDP3` `402 account_delinquent_invoice` billing block
+  (`tradfi_databento_account_billing_suspended_2026_08_09.md`, still `status: blocked`), which stopped forward
+  progress on `2020-06-10` and let the in-VM stall watchdog fire ~65min later. `g01-6a-6l-2020` isn't special — any
+  CME-sourced shard needing dates past whatever the account last paid through will hit the identical wall. Full
+  writeup:
+  `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`.
+  Leaving this doc's own Todo 1/Todo 2 checkboxes as-is (not this worker's VM/session to close) but flagging Todo 2's
+  "bound the offending call with `asyncio.wait_for`" branch as very unlikely to be the real fix — the adapter
+  returned promptly with a 402, it did not hang.

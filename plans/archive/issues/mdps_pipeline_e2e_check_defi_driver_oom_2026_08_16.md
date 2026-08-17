@@ -24,7 +24,7 @@ summary: >-
   DRIVER itself, on a purpose-built `e2-highmem-4`/32GB box whose sizing comment explicitly claims "comfortably above
   the observed 15.7GB (features) / 21.9GB (MTDS) driver peaks" — DEFI blew past that headroom in under a minute,
   a materially worse peak than any previously-measured driver for this same launcher).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, infrastructure]
 stage: [data]
@@ -51,14 +51,24 @@ author: slot-15 (data_engineering)
 assigned_vm: planning
 parent_epic: infrastructure_master
 priority: P1
-resolved_by:
+resolved_by: slot-20 (data_engineering), 2026-08-17
 locked_by:
 source:
   - data_pipeline_check_mdps_features_2026_07_20.md's "NEW todo (was 8's remaining scope)" — the specific dispatched
     todo this session was attempting to close
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # `/data-pipeline-check-mdps` driver OOM-killed on DEFI — mechanism now proven for the other 4 AGs
+
+> **✅ RESOLVED 2026-08-17 (slot-20).** All 3 fix todos landed (root-cause instrumentation +
+> `market-data-processing-service@5773a617ad`, env-overridable `MACHINE_TYPE` +
+> `deployment-service@5d7230ec04`, `duplicate_in_flight` false-skip fix). DEFI re-ran on `e2-highmem-8` with NO
+> OOM. The re-run surfaced a genuinely separate finding (0/206 cells verified) split into
+> `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` rather than reopening this
+> doc.
 
 ## What I found
 
@@ -122,23 +132,35 @@ SPORTS's clean automated pass today.
 
 ## Recommended decision
 
-1. `[SCRIPT] P1.` Root-cause the DEFI-specific OOM: re-run `python scripts/pipeline_e2e_check.py --day 2026-07-05
-   --asset-group DEFI --legs force,skip --require-captured --auto-day` under an RSS-sampling wrapper (or add a
-   coarse `tracemalloc`/periodic-RSS log around `_read_input_index_frame`/`mdps_mvp_universe(DEFI)`/the
-   `_captured_days_by_cell` groupby) to identify which specific call balloons past 32GB. Repo:
-   market-data-processing-service.
-2. `[SCRIPT] P2.` Once root-caused, either (a) fix the read to genuinely row-group/date-filter instead of relying on
-   column pushdown alone (mirroring `precompute_confirmed_empty_dates`'s date-range-pushdown pattern from this same
-   plan's todo 10-followup-b), or (b) if the read is already properly bounded and the blowup is structural
-   (`mdps_mvp_universe(DEFI)`'s 103-cell object materialization, or a `.groupby` producing a large intermediate),
-   bump `launch-pipeline-e2e-check-driver-vm.sh`'s `MACHINE_TYPE` to an env-overridable value (default
-   `e2-highmem-4`, allow `PIPELINE_E2E_CHECK_DRIVER_MACHINE_TYPE` override) so a large-AG run like DEFI can request
-   `e2-highmem-8`/`-16` without a code change every time. Repo: deployment-service.
-3. `[SCRIPT] P3.` Fix the SPORTS skip-leg `duplicate_in_flight` false-skip: when force+skip run in the SAME driver
-   invocation back-to-back on a single-cell AG, the skip leg should wait for the force VM to reach a terminal state
-   (it already polls `EXIT_STATUS` elsewhere in this same driver) rather than treating "still RUNNING" as grounds to
-   skip the skip-proof entirely — right now a single-cell AG's skip leg can never actually validate the freshness-gate
-   mechanism. Repo: market-data-processing-service.
-4. `[DATA] P1.` Once (1)/(2) land, re-run DEFI (and re-verify CEFI/TRADFI/PREDICTION reached a terminal state — they
-   were still in flight when this session ended) to close
-   `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo for real, with all 5 AGs' reports consolidated.
+1. ✅ **DONE 2026-08-17 (slot-20, data_engineering)**. `[SCRIPT] P1.` Root-caused via a live re-run under the new
+   RSS-checkpoint instrumentation (`market-data-processing-service@5773a617ad`): `_read_input_index_frame` reads
+   **160,415,229 rows** for DEFI (the FULL raw-tick manifest, not the ~2.37M-row per-data_type slice todo 13
+   measured) — peak RSS 33.6GB, already past the old 32GB `e2-highmem-4` ceiling on that single call, before
+   `mdps_mvp_universe(DEFI)`/groupby ever run. Full evidence + the exact log lines:
+   `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md`.
+2. ✅ **DONE 2026-08-17 (slot-20)**. `[SCRIPT] P2.` Took path (b) as the immediate mitigation —
+   `deployment-service@5d7230ec04`: `MACHINE_TYPE` is now `${PIPELINE_E2E_CHECK_DRIVER_MACHINE_TYPE:-e2-highmem-4}`.
+   Verified live: re-ran DEFI on `e2-highmem-8` (VM `pipeline-e2e-check-mdps-20260816-235931-f56c11`) — the same
+   160M-row read now peaks at 33.7GB, comfortably inside 64GB, and the driver completed in ~2 min with NO OOM.
+   Path (a) — genuinely bounding the read itself instead of just adding headroom — is NOT done and is real
+   follow-up work (the 160M-row full-manifest read is still wasteful even though it now fits); tracked as new todo
+   in `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` item 3.
+3. ✅ **DONE 2026-08-17 (slot-20)**. `[SCRIPT] P3.` `market-data-processing-service@5773a617ad`:
+   `_find_inflight_duplicate_vm` gained an `exclude_vm_name` kwarg; `_run_skip_leg` now excludes the force leg's
+   OWN just-completed VM (via a new `_ForceLegOutcome.self_launched` flag, true only when the force leg genuinely
+   launched its own VM rather than borrowing a real external duplicate) from its duplicate-in-flight check. 7 new/
+   updated regression tests in `test_pipeline_e2e_check_duplicate_vm_guard.py`, QG green both repos.
+4. **SPLIT 2026-08-17 (slot-20)** — `[DATA] P1.` Once (1)/(2) landed, DEFI was re-run and now survives without
+   OOMing, BUT proved a NEW, separate finding: 0/206 cells verified despite the manifest read finding 115 real
+   canonical captured cells — a 0% overlap with the 103-shard MVP universe, likely the already-flagged
+   `service_name=market-data-processing-service`-vs-`market-tick-data-service` DeFi-capture discrepancy from
+   `issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`. That is real, separate root-cause work — split
+   into `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` rather than blocking
+   this issue's closure on it. Live-fleet check at time of this update (2026-08-17T00:xx UTC): SPORTS/TRADFI/
+   PREDICTION reports are ALL now terminal in GCS (SPORTS was already known done; TRADFI `total=86 passed=10
+   failed=30 skipped=46`; PREDICTION `total=28 passed=0 failed=14 skipped=14` — both terminal but with concerning
+   pass rates worth a follow-up look, not investigated further in this session); CEFI was STILL genuinely
+   progressing (a fresh `mdps-backfill-cefi-pcskip-*` sub-VM launched at 2026-08-16T23:39:52Z, ~1h after its
+   driver's own launch) — left untouched per the "don't touch a live claim" rule. Remaining work (CEFI's terminal
+   check + the DEFI capture-mismatch fix + final 5-AG report consolidation) is tracked in the plan's own todo,
+   not re-duplicated here.

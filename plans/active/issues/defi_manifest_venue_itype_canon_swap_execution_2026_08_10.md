@@ -15,7 +15,7 @@ repos: [market-tick-data-service]
 scope: [engineer]
 tags: [issue, n5r, n6r, manifest-swap, vm-execution, defi]
 related:
-  - /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
+  - /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
   - /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md
   - /plans/active/defi_consolidated_closeout_2026_07_18.md
 created: "2026-08-10"

@@ -33,7 +33,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-06"
+last_updated: "2026-08-16"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -124,3 +124,7 @@ reasoning: `ag_closeout_audit_prediction_parked_2026_08_04.md`.
   operator flips to `active` to dispatch.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (3 entries) — verified all 3 still resolve and still
   map to the sole open P3 `available_at` consumer-check todo; unchanged.
+- **2026-08-17 (plan_reconciler)**: `last_updated` was stale (2026-08-06, 10 days after the sole todo's actual
+  2026-08-16 completion) — corrected in frontmatter above. Completion evidence lives in the source doc's own Progress
+  Log (`archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`, `status:
+  resolved`, 0 open todos, banner "🟢 ARCHIVED 2026-08-16").

@@ -58,13 +58,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P3. **Reconcile the source doc.** batch7's one todo cites
+- [x] ✅ [REVIEW] P3. **Reconcile the source doc.** batch7's one todo cites
       `archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`. Confirm that doc's own remaining
       todo (the downstream-consumer check) was actually updated with batch7's verdict + commit citation, per batch7's
       own Done-when clause. If the verdict was "no real consumer exists", confirm the source doc's checkbox is flipped
       and its `status` is updated toward `resolved` (0 open todos). If the verdict was "a real consumer exists", confirm
       a follow-up todo/plan was filed for the separately-scoped backfill (not left as a dangling prose note). **Done
-      when**: the reconciliation is recorded in this plan's own Progress Log with the exact commit citation.
+      when**: the reconciliation is recorded in this plan's own Progress Log with the exact commit citation. — verified
+      by plan_reconciler agt-2934ac 2026-08-17: source doc's checkbox is `[x]`, `status: resolved`, 0 open todos,
+      banner "🟢 ARCHIVED 2026-08-16" — `unified-trading-pm@e3ca863b9d`.
 
 - [ ] [DOC] P3. **Archive batch7 + this finalize plan.** Once the source doc is confirmed reconciled and batch7's one
       todo + this plan's todo 1 are both done, archive both `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` and
@@ -74,6 +76,16 @@ context_scope:
       `ag_closeout_audit_prediction_parked_2026_08_04.md`'s `related:`). **Done when**: both files are in
       `plans/archive/2026_08/`, `regenerate_active_plan_inventory.py` shows 0 orphaned referrers, and
       `check_ag_closeout_linkage.py --tranche prediction` is still green.
+
+      **STILL OPEN 2026-08-17 (plan_reconciler)** — todo 1 above is now done, clearing the content-side blocker, but
+      the referrer-fix step cannot safely run this pass: `plans/epics/predictions_master.md` (the one REAL active
+      referrer — the hub `prediction_consolidated_closeout_2026_07_18.md` does NOT cite batch7, verified via grep) was
+      edited 8h ago, inside the 12h grace window. `ag_closeout_audit_prediction_parked_2026_08_04.md` is itself
+      already archived (historical citation, not fixed per this corpus's "resolved issue doc describing history"
+      exclusion); `plans/active/INDEX.md` is auto-regenerated, never hand-fixed. Next session: once
+      `predictions_master.md` clears grace, `git mv` both files to `plans/archive/2026_08/`, update the epic's 4
+      batch7 citation lines (2 `related_plans:` entries around line 47-48 + 2 body header links around line
+      1021-1025), then flip this checkbox.
 
 ## Progress Log
 

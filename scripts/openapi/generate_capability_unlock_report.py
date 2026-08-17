@@ -15,7 +15,7 @@ Reads the committed capability manifest, computes the minimal unlock set
 
 With ``--emit-todos`` it ALSO appends, for the N closest-to-unlock edges,
 canonical ``- [ ] [SCRIPT] P2.`` roadmap todos into the gap tracker
-(``plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md``) —
+(``plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md``) —
 dedup-idempotent, reusing ``emit_capability_gap_todos.py``'s append pattern.
 
 The engine is decoupled from the registry walk: it reads the already-generated
@@ -192,7 +192,7 @@ def main() -> int:
         tracker_path = (
             Path(tracker_arg)
             if tracker_arg
-            else _PM_ROOT / "plans" / "active" / "issues" / "capability_wizard_gap_discovery_2026_06_11.md"
+            else _PM_ROOT / "plans" / "archive" / "2026_08" / "issues" / "capability_wizard_gap_discovery_2026_06_11.md"
         )
         emitted = emit_roadmap_todos(entries, tracker_path, top_n, dry_run=dry_run)
 

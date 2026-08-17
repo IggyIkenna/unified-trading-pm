@@ -267,7 +267,7 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       `_dex_swaps_queries.py`, `rebuild_defi_manifest.py`). Re-closing the axis-contamination P3 todo is
       correspondingly DEFERRED to the gated todo below — not safe to re-close while the writer that caused the
       reopening is still live and unfixed.
-- [ ] [BACKEND] P0. Fix the confirmed root cause:
+- [x] ✅ [BACKEND] P0. Fix the confirmed root cause:
       `market_data_processing_service/app/core/canonical_writer.py:374`'s `partition_path` construction must
       lowercase `instrument_type` for the GCS PATH segment specifically (e.g. `instrument_type=
       {instrument_type.lower()}`) — while leaving every OTHER use of the `instrument_type` variable in this
@@ -276,7 +276,21 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       only the PATH segment (§3a) is wrong today. Audit every OTHER `instrument_type` usage in this same file
       (this session found ~10 call sites, `:284/301/331/344/357/390/429/512/532/586/659`) individually before
       touching any of them — some may be additional, not-yet-found path-construction sites with the SAME bug
-      (unverified this session), not all are the row-content/manifest-column use this todo assumes. (repo:
+      (unverified this session), not all are the row-content/manifest-column use this todo assumes. **RESOLVED
+      2026-08-16 (slot 19, backend_engineer)**: fresh per-line audit of all 13 `instrument_type` usages in the
+      file found only ONE genuine path-construction call site — the `partition_path` f-string this todo names is
+      actually a `validate_partition_consistency()` cross-check string (`streaming_writer.py`, never written to
+      GCS), so lowering it would have been a no-op-or-worse (risks a false partition-mismatch against the
+      uppercase id-derived value). The REAL physical write-path builder is the `build_canonical_candle_object_path(
+      ..., instrument_type=instrument_type, ...)` call (`canonical_writer.py`, feeds `canonical_gcs_path` ->
+      `_upload_local_to_gcs`) — confirmed via `output_path_helpers.py` -> UTL
+      `config_interface/paths/registry.py::build_canonical_candle_path` -> `build_path()`, none of which lowercase.
+      Fixed by lowering `instrument_type` at that ONE call site only; every other usage (manifest row content,
+      `lookup_mdps_contract`, log payloads, the `partition_path` validation string) verified untouched/still
+      UPPER. Updated `tests/unit/test_canonical_writer_record_helpers.py`'s
+      `test_write_candle_parquet_calls_record_captured_not_add` (its `expected_path`/`uploaded_path` assertion
+      encoded the pre-fix uppercase-path bug). QG green, shipped
+      market-data-processing-service@94215e9cd9. (repo:
       market-data-processing-service)
 - [x] ✅ [DIAG] P1. Verify `_prune_consolidated_shards` (`manifest_consolidator.py:1893`) is actually keeping the defi
       bucket's per-VM-shard backlog drained, not silently falling behind — **RESOLVED 2026-08-16 (slot 5,
@@ -368,3 +382,11 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   Logging read-quota exhaustion for the whole session — filed as a separate P3 follow-up rather than block this
   todo on it, since the state-mode evidence stands alone. Filed 2 new follow-up todos (root-cause the stall;
   retry the logs check once quota clears) — see Todos list.
+- **2026-08-16 (slot 19, backend_engineer)**: resolved the `[BACKEND]` P0 writer fix todo. Corrected the
+  investigation's own line-374 attribution en route (see the todo's resolution note for detail): the actual
+  physical GCS-path builder is the `build_canonical_candle_object_path(...)` call in `canonical_writer.py`, not
+  the `partition_path` string (which is validation-only, never written to disk). Lowered `instrument_type` at
+  that one call site; audited all other usages in the file and confirmed none else construct a physical path.
+  Updated the one test whose assertion encoded the pre-fix uppercase-path bug. QG green, shipped
+  `market-data-processing-service@94215e9cd9`. Next: the GATED `[SCRIPT]` re-retirement todo below still needs a
+  fresh candle write for a new day to confirm the fix is live (not just code-reviewed) before retirement resumes.

@@ -60,17 +60,24 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. Reconcile every completed todo in `cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md` — the
+- [x] ✅ [REVIEW] P2. Reconcile every completed todo in `cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md` — the
       plan is self-contained (not a batch extraction from other source docs), so verify its own checkboxes cite real
       evidence (a commit sha / IS registration confirmation) rather than trusting a bare `[x]`. Re-check the plan's own
       text for any deferred/excluded-at-authoring-time item to see whether its gate has since cleared; if so, spin it
       into a new tracked todo/plan rather than silently dropping it. Done when: every checkbox in the source plan is
-      verified evidence-backed, and any newly-clearable deferred item has its own tracked follow-up.
-- [ ] [REVIEW] P2. Once the source plan has zero open todos and the reconciliation above is clean, run the standard
+      verified evidence-backed, and any newly-clearable deferred item has its own tracked follow-up. — DONE 2026-08-16
+      (slot-6 review). All 7 SHAs independently re-verified as ancestors of `origin/live-defi-rollout` with matching
+      diffs; one mis-citation found + corrected (Todo 4 pointed at a follow-up test-fix commit instead of the real
+      feature commit) — see the source plan's own Progress Log entry for detail. No deferred item needs a new
+      follow-up.
+- [x] ✅ [REVIEW] P2. Once the source plan has zero open todos and the reconciliation above is clean, run the standard
       6-step archival ritual on `cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md` (dated archive folder,
       exact-successor banner if applicable, corpus-wide referrer-path fixup), then archive this finalize plan too. Done
       when: the source plan and this finalize plan are both under `plans/archive/`, and
-      `regenerate_active_plan_inventory.py` reports zero orphan referrers to either.
+      `regenerate_active_plan_inventory.py` reports zero orphan referrers to either. — DONE 2026-08-16 (slot-6
+      review). Both plans `git mv`d to `plans/archive/`; every corpus referrer (`INDEX.md`,
+      `/codex/02-data/cefi-capture-universe.md`, `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`) updated to the
+      new path in the same commit.
 
 ## Progress Log
 

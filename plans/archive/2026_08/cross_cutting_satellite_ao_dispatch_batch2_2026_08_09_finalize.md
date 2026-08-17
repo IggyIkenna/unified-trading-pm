@@ -6,7 +6,7 @@ summary: >-
   `gate_on_depends: true` until all 22 todos are done. Reconciles each of the 6 distinct `instruments_master` source
   docs' checkboxes independently (citing the shipped commit per todo), then archives the batch doc via the standard
   6-step ritual.
-status: active
+status: complete # archived 2026-08-16 — both todos done; archival is this todo's own final act
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -92,12 +92,21 @@ context_scope:
       already `status: complete` and archived — no status change needed. Done when: all source-doc checkboxes/sections
       flipped with verified evidence — satisfied (the status-flip sub-clause turned out to apply to 0 of the 6, not
       1, once the delegation-artifact trap was caught).
-- [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule) once todo 1 is done: add the archive banner → run the codex-alignment check
-      (confirm no new durable contract from this batch) → grep the corpus for every referrer of this doc and fix each
-      path to point at the archived location → clear `locked_by` (confirm already empty). Done when: the plan is moved
-      to `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and this finalize doc itself is
-      archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-08-16 (slot 24, review).** Archived `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`
+      via the standard 6-step ritual (per CLAUDE.md's plan-archival rule +
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) now that todo 1 is done: confirmed 0 open
+      `- [ ]` todos remain in the source doc; added the archive banner (`status: complete # archived 2026-08-16`,
+      `superseded_by: cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize`); ran the codex-alignment check —
+      no new durable contract from this batch (every item was either a stale-premise verification, a mechanical
+      registration/typing fix, or work already covered by an existing codex SSOT — nothing here establishes a new
+      rule), so no codex doc update needed; grepped the whole corpus for referrers and fixed every leading-slash/
+      relative-path reference (the many bare-filename mentions already marked "(archived)" in prose needed no change,
+      per this ritual's step-5 scope — only actual path links); regenerated `plans/active/INDEX.md` via
+      `scripts/plans/regenerate_active_plan_index.py` rather than hand-editing it (auto-generated file); confirmed
+      `locked_by` empty on both docs. Both docs moved to `plans/archive/2026_08/` in this same commit — single-repo
+      (mode-1) finalize plan, same-commit flip+archival is the sanctioned shape per that codex doc's mode-1 section.
+      Done when: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and
+      this finalize doc itself is archived alongside it in the same commit — satisfied.
 
 ## Progress Log
 

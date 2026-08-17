@@ -1314,7 +1314,7 @@ exposure the public-repo revert above exists to prevent. 7 repos went through th
 `instruments-service`, `unified-api-contracts`, `market-data-processing-service`, `trading-agent-service`,
 `deployment-api`, `deployment-service`, `unified-trading-library` — see
 `/codex/07-security/self-hosted-runner-security-posture.md` § "Current self-hosted repo set" for the live-verified
-runner-assignment evidence and `/plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md`
+runner-assignment evidence and `/plans/archive/2026_08/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md`
 for the full ship provenance (commit SHAs, the dependency-chain sequencing that mattered here — `unified-trading-library`
 and `unified-api-contracts` are upstream of the other 5 in `workspace-manifest.json`, so they had to land first).
 

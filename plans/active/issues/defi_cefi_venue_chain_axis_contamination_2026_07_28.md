@@ -351,6 +351,36 @@ in this read-only audit pass (time-bounded scope).
       async-wait discipline, a 9-11h wait does not belong in this single-task session; verifying the actual first fire
       + corpus-freshness recovery is the follow-up todo immediately below. **Repo: deployment-service** (VM launch
       only, no code change).
+- [ ] [INFRA] P1. **NEW 2026-08-16 (slot-17) — the two 2026-08-15 cron-host launches (task -1b75e9a1f3d4)
+      cannot clear the step-1 corpus-freshness gate as configured; root-caused via live SSH + source read, not
+      guessed.** (1) **`cefi-fwd-daily-cron-20260815-212910`'s 09:00 UTC `launch-cefi-forward-poll.sh` fire FAILS
+      every day** — live log (`/var/log/cefi-fwd-cron.log`, first lines) shows
+      `.../launch-cefi-forward-poll.sh: line 190: .../tardis-concurrency-guard.sh: No such file or directory`
+      then `[2026-08-16T09:00:17Z] cefi-fwd cron fire FAILED rc=0`. Root cause confirmed in
+      `deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` lines 129-131 + 158: the cron-install step
+      `gsutil cp`s only `lib/launcher_common.sh` + `launch-cefi-forward-poll.sh` to
+      `/opt/deployment-service/scripts/vm/` — it never stages the sibling `tardis-concurrency-guard.sh` that
+      `launch-cefi-forward-poll.sh:190` `source`s from its own directory (confirmed present in-repo at
+      `deployment-service/scripts/vm/tardis-concurrency-guard.sh`, just never copied to the VM). **The 09:15 UTC
+      Deribit-options entry in the same `/etc/cron.d/cefi-fwd-daily` file is a separate, legitimate, correctly-firing
+      cron** (not a misconfiguration — initially misread as one) sharing the same log file, which is why the log tail
+      looked like "wrong VM operation" at first glance. **Fix**: add `tardis-concurrency-guard.sh` to both the
+      one-shot install-time copy (script lines ~129-131) and the recurring cron-line copy (line 158) in
+      `launch-cefi-fwd-daily-cron-vm.sh`, mirroring the existing `launcher_common.sh` staging pattern; re-launch the
+      cron host (or hot-fix the live VM's `/opt/.../tardis-concurrency-guard.sh` + wait for tomorrow's fire) and
+      verify via a fresh log tail post-09:00Z. (2) **`cefi-perp-funding-daily-cron-20260815-212924`'s 07:00 UTC entry
+      has NEVER fired at all** — `/etc/cron.d/cefi-perp-funding-daily` is present, correctly formatted (valid
+      crontab syntax, `root:root 644`, proper trailing newline confirmed via `xxd`), and the cron daemon is `active`
+      and firing OTHER jobs normally (`run-parts /etc/cron.hourly`, `debian-sa1` every 10 min, confirmed in syslog) —
+      but a full-day `grep cefi-perp-funding-daily /var/log/syslog` found **zero** `CRON[...]` exec lines for this
+      specific job, and `/var/log/cefi-perp-funding-cron.log` does not exist (neither the success-append nor the
+      `|| echo ... FAILED` fallback ever ran). Mechanism NOT pinned — flagging rather than guessing (candidates:
+      cron's inotify/mtime cache missing this file at install time, a VM-clock/timezone anomaly, or something else
+      cron-daemon-internal) — needs a fresh diagnostic pass (e.g. `sudo service cron restart` + wait one cycle, or
+      `strace`/`journalctl -u cron -f` across a scheduled fire) by whoever picks this up. **Both fixes are
+      prerequisites for step 1 (corpus-freshness) ever landing** — until then, this doc's step-3 physical-delete todo
+      (below) and the sibling cron-verification todo remain correctly GATED, not merely "waiting". **Repo:
+      deployment-service.**
 - [ ] [DATA] P1. **NEW 2026-08-15 (slot-4) — follow-up: verify the two cron hosts launched above (task -1b75e9a1f3d4)
       actually FIRED and, once raw input catches up, that the corpus-freshness gate clears.** No earlier than
       2026-08-16T09:10Z (after both `cefi-fwd-daily-cron-20260815-212910` @ 09:00 UTC and
@@ -554,6 +584,21 @@ doc for the full history).
   before the gate opens; none of the 3 verification steps can produce a meaningful result yet, so no GCS/gcloud calls
   made this pass. Skipping `reason_code=GATED` (real ETA ~444min exceeds the fleet's 180min dispatch-cooldown cap).
   Re-dispatch any time at/after 2026-08-16T09:10Z.
+
+- **slot-17 2026-08-16 ~23:56Z (data_engineering, task `defi_cefi_venue_chain_axis_contamination-345201378396`,
+  step-3 physical-delete re-check)**: Fresh-pulled all repos first (no doc drift since last snapshot). Re-verified
+  step-1 gate via a bounded UTL `list_blobs` probe (single-day-prefix each, not a corpus walk) of
+  `market-data-tick-defi-prd-central-element-323112` for `perp_funding`/`perp_daily_ctx`, 6 `catalog_carry.py`
+  venues, 2026-08-12..16: **0 matched objects every day** (08-12: 1044 total objects at that day-prefix / 0 matching;
+  08-13: 1124/0; 08-14: 380/0; 08-15: 33/0; 08-16: 0/0). `funding_window()` still returns empty for current days —
+  step 1 has NOT landed, same result as every prior check since 2026-08-10. **Went further than prior re-checks**:
+  live-SSH-verified WHY the 2026-08-15 cron-host launches (previously marked "DONE") cannot close this gate as
+  currently configured — both hosts have real, distinct bugs (fwd-cron: missing sourced dependency causes the
+  09:00Z forward-poll to fail every fire; perp-funding-cron: correctly-installed `/etc/cron.d` entry never actually
+  executes, mechanism unpinned). Full evidence + fix guidance filed as a new `[INFRA] P1` todo directly above the
+  cron-verification follow-up todo — this is the real blocker, not mere elapsed-time waiting. My own task remains
+  correctly GATED on step 1 (+ the still-outstanding fresh 5-part delete-safety proof once it does land). No delete
+  executed, no code shipped. Released `reason_code=GATED`.
 
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 

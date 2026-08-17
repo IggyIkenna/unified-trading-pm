@@ -7,26 +7,36 @@
 
 tardis:
   # Access mode: auto | perpetuals_only | full_access
-  # - auto: Auto-detect from secrets (checks if TARDIS_API_KEY_FULL_DATA exists)
+  # - auto: Auto-detect from secrets (checks whether secrets.full_access exists)
   # - perpetuals_only: Filter out spot-only venues (BINANCE-SPOT, COINBASE, UPBIT)
   # - full_access: All venues accessible
   #
   # Override with env var: TARDIS_ACCESS_MODE=full_access
-  mode: auto
+  #
+  # 2026-08-16/17 (upbit_cefi_data_gap_may_2026_2026_08_04.md): pinned to full_access,
+  # not auto. The auto path's secret probe (secrets.full_access below) checks for a
+  # DISTINCT `tardis-api-key-full` secret that does not exist and was never created —
+  # measurement confirmed the single `tardis-api-key` secret already carries full
+  # spot+perp entitlement (dataPlan:unlimited; live Tardis datasets API returned
+  # HTTP 302/authorized for UPBIT spot dates). Auto-detect was permanently returning
+  # perpetuals_only and silently excluding every spot-only venue (BINANCE-SPOT,
+  # COINBASE, UPBIT) from all new backfill VMs since the 2026-05-01 filter shipped.
+  mode: full_access
 
   # Venues requiring full Tardis subscription (spot data)
   # These are filtered out when mode=perpetuals_only
-  # Updated 2026-02-09: Currently have full access via TARDIS_API_KEY_FULL_DATA
   spot_only_venues:
     - BINANCE-SPOT
     - COINBASE
     - UPBIT
 
-  # Secret names for auto-detection
+  # Secret names for auto-detection (used only when mode=auto).
   # The system checks if tardis-api-key-full exists in Secret Manager
   # If it exists: mode = full_access (all venues accessible)
   # If it doesn't exist: mode = perpetuals_only (spot venues filtered)
-  # Note: These names match market-tick-data-service/.env configuration
+  # tardis-api-key-full does NOT exist in Secret Manager (confirmed 2026-08-16) —
+  # do not rely on auto-detect until this is either created or repointed at the
+  # already-verified tardis-api-key.
   secrets:
     basic: tardis-api-key
     full_access: tardis-api-key-full

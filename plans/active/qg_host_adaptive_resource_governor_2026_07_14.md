@@ -230,9 +230,23 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       Measure per-repo CPU demand under the profiler's UNPINNED `--parallel` mode (real config, no single-core/thread
       caps) to get PEAK concurrent cores per repo → feed `cpu_weight` for the CPU gate. The single-core-pinned baseline
       can't see this (basedpyright + pytest burst multi-core).
-- [ ] [INFRA] P1. Baseline freshness loop — the governor records each run's observed peak tree-RSS; a DAILY job promotes
+- [x] ✅ [INFRA] P1. **DONE 2026-08-16 (governor Trigger 3, `ci_satellite_ao_dispatch_batch15_2026_08_16.md` item 1,
+      slot 21) — shipped in this same commit.** Baseline freshness loop — the governor records each run's observed peak tree-RSS; a DAILY job promotes
       observations → the committed baseline (free — we already run every repo's QG most days). A single-run observed
       peak > 20 % above baseline → Slack alert (NOT a silent bump; a +182 %-style jump means something is wrong).
+      Shipped: `scripts/dev/measure-qg-baseline.sh` now carries an anomaly guard (`--force` to bypass, default
+      `QG_BASELINE_ANOMALY_PCT=20`) in a newly-extracted `scripts/dev/qg_baseline_merge.py` — a repo whose freshly
+      measured peak is >=20% above its committed value is NOT auto-promoted; it fires the existing
+      `_qg_governor_slack_alert()` (batch13's Trigger 1-2 mechanism) instead and leaves the baseline untouched.
+      `scripts/orchestrator/qg-baseline-daily-promote.{sh,service,timer}` +
+      `install_qg_baseline_daily_promote.sh` wire it to run daily (03:11 UTC, env=vm, jobs=3) across every repo the
+      committed baseline already tracks, mirroring the existing `ldr-to-main-promote-heartbeat` systemd-timer pattern
+      (needs the full multi-repo workspace measure-qg-baseline.sh already assumes — not GH-Actions-hosted-runner
+      feasible, see that pattern's own README). 12/12 synthetic anomaly-guard assertions pass:
+      `scripts/dev/test-qg-baseline-anomaly-guard.sh` (no-prior/within-threshold/over-threshold/`--force`
+      /drop/exact-boundary). **Not yet installed on the orchestrator VM** — `install_qg_baseline_daily_promote.sh`
+      is `[OPERATOR]`-run-on-the-VM by design (same as its sibling installers); first live daily tick + a genuine
+      Slack alert firing are still pending real-world observation.
 
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 

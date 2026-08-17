@@ -51,6 +51,10 @@ context_scope:
 
 ## What's blocked and why
 
+> **RESOLVED 2026-08-15 — see Progress Log.** The size-only check described below was replaced with a real
+> crc32c content compare in `market-tick-data-service@05062013`. Retained as historical context for the "Todos"
+> section's provenance; do not read the paragraph below as the current code state.
+
 `_apply_one` in `migrate_tradfi_underlying_display_names_2026_08.py`, on finding the display-name destination object
 ALREADY exists (a real, documented, common case in this corpus), currently compares only the source and destination
 object SIZES before deleting the source. This is the exact class of check the delete-safety protocol's Part 2 (content
@@ -75,3 +79,8 @@ would be destroyed with no real content-equivalence proof.
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **RECLASSIFY, per-todo split.** Todo 1
   (bounded code fix) extracted to `tradfi_satellite_ao_dispatch_batch14_2026_08_16.md`; todo 2 (real prod-bucket-delete
   launch decision) stays genuinely operator-gated. Doc stays `assigned_vm: NA`.
+- **2026-08-16 — batch14 dispatch found todo 1 already shipped a day before the audit extraction.**
+  `market-tick-data-service@05062013` (2026-08-15 01:30 UTC, slot-14) already replaced the size-only check with a
+  `crc32c` content compare (kept size-check only for the freshly-copied-by-us branch) + 2 unit tests, citing this same
+  doc as its source. Flipped done in the batch plan citing that SHA; no new code shipped. The "What's blocked" section
+  above is now stale-marked rather than deleted, since it's still useful provenance for why the check existed.

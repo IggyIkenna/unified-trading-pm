@@ -27,6 +27,9 @@ related:
   ]
 priority: P1
 resolved_by: e2e-testing@9ed5f78e3f
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_08_16)

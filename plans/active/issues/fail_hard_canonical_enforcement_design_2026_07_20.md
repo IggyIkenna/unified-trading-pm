@@ -194,15 +194,26 @@ implementation todos on that check, since they're each independently reviewable 
       see §5b for the three resolutions. Flagged for an operator/engineering sanity check given the correctness stakes,
       but not gating dispatch of the three implementation todos below — each is independently reviewable in its own PR.
       Implementation split into the 3 new todos below, one per gap.
-- [ ] [WRITER] P2. **na-eligibility-audit 2026-08-16**: extracted verbatim to `fail_hard_canonical_enforcement_ao_dispatch_2026_08_15.md` (assigned_vm: planning, status: active, created 2026-08-16) as todo #2, currently gated behind that doc's own [REVIEW] P2 sanity-check todo. Stays open here (source doc), not yet done. Original text: **Implement Gap 1's resolution (§5b)**: add a row-level column-value gate for bundle-shaped writers
-      (chain-bundle / `options_chain` lanes) that validates each row's embedded instrument_id against the
-      canonical/quarantine registry before write; drop non-canonical rows to
-      `record_failed(NON_CANONICAL_INSTRUMENT_ID, granularity=row)`; add `quarantined_legs: [...]` to the manifest row.
-      Repo: market-tick-data-service.
-- [ ] [WRITER] P2. **na-eligibility-audit 2026-08-16**: extracted verbatim to `fail_hard_canonical_enforcement_ao_dispatch_2026_08_15.md` (assigned_vm: planning, status: active) as todo #3 (lines 57-59), same sanity-check gate as Gap 1. Stays open here (source doc), not yet done. Original text: **Implement Gap 2's resolution (§5b)**: make the live/on-chain lane's manifest key a deterministic
-      function of the already-computed column value (parse it, don't re-resolve independently via
-      `resolve_cefi_instrument_id()`); keep the independent resolver only as a fallback for the no-column-yet case.
-      Repo: market-tick-data-service (`venue_fetch.py`, `partitioned_writer.py`).
+- [x] ✅ [WRITER] P2. **RECONCILED 2026-08-16 (cefi_satellite_ao_dispatch_batch19_2026_08_13_finalize.md, slot 21) —
+      corrects a stale na-eligibility-audit 2026-08-16 note that missed batch19's prior-day shipment.** **Implement
+      Gap 1's resolution (§5b)**: add a row-level column-value gate for bundle-shaped writers (chain-bundle /
+      `options_chain` lanes) that validates each row's embedded instrument_id against the canonical/quarantine
+      registry before write; drop non-canonical rows to `record_failed(NON_CANONICAL_INSTRUMENT_ID, granularity=row)`;
+      add `quarantined_legs: [...]` to the manifest row. Repo: market-tick-data-service. — **SHIPPED
+      market-tick-data-service@c1626c5dbd** (+ prerequisite UAC ID_FORM-oracle widening
+      `unified-api-contracts@8b81dd78bb`), 2026-08-15, via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` — see
+      that plan's own entry for full detail. The na-eligibility-audit 2026-08-16 extraction to
+      `fail_hard_canonical_enforcement_ao_dispatch_2026_08_15.md` (+finalize) duplicated this already-shipped work
+      one day later; both cancelled-superseded and archived in this same reconciliation pass.
+- [x] ✅ [WRITER] P2. **RECONCILED 2026-08-16 (cefi_satellite_ao_dispatch_batch19_2026_08_13_finalize.md, slot 21) —
+      corrects a stale na-eligibility-audit 2026-08-16 note that missed batch19's prior-day shipment.** **Implement
+      Gap 2's resolution (§5b)**: make the live/on-chain lane's manifest key a deterministic function of the
+      already-computed column value (parse it, don't re-resolve independently via `resolve_cefi_instrument_id()`);
+      keep the independent resolver only as a fallback for the no-column-yet case. Repo: market-tick-data-service
+      (`venue_fetch.py`, `partitioned_writer.py`). — **SHIPPED market-tick-data-service@d518aca80d**, 2026-08-15, via
+      `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` — see that plan's own entry for full detail. Same duplicate
+      dispatch (`fail_hard_canonical_enforcement_ao_dispatch_2026_08_15.md`) cancelled-superseded and archived
+      alongside Gap 1 above.
 - [x] ✅ [UAC] P3. **Implement Gap 3's resolution (§5b)**: add the temporal `unclassified` state (manifest row predates
       Stage 2 / lacks `instrument_id_form`) distinct from `non_canonical`; wire the Stage 3 read gate to
       pass-with-warning on `unclassified` until a backfill-complete flag promotes it to enforced-fail. Repo:

@@ -75,7 +75,7 @@ claiming `glue-ip-172-31-3-59-1` (not `ubuntu-latest`) for `unified-api-contract
 `deployment-service`, `trading-agent-service`, `deployment-api`, `unified-trading-library`. `instruments-service`'s
 workflow file content is verified identical to the working repos' at LDR HEAD, but its own fresh dispatch hit a
 content-sentinel cache skip (zero compute, so no runner assignment to observe) — re-verify on its next real content-
-changing push. Details/provenance: `/plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md`.
+changing push. Details/provenance: `/plans/archive/2026_08/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md`.
 
 ## Public-repo / fork-PR threat model — the `unified-trading-pm` exposure is RESOLVED (2026-08-07)
 

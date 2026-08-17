@@ -64,13 +64,19 @@ context_scope:
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Harden `_apply_one`'s destination-exists branch in
+- [x] ✅ [SCRIPT] P1. **ALREADY SHIPPED prior to this batch's extraction — market-tick-data-service@05062013.**
+      Harden `_apply_one`'s destination-exists branch in
       `market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_underlying_display_names_2026_08.py`
       to do a real content/byte comparison (not size only) before deleting the short-code source object — mirror the
       compound-key content-comparison pattern already proven earlier in the same investigation for a similar
       duplicate-verification task (sort/compare on a stable row key, not a coarse size/row-count proxy). Repo:
       market-tick-data-service. Done when: the size-only check is replaced with a real content comparison, unit-tested,
-      QG green. Source: `tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md` todo 1.
+      QG green. Source: `tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md` todo 1. **Verified
+      live 2026-08-16**: `05062013` (2026-08-15 01:30 UTC, slot-14, already on `origin/live-defi-rollout`) replaced the
+      size-only check with a `smeta.crc32c != dmeta.crc32c` compare on the destination-pre-existed branch (size check
+      kept only for the freshly-copied-by-us branch) and added 2 unit tests (mismatch-kept / match-deletes). This
+      predates the 2026-08-16 na-eligibility-audit extraction that created this todo — the source issue doc's "What's
+      blocked" section was stale by one day at extraction time. No new code needed; nothing to ship.
 - [ ] [SCRIPT] P1. **Time-sensitive — vm-logs/ GCS objects age out on a 14-day retention window.** Pull `run.log` (via
       `deployment_service.data_pipeline_monitors._gcs.read_text`, UTL storage client — never subprocess
       `gsutil`/`gcloud storage`) for the 4 other recent `mdps-tradfi-`/`tradfi-bf-` VMs — `mdps-tradfi-2023-20260815-040118`,
@@ -85,3 +91,13 @@ context_scope:
       retention expired) is recorded. Source: `dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md`
       todo 2 (named all 4 siblings) — consolidates `dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md`
       todo 1's narrower ask for the 2023 VM specifically, so the identical run.log pull isn't dispatched twice.
+
+## Progress Log
+
+- **2026-08-16 — todo 1 found already-shipped on dispatch.** Worker dispatched against todo 1 found
+  `market-tick-data-service@05062013` (2026-08-15 01:30 UTC, slot-14) already implements the exact crc32c
+  content-verify hardening this todo asks for, already on `origin/live-defi-rollout`, with 2 unit tests. Flipped done
+  citing that SHA; no new code shipped. Root cause of the stale dispatch: the na-eligibility-audit extraction
+  (2026-08-16) read the source issue doc's "What's blocked" prose, which was already one day stale at extraction
+  time — the doc's own todo checkbox was correctly marked done/extracted, but the prose above it wasn't reconciled
+  against current code state before the extraction ran.

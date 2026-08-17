@@ -335,7 +335,14 @@ last_updated: 2026-08-15 # (was: 2026-06-27 -- plan-reconcile 2026-08-15: stale 
       and UI must migrate in the SAME change. **Move, don't copy-then-delete-separately** (operator, 2026-08-10) —
       noting GCS has no atomic move, so the delete half still falls under the delete-safety protocol; check
       `scripts/backfill_defi_dex_pool_swaps_source_correction.py`'s deliberate "copy-not-move" rationale before
-      overriding it.
+      overriding it. **RECONCILED 2026-08-16 (cefi_satellite_ao_dispatch_batch19_2026_08_13_finalize.md, slot 21) —
+      still open, redirected not done.** `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s mirrored copy of this
+      item investigated the scope (5-repo consumer inventory including the canonical-path oracle itself), found it
+      genuinely too large for a batch todo, and — per operator ruling on `BLK-f5cd6b22` — redirected it into a
+      dedicated phased plan: `plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md` (5 phases:
+      resolve move-vs-copy → UAC oracle dual-acceptance → writer+adapters+catalogue migrate together → operator-gated
+      backfill → oracle narrows + close-out), carrying the full consumer inventory forward. This item stays open here
+      pending that plan's own execution — not superseded, tracked there now.
 - [ ] [SCRIPT] P2. **na-eligibility-audit 2026-08-16 note**: conflict-checked CLEAR on its own merits, but `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` already explicitly marked this item "OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)" — a dated operator ruling, not re-litigated here. Stays NA pending that same scoping decision changing, not because it's unbounded. Original text: Shard the slow date in the MDPS per-date backfill so one date cannot fail a 944/944-complete run
       (`subprocess-per-date: date=2026-08-01 TIMED OUT after 1800s`). Operator-approved. Fix the per-date timeout /
       shard the date — NOT a bigger machine, which is what the alert's canned advice wrongly suggests.

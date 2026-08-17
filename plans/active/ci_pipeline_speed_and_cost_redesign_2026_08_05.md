@@ -47,7 +47,6 @@ source:
     repo... currently we spend 1k monthly on gh plus... 5k gh ci spend alone'",
   ]
 last_updated: "2026-08-15" # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale 10 days behind the doc's
-  # own most recent (context-scout 2026-08-15) Progress Log entry
 locked_by:
 locked_since:
 supersedes:

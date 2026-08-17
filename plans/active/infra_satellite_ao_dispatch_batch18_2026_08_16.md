@@ -100,21 +100,20 @@ Verdict: clear on all 3 items — proceed.
       resolves `state_bucket()` correctly (worth checking FIRST, before assuming another VM launch is needed), this
       is a same-day close. If it doesn't, the worker's job is to say so precisely (what env var/config IS present vs
       needed) rather than fake a result — do not report BLOCKED-CREDENTIALS as done. Repo: deployment-service.
-- [ ] [CODE] P2. **Wire `RevocationActuator`'s `consolidator_bucket_resolver` into a real production call site.**
-      `deployment-service@310f82e84f` (2026-08-16) added the injected-callable param + `_register_maintenance_windows()`
-      (the FLEET_HALT double-page fix), but every current production `RevocationActuator()` construction
-      (`escalation.py:775`, `meta_watchers.py:195`) passes `None` — a verified no-op, not a regression, but the fix
-      doesn't do anything in production yet. Blocked on a REAL import cycle (confirmed by attempting the direct
-      import, not assumed): this module sits below `escalation.py` (which imports it); the real resolver function,
-      `consolidator_scheduler_watcher.consolidator_job_to_bucket`, sits behind
-      `meta_targets.py` → `meta_watchers.py` → `escalation.py` → back to this module. `meta_targets.py`'s only need
-      for `meta_watchers` is 3 unrelated `FreshnessTarget`-building functions (`catalogue_targets`,
-      `high_attempted_failed_targets`, `cron_targets`) — extracting those 3 to their own module (or moving
-      `FreshnessTarget` itself to a lower-level module both sides can import) breaks the cycle cleanly. Verify the fix
-      by re-running the exact import check that found the cycle:
-      `python3 -c "import deployment_service.data_pipeline_monitors.revocation_actuator"` after wiring must succeed
-      with the resolver imported at module level (no function-level import — that's separately banned by the gate).
-      Repo: deployment-service.
+- [x] ✅ [CODE] P2. **Wire `RevocationActuator`'s `consolidator_bucket_resolver` into a real production call site.**
+      — `deployment-service@ae49548487` (2026-08-17). Broke the cycle with two leaf-module extractions rather than
+      the single meta_targets->meta_watchers fix originally scoped: (1) `freshness_target.py` — `FreshnessTarget` +
+      `DEFAULT_CATALOGUE_MAX_AGE_MIN` moved out of `meta_watchers.py`, so `meta_targets.py` no longer imports
+      `meta_watchers` at all (re-exported from `meta_watchers.py` for existing callers/tests); (2)
+      `consolidator_bucket_map.py` — `consolidator_job_to_bucket` moved out of `consolidator_scheduler_watcher.py`,
+      since that module ALSO imports `escalation.py`/`meta_watchers.py` directly (for `EscalationTier`/`PipelineFinding`/
+      `_emit`/`MissTracker`) — fixing only the `meta_targets` edge would have left those two direct edges cycling.
+      Both prod call sites now pass the resolver: `escalation.py`'s `_apply_revocation` (FLEET_HALT delivery) and
+      `meta_watchers.py`'s release bookend. Verified: `python3 -c "import ..."` clean for all 7 touched/new modules
+      (freshness_target, consolidator_bucket_map, meta_targets, meta_watchers, escalation,
+      consolidator_scheduler_watcher, revocation_actuator); 403 tests green
+      (`test_revocation_actuator.py` + `test_data_pipeline_monitors.py` + `test_data_pipeline_monitors_cli.py`);
+      full `quality-gates.sh` green. Repo: deployment-service.
 - [ ] [CODE] P2. **`RevocationActuator.release()` never resumes a FLEET_HALT's paused Cloud Scheduler jobs — only
       clears the generic hold/drain GCS marker.** `_pause_schedulers()` (the open half) calls
       `scheduler_maintenance.make_scheduler_pauser()` per job; `release()` has no symmetric `_resume_schedulers()` —

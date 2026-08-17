@@ -245,18 +245,20 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       `LEVEL_MAX_LOOKBACK_DAYS` / `earliest_allowed_start` / `assert_lookback_allowed`
       (databento_subscription_allowlist) + the manifest enumerator's floor-clip to the EXACT measured values. QG test:
       one day past the boundary rejected, one day inside allowed. Repo: unified-api-contracts.
-- [ ] [REFACTOR] P2. **na-eligibility-audit 2026-08-16**: extracted verbatim TODAY to `cefi_barchart_removal_ao_dispatch_2026_08_16.md` (+ finalize), assigned_vm: planning, status: active. Stays open here (source doc), not yet done. Original text: **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the
-      VIX cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via databento
-      XCBF.PITCH). Per delete-deprecated-code: (1) `rg -i barchart` workspace-wide (~30 files: SOURCE*PRIORITY tradfi
-      ohlcv_15m list, `SOURCE_MODE_CAPABILITY["barchart"]`, `EMISSION_LATENCY_MS_BY_SOURCE["barchart"]`,
-      data_source_continuity BARCHART_VIX*\* constants + SourceWindow, `_umi_yahoo`/tradfi adapters, IS enumerator,
-      multiple UAC tests, CLAUDE.md "VIX 15m: Barchart preload" note, docs); (2) VERIFY no live MVP cell is
-      source=barchart + the VIX path uses VX-futures-databento (repoint any straggler FIRST); (3) DELETE the
-      adapter/client/source-entries (remove code, no deprecation shim); remove `barchart` from every source enum /
-      SOURCE_PRIORITY / continuity registry; (4) UPDATE CLAUDE.md VIX note → VX-futures-via-databento; (5) update the
-      source-priority/parity tests (deleting a source must not break them). The new parity gate then finds NO
-      source=barchart-with-no-adapter (cross-check). If Barchart is load-bearing somewhere unexpected → STOP + flag.
-      Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
+- [x] ✅ [REFACTOR] P2. **RECONCILED 2026-08-16 (cefi_satellite_ao_dispatch_batch19_2026_08_13_finalize.md, slot 21) —
+      corrects a stale na-eligibility-audit 2026-08-16 note that missed batch19's prior verification.**
+      **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the VIX
+      cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via databento
+      XCBF.PITCH). — **Bulk removal already SHIPPED 2026-08-09** (`unified-api-contracts@fc1b4897`,
+      `market-tick-data-service@aea655a9`). Batch19 (2026-08-15) independently re-verified live on
+      `origin/live-defi-rollout`: `rg -i barchart` workspace-wide found zero live adapter/client/schema/registry-entry
+      code — only historical-retirement comments (correctly kept) plus 2 genuinely stale residuals, both fixed by
+      that batch: a `ProviderBinding.provider` type-comment still listing `barchart` as valid
+      (**SHIPPED unified-api-contracts@49ae9bc433**) and a tradfi-adapters module docstring pointing at the deleted
+      `scripts/upload_vix_barchart_local.py` (**SHIPPED market-tick-data-service@ea870f05cd**). See
+      `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s own entry for full detail. The na-eligibility-audit
+      2026-08-16 extraction to `cefi_barchart_removal_ao_dispatch_2026_08_16.md` (+finalize) duplicated this
+      already-verified-complete work; both cancelled-superseded and archived in this same reconciliation pass.
 
 ## Progress Log
 
@@ -264,7 +266,7 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
 
 Two flagged questions resolved:
 - **Barchart removal (Phase 5 line 248)**: operator ruling re-confirmed (already operator-directed 2026-06-24) —
-  extracted the fully-specced todo to `/plans/active/cefi_barchart_removal_ao_dispatch_2026_08_16.md` (+ finalize)
+  extracted the fully-specced todo to `/plans/archive/2026_08/cefi_barchart_removal_ao_dispatch_2026_08_16.md` (+ finalize)
   for AO dispatch, since this doc stays `assigned_vm: NA`.
 - **Index-perp mapping (Phase 1c)**: already `[x] ✅` done in this doc (line 637) — no new work needed; the audit
   report's flagged question was stale by the time it was asked.

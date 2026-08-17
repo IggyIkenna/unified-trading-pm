@@ -52,10 +52,6 @@ archive_exempt: true
 
 ## Progress Log
 
-- 2026-08-11 (slot-20, backend_engineer): dispatched to the Betfair back+lay P2 item — retagged `[BACKEND]`→`[INFRA]`
-  (VM/network egress provisioning is out of craft scope; full rationale in the mirrored issue doc's Progress Log). No
-  code changed; skipped the dispatched task so it redispatches to `infra` craft.
-
 - 2026-07-29 (slot 14, ag_closeout_auditor, dispatch agt-17d52d): drafted by the `/ag-closeout-audit prediction`
   scheduled run. Phase 0: rediscovered the covering-plan set via `generate_ag_closeout_audit_candidates.py` (8
   auto-detected covering docs) + a manual addition (`prediction_consolidated_native_ao_extract_2026_07_25.md`, the
@@ -264,6 +260,12 @@ archive_exempt: true
   resolved the Betfair egress question to `europe-west2` (London) — see the item's updated text + the linked issue doc's
   Progress Log for the full reasoning. Retagged from `BLOCKED-OPERATOR-DECISION`, now AO-dispatchable. Egress
   provisioning itself not done in this session.
+- 2026-08-11 (slot-20, backend_engineer): dispatched to the Betfair back+lay P2 item — retagged `[BACKEND]`→`[INFRA]`
+  (VM/network egress provisioning is out of craft scope; full rationale in the mirrored issue doc's Progress Log). No
+  code changed; skipped the dispatched task so it redispatches to `infra` craft. [Reordered 2026-08-17
+  (plan_reconciler) from the top of this log, where it broke chronological order — placed here as the more likely
+  sub-day sequence (dispatch presumably followed the unblocking decision above), a plausible-but-unproven ordering
+  given neither entry carries a time-of-day.]
 - **2026-08-12 (slot-7, data_engineering — git-status-red resolution)**: shipped the stranded betfair adapter
   proxy-routing commit `market-tick-data-service@64f0e4b48c` (full `quality-gates.sh` green, independently verified
   ancestor of `origin/live-defi-rollout`). The adapter now honors `HTTPS_PROXY`/`HTTP_PROXY` via `trust_env=True` (so

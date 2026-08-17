@@ -124,7 +124,7 @@ context_scope:
       `mtds@ff1b5d51` ("feat(defi): MTDS DeFi perf bundle -- concurrency knobs + async fan-out + executor-offload") and
       `mtds@4cf0ea3d` (`defi_max_concurrent_fetches` semaphore fix), both confirmed ancestors of
       `origin/live-defi-rollout`.
-- [ ] [DATA] P1. **Confirm the launcher + parallelization plan for the DeFi-MVP full-history MDPS candle backfill**
+- [x] ✅ [DATA] P1. **Confirm the launcher + parallelization plan for the DeFi-MVP full-history MDPS candle backfill**
       (gate-audit §6, 2026-07-24 — gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching P8).
       Determine which launcher runs it (single-VM vs. cross-VM sharded) and whether `max_workers` lets concurrent writes
       overlap GCS (~8x ETA impact suspected, unconfirmed). Definition of done: name the launcher + cite a measured
@@ -133,6 +133,15 @@ context_scope:
       `status: complete` (all 17 todos done, P8 cross-AG verify/reconcile confirmed clean for all 4 AGs, archived
       2026-07-28). This checkbox's own definition-of-done (name the launcher + a measured write-concurrency figure) has
       not itself been produced anywhere found in the corpus — not closing, just unblocked now.
+      **CLOSED BY CITATION 2026-08-16 (defi_satellite_ao_dispatch_batch9_2026_08_06_finalize, source-doc
+      reconciliation pass, slot 23, data_engineering)** — `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 11
+      answered this exact definition-of-done: launcher named
+      (`launch-mdps-sharded-backfill.sh defi --env prod`, the same fleet verified in this doc's own Todo above/todo 15
+      of `data_pipeline_check_mdps_features_2026_07_20.md`) + concurrency figure cited (`_max_workers_for defi` empty →
+      MDPS default `min(cpu_count, 16)` = 8 on e2-standard-8, each worker writing a distinct `gs://` blob path via
+      `polars_candle_engine.write_parquet()` — up to 8 concurrent GCS writes structurally possible; no independently
+      MEASURED overlap figure exists, an honest partial answer batch9 itself flags). This checkbox was never flipped
+      when batch9 closed it — flipping now by citation, no new investigation performed.
 - [ ] [DATA] P1. **PARTIAL progress via `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`
       (2026-08-14/15) — baseline attempted, mid/final still correctly ungated (backfill not yet 100%).** IS baseline VM
       (`pipeline-e2e-check-is-20260814-224849-f6e2db`) alive + progressing. MTDS baseline hit a driver-VM OOM (fixed

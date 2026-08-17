@@ -18,7 +18,7 @@ Side effects:
       plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md
     numbered from F15 upwards
   - Enum-without-doc + doc-without-enum → appended to
-      plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md
+      plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md
 
 Usage:
     python audit_prospectus_vs_codex.py [--output-dir PATH] \
@@ -537,7 +537,9 @@ def main() -> None:
     # Side effects
     if not args.no_side_effects:
         findings_path = _PM_ROOT / "plans" / "active" / "issues" / "capability_wizard_analysis_findings_2026_06_11.md"
-        gap_path = _PM_ROOT / "plans" / "active" / "issues" / "capability_wizard_gap_discovery_2026_06_11.md"
+        gap_path = (
+            _PM_ROOT / "plans" / "archive" / "2026_08" / "issues" / "capability_wizard_gap_discovery_2026_06_11.md"
+        )
 
         contradictions: list[dict[str, str]] = result["contradictions"]  # type: ignore[assignment]
         n_added = _append_findings(findings_path, contradictions)

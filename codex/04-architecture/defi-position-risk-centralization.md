@@ -24,7 +24,7 @@ related:
   ]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-08-17
 code_refs:
   [
     strategy_service/position/core/defi_health_aggregator.py,

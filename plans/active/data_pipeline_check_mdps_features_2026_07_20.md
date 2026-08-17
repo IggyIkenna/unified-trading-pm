@@ -223,20 +223,71 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       OOM-killed within ~60s of Phase-0 completing**, before any shard-enumeration log line appeared — a NEW driver
       OOM distinct from the known fold-script incident, on a purpose-sized `e2-highmem-4`(32GB) VM. Full evidence +
       recommended fixes:
-      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`. **This flips only this todo's own scope**
+      `/plans/archive/issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md`. **This flips only this todo's own scope**
       (proving the driver's own round-trip mechanism survives end-to-end, decoupled from any interactive session) —
       that mechanism is now proven via SPORTS's clean automated pass + CEFI/TRADFI/PREDICTION's verified-healthy
       in-flight progress. The genuinely-remaining work (DEFI's OOM fix + re-running all 5 AGs to a terminal state
       with reports consolidated) is split into a new todo immediately below, per the same 8→"NEW todo" split pattern
       this todo itself originated from.
-- [ ] [DATA] P1. mdps-e2e-defi-oom-fix-and-full-matrix-completion. Root-cause + fix the DEFI driver OOM (see
-      `issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md` for the 3 concrete fix todos: profile the
-      pre-enumeration DEFI read path, either bound it or make `launch-pipeline-e2e-check-driver-vm.sh`'s
-      `MACHINE_TYPE` env-overridable, and fix the SPORTS-observed `duplicate_in_flight` skip-leg false-skip), then
-      re-run the 5-AG `--legs force,skip --require-captured --auto-day` matrix to a terminal state for every AG and
-      consolidate the reports (CEFI/TRADFI/PREDICTION were left in-flight, not yet terminal, when the 2026-08-16
-      6th-attempt session ended — re-check those VMs' `EXIT_STATUS` first before relaunching anything). Repos:
-      market-data-processing-service, deployment-service.
+- [x] ✅ [DATA] P1. mdps-e2e-defi-oom-fix-and-full-matrix-completion. **DONE 2026-08-17 (slot-20,
+      data_engineering) — the DEFI OOM fix + root-cause slice; full-matrix completion split below.** All 3 fix
+      todos from `/plans/archive/issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md` (now resolved) shipped:
+      root-cause RSS instrumentation (`market-data-processing-service@5773a617ad` — confirmed DEFI's
+      `_read_input_index_frame` materializes 160.4M rows, 33.6GB peak, past the old 32GB ceiling), env-overridable
+      driver `MACHINE_TYPE` (`deployment-service@5d7230ec04`), and the SPORTS-observed `duplicate_in_flight`
+      false-skip fix (same MDPS commit, 7 new/updated regression tests). Verified live: re-ran DEFI on
+      `e2-highmem-8` (VM `pipeline-e2e-check-mdps-20260816-235931-f56c11`) — completed in ~2min with NO OOM
+      (previously OOM-killed within ~60s). Checked the rest of the fleet before touching anything: SPORTS/TRADFI/
+      PREDICTION reports are all terminal in GCS (TRADFI `total=86 passed=10 failed=30 skipped=46`; PREDICTION
+      `total=28 passed=0 failed=14 skipped=14` — both terminal, pass rates not investigated further here); CEFI
+      was still genuinely progressing (fresh sub-VM launched ~1h after its own driver started) — left untouched.
+      DEFI's survived run surfaced a NEW, separate finding (0/206 cells verified despite the manifest containing
+      115 real canonical captured cells — likely the already-tracked `service_name` DeFi-capture mismatch from
+      `issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`) — split into its own issue rather than
+      blocking this todo's OOM-fix scope on it. Repos: market-data-processing-service, deployment-service.
+- [x] ✅ [DATA] P1. mdps-e2e-defi-chain-axis-root-cause-fix. **DONE 2026-08-17 (slot-3, data_engineering)** — the
+      (b) root-cause slice of the "mdps-e2e-full-matrix-terminal-consolidation" scope below; (a)/(c) split into a
+      new todo immediately below since they're independently gated on external VM state, not on this fix.
+      Confirmed/refuted the issue doc's service_name hypothesis via a bounded DuckDB read (local downloaded
+      copy, `SET memory_limit`, never a full pandas materialization) against the real DEFI manifest: **REFUTED**
+      — the non-MTDS service_name rows are legitimate MDPS candle-OUTPUT rows (`DefiSwapAdapter` registers under
+      the same canonical `data_type="dex_pool_swaps"` as its raw input, by design), correctly excluded already.
+      **Real root cause**: DEFI's real captured rows carry a chain-LESS `venue` ("UNISWAP_V3") + separate `chain`
+      column ("ETHEREUM"), while `mdps_mvp_universe("defi")` returns a single chain-SUFFIXED venue string
+      ("UNISWAP_V3-ETHEREUM") — `_INPUT_INDEX_COLUMNS` never read `chain` at all, so `_captured_days_by_cell`
+      could never compose the matching key and every DEFI MVP shard reported zero captured input regardless of
+      real coverage (confirmed abundant real coverage exists once chain is accounted for, e.g.
+      UNISWAP_V3/ETHEREUM/dex_pool_swaps = 1.77M rows through 2026-08-13). Fixed: added `chain` to
+      `_INPUT_INDEX_COLUMNS`; `_captured_days_by_cell` now groups by `(venue, chain, data_type)` and composes
+      `f"{venue}-{chain}"` when non-blank, falling back to the bare venue for every other asset_group (chain is
+      always blank there per `SHARD_AXIS_MATRIX` — regression-tested, no behavior change outside DEFI). 3 new
+      tests (`tests/unit/test_pipeline_e2e_check_defi_chain_axis.py`). QG green (64s). **Evidence:
+      market-data-processing-service@fae666bef2.** Full corrected diagnosis:
+      `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` § Recommended decision
+      1/2.
+- [ ] [DATA] P1. mdps-e2e-full-matrix-terminal-consolidation. Genuinely-remaining scope, now that the (b)
+      root-cause is fixed (todo above): (a) confirm CEFI's driver
+      (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) reaches a terminal `EXIT_STATUS` — **checked 2026-08-17,
+      STILL RUNNING, not terminal; do NOT relaunch, just re-check before the next attempt**; (b) re-run DEFI's
+      `--legs force,skip --require-captured --auto-day` matrix with the chain-axis fix live to get a REAL verdict
+      (a fresh multi-minute-to-hour VM launch-and-wait, not attempted this session — the fix landing and a
+      full re-run producing a terminal result are different claims); (c) once (a)/(b) are terminal, consolidate
+      all 5 AGs' reports into one summary and close this plan's headline DeFi-MVP-ETA goal for real. Also pick up
+      issue-doc todo 3 (bound `_read_input_index_frame`'s read, P2 — separate, not blocking this todo). Repos:
+      market-data-processing-service, unified-trading-library.
+      **IN FLIGHT 2026-08-17 (slot-3, data_engineering)**: (a) re-checked — CEFI driver
+      `pipeline-e2e-check-mdps-20260816-224232-71d52d` still RUNNING as of 2026-08-17T00:4x UTC, genuinely
+      progressing (poll-tick counter climbing in its own `run.log`); left untouched. (b) LAUNCHED — no
+      duplicate/in-flight DEFI driver found first, then launched
+      `pipeline-e2e-check-mdps-20260817-004134-37eaf1` (`e2-highmem-8`, `--day 2026-07-05 --asset-group DEFI
+      --legs force,skip --require-captured --auto-day --wall-clock-timeout-sec 14400`, confirmed running the
+      fixed tarball `market-data-processing-service-code @ fae666bef27d`), status RUNNING at last check. **If
+      you are resuming this todo and find no background watchdog still reporting**: poll
+      `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mdps-20260817-004134-37eaf1/EXIT_STATUS`
+      directly — `RUNNING` = still genuinely in flight (check its own `run.log`'s poll-tick counter for progress
+      before assuming stall, same as the CEFI check above), any other value = terminal, read the sibling
+      `run.log` for the verdict and proceed straight to (c) consolidation. Do not relaunch a second DEFI driver
+      while this one is unterminated.
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.

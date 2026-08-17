@@ -90,15 +90,41 @@ source: >-
       have a real, implemented calculator that's simply unreachable (not wired into the dispatch if/elif chain).
       `dex_pool_swaps`/`staking_yields` have no consumer implementation at all — genuinely unimplemented, not just
       unwired. 2 new gap todos below (dispatch-table gap; missing-implementation gap).
-- [ ] [BACKEND] P1. **Gap: 22 defi venues are capability-declared but have no resolvable
-      `VENUE_TO_ADAPTER_KEY` entry** (beyond the already-tracked 8-venue gap) —
-      `ACROSS-ETHEREUM`/`STARGATE-ETHEREUM`/`FLASHBOTS-ETHEREUM`/`ALCHEMY-ONCHAIN` (zero adapter class exists);
-      `METEORA-SOLANA`/`LIFINITY-SOLANA`/`PHOENIX-SOLANA` (adapter exists + registered, venue itself unwired,
-      same pattern as the already-documented `ibkr` dead-key case); chain-expansion gaps in otherwise-live
-      families (`AAVE_V3-{SCROLL,ZKSYNC}`, `COMPOUND_V3-{POLYGON,SCROLL}`, `MORPHO-{ARBITRUM,OPTIMISM,POLYGON}`,
-      `MORPHOVAULTS-ETHEREUM`, `PANCAKESWAP_V3-ARBITRUM`, `BEEFY-POLYGON`, `IDLE-POLYGON`, `YEARN_V3-OPTIMISM`,
-      `FRAX-ETHEREUM`); legacy bare-form aliases (`COMPOUND-ETHEREUM`, `UNISWAP-ETHEREUM`). Done-when: each is
-      either given a real `VENUE_TO_ADAPTER_KEY` entry or confirmed intentionally excluded with a cited reason.
+- [x] ✅ [BACKEND] P1. **Gap: 22 defi venues are capability-declared but have no resolvable
+      `VENUE_TO_ADAPTER_KEY` entry — done 2026-08-16, all 22 already carry a cited reason, no code needed.**
+      This todo's own premise was checked against the wrong file: the earlier steps-1-5 sweep read only
+      `venue_adapter_keys.py` (the resolved-adapter registry) and never cross-referenced
+      `unified-api-contracts/unified_api_contracts/registry/defi_venues.py`'s `DEFI_VENUE_PHASE` dict, where
+      every one of the 22 already carries an explicit `"pipeline"` classification under a section-header
+      comment naming the reason — verified by reading each entry's surrounding comment directly, not inferred:
+      - `ACROSS-ETHEREUM`/`STARGATE-ETHEREUM`/`FLASHBOTS-ETHEREUM`/`ALCHEMY-ONCHAIN`/`COMPOUND-ETHEREUM`/
+        `UNISWAP-ETHEREUM` — NOT "zero adapter class" or "legacy aliases" as originally characterized; they're
+        governance/MEV/bridge/gas-oracle analytics venues under "Pipeline (Ethereum analytics / governance /
+        MEV — NOT IS-producible)" / "Pipeline (Alchemy multi-chain gas-fee oracles — NOT IS-producible)".
+        `defi_venues.py`'s own `DEFI_VENUE_MTDS_ADAPTER_VERIFIED_NOT_YET_SCHEDULED` docstring additionally cites
+        per-venue MTDS-side evidence for `ALCHEMY`/`FLASHBOTS`/`ACROSS`/`STARGATE`: "STILL-BROKEN: crash-looping
+        cron or never scheduled at all, two with no SchemaContract registered" (2026-07-22 design doc).
+      - `METEORA-SOLANA`/`LIFINITY-SOLANA`/`PHOENIX-SOLANA` — already cited in `venue_adapter_keys.py` itself
+        (measurably dead upstreams, 404/522/NXDOMAIN, re-verified 2026-07-22).
+      - `AAVE_V3-{SCROLL,ZKSYNC}`, `COMPOUND_V3-SCROLL` — "Pipeline (Scroll / zkSync — NOT IS-producible)".
+      - `COMPOUND_V3-POLYGON` — "Pipeline (Polygon — NOT IS-producible)"; `venue_adapter_keys.py`'s own
+        `SUBGRAPH_IDS["compound_v3"]` additionally notes "subgraph returns 0 markets (Compound V3 not active on
+        Polygon)".
+      - `MORPHO-ARBITRUM` — checked most carefully since `venue_adapter_keys.py`'s own comment reads as if this
+        should be live ("ARBITRUM now has real major-asset liquidity... wired into morpho_adapter.py's
+        `_CHAIN_ID_BY_CHAIN`"); `defi_venues.py` has the newer, more specific ruling: "not in IS-producible set
+        despite having rows (not in `_build_defi_venues()`)" — deliberately still pipeline. Did NOT add an
+        explicit key entry here on the strength of the older comment alone; the newer citation governs.
+      - `MORPHO-OPTIMISM`/`MORPHO-POLYGON`, `YEARN_V3-OPTIMISM`, `PANCAKESWAP_V3-ARBITRUM` — each under its own
+        "Pipeline (... — NOT IS-producible)" section header.
+      - `MORPHOVAULTS-ETHEREUM`/`FRAX-ETHEREUM` — "Pipeline (Ethereum vaults / analytics — NOT IS-producible)";
+        `FRAX` additionally has the same MTDS-side "stopped dead 2026-06-21, no scheduler" citation as the
+        analytics group above.
+      - `BEEFY-POLYGON`/`IDLE-POLYGON` — "Pipeline (Polygon catalogue Phase 1A, slot 5 2026-05-11)".
+      No `VENUE_TO_ADAPTER_KEY` / `DEFI_VENUE_PHASE` edits made — every branch of the done-when ("real entry OR
+      confirmed intentionally excluded with a cited reason") already resolves to the second branch, and writing
+      speculative adapter code or forcing a phase flip against these citations would contradict already-ruled
+      decisions, not close a gap.
 - [ ] [BACKEND] P1. **Gap: features-service's onchain dispatch table is narrower than its calculator registry** —
       `oracle_prices` (`chainlink_peg_deviation_calculator.py`) and `dex_pool_state`
       (`concentrated_liquidity_il_realised_calculator.py`, `pool_invariant_drift_calculator.py`) all have real,
@@ -111,16 +137,139 @@ source: >-
       anywhere; `staking_yields`'s only near-match, `lst_staking_calculator.py`, is an unrelated live DefiLlama
       pull that bypasses the manifest and also isn't dispatched). Done-when: a real implementation exists and is
       wired, or the gap is confirmed intentional with a cited reason.
-- [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across the same 200 rows. **Gated by the
-      step-5 result above**: only `lending_indices`/`lst_rates` rows (the archetype family defi was originally
-      built around) have real feature output today; `oracle_prices`/`dex_pool_state` rows stay `BLOCKED-ON` the
-      dispatch-table gap todo above, `dex_pool_swaps`/`staking_yields` rows stay `BLOCKED-ON` the missing-
-      implementation gap todo above. Scope this todo to the `lending_indices`/`lst_rates` rows first: does a
-      position adapter resolve in batch/live/paper; are these venues declared in the archetype/slot catalogues
-      for `CARRY_STAKED_BASIS`/`CARRY_STAKED_BASIS_DATED`/`CARRY_RECURSIVE_STAKED`/`YIELD_STAKING_SIMPLE`/
-      `YIELD_ROTATION_LENDING`; does an execution adaptor handle every `InstructionActionV2` those archetypes
-      emit — verify real routing per the prediction/tradfi batches' methodology, not just a declared mapping.
-      Done-when: a real per-row verdict for those rows, plus `BLOCKED-ON` markers for the rest.
+- [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, 0/45 rows reach a genuinely complete
+      end-to-end state.** SHIPPED — `unified-trading-pm@9f23cf22e5`. 2 parallel research passes (strategy-
+      service archetype/slot + position-adapter chain-suffix mechanics; execution-service `InstructionActionV2`
+      routing), scoped to the 45 `lending_indices`/`lst_rates` rows (31 protocol families) that cleared step 5;
+      `oracle_prices`/`dex_pool_state`/`dex_pool_swaps`/`staking_yields` rows stay `BLOCKED-ON` their step-5 gap
+      todos above, unchanged.
+      **Step 6 (position adapter) — chain is NEVER part of the resolvable venue identity.**
+      `strategy_service/position/position_interface/factory.py::get_position_adapter` normalizes
+      `venue.lower().replace("-", "_")` (`factory.py:346`) and matches only BARE protocol tokens (`case "aave" |
+      "aave_v3":`, `"morpho"`, `"kamino"`, `factory.py:108,115,143`) — a composite `PROTOCOL-CHAIN` string like
+      `AAVE_V3-ARBITRUM` would normalize to `aave_v3_arbitrum`, match nothing, and raise `ValueError: Unknown
+      venue`. Confirmed this is by design, not a bug: chain selection is a separate config field
+      (`rpc_url`/`fork_mode`/`alchemy_rpc_url`, `routing.py:99-102,147-153`) threaded alongside the bare protocol
+      venue, never encoded in it — `archetype_slots_defi.py:110-113` passes `"lending_protocol":
+      "AAVE_V3_ETHEREUM"` and chain as two independent fields. So AAVE_V3's 8 chain rows are 1 resolvable
+      protocol-level adapter reused via RPC config, not 8 independent venues — the right check granularity is
+      per-PROTOCOL, not per-(protocol,chain) row. Dedicated adapters exist for `aave`/`aave_v3`, `morpho`,
+      `kamino` only (`factory.py:106-146`); every other lending protocol
+      (BENQI/COMPOUND_V3/EULER_V2/FLUID/MARGINFI/RADIANT/SOLEND/SPARK/VENUS) falls through to
+      `_generic_token_balance_adapter`, which is LST-scoped by design (its own docstring: "NOT vault-share
+      protocols... NOT the genuinely stateful protocols") and resolves `None` for all 9 → **FAIL, no adapter at
+      all**. For LST protocols, `_generic_token_balance_adapter` needs BOTH a `LST_VENUE_TO_TOKENS` entry AND a
+      real address in `LST_TOKEN_ADDRESS_BY_CHAIN`
+      (`unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py`) — only 6 of 18 have both
+      (LIDO, ROCKETPOOL, ETHERFI, PUFFER, JITO, MARINADE); the other 12
+      (ANKR/BINANCE/COINBASE/ETHENA/MAKER/MANTLE/SANCTUM/SOLANA-NATIVE/SOLBLAZE/STADER/STAKEWISE/SWELL) **FAIL** —
+      10 of those (all but BINANCE, SOLANA-NATIVE, which have no `LST_VENUE_TO_TOKENS` entry at all) have a real
+      `LST_VENUE_TO_TOKENS` symbol + `LST_TOKEN_GENESIS` date but NO address in `LST_TOKEN_ADDRESS_BY_CHAIN` —
+      new gap todo below (registry-appears-complete-but-isn't).
+      **Step 7 (archetype/slot declaration)** — per protocol, across all 5 target archetypes
+      (`archetype_slots_defi.py`, `target_universe/catalog_carry.py`, `catalog_staked_basis.py`,
+      `catalog_yield_defi.py`): lending — AAVE_V3/COMPOUND_V3/KAMINO/MORPHO/SPARK declared in ≥1 archetype;
+      BENQI/EULER_V2/FLUID/MARGINFI/RADIANT/SOLEND/VENUS (7) declared in **none**. AAVE-PLASMA is **ambiguous** —
+      the catalogue only ever emits the bare `"aave"` token, never a Plasma-chain-disambiguated form, so whether
+      it's the same resolvable adapter as `AAVE_V3-*` or orphaned isn't determinable from code alone (new gap
+      todo below). LST — LIDO/ROCKETPOOL/ETHERFI/JITO/MARINADE/ETHENA declared in ≥1 archetype; the other 12 (same
+      set that also fails step 6, plus PUFFER which PASSES step 6 but has **zero** archetype declaration)
+      declared in **none**. Also found: UAC's own `archetype_consumers` column claims `CARRY_STAKED_BASIS`/
+      `CARRY_STAKED_BASIS_DATED` consume all 28 `lending_indices` rows, but neither archetype's slot code
+      references any lending protocol anywhere (LST + perp-hedge only) — stale/over-broad UAC declaration, new
+      gap todo below.
+      **Step 8 (execution, `InstructionActionV2`) — THREE parallel non-equivalent facades found, same failure
+      class as the prediction batch's `PredictionBetHandler` finding.** The real live path is
+      `DeFiAdapter`/`_dispatch_defi_operation` (`execution_service/adapters/defi_adapter.py:223-237`), reached via
+      `LiveExecutionHandler._handle_defi_instruction`, which its own comment says "BYPASSES `InstructionRouter`"
+      (`live_execution_handler.py:709-711`). It only branches on `SWAP/LEND/BORROW/STAKE` — **no WITHDRAW, REPAY,
+      or UNSTAKE branch exists at that layer at all**, so even a fully-wired protocol can enter but never exit a
+      position (new P0 gap todo below — a correctness/safety gap, not just coverage). It is constructed with
+      exactly 5 live connectors (`uniswap, aave, lido, symbiotic, jupiter`, `live_execution_handler.py:534-538`).
+      Net per-protocol: **AAVE_V3 — PARTIAL** (LEND/BORROW live via `self._aave.supply/borrow`, no WITHDRAW/REPAY)
+      — the best result in the batch. **LIDO — PARTIAL** (STAKE live, no UNSTAKE) — the other best result.
+      Everything else — **FAIL or NOT-FOUND**: MORPHO/KAMINO/ETHERFI/JITO/MARINADE/PUFFER/ROCKETPOOL/SOLBLAZE
+      have real, complete connector modules in `defi_execution/protocols/` that are simply never constructed at
+      the one live entry point (dispatch-table-narrower-than-registry pattern, same class as the features-service
+      gap already tracked above — new gap todo below); COMPOUND_V3/EULER_V2/FLUID have UAC param types only, no
+      connector file; BENQI/MARGINFI/RADIANT/SOLEND/SPARK and
+      ANKR/BINANCE/COINBASE/ETHENA/MAKER/MANTLE/SANCTUM/SOLANA-NATIVE/STADER/STAKEWISE/SWELL have zero reference
+      anywhere in execution-service. The other two facades are dead ends: `InstructionRouter`/`HandlerRegistry`
+      (keyed on `OperationType`, not `InstructionActionV2`) only feeds backtest `BenchmarkMatcher` simulation
+      (instant fill, never a real connector), and `OnChainExecutionService` is fully orphaned (zero call sites
+      outside itself/tests) with `deposit/withdraw/borrow/repay/stake` methods that only call
+      `RateImpactEngine.simulate_rate_impact()` and fabricate `success=True` — never touching a real connector.
+      Backtest `LendHandler`/`StakeHandler.SUPPORTED_VENUES` advertise MORPHO/COMPOUND_V3/EULER_V2/FLUID/ETHERFI
+      as "supported," which is not live-reachable — a paper≠live divergence risk, new gap todo below.
+      **Net result: 0 of 45 rows / 31 protocol families reach a genuinely complete end-to-end state** — matching
+      the 0/4 pattern the prediction batch found. AAVE_V3 and LIDO are the closest (2 of 3 legs real, both
+      missing their exit-side execution action). Every other protocol fails at least 2 of the 3 steps.
+      `BLOCKED-ON` markers: all `oracle_prices`/`dex_pool_state`/`dex_pool_swaps`/`staking_yields` rows stay
+      blocked on their step-5 gap todos above (unchanged, not re-investigated here).
+- [x] ✅ [BACKEND] P0. **Gap: execution-service's live DeFi path has no exit-side action at all — DONE 2026-08-17
+      (slot-17).** `DeFiAdapter._dispatch_defi_operation` (`execution_service/adapters/defi_adapter.py`) now
+      routes `WITHDRAW`/`REPAY` into `_execute_lending` (calling `AAVEConnector.withdraw()`/`.repay()`, both
+      already complete + live-wired via `_execute_live_withdraw`/`_execute_live_repay`) and `UNSTAKE` into
+      `_execute_staking` (calling `LidoConnector.unstake()`, already complete + live-wired via `_unstake_live` —
+      honestly reports `staked_token="stETH"`, not WETH, since the Lido withdrawal queue isn't wired; also wired
+      `SymbioticConnector.withdraw()` for UNSTAKE, same pattern). This was purely a dispatch-table gap — every
+      connector method already existed. **Also fixed the upstream routing gate**: `DEFI_OPERATIONS` frozenset in
+      `live_execution_handler.py` was missing `WITHDRAW`/`REPAY` — without this fix those instructions would have
+      misrouted to `adapter_type="trade"` and never reached the new dispatch code at all. **Also fixed the true
+      root gap**: UAC's `InstructionActionV2` enum had no `WITHDRAW`/`REPAY` members at all, so no caller could
+      even construct such an instruction — added both (+ the paired `BENCHMARK_FILL_MODE_BY_ACTION` completeness
+      dict entry, caught by `execution-service`'s own exhaustiveness test). New unit tests:
+      `test_execute_withdraw`, `test_execute_repay`, `test_execute_unstake_lido`,
+      `test_execute_unstake_unsupported_venue`; fixed `test_execute_unsupported_operation` (asserted UNSTAKE was
+      unsupported — no longer true) and `test_defi_operations_constant`. Full `quality-gates.sh` green both repos.
+      Evidence: `unified-api-contracts@03ff79e8b8` (InstructionActionV2 WITHDRAW/REPAY) +
+      `unified-api-contracts@73a7594285` (BENCHMARK_FILL_MODE_BY_ACTION follow-up) +
+      `execution-service@b8115edffc` (dispatch + routing-gate + tests).
+- [ ] [BACKEND] P1. **Gap: execution-service's live `DeFiAdapter` wires only 5 of 12+ fully-built protocol
+      connectors** — `defi_execution/protocols/` has complete, real connector modules for `morpho.py`,
+      `kamino.py`, `etherfi.py`, `marinade.py`, `puffer.py`, `rocket_pool.py`, `solblaze.py`, but
+      `LiveExecutionHandler._build_defi_adapter` (`execution_service/cli/handlers/live_execution_handler.py:
+      500-541`) only ever constructs `uniswap, aave, lido, symbiotic, jupiter` — the same dispatch-table-
+      narrower-than-registry pattern already tracked for features-service above. Done-when: each connector is
+      either wired into `_build_defi_adapter` and exercised, or its exclusion is confirmed intentional with a
+      cited reason.
+- [ ] [BACKEND] P1. **Gap: three parallel, non-equivalent DeFi execution facades exist in execution-service,
+      risking a paper≠live divergence.** `InstructionRouter`/`HandlerRegistry` (keyed on `OperationType`, not
+      `InstructionActionV2`) feeds only backtest `BenchmarkMatcher` simulation (instant fill at benchmark price,
+      never a real connector); `OnChainExecutionService` (`execution_service/services/
+      onchain_execution_service.py`) is fully orphaned (zero call sites outside itself/tests) and its
+      `deposit/withdraw/borrow/repay/stake` methods only call `RateImpactEngine.simulate_rate_impact()` and
+      fabricate `success=True`, never touching a real connector; the real live path is `DeFiAdapter`, reached via
+      `LiveExecutionHandler._handle_defi_instruction`, whose own comment states it "BYPASSES `InstructionRouter`"
+      (`live_execution_handler.py:709-711`). Backtest `LendHandler`/`StakeHandler.SUPPORTED_VENUES`
+      (`engine/handlers/{lend,stake}_handler.py`) advertise MORPHO/COMPOUND_V3/EULER_V2/FLUID/ETHERFI as
+      "supported," none of which are live-reachable — relevant to
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`'s paper(W)==batch-rerun(W) invariant.
+      Done-when: the architecture is consolidated to one live-authoritative facade (or the divergence is
+      confirmed intentional/harmless with a cited reason) and the backtest SUPPORTED_VENUES lists are corrected
+      to match live reality.
+- [ ] [BACKEND] P1. **Gap: `LST_TOKEN_ADDRESS_BY_CHAIN` is missing addresses for 10 LST tokens that
+      `LST_VENUE_TO_TOKENS`/`LST_TOKEN_GENESIS` already declare** —
+      `unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py` has real venue+symbol+genesis
+      entries for COINBASE(cbETH)/ETHENA(sUSDe)/MAKER(sDAI)/MANTLE(mETH)/SWELL(swETH)/STADER(ETHx)/
+      STAKEWISE(osETH)/ANKR(ankrETH)/SANCTUM(sanctumSOL)/SOLBLAZE(bSOL) but no contract address in
+      `LST_TOKEN_ADDRESS_BY_CHAIN` for any of them, so `lst_token_addresses_for_venue()` silently returns an
+      empty dict and `_generic_token_balance_adapter` resolves `None` — these venues LOOK registered (a genesis
+      date + declared symbol exist) but position reads fail exactly like a fully-unregistered venue, with no
+      signal distinguishing the two states. Done-when: each token has a cited on-chain address added, or is
+      confirmed genuinely unreadable (e.g. no simple `balanceOf`-style read exists) with a documented reason.
+- [ ] [BACKEND] P2. **Gap: UAC's `archetype_consumers` over-declares `CARRY_STAKED_BASIS`/
+      `CARRY_STAKED_BASIS_DATED` as consumers of all 28 `lending_indices` rows, but neither archetype's slot code
+      references any lending protocol at all** — `strategy_service/engine/strategies/v2/target_universe/
+      catalog_staked_basis.py` is LST + perp-hedge only (zero `lending_protocol`/AAVE-family references).
+      Done-when: the UAC `archetype_consumers` declaration for `lending_indices` rows is corrected to drop these
+      2 archetypes, or a real lending-consumption path is added to justify keeping them.
+- [ ] [BACKEND] P2. **Gap: AAVE-PLASMA's protocol identity is ambiguous in the archetype catalogue** — every
+      slot/catalogue reference to Aave uses the bare `"aave"` token (e.g. `archetype_slots_defi.py`,
+      `catalog_yield_defi.py`), never a Plasma-chain-disambiguated form, so whether `AAVE-PLASMA` resolves
+      through the same path as `AAVE_V3-*` rows or is silently orphaned isn't determinable from code alone.
+      Done-when: the catalogue explicitly confirms (or denies) AAVE-PLASMA coverage, or this is confirmed
+      genuinely unresolvable pending an upstream disambiguation decision with a cited reason.
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16, 1 major finding escalated as MORE urgent than the
       cefi sibling.** SHIPPED — `unified-trading-pm@285cefec7a`. Transfer routing is generic/chain-scoped, not
       per-protocol — `classify_transfer_type` routes purely on wallet type + custody_provider, the specific
@@ -138,15 +287,36 @@ source: >-
       **Copper custody path confirmed clean** — chain-agnostic by design (passes `chain` as an opaque string),
       real non-stub `create_transfer` calls, covers ASTER/HYPERLIQUID/LIGHTER-ZKSYNC/POLYMARKET-PERP already
       confirmed in the cefi batch.
-- [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16.** 6 genuinely new gaps tracked across steps
-      1-5 and 9 (22 unresolved venues, the dispatch-table-narrower bug, the 2 unimplemented data_types, and the
-      cloud_kms chain-id issue doc); 2 apparent gaps (the ~13% live-connector coverage, the already-tracked
-      8-venue capability gap) confirmed already tracked elsewhere, not duplicated.
+- [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16.** 12 genuinely new gaps tracked across steps
+      1-5, 6-8, and 9 (22 unresolved venues, the dispatch-table-narrower bug, the 2 unimplemented data_types, the
+      cloud_kms chain-id issue doc, the no-exit-side-execution-action gap, the DeFiAdapter-narrower-than-registry
+      gap, the 3-parallel-facades gap, the missing-LST-addresses gap, the over-broad UAC archetype_consumers
+      gap, and the AAVE-PLASMA identity-ambiguity gap); 2 apparent gaps (the ~13% live-connector coverage, the
+      already-tracked 8-venue capability gap) confirmed already tracked elsewhere, not duplicated.
 - [x] ✅ [BACKEND] P0. **Confirm the parent plan's hard rules held — done 2026-08-16, trivially satisfied.** This
-      batch's steps 1-5 and step 9 sweep was investigation/documentation only — zero code was changed in any
-      touched repo (the 2 new issue docs are plan-corpus docs, not code changes).
+      batch's steps 1-9 sweep was investigation/documentation only — zero code was changed in any touched repo
+      (the 2 new issue docs are plan-corpus docs, not code changes).
 
 ## Progress Log
+
+**2026-08-16 — steps 6-8 swept, 6 more real gaps found — 0/45 rows (31 protocol families) reach a complete
+end-to-end state.** SHIPPED — `unified-trading-pm@9f23cf22e5`. 2 parallel research passes (strategy-service
+archetype/slot + position-adapter mechanics; execution-service `InstructionActionV2` routing), scoped to the 45
+`lending_indices`/`lst_rates` rows that cleared step 5. Confirmed chain is never part of the resolvable position-
+adapter venue identity (protocol-only match, chain via RPC config) — so the right check granularity is per-
+protocol-family, not per-(protocol,chain) row. Position adapter resolves for only 9/31 protocols (AAVE_V3/
+MORPHO/KAMINO dedicated; LIDO/ROCKETPOOL/ETHERFI/PUFFER/JITO/MARINADE via the generic LST-balance path).
+Archetype/slot declaration covers 11/31. Execution (`InstructionActionV2` via the real live `DeFiAdapter` path,
+which explicitly bypasses `InstructionRouter`) only wires AAVE (LEND/BORROW) and LIDO (STAKE) live, and neither
+has an exit-side action at all (no WITHDRAW/REPAY/UNSTAKE dispatch exists) — the same "looks wired, routes
+through the wrong/older facade" failure class the prediction batch found, compounded here by two dead facades
+(backtest-only `InstructionRouter`, fully-orphaned `OnChainExecutionService` that fabricates `success=True`) and
+7 fully-built-but-unregistered protocol connectors. 6 new gap todos tracked: no-exit-side-action (P0),
+DeFiAdapter-narrower-than-registry (P1), 3-parallel-facades/paper-live-divergence-risk (P1), missing-LST-
+addresses-despite-registered-symbols (P1), over-broad UAC `archetype_consumers` for `lending_indices` (P2),
+AAVE-PLASMA identity ambiguity (P2). Net: AAVE_V3 and LIDO are the closest to end-to-end (2 of 3 legs real, both
+missing their exit action); every other protocol fails at least 2 of the 3 steps. Remaining open: none — this
+batch's steps 1-9 are now all resolved or gap-tracked.
 
 **2026-08-16 — full contract sweep done, 1 escalated finding MORE urgent than cefi's, 6 new gaps total.**
 SHIPPED — `unified-trading-pm@285cefec7a`. 4 parallel research passes plus a dedicated reachability check.
@@ -177,3 +347,16 @@ cross-check for future re-runs of this batch, not a substitute for the registry-
 No new gap todos added from this run: its FAIL/NONE counts are structurally consistent with the already-tracked
 gaps above (the 22-venue adapter gap, the ~13% live coverage, the narrow feature dispatch) rather than revealing a
 distinct defect class.
+
+**2026-08-16 — 22-venue adapter gap resolved, all already cited, zero code changes needed.** Investigated the
+"22 defi venues... no resolvable `VENUE_TO_ADAPTER_KEY` entry" P1 gap todo by reading `defi_venues.py`'s
+`DEFI_VENUE_PHASE` dict (not just `venue_adapter_keys.py`, which is what the originating sweep checked). Every
+one of the 22 already carries an explicit `"pipeline"` classification under a section-comment reason there —
+governance/MEV/bridge/gas-oracle analytics (not IS-producible by architecture), dead/low-liquidity/inactive
+subgraphs, or staged Phase-1A rollout. Full per-venue citation list in the flipped todo below. One near-miss
+worth flagging for future readers: `MORPHO-ARBITRUM`'s comment in `venue_adapter_keys.py` reads as if it should
+already be live (real liquidity, wired into the adapter's chain map) — `defi_venues.py` carries the newer,
+overriding citation ("not in IS-producible set despite having rows"). Deferred to the newer source rather than
+adding a key on the older comment's strength alone. No code shipped (correctly — the gap resolves via the
+already-cited-reason branch of the done-when, not a code fix); this batch's own hard-rule confirmation todo above
+already established zero code changes for steps 1-5/9, and this todo continues that pattern.

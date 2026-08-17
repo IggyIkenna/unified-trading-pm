@@ -277,9 +277,14 @@ def get_tier_map(manifest: JsonDict) -> dict[str, int]:
 
 # Repos exempt from tier violation checks — these have documented bootstrap exceptions.
 # deployment-service: directly uses cloud/config/events for infrastructure orchestration.
+# e2e-testing: Phase-6 revocation black-box tests intentionally import service internals
+# (RULED 2026-08-16, e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md) —
+# importing service internals for black-box coverage is the repo's whole purpose, not an
+# accidental violation.
 TIER_EXEMPT_REPOS: frozenset[str] = frozenset(
     {
         "deployment-service",
+        "e2e-testing",
     }
 )
 

@@ -205,3 +205,15 @@ independently dispatchable — different files, no ordering constraint between t
 353 (venue, data_type) pairs from `VENUE_DATA_TYPE_CAPABILITIES`. The "158/84" figure was a stale manual tally,
 superseded — see the section above. 8 DeFi venues remain undeclared (tracked as a P1 todo in the umbrella, not a
 blocker here). "Derive the work list" (P0, above) is now the next actionable item.
+
+**2026-08-16 — Definition-of-done "cascade invariants" todo dispatched prematurely, skipped GATED.** A worker was
+dispatched against the "No venue reads as supported while a leg cannot serve it" Definition-of-done todo despite
+`gate_on_depends: true` on the 5 AG batch slugs, none of which are done yet (checked live:
+defi_venue_e2e_batch1 4 open, cefi_venue_e2e_batch1 3 open, tradfi_venue_e2e_batch1 2 open, sports_venue_e2e_batch1
+3 open, prediction_venue_e2e_batch1 7 open — 0/5 complete). This is the exact dispatch-vs-gate gap already
+documented in this plan's own "authored, held at draft" log entry above (`depends_on` orders but doesn't gate
+dispatch) — now confirmed recurring for the Definition of done section too, not just the initial draft-hold. Not
+filing a fresh issue doc since the gap is already named in-plan; noting it here so the next worker dispatched
+against this same todo doesn't re-derive the same investigation. Skipped with `reason_code: GATED`, no code
+shipped — correctly nothing to verify/ship while the AG batches (the thing that would close any cascade gaps) are
+still open.
