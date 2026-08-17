@@ -150,7 +150,12 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       `strategy-service@6e9164b1`, 2026-06-17), so the "if it ships" precondition is met and the remaining
       documentation work is now bounded/AO-dispatchable. Original item: document the collateral-posting-mode +
       buffer-sizing contract in `codex/04-architecture/` (margin/collateral) + the wizard param-schema in the
-      capability-wizard codex.
+      capability-wizard codex. **Extracted work DONE 2026-08-17** —
+      `unified-trading-pm@7e9397588b` (verified ancestor of `origin/live-defi-rollout`): added the
+      opportunity-ranking-consequence citation (`archetypes_rank.py:373-383,337`) to
+      `/codex/04-architecture/token-wrapping-and-collateral.md` and `/codex/09-strategy/architecture-v2/capability-wizard.md`,
+      completing the collateral-posting-mode + buffer-sizing contract writeup. See
+      `defi_satellite_ao_dispatch_batch15_2026_08_16.md`'s Progress Log for full detail.
 
 ## Progress Log
 

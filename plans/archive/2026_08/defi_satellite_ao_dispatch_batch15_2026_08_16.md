@@ -8,7 +8,7 @@ summary: >-
   own Phase A, 2026-06-17 — the codex-doc-update precondition is met, leaving pure documentation work). Conflict-
   checked against every active defi covering doc (consolidated closeout, satellite batch2/6/9/11/14, finalize
   pairs, track01/track5, strategy_service_centralization_fixes) — zero prior claim found on this item.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [meta]
