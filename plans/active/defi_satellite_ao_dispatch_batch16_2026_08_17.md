@@ -72,8 +72,9 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [UAC] [SCRIPT] P2. **Solana + multi-venue DeFi source-label fix — RULED 2026-07-28 (canonicalisation, not a
-      hack).** `SOURCE_PRIORITY(defi, dex_pool_state|lending_indices)` resolves `onchain_subgraph` for ALL chains, but
+- [x] ✅ [UAC] [SCRIPT] P2. **Solana + multi-venue DeFi source-label fix — RULED 2026-07-28 (canonicalisation, not a
+      hack).** — unified-trading-library@40f9c5678e, market-tick-data-service@2895991771 (unified-api-contracts
+      needed NO change — see Progress Log below). `SOURCE_PRIORITY(defi, dex_pool_state|lending_indices)` resolves `onchain_subgraph` for ALL chains, but
       `solana_defi_handler` actually fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend lending via Solana
       RPC/Helius/DeFiLlama (not The Graph) — a provenance-label mislabel (data is correct, `source` column is wrong).
       Separately, `SOURCE_PRIORITY(defi, perp_funding)=[hyperliquid]` (single) makes ASTER/DRIFT/PACIFICA perp venues
@@ -220,3 +221,65 @@ plan's own todo checkbox above and in the issue doc's final Progress Log entry: 
 (Phase 5's real backfill already ran 2026-07-22), not `expected_unattempted` gaps — the todo's "confirm
 expected_unattempted" wording predates that backfill completing. Flipped both this todo and the issue doc's
 corresponding todo to done.
+
+### Todo 1 — shipped, done — 2026-08-17 (fresh session, different worktree from slot-6)
+
+slot-6's prior session (see the "Todo 1 — code-complete, blocked on cross-repo QG red" entry above) left this GATED on
+`RB-36315e6e` (a pre-existing UTL QG-red test) in an unpushed local commit in a worktree not accessible to this
+session. Re-derived the fix from scratch against current live code rather than trusting the described diff verbatim.
+
+**Re-verified against live code**: `unified-trading-library`'s QG is GREEN today — `RB-36315e6e` is resolved (ran
+`quality-gates.sh` fresh, full pass, no `test_manifest_writer_v6` failure). No corresponding UTL repo-blocker issue
+doc was found under `plans/active/issues/utl_manifest_writer_v6*` — it appears to have cleared without leaving a
+citable doc.
+
+**unified-api-contracts needed NO change**: confirmed live that `BATCH_SOLANA_RPC`/`BATCH_HELIUS_RPC`/`BATCH_DEFILLAMA`
++ `LIVE_`/`REPLAY_SOLANA_RPC` + `LIVE_`/`REPLAY_HELIUS_RPC` enum members already exist in `pipeline_mode.py`, and
+`SOURCE_MODE_CAPABILITY` already correctly declares `defillama` as BATCH-only (`solana_rpc`/`helius_rpc` as
+BATCH+LIVE+REPLAY) — `source_string_for`/`default_transport_for_source` are generic (derived from the enum value
+string, not per-source wired), so no UAC commit was needed or made this session (repo confirmed clean, HEAD unchanged
+at `fb7ff3b0`). The ASTER/DRIFT/PACIFICA perp-venue half of the ticket is confirmed STALE, same finding as slot-6:
+live-grepped `unified_api_contracts/registry/venue_adapter_keys.py` — DRIFT has zero live entries (purged 2026-07-16,
+no reversal), and PACIFICA-SOLANA (re-authorized 2026-08-14, "jupiter and pacifica please") is explicitly classified
+`asset_group=cefi` (`canonical/quarantine.py` line 212, `mvp_scope.py`, `pipeline_mode.py` comments — "Solana on-chain
+CeFi perp CLOB") — no live DeFi perp venue exists in this mapping today. Left un-actioned as originally assessed.
+
+**Root cause + fix (MTDS + UTL, load-bearing together, confirmed independently)**: `solana_defi_handler.py`'s
+`_SOLANA_PROTOCOL_SOURCE_OVERRIDES` only had `kamino_oracle→kamino`; every other Solana protocol's manifest `source=`
+stamped empty AND (separately) `write_defi_rows`'s actual GCS-path pipeline_mode derivation
+(`_resolve_pipeline_mode`→UTL `derive_pipeline_mode_for_row`, since the handler passed no explicit `pipeline_mode=`)
+fell through to `SOURCE_PRIORITY(defi, dex_pool_state)=onchain_subgraph` — a genuine mislabel, verified against the
+manifest AND the write path both mis-resolving without the pair of fixes. Extended
+`_SOLANA_PROTOCOL_SOURCE_OVERRIDES` to cover all 12 protocols (kamino/orca/raydium/phoenix/meteora/lifinity/marinade/jito
+→ `solana_rpc`; kamino_lending/marginfi/solend → `defillama`, confirmed via each protocol's actual
+`_collect_defillama_lending`/native-API call site, not assumed from the ruling text alone — kamino_lending in
+particular is DeFiLlama-sourced, not `solana_rpc`, contradicting a naive reading of the ruled per-venue mapping).
+Added matching UTL `_VENUE_OVERRIDES` entries (ORCA/RAYDIUM/PHOENIX/METEORA/LIFINITY→`BATCH_SOLANA_RPC`,
+MARGINFI/SOLEND→`BATCH_DEFILLAMA`) plus `_VENUE_DT_OVERRIDES` for KAMINO's 3 distinct data_types (dex_pool_state/
+lending_indices/oracle_prices — a venue-only override would have wrongly forced all 3 onto one source).
+
+**Regression caught + fixed before shipping (not in slot-6's notes)**: a blanket MARINADE/JITO venue-level UTL
+override broke `test_lst_rates_handler.py` — `lst_rates_handler.py` ALSO writes the SAME `(MARINADE/JITO, lst_rates)`
+shard atom via a genuinely different collector (a 3-tier RPC/TheGraph archival path), so a venue-level override there
+would have mislabeled that OTHER handler's rows. Resolved by deliberately NOT adding MARINADE/JITO to UTL's
+`_VENUE_OVERRIDES` (documented the ambiguity in-line) and instead having `solana_defi_handler.py` pass
+`pipeline_mode=` EXPLICITLY at its own `write_defi_rows` call site (new `_solana_write_pipeline_mode` helper),
+matching the pattern already used by `orca_whirlpool_state_handler`/`raydium_classic_amm_handler`/
+`phoenix_orderbook_handler` (explicit `pipeline_mode=PipelineMode.BATCH_ONCHAIN_RPC`). This is a stronger, handler-scoped
+fix than a blanket UTL table entry would have been for this specific pair of venues.
+
+Updated `test_solana_defi_handler.py`'s KAMINO dex_pool_state path assertion (`batch_onchain_subgraph`→`batch_solana_rpc`)
+and added closed-set symmetry tests to `test_pipeline_mode_resolver.py` (`test_orca_venue_override`,
+`test_raydium_derive_pipeline_mode_for_row_not_onchain_subgraph`, `test_phoenix_meteora_lifinity_venue_overrides`,
+`test_marginfi_solend_venue_overrides_are_defillama`, `test_kamino_per_data_type_overrides_not_forced_onto_one_source`,
+`test_marinade_jito_deliberately_not_venue_overrides`).
+
+**Shipped** (2 UTL commits — first pass then a correction after the lst_rates_handler regression was caught, both
+green-tree quickmerge): `unified-trading-library@86f3eed0a0` (initial fix), `unified-trading-library@40f9c5678e`
+(scoped MARINADE/JITO out of the blanket table + explicit-pipeline_mode correction, tests updated to match) — cite
+`40f9c5678e` as the current state. `market-tick-data-service@2895991771` (source overrides + explicit
+`pipeline_mode=` write path + test updates; two intermediate line-cap/method-size QG failures on the same commit were
+fixed in-place before the final green run, not shipped separately). `unified-api-contracts`: no commit, confirmed
+clean at `fb7ff3b0` (no code change needed — see above). QG: UTL green, MTDS green, UAC untouched/already-green.
+Todo 1 flipped to done above; superseding the earlier slot-6 GATED entry (that session's local unpushed commits were
+never reachable from this worktree and are treated as abandoned).
