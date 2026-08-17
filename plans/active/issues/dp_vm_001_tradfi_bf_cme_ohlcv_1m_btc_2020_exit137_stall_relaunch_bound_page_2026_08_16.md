@@ -34,6 +34,9 @@ related:
     /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
+    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md,
+    /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch15_2026_08_17.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
@@ -106,6 +109,21 @@ case) suggests a launcher-family-wide defect (e.g., an unbounded outbound HTTP c
 common to the whole `tradfi-bf-cme-ohlcv-1m-` launcher, rather than a per-shard poison instrument) — worth the
 operator weighing against the shard-specific hypothesis the `g01-6a-6l-2020` sibling doc raised.
 
+## Update 2026-08-17 — root cause confirmed: billing block, NOT a launcher-family-wide code defect
+
+A fresh `btc-2020` recurrence (`tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-060542`) hit the same DP-VM-001 shape the
+next day. This worker pulled `run.log` for BOTH that fresh VM and the ORIGINAL `...-20260816-180410` VM this doc
+covers (GCS SDK reads, never subprocess) — both show the identical
+`DatabentoAdapter: GLBX.MDP3/ohlcv_1m|1s failed [402]: 402 account_delinquent_invoice` signature starting from the
+shard's very first CME trading date (2020-01-02) and continuing through every subsequent date attempted, until the
+in-VM stall watchdog fired (3903s / 3951s no-progress) and self-terminated. This is the SAME tracked, `status:
+blocked`, P0 issue as `g01-6a-6l-2020` (`tradfi_databento_account_billing_suspended_2026_08_09.md`), **not**
+launcher-family-wide code defect and **not** a per-shard poison instrument — the "why this is a PAGE case"
+cross-shard hypothesis above is superseded by this direct evidence. 3 of the 4 same-week `tradfi-bf-cme-ohlcv-1m-`
+DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains genuinely undiagnosed (tracked in
+`tradfi_satellite_ao_dispatch_batch15_2026_08_17.md`, narrowed accordingly in the same session). Full writeup:
+`/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`.
+
 ## What this worker did NOT do
 
 - Did not relaunch `tradfi-bf-cme-ohlcv-1m-btc-2020-20260816-180410` or any other `tradfi-bf-cme-ohlcv-1m-` VM.
@@ -135,9 +153,12 @@ operator weighing against the shard-specific hypothesis the `g01-6a-6l-2020` sib
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `tradfi-bf-cme-ohlcv-1m-btc-2020-20260816-180410`'s shard
-      (tradfi/CME/btc/2020 1m OHLCV) per the recommended decision above; the `tradfi-bf-cme-ohlcv-1m-` family
-      relaunch bound is already exhausted for today (2/2, per this escalation's own context).
+- [ ] [OPERATOR] P1. **RESOLVED-BY-REDIRECT 2026-08-17** — root cause confirmed (see "Update 2026-08-17" section
+      above): this is the tracked Databento CME billing block, not an independent relaunch-vs-wait call. Same
+      underlying ask as `tradfi_databento_account_billing_suspended_2026_08_09.md`'s existing P0 `[OPERATOR]` todo
+      (pay the invoice) — no separate decision needed here. Once billing is restored, `btc-2020` needs a fresh
+      relaunch from `2020-01-02` — the family's normal backfill-completion sweep will pick it up, not urgent to
+      track separately.
 - [x] ✅ [BACKEND] P1. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
       `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2** (narrowed to the two VMs in this 4-VM ask NOT
       already root-caused as billing-blocked — `es-2020` + `btc-2020`; the other two,
@@ -158,6 +179,20 @@ operator weighing against the shard-specific hypothesis the `g01-6a-6l-2020` sib
 
 ## Progress Log
 
+- **2026-08-17 (slot 12, data_pipeline_failure escalation agt-dfccf4)**: Received a fresh DP-VM-001 escalation for
+  `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-060542` (same `btc-2020` shard, next day, family again at 2/2 relaunch
+  dispatches). Checked `plans/active/issues/` — this doc still open, appending rather than filing a near-duplicate.
+  Pulled `run.log` (GCS SDK reads, never subprocess) for BOTH this fresh VM and the ORIGINAL
+  `...-20260816-180410` VM this doc covers — both show the identical `DatabentoAdapter: GLBX.MDP3 failed [402]:
+  402 account_delinquent_invoice` signature from the shard's first CME date (2020-01-02) onward, confirming this
+  is the SAME tracked P0 billing block as `g01-6a-6l-2020`, not a launcher-family-wide code defect or per-shard
+  poison instrument (see "Update 2026-08-17" section above, which supersedes the original "Why this is a PAGE
+  case" cross-shard-defect hypothesis). Updated Todo 1 (redirected to the P0 billing doc, no separate operator
+  decision needed) and narrowed `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md`'s diagnosis todo to `es-2020`
+  only (the one remaining undiagnosed same-family incident). Appended a corroborating entry to
+  `tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log in the same session. Per
+  RB-INFRA-RELAUNCH, did not relaunch. Did not file a new issue doc or re-page separately — this doc + the P0
+  billing doc already cover the ask; posted a bounded `/blocked` pointing at both. No code changed.
 - 2026-08-16 (slot 1, data_pipeline_failure escalation agt-fc0533): Received escalation for DP-VM-001
   `tradfi-bf-cme-ohlcv-1m-btc-2020-20260816-180410` exit_code=137, flagged by the escalation as stall-induced, not
   OOM. Checked for an existing issue doc naming this VM/shard — none found; found three same-family sibling docs

@@ -335,4 +335,24 @@ archival — no live Databento dependency).
   the invoice stays unpaid. Did not re-page the operator via a fresh escalation -- this doc's existing P0 todo already
   covers the ask, and 3 other sessions corroborated the same root cause in the last 48h; posted a bounded `/blocked`
   pointing at this doc instead of duplicating the page. No code changed.
+- **2026-08-17 (slot 12, data_pipeline_failure escalation agt-dfccf4, DP-VM-001 on
+  `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-060542`) — STILL `blocked`, reconfirmed via a SECOND shard/day pair.**
+  A fleet monitor flagged this VM's `exit_code=137` (stall-induced, not OOM) with the `tradfi-bf-cme-ohlcv-1m-`
+  family already at its 2/2 RB-INFRA-RELAUNCH dispatch bound for today. Per the runbook, checked for an existing
+  open issue doc — found
+  `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`
+  (same `btc-2020` shard, prior day's VM `...-20260816-180410`, still open with an unresolved "launcher-family-wide
+  code defect vs poison instrument" hypothesis in its "Why this is a PAGE case" section). Pulled `run.log` for
+  BOTH this VM and the prior day's `...-20260816-180410` (via GCS SDK reads, never subprocess) — both show the
+  identical `DatabentoAdapter: GLBX.MDP3/ohlcv_1m|1s failed [402]: 402 account_delinquent_invoice` signature
+  starting from the shard's very first CME trading date (2020-01-02), continuing through every subsequent date
+  attempted, until the in-VM stall watchdog fired (3903-3951s no-progress) and self-terminated. This corrects the
+  sibling doc's cross-shard-code-defect hypothesis: `btc-2020` is the SAME tracked billing block as
+  `g01-6a-6l-2020` (see the 2026-08-17 entry above), not an independent poison-instrument or shared-code-defect
+  issue — 3 of the 4 same-week `tradfi-bf-cme-ohlcv-1m-` DP-VM-001 incidents are now confirmed billing-caused (only
+  `es-2020` remains undiagnosed, tracked in `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md`). Did not relaunch
+  (would blindly repeat the same failure). Updated the sibling doc's Todo 1 + "Why this is a PAGE case" section and
+  narrowed `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md`'s Todo (btc-2020 → resolved, es-2020 only remains)
+  in the same session. Did not re-page the operator — this doc's existing P0 `[OPERATOR]` invoice todo already
+  covers the ask; this is a second independent corroboration, not a new event. No code changed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (1 entries).

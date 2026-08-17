@@ -95,22 +95,25 @@ source: >-
       Done when: the run completes and each of the 4 patterns is confirmed absent, or documented as a fresh finding
       if still present. Source: `/plans/active/data_completion_tradfi_2026_07_15.md` item 15 (L995).
 
-- [ ] [BACKEND] P1. **Pull + read `run.log` for the two `tradfi-bf-cme-ohlcv-1m-` DP-VM-001 stalls NOT explained by
-      the tracked Databento CME billing block**: `tradfi-bf-cme-ohlcv-1m-btc-2020-20260816-180410` and
-      `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` (the other 2 same-family incidents this week — both
-      `g01-6a-6l-2020` shards — ARE confirmed billing-caused, see
-      `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`
-      — do not re-diagnose those). Use
-      `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess
-      `gsutil`/`gcloud storage`). es-2020's log was already partially pulled (1561 lines, confirmed genuine
-      `WORKER_STALLED`, but the stack trace identifies only the `tee`-wrapper process, not the actual worker — the
-      hung call is still unidentified). Compare both VMs' failure signatures; fix at the root — if a shared code
-      defect, bound the offending call with `asyncio.wait_for` at the per-shard level per the shard-isolation SSOT;
-      if genuinely shard-specific, isolate + skip the poison instrument-date per shard-level failure isolation. Done
-      when: both VMs' `run.log`s are read, a failure signature is identified (or documented as inconclusive), and
-      either a code fix ships or both are confirmed shard-specific poison data. Sources:
+- [ ] [BACKEND] P1. **Pull + read `run.log` for `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216`** — the ONE
+      remaining `tradfi-bf-cme-ohlcv-1m-` DP-VM-001 stall not yet explained by the tracked Databento CME billing
+      block. **`btc-2020` resolved 2026-08-17** (data_pipeline_failure escalation agt-dfccf4, slot 12): pulled
+      `run.log` for both `tradfi-bf-cme-ohlcv-1m-btc-2020-20260816-180410` and a fresh `...-20260817-060542`
+      recurrence — both confirmed the identical Databento CME billing-block signature (402/account_delinquent) from
+      the shard's first CME date onward; do not re-dispatch `btc-2020`, see
+      `dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`'s 2026-08-17
+      Progress Log entry. Use `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code`
+      (SDK, never subprocess `gsutil`/`gcloud storage`). es-2020's log was already partially pulled (1561 lines,
+      confirmed genuine `WORKER_STALLED`, but the stack trace identifies only the `tee`-wrapper process, not the
+      actual worker — the hung call is still unidentified). Given 3 of 4 same-family incidents this week turned out
+      billing-caused, FIRST check whether es-2020 also matches the 402/account_delinquent signature before assuming
+      a genuine code defect. If billing-caused: no code fix needed, redirect to the billing doc, done. If genuinely
+      a different cause: fix at the root — shared code defect → bound the offending call with `asyncio.wait_for` at
+      the per-shard level per the shard-isolation SSOT; shard-specific → isolate + skip the poison instrument-date.
+      Done when: the VM's `run.log` is read, a failure signature is identified (or documented as inconclusive), and
+      either a code fix ships or it's confirmed billing-caused or shard-specific poison data. Sources:
       `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`
-      item 2 (originally 4-VM scope, narrowed here per this audit's cross-doc synthesis),
+      item 2 (originally 4-VM scope, then narrowed to 2, now narrowed to 1 — btc-2020 resolved 2026-08-17),
       `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md`
       item 2 (absorbed — do not double-dispatch).
 
