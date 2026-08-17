@@ -116,16 +116,22 @@ Dispatch `agt-a74a6a`, slot 31, tranche `tradfi`. Corpus: 86 docs / 2,755,415 by
       `estate_orphan_assessment_2026_07_21.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` — were
       inside the 12h grace window at 2026-08-16 filing time; mechanical, grace-blocked, extracted rather than
       fixed directly here (the extracted todo re-verifies grace has cleared, now a new day, before editing).
-- [ ] [DOCS] P3. **File 4 codex-alignment corrections** identified this run (new content needed, not a pure
+- [x] ✅ [DOCS] P3. **File 4 codex-alignment corrections** identified this run (new content needed, not a pure
       substitution, so not auto-applied per the mechanical carve-out): `/codex/02-data/tradfi-databento-sourcing-ssot.md`
       (2 gaps — stale CBOE-floor-fix status + silent on `EXCHANGE_CODE_TO_NAME`), `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`
       (missing a 3rd billing-waste failure-mode class), `/codex/05-infrastructure/manifest-consolidator-ssot.md` (no
       warning that rebuild scripts resurrect retired-venue manifest rows), `/codex/05-infrastructure/data-pipeline-alerts.md`
-      (no detector for intended-pause-then-silently-resumed, confirmed recurred twice). **STILL OPEN 2026-08-16
-      (plan_reconciler Phase -1) — deliberately NOT applied.** These are codex SSOT edits; per the skill's Modes
-      section, the ONE carve-out that stays gated regardless of trust mode is any edit to `codex/**`, because new
-      content (not a pure substitution) requires new judgment about wording/scope, not just a fact-check. Flagged to
-      the operator in this pass's final report per the task's instructions instead of applied.
+      (no detector for intended-pause-then-silently-resumed, confirmed recurred twice). Flagged to the operator, who
+      approved landing all 4 as content additions on 2026-08-17. **DONE 2026-08-17** — all 4 investigated fresh
+      (re-verified against live code/plan corpus, not assumed from this doc's framing) and shipped:
+      `unified-trading-pm@a07e438230` (CBOE floor-fix status corrected + `EXCHANGE_CODE_TO_NAME`/`tradfi_symbology.py`
+      section added), `unified-trading-pm@cb424aad2e` (3rd billing-waste failure-mode class —
+      `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`'s under-scoped relaunch actuator, ~20-30x fan-out),
+      `unified-trading-pm@206dc9cb15` (manifest-consolidator retired-venue resurrection warning —
+      `retirement_completeness_pollutant_reverify_ice_still_live_2026_08_15.md`'s ICE finding),
+      `unified-trading-pm@6745e86402` (data-pipeline-alerts "intended-pause-then-silently-resumed" gap — the
+      2026-07-31 prediction + tradfi consolidator-cron recurrences). All 4 ancestor-verified on
+      `origin/live-defi-rollout`.
 
 ## na-eligibility-audit 2026-08-17 (tradfi tranche, dispatch agt-d99b5c)
 
