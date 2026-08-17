@@ -150,13 +150,13 @@ backend_engineer deploy-chain verification task, not an open-ended runtime inves
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Root-cause why `DP_CRON_DID_NOT_FIRE`'s 1800s dedup cooldown is still violated live
+- [x] ✅ [SCRIPT] P1. Root-cause why `DP_CRON_DID_NOT_FIRE`'s 1800s dedup cooldown is still violated live
       (`mtds-live-cefi-consolidated-20260817-025031`/BYBIT-FUTURES, confirmed firing every 15-16min as of 07:06Z) despite
       the deployed `alerting-service` image (`dp-alerting-subscriber-00103-zhw`) containing the correct
       `attempted_age_hours`-exclusion fix. Start from the 4 unruled-out candidates above — instance-recycling check
       (Cloud Run instance/container start-time vs. sweep timestamps), and a direct trace of the `DP_CRON_DID_NOT_FIRE`
       delivery path in `router.py`/`_route_data_pipeline_event` for a second, dedup-bypassing route. (repo:
-      alerting-service)
+      alerting-service) — Evidence: `alerting-service@166f291f44`.
 - [ ] [SCRIPT] P2. Once root-caused, re-sample the live fire-cadence for the same identity to confirm the 1800s
       cooldown is actually respected post-fix, and close this doc. (repo: alerting-service)
 
@@ -168,3 +168,40 @@ backend_engineer deploy-chain verification task, not an open-ended runtime inves
   check the prior sweep didn't reach). The deploy chain is NOT the problem. Live behavior is still broken — filed this
   doc to track the residual, unexplained runtime defect separately so the deploy-verification todo can close cleanly
   on its own done-when bar.
+- **2026-08-17 (slot 24, backend_engineer craft, task dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective-093d4d6697ee)**:
+  root-caused via live Cloud Logging evidence, not guesswork. Confirmed `dp-alerting-subscriber` stayed on the SAME
+  container instance the whole window (only 2 "AlertSubscriber initialized" starts, both at the 00:54Z fix-deploy
+  boundary, none since through 07:36Z) — RULES OUT candidate 1 (instance recycling). Pulled the exact ALERT_ROUTED /
+  ALERT_SENT log lines for `DP_CRON_DID_NOT_FIRE` in the observed 06:36Z/07:06Z window and found the 06:36Z cluster
+  was `severity=INFO` in `consumed+routed` (`meta_watchers.reconcile_resolved`'s "condition cleared" bookend), yet
+  STILL produced the SAME doubled `ALERT_ROUTED`/`ALERT_SENT` pair a genuine CRITICAL page produces. Traced this to
+  `router._route_data_pipeline_event`: it is called with `dp_rule.severity` (the registry's STATIC CRITICAL for
+  `DP_CRON_DID_NOT_FIRE`), not the emitted event's actual severity, so a `resolved=True` INFO bookend from
+  `meta_watchers.reconcile_resolved` (`log_event(event, severity="INFO", details={"resolved": True, ...})`) still hit
+  `if severity is AlertSeverity.CRITICAL: route_event_with_explicit_channels(...)` and paged PagerDuty/Telegram. Its
+  `details` shape (`resolved`/`label`/`registry_id="DP-RESOLVED"`/`message`/`cloud`) is entirely different from a real
+  fire's identity (`vm_name`/`venue`/`data_type`/`bucket`/...), so it was ALSO never caught by the 1800s dedup
+  cooldown — every time the underlying (still-flapping) detector's miss/resolve state toggled, a fresh, un-deduped
+  CRITICAL page fired. This is candidate 2 from the prior sweep's list ("a second, dedup-bypassing route"), just via
+  severity-override rather than a literal second call site. Fixed: `_route_data_pipeline_event` now forces `severity
+  = AlertSeverity.INFO` whenever `details.get("resolved")` is truthy, before the CRITICAL-page branch — mirrors the
+  existing STATIC BACKLOG downgrade in the same function. 2 new regression tests
+  (`TestResolvedBookendNeverPages`) added to `test_router_dp_mirror_live.py`. Evidence: `quality-gates.sh` ALL PASSED
+  (53s), sentinel `166f291f4433198adf95a2ac8898c23ef390d7a0`; shipped `alerting-service@166f291f44`, ancestry-verified
+  against `origin/live-defi-rollout`. Investigated (but did NOT fix, to keep this change surgical) a SEPARATE,
+  independently-real quirk: a CRITICAL DP_* event runs through TWO independent `AlertDeduplicator.is_duplicate()`
+  calls with DIFFERENT hashes (`route_event`'s own check on bare `details`, then
+  `route_event_with_explicit_channels`'s check on `{**details, "severity": ...}`) — this causes a DOUBLE
+  ALERT_ROUTED/ALERT_SENT per genuine fire (already flagged, pre-existing, in
+  `test_router_dp_mirror_live.py::test_run_failed_still_pages_unaffected`'s own docstring) but does NOT by itself
+  explain the cooldown-defeat symptom (each of the two states is STILL correctly 1800s-TTL'd on its own key, so an
+  identical repeat fire is still suppressed by each independently) — confirmed by direct attempt: excluding
+  `"severity"` from the dedup identity to unify the two states makes the INNER call's key collide with the key the
+  OUTER check JUST recorded moments earlier in the SAME call stack, silently suppressing the CRITICAL PagerDuty/
+  Telegram delivery entirely on every first occurrence (a much worse regression than the bug being chased) — reverted.
+  Left as a known, separate, lower-priority follow-up (double-delivery-not-double-firing) rather than risking that
+  regression in this task's scope.
+- **2026-08-17 (slot 24, same task)**: root-cause + fix closed above. Todo 2 (re-sample live fire-cadence post-fix)
+  needs the fix to actually be LIVE first (LDR→main promote + a fresh Cloud Build + `dp-alerting-subscriber` revision
+  — same 3-part deploy-chain check this doc's own history already establishes the pattern for) before it can be
+  meaningfully re-sampled; left open for the next dispatch/sweep rather than attempted here.
