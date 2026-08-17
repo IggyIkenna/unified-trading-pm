@@ -124,6 +124,21 @@
 # restored to their entry content from this run's own snapshot before exiting -- the corrupted
 # version is never handed to the pre-commit checker. Dirty-at-entry files are unaffected by this
 # check and still resolve to exit 6 exactly as before.
+# 16 (added 2026-08-17, safe_doc_push_carries_unrelated_ahead_commits_silently_2026_08_17.md
+# todo 1) this branch ALREADY had commit(s) ahead of origin/$BRANCH before this script created
+# its own doc commit -- i.e. `committed` was still false when a non-zero `ahead` count was
+# measured, so those commit(s) cannot be the doc commit this invocation is about to make. Left
+# unguarded, the final `git push origin HEAD:${BRANCH}` sends the CURRENT BRANCH TIP, so those
+# pre-existing commit(s) ride along underneath this run's doc commit and land on
+# origin/$BRANCH WITHOUT ever passing through quality-gates.sh or quickmerge's --agent sentinel
+# -- this script never runs either, by design ("skipping quickmerge/quality-gates.sh entirely
+# for speed" above), so there is no gate left to catch them. This is the exact "CODE reaches the
+# integration branch ONLY via quickmerge" HARD RULE violation the issue doc describes, whether or
+# not the carried commits happen to be individually safe. Refuses by default; the caller must
+# ship the pre-existing commit(s) via quickmerge first (or otherwise resolve them), then re-run.
+# SDP_ALLOW_UNRELATED_AHEAD=1 is the documented override for a caller who has independently
+# verified those commits are safe to carry (mirrors the SDP_ALLOW_NOOP=1 pattern used for exit
+# 12's analogous indistinguishable-from-in-here case).
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -1634,6 +1649,33 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
         fi
       fi
     else
+      # UNRELATED-AHEAD-COMMITS GUARD (2026-08-17, closes
+      # safe_doc_push_carries_unrelated_ahead_commits_silently_2026_08_17.md todo 1). `committed`
+      # is still false here, so this ahead count cannot include a commit this run made -- every
+      # commit it counts predates this invocation entirely. Unguarded, the final `git push`
+      # below ships them to origin/${BRANCH} riding under this run's own doc commit, without
+      # ever passing through quality-gates.sh or quickmerge's --agent sentinel (this script runs
+      # neither) -- see exit code 16 above for the full mechanism.
+      if [[ "${SDP_ALLOW_UNRELATED_AHEAD:-0}" != "1" ]]; then
+        {
+          echo
+          echo "🛑 REFUSING: this branch already has ${ahead} commit(s) ahead of origin/${BRANCH} that this run did NOT create:"
+          git log --oneline "origin/${BRANCH}..HEAD" 2>/dev/null | sed 's/^/     /'
+          echo "   safe-doc-push.sh is the pure-docs fast path -- it never runs quality-gates.sh or"
+          echo "   quickmerge's --agent sentinel. Its final push sends the whole branch tip, so the"
+          echo "   commit(s) above would reach origin/${BRANCH} without ever passing through that gate --"
+          echo "   the 'CODE reaches the integration branch ONLY via quickmerge' HARD RULE violation,"
+          echo "   independent of whether this particular payload happens to be safe."
+          echo "   RESOLVE FIRST: ship the commit(s) above via"
+          echo "     bash scripts/quickmerge.sh \"<msg>\" --agent --files '<paths>'"
+          echo "   then re-run this script for the doc-only push."
+          echo "   Override ONLY if you have independently verified these commit(s) are safe to carry"
+          echo "   along (e.g. already QG-passed, queued for an unrelated reason): SDP_ALLOW_UNRELATED_AHEAD=1"
+          echo "   See plans/active/issues/safe_doc_push_carries_unrelated_ahead_commits_silently_2026_08_17.md"
+        } >&2
+        exit 16
+      fi
+      echo "  ⚠️  SDP_ALLOW_UNRELATED_AHEAD=1 -- proceeding with ${ahead} pre-existing ahead commit(s) explicitly acknowledged by the caller."
       # Defensive: shouldn't normally happen pre-commit, but handle the same as the
       # post-commit case if it does (e.g. a prior failed attempt left a local commit).
       autostash_rebase_reconcile; _sdp_rebase_rc=$?

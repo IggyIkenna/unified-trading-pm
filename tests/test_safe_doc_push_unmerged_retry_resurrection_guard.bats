@@ -133,7 +133,14 @@ setup() {
 
 @test "a clean checkout with no unmerged paths is unaffected by the guard" {
   git merge --abort 2>/dev/null || true
-  git reset -q --hard live-defi-rollout
+  # Reset to origin/live-defi-rollout, NOT the local live-defi-rollout branch tip: setup()'s
+  # shared merge-conflict scaffolding leaves an "ours: delete thing.md (archival rename)" commit
+  # on the local branch that was never pushed. Resetting to the LOCAL branch tip (the pre-fix
+  # form of this line) left that commit sitting ahead of origin -- i.e. exactly the
+  # "safe-doc-push_carries_unrelated_ahead_commits" shape safe_doc_push_carries_unrelated_ahead_commits_silently_2026_08_17.md's
+  # new guard exists to catch, which is unrelated to what THIS test means by "clean" (no
+  # unmerged paths). Reset to origin's ref for a checkout that is actually ahead=0.
+  git reset -q --hard origin/live-defi-rollout
   [ -z "$(git ls-files -u)" ]
   mkdir -p plans/active/issues
   echo "new content" > plans/active/issues/fresh.md
