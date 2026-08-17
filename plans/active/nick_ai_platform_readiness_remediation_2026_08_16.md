@@ -215,7 +215,28 @@ helper, not a hand-rolled copy.
       rows are a separate, likely-larger follow-up (new `feature_group` definitions in features-onchain/
       features-delta-one, not an archetype-declaration task) — do not fold them into a future declaration pass.
 
-## W3 — Granularity declaration (step 13) — land early, genuinely independent
+## W3 — Granularity declaration (step 13) — NOW THE CRITICAL PATH FOR THE ARTIFACT (operator ruling 2026-08-17)
+
+> **W3 is no longer "land early, independent" — it BLOCKS the artifact's numbers.** Finding 2026-08-17: the venue
+> denominator is **`(venue, data_type)` 2-tuples only** — 353 pairs — because `VENUE_DATA_TYPE_CAPABILITIES` is
+> `dict[str, VenueCapabilityRecord]` keyed by venue with a per-data_type dict inside, and **has no instrument_type
+> axis at all**. The denominator script's own docstring says so: _"(venue, data_type) pairs, not venue count."_
+>
+> **The mismatch**: the coverage NUMERATOR already goes to 3-tuples where data supports it — the TradFi audit
+> produced `(venue × instrument_type × data_type)` cells, 244 of them, and canonical GCS paths carry
+> `instrument_type=` as a partition key. So a venue carrying `trades` on both spot and perp is ONE denominator pair
+> but TWO real coverage cells. Any percentage computed as captured-cells ÷ 353 divides one unit by another. The
+> artifact's collapse hierarchy is AG → venue → instrument_type → data_type, so its leaf level currently has no
+> denominator to divide by.
+>
+> **OPERATOR RULING 2026-08-17 — land the instrument_type axis FIRST, then measure once at 3-tuple granularity
+> throughout.** Chosen over (a) publishing at `(venue, data_type)` and collapsing the tree a level, and (b)
+> publishing mixed granularity per AG with the unit stated. Rationale: cleanest numbers, measured once, and it
+> removes a whole class of unit-mismatch error from a client-facing document — accepted as real registry work ahead
+> of the Tuesday target.
+>
+> **Consequence for sequencing**: no artifact percentage is final until this lands. The batch-2 audit's per-shard
+> work should run AFTER the axis exists, or it measures against a denominator that is about to change.
 
 **Ruled 2026-08-16** in `venue_readiness_and_registry_hardening_2026_08_16.md`: a UAC registry, keyed per
 `(venue × instrument_type × data_type)`, extending `VenueCapabilityRecord`
