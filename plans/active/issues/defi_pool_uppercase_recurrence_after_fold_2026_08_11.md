@@ -310,13 +310,28 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       sibling plan's own separate wrapped-id content-verify blocker, unrelated to this doc). Re-close
       `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s P3 todo in the SAME pass, citing this doc + the
       landed fix sha.
-- [ ] [DIAG] P2. Scope the corpus-wide non-canonical `processed_candles/.../instrument_type=POOL/` physical-object
-      population before any migration is attempted — this session measured 100% uppercase (41,279 objects) for ONE
-      day's `dex_pool_swaps` alone; the corpus spans ~1,155 distinct days
-      (`backfill_defi_dex_pool_swaps_source_correction.py`'s own enumeration) and likely other defi POOL data_types
-      beyond `dex_pool_swaps` (the writer bug is data_type-agnostic). Likely a six-to-seven-figure object count —
-      needs its own dedicated plan (COPY-to-canonical-lowercase, never a blind rename/move, per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5) once scoped, not a fold into this doc.
+- [x] ✅ [DIAG] P2. Scope the corpus-wide non-canonical `processed_candles/.../instrument_type=POOL/` physical-object
+      population before any migration is attempted — **RESOLVED 2026-08-17 (slot 25, backend_engineer): SCOPED via a
+      stratified, walk-disciplined GCS sample (24/1,159 days, 2.1% of the corpus — never a new whole-corpus walk).**
+      Script: `market-data-processing-service/scripts/scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`
+      (reuses `backfill_defi_dex_pool_swaps_source_correction.py`'s own sanctioned `enumerate_days()` delimiter-descent
+      + per-day/per-pipeline_mode bounded listing idiom). Corpus day count confirmed **1,159** distinct days
+      (2023-01-01..2026-08-05, one day more than the sibling script's stale 1,155 citation — expected, corpus growth
+      since that script's docstring was last measured). **Result: 0/24 sampled days found ANY lowercase
+      `instrument_type=pool/` object under `processed_candles/`** — the corpus is (at minimum, per this sample)
+      exclusively uppercase for this population, consistent with the confirmed pre-fix writer defect affecting every
+      historical write. **Per-day object counts are highly non-uniform** (0 to 62,586 across the 24 samples — several
+      days show 0 activity), sample total 360,140 objects, **average 15,005.8 objects/day → projected corpus-wide
+      total ≈ 17.4M objects** (order-of-magnitude, sample-based — NOT an exact count; do not cite as precise). This
+      lands at the high end of the "six-to-seven-figure" estimate this todo opened with. **Only ONE `data_type` value
+      observed across all 24 sampled days: `dex_pool_swaps`** — no evidence found of other defi POOL data_types under
+      `processed_candles/` in this sample (the prior todo's "likely other data_types" concern is UNCONFIRMED, not
+      ruled out — a 2.1% sample cannot prove absence corpus-wide, but found zero signal for it). Both known
+      `pipeline_mode`s (`batch_onchain_rpc`, `batch_onchain_subgraph`) carry the population; neither is clean.
+      **Recommendation carried forward to the new todo below**: this is genuinely corpus-scale (order 10M objects) —
+      a full precise count + the actual COPY-to-canonical-lowercase migration both belong on a dedicated VM per
+      `/codex/05-infrastructure/vm-launcher-runbook.md` (heavy I/O never runs on the shared host), not this
+      interactive session. market-data-processing-service@c22556ef66 (script committed this session).
 - [ ] [DIAG] P2. Check whether the SAME `canonical_writer.py`/`_infer_instrument_type` casing-conflation bug also
       affects cefi/tradfi/prediction `processed_candles/` writes — their canonical id grammars ALSO embed an
       uppercase type token (§3b applies fleet-wide, not defi-only) and `canonical_writer.py` is shared cross-
@@ -349,6 +364,15 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       build-triggering push has occurred since. Root-cause and, if it's a real stall, file the fix; if it's benign,
       note why and close. This blocks the gated `[SCRIPT]` re-retirement todo below from ever being confirmable via
       deploy evidence. (repo: unified-trading-pm or whichever repo owns the Cloud Build trigger investigation)
+- [ ] [OPERATOR] P2. Now that the `processed_candles/.../instrument_type=POOL/` population is scoped (~17.4M objects
+      projected, order-of-magnitude, one confirmed `data_type=dex_pool_swaps`, both known `pipeline_mode`s affected —
+      see the resolved DIAG todo above), decide plan destination for the actual migration (COPY-to-canonical-lowercase
+      per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5, never a blind rename/move) per
+      CLAUDE.md's "ask before creating" rule — AO-dispatched (`assigned_vm: planning`) vs human (`assigned_vm: NA`) —
+      then author the dedicated plan this issue's DIAG todo already recommended. The migration itself is genuinely
+      corpus-scale (order 10M objects) and belongs on a dedicated VM per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`, not an interactive slot session. A precise (non-sampled)
+      corpus-wide count should be the plan's own first step, not assumed from this todo's 2.1%-sample projection.
 
 ## Progress Log
 
@@ -428,3 +452,23 @@ delete, but the same evidentiary bar applies given real financial data is at sta
     uppercase `POOL` keeps appearing post-fix, the fix has NOT actually deployed live despite being on main and
     needs the new Cloud-Build-staleness DIAG todo resolved first.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **2026-08-17 (slot 25, backend_engineer)**: resolved the `[DIAG]` P2 corpus-wide scoping todo. Wrote
+  `market-data-processing-service/scripts/scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`, a
+  walk-disciplined stratified-sample scoper reusing `backfill_defi_dex_pool_swaps_source_correction.py`'s own
+  sanctioned day-enumeration idiom (1 delimiter-descent call gets all `day=` prefixes; confirmed 1,159 distinct
+  days, one more than that script's stale 1,155 citation — corpus growth since). An initial version tried to
+  scope via the availability manifest (matching `verify_mdps_casing_fix_live_via_manifest_2026_08_17.py`'s idiom)
+  but found this population is NOT reliably represented there (0 manifest rows for the candle `data_type` key
+  MDPS's own `mdps_data_type_key()` would produce; MDPS's emission-policy gate can skip `record_captured` for a
+  sampled fraction of writes) — abandoned that approach (deleted the script,
+  `market-tick-data-service/scripts/one_offs/scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`, before
+  shipping it, since it silently under-reported) in favor of direct GCS listing, matching the exact path grammar
+  `build_canonical_candle_path` (UTL `registry.py`) actually emits — confirmed NO `asset_group=` segment exists in
+  this tree yet (canonical-cutover-register.md §6d: that axis is still PENDING). Sampled 24/1,159 days (2.1%):
+  0/24 found any lowercase `instrument_type=pool/` object; sample total 360,140 uppercase objects, highly
+  non-uniform per-day (0-62,586), average 15,005.8/day → projected corpus-wide total ≈17.4M objects
+  (order-of-magnitude, sample-based, NOT exact). Only `data_type=dex_pool_swaps` observed in the sample — no
+  evidence of other defi POOL data_types, though a 2.1% sample cannot rule that out corpus-wide. Filed a new
+  `[OPERATOR]` P2 todo for plan-destination + the dedicated migration plan itself (genuinely corpus-scale,
+  belongs on a dedicated VM, not this interactive session) per this doc's own recommendation. Script committed,
+  QG green, shipped via quickmerge.
