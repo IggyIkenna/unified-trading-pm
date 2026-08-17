@@ -188,9 +188,19 @@ those stay local by construction and are deliberately absent.
       reading `task_template.md`'s `gate_on_depends` docs for an unrelated task this session, found it gates on
       a dependency task's checkbox being flipped, not its recorded outcome — see
       `plans/active/issues/gate_on_depends_checks_completion_not_outcome_2026_08_17.md`.
-- [ ] [DOC] P2. **Fix the venue-coverage issue doc's stale frontmatter.** Its `summary` still says "~30 DeFi
-      protocols" while the body carries the corrected figure. Done-when: frontmatter and body agree, sourced from the
-      body's measured number, not re-counted.
+- [x] ✅ [DOC] P2. **Fix the venue-coverage issue doc's stale frontmatter.** Its `summary` still said "~30 DeFi
+      protocols" while the body carried the corrected figure. Done-when: frontmatter and body agree, sourced from the
+      body's measured number, not re-counted. — **Shipped: `unified-trading-pm@<pending-sha>`.** Both `title` and
+      `summary` cited "~30" execute / "3" read — both stale, and both explicitly named replacements exist in the body
+      already (no re-counting): execute → "~16 genuinely live" (the P0 "Re-measure DeFi execute coverage" todo's own
+      corrected figure, which explicitly supersedes the earlier "~10, not ~30" table value); read → "8" (the "READ
+      SIDE — shipped 2026-08-15" section's own "Before: 3 → After: 8" table — the 3 original adapters plus the LST
+      family closed via the generic registry-driven reader). Updated title to "…EXECUTE on ~16 DeFi protocols and
+      READ positions from 8" and reworded the summary's asymmetry sentence to carry the same two corrected numbers.
+      **Deliberately NOT touched**: whether 8 itself is now slightly stale post-Kamino (a bespoke adapter shipped
+      2026-08-16, after the 8-count's 2026-08-15 dating) — the body has no later explicit restated total that
+      includes it, and combining the two partial statements myself would be exactly the re-counting the done-when
+      rules out; left for a future pass once the body states a new total explicitly.
 
 ## Definition of done
 
@@ -276,3 +286,11 @@ green). Resolved the skills-audit todo's `<pending-sha>` placeholder to `unified
 (ancestor-verified). No over-claims found — nothing reverted, no worker pinged. The `[DOC] P2` frontmatter-fix todo
 remains genuinely open (a distinct, undispatched craft item) — out of scope for this review, not a finding against
 it.
+
+**2026-08-17 (slot 8, backend_engineer) — frontmatter-fix todo done, batch plan complete.** Dispatched against the
+final `[DOC] P2` todo. Fixed `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`'s title + summary
+(both carried the stale "~30 DeFi protocols" / "3 position adapters" figures) using two explicit corrected numbers
+already stated in the body — `~16 genuinely live` (execute) and `8` (read) — no re-counting. Full detail in the
+flipped checkbox above. This was the last open todo in this plan — all six now flipped, definition-of-done review
+already independently re-verified the other five (slot 13). Per the archival HARD RULE (every todo done + unlocked
+→ archive immediately), this plan should be archived in the same session that ships this flip.
