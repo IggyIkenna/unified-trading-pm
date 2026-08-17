@@ -125,13 +125,19 @@ source: >-
       confirmed intentionally excluded with a cited reason") already resolves to the second branch, and writing
       speculative adapter code or forcing a phase flip against these citations would contradict already-ruled
       decisions, not close a gap.
-- [ ] [BACKEND] P1. **Gap: features-service's onchain dispatch table is narrower than its calculator registry** —
-      `oracle_prices` (`chainlink_peg_deviation_calculator.py`) and `dex_pool_state`
-      (`concentrated_liquidity_il_realised_calculator.py`, `pool_invariant_drift_calculator.py`) all have real,
-      registered implementations that are simply absent from `onchain/cli/parser.py`'s `FEATURE_GROUPS`/
-      `engine/orchestrator.py`'s dispatch if/elif chain — a mechanical wiring gap, not missing engineering work.
-      Done-when: all 3 calculators are reachable via the dispatch path and produce real output for at least one
-      defi venue.
+- [x] ✅ [BACKEND] P1. **Gap: features-service's onchain dispatch table is narrower than its calculator
+      registry — done 2026-08-17.** SHIPPED — `features-service@affaa7e850`. Wired all 3 previously-dead
+      calculators into `onchain/cli/parser.py`'s `FEATURE_GROUPS` and `engine/orchestrator.py`'s
+      `_dispatch_feature_group` if/elif chain: `chainlink_peg_deviation` (oracle_prices — reused the existing
+      per-day `data_loader.load_oracle_prices` loader + a pandas/polars conversion shim, since the calculator's
+      own `fetch_data` is standalone-empty by design, same caller-injected pattern as `lst_features.py`);
+      `concentrated_liquidity_il_realised` and `pool_invariant_drift` (dex_pool_state — both already implement a
+      real `fetch_data` via `read_canonical_defi_parquets`, so wired directly mirroring the existing
+      `_process_rate_impact`/`_process_onchain_regime` dispatch pattern). New wiring test
+      `tests/onchain/unit/test_dispatch_table_narrower_than_registry_wiring.py` (9 tests, all passing) proves
+      each calculator is registry-reachable via `_dispatch_feature_group` end-to-end with mocked data and
+      produces real, non-empty feature output (peg-deviation bps, IL pct, drift bps) for at least one defi venue —
+      satisfying the done-when. Full `quality-gates.sh` green on the shipped SHA.
 - [ ] [BACKEND] P2. **Gap: `dex_pool_swaps` and `staking_yields` have no feature_group consumer at all** — unlike
       the dispatch-table gap above, these are genuinely unimplemented (no calculator reads `dex_pool_swaps`
       anywhere; `staking_yields`'s only near-match, `lst_staking_calculator.py`, is an unrelated live DefiLlama
