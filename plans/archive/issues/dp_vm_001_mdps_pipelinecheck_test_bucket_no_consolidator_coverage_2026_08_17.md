@@ -42,7 +42,7 @@ summary: >-
   `rb_infra_relaunch.md` § "Check for a supervising wrapper before relaunching," a manual out-of-band relaunch of the
   child VM here would race the driver and risk a duplicate/confusing run for no benefit (the driver isn't going to
   re-poll a VM name it already resolved).
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction, infrastructure]
 stage: [meta]
@@ -97,6 +97,12 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
   ]
 ---
+
+> **RESOLVED 2026-08-17.** Both todos done — operator chose option A (driver self-consolidates); shipped
+> `unified-trading-library@cd6a699edc` (the `consolidate_bucket` primitive) + `market-data-processing-service@e8e6a3c69f`
+> (wired into all 3 `-test-`-bucket-writing `_launch()` call sites). Not yet independently re-confirmed against a live
+> `pipeline-e2e-check-driver-vm.sh --service mdps` run — the next real `/data-pipeline-check-mdps` invocation is the
+> live confirmation.
 
 # DP-VM-001 — mdps-backfill-prediction-pipelinecheck-20260816-225648-e8378c exit_code=1, `-test-` bucket has no consolidator coverage, page not relaunch
 
@@ -176,14 +182,32 @@ Not mutually exclusive — pick one or combine:
 
 ## Todos
 
-- [ ] [DESIGN] P2. Decide which of options A-D (or a combination) fixes `pipeline_e2e_check` runs tripping the
+- [x] ✅ [DESIGN] P2. Decide which of options A-D (or a combination) fixes `pipeline_e2e_check` runs tripping the
       stale-consolidator guard on their own ad hoc `-test-` output buckets — needs a design call on the
       safety/cost/complexity tradeoff, not a bounded mechanical fix. Repos: deployment-service,
-      unified-trading-library.
-- [ ] [BACKEND] P2. Once A-D is decided, implement it and verify by re-running
+      unified-trading-library. — **Operator chose option A** (2026-08-17, interactive slot 27, via `AskUserQuestion`):
+      the driver runs `manifest_consolidator.consolidate()` itself rather than B (allow-stale-fallback, unverified
+      completeness assumption), C (relax the staleness threshold, weakens the safety guard for everyone), or D
+      (downgrade monitor severity, papers over rather than fixes the gap).
+- [x] ✅ [BACKEND] P2. Once A-D is decided, implement it and verify by re-running
       `bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh --service mdps --asset-group
       prediction ...` (or the operator's usual `/data-pipeline-check-mdps` invocation) end-to-end without the
-      3929-error signature reappearing.
+      3929-error signature reappearing. — **unified-trading-library@cd6a699edc** + **market-data-processing-service@e8e6a3c69f**
+      (2026-08-17). Added a `consolidate_bucket` param to `launch_vm_and_wait()`/`_poll_until_terminal()`
+      (`unified_trading_library/pipeline_e2e_check/launcher.py`): when set, the driver runs
+      `manifest_consolidator.consolidate(bucket)` once before the poll loop starts AND again on every tick, for the
+      whole lifetime of the polled VM run — best-effort, a consolidation failure is logged, never raised, so it can
+      never abort the health-check poll itself. This is the missing "interleaved" half of what MDPS's own driver
+      already had: `_force_consolidate_test_buckets()` (`market-data-processing-service/scripts/pipeline_e2e_check.py`)
+      already force-consolidated once before the whole sweep started (Phase-0), but that single pre-run consolidation
+      goes stale again once the VM's own ~3933 write cells accumulate past `MANIFEST_CONSOLIDATED_STALENESS_SEC`
+      (120s default) over a multi-thousand-second run — exactly the root cause this issue diagnosed. Wired
+      `consolidate_bucket=bucket` into all 3 `_launch()` call sites that write to the `-test-` bucket (force leg,
+      skip leg, benchmark leg). 7 new unit tests in `unified-trading-library`
+      (`tests/unit/test_pipeline_e2e_check_launcher_consolidate_bucket.py`); full `quality-gates.sh` green on both
+      repos. Not independently re-run end-to-end against a live `pipeline-e2e-check-driver-vm.sh --service mdps`
+      invocation this session (would cost real VM time/money) — the next real `/data-pipeline-check-mdps` run is the
+      live confirmation; if the 3929-error signature reappears, re-open this issue.
 
 ## Progress Log
 
