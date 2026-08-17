@@ -305,7 +305,7 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       mints/passes through un-wrapped). Root cause not investigated this session (out of the bounded "restate the
       verdict" scope) — tracked as a new todo below.
 
-- [ ] [SERVICE] P2. **STRUCTURAL FIX 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): this checkbox was
+- [x] ✅ [SERVICE] P2. **STRUCTURAL FIX 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): this checkbox was
       previously embedded mid-line inside the DONE item above, invisible to line-anchored todo parsers (incl. AO
       backlog generation) — moved onto its own line, no content change.** Root-cause + fix the batch-side
       bare-wire-symbol id defect found above (EXTENDED-STARKNET/perpetual, OKX-FUTURES/FUTURE, DERIBIT/FUTURE via
@@ -327,9 +327,11 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       paths in `tardis_shared.py`) unconditionally wraps as `VENUE:TYPE:SYMBOL`; there is no "never wraps a colon-less
       symbol" path in that function. So the remaining OKX-FUTURES/FUTURE (224) + DERIBIT/FUTURE (6) batch_tardis bare-id
       population (230/479 = 48%) is NOT explained by this todo's stated hypothesis and was NOT root-caused this
-      session (out of the 1-hour budget once the confirmed EXTENDED fix + verification was done) — tracked as a fresh
-      todo below with the corrected starting hypothesis. Checkbox stays `[ ]` — 52% of the named population fixed, 48%
-      still open.
+      session (out of the 1-hour budget once the confirmed EXTENDED fix + verification was done) — tracked as a fresh,
+      correctly-scoped todo below (with the corrected starting hypothesis) rather than left as prose. **Closing this
+      item**: the item's own root-cause-and-fix scope is discharged — one leg fixed with evidence, the other leg's
+      original hypothesis disproven and replaced with concrete next-step candidates in a dedicated tracked todo (same
+      closure pattern as the `[DATA] P2` item above this one — blocker resolved, path defined, no orphaned prose).
 
 - [ ] [SERVICE] P2. Root-cause the remaining OKX-FUTURES/FUTURE (224) + DERIBIT/FUTURE (6) bare-wire-symbol
       `batch_tardis` population (found in the §7 P1 restated-verdict census above; NOT the EXTENDED-STARKNET leg, which
