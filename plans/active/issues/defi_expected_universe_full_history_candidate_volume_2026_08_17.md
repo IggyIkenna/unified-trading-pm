@@ -131,17 +131,28 @@ should weigh in on.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide which of the 3 options above to pursue for closing
-      `defi_satellite_ao_dispatch_batch16_2026_08_17.md`'s `[IS] P1` regen todo — see this issue's
-      "Recommended decision" section for the tradeoffs. Repo: n/a (decision only).
-- [ ] [IS] P2. If option 1 is chosen: add chunked/streaming accumulation to
-      `enumerate_expected_universe.py`'s `--full-history` branch (mirror
-      `_stream_write_v2_absent_rows`'s `V2_STREAM_CHUNK_SIZE` pattern, adapted for
-      `range_encode()`'s need to see the full per-key day-set before compacting — likely needs a
-      per-key incremental range-merge instead of a single upfront `range_encode(v2_absent)` call
-      over the whole drained list). Repo: instruments-service. Done when: a defi
+- [x] ✅ [OPERATOR] P1. Decide which of the 3 options above to pursue — **answered via `BLK-2efccf37`
+      (2026-08-17): option 1 (code fix), do NOT raise the cap further.** Operator's exact
+      reasoning: 1M→15M→100M with no levelling-off against a root-caused real volume means the
+      next guess very likely OOMs with zero diagnostic value; this is a code-fix task, not a
+      cap-tuning task. Sequence directed: (1) file/confirm the P1 code todo — done, see below;
+      (2) once shipped, retest `--full-history` with the CURRENT 100M cap (not higher); (3) if it
+      still trips post-fix, that IS a genuinely new signal worth a fresh `/blocked`. The
+      2026-08-12/15 ruling authorized the regen itself, not a specific implementation, so this did
+      not need to go back to the operator a second time.
+- [ ] [IS] P1. Add streaming accumulation to `enumerate_expected_universe.py`'s `--full-history`
+      branch. Simpler than originally scoped: no per-key incremental range-merge needed —
+      `range_encode()` already only builds the compact `by_key: dict[key, list[date]]` grouping
+      from whatever iterable it's given (it never needed the full row list), so the actual fix is
+      removing `main()`'s redundant `v2_absent: list[ExpectedRow] = []` materialisation and
+      passing a new `counted_expected_rows()` generator (raises `_MaxWritesExceeded` mid-stream,
+      enforcing the halt-safety cap without ever holding more than one row's worth of
+      `ExpectedRow` at a time) directly into `range_encode()`. Implemented + 4 new unit tests
+      added (byte-identical-output-vs-old-shape + no-over-consumption-before-raise), all 245 tests
+      in `tests/unit/scripts/test_enumerate_expected_universe_v2.py` green — NOT YET shipped or
+      live-retested. Repo: instruments-service. Done when: shipped AND a defi
       `--full-history --apply-write` run completes without needing any `--max-writes-per-run`
-      override, verified against the live 78,802-row catalog.
+      override beyond the existing 100M cap, verified against the live 78,802-row catalog.
 - [ ] [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
       unbounded-drain code shape (cefi/tradfi/prediction/sports) before anyone else hits this same
       wall blind — sports in particular is flagged elsewhere
@@ -159,3 +170,8 @@ should weigh in on.
   "7,895 instruments" launcher comment (actual: 78,802) in the same commit. Not resolving further
   autonomously — this is a genuine judgment call per the "Recommended decision" section, escalated
   via `/blocked` on the same turn.
+- **2026-08-17 (same session, continued)**: operator answered `BLK-2efccf37` — option 1 (code
+  fix), do not raise the cap further. Implemented the streaming fix (removed `main()`'s redundant
+  full-list materialisation ahead of `range_encode()`; new `counted_expected_rows()` generator
+  enforces the halt-safety cap mid-stream instead), added 4 unit tests, all 245 tests in the
+  enumerator's test file green. Shipping + live retest against the existing 100M cap next.
