@@ -13,7 +13,7 @@ summary: >-
   already-active, separate artifact_pipeline_observability_2026_07_17.md feature's /ops/artifacts "running" view
   (DRIFT_PINNED/DRIFT_STALE classification) — needs reconciliation before building a parallel concept. A ui_developer
   cannot complete this todo as scoped without crossing into backend Python + GitHub Actions workflow changes.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -52,6 +52,11 @@ drift_direction: advance-code
 ---
 
 # Rollout-ratchet panel todo is mis-scoped [UI]-only — needs a backend counterpart, and overlaps an existing feature
+
+> **ARCHIVED 2026-08-17 (slot-21)** — all 5 todos resolved. The 4 backend prerequisites (template-drift verdicts,
+> ruleset-drift verdicts, the `/api/rollout-ratchet/overview` route, the running-vs-`main`-HEAD extension) landed
+> across slots 1/9/27/32, and the final `[UI]` todo (this doc's own scoping fix) shipped as
+> `deployment-ui@173e66ecab` — the 3-column panel + running-vs-HEAD-SHA widget. See the Progress Log for full detail.
 
 ## What I found
 
@@ -197,13 +202,26 @@ craft-scoped worker mid-investigation.
       uses. Best-effort throughout (missing GH_PAT / rate-limit / network failure degrades to honest-unknown, never
       a fabricated verdict). 7 new unit tests in `test_artifact_pipeline.py` (behind/matches/unknown/short-circuit-
       when-no-built_from cases + 2 provider-level degrade tests). deployment-api@a2963906ab.
-- [ ] [UI] P2. Once the above route(s) exist, build the 3-column rollout-ratchet panel (workflow-template drift /
-      Dockerfile digest-pin / ruleset-branch-protection drift) + the separate running-vs-HEAD-SHA widget, modeled on
-      `VersionCoherencePanel.tsx` / `ChangeFreezeBanner.tsx`. Repo: deployment-ui. Gated on the `GET
-      /api/rollout-ratchet/overview` route + the running-vs-HEAD-SHA field existing.
+- [x] ✅ [UI] P2. **DONE 2026-08-17 (slot-21).** Built the 3-column rollout-ratchet panel
+      (`RolloutRatchetPanel.tsx`, modeled on `VersionCoherencePanel.tsx`) reading `GET
+      /api/rollout-ratchet/overview` for the template-drift + ruleset-drift columns; the digest-pin
+      column reads the existing `GET /api/artifacts/running` drift classification (best-effort
+      service->repo match, since no repo-level Dockerfile-pin signal exists — see "What I found").
+      Added the separate running-vs-`main`-HEAD widget as a "behind main" badge + stat tile on
+      `ArtifactPipeline.tsx`'s "What's running" table, reading the `main_head_sha`/`behind_main`
+      fields the backend already ships (extended the UI's `RunningVersion`/`RunningStats` types to
+      match). Wired into `RepoCi.tsx` next to `VersionCoherencePanel`. New unit tests
+      (`RolloutRatchetPanel.test.tsx`) + a playwright smoke spec
+      (`tests/smoke/verdict-store-panels.spec.ts`). Repo: deployment-ui@173e66ecab.
 
 ## Progress Log
 
+- **2026-08-17 (slot-21, ui_developer)**: closed the final `[UI]` todo — `deployment-ui@173e66ecab`. Pass-1
+  `quality-gates.sh` initially failed the global function/branch coverage thresholds because the new
+  `RolloutRatchetPanel.tsx` had zero test coverage (mirrors `VersionCoherencePanel.tsx`'s own low-coverage
+  precedent, but pushed the fleet-wide average under the gate); added `RolloutRatchetPanel.test.tsx` (3 cases:
+  flagged rows + chip content, all-clean state, error state) to restore coverage, then Pass-1 went fully green.
+  Every todo in this issue doc is now done and it is unlocked — archiving next.
 - **2026-08-17 (slot-1, ui_developer, interactive)**: filed after investigating batch15's rollout-ratchet UI todo
   and finding it undispatchable as pure UI — see "What I found" above for the full investigation. Did not build any
   UI against a guessed/mocked contract.
