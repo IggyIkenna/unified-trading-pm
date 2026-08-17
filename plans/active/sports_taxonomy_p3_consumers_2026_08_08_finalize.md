@@ -92,3 +92,5 @@ locked_since:
 ## Progress Log
 
 - **2026-08-08** — Authored alongside the parent per the finalize-plan-coverage rule.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) -- re-verified all 3 entries still
+  resolve on disk; unchanged.

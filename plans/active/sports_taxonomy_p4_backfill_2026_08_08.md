@@ -45,6 +45,7 @@ gate_on_depends: true
 context_scope:
   [
     /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
@@ -130,3 +131,6 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 - **2026-08-08** — Authored. Coverage gap measured against the live prod manifest. C3 disposition recorded as an
   ALREADY-RULED item (2026-07-21 floor ruling) rather than a fresh operator decision — the source todo is stale.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- added
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, the SSOT the C3 corpus delete todo cites (§3a) but the
+  prior list never surfaced.

@@ -49,11 +49,11 @@ superseded_by:
 context_scope:
   [
     /plans/active/venue_e2e_wiring_2026_08_16.md,
-    /codex/06-coding-standards/integration-testing-layers.md,
-    /codex/04-architecture/shard-level-failure-isolation.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     unified-api-contracts/scripts/generate_venue_work_list.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+    strategy-service/strategy_service/position/position_interface/factory.py,
   ]
 source: >-
   Forked from `venue_e2e_wiring_2026_08_16.md`'s "Fork per-asset-group dispatch batches" P0 todo, 2026-08-16
@@ -225,3 +225,7 @@ single-dash-split shape, so used the done-when's explicit-case-arm-extension opt
 `"betfair"` match arm in `_get_other_adapter` to also match all 3 sports tokens, routing to the same
 `BetfairPositionAdapter`. Updated the factory docstring + `ValueError` venue list, added a parametrized
 regression test covering all 3 tokens. `quality-gates.sh` green on the shipped HEAD.
+
+**context-scout 2026-08-17**: refreshed context_scope (6 entries) -- dropped `integration-testing-layers.md`/
+`shard-level-failure-isolation.md` (never named anywhere in this doc's own body, generic parent-scope carryover),
+added `odds_api_adapter.py` (the actual gap-fix file, named 4x in body) and `factory.py` (the BETFAIR dispatch fix).

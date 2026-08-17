@@ -678,3 +678,5 @@ spelling variant survives, which is the entire point of the panel". It does not.
   `parked_condition` exists, or regen must preserve the hand-tuned park) — out of scope for this worker task. Until
   then, recommend: (a) an operator marks this task parked/done until P2's re-stamp lands, or (b) this todo moves INTO
   the P2 plan alongside the re-stamp, which its own text already makes the correct home.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- re-verified all 6 entries still
+  resolve on disk; unchanged.
