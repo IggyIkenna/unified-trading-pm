@@ -24,6 +24,7 @@ related:
     /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-15
 last_updated: 2026-08-15
