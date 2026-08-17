@@ -224,6 +224,41 @@ should weigh in on.
   scan-only measurement VM — no independent `/blocked` filed to avoid duplicating an
   already-answered escalation. Deferring to slot-3's Todos-section resolution above (the scan-only
   pass + calibrated-run plan) as the current path forward; no further action taken this session.
+- **2026-08-17 (worker, slot-17, backend_engineer craft, IN PROGRESS — checkpoint before context
+  compaction)**: dispatched the remaining `[IS] P1` regen todo. The original scan-only VM
+  (`expected-universe-v2-defi-20260817-074211`) was SPOT-preempted mid-run at 08:04:36 with zero
+  candidate-count signal recovered (confirmed via `gcloud logging read` audit-log
+  `compute.instances.preempted`, not a code failure — its own log went silent after the manifest-load
+  phase with the VM still nominally RUNNING per `describe`, which is what first looked like a stall).
+  Relaunched (another slot got there first — `expected-universe-v2-defi-20260817-080605`, deferred to
+  it rather than duplicate) on `ON_DEMAND=true MACHINE_TYPE=e2-highmem-16` to avoid a second silent
+  preemption loss on a run with zero write-side checkpointing. **Scan-only result: TRUE CANDIDATE
+  COUNT = 294,144,873** (`range_rows=267499`, `eu_days=288659526`, `written=0`,
+  `run_id=enum-universe-defi-20260817-081015`, completed cleanly 09:22:04 UTC — ~2.94x the 100M cap
+  that kept tripping halt-safety across 4 prior attempts). Deleted that VM after confirming clean
+  completion via its `ENUMERATOR_COMPLETED` event (staleness confirmed by the log itself, not by
+  heartbeat-age alone) to free the launcher's singleton lock. **Calibrated the real `--apply-write`
+  run at `--max-writes-per-run 350000000`** (true count + ~19% margin, in the spirit of the operator's
+  10-20% direction) and launched it — then discovered ANOTHER slot had independently launched the
+  IDENTICAL command (`expected-universe-v2-defi-20260817-092709`, same asset_group/mode/cap) moments
+  earlier; deleted my own redundant duplicate (`...092925`, still `STAGING`, zero writes had started)
+  rather than risk two concurrent writers racing on the single non-additive
+  `_index/expected_universe_ranges.parquet` target (the exact hazard the plan's own "Recommended
+  decision" §3 already flagged for a *narrower*-scope write — the same last-writer-wins mechanism
+  applies here to a full-scope duplicate). **`expected-universe-v2-defi-20260817-092709` is the live
+  run of record** — SPOT-provisioned (not mine to change without re-duplicating), actively
+  enumerating as of this checkpoint, being watched by an active session Monitor for both log-progress
+  and a VM-status-flip (to catch a repeat preemption early rather than discovering it via silence).
+  **Not yet done**: this checkbox stays `[ ]` until (a) the VM reaches `ENUMERATOR_COMPLETED` with
+  `written>0`, (b) `_index/expected_universe_ranges.parquet`'s GCS timestamp is confirmed past
+  2026-08-17, and (c) the 2 target cells (`CHAINLINK-ETHEREUM`/`AAVE` `oracle_prices`) confirm
+  `expected_unattempted`, per the todo's own "Done when". **If this VM also gets preempted before
+  finishing**: relaunch with `ON_DEMAND=true MACHINE_TYPE=e2-highmem-16 FULL_HISTORY=true` (same
+  flags as the scan-relaunch above) — the 294,144,873 measurement + 350M cap are already known-good,
+  no need to re-scan. **Lesson for future full-history VM babysitting**: a completed-but-`RUNNING`
+  VM (process done, instance not self-terminating — this launcher has no auto-shutdown) silently
+  keeps billing until manually deleted; check the run.log's own terminal event before concluding a
+  VM is "stuck", don't infer state from `describe`'s STATUS field alone.
 - **2026-08-17 (worker, slot-19, data_engineering craft)**: dispatched the remaining `[IS] P1`
   live todo (final regen). Live-reverified before acting: `_index/expected_universe_ranges.parquet`
   still `last_modified=2026-07-03` (no other slot had landed a write since), no
