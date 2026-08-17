@@ -44,6 +44,14 @@ source:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/archive/issues/mdps_pipeline_e2e_check_defi_driver_oom_2026_08_16.md,
+    market-data-processing-service/scripts/pipeline_e2e_check.py,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
+  ]
 ---
 
 # DEFI pipeline_e2e_check: OOM fixed + root-caused, but the driver now proves the shard universe doesn't match captured data

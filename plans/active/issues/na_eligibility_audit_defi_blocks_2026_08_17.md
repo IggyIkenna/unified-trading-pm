@@ -31,7 +31,11 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
-context_scope: [/cursor-configs/skills/na-eligibility-audit/SKILL.md]
+context_scope:
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 supersedes: na_eligibility_audit_defi_blocks_2026_08_16
 source: >-
   /na-eligibility-audit defi (2026-08-17, dispatch agt-e2dde1, slot 14) — Phase 1b consolidation across all 23
@@ -146,3 +150,4 @@ carried on this list was itself stale. Closed off the list, not re-carried.
   next calendar-day run (or a dispatched worker) to execute the live schema_version/pipeline_mode
   manifest-distribution check its own text calls for. No new operator questions or MISCLASSIFIED_LIKELY_AO_ELIGIBLE
   items surfaced this pass. Ratchet checked at run end (see this run's `/done` evidence).
+- **context-scout 2026-08-17**: refreshed context_scope (2 entries).

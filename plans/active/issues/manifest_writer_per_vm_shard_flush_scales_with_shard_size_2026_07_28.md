@@ -145,3 +145,4 @@ its own review):
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:552ffed4150d81ba]: KEEP-NA, valid -- Reaffirmed KEEP-NA 4x (2026-07-30, 08-03, 08-06, 08-08 round7 RECLASSIFY sweep) -- survived an explicit RECLASSIFY sweep. The fix belongs in shared unified-trading-library manifest-writer code (used by every backfill VM fleet-wide) with an explicit SIGKILL-durability-preservation constraint; the P3 alternative explicitly trades durability for throughput and 'needs an explicit call on whether that tradeoff is acceptable, not a default flip'; the verification todo is sequenced after either fix ships.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries), unchanged.

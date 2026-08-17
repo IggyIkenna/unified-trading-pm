@@ -214,4 +214,4 @@ read-merge-write instead of overwrite) as a new P1 todo here.
 
 ## Progress Log addendum
 
-- **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.
+- **context-scout 2026-08-17**: refreshed context_scope (7 entries).

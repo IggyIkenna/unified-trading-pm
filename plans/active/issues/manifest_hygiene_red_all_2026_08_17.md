@@ -34,6 +34,14 @@ locked_since:
 resolved_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    unified-trading-library/scripts/detect_manifest_divergence.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer_validation.py,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+  ]
 ---
 
 # Manifest hygiene RED — 4 AG(s) with findings (2026_08_17)
@@ -354,3 +362,7 @@ choice.
       / `unified-trading-library` (the detector script's home).
 - [ ] [DATA] P2. Same as above for tradfi (`--asset-group tradfi`, 8,468 DIVERGENT_EMPTY,
       14,464,340-row manifest already confirmed to OOM a 4GB local cap).
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
