@@ -28,6 +28,8 @@ related: []
 locked_by:
 locked_since:
 resolved_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Manifest hygiene RED — 4 AG(s) with findings (2026_08_17)
