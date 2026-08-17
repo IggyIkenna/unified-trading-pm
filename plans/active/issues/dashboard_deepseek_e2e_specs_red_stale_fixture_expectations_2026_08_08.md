@@ -42,14 +42,7 @@ source:
     "discovered 2026-08-08 regression-checking `npx playwright test --project=chromium` (44 passed / 2 failed) after
     adding tier-editor.spec.ts; provenance established by re-running both specs in a detached worktree at 665e5d0",
   ]
-context_scope:
-  [
-    agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts,
-    agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts,
-    agent-orchestrator/dashboard/tests/e2e/fixtures/seed_e2e_state.py,
-    agent-orchestrator/server/deepseek_usage.py,
-    /codex/06-coding-standards/ui-testing-layers.md,
-  ]
+context_scope: [agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts, agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts, agent-orchestrator/dashboard/tests/e2e/fixtures/seed_e2e_state.py, agent-orchestrator/server/deepseek_usage.py, /codex/06-coding-standards/ui-testing-layers.md]
 ---
 
 # DeepSeek dashboard e2e specs red on stale fixture expectations
@@ -129,3 +122,4 @@ mechanical fix, which is why this is filed rather than patched.
   after the `[REVIEW]` investigation and would become concurrently dispatchable the moment this doc goes AO-live, and
   the investigation can still terminate in a genuine semantics call the investigation alone can't resolve. Explicit
   dated operator consideration-and-decline, not re-litigated.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

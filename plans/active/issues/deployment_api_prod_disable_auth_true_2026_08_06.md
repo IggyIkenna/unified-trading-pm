@@ -65,13 +65,7 @@ source:
     "sub-agent session, 2026-08-06 — service-deployed dispatch listener task, `gcloud run services describe
     uts-shared-deployment-api`",
   ]
-context_scope:
-  [
-    deployment-api/deployment_api/auth.py,
-    deployment-api/deployment_api/firebase_auth.py,
-    deployment-api/deployment_api/main.py,
-    unified-trading-library/unified_trading_library/config_interface/cloud_config.py,
-  ]
+context_scope: [deployment-api/deployment_api/auth.py, deployment-api/deployment_api/firebase_auth.py, unified-trading-library/unified_trading_library/config_interface/cloud_config.py, /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md]
 ---
 
 ## What was found
@@ -217,3 +211,4 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
     `assigned_vm: planning`, `sequential: true`; step 1 "Decide the env SSOT + fix the guard" DONE via
     `UTL@336f2b3b6c` + `deployment-api@d0eebac4e6`, 4 follow-on todos open), so no further escalation is needed from
     this retag — the retag is what finally gives the fix a owning tranche to be claimed under.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

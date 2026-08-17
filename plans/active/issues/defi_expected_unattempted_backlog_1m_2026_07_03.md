@@ -38,14 +38,7 @@ last_updated: "2026-08-08"
 locked_by:
 locked_since:
 resolved_by:
-context_scope:
-  [
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
-    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
-    instruments-service/scripts/enumerate_expected_universe.py,
-    /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
-  ]
+context_scope: [unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/possible_manifest.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, instruments-service/scripts/enumerate_expected_universe.py, /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md]
 ---
 
 > **🟢 2026-07-10 RESOLVED — fresh operator decision made at the real v2 scale (Option A, full 63,876,053-row apply,
@@ -471,3 +464,4 @@ above are otherwise fully reproducible via the shipped CLI.
   finalize plan's `gate_on_depends` condition genuinely satisfied. Proceeding to the finalize plan's `[REVIEW]`
   re-verification + `[DOC]` archival todos in the same session.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

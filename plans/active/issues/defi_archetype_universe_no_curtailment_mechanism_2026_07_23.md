@@ -37,15 +37,7 @@ locked_by:
 source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
 archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
-context_scope:
-  [
-    /codex/04-architecture/tier-and-import-architecture.md,
-    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,
-    execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
-    /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md,
-  ]
+context_scope: [/codex/04-architecture/tier-and-import-architecture.md, strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py, execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py, strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py, /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md]
 ---
 
 # DeFi strategy archetype universe — no curtailment mechanism, two unreconciled registries, one dead field
@@ -900,3 +892,4 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   added `--archetypes`/`--venue-allowlist`/`--currency-allowlist` CLI flags to `run_paper`'s `service_entry.py`,
   threaded into `PaperUniverseConfig` via `build_paper_universe_config`, with 16 unit tests + green
   `quality-gates.sh --no-fix`. No further hygiene action needed on this item.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

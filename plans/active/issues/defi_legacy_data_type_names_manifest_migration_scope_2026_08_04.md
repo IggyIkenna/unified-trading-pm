@@ -68,15 +68,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope:
-  [
-    /codex/02-data/defi-canonical-naming-ssot.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
-    market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py,
-    deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh,
-  ]
+context_scope: [/codex/02-data/defi-canonical-naming-ssot.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md, market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py, /plans/active/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md, deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh]
 ---
 
 # `dex_pools`/`dex_swaps`/`rate_indices` legacy data_type residue — scoping doc (2026-08-04)
@@ -254,3 +246,4 @@ context_scope:
   tracking. Not executing either here (bounded task scope: pool/rate_indices/dex_pool_fees retirement + rollup + panel
   check).
 - **na-eligibility-audit 2026-08-16** [body-hash:a72416208cabee9e]: KEEP-NA, valid — The sole open todo (dex_swaps -> dex_pool_swaps real content migration, NOT a safe rename per a live-run DIAG that found up to 84% legacy-only content on some venue/chain pairs) has been repeatedly corroborated too_large_or_risky across four prior touchpoints (2026-08-04 x2, na-eligibility-audit 2026-08-07, round11-sweep 2026-08-09) as genuinely judgment-heavy: it requires root-causing an unexplained recent multi-venue gap cluster plus a full five-part delete-safety proof before any GCS-level change.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

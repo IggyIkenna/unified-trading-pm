@@ -39,13 +39,7 @@ source:
     document the prod terraform drift first observed by slot-11 on 2026-08-06; read-only plan run, no apply.",
   ]
 depends_on: []
-context_scope:
-  [
-    deployment-service/terraform/gcp,
-    deployment-service/terraform/gcp/client_reporting_scheduler.tf,
-    deployment-service/terraform/gcp/t1_batch_scheduler.tf,
-    /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
-  ]
+context_scope: [deployment-service/terraform/gcp, deployment-service/terraform/gcp/client_reporting_scheduler.tf, deployment-service/terraform/gcp/t1_batch_scheduler.tf, /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md]
 ---
 
 # Prod terraform drift — 36 add / 18 change / 3 destroy pending apply
@@ -260,3 +254,4 @@ the IaC config; the third is a Cloud Run job module removal.
     text updates on `lst-rates`/`perp-funding` (both purely descriptive, documenting already-applied historical live
     memory bumps), and the `liquidation-events`/`risk-params` output-map additions. No other memory/cpu/env changes
     found beyond the two already discussed.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

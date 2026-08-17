@@ -50,11 +50,7 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
-context_scope:
-  [
-    /codex/04-architecture/defi-execution-overview.md,
-    /codex/04-architecture/defi-position-risk-centralization.md,
-  ]
+context_scope: [/codex/04-architecture/defi-execution-overview.md, /codex/04-architecture/defi-position-risk-centralization.md, strategy-service/strategy_service/position/core/defi_health_aggregator.py, strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py, strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py, strategy-service/strategy_service/circuit_breakers/liquidation_proximity_circuit.py]
 source: >-
   Interactive session 2026-08-16, surfaced while scoping which DeFi feature fields the Elysium carve-out owes the
   client. Two agent-dispatched investigations traced the actual wiring rather than trusting docstrings: the first
@@ -201,3 +197,4 @@ Even once wired, the centralized data model can't yet serve everything an archet
   scoped pattern (4 files, 3 families) rather than a systemic one. Title, summary, findings and todos updated to
   the real scope in the same edit. Estimate revised from 6/4.8 AI-days to 8/6.4 to reflect the added fix surface.
 - **na-eligibility-audit 2026-08-16** [body-hash:5b28bea2cce6b9c5]: KEEP-NA, valid — Freshly filed today (2026-08-16) from an interactive session; zero prior na-eligibility-audit markers, this is its first pass. 10 open todos verified via the fence-aware grep, matching Phase-0's open_todos=10 exactly.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

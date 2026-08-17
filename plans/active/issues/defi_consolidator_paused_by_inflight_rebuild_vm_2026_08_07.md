@@ -49,13 +49,7 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
-context_scope:
-  [
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
-    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
-  ]
+context_scope: [/codex/05-infrastructure/manifest-consolidator-ssot.md, /codex/05-infrastructure/data-pipeline-alerts.md, market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py, deployment-service/scripts/vm/launch-canonical-migration-vm.sh]
 ---
 
 ## What happened
@@ -181,3 +175,4 @@ this is inference from timing + the workspace's own documented operational contr
   never this doc's to track and is correctly owned by `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3
   item. 1 todo remains open (todo 3, operator/design-gated Slack-routing question) — doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:c9c0e4e2998c0916]: KEEP-NA, valid — Todos 1-2 are already closed with hard, live-verified evidence (Cloud Audit Log correlation of the scheduler pause to the in-flight rebuild VM;.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

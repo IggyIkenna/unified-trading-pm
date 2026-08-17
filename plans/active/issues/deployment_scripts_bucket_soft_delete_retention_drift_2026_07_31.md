@@ -40,12 +40,7 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
-context_scope:
-  [
-    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    deployment-service/terraform/gcp/main.tf,
-  ]
+context_scope: [/plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, deployment-service/terraform/gcp/main.tf]
 ---
 
 ## What I found
@@ -216,3 +211,4 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   the honest verification checkpoint; re-tracked as a new date-gated `- [ ]` P3 todo for re-check on/after 2026-08-17.
   No writer-side investigation warranted yet — drain is real and ongoing, just slower than the 08-09 point-estimate. Fix
   intact (retentionDurationSeconds=0, confirmed by prior reads). (repo: deployment-service, verification-only.)
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

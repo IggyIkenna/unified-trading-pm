@@ -58,12 +58,7 @@ depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/market_interface/factory.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/market_interface/factory.py, market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py]
 ---
 
 ## What was actually checked, and how
@@ -146,3 +141,4 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
   reserves for a human, not something a worker can determine from the code alone. No RECLASSIFY or satellite-extraction
   applies — there is only the one item, and it is not bounded. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:fe02c3b6ddf2195d]: KEEP-NA, valid — The one prior todo (registering CoinbaseCbEthAdapter) is already closed with concrete evidence (regression tests added, full local suite green modulo two confirmed pre-existing unrelated failures).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

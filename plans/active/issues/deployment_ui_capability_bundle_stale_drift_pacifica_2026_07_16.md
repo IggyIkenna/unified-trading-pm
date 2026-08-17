@@ -45,13 +45,7 @@ source:
 assigned_vm: planning
 resolved_by:
 locked_by:
-context_scope:
-  [
-    scripts/openapi/generate_strategy_prospectus.py,
-    unified-api-contracts/openapi/prospectus,
-    /codex/06-coding-standards/script-homes.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
-  ]
+context_scope: [scripts/openapi/generate_strategy_prospectus.py, unified-api-contracts/openapi/prospectus, /codex/06-coding-standards/script-homes.md, /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium
@@ -448,3 +442,4 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
   this doc's tag being silently wrong in the meantime.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

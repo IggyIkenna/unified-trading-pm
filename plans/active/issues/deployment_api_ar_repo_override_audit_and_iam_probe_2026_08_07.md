@@ -39,13 +39,7 @@ source:
   check_terminal_status_archived ratchet fix"
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_08/issues/deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07.md,
-    deployment-api/deployment_api/routes/builds.py,
-    alerting-service/alerting_service/notifiers/pagerduty.py,
-    /plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md,
-  ]
+context_scope: [/plans/archive/2026_08/issues/deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07.md, deployment-api/deployment_api/routes/builds.py, alerting-service/alerting_service/notifiers/pagerduty.py, /plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md]
 ---
 
 # deployment-api: AR-repo-override audit + IAM capability probe
@@ -116,3 +110,4 @@ context_scope:
   `_get_ar_repo_name()` source (`deployment-api/deployment_api/routes/builds.py`), the remaining P3's cited capability-
   probe analog (`alerting-service/alerting_service/notifiers/pagerduty.py`), and its cited same-root-shape sibling issue
   doc.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

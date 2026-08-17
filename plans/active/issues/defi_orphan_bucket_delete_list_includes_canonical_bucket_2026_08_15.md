@@ -51,13 +51,7 @@ source: >-
   ["defi_operator_ruling_ao_dispatch_2026_08_15.md todo 2 (dispatched task
   defi_operator_ruling_ao_dispatch-e5203df5b8c2), 2026-08-15"]
 depends_on: []
-context_scope:
-  [
-    /plans/active/defi_migration_audit_log_2026_07_24.md,
-    /plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    market-tick-data-service/market_tick_data_service/scripts/_migrate_defi_classify.py,
-  ]
+context_scope: [/plans/active/defi_migration_audit_log_2026_07_24.md, /plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, market-tick-data-service/market_tick_data_service/scripts/_migrate_defi_classify.py]
 ---
 
 # DeFi orphan-bucket delete list includes the current canonical bucket; unique-gap migration unconfirmed
@@ -201,3 +195,7 @@ already-executed, irreversible deletion rather than a migration to perform.
       autonomous path once each bucket's fresh soft-delete-retention check clears ≥7 days.
       `market-data-tick-defi{,-prd}` stays permanently off any delete list. Repo: instruments-service (or wherever the
       delete script/skill lives). Owner: vm-defi. parent_epic: defi_master.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

@@ -52,8 +52,7 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-16
 locked_since:
-context_scope:
-  [/plans/active/defi_migration_audit_log_2026_07_24.md, /codex/05-infrastructure/bucket-isolation-model.md]
+context_scope: [/plans/active/defi_migration_audit_log_2026_07_24.md, /codex/05-infrastructure/bucket-isolation-model.md, deployment-service/configs/cloud-providers.yaml, unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py]
 source: >-
   /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md's "[SCRIPT] P2. Redirect the 4 DeFi live
   handlers..." todo (Source: plans/active/defi_migration_audit_log_2026_07_24.md).
@@ -173,3 +172,4 @@ provisioning SSOT.
   manifest-rebuild-scope todo open as P3 (no live risk, already `[x]` DONE upstream, informational staleness only).
   Downgraded this doc's frontmatter `priority` P2→P3 to match: 3 of 4 items now resolved, the remainder is low-risk.
 - **na-eligibility-audit 2026-08-16 (RECLASSIFY, whole-doc, conflict-clear)**: sole remaining open todo (the gas-fees manifest-rebuild-scope annotation) is bounded/mechanical -- add one staleness note to defi_migration_audit_log_2026_07_24.md, mirroring the CAVEAT annotations already added to that docs items 2-3. Conflict-check against active defi/infrastructure_master planning plans + defi_satellite_ao_dispatch_batch14 found zero prior claim on this specific item. Flipped assigned_vm: NA -> planning in place (no rename), execution_scope -> orchestrator-agent, assigned_role -> data_engineering. Paired with defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16.md (depends_on + gate_on_depends: true, status: active).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

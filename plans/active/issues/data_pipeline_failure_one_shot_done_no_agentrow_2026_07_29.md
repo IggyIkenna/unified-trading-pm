@@ -50,14 +50,7 @@ superseded_by:
 resolved_by:
 source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-79063c"
 last_updated: 2026-07-29
-context_scope:
-  [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
-    agent-orchestrator/server/escalation.py,
-    agent-orchestrator/server/routes/slots_worker.py,
-    agent-orchestrator/server/state_store/agents.py,
-  ]
+context_scope: [/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md, /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md, agent-orchestrator/server/escalation.py, agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/state_store/agents.py]
 ---
 
 # `data_pipeline_failure` one-shot worker's `/done {one_shot_complete: true}` 400s despite a registration path that should cover it
@@ -366,3 +359,4 @@ still in flight.
   context-saturation wedge-kill) converging on one terminal event — the actual fix approach (widen the AgentRow status
   filter vs. block the transition vs. something else) is still an open design call, not reduced to a single mechanical
   change. Staying parked.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

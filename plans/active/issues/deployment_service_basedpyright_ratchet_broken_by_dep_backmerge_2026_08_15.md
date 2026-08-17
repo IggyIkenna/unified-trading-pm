@@ -45,14 +45,7 @@ superseded_by:
 source: >-
   Found while shipping Todo 2 of dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md (truncated-sweep
   detection) — quality-gates.sh failed on type-check with zero deployment-service files touched by my own diff.
-context_scope:
-  [
-    deployment-service/scripts/quality-gates.sh,
-    deployment-service/deployment_service/shard_builder.py,
-    deployment-service/deployment_service/shard_calculator.py,
-    deployment-service/deployment_service/smoke_test_framework.py,
-    deployment-service/deployment_service/sports_latency_observation.py,
-  ]
+context_scope: [deployment-service/scripts/quality-gates.sh, deployment-service/deployment_service/shard_builder.py, deployment-service/deployment_service/shard_calculator.py, deployment-service/deployment_service/smoke_test_framework.py, deployment-service/deployment_service/sports_latency_observation.py, /codex/06-coding-standards/quality-gates.md]
 ---
 
 # deployment-service basedpyright ratchet broken by a dependency backmerge, not by deployment-service's own code
@@ -284,3 +277,7 @@ finding auto-recovers instead of re-escalating) is blocked on this ratchet.
 
 **Recommended next item**: Todo 2 (operator decision) — it unblocks ALL deployment-service shipping immediately,
 independent of whether Todo 3's cache-hit investigation ever resolves the "why."
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

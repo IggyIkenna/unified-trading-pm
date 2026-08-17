@@ -35,14 +35,7 @@ depends_on: [data_completion_defi_2026_07_15]
 gate_on_depends: true
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    /plans/active/data_completion_defi_2026_07_15.md,
-    /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py,
-  ]
+context_scope: [/plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md, /plans/active/data_completion_defi_2026_07_15.md, /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md, market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py]
 ---
 
 > **Dispatch gate is now AUTHORED HERE, not hand-edited into `backlog.yaml` (2026-07-31, corpus-sweep):** re-check #14
@@ -962,3 +955,4 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
   wiring, 3x VM relaunches, a GraphQL schema-drift fix, a tarball-staleness audit, a zombie-watchdog fix, a 13-round
   redispatch storm). Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:3d66938a1d9bef6a]: KEEP-NA, valid — 964-line doc read end-to-end (two-pass, initial Read truncated at line 546, completed via offset=547), including the full incident history: Morpho adapter dead-code wiring, 3 VM relaunches, a GraphQL schema-drift bug, a launch/publish tarball-staleness race that triggered a fleet-wide P0 audit, an 11+ round redispatch storm on a since-fixed consolidator-staleness precondition, and a backlog.yaml hand-edit later formally re-channeled into frontmatter (2026-07-31 operator ruling, documented in the banner).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

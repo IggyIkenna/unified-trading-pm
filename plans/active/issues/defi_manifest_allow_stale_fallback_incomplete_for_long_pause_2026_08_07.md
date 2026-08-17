@@ -52,12 +52,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope:
-  [
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
-    unified-trading-library/unified_trading_library/manifest_consolidator.py,
-    deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh,
-  ]
+context_scope: [unified-trading-library/unified_trading_library/manifest_writer/_read_index.py, unified-trading-library/unified_trading_library/manifest_consolidator.py, deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh, /plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md]
 ---
 
 # `MANIFEST_ALLOW_STALE_FALLBACK` incomplete-for-long-pause gap (2026-08-07)
@@ -165,3 +160,4 @@ Two independently-shippable angles:
   the low-confidence flag carried since 2026-08-08 in `ag_closeout_audit_infra_parked_2026_08_08.md` finding 22 /
   `ag_closeout_audit_infra_parked_2026_08_09.md` finding 6 — recommendation B taken). Frontmatter updated; content
   unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

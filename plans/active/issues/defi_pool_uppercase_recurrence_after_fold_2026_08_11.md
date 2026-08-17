@@ -57,15 +57,7 @@ source: >-
   block) — this doc documents a second, independent blocking gap found while researching how to safely resolve the first
   one.
 execution_scope: orchestrator-agent
-context_scope:
-  [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/02-data/canonical-cutover-register.md,
-    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py,
-    market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py,
-    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
-  ]
+context_scope: [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/02-data/canonical-cutover-register.md, market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py, market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py, market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py, market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -435,3 +427,4 @@ delete, but the same evidentiary bar applies given real financial data is at sta
     if the freshest post-fix row is lowercase `pool`, the gate is satisfied and retirement can proceed; if
     uppercase `POOL` keeps appearing post-fix, the fix has NOT actually deployed live despite being on main and
     needs the new Cloud-Build-staleness DIAG todo resolved first.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

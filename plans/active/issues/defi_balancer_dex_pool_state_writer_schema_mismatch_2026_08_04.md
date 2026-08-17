@@ -57,14 +57,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_parsers.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py,
-    strategy-service/strategy_service/engine/core/canonical_dex_pool_provider.py,
-    /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
-    /codex/02-data/defi-canonical-naming-ssot.md,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_parsers.py, market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py, strategy-service/strategy_service/engine/core/canonical_dex_pool_provider.py, /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md, /codex/02-data/defi-canonical-naming-ssot.md]
 ---
 
 # BALANCER `dex_pool_state` writer schema mismatch — fee accrual silently reads 0 (2026-08-04)
@@ -283,3 +276,4 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
   `[HUMAN]` historical-backfill decision. Matches the 2026-08-07 audit's own classification (dead-code item tagged
   MISCLASSIFIED_LIKELY_AO_ELIGIBLE at lower confidence, held at doc-level per precedent). Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:401ef52cf40b6d68]: KEEP-NA, valid — Focused issue doc on a live production data-correctness bug (BALANCER dex_pool_state writer emitting legacy cumulative column names, causing fee_apy_bps to silently read 0 for all Balancer pools).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

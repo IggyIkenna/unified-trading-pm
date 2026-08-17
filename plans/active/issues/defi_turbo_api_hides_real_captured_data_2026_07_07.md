@@ -48,13 +48,7 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
-context_scope:
-  [
-    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
-    unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py,
-    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
-    deployment-api/deployment_api/services/data_status/defi.py,
-  ]
+context_scope: [unified-api-contracts/unified_api_contracts/registry/defi_venues.py, unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py, /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md, deployment-api/deployment_api/services/data_status/defi.py]
 ---
 
 > **NOTIFY-OPERATOR class finding — a live, current data-correctness bug, not a design question.** Filed P0 because the
@@ -407,3 +401,4 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   (deterministic UAC registration, no remaining judgment call). Flipped `assigned_vm: NA` -> `assigned_vm: planning` —
   this was the doc's only open todo.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

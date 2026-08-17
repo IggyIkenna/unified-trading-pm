@@ -75,14 +75,7 @@ source: >-
   calling unified_trading_library.get_secret_client correctly and revealed the sibling venue_credentials.py file
   already had this exact bug).
 drift_direction: advance-code
-context_scope:
-  [
-    unified-trading-library/unified_trading_library/core/client_factory.py,
-    unified-trading-library/unified_trading_library/cloud_interface/factory.py,
-    deployment-api/deployment_api/routes/infra_health.py,
-    deployment-api/deployment_api/routes/repo_coverage.py,
-    deployment-api/deployment_api/routes/repo_readiness.py,
-  ]
+context_scope: [unified-trading-library/unified_trading_library/core/client_factory.py, unified-trading-library/unified_trading_library/cloud_interface/factory.py, deployment-api/deployment_api/routes/infra_health.py, deployment-api/deployment_api/routes/repo_coverage.py, deployment-api/deployment_api/routes/repo_readiness.py]
 ---
 
 # deployment-api: positional `project_id` misread as `provider` in `get_secret_client`/`get_storage_client`
@@ -120,3 +113,4 @@ blast radius deserves its own look rather than an ad-hoc bundled fix. Ruled out
 `deployment_state_reader.py:92,135` as a false positive — it calls a local wrapper
 (`deployment_api/utils/storage_client.py::get_storage_client`) with the correct signature, not the
 buggy UTL function.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

@@ -22,14 +22,7 @@ created: "2026-08-10"
 author: slot-7
 source:
   - cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md N5r/N6r item
-context_scope:
-  [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    market-tick-data-service/market_tick_data_service/scripts/defi_manifest_venue_itype_canon_swap.py,
-    market-tick-data-service/market_tick_data_service/scripts/defi_manifest_drain_gate.py,
-    deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh,
-  ]
+context_scope: [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/05-infrastructure/vm-launcher-runbook.md, market-tick-data-service/market_tick_data_service/scripts/defi_manifest_venue_itype_canon_swap.py, market-tick-data-service/market_tick_data_service/scripts/defi_manifest_drain_gate.py, deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh]
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
@@ -169,3 +162,4 @@ mandatory verified pre-write snapshot).
   `git fetch && git merge --ff-only origin/live-defi-rollout`, push the launcher commit, then launch the projection VM
   via `bash scripts/vm/launch-defi-manifest-projection-vm.sh`. Todo (e) remains gated on (c)'s projection output.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

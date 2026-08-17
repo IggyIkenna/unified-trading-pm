@@ -61,13 +61,7 @@ supersedes:
 superseded_by:
 depends_on:
 source: ["operator CI audit, 2026-08-06 — deployment-api PR #501, run 31087761957, job 92571271263"]
-context_scope:
-  [
-    unified-trading-library/unified_trading_library/events/__init__.py,
-    unified-trading-library/unified_trading_library/events_interface/__init__.py,
-    deployment-api/tests/conftest.py,
-    unified-trading-library/unified_trading_library/events/run_lifecycle.py,
-  ]
+context_scope: [unified-trading-library/unified_trading_library/events/__init__.py, unified-trading-library/unified_trading_library/events_interface/__init__.py, deployment-api/tests/conftest.py, unified-trading-library/unified_trading_library/events/run_lifecycle.py]
 ---
 
 # deployment-api test flake: real GCE metadata probe despite a GcsEventSink mock
@@ -192,3 +186,4 @@ executes the real lifecycle context manager at all).
   (investigate + reconcile the two independent `unified_trading_library` event-global-state stores, and why the
   `conftest.py` autouse reset didn't prevent the CI-only leak) is genuine investigation/design work on a fleet-wide
   shared dependency, not a mechanical fix.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

@@ -48,14 +48,7 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
-    /codex/06-coding-standards/quality-gates.md,
-    scripts/hooks/prettier-autostage.sh,
-    agent-orchestrator/dashboard/package.json,
-    agent-orchestrator/scripts/quality-gates.sh,
-  ]
+context_scope: [/plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md, /codex/06-coding-standards/quality-gates.md, scripts/hooks/prettier-autostage.sh, agent-orchestrator/dashboard/package.json, agent-orchestrator/scripts/quality-gates.sh]
 ---
 
 # Dashboard prettier version skew vs the autostage wrapper's pin
@@ -126,3 +119,4 @@ and the gate passed, so nothing was blocked.
   `ao_satellite_ao_dispatch_batch10_2026_08_09.md` (todo 6). Item 2 ('decide whether the dashboard should gate on
   formatting at all') is a genuine, undecided design/policy call per the doc's own text and the round7/08-08 marker's
   reasoning — agrees, no new facts found.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
