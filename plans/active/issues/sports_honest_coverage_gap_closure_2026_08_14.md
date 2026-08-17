@@ -557,10 +557,24 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       workers on a 4-vCPU box is oversubscribed for this job's per-worker memory footprint. **This is a genuine
       retry-with-a-fix, not the blind 4th-retry the note above warns against** (different cause, not the
       consolidator-watchdog one) — relaunched as `sports-manifest-rescan-20260817-165755` with `--workers 4`
-      (matching vCPU count). **Did NOT yet change the launcher's default** — want this attempt to actually
-      complete first (verify a fix before committing it, not just theorize one); if `--workers 4` succeeds,
-      lower the hardcoded default from 16 to 4 in the same commit as closing this todo, citing this incident.
-      Check `vm-logs/sports-manifest-rescan-20260817-165755/run.log` for a clean `DEPLOYMENT_COMPLETED
+      (matching vCPU count).
+      **Attempt 4's `--workers 4` fix was WRONG — corrected in the same tick, not left standing.** SSH'd in directly
+      (not just log-watching) while it sat at the identical `93400/142894` progress point attempt 3 died at,
+      heartbeats still ticking: `ps aux` showed exactly ONE `rescan_sports_fixtures_canonical.py` process at
+      94% RSS (`free -h`: 15Gi/15Gi used, 57Mi available) — `--workers` controls IN-PROCESS concurrency
+      (threads/async), not separate OS processes, so reducing it does nothing to the size of whatever dataset this
+      script loads into memory. The real constraint is the machine's 16GB RAM, not worker count. Confirmed by
+      re-reading: the launcher never had a `--machine-type` override at all — hardcoded `e2-standard-4` with no
+      escape hatch. **Fixed properly**: added `--machine-type` override to `launch-sports-manifest-rescan-vm.sh`
+      (`deployment-service@a06dffebdf`, QG green, mirrors the launcher's existing `--workers`/`--vm-name`-style
+      override pattern) — did NOT touch the hardcoded DEFAULT yet, same "verify before committing" discipline as
+      the workers attempt. Attempt 4 died on its own (OOM) shortly after the SSH check, as expected. Relaunched as
+      attempt 5, `sports-manifest-rescan-20260817-175102`, with `--machine-type e2-highmem-4` (32GB, double RAM)
+      `--workers 4`. If this completes: raise the launcher's hardcoded default machine-type from `e2-standard-4`
+      to `e2-highmem-4` in the same commit as closing this todo. If it ALSO OOMs: the dataset itself needs a
+      streaming/chunked read fix in `rescan_sports_fixtures_canonical.py`, not another machine-size escalation —
+      stop retrying blindly and look at what the script actually holds in memory.
+      Check `vm-logs/sports-manifest-rescan-20260817-175102/run.log` for a clean `DEPLOYMENT_COMPLETED
       exit_code=0`, and spot-check that the weather VM's new captures show up as `empty_confirmed` (not still
       `expected_unattempted`) in the manifest afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
