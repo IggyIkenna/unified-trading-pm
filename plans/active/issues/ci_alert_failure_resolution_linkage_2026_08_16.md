@@ -63,6 +63,7 @@ context_scope:
     unified-trading-ci/.github/workflows/python-quality-gates-v2.yml,
     .github/workflows/ldr-to-main-promote.yml,
     .github/workflows/ldr-ci-monitor.yml,
+    /codex/04-architecture/ci-alerting.md,
   ]
 source: >-
   Direct operator feedback during a long `/autonomous` CI-alert-debounce session (2026-08-15/16) —
@@ -111,3 +112,6 @@ source: >-
   earlier this session), and touching a fleet-wide promotion workflow under those conditions late
   in an already eventful session was judged not worth the risk. Left as tracked, scoped follow-up
   work rather than attempted blind.
+
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added `/codex/04-architecture/ci-alerting.md`,
+  the SSOT this doc's own `related:` field already cited but its context_scope hadn't yet surfaced.

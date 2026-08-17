@@ -50,9 +50,9 @@ context_scope:
   [
     /plans/archive/2026_08/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
+    /plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md,
     unified-trading-library/unified_trading_library/cf_manifest_audit.py,
   ]
 ---
@@ -398,3 +398,8 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   citing `unified-trading-pm@e6d24727aa` (the issue doc) + this commit's landed SHA, explicit that the backfill was not
   completed this session. If a future session resumes this before landing is confirmed: do NOT re-ship the same two
   scripts — check `git log --all --grep=908cfecf` / the commit's presence on `origin/live-defi-rollout` first.
+
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- swapped the older, now largely superseded
+  `sports_cf8_available_at_backfill_regression_2026_07_13.md` for `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`,
+  the doc the still-open P3 sports CF-8 backfill todo's own text now names as carrying "full evidence + fix/cleanup/
+  re-attempt todos" for the current blocker (a write-path bug found mid-execution 2026-08-15).

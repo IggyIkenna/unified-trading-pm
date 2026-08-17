@@ -768,3 +768,7 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   review-craft's process-observation escalation for `-003`). Todo remains open — proceed once this competing VM
   completes or is confirmed dead. Declining via `reason_code: "GATED"` (own done-when condition unmet, not a genuine
   ambiguity), no `park_now` per the same established multi-hour-ETA rationale as the two prior entries.
+
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries), unchanged -- the gating parent/finalize plans, the
+  two VM-preemption codex SSOTs, the launcher script, and the escalation-cooldown module still cover the doc's subject
+  matter through the 10th-relaunch dispatch churn.

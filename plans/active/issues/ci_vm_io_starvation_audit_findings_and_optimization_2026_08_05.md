@@ -54,7 +54,7 @@ context_scope:
     /codex/07-security/self-hosted-runner-security-posture.md,
     scripts/quality-gates-base/qg-host-governor.sh,
     scripts/dev/qg_resource_baseline.json,
-    scripts/plan-hygiene/run_hygiene_sweep.sh,
+    unified-trading-ci/.github/workflows/python-quality-gates-v2.yml,
   ]
 ---
 
@@ -871,3 +871,8 @@ valid — Large, actively-evolving CI-VM cost/I/O audit (2026-08-05 original, in
 live AWS/SSM/CloudWatch evidence (VM downsized to m8i.2xlarge, EBS bumped, public-repo migration completed, uv cache
 gated off, 6 plan-hygiene ratchets fixed, job-minutes re-measured -32.4%). 8 items remain open. Each falls into one of:
 (a) explicit operator-deferred security decision (item 2, [OPERATOR]-tagged, 2026-08-08 ruling 'leave... blocked...
+
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- swapped the now-closed `run_hygiene_sweep.sh`
+  (its only relevance, the plan-hygiene ratchet fix, is DONE) for `python-quality-gates-v2.yml`, the concrete file
+  behind two still-open items (the hardcoded `content-gate` runner decision; the governor's `QG_GOVERNOR_MODE`
+  reservation-vs-token gating).

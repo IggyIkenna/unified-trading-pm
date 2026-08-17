@@ -50,6 +50,7 @@ context_scope:
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/routes/slots_ops.py,
     agent-orchestrator/server/auto_park.py,
+    /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
   ]
 ---
 
@@ -220,4 +221,5 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:63c0490dc6e560eb]: KEEP-NA, valid — root-cause todo already done; both remaining items need an operator-only dashboard unpark action this interactive session has no write access to trigger.
-- **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:6fd2657b384ea727]: KEEP-NA, valid — re-affirms the marker above. The [OPERATOR]-tagged unpark item needs the operator to "agree with this read" before risking a re-wedge — an AO-dispatched worker's own curl access to the endpoint does not substitute for that judgment call.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added the now-archived TmuxPruner root-cause
+  doc this doc's own completed BACKEND todo cites as carrying "full detail" on the fix that unblocks the pending unpark.
