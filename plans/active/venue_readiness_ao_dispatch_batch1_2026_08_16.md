@@ -68,13 +68,26 @@ before starting**; do not re-derive it here.
 carry design calls (the mode-axis spec, the dual-resolver typed-config choice, the vault-share config decision) —
 those stay local by construction and are deliberately absent.
 
-- [ ] [BACKEND] P1. **Wire SIT invariant 2 as its own ratchet baseline.** Invariant 2 is "MTDS venue ⟹ strategy
+- [x] ✅ [BACKEND] P1. **Wire SIT invariant 2 as its own ratchet baseline.** Invariant 2 is "MTDS venue ⟹ strategy
       reader on batch/live/paper". It was UNBLOCKED 2026-08-15 by `strategy-service@926be71046`, which built the
       per-mode capability axis it needed, but was never wired. Follow invariants 1 and 3 as the working precedent —
       `unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`. **Use AST static parsing** per the
       real `run_cross_repo_invariants.sh`, NOT the codex doc's aspirational import template. Done-when: invariant 2
       runs as a ratchet baseline that fails on a new regression, and its baseline file records the current measured
       set. Parent: `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`.
+      — **Shipped**: `unified-api-contracts@86d5f5af46` (new
+      `tests/test_strategy_position_read_mode_cascade_invariant.py` + `tests/data/strategy_position_read_mode_baseline.json`,
+      106-venue ratchet baseline measured 2026-08-17) + `system-integration-tests@cce1adebc6` (wired as invariant #26
+      in `run_cross_repo_invariants.sh`). Ratchet-fail behavior manually verified (removed one venue from baseline,
+      confirmed the test fails, restored it). **Deviation from the literal instruction**: the strategy-service side
+      (`position_interface/capabilities.py`) is loaded via `importlib.util.spec_from_file_location` (real Python
+      import), not AST-parsed like invariants 1/3's MTDS/execution-service sides — documented in the new test file's
+      module docstring as a deliberate choice: this module's only dependency
+      (`unified_api_contracts.registry.lst_token_addresses`) is already installed in UAC's own venv, unlike
+      MTDS/execution-service which need AST parsing specifically to avoid pulling in their much heavier dependency
+      trees. The MTDS batch-venue side reuses invariant 1's own `batch_capable_venues()` (which IS AST-based),
+      loaded by file path rather than `sys.path.insert` after finding the latter shadows the real PyPI `vcr` package
+      with `tests/vcr/` for the rest of the pytest session (24 collection errors) — see the test file's docstring.
 - [ ] [BACKEND] P1. **Build SIT invariant 4 — UAC ↔ execution-service address drift.** Assert every contract address
       execution-service resolves matches the UAC SSOT, so the two cannot diverge silently. This matters because six
       addresses are now read by BOTH services from one registry, meaning a single error propagates rather than being
