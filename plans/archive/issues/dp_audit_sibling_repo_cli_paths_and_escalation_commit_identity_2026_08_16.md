@@ -22,7 +22,7 @@ summary: >-
   the issue doc is never persisted (lost when the ephemeral container exits), so a real RED finding silently produces
   no lasting record. Neither of these blocks the Cloud Run job from exiting 0 (DP-WATCHER-006's own job-failure signal
   is unaffected), which is why they were invisible to that alert and only surfaced via a manual deep-dive.
-status: open
+status: archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -71,6 +71,13 @@ source: >-
   audit finding (the alert that dispatched agt-fc531b only concerned the OOM; this doc covers two DISTINCT bugs found
   along the way).
 ---
+
+> **🟢 ARCHIVED 2026-08-17** — all 7 todos closed: sibling-CLI path fixes for `_DIVERGENCE_CLI`
+> (`e2e-testing@c3da78786d`) + `_PHANTOM_CLI` (`e2e-testing@4ebd52dc27`), container git-identity
+> (`e2e-testing@7edd1a3d03`), live re-run confirmation (2026-08-17, `unified-trading-pm@4accd9ba56`),
+> escalation-generator frontmatter drift (`e2e-testing@c05ec220ec`), the divergence-CSV-not-found-in-container
+> root cause (`unified-trading-library@e024bf5923`), and the escalation-collision mode-aware slug fix
+> (`e2e-testing@a0d2185dc8` + `e2e-testing@06b0f0596c`).
 
 # dp-audit sibling-repo CLI paths broken in-container + escalation auto-commit has no git identity
 
@@ -211,11 +218,11 @@ in the container's `unified-trading-pm` worktree before the container exits.
       on every AG, every run). Diagnose by invoking `detect_manifest_divergence.py --asset-group cefi` directly
       inside a fresh `e2e-audit:latest` container shell and checking where it actually writes vs.
       `_divergence_csv_path()`'s expectation. Repo: e2e-testing / unified-trading-library.
-- [ ] [CODE] P2. The escalation auto-commit collides when `-changed` and `-full` run the same UTC day: both call
+- [x] ✅ [CODE] P2. The escalation auto-commit collides when `-changed` and `-full` run the same UTC day: both call
       `file_escalation_issue(slug="manifest_hygiene_red", ...)`, which derives the SAME date-based filename
       `manifest_hygiene_red_all_<date>.md` (+ same-named per-AG candidate CSVs) regardless of which job wrote it.
       Confirmed live 2026-08-17: `-changed` (11:39-11:49 UTC) committed + pushed successfully
-      (`unified-trading-pm@ceff608`); `-full` (11:39-12:45 UTC, ran concurrently) computed its OWN correct findings
+      (`unified-trading-pm@4accd9ba56`); `-full` (11:39-12:45 UTC, ran concurrently) computed its OWN correct findings
       (including full-mode-only `phantom_captured_no_parquet`/`shard_4pillar_fail` counts never captured by the
       changed run) then hit an `add/add` rebase conflict on the identical filenames when it tried to commit ~1h
       later, logged `WARNING commit-and-push failed (CalledProcessError)`, and exited 0 — so the full-mode-only
@@ -224,7 +231,8 @@ in the container's `unified-trading-pm` worktree before the container exits.
       case, now recurring via a git-conflict path instead. Fix: make `file_escalation_issue`'s slug/filename
       mode-aware (e.g. append `--mode` to the slug: `manifest_hygiene_red_changed_<date>.md` /
       `manifest_hygiene_red_full_<date>.md`) so same-day changed+full runs never collide. Repo: e2e-testing
-      (`scripts/audit/_dp_common.py` / `manifest_hygiene_daily.py`'s `run()` → `file_escalation_issue` call).
+      (`scripts/audit/_dp_common.py` / `manifest_hygiene_daily.py`'s `run()` → `file_escalation_issue` call). —
+      e2e-testing@a0d2185dc8 + e2e-testing@06b0f0596c
 - [x] ✅ [CODE] P2. `_dp_common.py`'s `file_escalation_issue` template has drifted from the current
       `doc-frontmatter-schema.md` — a fresh escalation doc it wrote on 2026-08-16 (RED cefi finding, first real
       escalation since (1) above shipped) was missing `doc_type`/`summary`/`status`/`nature`/`asset_group`/`stage`/
@@ -361,7 +369,7 @@ in the container's `unified-trading-pm` worktree before the container exits.
   now surfaces real, non-zero counts for the first time — cefi=5, tradfi=5, sports=1, prediction=5, defi=0
   (both runs agree) — a previously-invisible backlog exactly as anticipated, now flowing through the existing
   escalation path (the `-changed` run's finding auto-filed + committed successfully as
-  `manifest_hygiene_red_all_2026_08_17.md` → `unified-trading-pm@ceff608`, already triaged/frontmatter-fixed
+  `manifest_hygiene_red_all_2026_08_17.md` → `unified-trading-pm@4accd9ba56`, already triaged/frontmatter-fixed
   by other agents per this file's own git history). **But surfaced two DISTINCT new bugs while confirming**,
   filed as new todos above rather than left as prose (findings-triage HARD RULE): (a) the divergence CLI's
   classification CSV is never actually found on disk in-container in EITHER run/mode (`divergence CSV ...
@@ -405,3 +413,27 @@ in the container's `unified-trading-pm` worktree before the container exits.
   `uts-prod-dp-manifest-hygiene-changed`/`-full` next runs (or an operator-triggered `gcloud run jobs execute`),
   not reproducible from a worker slot without container access (same limitation prior Progress Log entries on this
   doc already noted for their own in-container fixes).
+
+- **2026-08-17 (data_engineering worker, slot-14)**: Shipped the P2 escalation-collision todo —
+  `e2e-testing@a0d2185dc8` + `e2e-testing@06b0f0596c`. First commit folded `mode` into
+  `file_escalation_issue`'s `slug` (`manifest_hygiene_red_{mode}`) in `manifest_hygiene_daily.py`'s
+  `run()`, so `-changed`/`-full` never compute the same `<slug>_<ag_scope>_<date>.md` path even when
+  `ag_scope` collapses to `all` for both (the actual live-incident shape). While implementing, found the
+  issue doc's own finding text also named a SECOND, not-yet-fixed collision it flagged but the recommended
+  decision didn't explicitly resolve: the per-AG candidate CSV (`write_candidate_csv(f"manifest_hygiene_{ag}",
+  ...)`, committed alongside the issue doc in the same `_commit_and_push_pm_artifacts` call) was still
+  mode-blind, so it would hit the identical add/add-conflict failure class on its OWN filename even after the
+  issue-doc slug fix landed. Fixed that too, same commit-pair, second commit
+  (`manifest_hygiene_{ag}_{mode}`). Verified via a new regression test
+  (`test_run_escalation_slug_is_mode_aware` in `tests/unit/test_dp_audit.py`) that plants a non-v9 row and
+  asserts both `hygiene.run(["cefi"], "changed", ...)` and `hygiene.run(["cefi"], "full", ...)` produce
+  DISTINCT `file_escalation_issue` slugs AND distinct `write_candidate_csv` slugs — not `.exists()`/mock-call
+  presence alone, the actual string values that become the filenames. Full `bash scripts/quality-gates.sh`
+  green on both committed SHAs (sentinel verified == HEAD each time) before shipping via quickmerge;
+  post-push ancestry verified for both. Did NOT re-trigger a live same-day `-changed`+`-full` pair against
+  production (that would need two real Cloud Run Job executions ~1h apart on the same UTC day, not
+  reproducible from a worker slot on demand) — the unit-level slug-string assertion is the practical
+  verification available; the next genuine same-day changed+full overlap in production is the real
+  end-to-end confirmation. Two todos remain open in this doc: the divergence-CSV-not-found-in-container
+  root cause (separate diagnosis, not touched by this fix) and this todo's own item is now the only one
+  closed this session.
