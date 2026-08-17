@@ -124,13 +124,13 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       (`strategy-service/.../arbitrage_structural/liquidation_capture.py:87`) stops reading a permanent `0.0`. Repo:
       features-service. Done when: `LIQUIDATION_CAPTURE`'s `gas_cost` is confirmed non-zero on a real block in a
       paper run, with a regression test.
-- [ ] [STRATEGY] P1. Wire a real `fees_apy_bps` (or an explicit gas-only sub-term) into
+- [x] ✅ [STRATEGY] P1. Wire a real `fees_apy_bps` (or an explicit gas-only sub-term) into
       `strategy-service/.../carry_and_yield/staked_basis.py:459-460`'s `net_carry` calc — replace
       `paper_run_handler.py:342,1196`'s hardcoded `0.0` with the real computed value once the features.py-side
       producer exists (may share the P1 calculator above, or a dedicated funding/swap/gas composite — needs a short
       design decision on scope, not a blind guess). Repo: strategy-service (+ features-service if the composite
       lives there). Done when: `CARRY_STAKED_BASIS` nets a real non-zero gas term in a live/paper run, with a
-      regression test; `paper_run_handler.py`'s hardcode removed.
+      regression test; `paper_run_handler.py`'s hardcode removed. — strategy-service@f09969fe94
 - [ ] [STRATEGY] P2. Implement `JIT_LIQUIDITY`'s (`strategy-service/.../mev/jit_liquidity.py`) documented
       gas+IL+flash-fee profitability threshold in `on_tick()`, or correct the docstring if the threshold is
       deliberately not enforced (state which, with the reasoning). Repo: strategy-service. Done when: either the
@@ -155,3 +155,22 @@ execution-service's gas-cost models and features-service's onchain calculators. 
   features-service calculator is quant_dev/features craft scope, not data_engineering, and is bigger than this
   todo's 1-hour estimate. Cited back into the source todo's checkbox in
   `defi_satellite_ao_dispatch_batch16_2026_08_17.md` rather than left as an unresolved verification.
+- **2026-08-17 (slot-17)**: closed the `[STRATEGY] P1` `CARRY_STAKED_BASIS` `fees_apy_bps` todo — scope decision: a
+  **gas-only sub-term** (the todo's own offered alternative to a full funding+swap+gas composite), computed inside
+  `CarryStakedBasisEngine._preflight`/`_estimate_gas_fees_apy_bps` rather than as a new features-service producer, so
+  the fix stayed strategy-service-only (no features-service touch needed). Real inputs, never fabricated: on-chain
+  swap-gas units come from UAC's already-cited `unified_api_contracts.internal.architecture_v2.FEES_REGISTRY` (the
+  same execution-service-sourced numbers other DeFi cost models reuse — no new number invented); gas price + native
+  price are real per-tick values (`features["gas_price_gwei"]` now sourced in `paper_run_handler.py` from MTDS's
+  captured `gas_fees` corpus via the SAME real reader `pnl_input_builder._load_gas_fee_data` already uses for
+  post-trade gas accounting; native price reuses the tick's real `mid_price`). The one-time round-trip gas cost is
+  annualised via a new tunable `fee_amortization_days` engine param (default 30) to make it comparable to
+  `staking_apy_bps`/`funding_rate_apy_bps`. `fees_apy_bps` stays an OPTIONAL feature override — the gas estimate only
+  fires when the key is absent, so every existing test that explicitly passes `fees_apy_bps` (including F-10's own
+  suite) is unaffected. Both `paper_run_handler.py:342,1196` hardcodes (`"fees_apy_bps": 0.0`) removed. 10 new
+  regression tests added (`TestFeesApyBpsGasFallback` + `TestEstimateGasFeesApyBpsUnit`) covering: absent-both
+  matches pre-change behaviour, a real gas price computes a nonzero fee that can suppress entry (mirrors F-10), a CEX
+  `spot_venue` correctly stays 0.0 (no on-chain gas leg — honest, not a gap), and the exact annualisation arithmetic.
+  Shipped strategy-service@f09969fe94 (Pass-1 QG green, sentinel-verified). Remaining sibling todos in this doc
+  (FEATURES P1 `LIQUIDATION_CAPTURE`, STRATEGY P2 `JIT_LIQUIDITY`, STRATEGY P3 `BACKRUN` + `ExecutionCostEstimator`)
+  are untouched — separate scope, not part of this task.
