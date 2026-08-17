@@ -54,6 +54,19 @@ per-item detail. Not archived (genuine open work remains).
   frontmatter `model: sonnet` + CLAUDE.md's 2026-08-08 ruling that opus is manual-only): re-ran the cited greps,
   re-counted checkboxes, and re-read surrounding context for every candidate before applying a fix.
 
+## Checkpoint 2 — operator answered BLK-bddcd537 ("A"), applied
+
+Filed as a blocked-question (STEP 6a) after `check_line_caps` correctly blocked the §I table fix — see
+Contradictions #4 below for the original finding. Operator answered **A** (via `GET /api/activity`, since the
+answer never reached `/api/slots/28/messages` — the same known orphaning bug as
+`plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`; adding this as a fresh data point there).
+Applied: extracted 3 more historical Progress Log entries (measurement lesson, fourth pass, third pass — all
+2026-08-12, pure session narration already folded into sections H/H.5/H.7 above, no open todo referenced) from
+`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` to the existing companion archive doc
+(`/plans/archive/2026_08/elysium_october_delivery_and_code_disclosure_readiness_progress_log_history_2026_08_15.md`),
+same pattern as that doc's own 2026-08-15 extraction. Doc now 960L (was 1001L), comfortable headroom restored.
+Reapplied the previously-reverted §I table fix on top (elysium_carveout 16/2→18/4, uac_kamino 0/0→1/0).
+
 ## Flips verified (applied this run)
 
 1. `elysium_carveout_stubbed_strategy_service_2026_08_12.md` — PortfolioRiskService todo `[ ]`→`[x]`: the doc's own
@@ -128,16 +141,8 @@ per-item detail. Not archived (genuine open work remains).
 
 ## Doc-drift / routed (NOT auto-fixed — genuine judgment calls, blocked by another gate, or needs live infra/investigation beyond doc reconciliation)
 
-- **`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` is 1001L, over the 1000L hard cap** (P1,
-  hunter batch E, corroborated by the pre-commit `check_line_caps` gate independently blocking my unrelated table-row
-  fix). Self-aware (doc's own line ~924 flags it), already underwent one remediation extraction 2026-08-15
-  (Progress Log history moved to `/plans/archive/2026_08/elysium_october_delivery_and_code_disclosure_readiness_progress_log_history_2026_08_15.md`)
-  but crept back over cap via 2 more Progress Log entries appended after that extraction. Needs another
-  remediation-extraction pass (operator-gated: splitting/trimming a plan's content is a planning decision, not a
-  mechanical doc-hygiene fix I should make unilaterally) — **once split, also apply the §I table fix**: row
-  `elysium_carveout_stubbed_strategy_service_2026_08_12` should read "18/4" not "16/2"; row
-  `uac_kamino_venue_reachability_cascade_regression_2026_08_15` should read "1/0" not "0/0" (re-counted+verified
-  this run, ready to reapply).
+- ~~`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` over cap~~ **RESOLVED — see Checkpoint 2
+  above** (operator ruling A applied: extraction + table fix both landed).
 - **`data_pipeline_check_mdps_features_2026_07_20.md`** (hunter batch A) — a same-day-earlier plan_reconciler entry
   in this SAME doc already found the todo's cited gating doc (`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`)
   resolved/archived 19 days ago, but the still-open `[REVIEW] P2` todo (line ~255, "split the P0 item into its own
