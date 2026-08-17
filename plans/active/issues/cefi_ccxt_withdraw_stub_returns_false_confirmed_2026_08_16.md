@@ -140,8 +140,44 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
       call site exists (or an existing one is identified and wired), the connection is exercised end-to-end against
       a REAL exchange sandbox/testnet account (not a mock), and the result is verified against that exchange's own
       confirmation — this is the remaining, genuinely live-credentialed half of the original done-when.
-- [ ] [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** if it had
-      ever been reachable — done-when: a cited answer, yes or no, with evidence.
+- [x] ✅ [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** if it
+      had ever been reachable — done-when: a cited answer, yes or no, with evidence. **Answer: NO — two
+      independent reasons, evidence 2026-08-17.** (1) No existing reconciliation component checks a
+      withdrawal/transfer outcome against exchange state at all: `funding_recon_engine.py` reconciles perp
+      funding-rate *payments* (not fund transfers); `pnl_monitor.py` reconciles positions/fills for PnL (not
+      transfers); `recon_gate.py` is a pre-close health gate that queries strategy-service/PBMS's own
+      `/health/recon/{venue}` endpoint (not a balance check, and not wired to transfer outcomes at all). (2) Even
+      if a hypothetical caller checked balance post-withdrawal via `TransferAdapter.get_balance()`, that path
+      would ALSO have been blind to the bug:
+      `LiveCcxtTransferAdapter.get_balance()` (`engine/transfers/live_ccxt_adapter.py:242-265`) is itself an
+      unwired stub that unconditionally returns `Decimal("0")` regardless of the real exchange balance — a
+      caller comparing "balance after withdrawal" against "balance before" would see `0` either way, a
+      completely uninformative signal, not a real check. **New finding from this audit, tracked below**: while
+      confirming this, found `execute_internal_transfer` in the same file had the IDENTICAL bug already fixed
+      for `execute_withdrawal` (silently returns CONFIRMED without calling the exchange), plus
+      `TransferHandler._execute_internal_transfer` had the identical "never checks `adapter_result.error`"
+      second bug already fixed for `_execute_cex_withdrawal`. **Both fixed — `execution-service@58dbf04776`**:
+      `execute_internal_transfer` now calls the real `exchange.transfer()` (mirrors `execute_withdrawal`'s
+      `InsufficientFunds`/`NetworkError`/`BaseError` classification into a FAILED `TransferResult`), and
+      `TransferHandler._execute_internal_transfer` now checks `adapter_result.error` and fails loud before
+      emitting `CEX_INTERNAL_TRANSFER_COMPLETED`. 6 new tests (`test_live_ccxt_internal_transfer.py`,
+      `test_transfer_handler_internal_transfer_failure.py`); 4 pre-existing tests in
+      `test_transfer_adapter_fund_context.py` broke because they constructed `LiveCcxtTransferAdapter` with a
+      bare `object()` exchange stand-in (worked when the method was a no-op stub, not once it genuinely calls
+      `.transfer()`) — fixed by swapping in a `.transfer`-mocked `AsyncMock`, same pattern the file already used
+      for the withdrawal tests. 8568 passed/21 skipped, full `quality-gates.sh --no-fix` green before commit.
+      **`get_transfer_status()`/`get_balance()` remain unwired stubs** — tracked as a new P1 todo below, not
+      fixed in this pass (read-only query paths, lower severity than a silent-false-success write path, and
+      this todo's own done-when was the audit answer, not a full sweep of every stub in the file).
+- [ ] [BACKEND] P1. **Wire the remaining two `LiveCcxtTransferAdapter` stubs — `get_transfer_status()` and
+      `get_balance()`** (`engine/transfers/live_ccxt_adapter.py:220-265`), found during the 2026-08-17 audit
+      above. `get_transfer_status()` always returns `PENDING` without calling `exchange.fetch_withdrawal()`;
+      `get_balance()` always returns `Decimal("0")` without calling `exchange.fetch_balance()`. Same
+      DEAD-CODE-TODAY reachability as the rest of this file (no production call site constructs
+      `LiveCcxtTransferAdapter` yet, per the P1 bootstrap-wiring todo above) — must-fix-before-live-trading-
+      cutover, not an active incident. Done-when: both call the real CCXT method, classify errors the same way
+      `execute_withdrawal`/`execute_internal_transfer` do, and have regression tests mirroring
+      `test_live_ccxt_withdraw.py`'s pattern.
 - [ ] [BACKEND] P2. **`TransferCoordinator`'s missing `CEX_WITHDRAW` handler-map entry is itself worth fixing**
       independent of the adapter-wiring fix above — a caller that DOES construct a `TransferCoordinator` directly
       (bypassing `HandlerRegistry`) would hit a `KeyError`, not a clean error. Done-when: `CEX_WITHDRAW` has a
@@ -155,6 +191,11 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
 
 ## Progress Log
 
+- **2026-08-17**: Closed the downstream-reconciliation audit todo — answer NO, with evidence (no reconciliation
+  component checks transfer outcomes; `get_balance()` is itself a blind stub). While auditing, found and fixed
+  `execute_internal_transfer`'s identical silent-fallback bug plus `TransferHandler`'s identical missing
+  error-check bug — `execution-service@58dbf04776`. Added a new P1 todo for the two remaining unwired stubs
+  (`get_transfer_status()`/`get_balance()`), not fixed this pass.
 - **2026-08-16**: Filed during the cefi AG batch's step-9 (transfers) venue-readiness sweep. Flagged to the
   operator directly given the live-money-correctness class of the finding, per this workspace's "big finding →
   notify operator" rule, rather than left as a silent plan todo.
