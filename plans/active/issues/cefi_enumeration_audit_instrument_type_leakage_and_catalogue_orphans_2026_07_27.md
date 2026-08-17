@@ -248,23 +248,55 @@ adjacent axis the same script happens to also report). **Both findings investiga
           migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
           Repos: instruments-service, market-tick-data-service.
 
-- [ ] [DATA] P2. Write + backup-first apply a marker-format migration covering: BYBIT's raw-date dated-future symbol
-      shape (`BYBIT:FUTURE:<SYM>-<DDMMMYY>` with no `@INV`/`@LIN` marker — the 2026-07-09 migration's regex evidently
-      missed this shape), plus new coverage for COINBASE-FUTURES PERPETUAL (`-PERP`-suffixed bare symbols) and
-      BITGET-FUTURES PERPETUAL (whatever its bare-symbol residual shape is, not yet characterized) — 3 venues, ~700
-      still-unmigrated ids total. Follow the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py` pattern
-      (backup-first, content-patch in place, `derive_row_instrument_id` as SSOT). Repo: market-tick-data-service. **NOT
-      operator-gated (round5-cefi-question-resolution 2026-08-08) — reversibility-verified per
-      `plans/active/task_template.md` finding T/U.** Fresh same-run check (2026-08-08):
-      `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112 --format="value(softDeletePolicy.retentionDurationSeconds)"`
-      → **604800** (the 7-day floor finding T requires) — confirmed this is the exact bucket
-      `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`'s pattern targets
-      (`get_tick_data_bucket(None, asset_group="cefi")`, verified by reading the precedent script directly), and that
-      script's `_backup_and_write` already writes a `.backup` copy before every content-patch, ahead of the bucket-level
-      soft-delete floor. Named-venue, named-scope (~700 ids, 3 venues), not a whole-bucket destroy (finding T's one hard
-      exclusion). Reclassifying as ordinary AO-dispatchable `[DATA]` SCRIPT work; the actual migration script still
-      needs to be written (BITGET-FUTURES' bare-symbol shape is explicitly "not yet characterized") — that build + apply
-      work was not done in this pass (documentation-question audit, not an implementation dispatch).
+- [ ] [DATA] P2. **SCRIPT WRITTEN + DRY-RUN VERIFIED 2026-08-17 (slot-24) — NOT YET COMMITTED/SHIPPED, blocked on
+      repo-blocker `RB-3d968cff`** (market-tick-data-service `quality-gates.sh` fails on 2 PRE-EXISTING unit tests
+      unrelated to this diff — `test_solana_defi_handler.py::TestCollectProtocol::test_writes_data_to_gcs`,
+      `test_lst_rates_handler.py::test_process_writes_canonical_partition_per_protocol_chain` — verified via
+      `git stash` + re-run on clean HEAD; see
+      `plans/active/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`). The 3 files below exist,
+      uncommitted, in slot-24's `.tabs/24/market-tick-data-service` working tree — do NOT discard them; ship via the
+      normal Pass-1/Pass-2 flow the moment the blocker clears, THEN flip this checkbox with the real sha. Wrote
+      `market-tick-data-service/scripts/migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py` following the
+      `migrate_cefi_dated_perps_margin_marker_2026_07_09.py` pattern (backup-first to
+      `_migration_backups/cefi_bybit_coinbase_bitget_margin_marker_2026_08_17/`, content-patch in place,
+      `derive_row_instrument_id` as SSOT, dry-run default). BITGET-FUTURES' bare-symbol shape (previously
+      "not yet characterized") is now characterized: glued `<BASE><QUOTE>` (e.g. `IPUSDT`, `TRXUSD`) — same convention
+      as BINANCE-FUTURES/BYBIT. COINBASE-FUTURES raw wire symbol confirmed `<BASE>-PERP` (e.g. `GUN-PERP`), always
+      USD-cash-margined linear. Both required extending `tardis_margin_marker.py`'s `MARGIN_MARKER_VENUES` +
+      `derive_settlement_dimensions` + `derive_base_token` — without that extension `derive_row_instrument_id` falls
+      through to the bare passthrough shape for these 2 venues (verified live before the code change: e.g.
+      `COINBASE-FUTURES:PERPETUAL:GUN-PERP`, no marker). BYBIT's raw-date shape needed NO code change —
+      `derive_row_instrument_id` already correctly canonicalises it given just `symbol` (verified live:
+      `BTCUSDT-25SEP26` → `BYBIT:FUTURE:BTC-USDT@LIN-20260925`); the gap is purely that no migration pass has run
+      against the corpus's current content. Unit tests added (`tests/unit/test_tardis_shared_v6.py`:
+      `TestCoinbaseFutures`, `TestBitgetFutures`, `TestBybit.test_raw_date_dated_future_full_round_trip_gets_marker`)
+      lock the real symbol shapes + full `derive_row_instrument_id` round-trip.
+
+      **The `--apply` was NOT run in this pass — real scope is corpus-scale, not ~700 ids.** A full-corpus dry-run
+      (2019-03-30..2026-08-17, all 3 scopes) discovered 329,610 total files and was still downloading them (required
+      even in dry-run to inspect content) when it hit the shared-host's own runtime limit — this is squarely the
+      "heavy I/O never runs on the operator's local machine, always a VM in-region" HARD RULE
+      (`/codex/05-infrastructure/vm-launcher-runbook.md`), not an interactive-session task. Sized the REAL non-marker
+      population via the availability manifest instead (bounded `filters=[('date',...)]` reads, no full-corpus GCS
+      walk — single-walk discipline preserved): **zero rows for all 3 scopes before 2023-01-01**; from 2023-01-01
+      onward, non-marker counts are BYBIT FUTURE 2,236 (2023-2024) + 8,805 (2025-2026) = **11,041**, COINBASE-FUTURES
+      PERPETUAL 0 (no data before 2025) + 2,792 (2025-2026) = **2,792**, BITGET-FUTURES PERPETUAL 14 (2023-2024) +
+      7,457 (2025-2026) = **7,471** — **~21,304 non-marker rows total**, well above the ~700-id estimate this todo's
+      text originally carried (that estimate was almost certainly counting DISTINCT ids, not per-day shard files — one
+      id can have many daily files). See the new todo below for the actual `--apply` dispatch. Repo:
+      market-tick-data-service.
+
+- [ ] [DATA] P2. Dispatch the `--apply` run of
+      `market-tick-data-service/scripts/migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py` (written +
+      dry-run-verified above) on a dedicated VM per `/codex/05-infrastructure/vm-launcher-runbook.md` — this is
+      corpus-scale I/O (~21,304 non-marker rows to patch, spanning ~298k+ total in-scope files that must be scanned to
+      find them), not interactive-session work. Scope tightly with `--start-date 2023-01-01` (confirmed zero rows for
+      all 3 target scopes before that date via the availability manifest — no need to walk 2019-2022). **NOT
+      operator-gated** — same reversibility basis as the original todo above (bucket soft-delete retention 604800s,
+      `_backup_and_write` writes a backup before every content-patch, named-venue/named-scope, not a whole-bucket
+      destroy); re-verify the retention live before `--apply` since it may have changed since the 2026-08-08 check.
+      Verify via `--sample-days` dry-run first, then `--apply`; confirm outcome-breakdown counts (`patched` /
+      `already_canonical_skipped` / `verify_failed`) before closing. Repo: market-tick-data-service.
 
 > **📤 HISTORICAL — THE P3 TODO BELOW WAS EXTRACTED AND DISPATCHED ELSEWHERE, NOW RESOLVED
 > (`/na-eligibility-audit` 2026-08-02, tranche=cefi; P3 itself closed 2026-08-05, see the todo below).**
@@ -368,3 +400,12 @@ adjacent axis the same script happens to also report). **Both findings investiga
   `execution_scope: local-only` — a self-contradiction (the orchestrator skips any `local-only` plan regardless of
   `assigned_vm`, per `plans/PLAN_FORMAT.md`). The 2026-08-12 entry above already ruled this doc AO-eligible
   (`assigned_vm: planning`); `execution_scope` was simply never updated to match. Flipped to `orchestrator-agent`.
+- **2026-08-17 (slot-24, data_engineering worker)**: wrote + dry-run-verified the marker-format migration script for
+  BYBIT/COINBASE-FUTURES/BITGET-FUTURES (see the todo above for the full writeup). Split the `--apply` into its own new
+  `[DATA] P2` todo below once live characterization showed the real population is corpus-scale (~21,304 non-marker
+  rows, not the ~700-id estimate this doc originally carried) — that scale requires a dedicated VM per the heavy-I/O
+  HARD RULE, not an interactive worker session. **Code NOT YET SHIPPED** — `market-tick-data-service`'s
+  `quality-gates.sh` is red on 2 pre-existing, unrelated tests (repo-blocker `RB-3d968cff`, issue doc
+  `mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`); the 3 files (script + `tardis_margin_marker.py`
+  extension + unit tests) sit uncommitted in slot-24's working tree pending the blocker clearing. Do not re-flip the
+  todo above to done until a real sha exists.
