@@ -114,14 +114,28 @@ source: >-
       flagged docs) before I could finish my own partial fix, gate green again (5 ≤ baseline 0 + buffer 5) as of this
       ship.
 
-- [ ] [INFRA] P2. **Stagger `ldr-to-main-promote-fleet.yml`'s per-repo fan-out** rather than firing all repos
+- [x] ✅ [INFRA] P2. **Stagger `ldr-to-main-promote-fleet.yml`'s per-repo fan-out** rather than firing all repos
       simultaneously on each tick. **NOTE (2026-08-16, retag not stale-content):** the tick cadence itself was
       loosened `*/15` → `*/30` same-day (`unified-trading-pm@1be6a8e036`, both the workflow cron AND
       `ldr-to-main-promote-heartbeat.timer`'s `OnCalendar` — that timer is the ACTUAL driver, see its own header
       comment) — this todo's own scope (staggering dispatch ORDER within one tick's fan-out) is unaffected by that
       and remains valid, but re-verify the CURRENT cron/timer state before touching either file rather than trusting
       "*/15" as a given. Source: same doc (line ~622). Gate: fan-out is measurably staggered; no regression in overall
-      promote-fleet drain latency.
+      promote-fleet drain latency. **DONE 2026-08-17 (slot 20) — unified-trading-pm@23499c954f.** The bounded-parallel
+      driver at the bottom of `scripts/cicd/ldr_to_main_fleet_promote.sh` backgrounded `process_repo "$REPO"` for
+      every repo back-to-back with zero delay, throttled only once `MAXJOBS`=6 were already in flight — the exact
+      shape behind the 2026-08-06 "3 full-workspace-sit dispatches within ~10s" stampede documented inline above the
+      driver. Added an env-overridable `STAGGER_SECONDS` (`LDR_MAIN_PROMOTE_STAGGER_SECONDS`, default 3) with a
+      `sleep "$STAGGER_SECONDS"` between the background launch and the `MAXJOBS` `wait -n` check, so successive
+      launches are spread out in real time (measurably: min inter-launch gap ≈ stagger value) instead of firing as
+      fast as the shell can fork. Drain latency is unaffected in the common case — `process_repo`'s own `gh api`
+      calls (SIT checks, workspace-digest reads, provenance checks, ancestor cleanup) each take far longer than the
+      3s stagger, so the run stays `MAXJOBS`-bound, not stagger-bound; `LDR_MAIN_PROMOTE_STAGGER_SECONDS=0` reproduces
+      the old zero-delay behavior for local/CI testing. New regression test
+      `scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh` (6/6 assertions pass): structurally
+      confirms the stagger var + its placement between launch and throttle, and functionally runs the real driver
+      loop (extracted verbatim, stub `process_repo`) proving both the staggered case (min gap ≥ ~900ms at
+      stagger=1s) and the opt-out case (stagger=0 completes near-instantly, no forced delay).
 
 - [ ] [INFRA] P2. **Share bare repos + `git worktree` for sibling-clone I/O** instead of full clones per slot — explicit
       do/don't scope already given in the source doc. Source: same doc (line ~634). Gate: sibling-clone disk I/O
@@ -308,3 +322,9 @@ source: >-
   `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`. The daily timer is not yet installed on the
   orchestrator VM — that install step is `[OPERATOR]`-run by design (root + `/etc/systemd/system`), same as its
   sibling installers (`ldr-to-main-promote-heartbeat`, `reap-stale-blockers`).
+- **2026-08-17 (slot 20, AO-dispatched worker, infra craft).** Shipped the "Stagger
+  `ldr-to-main-promote-fleet.yml`'s per-repo fan-out" todo: `unified-trading-pm@23499c954f`. Added an
+  env-overridable `STAGGER_SECONDS` (default 3s) to the bounded-parallel driver in
+  `scripts/cicd/ldr_to_main_fleet_promote.sh` so successive `process_repo` launches are spread out instead of
+  firing back-to-back, plus a new regression test
+  (`scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh`, 6/6 assertions pass). Flipped this item.
