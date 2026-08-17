@@ -213,14 +213,28 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
       relaunch now replays ONLY the one dead shard. Untested against a live preemption (none observed this session);
       `bash -n` syntax-clean, `quality-gates.sh --no-fix` green (211s). Shipped: deployment-service@8c2a1da87e.
       (repo: deployment-service)
-- [ ] [DATA] P1. **New finding, 2026-08-16**: the `cefi-aster-2024-20260816-020107` keeper's `run.log` shows
+- [x] ✅ [DATA] P1. **New finding, 2026-08-16**: the `cefi-aster-2024-20260816-020107` keeper's `run.log` shows
       `ERROR Schema validation FAILED: venue=ASTER data_type=trades missing columns=['amount'] (have=['timestamp',
       'price', 'quantity', 'side', 'symbol', 'venue', 'data_type', 'instrument_type', 'underlying',
       'instrument_id'])` firing repeatedly (e.g. TRBUSDT 2024-03-29, 38096 trades still captured despite the error —
       unclear whether the error is cosmetic/non-blocking or a genuine schema-contract violation on a subset of ASTER
       trades rows). Root-cause whether `amount` is a required OnchainPerpBatchHandler/ASTER-adapter trades column
       that's silently missing, or a stale validation expecting a column the schema no longer carries. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — **ROOT-CAUSED + FIXED 2026-08-17**: the LIVE write path
+      (`onchain_perp_batch_handler.py` → `market_interface/adapters/onchain_perps/aster_adapter.py`'s
+      `_parse_agg_trade`/`fetch_liquidations`, distinct from the unused UMI-style `adapters/_umi_aster.py`) emits
+      `quantity` for trade/liquidation size, not `amount` — the canonical column
+      `_TICK_REQUIRED_COLUMNS`/UAC's trades+liquidations schema specs expect (confirmed via
+      `unified_api_contracts.registry._schema_spec_tradfi`'s identical `source_aliases=("size",)` pattern, and MDPS's
+      `cefi/trades_adapter.py` consuming `amount`). No alias existed for `quantity`→`amount` (only `size`→`amount` and
+      `ts_event`→`timestamp` were registered), so `_apply_column_aliases`
+      (`engine/orchestrator/symbol_rules.py`) never copied it before `_validate_tick_schema` ran — a genuine
+      schema-contract gap, not a stale validation (the error was advisory-only, so rows were still captured, matching
+      the observed 38096-row capture alongside the error). Fix: added `"quantity": "amount"` to `_COLUMN_ALIASES`,
+      mirroring the existing `size`→`amount` copy semantics (source column preserved, target added only when absent)
+      — closes the gap for both `trades` and `liquidations` data_types on ASTER. 2 regression tests added
+      (`tests/unit/test_symbol_rules_column_aliases.py`). QG green (`.qg_last_passed_sha` verified == HEAD). Shipped:
+      market-tick-data-service@3ac51c9826.
 - [ ] [INFRA] P3. **Resource-rightsizing finding, 2026-08-16** (operator-requested, mirrors
       `/vm-resource-rightsizing-check`): self-reported `RESOURCE_SAMPLE` telemetry from 4 sampled `e2-highmem-4`
       (4 vCPU / 32GB) keeper VMs' `run.log` (n=1347-1593 samples each, full VM lifetime) shows memory pinned at
@@ -357,3 +371,15 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   - **Banners lifted**: removed the 🔴 DO NOT DISPATCH banner from this doc and the two related docs
     (`cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`, `cefi_hl_aster_vm_resource_downsize_2026_08_10.md`),
     replaced with 🟢 RESOLVED pointers back to this Progress Log entry.
+- **slot-13 2026-08-17 (data_engineering worker)**: picked up the remaining [DATA] P1 ASTER schema-validation todo.
+  Root-caused via a code read (not the run.log alone): the LIVE write path for `collect-onchain-perp-batch`
+  (`onchain_perp_batch_handler.py` → `market_interface/adapters/onchain_perps/aster_adapter.py`) is a DIFFERENT,
+  currently-used ASTER adapter from the unused UMI-style `adapters/_umi_aster.py` (which already emitted `amount`
+  correctly and was a red herring). The live adapter's `_parse_agg_trade`/`fetch_liquidations` emit `quantity`, and
+  `engine/orchestrator/symbol_rules.py`'s `_COLUMN_ALIASES` had no `quantity`→`amount` entry (only `size`→`amount`
+  and `ts_event`→`timestamp`), so `_apply_column_aliases` never copied it before `_validate_tick_schema` checked for
+  `amount` — confirmed genuine gap, not stale validation, by cross-checking `unified_api_contracts.registry
+  ._schema_spec_tradfi` (same `source_aliases=("size",)` pattern for the same reason) and MDPS's
+  `cefi/trades_adapter.py` (consumes `amount`). Fix: one-line addition to `_COLUMN_ALIASES` mirroring the existing
+  `size`→`amount` copy semantics; 2 regression tests added. QG green, shipped
+  market-tick-data-service@3ac51c9826.
