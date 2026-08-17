@@ -112,3 +112,17 @@ this task's repo). Needs a human or a dedicated diagnostic task to:
   systemic gap in the pre-spawn branch-state guard rather than a one-off.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:b22f1567c7f33f38]: KEEP-NA, valid -- First item is explicitly a 'human call, needs slot-12 context this doc doesn't have' -- cannot be resolved by a worker alone since it requires confirming intent with a specific other session/operator. Second item (root-cause the wrong-branch checkout) is genuinely open-ended forensic investigation into possibly-already-changed live infra state (git reflog / guard-code archaeology on a specific slot's checkout, 3 days stale) with no pre-specified investigation path or deterministic success criterion -- I considered promoting it to a reclassify candidate given the doc's own 'a human OR a dedicated diagnostic task' phrasing for this specific point, but given genuine uncertainty whether the evidence trail is even still present and the open-ended nature of root-causing a historical multi-agent anomaly, I kept this conservative rather than force a reclassify on an item that only partially clears the bounded-outcome bar.
+- **slot-4 2026-08-17**: 4th confirmed occurrence — `.tabs/4/unified-trading-ci` carries the IDENTICAL commit
+  `c0d10ba6cfe437ac299eebb26f38f2e5ff5dd758` slot-3 reported above (same SHA, not just the same pattern), on branch
+  `main` (upstream `origin/main`, 0 ahead/0 behind — already landed on `origin/main`), 1 ahead / 21 behind
+  `origin/live-defi-rollout`, clean working tree. New data point: `git reflog` on this clone shows a repeating 4-cycle
+  sequence — `rebase (start): checkout origin/live-defi-rollout` → `rebase (finish): returning to refs/heads/main` →
+  `branch: Reset to origin/main` → `checkout: moving from main to main` — i.e. something has repeatedly attempted
+  (and abandoned) a rebase onto `live-defi-rollout` before hard-resetting back to `main`, at least 4 times in this
+  clone's own history. Combined with the identical-SHA match to slot-3 (not just a structurally similar collision),
+  this looks less like independent per-slot drift and more like a shared seed/template clone or a repeated automated
+  remediation loop propagating the same state — worth checking whatever provisions new `.tabs/<N>/unified-trading-ci`
+  clones for a stale template, and whatever is issuing that repeating rebase-then-reset sequence. Also confirmed this
+  session's "GIT STATUS RED...AHEAD=3" nudge for this repo was already stale/false-positive by the time I read it
+  (measured 1 ahead of `live-defi-rollout`, matching `git_status_red_nudge_false_positive_wrong_branch_comparison_
+  2026_08_17.md`'s diagnosis) — acked as stale, not touched, per established precedent.
