@@ -79,9 +79,12 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       these 3 were meant to cover. **Re-verified 2026-08-05 (docs-reconcile): still no confident successor, left open.**
       **Re-verified 2026-08-17 (docs-reconcile, hunter-5 broken-link triage): still no confident successor, left
       open.**
-- [ ] [DOCS] P3. `/codex/06-coding-standards/ui-testing-layers.md` cites `../../../.claude/rules/workspace-workflow.md`
+- [x] ✅ [DOCS] P3. `/codex/06-coding-standards/ui-testing-layers.md` cited `../../../.claude/rules/workspace-workflow.md`
       — no `rules/` subdir under `cursor-configs/`, no file named `workspace-workflow.md` anywhere in the repo.
-      **Re-verified 2026-08-05 (docs-reconcile): still absent everywhere, left open.**
+      **Fixed 2026-08-17 (docs-reconcile)**: repointed to `/codex/08-workflows/ci-cd-flow.md`'s current branch-model
+      section (`#branch-model--ldr-trunk--main-direct-staging-dormant-reversible`), with the citing prose updated to
+      describe the current staging-dormant model rather than the old "three-tier... staging convergence" framing.
+      `unified-trading-pm@ea375c7182`.
 - [x] ✅ [DOCS] P3. `/codex/07-security/mev-protection.md` cited the retired `plans/questions/` dir's
       `defi_readiness_catalogue_2026_05_08.md`. **Fixed 2026-08-05**: repointed to the retirement record
       (`plans/archive/questions_README_retired_2026_05_20.md`), which names the 2 real successors
