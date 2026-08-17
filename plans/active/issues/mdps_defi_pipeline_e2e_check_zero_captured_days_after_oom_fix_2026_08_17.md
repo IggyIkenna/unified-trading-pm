@@ -41,6 +41,9 @@ locked_by:
 source:
   - data_pipeline_check_mdps_features_2026_07_20.md's "mdps-e2e-defi-oom-fix-and-full-matrix-completion" todo —
     the DEFI re-run this todo's own fix enabled surfaced this NEW, separate finding
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # DEFI pipeline_e2e_check: OOM fixed + root-caused, but the driver now proves the shard universe doesn't match captured data
