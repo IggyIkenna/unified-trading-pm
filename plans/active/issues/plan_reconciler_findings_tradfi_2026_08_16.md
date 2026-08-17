@@ -348,4 +348,13 @@ routing (RESOLVED / STILL-OPEN AUTO-FIXABLE / STILL-OPEN NEEDS-CODEX-RULING / ST
 fully resolved and stays
 `status: open` in `plans/active/issues/`, not archived.
 
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-071b5c) [body-hash:5d2f3751c4f96721]: KEEP-NA,
+  valid — re-verified this same-day doc's own earlier na-eligibility-audit verdict (dispatch agt-d99b5c) is still
+  current; the doc's one remaining open item (`[SERVICE] P3` OPERATOR-tag fix on
+  `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) is the rubric's own named line-cap-blocked-done
+  sub-case — genuinely un-actionable until that target doc is split under its own 1000L hard cap, correctly reported
+  rather than reclassified or force-flipped. This marker only backfills the machine-readable dated-hash tag the
+  earlier same-day pass's narrative verdict omitted, so future incremental runs can skip this doc without a full
+  re-read.
+
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
