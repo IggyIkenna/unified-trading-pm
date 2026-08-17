@@ -284,16 +284,24 @@ source: >-
       todo's own scope is the facade/list-honesty finding, not re-doing that sibling gap's work).
       Zero code-BEHAVIOR changes (docstrings/comments only) — no test changes needed;
       `quality-gates.sh` green on the shipped SHA.
-- [ ] [BACKEND] P1. **Gap: `LST_TOKEN_ADDRESS_BY_CHAIN` is missing addresses for 10 LST tokens that
-      `LST_VENUE_TO_TOKENS`/`LST_TOKEN_GENESIS` already declare** —
-      `unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py` has real venue+symbol+genesis
-      entries for COINBASE(cbETH)/ETHENA(sUSDe)/MAKER(sDAI)/MANTLE(mETH)/SWELL(swETH)/STADER(ETHx)/
-      STAKEWISE(osETH)/ANKR(ankrETH)/SANCTUM(sanctumSOL)/SOLBLAZE(bSOL) but no contract address in
-      `LST_TOKEN_ADDRESS_BY_CHAIN` for any of them, so `lst_token_addresses_for_venue()` silently returns an
-      empty dict and `_generic_token_balance_adapter` resolves `None` — these venues LOOK registered (a genesis
-      date + declared symbol exist) but position reads fail exactly like a fully-unregistered venue, with no
-      signal distinguishing the two states. Done-when: each token has a cited on-chain address added, or is
-      confirmed genuinely unreadable (e.g. no simple `balanceOf`-style read exists) with a documented reason.
+- [x] ✅ [BACKEND] P1. **Gap: `LST_TOKEN_ADDRESS_BY_CHAIN` is missing addresses for 10 LST tokens that
+      `LST_VENUE_TO_TOKENS`/`LST_TOKEN_GENESIS` already declare — done 2026-08-17.** SHIPPED —
+      `unified-api-contracts@9b982906fa`. 3 of the 10 had a real cited address already present elsewhere in the
+      fleet and were migrated in: **cbETH/swETH** from `execution-service/execution_service/defi_execution/
+      protocols/eigenlayer.py`'s `LST_TOKEN_ADDRESSES` dict (the real ERC-20 token addresses — distinct from
+      that same file's `CBETH_STRATEGY`/`SWETH_STRATEGY` EigenLayer vault addresses, which are protocol
+      contracts, not tokens, and were correctly NOT used); **bSOL** from `protocols/solblaze.py`'s
+      `BSOL_MINT`, closing the module's own prior "held out pending cross-check" note. The other 7
+      (ETHENA sUSDe / MAKER sDAI / MANTLE mETH / STADER ETHx / STAKEWISE osETH / ANKR ankrETH /
+      SANCTUM sanctumSOL) have **no cited on-chain address anywhere in this codebase** — grepped fleet-wide;
+      every reference found (`execution_service/cli/defi_rebasing_yield_decision_trace.py`, `kelpdao.py`) is a
+      bare symbol string used for APY classification, never a contract address. Per the registry module's own
+      explicit provenance rule ("no address here was authored, inferred, or extrapolated... copy it from a
+      cited source, never derive"), adding one without an in-repo citation would be the exact fabrication that
+      rule exists to prevent — documented in-code (`lst_token_addresses.py`) as a "DELIBERATELY ABSENT" block
+      with the reason, rather than left as a silent gap. Remaining work (sourcing a cited address for those
+      7 from an external, verifiable source) is out of this bounded task's scope — not tracked further here
+      since it needs an operator/external-source decision, not more code search.
 - [ ] [BACKEND] P2. **Gap: UAC's `archetype_consumers` over-declares `CARRY_STAKED_BASIS`/
       `CARRY_STAKED_BASIS_DATED` as consumers of all 28 `lending_indices` rows, but neither archetype's slot code
       references any lending protocol at all** — `strategy_service/engine/strategies/v2/target_universe/
