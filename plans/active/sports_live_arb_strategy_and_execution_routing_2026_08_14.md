@@ -301,3 +301,11 @@ This Progress Log entry is written from an isolated `git worktree` checked out f
 session's `.tabs/3/unified-trading-pm` checkout had 4 other live sessions sharing it per the SessionStart collision
 warning, plus an actual in-progress unmerged conflict on an unrelated file — editing the plan doc there risked racing a
 concurrent session's index/working-tree state, so this write bypasses that checkout entirely rather than touching it).
+
+- **na-eligibility-audit 2026-08-17** [body-hash:e191f59249765f4f]: KEEP-NA, valid — all 16 open items sit behind a
+  doc-level depends_on+gate_on_depends:true gate on TWO still-open prerequisite plans
+  (venue_capability_route_axis_and_cross_ag_declarations_2026_08_14,
+  mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14), both verified live+status:active on 2026-08-17.
+  Independently cross-corroborated by ag_closeout_audit_sports_parked_2026_08_16.md ("Parked — dependency-gated").
+  RECOMMEND FOLLOW-UP: re-audit once BOTH prerequisite docs land — 11 of 16 items (all but the design-judgment item and
+  the explicit [OPERATOR] promotion-gate item) become genuine RECLASSIFY/split candidates at that point.

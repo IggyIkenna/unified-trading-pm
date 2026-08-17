@@ -298,3 +298,7 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
   same 2 genuine either/or design forks remain (extend `EXPECTED_BOOKMAKER_MARKET_SETS` vs. a `tier_3_global` tier;
   restore deleted regression tests vs. accept current coverage), plus the standing `locked_by: live-defi-rollout` +
   do-not-archive-without-ruling banner. No evidence-based tiebreaker exists. No flip.
+- **na-eligibility-audit 2026-08-17** [body-hash:869a629705e9da18]: KEEP-NA, valid — sole open item is a genuine
+  either/or design fork (trades cluster-validation gap: register in BUNDLED_DATA_TYPES for live enforcement vs formally
+  accept static-audit-only validation), no evidence-based tiebreaker; 3 independent prior audit passes (2026-07-30,
+  round7 08-08, round11 08-09) all agree. 🔒 banner forbids archive/unlock without explicit operator ruling.

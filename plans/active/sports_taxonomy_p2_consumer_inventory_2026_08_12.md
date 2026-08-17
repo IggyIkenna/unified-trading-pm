@@ -471,3 +471,8 @@ pipeline (the migration plan's actual purge target) → `league_id=` canonical, 
   plan-text contradiction, and 4 independent copies of the same path-prefix logic across features-service/ml-service.
   `strategy-service` explicitly not covered — flagged as a stated blind spot, not silently omitted.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:5f3965a13b05405b]: KEEP-NA, valid — 0 open todos (pure nature:record
+  inventory doc, both [ ] and [x] grep = 0), NOT an archive candidate: this is the explicit standing-reference-doc
+  exception — actively cited as the consumer checklist by 2 still-active migration plans
+  (sports_taxonomy_p2_migration_2026_08_08.md, sports_taxonomy_p3_consumers_2026_08_08.md), updated as recently as
+  2026-08-16. Archiving would break live citations from in-flight plans.

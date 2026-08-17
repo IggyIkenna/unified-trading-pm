@@ -838,3 +838,4 @@ into the same fix — carried forward here so it isn't lost with the archive:
     — so all 61 have transitioned to `captured`/`empty_confirmed`.
   - **No explicit re-attempt needed.** Batch9 todo (`sports_satellite_ao_dispatch_batch9_2026_08_04.md` item) flipped
     same-turn.
+- **na-eligibility-audit 2026-08-17** [body-hash:98c13a91e4fea158]: KEEP-NA-STALE (already-duplicated) — 5 of 6 open items verified as duplicate-citations to sports_consolidated_closeout_2026_07_19.md Track V and sports_satellite_ao_dispatch_batch9_2026_08_04.md (both status:active); the 6th (§M, line ~684, runtime rate-budget re-division) is a genuine architecture/mechanism-choice judgment call, correctly stays NA.

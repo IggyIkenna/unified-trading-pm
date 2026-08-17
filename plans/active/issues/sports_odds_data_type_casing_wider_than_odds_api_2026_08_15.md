@@ -146,3 +146,4 @@ an in-flight dispatch.
   reports 0 orphans (baseline 0). No content change. `check_reference_paths` (the escalation's other named failure)
   had already self-healed via a later concurrent commit before this dispatch — verified 34 dangling refs == baseline
   34, no action needed there.
+- **na-eligibility-audit 2026-08-17** [body-hash:10630b9891d84b9a]: KEEP-NA-STALE (already-duplicated) — item 1 (betfair_adapter.py uppercase ODDS census) already extracted verbatim into sports_satellite_ao_dispatch_batch14_2026_08_16.md (status:draft, not yet active); item 2 is an explicit [OPERATOR][DECISION] casing-unification-end-state item, batch14 explicitly excludes it from extraction. Do not reclassify — would duplicate batch14 once it activates.

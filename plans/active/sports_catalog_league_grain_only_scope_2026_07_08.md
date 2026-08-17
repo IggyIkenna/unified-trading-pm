@@ -222,3 +222,6 @@ honest-coverage denominator math, not a same-file fix.
   `sports_taxonomy_p3_consumers_2026_08_08.md`, independently re-confirmed today by
   `sports_satellite_ao_dispatch_batch11_2026_08_09.md` ("all 4 open todos resolved by a dated..."). Checkboxes flip via
   that plan's finalize sibling. No flip here.
+- **na-eligibility-audit 2026-08-17** [body-hash:b9307e2036b4147d]: KEEP-NA-STALE (already-duplicated) — dated
+  OPERATOR RULING 2026-08-08: all 4 open todos are carried by sports_taxonomy_p3_consumers_2026_08_08.md (verified
+  status:active, its related: list cites this doc back). Independently re-confirmed by 2+ prior audit passes.

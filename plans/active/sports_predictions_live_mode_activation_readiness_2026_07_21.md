@@ -415,3 +415,9 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   `status: resolved` (slot 3, 2026-07-21) and archived under `plans/archive/issues/`. This does NOT flip Todo 5's
   checkbox (that plan owns its own verdict); it records that the gates named in Todo 5's own done-when are now
   satisfied. The operator hard-stop on Todo 6 (live-capital trading) is unchanged and remains gated.
+- **na-eligibility-audit 2026-08-17** [body-hash:8ed0655fab06b816]: KEEP-NA, valid — whole-doc human-plan-by-construction
+  ruling (BLK-9d3a208c: "a plan whose terminal action is a human go/no-go on live trading activation is the human-plan
+  class by construction"). Sole real-capital todo is a textbook permanent human hard-stop, reaffirmed via a dated
+  2026-08-08 OPERATOR RULING banner. Never re-litigated. Note for a future pass: the REVIEW promote-workflow todo is
+  gate-clear per a 2026-08-11 entry — may be worth an operator-driven look at splitting the paper-only leg out, but not
+  unilaterally actioned given the standing whole-doc ruling.

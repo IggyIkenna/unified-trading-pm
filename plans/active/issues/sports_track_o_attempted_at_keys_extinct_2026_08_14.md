@@ -74,3 +74,4 @@ carry the same wrong stamp.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 10, operator ruling)**: extracted to
   `/plans/active/sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch,
   since this doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-17** [body-hash:8a784e5f9a137df0]: KEEP-NA-STALE (already-duplicated) — sole open item freshly extracted 2026-08-16 into sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md + its _finalize.md sibling (both verified status:active, assigned_vm:planning). Correctly and recently extracted, nothing to re-litigate.

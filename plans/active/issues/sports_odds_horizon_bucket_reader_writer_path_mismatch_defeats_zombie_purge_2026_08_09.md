@@ -264,3 +264,4 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
   ignoring it or forcing an uninvestigated fix into a third script/manifest layer. Flipping
   `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick checkbox now — its literal parts (a) purge and (b)
   verify_ml_readiness scope are genuinely complete; the residual is tracked as its own todo, not glossed over.
+- **na-eligibility-audit 2026-08-17** [body-hash:1cef22da863866d9]: KEEP-NA-STALE (already-duplicated) — both open items (odds_features export gap for 3 dates + Option-C bucket-cutover-lane cleanup) already extracted verbatim into sports_satellite_ao_dispatch_batch14_2026_08_16.md's combined todo (status:draft, not yet active). Do not reclassify — would duplicate batch14 once it activates.
