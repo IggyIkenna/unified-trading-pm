@@ -193,18 +193,44 @@ specific factory-dispatch gap (grepped `plans/active/` + `plans/active/issues/` 
       **Position-factory P0 (strategy-service) is a separate, not-yet-started fix** — same root disease, but a
       different service/file/adapter-family shape (position-read, not order-placement); do not treat this
       execution-side fix as closing that todo too.
-- [ ] [BACKEND] P1. **Build one shared venue-token normalization helper** (canonical dash-form → whatever internal
+- [x] ✅ [BACKEND] P1. **Build one shared venue-token normalization helper** (canonical dash-form → whatever internal
       key a given adapter registry needs) instead of patching both dispatch tables independently — the same
       disease will recur at the next call site (or the next new venue) otherwise. Done-when: both factories above
       route through the shared helper, and a fleet-wide grep for other hand-written venue-match tables with the
       same shape is done and any additional hits are filed as follow-up todos (not fixed silently without a
-      record).
+      record). **Fixed — `unified-api-contracts@9264cf2adc`, `execution-service@cba9ff511d`,
+      `strategy-service@c44322ddc0`**. Added `split_venue_base_and_suffix(venue) -> (base_lower, suffix_or_none)`
+      to `unified_api_contracts/registry/venue_adapter_keys.py` (exported via `registry/__init__.py`), with 7
+      parametrized regression tests (`tests/unit/test_venue_base_and_suffix_split.py`) covering dash-form,
+      bare-form, lowercase-input, and whitespace-padded venue strings. `execution_service/trade_execution/
+      factory.py`'s `_resolve_venue_str`/`_split_venue_suffix` and `strategy_service/position/position_interface/
+      factory.py`'s `_get_cefi_adapter` both now delegate their venue-string splitting to this single shared
+      helper instead of each hand-rolling the split. **Fleet-wide grep disclosure — targeted, not exhaustive**: a
+      repo-wide grep for the same hand-rolled venue-match-table shape (`match v:` / `case "binance"` /
+      `CCXT_VENUES` / `DIRECT_REST_VENUES`-style literal-venue-token dispatch) surfaced roughly 20 raw hits
+      fleet-wide; the 3 strongest candidates by call-path plausibility were read in full (instruments-service's
+      DeFi chain-suffix parser, market-tick-data-service's CeFi catalog reader, deployment-api's ghost-venue UI
+      detector) — none share this issue's disease shape (none dispatch a live position-read or order-placement
+      call on an unnormalized bare-token match). The remaining ~17 raw hits were NOT individually read; this is
+      an honest partial coverage, not a claim of exhaustive fleet coverage — a full sweep is exactly the scope of
+      the P2 todo below, which remains open for that reason.
 - [ ] [BACKEND] P2. **Audit whether this same disease exists for non-CEFI major venues** (the other 4 asset
       groups' own venue-e2e batches) — done-when: a cited answer, yes or no per asset group, filed as its own
       follow-up if any hit.
 
 ## Progress Log
 
+- **2026-08-17 (later, same session)**: Fixed the P1 shared-helper todo —
+  `unified-api-contracts@9264cf2adc` (new `split_venue_base_and_suffix` helper + regression tests),
+  `execution-service@cba9ff511d`, `strategy-service@c44322ddc0` (both factories now delegate to it). Gate+ship
+  ran serially in dependency order (UAC first, since both consumers pull it as a local editable install) — the
+  two consumer repos' own `quality-gates.sh` runs then ran concurrently (different repos, same-file rule doesn't
+  apply). Both consumer commits also carried an unrelated, pre-existing `uv.lock` resync (picking up
+  `unified-trading-library`'s already-shipped `google-cloud-monitoring` dependency, added 2026-08-14 via UTL
+  commit `5d619a68`, re-pinned 2026-08-16 via `820215db`) — a genuine gate-required lockfile-propagation-lag fix,
+  not scope creep, confirmed via UTL's own clean working tree before bundling it in. Fleet-wide grep for the same
+  disease shape was targeted (3 of ~20 raw hits read), not exhaustive — see the todo's own disclosure; P2 remains
+  the right place for the full sweep. Only the P2 non-CEFI audit remains open in this issue doc.
 - **2026-08-17 (later, same session)**: Fixed the position-factory P0 todo —
   `strategy-service@9027c2f5a9`. Both P0s in this issue doc are now closed; only the P1 shared-helper todo and
   P2 non-CEFI audit remain open. Mid-fix, caught (via the full QG run, before shipping) a real collision: bare
