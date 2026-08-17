@@ -131,10 +131,21 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ### Phase 1 — UAC canonical layer (must land before Phase 2; the oracle is the SSOT every other repo trusts)
 
-- [ ] [BACKEND] P1. Extend `unified-api-contracts/unified_api_contracts/canonical/partition_paths.py`'s
+- [x] ✅ [BACKEND] P1. Extend `unified-api-contracts/unified_api_contracts/canonical/partition_paths.py`'s
       `build_cefi_partition_path`/`build_tradfi_partition_path` (or add sibling builders) so `options_chain`/
       `futures_chain` can be emitted at the `data_type=` segment while `instrument_type=` carries the real underlying
-      instrument type instead of the literal `"trades"` placeholder.
+      instrument type instead of the literal `"trades"` placeholder. — unified-api-contracts@1a6fc193d9. Both builders'
+      chain-bundle (v6 tail) detection now triggers off EITHER `instrument_type` OR `data_type` being in
+      `CEFI_CHAIN_INSTRUMENT_TYPES`/`TRADFI_CHAIN_INSTRUMENT_TYPES`, so a caller can pass the corrected shape
+      (`data_type="options_chain"`/`"futures_chain"`, `instrument_type="option"`/`"future"`) and still get the
+      `underlying=/quote=/margin=/ticks.parquet` tail — legacy-shape callers (`instrument_type=options_chain`,
+      `data_type="trades"`) are byte-identical to before (no regression). Added 3 new unit tests
+      (`test_cefi_v6_chain_bundle_corrected_shape`, `test_cefi_v6_chain_corrected_shape_without_all_axes_falls_back_to_flat`,
+      `test_tradfi_partition_path_chain_v6_corrected_shape`) pinning the corrected-shape output; all 46+89 existing
+      `test_partition_paths.py`/`test_partition_path_is_canonical.py` tests still pass unmodified.
+      `quality-gates.sh` green. Scope note: this todo is the BUILDER change only — `_partition_path_canonicality.py`'s
+      oracle widening (dual-acceptance) and the regression tests pinning that dual-acceptance are the next two
+      Phase-1 todos below, left untouched here per task scope.
 - [ ] [BACKEND] P1. Widen `_partition_path_canonicality.py`'s oracle (`CEFI_CHAIN_INSTRUMENT_TYPES` /
       `TRADFI_CHAIN_INSTRUMENT_TYPES` + `canonical_path_violations()`) to accept BOTH the legacy shape
       (`instrument_type=options_chain`) and the corrected shape (`data_type=options_chain`) as canonical for a
