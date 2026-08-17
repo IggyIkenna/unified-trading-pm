@@ -374,3 +374,9 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   `issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, asked via `/blocked`. 4 items routed to
   the operator (delete-autonomy contradiction, the locked_by ruling, 2 codex-drift items needing new prose / cross-doc
   scope). Full write-up: `issues/plan_reconciler_findings_ui_2026_08_10.md`.
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:2773f5b2360aa1db]: KEEP-NA, valid — all 5 open
+  Track-rollup/audit todos verified against their live source docs (Tracks 1-3 rollups against 8 still-open sources;
+  Todo 5 self-redirected to `/ag-closeout-audit`'s own job; Todo 6 needs cross-tranche-ownership judgment a worker
+  can't resolve alone). 5th consecutive audit pass reaching this verdict. Minor non-blocking note: frontmatter
+  `last_updated: 2026-08-09` lags the doc's own more recent edits by about a week — worth a bump next legitimate
+  touch.

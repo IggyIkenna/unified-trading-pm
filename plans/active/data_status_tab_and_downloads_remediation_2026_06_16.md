@@ -22,7 +22,7 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated: 2026-08-17
 locked_by:
 locked_since:
 supersedes:
@@ -191,14 +191,11 @@ context_scope:
       still need a backend `limit` bump to be client-pageable — follow-on if wanted. **2026-08-14: fresh full `pw:L2`
       re-run exits 0 — 450/450 passed** (same evidence as the two items above). — deployment-ui `[UI]` | pw:L2 ✓ |
       regression: `tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`
-- [ ] [UI] P3. **ADDED 2026-08-16 (plan_reconciler agt-8fc5a6, zero-checkbox conversion).** **Denominator-freshness /
-      coverage-% staleness trust annotation** — real, still-open work explicitly hand-off'd in prose from
-      `consolidator_throughput_backlog_monitor_2026_07_09.md` ("(4) Denominator-freshness trust-annotation HANDED to
-      Ikenna (data-status tab)", 2026-07-10) but never converted into a tracked checkbox anywhere in the corpus
-      (confirmed via a fresh grep of all 4 ui-tranche data-status docs for "denominator": zero other hits). Add a UI
-      trust/staleness indicator on this tab showing how fresh the denominator (coverage-%) computation is, mirroring
-      the annotation pattern the consolidator backlog monitor already ships. No design/implementation done here —
-      routing the prose hand-off into a real todo per the workspace's "every follow-up is a todo, never prose" rule.
+- [x] ✅ [UI] P3. **ADDED 2026-08-16 (plan_reconciler agt-8fc5a6, zero-checkbox conversion).** **Denominator-freshness /
+      coverage-% staleness trust annotation** — EXTRACTED 2026-08-17 (na-eligibility-audit, RECLASSIFY per-todo split)
+      to `ui_satellite_ao_dispatch_batch4_2026_08_17.md` item 1 for AO dispatch (bounded: mirrors the consolidator
+      backlog monitor's existing annotation pattern). Tracked there now, not here — see that doc + its gated
+      `_finalize` twin for the real work + eventual shipped-evidence citation back to this checkbox.
 - [x] ✅ [UI] P3. **DONE, verified 2026-08-15 (/plan-reconcile).** **Rollup-difference clarity** (audit §F, by-design):
       optional small UI note/tooltip explaining IS is a per-venue/day reference bundle (no data_type axis) vs MTDS's
       5-axis market-data shards — so the structurally different drilldown reads as intentional, not broken. —
@@ -481,3 +478,10 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:f47acc5043fb5c90]: RECLASSIFY (per-todo split) — of 3
+  open todos, 1 (denominator-freshness UI annotation, Phase B) cleared the bounded-outcome bar (mirrors an existing
+  shipped pattern) and was extracted to `ui_satellite_ao_dispatch_batch4_2026_08_17.md` item 1 (conflict-checked
+  clean: no other active `assigned_vm: planning` doc under this parent_epic, or corpus-wide "denominator" grep, claims
+  it); its checkbox here is flipped `[x]` citing the extraction. The other 2 (DeFi sub-bucket phantom-row audit;
+  defi/sports APPLY-GATE sign-off) stay NA — both explicitly self-gated on the same still-open, named 2026-08-07
+  operator HOLD. Doc stays `assigned_vm: NA` overall (2 open items remain).

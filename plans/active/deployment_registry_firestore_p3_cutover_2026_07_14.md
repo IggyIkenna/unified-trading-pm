@@ -271,3 +271,8 @@ QG-green per repo.
   surface, per-VM data retrievable, parity check) — irreversible cutover steps stay blocked until the sibling
   migration-overview doc's dual-write deploy (reclassified this run) clears the precondition.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:a80d09ae66e212a2]: KEEP-NA, valid — todo 1's HALT (unmet
+  2026-07-14 operator-decision GO/NO-GO checklist, criterion 1 at 27% live-fleet coverage as of 2026-08-08) still
+  gates all 4 remaining sequential todos; this is live dispatch-critical-path machinery (fleet-wide VM deployment
+  registry) so a premature GCS-write-drop risks blinding registry visibility. 6th consecutive audit pass (2 infra + 4
+  ui) reaching this verdict.

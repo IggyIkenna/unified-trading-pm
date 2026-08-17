@@ -212,3 +212,8 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
     `UTL@336f2b3b6c` + `deployment-api@d0eebac4e6`, 4 follow-on todos open), so no further escalation is needed from
     this retag — the retag is what finally gives the fix a owning tranche to be claimed under.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:d3b65086e3c33d5c]: KEEP-NA, valid — 0 open todos (all 4
+  Resolution items shipped + verified), but `archive_exempt: true` correctly defers archival to
+  `deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md`'s own still-open todos 1-3 (independently
+  re-verified: that finalize doc's todo 3 still names this doc for archival and remains unchecked). Not archived here
+  per that explicit redirect.

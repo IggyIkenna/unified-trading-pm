@@ -41,7 +41,7 @@ related:
   ]
 created: 2026-07-16
 author: unknown
-last_updated: 2026-07-26
+last_updated: 2026-08-17
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -221,11 +221,14 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
 
 ## Todos
 
-- [ ] [ENGINEER] P1. **Resync UI `venue_set_variants`/`archetype_capability_registry`/`strategy_instance_catalogue` +
-      fix the generator/UI structural skew** — the UAC architecture_v2 source is now clean, but the UI's registry copy
-      (`unified-trading-system-ui/lib/registry/ui-reference-data.json`) and the E2E fixture still reference the removed
-      `drift` venue / `jito-kamino-drift-sol-usdc-prod` slot label, and the sync generator itself is stale against the
-      committed UI shape (see "Recommended next steps" items 2-4 above).
+- [ ] [ENGINEER] P1. **Fix the E2E fixture + the generator/UI structural skew** (STRUCK the ui-reference-data.json
+      resync sub-claim 2026-08-17, na-eligibility-audit — STALE, already shipped: commits `80bb6a9c` (2026-07-26) +
+      `88422902` (2026-08-16) removed all drift-venue residue from that file; live-verified 2026-08-17, zero matches
+      remain). Two sub-parts genuinely still open: (1) `tests/e2e/_shared/strategy-registry.ts:158` still has the dead
+      `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod` instance ID (grep-confirmed, no fixing commit in that
+      file's history); (2) the sync generator/UI structural-skew investigation (see "Recommended next steps" items 2-4
+      above) — unverified either way (re-running `generate_ui_reference_data.py` to check needs the repo `.venv`,
+      ambient `python3` lacks `pydantic`).
 
 ## Progress Log
 
@@ -263,3 +266,8 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
   `related: [/plans/active/ui_consolidated_closeout_2026_07_30.md]` alongside the existing defi-closeout link so the
   doc has a path into its new tranche's closeout family (`check_ag_closeout_linkage.py` convention).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:0d2984d35c34a8d6]: KEEP-NA, stale item closed — the
+  bundled todo's ui-reference-data.json resync sub-claim was STALE (already shipped via `80bb6a9c`/`88422902`,
+  live-verified 2026-08-17: zero drift-venue-residue matches remain) and has been struck from the todo text. Doc stays
+  NA: 2 genuinely open sub-parts remain (the e2e-fixture fix, live-confirmed still-present; the generator/UI
+  structural-skew investigation, unverified either way).

@@ -542,3 +542,7 @@ context_scope:
   (its 4 concrete sub-parts are all already individually shipped, see the closed todo above). Doc otherwise stays NA —
   the 2 remaining open items (WS-1 + WS-3 shipping gates) are both explicitly deferred by the same dated 2026-07-10
   operator decision (local-dev-only until all cockpit plans complete).
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:65529ba73a1af7cc]: KEEP-NA, valid — both open [REVIEW]
+  gates cite the same explicit dated 2026-07-10 operator ruling (Cloud Build deploy deferred until all cockpit plans
+  complete); neither is fully done (deploy step + one cross-link check unverified in the Progress Log), so RECLASSIFY
+  does not apply. 5th consecutive audit pass reaching this same verdict.

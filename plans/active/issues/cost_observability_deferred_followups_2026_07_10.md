@@ -163,3 +163,9 @@ context_scope:
   checkboxes with a shipped-sha citation once batch2's todo lands; not pre-flipped here without that evidence. The
   business-context enrichment item (item 1) remains correctly NOT-BOUNDED per the 2026-08-08 scoping finding (176
   launcher scripts, ~9 through the shared choke point) — no change. Doc stays NA as a whole.
+- **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:91f5e87355264d04]: KEEP-NA, valid — the sole open item
+  (business-context/asset_group enrichment, operator-RULED-to-proceed 2026-08-07) still fails the bounded-outcome bar:
+  only 45/149 raw-create VM launchers are directly migratable today per
+  `infra_satellite_ao_dispatch_batch17_2026_08_16.md` (dated one day before this audit), the other 104 split across 3
+  tiers still gated on unresolved operator design decisions. Corroborates, does not contradict, the 2026-08-08/09
+  findings already in this doc.
