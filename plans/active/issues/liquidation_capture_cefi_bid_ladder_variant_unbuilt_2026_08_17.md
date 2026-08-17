@@ -75,3 +75,7 @@ forward paths, tracked as follow-ups rather than done here:
       `archetype_capability_manifest.json`'s `LIQUIDATION_CAPTURE` CEFI cell from `PARTIAL` to `BLOCKED` (matching
       the existing DEFI-perp cell's pattern) so the manifest stops overclaiming an unimplemented capability (repo:
       unified-api-contracts).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (cefi tranche)** [body-hash:b5bfdc3cca5afe6d]: KEEP-NA, valid — first audit pass (fresh doc, created 2026-08-17, no prior marker). Both open items sit on either side of one undecided build/no-build fork. Item 1 (design + implement a real CEFI LIQUIDATION_CAPTURE variant) GENUINE_WORK — brand-new archetype/signal design, quant_dev craft, not a slot-declaration wiring gap. Item 2 (downgrade the capability manifest's PARTIAL→BLOCKED cell if the variant is never pursued) DEPENDENCY_BLOCKED — mechanically trivial once triggered, but its trigger condition (a decision NOT to pursue item 1) is not yet made; doc frames both paths as still-live options. Doc stays assigned_vm: NA.

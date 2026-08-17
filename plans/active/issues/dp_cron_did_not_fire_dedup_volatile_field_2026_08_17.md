@@ -186,3 +186,4 @@ on the live capture process itself) is out of scope for this reconciliation swee
   todos) for the next dispatch to root-cause — RESOLVED + archived 2026-08-17: root-caused (severity-override on
   resolved bookends bypassing dedup), fixed (`alerting-service@166f291f44`), and live fire-cadence reconfirmed
   1800s-compliant post-fix.
+- **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:7afccc51e9054fa6]: KEEP-NA, valid — re-confirmed after this morning's extraction (batch21 item 1) closed out and the runtime-defect follow-up resolved + archived separately, leaving exactly the 1 open item already covered by this doc's own earlier na-eligibility-audit marker above. Line 116 ([OPERATOR] P1, investigate the 2 genuine live-capture stalls on BYBIT-FUTURES/CME) OPERATOR_QUESTION — explicit `[OPERATOR]` tag, open-ended production debugging with unknown root cause (auth/API/schema) on live-capture-critical-path VMs. Doc stays assigned_vm: NA.
