@@ -534,21 +534,39 @@ degrading reads (operator direction 2026-06-01; plan `manifest_consolidator_live
   (`features-{ag}-{env}-{project}`, cefi/defi/tradfi/sports/calendar — **prediction excluded**, `features-prediction`
   has no consolidator job); `strategy_service` (one flat `strategy-store-{env}-{project}` bucket for every asset_group
   **except prediction** — `strategy-store-prediction` has no consolidator job); `execution_service` (one
-  unconditional single-root `execution-store-{env}-{project}` bucket, every asset_group via a path prefix). **Still
-  NOT extended** (documented exclusions, not a silent gap): `ml_service` (VM_TASK is the generic "features-backfill"
-  dispatch with an arbitrary `VM_BACKFILL_CMD` — which of `ml-store`'s 5 object-key prefixes a given invocation writes
-  isn't derivable from VM_SERVICE/VM_ASSET_GROUP alone, and only `ml-training-artifacts` ever had a consolidator);
-  `deployment_service`/`batch_live_reconciliation_service`/`wallet_treasury`/`client_reporting`/`alerting_service`/
-  `chaos-drill`/`dr-drill-cutover`/`qg_snapshot` (target deployment-state/portfolio-state/recon/audit buckets, none of
-  which have a consolidator — portfolio-state confirmed "none" above); compound-VM_SERVICE launchers (e.g.
-  `launch-mdps-features-live.sh`, `launch-prediction-pipeline-vm.sh` — write more than one covered bucket per run,
-  `CONSOLIDATOR_WATCHDOG_BUCKET` only supports a single target); bespoke `*_daily_cron` VM_SERVICE literals
-  (`cefi_fwd_daily_cron`, `tradfi_fwd_daily_cron`, etc. — genuine per-launcher work to confirm their real write target);
-  and continuous/live launchers (`mtds-live*`, `*-forward-poll`, `prediction-live`, `perp-clob-live` — a different,
-  self-relaunching execution shape than the bounded-backfill population this mechanism was proven against). Tests:
-  `deployment-service/tests/unit/test_consolidator_watchdog_vm_wiring.py`'s `TestSetupScriptWiresExtendedFamilies`.
-  SSOT for the remaining gap: `plans/active/manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`'s
-  Progress Log.
+  unconditional single-root `execution-store-{env}-{project}` bucket, every asset_group via a path prefix).
+  **Extended further 2026-08-17** to two more populations, closing both compound-bucket and continuous-execution
+  gaps this doc previously listed as unaddressed:
+  - **Compound-VM_SERVICE launchers** (`launch-mdps-features-live.sh`, `launch-prediction-pipeline-vm.sh` — the
+    literal `VM_SERVICE=market_data_processing_service+features_service`, write BOTH the `market-data-tick-{ag}`
+    AND `features-{ag}` buckets per run). `vm-exec-with-gcs-tee.sh`'s watchdog now accepts a **comma-separated**
+    `CONSOLIDATOR_WATCHDOG_BUCKET` list — every bucket is checked each tick, the first found stale trips the kill
+    (single-bucket values behave identically to before, one-element list). The resolver's compound case arm
+    resolves both `market-data-tick`/`features` kinds and joins them; `features`'s existing prediction-exclusion
+    propagates automatically (prediction-asset-group compound launchers get only the market-data-tick half).
+  - **Continuous/live MTDS launchers** (`launch-mtds-live.sh`, `launch-mtds-live-{cefi,prediction}-consolidated.sh`,
+    `launch-perp-clob-live.sh`, `launch-prediction-live.sh` — new §5d, keyed on
+    `VM_SERVICE=market_tick_data_service && VM_OPERATION=live_websocket`, distinct from §5b's `VM_OPERATION=download`
+    gate). Same `market-data-tick-{ag}` bucket formula as batch MTDS, periodic watchdog export only (no OOM
+    preflight — that concern was never established for live capture). **Correction to this doc's own prior
+    framing**: `*-forward-poll.sh` launchers, named in the original "continuous/live" exclusion, turned out on
+    investigation to be a different shape than assumed — all 10 set `VM_SHUTDOWN_ON_COMPLETION=true` and route
+    through `VM_OPERATION=download`/`instruments`, i.e. already covered by §5b/§5c; none needed new wiring. One
+    exception found instead: `launch-defi-forward-poll.sh` uses a variable `--operation` flag (default
+    `collect-lst-rates`, never `download`) and is covered by nothing — a newly-discovered, separate gap, not wired
+    (unconfirmed real write target).
+    **Still NOT extended** (documented exclusions, not a silent gap): `ml_service` (VM_TASK is the generic
+    "features-backfill" dispatch with an arbitrary `VM_BACKFILL_CMD` — which of `ml-store`'s 5 object-key prefixes a
+    given invocation writes isn't derivable from VM_SERVICE/VM_ASSET_GROUP alone, and only `ml-training-artifacts`
+    ever had a consolidator; extracted 2026-08-17 into `infra_satellite_ao_dispatch_batch18_2026_08_17.md` item 7);
+    `deployment_service`/`batch_live_reconciliation_service`/`wallet_treasury`/`client_reporting`/`alerting_service`/
+    `chaos-drill`/`dr-drill-cutover`/`qg_snapshot` (target deployment-state/portfolio-state/recon/audit buckets, none of
+    which have a consolidator — portfolio-state confirmed "none" above); bespoke `*_daily_cron` VM_SERVICE literals
+    (`cefi_fwd_daily_cron`, `tradfi_fwd_daily_cron`, etc. — genuine per-launcher work to confirm their real write
+    target; same extraction as ml_service above); `launch-defi-forward-poll.sh` (see above). Tests:
+    `deployment-service/tests/unit/test_consolidator_watchdog_vm_wiring.py`'s `TestSetupScriptWiresExtendedFamilies` +
+    `TestVmExecMultiBucketWatchdog` + `TestSetupScriptWiresCompoundAndLiveLaunchers`. SSOT for the remaining gap:
+    `plans/active/manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`'s Progress Log.
 - **Liveness watchdog** — `unified_trading_library.monitors.consolidator_liveness.ConsolidatorLivenessMonitor` +
   `check_buckets()` + CLI (`python -m unified_trading_library.monitors.consolidator_liveness --buckets a,b`). Per bucket
   it reads the heartbeat age and emits `CONSOLIDATOR_DOWN` (ERROR) when it misses > N cycles (default 5 × 60s),

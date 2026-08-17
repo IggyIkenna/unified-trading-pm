@@ -165,14 +165,13 @@ context_scope:
       via a direct bucket-level lifecycle-clear instead — confirmed empty rule set after. `pnl-attribution-output`
       resolved SEPARATELY (see entry below) — NOT a lifecycle-rule question. QG green (full run, exit 0, sentinel
       `78dfe2ef` == HEAD at push time).
-- [ ] [INFRA] P3. **The 10(IS+MTDS)+8(Group B)=18-jobs→5-per-asset-group consolidation is NOT shipped and is NOT a
-      pure Terraform regroup** (verified 2026-08-16, reading `manifest_consolidator_scheduler.tf` directly — no GCS
-      calls): both `for_each` blocks pass a single `--bucket` arg per job, one job per bucket, and the file's own
-      comment states the structural reason — Cloud Scheduler cannot override args on a per-invocation Cloud Run Job
-      trigger, so consolidating to fewer jobs requires the ENTRYPOINT itself to accept a bucket LIST and loop
-      sequentially (a `unified-trading-library` code change), not just a Terraform locals rewrite. Re-scope as a
-      code+infra change, not infra-only, before estimating. Same drift-blocker gate as the todo above applies.
-      Done-when: either confirmed-already-shipped elsewhere (cite commit) or a scoped code+infra diff exists.
+- **[INFRA] P3. CANCELLED — SUPERSEDED 2026-08-17 (operator rejected, see the 2026-08-17 Progress Log entry
+  below).** The 10(IS+MTDS)+8(Group B)=18-jobs→5-per-asset-group consolidation was verified NOT shipped and NOT a
+  pure Terraform regroup, then explicitly rejected by the operator on architectural grounds (combining buckets into
+  one container invocation means sizing RAM for the worst-case bucket and running sequentially — directly
+  contradicts the already-confirmed finding that per-bucket resource sizing is what's actually working, and would
+  make the market-data-cefi class of incident easier to reproduce, not harder). Do not resurrect without new
+  evidence changing the RAM/time tradeoff.
 - [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
       item 6 (folded into the same dispatched item as the Terraform-diff todos above — sequential follow-on, not
       independent).** Not yet executed — tracked there. [REVIEW] P3. **Cost-gain tracking** — after any change above ships, re-run the same `bq query` shape used to
@@ -240,11 +239,17 @@ context_scope:
       can be derived per-launcher (e.g. a dedicated `VM_ML_TARGET` metadata key) so `launch-ml-training-vm.sh`/
       `launch-ml-vm.sh` can opt into the watchdog for the one prefix (`training-artifacts`, folded into `ml-store`)
       that actually has a consolidator. Repos: deployment-service.
-- [ ] [INFRA] P3. **Compound-VM_SERVICE watchdog coverage** (excluded above) — `launch-mdps-features-live.sh` and
+- [x] ✅ [INFRA] P3. **Compound-VM_SERVICE watchdog coverage** (excluded above) — `launch-mdps-features-live.sh` and
       `launch-prediction-pipeline-vm.sh` each write more than one consolidator-covered bucket per run;
-      `CONSOLIDATOR_WATCHDOG_BUCKET` only supports a single target. Either add multi-bucket support to
-      `vm-exec-with-gcs-tee.sh`'s watchdog or make an explicit per-launcher primary-bucket call. Repos:
-      deployment-service.
+      `CONSOLIDATOR_WATCHDOG_BUCKET` only supported a single target. **DONE 2026-08-17** — `deployment-service@7d6e5e48f9`. Resolved via native
+      multi-bucket support (comma-separated `CONSOLIDATOR_WATCHDOG_BUCKET` list — every bucket checked each tick,
+      first stale one trips the kill; single-bucket callers unaffected) rather than picking one primary bucket,
+      since the alternative would leave the unpicked bucket's orphaned-shard risk completely unmonitored, defeating
+      the mechanism's purpose. `setup-data-pipeline-vm.sh`'s resolver now dispatches the literal
+      `VM_SERVICE=market_data_processing_service+features_service` to a two-lookup branch that resolves both
+      `market-data-tick`/`features` kinds and joins them. Repos: deployment-service. Tests:
+      `TestVmExecMultiBucketWatchdog` + `TestSetupScriptWiresCompoundAndLiveLaunchers` (new, 12 cases) in
+      `test_consolidator_watchdog_vm_wiring.py`.
 - [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
       item 7 (combined with the ml_service watchdog todo above into one dispatched item).** Not yet executed — tracked
       there. [INFRA] P3. **Bespoke `*_daily_cron` VM_SERVICE watchdog coverage** (excluded above) —
@@ -252,11 +257,28 @@ context_scope:
       `funding_ensemble_daily_cron` use bespoke non-standard `VM_SERVICE` literals; confirm each one's actual write
       target (several look MTDS/MDPS-shaped and may already resolve to an already-covered bucket) before wiring.
       Repos: deployment-service.
-- [ ] [INFRA] P3. **Continuous/live launcher watchdog coverage** (excluded above) — `mtds-live*`,
+- [x] ✅ [INFRA] P3. **Continuous/live launcher watchdog coverage** (excluded above) — `mtds-live*`,
       `*-forward-poll`, `prediction-live`, `perp-clob-live` are self-relaunching, `VM_SHUTDOWN_ON_COMPLETION=false`
       long-running processes, a different execution shape than the bounded-backfill population the watchdog was
-      proven against. Decide whether the same periodic re-check should apply to them (plausibly yes — a stale
-      consolidator is just as meaningful mid-live-run) and wire if so. Repos: deployment-service.
+      proven against. **DONE 2026-08-17** — `deployment-service@7d6e5e48f9`. Investigated each launcher's actual metadata directly rather than
+      guessing: `launch-mtds-live.sh` / `launch-mtds-live-{cefi,prediction}-consolidated.sh` /
+      `launch-perp-clob-live.sh` / `launch-prediction-live.sh` all emit
+      `VM_SERVICE=market_tick_data_service && VM_OPERATION=live_websocket` (confirmed pure data-capture, not
+      execution/trading-adjacent, from each launcher's own header) — wired via a new §5d block in
+      `setup-data-pipeline-vm.sh`, same `market-data-tick-{ag}` bucket formula as batch MTDS, periodic watchdog
+      export only (no OOM preflight — never established for live capture). **Correction to the original premise**:
+      `*-forward-poll.sh` (all 10, verified directly) actually set `VM_SHUTDOWN_ON_COMPLETION=true` and route
+      through `VM_OPERATION=download`/`instruments` — a bounded catch-up task, not continuous, already covered by
+      existing §5b/§5c wiring; no new work needed for any of them. One new gap found instead:
+      `launch-defi-forward-poll.sh` uses a variable `--operation` flag (default `collect-lst-rates`, never
+      `download`), covered by nothing — tracked as a new follow-up below, not wired on an unconfirmed target.
+      Repos: deployment-service.
+- [ ] [INFRA] P3. **`launch-defi-forward-poll.sh` watchdog coverage** (newly discovered 2026-08-17 while resolving
+      the continuous/live todo above) — its `VM_OPERATION` is a variable `--operation` flag (default
+      `collect-lst-rates`, seen values likely include other `collect-*` operations), never `download`, so it falls
+      through §5b's exact-match gate despite being `VM_SERVICE=market_tick_data_service`. Confirm each real
+      `--operation` value's actual write target before wiring (same "confirm real write target" caution as the
+      bespoke `*_daily_cron` launchers). Repos: deployment-service.
 - [x] ✅ [INFRA] P1. **Terraform-drift finding — market-data-cefi resource fix not actually codified** (discovered
       2026-08-16 while shipping the watchdog-extension todo above; unrelated to that todo's own scope, surfaced only
       because a concurrent session's dirty `terraform/gcp/manifest_consolidator_scheduler.tf` had to be checked
@@ -696,3 +718,18 @@ context_scope:
   lazy; both were victims of a plausible-but-wrong naming assumption neither had reason to question. See
   `/codex/12-agent-workflow/measurement-claims-discipline.md` for the general pattern this fits (an absence claim is
   a statement about the probe, not the target, until the probe is proven to have looked in the right place).
+
+- **2026-08-17 (interactive session, remaining watchdog-coverage todos)**: resolved the two genuinely-open
+  watchdog-coverage todos without needing an operator decision — both resolved cleanly from investigating the
+  actual launcher code rather than being a real judgment call. **Compound-VM_SERVICE**: added native
+  comma-separated multi-bucket support to `vm-exec-with-gcs-tee.sh`'s watchdog (rejected the "pick one primary
+  bucket" alternative — it would leave the unpicked bucket's orphaned-shard risk unmonitored, defeating the
+  mechanism). **Continuous/live**: wired `market_tick_data_service`+`live_websocket` launchers via a new §5d block;
+  in the process, disproved the original todo's premise that `*-forward-poll.sh` launchers needed the same
+  treatment — all 10 were verified to already be bounded, `VM_SHUTDOWN_ON_COMPLETION=true` tasks already covered
+  by existing wiring, and one genuinely new gap (`launch-defi-forward-poll.sh`, a variable `--operation` flag) was
+  found and tracked separately instead. 12 new test cases added (`TestVmExecMultiBucketWatchdog`,
+  `TestSetupScriptWiresCompoundAndLiveLaunchers`), 3 pre-existing tests updated for the restructured nested-loop
+  shape, all 34 passing. Also flipped the operator-rejected 18→5 job-consolidation todo to a CANCELLED marker (it
+  was sitting unchecked despite being resolved on 2026-08-17) and updated
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s coverage accounting to match.
