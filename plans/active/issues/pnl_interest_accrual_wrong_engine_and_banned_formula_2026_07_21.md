@@ -823,3 +823,7 @@ code.
 - **na-eligibility-audit 2026-08-16** [body-hash:1c8918d7c9daea13]: KEEP-NA, valid — This is a long-running, heavily-audited money-path issue doc (interest-PnL accrual in the determinism-critical client-reporting spine) that has already shipped three legs (FUNDING/E1, STAKING/E4/E2-partial, LENDING row-set drop) under an explicit standing '## OPERATOR GATE' requiring a 3-lens money-path review before any accrual/NAV change ships.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-17 (defi tranche, dispatch agt-f4fef7)**: KEEP-NA, valid — re-confirmed
+  independently; no substantive content change since the 2026-08-16 verdict (context-scout metadata touch only).
+  Still under the standing `## OPERATOR GATE` (3-lens money-path review required before any accrual/NAV change
+  ships) — not re-litigated. Doc stays `assigned_vm: NA`.

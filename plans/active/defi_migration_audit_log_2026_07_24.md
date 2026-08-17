@@ -409,6 +409,22 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       migrator source routing to dedicated dests). vault_share_price is MVP-relevant (carry vault NAV). Repo:
       market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 coverage matrix
       2026-06-09.
+      **na-eligibility-audit 2026-08-17: premise partially INVERTED, same class as the REDIRECT todo below —
+      dedicated buckets are RETIRED (`defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`), so
+      "fold into dedicated buckets" is not a real target. Code-verified live (2026-08-17, not inferred):
+      `risk_params_handler.py:414` (`get_write_bucket_name("market_data","defi")`) and
+      `vault_share_price_handler.py:261` (`get_write_bucket_name("market_data",asset_group="defi")`) both already
+      resolve the SAME shared canonical bucket every already-migrated data_type uses — this is not an "orphan"
+      bucket, it's the permanent one. Both handlers also already stamp per-row `pipeline_mode_for_source(...)` (the
+      same source-aware v9 pattern as the 8 already-migrated data_types) — `risk_params_handler.py:252-279`,
+      `vault_share_price_handler.py:407-440`. (`utilization`'s specific handler not independently identified this
+      pass — likely the same lending/risk-params family, not confirmed.) **So the bucket-fold half of this todo is
+      moot** (same disposition as the REDIRECT todo). **Real narrower residual, still genuinely open and NOT
+      resolved by this note**: whether pre-existing HISTORICAL rows for these 3 data_types (written before the
+      source-aware writer went live, pre-2026-06-16 per this doc's own G0 date) are still legacy/non-v9-shaped and
+      need a v8→v9 backfill the way the 8 covered data_types received — that needs a live
+      `schema_version`/`pipeline_mode` distribution check against the manifest for these 3 data_types specifically
+      (not a bucket migration). Left `[ ]` open, reworded rather than closed — no live check run this pass.**
 - [ ] [DATA] P2. **Retagged 2026-07-29 (corpus hygiene pass): mostly false-positive — verified
       `eigenlayer_rewards_handler.py` (Alchemy RPC + free DefiLlama), `native_staking_handler.py` (free public Solana
       RPC + free Jito Kobe MEV API) and `staking_yields_handler.py` (free Lido/EtherFi/DefiLlama APIs) are ALL complete,

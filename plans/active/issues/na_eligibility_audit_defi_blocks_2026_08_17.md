@@ -80,29 +80,52 @@ cefi-owned) is now STALE — that doc's own live content shows the item already 
 Per the skill's close-the-loop rule, every `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` tag from this run that was NOT promoted
 to a real RECLASSIFY verdict is a mandatory Phase-1 input for the next `/na-eligibility-audit defi` run.
 
-**Resolved this run** (promoted to RECLASSIFY, extracted to `defi_satellite_ao_dispatch_batch16_2026_08_17.md`, or
-converted to a KEEP-NA-STALE citation — excluded from the list below): the Solana/multi-venue source-label fix and
-gas net-cost consumer (`defi_migration_audit_log_2026_07_24.md`), the 3 plan_reconciler corpus-hygiene items
-(`.tabs/2` check, batch3-finalize text, 4-doc cross-link), the LST catalogue/enumerator v2 regen and DEX-fill
-shard-3 check (`lst_rate_honest_coverage_2026_07_21.md`), the subgraph-health-probe alert triage (whole-doc
-RECLASSIFY), the HYPERLIQUID k-prefix casing citation-fix, and the health-factor docstring citation-fix.
+**Resolved 2026-08-17 dispatch agt-e2dde1** (promoted to RECLASSIFY, extracted to
+`defi_satellite_ao_dispatch_batch16_2026_08_17.md`, or converted to a KEEP-NA-STALE citation): the Solana/multi-venue
+source-label fix and gas net-cost consumer (`defi_migration_audit_log_2026_07_24.md`), the 3 plan_reconciler
+corpus-hygiene items (`.tabs/2` check, batch3-finalize text, 4-doc cross-link), the LST catalogue/enumerator v2 regen
+and DEX-fill shard-3 check (`lst_rate_honest_coverage_2026_07_21.md`), the subgraph-health-probe alert triage
+(whole-doc RECLASSIFY), the HYPERLIQUID k-prefix casing citation-fix, and the health-factor docstring citation-fix.
+
+**Resolved 2026-08-17 dispatch agt-f4fef7 (same-day incremental pass)**: (1)
+`defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md` — a NEW doc filed the same day (by
+`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize.md`'s own reconciliation pass), never on this
+carry-forward list before; promoted to a full whole-doc RECLASSIFY (conflict-check clear against all 4 required
+surfaces), extracted to its own `..._finalize.md`. (2) `defi_migration_audit_log_2026_07_24.md` line ~412
+(collection-gaps retag) — re-read fresh: the doc's OWN existing text (its 2026-08-08 inline correction) already
+carries the exact narrowing this carry-forward item was asking for (native_staking per-validator sub-feature,
+CREDENTIAL_BLOCKED on a free-tier `helius-api-key`); no further edit was needed — the "needs narrowing" framing
+carried on this list was itself stale. Closed off the list, not re-carried.
 
 **Still genuinely open, for the next run to re-assess:**
 
-- `defi_migration_audit_log_2026_07_24.md` line ~406 (FOLD-3-orphan-data_types) — premise now inverted per the
-  retired-dedicated-bucket-architecture finding; needs rewording toward the narrower v9-shape/manifest-coverage
-  verification before a clean extraction is possible. Flagged, not edited this run (same disposition as
-  2026-08-16's pass — a low-confidence edit given the long cross-referenced text).
-- `defi_migration_audit_log_2026_07_24.md` line ~412 (collection-gaps retag) — mostly-resolved (eigenlayer_rewards
-  scheduling confirmed live), needs narrowing to its residual scope (native_staking per-validator sub-feature,
-  CREDENTIAL_BLOCKED on a free-tier `helius-api-key`). Same flagged-not-edited disposition as 2026-08-16.
-- `defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md` (infra-owned) todo 1 — see operator-questions
-  §3 above; infra tranche's job to promote via a per-todo split.
-- `estate_orphan_assessment_2026_07_21.md` (cefi-owned) todo 6 — see operator-questions §3 above; cefi tranche's
-  job, still contested.
+- `defi_migration_audit_log_2026_07_24.md` line ~406 (FOLD-3-orphan-data_types) — **narrowed with live code
+  evidence this run (2026-08-17, agt-f4fef7), not yet closable.** Verified live: the bucket-fold premise is moot,
+  same class as the already-resolved REDIRECT todo — `risk_params_handler.py:414` and
+  `vault_share_price_handler.py:261` both already call `get_write_bucket_name("market_data","defi")` (the SAME
+  shared canonical bucket every migrated data_type uses, not an orphan) and both already stamp per-row
+  `pipeline_mode_for_source(...)` (the same v9 source-aware pattern the 8 already-migrated data_types use). Real
+  residual, still open: whether pre-existing HISTORICAL rows for these 3 data_types (written before the source-aware
+  writer went live) are still legacy-shaped and need a v8→v9 backfill — needs a live `schema_version`/`pipeline_mode`
+  manifest distribution check, not a code read. Correction applied inline on the source doc's own todo text this
+  pass; next run (or a dispatched worker) should run that live check — if clean, this todo closes as fully moot.
+- `defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md` (infra-owned) todo 1 — unchanged since the
+  first 2026-08-17 pass; still infra tranche's job to promote via a per-todo split, not re-touched here (primary-owner
+  rule).
+- `estate_orphan_assessment_2026_07_21.md` (cefi-owned) todo 6 — not in today's defi Phase-0 in-scope set (unchanged
+  since last seen); still cefi tranche's job, still contested per the first 2026-08-17 pass's note.
 
 ## Progress Log
 
 - **2026-08-17 (na-eligibility-audit, defi tranche, dispatch agt-e2dde1)**: drafted as the Phase 1b consolidation
   artifact for this run's 23-doc classification pass (16 defi-owned + 7 report-only). See
   `defi_consolidated_closeout_2026_07_18.md` for the tranche's own AG closeout tracker.
+- **2026-08-17 (na-eligibility-audit, defi tranche, dispatch agt-f4fef7, slot 14 — same-day incremental pass)**:
+  Phase 0 found only 10 of 60 defi-tranche docs in scope (already-verdicted-and-unchanged the rest); 7 defi-owned
+  in-scope docs classified (1 RECLASSIFY — `defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md`,
+  new same-day doc, whole-doc conflict-clear, paired finalize authored; 6 KEEP-NA/KEEP-NA-STALE re-confirmations,
+  dated markers written), 3 non-owned report-only docs read + reported (no writes, primary-owner rule), 2 mandatory
+  carry-forward MISCLASSIFIED items on `defi_migration_audit_log_2026_07_24.md` re-assessed (line ~412 closed as
+  already-adequately-narrowed; line ~406 narrowed with fresh live code evidence, correction applied inline, real
+  residual re-carried forward — see above). Ratchet checked at run end (see plan-flip evidence in this run's
+  `/done` payload).

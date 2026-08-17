@@ -169,3 +169,7 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 - **na-eligibility-audit 2026-08-16** [body-hash:af9008fe203a4904]: KEEP-NA-STALE (already-duplicated), re-confirmed -- doc unchanged since the 2026-08-09 verdict. Sole open item (line ~135, archive-this-doc trigger) is the identical closing action already tracked as todo 2 of the active solana_dex_pool_swaps_indexer_2026_08_08_finalize.md; citation already correct and current. No action needed.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-17 (defi tranche, dispatch agt-f4fef7)**: KEEP-NA-STALE (already-duplicated),
+  re-confirmed — doc unchanged since the 2026-08-16 verdict (context-scout metadata touch only). Sole open item
+  (archive-this-doc trigger) is still the identical closing action tracked as todo 2 of the active
+  `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`; citation still correct and current. No action needed.
