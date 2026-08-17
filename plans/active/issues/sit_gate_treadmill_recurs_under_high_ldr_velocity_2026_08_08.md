@@ -270,3 +270,23 @@ empty post-merge). Todos 1 (dedup-key) and 3 (hoist PR cleanup) are unchanged/st
 exercise either (no PR ever went stale).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+**cicd escalation agt-b4293e, 2026-08-17 ~10:44Z** (`sit_gate_stuck` wall, `market-tick-data-service` 4 straight
+SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32021413430`): Live-diagnosed via `gh run view --log` on
+the fleet-promote run + `sit_gate_stuck_detector.py` (no `--slack`), not assumed from the alert text. **Same documented
+moving-tree race, self-converged — no code fix needed, nothing to push.** Sequence: run `32021413430` (10:44:22Z) logged
+`SIT GATE BLOCK market-tick-data-service: true-delta not SIT-validated on this tree` (fail-closed,
+`sit_validated_tree='c14c59719ada...'` vs `LDR tree='f8f1875696e4...'`), with SIT-on-LDR already dispatched (runs
+`32021514964` pending + `32020551569` in_progress at diagnosis time); no orphaned promote PR existed for
+market-tick-data-service throughout (`gh pr list --search "chore(promote)"` empty). Backgrounded a bounded poll of
+`sit_gate_stuck_detector.py` (every 3 min) rather than block synchronously: streak held flat at "4 straight" through
+~10:51Z-10:54Z (SIT round still in flight, not a masked second bug), then converged: `sit-gate stuck detector: healthy
+(no repo has 3+ consecutive SIT GATE BLOCK ticks)`. Verified concretely, not just inferred: the next fleet-promote tick
+(run `32023280696`, 11:06:28Z) logged `SIT GATE PASS market-tick-data-service: true-delta SIT-validated on this tree
+(sit_validated_tree == LDR tree f8f1875696e4...)`, and opened/updated promote PR `market-tick-data-service#1138`
+(currently blocked on `quality-gates-v2` on that PR head — a separate concern from the SIT-gate treadmill this
+escalation covers, not investigated here as it's outside `sit_gate_stuck` scope). Todos 1 (dedup-key) and 3 (hoist PR
+cleanup) are unchanged/still open — this occurrence did not exercise either (no PR ever went stale). This is the 5th
+consecutive occurrence of this exact wall type all resolving to "self-converges, no code fix" — the pattern is now
+well-established across 5 different repos (deployment-api, execution-service, market-tick-data-service ×2, this one).
