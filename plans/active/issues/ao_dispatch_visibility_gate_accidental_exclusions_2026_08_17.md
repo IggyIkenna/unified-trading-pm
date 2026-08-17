@@ -88,9 +88,15 @@ remedy text.
 
 ## Todos
 
-- [ ] [REVIEW] P1. Classify `infra_satellite_ao_dispatch_batch18_2026_08_16.md`'s flagged todo
+- [x] ✅ [REVIEW] P1. Classify `infra_satellite_ao_dispatch_batch18_2026_08_16.md`'s flagged todo
       (repo: unified-trading-pm) — genuinely open (fix dispatch-visibility) or needs a declared
-      marker.
+      marker. — 2026-08-17 (unified-trading-pm, docs-only): verified live that
+      `scripts.recovery._durable_state.state_bucket()` resolves correctly on the orchestrator VM
+      (`deployment-scripts-central-element-323112`) — the dev-checkout-only block never applied
+      here. Rewrote the batch18 todo to drop the stale `BLOCKED-CREDENTIALS` phrasing that was
+      tripping the dispatch-visibility parser's undeclared-marker exclusion; it now dispatches
+      normally. The actual p95/max shard-duration measurement is still unattempted work for a
+      future SCRIPT-craft worker.
 - [ ] [REVIEW] P1. Classify `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md`'s
       flagged todo (repo: unified-trading-pm).
 - [ ] [REVIEW] P1. Classify
@@ -112,3 +118,9 @@ remedy text.
   `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s qg-baseline re-measurement todo. Confirmed
   unrelated to that diff (gate scans plan-corpus todo text only). Filed this issue + declared a
   `qg_red` repo-blocker for `unified-trading-pm` per RULES.md §4b.
+- **2026-08-17 (slot 24, review-craft)**: classified item 1 (`infra_satellite_ao_dispatch_batch18_2026_08_16.md`).
+  Verdict: genuinely open, not a legitimate exception — the todo's own `BLOCKED-CREDENTIALS` text was a stale
+  dev-checkout-only observation that never held on the orchestrator VM itself (verified live: `state_bucket()`
+  resolves to `deployment-scripts-central-element-323112` here). Fixed by rewriting the todo to drop the
+  undeclared-marker phrasing rather than adding a declared `BLOCKED-*` marker, since declaring it would have
+  permanently suppressed dispatch of work that is actually available now.
