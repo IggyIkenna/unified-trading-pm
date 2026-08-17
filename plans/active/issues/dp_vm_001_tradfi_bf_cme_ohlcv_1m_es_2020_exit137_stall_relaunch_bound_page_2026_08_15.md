@@ -113,12 +113,15 @@ retry, not genuinely new information.
 - [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216`'s shard
       (tradfi/CME/ES/2020 1m OHLCV) per the recommended decision above; the `tradfi-bf-cme-ohlcv-1m-` family relaunch
       bound is already exhausted for today (2/2).
-- [ ] [BACKEND] P2. Pull + read `run.log` for `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` via
+- [x] ✅ [BACKEND] P2. **CONSOLIDATED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) — folded
+      into `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2** (that todo covers this VM together with the
+      `btc-2020` sibling stall — do not double-dispatch a separate run.log pull for this VM; the batch todo already
+      accounts for this doc's own partial pull below — 1561 lines, confirmed genuine `WORKER_STALLED`, actual hung
+      call still unidentified). Original ask: pull + read `run.log` for
+      `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` via
       `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess) to
-      diagnose the stall root cause (candidate: an unbounded outbound call lacking `timeout=` in the CME OHLCV 1m
-      capture path); fix at the root if it's a code defect (bound the call with `asyncio.wait_for` at the per-shard
-      level per the shard-isolation SSOT), and cross-check whether other `tradfi-bf-cme-ohlcv-1m-` shards launched in
-      the same batch show the same signature.
+      diagnose the stall root cause; fix at the root if it's a code defect; cross-check other
+      `tradfi-bf-cme-ohlcv-1m-` shards for the same signature.
 
 ## Progress Log
 
@@ -148,3 +151,6 @@ retry, not genuinely new information.
   CME OHLCV 1m capture path actually hung; that remains open work for the BACKEND todo above (candidate: an
   unbounded outbound call lacking `timeout=`), not resolved by this cross-VM check.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **RECLASSIFY, per-todo split.** Todo 2
+  consolidated into `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2 alongside the `btc-2020` sibling —
+  see checkbox above. Todo 1 (operator relaunch decision) stays genuinely gated. Doc stays `assigned_vm: NA`.

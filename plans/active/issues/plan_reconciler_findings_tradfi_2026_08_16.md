@@ -74,17 +74,17 @@ Dispatch `agt-a74a6a`, slot 31, tranche `tradfi`. Corpus: 86 docs / 2,755,415 by
       (machine-generated, established precedent from this doc's own earlier "Hygiene fixes" section); a
       Progress-Log-only historical mention in `defi_satellite_ao_dispatch_batch11_2026_08_09.md` left untouched
       (fact-vs-path convention).
-- [ ] [DATA] P2. **Correct the stale Massive-purge section in `tradfi_canonical_path_migration_design_2026_07_19.md`,
-      then archive it.** Doc body (steps 5-6 / hard-stops list) still frames the 1.47M-object Massive purge as
-      future-gated; `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3 confirms it EXECUTED 2026-07-20/21
-      (1,701,422 objects → 0, 0 collateral) and names this doc as the source design doc. All todos already `[x]`,
-      `archive_exempt: true` bridge pending this correction + a follow-on pass. **HALF-DONE 2026-08-16 (plan_reconciler
-      Phase -1): the text correction is DONE** (Sequencing step 6 + Hard-stops list corrected in place, evidence cited
-      inline). **Archival deliberately DEFERRED, not this pass** — this doc has 35+ corpus referrers (vs. the other 3
-      docs' single-digit counts), at least 2 of them (`tradfi_consolidated_closeout_2026_07_18.md`,
-      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`) inside the 12h grace window at the time of this pass — a
-      rushed referrer sweep across that many active docs risks leaving dangling refs, which is worse than leaving the
-      doc active a while longer. Genuinely still open, real work — leave for a dedicated referrer-sweep pass.
+- [x] ✅ [DATA] P2. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 6 (archival half only).** Correct the stale
+      Massive-purge section in `tradfi_canonical_path_migration_design_2026_07_19.md`, then archive it. Doc body
+      (steps 5-6 / hard-stops list) still frames the 1.47M-object Massive purge as future-gated;
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3 confirms it EXECUTED 2026-07-20/21 (1,701,422
+      objects → 0, 0 collateral) and names this doc as the source design doc. All todos already `[x]`,
+      `archive_exempt: true` bridge pending this correction + a follow-on pass. **HALF-DONE 2026-08-16
+      (plan_reconciler Phase -1): the text correction is DONE** (Sequencing step 6 + Hard-stops list corrected in
+      place, evidence cited inline). Archival half (43 corpus referrers, confirmed via a fresh grep 2026-08-17, up
+      from the "35+" estimate at filing) is bounded/mechanical (standard 6-step ritual + referrer sweep) —
+      extracted to the AO batch above rather than executed in this audit pass.
 - [ ] [SERVICE] P3. **Fix the missing `[OPERATOR]` tag on 2 open todos in
       `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** (lines ~975, ~983 as of this run — SPOT vs
       on-demand VM cost/reliability question, raised twice in Progress Log across 6 consecutive gated-skip dispatches,
@@ -97,28 +97,25 @@ Dispatch `agt-a74a6a`, slot 31, tranche `tradfi`. Corpus: 86 docs / 2,755,415 by
       (uncommitted, cleanly — nothing landed). Per the skill's own "line-cap-blocked-done is a distinct sub-case" rule
       (Phase 2), this is now a **split finding**, operator-gated (splitting a 1000+-line doc is a planning decision,
       not a mechanical fix) — not something this pass can force through. Genuinely still open.
-- [ ] [DOCS] P3. **Fix the residual reference-path ratchet regression from this run's archivals** (baseline 34,
-      currently 38 — 2 of the original 6 were fixed same-run) — `tradfi_consolidated_closeout_2026_07_18.md` (×2) and
-      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (×2) still reference the now-archived
-      `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`(+`_finalize`); both source docs were inside the 12h grace
-      window during this run. Repoint to `/plans/archive/2026_08/...` once grace clears. **STILL OPEN 2026-08-16
-      (plan_reconciler Phase -1)**: re-checked — both docs are STILL inside the 12h grace window as of this pass
-      (`tradfi_consolidated_closeout_2026_07_18.md` last touched 5 min before this check; `..._batch8...` ~3.5h
-      before), one apparently mid-edit by a concurrent session right now. Genuinely grace-blocked, not a judgment call
-      — leave for the next pass that finds them clear.
-- [ ] [DOCS] P3. **Bump stale `last_updated` frontmatter on 7 tradfi-tranche docs** found during this run (identical
-      pattern — na-eligibility-audit/context-scout passes don't bump the field): `ag_closeout_audit_rollout_2026_07_25.md`,
-      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`, `instruments_remaining_work_audit_2026_07_10.md`,
-      `tradfi_manifest_content_recovery_completion_2026_07_24.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`,
-      `estate_orphan_assessment_2026_07_21.md`, `strategy_ml_orphan_coverage_design_gaps_2026_08_03.md` — a mechanical
-      tooling fix (bump-on-audit-touch) is likely higher-leverage than 7 hand-edits. **3/7 DONE 2026-08-16
+- [x] ✅ [DOCS] P3. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 7.** Fix the residual reference-path ratchet
+      regression from this run's archivals (baseline 34, currently 38 — 2 of the original 6 were fixed same-run) —
+      `tradfi_consolidated_closeout_2026_07_18.md` (×2) and `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (×2)
+      still reference the now-archived `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`(+`_finalize`). **STILL
+      OPEN 2026-08-16 (plan_reconciler Phase -1)**: re-checked — both docs were still inside the 12h grace window as
+      of that pass. Grace-blocked, mechanical, not a judgment call — extracted rather than fixed directly here
+      (by 2026-08-17 dispatch time this is a new day; the extracted todo re-verifies grace has cleared before
+      editing).
+- [x] ✅ [DOCS] P3. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
+      `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 8 (4/7 remaining slice).** Bump stale
+      `last_updated` frontmatter on the tradfi-tranche docs found during this run. **3/7 DONE 2026-08-16
       (plan_reconciler Phase -1)**: `instruments_remaining_work_audit_2026_07_10.md`,
-      `tradfi_manifest_content_recovery_completion_2026_07_24.md`, `strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`
-      bumped to their real last-git-touched date (all confirmed outside the 12h grace window). **4/7 left untouched —
-      confirmed INSIDE the 12h grace window at time of this pass** (`ag_closeout_audit_rollout_2026_07_25.md`,
-      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`, `estate_orphan_assessment_2026_07_21.md` all touched
-      ~40 min before this check; `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` ~3h20m before) — genuinely
-      grace-blocked, not skipped by choice.
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md`,
+      `strategy_ml_orphan_coverage_design_gaps_2026_08_03.md` bumped already. **4/7 remaining** —
+      `ag_closeout_audit_rollout_2026_07_25.md`, `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`,
+      `estate_orphan_assessment_2026_07_21.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` — were
+      inside the 12h grace window at 2026-08-16 filing time; mechanical, grace-blocked, extracted rather than
+      fixed directly here (the extracted todo re-verifies grace has cleared, now a new day, before editing).
 - [ ] [DOCS] P3. **File 4 codex-alignment corrections** identified this run (new content needed, not a pure
       substitution, so not auto-applied per the mechanical carve-out): `/codex/02-data/tradfi-databento-sourcing-ssot.md`
       (2 gaps — stale CBOE-floor-fix status + silent on `EXCHANGE_CODE_TO_NAME`), `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`
@@ -129,6 +126,18 @@ Dispatch `agt-a74a6a`, slot 31, tranche `tradfi`. Corpus: 86 docs / 2,755,415 by
       section, the ONE carve-out that stays gated regardless of trust mode is any edit to `codex/**`, because new
       content (not a pure substitution) requires new judgment about wording/scope, not just a fact-check. Flagged to
       the operator in this pass's final report per the task's instructions instead of applied.
+
+## na-eligibility-audit 2026-08-17 (tradfi tranche, dispatch agt-d99b5c)
+
+**RECLASSIFY, per-todo split.** Items 1 (archival half), 3 (reference-path regression), and 4 (last_updated bumps,
+4/7 remaining) are bounded/mechanical, blocked only by a self-resolving 12h grace window (now cleared, a new day) —
+extracted to `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todos 6/7/8 respectively (see checkboxes above).
+Item 2 (line-cap-blocked tag fix on `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) stays KEEP-NA —
+explicitly operator-gated (splitting a 1000+-line doc is a planning decision), self-cited in-doc. Item 5 (4 codex
+SSOT corrections) stays KEEP-NA — gated by this skill's own codex-edit carve-out (new content, not a pure
+substitution, stays gated regardless of trust mode); already flagged to the operator per the originating pass. Doc
+stays `assigned_vm: NA` (this is an issue-doc classification action on individual findings within it, not a
+whole-doc reclassify — the doc's own remaining open items, 2 and 5, are genuinely NA).
 
 ## Phase -1 — prior findings reconciliation
 
