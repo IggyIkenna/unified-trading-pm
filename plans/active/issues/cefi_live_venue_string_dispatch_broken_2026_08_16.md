@@ -133,10 +133,12 @@ rather than surfacing as a loud failure.
 position-read coverage as "effectively broad... reachable via `venue="ccxt", exchange_id="<id>"`." That framing is
 true only for a manually-constructed call — nothing in the real production call path
 (`AccountQueryClient`/`ReconciliationEngine`) ever translates a canonical dash-form venue token into that
-`ccxt`+`exchange_id` pair (`execution_service`'s own `routing.py::_map_venue_to_ccxt`, the one place that could,
-also has no `coinbase`/`kraken` entries — `routing.py:174-189`). This issue doc is a genuine refinement of that
-finding, not a duplicate, and is worth surfacing to that doc's owner. No other plan or issue doc tracks this
-specific factory-dispatch gap (grepped `plans/active/` + `plans/active/issues/` before filing).
+`ccxt`+`exchange_id` pair (**correction**: this lives in `strategy-service`, not `execution_service` — the one
+place that could, `strategy_service/position/position_interface/routing.py::_map_venue_to_ccxt`, also has no
+`coinbase`/`kraken` entries — `routing.py:174-189`; confirmed zero production callers of `create_position_adapter`,
+the only function that calls it, today). This issue doc is a genuine refinement of that finding, not a duplicate,
+and is worth surfacing to that doc's owner. No other plan or issue doc tracks this specific factory-dispatch gap
+(grepped `plans/active/` + `plans/active/issues/` before filing).
 
 ## Todos
 
@@ -217,9 +219,39 @@ specific factory-dispatch gap (grepped `plans/active/` + `plans/active/issues/` 
 - [ ] [BACKEND] P2. **Audit whether this same disease exists for non-CEFI major venues** (the other 4 asset
       groups' own venue-e2e batches) — done-when: a cited answer, yes or no per asset group, filed as its own
       follow-up if any hit.
+- [ ] [BACKEND] P3. **`strategy_service/position/position_interface/routing.py::_map_venue_to_ccxt`** (lines
+      174-189) has the identical disease shape the P1 fix eliminated elsewhere: a hand-written
+      `dict[str, str]` mapping bare lowercase tokens (`"binance"`, `"bybit"`, `"okx"`, `"kucoin"`, `"bitget"`,
+      `"mexc"`, `"upbit"`) with no `coinbase`/`kraken` entries and no dash-form normalization — it does not
+      route through `split_venue_base_and_suffix`. **Currently dormant, not urgent**: the module's own
+      docstring confirms `create_position_adapter` (the only caller of `_map_venue_to_ccxt`, at
+      `routing.py:144`) has zero production callers today — this is why the P1 fix's fleet grep, which read
+      only the 3 candidates it judged strongest by live call-path plausibility, did not surface it. Done-when:
+      either migrated to `split_venue_base_and_suffix` + full 12-venue coverage (if/when this path gains a real
+      caller), or explicitly deleted as dead code if it never does.
+- [ ] [BACKEND] P3. **`strategy_service/position/position_interface/capabilities.py::POSITION_READ_MODE_CAPABILITIES`**
+      (lines 80-110) is a hand-maintained venue-token capability table now stale relative to the P1 fix's
+      newly-added `factory.py` match arms — missing `bybit_spot`, `bybit_futures`, `okx_spot`, `okx_futures`,
+      `okx_swap`, `coinbase_spot`, `kraken`, `kraken_spot`, `kraken_futures`. Not a dispatch-breaking bug (this
+      table drives capability *metadata*, not routing), but a drift risk: the module's own comment already
+      flags this exact gap ("if a venue is added to the factory, add it here too — a future gate could diff the
+      two — out of scope for this pass"). Done-when: table updated to match `factory.py`'s current match arms,
+      or the diff-gate the module's own comment proposes is built instead.
 
 ## Progress Log
 
+- **2026-08-17 (later still)**: Picked up as backlog task `cefi_live_venue_string_dispatch_broken-f5fb15802efc`;
+  found the P0/P1 work already landed by a concurrent slot (`unified-api-contracts@9264cf2adc`,
+  `execution-service@cba9ff511d`, `strategy-service@c44322ddc0`, both P0 fixes) — a genuine duplicate-dispatch
+  collision, not a fresh regression. Independently confirmed via `git log`/`git diff` that both factory files'
+  shipped content is functionally equivalent to what this slot had built locally and uncommitted; discarded the
+  local duplicate rather than shipping a competing version. Added value beyond what the other slot's partial
+  (3-of-~20-hits) fleet grep covered: corrected the "Relation to existing tracked docs" mis-citation
+  (`routing.py::_map_venue_to_ccxt` lives in strategy-service, not execution_service — confirmed by direct file
+  read) and filed 2 new P3 follow-up todos for genuine additional same-shape hits this session's own fleet grep
+  found (`routing.py::_map_venue_to_ccxt` dead-code gap, `capabilities.py::POSITION_READ_MODE_CAPABILITIES`
+  staleness) — both out of P1's original 3-candidate deep-read but real, cited findings, filed per the workspace
+  rule that a discovered gap becomes a tracked `- [ ]`, not silent knowledge.
 - **2026-08-17 (later, same session)**: Fixed the P1 shared-helper todo —
   `unified-api-contracts@9264cf2adc` (new `split_venue_base_and_suffix` helper + regression tests),
   `execution-service@cba9ff511d`, `strategy-service@c44322ddc0` (both factories now delegate to it). Gate+ship
