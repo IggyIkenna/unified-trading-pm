@@ -127,5 +127,6 @@ already-credentialed Odds-API/footystats path). Once provisioned:
   sports closeout family for this doc's `asset_group`. No content change.
 - **na-eligibility-audit 2026-08-17** [body-hash:158a275d28bb3d58]: KEEP-NA, valid — OPERATOR scope decision (Sportradar's intended role vs Odds-API/footystats overlap) + CREDENTIAL_BLOCKED ($499/mo vendor key, no GSM secret exists as of last check).
 - **na-eligibility-audit 2026-08-17** [body-hash:f377561cd8c8ae60] (dispatch agt-1c51ee, second same-day pass): reconfirmed independently — same verdict; also re-verified live that `SportradarAdapter` still appears in no registry/factory, confirming the registration gap is real and unchanged. Hash refreshed (prior marker's stored hash had drifted with no substantive content change since; not investigated further here).
+- **na-eligibility-audit 2026-08-17** (dispatch agt-952948, third same-day pass): reconfirmed independently — same verdict, KEEP-NA valid (OPERATOR scope decision + CREDENTIAL_BLOCKED, both unchanged). Not re-adding a hash marker given two fresh same-day anchors already exist above.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

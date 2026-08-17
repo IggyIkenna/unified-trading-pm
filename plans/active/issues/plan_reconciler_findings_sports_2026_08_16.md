@@ -121,5 +121,10 @@ should be pointing sharded workers at their slot clone.
 - **na-eligibility-audit 2026-08-17** [body-hash:0a1e5beaab50e7ea] (dispatch agt-1c51ee, second same-day pass):
   reconfirmed independently — same verdict. Hash refreshed (prior marker's stored hash had drifted from the live
   body with no substantive content change since; not investigated further here).
+- **na-eligibility-audit 2026-08-17** (dispatch agt-952948, third same-day pass): reconfirmed independently — same
+  verdict, KEEP-NA valid, not an archive candidate despite 0 open todos. Not re-adding a hash marker (two fresh
+  same-day anchors already exist above); noting only that the repeated same-day hash-drift pattern across several
+  sports docs today (a marker's stored hash not matching a freshly-recomputed one despite no content change) looks
+  like a real incremental-skip mechanism inefficiency worth a look — not investigated further in this dispatch.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
