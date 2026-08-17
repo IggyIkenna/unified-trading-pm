@@ -87,16 +87,22 @@ source: >-
       `liquidation_count`/`liquidation_notional_usd` presence (or widen the existing check). Source:
       `plans/active/issues/cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`. Done-when: the WARNING no
       longer fires on a zero-liquidation window in a re-run, and quality-gates.sh stays green.
-- [ ] [BACKEND] P2. Pull + read `run.log` for `mdps-cefi-2019-20260810-043116` via
-      `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess) to
-      diagnose the `exit_code=1` root cause; fix at the root if it's a code defect (missing `timeout=`, an unhandled
-      exception class, etc.) rather than treating it as a one-off. **First check**
-      `plans/archive/2026_08/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md` — it
-      already root-caused + fixed a timestamp float-compare bug in this same singleton shard's 2026-08-10/08-11
-      launch wave and may make this a verify-only task. Source:
-      `plans/active/issues/dp_vm_001_mdps_cefi_2019_exit_nonzero_relaunch_bound_page_2026_08_14.md`. Done-when: root
-      cause named (with the archived doc cross-checked) and either a fix ships or the archived fix is confirmed to
-      already cover it.
+- [x] ✅ [BACKEND] P2. **VERIFY-ONLY — DONE 2026-08-17 (slot-12, backend_engineer)**. Pulled + read `run.log` for
+      `mdps-cefi-2019-20260810-043116` via `_gcs_tail.read_terminal_exit_code`/`read_text_tail` (SDK, tail-capped —
+      `read_terminal_exit_code` moved from `_gcs.py` to `_gcs_tail.py` 2026-08-15, run.log blobs measured up to
+      12.2GB). `exit_code=1` confirmed. **Root cause: the SAME bug**
+      `plans/archive/2026_08/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md` already
+      diagnosed + fixed (`market-data-processing-service@cc65f076ae`) — the run.log's exact 2
+      `Handler returned non-zero exit code` lines (`cefi/liquidations/PERPETUAL: ALL FAILED (2/2)`,
+      `cefi/trades/FUTURE: ALL FAILED (4/4)`) are both the `'>' not supported between instances of 'Timestamp' and
+      'float'` TypeError (8 occurrences in the log) on the shard's final date `2019-12-31`. This VM (launched
+      2026-08-10 04:31, pre-fix) is a 3rd confirmed pre-fix instance within the archived doc's own
+      blast-radius-audited 19-VM set (same `mdps-cefi-2019-*` / 2026-08-10..11 window). No other error class in this
+      VM's log (`SCHEMA_VALIDATION_FAILED` ×10, `MalformedTickFieldError` ×1627 — pre-existing DERIBIT-options
+      honest-drop handling, `recovery=fail_fast`) caused a handler exit. **The archived fix already covers this — no
+      new code needed.** Adjacent finding (relaunch-chain status is stale in the source issue doc) folded into that
+      doc's own Progress Log rather than this todo's scope. Source:
+      `plans/active/issues/dp_vm_001_mdps_cefi_2019_exit_nonzero_relaunch_bound_page_2026_08_14.md`.
 - [ ] [SCRIPT] P2. Thread a slim `columns=` list through `reconcile_phantom_manifest_rows_all.py`'s
       `merge_canonical_with_outstanding_shards(storage_client, bucket_name, str(cfg["index"]))` call (line 1719) for
       `--unphantom-only` mode specifically — enumerate exactly the columns that mode's reverse-revalidation logic (+
