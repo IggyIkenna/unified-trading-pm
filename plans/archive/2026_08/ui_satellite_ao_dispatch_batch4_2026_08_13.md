@@ -9,7 +9,7 @@ summary: >-
   into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: active
+status: superseded
 nature: process
 asset_group: [ui]
 stage: [data]
@@ -40,7 +40,7 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: ui_satellite_ao_dispatch_batch4_2026_08_13_finalize
 depends_on: []
 context_scope:
   [
@@ -60,6 +60,16 @@ source: >-
 > **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
 > bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
 > and conflict-checked against this tranche's existing active batches before being drafted here.
+
+> **ARCHIVED 2026-08-17** — all 11 todos shipped and their evidence independently re-reconciled back into all 4 distinct
+> `Source:` docs by `ui_satellite_ao_dispatch_batch4_2026_08_13_finalize.md`'s 3 todos (all now `[x]`). Every cited
+> commit SHA re-verified this turn via `git merge-base --is-ancestor <sha> origin/live-defi-rollout` — all real, none
+> fabricated. Neither `data_status_tab_and_downloads_remediation_2026_06_16.md` nor
+> `artifact_pipeline_observability_2026_07_17.md` reached zero open todos (both carry unrelated open work), so no
+> source-doc archival triggered. Corpus-wide referrer sweep found one real machine-followable referrer —
+> `plans/epics/deployment_and_user_management_master.md`'s 2 relative-path links + status lines — repointed to this
+> archive path in the same commit; all other mentions are bare-filename historical-record prose, left as-is per
+> existing corpus precedent.
 
 ## Todos
 
