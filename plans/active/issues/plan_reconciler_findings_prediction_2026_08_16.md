@@ -296,7 +296,7 @@ substitution, no HARD-STOP governance area, no new measurement.
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, sourced from the `233ebd6148` origin
       commit + the ~15 already-citing satellite/finalize plans across the corpus (the 2 docs named here reworded the
       same ruling without the literal "no-double-gate" term, which is why the original literal-term grep missed them)
-      — `unified-trading-pm@<pending>`.
+      — `unified-trading-pm@2f6c1332fa`.
 - [ ] [REVIEW] P2. `instruments_remaining_work_audit_2026_07_10.md:374-377` — self-flags an unresolved cross-doc
       contradiction: D6 (approved 2026-07-07 per a sibling doc) still shows "⏳ OPEN" in
       `instruments_completion_tracker_2026_07_06.md`'s Decision Gates table. That target doc is NOT a
