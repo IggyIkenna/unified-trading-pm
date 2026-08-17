@@ -148,6 +148,22 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   the runner gets a persistent `_work/_actions` cache so it stops re-fetching `actions/checkout` every job). Provenance:
   cicd escalation agt-3378e5, deployment-service#1036.
 
+- **cicd escalation agt-8c192b 2026-08-17 ~14:07Z (slot 4)**: THIRD manifestation of the same single-glue-runner
+  congestion — instruments-service `live-defi-rollout` quality-gates-v2 red at commit `a1754003466946c0e5b7b71ad4a5b58`
+  (run 32034365453, wall_type=ldr_qg_failure, `#0` no PR). Root cause identical to agt-3378e5 above: job logs (fetched
+  via the `/actions/runs/{id}/logs` zip endpoint — the per-job `/jobs` and `/check-runs` endpoints both 403 for this
+  session's GH_PAT, "Resource not accessible by personal access token", an Actions-permission gap on the PAT distinct
+  from its already-granted Workflows:read/write scope) show "QG slice (tests)" dying in "Set up job" downloading
+  `actions/checkout@v4` from `codeload.github.com` → 429 after 3 backoff retries. Confirmed NOT a code break: full local
+  `bash scripts/quality-gates.sh` on the exact HEAD sha (a1754003) passed clean (`✅ ALL QUALITY GATES PASSED (118s)`,
+  sentinel written for that exact sha). Re-triggered the workflow live (`gh workflow run quality-gates-v2.yml --ref
+  live-defi-rollout`, run 32038587130) to double-check — it ALSO failed, same signature (`codeload.github.com` 429 on
+  `actions/checkout`/`actions/setup-python` during "Set up job"), confirming the congestion is still ongoing ~1h after
+  agt-3378e5's finding, not a one-off blip that already cleared. No code fix exists or is needed on instruments-service.
+  This escalation will retry-poll for a clean quality-gates-v2 run and close once the runner congestion drains — it
+  does not duplicate the [OPERATOR] follow-up already tracked below. Provenance: cicd escalation agt-8c192b,
+  instruments-service (no PR).
+
 ## Follow-ups (tracked work, not prose)
 
 - [ ] [OPERATOR] P1. From a session/identity WITH `ssm:SendCommand`/`ssm:DescribeInstanceInformation` on the
