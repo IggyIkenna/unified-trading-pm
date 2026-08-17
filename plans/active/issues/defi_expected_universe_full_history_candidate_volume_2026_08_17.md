@@ -224,3 +224,19 @@ should weigh in on.
   scan-only measurement VM — no independent `/blocked` filed to avoid duplicating an
   already-answered escalation. Deferring to slot-3's Todos-section resolution above (the scan-only
   pass + calibrated-run plan) as the current path forward; no further action taken this session.
+- **2026-08-17 (worker, slot-19, data_engineering craft)**: dispatched the remaining `[IS] P1`
+  live todo (final regen). Live-reverified before acting: `_index/expected_universe_ranges.parquet`
+  still `last_modified=2026-07-03` (no other slot had landed a write since), no
+  `expected-universe-v2-defi-*` VM currently RUNNING. Found the scan-only pass (VM
+  `expected-universe-v2-defi-20260817-074211`, relaunched as `-080605` since the first attempt's
+  log tail was mid-run when checked) had already completed cleanly: **true candidate count
+  294,144,873** → 267,499 range rows (288,659,526 EU-days, 1100x compaction), `exit_code=0`,
+  self-deleted. Sized the calibrated `--apply-write` run at 294,144,873 × ~1.19 ≈ **350,000,000**
+  (`--max-writes-per-run`), matching the operator's 10-20%-margin direction from `BLK-fbf334bd`.
+  Launched `MACHINE_TYPE=e2-highmem-16 FULL_HISTORY=true bash
+  deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh defi --apply-write 350000000`
+  (same machine class the scan-only pass proved sufficient for the full 294M-candidate volume) →
+  VM `expected-universe-v2-defi-20260817-092709`, confirmed RUNNING (SPOT) at launch. Watching to
+  terminal state via a bounded background poller (3hr cap) rather than fire-and-forget; will record
+  the before/after `expected_universe_ranges.parquet` timestamp + the 2 target cells'
+  `expected_unattempted` confirmation here once it completes.
