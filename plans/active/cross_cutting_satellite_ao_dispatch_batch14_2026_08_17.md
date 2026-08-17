@@ -114,11 +114,29 @@ source: >-
       `resolve_bucket_name()`. Update the QG ratchet baseline. Done-when: the audit table is produced and the QG
       ratchet baseline for inline `gs://` usage reflects 0 remaining violations (or is lowered to match a
       genuinely-zero count). Repo: unified-trading-pm. Source: `plans/active/manifest_v9_residual_2026_08_15.md`.
-- [ ] [DIAG] P1. Independently verify the ExecutionOrchestrator/LiveOrchestrator protocol mismatch — read
+- [x] ✅ [DIAG] P1. Independently verify the ExecutionOrchestrator/LiveOrchestrator protocol mismatch — read
       `ExecutionOrchestrator`'s actual method signature against the `LiveOrchestrator` protocol definition directly
       (do not trust the source doc's relay alone), confirm the instruction-type and return-type mismatch claims with a
       direct citation of both sides. Repo: execution-service. Source:
       `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      — **CONFIRMED, both mismatch claims hold, both sides read directly (no line trusted from the issue doc's own
+      relay).** Protocol side: `execution_service/orchestration/orchestrator.py:44-46`, `LiveOrchestrator(Protocol)`
+      declares `async def execute_instruction(self, instruction: StrategyInstruction) -> dict[str, object]: ...`
+      (`StrategyInstruction` is the dataclass defined in that same file, lines 16-29). Implementation side:
+      `execution_service/engine/orchestrator.py:235`, `ExecutionOrchestrator.execute_instruction(self, instruction:
+      Instruction) -> None` — `Instruction` is imported at line 34 from `execution_service.engine.execution.types`,
+      a genuinely different type from `orchestration/orchestrator.py`'s `StrategyInstruction` (distinct module,
+      distinct field set), and the method body (lines 235-267) has no explicit `return` at all — falls through to
+      implicit `None`, matching its own `-> None` annotation exactly. **Confirmed the cast site too** (not just the
+      two signatures in isolation): `execution_service/operations/manual/__init__.py:61`,
+      `self._orchestrators[venue_key] = cast(LiveOrchestrator, orch)` where `orch` comes from
+      `create_orchestrator_for_venue()` (`cli/handlers/live_execution_handler.py`, constructs a real
+      `ExecutionOrchestrator`) — and `ManualOperationHandler.execute()` (same file, lines 82-95) is declared `->
+      dict[str, object]`, takes a `StrategyInstruction`, and directly `return`s
+      `orchestrator.execute_instruction(instruction)` with no shape check in between. So in production the call
+      passes a `StrategyInstruction` where `ExecutionOrchestrator` expects an `Instruction`, and the caller's own
+      return-type contract (`dict[str, object]`) is satisfied at runtime by whatever `None` actually is — both
+      claims from the source issue doc verified true, not merely plausible.
 - [ ] [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
       `LiveOrchestrator` and would receive an `ExecutionOrchestrator` instance in production, and check whether a
       `None` return where a `dict` is expected would raise, silently no-op, or corrupt downstream state. Depends on the
@@ -137,3 +155,13 @@ source: >-
   every sibling candidate in this same audit run, this tranche's consolidated-closeout doc, and every prior
   `status: draft` satellite batch for this tranche (none found). Source docs' own checkboxes flipped `[x]` with a
   citation to this batch in the same commit pass.
+
+- **2026-08-17 (slot 26, infra) — DIAG P1 "independently verify the ExecutionOrchestrator/LiveOrchestrator protocol
+  mismatch" flipped, no code change (verification-only todo).** Read both sides directly in the current tree rather
+  than trusting the source issue doc's relay: `LiveOrchestrator` protocol (`orchestration/orchestrator.py:44-46`)
+  vs. `ExecutionOrchestrator.execute_instruction` (`engine/orchestrator.py:235`), plus the actual cast + call site
+  (`operations/manual/__init__.py:61,95`). Both the instruction-type mismatch (`StrategyInstruction` vs. `Instruction`
+  — confirmed genuinely different types, different modules) and the return-type mismatch (protocol declares `->
+  dict[str, object]`, real implementation is `-> None` with no explicit return) hold up under direct citation. Full
+  detail in the flipped checkbox above. Next item is the DIAG P1 "if confirmed, determine blast radius" todo — not
+  in scope for this dispatch.
