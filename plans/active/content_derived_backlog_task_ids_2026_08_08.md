@@ -32,7 +32,7 @@ related:
   [
     /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
+    /plans/archive/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -577,7 +577,7 @@ a shipped, tested script mid-draft, without operator direction, is out of scope 
       `migrate_sports_casing_revert_2026_07_27.py` — not a duplicate of `-008` at all. Only `-010` needs checking
       independently. Remaining scope: verify `-010`'s actual status live (`GET /api/backlog`) and fix its citation if
       needed — do NOT dedupe `-008`/`-009`, they are correctly separate rows for separate scripts. Source:
-      /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
+      /plans/archive/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
       unified-trading-pm)
 - [ ] [BACKEND] P2. **Root-cause why `remint_backlog_collision` didn't durably stop
       `defi_catalog_engine_config_key_contract_drift-002`'s collision from recurring.** Found while working the

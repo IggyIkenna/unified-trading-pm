@@ -40,7 +40,7 @@ codex_ssots:
 related_plans:
   - ../active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md
   - ../active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_finalize_2026_08_10.md
-  - ../active/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md
+  - ../archive/2026_08/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md
   - ../active/ao_human_fleet_integration_2026_08_15.md
   - ../active/ao_open_work_consolidated_tracker_2026_08_14.md
   - ../active/ao_satellite_ao_dispatch_batch14_2026_08_09.md
@@ -400,8 +400,8 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](../active/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
-**status**: active · **estimate**: 0.16 cal AI-days (class: refactor)
+### [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](../archive/2026_08/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
+**status**: archived 2026-08-17 (all 3 todos done) · **estimate**: 0.16 cal AI-days (class: refactor)
 **title**: audit-false-done 14 false-done rows + 1,013 unresolved plan_refs — finalize
 
 ### [`ao_human_fleet_integration_2026_08_15`](../active/ao_human_fleet_integration_2026_08_15.md)
