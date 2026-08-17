@@ -173,6 +173,7 @@ without knowing what it is). No further action was taken on `deployment-api` —
   baseline regeneration needed (todo 2 N/A). Full `quality-gates.sh` from `execution-service` passed clean (exit 0, STEP
   5.83 `OK`) and `quickmerge.sh --agent` shipped `execution-service@d75c99a0`. Blocking scope of this issue is closed;
   leaving `status: open` only for the still-outstanding, non-blocking todo 3 design-hardening suggestion.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:ce77b6c232951c94]: KEEP-NA, valid — blocking scope resolved same-day 2026-08-03 (clean QG re-run + shipped fix); sole remaining item (todo 3, STEP 5.83 canonical-vs-local-checkout validation source) is an undecided architecture tradeoff with no stated done-when, re-confirmed by 5 prior passes.
 
 ## na-eligibility-audit verdict
 

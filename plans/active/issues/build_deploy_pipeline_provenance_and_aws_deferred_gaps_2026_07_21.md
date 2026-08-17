@@ -160,6 +160,7 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
   resolve.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:95ef5bcfcc2dc853]: KEEP-NA, valid — doc opens with an explicit 2026-07-21 operator ruling ('page-first, do NOT fix here'); sole open item (#3, cicd-events ledger build_id) is a low-priority 'confirm whether' judgment call, not a bounded task; re-confirmed across 11+ prior passes.
 
 ## na-eligibility-audit verdict
 

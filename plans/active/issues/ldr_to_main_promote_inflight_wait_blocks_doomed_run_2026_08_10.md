@@ -113,3 +113,4 @@ can't.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:39066dc1388e002a]: ARCHIVE-verdict confirmed — 0 open todos, both resolved with fresh 2026-08-16 evidence (superseded PR + 30+ subsequent clean promote merges), independently corroborated by plan_reconciler_findings_ci_2026_08_16.md's own Flips-verified item 8. Same archive_exempt deferral — ready for the next ci-tranche archival sweep.

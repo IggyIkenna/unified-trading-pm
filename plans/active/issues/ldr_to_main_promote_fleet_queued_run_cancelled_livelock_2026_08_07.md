@@ -339,3 +339,4 @@ out with GitHub's run retention; re-attempt the purge after that.
 ## Progress Log addendum
 
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:768434205ae62539]: KEEP-NA, valid — 2 open items. Todo 1 (hold a clean 60-min window before declaring resolved) reads as likely already-satisfied in practice (doc is 10 days stale, sibling docs report 8+ consecutive clean billing days) but was NOT live-verified this pass — held rather than force-closed per measurement-claims-discipline; flagging for a live CI/Slack check next pass, or fold into a fresh na-eligibility-audit pass. Todo 2 is explicitly time-gated on GitHub-side retention aging out 3 permanently-wedged strategy-service runs, confirmed cosmetic-only.

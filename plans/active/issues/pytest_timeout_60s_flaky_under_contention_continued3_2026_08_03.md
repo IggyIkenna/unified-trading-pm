@@ -474,6 +474,7 @@ here.
   — same capacity-side root cause, different QG selector) and **9th for the whole doc-chain**; extends todo 1's scope
   (`PYRIGHT_TIMEOUT`, not just `pytest --timeout`, is exposed to the same governor-admission-vs-real-load gap) and
   further corroborates todo 2 (single-digit-second merge/escalation race, now observed at 1s — the tightest yet).
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:39403f1591ed0149]: KEEP-NA, valid — same gate/reasoning as continued2.md (near-identical todos), re-confirmed 2026-08-10; 14-day monitoring window still in progress per the doc's own Progress Log.
 
 ## na-eligibility-audit verdict
 

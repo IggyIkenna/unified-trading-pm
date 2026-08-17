@@ -441,6 +441,7 @@ to be per repo — not measured here, out of this todo's scope.
   - **Scope, explicitly**: MDPS ONLY. The fleet-wide evidence-sufficiency todo above is UNCHANGED — this was a scoped
     operator risk-accept for one repo, not fleet-wide evidence clearing the bar. No other repo's `quality-gates.sh` was
     touched; `base-service.sh`'s new hook is inert everywhere it isn't explicitly opted into.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:462b58832c253d86]: KEEP-NA, valid — frontmatter (sequential: true) + Progress Log carry an explicit dated operator instruction that the WHOLE plan flips to assigned_vm:planning as ONE action once the operator completes their own /pre-compact checkpoint, not a partial/cherry-picked dispatch; 6 prior passes concur, including explicitly declining to split out the individually-bounded-looking divergence-analysis-tool item for this exact reason.
 
 ## na-eligibility-audit verdict
 

@@ -701,6 +701,7 @@ at threshold, `QG_GOVERNOR_WAIT_TIMEOUT_DISABLE` opt-out, and a real end-to-end 
 `qg_governor_acquire_total_instance` itself exits 75) — all pass; the pre-existing "(b) contended acquire" flake in
 that same file (documented since the 2026-07-27 Progress Log entry above as a known host-timing flake, unrelated to
 governor logic) still flakes on this host, unchanged by this work.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:29d36ddf2645d284]: KEEP-NA, valid — doc opens with an explicit dated operator ruling ('LOCAL/operator-driven plan... operator decision 2026-07-14: human-driven') covering the whole doc's remaining engineering follow-on scope; 6+ prior passes concur. 13 open items counted end-to-end; 2 (hyperthread core-count dedup fix, queue-wait double-counted in the completion gate) read as individually bounded but stay under the whole-doc citation per the established ruling — flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE this pass for a second look once the operator-driven phase concludes.
 
 ## Deferred / open decisions
 

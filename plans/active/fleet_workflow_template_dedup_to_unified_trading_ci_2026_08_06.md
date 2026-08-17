@@ -492,3 +492,4 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
   dropped).
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:2f11d40ac194a374]: KEEP-NA, valid — 10 of 11 todos done and independently verified; sole open item (branch-protection/visibility alert) is explicitly framed as optional/whether-to-build, a priority decision not a spec.

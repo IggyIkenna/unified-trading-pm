@@ -136,3 +136,5 @@ this doc's job was un-blocking the fleet, not redesigning the gate):
       unified-api-contracts (and any future repo growing a similarly hardcoded-consumer job), mirroring
       `check_cloudbuild_template_drift.py`'s STEP 5.108 consumer-scoped wiring — catches this class of drift at
       introduction instead of on a later unrelated PM commit. Repo: unified-api-contracts.
+
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:aa550be11d2fd0eb]: KEEP-NA-STALE (already-duplicated) — the sole open todo ([SCRIPT] P3, add detect_template_drift.py --workflows --repo <self> as a consumer-scoped CI check in unified-api-contracts) is already extracted verbatim into ci_satellite_ao_dispatch_batch15_2026_08_16.md (line 263, currently one of batch15's 23 unworked todos). Citation recorded; assigned_vm deliberately NOT flipped — that would dispatch a duplicate. Once batch15's extraction ships, this checkbox should flip [x] citing the real SHA directly in this doc.

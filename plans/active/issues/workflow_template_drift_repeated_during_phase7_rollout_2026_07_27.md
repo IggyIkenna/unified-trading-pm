@@ -185,6 +185,7 @@ correctly used the docs-only carve-out rather than fixing code). No `assigned_vm
 valid — confirms the 2026-08-07 verdict, unchanged. Item 1 remains an open-ended design question with no decided
 mechanism; item 2 remains a standing conditional runbook (last actually exercised 2026-08-06 by a tradfi-tranche
 auditor, per its own documented usage). No `assigned_vm` change.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:c749e6a6da47cef3]: KEEP-NA, valid — established ruling, 7 independent prior passes concur (item 1 is an open-ended design question with no decided target mechanism; item 2 is a standing conditional runbook step, demonstrably still exercised live 2026-08-06). Note: a sibling ag-closeout-audit run (2026-08-16) escalated these same 2 items directly to the operator (see ag_closeout_audit_ci_parked_2026_08_16.md Todos) after 6 reconfirmations without a scoping decision — deferring to that escalation rather than re-confirming a 7th/8th time here.
 
 ## na-eligibility-audit verdict
 

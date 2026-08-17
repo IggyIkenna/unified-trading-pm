@@ -862,6 +862,7 @@ via that batch, `unified-trading-pm@c8f7776fb`; the other 7 were explicitly cons
 `qg_host_adaptive_resource_governor_2026_07_14.md` standing operator ruling, 1 has no stated done-when, 2 are
 already-deferred fleet-wide-promote judgment calls, 1 is a re-baseline with no forcing function, 1 is the
 operator-deferred fork-PR item). No `assigned_vm` change.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:b7495e13c431bad4]: KEEP-NA, valid — 8 open items, most already individually assessed and kept NA by 10+ prior passes (operator-ruled fork-PR approval hold, capacity/topology judgment calls with no stated done-when). 3 items flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE this pass for a closer look next run: re-baseline scripts/dev/qg_resource_baseline.json, stagger the ldr-to-main-promote-fleet fan-out, reap the governor marker-file leak (344 stale running.<pid> files).
 
 ## na-eligibility-audit verdict
 

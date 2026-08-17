@@ -367,6 +367,7 @@ confirmed occurrence — see the 2026-08-02 ~18:35/19:30 UTC entries above), and
   the failure mode is pure host contention with no code component: identical code, identical tests, red under load /
   green once the runner got a turn. LDR `ci_status` for `deployment-api` should now read `FEATURE_GREEN` (no manual push
   needed — the workflow's own `ci-status-update` step records it).
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:d0e99828be033ed3]: KEEP-NA, valid — allowlist posture set by a live 2026-07-28 operator correction, unchanged. This pass CONVERTED a confirmed prose-only-remaining-work gap (workspace HARD RULE violation): the '## Follow-up' -> 'Not done / follow-up' items (1) redeploy the fixed wrapper script to the live VM and (2) operator decision on throughput-provisioning vs. concurrency-reduction were re-verified still genuinely open (not mentioned/resolved in the 2026-08-14 entry) and converted into 2 real tracked `- [ ]` todos in this same edit — see the new na-eligibility-audit-2026-08-17 finding note above the Follow-up section. Doc stays KEEP-NA, valid on both new todos (host-deploy access + operator sign-off respectively).
 
 ## Follow-up
 
@@ -714,6 +715,23 @@ measurement... filed as a follow-up in this issue doc directly"). Investigating 
   direct concurrency lever, but touches fleet-wide CI capacity and needs explicit sign-off before executing; (3) check
   whether `glue-runner-crash-loop-watchdog.sh` (RESTART_THRESHOLD=5 by default) actually paged for the 89-restart
   agent-orchestrator crash-loop — if it didn't, that watchdog itself has a gap worth a separate look.
+
+**na-eligibility-audit 2026-08-17 finding**: items (1) and (2) above are still genuinely open (re-verified against the
+2026-08-14 Progress Log entry, which does not mention redeploying the wrapper script and leaves the new-VM load-average
+measurement blocked on an IAM/SSM gap) but have sat as PROSE only since 2026-08-05, not tracked `- [ ]` todos — the exact
+class the workspace HARD RULE ("every follow-up is a `- [ ]` todo, never prose") exists to catch. Converting to real
+tracked todos below rather than leaving them as narrative:
+
+- [ ] [INFRA] P2. Redeploy the fixed `glue-runner-run.sh` wrapper script (stale-registration DELETE retry+logging fix,
+      `unified-trading-pm@a4eb9a288`) to the live VM's static install copy at `/opt/github-glue-runners-ao/glue-runner-run.sh`
+      — requires re-running `setup-glue-runners.sh` or a direct file push (not git-tracked live, a static `install`-copied
+      file). Done when: the live file's content matches the repo's current `scripts/self-hosted-runners/glue-runner-run.sh`.
+- [ ] [OPERATOR] P3. Decide whether to reduce shared-host CI concurrency (PM's 5 glue slots and/or AO's 2) vs. provision
+      higher gp3 throughput (cheap, no-downtime AWS change, up to 1000 MB/s on the same volume) vs. both — the
+      2026-08-05 measurement found the bottleneck is disk THROUGHPUT (126 MB/s at the 125 MB/s baseline ceiling, 89.5%
+      %util), not CPU/IOPS/vCPU count. Touches fleet-wide CI capacity; needs explicit operator sign-off before executing
+      either lever.
+
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — actively-evolving P0 incident, operator ruling on allowlist

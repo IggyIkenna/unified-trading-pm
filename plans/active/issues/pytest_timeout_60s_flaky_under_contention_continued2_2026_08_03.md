@@ -134,6 +134,7 @@ repeated here.
 - **2026-08-09 (plan_reconciler ci-tranche, agt-04cb0e)** — re-tested todo 1's gate: ledger-coordination fix landed
   (`status: complete`, Phase 2+3 `[x]`) but recurrence did NOT stop — `continued3` logs a fresh occurrence 2026-08-09
   ~02:20-03:15Z. Todo 3's archive condition unmet; both stay open.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:d38e2ce77366b819]: KEEP-NA, valid — 2 open items gated on qg_governor_glue_runner_ledger_coordination_2026_08_03.md Phase 2-3 landing AND HOLDING; recurrence documented past that plan's own archival, re-confirmed by prior passes through 2026-08-10.
 
 ## na-eligibility-audit verdict
 

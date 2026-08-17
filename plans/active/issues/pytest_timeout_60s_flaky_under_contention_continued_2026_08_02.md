@@ -971,6 +971,7 @@ doc's own note.
 valid — the sole open item (todo 2, whether other repos beyond features-service warrant the same `PYTEST_TIMEOUT` raise)
 remains an open-ended "consider whether" judgment call, unchanged since the 2026-08-04 verdict. Doc at 972L, still under
 the 1000L hard cap. No `assigned_vm` change.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:088aed1d9d2bf294]: KEEP-NA, valid — 2 of 3 original todos closed; sole open item is an open-ended 'consider whether other repos would benefit' judgment call, re-confirmed by 5 prior passes (2026-08-04/06/07/09/10).
 
 ## na-eligibility-audit verdict
 

@@ -287,3 +287,4 @@ and `/plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_
 repointed this doc's `context_scope` and one resolution-checklist link but left this verdict paragraph unrevised.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:a57907fc610d468b]: KEEP-NA, valid — sole open item (MTDS half of resolution-checklist item 3) was sequenced behind 2 blocker docs that a 2026-08-16 plan_reconciler correction (already present in-doc) confirms were archived-as-resolved 2026-08-15 (root cause found, real fix already shipped 2026-07-25) — but that correction note itself flags the open item's actual current status was NOT re-verified after that resolution. Flagging for a live check (do the 2 MTDS DEPLOYMENT_ENV tests now pass) next pass rather than force-closing on an unverified inference.

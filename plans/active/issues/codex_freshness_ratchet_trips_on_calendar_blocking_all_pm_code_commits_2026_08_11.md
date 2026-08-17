@@ -235,3 +235,5 @@ delimiter that was never missing.
       actually blocks a commit either way — this is purely about the diagnostic pointing the next person at the right
       fix on the first read instead of a false "you're missing the frontmatter block entirely" lead. Repo:
       unified-trading-pm.
+
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:e9274ef1eba4d461]: ARCHIVE-verdict confirmed — 0 open todos, all 7 across 4 sub-incidents hard-evidence-done with commit citations. Same 2026-08-16 archive_exempt deferral as the sibling docs in this tranche — ready for the next ci-tranche archival sweep.

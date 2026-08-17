@@ -759,3 +759,4 @@ AO-dispatch convention for this exact class of work). The most recent (2026-08-0
 'requires a [UI]-capable assigned_role is not itself disqualifying for AO dispatch' and calls for 'a fresh scoping pass,
 not a mechanical precedent match' to responsibly reconsider -- I performed a partial one here rather than mechanically
 re-confirming.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:5d85c03c2e3b815b]: KEEP-NA, valid — 3 open items are all [CODE][UI] surface work needing a UI-capable role plus this doc's own established playwright-gate convention (pw:L2 + cited regression spec, matching dozens of already-shipped items in this doc); 7 consecutive prior passes concur, most recent (2026-08-10) performed a fresh scoping look and still didn't clear the RECLASSIFY bar.

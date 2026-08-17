@@ -367,3 +367,4 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
     SSOT + the capacity-crisis source doc unchanged. (A stray context-scout marker from 2026-08-05 sits above under
     "Codex SSOTs" — written before this doc had a Progress Log section; left as historical record, not relocated.)
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:8062a95d360fe606]: KEEP-NA, valid — sole open item (warm git-object cache rollout) is explicitly self-gated pending an on-VM diagnostic of an unresolved file-visibility mystery between the SSM check and the runner's own filesystem view; re-confirmed across 3+ prior passes.

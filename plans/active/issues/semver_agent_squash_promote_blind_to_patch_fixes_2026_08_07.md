@@ -498,6 +498,7 @@ conservative here since it can't verify reversibility from command text alone).
   what's actually being shipped. Fixed the YAML minimally (added `>-` to an unquoted multi-line `summary:` that
   contained `": "`, matching the block-scalar convention already used elsewhere in `agents/*.md`) rather than bypassing
   the hook — left uncommitted for that file's owning session to pick up.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:115e9ea325b69ca3]: ARCHIVE-verdict confirmed — 0 open todos, every checkbox hard-evidence-done (shipped commits, live gh verification, a minted tag v0.49.1, reconcile_release_tags.py dry-run at 0 STALLED). Same archive_exempt deferral — ready for the next ci-tranche archival sweep.
 
 ## na-eligibility-audit verdict
 

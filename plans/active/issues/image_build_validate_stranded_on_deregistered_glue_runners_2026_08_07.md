@@ -185,6 +185,7 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
 **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:5dc1e65cce36b844]: KEEP-NA,
 valid — the sole open item (todo 2, standing-check design decision) remains a genuine, un-scoped design call. No
 `assigned_vm` change.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:5137d88cc62a545c]: KEEP-NA, valid — todo 1 (fleet-wide stranded-runs-on sweep) done 2026-08-08. Sole open item (standing runs-on re-audit trigger heuristic) is an unscoped design call needing a brand-new detection heuristic from scratch, re-confirmed by 3 prior passes, corroborated by an identical open question independently raised in fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md todo 10.
 
 ## na-eligibility-audit verdict
 

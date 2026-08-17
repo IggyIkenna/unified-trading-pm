@@ -209,6 +209,7 @@ precondition named by the parent plan.
   `venv_workspace_openapi_regen_batch11_findings_2026_08_09.md`, which Residual 1's own 2026-08-12 `/plan-reconcile`
   correction names as where "the next picker-up should start" (specifically its todo 1) rather than repeat the
   investigation this doc's own stale "nothing committed" text describes.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:73f558b57f676ab7]: KEEP-NA, valid — sole open item is a deliberately-deferred design successor (client-lite wizard, use case 4) whose own gate requires authoring a build sub-plan first, not a worker-determinable outcome; re-confirmed across 4+ prior passes.
 
 ## na-eligibility-audit verdict
 

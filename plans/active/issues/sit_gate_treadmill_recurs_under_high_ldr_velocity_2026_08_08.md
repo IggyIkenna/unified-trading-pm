@@ -290,3 +290,4 @@ escalation covers, not investigated here as it's outside `sit_gate_stuck` scope)
 cleanup) are unchanged/still open — this occurrence did not exercise either (no PR ever went stale). This is the 5th
 consecutive occurrence of this exact wall type all resolving to "self-converges, no code fix" — the pattern is now
 well-established across 5 different repos (deployment-api, execution-service, market-tick-data-service ×2, this one).
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:a2479b60fc7a7157]: ARCHIVE-verdict confirmed — 0 open todos, all 4 hard-evidence-done, 5 subsequent live cicd-escalation entries (2026-08-14 through 08-17, 5 different repos) independently confirm the SIT-gate treadmill mechanism now self-converges cleanly. Same archive_exempt deferral — ready for the next ci-tranche archival sweep.

@@ -331,6 +331,7 @@ not just noting.
       `worker.md`. Filed `issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md` for the residual
       live-incident follow-up (whether slot 1's CURRENT session self-recovers from a docs-only fix — an operator
       judgment call, not a worker-alone fix) — that doc, not this checkbox, tracks what's still open.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:4ffa734e1ace65e8]: KEEP-NA, valid — 2 open items. The RETRY_PER_TICK escalation-budget design tradeoff is a genuine open call ('leave as-is' is a valid outcome). The AWS Cost Explorer $ quantification item has been individually bounded/deterministic since 2026-08-01 and repeatedly flagged extraction-ready by 3+ prior passes, but held again this pass on the SAME standing 'doc is actively evolving, respect the deferral' rationale those passes used — this is the audit skill's own recurring proportionality call, not an operator ruling, so it should be re-evaluated (not automatically re-deferred) once this doc's Progress Log next shows the incident genuinely settled.
 
 ## Evidence
 

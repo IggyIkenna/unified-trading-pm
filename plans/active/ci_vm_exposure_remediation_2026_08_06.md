@@ -157,6 +157,7 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the predecessor io-starvation audit
   issue doc naming these 3 exposure items, the cgroup slice + runner setup script todo 3's investigation targets, and
   the resource-history sampler service + installer todo 2 shipped a fix into.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:f771671cf85be58b]: KEEP-NA, valid — sole open item (fleet-wide CI concurrency cap) already tried 2 mechanisms with real measured numbers and rejected both as unsafe/too-blast-radius; the remaining mechanism needs live-infra judgment (runner-version confirmation, canary pool sizing, K sized from real measurements).
 
 ## Codex SSOTs
 

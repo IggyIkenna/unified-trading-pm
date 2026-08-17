@@ -89,6 +89,7 @@ a third party cannot tell which from the outside). The confirmation todo below s
   `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`. Deliberately scoped to transcription only — the
   ruling is copied verbatim from its citing todo and attributed to that doc, so this adds traceability without adding
   authority. Authenticity confirmation is tracked as the open `[OPERATOR]` todo above, not assumed.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:bb2b08be491c6ba7]: KEEP-NA, valid — sole open item is [OPERATOR]-tagged, verifying the operator's own prior statement's transcription accuracy; human-only by design (the doc's own Provenance section is explicit this settles traceability only, not authenticity). Re-confirms the 2026-08-10 verdict, content unchanged.
 
 ## na-eligibility-audit verdict
 

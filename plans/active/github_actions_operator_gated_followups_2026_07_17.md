@@ -633,6 +633,7 @@ Full narrative + evidence lives in `/plans/archive/issues/orchestrator_vm_disk_i
   PR #440 → superseded by fresh `#441` (`promote/deployment-ui/5c658c43bf62`) → **merged to `main` 22:07:53 UTC**,
   independently verified by reading `ui-quality-gates-v2.yml` back off `main` (`runs-on: ubuntu-latest` confirmed
   present). Loop terminates here — success criteria met, nothing left to pick up on this thread.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:eda5a8fe7c03d1c3]: KEEP-NA, valid — 4 open todos, each independently blocked (digest-drift-sweep dependency, structural bare-VM need, credential-gated slot raise awaiting operator-provisioned accounts, explicitly-not-recommended-now org migration); 5+ prior passes concur.
 
 ## na-eligibility-audit verdict
 

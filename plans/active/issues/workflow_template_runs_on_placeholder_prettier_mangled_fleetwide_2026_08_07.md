@@ -282,3 +282,4 @@ context_scope:
   origin). NOTE: the batch doc's cited `8a7b1860a0` was a mis-citation (that SHA is an unrelated pm_root QG test-fix);
   the actual template-lint commit is `92ab939583` — corrected in the flipped checkbox above. Doc stays open —
   `[DEVOPS] P2` (investigate promote-PR non-supersession) remains genuinely open-ended.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:3630c7ae92a2b175]: KEEP-NA, valid — the 2026-08-08 pass already applied the conflict-check and extracted the bounded slice (now shipped); sole remaining item is genuinely open-ended (2 unconfirmed hypotheses, no done-when). Note: a sibling ag-closeout-audit run (2026-08-16) formalized this skill's own repeated 08-08/08-09 recommendation to pre-scope this item into a properly-scoped issue doc as a tracked todo on ag_closeout_audit_ci_parked_2026_08_16.md — deferring to that tracked action rather than re-recommending here.

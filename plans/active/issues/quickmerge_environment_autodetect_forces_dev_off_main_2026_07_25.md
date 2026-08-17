@@ -262,3 +262,4 @@ immediately surfaced 2 DIFFERENT failures elsewhere in the same repo, because a 
 (UnifiedCloudServicesConfig) has the OPPOSITE documented default from the first (resolve_bucket_name).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:37bf166e2269396d]: KEEP-NA, valid — 2 of 3 next-steps done; sole open item (broaden quickmerge's branch check) is a design call on shared ship infra, gated on ownership contention with another active batch todo (D4-1); re-confirmed by 5 prior passes. Note: a `locked_by: live-defi-rollout` frontmatter anomaly (a branch name, not a slot/agent token, predating the doc's own created date) remains flagged since 2026-08-01 and unactioned pending operator, per the HARD RULE against archival/reclassification on a non-empty locked_by without [unlock-plan].

@@ -106,6 +106,7 @@ false positives worth a targeted `# type: ignore`-equivalent per this repo's own
   for an explicit operator ruling"), staying `assigned_vm: NA` and flagging here rather than guessing which side should
   own the file family.
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:ec264fee2c224670]: ARCHIVE-verdict confirmed — 0 open todos, ratchet fix shipped (deployment-service@71871454) and independently re-confirmed via a fresh 2026-08-14 standalone basedpyright run showing 0 errors on the 4 named files. Same archive_exempt deferral — ready for the next ci-tranche archival sweep.
 
 ## na-eligibility-audit verdict
 

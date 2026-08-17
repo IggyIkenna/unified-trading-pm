@@ -340,3 +340,4 @@ fix, exactly matching the KEEP-NA-valid pattern this skill already independently
 ## Progress Log
 
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:3f40d3cb23d3f27d]: KEEP-NA, valid — 3-of-4 recommendations shipped and regression-tested; sole open item is open-ended root-cause diagnosis ('why has update-dependency-version.yml's cascade been dormant since 2026-06-28'), re-confirmed by 4 prior passes.

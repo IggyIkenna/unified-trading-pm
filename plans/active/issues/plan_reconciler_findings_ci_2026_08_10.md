@@ -503,3 +503,4 @@ written).
   finding; `can_continue: true` was set at blocked-question submission time (SUB_AGENT_MANDATORY_RULES ASK-never-BLOCK),
   so the sweep's completion was never contingent on this answer arriving. Proceeding to close the one-shot lifecycle.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:afd79c82ae5a38ef]: KEEP-NA, valid — 8 of 9 filed items resolved with dated evidence; sole open item (blocked-question answer-retrieval gap) needs AO-dashboard-side visibility this worker doesn't have, correctly stays open per the doc's own 2026-08-16 note rather than being force-closed.

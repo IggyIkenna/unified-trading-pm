@@ -159,6 +159,7 @@ explicit, still-present in-doc dispatch prohibition ("for operator / careful rev
 is high-blast-radius shared ship infra") — the AO-dispatch-by-default precedent governs new plans' own `assigned_vm`
 default, it does not override an existing, reasoned, high-blast-radius dispatch prohibition already written into a
 specific doc. No RECLASSIFY, no satellite-extraction. No ARCHIVE.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:eccac1e841b56709]: KEEP-NA, valid — fix 2 (backoff+jitter) shipped via a sibling doc; sole open item sits under an explicit, still-present 'for operator / careful review — do NOT dispatch blind' DO-NOT-DISPATCH banner for high-blast-radius shared ship infra; re-confirmed by 4 prior passes.
 
 ## na-eligibility-audit verdict
 

@@ -285,3 +285,5 @@ The shared structural property is that **`quality-gates.sh` aggregates fleet-wid
 repo's regression becomes every agent's blocker, and the agent who pays is chosen by who commits next rather than by who
 caused it. Worth deciding as a policy question, not incident by incident — see the sibling issue's P2 todo on whether a
 calendar/fleet-triggered ratchet should be able to hard-block commits at all.
+
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:0b71f59dd215d7c9]: ARCHIVE-verdict confirmed — 0 open todos, all 6 hard-evidence-done (resolved_by cites 6 commits across deployment-api + unified-trading-pm). Not archived this pass — doc's own 2026-08-16 archive_exempt note already defers archival to the next full ci-tranche archival sweep (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope); re-confirming that deferral, not re-litigating it.

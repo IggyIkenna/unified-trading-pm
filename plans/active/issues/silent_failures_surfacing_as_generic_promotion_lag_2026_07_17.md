@@ -231,3 +231,4 @@ retry -- exactly the 'multi-file/multi-day rewrite of live-dispatch-critical-pat
 small/low-risk change despite being bundled into one todo.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:8992df87cfce3cbb]: KEEP-NA, valid — 2 of 5 'still open' items done; 3 remain: a P0 credential-fetch re-fix explicitly operator-gated after its first attempt crash-looped all 5 live glue runners (mandates a --selfcheck validation mode + one-unit-at-a-time canary before retry), a P2 structural Python-only differ tax with no done-when, and a P3 systemd rate-limiting item deliberately kept grouped with the P0's live-runner-fleet territory (not separately operator-cleared for extraction) — flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE this pass for a closer look, given it's comparatively low-risk/purely-additive.

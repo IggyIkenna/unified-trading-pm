@@ -456,3 +456,4 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
   than reclassified here, given this doc's history of misdiagnosis from ambiguous instance naming.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-17** (ci tranche, autonomous, dispatch agt-b9cf62) [body-hash:e609dbda3be310db]: KEEP-NA, valid — 8/9 todos done (2 P3 items closed 2026-08-15/16). Sole open item (extend crash-loop watchdog to alert on cleanly-inactive/hung-but-active units) needs host-deploy access + alert-threshold judgment, consistent with the 2026-08-07 audit's reasoning (prior misdiagnoses from ambiguous VM naming, now fixed). Note: the doc's own status/summary header is stale (still describes 2 open P2/P3 items; only 1 remains) — flagging for a same-turn fix next time this doc is touched, per the stale-pointer HARD RULE.
