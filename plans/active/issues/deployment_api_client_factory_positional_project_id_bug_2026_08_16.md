@@ -60,8 +60,9 @@ related:
 created: 2026-08-16
 priority: P2
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 sequential: false
 depends_on: []
 locked_by:
@@ -114,3 +115,4 @@ blast radius deserves its own look rather than an ad-hoc bundled fix. Ruled out
 (`deployment_api/utils/storage_client.py::get_storage_client`) with the correct signature, not the
 buggy UTL function.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:db39fdd68dc008ad]: RECLASSIFY (whole-doc) -- assigned_vm flipped NA -> planning; execution_scope -> orchestrator-agent; assigned_role: backend_engineer (was unset). Both open items are bounded/mechanical (confirm-then-fix, one-line project_id= keyword changes mirroring an already-applied fix), conflict-check CLEAR. doc_type: issue, structurally exempt from a finalize-plan companion per task_template.md's finalize-plan-coverage rule. Cross-cutting tranche audit.

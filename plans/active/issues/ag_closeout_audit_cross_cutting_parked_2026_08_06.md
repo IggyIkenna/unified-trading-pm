@@ -293,3 +293,4 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
   scoped "owning-tranche fix, leave to X tranche's own audit" -- not this tranche's write by construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:cfc210fca4cc8ba7]: KEEP-NA-STALE (already-duplicated) -- the doc's own banner explicitly instructs that its 3 remaining checkboxes must NOT be flipped early; they are reconciled in one pass by meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md's own todo 17 once that work lands. No checkbox touched this pass, per the doc's own instruction. Cross-cutting tranche audit.

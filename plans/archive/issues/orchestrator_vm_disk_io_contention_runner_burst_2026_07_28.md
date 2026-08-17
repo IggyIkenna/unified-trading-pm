@@ -1,0 +1,465 @@
+---
+doc_type: issue
+title:
+  Registering 23 self-hosted runner pools (46 processes) at once, concurrent with 22 repos' real quickmerge/QG runs,
+  drove the shared orchestrator VM into sustained 66-93% iowait — the operator's own interactive/autonomous AO
+  slot-workers were observed blocked in D-state alongside the new runner processes
+summary: >-
+  During github_actions_operator_gated_followups_2026_07_17.md's Phase-7 fan-out (2026-07-27/28), 9 of 23 newly-
+  registered self-hosted runner pools showed a runner process logging "Connected to GitHub"/"Listening for Jobs" while
+  GitHub's own `/actions/runners` API showed `total_count: 0` for that repo — a real, VM-side registration failure, not
+  a client-side query artifact (confirmed identically via the VM's own admin-PAT-backed `setup-glue-runners.sh status`).
+  Live diagnosis (`top`, `uptime`, `ps -eo stat`) found the root cause: registering 23 pools (46 new Runner.Listener
+  processes) essentially simultaneously, landing at the same time as 22 repos' own concurrent
+  quickmerge/quality-gates.sh runs (real pytest/lint/typecheck suites) PLUS live CI jobs already starting to execute on
+  the newly-self-hosted pools, drove the shared VM into genuine, sustained disk I/O contention: `top`'s `%Cpu(s)`
+  breakdown showed 66.2%→93.1% iowait (NOT CPU-bound — `us+sy+ni` stayed ~20-30% throughout), `uptime` load average
+  climbed 74→119 on a 16-vCPU box, swap usage grew from 8GB to 10.5GB, and disk sat at 90% full (433GB/483GB). The
+  clinching evidence this is a real, shared-impact problem and not scoped to the 9 affected repos: the operator's OWN
+  interactive/autonomous AO slot-worker `claude` processes (orch-slot-1 and several others) were observed in `D`
+  (uninterruptible disk-wait) state in the same `ps` snapshot as the runner/pytest processes.
+status: resolved
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, agent-orchestrator]
+scope: [engineer, admin]
+tags: [ci-cd, self-hosted-runners, capacity-planning, io-contention, vm-infra, phase-7]
+related:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
+created: 2026-07-28
+author: unknown
+priority: P1
+parent_epic: infrastructure_master
+source:
+  "slot-1 (tabs/1), /autonomous, discovered live-diagnosing 9 unregistered runner pools during Phase-7 fan-out,
+  2026-07-28"
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
+assigned_vm: NA
+resolved_by: na-eligibility-audit 2026-08-17 (executing the 2026-08-12 archive_exempt bridge note's own deferred-archival instruction)
+locked_by:
+locked_since:
+context_scope:
+  [
+    agent-orchestrator/scripts/bootstrap_vm.sh,
+    /plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    scripts/quality-gates-base/base-service.sh,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    agent-orchestrator/scripts/rescale-memory-cap.sh,
+  ]
+---
+
+> **🟢 ARCHIVED 2026-08-17** — fully resolved; iowait mitigated + EBS iops/throughput bumped + capacity policy ratified
+> 2026-07-30 (glue-2 disabled by default fleet-wide), memory-cap self-healing shipped, all sub-incidents closed.
+> Executes the 2026-08-12 `archive_exempt: true` bridge note's own deferred flip-then-mv instruction
+> (na-eligibility-audit 2026-08-17).
+
+# Runner-registration burst drove the shared VM into real I/O contention
+
+## What I found
+
+Registering all 23 remaining repos' self-hosted glue-runner pools in one batched pass
+(`setup-glue-runners.sh POOL_TAG=<repo> ... install`, 2 glue runners each, sequential within the batch script but
+landing within minutes of each other) coincided with the SAME fan-out's own git-side work — a background Workflow
+shipping all 23 repos' workflow-YAML changes via `quickmerge.sh`, which runs each repo's REAL `quality-gates.sh` (full
+pytest/lint/typecheck, batched 2-concurrent per the workspace's own shared-host rule) — plus, as those repos'
+`quality-gates-v2` began running on the newly-registered self-hosted pools, real CI job checkouts/test executions on TOP
+of that.
+
+**Initial hypothesis was wrong and corrected in-session**: first read as "VM overloaded on CPU," which the operator
+correctly challenged by pointing at the AO dashboard's Host Resources panel (CPU 41%, RAM 24%, matching a live `free -h`
+pull almost exactly). Both readings are accurate for what they measure — the dashboard's CPU% is `us+sy+ni` (true
+compute busy-ness), which was genuinely moderate. The real, separate signal was **iowait**, which a simple CPU% panel
+does not surface: `top -bn1`'s `%Cpu(s)` line showed `66.2 wa` then `93.1 wa` across two checks a few minutes apart —
+the box was spending the large majority of CPU-accounting time waiting on disk, not computing.
+
+**Confirmed real (not a diagnostic artifact) via a live process snapshot**: `ps -eo pid,stat,...` showed dozens of
+processes in `D`/`Ds`/`Dl` state (uninterruptible sleep, i.e. genuinely blocked on I/O) — `kswapd0` (kernel swap daemon,
+confirming active swap pressure), multiple `Runner.Listener`/`Runner.Worker`/`actions/checkout` processes for the
+newly-registered pools actually executing real jobs, long-running pytest processes for `alerting-service` and
+`fund-administration-service` (~2h wall-clock — abnormally long, consistent with I/O starvation slowing them down rather
+than a 2h test suite being normal), a `.tabs/2` (a DIFFERENT slot entirely) pytest run, and — the finding that made this
+undeniably a shared-impact problem rather than a scoped one — **several `claude --dangerously-skip- permissions ...`
+processes (the operator's own interactive/autonomous AO slot-worker sessions, e.g. `orch-slot-1`) were ALSO in `D`
+state** in the exact same snapshot.
+
+## Corrective action taken (autonomous rule 3/10 — own the infra op)
+
+Disabled the second glue runner (`glue-2`) across all 23 newly-registered pools via `systemctl disable --now` (cheap —
+no disk I/O beyond a few syscalls, unlike any `install`/rebuild path), halving active new-pool runner processes 46→23.
+This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically because ANY install-path operation
+(tarball extraction, venv rebuild) would itself have added to the exact I/O pressure being relieved.
+
+## Open questions / follow-up
+
+- [x] ✅ [VERIFY] P1. Confirm load/iowait actually eased after the glue-2 scale-down (re-check `uptime`/`top` a few
+      minutes later) before concluding this alone resolved it — unified-trading-pm@c2308363d. Three `top -bn1` samples
+      taken minutes apart: iowait `52.0 wa` → `18.5 wa` → `6.5 wa` (down from the original 66.2→93.1 wa episode); load
+      average 1-min `32.92` → `31.90` → `42.05` (5-min/15-min trending down: `39.77`→`39.04`→`39.48`, off the prior
+      74→119 peak) with the remaining CPU-accounting time now `us`/`sy`/`ni` (real compute, e.g. concurrent QG runs),
+      not `D`-state disk-wait. iowait is conclusively down; the tapering fan-out QG batch is the residual load driver,
+      consistent with the doc's own prediction.
+- [x] ✅ [VERIFY] P1. Once load is confirmed down, re-attempt registration for whichever repos still show
+      `total_count: 0` on `/actions/runners` — unified-trading-pm@c2308363d. Queried `GET /actions/runners` (via
+      `gh api`, `scripts/workspace/load-gh-token.sh`) for all 23 newly-registered pools by name (`ao` →
+      `agent-orchestrator`): **every one now shows `total_count >= 1`, none show 0** — alerting-service,
+      batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, e2e-testing,
+      execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra,
+      instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
+      system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api,
+      unified-trading-library (all =1), deployment-ui, unified-trading-system-ui (=2, glue-2 offline-but-registered),
+      agent-orchestrator (=3). Per-runner detail confirms `glue-1` is `status=online` (mostly `busy=true`, i.e. actively
+      running real CI jobs) on every pool; `glue-2` shows `status=offline` where it exists (correctly reflecting the
+      `systemctl disable --now` corrective action, not a registration failure). **No re-registration action was needed**
+      — the working theory is confirmed: the earlier `total_count: 0` reads were the registration handshake itself
+      getting starved by I/O contention, and all 9 previously-phantom repos self-resolved to online registered runners
+      once the pressure eased (no manual re-`install` required).
+- [x] ✅ [REVIEW] P2. **Capacity-plan this VM for concurrent self-hosted-runner registration going forward** — this
+      session's burst (23 pools at once) was a one-time fan-out, but the same box now permanently hosts PM's original
+      8 + agent-orchestrator's 3 + 23×N new runner processes ALONGSIDE the interactive/autonomous AO slot workers that
+      are its primary tenant. Consider: (a) whether `glue-2` should stay disabled long-term per new pool (permanent
+      capacity decision, not just a burst mitigation) vs. re-enabled once steady-state load is confirmed low, (b)
+      whether a FUTURE bulk runner-pool registration (e.g. onboarding more repos later) should be explicitly staggered
+      /rate-limited rather than batched, given this measured impact on interactive sessions. **Update 2026-07-28 ~00:20
+      UTC — steady-state load is NOT low, arguing against re-enabling `glue-2` and FOR treating this as a real capacity
+      gap, not a one-time burst.** Re-checked `vol-0b4f0237fa0f5cd0f`'s `VolumeQueueLength` via CloudWatch ~2h after the
+      `52→18.5→6.5 wa` post-mitigation reading above (which was real and correct at the time): the LATEST 6 datapoints
+      (30-min window, 5-min granularity) show a SUSTAINED `5.7-6.5` average — roughly DOUBLE the `~2.5-2.9` level
+      measured earlier this same evening (itself already called out in
+      `github_actions_operator_gated_followups_2026_07_17.md`'s Phase-7 P2 todo as "the residual level after glue-2 was
+      halved, not healthy-baseline"). CPU stayed moderate throughout (29-51% avg, matching the 50-70%-target framing,
+      not the bottleneck). Corroborating symptom same window: `system-integration-tests`' `cross-repo-invariants` job (2
+      consecutive real failures, `full-workspace-sit` runs `30312490597`/`30314690222`) polls a `ci-status-update`
+      dispatch per SIT-covered repo with an 18×5s=90s budget — 4/21 repos (agent-orchestrator, alerting-service,
+      batch-live-reconciliation-service, client-reporting-api) blew that budget and got reported as
+      `conclusion=unknown/timeout`, but spot-checking one (agent-orchestrator's dispatch, run `30314879898`) shows it
+      actually completed `success` ~6 minutes later — a real false-negative from a polling window that's too tight for
+      CURRENT (degraded) conditions, not a code bug in that job. **Net read: the glue-2 disable was a correct, working
+      burst mitigation, but load has climbed back since, so it has NOT solved the underlying capacity question this todo
+      already named** — the EBS iops/throughput bump suggested in the Phase-7 doc (a live, non-disruptive `gp3`
+      modify-volume op) is worth trying before further headcount reductions on the runner side, since CPU/RAM are not
+      what's constrained here.
+
+      **Update 2026-07-28 ~06:25 UTC — contention has substantially EASED, likely on its own as the fan-out's own
+          CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
+          1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
+          consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
+          — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
+          bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
+          newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
+          lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
+          consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
+          looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
+          (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
+          iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
+          fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
+          urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
+          to poll an already-recovered metric.
+
+          **Update 2026-07-28 ~18:40 UTC — recurred, EBS iops/throughput bump now actually applied (correcting an
+          overclaim in this plan's own "Final report" section, which said "IOPS/throughput/size all bumped" — only SIZE
+          was bumped that session; the iops/throughput half was a recommendation, still explicitly open per the ~06:25
+          UTC update directly above, until now).** Adding `deployment-ui` to the self-hosted fleet (separate session,
+          same root cause) reproduced the exact pattern live: `iostat -x 1 5` on `i-0c9b283b31d6b5ca7` showed `nvme0n1`
+          at 74-85% util, ~8,000-9,200 combined IOPS, 30-46 request queue depth, sustained across 5 samples — confirmed
+          via `aws ec2 describe-volumes` the volume (`vol-0b4f0237fa0f5cd0f`, gp3) was provisioned for exactly 8,000 IOPS
+          / 500 MB/s, i.e. running AT its own ceiling continuously, not merely "busy." Real-world impact this time, not
+          just a metric: `deployment-ui`'s CI job (`actions/setup-node`'s npm-cache-save step alone took ~4m40s vs
+          near-instant on `ubuntu-latest`) blew its 10-min job timeout, and a real open promotion PR (#440) sat queued
+          over an hour behind it on the repo's single runner, then failed its own run (a `tsc` type-check hit its
+          internal 60s step timeout — the SAME contention, a different layer). **Action taken**: live `aws ec2
+          modify-volume --volume-id vol-0b4f0237fa0f5cd0f --iops 16000 --throughput 1000` (gp3's max short of migrating
+          volume type; no downtime, reversible) — confirmed `ModificationState: optimizing` (new limits already active)
+          within ~2min. This is the fix this todo's own ~06:25 UTC update named as "worth trying" — now done, not just
+          recommended. Re-verify under the next real burst rather than assuming this closes the capacity question
+          permanently; 16,000 IOPS is a higher ceiling, not an unlimited one, and this box still hosts >23 runner pools
+          it never had when originally sized.
+
+          **DONE 2026-07-30 — ratified the standing capacity policy for (a) and (b), shipped as a script default change +
+          README policy section: `unified-trading-pm@<SHA>`.** Live-reverified current host state before deciding (this
+          session runs directly on `i-0c9b283b31d6b5ca7`): `uptime` load average 2.41/2.77/3.56 (16 vCPU), `top -bn1`
+          `%Cpu(s)` 5.2 wa (iowait), `free -h` swap 3.4Gi/47Gi used, `df -h /` 73% (489G/678G) — nowhere near the
+          66-93% iowait / 74-119 load / 8-10.5GB-swap crisis reading, and comfortably below the ~52-93% iowait post-mitigation
+          readings recorded earlier in this doc. `systemctl list-units --all` on the box shows the operational reality this
+          todo's (a) was asking whether to ratify: every one of the 23 newly-onboarded pools (`glue-1` count = 25 total,
+          i.e. 23 new + PM + AO) now runs with a SINGLE `glue-1` runner and NO `glue-2` at all (confirmed absent, not merely
+          disabled — 0 `glue-2` units for any of the 23), while only the two pre-existing high-traffic pools
+          (`unified-trading-pm`, `agent-orchestrator`) still run `glue-2` (2 units total, both `active running`). This
+          single-runner-per-new-pool posture — already in place operationally but never formally ratified as the standing
+          policy — is confirmed to be what's keeping the host healthy, so (a)'s answer is: **glue-2 stays off long-term for
+          every future new pool; only re-enable per-pool after confirming steady-state load stays low, never by default.**
+          Ratified this by lowering `setup-glue-runners.sh`'s own default (`GLUE_COUNT="${GLUE_COUNT:-5}"` →
+          `${GLUE_COUNT:-1}`) so a future `install` invocation that forgets to set it explicitly gets the safe value instead
+          of silently reproducing the incident, plus a documented override path (`GLUE_COUNT=2`) for PM/AO-tier pools. For
+          (b): confirmed via source read there is no bulk-registration wrapper script in this repo — the 23-pool burst was an
+          ad-hoc per-repo loop with zero staggering, and `setup-glue-runners.sh` itself has no rate-limit/sleep logic (by
+          design: a per-repo `install` shouldn't carry unexercised bulk-only complexity). Documented the staggering
+          requirement as an attended runbook step in the README (register one repo, check load via `status`/`uptime`, THEN
+          register the next) rather than inventing an unused automated stagger mechanism for an operation this rare. Also
+          fixed a stale README example (`GLUE_COUNT=5 WRITER_COUNT=3`, PM's own original 2026-07-16 bootstrap command) that
+          would have led a future operator to reproduce the exact incident if copied for a new repo — annotated as historical
+          + pointed at the new policy section. Files: `scripts/self-hosted-runners/setup-glue-runners.sh` (default +
+          comment), `scripts/self-hosted-runners/README.md` (new "Runner-count capacity policy" section + stale-example
+          caveat). Fresh, out-of-scope discrepancy found while live-checking the host (not fixed here — see the new todo
+          immediately below): the box is currently back on `m8i.4xlarge` (64GB) per live instance metadata, not the
+          `c7i.4xlarge` (32GB) this same doc's earlier `[x] [INFRA] P1` entry described resizing to and verifying.
+
+- [x] ✅ [INFRA] P2. **Reconciled 2026-07-30 — the discrepancy is a deliberate, authenticated operator revert, not a
+      regression or a stale-verification bug.**
+      `aws cloudtrail lookup-events --lookup-attributes AttributeKey=ResourceName,AttributeValue=i-0c9b283b31d6b5ca7`
+      for the window around the 2026-07-28 resize shows a SECOND, independent `StopInstances` →
+      `ModifyInstanceAttribute{instanceType: m8i.4xlarge}` → `StartInstances` sequence at **2026-07-29 04:43-04:47
+      UTC**, one day after the c7i.4xlarge resize, run by IAM user `admin_od` (macOS `aws-cli/2.33.8`, a human/operator
+      identity distinct from any AO worker credential) — i.e. the box was knowingly put back on `m8i.4xlarge` (64GB) the
+      next day; the 2026-07-28 resize's own verification was correct AT THE TIME, nothing about it was wrong. Also
+      corrected a stale claim in that P1 entry: **the self-correcting `bootstrap_vm.sh` Step 5.7 cap computation is
+      ALREADY SHIPPED** (confirmed via `git log`/direct read of `agent-orchestrator/scripts/bootstrap_vm.sh` on
+      `live-defi-rollout` HEAD — it was not, in fact, still blocked on
+      `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`, which is itself long since resolved+archived).
+      Computed what that shipped formula produces against this host's ACTUAL current `/proc/meminfo`
+      (`MemTotal=64773408kB`≈61.8GiB, `SwapTotal=50331640kB`≈48GiB>16G cap) — target
+      `MemoryHigh=46G`/`MemoryMax=54G`/`MemorySwapMax=16G`, vs the live drop-in's stale `23G`/`26G`/`15G` (still tuned
+      for the since-reverted 32GB box; current live usage is only ~11.5GiB, well under either cap, so this is a
+      real-but-not-urgent under-provisioning, not an active incident). **Could not apply the live drop-in edit myself
+      this session** — verified no privileged execution path is available from this AO-worker identity: local `sudo` is
+      blocked by the session's own `no_new_privs` sandbox flag (confirmed: `sudo -n true` refuses even though the user
+      is in the `sudo` group — a deliberate harness safety boundary, not something to work around), and the AWS identity
+      this session runs as (`ikenna-worker`) is denied `ssm:SendCommand` on the instance AND cannot self-grant (denied
+      `iam:PutUserPolicy`/`ListUserPolicies` on itself too) — a genuinely different, narrower identity than the two
+      documented self-service ones (`unified-trading-sa`/`uts-orchestrator-epic-role`) per
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, so this is a legitimate escalation, not a
+      self-service gap being dodged. See the new todo directly below for the exact 3-line remaining action.
+
+- [x] [OPERATOR] P2. **CLOSED 2026-08-06 — moot, superseded by a self-healing mechanism.**
+      `agent-orchestrator/scripts/rescale-memory-cap.sh` exists (shipped `a916694`, 2026-07-30) and is wired into
+      `ao-self-pull.sh` to run unconditionally on every ~15-min cron tick (self-heals; no-ops when already correctly
+      scaled), with `bootstrap_vm.sh` Step 5.7 delegating to the same script. This supersedes the manual apply-step
+      below — no operator action needed. Original text follows. **Apply the corrected `orchestrator.service` memory-cap
+      drop-in on `i-0c9b283b31d6b5ca7`** — needs real root (SSM RunCommand or an operator-privileged session), which no
+      current AO-worker identity has (verified above). Not urgent (live usage ~11.5GiB is well under both the stale and
+      corrected caps) but should land before the next real memory-pressure event, since the stale cap silently halves
+      the host's usable headroom for `orchestrator.service`. Exact commands (idempotent, matches `bootstrap_vm.sh` Step
+      5.7's shipped formula exactly — re-running full bootstrap also works and is the more durable fix since it
+      self-corrects on every future resize):
+      `bash sudo tee /etc/systemd/system/orchestrator.service.d/memory-cap.conf >/dev/null <<'DROPIN' [Service] MemoryHigh=46G MemoryMax=54G MemorySwapMax=16G DROPIN sudo systemctl daemon-reload systemctl show orchestrator.service -p MemoryHigh,MemoryMax,MemorySwapMax,ActiveState  # verify + confirm still active `
+      **Done when**: `systemctl show orchestrator.service -p MemoryMax` reports `54G`'s byte value (not the current
+      stale `26G`'s `27917287424`) AND `orchestrator.service` remains `ActiveState=active` immediately after the reload
+      (a bad edit would show `inactive`/`failed` or a parse error in `journalctl -u orchestrator.service -n 20`). Repo:
+      `unified-trading-pm` (this doc, checkbox flip) — no code repo change needed, the computing logic is already
+      shipped in `agent-orchestrator`.
+
+- [x] ✅ [REVIEW] P3. **DONE 2026-07-28 — AO dashboard's Host Resources panel now surfaces iowait% and load average**,
+      closing the exact blind spot this todo named (the panel showed "CPU 41%"/"CPU 9%" while the box was genuinely
+      66-93% iowait, because `us+sy+ni` was the only thing computed). Backend:
+      `agent-orchestrator/server/ host_resources.py`'s `cpu_percent()` already read `/proc/stat`'s iowait field but
+      folded it into `idle` and discarded it — now tracks it as a separate delta from the SAME sample pair (avoids two
+      independent trackers reading `/proc/stat` at slightly different moments) and exposes `iowait_percent()`; added
+      `load_average()` via stdlib `os.getloadavg()` (no new dependency, no `/proc` parsing needed for this one).
+      `HostResources` (both the pydantic model and the TS `types.ts` mirror) gained `iowait_percent`,
+      `load_avg_1m/5m/15m`. Frontend: a 4th `ResourceTile` ("I/O Wait") added to `VmResources.tsx`, with load-avg-1min
+      as its subtitle and 5/15min in a tooltip — given its own colour-threshold function (`iowaitTone`, amber at 20%/red
+      at 50%) rather than reusing `resourceTone`'s 75%/90% thresholds, since the 2026-07-28 incidents showed sustained
+      double-digit iowait is already a real bottleneck, well below where CPU/RAM/disk saturation thresholds would fire.
+      Full test coverage both sides (`test_host_resources.py`: delta computation, unreadable-`/proc`-is-None-not-raise,
+      platform-without- `getloadavg`-is-None; `VmResources.test.ts`: the two new pure mappers, mirroring the existing
+      `resourceTone`/ `formatPercent` test pattern). Disk queue depth (`/proc/diskstats`) intentionally NOT added this
+      pass — it needs resolving the disk-usage root to its underlying block device first (`/proc/mounts` lookup), a more
+      involved follow-up than iowait/load-avg; note it as a future enhancement if iowait alone proves insufficient
+      signal.
+- [x] ✅ [VERIFY] P2. **Cross-check against the Phase-7 4-repo verification spot-check sweep**
+      (instruments-service/strategy-service/unified-api-contracts/market-tick-data-service) for independent confirmation
+      this episode's impact was real and has now cleared. instruments-service's own `quality-gates-v2`
+      `workflow_dispatch` chain (`30311641098`→`30314016051`→`30315154036`→`30317528373`, each cancelled with ZERO jobs
+      within the 22:41-01:34 UTC window — squarely inside this doc's contention window) is a third, more granular
+      confirmation: a manual/scripted cancel-and-retry loop hitting the exact iowait spike, not GitHub's push-triggered
+      concurrency auto-cancel (`workflow_dispatch` has `cancel-in-progress=false` per this repo's own workflow). The 5th
+      attempt (`30320617101`, dispatched 01:33:56Z, after the EBS IOPS/throughput fix had time to take effect) succeeded
+      on `glue-ip-172-31-5-118-1`; the pool has run 5+ green since. strategy-service's `QG slice (checks)` job on run
+      `30315156486` (23:45 UTC) failed via basedpyright killed at `run_timeout ${PYRIGHT_TIMEOUT:-120}` (exit=124, empty
+      output — a kill, not a real type error) directly behind a logged `[qg-governor] all 4 tokens busy` / "token 4/4
+      acquired after 216s wait" queue-contention signature — the SAME commit (`b26bb306`) re-ran clean twice afterward
+      (03:04 and 03:23 UTC) on identical self-hosted infra, confirming this was this episode's contention hitting a
+      fixed 120s timeout budget, not a runner-migration defect or pre-existing code issue. No code fix applied to either
+      repo (none needed — both self-resolved).
+- [x] [SCRIPT] P3. **CORRECTED 2026-08-12 (/plan-reconcile) — superseded, not implemented.** This todo proposed a
+      fleet-wide `PYRIGHT_TIMEOUT` bump if the kill recurred. It has recurred repeatedly since (9 occurrences logged in
+      the `pytest_timeout_60s_flaky_under_contention*` doc-chain as of `continued3_2026_08_03.md`), and that chain's own
+      investigation explicitly considered and REJECTED a per-repo/fleet-wide timeout raise: "same capacity-side root
+      cause, not a per-repo timeout raise" (`continued3` todo 1's recurring verdict) — the residual root cause is
+      runner-pool/QG-governor admission starvation under real load, not the timeout budget being too tight. The actual
+      fix path is the resource-reservation admission governor tracked in
+      `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (`status: active`), matching the fleet's current
+      "QG concurrency is RESOURCE-based, not a fixed count" default. No timeout bump was or should be applied here —
+      this todo is closed as superseded by that plan rather than reimplemented.
+- [x] ✅ [VERIFY] P2. **Third recurrence, market-tick-data-service, 2026-07-28 (cicd escalation `agt-8523b7`, PR
+      `market-tick-data-service#774`→`#775` promote LDR→main)**: `QG slice (checks)` failed TWICE same-day with the
+      identical `run_timeout ${PYRIGHT_TIMEOUT:-120}` signature — `❌ Type check FAILED/timeout (exit=124)` at exactly
+      ~120-121s elapsed both times (run `30372052884` @ 15:22 UTC, then PR #775's re-gate run `30385576683` @ 20:26 UTC)
+      — while `uptime` on the shared orchestrator VM (this box also hosts the self-hosted runner,
+      `glue-ip-172-31-5-118-1`) showed load average swinging 18→199→90 across the same window (16 vCPU box). Local
+      direct `basedpyright market_tick_data_service/` reproduction completed clean in 26s when unstarved (871
+      pre-existing warn-only errors, no ceiling configured — not the failure cause). Also found + cancelled 2 stray
+      `workflow_dispatch` `quality-gates-v2` runs on `live-defi-rollout` (actor `IggyIkenna`, presumably an earlier
+      auto-recovery/re-trigger attempt) squatting the repo's single self-hosted runner — one hung `in_progress` for 4.5h
+      (`tests` leg alone took 1h56m), the other `pending` 50min; cancelling both freed the runner for PR #775's gate to
+      actually run (previously queued behind them). Per this doc's own P3 guidance above, did **NOT** apply a per-repo
+      `PYRIGHT_TIMEOUT` override — this is contention, not a code regression, and we are confirmed still inside a burst
+      window (load 60-90 at time of writing), not the "confirmed durable" quiet state that todo gates a fleet-wide bump
+      on. Retrying the gate instead; this entry is the 3rd independent same-root-cause data point (after
+      instruments-service + strategy-service above) — if a 4th repo recurs, the P3 fleet-wide-bump todo above should
+      probably stop being "consider" and become a scheduled action.
+
+- [x] ✅ [INFRA] P1. **RETAGGED 2026-07-28 (workspace stale-gate audit) — already executed, operator-authorized action
+      complete.** RAM right-sized 2026-07-28 ~08:40-08:59 UTC — resized the orchestrator VM `i-0c9b283b31d6b5ca7` from
+      `m8i.4xlarge` (16 vCPU / 64GB, $1.09368/hr) to `c7i.4xlarge` (16 vCPU / 32GB,
+      $0.8988/hr) — same vCPU count
+      (preserves the 2026-07-27 CPU-oversubscription fix), ~~18%/~~$141/month cheaper, right-sized to actual usage (live
+      `free -h` before the resize: 8GB used / 53GB available out of 61GB — real usage was ~13% of capacity; even this
+      episode's peak swap only reached 10.5GB).** Operator-authorized ("implement in full /autonomous", 2-hour window) —
+      full pre-flight + execution + post-verify below.
+  - **Pre-flight (parallel adversarial workflow, 3 independent checks, all before touching anything)**: (1) real-time
+    safety check via SSM — reviewed all ~15 live `ps` entries + all 10-then-visible `orch-*` tmux panes for a critical
+    uninterruptible operation; found none (routine agent work only: a QG test run, plan edits, a resumable quickmerge
+    push, a monitoring loop for an ALREADY-completed separate-host VM launch) — verdict `safe_to_stop_now=true`. (2)
+    full adversarial code-safety read of `clean-restart-vm.sh` — surfaced a REAL gap: if `aws ec2 start-instances` fails
+    after `modify-instance-attribute` already succeeded (e.g. `InsufficientInstanceCapacity` for the new type),
+    `set -euo pipefail` aborts with the instance left STOPPED, type already changed, zero auto-retry/rollback, no
+    `trap ERR` — script verdict `safe_to_run=true` but explicitly "attended only, never fire-and-forget," with the exact
+    rollback command (`./clean-restart-vm.sh i-0c9b283b31d6b5ca7 m8i.4xlarge 900`) pre-staged. (3) independent live
+    re-derivation of every compatibility/cost claim via fresh
+    `describe-instance-types`/`describe-instance-type-offerings`/ `pricing get-products` calls (not trusting the earlier
+    solo numbers) — all 5 claims (same vCPU, ~32GB RAM, Nitro-compatible in-place resize, available in ap-northeast-1c,
+    cheaper) independently confirmed with the same $1.09368/$0.8988 figures.
+  - **Execution, watched live end-to-end (not backgrounded) per the script review's own recommendation**: Phase 1
+    checkpoint (900s budget) — 1/15 `orch-*` sessions (`orch-slot-5`) checkpointed in time via `/pre-compact`; the other
+    14 timed out and were left running as-is (the script's own documented best-effort design, not a malfunction). Phase
+    2 stop→modify→start completed cleanly with NO failure at either of the two risky points the review flagged (modify
+    succeeded, start succeeded) — independently cross-checked mid-run via a separate `describe-instances` call showing
+    `running`/`c7i.4xlarge` before the script's own Phase 3 even started. Phase 3 SSM reachability returned `Online`
+    within ~13s of the instance reporting `running`.
+  - **Post-verify**: `orchestrator.service` active (PID 782, 2.5G used); AutoSpawn confirmed ACTIVELY self-healing (not
+    just designed to) — live `journalctl` showed `orch-slot-1` and `orch-agent-main` respawned fresh within 9-30s of
+    restart, `PlanRegenLoop`/`AgentKeeper` ticking normally, zero errors; 21 glue-runner systemd units reconnected; the
+    tmux SERVER itself was killed by the stop (expected — a hard poweroff, not a live migration — so all 15 sessions'
+    conversational continuity was lost regardless of checkpoint status, not just the 14 that timed out; this is the
+    accepted, documented cost of this maintenance class, and AutoSpawn is the system's own designed recovery for exactly
+    this). `docker-disk-cleanup.timer` (below) survived the reboot, still active.
+  - **Byproduct fix, found during post-verify**: `orchestrator.service`'s own cgroup memory guard
+    (`orchestrator.service.d/memory-cap.conf`) was HARDCODED to `MemoryMax=56G`/`MemorySwapMax=16G` in
+    `agent-orchestrator/scripts/bootstrap_vm.sh` (Step 5.7) — a cap ABOVE the new 32GB box's total RAM defeats the
+    entire point of the guard (the kernel OOMs the whole host before a 56G cgroup limit can ever bind); a stray,
+    untracked `MemoryHigh=48G` (set via some undocumented past `systemctl set-property`, not found anywhere in version
+    control) had the same problem. **Fixed on the live box immediately**: recomputed as 87.5%/75% of actual
+    `/proc/meminfo` MemTotal (23G high / 26G max / 15G swap — same ratios the original 56G/48G/16G values were
+    hand-tuned for on the old 64GB box), applied via a corrected drop-in file + `daemon-reload` (verified live via
+    `systemctl show`, took effect without a service restart), `orchestrator. service` confirmed still `active`
+    throughout. **Made the fix durable in `bootstrap_vm.sh` itself** (compute the same ratios from live `/proc/meminfo`
+    at bootstrap time instead of hardcoding constants — self-corrects on every future resize, up or down) — **written
+    and locally verified (`bash -n` clean, arithmetic hand-tested against both the old 64GB and new 32GB box) but NOT
+    YET SHIPPED**: blocked by the already-filed, unrelated, correctly-triaged-elsewhere P0
+    `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` SSOT contradiction, which independently also
+    breaks `agent-orchestrator`'s own `.venv` test collection (confirmed: `fastapi==0.136.1` there, missing
+    `iter_route_contexts`, same signature as that doc's PM/UTL finding) — not something to fix unilaterally per that
+    doc's own explicit instruction. **Ship this once that blocker clears**: `git diff -- scripts/bootstrap_vm.sh` in
+    `agent-orchestrator` has the change ready, just needs `quality-gates.sh` to pass once agent-orchestrator's own
+    `.venv` picks up whatever direction that SSOT contradiction resolves to.
+
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
+- **Explicitly considered and rejected, both correctly**: (1) sharing the per-runner-pool `RUNNER_TOOL_CACHE` across the
+  25 pools to save disk — `setup-glue-runners.sh`'s own header comment already documents why this is deliberately
+  per-pool (`actions/setup-python` is delete-then-create and races across concurrent runners); confirmed toolcache is
+  only ~26% of a pool's footprint anyway (agent-orchestrator's own pool: 5.0GB total, 1.28GB toolcache, 1.78GB
+  runner-software "externals", 674MB `_work`), so sharing it wouldn't have been the win it looked like. (2) shrinking
+  the EBS volume from 700GB (already bumped up from 500GB earlier the same day, `vol-0b4f0237fa0f5cd0f`) to 600GB — live
+  `df -h` showed 503GB/678GB (75%) used, trending UP not down across this session, and EBS volumes can't shrink in-place
+  in AWS regardless (would need a snapshot + new volume + migrate, real downtime/risk for a saving that isn't safely
+  there). Neither actioned.
+- **Also shipped, host-wide, same session**: `docker-disk-cleanup.sh`/`.service`/`.timer` (new,
+  `unified-trading-pm/scripts/self-hosted-runners/`) — confirmed zero prior cleanup automation existed for docker
+  (`docker system df` showed 51GB images / 12.89GB immediately reclaimable; only the generic
+  `systemd-tmpfiles-clean.timer` existed, which doesn't touch docker's storage driver). Deployed + enabled via SSM, runs
+  every 6h (`docker image/container/builder prune -af --filter until=24h`, safe by construction since docker's own
+  "unused" accounting already excludes anything a running/restartable container references). Confirmed `active` both
+  before and after the VM resize/reboot.
+
+**Update 2026-07-28 ~19:37 UTC — deployment-ui's LDR verification blocked on what looks like the SAME class of incident
+tracked in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (not duplicating that doc —
+cross-referencing).** After the EBS iops/throughput bump above, a fresh `quality-gates-v2` run against
+`live-defi- rollout` still failed — but this time NOT a job-level timeout (already bumped 10→25min) and not the original
+60s TS-check timeout (another process already bumped that to 300s) — it hit the NEW 300s TS-check budget and still
+didn't finish. Live `uptime`/`top`/`free` check: load average 77.86/74.02/69.30, `%Cpu(s)` now 34.3 us + 15.7 sy + 10.3
+ni (real compute load, not just iowait like earlier today) + 39.7 wa, and **swap at 97.8% (355MB free of 16GB)** — worse
+than the 87-93% swap readings `self-hosted-qg-repos.txt`'s own recent revert notes describe for the concurrent
+`unified-trading-library` incident. Read as the same underlying capacity problem, now compounding. Per autonomous
+stall-safety: NOT retrying a third time on an identical failure class — that other doc's incident is already being
+actively worked by a separate process; duplicating remediation here risks conflicting with it. Deferred as "cannot be
+done yet" (waiting on an external event — that incident clearing), not "blocked-operator" — will re-verify once host
+load is back to a sane baseline rather than polling tightly.
+
+**Update 2026-07-28 ~20:00-20:45 UTC — resolved for deployment-ui specifically via revert; the underlying host incident
+then escalated to full unreachability.** Reverted `deployment-ui`'s `ui-quality-gates-v2.yml` back to
+`runs-on: ubuntu-latest` (temporary, commented with the reason and a re-attempt condition) — the exact precedented fix
+`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` already proved on `strategy-service` and
+`execution-service` the same day. Verified clean: fresh `quality-gates-v2` run on `live-defi-rollout` (run
+`30393665875`) completed `success` in 3m45s on a real `GitHub Actions` hosted runner — confirms the prior failures were
+purely host contention, not a code/config problem. **However**, re-triggering the fleet's own
+`ldr-to-main-promote-fleet.yml` to generate a fresh promote PR (superseding the stale `#440`, pinned to a pre-fix SHA)
+itself failed — that workflow runs on the SAME contended `[self-hosted, glue]` pool. Checked host reachability directly:
+SSH to `i-0c9b283b31d6b5ca7` times out at the banner-exchange stage (confirmed twice, once with a 25s timeout) —
+independently corroborated via `aws ssm describe-instance-information`: `PingStatus: ConnectionLost`, last successful
+ping 20:45:27 UTC. **The host is unreachable via both SSH and SSM**, not just slow — a materially worse state than the
+load-151/swap-97.8% reading minutes earlier. Not attempting a reboot or other remediation myself: this is shared
+infrastructure another dedicated process is already actively working (this doc's own
+`strategy-service`/`execution-service` entries above, and the VM-resize precedent, show that process routinely does
+stop/start cycles as part of its remediation — this unreachability is plausibly ITS in-progress fix, not a new, unowned
+failure). Uncoordinated intervention on a box with other live tenants (the orchestrator service itself, other agents'
+interactive sessions, 24 other repos' runner pools) risks doing more harm than the wait costs. **Net state**:
+`deployment-ui`'s own CI is fully fixed and verified (ubuntu-latest, green). PR `#440` remains open, blocked purely on
+the promote-fleet mechanism's dependency on this now-unreachable host — genuinely "cannot be done yet," re-check once
+SSM reports the instance back online.
+
+**Cross-ref (slot 14, 2026-07-28T23:5xZ):** hit the same symptom shipping
+`cross_cutting_satellite_ao_dispatch_batch1b-006` — `unified-api-contracts` `quality-gates.sh --no-fix` SIGTERM-killed
+by the qg-host-governor 6 consecutive times at `[3/6] TESTS` (swap 12-15Gi/15Gi, 14-17 concurrent `quality-gates.sh`
+processes host-wide, one confirmed unrelated systemd-cgroup OOM kill of `process-category-sampler.service`). Main
+confirmed via `BLK-af1211b4` this is the same tracked burst, not a new incident — backing off with jitter and retrying
+per the doc's own guidance, no new issue doc filed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Both remaining open items are genuinely
+  operator-gated / judgment-gated, not bounded worker-executable tasks. Item 1 is explicitly tagged [OPERATOR] and the
+  doc itself proves via live verification that no AO-worker cloud identity (ikenna-worker) has the privileged access
+  (root/SSM RunCommand/self-gr...
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Today's edit that
+  put this doc back in incremental scope was a cosmetic `context_scope` backfill commit, not a content change; the
+  remaining `[OPERATOR]` memory-cap-drop-in item still has no privileged AO-worker identity able to apply it
+  (re-verified against `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`'s two self-service
+  identities — neither is `ikenna-worker`), and the conditional `[SCRIPT]` P3 fleet-wide-timeout-bump item is still
+  explicitly gated on "confirmed durable, not during a future burst," which is a live-monitoring judgment call, not a
+  standing fact to close on.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged from prior scout — still accurate).
+- **context-scout 2026-08-06**: re-scouted; added `agent-orchestrator/scripts/rescale-memory-cap.sh` (2026-07-30,
+  cron-wired self-healing memory-cap rescale — likely resolves/supersedes the remaining `[OPERATOR] P2` manual drop-in
+  todo above; flagging for a human check, not resolving the todo myself), now 6 entries.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-01/08-03 (unchanged): item 1 is blocked on an
+  ssm:SendCommand grant gap, item 2 is contingent on a future recurrence. NEW finding this pass: rescale-memory-cap.sh
+  already runs unconditionally every ~15min via root cron, so item 1's manual apply-step may already be moot — flagging
+  for a human live-state check (`systemctl show orchestrator.service -p MemoryMax`), not closing without live proof.
+- **2026-08-06 (AO issue-doc sweep)**: closed the `[OPERATOR] P2` item — `rescale-memory-cap.sh` confirmed wired into
+  `ao-self-pull.sh`'s ~15-min cron tick, self-healing/no-op-when-correct, superseding the manual apply-step. The
+  remaining `[SCRIPT] P3` item (fleet-wide `PYRIGHT_TIMEOUT` bump) is a genuine standing watch-condition, not a current
+  defect — stays open, doc NOT archived. Re-check only if a `PYRIGHT_TIMEOUT`-triggered `exit=124` kill recurs outside a
+  burst/fan-out window.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

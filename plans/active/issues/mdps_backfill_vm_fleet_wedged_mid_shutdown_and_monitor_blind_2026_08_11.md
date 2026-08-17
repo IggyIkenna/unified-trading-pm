@@ -214,7 +214,7 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
       `ok=False` on the last-run sentinel instead of a green sentinel by omission. Evidence:
       `unified-trading-library@8764696aef`, `deployment-service@1b7d1d3587`, QG green (745s). Plan flip:
       `plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` item (exit_code_fleet_monitor).
-- [ ] [SCRIPT] P1. Stop `*/5` executions overlapping — set the Cloud Run job's concurrency to 1 (or take a lease), so
+- [x] ✅ [SCRIPT] P1. Stop `*/5` executions overlapping — set the Cloud Run job's concurrency to 1 (or take a lease), so
       the relaunch budget is consulted by ONE container at a time. The empty-budget-per-container race is already
       documented in `relaunch_backfill_vm.py`; the schedule still permits it.
 - [x] ✅ [SCRIPT] P1. **Diagnosed via available evidence (audit logs + code read) — spot-preemption wave RULED OUT;
@@ -257,10 +257,10 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
       `mtds-live-cefi-consolidated` and `mtds-live-tradfi-cme-trades` (2026-08-11T06:xx). These need a restart and an
       investigation of what live data was missed, not a delete. Restarting a live producer is a different action class
       from reaping a backfill.
-- [ ] [SCRIPT] P2. Verify whether deployment-service@0c38c00d's GCS-backed relaunch budget is in the deployed
+- [x] ✅ [SCRIPT] P2. Verify whether deployment-service@0c38c00d's GCS-backed relaunch budget is in the deployed
       `deployment-api:latest` image the monitor job runs. The fix is on the branch; the image build time was never
       checked, so the cap may still be reading an empty per-container tempdir in production.
-- [ ] [SCRIPT] P2. Re-probe the 39 VMs whose serial-console read returned no parseable timestamp — they are classified
+- [x] ✅ [SCRIPT] P2. Re-probe the 39 VMs whose serial-console read returned no parseable timestamp — they are classified
       neither live nor wedged and were left alone. Tool: `deployment-service/scripts/vm/probe_vm_serial_liveness.sh`
       (promoted from this incident's diagnostic session, read its header before trusting a fresh timestamp as more than
       guest-alive).
@@ -302,3 +302,4 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
     and did NOT kill either duplicate VM (no destructive action without a clearer instruction than "relaunch," and
     reaping is already this doc's own tracked P0/P1 territory). No code shipped this session; this Progress Log entry is
     the only change. `/done` posted with `one_shot_complete: true`.
+- **na-eligibility-audit 2026-08-17** [body-hash:d726b3c7c8b4120f]: KEEP-NA, stale-items corrected -- closed 3 of 6 open items (Cloud Run concurrency/lease, deployment-service@0c38c00d image-verification, 39-VM re-probe): all already done via the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (same parent_epic infrastructure_master), each ending with an explicit Source: citation to this exact doc -- deployment-service@2855b17833 (GCS CAS lease, 2026-08-15), image verification CONFIRMED YES (2026-08-15, tag 4048e78), and the 39-VM re-probe found NOT-ATTEMPTED-premise-unmet (VM names never persisted, fleet fully turned over). Doc stays assigned_vm: NA for its 3 remaining items (1 P0 unpause blocked-on-deploy, 1 P1 shutdown-path design, 1 P1 [OPERATOR] live-producer restart). Cross-cutting tranche audit conflict-check finding.

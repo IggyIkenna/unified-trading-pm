@@ -22,8 +22,8 @@ related:
 created: 2026-08-14
 last_updated: 2026-08-14
 parent_epic: batch_live_symmetry_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -111,3 +111,4 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
   (extracted `_register_lazy_buffer()`, 897 lines, quality gates green). P1 (blocked bybit consumer migration) and P2
   (gate error-message improvement) left open for their respective owners — not touched.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:ec9e6f10b9859059]: RECLASSIFY (whole-doc) -- assigned_vm flipped NA -> planning; execution_scope -> orchestrator-agent; assigned_role: data_engineering (already set). The sole open item (record a decision on whether the file-size gate should report the delta-against-cap in its failure message) is a bounded, self-contained nice-to-have decision-and-implement task, conflict-check CLEAR. doc_type: issue, structurally exempt from a finalize-plan companion. Cross-cutting tranche audit.

@@ -345,11 +345,11 @@ separate CODE tasks after operator triage". A grep of `plans/active/` for that f
 
 So the tracked record says DeFi live is resolved, while 40 venues cannot stream and 52 more have no connector at all.
 
-- [ ] [OPERATOR] P1. Decide whether DeFi live capture is in scope at all before any build — there is no defi live VM, no
+- [x] ✅ [OPERATOR] P1. Already resolved via AskUserQuestion, extracted to `defi_operator_ruling_ao_dispatch_2026_08_15.md` (na-eligibility-audit 2026-08-17 stale-checkbox correction). Decide whether DeFi live capture is in scope at all before any build — there is no defi live VM, no
       defi live launcher, and DeFi is nominally the May-23 critical path; the honest options are to build the pollers,
       or to declare DeFi live BATCH-ONLY-BY-DESIGN and stop carrying 40 placeholder registrations that read as coverage
       — DoD: the ruling is recorded here.
-- [ ] [DATA] P1. Whichever way that ruling goes, make the archived gap doc's status honest — DoD: either the follow-up
+- [x] ✅ [DATA] P1. Already resolved, phased-scoping todo extracted to `defi_operator_ruling_ao_dispatch_2026_08_15.md` (na-eligibility-audit 2026-08-17 stale-checkbox correction). Whichever way that ruling goes, make the archived gap doc's status honest — DoD: either the follow-up
       tasks exist as tracked todos, or the placeholders are reclassified with the ruling cited; "resolved" must not mean
       "scaffolded".
 
@@ -363,7 +363,7 @@ any full-index read is impractical — it defeated a read in this session and is
 Note the manifest consolidator itself is healthy — `uts-prod-manifest-consolidator-market-data-defi` executes every 60s
 and succeeded on all recent runs; the index's age reflects the incremental-cutoff design and scale, not a broken job.
 
-- [ ] [OPERATOR] P1. Rule on retention for the `_index/*.bak*` snapshots in the defi prod bucket — prod-bucket deletes
+- [x] ✅ [OPERATOR] P1. Already ruled (leave as-is indefinitely, no dispatch, status quo stands) via `defi_operator_ruling_ao_dispatch_2026_08_15.md` (na-eligibility-audit 2026-08-17 stale-checkbox correction). Rule on retention for the `_index/*.bak*` snapshots in the defi prod bucket — prod-bucket deletes
       are human-only unless reversibility-qualified; cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` —
       DoD: a retention rule recorded here, then executed under that protocol.
 - [ ] [DATA] P2. Give consumers a projected/filtered read path for the defi index so an audit does not need the full 7.3
@@ -478,3 +478,4 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
   `[OPERATOR]` todo) and resolved that todo: do NOT delete `phoenix_ws.py`. Full evidence + the two genuine
   follow-up decisions (canonical-key re-registration; live-phase promotion) are in
   `/plans/archive/2026_08/defi_operator_ruling_ao_dispatch_2026_08_15.md`'s own Progress Log, same date.
+- **na-eligibility-audit 2026-08-17** [body-hash:25b58a0e0a5de6c9]: KEEP-NA, stale-items corrected -- closed 3 of 8 open items (DeFi live-capture-scope decision, archived-gap-doc honesty follow-up, _index/*.bak* retention ruling): all already resolved via AskUserQuestion and extracted to the active defi_operator_ruling_ao_dispatch_2026_08_15.md, checkboxes here simply never flipped. Doc stays assigned_vm: NA for its 5 remaining genuinely open items (an OPERATOR ruling, a dependency-blocked pairing todo, a captured-row verification blocked on an unshipped fix, a prediction-stall diagnosis redirected to a different doc, and a genuine build task). Cross-cutting tranche audit.

@@ -550,7 +550,7 @@ reconciling + signing off, not redoing.)_
 
 ## Stage 6 — Hygiene (run in parallel; non-blocking)
 
-- [ ] [ADMIN] P2. Flip stale / self-contradictory checkboxes (`instruments_mtds_subset`: `N9c`, `N5r/N6r`,
+- [x] ✅ [ADMIN] P2. Both targets already resolved: `instruments_catalogue_incremental_rollup` flip already done, and `instruments_mtds_subset_consistency_remediation` already done + archived 2026-07-26 per this doc's own Stage 0 section (na-eligibility-audit 2026-08-17 stale-checkbox correction). Flip stale / self-contradictory checkboxes (`instruments_mtds_subset`: `N9c`, `N5r/N6r`,
       "migrate-first 4 AGs"; `instruments_catalogue_incremental_rollup` → completed). **STILL OPEN (reconciled
       2026-07-28)** — targets docs outside this todo's 7 named archived children; not covered here.
 - [x] ✅ [VERIFY] P2. `honest_coverage_smoke_harness`: run the deferred **cefi / defi / tradfi / prediction**
@@ -588,12 +588,13 @@ reconciling + signing off, not redoing.)_
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [UI] P2. Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
+- [x] ✅ [UI] P2. Duplicate of this doc's own still-open Stage 6 UI drill-down item -- this todo's own text says it "MOVED to instruments_completion_tracker_2026_07_06.md Stage 6" (na-eligibility-audit 2026-08-17 stale-checkbox correction, not independent work). Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
       gate applies). **→ MOVED to `instruments_completion_tracker_2026_07_06.md` Stage 6 (last open `honest_coverage_v2`
       item; too small for its own AO plan, tracked as tracker hygiene singleton per operator 2026-07-06).** This plan's
       **measurement track is now CLOSED** — every Phase 0/1/2 measurement item complete; only this UI drill-down
       remains, and it is now owned by tracker Stage 6. (FOLDED IN from
-      honest_coverage_v2_instrument_denominator_2026_06_28, 2026-07-15, plan-reconcile §6 operator ruling)
+      honest_coverage_v2_instrument_denominator_2026_06_28, 2026-07-15, plan-reconcile §6 operator ruling — see
+      /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md)
 
 ---
 
@@ -746,3 +747,4 @@ content post-line-cap-split.
   exit codes, commit shas, verdict counts — not just checkboxes). Updated this tracker's Stage 1 todo with the final
   numbers (prediction 0 candidates/clear; defi 837/1080=77.5% twin-coverage, gate does not clear; sports still fails,
   categorical Part-4 blocker unchanged). Archiving the parent + finalize plans next.
+- **na-eligibility-audit 2026-08-17** [body-hash:38e7eff7013cca32]: KEEP-NA, stale-items corrected -- closed 2 of 7 open items: (1) the ADMIN stale-checkbox-flip todo targets 2 docs this doc's own Stage 0 section already records as done/archived; (2) the UI drill-down todo is a verbatim duplicate of this doc's own still-open Stage 6 UI item. Doc stays assigned_vm: NA for its 5 remaining items (a cross-registry data contradiction, a Layer-1 cert forked to another plan, an operator-confirmed-but-unimplemented classification, a fix owned by a successor plan, and a real UI build gated on the playwright testing layer). Cross-cutting tranche audit.

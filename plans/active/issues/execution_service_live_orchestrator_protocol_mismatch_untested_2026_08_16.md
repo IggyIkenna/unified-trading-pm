@@ -64,13 +64,13 @@ full verification.
 
 ## What's not yet done
 
-- [ ] [AGENT] P1. **Independently verify the protocol mismatch** — read `ExecutionOrchestrator`'s actual method
+- [x] ✅ [AGENT] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 12 (na-eligibility-audit 2026-08-17). **Independently verify the protocol mismatch** — read `ExecutionOrchestrator`'s actual method
       signature against the `LiveOrchestrator` protocol definition directly (do not trust this doc's relay alone),
       confirm the instruction-type and return-type mismatch claims with a direct citation of both sides.
-- [ ] [AGENT] P1. **If confirmed, determine blast radius** — trace every call site that casts to `LiveOrchestrator`
+- [x] ✅ [AGENT] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 13 (na-eligibility-audit 2026-08-17). **If confirmed, determine blast radius** — trace every call site that casts to `LiveOrchestrator`
       and would receive an `ExecutionOrchestrator` instance in production, and check whether a `None` return where a
       `dict` is expected would raise, silently no-op, or corrupt downstream state.
-- [ ] [AGENT] P1. **Add a real (non-mock) end-to-end test** of the production live-execution path, matching the
+- [x] ✅ [AGENT] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 14 (na-eligibility-audit 2026-08-17). **Add a real (non-mock) end-to-end test** of the production live-execution path, matching the
       pattern the W1 sub-agent's own test used (`tests/unit/test_external_instruction_api.py` in
       `execution-service`, per `nick_ai_platform_readiness_remediation_2026_08_16.md`'s W1 evidence) — a real
       `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
@@ -87,3 +87,4 @@ checked directly (confirmed), the protocol-mismatch and return-type claims were 
 filing — see the todos above for that verification work. Flagged to the operator in the same turn this was filed,
 per the workspace's big-finding notification rule (cross-cutting to live execution correctness).
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:3655dacfb7f13e16]: RECLASSIFY (per-todo split) -- extracted 3 of 4 open items (independently verify the protocol mismatch, determine blast radius if confirmed, add a real end-to-end test) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md items 12-14. Doc stays assigned_vm: NA for its 1 remaining item ('Fix the mismatch') -- genuinely gated on the diagnosis outcome (widen the protocol vs fix the implementation), not bounded standalone. Cross-cutting tranche audit.

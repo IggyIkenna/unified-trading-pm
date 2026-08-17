@@ -111,11 +111,11 @@ each depending on plan). Once provisioned:
       wire it into a collect handler (which downstream feature consumer needs on-chain analytics is a separate design
       decision — do not guess a handler; ask if unclear). `BLOCKED-CREDENTIALS` — awaiting `glassnode-api-key`. Repo:
       market-tick-data-service.
-- [ ] [CODE] P2. Promote `KaikoAdapter` (`market_tick_data_service/market_interface/adapters/onchain/kaiko.py`, added
+- [x] ✅ [CODE] P2. DECOMMISSIONED -- Kaiko banned fleet-wide 2026-08-10, KaikoAdapter/PLANNED_VENUES entry/UAC SourceCapability all deleted, zero references remain (na-eligibility-audit 2026-08-17 stale-checkbox correction). Promote `KaikoAdapter` (`market_tick_data_service/market_interface/adapters/onchain/kaiko.py`, added
       2026-08-09) from `PLANNED_VENUES` into `VENUE_REGISTRY` + `get_adapter()` dispatch, and wire it into a collect
       handler (same caveat as above — target handler is a design decision, not a guess). `BLOCKED-CREDENTIALS` —
       awaiting `kaiko-api-key`. Repo: market-tick-data-service.
-- [ ] [DATA] P3. Once live-credential integration tests are added (mirroring
+- [x] ✅ [DATA] P3. DECOMMISSIONED -- Kaiko banned fleet-wide 2026-08-10, no adapter remains to add a test for (na-eligibility-audit 2026-08-17 stale-checkbox correction). Once live-credential integration tests are added (mirroring
       `tests/integration/test_glassnode_integration.py`'s `@pytest.mark.requires_credentials` pattern), add a Kaiko
       counterpart. Repo: market-tick-data-service.
 
@@ -128,6 +128,7 @@ each depending on plan). Once provisioned:
   unit tests, already shipped 2026-05-21) re-verified still green, no changes needed.
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 
+- **na-eligibility-audit 2026-08-17** [body-hash:6c7264096c579f4b]: KEEP-NA, stale-items corrected -- closed 2 of 3 open items (promote KaikoAdapter; add a Kaiko integration-test counterpart): the doc's own dated 2026-08-10 banner confirms Kaiko removal COMPLETE (fleet-wide ban, adapter/PLANNED_VENUES entry/UAC SourceCapability all deleted, zero remaining references) -- decommissioned, not stale-duplicate. Doc stays assigned_vm: NA for its 1 remaining item (Glassnode, genuinely CREDENTIAL_BLOCKED per the external-data-always-available HARD RULE). Cross-cutting tranche audit.
 ## Kaiko removal COMPLETE (2026-08-10)
 
 The Kaiko scaffold this ask was filed for no longer exists anywhere: `unified-api-contracts@c48238266b` (capability +
