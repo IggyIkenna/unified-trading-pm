@@ -179,8 +179,14 @@ by `graph_semaphore = Semaphore(3)`) → `_fetch_one_venue()` → `TardisAdapter
 (`tardis_batch_download.py:236-253`) builds the shared `ParallelPerSymbolRunner` with
 `max_concurrent=`/`in_flight_registry=`/`resource_profiler=` — it never passes `max_in_flight_bytes`. In
 `parallel_per_symbol_runner.py:295-319`, `_await_capacity()` is a documented no-op whenever
-`max_in_flight_bytes is None`, which it always is for this caller. The only admission control is a per-`run()`-call
-`asyncio.Semaphore(max_concurrent)` (default `TARDIS_MAX_INFLIGHT_TASKS=128`) plus the shared HTTP-fetch semaphore
+`max_in_flight_bytes is None`, which it always is for this caller. The only admission control is
+`asyncio.Semaphore(max_concurrent)` (default `TARDIS_MAX_INFLIGHT_TASKS=128`) — **STALE 2026-08-17**: at the time of
+this incident (single-date, `--batch-date-concurrency 1`) the semaphore was minted fresh per `run()` call, which was
+also a real, separately-fixed bug under date-concurrency (see `plans/active/cefi_tardis_date_concurrency_2026_08_16.md`
+— now built once per runner instance and shared across every `run()` call), but for THIS incident's single-date shape
+it made no difference: one date means one `run()` call either way, so the admission-control gap this section
+diagnoses (COUNT cap only, no byte-SUM cap) is unaffected by that fix and remains the real, still-open root cause
+below — plus the shared HTTP-fetch semaphore
 (`TARDIS_MAX_CONCURRENT_DOWNLOADS=32`) — both COUNT caps, no byte-SUM cap. For this incident's chunk (3 venues × 9
 symbols × 1 data_type = 27 tasks), 27 is under both caps, so **every symbol-day for the whole chunk is scheduled
 concurrently with no bound on their combined size.** The finalizer's own docstring (`tardis_cefi_shards.py:390-393`)

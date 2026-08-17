@@ -291,29 +291,35 @@ this session and have been removed rather than left to mislead a future reader. 
 | UTL `ParallelPerSymbolRunner` in-flight semaphore hoist to per-instance/per-process scope (line 289).              | P2       | Actionable now, independently of the Tardis slot — a standalone UTL design/code change, not gated on anything running.    |
 | Phase 4 — widen concurrency further if the per-date long-tail fetch latency dominates (line 271), optional/conditional. | P3       | Not yet evaluated; only relevant if the concurrency-6 result (above) shows the tail, not the prologue/epilogue, still dominates. |
 
-- [ ] [BACKEND] P2. **UTL follow-up — instance-scope `ParallelPerSymbolRunner`'s in-flight semaphore. INVESTIGATED
-      2026-08-17, NOT a drop-in fix — needs a real design decision before touching it.** `run()` mints a fresh
-      `asyncio.Semaphore(self._max_concurrent)` on every call
-      (`unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py:229`), so the "max
-      in-flight tasks" knob is per-CALL, not per-process — which is why F5 had to be a config-time guard rather than
-      a real bound. **Traced the actual call-site shape before assuming this is a small change**: the runner
-      INSTANCE is already correctly a process-wide pooled singleton — `TardisAdapter._init_runner_slots` docstring:
-      "Runners are created lazily on first download_batch call and reused across all subsequent dates" (backed by
-      `_get_tardis_adapter()`'s own module-global `_tardis_adapter` pool in
-      `market_tick_data_service/adapters/umi_tick_provider.py`). So a naive hoist of the semaphore from `run()` to
-      `__init__` (instance-scope) WOULD share it correctly across all dates — but that's exactly the problem: TradFi
-      already runs `--batch-date-concurrency 20` live in production today, with each of those 20 concurrent dates'
-      `run()` call currently getting its OWN full-size semaphore (today's *effective* in-flight bound is
-      `20 × tardis_max_inflight_tasks`). Hoisting to instance-scope would silently collapse that to just
-      `tardis_max_inflight_tasks` — a ~20x cut to TradFi's live, already-tuned effective concurrency, not a bug fix.
-      **This needs an explicit design decision, not a patch**: either (a) make the process-level cap the real
-      absolute value and re-tune `tardis_max_inflight_tasks` config per asset class to compensate (TradFi, Deribit
-      DVOL, CeFi all need new, individually-computed values), or (b) keep call sites computing
-      `max_concurrent × date_concurrency` at construction time (centralizing today's manual-division burden into one
-      place instead of removing it). Do not implement either without picking one and updating every call site's
-      config value in the same change — a partial hoist would be a live production throughput regression for
-      TradFi, discovered only after the fact. Flagged in the original design as the bigger, separate UTL change;
-      not required for Phase 3.
+- [x] ✅ [BACKEND] P2. **SHIPPED 2026-08-17** — `unified-trading-library@3d640812c8` +
+      `market-tick-data-service@08708de2f6`. Picked option (b) from the investigation below (call sites compute
+      `max_concurrent × date_concurrency` at construction — zero config changes anywhere, byte-identical aggregate
+      for every currently-tuned asset class): `ParallelPerSymbolRunner` gained a `date_concurrency: int = 1`
+      constructor param; the semaphore is now built ONCE in `__init__` (sized
+      `max_concurrent × date_concurrency`) and reused by every `run()` call, replacing the old
+      `asyncio.Semaphore(self._max_concurrent)` minted fresh per call. Bridged the CLI-preflight-only
+      `--batch-date-concurrency` value down to the deep, pooled `TardisAdapter` construction sites (which have no
+      direct access to CLI args) via a small module-global in `service_config.py`
+      (`set_active_batch_date_concurrency`/`get_active_batch_date_concurrency`), mirroring the exact pattern
+      `_vm_progress.py`'s watermark already uses for the same class of problem — set once at preflight (right
+      where `validate_date_concurrency_inflight_budget` already runs), read by all 3 real Tardis runner
+      construction sites (`_get_perp_runner`, `_get_book_snapshot_runner` in `tardis_batch_download.py`,
+      `_futures_runner` in `tardis_bulk_download.py` — Deribit dated futures). DeFi handlers untouched (they never
+      call the setter, so `date_concurrency` stays at its default of 1 — provably a no-op for them). 9 new
+      regression tests added across both repos (shared-budget-not-duplicated, default-preserves-today's-number,
+      date_concurrency floors at 1, the bridge round-trips) — both repos' full `quality-gates.sh` genuinely
+      re-executed their real test suites (verified directly, not just trusted the checkmark — MTDS: 11073 passed
+      fresh with `.qg_content_sentinel` deleted first to force it; UTL: traced `base-library.sh`'s pytest
+      invocation to confirm successful output is captured-and-hidden, not skipped, so "Tests PASSED" is genuine
+      evidence). **Real incident during this work**: an agent-orchestrator "pre-spawn dirty-state gate" judged this
+      interactive session's slot as inherited-from-a-dead-predecessor mid-edit, auto-committed the in-progress
+      diff as a `chore(orphan-wip)` commit, then reset the branch to origin — the uncommitted work briefly looked
+      fully lost (clean tree, no stash, nothing ahead of origin) before the orphan-wip commits
+      (`c998342a`/`f4508391`/`431d419fd6`, still present as dangling objects) were found via `git reflog` and
+      recovered via `git checkout <commit> -- <path>`. Filed as its own tracked issue —
+      `/plans/active/issues/ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17.md` — an
+      interactive session mid-edit should not be a valid "dead predecessor" target for that gate, and the
+      `COMMIT_AND_PUSH` disposition's push half silently didn't happen (all 3 orphan-wip commits stayed local-only).
 
 ## Progress Log
 
