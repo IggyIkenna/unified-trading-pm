@@ -349,6 +349,14 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       under contention — confirm whether the `ManifestConsolidator: pruned N consolidated per-VM shard(s)` INFO
       line has appeared at all in the job's recent run history, which would date how long the backlog above has
       been accumulating. (repo: unified-trading-library)
+- [ ] [DIAG] P2. Confirm `gcloud builds list --project=central-element-323112` shows a FRESH successful build for
+      `market-data-processing-service` (any build at all, fleet-wide in this project) — the 2026-08-17 (slot 32)
+      session below found the last build in the whole project was `2026-08-16T19:39:42Z`, i.e. BEFORE
+      `94215e9cd9` even landed, and still >30h stale at read time. This is a single snapshot, not a confirmed
+      root-cause — could be a genuine Cloud Build trigger/deploy-pipeline stall (cicd craft), or simply no
+      build-triggering push has occurred since. Root-cause and, if it's a real stall, file the fix; if it's benign,
+      note why and close. This blocks the gated `[SCRIPT]` re-retirement todo below from ever being confirmable via
+      deploy evidence. (repo: unified-trading-pm or whichever repo owns the Cloud Build trigger investigation)
 
 ## Progress Log
 
@@ -390,3 +398,40 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   Updated the one test whose assertion encoded the pre-fix uppercase-path bug. QG green, shipped
   `market-data-processing-service@94215e9cd9`. Next: the GATED `[SCRIPT]` re-retirement todo below still needs a
   fresh candle write for a new day to confirm the fix is live (not just code-reviewed) before retirement resumes.
+- **2026-08-17 (slot 32, data_engineering) — attempted the gated `[SCRIPT]` re-retirement todo; GATE STILL NOT MET,
+  no retirement attempted.** Live-verified two independent signals, both inconclusive-to-negative for "fix confirmed
+  live":
+  - **`94215e9cd9`'s content IS present on `origin/main`** — direct content read (`git show
+    origin/main:market_data_processing_service/app/core/canonical_writer.py`) confirms the
+    `build_canonical_candle_object_path(..., instrument_type=instrument_type.lower(), ...)` call site. The commit
+    sha itself is NOT a git ancestor of main (likely squash-merged during LDR→main promotion, per the known
+    `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` pattern — expected, not a bug) but the diff is
+    there.
+  - **Zero fresh MDPS `dex_pool_swaps` writes since BEFORE the fix landed, of either casing.** Wrote a bounded,
+    memory-safe manifest probe (row-group-at-a-time, run under `run-bounded-analysis.sh`, mirroring the retirement
+    script's own idiom) — `market-tick-data-service/scripts/one_offs/verify_mdps_casing_fix_live_via_manifest_2026_08_17.py`
+    — querying `data_type=dex_pool_swaps` + `service_name=market-data-processing-service` + `capture_status=captured`
+    for `MAX(written_at)` per `instrument_type` casing. Result: uppercase `POOL` max(written_at) =
+    `2026-08-16T20:31:16Z` (1,643,557 rows total); lowercase `pool` max(written_at) = `2026-08-11T02:55:55Z`
+    (1,925,307 rows total). **Both predate the fix commit's landing (`2026-08-16T23:31:54Z`)** — 0 rows of either
+    casing written after the fix. MDPS simply has not processed any `dex_pool_swaps` candle write (backfill or live)
+    in the ~29h since, so there is no fresh evidence to inspect yet — absence of new uppercase writes is NOT the
+    same as a confirmed-live fix (per the todo's own done-when, which explicitly requires "not just a code review").
+  - **Side finding (uncertain, not root-caused — filed as a new DIAG todo above, not resolved here)**: `gcloud
+    builds list --project=central-element-323112 --limit=8` (whole-project, not MDPS-filtered — a
+    `_SERVICE_NAME=market-data-processing-service` filter returned zero rows even over the last 30 builds) showed
+    the most recent build anywhere in the project at `2026-08-16T19:39:42Z`, i.e. before the fix even landed and
+    >30h stale at read time. Single snapshot, not confirmed as a genuine deploy-pipeline stall — could equally be
+    "no build-triggering push has landed since" (this project's Cloud Build triggers, cicd craft, out of my scope
+    to root-cause here). Flagging because it directly affects whether/when this gate can ever be satisfied via
+    deploy evidence, not because it's confirmed broken.
+  - **DECISION: gate not met, no retirement attempted, checkbox NOT flipped.** Did not force a synthetic write
+    (e.g. via the `/data-pipeline-check-mdps` smoke-test skill) to manufacture verification evidence — that skill
+    explicitly requires an operator-given `--day`, not one invented by an unattended worker, and a forced write
+    would test correctness but not settle whether the REAL production write path is actually live. Skipped the
+    task with `reason_code=GATED` per `worker.md` § 4c so the fleet cooldown arms correctly rather than the task
+    immediately re-dispatching to the next slot with the same negative result. Next worker: re-check the manifest
+    probe's `MAX(written_at)` once genuine new `dex_pool_swaps` capture activity resumes (backfill VM or live) —
+    if the freshest post-fix row is lowercase `pool`, the gate is satisfied and retirement can proceed; if
+    uppercase `POOL` keeps appearing post-fix, the fix has NOT actually deployed live despite being on main and
+    needs the new Cloud-Build-staleness DIAG todo resolved first.
