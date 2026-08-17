@@ -223,6 +223,7 @@ the `registry_id` the deliver path used) — filed as its own issue,
 since fixing it needs a design call on where the identity is threaded from and this doc's own scope is the timeout, not
 the release bookend.
 
+- **na-eligibility-audit 2026-08-17** [body-hash:907eaf69a8ce925b]: KEEP-NA, valid -- The doc's original scope (the 1800s Cloud Run task timeout) is resolved and live-verified via a different implementation path (5 commits ending e69f8aed, deployed cloudbuild=b60b2180). The one remaining open todo's code+tests are already written and compile-checked (2026-08-15, slot 15), but shipping is explicitly blocked on an unrelated basedpyright ratchet break (1261>1259, zero deployment-service source involved) tracked in a separate, named issue doc that blocks ALL deployment-service shipping. This is a genuine external dependency block, not a design/judgment gap and not evidence the item is done elsewhere (it's the same undone item, just blocked) — does not qualify for KEEP_NA_STALE_ITEMS or ARCHIVE.
 ## Deferred work after 2026-08-15
 
 | Item                                                                            | State / why deferred                                                                                                   | Blocked on                                                                                                                |

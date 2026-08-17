@@ -679,6 +679,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 ---
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
+- **na-eligibility-audit 2026-08-17** [body-hash:c8f04acd8336204f]: KEEP-NA, valid -- 0 open todos (42/42 done, grep-verified: zero matches) — but this is explicitly NOT an archive candidate. Frontmatter carries archive_exempt: true with an inline citation to a dated operator ruling ('resolved autonomous_session_operator_decisions_2026_07_25.md entry #10, 2026-07-26, option A'), and the doc's own summary states 0 open / 42 done is 'expected here, not a lifecycle signal.' It is a standing reference surface / cross-reference hub that other docs' D1/D2 rulings point to, deliberately kept active per cross_cutting_consolidated_closeout_2026_07_25.md Track 13 ('as a pure cross-reference, not something to close'). Two prior na-eligibility-audit passes (2026-07-30, 2026-08-03) already confirmed KEEP-NA valid on the same grounds. This matches the corpus's 'standing reference, not archival' trap — ARCHIVE would be wrong despite the 0-open-todos signal.
 ## Deferred work after 2026-07-20
 
 All 15 build todos + the audit/ruling/integration work (todos 1–23, 26–30, 33) are DONE and shipped. Four todos remain —

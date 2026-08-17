@@ -386,3 +386,4 @@ design's counts are 2026-07-13).
   verification+flip step, not a fresh dispatch-eligible unit on its own).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the UTL bucket_naming.py/registry.py
   cutover-site source paths in place of a second archived design plan link.
+- **na-eligibility-audit 2026-08-17** [body-hash:600af6544abe8169]: KEEP-NA, valid -- HUMAN plan per the 2026-07-17 operator ruling (all 5 folds); re-confirms the 2026-08-03 pass's finding that the alias-sunset blocker is stale, still pending a live tofu plan verification before flip. Cross-cutting tranche audit.

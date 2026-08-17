@@ -198,3 +198,4 @@ should be filed as its own todo against that decision's outcome.
   DESIGN todo is still a genuine open decision (real per-data_type contracts, or a reframing of seed_validator's role).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:71c8c1b9b53c3205]: KEEP-NA, valid -- Reaffirmed KEEP-NA 3x (2026-07-30, 08-04, 08-07). The bounded P0 half (gas-fee reader fix) was already extracted 2026-07-30 into its own AO-dispatchable doc. The sole remaining DESIGN todo was further investigated 2026-08-15 and found to be a BIGGER open design gap than originally scoped: the flat UAC seed_validator contracts don't match live production column names even for the 'obviously matching' candidates (yield-shaped defi, sports odds), so wiring them in as originally ruled would have false-failed real production shards under a load-bearing MTDS quality-gate.

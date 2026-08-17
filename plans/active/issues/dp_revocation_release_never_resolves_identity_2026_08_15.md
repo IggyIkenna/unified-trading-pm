@@ -166,3 +166,4 @@ Option 1 is the structural fix; option 2 is a stopgap that only covers the 3 eve
 ## Progress Log
 
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:43bcf5289ade19ff]: KEEP-NA, valid -- Grep-verified 1 open checkbox (line 153), matching inventory_open_todos=1. The 2 code/test fixes are already shipped and checked [x] (deployment-service@bf69b2b289). The sole remaining item is explicitly [OPERATOR]-tagged and asks for a genuine risk-tolerance/operational decision (manual-clear vs let-self-heal) with no default allowed -- a real, unresolved operator question, not a technical task.

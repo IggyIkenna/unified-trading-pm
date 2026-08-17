@@ -321,7 +321,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       the infra regen run is still open. **DONE (verified 2026-08-16)**: already carries a `RULED 2026-08-12
       (/plan-reconcile, operator interactive)` ruling that a literal regen-script run IS required, and a follow-up
       Progress Log entry confirms the regen genuinely ran 2026-08-15 — resolved.
-- [x] ✅ [REVIEW] P3. (P2) plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md — proposes
+- [x] ✅ [REVIEW] P3. (P2) plans/archive/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md — proposes
       a fix already investigated + differently resolved by the pytest-timeout doc-chain. **DONE (verified
       2026-08-16)**: doc now has 0 open todos — resolved since this finding was logged.
 - [x] ✅ [REVIEW] P3. (P3) plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md — frontmatter
@@ -586,7 +586,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md — low severity.
       **DONE (verified 2026-08-16)**: doc archived, 0 open todos — moot.
 - [ ] [DOC] P3. (codex-drift)
-      plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md —
+      plans/archive/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md —
       unspecified drift. **Still open (checked 2026-08-16)**: not stale — the doc carries 5 concrete, specific P2/P3
       todos (HEAD-red reproducibility, moving 11 Pydantic models to unified-cloud-interface, resolving inline
       liquidation thresholds against UAC, QG budget overrun, an archived-doc gate reference) — real, bounded remaining
@@ -744,3 +744,4 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   unfinished work / judgment calls / corpus-wide disagreements not resolvable by this pass — left untouched. Doc NOT
   archived (still has open items).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:fe18476dc8bf9bf0]: KEEP-NA, valid -- 24 open items (grep-verified, matches inventory_open_todos=24) are the P2/P3 backlog from a 2026-08-12 full-corpus /plan-reconcile run. A dated 2026-08-16 Progress Log pass individually re-checked essentially every item, flipped the ones resolved elsewhere, and explicitly concluded the remaining 24 are 'real unfinished work / judgment calls / corpus-wide disagreements not resolvable by this pass.' Read every remaining item: a mix of (a) cross-doc redirects where the real work is tracked and correctly still open in another doc (e.g. the order_state_machine_ssot line mirrors this same tranche's order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md, assessed separately), (b) genuine corpus-wide judgment calls explicitly flagged as 'not something this bounded pass can settle' (the locked_by placeholder-vs-bug disagreement), (c) operator-gated items (sports_track_h denominator; defi_catalog_engine recursion_depth_max, both explicitly 'the operator's call'), and (d) low-severity cosmetic/historical noise nobody has prioritized. None presents a self-contained, worker-determinable action without further investigation-then-judgment or an operator decision. This is a triage/investigation-tracking doc (parent_epic: plan_hygiene_master) by nature, not a batch of bounded engineering todos.

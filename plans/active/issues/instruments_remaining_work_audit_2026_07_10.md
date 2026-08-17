@@ -758,6 +758,7 @@ the source docs if this list is used for dispatch planning.
   2026-07-30, unchanged): sole todo is a portfolio umbrella over 6 separately-tracked, partly operator-gated
   workstreams, not one determinable outcome.
 
+- **na-eligibility-audit 2026-08-17** [body-hash:f5c512054618ab8f]: KEEP-NA, valid -- This 846-line doc is a self-declared 'HISTORICAL SNAPSHOT... a discoverability index, not a live tracker' whose entire content is pointers to other docs' own SSOT checkboxes -- it explicitly redirects, matching the never-relitigate criterion for doc-level redirection. Its single remaining todo is an umbrella spanning 6 independently-scoped major workstreams (Turbo API bug, a live CeFi monotonicity incident, an unexplained cloud crash, a 59-bug master smoke-test record, the entire Instruments Completion Tracker at 33/37 open — doc #2 in this same batch — and a tradfi Layer-1 block owned by yet another plan), several explicitly operator-gated. Two independent prior na-eligibility-audit passes (2026-07-30 sports tranche, 2026-08-07 cross-cutting tranche) already reached this identical conclusion with matching language; my own read confirms it is not a single determinable outcome.
 ## Orchestration state — dispatched execution workflow
 
 `wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — **COMPLETE**, 8/8 agents returned. Real per-item verdict:
