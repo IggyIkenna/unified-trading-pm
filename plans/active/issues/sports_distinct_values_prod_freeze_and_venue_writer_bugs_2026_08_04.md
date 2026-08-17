@@ -435,3 +435,16 @@ that doesn't block or affect anything here; pick it up whenever, no urgency.
     reaching empty"). No code change; read-only verification. **Evidence**: coverage.json
     `generated_at 2026-08-04T13:16:32Z` + live endpoint
     `non_canonical_count {venues: 2, instrument_types: 1, data_types: 2, chains: 1}`.
+
+- **na-eligibility-audit 2026-08-17 (sports tranche, dispatch agt-555dfd, slot 26)**: KEEP-NA-STALE, already-duplicated
+  — verdict unchanged since 2026-08-07. Re-verified the reconciliation chain directly rather than trust an earlier
+  recollection: `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3 carries a resolution
+  ("Recommendation: pin `LC_TARBALL_FRESHNESS=auto` explicitly \[not `enforce`\] — `auto` already gives the same
+  never-launch-on-stale-code guarantee, shipped `deployment-service@c1e0481`/`@450b212`"), but its own finalize plan's
+  reconciliation item for THIS doc still correctly reads **do not archive on the "all substantive items closed" basis**
+  (2026-08-12 `/plan-reconcile` correction: the doc's "0/0 non-canonical, RESOLVED" claim was produced by exclusion
+  sets, not genuine canonicalisation — see this doc's own 2026-08-08 CORRECTION banner above). The mechanical flip +
+  any archival decision stays owned by `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`'s own gated
+  reconciliation item, not this audit — flipping the checkbox directly here would bypass that already-documented
+  correction. No change to this doc.
+  [body-hash:pending]

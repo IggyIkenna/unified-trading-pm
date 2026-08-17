@@ -487,7 +487,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       concurrent activity or a stale deployment-api cache at screenshot time — downgraded from "investigate" to
       "watch."** **Done when**: either value reappears in a FUTURE dated read (re-open then, trace
       `written_at`/`service_name` on the specific row before treating as live), or this is struck as confirmed-dead
-      after one more clean read on a later date.
+      after one more clean read on a later date. **Extracted 2026-08-17 to
+      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`) as a bounded single-census
+      re-check todo.
 - [x] [CODE] P0. ✅ **NEW — fixed via `batch1_ao_ready` todo 3** — `market-data-processing-service@c9b7f4a` +
       `instruments-service@f46e553e` (verified via `git log`); every non-sports asset_group verified byte-identical.
       **Not independently verified**: the literal done-when (Distinct Values panel on fresh LIVE writes) needs a
@@ -554,7 +556,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       registered ODDS_API bookmaker venues. It was never "removed from all repos"; a purge would destroy over a million
       rows of genuine live production data. The `LADBROKES_UK`/`SPORT888` re-stamps in (1), and dispositions (2) and
       (4), are UNAFFECTED and still stand. No worker can pick up the struck clauses anymore — they no longer exist in
-      the todo text above, only this historical record of why they were removed.
+      the todo text above, only this historical record of why they were removed. **na-eligibility-audit 2026-08-17**:
+      already extracted to `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md` todo 1 (verified
+      status: active, verbatim match) — checkbox flips once that todo lands.
 - **[CODE] P0/P1.** EXCHANGE_ODDS vs FIXED_ODDS fork — **MOVED 2026-07-25** to its own child,
   `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` (`sequential: true`, 11 todos — the GCS-move step split into
   an immediately-dispatchable pass for the 5 already-unambiguous venues plus a separate `[OPERATOR]`-gated follow-on for
@@ -597,7 +601,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       merging in: correct the cutover runbook's canonical-is-a-superset premise for raw odds on early dates.
       `sports_canonical_migrated_odds_mistamped_footystats` has no standalone issue doc — it's the footystats
       legacy-bundle mislabel already tracked as its own Track C todo above (venue vocabulary cleanup, `venue=ODDS_API`→
-      `FOOTYSTATS`, 42,476 rows). **Done when**: the cutover runbook is corrected and cites this doc.
+      `FOOTYSTATS`, 42,476 rows). **Done when**: the cutover runbook is corrected and cites this doc. **Extracted
+      2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`).
 - [x] ✅ [DIAG] P2. **NEW 2026-07-23 (decision 16) — DONE 2026-08-04, `unified-trading-pm@09ce04535`** (batch7 todo 4).
       Both anomalies root-caused: standings cache writes current data to every processing date; transfermarkt writer
       emits Cartesian product of season×trigger-dates; phantom-audit STANDINGS/TEAMS shares the same cause
@@ -799,7 +804,10 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       delete only, target `market-data-tick-sports-prd-central-element-323112` —
       `gcs_bucket_soft_delete_retention_seconds(...)` returned `604800` (7 days) fresh-checked 2026-07-27 per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from this
-      citation. Detail: archive history doc's "Newly-actionable todos" section.
+      citation. Detail: archive history doc's "Newly-actionable todos" section. **na-eligibility-audit 2026-08-17**:
+      already extracted to `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md` todo 2 (verified
+      status: active — that extraction adds a new fresh live-writer recheck precondition, superseding this line's
+      "no OPERATOR gate needed" framing) — checkbox flips once that todo lands.
 - [x] [DATA] P0. ✅ **RESTORED 2026-07-24, EXECUTED 2026-07-28** — the separate, 5-part-proof-gated DELETE of old
       non-canonical K1/K2 GCS objects: `market-tick-data-service@26201c44` (new `delete_stale_uppercase_2026_07_27.py`,
       generation-matched CAS delete, fresh-verify per object) + launcher wiring (`deployment-service@8b93ae7`).
@@ -854,11 +862,13 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       round rows produced by the pre-2019-scope (§T) + registry-membership (§U) decisions and the 2026-07-18
       round-derivation sweep — the catalogue snapshot predates all of them.
 - [ ] [CODE] P2. Upgrade the catalogue `player` grain from `entity=injuries` (injured-only) to `entity=fixture_lineups`
-      (full roster, now carries 100% player/coach identity).
+      (full roster, now carries 100% player/coach identity). **Extracted 2026-08-17 to
+      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`).
 - [ ] [DATA] P2. Determine which launcher ran the most recent sports features backfill — serial
       `launch-features-sports-backfill-vm.sh` or parallel `launch-features-sports-parallel-backfill-vm.sh` — via VM
       launch history/logs; if serial, file a follow-up todo requiring the parallel launcher for every future sports
-      features backfill. **Done when**: the launcher used is named with its citing VM log/dispatch record.
+      features backfill. **Done when**: the launcher used is named with its citing VM log/dispatch record. **Extracted
+      2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`).
 
 ## Track K — SMOKE + SPEED + right-days · P1
 
@@ -884,12 +894,14 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [ ] [BACKEND] P2. Confirm whether any primary sports entrypoint (not a one-off script) exposes a genuine fixture-level
       targeting flag for shard-splitting a backfill run; if none does, file a todo to add one to the primary
       features/MDPS backfill CLI. **Done when**: either a cited flag + file is named, or the add-flag todo exists with a
-      named target CLI.
+      named target CLI. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`**
+      (`assigned_vm: planning`).
 - [ ] [DATA] P1. Run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check, post-backfill final
       gate) for EACH of the 5 required mechanisms (`data-pipeline-check-is`/`-mtds`/`-mdps`/`-features` +
       `/data-pipeline-reconciliation`) against sports — currently ZERO real run-todos exist for any of the 5 despite all
       5 already supporting sports's shard atoms (task_template.md §3 finding K). **Done when**: each of the 5 mechanisms
-      has 3 dated runs cited by report path/dispatch_id, baseline through final.
+      has 3 dated runs cited by report path/dispatch_id, baseline through final. **Extracted 2026-08-17 to
+      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`).
 
 ## Track D — CODEX: doc alignment · P1 (CLOSED, extracted 2026-07-25)
 
@@ -1005,3 +1017,15 @@ section above, which conflated answered and open items):
   1-12, most recently `sports_satellite_ao_dispatch_batch11_2026_08_09.md`/`batch12` today, both of which reference this
   doc's Tracks without duplicating them) rather than a whole-doc flip — consistent with every prior audit pass. No new
   extractable item found beyond what batch9-12 already claimed. No flip.
+- **na-eligibility-audit 2026-08-17**: RECLASSIFY-split (verdict 5) — standing ⛔ 2026-07-23 ruling re-confirmed, no
+  whole-doc flip. Fixed 2 stale checkbox citations (venue-vocabulary cleanup + league_id DELETE, both already
+  extracted to `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md`). Extracted 7 fresh bounded items
+  (PERPETUAL/football watch-census, cutover-runbook doc-fix, catalogue player-grain upgrade, backfill-launcher
+  diagnostic, shard-splitting-flag check, 5-pipeline-check dated-checkpoint run) to a new
+  `sports_satellite_ao_dispatch_batch15_2026_08_17.md` + gated finalize, conflict-checked against batch14 (2026-08-16,
+  no overlap found) and every other active satellite batch. Also found stale broken §T/§U/§Z/§J/§R cross-doc shorthand
+  (sections relocated to the archived history doc during the 2026-07-24 line-cap trim, never updated at point of use)
+  — flagging only, not fixed this pass (out of scope for a citation-hygiene edit). **Doc is now 1017/1000 lines, over
+  its own hard line-cap (pre-existing before this pass, worsened slightly by these citation additions)** — recommend a
+  dedicated line-cap remediation split (extract closed Progress Log history, same pattern as the 3 prior splits on
+  2026-07-25/08-10) on the next touch; not attempted here, out of scope for this audit.

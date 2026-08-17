@@ -29,7 +29,7 @@ summary: >-
   `parked_findings=27`, `entries_written=27` — balanced (25 taxonomy-tagged residual-work entries + 2 investigation
   notes; 2 further findings were resolved in-run and are recorded as prose only, not counted in this tally per the
   skill's "informational/fixed-in-run is not a todo" rule).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -268,3 +268,9 @@ independently found real evidence of staleness or blockage worth operator awaren
   audit passes). 25 taxonomy-tagged residual-work entries + 2 investigation notes parked below (`parked_findings=27`,
   `entries_written=27` — balanced).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17**: ARCHIVE — confirmed 0 open `- [ ]` todos of its own (checked both the standard
+  pattern and a broad indented/star-bullet rescan; this is a narrative findings ledger, not a todo-tracked doc). All
+  actionable content is either already extracted into `sports_satellite_ao_dispatch_batch14_2026_08_16.md` or
+  explicitly parked with citations to the docs that actually own the ground. Archived via `git mv` from
+  `plans/active/issues/` to this path; `status` flipped `open`→`resolved`; referrer sweep fixed
+  `sports_satellite_ao_dispatch_batch14_2026_08_16.md`'s 3 `/plans/active/issues/...` citations to this new path.
