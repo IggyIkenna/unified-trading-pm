@@ -6,8 +6,7 @@ summary: >-
   contract steps 1-9 across every tradfi (venue, data_type) row from `unified-api-contracts/scripts/
   generate_venue_work_list.py` (16 rows, measured 2026-08-16; re-run the script, this count is not a constant).
   Not an extraction from another source doc — no operator-gated item mixed in, per task_template.md §3 finding Y.
-status: active
-archive_exempt: true
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data, features, strategy, execution]
@@ -30,7 +29,7 @@ related:
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

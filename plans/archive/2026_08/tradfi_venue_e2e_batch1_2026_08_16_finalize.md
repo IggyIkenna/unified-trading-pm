@@ -6,7 +6,7 @@ summary: >-
   every todo in that batch is done. Re-verifies evidence, runs the standard 6-step archival ritual on the batch
   plan, and checks whether all 5 AG batches are now closed so venue_e2e_wiring_2026_08_16.md's own Definition of
   done can be flipped.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [meta]
@@ -16,11 +16,11 @@ tags: [venue-readiness, e2e-wiring, tradfi, ao-dispatch, satellite-batch, close-
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_venue_e2e_batch1_2026_08_16.md,
+    /plans/archive/2026_08/tradfi_venue_e2e_batch1_2026_08_16.md,
     /plans/active/venue_e2e_wiring_2026_08_16.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -70,14 +70,24 @@ source: >-
       (`IBKR_FUND_MOVE` unfinished-capability), `plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_
       ruling_citation_2026_08_03.md`, `plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` —
       no dangling citations found.
-- [ ] [REVIEW] P1. Once `tradfi_venue_e2e_batch1_2026_08_16.md` has zero open todos, run the standard 6-step
-      archival ritual on it and this finalize plan. Done-when: both docs are under `plans/archive/`, and
-      `regenerate_active_plan_inventory.py` reports zero orphan referrers to either.
-- [ ] [REVIEW] P1. Check whether all 5 AG batches (cefi/defi/tradfi/sports/prediction) are now archived. If so,
-      verify and flip `venue_e2e_wiring_2026_08_16.md`'s Definition of done section and follow its own stated
-      closing action. If not, no action — a sibling finalize will find this true once the last batch closes.
-      Done-when: either confirmed still-open siblings (no action) or the parent's Definition of done is verified
-      with evidence.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-17 (slot-13).** Ran the 6-step archival ritual on
+      `tradfi_venue_e2e_batch1_2026_08_16.md` (all 7 todos `[x]`, unlocked, `archive_exempt: true` dropped as
+      routine hygiene per the archival commit): `status: complete`, `git mv` to
+      `plans/archive/2026_08/tradfi_venue_e2e_batch1_2026_08_16.md`. Referrer sweep: 3 corpus hits found
+      (`venue_e2e_wiring_2026_08_16.md:152` link — repointed to the archive path with an "archived — done" note;
+      `sports_venue_e2e_batch1_2026_08_16.md` — 3 bare prose mentions, not path-shaped links, left as-is per the
+      ritual's own "cites a path" scope; `INDEX.md` — auto-generated, regenerated via
+      `regenerate_active_plan_inventory.py` below rather than hand-edited). No codex contract change — this batch
+      shipped 2 code fixes (`features-service@be2af7b191`, `strategy-service@ff6c00870a`) already covered by their
+      own tests; nothing new to establish as an SSOT rule. This finalize doc archives together with the batch plan
+      in the same commit (single-repo/mode-1 combined flip+archival, sanctioned per
+      `plan-completion-and-archival-discipline.md` § "No-double-gate" 2026-08-10 narrowing) once todo 3 below also
+      confirms no further action is needed.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-17 (slot-13).** Checked all 5 AG batches: `cefi_venue_e2e_batch1_2026_08_16.md`
+      2 open, `defi_venue_e2e_batch1_2026_08_16.md` 4 open, `sports_venue_e2e_batch1_2026_08_16.md` 2 open,
+      `prediction_venue_e2e_batch1_2026_08_16.md` 7 open — only `tradfi` (this finalize's own upstream) is done.
+      **Not all 5 archived — no action** on `venue_e2e_wiring_2026_08_16.md`'s Definition of done section; a
+      sibling finalize will find the all-5-done condition true once the last batch closes.
 
 ## Progress Log
 
