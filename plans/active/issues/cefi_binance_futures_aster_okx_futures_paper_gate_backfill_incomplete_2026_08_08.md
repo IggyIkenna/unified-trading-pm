@@ -588,3 +588,6 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
     ping-authoring-slot step is skipped per this role's own instruction (no real originator to notify; the dispatch-
     time Slack alert already covered the FYI). No code/report changes; this Progress Log entry is the only change
     this turn.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) — re-verified all 3 entries resolve on
+  disk and remain accurate; the operator ruling + subsequent gating checks since the last marker reference only the
+  already-scoped sibling backfill plan, no new dependency.

@@ -47,9 +47,10 @@ source: >-
   path, not just its registry classification.
 context_scope:
   [
+    execution-service/execution_service/engine/transfers/live_ccxt_adapter.py,
     execution-service/execution_service/engine/handlers/transfer_handler.py,
     execution-service/execution_service/transfer_coordinator.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/04-architecture/transfer-architecture.md,
   ]
 ---
 
@@ -280,3 +281,9 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
   `quality-gates.sh` green on execution-service both commits. Added the bootstrap-wiring P1 follow-up above since
   no production call site yet threads a real adapter through; real live-exchange verification was deliberately not
   attempted this session (no operator authorization to move real funds).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) — added
+  `engine/transfers/live_ccxt_adapter.py` (the class every fix in this doc's todos actually landed in) and
+  `/codex/04-architecture/transfer-architecture.md` (the governing codex SSOT, already cited in `related:` but
+  missing from context_scope); dropped `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (unrelated to a
+  transfer-execution bug — no GCS delete operation appears anywhere in this doc, looks like a copy/paste artifact
+  from the doc's original authoring).

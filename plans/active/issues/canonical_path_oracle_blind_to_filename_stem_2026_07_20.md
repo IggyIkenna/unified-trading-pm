@@ -67,7 +67,7 @@ context_scope:
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
     unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
-    /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
+    market-tick-data-service/scripts/backfill_bare_underlying_future_manifest_ids_2026_08_17.py,
   ]
 ---
 
@@ -653,3 +653,9 @@ NOT retry a third time per the watchdog's explicit directive. Filed the finding 
 rushed fix to a live production-manifest write path under memory pressure. **Not flipping this todo's checkbox** —
 discovery is complete but the done-when (rows actually re-keyed) is still not met; VM launches are infra-craft
 scope, out of this data_engineering session's remit per `agents/data_engineering.md` `does_not`.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — swapped the resolved sibling finding
+  (`batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`, now `status: resolved`) for
+  `backfill_bare_underlying_future_manifest_ids_2026_08_17.py`, the script driving all three of today's active
+  discovery/apply sessions directly above (currently blocked on the shared host's memory watchdog). Other 5 entries
+  re-verified, unchanged.

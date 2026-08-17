@@ -882,3 +882,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
   fixes are all shipped) for the execution-service adapters dir, since the sole remaining open item (F46,
   BLOCKED-CREDENTIALS) is the binance/bybit/okx `place_order` scaffolds there.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — re-verified against the full
+  checkbox sweep: F46 (execution-service adapters, BLOCKED-CREDENTIALS) remains the sole genuinely open `- [ ]` todo
+  in this doc (F54's `scripts/openapi/*` path-drift fix landed today but was already tracked/closed, not a new
+  dependency for the doc's remaining open work); all 5 entries still accurate, unchanged.
