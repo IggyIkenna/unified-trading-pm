@@ -67,6 +67,8 @@ jobs:
       pr: ${{ steps.promote.outputs.pr }}
       arm_failed: ${{ steps.promote.outputs.arm_failed }}
       superseded_red_prs: ${{ steps.promote.outputs.superseded_red_prs }}
+      provenance_blocked: ${{ steps.promote.outputs.provenance_blocked }}
+      provenance_just_cleared: ${{ steps.promote.outputs.provenance_just_cleared }}
     steps:
       # Token-pool split (sprawl consolidation 2026-06-27):
       # checkout uses GITHUB_TOKEN (same-repo read + LDR push, which is unprotected).
@@ -87,6 +89,17 @@ jobs:
           private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
           owner: IggyIkenna
 
+      # Cross-tick state for the provenance cleared/recovery diff below — always a primary-key MISS
+      # (run_id is unique per run) so restore-keys' prefix match always resolves to the most recently
+      # saved entry, i.e. the previous run's verdict. Same idiom as branch-health.yml's .lag-state.json.
+      - name: Restore provenance-block state (prior tick)
+        uses: actions/cache@v5
+        with:
+          path: .provenance-block-state.txt
+          key: ldr-main-provenance-state-${{ github.run_id }}
+          restore-keys: |
+            ldr-main-provenance-state-
+
       - name: Drain LDR → main (content-gated, reuse open PR, self-recover v2-never-reported)
         id: promote
         env:
@@ -94,7 +107,6 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
-          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
           # PAT for ref writes + PR authorship + the auto-merge ARM. The App token can do none of
           # those three correctly here: it cannot enablePullRequestAutoMerge (WS-L canary
           # 2026-06-26), and a PR it authors lands quality-gates-v2 in `action_required` (see the
@@ -147,28 +159,23 @@ jobs:
             PROV_BLOCKED=1
             echo "⛔ provenance: PM LDR carries non-quickmerge CODE — LDR→main auto-merge will NOT be armed:"
             printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
-            # Level-2 WARN to #ci-failures (drain-time detection; the block is the enforcement).
-            if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
-              # Pure bash (no printf|grep|head pipeline) — ldr_to_main_promote_fleet_sigpipe_silent_drop
-              # (2026-07-21): under `set -euo pipefail`, `head` closing its read end before an upstream
-              # producer finishes writing a large payload SIGPIPEs the producer. This step is NOT
-              # backgrounded here (unlike the fleet bot's per-repo subshell), so a SIGPIPE would abort the
-              # whole step loudly rather than silently — lower risk, per the original finding — but not
-              # proven safe either; closed the same way for consistency.
-              PROV_DETAIL=""; _pd_n=0
-              while IFS= read -r _pd_line; do
-                case "$_pd_line" in *"- "*) : ;; *) continue ;; esac
-                PROV_DETAIL="${PROV_DETAIL}${_pd_line}"$'\n'
-                _pd_n=$((_pd_n + 1))
-                [ "$_pd_n" -ge 5 ] && break
-              done <<< "$PROV_OUT"
-              PROV_DETAIL="$(printf '%s' "$PROV_DETAIL" | sed 's/"/'"'"'/g')"
-              curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                -d "{\"text\":\":no_entry: *Provenance gate BLOCKED a promotion* — \`$OWNER/$REPO\` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n\`\`\`$PROV_DETAIL\`\`\`\"}" >/dev/null 2>&1 || true
-            fi
           elif [ "${PROV_RC:-0}" -ne 0 ]; then
             echo "WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. $PROV_OUT"
           fi
+
+          # ── Provenance-block state diff (cross-tick, via actions/cache) ────────────────────────
+          # .provenance-block-state.txt holds the PREVIOUS tick's verdict ("1"/"0"), restored above.
+          # Diffing catches the real blocked→clean transition exactly once. The BLOCKED post moved to
+          # the dedicated notify-provenance-blocked job below (was a raw, undeduped curl that re-paged
+          # every ~15-17min tick the block held — measured 2026-08-17: 9 posts in ~2h for one
+          # unresolved commit) and notify-provenance-cleared is the resolved bookend it never had.
+          PREV_BLOCKED="0"
+          [ -f .provenance-block-state.txt ] && PREV_BLOCKED="$(cat .provenance-block-state.txt)"
+          JUST_CLEARED="false"
+          [ "$PREV_BLOCKED" = "1" ] && [ "$PROV_BLOCKED" -eq 0 ] && JUST_CLEARED="true"
+          echo "$PROV_BLOCKED" > .provenance-block-state.txt
+          echo "provenance_blocked=$([ "$PROV_BLOCKED" -eq 1 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "provenance_just_cleared=$JUST_CLEARED" >> "$GITHUB_OUTPUT"
 
           # ── Frozen-head migration (2026-07-18) ───────────────────────────────────────────────
           # This bot (2026-06-09) predates the fleet bot's frozen-head design (2026-06-30) and was
@@ -696,5 +703,41 @@ jobs:
         needs.promote-ldr-to-main.outputs.pr }}) carries the up-to-date content. SSOT: ldr-to-main-promote.yml.
       recovery: true
       dedup_key: ldr-main-superseded-red-pm-${{ needs.promote-ldr-to-main.outputs.superseded_red_prs }}
+      cooldown_min: 5
+    secrets: inherit
+
+  notify-provenance-blocked:
+    name: Slack — LDR→main provenance gate BLOCKED alert
+    needs: [promote-ldr-to-main]
+    if: always() && needs.promote-ldr-to-main.outputs.provenance_blocked == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >
+        Provenance gate BLOCKED a promotion — `${{ github.repository }}` LDR→main carries code that bypassed
+        quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.
+      severity: CRITICAL
+      # Standing condition on a `*/30` cron — previously a raw, undeduped curl re-paged every tick the
+      # block held (measured 2026-08-17: 9 posts in ~2h for one unresolved commit). Migrated onto the
+      # shared dedup carrier the same way notify-arm-failed already is.
+      dedup_key: ldr-main-provenance-blocked-pm
+      cooldown_min: 60
+    secrets: inherit
+
+  # Asymmetric-alerting fix (2026-08-17): the BLOCKED alert above had no matching cleared/resolved
+  # bookend — the only positive signal on a successful re-arm was a workflow-log echo + a GitHub PR
+  # comment, neither visible in #ci-failures. provenance_just_cleared (cross-tick diff via
+  # .provenance-block-state.txt, see the promote step) fires this exactly once on the real
+  # blocked→clean transition, not on every healthy tick.
+  notify-provenance-cleared:
+    name: Slack — LDR→main provenance gate CLEARED
+    needs: [promote-ldr-to-main]
+    if: always() && needs.promote-ldr-to-main.outputs.provenance_just_cleared == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >
+        :large_green_circle: *Provenance gate CLEARED* — `${{ github.repository }}` LDR→main is clean again;
+        auto-merge is armed. SSOT: ldr-to-main-promote.yml.
+      recovery: true
+      dedup_key: ldr-main-provenance-cleared-pm
       cooldown_min: 5
     secrets: inherit

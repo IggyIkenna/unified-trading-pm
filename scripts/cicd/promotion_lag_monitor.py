@@ -1009,10 +1009,12 @@ def main() -> int:
         # dedup_key + cooldown to notify-slack, so a standing lag pages on the 60m-CROSSING
         # and is suppressed until it clears + recrosses.
         _m = int(thresh_s // 60)
+        _m_ldr_main = int(ldr_main_thresh_s // 60)
         _max_lines = 6
         repos_affected = sorted({f.split()[0] for f in findings})
         header = (
-            f":hourglass_flowing_sand: *PROMOTION LAG > {_m}m* — "
+            f":hourglass_flowing_sand: *PROMOTION LAG* "
+            f"(LDR→main >{_m_ldr_main}m, backmerge/staging >{_m}m) — "
             f"{len(findings)} branch-pair(s) across {len(repos_affected)} repo(s) un-propagated"
         )
         body_lines = [f"  • {f}" for f in findings[:_max_lines]]
@@ -1022,7 +1024,10 @@ def main() -> int:
         cli_hint = "  (CLI: `gh api repos/IggyIkenna/<repo>/compare/<base>...<head>` to inspect a specific pair)"
         print(header + "\\n" + "\\n".join(body_lines) + "\\n" + pointer + "\\n" + cli_hint)
     else:
-        print(f"⚠️  promotion lag > {int(thresh_s // 60)}m ({len(findings)}):")
+        print(
+            f"⚠️  promotion lag (LDR→main >{int(ldr_main_thresh_s // 60)}m, "
+            f"backmerge/staging >{int(thresh_s // 60)}m) ({len(findings)}):"
+        )
         for f in findings:
             print(f"  - {f}")
     return 1
