@@ -182,5 +182,7 @@ on the live capture process itself) is out of scope for this reconciliation swee
   (`06:35Z/06:50Z/07:06Z`) confirms the SAME identity is still firing every 15-16min, ~6h15m post-deploy — a separate,
   unresolved runtime defect (several obvious hypotheses ruled out: singleton deduplicator, minScale=1/maxScale=1,
   correct 1800s constant, no override-function interference, no other volatile field in this emission's details).
-  Filed as `plans/active/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (P1, 2 new
-  todos) for the next dispatch to root-cause.
+  Filed as `/plans/archive/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (P1, 2 new
+  todos) for the next dispatch to root-cause — RESOLVED + archived 2026-08-17: root-caused (severity-override on
+  resolved bookends bypassing dedup), fixed (`alerting-service@166f291f44`), and live fire-cadence reconfirmed
+  1800s-compliant post-fix.

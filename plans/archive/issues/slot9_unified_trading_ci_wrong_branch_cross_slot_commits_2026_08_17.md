@@ -10,7 +10,7 @@ summary: >-
   — meaning this is cross-slot/cross-identity contamination, not slot 9's own work. Given
   the unclear provenance and the wrong-branch state, not pushing or otherwise mutating this
   repo myself; flagging for infra triage rather than guessing.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +39,7 @@ supersedes:
 superseded_by:
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: slot-1 (infra craft), 2026-08-17 — direct git repair of slot 9's clone + unified-trading-pm@2d746128d0
 source: >-
   Discovered via the orchestrator's own "GIT STATUS RED" auto-nudge (message_ids 9204,
   9208) delivered on /boot to slot 9 while picking up an unrelated data_engineering task;
@@ -54,6 +54,14 @@ context_scope:
 ---
 
 # slot 9's unified-trading-ci clone: wrong branch + cross-slot unpushed commits
+
+> 🟢 **RESOLVED 2026-08-17 (slot 1, infra).** By the time this was picked up, local `main` in slot 9's clone was
+> already byte-identical to `origin/main` (verified `git rev-parse` on both sides) — the fleet's normal promotion
+> pipeline had already landed the flagged content in the hours since this doc was filed, so there was nothing left
+> to reconcile or discard. Re-checked out the clone onto `live-defi-rollout` and fast-forwarded to
+> `origin/live-defi-rollout`, restoring the Path-B invariant. Also hardened `agents/worker.md`'s fresh-pull loop
+> with a branch-identity WARN so a future wrong-branch clone surfaces immediately instead of silently no-op'ing.
+> See Progress Log for full evidence.
 
 ## What I found
 
@@ -116,20 +124,49 @@ provenance is too unclear to act on unilaterally.
 
 ## Todos
 
-- [ ] [INFRA] P2. Investigate slot 9's `unified-trading-ci` clone: reconcile or discard the 3 `main`-branch
-      commits attributed to `slot-2`/`main` (see commit shas above), then re-checkout the clone onto
-      `live-defi-rollout` and fast-forward it to `origin/live-defi-rollout` (currently 27 commits stale) to
-      restore the Path-B invariant. Repo: unified-trading-ci (slot 9 clone specifically). Done when: `git branch
-      -vv` in that clone shows `live-defi-rollout` checked out and current, with no stray `main`-branch ahead
-      commits.
-- [ ] [INFRA] P3. Check whether `agents/worker.md`'s fresh-pull loop (RULES.md §1b) should assert
-      `git branch --show-current == live-defi-rollout` before its `git merge --ff-only` step, since it silently
-      succeeded against whatever branch was checked out here without ever surfacing the wrong-branch state.
-      Repo: unified-trading-pm. Done when: either the assertion is added, or a note explains why it's
-      intentionally lenient.
+- [x] ✅ [INFRA] P2. **RESOLVED — content already landed, no reconcile/discard needed.** Verified `origin/main`
+      exactly matched local `main` in slot 9's `unified-trading-ci` clone (`git rev-parse` both sides identical:
+      `c0d10ba6cfe437ac299eebb26f38f2e5ff5dd758`) — disposition (1) from this doc's own recommended-decision list.
+      `origin/main`'s log shows the two content commits present under new shas but matching author + timestamp +
+      subject exactly (`c0d10ba`="fix: update before downstream merge" @ 2026-08-16T19:03:20+01:00 [slot-2·laptop];
+      `e88304a`="ci: add self_hosted_runner_labels input to image-build-validate.yml" @ 2026-08-16T19:09:31+01:00
+      [main·laptop]) — landed via the fleet's normal promotion pipeline in the hours since this doc was filed,
+      most likely rebased/rewritten in the process (hence the new shas). The third commit (a `main`→
+      `live-defi-rollout` sync merge for a Slack alert streak-sha feature) is independently present on
+      `origin/main` via `7000ac0` ("link QG-fail and QG-recovered Slack alerts by a shared streak-start sha").
+      Confirmed no live process in `.tabs/9` before touching anything (no `.agent-claim` file; a `claude`-process
+      cwd scan against every live pid found no match under `.tabs/9/`), and the working tree was clean, so the
+      branch switch carried zero risk of losing anything. Re-checked out `live-defi-rollout` and fast-forwarded to
+      `origin/live-defi-rollout` (`git merge --ff-only`, `2c48c4b..3209654`, clean FF, 11 files touched — CI
+      workflow + `.gitleaks.toml`/`.pre-commit-config.yaml` additions). Confirmed done-condition: `git branch -vv`
+      now shows `* live-defi-rollout 3209654 [origin/live-defi-rollout]` (zero ahead/behind) and
+      `main c0d10ba [origin/main]` (zero ahead) — no stray `main`-branch ahead commits remain.
+- [x] ✅ [INFRA] P3. Added a branch-identity guard to `agents/worker.md`'s fresh-pull loop (§ "1b) FRESH-PULL") —
+      unified-trading-pm@2d746128d0. Before the `git status --porcelain` dirty-check, the loop now reads
+      `git branch --show-current` and compares it against `$base` (`live-defi-rollout`), WARNing and skipping the
+      pull for that repo (never hard-failing) when they differ, naming the actual checked-out branch — instead of
+      silently no-op'ing or, worse, `git merge --ff-only` succeeding onto a misnamed branch, which is exactly the
+      gap that let this slot 9 state go undetected. Kept WARN-only per this workspace's established pattern for
+      git-hygiene detection (the `SessionStart` collision check, the commit-time Quickmerge-provenance hook) — a
+      worker mid-investigation of a wrong-branch clone (e.g. this very incident) must not be blocked by its own
+      fresh-pull step. No separate codex-doc update: `/codex/05-infrastructure/per-tab-worktrees.md` already
+      states the branch-identity invariant this guard enforces ("checked out **directly on `live-defi-rollout`**")
+      — the guard hardens DETECTION of an existing rule, it doesn't establish a new one.
 
 ## Progress Log
 
 - **2026-08-17 (slot 9, data_engineering)**: filed after investigating a recurring "GIT STATUS RED" auto-nudge
   (message_ids 9204, 9208) that didn't fit the standard remedy. Not pushed/reset/touched — flagging for infra
   triage given foreign commit provenance and unclear resolution.
+- **2026-08-17 (slot 1, infra craft) — both todos resolved.** Investigated read-only first: confirmed no live
+  process occupies `.tabs/9` (no `.agent-claim`, no matching `claude`-process cwd), then found local `main` in
+  slot 9's `unified-trading-ci` clone is byte-identical to `origin/main` (exact `git rev-parse` match on both
+  sides) — the 3 originally-flagged commits' content is already safely on origin, landed by the normal fleet
+  pipeline sometime after this doc was filed this morning. Nothing to reconcile or discard; switched the clone to
+  `live-defi-rollout` and fast-forwarded it (safe: zero divergent local content, clean working tree). Also fixed
+  the secondary gap this doc's own "What I found" section flagged — `worker.md`'s fresh-pull loop never asserted
+  branch identity — by adding a WARN-only guard (unified-trading-pm@2d746128d0). Archiving now per
+  `/codex/11-project-management/issue-doc-lifecycle.md` (ACKED-INTO-CODE — both fixes are shipped/verified, no
+  reason to leave this in `active/issues/`); this is a single-repo (mode-1) doc so the same-commit flip+archive
+  shape is sanctioned per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Corpus grep for
+  this doc's filename found zero referrers — no referrer-fixup needed.

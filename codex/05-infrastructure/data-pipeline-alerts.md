@@ -205,16 +205,29 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 > closes it. See `unified_api_contracts/canonical/crosscutting/_dependency_revocation_policies.py` for the full
 > per-id revocation-policy rationale (each id's `DependentAction` + reasoning).
 >
-> **2026-08-17 incident (`plans/active/issues/dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md`)**: DP-LIVE-004
-> emits `details={"attempted_age_hours": ...}`, a value recomputed every sweep; this defeated `AlertDeduplicator`'s
-> identity-hash dedup (the differing value changed the hash every sweep), making the registered 1800s
-> `DP_CRON_DID_NOT_FIRE` cooldown a no-op for this detector specifically. Fixed (`alerting-service@cd60a3e595`,
-> `attempted_age_hours` + a generic `*_age_hours/days/minutes/seconds` suffix added to
-> `AlertDeduplicator._VOLATILE_DETAIL_KEYS`), confirmed present in `origin/main` content — but a follow-up 2026-08-17
-> sweep (this doc's own reconciler) found the storm still live in `#data-pipeline-alerts` as of 06:38Z (same identity
-> re-firing at ~15-16min intervals, violating the 1800s cooldown), and could not confirm via `gcloud builds
-list`/`gcloud builds triggers list` that a fresh build of the fix actually reached the live `dp-alerting-subscriber`
-> Cloud Run revision — see the issue doc for the open deploy-chain-verification thread.
+> **2026-08-17 incident, RESOLVED (`plans/active/issues/dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md`,
+> `plans/archive/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md`)**: two independent bugs
+> stacked, both now fixed and live-confirmed. **Bug 1**: DP-LIVE-004 emits `details={"attempted_age_hours": ...}`, a
+> value recomputed every sweep; this defeated `AlertDeduplicator`'s identity-hash dedup (the differing value changed
+> the hash every sweep), making the registered 1800s `DP_CRON_DID_NOT_FIRE` cooldown a no-op for this detector
+> specifically. Fixed (`alerting-service@cd60a3e595`): `attempted_age_hours` + a generic
+> `*_age_hours/days/minutes/seconds` suffix added to `AlertDeduplicator._VOLATILE_DETAIL_KEYS`. **Bug 2** (why the
+> storm persisted after Bug 1 shipped — the deploy chain was clean the whole time): `router._route_data_pipeline_event`
+> routes on `dp_rule.severity` (the registry's STATIC CRITICAL for `DP_CRON_DID_NOT_FIRE`), not the emitted event's
+> actual severity — so a `resolved=True` INFO bookend from `meta_watchers.reconcile_resolved()` still hit the
+> CRITICAL-paging branch, and its `details` shape (`resolved`/`label`/`registry_id="DP-RESOLVED"`) is unrelated to a
+> real fire's identity, so the 1800s dedup never caught it either: every detector flap produced a fresh, un-deduped
+> CRITICAL page. Fixed (`alerting-service@166f291f44`): `_route_data_pipeline_event` now forces `severity =
+AlertSeverity.INFO` whenever `details.get("resolved")` is truthy, before the CRITICAL-page branch — mirrors the
+> existing STATIC BACKLOG downgrade in the same function. **Live-confirmed** (2026-08-17 09:36Z): deploy chain
+> reverified clean (fix content on `origin/main`, Cloud Build `d6ab1c6f`, live revision
+> `dp-alerting-subscriber-00105-bkq` @ 100% traffic running that exact image digest); the sampled identity
+> (`mtds-live-cefi-consolidated-20260817-025031`/BYBIT-FUTURES) fired at 09:06Z, was correctly suppressed at the
+> 09:20/21Z sweep, and fired again exactly 30min later at 09:36Z — the 1800s cooldown is now genuinely respected.
+> A known, separate, lower-priority quirk was found but deliberately left unfixed (see the archived issue doc): a
+> CRITICAL DP_\* event runs through two independent `AlertDeduplicator.is_duplicate()` calls with different hashes,
+> causing a double `ALERT_ROUTED`/`ALERT_SENT` per genuine fire — each state is still correctly TTL'd on its own key,
+> so this does not reproduce the cooldown-defeat symptom, just a cosmetic double-log.
 
 ### DP-DIGEST — routine INFO telemetry (never the incident path)
 

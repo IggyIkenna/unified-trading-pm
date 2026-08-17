@@ -48,6 +48,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_role: backend_engineer
+archive_exempt: true
 context_scope:
   [
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
@@ -114,16 +115,34 @@ Three real production call sites, deduped across worktree/branch clones:
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Wire live catalogue providers for DEFI/TRADFI/PREDICTION** — extend
+- [x] ✅ [BACKEND] P2. **Wire live catalogue providers for DEFI/TRADFI/PREDICTION** — extend
       `deployment-api/venue_resolution.py` to build a live catalogue provider for DEFI, TRADFI, and PREDICTION
       (mirroring the existing CEFI-only branch); this is revisit-trigger item 1 above, new engineering work not yet
-      drafted as a todo anywhere else in the corpus.
+      drafted as a todo anywhere else in the corpus. — deployment-api@3e33fac
 
 No code change ships from this doc. It exists so the deferred decision has a durable, re-discoverable home instead of
 dangling inside a closed plan todo.
 
 ## Progress Log
 
+- **2026-08-17 (slot 14, backend_engineer): revisit-trigger item 1 SHIPPED — deployment-api@3e33fac**. Generalized
+  `deployment_api/services/data_status/instrument_coverage.py`'s CEFI-only
+  `build_cefi_is_instruments_provider`/`_read_cefi_catalogue_metadata` into a shared
+  `_read_is_catalogue_metadata(cloud, asset_group)` + `_venue_instruments_provider_from_windows(...)` pair, and added a
+  new `build_is_instruments_provider(cloud, asset_group)` on top of them (PREDICTION resolved via its own
+  `instruments-store-prediction` bucket kind, mirroring `catalogue_lifecycle.py::_catalogue_bucket`'s existing
+  precedent). `venue_resolution.py`'s `_cefi_instruments_provider_for_category` now dispatches DEFI/TRADFI/PREDICTION
+  to the new builder alongside the unchanged CEFI branch (SPORTS untouched — no per-instrument catalogue axis).
+  `build_cefi_is_instruments_provider`'s tested public surface (incl. the `_read_cefi_catalogue_metadata`
+  mock-patch target every existing CEFI IS-provider test pins) is byte-behavior-unchanged. Full local `quality-gates.sh`
+  green (5420 tests passed); the one broad-except baseline overage (`unified-trading-pm` ratchet) hit mid-work was
+  confirmed pre-existing via a revert-and-recheck (unrelated `scripts/*.py`/`vm_utils.py` sites, not this diff) —
+  the one net-new site this change itself added got a `# noqa: broad-except` (mirrors the already-baselined
+  `build_cefi_is_instruments_provider` fail-open pattern) rather than absorbing the unrelated pre-existing overage
+  into this task. This todo was the doc's ONLY open item and this doc's own remaining scope (revisit-trigger items 2-4:
+  CEFI/TRADFI G1-G5 gate closure) is tracked elsewhere (`instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
+  `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`) — this doc stays open (not archived) since the underlying
+  fallback-removal decision itself is still deferred pending those gates, per the 2026-08-17 entry below.
 - **2026-08-17 (verified operator ruling, interactively confirmed — supersedes the 2026-08-16 entry below)**: the
   operator confirmed interactively, live, in an interactive session on this date, that the 2026-07-26 ruling text
   ("Keep the fallback for now") is scoped to the **removal decision only** — it does not gate or block the wiring

@@ -197,6 +197,19 @@ for repo_dir in "$SLOT_TABS"/*/; do
   # agent-orchestrator: slot clones track origin/live-defi-rollout; a
   # `main` base reads as diverged — 2026-05-24 incident).
   base="live-defi-rollout"
+  # Branch-identity guard (2026-08-17, slot9_unified_trading_ci_wrong_branch_cross_slot_commits):
+  # `git merge --ff-only` merges INTO whatever branch is currently checked out — if that isn't
+  # `live-defi-rollout`, a successful FF silently advances the WRONG branch name to LDR's tip
+  # (or, more commonly, just fails non-FF and gets swallowed by the generic skip message below
+  # with no indication the real problem is the branch, not staleness). WARN loudly and skip
+  # the pull entirely rather than merging onto a misnamed branch or masking the signal — this
+  # is deliberately never a hard-fail (a worker mid-investigation of a wrong-branch clone, e.g.
+  # this very incident, must not be blocked by its own fresh-pull step).
+  current_branch="$(git branch --show-current 2>/dev/null)"
+  if [ "$current_branch" != "$base" ]; then
+    echo "WARN $repo_name: checked out on '${current_branch:-<detached>}', not '$base' — Path-B requires every slot clone directly on live-defi-rollout (see per-tab-worktrees.md). Skipping the FF-pull for this repo rather than merging onto the wrong branch; investigate before continuing."
+    continue
+  fi
   # Only pull when clean — never blow away your own uncommitted work.
   if [ -n "$(git status --porcelain)" ]; then
     echo "skip $repo_name: dirty worktree"
