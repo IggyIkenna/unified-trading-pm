@@ -215,9 +215,30 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
       (`test_chain_type_matches_corrected_data_type_segment`,
       `test_futures_chain_type_matches_corrected_data_type_segment`) in `test_orchestration_scanner_coverage.py`.
       Full `quality-gates.sh` green (2462 passed, 2 skipped, `.qg_last_passed_sha=bef6495bed60e95462ede20b5dec463971ce13aa`).
-- [ ] [BACKEND] P1. deployment-api: update the data-status/catalogue stack (files listed in the consumer inventory
+- [x] ✅ [BACKEND] P1. deployment-api: update the data-status/catalogue stack (files listed in the consumer inventory
       above) to read/aggregate both shapes as the same logical entity during the migration window — a shard must not
-      appear to double-count or vanish depending on which shape it's currently in.
+      appear to double-count or vanish depending on which shape it's currently in. — deployment-api@2a1e504afc. New
+      shared `deployment_api.utils.chain_bundle_shapes` module (dual-shape detection + alternate-axes resolution,
+      `combo_chain` explicitly out of scope). Fixed: `data_status_hierarchical.py` normalizes legacy `data_type`
+      ("trades") to the chain token so the drilldown TREE merges both shapes into one `data_type` node (the exact
+      double-count/vanish failure mode); `shard_detail/_shard_core.py::_mtds_shard_path` now probes the alternate
+      shape on a miss (also fixed a pre-existing `is_derivative_bundle` AND-vs-OR bug that meant neither pure shape's
+      v6 bundle tail was ever correctly detected — found investigating this todo, fixed same file/commit);
+      `data_status_drilldown/_instruments.py::_list_instruments_full` gets a dual-shape prefix fallback so a shard
+      doesn't "vanish" from the per-instrument listing, and `_bundling_mode` now takes `data_type` so a
+      corrected-shape bundle classifies `per_underlying` (not `per_symbol`); `path_combinatorics.py`'s
+      `CombinatoricEntry.to_gcs_prefixes` emits the alternate-shape prefix for options_chain/futures_chain combos
+      only (no widening of the rest of the combinatorics matrix — efficiency north-star). 26 new unit tests across
+      5 test files; full `quality-gates.sh` green (`.qg_last_passed_sha=2a1e504afcf74a632790d424524539ff7158d35e`).
+      **Explicitly NOT fixed (documented, not silently left)**: `get_shard_info`/`_collect_instrument_types`
+      (`_instruments.py`) enumerates raw `instrument_type=` path segments without filtering by `data_type` — a
+      pre-existing gap (its own docstring's claim of per-`data_type` scoping doesn't match its actual GCS-prefix
+      scan) that predates this migration; during the dual-shape window it will list a corrected-shape bundle's real
+      type (`option`/`future`) as a distinct entry alongside any genuine single-instrument TradFi `option`/`future`
+      data for the same venue/day, which this todo's scope didn't extend to disambiguating. `routes/data_status/*.py`
+      (`_distinct_values.py`/`_axis_census.py`/`_downloads.py`/`_query_meta.py`/`_live_coverage.py`) were checked and
+      confirmed to be thin passthroughs with no independent chain-bundle prefix-building/aggregation logic of their
+      own — no code change needed there; they inherit the fix via the services they call.
 - [ ] [UI] P2. deployment-ui: verify whether `DataStatusTab.tsx`/`DataStatusDrilldown.tsx`/`ShardDetailModal.tsx`/
       `mock-api.ts` branch on path-position client-side. If they're a pure passthrough of backend-shaped data (likely,
       per deployment-api already normalizing above), state that explicitly and skip; only change code if a real
@@ -368,3 +389,9 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   non-existent `6e06fe17`) — its message literally reads "shrink writer to 900-line cap", confirming the swap. Fixed
   both citations plus the QG sentinel SHA at the same todo, and my own new Progress Log entry above which had copied
   the same wrong SHA before I caught it.
+- **2026-08-17 (slot 23, backend_engineer) — Phase 2 deployment-api todo done, deployment-api@2a1e504afc.** See the
+  checkbox annotation above for the full change list + explicit not-fixed scope. Also fixed a QG false-positive this
+  work exposed: the new `_probe_mtds_shard_axes` helper inserted above `_shard_core.py::_manifest_row_for_coord`
+  shifted that pre-existing, already-baselined bare `read_availability_index` call from line 525 to 565 —
+  re-pointed the line-keyed baseline entry (`unified-trading-pm@b7131a09a0`, direct-pushed per the GATE-INFRA
+  `scripts/quality_gates/` carve-out) so the ratchet check keeps recognizing it instead of misreporting it as new.
