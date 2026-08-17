@@ -157,3 +157,11 @@ needing raw `odds` data, so steps 6-8 remain undispatchable for the whole AG. Se
 this todo is waiting on) — none exists; only this plan and `tradfi_venue_e2e_batch1_2026_08_16.md` cite the
 condition, neither drives it. No ETA available. Skipping this task with `reason_code: GATED` (no code shipped —
 correctly nothing to ship while blocked) rather than fabricating work or falsely flipping the checkbox.
+
+**2026-08-17 — re-checked again (slot 15), still blocked, zero movement.** Re-dispatched against the same "Steps
+6-8 per unit" P0 todo. Re-ran `unified-api-contracts/scripts/generate_venue_work_list.py --csv` live and confirmed
+all 31 sports rows still show `archetype_consumers=NONE` — no change since the 2026-08-16 re-check above.
+Re-searched `unified-trading-pm/plans/active/` for a plan that owns/drives the archetype-declaration backlog —
+still only this plan and `tradfi_venue_e2e_batch1_2026_08_16.md` cite the condition; neither drives it, and no new
+owning plan has appeared. No ETA available. Skipping with `reason_code: GATED` again — no code shipped, correctly
+nothing to ship while blocked.
