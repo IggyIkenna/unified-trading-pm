@@ -96,10 +96,21 @@ context_scope:
 > smaller delta the explicit `--apply` would still correct. `instrument_availability/by_date/` in `-prd` is also
 > **NOT empty** (78,449 rows rolled up, contradicting the "EMPTY" finding below) — but its upstream capture cron
 > is stale 21 days, a new separate finding filed as
-> `/plans/active/issues/defi_by_date_capture_cron_stale_2026_08_16.md`. Bucket-architecture assumption
+> `/plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md` (now resolved — see the banner below).
+> Bucket-architecture assumption
 > (§ below) CONFIRMED unaffected by the sibling dedicated-bucket retirement (`instruments-store` is a distinct
 > bucket `kind`). Follow-on `--apply-write` plan filed (draft, operator-gated):
 > `/plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md`.
+
+> **🟢 by_date-capture-cron finding RESOLVED 2026-08-16 (slot-32) — FALSE POSITIVE, not a broken cron.** The
+> "upstream capture cron stale 21 days" claim two paragraphs up was itself an artifact of running
+> `build_instrument_catalogue.py --dry-run --max-blobs 5` (the diagnostic truncation flag mechanically pins the
+> observed `latest_day` to the incremental window's start, regardless of real freshness — see the issue doc for
+> the full mechanism). `is-daily-enum-defi`'s Cloud Scheduler + Cloud Run Job history and a direct GCS check both
+> confirmed the capture job has written every day through 2026-08-16 without interruption; a real untruncated
+> dry-run the same day rolled up 1903 by_date parquets with zero staleness signal. Fixed at the root —
+> `instruments-service@01a2c186` (the staleness check now skips itself under `--max-blobs`). Issue doc archived:
+> `/plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md`.
 
 ## vm-defi (slot-2) status + findings — 2026-06-07
 

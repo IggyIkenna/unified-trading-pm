@@ -23,7 +23,7 @@ related:
     /plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
-    /plans/active/issues/defi_by_date_capture_cron_stale_2026_08_16.md,
+    /plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -49,7 +49,7 @@ context_scope:
   [
     /plans/active/defi_migration_audit_log_2026_07_24.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/issues/defi_by_date_capture_cron_stale_2026_08_16.md,
+    /plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md,
     instruments-service/scripts/migrate_instruments_store_v9.py,
   ]
 locked_since:
@@ -65,9 +65,9 @@ routine writes, not the migration this plan would run. Firing `--apply` now woul
 is ALREADY 88% clean by the migrator's own accounting, which changes the risk/reward calculus from the original
 plan's premise (a 100%-v8, fully-dirty corpus). Before this plan is promoted to `active` and its `--apply` todo
 dispatched, the operator should confirm: (a) is the residual 12% delta (`data_type_set`) still worth a
-whole-corpus `--apply` walk, or small enough to fix a narrower way; (b) should this wait until the sibling
-by_date-capture-cron issue (`defi_by_date_capture_cron_stale_2026_08_16.md`) is resolved, since that job's
-resumption could shift the `_index` row count/composition again before `--apply` runs; (c) re-run the dry-run
+whole-corpus `--apply` walk, or small enough to fix a narrower way; (b) **RESOLVED 2026-08-16 (slot-32)**: the
+sibling by_date-capture-cron issue (`/plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md`) was a
+false positive — the job was never down, so there is no pending "resumption" to wait on; (c) re-run the dry-run
 fresh immediately before firing, since this corpus is evidently still moving under routine writes (do not trust
 the 2026-08-16 numbers in this doc as still-current by the time this plan is picked up).
 

@@ -301,10 +301,13 @@ parallel-safe.
       execution-log trace); it's organic convergence via the routine hourly manifest-consolidator cron ingesting
       already-v9-native live writes. A residual 12% (`data_type_set: 16,750`/138,612 rows) data-quality delta
       remains that the explicit migration would still fix. `instrument_availability/by_date/` is also NOT empty
-      (78,449 rows already rolled up) but its upstream capture cron is stale 21 days — see the new issue doc
-      `/plans/active/issues/defi_by_date_capture_cron_stale_2026_08_16.md`. Follow-on `--apply-write` plan filed
+      (78,449 rows already rolled up); its apparent "capture cron stale 21 days" signal was RESOLVED 2026-08-16
+      (slot-32) as a false positive — see the archived issue doc
+      `/plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md` (root cause + fix:
+      instruments-service@01a2c186). Follow-on `--apply-write` plan filed
       (draft, operator-gated): `/plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md`. STILL
-      NOT ✅ COMPLETE — the explicit migration + capture-cron fix are both still outstanding.
+      NOT ✅ COMPLETE — the explicit v9 `--apply` migration (residual 12% `data_type_set` delta) is still
+      outstanding; the capture-cron half is resolved, no action needed.
 - [x] ✅ [DATA] P0. **slot 3 (CeFi) — G4 `--apply`** (same sequence; DERIBIT/OKX Era-B chains). Repos: as above. —
       2026-06-29: CeFi already canonical on-disk (`pipeline_mode=batch_tardis` paths confirmed); IS v9 migration done;
       enumerate seed 162,528 rows (EXPECTED_PRE_VENUE_LAUNCH); IS catalogue 349,912 rows > 349,709 promoted ✅

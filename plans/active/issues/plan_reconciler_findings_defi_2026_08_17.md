@@ -155,10 +155,11 @@ operator to pick up:
       That gating doc was found resolved/archived 19 days ago by an EARLIER entry in this SAME doc (hunter batch A),
       but the todo itself was never updated. Whether a companion plan is still needed at all (and if so, ungated) is
       a scope/design call — resolve that first, then either drop the gate or the whole todo.
-- [ ] [DIAG] P3. **`defi_by_date_capture_cron_stale_2026_08_16.md`** — its `[DIAG]` todo's first line names its
-      target ambiguously ("likely `instruments-daily-backfill` or `instruments-service-daily-trigger`"). Run
-      `gcloud scheduler jobs list` to disambiguate before this AO-dispatched todo fires, or resolve it at dispatch
-      time.
+- [x] ✅ [DIAG] P3. **CLOSED 2026-08-16 (slot-32)** — `defi_by_date_capture_cron_stale_2026_08_16.md`'s
+      `[DIAG]` todo has been dispatched and resolved; `gcloud scheduler jobs list` disambiguated the target as
+      `is-daily-enum-defi` (neither of the two candidates this todo named — both are unrelated/legacy jobs). The
+      issue doc is closed as a false positive (the capture cron was never unhealthy) and archived to
+      `/plans/archive/issues/defi_by_date_capture_cron_stale_2026_08_16.md`.
 - [ ] [DIAG] P3. **`operator_action_items_consolidated_2026_08_08.md`** — its `.tabs/2` stash-cleanup item claims
       (as of 2026-08-08) a live unresolved 3-way git merge conflict in another slot's working tree; 9 days of
       subsequent Progress Log entries never re-verified it. Check `.tabs/2`'s current state (out of THIS run's
