@@ -104,6 +104,14 @@ cover. Re-declaring the blocker below since the repo is not actually fixed. Flag
 `repo_blocker_resolution_signal_false_positive_2026_07_28` (supposedly fixed 2026-07-30), recurring here on
 2026-08-17 for a different underlying defect.
 
+### Second independent confirmed blocker — 2026-08-17 (slot-6)
+
+Hit the identical red shipping an unrelated cross-repo fix (`defi_satellite_ao_dispatch_batch16_2026_08_17.md` todo 1
+— Solana DeFi source-label fix spanning `market-tick-data-service` + this repo's `pipeline_mode_resolver.py`). Same
+pattern as interactive slot-27 below: MTDS's quickmerge pre-flight refuses to ship while this repo carries uncommitted
+changes, and this repo can't commit under a red tree. Parked locally per the same resolution slot-27 was given. Two
+independent sessions blocked by this in the same session-day — raising visibility.
+
 ### Re-confirmed still blocking — 2026-08-17 (interactive slot 27)
 
 `quickmerge.sh`'s own re-gate hit the identical failure while shipping an unrelated `pipeline_e2e_check` fix
