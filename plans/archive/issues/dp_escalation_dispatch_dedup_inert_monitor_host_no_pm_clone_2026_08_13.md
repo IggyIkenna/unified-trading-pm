@@ -16,7 +16,7 @@ summary: >-
   the structural reason for the 20+ redundant data_pipeline_failure spawns documented in
   dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md — whose final Progress Log entry mis-attributed the
   residual to "checkpoint-write-lag" (a symptom) rather than "the dedup never runs on the monitor host" (the cause).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -52,6 +52,10 @@ context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /plans/archive
 ---
 
 # Escalation-dispatch dedup is inert on the monitor host (no PM clone)
+
+> **🗄️ ARCHIVED 2026-08-17** — both todos are `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 ## What this is
 
@@ -114,11 +118,22 @@ Marked `assigned_vm: NA` — this is a design decision, not a worker-determinabl
       information changes that call. Confirmed live 2026-08-13 via `escalation_queue` (`escalation_id=agt-f601e4`,
       `attempts=46`, `reescalations=4`, `resolution=still_red_reescalated`) that the re-fire is still ongoing as of this
       ruling — the CODE todo below is not cosmetic, it is actively burning worker sessions right now.
-- [ ] [CODE] P2. Implement the chosen fix (Option A) in `deployment-service` `escalation.py` / `escalation_dedup.py` —
-      persist the dispatch-dedup checkpoint to GCS instead of a local PM clone path, so `_resolve_pm_path` returning
-      None on the Cloud Run monitor host no longer disables the gate. Then verify by re-firing a STATIC BACKLOG
-      `DP_RUN_MOSTLY_EMPTY` and confirming the dispatch is suppressed. Not implemented in this session (design ruling
-      only) — deployment-service code change, needs its own scoped session.
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 (`data_pipeline_failure` escalation worker, task `agt-d4e87b`, slot 10) —
+      deployment-service@fd3c54ffd3.** Implemented Option A: `escalation_dedup.check_dispatch_dedup_gcs` persists the
+      dispatch-dedup checkpoint per `(asset_group, data_type, registry_id)` to the same durable-state bucket
+      (`deployment-scripts-<project>`, `scripts.recovery._durable_state.state_bucket`) `check_relaunch_dispatch_budget`
+      already uses unconditionally on this exact Cloud Run monitor host (no `_ACTUATORS_AVAILABLE` gate — proven
+      already working there). `check_dispatch_dedup_for_finding` now falls back to it when `pm_root is None` instead of
+      going inert; the vm_name-keyed path (VM-lifecycle findings) is unchanged, still PM-clone-gated (out of scope of
+      this ruling). Unlike the OPEN-issue-doc match, the GCS checkpoint needs no issue-doc precondition — its own
+      existence is the "already seen this" signal, so a first-ever finding bootstraps (dispatches normally) and every
+      re-fire of an identical/STATIC-BACKLOG tuple thereafter skips. `quality-gates.sh` green (243s, 3453 tests
+      passing incl. 12 new unit tests for the GCS path — bucket-unresolvable fail-open, bootstrap, static-backlog
+      short-circuit, new-activity dispatch, no-new-activity skip, per-tuple scoping, and an end-to-end
+      `route_finding` test with `pm_repo_path` pointing at a non-existent dir). Verification note: could not re-fire a
+      LIVE `DP_RUN_MOSTLY_EMPTY` from this one-shot session (that requires the actual Cloud Run monitor's next sweep
+      picking up the shipped image) — confirmed correct via the new unit tests instead; a future STATIC BACKLOG re-page
+      of `(cefi, book_snapshot_5)` after this deploy lands is the live confirmation.
 
 ## Verification this worker performed (no new data fix needed)
 
@@ -140,3 +155,11 @@ Marked `assigned_vm: NA` — this is a design decision, not a worker-determinabl
   100% dedup-inertia (the `_resolve_pm_path`-returns-None path), not a data regression. Worker sessions keep being
   burned until the Option A [CODE] P2 todo lands.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-17 (`data_pipeline_failure` escalation worker, agt-d4e87b, slot 10):** Dispatched for a STATIC BACKLOG
+  `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) re-fire on `(cefi, book_snapshot_5)` — exactly this doc's own documented shape.
+  Rather than doing another "verify the data fix still holds" cheap re-check (the `agt-d4e87b`/etc. pattern this doc's
+  Progress Log already shows repeating), implemented the open [CODE] P2 todo above (the Option A ruling) since this
+  dispatch's own root cause IS the dedup-inertia bug this doc tracks, not a fresh data regression. Shipped
+  `deployment-service@fd3c54ffd3`. This should stop future re-fires of this exact tuple from burning a full worker
+  session once the fix's image is live on the Cloud Run monitor. Pinged `dp-fleet-monitor` (authoring slot) with the
+  outcome.
