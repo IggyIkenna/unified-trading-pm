@@ -451,3 +451,9 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
   residual nested todo, an open team-name-canonicalization provenance question this workspace's "no false pairs"
   mandate keeps genuinely gated). Matches the 2026-08-09 marker and the 2026-08-16 plan_reconciler's independent
   2-open-item recount. Doc stays NA.
+
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:209354abc81b532f]: KEEP-NA, valid —
+  2 open items re-confirmed as genuine open-ended design/judgment calls (an unresolved infra tarball-overwrite-race
+  mitigation choice with 2 named options and no directive; a fixture-pairing registry-resolution design divergence
+  flagged by an independent 2026-08-10 code-diff verification) — no bounded deterministic path, no active
+  planning-doc duplicate found. Doc stays NA.

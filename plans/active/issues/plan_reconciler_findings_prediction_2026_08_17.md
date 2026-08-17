@@ -254,4 +254,9 @@ requiring this specific run to act (all were already correctly left open by the 
   and the standing `BLK-e7b0e8da` operator governance escalation (now open 3 calendar days, carried forward, not
   re-escalated). Neither is worker-bounded AO-dispatchable work. Doc stays NA.
 
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:0b3d6f670acd1a3f]: KEEP-NA, valid —
+  2 open items re-confirmed genuinely non-dispatchable: a time-gated archival step self-resolving once the target
+  epic clears its 12h grace window, and the standing `BLK-e7b0e8da` operator governance escalation (still unresolved,
+  now open 3 calendar days). Doc stays NA.
+
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

@@ -518,3 +518,8 @@ in this same run.
   re-check), routed to a different tranche/owner, or an unresolved operator governance question. Doc stays NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:329b4979a60a743d]: KEEP-NA, valid —
+  13 open items re-confirmed genuinely non-dispatchable (12h-grace-window mechanical re-checks self-owned by this same
+  skill's recurring cadence, cross-tranche routing notes, and the standing `BLK-e7b0e8da` operator escalation) — none
+  is orphaned bounded work needing a separate AO dispatch. Doc stays NA.
