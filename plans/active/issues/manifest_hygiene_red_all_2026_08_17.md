@@ -16,7 +16,6 @@ repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]
 tags: [manifest-hygiene, divergent-empty, data-correctness, prediction, cefi, tradfi]
 created: 2026-08-17
-author: "manifest_hygiene_daily.py (data-pipeline daily audit)"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
