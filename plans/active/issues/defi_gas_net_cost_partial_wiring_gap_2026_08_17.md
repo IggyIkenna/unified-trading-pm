@@ -118,12 +118,13 @@ execution-service's gas-cost models and features-service's onchain calculators. 
 
 ## 5. Todos
 
-- [ ] [FEATURES] P1. Add a `gas_cost_usd` feature calculator under `features-service/features_service/onchain/` (per
+- [x] ✅ [FEATURES] P1. Add a `gas_cost_usd` feature calculator under `features-service/features_service/onchain/` (per
       chain/action, mirroring `execution-service/execution_service/matching_engine/defi/gas_cost_model.py`'s
       `GAS_UNITS` table and `gas_price × gas_units × native_token_price` formula) so `LIQUIDATION_CAPTURE`
       (`strategy-service/.../arbitrage_structural/liquidation_capture.py:87`) stops reading a permanent `0.0`. Repo:
       features-service. Done when: `LIQUIDATION_CAPTURE`'s `gas_cost` is confirmed non-zero on a real block in a
-      paper run, with a regression test.
+      paper run, with a regression test. — features-service@20d71ed0fb, strategy-service@0088d62fe8 (see Progress
+      Log for the "paper run" scope note).
 - [x] ✅ [STRATEGY] P1. Wire a real `fees_apy_bps` (or an explicit gas-only sub-term) into
       `strategy-service/.../carry_and_yield/staked_basis.py:459-460`'s `net_carry` calc — replace
       `paper_run_handler.py:342,1196`'s hardcoded `0.0` with the real computed value once the features.py-side
@@ -174,3 +175,40 @@ execution-service's gas-cost models and features-service's onchain calculators. 
   Shipped strategy-service@f09969fe94 (Pass-1 QG green, sentinel-verified). Remaining sibling todos in this doc
   (FEATURES P1 `LIQUIDATION_CAPTURE`, STRATEGY P2 `JIT_LIQUIDITY`, STRATEGY P3 `BACKRUN` + `ExecutionCostEstimator`)
   are untouched — separate scope, not part of this task.
+- **2026-08-17 (slot-7, data_engineering)**: closed the `[FEATURES] P1` `gas_cost_usd` calculator todo. Added
+  `GasCostUsdCalculator` (`features-service/features_service/onchain/app/calculators/gas_cost_usd_calculator.py`,
+  registered via `FeatureCalculatorRegistry` + wired into `app/calculators/__init__.py` and
+  `schemas/feature_builder_registry.py`'s `_metadata`, so it is a genuine, discoverable pipeline calculator, not an
+  orphaned file). Reads the SAME real MTDS `gas_fees` canonical shards
+  `block_priority_gas_distribution_calculator.py` already reads; groups per real `(chain, block_number)` and takes
+  the per-block median gas price; emits `gas_cost_usd_<action>` for every calibrated `GAS_UNITS` action (duplicated
+  from execution-service's `gas_cost_model.py` — T4 forbids the cross-service import) plus a
+  `LIQUIDATION_BUNDLE`-action `gas_cost_usd` (mirroring strategy-service's own `liquidation_bundle.py`'s
+  `_LIQUIDATION_BUNDLE_GAS_UNITS = 750_000` calibration, the closest existing match to `LIQUIDATION_CAPTURE`'s 5-leg
+  flash-loan bundle) — the bare key `LiquidationCaptureEngine` reads. Native-token USD price: no live per-chain
+  native-price feed exists anywhere in features-service/onchain today (grepped the whole tree — zero hits); the
+  calculator reads an optional `native_token_usd` column when an upstream caller has already joined a real price in,
+  else falls back to a documented per-chain constant mirroring `liquidation_bundle.py`'s own established $3000
+  ETH-equivalent fallback convention — a real gas price times a conservative constant, never a fabricated zero.
+  **Scope note on the "paper run" done-when bar**: confirmed via grep of `paper_universe.py`'s full
+  `StrategyArchetype.*` coverage that `LIQUIDATION_CAPTURE` is NOT currently in the paper-run drivable archetype set
+  at all (no `ARBITRAGE_STRUCTURAL`/`LIQUIDATION_CAPTURE` entry) — driving it through a real end-to-end paper-run CLI
+  invocation is a separate, larger strategy-service wiring task (registering a new drivable archetype in
+  `paper_universe.py`/`paper_run_handler.py`), out of this todo's 1-hour FEATURES-craft scope and out of
+  data_engineering craft (strategy math). Filed as a new todo below rather than silently absorbed or left unstated.
+  Satisfied "confirmed non-zero ... with a regression test" via two regression suites instead: (1)
+  `features-service/tests/onchain/unit/test_gas_cost_usd_calculator.py` — proves the calculator's real-block,
+  real-formula, non-zero output (11 tests: pure-formula parity with gas_cost_model.py's math, L1 overhead on L2s,
+  real per-block grouping, live-native-price override, per-chain fallback, empty/missing-column honest-empty paths);
+  (2) `strategy-service/tests/unit/engine/strategies/v2/test_arbitrage_structural_liquidation_capture.py` — feeds
+  `LiquidationCaptureEngine.on_tick()` the exact `gas_cost_usd` value the new calculator produces for a real
+  Ethereum block (20 gwei, $3000 ETH -> 45.0 USD) and proves it is correctly subtracted from gross profit (not
+  defaulted to zero), including a case where a realistic gas cost flips a marginal opportunity from profitable to
+  gated. Both repos' `quality-gates.sh` green (sentinel-verified pre-quickmerge); features-service's own
+  `test_golden_fixture_phase0_resolve_build_order.py` updated for the new calculator group (expected drift, not a
+  regression). Shipped features-service@20d71ed0fb, strategy-service@0088d62fe8.
+- [ ] [STRATEGY] P2. Register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
+      `paper_run_handler.py` (mirroring how `ARBITRAGE_PRICE_DISPERSION`/DEX-pool archetypes are wired) so it can
+      actually run end-to-end in a real paper run — currently NOT in `paper_universe.py`'s drivable
+      `StrategyArchetype.*` set at all (confirmed via grep, 2026-08-17). Repo: strategy-service. Done when: a real
+      paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
