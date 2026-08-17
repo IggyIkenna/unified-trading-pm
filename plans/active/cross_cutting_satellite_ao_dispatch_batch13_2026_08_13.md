@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, satellite-batch, na-eligibility-audit, ag-closeout-audit]
 related: [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
@@ -462,24 +462,24 @@ source: >-
       **CORRECTION 2026-08-14 (cicd/plan_health):** the source plan was un-archived the same day (13 other todos remain
       open incl. 4 P0s — mechanism never actually fires in prod) — this Phase-1 item itself is still shipped and
       correctly closed here, only the "archived" framing was stale. Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
 - [x] ✅ [CODE] P2. Phase 1: add the flush-contract doc to spot-vms-for-backfill.md. **STALE DUPLICATE, closed
       2026-08-14** — landed same commit as above. Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
 - [x] ✅ [CODE] P2. Phase 2: add DependentAction StrEnum + evaluate_revocation() + alert-action map to UAC. **STALE
       DUPLICATE, closed 2026-08-14** — landed `unified-api-contracts@c206f910` (all 7 todos). Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
 - [x] ✅ [CODE] P2. Phase 3: add RetryBudget/RETRY_BUDGETS registry to UAC with the documented default ladder. **STALE
       DUPLICATE, closed 2026-08-14** — landed `unified-api-contracts@c206f910` + `instruments-service@1ae4b7d0` +
       `market-tick-data-service@554adf49` (all 8 todos). Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
 - [x] ✅ [CODE] P2. Phase 4: add the push actuator in deployment-service that consults evaluate_revocation() with no
       policy branch of its own. **STALE DUPLICATE, closed 2026-08-14** — landed `deployment-service@e38b2a0e` +
-      `@67e3b36c` (all 9 todos). Source: `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
+      `@67e3b36c` (all 9 todos). Source: `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
 - [x] ✅ [CODE] P2. Phase 5: add the VM-side drain-marker poll hook and Cloud Run admission-check skip gate. **STALE
       DUPLICATE, closed 2026-08-14** — landed `deployment-service@67e3b36c` + `deployment-api@0d3f1cc` +
       `unified-trading-library@ad29bd9f` (all 8 todos). Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
 - [x] ✅ [CODE] P2. **NOT ATTEMPTED — premise unmet: the superseding job doesn't exist yet.** (2026-08-15,
       slot-21·infra) Confirmed live: `_write_agent_report()` is still present and called from `run_stage4()` in
       `batch_live_reconciliation_service/stages/stage4_agent_analysis.py` (writes `agent_report_{date}.md` to GCS, still

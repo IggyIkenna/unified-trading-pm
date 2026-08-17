@@ -19,7 +19,7 @@ related:
   [
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md,
     /plans/archive/2026_08/revocation_arming_2026_08_14.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-16"
@@ -41,7 +41,7 @@ superseded_by:
 depends_on: [infra_satellite_ao_dispatch_batch18_2026_08_16]
 gate_on_depends: true
 sequential: true
-context_scope: [/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md, /plans/archive/2026_08/revocation_arming_2026_08_14.md, /plans/active/alert_driven_dependency_revocation_2026_08_12.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /codex/12-agent-workflow/commit-push-flip-rule.md]
+context_scope: [/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md, /plans/archive/2026_08/revocation_arming_2026_08_14.md, /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /codex/12-agent-workflow/commit-push-flip-rule.md]
 source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored in
   the same turn as batch 18, 2026-08-16, via a scoped /na-eligibility-audit run against the alert-driven-revocation

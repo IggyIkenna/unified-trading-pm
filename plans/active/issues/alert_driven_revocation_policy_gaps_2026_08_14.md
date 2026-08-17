@@ -6,12 +6,13 @@ title:
 summary: >-
   Phases 0-7 of alert_driven_dependency_revocation_2026_08_12.md were believed DONE (evaluator, actuator, gate, drain
   contract, 12-scenario test matrix, codex SSOTs — shipped and verified) when this doc was written. **CORRECTION
-  2026-08-14 (cicd/plan_health):** the parent plan was un-archived the same day — 13 todos incl. 4 P0s remain open
-  (nothing calls RevocationActuator.actuate() outside tests, so the mechanism has never fired in prod); it is back at
-  /plans/active/alert_driven_dependency_revocation_2026_08_12.md, not archived. Findings 1/2/6 below duplicate open
-  todos now reopened in that plan (p95/max shard-duration measurement, FLEET_HALT MaintenanceWindow, UTL venv bootstrap)
-  — reconcile which copy is canonical before dispatching either. The 5 findings themselves (this doc's actual content)
-  remain independently valid regardless of the parent plan's archival status.
+  2026-08-14 (cicd/plan_health):** the parent plan was un-archived that day — 13 todos incl. 4 P0s were open at the
+  time (nothing called RevocationActuator.actuate() outside tests, so the mechanism had never fired in prod). Findings
+  1/2/6 below duplicated open todos in that plan (p95/max shard-duration measurement, FLEET_HALT MaintenanceWindow,
+  UTL venv bootstrap) — reconciled 2026-08-17 (findings 1/6 closed as duplicate-now-resolved; finding 2 remains
+  genuinely open, see below). The parent plan is now fully done and archived:
+  `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`. This doc's own finding 2 remains
+  independently valid regardless of the parent plan's archival status.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -22,7 +23,7 @@ tags: [alerting, self-healing, vm-lifecycle, dependency-dag, revocation, policy-
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
@@ -46,16 +47,17 @@ source: >-
   Found 2026-08-14 while writing and reviewing Phase 6's 12-scenario test matrix (e2e-testing@094246df1a) — 3 scenarios
   needed correcting against already-shipped Phase 2 policy, 2 are genuine gaps in that policy table.
 depends_on: []
-context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/04-architecture/autonomous-recovery-matrix.md, /plans/active/alert_driven_dependency_revocation_2026_08_12.md, unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency_revocation.py, deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py, deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/04-architecture/autonomous-recovery-matrix.md, /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md, unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency_revocation.py, deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py, deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py]
 ---
 
 # Alert-driven revocation — 5 findings from Phase 6 verification
 
-> **STALE, corrected 2026-08-14 (cicd/plan_health gate fix):** this doc originally said the parent plan was archived
-> with all plan-scope todos done. It was un-archived the same day (13 open todos incl. 4 P0s — see
-> `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` directly). This doc's own 5 findings below are
-> unaffected by that correction, but findings 1/2/6 now duplicate todos reopened in the parent plan — see the Progress
-> Log at the bottom before dispatching either copy.
+> **STALE 2026-08-14, then genuinely resolved 2026-08-17.** This doc originally said the parent plan was archived with
+> all plan-scope todos done; it was un-archived that same day (13 open todos incl. 4 P0s) then, once those closed,
+> re-archived for real on 2026-08-17 —
+> `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`. This doc's own 5 findings below are
+> unaffected by that history; findings 1/6 (which duplicated todos reopened in the parent plan) are now closed as
+> duplicate-now-resolved, finding 2 remains genuinely open — see the Progress Log at the bottom.
 
 ## 1. P95/max shard-duration measurement — BLOCKED-CREDENTIALS in dev checkouts (P2)
 
@@ -67,8 +69,12 @@ load-bearing for anything already shipped.
 
 **Repo:** deployment-service.
 
-- [ ] [SCRIPT] P2. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers, from
-      a runtime context with `state_bucket()` actually resolving (a VM, or a slot with the deploy-time env vars).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-17 — resolved in the parent plan's own copy, not redone here.** Measured via
+      batch18 item 1: `deployment-service@e631240990` (`scripts/measure_shard_duration_p95.py`). Worst-case
+      drain-budget denominator 34072.0s (~9.5h, `launch-mtds-dex-swaps-backfill-vm.sh`); partial coverage honestly
+      reported (62/13,891 run.log blobs, ~0.45% — a fuller run was blocked by a confirmed host-level constraint, not
+      re-attempted this pass). Full table:
+      `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` Phase 0, item 1.
 
 ## 2. FLEET_HALT pauses register no `MaintenanceWindow` — possible DP-WATCHER-004 double-page (P2)
 
@@ -103,7 +109,7 @@ urgent; nothing is broken.
       plan's original "Why this exists" section and confirm HOLD is still the right call, or open a policy-change todo
       if not. — **RESOLVED 2026-08-15, already answered — this duplicates work done in the parent plan, not redone
       here.** The parent plan's own `2026-08-14 — [x] ✅ [DOC] P2` Phase-6 reconciliation entry
-      (`/plans/active/alert_driven_dependency_revocation_2026_08_12.md`, "Reconcile Phase 6's stale prose against the
+      (`/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`, "Reconcile Phase 6's stale prose against the
       shipped policy table") already re-derived this exact question against the exact money-burn framing and confirmed
       HOLD is correct for both: a down consolidator makes the manifest STALE, not FALSE, and it is `AUTO_RECOVER` —
       draining every manifest-writing VM would destroy in-flight work over a condition that heals itself (the
@@ -128,7 +134,7 @@ independent... does NOT import the alerting-service"), so a stale-sentinel condi
 
 **RESOLVED 2026-08-15 — operator confirmed reading (b), same conclusion the parent plan already reached.** This
 duplicates work done in the parent plan, not redone here:
-`/plans/active/alert_driven_dependency_revocation_2026_08_12.md`'s own `2026-08-14 — [x] ✅ [CODE] P2` entry ("No alert
+`/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`'s own `2026-08-14 — [x] ✅ [CODE] P2` entry ("No alert
 identity in the shipped policy table resolves to FLEET_HALT for the watch-the-watchers condition") already reached
 reading (b) independently — the deadman poster stays deliberately independent of the alerting-service,
 `DP-WATCHER-001/002 → DEPS_HOLD` is correct as shipped, and no code change is needed. The operator's 2026-08-15 answer

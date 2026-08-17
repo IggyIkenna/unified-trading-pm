@@ -15,7 +15,7 @@ summary: >-
   ships without touching any launcher, and a VM-side poll hook that lands incrementally as a fail-closed backstop. Phase
   1 is a hard prerequisite — a graceful-flush contract that every buffered writer honours, because drain-only is only
   safe if a drained unit writes out the shards it is holding.
-status: active
+status: archived
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,7 +34,7 @@ related:
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
   ]
 created: "2026-08-12"
-last_updated: 2026-08-12
+last_updated: "2026-08-17"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -69,6 +69,16 @@ source:
 ---
 
 # Alert-driven dependency revocation
+
+> **📦 ARCHIVED 2026-08-17.** Every phase (0-7) is done and green — the mechanism is built, armed, live in production
+> since 2026-08-15, and its 3 remaining follow-ups (p95 measurement, `consolidator_bucket_resolver` production
+> wiring, `RevocationActuator.release()` scheduler-resume — extracted to the child plan
+> `/plans/archive/2026_08/revocation_arming_2026_08_14.md` then to
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`) are all closed. One genuinely open,
+> non-blocking finding remains tracked separately (FLEET_HALT pauses register no `MaintenanceWindow`, needs an
+> operator `bucket`/`ttl_minutes` design call):
+> `plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` finding 2. Archived per the standard 6-step
+> ritual; closed out by `/plans/active/infra_satellite_ao_dispatch_batch18_finalize_2026_08_16.md`.
 
 > **Operator decisions (2026-08-12, recorded before authoring).** (1) Enforcement point: **both** — the DAG owns policy,
 > the actuator executes, VM polling lands incrementally as a fail-closed backstop. (2) `DEPS_KILL` semantics:
@@ -377,15 +387,14 @@ bridges them; it does not extend one over the other.
       rather than silently exempt. Never silent: paused job names ride back on the outcome. A failing pause does not
       abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports, not cefi, because cefi
       resolves to a SINGLE job and the test would have been vacuous).
-- **[CODE] P2. CANCELLED — SUPERSEDED 2026-08-16 (mechanism built `deployment-service@310f82e84f`; production wiring
-  extracted to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2, via a scoped
-  `/na-eligibility-audit` run).** A FLEET_HALT pause registers no `MaintenanceWindow`, so
-  `check_consolidator_scheduler_paused` (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one.
-  Operator chose "route through `pause_for_maintenance()`" — `RevocationActuator.__init__`'s
-  `consolidator_bucket_resolver` injected-callable param + `_register_maintenance_windows()` now exist
-  (`None` at every current production call site is a verified no-op, no regression); wiring the real resolver in is
-  blocked on a genuine `meta_targets.py`→`meta_watchers.py`→`escalation.py`→back-to-actuator import cycle, reassessed
-  as bounded/AO-eligible rather than genuinely NA-worthy.
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 via batch18 item 2 — deployment-service@ae49548487.** A FLEET_HALT pause
+  registered no `MaintenanceWindow`, so `check_consolidator_scheduler_paused` (DP-WATCHER-004) could page a
+  deliberate FLEET_HALT pause as an accidental one. `consolidator_bucket_resolver` is now wired into both production
+  call sites (`escalation.py`'s FLEET_HALT delivery, `meta_watchers.py`'s release bookend) — the
+  `meta_targets.py`→`meta_watchers.py`→`escalation.py`→back-to-actuator import cycle was broken via two leaf-module
+  extractions (`freshness_target.py`, `consolidator_bucket_map.py`). Was `CANCELLED — SUPERSEDED 2026-08-16`
+  (extracted to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2) — reconciled here
+  now that the batch has closed. Full evidence in that plan's Progress Log (archived).
 - [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
       from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
       documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,
@@ -613,8 +622,10 @@ conserved and each line names where the work went, per `check_todo_regression.sh
       the two constraints that must not be undone (injected visibility; `log_event` not `emit_finding`, which would
       re-enter `route_finding`). Separately corrected during this pass: `dependency-health-policy.md` had all FIVE
       `DependencyClass` names wrong.
-- [ ] [REVIEW] P0. Archive this plan once every todo is done and unlocked, per the archival discipline (dated archive
-      folder, banner, referrer sweep).
+- [x] ✅ [REVIEW] P0. **DONE 2026-08-17.** Archive this plan once every todo is done and unlocked, per the archival
+      discipline (dated archive folder, banner, referrer sweep) — this commit is the archival move itself
+      (`unified-trading-pm`, this session). All 7 phases + the child plan's 3 extracted follow-ups (batch18) verified
+      closed; corpus referrers repointed to the new `plans/archive/2026_08/` path.
 
 ---
 

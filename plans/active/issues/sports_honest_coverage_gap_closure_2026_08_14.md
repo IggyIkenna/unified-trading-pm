@@ -404,7 +404,7 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       at 18:24Z, 1.5h after its startup script reported `exit status 0`: no MTDS python process running, load avg
       0.00, and `/home/ikennaigboaka/logs/mtds-backfill.log` (708 bytes, last written 16:57:28Z — i.e. within seconds
       of boot) shows the actual terminal line: `[vm-exec] admission HELD by alert-driven revocation — skipping run
-      (exit 75)`. This is Phase 5 of `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` working exactly
+      (exit 75)`. This is Phase 5 of `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` working exactly
       as designed — a launcher preflight (`revocation_admission_cli.py`) correctly declines to run when a hold marker
       exists, exit 75 (`EX_TEMPFAIL`), logged as a clean skip not a crash. Read the actual marker
       (`vm-census/admission-hold/mtds-backfill-odds-1.json` in `deployment-scripts-central-element-323112`, via UTL's

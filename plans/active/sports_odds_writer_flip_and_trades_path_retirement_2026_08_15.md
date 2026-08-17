@@ -294,7 +294,7 @@ converge on the same lowercase `odds` string with no residual mismatch between t
   clean HEAD (untouched) already satisfies `test_every_dp_registry_id_has_a_dependent_action` trivially -- the whole
   6-failure block this session chased for hours traces to this corruption, not a real pre-existing gap. **Not this
   plan's scope to complete** -- flagged here for whoever owns the alert-driven-dependency-revocation plan
-  (`plans/active/alert_driven_dependency_revocation_2026_08_12.md`) to pick up the DP-LIVE-*/DP-WATCHER-005/006/
+  (`plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`) to pick up the DP-LIVE-*/DP-WATCHER-005/006/
   DP-VM-012 registration properly (their own WIP, still uncommitted/untracked in this shared checkout as of this
   entry -- diff preserved in this session's transcript if needed, not re-derived here).
   (2) The QG-governor's "total-instance" concurrency gate (host-wide cap 7) was saturated for 3+ consecutive

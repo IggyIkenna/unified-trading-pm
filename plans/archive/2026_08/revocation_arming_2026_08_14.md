@@ -19,8 +19,8 @@ related:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
-    /plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md,
   ]
 created: "2026-08-14"
 last_updated: "2026-08-16"
@@ -56,11 +56,11 @@ source:
 > (30 distinct VMs received a delivery in 12h — see the Progress Log). Every todo below is done or `CANCELLED —
 > SUPERSEDED`; the 3 genuinely-remaining follow-ups (p95 measurement, `consolidator_bucket_resolver` production
 > wiring, `RevocationActuator.release()` scheduler-resume) were reassessed as AO-eligible and extracted to
-> `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` (gated finalize also carries archiving the parent
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` (gated finalize also carries archiving the parent
 > plan once ITS remaining items close). Archived per the standard 6-step ritual.
 
 > **The mechanism is built and has never fired.** Split from
-> `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` on 2026-08-14. That plan's Phases 1-7 are done and
+> `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` on 2026-08-14. That plan's Phases 1-7 are done and
 > green; this one carries the work that makes any of it reach a VM. The parent MUST NOT be archived until this closes.
 
 > **This plan cannot be archived until this phase is done.** Phases 1-6 are genuinely complete and green, and the READ
@@ -535,8 +535,8 @@ sessions too, not just this main/review session). Umbrella goal: the alert-drive
 every emitted DP identity registered, every target resolvable, the guard that keeps it that way in place, and both plans
 in this chain closed and archived. Governing documents:
 
-- `/plans/active/revocation_arming_2026_08_14.md` — this plan, the active child
-- `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` — the parent; cannot archive until this child closes
+- `/plans/archive/2026_08/revocation_arming_2026_08_14.md` — this plan, the active child
+- `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` — the parent; cannot archive until this child closes
 - `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` — tracks 2 of the items below; same
   underlying work as the parent plan's copies, don't do it twice
 
@@ -647,16 +647,21 @@ either policy assignment).
 
 **Two new follow-up todos, both P2, both real, neither silently absorbed into this pass:**
 
-- **[CODE] P2. CANCELLED — SUPERSEDED 2026-08-16 (extracted to
-  `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2, via a scoped `/na-eligibility-audit`
-  run).** Wire `consolidator_bucket_resolver=consolidator_scheduler_watcher.consolidator_job_to_bucket` into
-  `RevocationActuator`'s production construction site(s) — blocked on breaking the `meta_targets.py`→`meta_watchers.py`
-  →`escalation.py`→back-to-this-module import cycle. Reassessed as bounded/AO-eligible (no operator judgment call
-  blocks the outcome, just an environment/refactor task), not genuinely NA-worthy.
-- **[CODE] P2. CANCELLED — SUPERSEDED 2026-08-16 (extracted to
-  `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 3, via a scoped `/na-eligibility-audit`
-  run).** `RevocationActuator.release()` never resumes a FLEET_HALT's paused schedulers — only the generic
-  marker-clearing runs. Reassessed as bounded/AO-eligible; needs real tests but no operator design call.
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 via batch18 item 2 — deployment-service@ae49548487.** Wire
+  `consolidator_bucket_resolver=consolidator_scheduler_watcher.consolidator_job_to_bucket` into `RevocationActuator`'s
+  production construction site(s) — was blocked on the `meta_targets.py`→`meta_watchers.py`→`escalation.py`→back-to-
+  this-module import cycle; broken via two leaf-module extractions (`freshness_target.py`,
+  `consolidator_bucket_map.py`). Both prod call sites now pass the resolver (`escalation.py`'s FLEET_HALT delivery,
+  `meta_watchers.py`'s release bookend). Was `CANCELLED — SUPERSEDED 2026-08-16` (extracted to
+  `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2) — reconciled here now that the batch has
+  closed. Full evidence in that plan's Progress Log (archived).
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 via batch18 item 3 — deployment-service@7302b037e7.**
+  `RevocationActuator.release()` never resumed a FLEET_HALT's paused schedulers — only the generic marker-clearing
+  ran. Fixed: `_resume_schedulers()` mirroring `_pause_schedulers()`'s shape, wired into `release()` for `FLEET_HALT`;
+  job set recomputed from the static UAC `SCHEDULER_REGISTRY` (same lookup `_pause_schedulers` uses) rather than
+  persisted, so nothing can drift from what was paused. 6 new tests. Was `CANCELLED — SUPERSEDED 2026-08-16`
+  (extracted to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 3) — reconciled here now that
+  the batch has closed. Full evidence in that plan's Progress Log (archived).
 
 **Live peer-contention note, worth carrying forward**: mid-session, `ps aux` surfaced a peer process (started ~30 min
 before this session's own UAC gate run) already quickmerging a SPLIT of `dependency_revocation.py` into
@@ -711,7 +716,7 @@ makes this plan's `release()` finding newly-observable rather than a duplicate o
 POLICY to, not a fix for) and one confirmed-ruled-out mention (`defi_collect_schedulers_paused_since_2026_07_18` cites
 `_pause_schedulers` only as a diagnosis it explicitly ruled out). Clear on all 3 items.
 
-**Extracted to `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md`** (+ its gated
+**Extracted to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`** (+ its gated
 `_finalize` pair, which also carries this plan's + the parent's final archival step). This plan's and the parent
 plan's own copies of the 3 items are marked `CANCELLED — SUPERSEDED` above/in the parent, citing the batch — not
 `[x]`, since the work itself isn't done yet, only relocated to where AO can pick it up. This plan itself has no
