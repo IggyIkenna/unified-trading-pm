@@ -30,6 +30,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
 resolved_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found

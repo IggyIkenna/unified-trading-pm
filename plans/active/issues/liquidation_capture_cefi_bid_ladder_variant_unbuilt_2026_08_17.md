@@ -26,6 +26,8 @@ resolved_by:
 locked_by:
 priority: P3
 execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # What I found
