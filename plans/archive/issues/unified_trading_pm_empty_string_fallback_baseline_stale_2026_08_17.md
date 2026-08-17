@@ -11,7 +11,7 @@ summary: >-
   scripts/sports/migrate_player_mappings_to_canonical.py:63) that a `git diff` against the pre-session base
   commit confirms are untouched by my session's own commits. Blocks EVERY worker trying to ship to
   unified-trading-pm right now, not just this task.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -33,7 +33,7 @@ source: >-
   failed STEP 5.101 on files this session never touched.
 assigned_vm: planning
 execution_scope: orchestrator-agent
-resolved_by:
+resolved_by: quality_gate_resolution (slot-10, escalation agt-c713e8), unified-trading-pm@<PENDING>
 locked_by:
 context_scope:
   [
@@ -42,7 +42,11 @@ context_scope:
     /plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
   ]
 depends_on: []
+drift_direction: advance-code
 ---
+
+> **✅ RESOLVED 2026-08-17** — all 3 sites annotated `# noqa: qg-empty-fallback`, ratchet back at baseline
+> (319). See Progress Log below.
 
 # unified-trading-pm's no_empty_string_fallback ratchet is red on pre-existing, unrelated files
 
@@ -110,16 +114,16 @@ the fix (re-run `check_no_empty_string_fallback.py` fresh, don't trust this doc'
 
 ## Todos
 
-- [ ] [CODE] P1. Fix `scripts/quality_gates/check_xfail_skip_tracked.py:177`'s `.get(key, "")` site — read
+- [x] ✅ [CODE] P1. Fix `scripts/quality_gates/check_xfail_skip_tracked.py:177`'s `.get(key, "")` site — read
       the call site, either rewrite to fail fast or add a justified `# noqa: qg-empty-fallback`. Repo:
       unified-trading-pm.
-- [ ] [CODE] P1. Fix `scripts/quality_gates/detect_template_drift.py:581`'s `.get(key, "")` site — read the
+- [x] ✅ [CODE] P1. Fix `scripts/quality_gates/detect_template_drift.py:581`'s `.get(key, "")` site — read the
       call site, either rewrite to fail fast or add a justified `# noqa: qg-empty-fallback`. Repo:
       unified-trading-pm.
-- [ ] [CODE] P1. Fix `scripts/sports/migrate_player_mappings_to_canonical.py:63`'s `.get(key, "")` site —
+- [x] ✅ [CODE] P1. Fix `scripts/sports/migrate_player_mappings_to_canonical.py:63`'s `.get(key, "")` site —
       read the call site, either rewrite to fail fast or add a justified `# noqa: qg-empty-fallback`. Repo:
       unified-trading-pm.
-- [ ] [CODE] P1. Once all 3 sites are fixed, re-run `check_no_empty_string_fallback.py` fresh (not this
+- [x] ✅ [CODE] P1. Once all 3 sites are fixed, re-run `check_no_empty_string_fallback.py` fresh (not this
       doc's snapshot) to confirm the count is back at or below the committed baseline (319), and ratchet the
       baseline file DOWN if the true clean count differs from 319. Repo: unified-trading-pm.
 
@@ -129,3 +133,11 @@ the fix (re-run `check_no_empty_string_fallback.py` fresh, don't trust this doc'
   follow-up (`rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`). Declared repo-blocker
   RB (kind: qg_red) via `POST /api/repo-blockers`; my own 2 local commits (`16ce1d7065`, `b8833445c8`) stay
   queued locally, unpushed, until this resolves.
+- **2026-08-17 (slot-10, quality_gate_resolution, escalation agt-c713e8)**: dispatched off a fleet-wide
+  `promote_qg_failure` wall on unified-trading-pm PR #3350, whose failing `QG slice (checks)` job named these
+  exact 3 sites. Read each call site — all three are genuine "absent key = meaningful falsy/default" cases
+  (a YAML-config default that already falls through to a hardcoded string via `or`, a manifest `archived_into`
+  presence check, and a source dataframe row field) — added `# noqa: qg-empty-fallback` with a one-line reason
+  to each rather than a fail-fast rewrite, since none of the three represent a hidden-failure risk.
+  `check_no_empty_string_fallback.py --scope unified-trading-pm` now reports `319 (== baseline)`; baseline
+  file left unchanged (true clean count already matches the committed 319, no further ratchet-down needed).

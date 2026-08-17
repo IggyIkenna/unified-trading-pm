@@ -24,7 +24,7 @@ tags: [ci, quickmerge, safe-doc-push, ship-discipline, repo-blocker, process-gap
 related:
   [
     /plans/active/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md,
-    /plans/active/issues/unified_trading_pm_empty_string_fallback_baseline_stale_2026_08_17.md,
+    /plans/archive/issues/unified_trading_pm_empty_string_fallback_baseline_stale_2026_08_17.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-08-17
@@ -41,6 +41,7 @@ resolved_by:
 locked_by:
 context_scope: [scripts/dev/safe-doc-push.sh, /codex/05-infrastructure/per-tab-worktrees.md]
 depends_on: []
+drift_direction: advance-code
 ---
 
 # safe-doc-push.sh silently carries unrelated ahead-of-origin commits
