@@ -57,7 +57,7 @@ from other slots' concurrent activity. This is a live, worsening, fleet-wide con
 | Path                            | Size | Note                                                                                                          |
 | ------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------- |
 | `unified-trading-system-repos/` | 157G | the real multi-slot workspace — N slots x ~20 repo clones each                                                |
-| `mdps_bench_data_fullmonth/`    | 3.8G | unclear ownership/purpose — not investigated this pass                                                        |
+| `mdps_bench_data_fullmonth/`    | 3.8G | **CONFIRMED SAFE TO ARCHIVE/DELETE** (2026-08-17) — dead scratch input for the already-closed `mdps_engine_comparison_2026_05_28` benchmark; see below |
 | `tmp_slot8_manifest_check/`     | 977M | **CONFIRMED DEAD** — newest file mtime 2026-07-12, zero open handles                                          |
 | `google-cloud-sdk/`             | 878M | the gcloud CLI install — expected, don't touch                                                                |
 | `tmp_slot3_manifest_restore/`   | 760M | **CONFIRMED DEAD** — newest file mtime 2026-07-12, zero open handles                                          |
@@ -110,9 +110,22 @@ specific to any one task.
       per slot, not one bad actor. Confirmed still true (2026-08-17 slot-16 sample: `.venv` 0.9-1.3G/repo,
       `node_modules` 2.4G + `.next` 323M for unified-trading-system-ui) but NOT the dominant single-item finding this
       pass — the `.tmp/` scratch leak is.
-- [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G) and
-      `/home/ubuntu/tmp/` (413M, generic — lower confidence than the named slot dirs) before proposing any action on
-      either.
+- [x] ✅ [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G) — DONE 2026-08-17
+      (slot 18). Owned by `plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/run_full_month.py`
+      (`DEFAULT_DATA_ROOT = Path("/home/ubuntu/mdps_bench_data_fullmonth")`), the raw 30-day×9-BINANCE-FUTURES-perp
+      `trades` parquet input for the full-month MDPS engine benchmark (Path A `pure_polars_lazy` vs Path C
+      `current_mdps_mixed`). The benchmark it feeds is COMPLETE and its results already persisted separately —
+      `results_full_month_binance_2026_04.md`/`.json` in the same benchmark dir, `status: pass`, dated 2026-06-29,
+      confirming 10.35× wall / 6.11× peak RSS / 8.88× retention all above their audited floors. `find -name
+      run_full_month.py` across the corpus shows only this one archival script referencing the path (no live
+      service/scheduled job); dir `mtime`/`birth` (2026-06-29) matches the benchmark's own `created:` date, i.e. it
+      was generated once for that already-closed run and never touched since. **Disposition: safe to
+      archive/delete** — the benchmark's conclusions are durably recorded in the committed `.md`/`.json` result
+      files, so the 3.8G raw parquet input is pure re-derivable scratch (re-run `run_full_month.py` against a fresh
+      Binance pull if the benchmark ever needs re-verification). Deferred: `/home/ubuntu/tmp/` (413M, generic, lower
+      confidence) — not investigated this pass, split out as a separate follow-up below.
+- [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/tmp/` (413M, generic — lower confidence than the
+      named slot dirs) before proposing any action.
 
 ## Orphaned manifest-consolidator scratch on the orchestrator VM (found 2026-08-08)
 
@@ -147,6 +160,16 @@ this needs automation rather than an agent noticing.
 
 ## Progress Log
 
+- **2026-08-17 (slot 18, data_engineering worker, AO-dispatched, `ao_satellite_ao_dispatch_batch21_2026_08_16.md`
+  last todo)**: Investigated `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G). Traced ownership via
+  `grep -rl mdps_bench_data_fullmonth` to `plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/run_full_month.py`'s
+  `DEFAULT_DATA_ROOT` — the raw April-2026 30-day×9-BINANCE-FUTURES-perp trades input for the full-month MDPS engine
+  benchmark. That benchmark is closed and its conclusions durably persisted in the same dir's
+  `results_full_month_binance_2026_04.md`/`.json` (`status: pass`, dated 2026-06-29). No other script/service
+  references the path fleet-wide. Disposition: safe to archive/delete (re-derivable scratch input, not an output).
+  Flipped the todo above with full detail; did not delete anything (read-only investigation per this todo's own
+  scope + the `block_destructive_commands.py` autonomous-cleanup gate). Split `/home/ubuntu/tmp/` into its own
+  separate open `[DATA] P2` follow-up todo since it was never actually investigated this pass. (repo: unified-trading-pm)
 - **2026-08-09 (slot 28, review, finalize `infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` todo 2)**:
   Reconciled both `[INFRA]` todos above now that batch10's todos 2-3 shipped — flipped both to `[x]`, citing
   `unified-trading-pm@699f53832` (todo 2, manifest-consolidate-* TTL reaper) and `agent-orchestrator@bb85164` (todo 3,

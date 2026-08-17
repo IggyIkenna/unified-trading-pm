@@ -177,12 +177,17 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       (shared host). — ✅ DONE 2026-08-17 (slot 6): itemized manifest written. Headline: ~57.2G of confirmed-dead
       one-off-script `.tmp/` scratch across 5 repo worktrees (slots 14/16/18×2/19) — same anti-pattern class as the
       already-fixed `manifest-consolidate-*` leak. Full table + rationale in the issue doc's new Progress Log entry.
-- [ ] [DATA] P2. **Investigate the ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G)** on the
+- [x] ✅ [DATA] P2. **Investigate the ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G)** on the
       shared host — identify which service/plan created it, whether any live script still references it, and whether
       it's safe to archive/delete. **Done when**: ownership is identified (or confirmed genuinely orphaned) and a
       disposition recommendation is written, cited back into
       `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md` + the tracker's Track 4. Repo: infra
-      (shared host).
+      (shared host). — ✅ DONE 2026-08-17 (slot 18): owned by
+      `plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/run_full_month.py`'s `DEFAULT_DATA_ROOT` — raw
+      input for the full-month MDPS engine benchmark, whose results are already durably persisted
+      (`results_full_month_binance_2026_04.md`/`.json`, `status: pass`, 2026-06-29). No other consumer found
+      fleet-wide. Disposition: safe to archive/delete (re-derivable scratch, not output). Full detail in the issue
+      doc's new Progress Log entry.
 
 ## Codex SSOTs (read before starting)
 
@@ -191,6 +196,12 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 ## Progress Log
 
+- **2026-08-17 (slot 18, data_engineering worker, AO-dispatched)**: Worked the `mdps_bench_data_fullmonth/` ownership
+  todo (the plan's last remaining open item). Traced ownership to
+  `plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/run_full_month.py`; its benchmark is closed with
+  results already persisted (`status: pass`, 2026-06-29) — disposition: safe to archive/delete. Full detail in
+  `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`'s new Progress Log entry; checkbox above
+  flipped. This plan's 7 todos are now all complete.
 - **2026-08-17 (slot 10, infra worker, AO-dispatched)**: Worked the 49.3G/16G-swap best-effort root-cause todo.
   Original 2026-08-02 peak predates resource-watchdog (shipped 2026-08-05) — no forensic trail survives, closed
   best-effort-exhausted. Redirected to the fallback: queried resource-watchdog's own kill corpus and found 187
