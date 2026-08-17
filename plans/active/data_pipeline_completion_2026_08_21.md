@@ -165,6 +165,39 @@ than a hypothesis — the operator asked specifically what past failures should 
 
 | B24 | **Minimum history declared per shard, and TRANSITIVE** `+ADDED` | Every shard declares the minimum history it needs to produce anything at all — and the requirement for a consumer is the **transitive closure** through the chain, not its own hop. | You cannot build a 1-year candle without a year of tick history, and you cannot compute a 10-period moving average over 1-year candles without **ten years** of candles beneath it. The requirement COMPOUNDS per hop; declaring it only at the last hop understates it by the depth of the chain. |
 | B25 | **Registration FAILS when declared config exceeds available history** `+ADDED` | A strategy/feature config asking for more lookback than measured coverage provides is rejected **at registration**, not at runtime. Declared lookback is checked against real honest coverage for that exact shard. | Otherwise we produce config that says what we want without ever checking the data exists to fulfil it — and the failure surfaces as quietly wrong numbers rather than an error. Composes with P12 (preflight registration) and B16 (denominator). |
+| B26 | **Three-stage benchmark per shard** `+ADDED` | Measure and record the pipeline as **three separate stages**, never one aggregate: **(1) fetch** — vendor/venue download, as throughput; **(2) process** — transform/normalise, as **latency**; **(3) write** — save to GCS, as **IO throughput**. One figure per stage, per shard, **and per MODE — batch, paper and live** (operator, 2026-08-17): the same three stages carry different profiles per mode, so a batch figure says nothing about live headroom. | An aggregate end-to-end number cannot answer the question we need it for. If most wall-clock is vendor-side fetch, changing compute provider or machine size changes nothing — and B11's measured 6–7% CPU on a 16-vCPU TradFi fleet is exactly what a fetch-bound shard looks like. The split is what makes B5's ETA and B11's rightsizing verdict *explainable* rather than merely observed. |
+
+### The three-stage benchmark — what it is FOR
+
+**It is a portability baseline, not a scorecard.** The point is to be able to answer "how much worse would this be
+somewhere else?" with a measurement instead of a guess.
+
+- **Portable by construction.** The same harness must run **off-Google** — on a laptop, or on another provider — or the
+  comparison is inference rather than measurement. A benchmark that only exists inside one provider's environment
+  cannot tell you what leaving it costs.
+- **The Google figure is the REFERENCE ETA, explicitly not a bar to beat.** Per the operator: we do not have to beat
+  it; we need to know how far off we are. That framing matters, because a target invites tuning the benchmark, whereas
+  a reference invites measuring honestly.
+- **Why the stage split is the whole value.** Each stage has a different bottleneck and a different remedy — fetch is
+  bound by vendor rate limits and network, process by CPU, write by IO and object count. A single end-to-end number
+  averages all three and hides which one to act on. It also silently misattributes: a slow shard reads as "needs a
+  bigger machine" when it is actually waiting on a vendor.
+- **Per MODE, not just per shard.** Batch backfill is bulk and throughput-bound; live is streaming and latency-bound;
+  paper sits between and must match batch (the ε=0 property). The same three stages therefore have three different
+  profiles, and the interesting numbers are different ones: batch cares about fetch+write throughput, live cares about
+  process latency and whether write keeps up in real time. Quoting a batch benchmark as if it bounded live capacity is
+  the specific error this per-mode split prevents.
+- **Composes with B6** (vertical scaling): when bundled throughput lags what the individual shard metrics predicted, the
+  three-stage split identifies *which* stage failed to parallelise — otherwise the shortfall is unattributable.
+- **Composes with B17** (cost): cost per stage, so an expensive stage is visible rather than averaged into a
+  per-shard total.
+
+- [ ] [BACKEND] P1. **Instrument the three stages per shard** and record fetch throughput, process latency, and GCS
+      write throughput separately.
+- [ ] [BACKEND] P1. **Make the harness portable** — same benchmark runnable on a laptop and on a non-Google provider,
+      so the figures are directly comparable rather than adjusted.
+- [ ] [BACKEND] P2. **Publish the per-shard reference ETA** derived from the Google figures, labelled REFERENCE and not
+      a target, alongside the per-stage breakdown that explains it.
 
 ### History sufficiency — why it is a chain problem, not a per-shard number
 
