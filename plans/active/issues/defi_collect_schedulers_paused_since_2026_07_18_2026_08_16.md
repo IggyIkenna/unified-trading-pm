@@ -28,7 +28,7 @@ related:
   ]
 created: "2026-08-16"
 author: slot-1
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 source: data_pipeline_failure escalation agt-95ede4 (DP-FETCH-009, side-finding, not the
   escalation's own asset_group/data_type)
 resolved_by:
@@ -112,15 +112,21 @@ one-shot dispatch.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. **Confirm resuming is safe, then resume all 3**: for each of
-      `dex-pools`/`evm-defi`/`solana-defi`, check `gcloud compute instances list
-      --project=central-element-323112` for any currently-running or very-recently-completed
-      backfill VM targeting that operation (naming pattern `mtds-<op>-backfill`, per
-      `deployment-service/scripts/vm/launch-mtds-<op>-backfill-vm.sh` if one exists), and
-      grep `plans/active/` once more for any newer doc that might explain the pause. If
-      clear, `gcloud scheduler jobs resume uts-prod-mtds-collect-<op>-cron
-      --project=central-element-323112 --location=asia-northeast1` for each, then verify
-      `state: ENABLED`.
+- [ ] [OPERATOR] P1. **INVESTIGATED 2026-08-17 (blocked-questions backlog live check,
+      BLK-op-…-06e066fa990d answered FINAL) — NOT resumed, gate still unmet.** (a) Confirmed
+      all 3 STILL `state: PAUSED` right now (live `gcloud scheduler jobs describe`) — not
+      stale. (b) `gcloud compute instances list` (live, full fleet) shows no VM currently
+      targeting dex-pools/evm-defi/solana-defi and no `canonical-migration-defi-*` VM at all
+      — the migration-VM race this todo asked about is clear. (c) Going further than the
+      narrow VM check, per this doc's own 2026-08-17 correction above: Track 8's REAL gate
+      is "Track-1/2 landing AND the migration VM finishing" — checked live, and
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md` (Track 1) is still
+      `status: active` with 2 open todos today (P1 "Score coverage per-instrument", P0
+      "Residual canon walk C2-C12"). **Track 1 has NOT landed** — resuming now would race
+      these 3 collectors' writes against the still-in-flight canonicalization work, exactly
+      what the gate exists to prevent. Not ambiguous — a clear NOT-YET. Did not smoke-test or
+      resume. Re-attempt once Track 1's 2 remaining todos close (then re-check Track 2/bucket
+      hygiene too).
 - [ ] [SCRIPT] P2. **Root-cause the shared 2026-07-18 `NonZeroExitCode` failure** that
       preceded all 4 pauses — pull each job's 2026-07-18 execution logs
       (`gcloud logging read` or the Cloud Run execution's own stderr) to confirm whether it
@@ -149,3 +155,7 @@ one-shot dispatch.
   Resumed oracle-prices myself (see companion doc); left these 3 for operator/next-dispatch
   triage since I hadn't done the equivalent "is it safe" check for them.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-17 (blocked-questions backlog live check)**: answered `BLK-op-defi_collect_schedulers_paused_since_2026_07_18-06e066fa990d`
+  FINAL via `POST /api/blocked/{id}/answer` (HTTP 200). Live-reverified all 3 schedulers still PAUSED (not stale),
+  confirmed no conflicting VM, then checked the doc's own Track 8 correction's broader gate (Track-1/2 landing) —
+  Track 1 still active with 2 open todos, so did NOT resume. See the `[OPERATOR]` todo above for full findings.

@@ -64,10 +64,22 @@ DEPLOYMENT_API_URL="${RW_DEPLOYMENT_API_URL:-}"
 # keeps working during rollout.
 DEPLOYMENT_API_KEY="${RW_DEPLOYMENT_API_KEY:-}"
 if [[ -z "${DEPLOYMENT_API_KEY:-}" && -n "${DEPLOYMENT_API_URL:-}" ]]; then
+  # `|| true` is load-bearing under `set -euo pipefail`: this service runs as
+  # root (no `User=` in resource-watchdog.service), and root has NO gcloud
+  # credentials on this AWS-hosted VM (only `ubuntu`'s gcloud config is
+  # authenticated — this box has no GCE metadata server to fall back to, it's
+  # EC2). Without the guard, a failed `gcloud secrets versions access` makes
+  # this command-substitution assignment itself fail, which `set -e` treats as
+  # a fatal error and kills the WHOLE watchdog — found live 2026-08-17 when a
+  # blind repo->installed copy crash-looped the service (NRestarts climbing,
+  # near-zero actual host-memory-guard coverage) for ~2.5 minutes before this
+  # fix. The core kill-runaway-process function matters far more than this
+  # secondary notification, so a resolution failure here must degrade to "omit
+  # the header" (existing behavior below), never take the process down.
   DEPLOYMENT_API_KEY="$(
     timeout 10 gcloud secrets versions access latest --secret=deployment-api-api-key \
       --project=central-element-323112 2>/dev/null | tr -d '\n'
-  )"
+  )" || true
   if [[ -z "${DEPLOYMENT_API_KEY:-}" ]]; then
     echo "[resource-watchdog] WARN deployment-api key unset — kill-event POST will omit X-API-Key (auth will fail after enforcement flip)" >&2
   fi

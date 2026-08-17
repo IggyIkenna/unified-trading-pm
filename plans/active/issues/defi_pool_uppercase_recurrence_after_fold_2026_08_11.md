@@ -732,3 +732,16 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   - No durable fix needed based on this evidence — the lock/TTL mechanism worked exactly as designed: a genuinely
     long-running merge held the lock for its actual duration, then released it normally on completion.
     unified-trading-library@864f62c2f7 (script committed, QG green, shipped via quickmerge).
+- **2026-08-17 (blocked-questions backlog live check)**: answered `BLK-op-defi_pool_uppercase_recurrence_after_fold-8fcf1eb70634`
+  FINAL via `POST /api/blocked/{id}/answer` (HTTP 200) — the operator's real question was "is this not done already,
+  check." Verdict: genuinely NOT done, not stale, not superseded — confirmed by (1) reading the full doc history (this
+  is one of the most actively-worked docs in the corpus, most Progress Log entries from today/yesterday), (2) grepping
+  `plans/active/`+`plans/archive/` for a superseding migration plan (none found), (3) a fresh independent live spot-check
+  (UTL `get_storage_client`, not gsutil) against `market-data-tick-defi-prd`'s `processed_candles/by_date/day=2023-01-01/
+  pipeline_mode=batch_onchain_rpc/` prefix — 30/30 sampled objects still at the non-canonical uppercase
+  `instrument_type=POOL/` path today, 0/30 lowercase, e.g.
+  `.../instrument_type=POOL/venue=BALANCER-ARBITRUM/BALANCER-ARBITRUM:POOL:0xd897...bf.parquet`. The corpus-wide
+  ~30.7M-object (defi+cefi+tradfi+prediction) non-canonical population is scoped but not yet migrated; the open
+  `[OPERATOR]` P2 "decide plan destination" todo above still stands, answered with a recommendation of
+  `assigned_vm: NA` (human plan, per this workspace's default-human rule for a judgment-call-scale migration plan) —
+  no plan authored, no migration executed, per the check-only scope of this session.

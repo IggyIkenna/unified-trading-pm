@@ -24,7 +24,7 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-15"
+last_updated: "2026-08-17"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -106,7 +106,10 @@ bounded read): NOT CLEAN — real, live pollution found, more active than the Ju
    removes them.
 3. **BARCHART — dormant legacy pollutant, zero growth.** 9,119 `empty_confirmed` rows, last `attempted_at` 2026-07-07
    (over 5 weeks stale) — matches "Barchart RETIRED" (CLAUDE.md's tradfi-databento-sourcing-ssot pointer). Not actively
-   growing; a straightforward manifest-cleanup candidate, no live-fetch risk.
+   growing; a straightforward manifest-cleanup candidate, no live-fetch risk. **STALE COUNT (see 2026-08-17 Progress Log
+   entry for the current live figure — 4,655, not 9,119, at re-check time; still present, still a valid purge
+   candidate, but this specific number has already drifted once and will drift again — re-measure at execution time
+   rather than trusting either count.)**
 
 **Leg 5 (surfaces — catalogue/data-status/UI): NOT AUDITED this session** (task budget exhausted on the manifest finding
 above, which is the more urgent one). Flagging as an open gap rather than silently skipping.
@@ -198,3 +201,50 @@ column-projected row-group filter + `gcs_describe_object` cross-check, run via
 `scripts/dev/run-bounded-analysis.sh --mem-cap 4G` per the memory-bounding HARD RULE.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+### 2026-08-17 (blocked-question backlog re-verification, answering `BLK-op-retirement_completeness_pollutant_reverify_ice_still_live-adb53e8ea708`) — status-check only, no purge executed
+
+Per operator instruction ("check current status first — not a yes/no yet"), re-ran a fresh, read-only, bounded column
+read of the live tradfi tick-data manifest (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`,
+`unified_trading_library.read_availability_index(bucket, columns=[venue, source, instrument_id, capture_status,
+data_type, instrument_type, attempted_at])`, run via `scripts/dev/run-bounded-analysis.sh --mem-cap 4G` from
+`market-tick-data-service`'s venv; total manifest rows at read time: 14,472,526). No writes, no deletes — read-only
+verification only, per this task's explicit scope (the actual pause-consolidator→snapshot→filter→resume purge is
+NOT authorized by this check and was not run).
+
+**CBOE VIX-cash-index stragglers: still 17 rows, UNCHANGED from the 2026-08-15 finding** — 15× `CBOE:INDEX:VIX-USD` +
+2× bare `VIX`, all `capture_status=empty_confirmed`, max `attempted_at` 2026-07-24T00:54:30Z. Confirmed still present,
+not cleaned up.
+
+**BARCHART: 4,655 rows currently, NOT the 9,119 the 2026-08-15 doc cited** — all `empty_confirmed`, evenly split 931
+rows each across `ohlcv_15m`/`ohlcv_1m`/`ohlcv_24h`/`tbbo`/`trades`, min/max `attempted_at` both a single stamp
+`2026-05-07T14:49:23.237671Z` (not `2026-07-07` as the original doc stated — a second discrepancy). This is a real
+~49% drop in row count since 2026-08-15 with no purge script run found in between to attribute it to (not
+investigated further this pass — flagging as an open discrepancy, not asserting cause). Still fully dormant (a single
+historical timestamp, zero growth) and still a valid, unambiguous purge candidate — just at a different measured
+count than originally filed.
+
+**ICE-via-databento (source=databento, venue=ICE) non-24h rows: 401,557 total** — 742 `captured` (661 `futures_chain`
++ 81 `ohlcv_1m`, the exact same stale-reregistered-object counts the 2026-08-15 DIAG root-caused to
+`rebuild_tradfi_manifest.py` re-stamping pre-2026-07-13 GCS objects — unchanged), 9,966 `empty_confirmed`, 390,849
+`attempted_failed` (spread across `mbp_10`/`ohlcv_1s`/`ohlcv_15m`/`ohlcv_24h`/`tbbo`/`trades`/`macro_result` — the
+`ohlcv_1s`/`mbp_10`/`tbbo`/`trades` `attempted_failed` sub-counts are all slightly HIGHER than the 2026-08-15 snapshot,
+e.g. `ohlcv_1s` 370,498 vs 373,600 originally cited is actually lower but `mbp_10` 11,167 combined vs 11,166 and
+`tbbo`/`trades` are within a few rows — consistent with continued periodic `rebuild_tradfi_manifest.py` re-stamping,
+not a live re-fetch; the 2026-08-15 DIAG already ruled out live-billing risk and nothing here contradicts that).
+`ICE max attempted_at by source=databento: 2026-08-16T03:43:46Z` — i.e. a rebuild re-stamp ran again as recently as
+yesterday, consistent with (not contradicting) the "stale re-registration keeps recurring until the GCS objects are
+actually deleted" finding already on record. **Not part of this pollutant set** (found this pass, informational only):
+legitimate `ICE:INDEX:DXY-USD` via `source=yahoo` (10,953 rows, the sanctioned path) and `source=fred` ICE rows (1,928
+rows, `ohlcv_1d`/`yield_curve`, `empty_confirmed`) — the latter wasn't evaluated by the original 2026-08-15 doc; not
+established here as a pollutant or as legitimate, just noted as an unaudited adjacent finding.
+
+**Verdict**: the retirement-completeness pollutant condition is CONFIRMED STILL LIVE as of 2026-08-17 — none of the
+three categories have been cleaned up since 2026-08-15 (BARCHART's row count dropped but the rows themselves are
+still all present and still stale/dormant; CBOE VIX-cash and ICE are unchanged or larger). The purge this todo calls
+for is still warranted. Per this task's scope, execution was NOT performed — a prod GCS-object delete + manifest
+filter needs `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a citation and dedicated operator sign-off
+on the actual run, which stays a separate, still-open follow-up (this P2 todo is intentionally left unchecked).
+Answered `BLK-op-retirement_completeness_pollutant_reverify_ice_still_live-adb53e8ea708` via
+`POST /api/blocked/{id}/answer` with this evidence (`from_role=operator`, `disposition=final`) — the blocked-question
+escalation is resolved with current status; the underlying purge action is not.
