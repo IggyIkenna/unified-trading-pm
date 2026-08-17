@@ -90,9 +90,25 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
       blocker for its OTHER todos is unaffected. Each parent doc also got a Progress Log entry naming the batch as the
       actual shipping session, since none of these three parent docs' authors cross-checked against batch1 before it
       duplicated their todos.
-- [ ] [REVIEW] P2. **Confirm the LST migration did not add eETH or rsETH.** Their absence is a deliberate operator
-      ruling (2026-08-16), not an oversight — a worker "completing" the registry would silently reintroduce the orphan
-      class the reachability gate exists to catch.
+- [x] ✅ [REVIEW] P2. **Confirm the LST migration did not add eETH or rsETH.** Their absence is a deliberate operator
+      ruling (2026-08-16, recorded in
+      `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`), not an oversight — a
+      worker "completing" the registry would silently reintroduce the orphan class the reachability gate exists to
+      catch.
+      — **Confirmed absent on both sides, independently re-checked this session (slot 21).** UAC's
+      `unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py` carries an explicit
+      `# DELIBERATELY ABSENT — eETH and rsETH (2026-08-15)` block (lines 87-94): reasoning is that
+      `LST_VENUE_TO_TOKENS` declares `ETHERFI` as `("weETH",)` only and has no `KELPDAO` venue at all (verified via
+      grep — no `ETHERFI`/`KELPDAO` reference anywhere maps either symbol reachable), so an unreachable registry entry
+      is dead weight that invites a hand-copy; adding either needs a cited `LST_TOKEN_GENESIS` date since that map
+      drives coverage denominators. Cross-checked the execution-service side too:
+      `execution-service/execution_service/defi_execution/protocols/etherfi.py::EETH_ADDRESS` and
+      `kelpdao.py::RSETH_ADDRESS` both remain plain string literals (`0x35fA...`, `0xA129...`), NOT routed through
+      `required_lst_address()` the way every migrated Chunk-A/B entry is. Confirmed the drift-invariant test
+      (`unified-api-contracts/tests/test_lst_token_address_drift_invariant.py`) has no `eETH`/`rsETH` entry in either
+      `LST_ADDRESS_SOURCE` or `MIGRATED_TO_UAC_LOOKUP` — consistent with the pair being outside the registry
+      entirely, not merely un-migrated. No code changed — verification-only, matches the ruling exactly, ruling still
+      correctly not implemented.
 - [ ] [REVIEW] P2. **Re-check the skills audit's verdicts against the oracle's own blind spots.** The oracle is
       path-structure-only and value-blind, so a skill that now calls it is still not checking filename instrument_id
       or the `instrument_type`/`data_type`/`venue`/`chain` values. Confirm each skill either checks those separately
@@ -124,3 +140,12 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
   `origin/live-defi-rollout` and spot-checked their content against each claim — did not trust batch1's own copy of
   the evidence lines. Full detail in the flipped checkbox above. Next open item is the P2 "confirm the LST migration
   did not add eETH or rsETH" todo.
+
+- **2026-08-17 (slot 21, review) — REVIEW P2 "confirm the LST migration did not add eETH or rsETH" flipped, no code
+  change.** Re-verified independently rather than trusting batch1's own claim: `unified-api-contracts`'s
+  `lst_token_addresses.py` still carries its explicit `DELIBERATELY ABSENT — eETH and rsETH` block with the
+  unreachable-venue rationale (`LST_VENUE_TO_TOKENS` has `ETHERFI: ("weETH",)` only, no `KELPDAO` key at all);
+  `execution-service`'s `etherfi.py::EETH_ADDRESS` and `kelpdao.py::RSETH_ADDRESS` remain plain literals, not routed
+  through `required_lst_address()`; and the drift-invariant test's `LST_ADDRESS_SOURCE`/`MIGRATED_TO_UAC_LOOKUP`
+  dicts have no entry for either symbol. Full detail in the flipped checkbox above. Next open item is the P2
+  "re-check the skills audit's verdicts against the oracle's own blind spots" todo.
