@@ -6,7 +6,7 @@ summary: >-
   contract steps 1-9 across every defi (venue, data_type) row from `unified-api-contracts/scripts/
   generate_venue_work_list.py` (200 rows, measured 2026-08-16; re-run the script, this count is not a constant).
   Not an extraction from another source doc — no operator-gated item mixed in, per task_template.md §3 finding Y.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data, features, strategy, execution]
