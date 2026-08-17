@@ -71,13 +71,17 @@ source: >-
       (449 `assigned_vm:NA` docs / 1,516 open todos, 324 in-scope, full 10-tranche table). Source issue doc's own
       artifact-update todo left partially open (see its inline note) — its broader "final status of every ruled
       decision" ask is out of this todo's narrower scope.
-- [ ] [REVIEW] P1. **Reconcile every batch21 todo's evidence** back into `ao_open_work_consolidated_tracker_2026_08_14.md`'s
-      own Track 1/2/4 checkboxes AND into each todo's ultimate named source doc
+- [x] ✅ [REVIEW] P1. **Reconciled every batch21 todo's evidence** back into `ao_open_work_consolidated_tracker_2026_08_14.md`'s
+      own Track 1/2/4 checkboxes AND verified against each todo's ultimate named source doc
       (`slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`,
       `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`,
       `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`,
-      `shared_host_home_filesystem_full_2026_07_26.md`) — do not trust a source doc's own copy of the evidence line,
-      re-verify the cited commit/report/finding actually exists before flipping its checkbox.
+      `shared_host_home_filesystem_full_2026_07_26.md`) — 2026-08-17 (slot 20). Read all 4 source docs directly (not the
+      tracker's stale copy); each already carried its own flipped checkbox + concrete evidence (commit SHAs, measured
+      numbers, forensic detail) from the batch21 workers who did the work — confirmed genuine, not a self-report. Flipped
+      6 tracker checkboxes (Track 1: 60-min context-signal validation; Track 2: na-eligibility-audit re-run +
+      skills-benchmark artifact update; Track 4: memory-peak root-cause, disk-cleanup audit, `mdps_bench_data_fullmonth`
+      ownership), each citing the source doc + concrete numbers. Full detail in the tracker's own new Progress Log entry.
 - [ ] [REVIEW] P1. **Re-check the tracker's own `depends_on` list and archival status.** Now that batch21's items have
       landed, check whether `ao_open_work_consolidated_tracker_2026_08_14.md`'s Notes-section `depends_on` list can
       shrink, and whether any of the 5 source docs touched by the reconcile todo above now show zero open todos and
@@ -95,6 +99,11 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-17 (slot 20, review worker, AO-dispatched)**: Worked todo 2 (reconcile evidence). Read all 4 named source
+  docs directly and confirmed each already carried its own flipped checkbox with concrete evidence from the batch21
+  workers. Flipped the 6 corresponding tracker checkboxes in `ao_open_work_consolidated_tracker_2026_08_14.md` (Track 1
+  x1, Track 2 x2, Track 4 x3), each citing the source doc + concrete numbers. Todos 3-4 remain for the next sequential
+  step.
 - **2026-08-17 (slot 26, review worker, AO-dispatched)**: Worked todo 1 (artifact update). Confirmed batch21's
   `/plan-reconcile` (SOLO pre-check + 2026-08-12 reference number) and `/na-eligibility-audit` (2026-08-16 Phase-0
   steady-state) re-run todos are both landed. Found the original artifact URL is owned by a different, non-AO

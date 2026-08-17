@@ -33,7 +33,7 @@ related:
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -191,13 +191,9 @@ context_scope:
   `model_tier._ALLOWED_MODEL_WINDOWS` carries a corpus-measured sonnet-5 prior (937,882 tokens / 17,974 transcripts) as
   the cold-start fallback. The manual purge-and-relearn this todo asked for is obsolete — the same correction now
   happens automatically. Source: same doc, line ~342.
-- [ ] [BACKEND] P2. **Re-run the 60-min context-signal validation after a clean fleet — overdue.** Multiple qualifying
-      changes to `context_lifecycle.py`/`context_probe.py` have landed since 2026-08-08 (`a1e2969`, `59d9417`,
-      `c00dc13`, `acc41b1`, `4af78dc`, `ac9ba18`, `905c210`, `c730f46`, `e943d72`+) with no re-run recorded since the
-      2026-08-10 audit. Source: same doc, line ~411. — **RE-RUN DONE 2026-08-17** (slot 12, `ao_satellite_
-      ao_dispatch_batch21` todo 1): fresh 60-min clean-start window, PASS on both criteria (21 forces, `60×11 · 69×10`,
-      zero terminal wedges — see the source issue doc's "2026-08-17 validation window" section for the full write-up).
-      Checkbox left unflipped here per this batch's own rule; `batch21_finalize` reconciles it.
+- [x] ✅ [BACKEND] P2. **Re-run the 60-min context-signal validation — DONE 2026-08-17** (slot 12, batch21 todo 1;
+      reconciled batch21_finalize todo 2). Clean-start window: 21 forces `60×11 · 69×10`, zero wedge-terminal events.
+      Source: `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`.
 - [x] [REVIEW] P3. **DONE.** `DoneRequest.claude_session_id` field exists (`server/models/worker_api.py:275`);
       `_done_one_off` (`server/routes/slots_worker.py:1912-1924`) matches it against the archived row's own
       `claude_session_id` and returns idempotent 200 instead of 409. Tracker's premise ("still has no field") is stale.
@@ -261,13 +257,18 @@ context_scope:
       timer) filed in Source. Most recent real whole-corpus number remains the 2026-08-12 interactive run (774 docs,
       121 contradictions) — 4 days stale. Source:
       `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
-- [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean steady-state benchmark.
-      Source: same doc.
+- [x] ✅ [SCRIPT] P1. Re-run `/na-eligibility-audit` — DONE 2026-08-16 (slot 9, batch21 todo 3; reconciled batch21_finalize
+      todo 2). Numbers in the duplicate `[x]` entry a few lines below. Source: same doc.
 - [x] [REVIEW] P2. **DONE — shipped `unified-trading-pm@d708247af1` TODAY (2026-08-15).**
       `agents/na_eligibility_auditor.md` STEP 1 (lines 109-115) now runs `git pull --ff-only origin live-defi-rollout`
       before proceeding, matching `agents/plan_reconciler.md`'s existing pattern exactly. Verified 2026-08-15
       (reconciliation sweep, this session, same day as the shipping commit). Source: same doc — flip its checkbox too.
-- [ ] [DOC] P2. Update the published skills-benchmark artifact once the two re-runs above land. Source: same doc.
+- [x] ✅ [DOC] P2. Update the published skills-benchmark artifact once the two re-runs above land — DONE 2026-08-17
+      (slot 26, `ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md` todo 1). New artifact
+      `https://claude.ai/code/artifact/e1ef46e8-1854-4ca5-96da-6cc66d88f2cb` cites both fresh reports (numbers +
+      timestamps) — the original URL is owned by a different, non-AO claude.ai account and unreachable from this
+      session. The source doc's own broader "final status of every ruled decision" ask stays open there (out of this
+      narrower todo's scope). Source: same doc.
       _(DeepSeek/Claude blended-routing work — `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` —
       and the Luna/Flex bridge — `codex_luna_flex_bridge_2026_08_14.md` (local-only, not yet pushed to origin as of this
       edit) — are out of scope for this tracker per operator direction 2026-08-14: handled elsewhere. The 7 todos below
@@ -381,11 +382,10 @@ context_scope:
       pruning them. Full resolved spec + both required deliverables (worker prompt template + dispatch hook; retention
       sweep) written into the source doc. Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox
       flipped there too.
-- [ ] [DIAG] P2. Best-effort root-cause the specific 49.3G/16G-swap peak more precisely, if feasible. **Confirmed still
-      genuinely open 2026-08-15** (reconciliation sweep) — enforcement (resource-watchdog) shipped and live, the "49.3G"
-      figure is a sticky cgroup `memory.peak` high-water-mark (not fresh per-restart evidence, confirmed across 3+
-      restarts), but the actual proximate cause was never pinned down (both live candidate processes checked at the time
-      were ruled out). Explicitly "best-effort... if feasible," no bounded done-when. Source:
+- [x] ✅ [DIAG] P2. Best-effort root-cause the 49.3G/16G-swap peak — DONE 2026-08-17 (slot 10, batch21 todo 5; reconciled
+      batch21_finalize todo 2). Original peak best-effort-exhausted (predates resource-watchdog); redirected to
+      resource-watchdog's own kill corpus — 187 kills/7d, 25 >10GB RSS, all tracing to 4 unbounded CEFI-manifest scripts
+      in `market-tick-data-service/scripts/` (new follow-up filed there). Source:
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`.
 - [x] [REVIEW] P2. **DONE — confirmed live 2026-08-15 (this session, direct SSM check).** Zero kernel OOM-killer hits
       host-wide in the last 30 days (`journalctl -k`, no root needed — the orchestrator's own service user,
@@ -412,13 +412,14 @@ context_scope:
       wiring. **A dashboard UI tile is explicitly NOT built** (out of scope for this pass, backend-only) — remains a
       genuine follow-up if the operator wants the data surfaced visually, not just available over the WS feed. Source:
       `/plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`.
-- [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, dominant disk consumer) for real cleanup headroom. Source:
-      `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`. — Evidence (checkbox left for
-      `batch21_finalize` to reconcile): DONE 2026-08-17 (slot 6) via
-      `ao_satellite_ao_dispatch_batch21_2026_08_16.md` todo 6 — itemized manifest found ~57.2G of confirmed-dead
-      one-off-script `.tmp/` scratch across 5 repo worktrees (slots 14/16/18×2/19), same anti-pattern class as the
-      already-fixed `manifest-consolidate-*` leak. Full detail in the issue doc's Progress Log.
-- [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G). Source: same doc.
+- [x] ✅ [DATA] P2. Audit `unified-trading-system-repos/` (157G) for cleanup headroom — DONE 2026-08-17 (slot 6, batch21
+      todo 6; reconciled batch21_finalize todo 2). Found ~57.2G confirmed-dead `.tmp/` scratch across 5 repo worktrees
+      (audit-only, no deletes — gated by `block_destructive_commands.py`). Full manifest in the issue doc. Source:
+      `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`.
+- [x] ✅ [DATA] P2. Investigate `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G) — DONE 2026-08-17 (slot 18, batch21
+      todo 7; reconciled batch21_finalize todo 2). Owned by the already-closed full-month MDPS engine benchmark
+      (`mdps_engine_comparison_2026_05_28`); results durably persisted. Disposition: safe to archive/delete. Source:
+      same doc.
 - **[SCRIPT] P3. CANCELLED — SUPERSEDED 2026-08-15 (reconciliation sweep, this session).** Was: bump `PYRIGHT_TIMEOUT`
   if a QG kill recurs. Already closed 2026-08-12 by `/plan-reconcile`: the kill DID recur (9 occurrences,
   `pytest_timeout_60s_flaky_under_contention*` doc-chain) but that investigation explicitly rejected a timeout bump
@@ -981,6 +982,11 @@ plan can reach zero-open-todos and archive independently.
   ongoing/multi-session by the operator's own direction). **Recommended next item** if this session resumes: the
   dirty-worktree implementation (Track 4 P0, spec fully written, zero design ambiguity left) — highest-value remaining
   bounded work.
+- **2026-08-17 (slot 20, review worker, AO-dispatched, batch21_finalize todo 2)**: Reconciled all 6 batch21
+  evidence-bearing todos into this tracker's own Track 1/2/4 checkboxes, re-verifying each against its 4 named source
+  docs directly (not the tracker's stale copy) before flipping — all already carried their own flipped checkbox +
+  evidence. Flipped: Track 1 context-signal re-run; Track 2 na-eligibility-audit re-run + artifact update; Track 4
+  memory-peak root-cause, disk-cleanup audit, `mdps_bench_data_fullmonth` ownership. Todos 3-4 remain.
 - **2026-08-16 (operator-reported "fix these Activity [entries]", interactive session)**: dashboard Activity feed
   showed a burst of `escalation_dispatch_initiated` → `escalation failed` pairs (slots #13-#18, ~10:35-10:38Z), each
   citing `server_url() resolved to the PRODUCTION default ... on a standalone instance (vm_id='')`. Traced via
