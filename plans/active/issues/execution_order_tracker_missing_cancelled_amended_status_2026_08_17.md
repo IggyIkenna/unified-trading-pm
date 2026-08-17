@@ -90,13 +90,17 @@ report a stale open-order count based on this, believing an order is still live 
 
 ## Todos
 
-- [ ] [BACKEND] P2. Add a `mark_cancelled(order_id)` / `mark_amended(order_id, ...)` method to `OrderTracker`
+- [x] ✅ [BACKEND] P2. Add a `mark_cancelled(order_id)` / `mark_amended(order_id, ...)` method to `OrderTracker`
       (repo: execution-service) and call it from `/cancel`'s and `/amend`'s success paths in
       `manual_instruction_api.py` after the venue call succeeds. `is_instruction_complete()` (or a new
       equivalent) should treat an instruction whose only open order is now `CANCELLED` as terminal too, not
       stuck `IN_PROGRESS` forever. Done-when: a test proves `GET /instructions/{id}` reflects `CANCELLED` status
       immediately after a successful `/cancel`, and the instruction's aggregate status is no longer stuck
-      `IN_PROGRESS` when its only order is cancelled.
+      `IN_PROGRESS` when its only order is cancelled. — execution-service@99e34929a5. Added
+      `mark_cancelled`/`mark_amended` to `OrderTracker`, wired both into `/cancel`/`/amend`'s success paths, and
+      widened `is_instruction_complete()`'s terminal-status set to `{FILLED, CANCELLED}`. New unit tests in
+      `tests/unit/test_order_tracker.py` (`TestMarkCancelled`/`TestMarkAmended`) prove a cancelled-only
+      instruction is now terminal; existing `_FakeOrderTracker` test doubles updated to match the new interface.
 - [ ] [BACKEND] P3. Prune (or at least stop relying on staleness of) `instruction_to_order_ids`/
       `order_id_to_instruction` in `engine/orchestrator.py` once an order is cancelled/amended-away, or document
       why leaving them populated is intentional (repo: execution-service). Lower priority than the P2 above —
