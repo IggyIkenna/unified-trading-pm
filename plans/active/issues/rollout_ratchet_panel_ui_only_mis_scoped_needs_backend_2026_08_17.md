@@ -175,10 +175,14 @@ craft-scoped worker mid-investigation.
       step in `ruleset-drift-alert.yml` (mirrors `version-coherence-check.yml`'s auth step); 13 new unit tests
       (`tests/unit/test_write_ruleset_drift_verdicts.py`, mirrors `test_write_template_drift_verdicts.py`'s
       structure). Repo: unified-trading-pm.
-- [ ] [CODE] P2. Add a deployment-api route (e.g. `GET /api/rollout-ratchet/overview`) reading both new verdict
-      collections via the existing generic `_verdict_store_reader.py`, mirroring `routes/version_coherence.py`'s
-      shape exactly (read-only proxy, never re-derive the verdict). Repo: deployment-api. Gated on the two todos
-      above (needs real collections to read).
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 (slot-27).** Added `GET /api/rollout-ratchet/overview` — reads both
+      `template_drift_verdicts` + `ruleset_drift_verdicts` via the existing generic `_verdict_store_reader.py`
+      (added `TEMPLATE_DRIFT_COLLECTION`/`RULESET_DRIFT_COLLECTION` constants there, mirroring
+      `VERSION_COHERENCE_COLLECTION`), mirroring `routes/version_coherence.py`'s shape exactly (read-only proxy,
+      independent per-collection `source` availability flags so a Firestore hiccup on one never blanks the
+      other). New `deployment_api/routes/rollout_ratchet.py`, registered in `main.py`; 5 new unit tests
+      (`tests/unit/test_rollout_ratchet_routes.py`, mirrors `test_change_freeze_routes.py`'s structure).
+      `deployment-api@46e04e0757`. — deployment-api@46e04e0757
 - [ ] [CODE] P2. Decide + implement the "running SHA vs `main` HEAD" comparison — either extend
       `/artifacts/running`'s `RunningResponse` with a `main_head_sha` + diff field, or add a new endpoint. Read
       `plans/active/artifact_pipeline_observability_2026_07_17.md` in full FIRST to avoid duplicating that feature's
