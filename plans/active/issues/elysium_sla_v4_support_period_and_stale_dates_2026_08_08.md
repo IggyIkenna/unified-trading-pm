@@ -277,7 +277,7 @@ complete" by 30 June 2026, which did not happen.
       locatable in `unified-api-contracts/` non-test sources in a reasonable search, so the count above is a **measured
       floor from the adapter directory**, not a registry read. Anyone quoting a venue total should either find the
       registry definition or quote the floor and say so.
-- [ ] [AGENT] P2. **Locate the real `VENUE_TO_ADAPTER_KEY` definition and record its path in CLAUDE.md's conditional
+- [x] ✅ [AGENT] P2. **Locate the real `VENUE_TO_ADAPTER_KEY` definition and record its path in CLAUDE.md's conditional
       index.** CLAUDE.md asserts venue lists and adapter keys are UAC data with `VENUE_TO_ADAPTER_KEY` as the resolver,
       but a `rg -l` across non-test sources returned only _consumers_ (`deployment-api`, `market-tick-data-service`,
       `e2e-testing`, `unified-trading-pm/scripts/cicd`) and one UAC **test** file. Either the symbol lives somewhere the
@@ -424,3 +424,4 @@ they were independent. Worth the operator knowing before forwarding it.
   working in a behind-HEAD checkout must read the file from `origin/<branch>` before editing it, not from disk.**
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:edb7041bdca17290]: KEEP-NA, stale-item corrected -- closed the VENUE_TO_ADAPTER_KEY-location todo (lines 280-285): the premise (symbol location unknown) is false -- the symbol is defined at unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:104 (confirmed live on disk 2026-08-17; the candidate's own rg -l search never reached that repo/path), already documented in the active registry_ssot_hardening_2026_08_16.md's Measured Baseline (line 84) and cross-cited by 2 other candidates from this same audit run. Doc stays assigned_vm: NA for its other 18 open items (this is a HUMAN-gated client-SLA doc). Cross-cutting tranche audit conflict-check finding.

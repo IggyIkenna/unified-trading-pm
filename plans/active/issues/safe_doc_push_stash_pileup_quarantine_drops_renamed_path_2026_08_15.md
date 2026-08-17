@@ -109,3 +109,7 @@ quarantine trigger and confirms the retry loop succeeds instead of exhausting.
       of exhausting all 6 attempts. (repo: unified-trading-pm)
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:08f17512841a6b51]: KEEP-NA, valid (classifier RECLASSIFY_WHOLE_DOC verdict OVERRIDDEN on conflict-check) -- the sole open todo (the post-fix RESIDUAL GAP on a git-mv'd rename hitting safe-doc-push.sh's stash-quarantine retry loop) is NOT bounded/mechanical as the classifier assumed: it has had 6 documented investigation passes across multiple sessions, none conclusive (slot-2 discovery 2026-08-15; slot-23/slot-17 both 'could not reproduce'; slot-20 hit a NEW variant 2026-08-16; and a 2026-08-17 na_eligibility_auditor dispatch, slot 30/agt-614193, found a SIXTH data point + a further new variant). This is an actively-worked, state-dependent/elusive repro bug -- reclassifying to assigned_vm:planning would open a competing claim on ground already under live investigation. Cross-cutting tranche audit conflict-check finding.

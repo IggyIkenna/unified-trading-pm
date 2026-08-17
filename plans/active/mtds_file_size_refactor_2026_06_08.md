@@ -149,10 +149,10 @@ byte-identical output before/after).
       methods >50L (75 violations); delete ALL exclude entries; REUSE UTL for cross-cutting pure calcs (search UTL
       first, flag promotion candidates). **Overlaps the file-size table above — execute as one programme.** Repo:
       market-tick-data-service. (MIGRATED FROM: `mtds_coverage_75_and_codex_zero_2026_06_11`.)
-- [ ] [TEST] P3. **Re-add 17 connector reconnect tests** that were deleted (mock-flawed: never-closing mocked websockets
+- [x] ✅ [TEST] P3. **Re-add 17 connector reconnect tests** that were deleted (mock-flawed: never-closing mocked websockets
       spun the reconnect loop) using terminating mocks (the `ws.closed` flip pattern in
       `test_deribit_book_ticker_ws_coverage.py`). Repo: market-tick-data-service. (MIGRATED FROM: same.)
-- [ ] [CODE] P3. **UAC generated-artifact churn** — UAC QG regenerates `openapi/ui-reference-data.json` in a new format
+- [x] ✅ [CODE] P3. **UAC generated-artifact churn** — UAC QG regenerates `openapi/ui-reference-data.json` in a new format
       (18k-line churn) + emits untracked `openapi/capability-manifest.json` + `capability-orphan-report.txt`; per the
       generated-artifacts HARD RULE, gitignore + `git rm --cached` (or re-commit the tracked copy from the current
       generator). Repo: unified-api-contracts. (MIGRATED FROM: same.)
@@ -182,7 +182,7 @@ byte-identical output before/after).
 
 ### From `mdps_coverage_85pct_2026_06_10` (archived — 9/10 done; MDPS coverage→86.71% SHIPPED)
 
-- [ ] [QG] P2. **Run PM `bash scripts/quality-gates.sh`** to confirm the plan + codex update pass
+- [x] ✅ [QG] P2. **Run PM `bash scripts/quality-gates.sh`** to confirm the plan + codex update pass
       (`unified-trading-pm`). (MIGRATED FROM: `mdps_coverage_85pct_2026_06_10`.)
 
 ### Live issue docs this survivor tracks (referenced, NOT folded — they are active blockers with their own lifecycle)
@@ -220,6 +220,7 @@ byte-identical output before/after).
   design/execution effort. Full survey + recommendation:
   `issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
 
+- **na-eligibility-audit 2026-08-17** [body-hash:ed2216fabc187778]: KEEP-NA, stale-items corrected -- closed 3 of 5 open items (connector-reconnect-tests, UAC generated-artifact-churn, PM quality-gates.sh confirm): all already shipped, each citing this exact doc as Source, inside the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (parent_epic infrastructure_master) -- market-tick-data-service@26eef1999f (2026-08-15), unified-api-contracts@f70f29c8 (2026-08-15), and PM's own quality-gates.sh confirmed green (sentinel .qg_last_passed_sha == HEAD 8b7e53a624). Doc stays assigned_vm: NA for its 2 remaining genuine items (MTDS file-split programme, Polars adapter migration -- both large, non-bounded). Cross-cutting tranche audit conflict-check finding.
 ## Deferred work — migrated to:
 
 **Not yet identified** — this whole plan (`status: active` as of 2026-07-27, was `paused`/tagged `deferred`) IS the

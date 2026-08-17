@@ -96,7 +96,7 @@ not `5`.
 Registering `GLUE_COUNT=5` pools per repo across a same-time bulk onboarding (23 repos at once, 2026-07-28) drove the
 shared orchestrator VM into sustained 66-93% iowait, swap pressure, and starved the operator's own interactive/
 autonomous AO slot-worker sessions (observed in `D`-state disk-wait alongside the new runner processes). Full incident:
-`/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. Live-reverified 2026-07-30: with
+`/plans/archive/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. Live-reverified 2026-07-30: with
 every non-original pool running a single `glue-1` runner (no `glue-2`) and only the two original high-traffic pools
 (`unified-trading-pm`, `agent-orchestrator`) keeping a second runner, the host sits at load average 2.4-3.6 (16 vCPU),
 ~5% iowait, 3.4/47GB swap — nowhere near the crisis reading (load 74-119, iowait 66-93%, swap 8-10.5GB). That reduced

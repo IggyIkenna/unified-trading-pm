@@ -471,7 +471,7 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
     — operator-level shared-host capacity/cost decision, same class as the CPU/RAM resize itself.
 
     **This corroborates, and is a smaller-magnitude AFTER-picture of,**
-    `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` — the SAME Phase-7
+    `plans/archive/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` — the SAME Phase-7
     runner-registration burst drove this exact box to 66→93% iowait / load-avg 74→119 / swap growing / disk
     90% full a few hours earlier (with the operator's OWN interactive AO slot-workers observed in D-state
     alongside the runner processes), which is why `glue-2` was disabled across all 23 newly-registered
@@ -608,7 +608,7 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
 
 ## Progress Log — 2026-07-28 evening (`/autonomous`, deployment-ui migration + shared-box I/O fix + AO dashboard)
 
-Full narrative + evidence lives in `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`
+Full narrative + evidence lives in `/plans/archive/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`
 (updated same session) — this entry is the pointer + terse status per plan-vs-issue-doc SSOT direction.
 
 - ✅ `deployment-ui@22df17f`+`210e4c4` — real test/lint job moved to self-hosted `[self-hosted, glue]` (operator

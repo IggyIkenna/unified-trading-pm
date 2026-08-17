@@ -1,0 +1,139 @@
+---
+doc_type: plan
+title: cross-cutting satellite AO dispatch batch 14 — 2026-08-17
+summary: >-
+  Extraction batch from the cross-cutting tranche's 2026-08-17 /na-eligibility-audit sweep — 14 conflict-cleared,
+  bounded/deterministic items pulled directly from 6 source docs (RECLASSIFY_PER_TODO_SPLIT bounded items). Each todo
+  cites its exact source doc; the source docs themselves are NOT touched by this batch beyond having the extracted
+  checkbox flipped with a citation (done in the same audit pass, not deferred to this batch's finalize). Conflict-checked
+  against every existing active batch/finalize plan for this tranche (incl. batch13) before drafting — no item here
+  duplicates ground an existing dispatched todo already claims.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [data]
+repos: [unified-trading-pm]
+scope: [engineer]
+tags: [cross-cutting, ao-dispatch, satellite-batch, na-eligibility-audit]
+related:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/active/lazy_scoped_loading_refactor_2026_08_16.md,
+    /plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md,
+    /plans/active/issues/local_host_concurrent_qg_serial_rule_violated_2026_08_15.md,
+    /plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md,
+    /plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md,
+    /plans/active/manifest_v9_residual_2026_08_15.md,
+  ]
+created: "2026-08-17"
+last_updated: "2026-08-17"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 2.5
+estimate_calibrated_ai_days: 2.0
+assigned_role: infra
+effort: medium
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: []
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch14_2026_08_17_finalize.md,
+  ]
+source: >-
+  Drafted by the 2026-08-17 /na-eligibility-audit cross-cutting-tranche run (na_eligibility_auditor, dispatch
+  agt-be514e, slot 29) — Phase 1 classification (10 parallel Workflow batches over 97 in-scope docs) + Phase 2
+  conflict-check (22 RECLASSIFY candidates, 10 CLEAR / 12 CONFLICT). Ships status: active (not draft) per the skill's
+  own authorization — this skill (unlike the read-only /ag-closeout-audit) applies its verdicts directly.
+---
+
+# cross-cutting satellite AO dispatch batch 14 — 2026-08-17
+
+> Every todo below was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by
+> the 2026-08-17 /na-eligibility-audit cross-cutting sweep and conflict-checked against every existing active
+> batch/finalize plan for this tranche before being drafted here. **The 7 Unity-venue todos (items 3-9) have a natural
+> internal order — registration before capability-declaration before the drift-guard test before the final parity
+> re-measurement — work them in listed sequence even though this plan is not marked `sequential: true` (the other
+> todos are fully independent of them and of each other).**
+
+## Todos
+
+- [ ] [AGENT] P1. Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
+      check, shrink-only in the same sense as the other baselines in this corpus. Repo: unified-trading-pm. Source:
+      `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`.
+- [ ] [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
+      `generate_na_doc_tranche_inventory.py`) that flags a doc where the Progress Log's own "extracted to `<path>`"
+      phrasing names a doc that is NOT cited on any currently-open checkbox in the same file. Repo: unified-trading-pm.
+      Source: `plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md`.
+- [ ] [CODE] P2. Register Unity's 10 child books as canonical sports venues from the UAC SSOT
+      `unified_api_contracts/internal/unity_child_books.py` (3ET, BETFAIR, BROKER5, CROWN, MATCHBOOK, SBO, SHARPBET,
+      VX, BETDEX, IBC), reusing the existing BETFAIR/MATCHBOOK venue tokens rather than minting Unity-specific
+      duplicates. DoD: 8 net-new venues registered, and a test asserts the venue set is derived FROM
+      `UNITY_CHILD_BOOKS` so adding a child book is a data change, not a code change. Repo: unified-api-contracts.
+      Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+- [ ] [CODE] P2. Give the Unity books capability entries with `route=broker:UNITY`, `batch = none`, `live = none`
+      (flips to wired in the MTDS plan). DoD: no batch backfill is implied for any Unity book; operator ruling
+      2026-08-14 is that no history is needed beyond what Odds API already captures. Depends on the prior todo's
+      registration landing first. Repo: unified-api-contracts. Source:
+      `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+- [ ] [CODE] P2. Wire NOVIG / PROPHETX / ONEXBET to `route=aggregator:SHARPAPI` — all three are on SharpAPI's active
+      31-book list yet have zero manifest rows, so this is a routing fix, not a build. DoD: each resolves a route;
+      actual capture is proven by the MTDS plan, not this one. Repo: unified-api-contracts. Source:
+      `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+- [ ] [CODE] P3. Leave BETOPENLY explicitly `batch = none`, `live = none` with an inline reason if no provider serves
+      it. DoD: the venue is honestly declared rather than silently absent, per the honest-absence rule. Repo:
+      unified-api-contracts. Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+- [ ] [TEST] P2. Add a drift-guard test asserting every venue in `VENUES_BY_ASSET_GROUP` has a capability record, and
+      every capability record's venue is declared. DoD: the test fails if either side gains an unmatched entry; the
+      four genuinely-unserved books pass via an explicit `none` route, not an allowlist. Repo: unified-api-contracts.
+      Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+- [ ] [TEST] P2. Extend the UAC parity gate `tests/unit/test_venue_source_adapter_parity.py` to cover the route axis
+      so a venue whose route names a provider we do not actually subscribe to fails. DoD: a deliberately-broken
+      fixture (a venue routed to an unsubscribed provider) RED-fails, proving the gate bites. Repo:
+      unified-api-contracts. Source: `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+- [ ] [DATA] P3. Re-run the parity measurement that produced the source plan's fact table and confirm the
+      40-undeclared count is now 0. DoD: cite the re-run output in the Progress Log. Do this LAST, after every other
+      Unity/routing todo above lands. Repo: unified-api-contracts. Source:
+      `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
+- [ ] [DOCS] P2. Record the swap-thrash signature in the quality-gates codex: a load average in the hundreds on this
+      host means swap exhaustion, not CPU saturation, and the correct response is to WAIT rather than retry or
+      override. Repo: unified-trading-pm. Source:
+      `plans/active/issues/local_host_concurrent_qg_serial_rule_violated_2026_08_15.md`.
+- [ ] [AGENT] P2. Workspace-grep audit for legacy bucket references — run workspace-wide grep to verify zero inline
+      `gs://` f-strings remain after the bucket SSOT rollout. Generate an audit table confirming all call sites use
+      `resolve_bucket_name()`. Update the QG ratchet baseline. Done-when: the audit table is produced and the QG
+      ratchet baseline for inline `gs://` usage reflects 0 remaining violations (or is lowered to match a
+      genuinely-zero count). Repo: unified-trading-pm. Source: `plans/active/manifest_v9_residual_2026_08_15.md`.
+- [ ] [DIAG] P1. Independently verify the ExecutionOrchestrator/LiveOrchestrator protocol mismatch — read
+      `ExecutionOrchestrator`'s actual method signature against the `LiveOrchestrator` protocol definition directly
+      (do not trust the source doc's relay alone), confirm the instruction-type and return-type mismatch claims with a
+      direct citation of both sides. Repo: execution-service. Source:
+      `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+- [ ] [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
+      `LiveOrchestrator` and would receive an `ExecutionOrchestrator` instance in production, and check whether a
+      `None` return where a `dict` is expected would raise, silently no-op, or corrupt downstream state. Depends on the
+      prior todo landing first. Repo: execution-service. Source:
+      `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+- [ ] [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
+      W1 sub-agent's own test used (`tests/unit/test_external_instruction_api.py` in execution-service) — a real
+      `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
+      contract itself. Repo: execution-service. Source:
+      `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17**: batch drafted + shipped `status: active` directly (skill-authorized). All 14
+  items conflict-checked CLEAR against every active `assigned_vm: planning` plan in their respective `parent_epic`s,
+  every sibling candidate in this same audit run, this tranche's consolidated-closeout doc, and every prior
+  `status: draft` satellite batch for this tranche (none found). Source docs' own checkboxes flipped `[x]` with a
+  citation to this batch in the same commit pass.

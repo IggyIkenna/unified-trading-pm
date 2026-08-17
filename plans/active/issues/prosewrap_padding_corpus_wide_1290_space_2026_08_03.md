@@ -179,7 +179,7 @@ Mechanical, bounded remediation — not a design/judgment call:
   **2808 violating lines against a baseline of 3655**, itself already ratcheted down from the 4472 seeded on 08-03. So
   remediation is landing: 4472 -> 3655 -> 2808. Current worst single line in the ACTIVE corpus is **1150 leading spaces
   in a 1257-char line (~91% padding)** in
-  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. This doc's headline "1290
+  `/plans/archive/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. This doc's headline "1290
   spaces" instance is gone from the active corpus by ARCHIVAL, not repair — its file now sits at
   `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`.
 

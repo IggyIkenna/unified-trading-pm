@@ -461,7 +461,7 @@ credits. Tracked todos below.
       cells). Disjoint from the running `af-backfill` (api-football) MTDS fan-out.
       SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES stay RETIRED (runtime-only UAC catalog). — instruments-service +
       deployment-service VM launchers
-- [ ] [DATA] P2. **Verify SFI+TM backfill VMs ran to completion + manifest cells flipped** — the 5 backfill VMs (run-id
+- [x] ✅ [DATA] P2. **Verify SFI+TM backfill VMs ran to completion + manifest cells flipped** — the 5 backfill VMs (run-id
       `20260619-161036` SFI Ã4 + `tm-backfill-20260619-161123`) auto-shutdown on completion. After they drain: (1)
       `gcloud compute instances list --filter='name~"^sfi-backfill" OR name~"^tm-backfill"'` = empty/STOPPED; (2) run
       `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` to materialise empty_confirmed rows; (3)
@@ -658,3 +658,4 @@ Two genuine hits in this plan:
   the FLEET-WIDE v9-column populate, the silent-worker watchdog, `paper_engine.py` foreign-repo dependency, the
   dirty-tree-gated PREDICTION tarball rebuild) — genuinely credential/dependency/design- gated, confirming the finalize
   plan's own expectation ("unlikely" to reach 0). Doc does NOT archive; stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-17** [body-hash:6a5f0199ef5b97bb]: KEEP-NA, stale-item corrected -- closed 'Verify SFI+TM backfill VMs ran to completion' (line 464): superseded by the active sports_master thread (issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md -> issues/sports_honest_coverage_gap_closure_2026_08_14.md, updated 2026-08-16), which measured this exact ground more recently: SFI 99.86% ('7-date retry DONE 2026-08-16'), TM 99.98% (residual ruled 'CORRECTLY classified... a vendor 502'), both diagnosed to terminal state. Doc stays assigned_vm: NA for its other 7 genuinely gated/design items (round11-extraction residual per the 2026-08-11 finalize). Cross-cutting tranche audit conflict-check finding.

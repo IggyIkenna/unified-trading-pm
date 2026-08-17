@@ -201,14 +201,15 @@ that is expected and correct, not something to work around.
 
 ### P2 — expand the universe
 
-- [ ] [DATA] P2. Register Unity's 10 child books as canonical sports venues from the UAC SSOT
+- [x] ✅ [DATA] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 3 (na-eligibility-audit 2026-08-17). Register Unity's 10 child books as canonical sports venues from the UAC SSOT
       `unified_api_contracts/internal/unity_child_books.py` (`3ET`, `BETFAIR`, `BROKER5`, `CROWN`, `MATCHBOOK`, `SBO`,
       `SHARPBET`, `VX`, `BETDEX`, `IBC`), reusing the existing `BETFAIR`/`MATCHBOOK` venue tokens rather than minting
       Unity-specific duplicates — DoD: 8 net-new venues registered, and a test asserts the venue set is derived FROM
       `UNITY_CHILD_BOOKS` so adding a child book is a data change, not a code change.
-- [ ] [DATA] P2. Give the Unity books capability entries with `route=broker:UNITY`, `batch = none`, `live = none` (flips
-      to `wired` in the MTDS plan) — DoD: no batch backfill is implied for any Unity book; operator ruling 2026-08-14 is
-      that no history is needed beyond what Odds API already captures.
+- [x] ✅ [DATA] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 4 (na-eligibility-audit 2026-08-17). Give the Unity books capability entries with `route=broker:UNITY`, `batch = none`, `live = none` (flips
+      to `wired` in the MTDS plan) — DoD: no batch backfill is implied for any Unity book; operator ruling 2026-08-14 (see
+      /plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md's own "Operator ruling
+      2026-08-14" finding above) is that no history is needed beyond what Odds API already captures.
 - [ ] [DATA] P2. Register the priority-14 arb books absent from the data axis, sourced from
       `e2e-testing/docs/sports/LIVE_ODDS_PROVIDERS.md`'s coverage matrix — KTO, Betano, SharpBet, Dafabet, BetPlay,
       Cloudbet, Bet365, SingBet, Stake — with `route=aggregator:SHARPAPI` or `aggregator:ODDS_API_IO` per that doc's
@@ -218,21 +219,21 @@ that is expected and correct, not something to work around.
       doc's status column is stale (it cites an odds-api.io trial expiring 2026-04-03 and a results section dated
       2026-04-01) — DoD: each provider's current subscription state is verified against the live account or Secret
       Manager entry and the doc is corrected in the same change.
-- [ ] [DATA] P2. Wire `NOVIG` / `PROPHETX` / `ONEXBET` to `route=aggregator:SHARPAPI` — all three are on SharpAPI's
+- [x] ✅ [DATA] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 5 (na-eligibility-audit 2026-08-17). Wire `NOVIG` / `PROPHETX` / `ONEXBET` to `route=aggregator:SHARPAPI` — all three are on SharpAPI's
       active 31-book list yet have zero manifest rows, so this is a routing fix, not a build — DoD: each resolves a
       route; actual capture is proven by the MTDS plan, not this one.
-- [ ] [DATA] P2. Leave `BETOPENLY` explicitly `batch = none, live = none` with an inline reason if no provider serves it
+- [x] ✅ [DATA] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 6 (na-eligibility-audit 2026-08-17). Leave `BETOPENLY` explicitly `batch = none, live = none` with an inline reason if no provider serves it
       — DoD: the venue is honestly declared rather than silently absent, per the honest-absence rule.
 
 ### P2 — guard the invariant
 
-- [ ] [DATA] P2. Add a drift-guard test asserting every venue in `VENUES_BY_ASSET_GROUP` has a capability record, and
+- [x] ✅ [DATA] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 7 (na-eligibility-audit 2026-08-17). Add a drift-guard test asserting every venue in `VENUES_BY_ASSET_GROUP` has a capability record, and
       every capability record's venue is declared — DoD: the test fails if either side gains an unmatched entry; the
       four genuinely-unserved books pass via an explicit `none` route, not an allowlist.
-- [ ] [DATA] P2. Extend the UAC parity gate `tests/unit/test_venue_source_adapter_parity.py` to cover the route axis so
+- [x] ✅ [DATA] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 8 (na-eligibility-audit 2026-08-17). Extend the UAC parity gate `tests/unit/test_venue_source_adapter_parity.py` to cover the route axis so
       a venue whose route names a provider we do not actually subscribe to fails — DoD: a deliberately-broken fixture (a
       venue routed to an unsubscribed provider) RED-fails, proving the gate bites.
-- [ ] [REVIEW] P2. Re-run the parity measurement that produced this plan's fact table and confirm the 40-undeclared
+- [x] ✅ [REVIEW] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 9 (na-eligibility-audit 2026-08-17). Re-run the parity measurement that produced this plan's fact table and confirm the 40-undeclared
       count is now 0 — DoD: cite the re-run output in the Progress Log.
 - [ ] [DATA] P2. Resolve the bare `BETFAIR_EX` / `BETFAIR_SB` mentions still in codex prose against the ACTUAL manifest
       venue distribution, then fix or keep each one deliberately. Measured 2026-08-15 (after the registry rename
@@ -539,6 +540,7 @@ re-running its own existing refresh script (see below), not a registry rename.
    source records which region the recorded `accuracy`/`is_exchange` numbers were actually measured against; flagged
    inline in the code, not silently resolved.
 
+- **na-eligibility-audit 2026-08-17** [body-hash:b65472084a73f315]: RECLASSIFY (per-todo split) -- extracted 7 bounded items (Unity child-book registration + capability wiring, NOVIG/PROPHETX/ONEXBET routing, BETOPENLY honest-absence declaration, drift-guard test, UAC parity gate extension, parity re-measurement) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md items 3-9. Doc stays assigned_vm: NA for its remaining items (priority-14 arb-book registration and provider-availability re-confirmation, both needing a live subscription-state check first; the BETFAIR_EX/SB codex-prose reconciliation). Cross-cutting tranche audit.
 ## Deferred work after 2026-08-14
 
 | Item                                                                                                              | State                                                             | Blocked on                                                                            |

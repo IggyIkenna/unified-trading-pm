@@ -100,7 +100,7 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
       plan-destination question (dispatch batch = `planning` or `NA`?) is answered by the standing "Plan destination —
       ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly overrides. No live operator input
       required to apply the default.
-- [ ] [DIAG] P2. **Multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions (migrated 2026-08-10 from
+- [x] ✅ [DIAG] P2. **Multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions (migrated 2026-08-10 from
       `plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`, which was closed + archived once its
       execution plan shipped)** — confirm whether any CARRY_STAKED_BASIS / CARRY_BASIS_PERP paper run's fill-rate or
       slippage figures were cited in an actual promotion/sizing decision (vs. only the directional P&L signal); if so,
@@ -135,3 +135,4 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   2026-08-03 scout pass was a referrer-path fix (`honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` moved to
   `plans/archive/issues/`), which this doc's context_scope doesn't reference; still a pure coordination-index doc over 8
   source plans, no source-code path applies.
+- **na-eligibility-audit 2026-08-17** [body-hash:80c0b20796011e73]: KEEP-NA, stale-item corrected -- closed todo #2 (multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions): already fully investigated and answered by the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (same parent_epic), whose completed item (lines 343-369) concludes 'CONFIRMED: NO -- never cited in any actual promotion/sizing decision; nothing to flag', citing this exact doc as Source. Doc stays assigned_vm: NA for its 1 remaining item (todo #1, the dedicated triage). Cross-cutting tranche audit conflict-check finding.

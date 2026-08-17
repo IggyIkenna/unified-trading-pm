@@ -31,8 +31,8 @@ estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
 assigned_role: review
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 locked_since:
 supersedes:
@@ -393,3 +393,7 @@ top of that.
   session's repeated autostash cycles (confirmed at least the infra doc's edits did NOT survive and had to be redone —
   verify each remaining batch's target files before assuming the content is still there).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:54d6e4cc04ce637b]: RECLASSIFY (whole-doc) -- assigned_vm flipped NA -> planning; execution_scope -> orchestrator-agent; assigned_role: review (already set). The sole open item (a corpus-wide stale-last_updated-frontmatter script fix, named instances enumerated) is bounded/mechanical, conflict-check CLEAR. doc_type: issue, structurally exempt from a finalize-plan companion. Cross-cutting tranche audit.

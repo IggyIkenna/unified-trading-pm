@@ -12,7 +12,8 @@ tags: [cross-cutting, finalize]
 related:
   [
     /plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md,
-    /plans/active/issues/mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md,
+    /plans/archive/issues/mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"

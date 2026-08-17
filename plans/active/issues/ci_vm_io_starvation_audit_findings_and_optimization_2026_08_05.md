@@ -25,7 +25,7 @@ related:
     /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
-    /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
+    /plans/archive/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md,
     /codex/07-security/self-hosted-runner-security-posture.md,

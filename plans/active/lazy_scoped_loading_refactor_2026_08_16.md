@@ -111,7 +111,7 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
 - [ ] [AGENT] P0. **Prove the end state with a scoped-build test** — construct a deployment declaring only
       `CARRY_BASIS_PERP` + `CARRY_STAKED_BASIS` (the contracted archetypes) and assert the loaded-module set excludes
       the families it does not use. This is the test that makes the carve-out's laziness verifiable rather than claimed.
-- [ ] [AGENT] P1. **Add a regression guard** so eager imports cannot creep back — a ratcheted module-count or
+- [x] ✅ [AGENT] P1. **Add a regression guard** — extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 1 (na-eligibility-audit 2026-08-17). so eager imports cannot creep back — a ratcheted module-count or
       import-graph check, shrink-only in the same sense as the other baselines in this corpus.
 - [x] [AGENT] P1. ✅ **Re-measure and record the delta** against the baseline from the first todo, in this plan's Progress
       Log, with the numbers rather than an adjective.
@@ -284,3 +284,4 @@ It is pre-existing, not-mine, uncommitted `uv.lock` drift (workspace `dirty-deps
 this doc-only todo). Recorded as a measurement trap for whoever next touches execution-service import cost: re-baseline
 against a `.venv` without this pending lock change, not silently smoothed into a false "the fix worked, numbers went
 down" narrative.
+- **na-eligibility-audit 2026-08-17** [body-hash:113cba0b6fa4629e]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (regression guard for eager imports) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 1. Doc stays assigned_vm: NA for its other genuinely operator-gated/design items (the layer-2 UAC restructure needs an operator ruling on scope first). Cross-cutting tranche audit.

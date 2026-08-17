@@ -315,7 +315,7 @@ job's per-category input adapters for the reconciliation-derived categories, per
 - [ ] [BACKEND] P3. **Remove BLRS Stage 4's `_write_agent_report()` write path** once the new job is confirmed live and
       its findings are landing — `agent_report_{date}.md` becomes fully redundant (§0, §4). (repo:
       `batch-live-reconciliation-service`)
-- [ ] [DATA] P2. **File the dead-`mode`-kwarg bug as its own issue doc** found in §2.1/§2.2/§2.4 (`execution_fills`,
+- [x] ✅ [DATA] P2. Already filed: `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md` (na-eligibility-audit 2026-08-17 stale-checkbox correction). **File the dead-`mode`-kwarg bug as its own issue doc** found in §2.1/§2.2/§2.4 (`execution_fills`,
       `positions`, `strategy_instructions`, `pnl_attribution` all accept a `mode=` parameter their path template
       silently drops, so batch/paper/live write to the SAME object path) — a real, independently-worth-fixing
       correctness bug this design's research surfaced. Explicitly NOT folded into this plan's scope: file it separately
@@ -368,3 +368,4 @@ job's per-category input adapters for the reconciliation-derived categories, per
   since the 2026-08-07 scout pass was item 6 (`[OPERATOR]`-tagged) resolving via a 2026-08-08 operator ruling
   (escalation-N=3 days, `assigned_vm` default planning) -- a checkbox flip, no new source/codex reference introduced;
   the Stage-4 source path + 5 plan/codex links remain accurate.
+- **na-eligibility-audit 2026-08-17** [body-hash:691d5e3b57d01ef0]: KEEP-NA, stale-item corrected -- closed 1 of 5 open items (file the dead-mode-kwarg bug as its own issue doc): already filed, plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md (dated 2026-08-15) describes precisely this. Doc stays assigned_vm: NA for its 4 remaining items -- this is a design plan whose own S5 banner frames all follow-ups as build-phase, not yet scoped for AO dispatch. Cross-cutting tranche audit.

@@ -148,7 +148,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       "dex-pools-prd purge-lifecycle armed (24h async; disarm window if concerns)" was stale vs. the sibling plans' more
       final status — corrected 2026-07-25, then re-corrected again here 2026-07-31 for the lending-indices and
       legacy-twin sub-items, which the 2026-07-25 pass had not yet re-derived from current sibling-plan state.
-- [ ] [DATA] P1. **ml legacy variants**: `ml-models-store` flat (data already migrated §5e, resolver fixed §5h — verify
+- [x] ✅ [DATA] P1. Already executed via the sibling `bucket_fold_ml_2026_07_17.md` plan's "Delete sources" P0 todo ([x] DONE 2026-08-08, operator-authorized); independently live-verified 2026-08-17 (gcloud storage buckets list + gcloud asset search-all-resources) that the flat `ml-models-store` GCP bucket no longer exists (na-eligibility-audit 2026-08-17 stale-checkbox correction, formally reconciling the 2026-08-12 note below). **ml legacy variants**: `ml-models-store` flat (data already migrated §5e, resolver fixed §5h — verify
       no new writes since, then delete) + `ml-models-store-{dev,prod,staging}`,
       `ml-configs-store`/`ml-predictions-store` flat twins (empty). Verify
       `deployment-api/deployment_api_config.py:642`'s flat `ml-configs-store-{pid}` default is repointed first.
@@ -439,3 +439,4 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   resolver relevance moved to the sibling plan below) and `bucket-isolation-model.md`; added
   `/plans/active/bucket_fold_ml_2026_07_17.md`, the confirmed actual execution record for the ml legacy variants delete
   per the 2026-08-12 note above.
+- **na-eligibility-audit 2026-08-17** [body-hash:7303f1e987fef5b3]: KEEP-NA, stale-item corrected -- closed the 'ml legacy variants' P1 todo: the underlying prod-bucket delete already executed via the sibling bucket_fold_ml_2026_07_17.md plan ([x] DONE 2026-08-08, operator-authorized), independently live-verified 2026-08-17 the flat ml-models-store bucket no longer exists -- this is the formal reconciliation the doc's own 2026-08-12 note explicitly left for a future pass, not a new delete action (none performed this session). Doc stays assigned_vm: NA for its 1 remaining item (the recon-bucket E2E producer-chain, explicitly out-of-scope multi-repo feature work). Cross-cutting tranche audit.

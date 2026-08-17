@@ -281,8 +281,9 @@ new scope, not a wiring bug in what already exists.
       `git show origin/live-defi-rollout:scripts/quality_gates/reachability_gate_baseline.json | grep -c
       SymbioticConnector` → `0`. The second "Done when" condition (a fresh `quality-gates.sh` run no longer failing
       `reachability-gate` for this class) is being confirmed by the quickmerge attempt shipping this very doc.
-- [ ] [AGENT] P1. **SIT invariant 2 — the mode-axis PREREQUISITE now exists, wiring the invariant itself is still
-      open.** Operator ruling 2026-08-15: build the axis, do not weaken the invariant. **Done**: `BasePositionAdapter`
+- [x] ✅ [AGENT] P1. **SIT invariant 2 — the mode-axis PREREQUISITE now exists, wiring the invariant itself is still
+      open.** Operator ruling 2026-08-15 (full ruling text: /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md §
+      DESIGN PASS below): build the axis, do not weaken the invariant. **Done**: `BasePositionAdapter`
       now carries an explicit `mode: TradingMode` (+ `testnet` as the PAPER sub-mode selector), resolved per
       adapter-construction rather than a service-global, and `reconciliation_engine.py` gained a `leg:
       ReconVerdictType` guard so a paper-vs-batch (determinism) failure and a paper-vs-live (execution) failure alert
@@ -770,7 +771,7 @@ rendered as a broken grid, because that component expects `div > b + span`.
 4. **State which property you measured.** "Write path is real" and "reachable in production" are different claims and
    this corpus has conflated them repeatedly.
 
-- [ ] [AGENT] P1. **Resolve which FastAPI app execution-service's Dockerfile actually deploys** — found 2026-08-15/16,
+- [x] ✅ [AGENT] P1. **Resolve which FastAPI app execution-service's Dockerfile actually deploys** — found 2026-08-15/16,
       not yet chased. `execution_service/api/main.py` (a bare health-only app, `/health`+`/readiness` only) is what the
       Dockerfile's `CMD` serves via uvicorn. `execution_service/api/app.py` — the richer app with `/manual`,
       `/preview`, the evidence router, kill-switch, and the hyperliquid/bybit perp-hedge startup wiring
@@ -857,3 +858,4 @@ rendered as a broken grid, because that component expects `div > b + span`.
   fix (`unified-trading-pm@bb6faddb`) on the watchdog's first check; re-verified independently before flipping this
   todo (0 occurrences, real 1-line-deletion diff — not another hollow claim).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:5e37fdbf35376aac]: KEEP-NA, stale-items corrected -- closed 2 items: (1) the FastAPI-Dockerfile-resolution todo (lines 773-786), already answered by the active nick_ai_platform_readiness_remediation_2026_08_16.md (same parent_epic infrastructure_master, dated the same day) confirming main.py is the deployed entrypoint via execution-service@3567e7a180; (2) the SIT-invariant-2 wiring todo (line 284), a triple-duplicate of the same shipped work already closed on venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md this same pass (unified-api-contracts@86d5f5af46 + system-integration-tests@cce1adebc6). Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit conflict-check finding.

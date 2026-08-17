@@ -27,8 +27,8 @@ related:
 created: "2026-08-15"
 last_updated: 2026-08-15
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 assigned_role: infra
 locked_by:
@@ -139,3 +139,7 @@ this case and will send the next agent hunting a regression in unrelated files.
   invoke or reference.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:f735dd50ac40655b]: RECLASSIFY (whole-doc) -- assigned_vm flipped NA -> planning; execution_scope -> orchestrator-agent; assigned_role: infra (already set). Both open items are bounded/mechanical (batch the per-pid lsof walk; fix an unconditional-vs-conditional wording bug in the re-gate message), conflict-check CLEAR. doc_type: issue, structurally exempt from a finalize-plan companion. Cross-cutting tranche audit.

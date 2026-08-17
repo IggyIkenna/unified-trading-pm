@@ -95,7 +95,7 @@ the single largest contributor measured here.
 - [ ] [CODE] P2. Make `IGNORE_TIMEOUT=true` observable — log who set it and why, so override frequency is measurable. If
       sessions routinely need it, the budget is wrong; if they use it to skip queueing, that is worth seeing. Repo:
       unified-trading-pm.
-- [ ] [DOC] P2. Record the swap-thrash signature in the quality-gates codex: a load average in the hundreds on this host
+- [x] ✅ [DOC] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 10 (na-eligibility-audit 2026-08-17). Record the swap-thrash signature in the quality-gates codex: a load average in the hundreds on this host
       means swap exhaustion, not CPU saturation, and the correct response is to WAIT rather than retry or override.
       Repo: unified-trading-pm.
 - [ ] [OPERATOR] P2. Consider whether 24 GiB physical is sufficient for the current slot count, or whether the practical
@@ -119,3 +119,4 @@ the single largest contributor measured here.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:a9ed035183a85708]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (record the swap-thrash signature in the quality-gates codex) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 10. Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit.

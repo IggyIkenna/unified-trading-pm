@@ -426,7 +426,7 @@ context_scope:
   ("same capacity-side root cause, not a per-repo timeout raise") — the real, already-adopted fix is the
   resource-reservation admission governor (`/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`, active),
   matching the fleet's "QG concurrency is RESOURCE-based" policy. Source:
-  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`.
+  `/plans/archive/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`.
 - [x] [REVIEW] P3. **DONE — shipped `agent-orchestrator@426e8cf55` TODAY (2026-08-15).** New `server/host_tombstone.py`:
       `is_host_tombstoned()`/`tombstoned_since()`, `ip-172-31-0-185` hardcoded as a fail-safe floor + live AWS EC2
       existence check for future ghost hosts. Resolved the design fork as tombstone-never-prune (row stays for audit

@@ -525,7 +525,7 @@ Kamino/Jupiter conflated the two.
       against; wiring that invariant as a ratchet baseline (matching invariants 1+3's pattern) is a separate,
       not-yet-done todo — building it would today produce a near-total-gap baseline on the batch/paper axes, which is
       accurate, not a bug.
-- [ ] [AGENT] P2. **Wire SIT invariant 2 as a ratchet baseline**, matching invariants 1+3's pattern
+- [x] ✅ [AGENT] P2. **Wire SIT invariant 2 as a ratchet baseline**, matching invariants 1+3's pattern
       (`unified-api-contracts@056d5eea2d`'s `tests/test_mtds_venue_coverage_cascade_invariant.py` +
       `system-integration-tests@da65ae1324`'s `run_cross_repo_invariants.sh` entries). Add
       `tests/test_strategy_position_read_mode_cascade_invariant.py` (in `unified-api-contracts`, per the same
@@ -898,3 +898,7 @@ the quickmerge on a later pass once this settles.
 ## Context scout
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:fabfd492dd204890]: KEEP-NA, stale-item corrected -- closed the 'Wire SIT invariant 2 as a ratchet baseline' todo (line 526): byte-for-byte already shipped under the active venue_readiness_ao_dispatch_batch1_2026_08_16.md (same parent_epic infrastructure_master) -- unified-api-contracts@86d5f5af46 (test_strategy_position_read_mode_cascade_invariant.py + baseline fixture, live-verified 4/4) + system-integration-tests@cce1adebc6 (wired as invariant #26). Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit conflict-check finding.

@@ -95,7 +95,7 @@ Text below is moved verbatim from `plans/epics/manifest_master.md` (was lines 22
 > Migrated from `bucket_name_ssot_canonicalisation_2026_05_10.md` (archived 2026-05-23) — bucket naming SSOT complete
 > for DeFi/CeFi/core paths; remaining items are env-tiered migration + prediction bucket + workspace audit.
 
-- [ ] [AGENT] P2. **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero inline
+- [x] ✅ [AGENT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 11 (na-eligibility-audit 2026-08-17). **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero inline
       `gs://` f-strings remain after bucket SSOT rollout. Generate audit table confirming all call sites use
       `resolve_bucket_name()`. Update QG ratchet baseline. Done-when: the audit table is produced and the QG ratchet
       baseline for inline `gs://` usage reflects 0 remaining violations (or is lowered to match a genuinely-zero count).
@@ -124,3 +124,4 @@ Text below is moved verbatim from `plans/epics/manifest_master.md` (was lines 22
   F), left a pointer in the epic. No content changed beyond adding an explicit done-when line to each (none had one) and
   correcting one bare `active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` cross-reference to the
   leading-slash repo-root-relative convention.
+- **na-eligibility-audit 2026-08-17** [body-hash:d5da20f6b18619f3]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (workspace-grep audit for legacy gs:// bucket references) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 11. Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit.

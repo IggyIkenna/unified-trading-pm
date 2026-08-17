@@ -84,7 +84,7 @@ full per-doc agentic classification pass to notice them incidentally, the way th
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
+- [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 2 (na-eligibility-audit 2026-08-17). Prototype a mechanical checker (standalone script, or a mode on
       `generate_na_doc_tranche_inventory.py`) that flags a doc where the Progress Log's own "extracted to `<path>`"
       / "ruled ... extracted to" phrasing names a doc that is NOT cited on any currently-open checkbox in the same
       file — the exact shape of all 4 instances found this run. Done when: run against the current full NA corpus
@@ -93,3 +93,7 @@ full per-doc agentic classification pass to notice them incidentally, the way th
 - [ ] [DOC] P3. If the checker in the todo above finds more instances outside tradfi, route each to its owning
       tranche's next `/na-eligibility-audit` pass rather than fixing them all from this doc.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:65eddac54ed20bf2]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (prototype a mechanical checker for un-cited extraction citations) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 2. Doc stays assigned_vm: NA for its remaining item. Cross-cutting tranche audit.
