@@ -56,6 +56,9 @@ locked_by:
 source:
   - data_pipeline_check_mdps_features_2026_07_20.md's "NEW todo (was 8's remaining scope)" — the specific dispatched
     todo this session was attempting to close
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # `/data-pipeline-check-mdps` driver OOM-killed on DEFI — mechanism now proven for the other 4 AGs
