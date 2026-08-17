@@ -59,6 +59,11 @@ TEMPLATE_DRIFT_COLLECTION: str = "template_drift_verdicts"
 """Collection for detect_template_drift.py verdicts (via the template-drift-daily-check systemd
 timer) — one document per repo. Verdict one of ``CLEAN`` / ``WARN`` / ``ERROR``."""
 
+RULESET_DRIFT_COLLECTION: str = "ruleset_drift_verdicts"
+"""Collection for verify_branch_protection_check_names.py verdicts (via ruleset-drift-alert.yml,
+Mondays 06:00 UTC + workflow_dispatch) — one document per repo. Verdict one of ``CLEAN`` /
+``DRIFT``."""
+
 
 def resolve_verdict(
     prev_checked_at: str | None,

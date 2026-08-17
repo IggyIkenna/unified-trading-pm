@@ -11,10 +11,18 @@ Prints per-repo MAIN/STAGING required contexts + 'ALL RULESETS CONSISTENT: True/
 Exit code: 0 when all consistent, 1 when any drift is detected (so CI / the
 ruleset-drift-alert workflow can gate + alert on the exit status).
 
+    python3 scripts/repo-management/verify_branch_protection_check_names.py --json
+
+Machine-readable mode for write_ruleset_drift_verdicts.py: a JSON list, one object per repo —
+{"repo": str, "default_branch": str, "default_branch_ok": bool, "main_required": list|None,
+"main_ok": bool, "staging_required": list|None, "staging_ok": bool, "drift": bool}. Same exit-code
+contract as the human-readable mode.
+
 Companion: pin_branch_protection_rulesets.py applies the fix; both are SSOT-linked
 to the issue doc above.
 """
 
+import argparse
 import json
 import subprocess
 from pathlib import Path
@@ -59,10 +67,16 @@ def contexts_for(repo, rsname):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--json", action="store_true", dest="output_json", help="Machine-readable JSON output")
+    args = parser.parse_args()
+
     allok = True
     drift = []
-    print(f"{'REPO':<32} {'DEFBR':<6} {'MAIN required':<55} {'STAGING required'}")
-    print("-" * 138)
+    results: list[dict[str, object]] = []
+    if not args.output_json:
+        print(f"{'REPO':<32} {'DEFBR':<6} {'MAIN required':<55} {'STAGING required'}")
+        print("-" * 138)
     for repo in REPOS:
         m = contexts_for(repo, "require-quality-gates")
         s = contexts_for(repo, "require-staging-lock-check")
@@ -93,12 +107,31 @@ def main():
             and expected_ctx in s
             and all(c in ("check-staging-lock", expected_ctx) or c.startswith("AWS CodeBuild") for c in s)
         )
-        flag = "" if (m_ok and s_ok and db_ok) else "  <-- CHECK" + ("" if db_ok else f" [default_branch={db}!=main]")
+        repo_drift = not (m_ok and s_ok and db_ok)
+        flag = "" if not repo_drift else "  <-- CHECK" + ("" if db_ok else f" [default_branch={db}!=main]")
         if flag:
             allok = False
         if not db_ok:
             drift.append((repo, db))
-        print(f"{repo:<32} {db:<6} {m!s:<55} {s!s}{flag}")
+        results.append(
+            {
+                "repo": repo,
+                "default_branch": db,
+                "default_branch_ok": db_ok,
+                "main_required": m,
+                "main_ok": m_ok,
+                "staging_required": s,
+                "staging_ok": s_ok,
+                "drift": repo_drift,
+            }
+        )
+        if not args.output_json:
+            print(f"{repo:<32} {db:<6} {m!s:<55} {s!s}{flag}")
+
+    if args.output_json:
+        print(json.dumps(results, indent=2))
+        return 0 if allok else 1
+
     if drift:
         print("\nDEFAULT-BRANCH DRIFT (must be `main`):")
         for repo, db in drift:
