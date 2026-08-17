@@ -50,6 +50,13 @@ EOF
 }
 
 @test "_cwd_of_batch resolves a live pid via /proc without ever spawning lsof" {
+    # /proc is a Linux-only filesystem (2026-08-17) -- on macOS this test's own peer-wait loop
+    # times out (nothing under /proc is ever readable) and _cwd_of_batch correctly falls back to
+    # the lsof-batched path instead, which is the CORRECT cross-platform behavior, not a bug. This
+    # test specifically validates the Linux-only /proc fast path, so it only applies where /proc
+    # is real; the lsof-batched fallback path is covered cross-platform by the two neighbouring
+    # tests below, which do not assume /proc succeeds.
+    [ -r "/proc/$$/cwd" ] || skip "/proc/<pid>/cwd not readable on this host (non-Linux) -- /proc fast path N/A"
     source "${_SCD_LIB}"
     _install_counting_lsof_stub
 
@@ -86,6 +93,10 @@ EOF
 }
 
 @test "_cwd_of_batch with zero leftover pids never invokes lsof" {
+    # Same /proc-only-on-Linux caveat as the test above -- this asserts the /proc fast path
+    # resolved the CALLING process's own (always-live) pid with zero lsof calls, which is only
+    # possible where /proc exists.
+    [ -r "/proc/$$/cwd" ] || skip "/proc/<pid>/cwd not readable on this host (non-Linux) -- /proc fast path N/A"
     source "${_SCD_LIB}"
     _install_counting_lsof_stub
 
