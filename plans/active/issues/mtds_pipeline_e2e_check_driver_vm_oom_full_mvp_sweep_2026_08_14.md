@@ -557,7 +557,7 @@ Two independent angles, not mutually exclusive:
   above are UNCHANGED in validity (the underlying bugs are real and worth finishing) but are no longer time-pressured by
   an automated job retrying every 2h against them — whoever picks them up next can do so at normal priority, not urgency
   driven by a runaway scheduler. Full evidence + the VM-starvation investigation itself:
-  `/plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s Progress
+  `/plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s Progress
   Log, same date.
 - **2026-08-15 (slot 29 worker, backend_engineer, pre-compact check) — CEFI's driver
   (`pipeline-e2e-check-mtds-20260815-093348-fc5255`) reached terminal state: `EXIT_STATUS=1` (confirmed via a direct

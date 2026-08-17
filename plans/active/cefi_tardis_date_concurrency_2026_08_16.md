@@ -19,7 +19,7 @@ related:
   [
     /plans/active/issues/cefi_tardis_date_serial_barrier_still_open_2026_08_16.md,
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
   ]
 created: "2026-08-16"

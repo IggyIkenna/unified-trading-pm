@@ -30,7 +30,7 @@ related:
     /plans/active/cefi_tardis_date_concurrency_2026_08_16.md,
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
     /plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md,
-    /plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
   ]
 parent_epic: cefi_master

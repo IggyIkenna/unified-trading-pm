@@ -37,7 +37,7 @@ related:
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md,
     /plans/active/issues/plan_reconciler_findings_cefi_2026_08_16.md,
-    /plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -170,7 +170,7 @@ source: >-
       stomps a caller-exported `YEARS_OVERRIDE` env var back to empty because the internal working variable and the
       plausible-but-wrong caller-facing name collide. Fix: rename the internal variable (e.g. `_YEARS_SCOPE`), or add
       an explicit guard that errors loudly instead of silently discarding the caller's intent. Source:
-      `plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`.
+      `plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`.
       Done-when: a caller-exported `YEARS_OVERRIDE` reaches the launcher intact in a re-run, or the loud-error guard
       fires instead of silent discard.
 

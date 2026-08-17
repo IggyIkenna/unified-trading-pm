@@ -27,7 +27,7 @@ tags: [cefi, tardis, manifest, empty_confirmed, data-correctness, big-finding]
 related:
   [
     /plans/active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md,
-    /plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
+    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 parent_epic: cefi_master
