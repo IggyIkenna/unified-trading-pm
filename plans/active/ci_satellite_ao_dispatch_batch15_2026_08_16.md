@@ -221,10 +221,25 @@ source: >-
       ancestor+concluded-failure safety constraint (never mass-close; only a strict ancestor of LDR tip with
       `quality-gates-v2` CONCLUDED failure) the source doc specified. No code change needed.
 
-- [ ] [DEVOPS] P2. **Fix `sit-gate-stuck-detector.yml`'s remaining dedup-key gap** — re-assess given 3+ subsequent
+- [x] ✅ [DEVOPS] P2. **CHECKBOX RECONCILIATION 2026-08-17 (slot-1, infra craft) — already shipped before this batch
+      was drafted.** The source doc's own dedup-key item (line ~161) is itself already `[x]` ✅ RESOLVED — DONE
+      (plan_reconciler Phase -1, 2026-08-16), citing `unified-trading-pm@c91496e0db` — this batch's own citation
+      (line ~155, "re-assess given 3+ subsequent recurrences") pointed at a since-resolved gap and missed the
+      resolution. **Fix `sit-gate-stuck-detector.yml`'s remaining dedup-key gap** — re-assess given 3+ subsequent
       recurrences (08-10, 08-14, 08-15) all self-resolved without incident since this was last held back as "too hot to
-      touch while live." Source: same doc (line ~155). Gate: dedup key change verified against the doc's own
-      recurrence history without introducing a new false-suppression.
+      touch while live." Verified live (not just trusting the citation): `git show -s --format='%H %ci' c91496e0db`
+      dates the fix to **2026-08-08 14:11:25+01:00** — i.e. it predates all 3 named recurrences (08-10, 08-14, 08-15),
+      so those recurrences already exercised the fixed code path, not the old flat-cooldown one.
+      `.github/workflows/sit-gate-stuck-detector.yml` (current tree) confirms `dedup_key:
+      sit-gate-stuck-${{ needs.check.outputs.max_streak }}` (streak-folded-in, replacing the flat `sit-gate-stuck`
+      key) plus a state-diffed `notify-resolved` all-clear bookend (`dedup_key: sit-gate-stuck-resolved`) — both parts
+      of the same design the doc asked for. Cross-checked against the doc's own recurrence history for a false
+      -suppression regression: the 08-14 (~22:41Z), 08-15 (~10:41Z), and 08-16 (~22:41Z) `cicd escalation` Progress
+      Log entries each show the detector correctly paging (an escalation firing IS a successful Slack
+      post — the opposite of suppression) and each converging to `sit-gate stuck detector: healthy` once the
+      treadmill self-resolved, with no report of a missed/suppressed post in any of the three. Gate satisfied: dedup
+      key change verified against the doc's own recurrence history, no new false-suppression found. Source: same doc
+      (line ~155).
 
 - [ ] [DEVOPS] P3. **Add `StartLimitBurst`/`StartLimitIntervalSec` to the glue-runner systemd units** — purely
       additive, does not touch the credential-fetch logic that previously crash-looped prod. Source:
@@ -398,3 +413,9 @@ source: >-
   cleanup above the SIT gate" todo — no code change needed, the source doc's own line ~146 item was already resolved
   2026-08-16 (`unified-trading-pm@5ff1205e68`) before this batch was drafted; verified live that the ancestor is real
   and the hoisted call site + safety constraint are actually present in `ldr_to_main_fleet_promote.sh` before flipping.
+- **2026-08-17 (slot 1, infra craft).** Checkbox-reconciled the "Fix `sit-gate-stuck-detector.yml`'s remaining
+  dedup-key gap" todo — no code change needed, the source doc's own dedup-key item was already resolved
+  2026-08-16 (`unified-trading-pm@c91496e0db`, dated 2026-08-08, predating this batch's cited recurrences). Verified
+  live: current `.github/workflows/sit-gate-stuck-detector.yml` carries the streak-folded `dedup_key` + a
+  state-diffed `notify-resolved` all-clear bookend; the doc's own 08-14/08-15/08-16 escalation entries show correct
+  paging + convergence with no suppressed post. Full evidence on the checkbox above.
