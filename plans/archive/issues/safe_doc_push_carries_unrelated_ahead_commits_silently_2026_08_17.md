@@ -14,7 +14,7 @@ summary: >-
   sentinel path — a real, if unintentional, violation of the "CODE reaches the integration branch ONLY via
   quickmerge" HARD RULE. The docs themselves were fine; the risk is generic to ANY worker in the same
   shape (code blocked + needs to push an unrelated doc).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -38,12 +38,16 @@ source: >-
   full incident narrative.
 assigned_vm: planning
 execution_scope: orchestrator-agent
-resolved_by:
+resolved_by: unified-trading-pm@96b2224e2f (todo 1), unified-trading-pm@3a16864cb5 (todo 2)
 locked_by:
 context_scope: [scripts/dev/safe-doc-push.sh, /codex/05-infrastructure/per-tab-worktrees.md]
 depends_on: []
 drift_direction: advance-code
 ---
+
+> **✅ RESOLVED 2026-08-17** — both todos shipped: the ahead-commit guard (exit 16) landed
+> `unified-trading-pm@96b2224e2f`, and this script's header docstring now warns about the risk directly
+> (`unified-trading-pm@3a16864cb5`). See Progress Log below.
 
 # safe-doc-push.sh silently carries unrelated ahead-of-origin commits
 
@@ -94,9 +98,9 @@ docs push.
       local commit ahead of origin that isn't the doc commit(s) this invocation just created; refuse (or warn
       + require an explicit `--i-know-this-carries-other-commits` style override) rather than silently pushing
       them. Repo: unified-trading-pm. — unified-trading-pm@96b2224e2f
-- [ ] [DOC] P3. Add a one-line warning to `safe-doc-push.sh`'s own header docstring about this exact risk, so a
+- [x] ✅ [DOC] P3. Add a one-line warning to `safe-doc-push.sh`'s own header docstring about this exact risk, so a
       future reader auditing the script (not just a QG-checker) sees it without needing this issue doc. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@3a16864cb5
 
 ## Progress Log
 
@@ -116,3 +120,10 @@ docs push.
   conflict by taking the peer's (more complete) landed version, no separate commit needed from this session.
   Todo 2 (P3, header docstring warning) intentionally left open — smaller, independent scope, not required for
   this task's done_definition.
+- **2026-08-17 (slot-1, interactive)**: shipped todo 2 — `unified-trading-pm@3a16864cb5`. Added a short "⚠
+  RISK" paragraph to `safe-doc-push.sh`'s header, right after the "WHAT THIS DOES" numbered list and before
+  USAGE, summarizing the ahead-commit carry risk + pointing to exit 16 for the full mechanics rather than
+  duplicating it. Both todos now done — archiving this issue doc (flat `plans/archive/issues/` per
+  `doc_type: issue`; corpus-wide grep found zero referrers to this doc's path; no codex-alignment gap —
+  `/codex/05-infrastructure/per-tab-worktrees.md` doesn't enumerate per-exit-code detail, the script's own
+  header stays that SSOT, unchanged by this archival).
