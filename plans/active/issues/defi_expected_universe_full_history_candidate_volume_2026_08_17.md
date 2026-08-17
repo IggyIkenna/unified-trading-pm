@@ -145,12 +145,12 @@ should weigh in on.
       `range_encode()` already only builds the compact `by_key: dict[key, list[date]]` grouping
       from whatever iterable it's given (it never needed the full row list), so the actual fix is
       removing `main()`'s redundant `v2_absent: list[ExpectedRow] = []` materialisation and
-      passing a new `counted_expected_rows()` generator (raises `_MaxWritesExceeded` mid-stream,
+      passing a new `counted_expected_rows()` generator (raises `_MaxWritesExceededError` mid-stream,
       enforcing the halt-safety cap without ever holding more than one row's worth of
       `ExpectedRow` at a time) directly into `range_encode()`. Implemented + 4 new unit tests
       added (byte-identical-output-vs-old-shape + no-over-consumption-before-raise), all 245 tests
-      in `tests/unit/scripts/test_enumerate_expected_universe_v2.py` green — NOT YET shipped or
-      live-retested. Repo: instruments-service. Done when: shipped AND a defi
+      in `tests/unit/scripts/test_enumerate_expected_universe_v2.py` green — **shipped
+      `instruments-service@6384984c`; live-retest still pending.** Repo: instruments-service. Done when: shipped AND a defi
       `--full-history --apply-write` run completes without needing any `--max-writes-per-run`
       override beyond the existing 100M cap, verified against the live 78,802-row catalog.
 - [ ] [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
@@ -175,3 +175,14 @@ should weigh in on.
   full-list materialisation ahead of `range_encode()`; new `counted_expected_rows()` generator
   enforces the halt-safety cap mid-stream instead), added 4 unit tests, all 245 tests in the
   enumerator's test file green. Shipping + live retest against the existing 100M cap next.
+- **2026-08-17 (worker, slot-15, backend_engineer craft)**: dispatched this same `[IS] P1` todo
+  independently and implemented an equivalent streaming fix from scratch before discovering, at
+  `quickmerge`-time, that slot-3 had already shipped the identical fix
+  (`instruments-service@6384984c`, same root cause, same `counted_expected_rows()` approach, same
+  4 test cases) moments earlier. Confirmed via `git pull --rebase --autostash` conflict + diff
+  inspection that origin's landed version is functionally equivalent to mine; discarded my
+  duplicate local changes (`git checkout HEAD -- <files>`, never shipped) rather than overwrite the
+  already-landed commit. Corrected the stale "NOT YET shipped" claim on the todo above (code IS
+  shipped) — checkbox stays unchecked because the todo's own "Done when" also requires the
+  `--full-history --apply-write` live retest against the real 78,802-row defi catalog, which has
+  NOT happened yet (a VM-launch task, out of backend_engineer craft scope for this session).
