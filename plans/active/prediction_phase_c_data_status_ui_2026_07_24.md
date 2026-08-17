@@ -146,3 +146,9 @@ context_scope:
   `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` still open (prerequisite still
   status:active, **CORRECTED 2026-08-16 (plan_reconciler): 6 open todos, not 7** — dropped 7→6 on 2026-08-15 per the
   closeout hub's own re-verified snapshot). Doc stays NA — gate conclusion unaffected by the count correction.
+
+- **na-eligibility-audit 2026-08-17** [body-hash:fc1a49343a0f6665]: KEEP-NA, valid — 2 open (RE-ADD data-status
+  dimensions-enumeration UI view, honest-coverage green verification). `depends_on:
+  [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` re-confirmed live — prerequisite still carries
+  6 open todos, gate not cleared. KEEP-NA on that citation alone, consistent with 5 prior audit passes (07-30 through
+  08-10). Doc stays NA.

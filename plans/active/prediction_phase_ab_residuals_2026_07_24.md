@@ -703,3 +703,15 @@ context_scope:
   "HELD per operator", explicit "operator/architect call, not a mechanical todo" backfill assessments, an accept-vs-fix
   writer-defect judgment branch, item 7 gated on item 2 within this same doc) — a mixed doc, not RECLASSIFY-eligible.
   Doc stays NA.
+
+- **na-eligibility-audit 2026-08-17** [body-hash:4c30ce85929a61ff]: KEEP-NA, valid — 6 open Phase-B todos
+  (enumeration-driven manifest migration, fixture-attribute historical backfill, ambiguous-canonical-value precedent
+  application, instrument_type casing re-verify to 100%, growing-blank-instrument_type diagnostic, 3x-cadence
+  reconciliation top-up). Re-confirmed against the unbroken KEEP-NA history (07-30 through 08-07, round11 08-09) —
+  every item ends in an operator-held race-sensitive `_index` CAS `--apply` (explicitly "HELD per operator"), a
+  per-item design/judgment call, or a same-doc dependency. **Flagging 2 items for closer review on a future pass**
+  (not acted on here — entangled with the same gated Phase-B migration sequence, consistent with this doc's
+  conservative precedent): the "apply standing canonicalization precedent" todo reads as a bounded
+  enumerate+apply+escalate-residuals-only procedure, and the "blank/null instrument_type ACTIVELY GROWING" item reads
+  as a bounded root-cause diagnostic — both tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for the next run to weigh
+  independently. Doc stays NA.

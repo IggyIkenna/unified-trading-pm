@@ -201,3 +201,11 @@ context_scope:
   respectively). E3's arb-engine identity-wiring + correctness-guard items also independently confirmed as genuine
   multi-file design/build work on live dispatch-critical machinery, not RECLASSIFY-eligible even setting the gate aside.
   Doc stays NA.
+
+- **na-eligibility-audit 2026-08-17** [body-hash:fd6de6563ae2fbd6]: KEEP-NA, valid — 2 open (E3: wire the arb engine to
+  consume `af_fixture_id` for the 3rd/bookmaker-odds venue — gap 3 of 3, gaps 1-2 already shipped; 3-way arb
+  correctness guards). Double `depends_on: [prediction_phase_ab_residuals_2026_07_24,
+  prediction_phase_d_formal_smoke_and_backfill_2026_07_24]` + `gate_on_depends: true` re-confirmed live — first
+  prerequisite still carries 6 open todos, gate not cleared. KEEP-NA on that citation alone; both remaining items are
+  also independently genuine multi-file design/build work on live dispatch-critical machinery, not RECLASSIFY-eligible
+  even setting the gate aside — consistent with 6 prior audit passes (07-30 through 08-10). Doc stays NA.
