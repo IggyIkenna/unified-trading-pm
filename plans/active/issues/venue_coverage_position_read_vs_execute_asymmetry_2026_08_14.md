@@ -232,7 +232,10 @@ Kamino/Jupiter conflated the two.
 
 ## Todos
 
-- [ ] [AGENT] P0. **Build DeFi position adapters for the carve-out path first** — Lido, Marinade, Kamino, Jupiter. These
+- [x] ✅ [AGENT] P0. **CLOSED (na-eligibility-audit 2026-08-17)** — all four resolved per this item's own body below:
+      Lido done (generic reader), Marinade done (`strategy-service@926be71046`), Jupiter determined not to need an
+      adapter, Kamino shipped (`strategy-service@70c3c05f5c`). **Build DeFi position adapters for the carve-out path
+      first** — Lido, Marinade, Kamino, Jupiter. These
       are not "more venues"; they are the reconciliation side of the two archetypes we are shipping real. Build the code
       fully (operator: _"we don't need credentials to fully build the code, not just stubs"_) — credentials gate RUNNING
       an adapter, not writing one. **Status 2026-08-15 (de-duplicated — this todo's body was accidentally double-pasted;
@@ -274,7 +277,7 @@ Kamino/Jupiter conflated the two.
       the underlying gate to be fixed; the required UAC dependency (`KaminoBorrowParams.market_address` +
       `"SOLANA"` jitoSOL/mSOL addresses) landed the same session as `unified-api-contracts@4821f0d92e` (see the P0
       todo above for the Solana LST addresses, and the Kamino borrow/repay todo for the `market_address` field).
-- [ ] [AGENT] P3. **`StrategyDomainConfig` (`extra="forbid"`) breaks `TestStrategySafeFieldAllowList` against ANY local
+- [x] ✅ [AGENT] P3. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 13 (na-eligibility-audit 2026-08-17). `StrategyDomainConfig` (`extra="forbid"`) breaks `TestStrategySafeFieldAllowList` against ANY local
       `.env` matching `.env.example`'s own documented defaults** — worked around this session (move-aside-and-restore
       per the todo above), not fixed. Consider `extra="ignore"` or constructing the test via `_env_file=None`; as
       written this likely blocks every quickmerge attempt against strategy-service from a machine with a normal local
@@ -362,7 +365,15 @@ Kamino/Jupiter conflated the two.
       (mid-session) vs the reds seen right after `.env` restoration were the SAME already-diagnosed pydantic-settings
       `.env`-pollution artifact recurring — moved `.env` aside again for the final verify pass, restored it immediately
       after, never touched/deleted it.
-- [ ] [AGENT] P1. **Build the venue-coverage cascade as THREE SIT invariants** — operator ruling 2026-08-14, recorded as
+- [x] ✅ [AGENT] P1. **CLOSED (na-eligibility-audit 2026-08-17)**, see
+      [integration-testing-layers § "The venue-coverage cascade"](/codex/06-coding-standards/integration-testing-layers.md) —
+      all 3 invariants now shipped. Invariants 1+3
+      shipped 2026-08-15 (`unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`, cited in this
+      item's own body below). Invariant 2 shipped as a ratchet baseline via the child todo later in this doc
+      (`unified-api-contracts@86d5f5af46` + `system-integration-tests@cce1adebc6`, reconciled 2026-08-17 by
+      `venue_readiness_ao_dispatch_batch1_2026_08_16`) — this PARENT todo's own checkbox was the one artifact the
+      earlier pass missed when it closed the child. **Build the venue-coverage cascade as THREE SIT invariants** —
+      operator ruling 2026-08-14, recorded as
       the SSOT in
       [integration-testing-layers § "The venue-coverage cascade"](/codex/06-coding-standards/integration-testing-layers.md).
       In-repo checks belong in `quality-gates.sh`; these are cross-repo, so no single repo's gate can see the other side
@@ -395,7 +406,9 @@ Kamino/Jupiter conflated the two.
       a real connector (JUPITER-SOLANA, registered via a bare module-level constant used outside any loop) and
       separately missed 4 files that register via a loop nested inside a function (only checking `tree.body` instead of
       `ast.walk`); (2) the first version counted ~31 deliberately aggregator-routed sports venues
-      (`route="aggregator:ODDS_API"`, operator ruling 2026-08-14) as gaps — fixed by scoping invariant 1 to
+      (`route="aggregator:ODDS_API"`, operator ruling 2026-08-14 -- recorded in this doc,
+      venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md, same conversational ruling cited above) as
+      gaps — fixed by scoping invariant 1 to
       `route == "direct"` only. Both moved the real number from an inflated 109 down to a measured 82.
 - [x] [AGENT] P1. ✅ **Audit execution-service instruction coverage per venue** — done 2026-08-14 (session 3), findings
       recorded in "Module reachability — the deeper finding" above. The audit found something worse than the scoped
@@ -481,7 +494,7 @@ Kamino/Jupiter conflated the two.
       fail-closed `SimulationOnlyConnectorError` guard refuse `is_live=True` construction before that branch could ever
       run. Fix alongside the write path: gate the read on `rpc_url`/`wallet_address` config presence instead (the
       pattern `jito.py` uses), not on `self.is_live`.
-- [ ] [AGENT] P2. **Kamino's `supply()`/`withdraw()` discriminators (`0x01`/`0x02`) have no citation** — found
+- [x] ✅ [AGENT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 14 (na-eligibility-audit 2026-08-17). Kamino's `supply()`/`withdraw()` discriminators (`0x01`/`0x02`) have no citation — found
       2026-08-15 while adding `borrow()`/`repay()` alongside them. Every address constant elsewhere in this repo carries
       a `# DERIVED from <source>` comment; these two do not, and git history shows no citation was ever recorded.
       `borrow()`/`repay()` avoided the same risk by calling Kamino's real Transactions API
@@ -490,7 +503,7 @@ Kamino/Jupiter conflated the two.
       deleting the uncited discriminator bytes, rather than trying to verify them after the fact. Not fixed inline:
       these two methods are already shipped/tested tier-1 (execution-service@2b92d6ac69) and rewriting a live
       money-moving path is a larger, separate change than the borrow/repay addition that found it.
-- [ ] [AGENT] P2. **`AAVEConnector.get_user_account_data()` returns hardcoded placeholder values, not a real read** —
+- [x] ✅ [AGENT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 15 (na-eligibility-audit 2026-08-17). `AAVEConnector.get_user_account_data()` returns hardcoded placeholder values, not a real read —
       found 2026-08-15 while wiring `RecursiveLoopOrchestrator` to real AAVE calls. Unlike `supply()`/`borrow()`/
       `repay()`/`withdraw()` (which correctly branch on `is_live` and call the real `_Web3LiveExecutor`),
       `get_user_account_data()` always returns `total_collateral_eth=Decimal("10")`, `total_debt_eth=Decimal("5")`
@@ -921,6 +934,16 @@ the quickmerge on a later pass once this settles.
   (`unified-api-contracts@86d5f5af46`, `system-integration-tests@cce1adebc6`) independently re-verified as live
   ancestors of `origin/live-defi-rollout` and content spot-checked, not trusted from the batch plan's own copy of the
   evidence line. Part of `venue_readiness_ao_dispatch_batch1_finalize_2026_08_16`'s reconciliation todo.
+- **na-eligibility-audit 2026-08-17** [body-hash:09c000694e56b30b]: RECLASSIFY (per-todo split) -- of 8 open todos: 2 CLOSED as
+  stale (line ~235 "Build DeFi position adapters" -- all 4 sub-items shipped per this item's own body; line ~365
+  "THREE SIT invariants" parent -- all 3 sub-invariants shipped, the child todo tracking invariant 2 was already
+  closed by a prior pass but this parent was missed). 4 bounded items extracted to
+  `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` items 13-16 (StrategyDomainConfig extra=forbid fix,
+  Kamino discriminator citation migration, AAVEConnector.get_user_account_data real read, re-count READ-side
+  coverage figure). Doc stays `assigned_vm: NA` for its remaining 2 items: Solblaze/Jito Restaking real write paths
+  (doc's own text: "judged too risky to guess", live money-moving path) and the `[OPERATOR]` disclosure decision on
+  out-of-mandate adapters. Conflict-check clear (grepped active planning docs; 2 incidental unrelated hits ruled
+  out). Cross-cutting tranche audit.
 
 ## Context scout
 

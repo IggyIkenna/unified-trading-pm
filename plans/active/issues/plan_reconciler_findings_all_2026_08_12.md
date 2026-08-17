@@ -585,12 +585,14 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [x] ✅ [REVIEW] P3. (ao-readiness)
       plans/archive/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md — low severity.
       **DONE (verified 2026-08-16)**: doc archived, 0 open todos — moot.
-- [ ] [DOC] P3. (codex-drift)
-      plans/archive/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md —
-      unspecified drift. **Still open (checked 2026-08-16)**: not stale — the doc carries 5 concrete, specific P2/P3
-      todos (HEAD-red reproducibility, moving 11 Pydantic models to unified-cloud-interface, resolving inline
-      liquidation thresholds against UAC, QG budget overrun, an archived-doc gate reference) — real, bounded remaining
-      work, not vague drift.
+- [x] ✅ [DOC] P3. (codex-drift)
+      plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md —
+      unspecified drift. **CORRECTED 2026-08-17 (na-eligibility-audit)**: the 2026-08-16 "not stale — real, bounded
+      remaining work" conclusion above is ITSELF now stale — all 5 of that doc's todos are DONE, extracted verbatim to
+      `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (strategy-service@621858344d,
+      unified-api-contracts@31b4ad958e, strategy-service@ac5cab7edb x2, unified-trading-pm@144a18fed5, all landed
+      2026-08-14). Source doc's checkboxes corrected in the same pass. Also fixing this line's own path drift: the
+      doc lives at `plans/active/issues/...` (open, never archived), not `plans/archive/issues/...` as cited above.
 - [ ] [DOC] P3. (codex-drift) plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md —
       9-state-vs-7-state enum mismatch, unresolved (related to the P1 fixed this run). **Still open (checked
       2026-08-16)**: operator RULED 2026-08-06 (option A, advance the contract), confirmed 2026-08-12 — but the actual
@@ -745,3 +747,11 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   archived (still has open items).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:fe18476dc8bf9bf0]: KEEP-NA, valid -- 24 open items (grep-verified, matches inventory_open_todos=24) are the P2/P3 backlog from a 2026-08-12 full-corpus /plan-reconcile run. A dated 2026-08-16 Progress Log pass individually re-checked essentially every item, flipped the ones resolved elsewhere, and explicitly concluded the remaining 24 are 'real unfinished work / judgment calls / corpus-wide disagreements not resolvable by this pass.' Read every remaining item: a mix of (a) cross-doc redirects where the real work is tracked and correctly still open in another doc (e.g. the order_state_machine_ssot line mirrors this same tranche's order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md, assessed separately), (b) genuine corpus-wide judgment calls explicitly flagged as 'not something this bounded pass can settle' (the locked_by placeholder-vs-bug disagreement), (c) operator-gated items (sports_track_h denominator; defi_catalog_engine recursion_depth_max, both explicitly 'the operator's call'), and (d) low-severity cosmetic/historical noise nobody has prioritized. None presents a self-contained, worker-determinable action without further investigation-then-judgment or an operator decision. This is a triage/investigation-tracking doc (parent_epic: plan_hygiene_master) by nature, not a batch of bounded engineering todos.
+- **na-eligibility-audit 2026-08-17 (re-run same day)** [body-hash:a3d9de14b0a5387e]: KEEP-NA-STALE-ITEMS -- content
+  changed since the marker above (hash differs), triggering incremental re-scope. Found item 14 (Section 3,
+  codex-drift, re: `strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`) itself stale:
+  its 2026-08-16 "not stale -- real, bounded remaining work" conclusion is contradicted by
+  `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`, which shows all 5 of that doc's todos DONE +
+  extracted verbatim 2026-08-14/15. Also fixed item 14's own path-drift bug (cited `plans/archive/issues/...`, real
+  path is `plans/active/issues/...`, never archived). Item 14 closed; the other 23 items unchanged from the marker
+  above, doc otherwise KEEP-NA valid. Cross-cutting tranche audit.

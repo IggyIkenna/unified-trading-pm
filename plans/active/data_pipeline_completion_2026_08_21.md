@@ -138,30 +138,28 @@ than a hypothesis — the operator asked specifically what past failures should 
 > **B23 is currently UNVERIFIED, not satisfied.** The 51-column instruments schema exists and is populated, but whether
 > it is *locked and versioned* has not been established. A schema existing is not a schema being locked.
 
-- [ ] [DATA] P0. **Verify B21** — Distinct Values in the deployment UI shows zero non-canonical values, per AG.
+- [x] ✅ [DATA] P0. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 1 (na-eligibility-audit 2026-08-17). Verify B21 — Distinct Values in the deployment UI shows zero non-canonical values, per AG.
 - [ ] [OPERATOR] P0. **Sign off B20's shard-name orthogonality.** Human judgment, explicitly not delegable to a checker.
-- [ ] [DATA] P0. **Verify B22 in BOTH directions**, per AG, off the manifest.
-- [ ] [DATA] P0. **Establish whether B23's schemas are locked and versioned**, and if not, what locking them requires —
-      the gate with the least existing evidence.
+- [x] ✅ [DATA] P0. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 2 (na-eligibility-audit 2026-08-17). Verify B22 in BOTH directions, per AG, off the manifest.
+- [x] ✅ [DATA] P0. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 3 (na-eligibility-audit 2026-08-17). Establish whether B23's schemas are locked and versioned, and if not, what locking them requires — the gate with the least existing evidence.
 
-| B21 | **Manifest canonical on the named surface** `+ADDED` | **Zero non-canonical entries in Distinct Values in the deployment UI**, per asset group. That surface is the acceptance check — not a grep, not a script's own opinion. | Operator's bar. A canonicalisation claim verified only by the tool that did the canonicalising is self-certifying. |
-| B22 | **Path <-> manifest reconciled BOTH ways** `+ADDED` | Every GCS path follows the same structure as the code, **and** every path entry is recorded in the manifest in canonical format. Bidirectional: manifest->path and path->manifest. Manifest-driven, no new whole-corpus walk (B13). | The path->manifest direction is the one that gets skipped and the one that matters: an object with no manifest row is invisible to every coverage number we quote. SSOT: `/codex/02-data/orphan-object-detection.md`. |
-| B23 | **Schemas conformant, LOCKED and VERSIONED** `+ADDED` | Every GCS object conforms to its declared schema; schemas are locked and versioned, so a schema change is a deliberate versioned act rather than a drift downstream readers discover. | The 2026-04-14 incident: 85 `entity=fixtures_schedule` shards silently carried an instrument-catalogue shape instead of fixtures data, undetected until a downstream column projection failed. Conformance catches a WRONG-SHAPE write, which no coverage number ever will. |
+> **Doc-hygiene fix (na-eligibility-audit 2026-08-17)**: this section previously contained an accidentally
+> near-verbatim duplicated block immediately below this point (the B21-B23 table + MEASURED blockquote appeared a
+> second time, differing only in cosmetic rewording and straight-vs-Unicode arrow glyphs) — table+blockquote
+> removed here; no content was lost, both copies said the same thing. The 4 duplicate checkboxes are individually
+> marked CANCELLED below (not silently deleted) so the doc's total todo count stays conserved.
 
-> **MEASURED 2026-08-17 — B22 currently FAILS, with a number.** A bounded 4,000-blob cefi instruments-store sample:
-> **1,000 non-canonical objects** (no `pipeline_mode=`/`asset_group=`, and a *different size* from their canonical twin
-> — different content, not duplicates) and **270 `.bak` files in prod**. Roughly a third of sampled objects. Sports
-> additionally uses a different path grammar (`day=/league=/venue=`), so "same structure as the code" is not yet true
-> across asset groups. Per-AG re-measure tracked in
-> [`/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`](/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md).
->
-> **B23 is UNVERIFIED, not satisfied.** The 51-column instruments schema exists and is populated; whether it is *locked
-> and versioned* has not been established. A schema existing is not a schema being locked.
-
-- [ ] [DATA] P0. **Verify B21** — Distinct Values in the deployment UI shows zero non-canonical values, per AG.
-- [ ] [OPERATOR] P0. **Sign off B20's shard-name orthogonality.** Human judgment, not delegable to a checker.
-- [ ] [DATA] P0. **Verify B22 in BOTH directions**, per AG, off the manifest.
-- [ ] [DATA] P0. **Establish whether B23's schemas are locked and versioned** — the gate with the least evidence today.
+- **[DATA] P0. CANCELLED — SUPERSEDED 2026-08-17 (na-eligibility-audit): exact duplicate of the B21 checkbox above,
+  accidental content-duplication artifact, not a second item.** Verify B21 — Distinct Values in the deployment UI
+  shows zero non-canonical values, per AG.
+- **[OPERATOR] P0. CANCELLED — SUPERSEDED 2026-08-17 (na-eligibility-audit): exact duplicate of the B20 checkbox
+  above, accidental content-duplication artifact, not a second item.** Sign off B20's shard-name orthogonality.
+- **[DATA] P0. CANCELLED — SUPERSEDED 2026-08-17 (na-eligibility-audit): exact duplicate of the B22 checkbox above,
+  accidental content-duplication artifact, not a second item.** Verify B22 in BOTH directions, per AG, off the
+  manifest.
+- **[DATA] P0. CANCELLED — SUPERSEDED 2026-08-17 (na-eligibility-audit): exact duplicate of the B23 checkbox above,
+  accidental content-duplication artifact, not a second item.** Establish whether B23's schemas are locked and
+  versioned — the gate with the least evidence today.
 
 | B24 | **Minimum history declared per shard, and TRANSITIVE** `+ADDED` | Every shard declares the minimum history it needs to produce anything at all — and the requirement for a consumer is the **transitive closure** through the chain, not its own hop. | You cannot build a 1-year candle without a year of tick history, and you cannot compute a 10-period moving average over 1-year candles without **ten years** of candles beneath it. The requirement COMPOUNDS per hop; declaring it only at the last hop understates it by the depth of the chain. |
 | B25 | **Registration FAILS when declared config exceeds available history** `+ADDED` | A strategy/feature config asking for more lookback than measured coverage provides is rejected **at registration**, not at runtime. Declared lookback is checked against real honest coverage for that exact shard. | Otherwise we produce config that says what we want without ever checking the data exists to fulfil it — and the failure surfaces as quietly wrong numbers rather than an error. Composes with P12 (preflight registration) and B16 (denominator). |
@@ -192,11 +190,11 @@ somewhere else?" with a measurement instead of a guess.
 - **Composes with B17** (cost): cost per stage, so an expensive stage is visible rather than averaged into a
   per-shard total.
 
-- [ ] [BACKEND] P1. **Instrument the three stages per shard** and record fetch throughput, process latency, and GCS
+- [x] ✅ [BACKEND] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 4 (na-eligibility-audit 2026-08-17). Instrument the three stages per shard and record fetch throughput, process latency, and GCS
       write throughput separately.
-- [ ] [BACKEND] P1. **Make the harness portable** — same benchmark runnable on a laptop and on a non-Google provider,
+- [x] ✅ [BACKEND] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 5 (na-eligibility-audit 2026-08-17). Make the harness portable — same benchmark runnable on a laptop and on a non-Google provider,
       so the figures are directly comparable rather than adjusted.
-- [ ] [BACKEND] P2. **Publish the per-shard reference ETA** derived from the Google figures, labelled REFERENCE and not
+- [x] ✅ [BACKEND] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 6 (na-eligibility-audit 2026-08-17). Publish the per-shard reference ETA derived from the Google figures, labelled REFERENCE and not
       a target, alongside the per-stage breakdown that explains it.
 
 ### History sufficiency — why it is a chain problem, not a per-shard number
@@ -277,7 +275,8 @@ pipeline readiness — they are deliberately absent here.
 Each gate above is owned by an existing plan wherever one exists. This plan is the **gate register**; the work lives
 where it already lives.
 
-- [ ] [DOC] P0. **Cross-link every gate to its owning plan/issue doc** so the register resolves to real tracked work:
+- [x] ✅ [DOC] P0. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 7 (na-eligibility-audit 2026-08-17). Cross-link every gate to its owning plan/issue doc
+      so the register resolves to real tracked work:
       canonicalisation and orthogonality → [`/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`](/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md)
       (steps 18–19); smoke-test bar → [`/plans/active/venue_smoke_test_bar_2026_08_16.md`](/plans/active/venue_smoke_test_bar_2026_08_16.md);
       per-venue e2e legs → [`/plans/active/venue_e2e_wiring_2026_08_16.md`](/plans/active/venue_e2e_wiring_2026_08_16.md);
@@ -285,11 +284,11 @@ where it already lives.
       Where a gate has **no** owning plan, that absence is the finding — record it rather than silently absorbing it.
 - [ ] [OPERATOR] P0. **Review and ratify the PAPER and LIVE gate sets** above, and the 12 `+ADDED` BATCH gates. They
       are drafted, not ruled.
-- [ ] [DATA] P0. **Tuesday checkpoint**: record BATCH/PAPER/LIVE stage per shard across IS → features, all asset
+- [x] ✅ [DATA] P0. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 8 (na-eligibility-audit 2026-08-17). Tuesday checkpoint: record BATCH/PAPER/LIVE stage per shard across IS → features, all asset
       groups. Recording, not achieving. `unverified` is a legitimate value and must be used where no check exists.
-- [ ] [DATA] P1. **Friday target**: all shards at BATCH pending backfill completion, with the residual explicitly
+- [x] ✅ [DATA] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 9 (na-eligibility-audit 2026-08-17). Friday target: all shards at BATCH pending backfill completion, with the residual explicitly
       being B8 (honest coverage 100%) and nothing else.
-- [ ] [SKILL] P1. **Build the gate-evaluation skill** so this register is re-runnable rather than a point-in-time
+- [x] ✅ [SKILL] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 10 (na-eligibility-audit 2026-08-17). Build the gate-evaluation skill so this register is re-runnable rather than a point-in-time
       snapshot — the same shape as the readiness state dump in the parent epic's W1/W20.
 
 ## Open question for the operator
@@ -312,3 +311,13 @@ addition, because a smoke test that exits 0 having written nothing satisfies B2 
 
 Deliberately kept OUT: strategy, execution and ML readiness. They are separate gate sets with different failure modes,
 and folding them in here would let a data-complete shard read as trading-ready.
+
+**na-eligibility-audit 2026-08-17** [body-hash:c833814dff07254d]: RECLASSIFY (per-todo split) -- of 18 grep-matched checkboxes
+(14 semantically distinct after collapsing an accidental duplicate block, see the doc-hygiene fix above), 10 bounded
+items extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` items 1-10 (B21/B22/B23 verify,
+3-stage benchmark instrumentation + portability + reference ETA, gate->plan cross-link, Tuesday/Friday checkpoint
+recording, gate-eval skill build). Doc stays `assigned_vm: NA` for its remaining 4 items: B20 shard-name-orthogonality
+sign-off `[OPERATOR]`, PAPER/LIVE+12-batch gate ratification `[OPERATOR]`, and the minimum-history/transitive-closure
+resolver design work (line 213 + its dependent at 215 — cross-service, no cited existing pattern, matches the
+"multi-file rewrite, not bounded" bar even though phrased as one todo). Conflict-check clear. Cross-cutting tranche
+audit.

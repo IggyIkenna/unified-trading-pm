@@ -10,7 +10,7 @@ summary: >-
   into strategy-service — measured 2026-08-10 while trying to land a one-line `cloudbuild.yaml` change that touches no
   Python at all. Not caused by the attempted commit: the working tree was clean apart from that single YAML line and
   HEAD was exactly equal to origin.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,12 +34,17 @@ depends_on: []
 locked_by:
 supersedes:
 superseded_by:
-resolved_by: ""
-last_updated: 2026-08-10
+resolved_by: cross_cutting_satellite_ao_dispatch_batch13_2026_08_13
+last_updated: "2026-08-17"
 context_scope: [strategy-service/scripts/quality-gates.sh, strategy-service/strategy_service, /plans/archive/SCHEMA_CONTRACTS_AUDIT.md]
 ---
 
 # strategy-service cannot accept any commit — its own gate is red at HEAD
+
+> **🗄️ ARCHIVED 2026-08-17 (na-eligibility-audit, cross-cutting tranche)** — all 5 todos were already done and
+> extracted verbatim to `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` on 2026-08-14/15; this doc's own
+> checkboxes simply never got flipped to cite that extraction until this pass. See the Progress Log below for the
+> full citation + landed SHAs.
 
 ## Evidence (measured, not inferred)
 
@@ -97,24 +102,24 @@ host it is partly a function of concurrent load (the run above spent 12s queued 
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Establish how HEAD went red and whether it is reproducible on a clean checkout.** Run
+- [x] ✅ [BACKEND] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` item (L99-102) (na-eligibility-audit, prior 2026-08-13 pass). **Establish how HEAD went red and whether it is reproducible on a clean checkout.** DONE — root cause: host-contention mis-triage, gate was not actually red. Run
       `bash scripts/quality-gates.sh --no-fix` on a pristine `origin/live-defi-rollout` checkout of strategy-service
       with NO working-tree changes. Confirm the same three failures. Then `git log -S` the introducing commits for the
       BaseModel/STEP-5.37 checks (and the check definitions themselves) to determine whether the CODE landed dirty or
       the CHECK tightened afterwards — the fix differs completely between those two. Repo: strategy-service.
-- [ ] [BACKEND] P2. **Move the 11 Pydantic BaseModel subclasses out of service source** into `unified-cloud-interface`
+- [x] ✅ [BACKEND] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` item (L103-106) (na-eligibility-audit, prior 2026-08-13 pass). **Move the 11 Pydantic BaseModel subclasses out of service source.** DONE — `strategy-service@621858344d` (2026-08-14): 9 of the 11 recorded as justified, dated `# CORRECT-LOCAL` exemptions (genuine FastAPI request/response DTOs, not domain contracts) rather than moved. into `unified-cloud-interface`
       `domain/strategy-service/` per /plans/archive/SCHEMA_CONTRACTS_AUDIT.md § 3b, OR record a justified, dated
       exemption if these are genuinely request/response DTOs rather than domain contracts (several are in
       `api/*_router.py`, which is exactly where FastAPI request models legitimately live — so this may be a
       FALSE-POSITIVE class in the check, not 11 real violations; determine which before refactoring). Repo:
       strategy-service.
-- [ ] [BACKEND] P3. **Resolve the STEP 5.37 inline HF/LTV/margin thresholds** against UAC `LIQUIDATION_PARAMS_REGISTRY`.
+- [x] ✅ [BACKEND] P3. Extracted to `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` item (L107-110) (na-eligibility-audit, prior 2026-08-13 pass). **Resolve the STEP 5.37 inline HF/LTV/margin thresholds.** DONE — `unified-api-contracts@31b4ad958e` + `strategy-service@ac5cab7edb` (2026-08-14). against UAC `LIQUIDATION_PARAMS_REGISTRY`.
       Size this from the gate's own output, not from the loose grep above. Repo: strategy-service.
-- [ ] [BACKEND] P3. **The <300s quality-gate budget is now exceeded (326s work + 12s queue).** Either optimise the suite
+- [x] ✅ [BACKEND] P3. Extracted to `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` item (L111-114) (na-eligibility-audit, prior 2026-08-13 pass). **The <300s quality-gate budget is now exceeded (326s work + 12s queue).** RESOLVED — already fixed as a side effect of the 2026-08-10 CPU-vs-wall billing rework (`strategy-service@ac5cab7edb`, 2026-08-14); no separate code change needed. Either optimise the suite
       back under budget or re-baseline the budget with a stated justification. Note the shared-host coupling: queue-wait
       counts toward the wall figure, so this check can fail purely from concurrent QG load on a busy laptop/VM — decide
       whether queue-wait SHOULD count before re-baselining. Repo: strategy-service.
-- [ ] [BACKEND] P3. **strategy-service's gate points at an archived doc.** Its BaseModel failure message sends you to
+- [x] ✅ [BACKEND] P3. Extracted to `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` item (L115-118) (na-eligibility-audit, prior 2026-08-13 pass). **strategy-service's gate points at an archived doc.** DONE — `unified-trading-pm@144a18fed5` (2026-08-14), fleet-wide grep included per this todo's own ask. Its BaseModel failure message sends you to
       the `active/` copy of `SCHEMA_CONTRACTS_AUDIT` (Section 3b), but that doc was archived — it now lives at
       /plans/archive/SCHEMA_CONTRACTS_AUDIT.md. Anyone following the gate's own instruction hits a missing file at the
       moment they most need the guidance. Update the message in strategy-service's `quality-gates.sh` (and grep the
@@ -128,3 +133,4 @@ host it is partly a function of concurrent load (the run above spent 12s queued 
   (version metadata) and not worth forcing past a red gate. No override was used and none should be: the emergency
   `QUICKMERGE_ALLOW_BEHIND`-style escapes exist for staleness, not for a genuinely failing gate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:12695fd954487497]: KEEP-NA-STALE (already-duplicated) -- all 5 open todos were already completed and extracted verbatim into `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (status: active) on 2026-08-13/14, each citing this doc's exact path as `Source:`. Checkboxes above corrected to cite the extraction + the 5 landed SHAs (strategy-service@621858344d, unified-api-contracts@31b4ad958e, strategy-service@ac5cab7edb x2, unified-trading-pm@144a18fed5). Zero `assigned_vm` change -- pure citation hygiene, this was already NOT genuinely open work. All 5 todos now closed; doc is unlocked (`locked_by:` blank) and archival-eligible. Cross-cutting tranche audit.

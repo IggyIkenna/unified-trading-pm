@@ -158,8 +158,8 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
       nothing, and inferring inheritance — without reading how it actually installs. Repos: strategy-service,
       greeks-service. **BLOCKED — neither could be landed 2026-08-10, both for reasons unrelated to the change itself:**
       `strategy-service`'s own quality gate is RED at its committed LDR tip, so quickmerge refuses ANY commit into the
-      repo (tracked in
-      /plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md).
+      repo (tracked in, now archived:
+      /plans/archive/2026_08/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md).
       `greeks-service` has a peer's uncommitted pre-migration `.github/workflows/semver-agent.yml` in its working tree;
       HEAD is post-migration (it now calls the shared reusable workflow), so quickmerge's autostash/pop conflicts on
       that file EVERY run, leaving `UU` conflict markers that then fail the workflow-YAML gate. Observed and reverted to

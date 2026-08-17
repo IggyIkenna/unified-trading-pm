@@ -120,7 +120,7 @@ monthly-grain roll-up over ~25 venues × ~90 months × ~300 rows lands around **
 "few hundred thousand to ~1M" the operator predicted, and roughly a **30× object-count reduction** versus daily. The
 grain change is justified on both counts.
 
-- [ ] [DATA] P1. **Re-measure findings 3 and 4 across all four asset groups.** The dual-path/`.bak` figures above are a
+- [x] ✅ [DATA] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 11 (na-eligibility-audit 2026-08-17). Re-measure findings 3 and 4 across all four asset groups. The dual-path/`.bak` figures above are a
       *bounded 4,000-blob cefi sample*, not a full census — the ratio may differ per AG, and a cleanup scoped from one
       sample would be wrong. Use the manifest, not a new whole-corpus walk.
 
@@ -177,7 +177,7 @@ Both paths must return the same answer, and that equivalence is a test, not an a
 - [ ] [BACKEND] P1. **Prove point-in-time equivalence**: for a sampled set of instruments and dates, the change-log
       replay and the monthly catalogue agree. Include a negative control — a known tick-size change must make a naive
       latest-state read visibly wrong.
-- [ ] [BACKEND] P1. **Verify the DeFi-address immutability assumption** rather than carrying it as belief. If
+- [x] ✅ [BACKEND] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 12 (na-eligibility-audit 2026-08-17). Verify the DeFi-address immutability assumption rather than carrying it as belief. If
       addresses can change (migration, proxy upgrade), they are mutable and belong in the declared set.
 - [ ] [BACKEND] P1. **Measure the real storage cost** of the change log over a representative period, so the
       "stays small" claim is a number rather than an argument.
@@ -235,3 +235,13 @@ size, contract size and protocol risk params are the ones that move, and they ar
 sensitive to — so historising *only* the declared-mutable set keeps storage proportional to real changes while
 protecting exactly the fields whose staleness produces wrong numbers rather than merely stale ones. Full-row versioning
 would pay for every immutable field on every change; monthly snapshots alone cannot resolve an intra-month change.
+
+**na-eligibility-audit 2026-08-17** [body-hash:7154f83bf9f523b6]: RECLASSIFY (per-todo split) -- 2 of 11 open todos are
+independent of the pending operator ratification (todo #2) and genuinely bounded: re-measure findings 3/4 across all
+4 AGs (confirmed real, externally-relied-upon work -- `data_pipeline_completion_2026_08_21.md` cites this doc twice
+as the owner of that exact measurement) and verify the DeFi-address immutability assumption (factual investigation,
+not a design call). Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` items 11-12. Remaining
+9 items stay `assigned_vm: NA`: todo #2 (ratify/replace the history-log design) `[OPERATOR]` + its direct dependents
+(#3, #5, #6, #8), plus #4/#9/#10 (MISCLASSIFIED_LIKELY_AO_ELIGIBLE, lower confidence -- not extracted this round per
+the rubric's "not a fallback for borderline items" rule), and #11 (explicit non-scope placeholder note). Conflict-check
+clear. Cross-cutting tranche audit.
