@@ -570,11 +570,22 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       override pattern) — did NOT touch the hardcoded DEFAULT yet, same "verify before committing" discipline as
       the workers attempt. Attempt 4 died on its own (OOM) shortly after the SSH check, as expected. Relaunched as
       attempt 5, `sports-manifest-rescan-20260817-175102`, with `--machine-type e2-highmem-4` (32GB, double RAM)
-      `--workers 4`. If this completes: raise the launcher's hardcoded default machine-type from `e2-standard-4`
-      to `e2-highmem-4` in the same commit as closing this todo. If it ALSO OOMs: the dataset itself needs a
-      streaming/chunked read fix in `rescan_sports_fixtures_canonical.py`, not another machine-size escalation —
-      stop retrying blindly and look at what the script actually holds in memory.
-      Check `vm-logs/sports-manifest-rescan-20260817-175102/run.log` for a clean `DEPLOYMENT_COMPLETED
+      `--workers 4`.
+      **Attempt 5 made REAL further progress, not a repeat of the same wall — the doubled RAM genuinely fixed the
+      scan-phase OOM.** Log shows `Progress: 142800/142894` then `Scan complete: 47053527 per-(date, league_id)
+      FIXTURES rows across 142894 blobs` — the entire scan finished. It THEN got SIGKILLed (`exit_code=137`)
+      moments later, `DEPLOYMENT_FAILED`, self-deleted. This is a DIFFERENT, LATER stage's memory pressure — the
+      post-scan aggregation/write of 47M rows, not the scan itself — so this is genuine incremental progress, not
+      the same failure recurring, and doesn't trigger the "stop retrying blindly" condition from the note above
+      (that condition was for OOMing at the SAME stage again). Relaunched as attempt 6,
+      `sports-manifest-rescan-20260817-183559`, `--machine-type e2-highmem-8` (64GB, double again) `--workers 4`.
+      **This is the last size-escalation attempt before switching to a real code fix, not an open-ended ladder**:
+      if attempt 6 ALSO OOMs (at this same post-scan stage or later), the fix is a streaming/chunked write in
+      `rescan_sports_fixtures_canonical.py` for the 47M-row aggregation (don't hold it all in memory to write
+      once), not another machine-size jump — file that as its own properly-scoped follow-up rather than continuing
+      to escalate machine size. If this completes: raise the launcher's hardcoded default machine-type from
+      `e2-standard-4` to whichever size actually worked, in the same commit as closing this todo.
+      Check `vm-logs/sports-manifest-rescan-20260817-183559/run.log` for a clean `DEPLOYMENT_COMPLETED
       exit_code=0`, and spot-check that the weather VM's new captures show up as `empty_confirmed` (not still
       `expected_unattempted`) in the manifest afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
