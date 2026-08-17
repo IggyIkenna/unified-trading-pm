@@ -134,23 +134,35 @@ drift_direction: advance-code
       data-engineering work). Repo: unified-trading-pm. Source: `plan_reconciler_findings_defi_2026_08_17.md` "Plans
       not reached" item 4 (line ~273). Done when: all 4 docs' `related:`/inline cross-links name all 3 siblings.
 - [x] ✅ [IS] P1. **Execute the LST catalogue + expected-universe v2 regen (operator-ruled 2026-08-12, reconfirmed
-      2026-08-15) — enumerator half only, catalogue half already ran.** Run `enumerate_expected_universe.py` (v2)
-      against real infra so the `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` + `(AAVE, spot_asset, oracle_prices)`
-      cells render `expected_unattempted` (honest RED). `build_instrument_catalogue.py`'s output already shows
-      `last_modified 2026-08-15T04:34:25Z` (regenerated); `enumerate_expected_universe.py`'s own output
-      (`_index/expected_universe_ranges.parquet`) was still `last_modified 2026-07-03` as of the last check — confirm
-      current staleness live before running (may have changed since). Repo: instruments-service. Source:
-      `lst_rate_honest_coverage_2026_07_21.md` todo at line ~116. Done when: `enumerate_expected_universe.py`'s output
-      timestamp moves past 2026-08-12 and the named cells confirmed `expected_unattempted`. **DONE 2026-08-17
-      — instruments-service, VM `expected-universe-v2-defi-20260817-092709`**: `_index/expected_universe_ranges.parquet`
-      `last_modified=2026-08-17T10:24:24Z` (past 2026-08-12). Both named cells resolve honestly-absent — but the
-      literal `capture_status` is `empty_confirmed[<typed reason>]` (`EXPECTED_INSTRUMENT_NOT_LISTED` /
-      `EXPECTED_PRE_GENESIS_CHAIN`), not `expected_unattempted` — see
-      `/plans/active/issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md`'s matching todo for
-      the full evidence + the terminology-correction detail (`expected_unattempted` is a distinct downstream-service
-      status per `/codex/02-data/availability-manifest-and-data-status.md`, not what this enumerator's own range
-      artifact writes). Full history: true candidate count measured at 294,144,873 (scan-only pass), calibrated
-      `--max-writes-per-run 350000000`, 267,499 range rows written.
+      2026-08-15) — enumerator half only, catalogue half already ran.** Ran `enumerate_expected_universe.py --full-history
+      --apply-write` (v2) against real prod infra — `instruments-service@fd0d12a9`-era catalogue already regenerated
+      2026-08-15; the enumerator half was the remaining stale artifact. Full detail (candidate-volume OOM discovery,
+      operator-directed code fix, scan-only calibration, the calibrated 350M-cap `--apply-write` launch) is tracked in
+      `issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md` — read that doc for the complete
+      trail, not repeated here. **DONE 2026-08-17 — instruments-service, VM
+      `expected-universe-v2-defi-20260817-092709`, `run_id=enum-universe-defi-20260817-093209`**: `EVENT
+      ENUMERATOR_COMPLETED {candidates: 294144873, range_rows: 267499, eu_days: 288659526, written: 267499,
+      full_history: true}`. Verified live (downloaded + read the actual parquet, not just the completion log):
+      `_index/expected_universe_ranges.parquet`'s GCS `last_modified` moved from the stale `2026-07-03T23:31:06Z` to
+      `2026-08-17T10:24:24.054Z` — past both 2026-08-12 and 2026-08-17.
+      **Target-cell finding, with a terminology correction**: both named cells resolve honestly, but NOT to
+      `expected_unattempted` — the literal `capture_status` is `empty_confirmed[<typed reason>]`
+      (`(CHAINLINK, ETHEREUM, oracle_prices)` → `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED`, the honest
+      pre-Chainlink-mainnet-launch dead window `2018-01-01→2019-12-31`, every later day already captured; `(AAVE,
+      oracle_prices)` → `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED` (chain ETHEREUM) + `empty_confirmed /
+      EXPECTED_PRE_GENESIS_CHAIN` (chain PLASMA) — the live catalog's actual venue for the AAVE reserve `spot_asset`
+      rows is `AAVE_V3`, not bare `AAVE`; querying `AAVE_V3`/`ETHEREUM`/`spot_asset`/`oracle_prices` directly shows 36
+      rows, all `empty_confirmed` per-reserve pre-listing windows, zero `expected_unattempted`). Per
+      `/codex/02-data/availability-manifest-and-data-status.md`, `expected_unattempted` is a distinct
+      downstream-service pre-flight status (`record_expected_unattempted`, IS-listed + post-genesis), not what this
+      enumerator's own range artifact writes — this file's status column uses `empty_confirmed[reason]` for exactly
+      this "not expected to ever be captured" case, so the plan's own "Done when" wording used the wrong status name.
+      Cross-checked the enumerator CAN still produce `expected_unattempted` for defi oracle_prices generally (2 real
+      rows exist for `EIGENLAYER-ETHEREUM` `GOVERNANCE_TOKEN`/`SPOT_PAIR` `EIGEN`) — not a broken enumerator. The
+      substantive intent (both cells honestly resolve to not-capturable/already-captured rather than silently missing
+      or wrongly counted) is fully satisfied — `lst_rate_honest_coverage_2026_07_21.md` Phase 5's real AAVE-oracle +
+      Chainlink-LST backfill (completed 2026-07-22, before this regen ran) already closed the gap the original todo
+      wording (written 2026-07-21/2026-08-12) assumed would still be open.
 - [ ] [MTDS] P3. **Confirm shard `-3`'s dex_pool_swaps deep-backfill completion (last checked 2026-08-09).** Per the
       2026-08-09 status update, 2 of 3 shards (`-1`/`-2`) were confirmed complete; shard `-3` was relaunched
       (SPOT, `SHARD_INDEX=6`, `--start 2025-12-15 --end 2026-07-21`) and health-verified running at T+10min
@@ -194,3 +206,17 @@ UTL red and was told by the operator to park locally and wait for AO to clear it
 **State left**: MTDS fix committed locally (unpushed, `460db09f`); UTL fix present in the working tree, uncommitted.
 Nothing lost. Releasing this todo `GATED` on `RB-36315e6e` (unified-trading-library qg_red) — resume once that clears:
 commit + ship UTL first, then re-verify + ship MTDS.
+
+### Todo 8 ([IS] P1 expected-universe regen) — done — 2026-08-17 (slot-19)
+
+Picked up the `[IS] P1` regen todo. Found it already had a rich in-flight trail from slots 3/15/17/21 in
+`issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md` (OOM discovery, operator-directed
+streaming fix, scan-only calibration measuring 294,144,873 true candidates). Live-reverified before acting (no other
+slot had landed a write since, no VM currently running), launched the calibrated `--apply-write` run
+(`--max-writes-per-run 350000000`, `MACHINE_TYPE=e2-highmem-16`) → VM `expected-universe-v2-defi-20260817-092709`,
+watched to completion. **Completed cleanly**: `_index/expected_universe_ranges.parquet` timestamp moved to
+2026-08-17T10:24:24Z. Verified the 2 target cells directly against the downloaded parquet — full finding in this
+plan's own todo checkbox above and in the issue doc's final Progress Log entry: both cells are now fully **captured**
+(Phase 5's real backfill already ran 2026-07-22), not `expected_unattempted` gaps — the todo's "confirm
+expected_unattempted" wording predates that backfill completing. Flipped both this todo and the issue doc's
+corresponding todo to done.
