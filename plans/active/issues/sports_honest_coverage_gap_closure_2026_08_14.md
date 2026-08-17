@@ -704,3 +704,18 @@ genuinely operator-gated.
   Considered and declined RECLASSIFY: staying NA rather than promoting the whole doc's `assigned_vm` for one
   VM-gated, not-yet-actionable script-run todo. Re-flag once the weather VM completes and the rescan is either run
   or explicitly self-justified.
+- **Pre-compact 2026-08-17 (interactive `/autonomous` session, operator-directed handoff to a fresh session for the
+  `merge_into_canonical()` fix)**: session covered, in order: (1) the odds-VM admission-hold self-deadlock fixed +
+  hardened with a 24h TTL; (2) the freshness-skip-window question fully investigated and closed as deliberate,
+  tested, correct-as-is behavior (not a bug — reopening it would regress a real, already-fixed 572-day-pinned-empty
+  incident); (3) weather VM ran to full completion; (4) 8 rescan attempts that found and fixed 2 real, independent
+  infra bugs (missing `--machine-type` override, missing `VM_ASSET_GROUP` silently defaulting the consolidator
+  watchdog to CEFI's bucket) before precisely root-causing a genuine OOM in `ManifestMigrator.
+  merge_into_canonical()` that machine-size escalation cannot fix. **Lesson worth carrying (cost real time twice
+  this session)**: this laptop's local clock is BST (UTC+1); Python's default logging handler stamps LOCAL time,
+  while every GCS blob's `last_modified`/manifest `written_at`/`requested_at` field is UTC. Comparing a locally-run
+  CLI's own printed log timestamps directly against GCS metadata timestamps (or against each other across that
+  boundary) without normalizing first produces a false ~1h skew that reads as "this is stale/missing/an hour
+  behind" when it is not — this nearly triggered a false fleet-wide Cloud-Scheduler-outage escalation earlier this
+  session and caused a second, smaller false "stale log" read. Always run `date -u` fresh before reasoning about
+  timestamp deltas that mix a local shell/log source with a GCS-read source.
