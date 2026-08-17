@@ -53,7 +53,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
-    /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
+    /plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
   ]
 created: 2026-08-07
 author: agt-fe0635 (data_pipeline_failure worker, slot 2)

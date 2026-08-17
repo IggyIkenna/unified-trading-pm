@@ -427,7 +427,7 @@ Discriminator = **does a manifest row exist**.
 
 ## Track 3 — DENOM: empty_confirmed / denominator honesty · P1
 
-- **Sources**: `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` (measured 63.9M via the v2 enumerator),
+- **Sources**: `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` (measured 63.9M via the v2 enumerator),
   `issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md`, `defi-completeness-oracle.md`,
   `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
   `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`.

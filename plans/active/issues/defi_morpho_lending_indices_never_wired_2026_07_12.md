@@ -35,7 +35,7 @@ depends_on: [data_completion_defi_2026_07_15]
 gate_on_depends: true
 locked_by:
 locked_since:
-context_scope: [/plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md, /plans/active/data_completion_defi_2026_07_15.md, /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md, market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py]
+context_scope: [/plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md, /plans/active/data_completion_defi_2026_07_15.md, /plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md, market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py]
 ---
 
 > **Dispatch gate is now AUTHORED HERE, not hand-edited into `backlog.yaml` (2026-07-31, corpus-sweep):** re-check #14

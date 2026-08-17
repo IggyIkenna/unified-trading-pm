@@ -750,7 +750,7 @@ note above already covers. Independently re-verified before declining:
 ## 2026-08-08 recurrence — another distinct plan pair (defi_expected_unattempted_backlog_1m_2026_07_03), zero-derived-parent-row again, new sub-bullet shape
 
 Slot 7 was dispatched `defi_expected_unattempted_backlog_1m_2026_07_03_finalize-001` (plan_ref
-`plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`,
+`plans/archive/2026_08/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`,
 `depends_on: [defi_expected_unattempted_backlog_1m_2026_07_03]`, `gate_on_depends: true`) while the upstream issue doc's
 sole remaining `[SCRIPT] P2` todo was still `- [ ]` open. Verified live:
 
