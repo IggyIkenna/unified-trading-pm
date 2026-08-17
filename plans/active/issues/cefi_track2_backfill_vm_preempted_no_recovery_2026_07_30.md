@@ -34,7 +34,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-17
+last_updated: 2026-08-17T09:23Z
 locked_since:
 context_scope:
   [
@@ -750,3 +750,21 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   NOT invoke `FORCE=1` (no operator ruling covers it here). Todo remains open — proceed once this competing VM
   completes or is confirmed dead. Declining via `reason_code: "GATED"` (own done-when condition unmet, not a genuine
   ambiguity), no `park_now` per the same established multi-hour-ETA rationale.
+
+- **2026-08-17T09:23Z (slot-13, infra craft, dispatched on the 10th-relaunch `[INFRA] P1` todo)**: Independent
+  re-verify before acting, per craft north-star "never launch blind." N=1 Tardis cap check **still FAILED**, this time
+  via the guard's own authoritative function rather than just an instance listing: sourced
+  `deployment-service/scripts/vm/tardis-concurrency-guard.sh` directly and called
+  `tardis_running_vm_count asia-northeast1-c central-element-323112` → **1** (same competing VM slot-16/slot-11
+  found). `gcloud compute instances describe cefi-binance-futures-2026-heavy-20260817-010713 --zone=asia-northeast1-c`
+  → `RUNNING`/SPOT, unchanged identity, now ~8h15m uptime since its `2026-08-17T00:11:46 UTC` launch. Full
+  `name~cefi` fleet sweep (44 instances) confirms no `cefi-queue-heavy-binancefutu-x17-*` VM exists — no 10th relaunch
+  has been attempted. AWS `describe-instances` (running/pending) showed only the two standing orchestrator VMs + 2
+  `ci-bootstrap-verify` VMs — no AWS-side Tardis consumer. Did NOT launch the 10th relaunch (would breach the N=1
+  hard cap) and did NOT invoke `FORCE=1` (no operator ruling covers it here). This is the 3rd consecutive infra-craft
+  dispatch (after slot-16 05:28Z, slot-11 ~08:00Z) to hit the identical block, spread over ~4h — the competing VM has
+  now held the slot ≥8h15m against slot-16's own ~10-11h ETA estimate (day~49/119 at 04:58Z), so completion is
+  plausible within the next few hours; not yet escalating (well below the ~10-dispatch threshold that triggered
+  review-craft's process-observation escalation for `-003`). Todo remains open — proceed once this competing VM
+  completes or is confirmed dead. Declining via `reason_code: "GATED"` (own done-when condition unmet, not a genuine
+  ambiguity), no `park_now` per the same established multi-hour-ETA rationale as the two prior entries.
