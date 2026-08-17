@@ -21,6 +21,7 @@ scope: [engineer]
 tags: [tradfi, ao-dispatch, satellite-extraction, batch-9, orphan-extraction]
 related:
   [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
