@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "3043fcaecbe6f32929741b7fde30a781d142734c"
+      "ldr_ci_status_sha": "106409b87b7342d0e7a57baf01c37432f8c66ef3"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "3baee9b2711dbfb24cbdd44caab91ca66f0a4120"
+      "ldr_ci_status_sha": "e47fafc4b433630e1d0e32c3bf868a250389028d"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "50f8ffe0f392ddd13f48b75fd8e48ab23c47d21b"
+      "ldr_ci_status_sha": "f90bf09a376e63fbd21fd9f6aab78d121d85744d"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "e7b4d4ab0f65abc10bd7dd679d31dde96ee4b3e3"
+      "ldr_ci_status_sha": "f89c6d82357f2310d3d2f1607766d8b6bb96385e"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "6151de2a2af0a9167ab12bef8699377a7b96255f"
+      "ldr_ci_status_sha": "ae6d4d2aa187c119a251945347af97d9a295c871"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1297,7 +1297,7 @@
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "df3703ab7fabe434ec5c89e5589cd09ba9d0d60f"
+      "ldr_ci_status_sha": "564391d1434d6bcbaa99863633bb57406b6f93f6"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "94fb9d00b9e70518af96ff765dc1498bef4f9645"
+      "ldr_ci_status_sha": "29c71d2d75d6d17d0061339d91f271eb4264bea4"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
