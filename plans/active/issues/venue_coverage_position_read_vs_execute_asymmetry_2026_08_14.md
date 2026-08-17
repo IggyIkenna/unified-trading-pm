@@ -1,14 +1,16 @@
 ---
 doc_type: issue
-title: Venue coverage — we can EXECUTE on ~30 DeFi protocols and READ positions from 3
+title: Venue coverage — we can EXECUTE on ~16 DeFi protocols and READ positions from 8
 summary: >-
   Audit of venue coverage against the MTDS capture universe (158 venues, 84 families) across the two surfaces a venue
   must be supported on — a strategy-service position adapter (client-credentialed, read-only, the exchange side of
   reconciliation) and execution-service instruction handling. CeFi is covered on both sides, largely because the ccxt
-  position adapter is generic over any ccxt exchange_id. DeFi is badly asymmetric — execution-service ships ~30 protocol
-  modules while strategy-service ships exactly 3 position adapters (aave, morpho, uniswap), so for most DeFi protocols
-  we can act and cannot reconcile. This includes Lido, Marinade, Kamino and Jupiter, i.e. both legs of the two DeFi
-  archetypes shipping real in the carve-out.
+  position adapter is generic over any ccxt exchange_id. DeFi is asymmetric — execution-service ships ~16 genuinely
+  live protocol connectors (corrected from an original overcount of ~30, which counted module existence rather than a
+  real write path) while strategy-service ships 8 position adapters (aave, morpho, uniswap, plus the LST family — Lido,
+  Rocket Pool, EtherFi, Puffer, Renzo — closed via the generic registry-driven reader), so a real DeFi read gap remains.
+  This includes Lido, Marinade, Kamino and Jupiter, i.e. both legs of the two DeFi archetypes shipping real in the
+  carve-out.
 status: open
 nature: issue
 asset_group: [cross-cutting]
