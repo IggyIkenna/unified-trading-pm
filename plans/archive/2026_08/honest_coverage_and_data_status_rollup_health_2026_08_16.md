@@ -7,7 +7,7 @@ summary: >
   scheduler-enabled) and found a live/committed Terraform drift on the honest-coverage launcher's task timeout that
   had been producing a false Completed/False status every day since 2026-08-10 despite the underlying computation
   actually succeeding. Fixed via an isolated, already-authored, non-destructive apply.
-status: active
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [data]
@@ -146,12 +146,16 @@ because the health check surfaced a genuine, previously-undiagnosed bug.
       post-apply. Repo: deployment-service. Evidence: `gcloud run jobs describe honest-coverage-daily-launcher
       --region=asia-northeast1 --project=central-element-323112 --format="value(spec.template.spec.template.spec.timeoutSeconds)"`
       → `1500`.
-- [ ] [REVIEW] P2. 3. Confirm tomorrow's (2026-08-17 00:30 UTC) `honest-coverage-daily-launcher` execution reports
-      `Completed/True` — the fix in todo 2 can only be verified against a fresh scheduled run, not retroactively
-      (today's 2026-08-16 execution already ran, pre-fix, and still shows `Completed/False` even though its
-      underlying VM succeeded — see finding 1/2 above). Done-when:
+- [x] 3. ✅ [REVIEW] P2. Confirm tomorrow's (2026-08-17 00:30 UTC) `honest-coverage-daily-launcher` execution reports
+      `Completed/True` — **CONFIRMED 2026-08-17**, via a scheduled one-shot check armed the prior session. Execution
+      `honest-coverage-daily-launcher-tcqjp` started `2026-08-17T00:30:07Z` (right on the `30 0 * * *` UTC cron),
+      completed `2026-08-17T00:49:46Z` (19m39s — well inside the new 1500s ceiling, confirming the launcher genuinely
+      needed more than the old 300s, not that 1500s is arbitrary headroom) with `status.conditions[0].status=True`.
+      Cross-checked against the two prior days for contrast: `2026-08-16` (`h65rz`) and `2026-08-15` (`zjdfl`) both
+      ran ~6 minutes and reported `Completed=False` — consistent with hitting the OLD 300s timeout, confirming the
+      fix (not some unrelated variable) is what changed the outcome. Evidence:
       `gcloud run jobs executions list --job=honest-coverage-daily-launcher --region=asia-northeast1
-      --project=central-element-323112 --limit=1` shows a `Completed/True` row dated 2026-08-17.
+      --project=central-element-323112 --limit=3 --format="table(name,status.conditions[0].type,status.conditions[0].status,status.startTime,status.completionTime)"`.
 - [x] 4. ✅ [REVIEW] P2. Verify `uts-prod-data-status-rollup-cron` health via its last 10 invocation logs — 8/10 HTTP
       200, 2/10 HTTP 504 at exactly the 1700s `attempt_deadline`, matching the already-documented accepted tradeoff in
       `data_status_rollup_scheduler.tf`'s 2026-08-10 comment (sports AG occasionally exceeds the 20-min cron gap;
@@ -174,3 +178,6 @@ because the health check surfaced a genuine, previously-undiagnosed bug.
   separate plan) and added a closing Progress Log note to
   `issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` (that doc's own Terraform comment described
   the fix this session found un-applied and applied).
+- **2026-08-17 (scheduled one-shot check, armed 2026-08-16)**: todo 3 confirmed — the fix holds on a genuine fresh
+  scheduled run, not just the isolated verification apply. See the flipped todo above for the exact evidence. All 4
+  todos are now `[x]`. Archiving per plan-completion-and-archival-discipline.

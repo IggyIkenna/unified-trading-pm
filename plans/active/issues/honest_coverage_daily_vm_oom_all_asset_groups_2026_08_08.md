@@ -306,6 +306,6 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   week, even on days the underlying VM computation genuinely succeeded (confirmed for 2026-08-16: all 5 asset groups
   measured, `partial=false`). This is a monitoring/status false-negative, not a recurrence of the OOM this doc tracks.
   Fixed via an isolated `-target` apply (0 add/1 change/0 destroy), live-verified `timeoutSeconds=1500` post-apply.
-  Full detail + evidence: `/plans/active/honest_coverage_and_data_status_rollup_health_2026_08_16.md`. Not re-opening
+  Full detail + evidence: `/plans/archive/2026_08/honest_coverage_and_data_status_rollup_health_2026_08_16.md`. Not re-opening
   this doc's own todos (both already closed, `archive_exempt` unaffected) — this entry exists so a future reader of
   this doc's Terraform-fix history sees the loop actually closed.
