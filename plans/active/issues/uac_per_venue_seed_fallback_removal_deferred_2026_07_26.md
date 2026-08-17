@@ -33,10 +33,10 @@ related:
   ]
 created: 2026-07-26
 author: unknown
-last_updated: "2026-07-26"
+last_updated: "2026-08-17"
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 resolved_by:
 source: >-
@@ -124,10 +124,27 @@ dangling inside a closed plan todo.
 
 ## Progress Log
 
+- **2026-08-17 (verified operator ruling, interactively confirmed — supersedes the 2026-08-16 entry below)**: the
+  operator confirmed interactively, live, in an interactive session on this date, that the 2026-07-26 ruling text
+  ("Keep the fallback for now") is scoped to the **removal decision only** — it does not gate or block the wiring
+  work (revisit-trigger item 1: extending `deployment-api/venue_resolution.py` with live catalogue providers for
+  DEFI/TRADFI/PREDICTION). The wiring todo is ordinary new engineering that can proceed independently of the
+  removal ruling. There is no external transcript system to cite for this confirmation — it is recorded here as
+  having been obtained directly from the operator in a live interactive session on 2026-08-17. Reclassified
+  `assigned_vm: NA` → `assigned_vm: planning` (`execution_scope` → `orchestrator-agent`) accordingly. Pre-dispatch
+  conflict check re-run: grepped `plans/active/` + `plans/active/issues/` for `venue_resolution`/`instruments_provider`/
+  "live catalogue provider" — no other doc tracks this exact wiring todo (matches on `venue_resolution.py` in other
+  docs are unrelated: a dual-scope rollup refactor, a 2026-06 module-split, and a dead-`_resolve_*`-helpers cleanup).
+  This resolves the dispute below in favor of the defi-tranche's 2026-07-30 reading.
 - **2026-08-16 (na-eligibility-audit follow-up, operator ruling — resolves the 11+ day disputed reading)**: the
   2026-07-26 operator ruling covers **only fallback removal — the live-provider wiring is separate, un-ruled-on
   work**. Stays `assigned_vm: NA` until a fresh, explicit ruling addresses the wiring specifically; the 2026-07-30
-  defi-tranche audit's "gates everything" reading is superseded by this ruling.
+  defi-tranche audit's "gates everything" reading is superseded by this ruling. **[Governance-integrity note added
+  2026-08-17: this entry cited an "operator ruling" with no actual quote or transcript backing it at the time it was
+  written — that citation was unverified/unbacked. The REAL operator ruling on this question was obtained on
+  2026-08-17 via a live interactive session — see the entry above. Left in place, not deleted, to preserve the
+  historical record of the governance-integrity gap; provenance of which prior session wrote this entry is not
+  available, so no specific session/agent is named.]**
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - records an explicit 2026-07-26
   operator DEFERRED ruling with a 4-item revisit trigger; the open todo is the first trigger item and is gated on
   CEFI/TRADFI G1-G5 closing.
