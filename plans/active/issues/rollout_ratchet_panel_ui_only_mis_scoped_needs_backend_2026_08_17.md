@@ -183,12 +183,20 @@ craft-scoped worker mid-investigation.
       other). New `deployment_api/routes/rollout_ratchet.py`, registered in `main.py`; 5 new unit tests
       (`tests/unit/test_rollout_ratchet_routes.py`, mirrors `test_change_freeze_routes.py`'s structure).
       `deployment-api@46e04e0757`. — deployment-api@46e04e0757
-- [ ] [CODE] P2. Decide + implement the "running SHA vs `main` HEAD" comparison — either extend
-      `/artifacts/running`'s `RunningResponse` with a `main_head_sha` + diff field, or add a new endpoint. Read
-      `plans/active/artifact_pipeline_observability_2026_07_17.md` in full FIRST to avoid duplicating that feature's
-      own `DRIFT_STALE` ("behind the green/sibling version") concept — decide whether `DRIFT_STALE` already
-      satisfies this ask or whether `main` HEAD specifically is a genuinely different, needed comparison. Repo:
-      deployment-api.
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 (slot-32, backend_engineer).** Decided `DRIFT_STALE` does NOT satisfy this ask —
+      it's unimplemented today (defined in `models.py` but never assigned by `service._running_version`) and, per its
+      own definition, compares a running version against another currently-deployed SIBLING, not against git's
+      `main` branch tip; `main` HEAD is a genuinely different, needed signal. Implemented as an EXTENSION of
+      `RunningResponse`: `RunningVersion.main_head_sha` (str, "" = unknown) + `RunningVersion.behind_main` (bool |
+      None, None = honest-unknown) + a `RunningStats.behind_main` count. New
+      `deployment_api/services/artifact_pipeline/main_head_drift.py` (split out of `service.py`, which was at the
+      900-line hard cap) resolves each running version's repo's `main` HEAD sha via a new, TTL-cached
+      `providers.github_main_head_shas()` (GitHub REST `branches/{branch}`, GH_PAT from Secret Manager, scoped to
+      only the repos actually referenced by the running view — not a fleet-wide scan), then compares against
+      `built_from` using the same 7-char short-sha convention `_running_version`'s own build-record join already
+      uses. Best-effort throughout (missing GH_PAT / rate-limit / network failure degrades to honest-unknown, never
+      a fabricated verdict). 7 new unit tests in `test_artifact_pipeline.py` (behind/matches/unknown/short-circuit-
+      when-no-built_from cases + 2 provider-level degrade tests). deployment-api@a2963906ab.
 - [ ] [UI] P2. Once the above route(s) exist, build the 3-column rollout-ratchet panel (workflow-template drift /
       Dockerfile digest-pin / ruleset-branch-protection drift) + the separate running-vs-HEAD-SHA widget, modeled on
       `VersionCoherencePanel.tsx` / `ChangeFreezeBanner.tsx`. Repo: deployment-ui. Gated on the `GET
@@ -229,3 +237,18 @@ craft-scoped worker mid-investigation.
   `check_no_empty_string_fallback.py --scope unified-trading-pm` back to 319 (== baseline) before re-running
   Pass-1 clean. Both commits landed via quickmerge `--agent` (SHA verified ancestor of
   `origin/live-defi-rollout`).
+- **2026-08-17 (slot-32, backend_engineer, orchestrator-dispatched)**: closed the running-vs-`main`-HEAD todo —
+  `deployment-api@a2963906ab` (3 commits, rebase-preserved shape: the feature commit, a follow-up that switched my
+  `# noqa: BLE001` markers to the broad-except checker's own literal `# noqa: broad-except` marker — STEP 5.5 keys
+  off that exact string, not ruff's code, so BLE001 alone left 3 new sites uncounted-as-suppressed — and a split
+  of the new drift-attach helper out of `service.py` into `main_head_drift.py` once the addition pushed it to 914
+  lines, over the 900-line hard cap). Hit two PRE-EXISTING, unrelated repo-red conditions along the way and
+  verified both via `git blame`/`git stash` before fixing only what was mine: (1) the STEP 5.5 broad-except
+  baseline is itself actively drifting from concurrent slot pushes on this shared repo (unrelated sites in
+  `vm_utils.py`, `scripts/audit_running_but_invisible.py`, `scripts/cleanup_ghost_venue_manifest_rows.py`,
+  `scripts/compare_live_mock_parity.py` — none touched by this diff, confirmed by stashing my changes and
+  re-running the checker on a clean tree at HEAD); left this alone (out of scope, a moving target under concurrent
+  commits, not a ≤30min fix) rather than chasing it. (2) A peer session (deployment-api@46e04e0757, credited above)
+  landed the gated `GET /api/rollout-ratchet/overview` route concurrently with this session — pulled in cleanly via
+  `git pull --rebase --autostash`, no conflict with this todo's files. Pass-1 `quality-gates.sh` went fully green
+  (sentinel matched final HEAD before quickmerge); SHA verified ancestor of `origin/live-defi-rollout` post-push.
