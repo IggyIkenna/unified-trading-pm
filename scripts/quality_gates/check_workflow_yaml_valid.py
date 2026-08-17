@@ -97,6 +97,15 @@ def _run_actionlint_per_file(workflows: list[str]) -> tuple[list[str], list[str]
             except subprocess.TimeoutExpired:
                 findings.append(f"{path}: actionlint timed out even with shellcheck disabled — skipped")
                 continue
+        except OSError as exc:
+            # Shared self-hosted runners install actionlint into a common, non-job-scoped
+            # ~/.local/act-tools/bin (python-quality-gates-v2.yml "Install actionlint" step) —
+            # a concurrent QG job's cache-miss install can still be extracting that same binary
+            # while this run tries to exec it, surfacing as OSError(26, "Text file busy").
+            # actionlint is informational-only (never fails the gate) — an environmental exec
+            # race on the shared binary must not crash the whole check either.
+            findings.append(f"{path}: actionlint invocation failed ({exc}) — skipped (informational only)")
+            continue
         if result.returncode != 0:
             findings.append((result.stdout + result.stderr).strip())
     return findings, stalled
