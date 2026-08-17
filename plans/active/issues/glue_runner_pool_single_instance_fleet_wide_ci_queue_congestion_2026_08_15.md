@@ -164,6 +164,34 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   does not duplicate the [OPERATOR] follow-up already tracked below. Provenance: cicd escalation agt-8c192b,
   instruments-service (no PR).
 
+- **cicd escalation agt-723f23 2026-08-17 ~14:31Z (slot 3)**: FOURTH manifestation of the same single-glue-runner
+  congestion — features-service `live-defi-rollout` quality-gates-v2 red at commit `6392c07ceb43a2bc7e3f8956d5bc080524ed2a78`
+  (original wall run 32034350333, wall_type=ldr_qg_failure, `#0` no PR; a subsequent ldr-ci-monitor re-check run
+  32038016611 at 14:08:59Z also failed). Confirmed NOT a code break: full local `bash scripts/quality-gates.sh` on the
+  current live-defi-rollout HEAD (20d71ed0, one commit past the escalating commit) passed clean (exit 0, verified via
+  the process's own `$?` — the captured log merely stopped mid-stream after STEP 5.104 with no failure banner, an
+  unflushed-buffer artifact of the backgrounding wrapper, not a real crash). The failing commit itself only bumped the
+  Dockerfile's pinned `BASE_IMAGE_DIGEST` (both old and new digests verified resolvable in Artifact Registry via
+  `gcloud artifacts docker images describe`); a full read of the reusable `python-quality-gates-v2.yml` confirms this
+  digest/Dockerfile is not referenced anywhere in the CI gate, ruling out any causal link. Re-triggered live
+  (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`, run 32039215897) to get a clean signal against
+  current HEAD — it ALSO failed. Job logs (fetched via the `/actions/runs/{id}/logs` zip endpoint, same as agt-8c192b —
+  the per-job `/jobs` and `/check-runs` endpoints both still 403 for this session's GH_PAT) show the identical
+  signature: "QG slice (tests)" Set up job dying on `actions/checkout@v4` download — `codeload.github.com` 429 (Too
+  Many Requests), then a 502, then a third 429, hard-failing after 3 backoff attempts (14:31:04Z-14:32:30Z). Confirms
+  the congestion is STILL ongoing ~40min after agt-8c192b's finding — 4 distinct repos hit within ~1.5h
+  (deployment-service, instruments-service, features-service, plus the original 2026-08-15 e2e-testing/
+  market-tick-data-service queueing). No code fix exists or is needed on features-service; not retrying further from
+  this session (each retry adds another `actions/checkout` download to the same congested IP, working against the
+  fix rather than toward it) — leaving this for the existing `[OPERATOR]` follow-up below and the next external
+  ldr-ci-monitor check. Also confirmed (informational, not actioned): this session's AWS identity (`ikenna-worker`)
+  hit the same `ssm:SendCommand AccessDeniedException` on `i-042a6332509482556` attempting to inspect the runner's
+  local diagnostic logs; did not attempt an `sts:AssumeRole` self-grant given this doc's existing finding that this
+  identity is not the self-service-blessed one. Given the escalating recurrence rate (4 confirmations in ~1.5h vs. the
+  original single 2026-08-15 observation), this may now warrant re-weighing P1 vs. a harder operator page — left as an
+  observation for whoever next reviews this doc, not unilaterally re-prioritized here. Provenance: cicd escalation
+  agt-723f23, features-service (no PR).
+
 ## Follow-ups (tracked work, not prose)
 
 - [ ] [OPERATOR] P1. From a session/identity WITH `ssm:SendCommand`/`ssm:DescribeInstanceInformation` on the
