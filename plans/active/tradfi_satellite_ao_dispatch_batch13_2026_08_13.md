@@ -27,7 +27,7 @@ related:
     /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
     /plans/active/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md,
     /plans/active/issues/tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md,
-    /plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
+    /plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md,
     /plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md,
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
@@ -253,7 +253,7 @@ source: >-
 
 - [x] ✅ [CODE] P2. Todo 1: implement operator-ruled Option A asset-group-aware _resolve_spot_perp fix once CME
       instrument_id string format is confirmed against live catalogue Source:
-      `plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
+      `plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
 
       **DONE 2026-08-15 (slot-5, backend_engineer) — features-service@f441638932.** `_resolve_spot_perp` now
           dispatches on `asset_group`: TRADFI routes to a new `_resolve_spot_future_tradfi`, CEFI/DEFI keep the
@@ -272,7 +272,7 @@ source: >-
           separate, unblocked, in-scope work — not done here.
 
 - [ ] [CODE] P2. Todo 2: relaunch TRADFI:volatility benchmark once todo 1 lands Source:
-      `plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
+      `plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
 
       **BLOCKED-INFRA 2026-08-15 (slot-6, backend_engineer) — attempted 3x, done_definition not met.** Ran
           `features-service/scripts/pipeline_e2e_check.py --day 2026-08-14 --asset-group TRADFI --family volatility

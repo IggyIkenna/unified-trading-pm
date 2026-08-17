@@ -142,7 +142,7 @@ context_scope:
       governing meta-issue's own RULED-2026-08-06 answer chose option A (narrow `check_line_caps.sh`'s exception)
       explicitly instead of B — todo 1 is not the ruled path; also independently conflict-parked by
       `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`'s open todo 2. 5.
-      `plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md` — todo 1's CME
+      `plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md` — todo 1's CME
       `instrument_id`-format verification sub-task near-verbatim duplicates the `[DIAG] P2` todo already tracked above
       in this same doc — dispatching both risks two workers independently verifying the same thing. 6.
       `plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` — remaining todos 2 and 3 are

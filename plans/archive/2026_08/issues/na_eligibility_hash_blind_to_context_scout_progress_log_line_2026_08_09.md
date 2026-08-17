@@ -104,7 +104,7 @@ a `+effort: xhigh` frontmatter line, already correctly excluded by `strip_frontm
   run only)
 - `plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`
 - `plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`
-- `plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
+- `plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
 - `plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`
 - `plans/active/tradfi_backfill_throughput_followups_2026_07_24.md` (also had `+effort: xhigh`)
 - `plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (also had `+effort: xhigh`)
