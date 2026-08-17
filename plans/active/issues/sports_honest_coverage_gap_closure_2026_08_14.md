@@ -579,15 +579,41 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       the same failure recurring, and doesn't trigger the "stop retrying blindly" condition from the note above
       (that condition was for OOMing at the SAME stage again). Relaunched as attempt 6,
       `sports-manifest-rescan-20260817-183559`, `--machine-type e2-highmem-8` (64GB, double again) `--workers 4`.
-      **This is the last size-escalation attempt before switching to a real code fix, not an open-ended ladder**:
-      if attempt 6 ALSO OOMs (at this same post-scan stage or later), the fix is a streaming/chunked write in
-      `rescan_sports_fixtures_canonical.py` for the 47M-row aggregation (don't hold it all in memory to write
-      once), not another machine-size jump — file that as its own properly-scoped follow-up rather than continuing
-      to escalate machine size. If this completes: raise the launcher's hardcoded default machine-type from
-      `e2-standard-4` to whichever size actually worked, in the same commit as closing this todo.
-      Check `vm-logs/sports-manifest-rescan-20260817-183559/run.log` for a clean `DEPLOYMENT_COMPLETED
-      exit_code=0`, and spot-check that the weather VM's new captures show up as `empty_confirmed` (not still
-      `expected_unattempted`) in the manifest afterward.
+      **Attempt 6 did NOT hit the post-scan OOM — it hit an ALREADY-DOCUMENTED cause again (consolidator-watchdog
+      false-positive on CEFI), but that turned out to have a REAL root cause, not just bad luck on timing.**
+      `Progress: 72400/142894` then `DEPLOYMENT_FAILED cause=consolidator_down bucket=instruments-store-cefi-prd
+      ... age_sec=3182 budget_sec=1800` — the SAME class as attempt 2, recurring purely because launches keep
+      landing at unlucky points in CEFI's hourly cycle. Investigated properly this time instead of retrying blind:
+      read `vm-exec-with-gcs-tee.sh`'s watchdog code directly — the SITEWIDE default budget is actually
+      `CONSOLIDATOR_WATCHDOG_BUDGET_SEC=86400` (24h), NOT 1800s. The 1800s came from THIS launcher's own metadata
+      (`launch-sports-manifest-rescan-vm.sh:205`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=1800`) — and that value's
+      own comment says it was deliberately calibrated for `instruments-store-sports-prd`'s known 400-460s merge
+      cycles (~4x headroom, a SENSIBLE number). **The real bug: this launcher never set `VM_ASSET_GROUP` at all**,
+      and `setup-data-pipeline-vm.sh`'s fallback chain
+      (`VM_ASSET_GROUP=$(_meta VM_ASSET_GROUP "$(_meta VM_CATEGORY CEFI)")`) defaults to the literal string `"CEFI"`
+      when both keys are absent — so the watchdog was silently monitoring the WRONG bucket (CEFI, ~hourly cadence)
+      with a threshold calibrated for a DIFFERENT bucket (sports, ~7min cadence) the whole time. This also explains
+      the `ag=CEFI` tag noticed all the way back at attempt 1. **Fixed at the actual source, not by loosening any
+      threshold**: added `VM_ASSET_GROUP=SPORTS` to the launcher's metadata (`deployment-service@78dfe2efeb`, QG
+      green) — the original 1800s value needed no change, it was correct all along for its intended target.
+      Relaunched as attempt 7, `sports-manifest-rescan-20260817-190421`, `--machine-type e2-highmem-8 --workers 4`.
+      **Attempt 7 confirmed BOTH fixes working**: heartbeat showed `ag=SPORTS` (not CEFI), watchdog tick showed
+      `bucket=instruments-store-sports-prd ... age=417s budget=1800s` (healthy), and it progressed PAST the exact
+      point that killed attempt 5 (`Scan complete: 47053527 rows` → `Reading existing manifest ...`) — genuinely
+      further than any prior attempt on the actual target bucket. It then went silent with **no terminal marker at
+      all** (no `DEPLOYMENT_FAILED`, no exit code, no self-delete log line — unlike every OOM-kill this session,
+      which always logged `exit_code=137` + a clean self-delete) — this signature matches routine SPOT preemption
+      (external termination, no graceful shutdown), not a code/sizing problem recurring. Relaunched as attempt 8,
+      `sports-manifest-rescan-20260817-200623`, same config (`e2-highmem-8 --workers 4`) — the fixes are sound,
+      this looks like ordinary SPOT churn. **If attempt 8 also OOMs at the post-scan stage** (not preempted): the
+      fix is a streaming/chunked write in `rescan_sports_fixtures_canonical.py` for the 47M-row aggregation, not
+      another machine-size jump — file that as its own follow-up. **Once any attempt completes**: raise the
+      launcher's hardcoded default machine-type from `e2-standard-4` to `e2-highmem-8` in the same commit as
+      closing this todo (both the asset-group and machine-type fixes are already shipped; only the default machine
+      size and this todo's closure remain).
+      Check the newest attempt's log for a clean `DEPLOYMENT_COMPLETED exit_code=0`, and spot-check that the
+      weather VM's new captures show up as `empty_confirmed` (not still `expected_unattempted`) in the manifest
+      afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
