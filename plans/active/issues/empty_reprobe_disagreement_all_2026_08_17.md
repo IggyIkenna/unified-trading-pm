@@ -62,4 +62,20 @@ above before acting.
 
 ## Todos
 
-- [ ] [CODE] P1. Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_17) — diagnose + fix the root cause (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate CSV(s) above first (source `reprobe_new_empty_confirmed.py`).
+- [x] ✅ [CODE] P1. Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_17) — diagnose + fix the root cause (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate CSV(s) above first (source `reprobe_new_empty_confirmed.py`). — market-tick-data-service@bf9fe5c4cc
+
+## Progress Log
+
+- 2026-08-17: Diagnosed the single tradfi candidate — `(CME, trades, 2026-08-17)`, verdict `ORACLE_EXPECTS_DATA`
+  (`oracle SHOULD_HAVE_DATA (None) but cell is empty_confirmed`). Root cause: **misclassified-empty**, not a real gap
+  or oracle-expects-but-empty divergence. CME is Databento-sourced (GLBX.MDP3) with the same T+1 archive-ingestion
+  settlement lag as NASDAQ/NYSE (`tick_data_handler.py::_needs_full_day_elapsed` already gates ALL of TRADFI for
+  this, not just NASDAQ/NYSE) — but the Tier-3 sentinel's delivery-lag classification branch
+  (`sentinels.py::_emit_tier3_for_dt`) only recognized `{"NASDAQ", "NYSE"}`, so a same-day CME zero-row cell fell
+  through to the permanent `SOURCE_RETURNED_ZERO` branch instead of `EXPECTED_SOURCE_DELIVERY_LAG`, which is exactly
+  why the oracle (which has no same-day-not-yet-settled awareness) flagged it as a disagreement. Fix: widened the
+  delivery-lag venue set to `{"NASDAQ", "NYSE", "CME", "CBOE"}` (CBOE is also Databento-sourced via XCBF.PITCH;
+  ICE/FX/KRX/FRED deliberately excluded — not Databento-sourced per `expected_coverage.py`'s `_TRADFI` dict). Added
+  a regression test (`test_tier3_cme_same_day_zero_row_stamps_delivery_lag_reason`) mirroring the existing
+  HYPERLIQUID delivery-lag regression test. Shipped `market-tick-data-service@bf9fe5c4cc`; QG green
+  (`bash scripts/quality-gates.sh --no-fix`, exit 0); ancestry-verified on `origin/live-defi-rollout`.
