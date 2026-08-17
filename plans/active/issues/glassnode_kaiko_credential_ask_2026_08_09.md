@@ -129,6 +129,8 @@ each depending on plan). Once provisioned:
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 
 - **na-eligibility-audit 2026-08-17** [body-hash:6c7264096c579f4b]: KEEP-NA, stale-items corrected -- closed 2 of 3 open items (promote KaikoAdapter; add a Kaiko integration-test counterpart): the doc's own dated 2026-08-10 banner confirms Kaiko removal COMPLETE (fleet-wide ban, adapter/PLANNED_VENUES entry/UAC SourceCapability all deleted, zero remaining references) -- decommissioned, not stale-duplicate. Doc stays assigned_vm: NA for its 1 remaining item (Glassnode, genuinely CREDENTIAL_BLOCKED per the external-data-always-available HARD RULE). Cross-cutting tranche audit.
+- **context-scout 2026-08-17**: refreshed context_scope (2 entries), unchanged.
+
 ## Kaiko removal COMPLETE (2026-08-10)
 
 The Kaiko scaffold this ask was filed for no longer exists anywhere: `unified-api-contracts@c48238266b` (capability +

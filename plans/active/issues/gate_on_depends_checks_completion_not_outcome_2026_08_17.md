@@ -35,7 +35,13 @@ execution_scope: local-only
 assigned_role:
 drift_direction: none
 depends_on: []
-context_scope: [/plans/active/task_template.md]
+context_scope:
+  [
+    /plans/active/task_template.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16_finalize.md,
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+  ]
 ---
 
 # gate_on_depends checks completion, not outcome
@@ -91,6 +97,4 @@ decision.
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:94e35689b7565fb2]: KEEP-NA, valid — first verdict; doc
-  created same day. Sole open item is an explicit 3-option plan-authoring-convention design question ("Needs an
-  operator/plan-authoring-convention call, not a worker decision" per the doc's own text) — not bounded/deterministic.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

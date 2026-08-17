@@ -59,6 +59,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/issues/cefi_hl_aster_vm_resource_downsize_2026_08_10.md,
     /plans/archive/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py,
   ]
 ---
 
@@ -385,3 +386,4 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   `cefi/trades_adapter.py` (consumes `amount`). Fix: one-line addition to `_COLUMN_ALIASES` mirroring the existing
   `size`→`amount` copy semantics; 2 regression tests added. QG green, shipped
   market-tick-data-service@3ac51c9826.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

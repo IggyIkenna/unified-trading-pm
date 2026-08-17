@@ -30,6 +30,13 @@ assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py,
+    unified-api-contracts/unified_api_contracts/registry/expected_coverage.py,
+  ]
 author: reprobe_new_empty_confirmed.py (data-pipeline daily audit)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -82,3 +89,4 @@ above before acting.
   a regression test (`test_tier3_cme_same_day_zero_row_stamps_delivery_lag_reason`) mirroring the existing
   HYPERLIQUID delivery-lag regression test. Shipped `market-tick-data-service@bf9fe5c4cc`; QG green
   (`bash scripts/quality-gates.sh --no-fix`, exit 0); ancestry-verified on `origin/live-defi-rollout`.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

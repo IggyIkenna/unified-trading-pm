@@ -130,3 +130,4 @@ tree OID when the merge is clean, so exit code alone proves nothing about conten
   `live-defi-rollout`: `86da727f32` (the three PR #3369 conflicts), `4b07cb8b31` (schema-required frontmatter keys),
   `ada633620e` (this silent deletion reverted). PR #3369 merged as `073acbb1c0`. No guard exists yet — the todos above
   are the actual fix.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

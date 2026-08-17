@@ -50,6 +50,7 @@ context_scope:
     execution-service/execution_service/orders/tracker.py,
     execution-service/execution_service/api/manual_instruction_api.py,
     execution-service/execution_service/engine/orchestrator.py,
+    /plans/archive/issues/cefi_execution_cancel_amend_fake_success_stub_2026_08_16.md,
   ]
 ---
 
@@ -112,3 +113,4 @@ report a stale open-order count based on this, believing an order is still live 
   `cefi_execution_cancel_amend_fake_success_stub_2026_08_16.md`. Both todos above are net-new fix work, kept out
   of that doc's own scope per this workspace's findings-triage rule (audits report evidence + tracked
   follow-ups, they don't silently absorb the fix).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

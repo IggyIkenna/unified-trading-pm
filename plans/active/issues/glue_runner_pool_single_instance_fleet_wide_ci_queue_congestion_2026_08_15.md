@@ -147,6 +147,7 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   or is needed on `deployment-service` — this wall will clear once the runner's action-download congestion drains (or
   the runner gets a persistent `_work/_actions` cache so it stops re-fetching `actions/checkout` every job). Provenance:
   cicd escalation agt-3378e5, deployment-service#1036.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged.
 
 - **cicd escalation agt-8c192b 2026-08-17 ~14:07Z (slot 4)**: THIRD manifestation of the same single-glue-runner
   congestion — instruments-service `live-defi-rollout` quality-gates-v2 red at commit `a1754003466946c0e5b7b71ad4a5b58`

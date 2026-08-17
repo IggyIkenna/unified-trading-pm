@@ -32,7 +32,12 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 resolved_by:
 locked_by:
-context_scope: []
+context_scope:
+  [
+    agent-orchestrator/server/worker_liveness/_git_alerts.py,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+  ]
 depends_on: []
 drift_direction: advance-code
 ---
@@ -81,3 +86,4 @@ upstream branch rather than a hardcoded `live-defi-rollout` comparison.
 - **2026-08-17 (slot-1, interactive)**: filed after investigating + acking 3 stale nudge messages
   (message_ids 9106/9165/9201) this session. Did not touch unified-trading-ci itself — nothing there needs
   fixing, only the nudge's own comparison logic.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
