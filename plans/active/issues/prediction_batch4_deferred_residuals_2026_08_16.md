@@ -89,7 +89,7 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
       landing" section (gate cleared 2026-08-07, `instruments-service@3617261f`). Done when: a fresh manifest read
       confirms the 38,020-row out-of-lifecycle `empty_confirmed` population reclassified to the honest
       `EXPECTED_INSTRUMENT_NOT_LISTED`/`DELISTED` reasons, with the new count cited.
-- [ ] [DATA] P3. **Investigate whether the 49 canonical-only POLYMARKET `trades` days (2025-04-19..2025-06-05 +
+- [x] [DATA] P3. **Investigate whether the 49 canonical-only POLYMARKET `trades` days (2025-04-19..2025-06-05 +
       2025-06-13, outside the 348-date legacy-bundle range) can recover `title`/`slug`/`event_slug` from the IS
       POLYMARKET reference universe** (`prediction_canonical_question_group`/`market_lifecycle`, which the manifest
       census confirms covers these dates) rather than from the legacy `prediction_trades` bundle (which does not
@@ -99,7 +99,10 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
       `enrichment_fields_present=False`; evidence at
       `gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_scratchpad_2026_08_06/`). Done when: a dated
       verdict is recorded (recoverable — with the recovery mechanism identified — or genuinely not recoverable from
-      any live source), committed to this doc's Progress Log.
+      any live source), committed to this doc's Progress Log. **Extracted 2026-08-17 (na-eligibility-audit,
+      per-todo RECLASSIFY_SPLIT)** — bounded, worker-determinable investigation with a crisp done-when, no
+      `[OPERATOR]` tag, no `depends_on` gate; promoted to `prediction_satellite_ao_dispatch_batch12_2026_08_17.md`
+      todo 3. Execution + the dated verdict are now tracked there, not here.
 
 ## Progress Log
 
@@ -117,3 +120,11 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
   a future pass to promote via per-todo split rather than reclassifying the whole doc off one item. Doc stays NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
+
+- **na-eligibility-audit 2026-08-17 (per-todo RECLASSIFY_SPLIT)** [body-hash:780392485c0f523f]: todo 2 (49-day
+  title/slug/event_slug recoverability investigation) promoted — bounded, worker-determinable, no `[OPERATOR]` tag, no
+  `depends_on` gate, crisp binary done-when; extracted to `prediction_satellite_ao_dispatch_batch12_2026_08_17.md`
+  todo 3, checkbox flipped `[x]` citing the batch. Todo 1 (38,020-row manifest `--apply` reclassification) stays NA —
+  confirmed permanent `[OPERATOR]` hard-stop per
+  `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s own "manifest `--apply`
+  reserved for human execution forever" ruling. Doc stays NA (1 open item remains).
