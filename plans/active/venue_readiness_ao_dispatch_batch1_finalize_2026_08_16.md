@@ -51,9 +51,28 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
 
 # Venue readiness AO dispatch batch 1 — finalize
 
-- [ ] [REVIEW] P1. **Prove both new SIT invariants go RED.** Invariants 2 and 4 must each be demonstrated failing on
+- [x] ✅ [REVIEW] P1. **Prove both new SIT invariants go RED.** Invariants 2 and 4 must each be demonstrated failing on
       a deliberately-introduced regression — a mode-coverage gap for 2, an address mismatch for 4. A green invariant
       that has never been shown to fail is not evidence, and this batch adds two of them at once.
+      — **Independently re-demonstrated live this session (slot 11), not trusted from either parent plan's own
+      Progress Log claim.** Invariant 2 (`unified-api-contracts/tests/test_strategy_position_read_mode_cascade_invariant.py::test_mtds_venues_have_strategy_position_read_coverage_no_new_regressions`):
+      removed `ACROSS-ETHEREUM` from `tests/data/strategy_position_read_mode_baseline.json`'s
+      `missing_position_read_coverage` list (a real, still-missing venue — simulates a coverage gap shipping
+      un-baselined) — test FAILED with `AssertionError: 1 NEW MTDS batch-capture venue(s) shipped ... ['ACROSS-ETHEREUM']`;
+      `git checkout` restored the file byte-identical, re-ran, 4/4 green. Invariant 4
+      (`unified-api-contracts/tests/test_lst_token_address_drift_invariant.py::test_lst_token_addresses_no_drift_from_execution_service`):
+      edited `execution-service/execution_service/defi_execution/protocols/eigenlayer.py`'s
+      `LST_TOKEN_ADDRESSES["cbETH"]` to a deliberately wrong literal (`0xDEADBEEF...`) — test FAILED with
+      `AssertionError: 1 LST token address mismatch(es) ... ETHEREUM/cbETH: UAC registry=... != execution-service
+      ...=0xDEADBEEF...`; `git checkout` restored the file byte-identical, re-ran, 7/7 green. Both repos confirmed
+      clean (`git status --porcelain` empty) after restore — no code shipped, this todo is verification-only.
+      **Side finding, not fixed (out of scope for this todo, noted for the next reconciliation pass)**: invariant
+      2's own baseline JSON `description` field and the sibling test module's docstring both still say "106 of 159"
+      MTDS batch venues lack coverage; the live baseline file actually holds 99 entries today (confirmed via
+      `git log` on the file: 106 → 101 via `unified-api-contracts@7d168775` "unstale baselines" → 99 via a later
+      untraced commit) — legitimate ratchet-down activity per the file's own convention, just never reflected in
+      the prose count. Not fixed here since a correct fix needs the full 159-venue re-measurement, not a 1-line
+      edit, and it doesn't affect this invariant's correctness (the test reads the JSON list, never the prose).
 - [ ] [REVIEW] P2. Reconcile each shipped todo back into its true parent's own checkbox: the SIT invariants and the
       LST migration into `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14` and
       `e2e_wiring_reachability_audit_2026_08_15`, the skills audit into `venue_smoke_test_bar_2026_08_16`. Re-verify
@@ -74,3 +93,10 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
 
 - **2026-08-16** — Authored alongside the parent. `status: active` with `depends_on`+`gate_on_depends: true` —
   ingested immediately, machine-held until every parent task is done.
+
+- **2026-08-17 (slot 11, review) — REVIEW P1 "prove both SIT invariants go RED" flipped.** Live-reproduced both
+  negative controls myself (detail in the flipped checkbox above) rather than trusting the parent plan's own
+  Progress Log claims that this had already been demonstrated. Both invariants correctly failed on a deliberately
+  introduced regression and correctly passed once reverted; both touched repos verified clean afterward. Noted one
+  small pre-existing doc-staleness (invariant 2's baseline description says "106", the file holds 99) as a
+  non-blocking side finding — not fixed, needs a full re-measurement, doesn't affect the invariant's correctness.
