@@ -141,12 +141,32 @@ measurement" rule.
       HTTP surface (not a dormant object graph) and the system is pre-live-trading, this should be treated as
       at least as urgent as "before live-trading cutover," arguably more so than the withdraw-stub finding was
       at its own equivalent stage.
-- [ ] [BACKEND] P0. **Wire `/cancel` to the real per-venue `cancel_order`** via `OrderAdapter` (or whatever the
+- [x] ✅ [BACKEND] P0. **Wire `/cancel` to the real per-venue `cancel_order`** via `OrderAdapter` (or whatever the
       real production instruction-routing path resolves to for this instruction's venue), and propagate the
       adapter's real result (success/failure/already-filled/not-found) instead of a hardcoded status. Done-when:
       an end-to-end test proves a cancel request reaches a real (or realistically mocked, per this workspace's
       test-fixture matrix) exchange call and the endpoint's response reflects that call's actual outcome, not a
-      constant.
+      constant. **Fixed — `execution-service@0cb7c767ba`**. `CancelInstructionRequest` carries only
+      `instruction_id`+`reason`, no venue — the fix looks up the instruction's real orchestrator, instrument_id,
+      and open order IDs from `ExecutionOrchestrator`'s own tracking state (`instruction_to_order_ids`/
+      `order_id_to_instruction`/`contexts`), not from caller input. Added `cancel_order()` to both
+      `OrderAdapterMatchingEngine` (delegates to the real `OrderAdapter.cancel_order`) and `ExecutionOrchestrator`
+      (delegates to the matching engine, `NotImplementedError` if the configured engine doesn't support live
+      cancellation — e.g. a batch/simulated one), plus `get_instruction_instrument_id()` on `ExecutionOrchestrator`
+      for the instrument-id lookup. `/cancel` now calls the real chain per open order, catches whatever exception
+      the venue adapter raises (ccxt.*/REST-specific — genuinely varies by venue, verified via `binance_ccxt.py`'s
+      real `cancel_order` re-raising the original ccxt exception), and returns `CANCELLED` only if every order
+      genuinely cancelled, `CANCEL_FAILED` with a per-order-id `errors` map otherwise — never a hardcoded status.
+      **Second bug found and fixed in the same pass**: the pre-existing `_get_active_orchestrator_or_raise`
+      (used by `get_instruction_status`, the only other caller) picked `cached[0]` — the FIRST cached per-venue
+      orchestrator, arbitrarily — silently wrong for any instruction tracked by a DIFFERENT cached venue on a
+      multi-venue deployment. Replaced with `_find_orchestrator_for_instruction()`, which searches every cached
+      orchestrator for the one that actually tracked the instruction; `get_instruction_status` now uses it too.
+      7 new tests in `tests/unit/test_manual_cancel_real_wiring.py` (real-FastAPI-`TestClient`, per this
+      workspace's HTTP-contract-test convention) covering: successful cancel calling the real adapter,
+      cancel-failure surfacing as `CANCEL_FAILED` not a fake success, partial multi-order failure reporting only
+      the failed order, 404/503 error paths, and the multi-venue orchestrator-lookup fix for both `/cancel` and
+      `get_instruction_status`. 8593 passed/21 skipped, full `quality-gates.sh --no-fix` green before commit.
 - [ ] [BACKEND] P1. **Decide + implement `amend`'s real semantics per venue** — either wire a genuine
       modify-order call for venues whose API supports it, or make the endpoint explicitly refuse with a clear
       "not supported for this venue, cancel and replace instead" for venues that don't, verified against each of
@@ -159,6 +179,13 @@ measurement" rule.
 
 ## Progress Log
 
+- **2026-08-17 (later, same session)**: Fixed the `/cancel` wiring P0 — `execution-service@0cb7c767ba`. Now
+  calls the real per-venue `cancel_order` (looked up via the orchestrator's own instruction-tracking state, not
+  caller input) and returns a genuine outcome instead of a hardcoded status. Found and fixed a second bug along
+  the way: the pre-existing multi-venue orchestrator lookup picked `cached[0]` arbitrarily, silently wrong for
+  any instruction tracked by a non-first venue — fixed for both `/cancel` and the pre-existing
+  `get_instruction_status` endpoint. 7 new tests, full QG green. Only the P1 `amend` semantics todo and P2
+  downstream-state-audit todo remain open.
 - **2026-08-17**: Closed the reachability todo — verdict LIVE-REACHABLE (not dead-code), since the `/manual`
   router is genuinely mounted in the running app and reachable by anyone with HTTP+auth access, unlike the
   withdraw-stub bug which was gated behind an unconstructed Python object. Flagged to the operator directly
