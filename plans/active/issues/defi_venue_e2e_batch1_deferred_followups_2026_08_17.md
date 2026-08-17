@@ -81,3 +81,12 @@ NA` is correct; not auto-dispatchable as-is.
       fields), but no slot anywhere currently selects Plasma as a chain. This is a new-scope decision (which
       chain to target next), not a bug fix. Done-when: operator decides yes/no; if yes, a bounded implementation
       todo is filed against strategy-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:acc8ffd9ffd8d9a3]: KEEP-NA, valid — both open items are
+  explicitly `[OPERATOR]`-tagged with clear rationale already in this doc's own "Recommended decision" section:
+  todo 1 needs an authoritative external source for on-chain token addresses (the registry's own provenance rule
+  forbids an inferred/authored address), todo 2 is a new-scope strategic decision (add Plasma-chain archetype
+  coverage or not) rather than a bug fix. Neither is worker-determinable. `grep -cE '^[[:space:]]*[-*] \[ \]'` = 2,
+  matching.
