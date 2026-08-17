@@ -379,7 +379,7 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       "Lock-orphan blind spot" comment at `manifest_consolidator.py:382-406`) lets several cron-minutes' worth of
       eligible shards accumulate before the next completed merge's prune call sweeps them. (repo:
       unified-trading-library)
-- [ ] [DIAG] P3. Confirm whether the `consolidator.lock` holder observed 2026-08-17 (instance `1-6831d99c`,
+- [x] ✅ [DIAG] P3. Confirm whether the `consolidator.lock` holder observed 2026-08-17 (instance `1-6831d99c`,
       acquired 04:51:10Z) is a genuinely-orphaned lock (Cloud Run killed/crashed the execution without reaching
       `finally: _release_lock`) vs. a legitimately still-running long merge — re-check
       `_index/consolidator.lock`'s content + age against the defi bucket; once its age exceeds
@@ -389,7 +389,9 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       flags as the actual mechanism, not just a one-off. If confirmed recurring, consider whether
       `_check_consolidation_stall`'s lock-skip path (`_check_stall_on_lock_skip`,
       `CONSOLIDATOR_STALL_ALERT_CYCLES=195` for this bucket) is actually accumulating toward a page for it. (repo:
-      unified-trading-library)
+      unified-trading-library) **RESOLVED 2026-08-17 (slot-4, backend_engineer): NOT an orphan — `1-6831d99c` was a
+      legitimately still-running long merge that completed successfully.** Direct evidence, not inference — see
+      Progress Log entry for full detail. unified-trading-library@864f62c2f7 (DIAG script committed this session).
 - [ ] [DIAG] P3. Retry this doc's `logs`-mode Cloud Logging check (script
       `unified-trading-library/scripts/check_defi_consolidator_prune_backlog.py logs --project
       central-element-323112`) once the shared `ReadRequestsPerMinutePerProject`/`PerUser` (60/min) Cloud Logging
@@ -698,3 +700,35 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   (prediction resolves via the dedicated `market-data-tick-prediction` bucket kind, not the generic `market-data`
   kind's per-asset_group dict). Script committed this session, QG green, shipped via quickmerge. Next: the
   `[OPERATOR]` migration-plan-destination todo above is now unblocked with real sizing for all four asset_groups.
+- **2026-08-17 (slot-4, backend_engineer)**: resolved the `[DIAG]` P3 consolidator.lock-orphan todo. **VERDICT:
+  `1-6831d99c` was NOT an orphaned/crashed lock — it was a legitimately still-running long merge that completed
+  successfully.** Direct evidence, not inference:
+  - Wrote a read-only DIAG script (`unified-trading-library/scripts/check_consolidator_lock_orphan_status_2026_08_17.py`,
+    mirrors `read_consolidator_lock_age_sec`'s own parse + the `instance` field that function doesn't expose) and ran
+    it live: `_index/consolidator.lock` for `market-data-tick-defi-prd-central-element-323112` is currently ABSENT
+    (no cycle holds it). Verified the bucket's REAL `CONSOLIDATOR_LOCK_TTL_SECONDS` against
+    `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` directly (`market-data-defi` = `9000`) —
+    NOT the module's own env-driven `_LOCK_TTL_SECONDS` default, which would silently read the wrong 300s in an
+    interactive shell (the Terraform override only applies inside the live Cloud Run job's own container).
+  - **Decisive piece**: `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-market-data-defi
+    --region=asia-northeast1` (region confirmed live via `gcloud run jobs list`, not guessed) shows execution
+    `...-qpxnr` started `2026-08-17T04:50:06.183680Z` (within ~64s of the lock's recorded
+    `started_at=2026-08-17T04:51:10Z` — consistent with brief in-process setup before `_acquire_lock()`) and
+    **completed with condition status=True (Succeeded)** at `2026-08-17T06:01:00.420412Z` — a genuine ~70min54s
+    merge, comfortably inside the bucket's 9000s/150min TTL and consistent with this doc's own documented long-tail
+    merge durations for this bucket. Two more consecutive long executions immediately followed (`...-2bzjw`
+    06:01:18Z→07:10:16Z, `...-4q6qm` 07:10:05Z→08:18:51Z), BOTH also `status=True` — three distinct, cleanly-completed
+    executions back-to-back (a temporarily heavier backlog being worked through), not the same instance repeatedly
+    dying and being reclaimed.
+  - A fleet-wide sweep (`--filter="status.startTime>=2026-08-17T00:00:00Z AND status.conditions[0].status!=True"`)
+    found **ZERO** non-succeeded executions for this job anywhere in the entire day — directly rules out any
+    SIGKILL/OOM crash today, for this or any other execution.
+  - `_index/latest.json` (overwritten every cycle) shows a clean, fast (~9-10s), successful
+    (`success=true, error_reason=""`) incremental no-op cycle as of `12:59:48Z` — 8+ hours after the original lock
+    acquisition, confirming the consolidator remains healthy.
+  - Directly answered the todo's own follow-up question: `_index/consolidator_stall_state.json`'s no-progress
+    streak is `0` — `_check_stall_on_lock_skip`'s alert mechanism (`CONSOLIDATOR_STALL_ALERT_CYCLES=195`, Terraform-
+    verified against the same `.tf` file, matching this todo's own citation) is NOT accumulating toward a page.
+  - No durable fix needed based on this evidence — the lock/TTL mechanism worked exactly as designed: a genuinely
+    long-running merge held the lock for its actual duration, then released it normally on completion.
+    unified-trading-library@864f62c2f7 (script committed, QG green, shipped via quickmerge).
