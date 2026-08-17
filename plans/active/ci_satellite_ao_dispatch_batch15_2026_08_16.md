@@ -302,11 +302,16 @@ source: >-
 
 ## Todos — checkbox reconciliation only (work already done elsewhere, never flipped)
 
-- [ ] [REVIEW] P2. **Reconcile the two `[OPERATOR]`-retagged SUPERSEDED/DO-NOT items** in
-      `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (lines ~341, ~349) — both
-      are already struck-through and marked moot (one verified a no-op, one verified would false-break the fleet); flip
-      both `[x]` with a citation to this reconciliation. Gate: doc shows 0 open CI-relevant items after the flip
-      (re-verify the doc's other content isn't gating something else before considering it archive-eligible).
+- [x] ✅ [REVIEW] P2. **CHECKBOX RECONCILIATION 2026-08-17 (slot-18, review craft) — already resolved before this
+      batch was drafted.** The two `[OPERATOR]`-retagged SUPERSEDED/DO-NOT items in
+      `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` were already converted from
+      `- [OPERATOR]`-tagged bullets to the non-checkbox `CANCELLED —` disposition format by
+      `unified-trading-pm@09cb20bf5a` (2026-08-16, `/plan-reconcile Phase -1`) — this batch's own Source line (~305)
+      still described them as pending a `[x]`-flip, missing that the reconcile pass had already closed them out in a
+      different (non-checkbox) format the same day. Verified live: `09cb20bf5a` is a real ancestor of current HEAD;
+      `grep -n '^\- \[ \]' <target-doc>` returns zero matches — the doc carries 0 open checkboxes. No further edit
+      needed to the target doc; its own `archive_exempt: true` (frontmatter) already documents the 0-open-todos state
+      and the deliberate archival deferral, so that note doesn't need repeating here.
 
 - [ ] [REVIEW] P2. **Reconcile `ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`'s 2 open items**
       (lines ~97, ~98) — item 2 (port the doomed-run guard to the fleet workflow) is already directly answered/closed
@@ -419,3 +424,9 @@ source: >-
   live: current `.github/workflows/sit-gate-stuck-detector.yml` carries the streak-folded `dedup_key` + a
   state-diffed `notify-resolved` all-clear bookend; the doc's own 08-14/08-15/08-16 escalation entries show correct
   paging + convergence with no suppressed post. Full evidence on the checkbox above.
+- **2026-08-17 (slot 18, review craft).** Checkbox-reconciled the "Reconcile the two `[OPERATOR]`-retagged
+  SUPERSEDED/DO-NOT items" todo — no doc edit needed on the target issue doc, both items were already converted from
+  `[OPERATOR]`-tagged bullets to the non-checkbox `CANCELLED —` disposition format by `unified-trading-pm@09cb20bf5a`
+  (2026-08-16, `/plan-reconcile Phase -1`), before this batch was drafted. Verified live: `09cb20bf5a` is a real
+  ancestor of current HEAD; `grep -n '^\- \[ \]'` on the target doc returns zero matches. Full evidence on the
+  checkbox above.
