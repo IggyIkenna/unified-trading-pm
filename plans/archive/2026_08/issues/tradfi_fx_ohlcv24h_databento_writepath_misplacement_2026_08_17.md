@@ -15,7 +15,7 @@ summary: >-
   concern: the 2026-08-14 KRW-USD pipeline_mode restamp script's premise (GCS-path
   existence under batch_databento implies genuine Databento sourcing) is backwards for FX,
   given this finding, and needs operator visibility.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -65,6 +65,12 @@ context_scope:
 ---
 
 # TradFi FX ohlcv_24h databento write-path misplacement — 2026-08-17
+
+> **📦 ARCHIVED 2026-08-17 — this issue is fully resolved.** Both the 1,008-row FX ohlcv_24h
+> population and the flagged 1,947-row KRW-USD follow-up have been repaired and
+> independently self-verified (0 remaining mislocated objects, 0 remaining mislabeled rows,
+> 0 column inconsistencies). The write-path code fix + regression test already shipped
+> (`market-tick-data-service@81f5fb8f`-era commit). See the Progress Log for full detail.
 
 ## Root cause
 
@@ -150,32 +156,33 @@ scope, `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 2).
 
 ## Flagged follow-up — needs operator visibility (big finding, per CLAUDE.md findings-triage)
 
-- [ ] [DATA] P1 [OPERATOR]. **Re-examine the 2026-08-14 KRW-USD `pipeline_mode` restamp**
-      (`restamp_tradfi_fx_krw_usd_mislabeled_pipeline_mode_2026_08_14.py`, shipped closing
-      `plans/active/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md`,
-      now likely archived — check `plans/archive/`). That script flipped 1,949 FX KRW-USD
-      manifest rows' `pipeline_mode` from `batch_yahoo` → `batch_databento` on the premise
-      "GCS content exists under the databento-prefixed path, so that label must be the true
-      one." **This finding's root cause shows that premise is backwards for FX**:
-      GCS-path existence under a `batch_databento` prefix is NOT evidence of genuine
-      Databento sourcing for FX (Databento has no spot-FX product at all) — it is evidence
-      of the SAME write-path misplacement bug class this doc just fixed. That script also
-      only touched `pipeline_mode`, never `source`, leaving ~1,947 KRW-USD rows sitting
-      `pipeline_mode=batch_databento` + `source=yahoo` — an internal column
-      inconsistency on top of a likely-wrong pipeline_mode call. This is NOT silently
-      reverted here (1,949 rows, a very recent shipped fix, different scope from this
-      todo) — it needs an operator decision: reconcile against real GCS content (repeat this
-      doc's copy+verify+delete+restamp pattern for the KRW-USD population) or explain why
-      KRW-USD is different from the rest of FX. Cross-repo/SSOT-contradiction-caliber per
-      CLAUDE.md's big-finding bar — notified in-chat by the executing agent, not just filed
-      here.
+- [x] ✅ [DATA] P1 [OPERATOR]. **Re-examine the 2026-08-14 KRW-USD `pipeline_mode` restamp**
+      — RESOLVED 2026-08-17 (operator answered BLOCKED question BLK-86e79b45: option A,
+      treat as the same write-path misplacement bug class). Repaired via
+      `market-tick-data-service/scripts/restamp_tradfi_fx_krw_usd_writepath_misplacement_2026_08_17.py`
+      (one-off, deleted post-run per its own lifecycle marker — see Progress Log for full
+      detail): confirmed via direct content probe that a sample KRW-USD object under the
+      mis-located `batch_databento` path is genuinely Yahoo-shaped
+      (`instrument_key=YAHOO_FINANCE:SPOT_PAIR:KRW-USD`); moved 1,808 physical objects across
+      1,947 candidate dates to the corrected `batch_yahoo` path (copy+verify+delete,
+      soft-delete-retention-gated); restamped both `pipeline_mode` AND `source` for all 1,947
+      manifest rows via a snapshot-first CAS write. Independent fresh-process self-verify: 0
+      rows remain `pipeline_mode=batch_databento`, 0 `pipeline_mode`/`source` inconsistencies.
+      Original 2026-08-14 script that this reverses:
+      `restamp_tradfi_fx_krw_usd_mislabeled_pipeline_mode_2026_08_14.py`, shipped closing
+      `plans/active/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md`
+      (archived) — it had flipped 1,949 FX KRW-USD manifest rows' `pipeline_mode` from
+      `batch_yahoo` → `batch_databento` on the premise "GCS content exists under the
+      databento-prefixed path, so that label must be the true one", which this doc's root
+      cause showed is backwards for FX (Databento has no spot-FX product at all).
 
 ## Why this needed operator notification (per workspace CLAUDE.md findings-triage)
 
-Data-correctness + contradicts a very recent shipped change (2026-08-14) + the same defect
+Data-correctness + contradicted a very recent shipped change (2026-08-14) + the same defect
 class the original 2026-07-24 P0 finding covered — cross-repo/SSOT-contradiction caliber.
-The executing agent flagged this explicitly in its final report rather than silently
-reverting the KRW-USD script.
+The executing agent flagged this explicitly via a `/blocked` question rather than silently
+reverting the KRW-USD script; the operator resolved it 2026-08-17 (option A) and the repair
+is now applied + self-verified (see Progress Log).
 
 ## Progress Log
 
@@ -225,3 +232,37 @@ reverting the KRW-USD script.
   - Deleted the one-off repair script per its own `Delete-when` lifecycle marker (the
     regression test proving the write-path code is already correct, from the earlier pass,
     is KEPT — it's permanent coverage, not one-off).
+- **2026-08-17 (AO worker, slot 3, data_engineering, KRW-USD follow-up)**: filed `/blocked`
+  question BLK-86e79b45 on the flagged follow-up rather than acting unilaterally on an
+  `[OPERATOR]`-tagged item; operator answered option A (treat KRW-USD as the same
+  write-path misplacement bug class, high confidence — `SOURCE_PRIORITY[("tradfi",
+  "ohlcv_24h")] = ["yahoo"]` is categorical, not pair-specific, and no registry entry makes
+  KRW-USD an exception). Per the operator's own instruction, confirmed via a direct content
+  probe FIRST (not assumed from the pattern): a sample KRW-USD object under the mis-located
+  `pipeline_mode=batch_databento` path carries `instrument_key=YAHOO_FINANCE:SPOT_PAIR:
+  KRW-USD` and plausible KRW/USD-scale OHLC (open≈0.000866) — genuinely Yahoo-shaped content,
+  confirming the same bug class. Built
+  `market-tick-data-service/scripts/restamp_tradfi_fx_krw_usd_writepath_misplacement_2026_08_17.py`
+  entirely DuckDB-based from the start (learned from the prior pass's pandas-OOM lesson above
+  — never loaded the ~14.5M-row manifest into pandas at all, discovery + restamp both went
+  through DuckDB against the locally-downloaded parquet file):
+  - **Dry-run**: 1,947 manifest candidates across 1,947 distinct dates (close to the
+    2026-08-14 script's own count of 1,949 — small drift tolerated by the stop-on-surprise
+    band).
+  - **Object move** (`--apply --skip-restamp`, ran in background, ~5 min): 1,808 physical
+    objects copied to the corrected `pipeline_mode=batch_yahoo` key (server-side copy,
+    size-verified), then the mis-located originals deleted (soft-delete-retention-gated, no
+    errors). Re-ran the same phase a second time to independently confirm 0 objects remain
+    under the mis-located path for all 1,947 dates (near-instant — every source object
+    already gone).
+  - **Manifest restamp** (`--apply --skip-object-move`): snapshot taken first
+    (`_index/backups/availability_index.pre_krw_usd_writepath_restamp_20260817T105236Z.parquet`),
+    CAS write succeeded (generation `1786963674848582` → `1786963963916034`), **1,947 rows
+    restamped** on BOTH `pipeline_mode` (`batch_databento`→`batch_yahoo`) AND `source`
+    (→`yahoo`) — closing the column-inconsistency gap the 2026-08-14 script left.
+  - **Independent self-verify** (fresh process, fresh manifest read): 0 rows remain
+    `pipeline_mode=batch_databento` for this population; 0 `pipeline_mode`/`source`
+    inconsistencies remain.
+  - Deleted the one-off repair script per its own `Delete-when` lifecycle marker (no code
+    changes ship from this pass — it was a pure data repair; the write-path CODE fix and its
+    regression test already shipped in the earlier pass above).

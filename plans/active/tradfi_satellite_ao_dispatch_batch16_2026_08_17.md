@@ -77,9 +77,9 @@ source: >-
       needed) + data repair executed live: 1,008 rows across 667 days — physical GCS objects moved
       `pipeline_mode=batch_databento` → `batch_yahoo` (copy+verify+delete, delete-safety-gated) and manifest
       `pipeline_mode`+`source` both restamped via a snapshot-first CAS write, self-verified 0 remaining. Root
-      cause + full evidence + a flagged KRW-USD regression concern (needs operator decision, not silently
-      touched):
-      `/plans/active/issues/tradfi_fx_ohlcv24h_databento_writepath_misplacement_2026_08_17.md`. Source:
+      cause + full evidence + the flagged KRW-USD regression concern (operator-resolved 2026-08-17 option A,
+      same repair pattern applied to 1,947 KRW-USD rows, self-verified):
+      `/plans/archive/2026_08/issues/tradfi_fx_ohlcv24h_databento_writepath_misplacement_2026_08_17.md`. Source:
       `/plans/active/issues/tradfi_reconciliation_2026_08_17_findings_2026_08_17.md` item 1.
 
 - [ ] [DATA] P2. **Finish the FX manifest `instrument_id` "ticks"-literal backfill residual** (670 rows, down from
