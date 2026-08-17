@@ -161,6 +161,11 @@ The spine. Everything else feeds it.
 
 ## W2 — Data pipeline integrity
 
+> **Gate register**: [`/plans/active/data_pipeline_completion_2026_08_21.md`](/plans/active/data_pipeline_completion_2026_08_21.md)
+> — operator-owned, deadline Friday 2026-08-21 with a Tuesday checkpoint. Holds the complete BATCH / PAPER / LIVE
+> data-pipeline gate sets (20 BATCH gates, 12 PAPER, 13 LIVE) and cross-links each gate to its owning plan. That
+> register is the SSOT for data-pipeline gates; this workstream's todos below are the ones with no other owner.
+
 - [ ] [BACKEND] P0. **Manifest canonicalisation of every entry**, and **skip logic when `--force` is not used** — a
       re-run must not silently re-fetch what is already captured, and must not silently skip what is absent.
 - [ ] [BACKEND] P0. **Manifest consolidators must be running, or VMs exit** — a launcher that proceeds against a stale
