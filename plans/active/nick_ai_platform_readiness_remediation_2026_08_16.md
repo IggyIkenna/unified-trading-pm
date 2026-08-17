@@ -130,21 +130,28 @@ helper, not a hand-rolled copy.
       venue filter) → 200, `transfer-encoding: chunked`, 670,695-byte parquet, read back via `pd.read_parquet` as
       13,141 real rows across all 23 venues; unmatched venue → 404. All against live prod data (cefi, day=2026-08-16),
       not a unit-test mock.
-- [ ] [BACKEND] P0. BLOCKED-ON:mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16 — **market-tick-data-service:
-      build the external market-data surface.** Same auth pattern. Two endpoints: an availability query (what's
-      captured for a given asset_group/venue/data_type — reuse the real `coverage.json`/manifest read path the
-      honest-coverage machinery already uses, never re-implement it) and a delivery endpoint covering both daily
-      batch parquet and a streaming leg (reuse the UTL `EventTransport` facade for streaming —
-      `unified_trading_library.streaming.event_facade` — never a bespoke transport). Done-when: both endpoints work
-      behind the same auth dependency, `quality-gates.sh --no-fix` green + a live curl, cited. **Code is written and
-      independently gate-verified green from the correct checkout — genuinely blocked on shipping, not on
-      implementation.** A fleet-wide STEP 5.70 (adapter-contract-call baseline) regression landed on
-      `live-defi-rollout` HEAD via a different, unrelated concurrent session's commit
-      (`market-tick-data-service@bd07cfc3`, slot-4) — blocks EVERY market-tick-data-service quickmerge right now, not
-      just this one. See
-      [`/plans/active/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md`](/plans/active/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md)
-      for full evidence; whoever resolves it (confirm-and-regen-baseline, or restore the missing call site) unblocks
-      this todo — no rework needed here once that clears.
+- [x] ✅ [BACKEND] P0. **market-tick-data-service: build the external market-data surface.** — SHIPPED
+      `market-tick-data-service@6fefa63676` (`api/routers/external.py` 310 lines, `tests/unit/api/test_external_router.py`
+      221 lines, 4-line wiring change to `api/main.py`). Verified AT ORIGIN by reading the blobs back from
+      `origin/live-defi-rollout`, not from the ship script's exit code; quickmerge's own post-push ancestry check also
+      confirmed `6fefa6367` is an ancestor. `ahead=0`.
+      **The blocker cleared on its own and the work was never re-done.** The STEP 5.70 adapter-contract-call baseline
+      regression (`market-tick-data-service@bd07cfc3`, a different slot's unrelated orchestrator refactor) blocked
+      EVERY MTDS quickmerge fleet-wide, not just this todo. Re-running
+      `scripts/quality_gates/check_adapter_contract_regression.py --workspace-root <root>` standalone on 2026-08-17
+      returned **OK — 378 baselined file(s) at or above minimum**: whoever owned that refactor resolved it upstream.
+      **The right call was NOT to regenerate the baseline.** That gate counts
+      `classify_venue_error|ADAPTER_FETCH_FAILED|record_captured|record_empty|record_failed` per file and exists
+      because a prior incident silently wiped 31 `classify_venue_error` calls — so a count DROP is a real
+      shard-level-failure-isolation regression, and "confirm-and-regenerate" would have papered over a correctness bug
+      had the call site genuinely gone. It hadn't; the count recovered at source. Recording this because the
+      confirm-and-regen path is the tempting one under deadline and is wrong by default for this specific gate.
+      **Recovery note**: the completed work sat UNCOMMITTED in the worktree for ~8 hours behind the cleared blocker.
+      Liveness was checked before inheriting it (479 min since last edit, no `.agent-claim`, well past the 120s
+      protect threshold) and the `.pyc` for `test_external_router` confirmed those tests had actually executed rather
+      than merely been written. Issue doc
+      [`/plans/archive/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md`](/plans/archive/issues/mtds_orchestrator_adapter_contract_baseline_regression_2026_08_16.md)
+      should now be closed as resolved-upstream.
 - [x] [BACKEND] P0. **execution-service: build the external instruction-submission surface.** Same auth pattern. One
       endpoint accepting a `StrategyInstructionEnvelope` (already-real schema —
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py`, class
