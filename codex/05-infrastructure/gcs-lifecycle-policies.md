@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
 title: GCS Lifecycle Policies — Cost + List-Latency Controls
-summary:
-  "SSOT for delete-after-N-days GCS bucket lifecycle rules: deployment-scripts vm-logs/ purged at 14 days,
-  central-element-323112-deployment-events quality_gates_snapshot/ at 30 days, central-element-323112-events events/ at
-  90 days. Bounds storage cost + list-latency (vm_zombie_watchdog walks vm-logs/). Honest-coverage + strategy/
-  execution/manifest buckets intentionally NOT lifecycle'd. Includes apply/re-apply + drift-detection commands."
+summary: "SSOT for GCS bucket lifecycle rules: deployment-scripts has 3 delete rules (vm-logs/ @14d, vm-heartbeat/ @15d,
+  logs/recon-logs/audit-results/etc @30d); central-element-323112-deployment-events + central-element-323112-events
+  are now bucket-wide STANDARD→COLDLINE storage-class-transition rules (@14d, @60d respectively) — NOT delete rules,
+  superseding the original delete-after-30/90-days design. Bounds storage cost + list-latency (vm_zombie_watchdog walks
+  vm-logs/). Honest-coverage + strategy/execution/manifest buckets intentionally NOT lifecycle'd. Includes apply/
+  re-apply + drift-detection commands."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -20,20 +21,22 @@ related:
     /codex/05-infrastructure/live-deployment-monitoring.md,
   ]
 created: 2026-05-16
-authoritative_for: [gcs bucket delete-after-N-days lifecycle rules]
+authoritative_for: [gcs bucket lifecycle rules (delete + storage-class-transition)]
 referenced_by: [/codex/05-infrastructure/gcs-object-operations.md]
 owner:
-last_reviewed: 2026-05-16
+last_reviewed: 2026-08-17
 code_refs:
 type: reference
 ---
 
 # GCS Lifecycle Policies — Cost + List-Latency Controls
 
-> SSOT for delete-after-N-days lifecycle rules across the workspace's GCS buckets. Applied 2026-05-16 by slot-8 per
+> SSOT for lifecycle rules across the workspace's GCS buckets. Originally applied 2026-05-16 by slot-8 per
 > [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/archive/issues/deployment_events_lifecycle_audit_2026_05_15.md)
 > (operator-acked: ADC admin perms on `central-element-323112` cover GCS lifecycle ops per CLAUDE.md "Plans Run To
-> Actual Completion" HARD RULE).
+> Actual Completion" HARD RULE). **Re-verified live 2026-08-17 (slot-18 codex-freshness sweep) — the deployment-events
+> and events buckets have DRIFTED from the original delete-after-N-days design to bucket-wide storage-class-transition
+> rules (see below); this doc's "Applied policies" section now reflects the LIVE state, not the original design.**
 
 ## Why lifecycle policies
 
@@ -42,54 +45,90 @@ type: reference
    `vm-logs/` paths; bounded directory size keeps watchdog response fast.
 3. **Audit trail clarity**: snapshots / event logs older than the documented retention window have no operational value;
    deletion is itself a form of "we know what we keep and why."
-4. **GCS lifecycle is delete-only**: rules never modify in-flight data. Lowest-risk infra op in the workspace.
+4. **Not every rule below is delete-only anymore** (see the two drifted buckets) — a storage-class transition never
+   deletes data, but still bounds STANDARD-class cost the same way a delete rule bounds total object count.
 
-## Applied policies (current state — 2026-05-16)
+## Applied policies (LIVE state, re-verified via `gsutil lifecycle get` — 2026-08-17)
 
-### `gs://deployment-scripts-central-element-323112/` — 14-day `vm-logs/` purge
-
-```json
-{ "rule": [{ "action": { "type": "Delete" }, "condition": { "age": 14, "matchesPrefix": ["vm-logs/"] } }] }
-```
-
-- **Why 14 days**: covers the typical debugging window after a VM run. Beyond 14 days, logs are forensic-only and GCS
-  bucket access cost > grep'ing the log.
-- **What's protected**: `code/` tarballs (no lifecycle — they roll naturally per CI push).
-- **Apply / re-apply**:
-  ```bash
-  gsutil lifecycle set <(echo '{"rule":[{"action":{"type":"Delete"},"condition":{"age":14,"matchesPrefix":["vm-logs/"]}}]}') \
-    gs://deployment-scripts-central-element-323112/
-  ```
-- **Verify**: `gsutil lifecycle get gs://deployment-scripts-central-element-323112/`
-
-### `gs://central-element-323112-deployment-events/` — 30-day QG snapshot retention
+### `gs://deployment-scripts-central-element-323112/` — 3 delete rules
 
 ```json
 {
-  "rule": [{ "action": { "type": "Delete" }, "condition": { "age": 30, "matchesPrefix": ["quality_gates_snapshot/"] } }]
+  "rule": [
+    { "action": { "type": "Delete" }, "condition": { "age": 14, "matchesPrefix": ["vm-logs/"] } },
+    { "action": { "type": "Delete" }, "condition": { "age": 15, "matchesPrefix": ["vm-heartbeat/"] } },
+    {
+      "action": { "type": "Delete" },
+      "condition": {
+        "age": 30,
+        "matchesPrefix": [
+          "logs/",
+          "recon-logs/",
+          "audit-results/",
+          "migration-bundle/staging/",
+          "log-archive/",
+          "deployments/archive/"
+        ]
+      }
+    }
+  ]
 }
 ```
 
-- **Why 30 days**: the `deployment-api /api/repos/deploy-ready` endpoint reads only the latest snapshot per repo. 30-day
-  history covers ad-hoc trend queries; deeper analysis can be repointed to a BigQuery sink (post-cutover).
-- **Apply / re-apply**:
+- **Why 14 days on `vm-logs/`**: covers the typical debugging window after a VM run. Beyond 14 days, logs are
+  forensic-only and GCS bucket access cost > grep'ing the log.
+- **`vm-heartbeat/` @15 days and the 6-prefix @30-days rule are ADDITIONS since the original 2026-05-16 design** (not
+  yet traced to a specific plan/commit as of this re-verification — if you land the provenance, cite it here).
+- **What's protected**: `code/` tarballs (no lifecycle — they roll naturally per CI push).
+- **Apply / re-apply** (full 3-rule set, matching live):
   ```bash
-  gsutil lifecycle set <(echo '{"rule":[{"action":{"type":"Delete"},"condition":{"age":30,"matchesPrefix":["quality_gates_snapshot/"]}}]}') \
+  gsutil lifecycle set <(echo '{"rule":[
+    {"action":{"type":"Delete"},"condition":{"age":14,"matchesPrefix":["vm-logs/"]}},
+    {"action":{"type":"Delete"},"condition":{"age":15,"matchesPrefix":["vm-heartbeat/"]}},
+    {"action":{"type":"Delete"},"condition":{"age":30,"matchesPrefix":["logs/","recon-logs/","audit-results/","migration-bundle/staging/","log-archive/","deployments/archive/"]}}
+  ]}') gs://deployment-scripts-central-element-323112/
+  ```
+- **Verify**: `gsutil lifecycle get gs://deployment-scripts-central-element-323112/`
+
+### `gs://central-element-323112-deployment-events/` — bucket-wide STANDARD→COLDLINE @14 days (NOT a delete rule)
+
+```json
+{
+  "rule": [
+    {
+      "action": { "type": "SetStorageClass", "storageClass": "COLDLINE" },
+      "condition": { "age": 14, "matchesStorageClass": ["STANDARD"] }
+    }
+  ]
+}
+```
+
+- **DRIFTED from the original design.** The doc originally specified a 30-day DELETE on `quality_gates_snapshot/` only.
+  The live rule is a bucket-wide (no `matchesPrefix`) storage-class transition at 14 days — objects are demoted to
+  COLDLINE, never deleted, and the transition applies to every prefix, not just `quality_gates_snapshot/`.
+  `deployment-api /api/repos/deploy-ready` still reads only the latest snapshot per repo, so this doesn't break reads,
+  but COLDLINE has a higher per-op read cost + 90-day minimum storage duration — worth knowing before scripting bulk
+  reads over this bucket.
+- **Apply / re-apply** (matches live):
+  ```bash
+  gsutil lifecycle set <(echo '{"rule":[{"action":{"type":"SetStorageClass","storageClass":"COLDLINE"},"condition":{"age":14,"matchesStorageClass":["STANDARD"]}}]}') \
     gs://central-element-323112-deployment-events/
   ```
 
-### `gs://central-element-323112-events/` — 90-day service-event retention
+### `gs://central-element-323112-events/` — bucket-wide STANDARD→COLDLINE @60 days (NOT a delete rule)
 
 ```json
-{ "rule": [{ "action": { "type": "Delete" }, "condition": { "age": 90, "matchesPrefix": ["events/"] } }] }
+{ "rule": [{ "action": { "type": "SetStorageClass", "storageClass": "COLDLINE" }, "condition": { "age": 60 } }] }
 ```
 
-- **Why 90 days**: covers cross-quarter ops debugging + post-mortem windows. Service-event JSONL is high-volume (every
-  VM emits STARTED + PROGRESS + STOPPED + FAILED).
-- **What's protected**: bucket root + non-`events/` prefixes are untouched.
-- **Apply / re-apply**:
+- **DRIFTED from the original design.** The doc originally specified a 90-day DELETE on `events/`. The live rule is a
+  bucket-wide storage-class transition at 60 days (no `matchesPrefix`, no `matchesStorageClass` condition — applies to
+  every object regardless of current class) — objects are demoted to COLDLINE, never deleted. Service-event JSONL is
+  never purged under the current live rule; the original "why 90 days" cost-bound rationale (delete after 90 days) no
+  longer describes reality — the bucket now grows unbounded in object count, just cheaper per-object after 60 days.
+- **Apply / re-apply** (matches live):
   ```bash
-  gsutil lifecycle set <(echo '{"rule":[{"action":{"type":"Delete"},"condition":{"age":90,"matchesPrefix":["events/"]}}]}') \
+  gsutil lifecycle set <(echo '{"rule":[{"action":{"type":"SetStorageClass","storageClass":"COLDLINE"},"condition":{"age":60}}]}') \
     gs://central-element-323112-events/
   ```
 
@@ -112,7 +151,8 @@ type: reference
 
 ## Drift detection
 
-To check that all 3 policies remain applied (workspace-QG-runnable):
+To check the 3 policies' LIVE shape (workspace-QG-runnable) — note two of them are now storage-class-transition rules,
+not delete rules, so "a rule exists" is the invariant to check, not "objects get deleted":
 
 ```bash
 for bucket in \
@@ -124,7 +164,10 @@ for bucket in \
 done
 ```
 
-Expected: each prints a single `{"rule":[...]}` line. Missing or empty → re-apply per § "Applied policies".
+Expected (as of 2026-08-17): `deployment-scripts-*` prints a 3-rule `Delete` JSON; the other two each print a
+single-rule `SetStorageClass`→`COLDLINE` JSON (age 14 and 60 respectively). Missing or empty → re-apply per §
+"Applied policies". A rule shape that differs from what's printed above is itself a drift signal — update this doc
+rather than assuming the doc is still right.
 
 ## References
 

@@ -33,7 +33,7 @@ referenced_by:
     /codex/05-infrastructure/ui-architecture.md,
   ]
 owner: ikenna
-last_reviewed: 2026-05-15
+last_reviewed: 2026-08-17
 code_refs:
 codified: 2026-05-08
 sources:
@@ -342,31 +342,29 @@ Deploy form. The new shape makes "fresh" and "re-run" structurally distinct:
 | VM-launcher registry                                 | REUSED            | `deployment-service/scripts/vm/` (existing)                                         |
 | Build history + log retrieval                        | REUSED            | `builds.py` / `cloud_builds.py` (existing)                                          |
 
-## Health-page connector-status contract (UI-19, added 2026-05-13)
+## Health surface (re-verified 2026-08-17 — SUPERSEDES the original UI-19 "Monitor → Health" design below)
 
-The deployment-ui health page (under Monitor → Health) probes a closed set of connectors at configured cadence. Codified
-here so both the UI maintainer and backend probe owners read the same contract.
+**The originally-designed closed-set connector probe page never shipped as designed.** `deployment-ui/src/health/
+connectors.ts` does not exist in the current tree, and there is no "Monitor → Health" sub-page. What exists instead:
 
-**Probed connectors (closed set):**
+- **Header liveness badge**: `useHealth()` (`deployment-ui/src/hooks/useHealth.ts`) polls `GET /health`
+  (`deployment-ui/src/api/client.ts` `getHealth()`) every 30s (paused while the tab is hidden), surfacing a single
+  `healthy`/degraded verdict — not a per-connector breakdown.
+- **Cockpit landing page** (`deployment-ui/src/pages/Cockpit.tsx`) is the actual "is everything OK" rollup: it reads
+  `GET /api/health/overview` (`deployment-ui/src/api/health.ts` `getHealthOverview()`) for color-coded tiles —
+  `deployments`, `consolidators`, `coverage`, `ci`, `billing`, `alerts`, `artifacts`, `vm-resources` — each tile's
+  `status` is `ok`/`degraded`/`critical` with a `detail_href` drill-down.
+- **Manifest-consolidator drill-down**: `GET /api/health/consolidator` (same file) returns per-(kind, asset_group)
+  `ConsolidatorHealth` — freshness, shard backlog, execution status, phantom-audit + empty-reprobe results (~25 jobs in
+  the terraform estate).
+- **Per-deployment freshness**: `GET /api/deployments/{id}/freshness` returns a manifest-derived `FreshnessStatus`
+  (`fresh`/`stale`/`liveness_only`/`unknown`) — distinct from the in-memory health-ping callback; a control-plane
+  deployment with no data responsibility honestly reports `liveness_only`, never a false "fresh".
 
-| Connector               | Probe endpoint                                                    | Healthy-state criterion               | Latency threshold | Startup hint                                        |
-| ----------------------- | ----------------------------------------------------------------- | ------------------------------------- | ----------------- | --------------------------------------------------- |
-| `deployment-api`        | `GET /healthz`                                                    | HTTP 200 + JSON `{status: "ok"}`      | <500 ms p99       | Cold-start within 60s of Cloud Run revision rollout |
-| Pub/Sub publish         | dummy publish to `lifecycle-events-health` topic                  | publish ack received                  | <1s p99           | Re-arm subscriber on subscription not-found         |
-| GCS read                | HEAD on `gs://deployment-scripts-{pid}/health/probe.txt`          | HTTP 200 + body matches expected hash | <1s p99           | Empty body indicates stale probe-writer cron        |
-| BigQuery (optional)     | `SELECT 1 LIMIT 1` against `${pid}.deploy_missing_audit.launches` | row returned                          | <2s p99           | Skip when BigQuery dataset absent (dev tier)        |
-| Firebase Auth (UI-side) | `firebase.auth().currentUser` resolution                          | non-null user                         | <500 ms p99       | Show "sign in to view monitoring" if null           |
-
-**Latency budgets** are p99 over a rolling 5-minute window. Breaches trigger a YELLOW dot; 3-consecutive-fail or
-30s-no-response triggers RED.
-
-**Startup hints** surface in the UI under the per-connector tile when the connector is unreachable for >60s — operator
-gets actionable text rather than a bare red dot.
-
-**SSOT for the probe set**: `deployment-ui/src/health/connectors.ts` (closed-set TypeScript literal). When adding a new
-probed connector, update both that file AND this table.
-
-Reference: Sweep 3 of `codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` (UI-19 finding).
+None of this probes Pub/Sub / GCS / BigQuery / Firebase Auth directly the way the original UI-19 design specified —
+those checks were folded into the richer manifest/consolidator-freshness model above instead. If you're implementing
+against this section, read `deployment-ui/src/api/health.ts` and `pages/Cockpit.tsx` directly; they are now the SSOT
+for shape, this doc is the pointer.
 
 ---
 
