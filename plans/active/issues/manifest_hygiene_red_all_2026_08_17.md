@@ -6,10 +6,12 @@ summary: >-
   cefi/tradfi/prediction and a 1-row schema_version_not_v9 straggler for cefi. Diagnosed 2026-08-17:
   prediction's 461-cell finding is 91% one shape — POLYMARKET's prediction_canonical_question_group
   CQG-bundle rollup is empty on 43% of days across the whole history including today, while raw trades
-  capture is mostly fine. ROOT CAUSE CONFIRMED 2026-08-17 (slot-9): the all-or-nothing cluster-coverage
-  gate in record_captured_from_counts requires every LISTED CQG market to trade, not just active ones —
-  fix needs an operator ruling (two candidate directions, see Todos); cefi (58,362 cells) and tradfi
-  (8,468 cells) still need a VM-scale re-run of detect_manifest_divergence.py (OOMs the shared host).
+  capture is mostly fine (though it has its own separate 8-day-and-counting outage as of 2026-08-16 — see
+  Todos). Slot-9's 2026-08-17 all-or-nothing-coverage-gate root-cause claim was REFUTED by slot-14's
+  round-2 LIVE measurement the same day (zero attempted_failed rows found on clean test dates) — real
+  cause not yet confirmed, needs a fresh code trace (see "Diagnosis update (slot-14 round 2)"); cefi
+  (58,362 cells) and tradfi (8,468 cells) still need a VM-scale re-run of detect_manifest_divergence.py
+  (OOMs the shared host).
 status: open
 nature: issue
 asset_group: [cefi, tradfi, prediction]
@@ -229,6 +231,75 @@ for cefi/tradfi specifically). Needs a VM-launched run of `detect_manifest_diver
 
 **sports (0 DIVERGENT_EMPTY) — clean, no action needed.**
 
+## Diagnosis update (2026-08-17, slot-14 round 2) — LIVE MEASUREMENT REFUTES BOTH prior hypotheses
+
+Per the "Still needed before shipping (a)" todo (live spot-check on a divergent date where `trades` itself
+is captured OK), ran a narrowly-filtered read of prod `_index/availability_index.parquet`
+(bucket `market-data-tick-pred-prd-central-element-323112`, `resolve_bucket_name(cloud="gcp",
+kind="market-data-tick-prediction")`, 209.8MB / 2,805,608 rows total, filtered in-memory to
+`venue=POLYMARKET, data_type=prediction_canonical_question_group` for one date at a time — no new
+whole-corpus walk). Script: `scripts/dev/run-bounded-analysis.sh`-wrapped, kept in scratchpad, not
+committed (throwaway read-only diagnostic).
+
+**Picked dates via measurement, not guesswork**: cross-referencing `divergence_2026-08-17.csv`'s own
+per-date rows, the ONLY 3 dates across the ENTIRE ~2.5-year history where `trades` is `OK_CAPTURED`
+(any_captured=True) **but** `prediction_canonical_question_group` is `DIVERGENT_EMPTY` are 2026-07-27,
+2026-08-03, and 2026-08-17 (today, still in-progress — excluded). Used 2026-07-27 and 2026-08-03 — every
+OTHER CQG-divergent date in the history is ALSO trades-divergent (2024-01-01→2025-03-13, and
+2026-08-09→2026-08-16 — trades itself hasn't captured POLYMARKET for over a week; a second, separate
+finding, not yet triaged — see new P1 todo below), so those dates can't isolate the CQG-bundle mechanism
+from a plain trades-capture outage.
+
+**Result — both prior hypotheses are refuted by the live data:**
+
+1. **Slot-9's all-or-nothing `ClusterCoverageError`/coverage-gate hypothesis is REFUTED**: zero
+   `attempted_failed` rows exist for `(POLYMARKET, prediction_canonical_question_group)` on EITHER test
+   date (0/79 on 2026-08-03, 0/90 on 2026-07-27). That mechanism's own code
+   (`record_captured_from_counts` → `check_cluster_coverage_from_counts`) can ONLY ever produce
+   `record_failed`/`attempted_failed` rows on a coverage miss — never `empty_confirmed` or
+   `expected_unattempted`. If the coverage gate were firing, these would show `attempted_failed`, not
+   the profile actually observed.
+2. **Slot-14's original "frozen migration-era stamp" hypothesis is ALSO REFUTED**: `written_at`/
+   `attempted_at` for these rows are timestamped on (or within days of) the row's OWN `date`
+   (e.g. `2026-08-03T01:32:40Z` for the 2026-08-03 cell, `2026-07-27T01:32:36Z` for 2026-07-27) — not a
+   frozen `2026-07-18` migration-script stamp. Something IS actively (re)writing these cells near their
+   processing date.
+3. **The REAL measured profile** — capture_status breakdown for `(POLYMARKET,
+   prediction_canonical_question_group)`:
+   - 2026-08-03 (79 rows): 67 `expected_unattempted` (85%), 12 `empty_confirmed` (reason
+     `EXPECTED_INSTRUMENT_DELISTED` ×12).
+   - 2026-07-27 (90 rows): 56 `expected_unattempted` (62%), 34 `empty_confirmed` (reason
+     `EXPECTED_INSTRUMENT_DELISTED` ×28, `EXPECTED_INSTRUMENT_NOT_LISTED` ×6).
+   - `expected_unattempted` dominating means `_finalize_prediction_bundles`'s own per-CQG sentinel loop
+     (`manifest_finalize.py` line ~611, `for cqg_member in CanonicalQuestionGroup: ... record_empty(...,
+     reason="SOURCE_RETURNED_ZERO")`) is NOT the process touching most of these rows — that loop
+     unconditionally iterates every `CanonicalQuestionGroup` member and would stamp `SOURCE_RETURNED_ZERO`
+     on all of them, not leave 62-85% at `expected_unattempted` (materialised-by-writer / never-attempted)
+     and stamp the rest with a DIFFERENT reason vocabulary.
+   - The `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons trace to
+     `market_tick_data_service/engine/orchestrator/prediction_tier3_lifecycle.py::_classify_prediction_tier3_reason`
+     — a SEPARATE "Tier-3 sentinel fan-out" (split out of `sentinels.py`) whose own docstring describes it
+     as classifying **per-market condition_id/ticker `trades` cells** against the lifecycle map, not
+     CQG-bundle cells. Whether this tier-3 path is being (mis)applied against CQG-level `instrument_id`
+     values too, or a third still-unidentified writer shares its reason vocabulary, is **not yet
+     confirmed** — needs a read of `sentinels.py`'s tier-3 fan-out call site to see what `data_type`/
+     `instrument_id` set it iterates for prediction.
+
+**Conclusion**: `_finalize_prediction_bundles` (the CQG-bundle finalize path both slot-14's original and
+slot-9's diagnoses centered on) does not appear to be the process actually producing most of these
+manifest rows in production — its own early-return guard (`if not prediction_cluster_counts_by_venue:
+return`, line 533) or the `_record_venue_shard_counts` truthy-check (`if writer.prediction_cluster_counts:`)
+may be silently skipping POLYMARKET on these dates despite real trades being captured that day (37/319,830
+and 8/196,303 trades rows were `captured`, so SOME `write_chunk` activity occurred). **Neither candidate
+fix (a) nor (b) from the "Diagnosis update (slot-9)" section addresses this** — both assume the
+all-or-nothing coverage gate is the live code path producing the divergence, which this measurement
+disproves. Implementing either now would ship a fix for a disproven mechanism on prod data-correctness
+code. The operator-ruling todo below is retargeted accordingly — do NOT rule on (a) vs (b) as originally
+framed; the open question is now "why does `_finalize_prediction_bundles` not reach POLYMARKET's CQGs at
+all on days with real captured trades, and what does the Tier-3 sentinel fan-out's `EXPECTED_INSTRUMENT_
+DELISTED/NOT_LISTED` stamping actually cover for this data_type" — a fresh code-path trace, not an (a)/(b)
+choice.
+
 ## Todos
 
 - [x] ✅ [CODE] P1. Manifest hygiene RED — diagnosed (not fully fixed) 2026-08-17 slot-14. See "Diagnosis"
@@ -245,20 +316,37 @@ for cefi/tradfi specifically). Needs a VM-launched run of `detect_manifest_diver
       (2026-08-17, slot-9)" section above for the full 4-step trace + code citations. NOT a mechanical
       fix — split into the two follow-ups below since the gate is shared with TradFi chain bundles and
       the fix direction needs a decision from the operator before landing (see next todo).
-- [ ] [OPERATOR] P1. Rule on the CQG-bundle cluster-coverage fix direction — (a) loosen
-      `_finalize_prediction_bundles` (`market-tick-data-service`) to route a CQG bundle with ANY
-      observed trading activity to `record_captured_from_counts` with `expected_root_clusters` narrowed
-      to observed-or-known-active markets (drops the all-or-nothing requirement for prediction bundles
-      only — recommended, smaller blast radius) vs (b) narrow `_load_expected_clusters_for_cqg`'s
-      "expected" set itself to markets known to be actively promoted that day (needs an
-      instruments-service data-model change, unknown blast radius on TradFi's identical
-      `check_cluster_coverage_from_counts` consumer for CME options/futures). See "Fix requires a
-      semantics decision" in the diagnosis section above for the full tradeoff writeup.
-- [ ] [DATA] P1. Once (a) or (b) is ruled on: live spot-check ONE recent divergent date (e.g.
-      2026-08-16) confirming `market_lifecycle.parquet` really does list markets with zero real trades
-      that day (rules out a separate bug in the IS lifecycle writer itself), then implement + ship the
-      ruled-on fix in `market-tick-data-service` (+ `unified-trading-library` if (b)). This is a
-      currently-ACTIVE gap (today's date is divergent too), not just a historical backfill task.
+- [x] ✅ [DATA] P1. Live spot-check the CQG-bundle divergence on a real prod date — 2026-08-17 slot-14
+      round 2. REFUTES both prior hypotheses (see "Diagnosis update (2026-08-17, slot-14 round 2) — LIVE
+      MEASUREMENT" above): zero `attempted_failed` rows found (disproves slot-9's coverage-gate theory),
+      `written_at` is near-live not frozen-migration (disproves slot-14's original theory). Real profile:
+      62-85% `expected_unattempted` (never touched) + a minority `empty_confirmed` stamped by
+      `prediction_tier3_lifecycle.py`'s Tier-3 sentinel fan-out, not `_finalize_prediction_bundles`'s own
+      sentinel. Did NOT implement (a)/(b) — both are built on the now-disproven coverage-gate premise;
+      shipping either would be a fix for the wrong mechanism on prod data-correctness code. Superseded by
+      the two todos below.
+- [ ] [OPERATOR/BACKEND] P1. Trace why `_finalize_prediction_bundles` (`market-tick-data-service`) does
+      not appear to reach POLYMARKET's CQG rows in production despite real captured trades that day (37
+      captured trades rows on 2026-08-03, 8 on 2026-07-27) — check whether its line-533 early-return
+      (`if not prediction_cluster_counts_by_venue: return`) or `_record_venue_shard_counts`'s
+      `if writer.prediction_cluster_counts:` truthy-check is silently skipping POLYMARKET in the live/
+      prod daily orchestrator run (add a count/log there, or trace against a known-good invocation), AND
+      confirm what `prediction_tier3_lifecycle.py::_classify_prediction_tier3_reason` (the actual source
+      of the `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons measured live) is applied against for
+      `data_type=prediction_canonical_question_group` cells — its own docstring describes it as a
+      per-market-`trades`-cell classifier, not a CQG-bundle one, so this may be a second, independent bug
+      (misapplied classifier) rather than the same mechanism. This supersedes the old (a)/(b)
+      coverage-gate ruling todo — do NOT rule on (a) vs (b), that decision no longer applies. `NOTIFIED
+      OPERATOR` per CLAUDE.md big-finding rule (data-correctness, contradicts 2 prior sessions'
+      diagnoses) — see `/blocked` on slot-14, 2026-08-17.
+- [ ] [DATA] P1. SEPARATE, more acute finding surfaced by the above: POLYMARKET raw `trades` capture
+      itself (not just the CQG bundle) has been `DIVERGENT_EMPTY` for 8 CONSECUTIVE days as of this
+      writing (2026-08-09 → 2026-08-16 per `divergence_2026-08-17.csv`), with 2026-08-17 showing
+      `MISSING_EXPECTED` (0 rows, still in progress). This is a currently-ACTIVE, worsening gap distinct
+      from the CQG-bundle mechanism above — diagnose whether POLYMARKET trades capture has broken
+      recently (adapter/credential/rate-limit failure) vs a genuine multi-day market lull, starting from
+      `market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` + recent
+      orchestrator run logs for `venue=POLYMARKET`.
 - [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group cefi` (14M+ row
       manifest OOMs the shared host at a 4GB cap) and get the real per-cell CSV breakdown (not the
       stdout-tail sample) — determine which venue(s)/data_type(s) actually drive the 58,362
