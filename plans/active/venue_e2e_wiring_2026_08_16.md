@@ -217,3 +217,14 @@ filing a fresh issue doc since the gap is already named in-plan; noting it here 
 against this same todo doesn't re-derive the same investigation. Skipped with `reason_code: GATED`, no code
 shipped — correctly nothing to verify/ship while the AG batches (the thing that would close any cascade gaps) are
 still open.
+
+**2026-08-17 — dispatched a THIRD time, still 0/5, parking durably this time (slot 15).** Re-dispatched against the
+same "cascade invariants" Definition-of-done todo despite `gate_on_depends: true`. Re-confirmed live:
+`defi_venue_e2e_batch1` 6 open, `cefi_venue_e2e_batch1` 4 open, `tradfi_venue_e2e_batch1` 2 open,
+`sports_venue_e2e_batch1` 3 open, `prediction_venue_e2e_batch1` 7 open — still 0/5 complete. Per CLAUDE.md,
+`depends_on` (and `gate_on_depends`) documents ordering + gates archival but does NOT affect dispatch — expected
+behavior, not a fresh bug; the actually-implemented durable-gate mechanism is the separate `park_now` /
+`auto_unpark__<task-id>` DB-condition path fixed in
+`ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md`. Skipping with `reason_code: GATED` and
+`park_now: true` this time so the task actually stays gated until the 5 AG batches land, instead of relying on the
+transient fleet cooldown alone (which is what let this redispatch a 2nd/3rd time).
