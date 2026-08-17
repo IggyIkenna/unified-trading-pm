@@ -54,6 +54,7 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by: market-tick-data-service (script + test, see Progress Log)
+archive_exempt: true
 context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
@@ -66,11 +67,14 @@ context_scope:
 
 # TradFi FX ohlcv_24h databento write-path misplacement — 2026-08-17
 
-> **📦 ARCHIVED 2026-08-17 — this issue is fully resolved.** Both the 1,008-row FX ohlcv_24h
-> population and the flagged 1,947-row KRW-USD follow-up have been repaired and
-> independently self-verified (0 remaining mislocated objects, 0 remaining mislabeled rows,
-> 0 column inconsistencies). The write-path code fix + regression test already shipped
-> (`market-tick-data-service@81f5fb8f`-era commit). See the Progress Log for full detail.
+> **TRANSITIONAL COMMIT — `archive_exempt: true` is TEMPORARY, not a standing exemption.**
+> This doc is fully resolved (0 open todos) and WILL be archived in an immediate follow-up
+> commit. It is re-committed at this still-active path, un-archived, purely so the AO
+> worker's `/done` M3 same-path checkbox-flip verification can see the flip — a prior commit
+> that bundled the flip with the `git mv` archival in one step made the diff at this literal
+> path show only a deletion, which defeats that check (documented failure mode,
+> `unified-trading-pm/agents/RULES.md` § 2). See the Progress Log for the real archival
+> commit that follows.
 
 ## Root cause
 
