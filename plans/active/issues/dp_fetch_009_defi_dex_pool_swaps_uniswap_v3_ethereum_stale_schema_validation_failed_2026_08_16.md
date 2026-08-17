@@ -204,3 +204,25 @@ count/ratio).
   workers being dispatched for what is effectively one underlying condition. No code fix needed (none exists to
   make — confirmed by the prior investigation's live re-verification). No new issue doc filed (would duplicate
   this one). Checked off todo 3. `market-tick-data-service` and `unified-trading-pm` worktrees left clean.
+
+- **2026-08-17 (data_pipeline_failure escalation agt-ef0f27, slot 5)**: THIRD re-fire of the same DP-FETCH-009
+  finding (asset_group=defi, data_type=dex_pool_swaps, 14036 attempted_failed of 8460364 attempted; "13456
+  attempted_failed row(s) in the last 1d"). Read RULES.md + SUB_AGENT_MANDATORY_RULES.md +
+  `/codex/05-infrastructure/data-pipeline-alerts.md`; pre-task grep of `plans/active/issues/` found this SAME
+  doc. `attempted_failed` is EXACTLY 14036 for the third consecutive filing (2026-08-16 ×2, now 2026-08-17) —
+  decisive per the prior sessions' own methodology (an OOM-prone bounded re-read was not repeated here for the
+  same reason it wasn't in the second filing). `market-tick-data-service` HEAD confirmed unchanged
+  (`c9bc8151`, no new dex-swap-relevant commits since the original investigation) — rules out a code
+  regression. **Note for whoever picks up todo 2**: this filing's total `attempted` (8460364) is LOWER than
+  both prior filings (8471219, then 8472925) despite arriving later in wall-clock time — inconsistent with the
+  monotonic-growth pattern the second filing used as corroborating evidence. Not investigated further here (the
+  identical 14036 `attempted_failed` count is the load-bearing signal and a third bounded-read risks the same
+  OOM the first session hit twice); plausibly a consolidator snapshot/partition-timing artifact given several
+  dex_pool_swaps fold/retire/dedup one-off scripts exist in this repo that could shrink the total independent of
+  this cell, but flagging rather than asserting. This is still the SAME 13 stale UNISWAP_V3/ETHEREUM dates
+  (2025-01-09..21, `attempted_at` 2026-08-10..16) sitting in the 14-day trailing window (self-clears ~08-24) and
+  NOT yet purged — todo 2 (the reclass script) is still open below and is the actual fix for the repeated
+  paging; this is the second consecutive re-fire that todo 3 already predicted, so no further todo change here.
+  No code fix needed, no new issue doc filed (would duplicate this one). `$AUTHORING_SLOT=dp-fleet-monitor` is
+  non-numeric — skipped the authoring-slot ping per the role doc (no real originator slot to notify).
+  `market-tick-data-service` and `unified-trading-pm` worktrees left clean.
