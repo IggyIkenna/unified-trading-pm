@@ -207,3 +207,4 @@ change — a token grep alone misses path-prefix/filename/registry-membership bi
   restaking venues, produces no candle-derivable market data MDPS processes — consistent with the Symbiotic
   onboarding doc's finding that MDPS is not a relevant layer for this venue shape).
 - **na-eligibility-audit 2026-08-16** [body-hash:5eaa96c384a0defb]: KEEP-NA, valid — Brand-new issue doc (created 2026-08-16, today), read end to end: a full-workspace Karak-decommission sweep across 8 repos (~50 files), 27 open [AGENT]-tagged todos (P0-P3), every one a mechanically bounded delete-this-file / remove-this-entry / update-this-golden-fixture instruction with the design decision (decommission entirely, not rebuild) already made and justified (zero deployed bytecode at the hardcoded vault address, verified real-mainnet;.
+- **context-scout 2026-08-17**: populated context_scope (3 entries).

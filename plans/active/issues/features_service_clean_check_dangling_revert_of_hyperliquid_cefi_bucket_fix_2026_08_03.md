@@ -193,3 +193,4 @@ problem with the fix that was never written down — which would be a genuine da
   are already gone. Flipped the todo to done on that basis. This doc now has 0 open todos; setting
   `archive_exempt: true` below rather than running the full archival ritual in this same pass — a separate follow-on
   pass should do the git-mv + referrer sweep.
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

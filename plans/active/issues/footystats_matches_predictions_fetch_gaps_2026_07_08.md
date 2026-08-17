@@ -453,3 +453,4 @@ code-fix task). A data_engineering slot with a full session budget should:
   verification is the SIBLING doc's own todo to run and flip, not folded in here; not executed this pass (out of this
   doc's own scope, and a live-manifest re-verify is real work, not a citation check).
 - **na-eligibility-audit 2026-08-17** [body-hash:2d1aa09a741708c7]: KEEP-NA, stale-items — todo #4's blocker doc independently re-verified resolved (status:resolved, all checkboxes [x]) but deliberately left open pending a VM-dispatch/archived-plan-flip decision per the 2026-08-16 session. Recommend a future pass: cheap re-verify of pending_fetch==0 for footystats MATCHES/PREDICTIONS/ODDS, then close todo #4 + likely archive this doc.
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

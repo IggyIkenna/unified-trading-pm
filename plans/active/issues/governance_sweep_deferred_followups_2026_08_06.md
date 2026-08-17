@@ -270,3 +270,4 @@ different task than writing the ruling:
   found all 6 resolved. Remaining open todos are 2 permanent operator hard-stops (live-trading go-ahead;
   fork-PR-approval GitHub UI click with no API path), 1 bounded-but-gated-by-the-whole-doc-rule DIAG item, and 1
   editorial line-cap trim needing human judgment -- whole doc stays NA.
+- **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.

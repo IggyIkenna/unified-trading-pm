@@ -160,3 +160,7 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    this relaunch): explicit `del`/`gc.collect()` of each leg's large intermediate structures
    (`_captured_days_by_cell`'s frame/groupby results) in `pipeline_e2e_check.py` between legs, or run each leg
    in its own subprocess so OS-level cleanup is guaranteed.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (5 entries).

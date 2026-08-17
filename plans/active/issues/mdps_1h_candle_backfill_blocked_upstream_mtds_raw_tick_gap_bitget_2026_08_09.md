@@ -211,6 +211,7 @@ the raw-tick manifest before re-running, rather than assuming a fixed completion
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
 - **slot 7, 2026-08-16**: Checked todo 3's gate ("once the BITGET-FUTURES raw ticks land") before re-running the MDPS
   candle backfill — **NOT yet met.** Direct manifest read (`read_availability_index_safe`,
   `market-data-tick-cefi-prd-central-element-323112`, filters `venue=BITGET-FUTURES data_type=trades

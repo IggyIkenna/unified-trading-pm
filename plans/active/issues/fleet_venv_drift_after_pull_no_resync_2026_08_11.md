@@ -175,3 +175,4 @@ leaves the environment behind, silently, forever.
   laptop + orchestrator VM, remediated all drifted venvs, shipped the fail-closed gate check, and recorded the three
   self-corrections above.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

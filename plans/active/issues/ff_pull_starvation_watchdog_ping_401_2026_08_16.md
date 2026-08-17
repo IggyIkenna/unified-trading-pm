@@ -54,7 +54,6 @@ context_scope:
     scripts/dev/ff-starvation-detect.sh,
     scripts/dev/slot-cron-ff-pull.sh,
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /tmp/slot-git-status-report.501.log,
   ]
 ---
 
@@ -140,3 +139,4 @@ returns `200` (was `401`).
   Root-caused to a stale per-slot `.orch_token` (expired 2026-05-27) shadowing a valid `~/.orch_token`
   (2026-09-09) in the resolver's fallback order. Fixed for slot 5, verified live (401→200). Slots 3/4 likely
   affected too but not touched — flagged as an operator todo since those checkouts aren't mine to reach into.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries — dropped a `/tmp/` log path, not a durable reference).

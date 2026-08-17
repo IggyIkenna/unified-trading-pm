@@ -55,16 +55,12 @@ source: >-
 drift_direction: advance-code
 context_scope:
   [
-    deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh,
     deployment-service/scripts/recovery/relaunch_backfill_vm.py,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_classify.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py,
-    deployment-service/scripts/wave_launcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/scripts/vm/vm_zombie_watchdog.py,
-    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
-    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh,
+    deployment-service/scripts/wave_launcher.py,
   ]
 ---
 

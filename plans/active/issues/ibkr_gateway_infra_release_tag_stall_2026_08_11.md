@@ -147,6 +147,7 @@ lands; that is not a bug. The residual reconciler content-check gap is filed abo
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
 - **slot-20·infra 2026-08-15**: Picked up the `_source_touched()` per-repo-source_dir-aware follow-up via
   `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`. Diagnosed rather than blindly implemented: empirically
   confirmed `workspace-manifest.json`'s `breaking_scan_dir` (the obvious candidate source) is incomplete for e2e-testing

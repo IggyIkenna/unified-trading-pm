@@ -211,3 +211,7 @@ read-merge-write instead of overwrite) as a new P1 todo here.
   - Declining via `reason_code: "GATED"` + `park_now: true` — same external gate as slot-25/slot-5 (per-day relaunch not
     yet run); re-check once the relaunch's post-completion audit posts. No code change to market-data-processing-service
     (gate not met; implementing a fix now would be speculative).
+
+## Progress Log addendum
+
+- **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.

@@ -231,3 +231,7 @@ none of them appear as todos in that plan.
   freshness SLA before allowing order submission".
 - `health_aggregator.py` module docstring: "per-ClientWorker heartbeat rollup... Consumed by
   `strategy_service/api/main.py`'s health endpoint" — intra-service, not cross-service.
+
+## Progress Log addendum
+
+- **context-scout 2026-08-17**: populated context_scope (5 entries).

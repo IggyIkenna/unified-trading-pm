@@ -553,3 +553,4 @@ tracked here.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries; added
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, the live plan several rehomed items now cite).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
