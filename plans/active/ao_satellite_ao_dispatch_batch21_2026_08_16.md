@@ -105,13 +105,17 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Re-run the 60-minute context-signal validation pass** (`context_lifecycle.py` /
+- [x] ✅ [BACKEND] P2. **Re-run the 60-minute context-signal validation pass** (`context_lifecycle.py` /
       `context_probe.py`) across a clean fleet window — no mid-window compaction/model-tier change confounding the
       signal. Multiple qualifying commits (`a1e2969`, `59d9417`, `c00dc13`, `acc41b1`, `4af78dc`, `ac9ba18`, `905c210`,
       `c730f46`, `e943d72`+) have landed since 2026-08-08 with no re-run recorded since the 2026-08-10 audit. **Done
       when**: a fresh dated validation report (pass/fail per signal) exists and is cited back into the tracker's Track 1
       + `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`. Repo:
-      agent-orchestrator.
+      agent-orchestrator. — ✅ DONE 2026-08-17 (slot 12): confirmed fleet clean-start (all `working` slots ≤60% ctx),
+      ran the full 60-min window via `GET /api/activity`. **Result: PASS on both criteria** — 21 forces, distribution
+      `60×11 · 69×10` (well inside the 60-08-08 baseline's 60-85 range), **zero terminal wedges** over the full
+      60 minutes (the 2026-08-08 run only partial-passed, 4 inherited wedges). Full write-up in the issue doc's new
+      "2026-08-17 validation window" section + cited into the tracker's Track 1.
 - [x] ✅ [SCRIPT] P1. **Re-run `/plan-reconcile` (whole-corpus) SOLO** — DONE 2026-08-16 (as the todo's own stated
       pre-check, not a completed corpus run). Ran the required gate ("confirm no concurrent session is running the
       same sweep before starting") and it correctly FAILED: `GET /api/agents` at `2026-08-16T18:32:26Z` (Sunday)
@@ -177,6 +181,15 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 ## Progress Log
 
+- **2026-08-17 (slot 12, AO-dispatched)**: Worked the 60-minute context-signal validation re-run todo. Verified the
+  fleet was clean-start (all `working` slots ≤60% context) before beginning — the exact precondition the 2026-08-08
+  session's own follow-up demanded. Ran a background monitor (6× 10-min checkpoints) over the live `/api/activity`
+  feed for `forced_compact`/`forced_precompact`/wedge-terminal event types across the full window. Result: 21 forces,
+  distribution `60×11 · 69×10` (tighter than the 2026-08-08 baseline's 60-85 range), zero terminal wedges — a clean
+  PASS where the 2026-08-08 run only partial-passed (4 wedges, all inherited saturation from a dirty start). Full
+  write-up appended to `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`'s own "2026-08-17
+  validation window" section (its matching follow-up todo flipped) + a citation note appended to the tracker's
+  Track 1 (checkbox itself left unflipped per this plan's own rule — `batch21_finalize` reconciles it).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-16 (interactive session, operator request)**: Authored per the operator's request to wrap a new AO plan
   into the nearest live "consolidated" tracker via reference, plus a companion durable-rule change requiring AO plans
