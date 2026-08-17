@@ -11,7 +11,7 @@ summary: >-
   cancellation instead of fund withdrawal. Not CEFI-specific in the underlying code (the endpoints are
   venue-agnostic) — filed against cefi because that is where this sweep found it; likely affects every venue in
   every asset group that would ever route through this manual-instruction path.
-status: open
+status: archived
 nature: issue
 asset_group: [cefi]
 stage: [execution]
@@ -53,6 +53,11 @@ context_scope:
     execution-service/execution_service/trade_execution/base_adapter.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-17** — all 4 todos closed (P0 reachability, P0 /cancel wiring, P1 amend refusal, P2
+> per-venue atomicity, P2 downstream-state audit). Follow-up fix work split into
+> `plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md` and
+> `plans/active/issues/kraken_futures_wrong_rest_base_url_2026_08_17.md`.
 
 # Order cancel/amend HTTP endpoints are hardcoded fake-success stubs
 
@@ -237,13 +242,54 @@ measurement" rule.
       private call (place/cancel/amend) through the Kraken **Spot** REST API, not the separate Kraken Futures
       surface; KRAKEN-FUTURES trading is non-functional through this adapter today (fails loud, not a fake
       success, so lower urgency than the stub bugs this doc chases, but still a real P0 gap).
-- [ ] [BACKEND] P2. **Audit whether any downstream state (order-tracking, position ledger) would show a stale
+- [x] ✅ [BACKEND] P2. **Audit whether any downstream state (order-tracking, position ledger) would show a stale
       "cancelled" order that is still actually live at the exchange** if this were ever hit before the fix lands
       — bounds the real-world blast radius the same way the withdraw-stub finding's equivalent todo did.
-      Done-when: a cited answer, yes or no, with evidence.
+      Done-when: a cited answer, yes or no, with evidence. **Answered — YES, but a DIFFERENT-shaped staleness
+      than the todo's own framing anticipated, and it is a PRESENT gap, not just a pre-fix historical exposure.**
+      Traced the actual downstream state surface `/cancel` and `get_instruction_status` both read:
+      `LiveOrchestrator.order_tracker` is `execution_service/orders/tracker.py`'s `OrderTracker` — its only two
+      state-transition methods are `track_order()` (sets `status="SUBMITTED"` when an order is first tracked) and
+      `update_fill()` (sets `status="FILLED"` on a fill). **There is no method anywhere on this class that sets a
+      `"CANCELLED"` (or `"AMENDED"`) status** — confirmed by reading the full class body (`tracker.py:1-95`+) —
+      and neither `/cancel`'s nor `/amend`'s handler in `manual_instruction_api.py` calls any tracker-mutating
+      method after a successful venue-side cancel/amend (verified: `cancel_manual_instruction` only calls
+      `cancel_order_fn(...)` per order id then returns a response dict; nothing touches `order_tracker`).
+      Consequence: `GET /instructions/{id}` (`get_instruction_status`, which calls
+      `order_tracker.get_order_status(order_id)` + `order_tracker.is_instruction_complete(instruction_id)`) keeps
+      reporting a **successfully-cancelled** order as `"SUBMITTED"` forever after — it can never read
+      `"CANCELLED"` because nothing ever writes that value — and `is_instruction_complete()` (which only returns
+      `True` when every order shows `"FILLED"`) never flips to `True` for an instruction whose sole order was
+      cancelled rather than filled, so the instruction's aggregate `status` field stays `"IN_PROGRESS"`
+      indefinitely too. This is NOT the todo's originally-framed risk (a REST response lying that a still-live
+      order is cancelled — that risk is now closed by the P0 `/cancel` fix, which propagates the venue's real
+      per-order outcome). It IS a real, still-open risk of the opposite shape: **a caller who queries
+      `GET /instructions/{id}` AFTER a genuinely successful `/cancel` sees a stale "still live" (`SUBMITTED`)
+      picture of an order that is, in truth, dead at the exchange** — the inverse staleness direction, but the
+      same class of "downstream state doesn't reflect the real order lifecycle" defect the todo asked about.
+      Separately confirmed `instruction_to_order_ids`/`order_id_to_instruction` (the OTHER, unrelated
+      instruction-tracking dict pair on `engine/orchestrator.py`, used only for orchestrator-lookup — not the same
+      object as `order_tracker` above) are also never pruned on cancel, so a cancelled order's id stays resolvable
+      via `_find_orchestrator_for_instruction` forever; this is lower-impact (lookup-only, no status field) but
+      noted for completeness. **Position ledger**: no separate position-ledger write path was found reachable
+      from `/cancel`/`/amend` at all in this service (`grep` for a position/ledger mutation call from either
+      handler or the orchestrator `cancel_order`/`amend_order` methods returned nothing) — so there is no
+      position-ledger-specific staleness to report; the only downstream state that reads order lifecycle at all is
+      the `OrderTracker` described above. **Filed as a new, separate follow-up issue** (out of this P2 todo's own
+      scope — an audit answers with evidence, it doesn't silently absorb the fix as unplanned work) rather than
+      fixed inline: `plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
 
 ## Progress Log
 
+- **2026-08-17 (final)**: Answered the last open todo (P2 downstream-state audit) — no code fix, audit-only.
+  `OrderTracker` (`execution_service/orders/tracker.py`) has no state-transition method that ever writes
+  `"CANCELLED"`/`"AMENDED"`, and neither `/cancel` nor `/amend` calls the tracker after a successful venue-side
+  cancel/amend — so `GET /instructions/{id}` keeps reporting a genuinely-cancelled order as `"SUBMITTED"`
+  indefinitely (the inverse of the todo's originally-framed risk, now that the P0 `/cancel` fix closed the
+  "lying REST response" risk). No reachable position-ledger write path exists from either handler. Filed the fix
+  as a separate follow-up issue rather than absorbing it as unplanned scope:
+  `execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`. **Every todo on this doc is now
+  closed** — ready for archival.
 - **2026-08-17 (new session)**: Fixed the `/amend` P2 per-venue atomicity verification — `execution-service@eb0b0771d2`.
   Checked all 12 venues against each exchange's own official API docs (WebSearch/WebFetch) plus the vendored
   CCXT source's actual `edit_order()` bodies (not just the `has` flag). 11 of 12 confirmed native-atomic (some
