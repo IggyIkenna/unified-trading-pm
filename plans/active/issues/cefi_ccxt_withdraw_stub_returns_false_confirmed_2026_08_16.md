@@ -132,15 +132,18 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
       moving real funds without operator authorization/credentials is outside what an autonomous worker should do;
       this is the workspace's own "credentials gate RUNNING, never BUILDING" pattern, not a shortfall. See the new
       P1 todo below for what remains before this is actually usable in production.
-- [ ] [BACKEND] P1. **Thread a real adapter into `HandlerRegistry` at actual service bootstrap** — the fix above
+- [x] ✅ [BACKEND] P1. **Thread a real adapter into `HandlerRegistry` at actual service bootstrap** — the fix above
       makes `HandlerRegistry` CAPABLE of using a real adapter, but no existing call site constructs
       `InstructionRouter`/`HandlerRegistry` with one: `InstructionRouter.__init__` only accepts `config`, and
       nothing in execution-service currently builds `create_transfer_adapter(mode, exchanges, ...)` from a live
-      `OperationalMode` + `ApiKeyReloader`-sourced CCXT exchanges and passes it through. Done-when: a real bootstrap
-      call site exists (or an existing one is identified and wired), the connection is exercised end-to-end against
-      a REAL exchange sandbox/testnet account (not a mock), and the result is verified against that exchange's own
-      confirmation — this is the remaining, genuinely live-credentialed half of the original done-when.
-      **First half done, 2026-08-17 — `execution-service@b57e9e1284`.** Confirmed no production call site
+      `OperationalMode` + `ApiKeyReloader`-sourced CCXT exchanges and passes it through. Original done-when: a real
+      bootstrap call site exists (or an existing one is identified and wired), the connection is exercised
+      end-to-end against a REAL exchange sandbox/testnet account (not a mock), and the result is verified against
+      that exchange's own confirmation. **SPLIT 2026-08-17** (mirrors this doc's own precedent, e.g. the
+      reachability-audit / CCXT-wiring split above): the bootstrap-call-site clause is DONE below;
+      the live-sandbox-verification clause moved to the new follow-up P1 todo immediately below (genuinely
+      credentialed, not something to bundle into this checkbox).
+      **Bootstrap wiring done, 2026-08-17 — `execution-service@b57e9e1284`.** Confirmed no production call site
       constructed `InstructionRouter`/`HandlerRegistry` with a real adapter anywhere (searched every
       `InstructionRouter(`/`HandlerRegistry(` call site — only `non_trade_processor.py`, a batch-only helper, and
       the API tests construct either; `LiveExecutionHandler`'s live engine bypasses `InstructionRouter` entirely and
