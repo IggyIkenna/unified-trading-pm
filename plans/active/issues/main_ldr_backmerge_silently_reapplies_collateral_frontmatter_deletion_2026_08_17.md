@@ -102,10 +102,20 @@ tree OID when the merge is clean, so exit code alone proves nothing about conten
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Add a silent-deletion guard to the back-merge path** — before `main-backmerge-to-ldr` merges, run
+- [x] ✅ [SCRIPT] P2. **Add a silent-deletion guard to the back-merge path** — before `main-backmerge-to-ldr` merges, run
       the `git merge-tree` + `git diff --stat` check above and FAIL (escalate) when the merge deletes lines from files
       whose only change comes from the base-vs-theirs side. Start with frontmatter keys and `- [ ]` todo lines, which
-      are the highest-value losses. Provenance: this doc.
+      are the highest-value losses. Provenance: this doc. — unified-trading-ci@6e92bcd (the reusable
+      `main-backmerge-to-ldr.yml` every repo's caller resolves against — see that repo's README "One branch: main,
+      no LDR tier" for why this shipped as a direct push to `main`, not quickmerge). Adds
+      `check_no_silent_frontmatter_or_todo_loss()` scoped to the exact base-vs-theirs-only shape (ours unchanged since
+      merge-base, theirs deletes a frontmatter key or `- [ ]` todo line), wired into both the explicit-base and
+      default merge paths. Regression test extended:
+      `scripts/quality-gates-base/tests/test-backmerge-silent-revert-loss-guard.sh` (12/12 pass, incl. 3 new functional
+      cases reproducing this doc's exact `author:` key mechanism) — also fixed 2 pre-existing stale cross-repo/
+      relocated-script path bugs discovered while touching it (BACKMERGE_WF pointed at a deleted PM path post the
+      2026-08-06 unified-trading-ci extraction; the trailer-stamp structural anchor grepped the wrong file post the
+      2026-08-01 `ldr_to_main_fleet_promote.sh` extraction) — both had been silently failing/FATAL-ing.
 - [ ] [DOCS] P2. **Teach `agents/conflict_resolver.md` the clean-merge blind spot** — the role currently reviews only
       git-reported conflicts. Add the pre-commit `merge-tree` diff as a mandatory step of its step-2d/step-4, with the
       exit-0-proves-nothing caveat spelled out. Provenance: this doc.
