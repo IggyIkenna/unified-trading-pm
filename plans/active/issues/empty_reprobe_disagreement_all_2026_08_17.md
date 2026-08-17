@@ -31,6 +31,9 @@ resolved_by:
 locked_by: live-defi-rollout
 context_scope:
 author: reprobe_new_empty_confirmed.py (data-pipeline daily audit)
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_17)
