@@ -110,6 +110,7 @@ context_scope:
       hole in `POST /api/agents/register`) — shipped `agent-orchestrator@7df307a411`; full detail + remaining follow-ups
       (scheduler/cicd/escalation slot hardening, dashboard tagging, auto-dispatch branch-heal recovery) in
       `/plans/active/issues/ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md`.
+- [x] [REVIEW] P3. **DONE — `agent-orchestrator@4dbac5d5c7`** (2026-08-17): a 429 left an account's stale `binding:` display frozen pre-rejection, now cleared. `/plans/archive/issues/ao_rate_limited_representative_claim_stale_through_429_2026_08_17.md`.
 - [x] [REVIEW] P2. **DONE — shipped `agent-orchestrator@3d2e368`** (2026-08-14, after this tracker's own authoring).
       `retire_orphaned_blocked_rows()` (`server/blocked_reconcile.py:564`) now called at both `reassign_slot`
       (`server/routes/slots_ops.py:763`) and `skip_current_task` (`:1060`) — the `auto_orphaned_slot_reassigned`
