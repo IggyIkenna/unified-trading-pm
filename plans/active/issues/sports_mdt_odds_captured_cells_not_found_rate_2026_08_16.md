@@ -364,19 +364,39 @@ below (stop the writer, relabel the existing population, investigate the coincid
       Class-1-shaped violation (in-flight write success, no manifest marker) rather than the Class-3/false-
       `captured` pattern this doc's earlier todos found for `odds_horizon_bucket`. Follow-up filed below.
 
-- [ ] [CODE] P1. Root-cause and fix why `market-tick-data-service`'s `_write_shard_counts_to_manifest` /
-      `_ManifestWriterPool` (`market_tick_data_service/engine/orchestrator/manifest_finalize.py`,
-      `_manifest_bucket.py`) is not landing manifest rows for `(pipeline_mode=batch_odds_api, data_type=odds,
-      fixture_id≠"")` shards, despite the 2026-08-09 fixture_id-routing fix being live in production and the
-      corresponding GCS parquet objects being written successfully every ~5 minutes (see this doc's now-resolved
-      DIAG P2 todo above for full evidence — a manifest query for any non-empty-`fixture_id` row finds nothing
-      newer than 2026-06-09, while the GCS write side is confirmed live as of 2026-08-17). Suspect the
-      `_ManifestWriterPool` flush/close lifecycle or a consolidator-side dedup collapse against a pre-fix bare-path
-      row sharing the same `(venue, league_id, day)` key — both need checking. Source: this doc's DIAG P2 finding
-      (2026-08-17). Done when: the root cause is identified and fixed, `quality-gates.sh` is green, and a fresh
-      manifest read after the fix has run through at least one live capture cycle confirms new
-      `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` rows are landing with dates past
-      the fix's deploy timestamp.
+- [x] ✅ [CODE] P1. **DONE 2026-08-17 (slot-11, `infra`) — `market-tick-data-service@03cf5a20f4`.** Root cause: NOT
+      the `_ManifestWriterPool` flush/close lifecycle — it's a consolidator-side dedup collapse, and the collapse is
+      BY DESIGN for the wrong key. `unified_trading_library.manifest_consolidator`'s dedup key
+      (`_BASE_DEDUP_COLS` + present `_OPTIONAL_DEDUP_COLS`) is `(date, venue, data_type, service_name[, league_id])`
+      — **`fixture_id` is deliberately NOT a dedup-key column** (it's a display/row-level axis; the sports shard atom
+      is `(bookmaker=venue, league_id, day)`, not per-fixture). Meanwhile
+      `sentinels.py::_emit_sports_v2_sentinels` fans out one honest-absence sentinel row per
+      `(bookmaker, league_id, fixture_id)` triple from the catalog, and only skipped emission when that EXACT triple
+      was already in `captured_sports_shards` — it did NOT check the coarser `captured_sports_league_pairs` set
+      (bookmaker+league only, already computed and already used elsewhere in the same file, e.g. the off-season-
+      leagues loop and the sibling `_emit_sports_v1_sentinels`). So for any `(bookmaker, league)` pair where fixture A
+      was genuinely captured but fixture B was not, the per-fixture-B sentinel row shared its dedup key with
+      fixture A's real captured row for the same cell — and last-write-wins consolidation silently overwrote the
+      captured row with the sentinel's honest-absence one, i.e. the exact "GCS write succeeds, manifest shows
+      nothing" symptom this doc's DIAG P2 todo measured. **Fix**: added the missing coarser skip check
+      (`if (bm, _canon_lid) in captured_sports_league_pairs: continue`) right after the existing exact-triple skip in
+      `_emit_sports_v2_sentinels`, reusing the pre-existing set — no new computation, no schema change. New
+      regression test `test_emit_sports_v2_sentinels_skips_uncaptured_fixture_when_league_pair_captured` in
+      `tests/unit/engine/test_sentinels_coverage.py` asserts 0 sentinel rows emitted (and no downstream
+      writer/coverage-check calls) when one fixture in a league pair is captured and a sibling fixture is not.
+      `quality-gates.sh` green end-to-end (full suite, `EXITCODE=0`, zero ❌ gate failures) before commit. Pushed via
+      quickmerge, post-push ancestry verified — `market-tick-data-service@03cf5a20f4` is an ancestor of
+      `origin/live-defi-rollout`. **Live-production confirmation is a separate, genuinely time-gated step — see the
+      new `[DIAG]` follow-up todo below** (cannot be done in this session: needs the fix to actually reach the
+      deployed image and at least one real ~5-min capture cycle to elapse afterward).
+- [ ] [DIAG] P2. Once `market-tick-data-service@03cf5a20f4` (or later) is live in the deployed image, re-run a fresh
+      bounded manifest read for `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` rows and
+      confirm new rows are landing with `date` past the deploy timestamp (the pre-fix max was stuck at 2026-07-26 per
+      this doc's DIAG P2 finding above). Also spot-check that `fixture_id`-scoped rows now persist (pre-fix max was
+      stuck at 2026-06-09). Source: this doc's now-fixed `[CODE] P1` todo above — this is its own stated done-when
+      condition, deliberately split out since it cannot be verified same-session as the code fix. Done when: a fresh
+      manifest read shows `captured` rows for this shard with dates after the fix's production deploy time, or (if
+      still 0) a new root cause is identified for a still-open gap.
 
 ## Progress Log
 
@@ -475,3 +495,18 @@ Verdict: real capture is NOT stalled; the MANIFEST is silently under-reporting i
 violation — successful write, no manifest marker), root cause not yet identified (suspect
 `_ManifestWriterPool` flush/close or a consolidator-side dedup collapse). Filed a new `[CODE] P1` follow-up todo to
 root-cause and fix. Did not attempt the fix itself (DIAG-scoped task; the fix is a distinct, larger investigation).
+
+**2026-08-17 (slot-11, `infra`)** — closed the `[CODE] P1` root-cause-and-fix todo:
+`market-tick-data-service@03cf5a20f4`. Root cause was a consolidator-side dedup collapse, not the
+`_ManifestWriterPool` flush/close path the prior DIAG suspected. `manifest_consolidator.py`'s dedup key
+(`_BASE_DEDUP_COLS`+`_OPTIONAL_DEDUP_COLS`) deliberately excludes `fixture_id` — the sports shard atom is
+`(bookmaker, league_id, day)`. `sentinels.py::_emit_sports_v2_sentinels` fanned out one honest-absence sentinel row
+per catalog `(bookmaker, league_id, fixture_id)` triple and only skipped the exact-triple case, not the coarser
+`(bookmaker, league_id)` case — so an uncaptured fixture's sentinel row shared its dedup key with a captured sibling
+fixture's real row for the same cell, and last-write-wins silently clobbered the captured row. Fix: skip sentinel
+emission whenever `(bookmaker, league_id)` is already in the pre-existing `captured_sports_league_pairs` set (same
+set already used by the off-season-leagues loop and `_emit_sports_v1_sentinels` — just not wired into this loop).
+One new regression test. Full `quality-gates.sh` green before commit; quickmerge push-ancestry verified. Filed a new
+`[DIAG] P2` todo for the live-production confirmation step (needs the fix live in the deployed image + one real
+capture cycle — could not be done in this session). This closes the doc's original `[CODE] P1` todo but the doc
+itself stays `open` pending that DIAG P2 follow-up.
