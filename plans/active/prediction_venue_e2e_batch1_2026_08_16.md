@@ -81,12 +81,17 @@ source: >-
       **Only 1 of 4 rows (POLYMARKET, trades) clears step 5.** Root cause is 2 real code gaps in
       `features-service`, tracked as their own todos below — NOT the archetype-declaration issue this doc originally
       (wrongly) assumed; that correction is recorded above. Never trust a stale "expect X" claim over live evidence.
-- [ ] [BACKEND] P2. **Gap: KALSHI has a live book_snapshot_5 connector
-      (`market_tick_data_service/live/connectors/kalshi_clob_ws.py:354`) but no batch/backfill collector** —
-      `kalshi_adapter.py`'s `download_batch` is trades-only. Cannot backfill KALSHI order-book history; live-only
-      capture means no historical replay/backtest for this data_type. Done-when: a batch collector exists (mirroring
-      `PolymarketAdapter._build_book_snapshot_5_rows`, `polymarket_adapter.py:347`) or this is explicitly ruled
-      out-of-scope with a cited reason.
+- [x] ✅ [BACKEND] P2. **Gap: KALSHI has a live book_snapshot_5 connector
+      (`market_tick_data_service/live/connectors/kalshi_clob_ws.py:354`) but no batch/backfill collector — fixed
+      2026-08-17.** SHIPPED — `market-tick-data-service@6e428204f9`. Added `get_books_batch()`/`_fetch_book_raw()`
+      (GET `/markets/{ticker}/orderbook`, CF-11 retry+failure signalling) and `_build_book_snapshot_5_rows()` to
+      `kalshi_adapter.py`, folding Kalshi's single-sided yes/no ladders into a canonical YES bid/ask book via the
+      same complement-price logic the live `KalshiClobWSFeedConnector` uses, so the batch row schema is IDENTICAL
+      to the live WS shard (mirrors `PolymarketAdapter._build_book_snapshot_5_rows`, mtds@7c849d7).
+      `download_batch()` now accepts `data_types=['book_snapshot_5']` alongside/instead of `['trades']` — no
+      further wiring needed since `_route_prediction` (`umi_tick_provider.py`) already dispatches generically by
+      venue. 3 new regression tests (canonical-shape, empty-book, complement-price fold). QG green (11,056 passed),
+      sentinel-verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P1. **Gap: `features-service`'s PREDICTION ingest path structurally excludes KALSHI entirely —
       fixed 2026-08-17.** SHIPPED — `features-service@c5ad65df10`. `_ingest_prediction` now lists+loads every venue
       in `PREDICTION_VENUES = (POLYMARKET, KALSHI)` (moved to new `engine/prediction_ingest.py` to stay under
@@ -270,6 +275,17 @@ source: >-
       `quality-gates.sh` run was needed to satisfy this todo's real intent.
 
 ## Progress Log
+
+**2026-08-17 — KALSHI batch book_snapshot_5 collector shipped.** SHIPPED —
+`market-tick-data-service@6e428204f9`. Closed the "live connector, no batch collector" gap by mirroring
+`PolymarketAdapter._build_book_snapshot_5_rows` — Kalshi's yes/no ladders fold to a canonical YES book via the same
+complement-price logic the live `KalshiClobWSFeedConnector` uses, so batch=live schema parity holds. Shipping was
+blocked ~40 min by a pre-existing, unrelated repo-wide `quality-gates.sh` red in market-tick-data-service (2 DeFi/
+solana handler test failures, tracked in `mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`, now archived
+resolved) — joined the existing repo-blocker `RB-3d968cff` as a waiter rather than re-diagnosing a duplicate, then
+resumed and shipped once the backend signalled green. Remaining open in this batch: `PolymarketPositionAdapter`
+live-path stub (P2), no `MARKET_MAKING_*`-adjacent archetype wiring beyond the fixed `MARKET_MAKING_CONTINUOUS`
+slot, the stale abandoned WIP triage in `.tabs/8/features-service-clean-check` (P2).
 
 **2026-08-17 — Execution-adapter gap re-investigated and closed: NOT a gap.** No commit needed (pure
 investigation/documentation; zero code changed in execution-service or any sibling repo). The steps-6-8 sweep's
