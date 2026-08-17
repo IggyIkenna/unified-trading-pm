@@ -7,7 +7,7 @@ summary: >-
   `row_key` carries them (`underlying`, `quote_asset`, `margin_type` all present). Confirmed pre-existing and unrelated
   to the `defi_satellite_ao_dispatch_batch16` Solana source-label fix in flight on slot-6 — reproduced byte-identical
   with that diff stashed out.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [data]
@@ -21,7 +21,7 @@ source:
   - defi_satellite_ao_dispatch_batch16_2026_08_17.md (todo 1 — discovered while running Pass-1 QG for an unrelated fix)
 assigned_vm: planning
 parent_epic: cefi_master
-resolved_by:
+resolved_by: unified-trading-library@29f6c42bb0 + unified-api-contracts@f13de26292
 locked_by:
 priority: P1
 execution_scope: orchestrator-agent
@@ -31,6 +31,10 @@ depends_on: []
 ---
 
 # UTL manifest_writer record_empty() drops underlying/quote/margin segments for cefi options_chain
+
+> **✅ ARCHIVED 2026-08-17** — the 1 todo `[x]`, 0 open work, `status: resolved`, `resolved_by` set, unlocked. Fixed at
+> both layers (UTL `_rows.py`/`_writer_captured.py`/`_writer_record.py` + UAC `partition_paths.py`); both repos'
+> `quality-gates.sh` green. Moved to `plans/archive/issues/`.
 
 ## What I found
 
@@ -72,12 +76,16 @@ green, then full `quality-gates.sh`.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `record_empty()`'s candidate write-path builder in
+- [x] ✅ [BACKEND] P1. Fix `record_empty()`'s candidate write-path builder in
       `unified-trading-library/unified_trading_library/manifest_writer/_rows.py` (`_resolve_candidate_write_path` or its
       caller) so a `(cefi, options_chain)` empty-row write threads `underlying`/`quote_asset`/`margin_type` from
       `row_key` into the v6 tail exactly as `record_captured()` does. Repo: unified-trading-library. Done when:
       `tests/unit/test_manifest_writer_v6.py::TestManifestWriterRecordEmptyV6::test_record_empty_with_v6_key` passes and
-      full `quality-gates.sh` is green on a clean tree.
+      full `quality-gates.sh` is green on a clean tree. — unified-trading-library@29f6c42bb0 +
+      unified-api-contracts@f13de26292 (companion fix). Root cause was NOT record_empty-specific: neither
+      `record_captured()` nor `record_empty()` threaded these 3 fields into `_assert_canonical_write_path`, AND UAC's
+      `candidate_parquet_paths()` never forwarded them to the CeFi/TradFi builders either — fixed at both layers. Both
+      repos' full `quality-gates.sh` green (sentinel matches HEAD in each).
 
 ## Progress Log
 
@@ -120,3 +128,19 @@ independent sessions blocked by this in the same session-day — raising visibil
 and without). Still `origin/live-defi-rollout@df3703ab` at time of this confirmation. Operator direction (asked
 directly, interactive session): wait for AO to clear this rather than attempt the core `manifest_writer` fix myself —
 the shipment stays parked locally (uncommitted, nothing lost) until this clears.
+
+### RESOLVED — 2026-08-17 (slot-12, backend_engineer)
+
+Root cause was genuinely NOT `record_empty()`-specific, confirming the "root cause narrowed" note above: neither
+`record_captured()` NOR `record_empty()` threaded `underlying`/`quote_asset`/`margin_type` into
+`_assert_canonical_write_path`/`_resolve_candidate_write_path` (`unified_trading_library/manifest_writer/_rows.py`) —
+both call sites only ever passed `instrument_id`. AND, independently, UAC's `candidate_parquet_paths()` CEFI/TRADFI
+branches never forwarded those 3 kwargs to `build_cefi_partition_path`/`build_tradfi_partition_path` even though both
+builders already accept them — a second, compounding gap in a different repo. Fixed at both layers:
+`unified-trading-library@29f6c42bb0` (thread the 3 fields through `_resolve_candidate_write_path`/
+`_assert_canonical_write_path` + both `record_captured`/`record_empty` call sites) and
+`unified-api-contracts@f13de26292` (forward them in the CEFI/TRADFI dispatcher branches, with `# noqa: qg-empty-fallback`
+on the deliberate `kwargs.get(key, "")` optional-axis reads). Both repos' full `quality-gates.sh` green (sentinel
+matches HEAD). `test_record_empty_with_v6_key` passes. This clears `RB-1484c950` and unblocks slot-27's parked
+`pipeline_e2e_check` shipment above — no action needed from either, `RepoHealthWatcher` will pick up the green state.
+Archiving this doc now (0 open todos, unlocked, no corpus referrers).
