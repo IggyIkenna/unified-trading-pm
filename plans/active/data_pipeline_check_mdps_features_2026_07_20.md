@@ -407,13 +407,18 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       [`issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
       Headline: every pipeline stage now has real-prod-data-validated orphan tooling; every real orphan population found
       is either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown.
-- [ ] [DATA] P0. 11c. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest
-      (safe additive `merge_manifest_from_canonical_paths()` from 11a, never destructive
-      `rebuild_manifest_from_canonical_paths`). **Not `[OPERATOR]`-pre-gated** (corrected 2026-07-27 — the additive path
-      only ADDS rows, finding O's carve-out applies). **Once 11b lands**: any orphan class needing a real GCS migration
-      re-checks that bucket's soft-delete fresh via `gcs_bucket_soft_delete_retention_seconds()` — `>=604800s` →
-      autonomous (finding T, §3a); else tag `[OPERATOR]` then, not before. VM-only, never in-session. `depends_on: 11b`.
-      Migrations run to real completion per the data-pipeline-correctness HARD RULE.
+- [x] ✅ [DATA] P0. 11c. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest.
+      **CLOSED 2026-08-17 (slot-10)** — the migration already ran via 2 adjacent resolved campaigns, both `status:
+      resolved`/archived, every todo `[x]`: MDPS candle stage
+      (`plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`) backfilled 86,252 orphan
+      cells cefi/tradfi/prediction/defi (sports clean) + closed the DeFi `dex_pool_swaps` source-mistag campaign
+      (VERDICT `copied=813150 copy_errors=0`, 2026-08-04). features-service stage
+      (`plans/archive/2026_08/issues/features_service_manifest_coverage_gap_2026_08_03.md`) backfilled onchain (783) +
+      sports (67,077) orphans and root-caused the calendar phantom-row anomaly as a one-time historical artifact, not a
+      live bug. ml/strategy's remaining `[OPERATOR]`-gated items
+      (`strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`) are a different stage, outside this todo's
+      candle/feature scope. No new whole-corpus walk run (single-walk discipline — both campaigns already terminal +
+      audited); did not launch a redundant migration VM. `depends_on: 11b` satisfied.
 - [x] 12. ✅ [SCRIPT] P1. **DONE 2026-07-28 (slot-9)** — `deployment-service@9e85d42`. Infra-craft-scoped slice shipped
       (the plan blends infra launcher-config work with backend service-kernel work; per
       `unified-trading-pm/agents/infra.md` "does_not: Python service business logic", the kernel-level axis stays out of
