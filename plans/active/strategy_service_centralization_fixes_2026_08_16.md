@@ -37,11 +37,11 @@ related:
     /plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md,
     /plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md,
     /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
-    /codex/04-architecture/defi-position-risk-centralization.md,
+    /codex/04-architecture/position-risk-centralization.md,
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
   ]
 created: 2026-08-16
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -64,7 +64,8 @@ source: >-
   operator-gated, never passive"). Operator confirmed AO-dispatched, one wrapper plan.
 context_scope:
   [
-    /codex/04-architecture/defi-position-risk-centralization.md,
+    /codex/04-architecture/position-risk-centralization.md,
+    strategy-service/strategy_service/position/core/margin_event_emitter.py,
     /plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md,
     /plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md,
     /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
@@ -78,10 +79,24 @@ context_scope:
 Full findings, root cause, and evidence for every todo below live in the three source issue docs (linked in
 `related`) — this plan is the execution surface, not a duplicate of the analysis.
 
-- [ ] [OPERATOR] P0. Decide the callable-path fix shape (in-process function vs. a shared helper both
-      strategy-service and execution-service import, keyed by wallet/client) for reading DeFi position-risk data
-      from `engine/strategies/v2/*`. Details:
-      [defi_leverage_archetypes_health_factor_wrong_source_2026_08_16](/plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md).
+- [x] [OPERATOR] P0. ✅ RULED 2026-08-17 — **Decide the callable-path fix shape**: neither "in-process function
+      scoped to one service" nor "build a new shared helper" — an in-process function scoped to strategy-service
+      structurally cannot serve execution-service too, and a *new* shared helper risks duplicating what already
+      exists. The generic collateral/exposure/health-ratio math must be asset-group-agnostic (DeFi, CeFi, TradFi
+      share one core; only the per-venue-type sourcing adapter differs) and live in UTL — which it already does:
+      `unified_trading_library.margin_and_liquidation` (`MarginModelProtocol`, `PortfolioInputs`, HF-mode/MMR-mode
+      grading) is already this shape. Full design: [position-risk-centralization](/codex/04-architecture/position-risk-centralization.md).
+      Details: [defi_leverage_archetypes_health_factor_wrong_source_2026_08_16](/plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md).
+- [ ] [AGENT] P0. **Reconcile the two parallel mechanisms before wiring anything.** `DeFiHealthAggregator`
+      (`position/core/defi_health_aggregator.py`, DeFi-only, HTTP-only, not live-fed) and `margin_event_emitter.py`
+      (`position/core/margin_event_emitter.py`, built on the UTL generic core, already live-called from
+      `position/cli/handlers/monitor_handler.py`, already consumed by execution-service's `deleverage_executor.py`)
+      both claim to be *the* centralized position-risk path. Determine whether `MarginEvent` (mechanism B) already
+      carries what an archetype's `on_tick()` gate needs (HF, LTV, liquidation price, distance-to-liquidation, per
+      position not just per portfolio) — if so, converge the next two todos onto mechanism B and retire mechanism
+      A instead of fixing it in place. Done-when: a stated decision, with evidence, on which mechanism the
+      archetypes below wire onto. Full context:
+      [position-risk-centralization § Two parallel mechanisms](/codex/04-architecture/position-risk-centralization.md).
 - [ ] [BACKEND] P0. Route execution-service's `HealthFactorMonitor`'s live per-wallet Aave data into
       `DeFiHealthAggregator`'s state via `update_wallet_health_from_lending` — not a new poller, not the stub
       `AavePositionAdapter`. Done-when: the aggregator's state reflects real position data after a live/paper run,
@@ -122,7 +137,7 @@ Full findings, root cause, and evidence for every todo below live in the three s
 - [ ] [OPERATOR] P2. Design the mode-aware dispatch (batch / live / paper-testnet / paper-live) for the
       centralized DeFi position-risk read, once the earlier routing/switch todos land.
 - [ ] [BACKEND] P3. Update
-      [defi-position-risk-centralization](/codex/04-architecture/defi-position-risk-centralization.md) from
+      [position-risk-centralization](/codex/04-architecture/position-risk-centralization.md) from
       "not yet complete" to reflect the landed state, once the earlier BACKEND todos land.
 
 ## THE GENERAL CLASS — reference data living inside a code path (operator ruling 2026-08-16)
@@ -192,3 +207,14 @@ logic and that no second archetype could ever want. That must be stated, not ass
   `per_client_config_surface_keying_and_missing_axes_2026_08_12.md` (the config-loader todo's own cited source doc),
   `registry_ssot_hardening_2026_08_16.md` (the W2 plan the GENERAL CLASS section says this plan consumes rather than
   pre-empts), and `staked_basis.py` (the doc's own named exemplar file for the 69-candidate audit).
+- **2026-08-17 (operator ruling + rescope)** — Interactive session: the operator asked how DeFi position-risk
+  centralization stays asset-group-agnostic given CeFi and TradFi also carry leverage. Ruled: the generic
+  collateral/exposure/health-ratio math lives in UTL, asset-group-agnostic, with per-venue-type sourcing adapters
+  — and it turns out `unified_trading_library.margin_and_liquidation` already IS this shape (CeFi-aware
+  `MarginModelProtocol` grading, UAC `cefi_margin_tiers.py` registry). That search also surfaced a second,
+  already-live aggregation mechanism (`margin_event_emitter.py` / `MarginEvent`, already consumed by
+  execution-service) that the original 2026-08-16 investigation missed entirely — added as a new P0 reconciliation
+  todo above, gating the two existing live-feed-wiring todos. Codex doc renamed
+  `defi-position-risk-centralization.md` → `position-risk-centralization.md` and rewritten to match; every
+  referrer in this corpus updated in the same change. TradFi confirmed as the genuine gap (no margin registry
+  exists yet) — CeFi is not.
