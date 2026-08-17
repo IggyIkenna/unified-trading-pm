@@ -175,3 +175,4 @@ checked against exact revision-swap timestamps to the second).
   genuine in-process dedup-layer defect plus a newly-affected second call site (`DP-LIVE-003`). Filed this issue
   rather than re-attempting the full live-trace root-cause (proportionate to a one-shot bounded sweep) — flagged P1
   for the next dispatch.
+- **na-eligibility-audit 2026-08-17 (cefi tranche, first audit pass)** [body-hash:49b09b47e001d79a]: KEEP-NA, valid — fresh doc (created today), no prior marker. All 3 open items are open-ended live-system root-cause investigation (a recurring DP_CRON_DID_NOT_FIRE storm whose two prior same-day fixes both independently verified compliant then regressed) — GENUINE_WORK, not bounded/deterministic. This doc's population is worked by the data_pipeline_alerts_reconciler's own 6-hourly scheduled sweep, not generic AO backlog dispatch. Doc stays assigned_vm: NA.
