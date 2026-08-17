@@ -388,6 +388,18 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       (1,956/20,134), `--apply` NOT run — see Progress Log for the full status and the shared-host-contention blocker
       that limited this session's scan progress (resolved via repo-blocker RB-17f1c27c; the script itself is
       unaffected and ready for the remaining `--report`-checkpointed chunks + a final `--apply-from-report`).
+- [ ] [DATA] P3. **New finding (2026-08-17, slot-22) — no durable cross-session handoff location exists for a
+      `--report` JSONL checkpoint file, so every session's discovery progress on THIS backfill has been lost at
+      session end (slot-19's report gone before slot-22 started; slot-22's own report will be gone once this
+      session ends) — the SAME loss repeated twice, not written down as trackable work either time.** Give
+      long-running, resumable, session-spanning discovery/backfill scripts (this one, and the general pattern) a
+      durable report location — either a small documented convention (a `gs://` scratch-reports prefix via
+      `resolve_bucket_name`, or a repo-relative `.gitignore`d-but-host-persistent path outside any one session's
+      scratchpad) so a `--report` JSONL survives across sessions/slots. Checked
+      `/codex/05-infrastructure/bucket-isolation-model.md` — no such tier documented today. Scope: could be scoped
+      narrowly to just THIS script, or generalized as a small shared helper other long-running backfill scripts
+      reuse — worth a short design decision, not a blind guess. Repo: market-tick-data-service (or
+      unified-trading-library if generalized).
 - [ ] [DATA] P2. **New finding (2026-08-17, surfaced while backfilling the item above) — root-cause + fix a DIFFERENT,
       deeper legacy stem defect on DERIBIT/trades.** Objects like `BTC-26JUN20.parquet` carry a bare `BASE-EXPIRY`
       stem with NO `VENUE:ITYPE:` prefix at all (unlike the wrapped-but-bare-underlying case the rest of §7 tracks) —
@@ -570,8 +582,12 @@ from slot-3's repeated 12GB+ spikes, not this script exceeding its own (3-6G) ca
 unbounded script, out of this task's scope to fix (`agents/RULES.md` § "Never bulk-kill a peer's process" — and
 slot-3's process wasn't stale, it was actively (re)spawning).
 
-Report is at **5556/20134** (up from 1956 at the last checkpoint), safely on disk in this session's scratchpad.
-**Not flipping the checkbox** — same as every prior session, the done-when is not met. **Escalating the
+Report is at **5556/20134** (up from 1956 at the last checkpoint) — **correction to my own framing above**: this
+report is in THIS session's scratchpad, which is exactly as ephemeral as slot-19's ("safely on disk" understated
+that; it will be lost at session end same as slot-19's was, not durable). No repo-relative or GCS durable-report
+convention exists for this pattern today (checked `/codex/05-infrastructure/bucket-isolation-model.md` — no
+scratch/reports tier documented) — tracked as a fresh todo below rather than silently repeating the loss a third
+time. **Not flipping the checkbox** — same as every prior session, the done-when is not met. **Escalating the
 recommendation**: this is now the SECOND session (slot-19, then slot-22) to hit this exact wall via the in-session
 chunked-retry approach, with an identified external cause (a different slot's runaway process) rather than this
 script's own footprint — a THIRD data_engineering worker retrying the identical approach is unlikely to fare
