@@ -74,14 +74,7 @@ depends_on: []
 last_updated: 2026-07-18
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
-    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
-    features-service/features_service/sports/data/gcs_normalizers.py,
-  ]
+context_scope: [/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md, /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md, features-service/features_service/sports/data/gcs_normalizers.py]
 ---
 
 > **✅ OPERATOR RULING 2026-08-08 — add BOTH T-2h and T-6h as MODEL horizons.** The open todo asks whether to add T-6h
@@ -805,3 +798,4 @@ have moved; use the section index above to locate it.
   executes batch10's copy; not re-extracted here (already `assigned_vm: planning` there, still open). `[MODEL] P2`
   reconfirmed still tracked and active in `sports_taxonomy_p3_consumers_2026_08_08.md`. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-17** [body-hash:931d4c9859cfad4a]: KEEP-NA-STALE (already-duplicated) — both open items cited to sports_satellite_ao_dispatch_batch10_2026_08_06.md and sports_taxonomy_p3_consumers_2026_08_08.md, both independently re-verified to exist and be status:active. 5 prior audit rounds agree, no drift.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

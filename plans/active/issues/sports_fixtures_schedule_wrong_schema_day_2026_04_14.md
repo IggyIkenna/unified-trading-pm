@@ -31,13 +31,7 @@ archive_exempt: true
 locked_by:
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    instruments-service/instruments_service/engine/orchestrator/writers.py,
-    instruments-service/scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
-  ]
+context_scope: [instruments-service/instruments_service/engine/orchestrator/writers.py, instruments-service/scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md]
 ---
 
 # Sports fixtures_schedule day=2026-04-14 — wrong-schema shards (instrument-catalogue content in a fixtures path)
@@ -551,3 +545,4 @@ leagues structurally unmapped, pending an operator decision) stands as-is.
   "DEFERRED=2" — all 6 todos here are genuinely `[x]`, 0 open; the doc is a real archive candidate once its
   `status: open`→`resolved` flip lands (deliberately deferred to a separate archival-ritual commit per the 2026-08-09
   entry above, not blocked by any open work).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

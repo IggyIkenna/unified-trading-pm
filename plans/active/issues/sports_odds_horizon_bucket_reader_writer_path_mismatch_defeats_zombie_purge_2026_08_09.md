@@ -54,13 +54,7 @@ source:
 repos: [market-data-processing-service, features-service, market-tick-data-service]
 locked_by:
 drift_direction: none
-context_scope:
-  [
-    /plans/archive/2026_08/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
-    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    market-data-processing-service/scripts/reprocess_sports_odds.py,
-    features-service/features_service/sports/data/gcs_reader.py,
-  ]
+context_scope: [/plans/archive/2026_08/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md, /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md, market-data-processing-service/scripts/reprocess_sports_odds.py, features-service/features_service/sports/data/gcs_reader.py, /plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md]
 depends_on: []
 ---
 
@@ -265,3 +259,4 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
   `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick checkbox now — its literal parts (a) purge and (b)
   verify_ml_readiness scope are genuinely complete; the residual is tracked as its own todo, not glossed over.
 - **na-eligibility-audit 2026-08-17** [body-hash:1cef22da863866d9]: KEEP-NA-STALE (already-duplicated) — both open items (odds_features export gap for 3 dates + Option-C bucket-cutover-lane cleanup) already extracted verbatim into sports_satellite_ao_dispatch_batch14_2026_08_16.md's combined todo (status:draft, not yet active). Do not reclassify — would duplicate batch14 once it activates.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

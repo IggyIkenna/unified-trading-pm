@@ -36,7 +36,7 @@ supersedes:
 superseded_by:
 resolved_by: ""
 last_updated: 2026-08-10
-context_scope: [strategy-service/scripts/quality-gates.sh, strategy-service/strategy_service]
+context_scope: [strategy-service/scripts/quality-gates.sh, strategy-service/strategy_service, /plans/archive/SCHEMA_CONTRACTS_AUDIT.md]
 ---
 
 # strategy-service cannot accept any commit — its own gate is red at HEAD
@@ -127,3 +127,4 @@ host it is partly a function of concurrent load (the run above spent 12s queued 
   `SETUPTOOLS_SCM_PRETEND_VERSION` build-arg, tracked in the MTDS issue doc) is DEFERRED, not abandoned — it is cosmetic
   (version metadata) and not worth forcing past a red gate. No override was used and none should be: the emergency
   `QUICKMERGE_ALLOW_BEHIND`-style escapes exist for staleness, not for a genuinely failing gate.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

@@ -43,13 +43,7 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
-    market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py,
-    market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py,
-  ]
+context_scope: [/plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md, market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py, market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py, unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py]
 ---
 
 # CF-8 captured-row backfill drops `timeframe` — phantom duplicate rows, not a supersession
@@ -881,3 +875,4 @@ issue's scope); flagged as a follow-up todo below.
   terse DONE/SUPERSEDED entries), well inside the 1000-line hard cap. Every `[DATA]`/`[INFRA]` root-cause todo in
   this doc is now closed; the sole remaining open item is the operator-coordinated production backfill
   re-execution (line ~276) — correctly untouched, out of scope for this pass.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

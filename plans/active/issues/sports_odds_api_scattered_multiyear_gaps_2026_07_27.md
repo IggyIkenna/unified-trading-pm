@@ -50,14 +50,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
-    /codex/02-data/sports-2020-06-data-floor.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
-    deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
-  ]
+context_scope: [/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md, /codex/02-data/sports-2020-06-data-floor.md, /codex/02-data/availability-manifest-and-data-status.md, /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md, deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh]
 ---
 
 # odds_api scattered multi-year manifest gaps (635 missing days, 616 undocumented)
@@ -766,6 +759,8 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   census still reads 291 missing (1967/2258d) — declined to re-run (would reproduce the same unchanged result). Not
   flipping either checkbox (P1 not terminal). Skip `GATED` (est 180). **Next dispatch**: check `smallchunk23` (or
   successor) for progress/terminal state before re-running the census.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
 
 ## Codex SSOTs
 

@@ -66,15 +66,7 @@ assigned_vm: NA
 resolved_by:
   "mtds@98a81c26 fixes the garbage-underlying (TICKS) half only. The canonical-root -> raw-symbol reverse-translation
   half and the EXCHANGE_CODE_TO_NAME SSOT-contradiction finding remain open — see § open question."
-context_scope:
-  [
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
-    market-tick-data-service/scripts/pipeline_e2e_check.py,
-    unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py,
-    unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py,
-    /plans/epics/infrastructure_master.md,
-  ]
+context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md, /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md, market-tick-data-service/scripts/pipeline_e2e_check.py, unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py, unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py, /plans/epics/infrastructure_master.md]
 ---
 
 # TradFi chain-bundle sampler: canonical-root mismatch, garbage-underlying data, and a disagreeing SSOT
@@ -549,3 +541,4 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   completing the MVP backfill-readiness gate itself (see that plan's own Progress Log for the full manifest count
   evidence). `assigned_vm` unchanged — todo 4 is a bounded, worker-determinable mechanical fix (wire an existing tested
   function into an existing call site + add a regression test), AO-eligible on its own next dispatch.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

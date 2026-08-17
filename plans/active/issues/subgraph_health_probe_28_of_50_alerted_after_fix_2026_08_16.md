@@ -33,6 +33,7 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/defi_consolidated_closeout_2026_07_18.md, deployment-service/terraform/gcp/subgraph_health_probe_scheduler.tf, market-tick-data-service/scripts/subgraph_health_probe.py, /plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md]
 ---
 
 # subgraph-health-probe now functional — 28/50 cells alerted, needs triage
@@ -111,3 +112,4 @@ notify + issue doc, not silently dismissed).
   against every active defi/observability covering doc — zero prior claim found. Flipped `assigned_vm: NA` →
   `planning`, `execution_scope: local-only` → `orchestrator-agent`, added `assigned_role: data_engineering`. Paired
   with `subgraph_health_probe_28_of_50_alerted_after_fix_2026_08_16_finalize_2026_08_17.md` in the same turn.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

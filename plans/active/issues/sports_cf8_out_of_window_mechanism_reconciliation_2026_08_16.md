@@ -42,13 +42,7 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py,
-    market-tick-data-service/live/connectors/odds_api_ws.py,
-    market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
-    market-data-processing-service/scripts/reprocess_sports_odds.py,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py, market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py, market-tick-data-service/market_tick_data_service/live/manifest_recorder.py, market-data-processing-service/scripts/reprocess_sports_odds.py]
 ---
 
 # CF-8 out-of-window population — mechanism reconciliation
@@ -306,3 +300,4 @@ todos, 6 are now done; the sole remaining item is the `[OPERATOR] P2` remediatio
 "blank from birth" gap — correctly not started, awaiting the operator.
 
 - **na-eligibility-audit 2026-08-17** [body-hash:2e182f89d59f1516]: KEEP-NA, valid — sole open item is an explicit [OPERATOR] remediation-policy decision (2026-07-13 cluster's "blank from birth" gap: accept as safe-to-leave vs backfill real timeframe); doc's own frontmatter `resolved_by` field confirms "6/7 todos done, sole remainder is OPERATOR decision, cannot auto-resolve."
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

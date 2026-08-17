@@ -56,15 +56,7 @@ supersedes:
 superseded_by:
 resolved_by:
 source: ["/data-pipeline-reconciliation sports 2026-08-01 dispatch"]
-context_scope:
-  [
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
-    /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/preflight.py,
-    deployment-service/deployment_service/sports_trigger_evaluation.py,
-    deployment-service/configs/sports-trigger-tiers.yaml,
-  ]
+context_scope: [/codex/02-data/data-pipeline-correctness-hard-rule.md, /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md, /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md, market-tick-data-service/market_tick_data_service/engine/orchestrator/preflight.py, deployment-service/deployment_service/sports_trigger_evaluation.py, deployment-service/configs/sports-trigger-tiers.yaml]
 ---
 
 # Sports fast-t1-recon Cloud Run Job: live OOM outage, zero SPORTS raw-tick writes since ~2026-07-27
@@ -690,3 +682,4 @@ Re-scope rationale: `odds_horizon_bucket` is never a requested data_type for liv
 known_dead_shard_gate.py:232), so the literal `still fetching=[...]` line cannot fire; the source-blind skip it
 addresses is verified silent (0 `SKIP date` in 7 days) while real capture proceeds (08-09: 14,562 records; GCS objects
 under `day=2026-08-08`+`day=2026-08-09`). No code changed; P3 deploy-dependent follow-up remains tracked separately.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

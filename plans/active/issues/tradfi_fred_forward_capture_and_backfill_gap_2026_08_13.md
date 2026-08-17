@@ -45,12 +45,7 @@ depends_on: []
 resolved_by:
 locked_by:
 last_updated: 2026-08-13
-context_scope:
-  [
-    /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
-    /plans/archive/issues/fred_backfill_early_date_indefinite_stall_2026_07_30.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-  ]
+context_scope: [/plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md, /plans/archive/issues/fred_backfill_early_date_indefinite_stall_2026_07_30.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 ---
 
 # Two live-prod FRED contradictions
@@ -97,3 +92,4 @@ completion" in any live sense.
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Both todos are
   open-ended, unscoped investigations explicitly flagged (not root-caused) by the filing session itself. First audit
   pass, no established ruling to defer to. `assigned_vm` unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

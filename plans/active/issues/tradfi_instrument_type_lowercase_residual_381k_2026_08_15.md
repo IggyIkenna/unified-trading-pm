@@ -48,6 +48,7 @@ estimate_calibrated_ai_days: 0.48
 assigned_role: backend_engineer
 drift_direction: unknown
 depends_on: []
+context_scope: [/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md, /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md, unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py, unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py]
 last_updated: 2026-08-15
 parent_epic: tradfi_master
 priority: P1
@@ -880,3 +881,4 @@ AO-eligible follow-up:
   classification, mirroring the sibling `written_at`-distribution todo's own precedent for this kind of scoped
   investigate todo. Unrelated to this doc's still-open `BLOCKED-OPERATOR-DECISION` quickmerge/qg-governor escalation
   above — left untouched, that escalation belongs to a different todo lineage and a different owning plan.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

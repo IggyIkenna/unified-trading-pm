@@ -33,6 +33,7 @@ locked_by:
 locked_since:
 drift_direction: advance-code
 depends_on: []
+context_scope: [/plans/active/sports_taxonomy_p2_migration_2026_08_08.md, /plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md, /codex/02-data/four-surface-reconciliation-procedure.md, instruments-service/scripts/restamp_sports_is_bucket_trades_mirror_to_odds_2026_08_15.py, instruments-service/scripts/reconcile_phantom_manifest_rows_all.py]
 ---
 
 # Sports IS-bucket `trades` mirror rows never re-stamped
@@ -139,3 +140,4 @@ shared host, per the memory-bounding + heavy-I/O HARD RULES.
       `market-tick-data-service/market_tick_data_service/engine/orchestrator/`), so it does not affect write-path
       correctness today, but it is a stale doc/registry entry that will mislead the next reader who trusts it as the
       canonical source. (repo: unified-api-contracts)
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

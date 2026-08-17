@@ -49,12 +49,7 @@ source:
     "round5-cross-cutting-audit 2026-08-08, id=52 (tradfi §8 4-leg retirement purge execution) — discovered
     mid-execution, not looked for",
   ]
-context_scope:
-  [
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    instruments-service/scripts/build_instrument_catalogue.py,
-  ]
+context_scope: [/plans/active/instruments_completion_tracker_2026_07_06.md, /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md, instruments-service/scripts/build_instrument_catalogue.py]
 ---
 
 # tradfi catalogue-regen schedulers were silently NOT paused for 6+ weeks
@@ -248,3 +243,4 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   re-confirmed.** 3 open todos re-read end-to-end. Todo 1's citation to
   `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` remains accurate. Todo 2 stays sequenced behind it; todo 5
   stays GENUINE_WORK. Nothing to reclassify.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

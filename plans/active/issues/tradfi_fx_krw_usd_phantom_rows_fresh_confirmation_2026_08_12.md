@@ -44,11 +44,7 @@ assigned_role: data_engineering
 effort: max
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py,
-  ]
+context_scope: [/plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md, market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py]
 ---
 
 # KRW/USD manifest rows: mislabeled pipeline_mode, NOT phantom (corrected 2026-08-14)
@@ -144,3 +140,4 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
   `assigned_vm: NA → planning`, `execution_scope → orchestrator-agent`, `assigned_role: data_engineering` added,
   `effort: max` added. Issue doc — no finalize-plan companion required (`check_finalize_plan_coverage.py` only globs
   `plans/active/*.md`).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

@@ -28,11 +28,7 @@ locked_by:
 created: 2026-08-16
 author: slot-23
 source: ["measure_canonical_odds_duplicate_scope_2026_08_16.py bounded 40-day sample, run 2026-08-16"]
-context_scope:
-  [
-    /plans/archive/issues/sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md,
-    market-tick-data-service/scripts/sports/measure_canonical_odds_duplicate_scope_2026_08_16.py,
-  ]
+context_scope: [/plans/archive/issues/sports_canonical_batch_odds_api_duplicate_rows_2026_08_16.md, market-tick-data-service/scripts/sports/measure_canonical_odds_duplicate_scope_2026_08_16.py, market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py, market-tick-data-service/market_tick_data_service/engine/orchestrator/_sports_tick_dedup.py]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -201,3 +197,4 @@ low today; it could be worse in cells/days not sampled.
   `2020-08-29`→`2020-09-25` across two ~1-minute-apart reads). No further action needed — standing down, not
   relaunching a third VM. Escalation `agt-cf32a4` resolved by reference to this doc's existing fix
   (`market-tick-data-service@ed0c4372d2`) and the already-in-flight relaunch above; no new code shipped.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

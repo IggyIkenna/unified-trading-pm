@@ -42,12 +42,7 @@ priority: P1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/archive/2026_08/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
-    /codex/02-data/sports-gcs-path-ssot.md,
-    /codex/05-infrastructure/gcs-object-operations.md,
-  ]
+context_scope: [/plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md, /plans/archive/2026_08/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, instruments-service/instruments_service/engine/orchestrator/sink.py]
 ---
 
 # Sports fixtures object carries instrument-catalog schema, not fixture data
@@ -793,3 +788,4 @@ transcript available in that session's Progress Log entry on
   two time points); once terminal, fold the final report's `contamination_codes`-positive rows (expected: the 0 already
   observed, plus whatever the un-scanned 2025-05-10→2026-08-16 range surfaces) into the count and flip the todo-3
   checkbox.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

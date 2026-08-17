@@ -39,14 +39,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-16
 locked_by:
-context_scope:
-  [
-    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
-  ]
+context_scope: [/plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md, /codex/02-data/availability-manifest-and-data-status.md, /codex/05-infrastructure/manifest-consolidator-ssot.md, market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py, unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py]
 resolved_by:
 ---
 
@@ -848,6 +841,8 @@ multi-source at first glance (MDPS `trades`: `api_football` + `odds_api`) turned
 keys, not a same-cell collision. This closes the todo's own open question — the answer is a confirmed negative, not an
 unconfirmed flag. No code changed, no crons touched, no production write. This plan-doc edit ships via the
 `docs(plans):` carve-out.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
 
 ## Root-caused + repaired the parking-gate churn — 2026-07-17 (slot-4, data_engineering, dispatched onto `sports_manifest_canonicalisation-001`)
 

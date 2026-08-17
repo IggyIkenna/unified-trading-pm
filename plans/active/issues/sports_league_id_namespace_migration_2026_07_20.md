@@ -28,15 +28,7 @@ author: unknown
 source: operator decision 2026-07-20 (canonicalise at the write path)
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    market-data-processing-service/scripts/reprocess_sports_odds.py,
-    market-tick-data-service/scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py,
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
-    deployment-service/scripts/rebuild_sports_manifest.py,
-  ]
+context_scope: [/plans/active/sports_consolidated_closeout_2026_07_19.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, market-data-processing-service/scripts/reprocess_sports_odds.py, market-tick-data-service/scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py, market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py, deployment-service/scripts/rebuild_sports_manifest.py]
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -871,3 +863,4 @@ offered to the queue once these are the only real blockers.
   old non-canonical objects) for a future dedicated delete-safety pass, not a batch todo — a new finding, not a reason
   to flip. No flip, no extraction (would duplicate the tracked prereqs pair).
 - **na-eligibility-audit 2026-08-17** [body-hash:11e001d00bd4ee15]: KEEP-NA-STALE (already-duplicated) — sole open item (Track H registry-aware honest-coverage denominator) tracked via sports_track_h_denominator_gated_2026_07_28.md + its _prereqs_2026_07_28.md sibling (both confirmed to exist). Note: per ag_closeout_audit_sports_parked_2026_08_16.md, the Track-H Path-A-vs-Path-B design fork has now sat unruled for 18+ days — worth an operator nudge, but that finding belongs to that doc, not a new item here.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

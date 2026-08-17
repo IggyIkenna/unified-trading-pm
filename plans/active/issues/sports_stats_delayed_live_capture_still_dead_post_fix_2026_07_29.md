@@ -54,14 +54,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py,
-    unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py,
-    deployment-service/deployment_service/sports_latency_observation.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
-  ]
+context_scope: [/codex/04-architecture/instruments-service-as-ssot-for-mtds.md, unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py, unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py, deployment-service/deployment_service/sports_latency_observation.py, unified-trading-library/unified_trading_library/manifest_writer/_read_index.py]
 ---
 
 # Sports `stats_delayed`/XG live capture still dead after the lookback fix — two further root causes
@@ -720,3 +713,4 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
   (~5 days from now). Releasing via `/skip-current-task {"reason_code": "GATED", "estimated_unblock_minutes": 180}` (cap
   per RULES.md § 4c). Reiterating the standing park recommendation — the concrete unblock date (~Aug 17) from the
   slot-17 check still holds.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

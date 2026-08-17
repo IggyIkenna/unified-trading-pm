@@ -47,13 +47,7 @@ assigned_role: infra
 resolved_by:
 locked_by:
 depends_on: []
-context_scope:
-  [
-    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
-    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
-    deployment-service/scripts/wave_launcher.py,
-    deployment-service/terraform/gcp/wave_launcher_scheduler.tf,
-  ]
+context_scope: [/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md, /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md, deployment-service/scripts/wave_launcher.py, deployment-service/terraform/gcp/wave_launcher_scheduler.tf]
 ---
 
 # Possible scope-ruling violation — legacy NASDAQ/NYSE fleet relaunched
@@ -315,3 +309,4 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
   operator/owner attention, not a settled finding.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
