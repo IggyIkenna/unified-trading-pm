@@ -605,15 +605,37 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       which always logged `exit_code=137` + a clean self-delete) — this signature matches routine SPOT preemption
       (external termination, no graceful shutdown), not a code/sizing problem recurring. Relaunched as attempt 8,
       `sports-manifest-rescan-20260817-200623`, same config (`e2-highmem-8 --workers 4`) — the fixes are sound,
-      this looks like ordinary SPOT churn. **If attempt 8 also OOMs at the post-scan stage** (not preempted): the
-      fix is a streaming/chunked write in `rescan_sports_fixtures_canonical.py` for the 47M-row aggregation, not
-      another machine-size jump — file that as its own follow-up. **Once any attempt completes**: raise the
-      launcher's hardcoded default machine-type from `e2-standard-4` to `e2-highmem-8` in the same commit as
-      closing this todo (both the asset-group and machine-type fixes are already shipped; only the default machine
-      size and this todo's closure remain).
-      Check the newest attempt's log for a clean `DEPLOYMENT_COMPLETED exit_code=0`, and spot-check that the
-      weather VM's new captures show up as `empty_confirmed` (not still `expected_unattempted`) in the manifest
-      afterward.
+      this looked like ordinary SPOT churn.
+      **STOPPING HERE — attempt 8 hit the confirmed, repeatable post-scan OOM, even at 64GB.** Same signature as
+      attempt 5, unambiguous: `bash: line 1: 5094 Killed .../rescan_sports_fixtures_canonical.py --workers 4`,
+      `exit_code=137`, clean `DEPLOYMENT_FAILED` + self-delete — a real SIGKILL, not a preemption. This is the exact
+      stop-condition set two attempts ago: this is a genuine architectural limit in the script (loading the full
+      existing manifest — a large parquet, growing — into memory to merge with the 47M freshly-scanned rows), not
+      a sizing problem more machine-escalation or more relaunches will fix. **Not continuing to throw VM-relaunch
+      cycles at this** — 8 attempts across ~4h already fixed 2 real, independent, shippable infra bugs (the missing
+      `--machine-type` override, the missing `VM_ASSET_GROUP` defaulting to CEFI) but the rescan itself needs a
+      genuine code change: a streaming/chunked merge in `rescan_sports_fixtures_canonical.py` instead of a
+      full-materialize merge. **Split into its own properly-scoped follow-up** — see the new todo immediately below
+      — rather than let this already-long entry keep growing. This todo is DONE as far as diagnosis goes: both
+      real bugs found and fixed, the remaining gap is fully understood and hasn't been fixed yet.
+      Once the streaming-write fix lands and a rescan actually completes: raise the launcher's hardcoded default
+      machine-type from `e2-standard-4` to whatever size the (memory-bounded) fixed version needs, and spot-check
+      that the weather VM's new captures show up as `empty_confirmed` (not still `expected_unattempted`) in the
+      manifest.
+- [ ] [SCRIPT] P2. **`rescan_sports_fixtures_canonical.py` needs a streaming/chunked manifest-merge — confirmed
+      OOM at 64GB, not a sizing problem.** Root-caused via the todo above (8 relaunch attempts, 2026-08-16/17): the
+      script scans cleanly (47,053,527 per-(date, league_id) FIXTURES rows across 142,894 blobs, no memory issue
+      through the whole scan) but then reads the FULL existing manifest and merges it with the freshly-scanned
+      rows in-memory — this step SIGKILLs even on `e2-highmem-8` (64GB), confirmed twice (attempts 5 and 8,
+      identical `exit_code=137` signature both times). Needs the same class of fix already applied elsewhere in
+      this codebase for the identical problem shape (see `check_shard_freshness()`'s "Slim + date-filtered read"
+      pattern, `unified-trading-library/unified_trading_library/manifest_writer/_queries.py:247` — filtered/
+      chunked reads instead of loading a whole large index) — read the existing-manifest merge in
+      `rescan_sports_fixtures_canonical.py` and rewrite it to merge in bounded chunks (e.g. per-league or
+      per-date-range) rather than one full in-memory join. Not urgent (this is materializing `empty_confirmed`
+      rows for the weather VM's new captures — a data-quality cleanup, not a correctness-blocking gap), but
+      genuinely needed — don't relaunch the rescan again without this fix, it will OOM the same way regardless of
+      machine size.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
