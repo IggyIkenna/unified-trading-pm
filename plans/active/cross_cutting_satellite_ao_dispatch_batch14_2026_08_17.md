@@ -71,10 +71,11 @@ source: >-
 - [x] [AGENT] P1. ✅ Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
       check, shrink-only in the same sense as the other baselines in this corpus. Repo: unified-trading-pm. Source:
       `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`. — unified-trading-pm@4173c83c54.
-- [ ] [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
+- [x] ✅ [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
       `generate_na_doc_tranche_inventory.py`) that flags a doc where the Progress Log's own "extracted to `<path>`"
       phrasing names a doc that is NOT cited on any currently-open checkbox in the same file. Repo: unified-trading-pm.
-      Source: `plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md`.
+      Source: `plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md`. —
+      unified-trading-pm@c2add0eabe, see Progress Log below.
 - [ ] [CODE] P2. Register Unity's 10 child books as canonical sports venues from the UAC SSOT
       `unified_api_contracts/internal/unity_child_books.py` (3ET, BETFAIR, BROKER5, CROWN, MATCHBOOK, SBO, SHARPBET,
       VX, BETDEX, IBC), reusing the existing BETFAIR/MATCHBOOK venue tokens rather than minting Unity-specific
@@ -242,3 +243,26 @@ source: >-
   Unity/routing-independent set; per the gated finalize plan
   (`cross_cutting_satellite_ao_dispatch_batch14_2026_08_17_finalize.md`), remaining open items are the Unity-venue
   chain (items 3-9, sequenced) plus the checker-script/gs-audit/codex-doc todos — not in scope for this dispatch.
+
+- **2026-08-17 (infra worker, slot-25) — SCRIPT P2 "prototype a mechanical checker for uncited Progress Log
+  'extracted to' claims" flipped — unified-trading-pm@c2add0eabe.** Added
+  `scripts/plan-hygiene/check_extracted_checkbox_citation.py`: for every `assigned_vm: NA` active/open doc with at
+  least one open checkbox, greps the Progress Log for "extracted ... to `<path>.md`" phrasing and flags any target
+  never cited anywhere in the doc's own Todos section (open OR closed — a correctly-fixed doc cites the extraction
+  on a now-CLOSED checkbox, so citation must NOT be restricted to open checkboxes only, else a doc with one
+  closed+cited extraction todo plus an unrelated still-open todo would false-positive). Excludes the distinct
+  `*_progress_log_history_*.md` line-cap-remediation convention (25 archived instances corpus-wide — moves old
+  narrative prose, not dispatchable work; confirmed by direct inspection of 2 flagged docs before adding the
+  exclusion, both were false positives of exactly this shape). Smoke test: 7 unit tests in
+  `tests/unit/test_check_extracted_checkbox_citation.py` reproduce the pre-fix shape of all 4 real instances the
+  source issue doc found (with and without backtick-wrapped filenames), the correctly-fixed shapes (cited-on-closed,
+  cited-alongside-another-open-todo), the progress_log_history exclusion, and the no-open-checkboxes out-of-scope
+  case — all pass. Ran for real against the current corpus: found 3 live, previously-undetected instances —
+  `plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` (extracted to
+  `ao_satellite_ao_dispatch_batch10_2026_08_09.md`), `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md`
+  (extracted to `sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md`), and
+  `plans/active/sports_live_arb_strategy_and_execution_routing_2026_08_14.md` (extracted to
+  `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md`). Did NOT fix these 3 — routing them is the
+  source doc's own separate DOC P3 follow-up todo ("route each to its owning tranche's next
+  `/na-eligibility-audit` pass"), not this dispatch's scope. Full `bash scripts/quality-gates.sh` green before
+  shipping.
