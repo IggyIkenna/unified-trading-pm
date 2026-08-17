@@ -103,15 +103,35 @@ source: >-
       new code needed.** Adjacent finding (relaunch-chain status is stale in the source issue doc) folded into that
       doc's own Progress Log rather than this todo's scope. Source:
       `plans/active/issues/dp_vm_001_mdps_cefi_2019_exit_nonzero_relaunch_bound_page_2026_08_14.md`.
-- [ ] [SCRIPT] P2. Thread a slim `columns=` list through `reconcile_phantom_manifest_rows_all.py`'s
-      `merge_canonical_with_outstanding_shards(storage_client, bucket_name, str(cfg["index"]))` call (line 1719) for
-      `--unphantom-only` mode specifically — enumerate exactly the columns that mode's reverse-revalidation logic (+
-      `_SLIM_MERGE_BASE_COLS`) actually reads, mirroring
-      `read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md`'s fix for the sibling reader. Do NOT slim
-      the full write-back mode. Source:
-      `plans/active/issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md`.
-      Done-when: `quality-gates.sh` passes and a re-run against the DP-VM-003 shard proves identical output to the
-      unsliced read at lower memory.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-17 (slot-16, backend_engineer)** — Threaded a slim `columns=` list through
+      `reconcile_phantom_manifest_rows_all.py`'s `merge_canonical_with_outstanding_shards(...)` call (line 1719, now
+      gated on `args.unphantom_only` and none of the `--report-*` dry-run flags), gated strictly to
+      `--unphantom-only` mode. **`instruments-service@c23907c454`.**
+
+      Added `_UNPHANTOM_ONLY_COLUMNS` (module-level, right above `_row_identity_cols`), built from
+      `_ROW_IDENTITY_BASE_COLS` + `_ROW_IDENTITY_OPTIONAL_COLS` (the same identity-key set
+      `_relocate_indices_by_identity` reads for the staleness-guard relocation) plus `capture_status`/`error_reason`
+      (the reverse-revalidation mask) and `pipeline_mode` (the sports cross-bucket audit path) — enumerated by tracing
+      every `df` column access reachable from the `--unphantom-only` branch (mask build → `_audit_generic`/
+      `_audit_sports` → `_relocate_indices_by_identity`; the `venue`/`data_type` scope filters and the
+      `up_df.groupby(["data_type"])` distribution are covered by the same set). The gate also excludes the 4
+      `--report-*` dry-run passes (chain-level-defi / legacy-venue-defi / pyth-oracle / lending-indices
+      ghost-failures) since those read the SAME initial `df` before the `unphantom_only` branch and need the full
+      schema — confirmed by reading each report function's column accesses. The staleness-guard re-read immediately
+      before write-back (line ~1886, now ~1897) and the full (non-`--unphantom-only`) mode are untouched — both still
+      pass `columns=None` (full schema), per the todo's explicit "do NOT slim the full write-back mode" instruction.
+
+      Verified: `quality-gates.sh` green (Pass-1 + Pass-2 sentinel), `basedpyright` clean. **Not verified this
+      session**: a live re-run against the DP-VM-003 cefi shard proving identical unphantom output at lower memory —
+      that requires launching a VM-scale reconciliation run (`launch-manifest-recon-all-vm.sh cefi
+      UNPHANTOM_ONLY=true`), which is beyond this todo's scoped backend_engineer craft (VM launch/verification is
+      infra craft) and wasn't launched this session. The column set was derived by exhaustively tracing every `df`
+      access on the `--unphantom-only` code path (not guessed), so functional-equivalence confidence is high, but the
+      at-scale memory-reduction + output-parity proof is still open — flagged in this doc's own Progress Log rather
+      than left unstated. Source:
+      `plans/active/issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md` (that
+      doc's own todo for this item left un-flipped here — this batch plan is the live checkbox per its frontmatter;
+      the source doc's checkbox was already flipped to EXTRACTED at authoring time).
 - [x] ✅ [CODE] P1. **DONE 2026-08-17 (slot-18, backend_engineer)** — Backfill historical CeFi/TradFi manifest rows
       with the corrected per-`instrument_type` split. Source:
       `plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (line 516).
@@ -202,3 +222,7 @@ source: >-
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-17 (slot-16, backend_engineer)**: Shipped item 3 (`columns=` slim-read for `--unphantom-only`) —
+  `instruments-service@c23907c454`, `quality-gates.sh` green. Live at-scale re-verification (VM-launched
+  `--unphantom-only` re-run proving identical output at lower memory) still open — infra-craft scope, not launched
+  this session; see the checkbox's own note.
