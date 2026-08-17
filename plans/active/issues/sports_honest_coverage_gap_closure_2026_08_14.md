@@ -544,9 +544,25 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       hour so CEFI's cron should have a fresh run by the time the watchdog checks. If attempt 3 ALSO fails on this
       same cause: this needs a real fix (either loosen this specific bucket's watchdog budget to match its actual
       hourly cadence, or tighten the CEFI cron itself) rather than another blind retry — file a proper issue doc
-      rather than retrying a fourth time. Check `vm-logs/sports-manifest-rescan-20260817-155832/run.log` for a
-      clean `DEPLOYMENT_COMPLETED exit_code=0`, and spot-check that the weather VM's new captures show up as
-      `empty_confirmed` (not still `expected_unattempted`) in the manifest afterward.
+      rather than retrying a fourth time.
+      **Attempt 3 (`...155832`) did NOT hit that same cause — a DIFFERENT, unambiguous root cause: genuine OOM.**
+      No `DEPLOYMENT_FAILED`/`DEPLOYMENT_COMPLETED` terminal line, just heartbeats stopping cold at
+      `Progress: 93400/142894` (~65%, further than either prior attempt). Pulled the deployment record directly
+      (`deployments/archive/2026-08-17/a103a13e-...json`, not just the log): `host_metrics_window` shows
+      `mem_pct` pinned at **99.4-99.5% across the ENTIRE 15-minute sampled window**, from the very first sample —
+      not a late-developing leak, memory-starved from near the start. `reap_reason=vm_not_running,
+      workload_alive=true` — the process was still running when the instance itself vanished (host-level OOM
+      eviction, not the app exiting cleanly). Root cause: the launcher's own default `WORKERS="16"`
+      (`launch-sports-manifest-rescan-vm.sh:76`) on its `--machine-type=e2-standard-4` (4 vCPU/16GB) — 16 parallel
+      workers on a 4-vCPU box is oversubscribed for this job's per-worker memory footprint. **This is a genuine
+      retry-with-a-fix, not the blind 4th-retry the note above warns against** (different cause, not the
+      consolidator-watchdog one) — relaunched as `sports-manifest-rescan-20260817-165755` with `--workers 4`
+      (matching vCPU count). **Did NOT yet change the launcher's default** — want this attempt to actually
+      complete first (verify a fix before committing it, not just theorize one); if `--workers 4` succeeds,
+      lower the hardcoded default from 16 to 4 in the same commit as closing this todo, citing this incident.
+      Check `vm-logs/sports-manifest-rescan-20260817-165755/run.log` for a clean `DEPLOYMENT_COMPLETED
+      exit_code=0`, and spot-check that the weather VM's new captures show up as `empty_confirmed` (not still
+      `expected_unattempted`) in the manifest afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
