@@ -6,7 +6,7 @@ summary: >-
   2,982-row instrument_type casing residual figure from cefi_consolidated_closeout_2026_07_18.md
   line 523 live before applying the canonicalization fix, given how much has landed on this
   branch since that figure was measured.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -16,9 +16,10 @@ tags: [cefi, canonicalization, casing]
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -34,7 +35,6 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 3, 2026-08-16"
 locked_by:
-context_scope: [/plans/active/cefi_consolidated_closeout_2026_07_18.md]
 locked_since:
 context_scope:
   [
@@ -43,6 +43,16 @@ context_scope:
   ]
 resolved_by:
 ---
+
+> **🟢 ARCHIVED 2026-08-17.** Reviewed + confirmed by [[cefi_casing_residual_ao_dispatch_2026_08_16_finalize]]:
+> both cited commits (`market-tick-data-service@07861cf6`, `market-tick-data-service@c07cc70e93`) independently
+> verified live on `origin/live-defi-rollout`; the follow-up issue doc's P2 VM-apply todo confirmed genuinely
+> `dispatched` in the live AO backlog (not merely filed). Sole todo's done-when ("re-count live; apply if real")
+> is honestly satisfied: the residual is real (39,286, not the stale 2,982), the writer regression causing it is
+> fixed, and the actual `--apply` run is correctly deferred to a VM (corpus-scale: 166k+ per-VM shard objects,
+> 29.9M-row consolidated index — confirmed too large for the shared host) rather than faked as complete. Remaining
+> work (the VM apply itself) tracked at `issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`,
+> not lost with this archival.
 
 # CeFi instrument_type casing residual — re-count fresh, then apply
 
@@ -70,6 +80,13 @@ resolved_by:
 
 ## Progress Log
 
+- **slot-3 2026-08-17 (review)**: independently verified both cited commits live on origin, confirmed the issue
+  doc's P1 (writer fix) is done and P2 (VM apply) is genuinely dispatched (not just filed) via the live AO backlog
+  — archival gate satisfied. Archived alongside `cefi_casing_residual_ao_dispatch_2026_08_16_finalize.md`. Fixed a
+  duplicate `context_scope:` frontmatter key found on this doc (two conflicting entries; kept the fuller one).
+  Referrer sweep: annotated the stale 2,982 citation in `cefi_consolidated_closeout_2026_07_18.md`, repointed
+  `issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`'s frontmatter, regenerated
+  `INDEX.md`.
 - **slot-14 2026-08-17**: re-counted live (independently twice) — residual is 39,286 (13x the cited 2,982), an
   active writer regression not stale debt. Fixed 3 safety defects in the existing `--apply` script
   (`market-tick-data-service@07861cf6`) but did NOT run `--apply` — confirmed VM-scale (166k+ per-VM shard objects,
