@@ -17,9 +17,9 @@ status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [unified-trading-pm]
+repos: [unified-trading-pm, deployment-service]
 scope: [engineer]
-tags: [ci, safe-doc-push, prek, orphaned-patch, false-progress, batch15]
+tags: [ci, safe-doc-push, prek, orphaned-patch, false-progress, batch15, dangling-commit]
 related:
   [
     /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md,
@@ -105,6 +105,32 @@ actual commit sha, or (b) if the design is stale/superseded, leave the batch15 t
 this patch was discarded as a draft, never shipped. Either way, the two `.patch` files above should stay on
 disk until someone completes this triage (do not delete pending resolution).
 
+## Second occurrence (2026-08-17, same session) — a dangling REAL commit, different failure shape
+
+A second, unrelated safe-doc-push run in the SAME session hit the identical orphaned-patch warning again, for
+`/home/ubuntu/.cache/prek/patches/1786946339254-2938102.patch`, touching
+`plans/active/alert_driven_dependency_revocation_2026_08_12.md` +
+`plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md`. This one is a DIFFERENT failure shape — not an
+unshipped draft, but real work that WAS shipped and then fell off the branch:
+
+- The patch claims `deployment-service@e631240990` shipped `scripts/measure_shard_duration_p95.py` (229 lines) and
+  cites concrete measurement output (a 16-row p95/max shard-duration table) plus a claim that
+  `infra_satellite_ao_dispatch_batch18_2026_08_16.md` was "completed + archived 2026-08-17."
+- **Verified**: the commit `e631240990` genuinely exists (`ikennaigboaka [slot-27·planning]`, 2026-08-17T05:56:16Z,
+  proper `Quickmerge: agent` trailer, real diff adding the 229-line script) — but `git merge-base --is-ancestor
+  e631240990 HEAD` returns **false** in slot 9's `deployment-service` clone: it is a dangling commit, not part of
+  current `live-defi-rollout` history. The script file does not exist anywhere in the current working tree.
+- `infra_satellite_ao_dispatch_batch18_2026_08_16.md` is confirmed still sitting in `plans/active/` — NOT archived,
+  contradicting the patch text's own claim (written prematurely, before the archival it describes actually
+  landed).
+- Not applied here either, for a different reason than occurrence 1: the underlying doc-archival claim in the
+  patch text is itself not yet true, so restoring the prose verbatim would misdescribe current state even though
+  the CODE commit it cites is real.
+
+This is a more serious variant: a properly quickmerge-trailed commit that landed once (by slot-27) but is now
+unreachable from `deployment-service`'s current HEAD is a genuine dropped-work signal, not just an
+interrupted-draft signal — worth the infra-craft triage recognizing both shapes exist under this same root cause.
+
 ## Todos
 
 - [ ] [INFRA] P3. Triage the orphaned patch above: either implement the `STAGGER_SECONDS` fan-out-stagger
@@ -112,9 +138,29 @@ disk until someone completes this triage (do not delete pending resolution).
       `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s stagger todo with a real commit sha, or confirm the
       design is superseded and leave that todo open with a note. Repo: unified-trading-pm. Done when: either
       the feature ships for real, or the batch15 todo carries an explicit note that this draft was discarded.
+- [ ] [INFRA] P2. Investigate the second occurrence: why is `deployment-service@e631240990` (a real,
+      properly-trailed commit by slot-27, 2026-08-17T05:56:16Z, adding `scripts/measure_shard_duration_p95.py`)
+      NOT an ancestor of current `live-defi-rollout` HEAD? Check `deployment-service`'s reflog/branch history for
+      a force-push, reset, or rebase that dropped it; if the work is still wanted, re-land
+      `scripts/measure_shard_duration_p95.py` for real (cherry-pick `e631240990` or re-author) and only then let
+      `alert_driven_dependency_revocation_2026_08_12.md`'s Phase 0 measurement todo + the
+      `infra_satellite_ao_dispatch_batch18_2026_08_16.md` archival claim be actioned. Repo: deployment-service +
+      unified-trading-pm. Done when: either the commit is confirmed reachable from HEAD with the script present,
+      or a root cause for its disappearance is documented and the affected plan todos are corrected to NOT claim
+      completion.
+- [ ] [INFRA] P3. Given this exact bug class (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`,
+      status: resolved) recurred TWICE in one session on slot 9 within minutes of each other, re-open or
+      cross-reference that resolution — the fix may not fully hold under the current ~21-entry autostash-pile
+      contention level this slot is running under. Repo: unified-trading-pm / agent-orchestrator (wherever
+      safe-doc-push.sh's stash/restore logic lives). Done when: either the fix is confirmed still sufficient
+      under high-contention load, or a follow-up fix lands.
 
 ## Progress Log
 
 - **2026-08-17 (slot 9, data_engineering)**: filed while investigating a safe-doc-push orphaned-patch warning
   incidental to an unrelated task; verified via live grep + git log that the patch's claimed code/test do not
   exist. Not applied. Not my craft (CI/infra) — leaving for the right worker to pick up.
+- **2026-08-17 (slot 9, data_engineering), same session, second occurrence**: a second, unrelated safe-doc-push
+  run hit the same warning for a different, unrelated doc pair. Investigated and found a materially different
+  failure shape (a real dangling commit, not an unshipped draft) — see the new section above. Not applied;
+  filed as new todos rather than a separate doc, since it's the same underlying mechanism.
