@@ -120,11 +120,27 @@ measurement" rule.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Confirm real-world reachability** — trace every caller of `POST /cancel` and `POST /amend`
-      (ops UI, strategy-service, a CLI, tests only) the same way the withdraw-stub finding did
-      (`HandlerRegistry`/`TransferCoordinator` construction-site trace). Done-when: a cited verdict, DEAD-CODE-
-      TODAY or LIVE-REACHABLE, with the full evidence chain — this determines whether the fix below is
-      must-fix-before-live-trading-cutover (if dead today) or an active incident (if reachable now).
+- [x] ✅ [BACKEND] P0. **Confirm real-world reachability — done 2026-08-17. Verdict: LIVE-REACHABLE, NOT
+      dead-code, materially different from the withdraw-stub finding's posture.** Traced every angle: (1)
+      `manual_router` (this file's `APIRouter(prefix="/manual", ...)`) IS mounted in the running app —
+      `execution_service/api/app.py:25,127`: `from execution_service.api.manual_instruction_api import router as
+      manual_router` / `app.include_router(manual_router)`. Unlike the withdraw-stub bug (gated behind a Python
+      object — `LiveCcxtTransferAdapter` — that nothing in production ever constructs), this is a live,
+      registered HTTP route in the running service; anyone who can reach the service's HTTP surface with valid
+      credentials for whatever auth layer sits in front of it can invoke `POST /manual/cancel`/`POST
+      /manual/amend` TODAY and receive a fake success. (2) Zero first-party callers found anywhere in the
+      workspace: grepped execution-service (CLI, other API routers, `__init__.py` — only an `__all__` export
+      listing, not a caller), agent-orchestrator, deployment-ui, deployment-api, strategy-service — zero hits.
+      The one UI-repo hit (`unified-trading-system-ui/lib/types/api-generated.ts`) is an OpenAPI-generated TS
+      type definition, confirmed NOT an actual caller (no component/hook imports or invokes it). (3) **Not fully
+      verified**: whether `/cancel`/`/amend` are gated by network-level auth (IAM/API-gateway/Cloud Run ingress
+      policy) in front of the deployed service — this file's own code shows no per-route `Depends(get_auth...)`
+      on either handler (unlike some other routes in this file that DO call `_check_service_state()` /
+      auth-dependent helpers), so in-code enforcement is not confirmed either way; this is infra-level, outside
+      what a repo checkout can settle. **Practical conclusion**: given this is genuinely operator-invokable
+      HTTP surface (not a dormant object graph) and the system is pre-live-trading, this should be treated as
+      at least as urgent as "before live-trading cutover," arguably more so than the withdraw-stub finding was
+      at its own equivalent stage.
 - [ ] [BACKEND] P0. **Wire `/cancel` to the real per-venue `cancel_order`** via `OrderAdapter` (or whatever the
       real production instruction-routing path resolves to for this instruction's venue), and propagate the
       adapter's real result (success/failure/already-filled/not-found) instead of a hardcoded status. Done-when:
@@ -143,6 +159,12 @@ measurement" rule.
 
 ## Progress Log
 
+- **2026-08-17**: Closed the reachability todo — verdict LIVE-REACHABLE (not dead-code), since the `/manual`
+  router is genuinely mounted in the running app and reachable by anyone with HTTP+auth access, unlike the
+  withdraw-stub bug which was gated behind an unconstructed Python object. Flagged to the operator directly
+  given this raises urgency above the withdraw-stub finding's own equivalent stage. Network-level auth
+  enforcement in front of the deployed service could not be verified from this checkout — infra-level, out of
+  repo-read scope.
 - **2026-08-16**: Filed during the cefi AG batch's step-8 (execution) venue-readiness sweep. Both endpoint bodies
   independently spot-checked by direct file read before filing. Flagged as a P0, same-shape-as-withdraw-stub
   finding given the live-money-correctness class, per this workspace's "big finding → notify operator" rule,
