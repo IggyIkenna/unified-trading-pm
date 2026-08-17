@@ -266,15 +266,16 @@ adjacent axis the same script happens to also report). **Both findings investiga
       needs to be written (BITGET-FUTURES' bare-symbol shape is explicitly "not yet characterized") — that build + apply
       work was not done in this pass (documentation-question audit, not an implementation dispatch).
 
-> **📤 THE P3 TODO BELOW IS EXTRACTED AND DISPATCHED ELSEWHERE — do NOT dispatch it from this doc
-> (`/na-eligibility-audit` 2026-08-02, tranche=cefi).**
-> `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`status: active`, `assigned_vm: planning`,
-> `unified-trading-pm@766822efe`) carries it verbatim as its `[DATA] P3` "Root-cause the KRAKEN-FUTURES / HYPERLIQUID
-> PERPETUAL catalogue-completeness gap", Source-citing this doc; that todo's done-when includes flipping the checkbox
-> below, so the batch5 worker owns closing it. **The `[DATA] P2` above is NOT extracted** — batch5 lists it under
-> "Deferred — BLOCKED-OPERATOR-DECISION", upholding the 2026-07-30 KEEP-NA ruling (a backup-first prod `--apply` content
-> migration needs an `[OPERATOR]` tag with a delete-safety cite, or a fresh same-run reversibility check). That is why
-> this doc stays `assigned_vm: NA` rather than being reclassified: one of its two todos is still gated.
+> **📤 HISTORICAL — THE P3 TODO BELOW WAS EXTRACTED AND DISPATCHED ELSEWHERE, NOW RESOLVED
+> (`/na-eligibility-audit` 2026-08-02, tranche=cefi; P3 itself closed 2026-08-05, see the todo below).**
+> `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`unified-trading-pm@766822efe`) carried it
+> verbatim as its `[DATA] P3` "Root-cause the KRAKEN-FUTURES / HYPERLIQUID PERPETUAL catalogue-completeness gap",
+> Source-citing this doc; that todo's done-when included flipping the checkbox below, which batch5 closed 2026-08-05.
+> **The `[DATA] P2` above was NOT extracted** — at the time (2026-08-02) batch5 characterized it as still held on the
+> 2026-07-30 KEEP-NA ruling, pending either an `[OPERATOR]` delete-safety citation or a fresh reversibility check. That
+> hold was independently cleared 2026-08-08 (round5-cefi-question-resolution, reversibility-verified) and this doc's
+> `assigned_vm` was reclassified `NA` → `planning` 2026-08-12 (see Progress Log below) — the P2 todo is ordinary
+> AO-dispatchable work now, not still gated by this note's original 2026-08-02 characterization.
 
 - [x] ✅ [DATA] P3. **RESOLVED 2026-08-05 — id-form mismatch, not a catalogue-completeness gap (slot 5,
       `cefi_satellite_ao_dispatch_batch5-005`).** Investigated via bounded catalogue + manifest-index reads (10.7M

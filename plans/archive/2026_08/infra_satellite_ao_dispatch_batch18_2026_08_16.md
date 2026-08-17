@@ -172,7 +172,8 @@ Verdict: clear on all 3 items — proceed.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)
 - **2026-08-17 (slot 24, review-craft)**: classified item 1's flagged
-  `ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` exclusion — verified live that
+  `/plans/archive/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` exclusion (archived
+  2026-08-17) — verified live that
   `state_bucket()` resolves on the orchestrator VM (bucket `deployment-scripts-central-element-323112`), so the
   todo was genuinely open, not a legitimate block. Rewrote the todo to drop the stale `BLOCKED-CREDENTIALS`
   phrasing (which was tripping the AO dispatch-visibility parser's undeclared-marker exclusion) so it dispatches

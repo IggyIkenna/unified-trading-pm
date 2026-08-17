@@ -109,7 +109,8 @@ source: >-
       22MB/541MB `local` entries are now backed by fresh `vm` entries: `unified-trading-system-ui` 3821MB,
       `deployment-ui` 743MB). Blocked mid-ship by a pre-existing, unrelated `check_ao_dispatch_visibility_gate` red
       (corpus-wide undeclared-exclusion drift, confirmed via stash test to have zero relation to this diff) — filed
-      `plans/active/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` +
+      `/plans/archive/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` (archived 2026-08-17, all
+      6 items resolved) +
       repo-blocker RB-e08a525b per RULES.md §4b; resolved collectively by the fleet (concurrent slots fixing the
       flagged docs) before I could finish my own partial fix, gate green again (5 ≤ baseline 0 + buffer 5) as of this
       ship.
