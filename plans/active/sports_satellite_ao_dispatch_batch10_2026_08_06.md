@@ -381,3 +381,6 @@ orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not
     own "or a cited reason why a horizon cannot fire" done-when clause — an unbounded wait for a specific live fixture
     to materialize is not further-session-actionable work.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-17**: re-verified; context_scope unchanged (4 entries, all resolve) — dispatch-batch
+  coordinator, genuinely code-free (every open todo is a checkbox-reconciliation against named source docs already in
+  `related:`).

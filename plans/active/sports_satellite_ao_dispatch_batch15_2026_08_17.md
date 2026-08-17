@@ -57,6 +57,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md,
   ]
 ---
 
@@ -208,3 +209,8 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
   a known answer would have been pure waste. Flagged as a process gap for the na-eligibility-audit conflict-check
   protocol: it checks a new batch against other ACTIVE satellite batches but not against older already-active docs
   (like `sports_consolidated_native_ao_extract_2026_07_25.md`) that independently extracted the same source lines.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- added
+  `/plans/active/issues/sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md` on a confirmed evidence
+  fingerprint match: both this doc's todo 5 and that issue doc's Part-3 pass independently cite the identical live-VM
+  literal `mtds-live-sports-odds-api-odds-20260816-145019` as verification the odds_api writer-flip cutover is clean
+  -- same underlying incident, different investigations. Also added `context_scope` (this pair) to that doc.

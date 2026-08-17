@@ -100,3 +100,5 @@ context_scope:
 > `context_scope` above; all three citations already agree. Evidence:
 > `ls /codex/12-agent-workflow/plan-completion-and-archival-discipline.md` → file present (21468 bytes). No path
 > correction needed.
+
+- **context-scout 2026-08-17**: re-verified; context_scope unchanged (2 entries, both resolve).

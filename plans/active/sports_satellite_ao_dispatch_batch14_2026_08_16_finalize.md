@@ -123,3 +123,8 @@ context_scope:
 
 - /plans/active/task_template.md §4 — finalize-plan-coverage rule
 - /codex/12-agent-workflow/plan-completion-and-archival-discipline.md — the 6-step archival ritual
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries) -- re-verified both entries still
+  resolve on disk; no change.
