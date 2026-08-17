@@ -156,11 +156,39 @@ source: >-
       re-read verification. **Done-when satisfied**: a fresh manifest read over both asset groups shows 0
       blank captured rows for `date < 2026-07-07` — the corrected per-instrument_type split, not
       blended/blank rows.
-- [ ] [SCRIPT] P2. Re-derive the original "four preemptions" narrative from the raw `uts-prod-dp-exit-code-monitor`
-      Cloud Run Job source log text (not just a paraphrase) to confirm vs. definitively refute whether those four
-      dispatch events were themselves triggered by the watchdog false-kill bug rather than genuine SPOT reclaim.
-      Source: `plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`. Done-when: a confirmed or
-      refuted verdict is cited against the actual Cloud Logging text, not the doc's own prior paraphrase.
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-17 (slot-8, backend_engineer) — REFUTED.** Re-derived the original "four
+      preemptions" narrative directly from the raw `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text
+      (`gcloud logging read` on `resource.type="cloud_run_job" resource.labels.job_name="uts-prod-dp-exit-code-monitor"`,
+      2026-08-15T13:55-14:35Z, `project=central-element-323112`). Raw log text names the exact terminated-VM instances
+      (run-ts included, not just the year): `mdps-cefi-2019-20260815-050114` (dispatch logged 14:02:43Z),
+      `mdps-cefi-2020-20260815-041556` (14:09:33Z), `mdps-cefi-2021-20260815-020059` (14:15:58Z),
+      `mdps-cefi-2022-20260815-050114` (14:22:23Z), plus a 5th in the same window,
+      `mdps-cefi-2022-20260815-050859` (14:28:50Z). **These run-ts values are DIFFERENT instances from the ones the
+      source doc's own "Correlation" section cited as the watchdog's kill victims in this window**
+      (`mdps-cefi-{2019,2020,2021,2022}-20260815-120236`/`120941`, all run-ts `12xxxx` — launched around noon, vs. the
+      actually-preempted VMs' `05xxxx`/`04xxxx`/`02xxxx` run-ts, launched pre-dawn) — the doc's "VM-identity match is
+      exact" claim does not hold once the raw log is read for full VM names, not just year. Cross-checked all 5 exact
+      VM names against three independent Cloud Logging sources spanning the full day
+      (2026-08-15T00:00-23:59Z): (1) GCE audit log `protoPayload.methodName="compute.instances.preempted"` — **HIT for
+      all 5**, each with a genuine GCE-system-issued preemption operation HOURS before the monitor's own dispatch log
+      (e.g. `mdps-cefi-2019-20260815-050114` preempted per audit log at 05:28:31Z, monitor dispatched relaunch at
+      14:02:43Z — consistent with relaunch-budget/backoff lag, not a same-moment coincidence); (2) watchdog's own
+      `textPayload:"reason=zombie_finished_not_shutdown"` kill-log — **ZERO hits** for any of the 5 exact VM names,
+      full day; (3) GCE audit log `v1.compute.instances.delete` by `uts-prd-sa` — **ZERO hits** for any of the 5 exact
+      VM names, full day. Also traced the code path generating the "preempted (SPOT reclaim)" log line
+      (`deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` → `_classify.py` →
+      `_compute_ops.make_preemption_op_checker`): the `is_preempted` signal is sourced either from an in-guest
+      shutdown-script GCS marker gated on the GCE metadata server's `instance/preempted` value
+      (`scripts/vm/lib/launcher_common.sh:825-827`, `[[ "$PREEMPTED" == "true" ]] || exit 0`) or the Operations-API
+      `was_instance_preempted` fallback querying for a `compute.instances.preempted` operation specifically — both
+      are GCE-system-authoritative signals a `compute.instances.delete` call (what the watchdog issues) structurally
+      cannot produce. **Verdict: REFUTED.** The four (five) specific dispatch events this doc's original text cited
+      as evidence for the explosion were genuine GCE SPOT reclaims, confirmed via a real
+      `compute.instances.preempted` system operation for each exact VM, not the watchdog false-kill bug — the
+      doc's own "likely the actual trigger" correlation theory does not survive re-derivation against the raw
+      per-VM Cloud Logging text. Bug 1/Bug 2's fixes remain necessary regardless (unaffected by this verdict — see
+      source doc). Full evidence + exact `gcloud logging read` filters in the source doc's own Progress Log.
+      Source: `plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`.
 - [ ] [SCRIPT] P2. Mirror execution-service's already-shipped unscoped-key fallback pattern into MTDS's
       `validate_api_keys_for_venues`/`get_required_secrets` (unified-trading-library) so Bybit market-data capture
       doesn't hard-fail when only the unscoped `bybit-api-key` exists. Source:
@@ -226,3 +254,9 @@ source: >-
   `instruments-service@c23907c454`, `quality-gates.sh` green. Live at-scale re-verification (VM-launched
   `--unphantom-only` re-run proving identical output at lower memory) still open — infra-craft scope, not launched
   this session; see the checkbox's own note.
+- **2026-08-17 (slot-8, backend_engineer)**: Closed item 5 (the "four preemptions" re-derivation) — REFUTED. Raw
+  `gcloud logging read` against the Cloud Run Job source log + the GCE audit log resolved the exact 5 VM names the
+  monitor logged as preempted in the 14:00-14:30 UTC window, confirmed a real `compute.instances.preempted` GCE
+  system operation for every one of them, and confirmed zero watchdog kills / zero `uts-prd-sa` deletes against
+  those same 5 exact VM names. See this checkbox's own entry for the full evidence; also appended a correcting note
+  to the source doc's "Correlation" section (append-only, doc's own prior content untouched).
