@@ -141,7 +141,7 @@ source: >-
 - [x] ✅ [INFRA] P2. **Share bare repos + `git worktree` for sibling-clone I/O** instead of full clones per slot — explicit
       do/don't scope already given in the source doc. Source: same doc (line ~634). Gate: sibling-clone disk I/O
       measurably reduced; existing slot isolation guarantees unaffected. **DONE 2026-08-17 (slot 13, infra craft) —
-      `unified-trading-ci@3209654`, `unified-trading-pm@<this-commit>`.** Scope note: this todo's "sibling-clone I/O"
+      `unified-trading-ci@3209654`, `unified-trading-pm@10fb8339dc`.** Scope note: this todo's "sibling-clone I/O"
       is CI dep-repo cloning inside `python-quality-gates-v2.yml`'s `clone_repo()` (the self-hosted glue-runner host
       cloning every dep repo fresh on every QG job), NOT the AO slot-worktree model (`.tabs/<N>/<repo>`, which is
       already Path-B — its own `.git` per slot, no shared-repo change applicable there; that model is unrelated to
@@ -379,7 +379,7 @@ source: >-
   (`scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh`, 6/6 assertions pass). Flipped this item.
 - **2026-08-17 (slot 13, AO-dispatched worker, infra craft).** Shipped the "Share bare repos + `git worktree` for
   sibling-clone I/O" todo: `unified-trading-ci@3209654` (the reusable `python-quality-gates-v2.yml` — that's where
-  `clone_repo()` actually lives, not the caller `.tmpl` in this repo) + `unified-trading-pm@<this-commit>` (the
+  `clone_repo()` actually lives, not the caller `.tmpl` in this repo) + `unified-trading-pm@10fb8339dc` (the
   standing worktree-prune timer). Full detail on the checkbox above. Fast path is code-shipped but dormant on the CI
   VM until an operator provisions `SHARED_BARE_ROOT` and installs the prune timer — both deliberately gated, not
   overlooked.
