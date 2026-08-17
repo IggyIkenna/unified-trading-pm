@@ -147,7 +147,8 @@ ruling, and it is what stops the sweep manufacturing green.
       operator-selected "per contract-step-group" decomposition (steps 1-5 / 6-8 / 9 / gap-tracking / hard-rule
       confirmation as separate todos, each scoped to one AG's rows):
       [defi_venue_e2e_batch1_2026_08_16](/plans/active/defi_venue_e2e_batch1_2026_08_16.md) (200 rows),
-      [cefi_venue_e2e_batch1_2026_08_16](/plans/active/cefi_venue_e2e_batch1_2026_08_16.md) (70 rows),
+      [cefi_venue_e2e_batch1_2026_08_16](/plans/archive/2026_08/cefi_venue_e2e_batch1_2026_08_16.md) (70 rows,
+      archived 2026-08-17 — done),
       [sports_venue_e2e_batch1_2026_08_16](/plans/active/sports_venue_e2e_batch1_2026_08_16.md) (31 rows),
       [tradfi_venue_e2e_batch1_2026_08_16](/plans/archive/2026_08/tradfi_venue_e2e_batch1_2026_08_16.md) (16 rows,
       archived 2026-08-17 — done),
