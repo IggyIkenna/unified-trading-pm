@@ -312,6 +312,34 @@ cause an outage).
       when**: a watchdog kill-event POST returns 200. (repo: unified-trading-pm, deployment-api) **Retagged
       `[INFRA]`→`[OPERATOR]` 2026-08-16 (plan_reconciler agt-8fc5a6)** — this todo's own text confirms no AO worker
       container has the sudo/root access it requires; `[INFRA]` routes to a worker that cannot complete it.
+      **UPDATE 2026-08-17**: root/SSM access to the VM WAS available this session (contrary to the retag's
+      premise) and was used — see the Progress Log entry below for the full diagnosis. This todo is now blocked
+      on something narrower than "no worker has root": (a) ship the verified `|| true` crash-fix from a
+      Linux-hosted session (this interactive session's macOS host can't pass `quality-gates.sh` for an unrelated
+      `/proc`-dependent bats test, so the fix sits live-deployed+verified on the VM but uncommitted to the repo);
+      (b) the actual X-API-Key resolution under root is still unresolved — `ubuntu`'s gcloud config has the
+      right credential but a `CLOUDSDK_CONFIG` env-var share-attempt didn't take effect under the unit's
+      `ProtectHome=read-only`/`ProtectSystem=strict` sandboxing, and even a manually-resolved key hit a NEW
+      403 (`requires deploy:trigger`) on `POST /api/fleet/watchdog/kill-events` — a possible scope-permission
+      gap on deployment-api's side, not evaluated further this session.
+- [ ] [INFRA] P1. **NEW 2026-08-17.** Ship the resource-watchdog crash-loop fix (`|| true` guard on the
+      `DEPLOYMENT_API_KEY` GSM-fetch assignment in `scripts/infra/resource-watchdog/resource-watchdog.sh`,
+      already live-deployed+verified stable on the orchestrator VM this session) to the repo SSOT via
+      `quickmerge.sh --files scripts/infra/resource-watchdog/resource-watchdog.sh` from a host where
+      `bash scripts/quality-gates.sh --no-fix` is actually green (this session's macOS host fails
+      `tests/test_slot_collision_detect_lsof_batching.bats` for an unrelated, confirmed platform reason — no
+      `/proc` on Darwin — not a regression from this fix). Without this, a future blind
+      repo-copy-to-`/usr/local/bin/` (the exact action the OPERATOR todo above already asks for) will
+      reintroduce the crash-loop. (repo: unified-trading-pm)
+- [ ] [OPERATOR] P2. **NEW 2026-08-17.** Decide how root should read the `deployment-api-api-key` GSM secret on
+      the orchestrator VM (currently only `ubuntu`'s gcloud config is authenticated; the resource-watchdog
+      systemd unit runs as root with no credential and a `CLOUDSDK_CONFIG` share attempt didn't work under the
+      unit's sandboxing) — e.g. a dedicated service-account key scoped to root, or moving the notification call
+      to a small script that reads a locally-provisioned key instead of shelling out to `gcloud`. Separately,
+      even a correctly-resolved key hit `403 "Insufficient permissions: requires deploy:trigger"` on
+      `POST /api/fleet/watchdog/kill-events` in a manual live test this session — check whether that route's
+      permission scope is intentional for a fire-and-forget monitoring notification, or itself a bug. (repo:
+      unified-trading-pm, deployment-api)
 
 ## Codex SSOTs
 
@@ -656,3 +684,46 @@ are unaffected.
   last open `[BACKEND]` todo in this plan — the only remaining open items are the `[OPERATOR]` P3 live-fire test and
   the `[INFRA]` P1 resource-watchdog installed-copy update, both already tracked below.
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-17 (ao-watchdog blocked-question triage, root SSM access)** — investigated the `[OPERATOR]` P1
+  resource-watchdog todo above (blocked question `BLK-op-...-a0eeff69543d`). **Found + fixed a NEW regression
+  risk in the repo's own "fixed" script, distinct from the original ask**: copying
+  `scripts/infra/resource-watchdog/resource-watchdog.sh` to `/usr/local/bin/` and restarting live crash-looped
+  the service (`NRestarts` climbing every ~10s for ~2.5min) — root cause: the script's `DEPLOYMENT_API_KEY`
+  GSM-fetch runs under `set -euo pipefail`, and `root` (the service runs with no `User=`, so it's root) has
+  **zero gcloud credentials** on this AWS-hosted VM (`gcloud auth list` → "No credentialed accounts"; only
+  `ubuntu`'s config is authenticated — this box is EC2, not GCE, so there's no metadata-server fallback either).
+  A failed `gcloud secrets versions access` inside the `VAR="$(...)"` assignment trips `set -e` and kills the
+  whole watchdog — its CORE job (killing runaway host processes) went down over a SECONDARY notification
+  failing. Fixed with `|| true` on the assignment, applied LIVE on the VM (both `/usr/local/bin/` and the VM's
+  own repo checkout) and verified: `NRestarts=0`, stable ticking since. **NOT YET SHIPPED to the repo SSOT from
+  this session** — `bash scripts/quality-gates.sh --no-fix` on this interactive session's host (macOS/Darwin)
+  fails `tests/test_slot_collision_detect_lsof_batching.bats` (`_cwd_of_batch ... without ever spawning lsof`,
+  2 tests) — confirmed via direct `bats -r tests` + reading the test: it asserts `/proc/<pid>/cwd` resolution
+  never falls back to `lsof`, which is structurally impossible to satisfy on Darwin (`/proc` does not exist on
+  this OS at all — verified `ls /proc` → No such file or directory). Pre-existing / platform-only, NOT caused by
+  this change (confirmed: the failing test file has zero relation to resource-watchdog, and no other file in
+  this working tree touches `cursor-configs/hooks/lib/slot-collision-detect.sh`). Per the workspace's own
+  "commit only from a quality-gates.sh-green tree" HARD RULE, did not force the commit through a red gate — the
+  fix is staged in the working tree, live-deployed+verified, but needs shipping from a Linux host/slot where
+  `/proc` exists and this suite is genuinely green. Tracked as the follow-up todo below. **Attempted, did NOT work — reverted cleanly**: tried
+  `Environment=CLOUDSDK_CONFIG=/home/ubuntu/.config/gcloud` on the systemd unit so root's `gcloud` would reuse
+  ubuntu's already-authenticated `unified-trading-sa` config (confirmed via a direct `sudo -u ubuntu gcloud
+  secrets versions access` that the credential itself resolves the right key, fingerprint-matching the known
+  `210a43c9…` key) — the WARN persisted after a full `daemon-reload`+restart under the actual systemd unit
+  (likely the `ProtectHome=read-only`/`ProtectSystem=strict` sandboxing blocking the read in ways a
+  `systemd-run` repro couldn't cleanly isolate either — hit an unrelated AppArmor "cannot change profile"
+  error trying). Reverted the unit to its original (backed up first as `.bak_pre_urgent_fix` on the VM,
+  confirmed via diff before restoring) rather than leave a non-functional env var that would mislead the next
+  reader. **Separately surfaced, not chased further**: a manual `X-API-Key`-bearing probe against
+  `POST /api/fleet/watchdog/kill-events` (once the key WAS resolved via the working ubuntu-config path)
+  returned **403** `"Insufficient permissions: requires deploy:trigger"` — not 401/200 — meaning even a
+  correctly-resolved general `deployment-api-api-key` may not carry whatever scope this specific route now
+  expects; this is a new finding, not evaluated against this plan's original caller-inventory work, and may
+  need its own look. **Disposition**: todo left `[ ]` open — the original ask (kill-events notification
+  actually sending a valid key under enforcement) is still unresolved; what changed is the diagnosis
+  (crash-loop bug now fixed and shipped; remaining blocker is credential-provisioning for root under the
+  current sandbox, not "needs root" — root access was available and used throughout this session) plus the new
+  403/scope finding. Recommend as follow-up: either provision a dedicated secret/credential root can read
+  without needing ubuntu's interactive gcloud config, or move the notification call to a small path that
+  doesn't shell out to `gcloud` at all (e.g. a REST call with a locally-stored key), and separately check
+  whether `deploy:trigger` is the intended scope for a fire-and-forget monitoring notification.
