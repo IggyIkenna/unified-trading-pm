@@ -239,10 +239,25 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
       (`_distinct_values.py`/`_axis_census.py`/`_downloads.py`/`_query_meta.py`/`_live_coverage.py`) were checked and
       confirmed to be thin passthroughs with no independent chain-bundle prefix-building/aggregation logic of their
       own — no code change needed there; they inherit the fix via the services they call.
-- [ ] [UI] P2. deployment-ui: verify whether `DataStatusTab.tsx`/`DataStatusDrilldown.tsx`/`ShardDetailModal.tsx`/
-      `mock-api.ts` branch on path-position client-side. If they're a pure passthrough of backend-shaped data (likely,
-      per deployment-api already normalizing above), state that explicitly and skip; only change code if a real
-      client-side assumption is found.
+- [x] ✅ [UI] P2. **VERIFIED pure passthrough — no client-side chain path-position assumption found, no code
+      change needed.** Read/grepped all 4 named deployment-ui files in full: `DataStatusTab.tsx` (7019 lines),
+      `DataStatusDrilldown.tsx` (1355 lines), `ShardDetailModal.tsx` (554 lines), `mock-api.ts` (7062 lines).
+      `DataStatusTab.tsx` carries exactly ONE `options_chain`/`futures_chain` literal in the whole file (a comment
+      at line 5629) and ZERO `instrument_type ===`/`data_type ===` value comparisons anywhere; every
+      `instrument_type:` value it forwards to `openShardDetail`/`InstrumentsModal`/`SchemaModal` is either the
+      sentinel `"AUTO"`/`""` (defers resolution to the backend or a user picker) or `itName`/`match.instrument_type`
+      sourced directly from a backend-supplied per-venue `instrument_types` array or search-match record — never
+      derived by testing `data_type` against a chain token. The "Per-underlying breakdown (options_chain /
+      futures_chain)" UI section renders `it.underlyings`, a dict the backend already computed and shaped.
+      `DataStatusDrilldown.tsx`'s `isBundled = listing?.bundling === "per_underlying"` is driven by a
+      backend-returned `bundling` field, not client-side instrument_type/data_type inspection; its own comment
+      documents that CeFi instrument_type disambiguation (perpetual vs. options_chain) goes through a `/shard-info`
+      backend call + a user picker, never a client guess. `ShardDetailModal.tsx`'s header comment states the branch
+      is "driven by `shard_class` in the response; the UI does not infer" — confirmed: zero chain-token literals
+      anywhere in the file. `mock-api.ts`'s only `options_chain`/`futures_chain`/`combo_chain` references live
+      inside `_mkCefiMtdsHonest()`'s MOCK FIXTURE data arrays (seeding a realistic shape for local dev/Playwright),
+      not route-handler logic. No deployment-ui commit — nothing to ship; this plan-doc flip is the complete
+      evidence trail. See Progress Log for the full method.
 - [ ] [BACKEND] P2. market-data-processing-service: `app/utils/path_parsing.py::blob_matches_canonical_instrument_id_stems`
       has a related, NOT-yet-fixed gap found during the file-discovery-matcher investigation above (see Progress Log):
       for a TradFi instrument-id-filtered backfill request (a reference id like `CME:OPTION:ES`), the function's first
@@ -395,3 +410,19 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   shifted that pre-existing, already-baselined bare `read_availability_index` call from line 525 to 565 —
   re-pointed the line-keyed baseline entry (`unified-trading-pm@b7131a09a0`, direct-pushed per the GATE-INFRA
   `scripts/quality_gates/` carve-out) so the ratchet check keeps recognizing it instead of misreporting it as new.
+- **2026-08-17 (slot 1, ui_developer craft) — Phase 2 UI todo done, verification-only.** Read every named
+  deployment-ui file end-to-end (`DataStatusDrilldown.tsx` + `ShardDetailModal.tsx` in full via Read;
+  `DataStatusTab.tsx` 7019L and `mock-api.ts` 7062L too large for one Read — swept with `rg` for
+  `options_chain|futures_chain|combo_chain` literals and `instrument_type`/`data_type` `===`/`!==` comparisons
+  across each whole file, then read every hit's surrounding code rather than grep-then-conclude). Found zero
+  client-side path-position branching in any of the four: `DataStatusTab.tsx`'s two `itGuess` sites (lines
+  5909/5949) turned out to be unrelated to CeFi chains — they resolve a PREDICTION/Polymarket "OTHER"-bucket
+  sentinel (`name.toUpperCase() === "POLYMARKET" ? "OTHER" : "AUTO"`), not an instrument_type/data_type value
+  check; every other `instrument_type:` assignment site (`match.instrument_type` from a backend search-match
+  record at lines 1244/1255, `itName` from a backend-supplied per-venue `instrument_types` array at lines
+  5594/5618/5693/5718) is backend-sourced, never computed by testing which axis carries the chain token.
+  `DataStatusDrilldown.tsx`'s bundling decision (`isBundled`) and `ShardDetailModal.tsx`'s tab rendering
+  (`shard_class`) are both explicitly backend-driven by design (the latter's own header comment says so).
+  `mock-api.ts`'s chain-token references are confined to `_mkCefiMtdsHonest()`'s fixture-seed arrays. Matches
+  the plan's own prediction ("likely... per deployment-api already normalizing"). No deployment-ui code changed;
+  this plan-doc commit is the only artifact.
