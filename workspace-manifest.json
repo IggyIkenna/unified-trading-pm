@@ -75,22 +75,22 @@
     "features-service": "0.89.1",
     "fund-administration-service": "0.9.67",
     "ibkr-gateway-infra": "0.5.3",
-    "instruments-service": "0.103.9",
+    "instruments-service": "0.103.10",
     "market-tick-data-service": "0.143.2",
     "system-integration-tests": "0.15.5",
     "unified-api-contracts": "0.136.10",
-    "unified-trading-library": "0.88.4",
+    "unified-trading-library": "0.88.5",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.30.9",
+    "market-data-processing-service": "0.30.11",
     "e2e-testing": "0.41.23",
     "agent-orchestrator": "0.100.3",
-    "greeks-service": "0.18.51",
+    "greeks-service": "0.18.54",
     "trading-agent-service": "0.13.1",
-    "strategy-service": "0.73.3",
+    "strategy-service": "0.73.4",
     "ml-service": "0.58.34",
     "alerting-service": "0.63.40",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.47"
+    "client-reporting-api": "0.32.48"
   },
   "repositories": {
     "alerting-service": {
@@ -2075,7 +2075,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": "SIT failed — open for fixes",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2249,8 +2249,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.88.4.dev1+gba73ee99e",
-      "published_at": "2026-08-17T13:08:36Z",
+      "version": "0.88.5.dev1+g39e089c6a",
+      "published_at": "2026-08-17T13:25:10Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
@@ -2259,8 +2259,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.103.9",
-      "published_at": "2026-08-17T12:06:05Z",
+      "version": "0.103.10.dev1+g59d928b1f",
+      "published_at": "2026-08-17T13:28:27Z",
       "registry": "artifact-registry"
     }
   }
