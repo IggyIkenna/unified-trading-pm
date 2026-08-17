@@ -57,10 +57,20 @@ source: >-
 
 ## Todos
 
-- [ ] [DOC] P1. **Update the published skills-benchmark artifact** once batch21's `/plan-reconcile` and
+- [x] ✅ [DOC] P1. **Update the published skills-benchmark artifact** once batch21's `/plan-reconcile` and
       `/na-eligibility-audit` re-run todos have both landed — cite the two fresh reports (timestamps + numbers). Source:
       `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — ✅ DONE 2026-08-17 (slot 26): the original artifact URL
+      (`https://claude.ai/code/artifact/246c4f9a-c3c8-4643-b099-d7023f7c17a4`) belongs to a different,
+      interactive-only claude.ai account — unreachable/unowned from this AO-dispatched worker session (`list` doesn't
+      show it, `WebFetch` refuses it as a non-member public reader). Published a new artifact instead —
+      `https://claude.ai/code/artifact/e1ef46e8-1854-4ca5-96da-6cc66d88f2cb` — citing both fresh reports with
+      timestamps + numbers: `/plan-reconcile`'s 2026-08-16 SOLO pre-check (correctly aborted, 5 concurrent shard
+      agents) + its most-recent real whole-corpus reference number (2026-08-12: 774 docs, 121 contradictions
+      6P0/37P1/52P2/26P3), and `/na-eligibility-audit`'s 2026-08-16 (slot 9) Phase-0 steady-state benchmark
+      (449 `assigned_vm:NA` docs / 1,516 open todos, 324 in-scope, full 10-tranche table). Source issue doc's own
+      artifact-update todo left partially open (see its inline note) — its broader "final status of every ruled
+      decision" ask is out of this todo's narrower scope.
 - [ ] [REVIEW] P1. **Reconcile every batch21 todo's evidence** back into `ao_open_work_consolidated_tracker_2026_08_14.md`'s
       own Track 1/2/4 checkboxes AND into each todo's ultimate named source doc
       (`slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`,
@@ -85,6 +95,14 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-17 (slot 26, review worker, AO-dispatched)**: Worked todo 1 (artifact update). Confirmed batch21's
+  `/plan-reconcile` (SOLO pre-check + 2026-08-12 reference number) and `/na-eligibility-audit` (2026-08-16 Phase-0
+  steady-state) re-run todos are both landed. Found the original artifact URL is owned by a different, non-AO
+  claude.ai account (unlisted under this session, `WebFetch` refuses it) — published a fresh artifact
+  (`https://claude.ai/code/artifact/e1ef46e8-1854-4ca5-96da-6cc66d88f2cb`) citing both fresh reports with full
+  timestamps/numbers/tables instead of an in-place edit. Left an inline note on the source issue doc's own
+  artifact-update todo since its scope is broader than this one (full ruled-decision ledger, not just the two
+  re-run numbers) — that half stays open there.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **2026-08-16** — Authored in the same turn as batch21, per the mandatory finalize-twin rule. `sequential: true` since
   the 4 todos are a genuine reconcile→archive chain (todo 1 needs todos 2-3 of the parent done; todo 2 needs todo 1's

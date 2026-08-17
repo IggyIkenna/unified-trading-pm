@@ -301,7 +301,21 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - [ ] [DOC] P2. Update the published benchmark artifact
       (`https://claude.ai/code/artifact/246c4f9a-c3c8-4643-b099-d7023f7c17a4`) with the clean re-run numbers once both
       of the above land, and with the final status of every ruled decision above (shipped / still-open /
-      superseded-by-concurrent-work).
+      superseded-by-concurrent-work). — **Partially done 2026-08-17 (batch21_finalize todo 1, slot 26)**: the
+      "clean re-run numbers" half is shipped — new artifact
+      `https://claude.ai/code/artifact/e1ef46e8-1854-4ca5-96da-6cc66d88f2cb` cites both fresh reports (the
+      2026-08-16 `/plan-reconcile` SOLO pre-check + its 2026-08-12 774-doc/121-contradiction reference number, and
+      the 2026-08-16 `/na-eligibility-audit` Phase-0 449-doc/1,516-todo/324-in-scope steady-state benchmark with
+      full per-tranche table), full detail/timestamps/citations in the new page. **Published as a NEW artifact, not
+      an in-place update of the old URL** — the original `246c4f9a-...` page was published from a different,
+      interactive-only claude.ai account/session; the AO-dispatched worker session that landed this update has no
+      ownership/edit access to it (confirmed: `Artifact({action:"list"})` under this account does not list it, and
+      a direct `WebFetch` of the URL returns "served as a public non-member reader, reading not enabled"). Treat
+      `e1ef46e8-...` as the current benchmark artifact going forward; the old URL is left as-is (still fetchable by
+      whoever owns it) with a note on the new page pointing back to it for provenance. **Still open**: the
+      "final status of every ruled decision above" half — that's a separate, much larger ledger-reconciliation ask
+      than batch21_finalize todo 1's narrower "cite the two fresh reports" scope; left for whoever next works this
+      checkbox (or a dedicated follow-up) to do a full pass over every ruled decision in this doc.
 - [x] [OPERATOR] P2. **4 timer-script edits were NEVER APPLIED** (agent-orchestrator repo) — `TimeoutStartSec` bump
       2450->6000 for `plan-reconciler.timer`, cadence change hourly->every-2h for `plan-reconciler`/
       `ag-closeout-auditor`/`na-eligibility-auditor` (the latter two offset to even/odd hours so their 9-concurrent
