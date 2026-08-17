@@ -313,12 +313,18 @@ source: >-
       needed to the target doc; its own `archive_exempt: true` (frontmatter) already documents the 0-open-todos state
       and the deliberate archival deferral, so that note doesn't need repeating here.
 
-- [ ] [REVIEW] P2. **Reconcile `ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`'s 2 open items**
-      (lines ~97, ~98) — item 2 (port the doomed-run guard to the fleet workflow) is already directly answered/closed
-      by a completed `ci_satellite_ao_dispatch_batch13_2026_08_13.md` todo citing this exact doc as `Source:`
-      ("CHECKED 2026-08-14... zero hits; nothing to port"); item 1 (confirm PR #2714 merged, close) concerns a single
-      PR from 6+ days ago under a fleet that promotes every 15 min — re-verify live via `gh pr view 2714` before
-      flipping. Gate: both items flipped with fresh evidence, not assumed from staleness alone.
+- [x] ✅ [REVIEW] P2. **CHECKBOX RECONCILIATION 2026-08-17 (slot-19, review craft) — already resolved before this
+      batch's citation was checked, no source-doc edit needed.** The source doc's own 2 items (lines ~97-98) were
+      already flipped `[x]` by `unified-trading-pm@09cb20bf5a` (`/plan-reconcile` Phase -1, 2026-08-16 22:54:09+01:00)
+      — that commit lands AFTER this batch was drafted (`bfc56a714a`, 2026-08-16 19:07:40+01:00), so this batch's
+      citation was stale on arrival, same shape as this batch's 2 other stale-citation reconciliations above. Both
+      items independently re-verified live (not trusted from the citation alone): item 1 — fresh
+      `gh pr view 2714 --repo IggyIkenna/unified-trading-pm` (2026-08-17) returns
+      `state: CLOSED, mergedAt: null, closedAt: 2026-08-10T16:01:44Z`, matching the source doc's own citation exactly;
+      item 2 — fresh `grep -n 'inflight_wait\|status!=\|not superseding\|about to pass'
+      .github/workflows/ldr-to-main-promote-fleet.yml` (2026-08-17) still returns zero hits, matching
+      `ci_satellite_ao_dispatch_batch13_2026_08_13.md`'s 2026-08-14 finding. No further action needed on the source
+      doc; both items are correctly resolved with accurate evidence already in place.
 
 - [x] ✅ [REVIEW] P2. **Reconcile `cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`'s 1 open item** —
       already shipped via `ci_satellite_ao_dispatch_batch13_2026_08_13.md` (`unified-trading-pm@b167edbaf4`, new
@@ -435,3 +441,10 @@ source: >-
   (2026-08-16, `/plan-reconcile Phase -1`), before this batch was drafted. Verified live: `09cb20bf5a` is a real
   ancestor of current HEAD; `grep -n '^\- \[ \]'` on the target doc returns zero matches. Full evidence on the
   checkbox above.
+- **2026-08-17 (slot 19, review craft).** Checkbox-reconciled the "Reconcile
+  `ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`'s 2 open items" todo — no source-doc edit
+  needed, both items were already flipped `[x]` by the same `unified-trading-pm@09cb20bf5a` `/plan-reconcile` Phase
+  -1 commit (2026-08-16 22:54, after this batch's 19:07 draft). Independently re-verified both live rather than
+  trusting the citation: fresh `gh pr view 2714` matches the source doc's cited CLOSED/never-merged state; a fresh
+  grep for doomed-run-wait patterns in `.github/workflows/ldr-to-main-promote-fleet.yml` still returns zero hits.
+  Full evidence on the checkbox above.
