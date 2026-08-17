@@ -109,3 +109,4 @@ same-region "fallback" would just fail the same way the primary did.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:ff32366ad3f7d910]: KEEP-NA, valid — sole open item is an [OPERATOR] decision between provisioning real 2nd-region infra vs accepting same-region retry as permanent design; doc's own text calls it not worker-determinable.

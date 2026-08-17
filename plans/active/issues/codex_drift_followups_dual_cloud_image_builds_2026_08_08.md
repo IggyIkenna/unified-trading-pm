@@ -158,3 +158,4 @@ access from this worktree).
   `codebuild:ListProjects`/`codebuild:BatchGetBuilds`. Kept `[OPERATOR]` (not retagged away) and marked STANDING-ACTION:
   the decision is made but execution requires the operator's own AWS console/CLI access, which no worker can self-serve
   for this identity. Stays open pending the actual grant + a live re-verification.
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:c379fed54f923515]: KEEP-NA, valid — sole open item is a standing [OPERATOR] action with an explicit dated operator ruling already cited in-doc — execution needs the operator's own AWS access.

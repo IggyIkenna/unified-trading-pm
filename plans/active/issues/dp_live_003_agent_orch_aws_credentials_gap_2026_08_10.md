@@ -159,3 +159,4 @@ explicit instruction, faking or hand-waving execution here was avoided; this doc
   task's explicit instruction to document rather than fake — see
   `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`'s Part 1 resolution for the shipped check itself.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:3844ba11d27aa001]: KEEP-NA, valid — todo 1 is a genuine operator architecture/security decision (long-lived IAM key vs workload-identity federation); todo 2 is dependency-blocked on todo 1.
