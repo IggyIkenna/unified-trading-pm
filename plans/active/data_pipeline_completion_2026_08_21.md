@@ -176,6 +176,26 @@ than a hypothesis — the operator asked specifically what past failures should 
 | B19 | **Consolidator freshness gating** `+ADDED` | A launcher whose manifest index is stale **exits** rather than proceeding. | Proceeding against a stale index writes into a lie, and every downstream number inherits it. |
 | B20 | **Orthogonal shard vocabulary** `+ADDED` | Human sign-off that no two shard names describe the same thing. Near-duplicates are normalised, migrated and purged — in GCS *and* the manifest. | The operator's own bar: "no shard names that are not truly orthogonal and can be unified." Two names for one thing double-counts the denominator. |
 
+| B21 | **Manifest canonical on the named surface** `+ADDED` | **Zero non-canonical entries in Distinct Values in the deployment UI**, per asset group. That surface is the acceptance check — not a grep and not a script's own opinion. If Distinct Values shows a non-canonical value, the gate fails. | Operator's bar. A canonicalisation claim verified only by the tool that did the canonicalising is self-certifying. |
+| B22 | **Path ↔ manifest reconciled BOTH ways** `+ADDED` | Every GCS path follows the same structure as the code, **and** every path entry is recorded in the manifest in canonical format. Bidirectional: manifest→path (does every entry have an object?) *and* path→manifest (does every object have an entry?). Manifest-driven, no new whole-corpus walk (B13). | The path→manifest direction is the one that gets skipped, and it is the one that matters: an object in GCS with no manifest row is invisible to every coverage number we quote. SSOT: `/codex/02-data/orphan-object-detection.md`. |
+| B23 | **Schemas conformant, LOCKED and VERSIONED** `+ADDED` | Every GCS object conforms to its declared schema; schemas are locked and versioned, so a schema change is a deliberate versioned act rather than a drift downstream readers discover. | The 2026-04-14 incident: 85 `entity=fixtures_schedule` shards silently carried an instrument-catalogue shape instead of fixtures data, undetected until a downstream column projection failed. Conformance catches a WRONG-SHAPE write, which no coverage number ever will. |
+
+> **MEASURED 2026-08-17 — B22 currently FAILS, with a number.** A bounded 4,000-blob sample of the cefi
+> instruments-store: **1,000 non-canonical objects** (no `pipeline_mode=`/`asset_group=` segment, and a *different
+> size* from their canonical twin — different content, not duplicates) and **270 `.bak` files in prod**. Roughly a
+> third of sampled objects. Sports additionally uses a different path grammar (`day=/league=/venue=`), so "follows the
+> same structure as the code" is not yet true across asset groups. Full per-AG re-measure tracked in
+> [`/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`](/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md).
+>
+> **B23 is currently UNVERIFIED, not satisfied.** The 51-column instruments schema exists and is populated, but whether
+> it is *locked and versioned* has not been established. A schema existing is not a schema being locked.
+
+- [ ] [DATA] P0. **Verify B21** — Distinct Values in the deployment UI shows zero non-canonical values, per AG.
+- [ ] [OPERATOR] P0. **Sign off B20's shard-name orthogonality.** Human judgment, explicitly not delegable to a checker.
+- [ ] [DATA] P0. **Verify B22 in BOTH directions**, per AG, off the manifest.
+- [ ] [DATA] P0. **Establish whether B23's schemas are locked and versioned**, and if not, what locking them requires —
+      the gate with the least existing evidence.
+
 ---
 
 ## Data pipeline readiness — PAPER
