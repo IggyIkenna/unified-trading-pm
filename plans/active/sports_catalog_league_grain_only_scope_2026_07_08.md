@@ -53,7 +53,9 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     instruments-service/scripts/build_instrument_catalogue.py,
+    instruments-service/docs/SPORTS_INSTRUMENTS.md,
   ]
 ---
 
@@ -225,3 +227,6 @@ honest-coverage denominator math, not a same-file fix.
 - **na-eligibility-audit 2026-08-17** [body-hash:b9307e2036b4147d]: KEEP-NA-STALE (already-duplicated) — dated
   OPERATOR RULING 2026-08-08: all 4 open todos are carried by sports_taxonomy_p3_consumers_2026_08_08.md (verified
   status:active, its related: list cites this doc back). Independently re-confirmed by 2+ prior audit passes.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — added `sports_taxonomy_p3_consumers_2026_08_08.md`,
+  the confirmed owner of all 4 remaining open todos per the dated operator ruling banner, and `SPORTS_INSTRUMENTS.md`,
+  the docs file this plan's own root-cause section quotes verbatim (verified it still exists on disk).

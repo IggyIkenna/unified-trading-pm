@@ -44,7 +44,8 @@ source: >-
 context_scope:
   [
     /plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
-    market-tick-data-service/market_tick_data_service/scripts/build_drift_v2_sig_index.py,
+    market-tick-data-service/market_tick_data_service/scripts/_sig_index_walker.py,
+    market-tick-data-service/market_tick_data_service/scripts/_orca_swap_decoder.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
   ]
@@ -130,3 +131,8 @@ context_scope:
   dependency chain (the generalized walker must land before either decoder can be built against it; the manifest-write
   wiring needs both decoders; the backfill VM needs the wired write path). No indexer code built in this session, per
   the operator's own scope for this todo (file/flip the plan, don't build the indexer inline).
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) — `build_drift_v2_sig_index.py` no longer exists
+  on disk (deleted 2026-07-16, per the doc's own todo-1 finding); replaced with its generalized successor
+  `_sig_index_walker.py` and added `_orca_swap_decoder.py` (the shipped ORCA decoder the sole open Raydium-decoder
+  todo is explicitly modeled on). Both handler files kept — todo 4 (manifest-write wiring) names
+  `SolanaDefiHandler` as a candidate integration point alongside a new CLI operation.

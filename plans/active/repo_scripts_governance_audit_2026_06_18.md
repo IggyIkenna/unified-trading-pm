@@ -46,7 +46,7 @@ context_scope:
     /codex/06-coding-standards/script-homes.md,
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/base-service.sh,
-    plans/audit/results/repo_scripts_characterization_2026_06_18.md,
+    /plans/audit/results/repo_scripts_characterization_2026_06_18.md,
   ]
 ---
 
@@ -470,3 +470,5 @@ narrowest literal precondition passed.
   checkbox, not this already-scoped, already-classified promote list. The other 6 open items remain
   gated/condition-blocked (campaign gates, an unmet fleet-wide precondition, sequencing after the delete pass) — doc
   stays `assigned_vm: NA`.
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged — corrected one entry's path to the
+  corpus's leading-slash repo-root-relative convention (`plans/audit/...` → `/plans/audit/...`), content unchanged.

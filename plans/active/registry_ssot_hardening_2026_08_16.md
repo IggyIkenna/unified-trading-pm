@@ -51,14 +51,11 @@ superseded_by:
 context_scope:
   [
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
-    /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
-    /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
-    /codex/02-data/canonical-cutover-register.md,
-    unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py,
+    /plans/active/strategy_service_centralization_fixes_2026_08_16.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
     unified-api-contracts/unified_api_contracts/registry/venue_constants.py,
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
   ]
 ---
 
@@ -359,4 +356,13 @@ remains open now, by design: its own done-when explicitly defers resolution unti
 real instance ("not before"), which hasn't happened. **This plan is therefore not yet archivable** — one todo remains,
 deliberately parked pending a future event, not blocked on anyone. No `locked_by:` is set. Next session/operator: this
 plan stays `active` until that P2 item's trigger condition is met or the item is explicitly re-homed.
+
+- **context-scout 2026-08-17**: rebuilt context_scope (6 entries, was 9 — trimmed to the 2-6 minimal target). Dropped
+  4 "already-clean, no fold needed" evidence paths (`venue_adapter_keys.py`, `market_data_categories.py`,
+  `architecture_v2/schemas.py`, `canonical/crosscutting/errors`) and the `elysium_carveout` sibling doc (not cited by
+  either remaining open todo); added the actual current open-work targets — `architecture_v2/enums.py` (`VenueFeature`,
+  the P2 vocabulary-overlap todo) and `staked_basis.py` (`_STAKING_PROTOCOL_CHAIN`, the P1 venue→chain-SSOT todo) —
+  plus `strategy_service_centralization_fixes_2026_08_16.md` (the downstream plan explicitly blocked on that P1
+  todo's answer) and `/codex/02-data/four-surface-reconciliation-procedure.md` (the doc's own cited method-note SSOT
+  for probing the right vocabulary). `venue_constants.py` kept (targets both remaining open todos).
 - **na-eligibility-audit 2026-08-17** [body-hash:eef83641d4201ce4]: KEEP-NA, valid -- Fresh plan (2026-08-16), no prior audit history. Both remaining todos are genuine, currently-undecided design calls: the VenueFeature/VenueCapability vocabulary-overlap todo is deliberately deferred pending a not-yet-occurred trigger event (VenueCapabilityV2's first real instance -- zero live instances exist today); the venue-chain SSOT overlap todo explicitly instructs the resolver NOT to assume a merge and to decide between two legitimate different-purpose registry designs (UAC wallet-grouping vs strategy-service staking-protocol lookup), with a downstream plan (strategy_service_centralization_fixes_2026_08_16) waiting on this answer.

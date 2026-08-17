@@ -643,3 +643,5 @@ materialized.
   operator-gated" entry (hard-stop #2, reversibility-qualified per §3a but not yet exercised for this specific
   population — needs the dry-run census's Part-5 twin-coverage proof first). No flip, no further extraction (would
   duplicate batch12).
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged — still the sole E8 legacy-delete
+  open item's script target, the closeout hub, and the 2 coverage/manifest codex SSOTs.

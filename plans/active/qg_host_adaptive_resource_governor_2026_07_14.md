@@ -49,6 +49,7 @@ context_scope:
     scripts/quality-gates-base/qg-host-governor.sh,
     scripts/quality-gates-base/base-service.sh,
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
+    /plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md,
   ]
 ---
 
@@ -919,3 +920,8 @@ conflicts). No retry11-14 launched; scratchpad audit: nothing at risk each check
 signature (STAGE 0→2 clean, queue `30s`→`360s`, zero terminal marker; `mtds_quickmerge_retry11.log`/`b7smu8yr2.output`/
 `b188ui3vl.output`). MTDS `ahead=2 behind=5`, commits `85d593bc`/`31995524` intact. Still `BLOCKED-OPERATOR-DECISION`;
 no retry12 per retry discipline.
+
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) — added
+  `/plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`, the doc this plan's own tail
+  Progress Log now repeatedly cross-references as the live evidence trail for the pending silent-death
+  option-1-vs-option-2 operator decision; prior 4 entries unchanged.
