@@ -55,6 +55,8 @@ context_scope:
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
     /codex/06-coding-standards/integration-testing-layers.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
+    system-integration-tests/scripts/run_cross_repo_invariants.sh,
+    unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py,
   ]
 ---
 
@@ -306,3 +308,9 @@ already stated in the body — `~16 genuinely live` (execute) and `8` (read) —
 flipped checkbox above. This was the last open todo in this plan — all six now flipped, definition-of-done review
 already independently re-verified the other five (slot 13). Per the archival HARD RULE (every todo done + unlocked
 → archive immediately), this plan should be archived in the same session that ships this flip.
+
+**context-scout 2026-08-17**: refreshed context_scope (6 entries) — kept the 2 parent issue docs and 2 codex SSOTs
+(SIT invariants + the canonical oracle the skills-audit todo covers), added 2 source paths covering the doc's two
+main technical threads: the SIT-invariant wiring hub (`run_cross_repo_invariants.sh`, touched by 2 of 6 todos) and
+the LST address SSOT registry (`lst_token_addresses.py`, touched by 2 of 6 todos plus the finalize doc's eETH/rsETH
+review).
