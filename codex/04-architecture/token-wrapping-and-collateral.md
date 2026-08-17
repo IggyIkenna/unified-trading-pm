@@ -24,7 +24,7 @@ created: 2026-04-03
 authoritative_for: [token wrapping rules + venue collateral acceptance matrix]
 referenced_by:
 owner:
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-17
 code_refs:
 ---
 
@@ -255,7 +255,7 @@ Perp margin must match the venue requirement:
 ### USDC Margin Buffer (`margin_buffer_pct`) — shipped 2026-07
 
 For `CARRY_STAKED_BASIS_PERP` and `CARRY_STAKED_BASIS_DATED` (RECURSIVE_STAKED_CARRY_BASIS_PERP), the
-`_derive_structure()` function (`staked_basis.py:344`) resolves the perp-margin structure from
+`_derive_structure()` function (`staked_basis.py:345`) resolves the perp-margin structure from
 `VENUE_COLLATERAL_MATRIX`:
 
 | Outcome                | Condition                    | `f` (staked fraction)   | Margin token       |
@@ -275,6 +275,20 @@ The parameter is user-overridable per strategy slot via `param_schema.py`'s `PAR
 margin), ignoring the user-set value.
 
 SPLIT_STAKE was deleted 2026-05-05 (see `MarginStructure` docstring, `staked_basis.py`).
+
+#### Opportunity-ranking consequence (`archetypes_rank.py`)
+
+The down-sized structure feeds forward into slot RANKING, not just sizing (Phase A's R2 requirement, same plan as
+above). `CarryStakedBasisRankAllocator._score()`
+(`strategy_service/portfolio_allocator/archetypes_rank.py:373-383`) scores an `LST_AS_MARGIN` slot (buffer == 0) at
+its full gross carry, but a `USDC_MARGIN_BUFFERED` slot at
+`gross_carry * (1 - margin_buffer_pct) - margin_buffer_pct * _DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS` — the reduced
+effective size MINUS a cross-exchange/dual-deposit capital-cost penalty scaled by the buffer
+(`_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS = 150` bps at a full buffer, `archetypes_rank.py:337` — CONFIRMED-STANDING
+per operator ruling 2026-08-08, no further real-cost calibration pending). An otherwise-identical buffered slot
+therefore always ranks below its full-collateral counterpart on both legs: it earns less (smaller effective size)
+and pays a real capital cost for funds sitting in two places (bridge/settlement latency, cross-exchange
+counterparty exposure, the idle stable not earning the staking leg's yield).
 
 ## Extending the Registries
 
