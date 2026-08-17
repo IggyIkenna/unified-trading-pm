@@ -19,7 +19,7 @@ related:
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-17"
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -62,7 +62,12 @@ source: >-
 > cited commit SHAs confirmed real ancestors of `origin/live-defi-rollout`), neither source doc reached zero open todos
 > so no source-doc archival triggered, and the batch plan + this finalize plan both moved to `plans/archive/2026_08/` in
 > this same turn. See `ui_satellite_ao_dispatch_batch4_2026_08_13.md`'s own archived banner for the corpus referrer-fixup
-> detail.
+> detail. **This is the single, clean flip+archive commit** — a prior attempt at this same archival hit a
+> `safe-doc-push.sh` tooling bug (`sdp_recover_named_from_any_stash()` false-positive,
+> `safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md`) that split the rename across 2
+> non-adjacent commits with no single commit showing the checkbox flip at the tracked `plan_ref` path; that shape was
+> corrected by restoring the pre-flip content at its tracked path (`unified-trading-pm@78e2b5d2a8`) so this commit could
+> perform a genuine single-commit flip+`git mv`.
 
 ## Todos
 
