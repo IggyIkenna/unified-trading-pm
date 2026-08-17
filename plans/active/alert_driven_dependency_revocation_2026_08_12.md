@@ -107,16 +107,15 @@ bridges them; it does not extend one over the other.
 
 - [x] ✅ [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS
       markers — the drain-budget denominator (worst-case waste = longest-shard-duration × dependent-count). Extracted
-      2026-08-16 to `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 1 (scoped
+      2026-08-16 to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 1 (scoped
       `/na-eligibility-audit` run), completed + that plan archived 2026-08-17. **deployment-service@e631240990**
       shipped `scripts/measure_shard_duration_p95.py`. **Worst-case drain-budget denominator: 34072.0s (~9.5h)**,
       from `launch-mtds-dex-swaps-backfill-vm.sh` (backfill launchers dominate the tail, as expected) — measured
       from a 30s-budget smoke sample, **partial coverage honestly reported by the script itself: 62/13,891
       fleet-monitored run.log blobs, ~0.45%** (a fuller run was blocked by a confirmed ~90-100s host-level SIGTERM
       constraint on the orchestrator VM, root cause unconfirmed, documented in the script's own docstring). Full
-      per-family p95/median/max table: `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 1's
-      Progress Log (about to archive to `plans/archive/2026_08/` — this pointer gets repointed in that same
-      commit). If a fuller corpus run later shifts the worst-case number, update it here.
+      per-family p95/median/max table: `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`
+      item 1's Progress Log. If a fuller corpus run later shifts the worst-case number, update it here.
 - [x] ✅ [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
       PROGRESS via `record_captured`) vs drain-blind (no checkpoint) — a drain-blind prefix can only ever receive
       DEPS_HOLD. Repo: deployment-service. — **MEASURED 2026-08-14** (no code changed, read-only census): **243 total
@@ -379,7 +378,7 @@ bridges them; it does not extend one over the other.
       abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports, not cefi, because cefi
       resolves to a SINGLE job and the test would have been vacuous).
 - **[CODE] P2. CANCELLED — SUPERSEDED 2026-08-16 (mechanism built `deployment-service@310f82e84f`; production wiring
-  extracted to `/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2, via a scoped
+  extracted to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2, via a scoped
   `/na-eligibility-audit` run).** A FLEET_HALT pause registers no `MaintenanceWindow`, so
   `check_consolidator_scheduler_paused` (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one.
   Operator chose "route through `pause_for_maintenance()`" — `RevocationActuator.__init__`'s

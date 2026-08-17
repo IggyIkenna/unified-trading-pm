@@ -217,7 +217,7 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 > automated signal distinguishing "genuinely accidental, safe to resume" from "deliberately paused by an in-flight
 > plan, resuming this races it" beyond manually finding the owning plan doc — **confirmed recurred twice in one day
 > (2026-07-31)**: the prediction and tradfi manifest-consolidator crons were both paused as part of
-> `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s tracked pause/apply/resume sequence (raw
+> `/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s tracked pause/apply/resume sequence (raw
 > `gcloud`, not the sanctioned `scheduler_maintenance` CLI, so no maintenance window was registered), and in the
 > tradfi case a triage agent actually RESUMED the cron directly before finding the owning plan — a mistake
 > self-corrected ~3 minutes later with zero consolidator ticks having fired in between (verified via the bucket's
@@ -376,7 +376,7 @@ coding-standards pointer above for the batch-vs-live scope distinction.
 `RevocationActuator()` construction is a verified no-op). Wiring it in is blocked on a real import cycle (this module
 sits below `escalation.py`; the resolver function sits behind `meta_targets.py`→`meta_watchers.py`→`escalation.py`→
 back to this module) — tracked as an AO-dispatchable todo in
-`/plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md`. Do not assume suppression works until that lands.
+`/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`. Do not assume suppression works until that lands.
 
 **A third anti-inertness class, found live 2026-08-15/16: an identity that is EMITTED but never REGISTERED.** The
 "built but not called" failure mode above (actuator with no caller) and "no dependent target resolves" (the

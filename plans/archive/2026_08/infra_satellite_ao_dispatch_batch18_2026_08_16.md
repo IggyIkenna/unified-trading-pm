@@ -37,7 +37,6 @@ effort: medium
 drift_direction: advance-code
 locked_by:
 locked_since:
-archive_exempt: true
 context_scope: [deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py, deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py, deployment-service/deployment_service/data_pipeline_monitors/meta_targets.py, deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py, deployment-service/deployment_service/data_pipeline_monitors/escalation.py, deployment-service/scripts/recovery/_durable_state.py, /plans/archive/2026_08/revocation_arming_2026_08_14.md, /plans/active/alert_driven_dependency_revocation_2026_08_12.md]
 supersedes:
 superseded_by:
@@ -46,6 +45,11 @@ source: >-
   /na-eligibility-audit, scoped run 2026-08-16 (operator-requested, scoped strictly to the 3 items below, not a
   tranche sweep) — see the conflict-check evidence in each item below and in this doc's own Progress Log.
 ---
+
+> **ARCHIVED 2026-08-17** — all 3 todos done, unlocked, closed out via the standard 6-step ritual. The item-1
+> drain-budget worst-case number (34072.0s) is migrated into
+> `/plans/active/alert_driven_dependency_revocation_2026_08_12.md`'s own Phase 0 item, which points back here (this
+> doc's Progress Log below) for the full per-family table. This doc is retained for provenance only.
 
 # Infra satellite — alert-driven-revocation follow-up work (batch 18)
 

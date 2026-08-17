@@ -46,7 +46,7 @@ check_ao_dispatch_visibility_gate: FAILED
 whose disk-vs-backlog dispatch visibility dropped without a declared
 `BLOCKED-*`/`DEFERRED-BY-DESIGN`/stretch marker at the start of their line:
 
-1. `plans/active/infra_satellite_ao_dispatch_batch18_2026_08_16.md` — "[SCRIPT] P0. Measure p95
+1. `plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` — "[SCRIPT] P0. Measure p95
    and max shard duration per launcher family from `vm-logs/` run.log PROGRESS…"
 2. `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md` — "[DOC] P2.
    Re-check the Deferred/excluded population for cleared gates. batch6 excluded 11 docs across
