@@ -7,6 +7,7 @@ summary: >-
   generate_venue_work_list.py` (16 rows, measured 2026-08-16; re-run the script, this count is not a constant).
   Not an extraction from another source doc — no operator-gated item mixed in, per task_template.md §3 finding Y.
 status: active
+archive_exempt: true
 nature: process
 asset_group: [tradfi]
 stage: [data, features, strategy, execution]
@@ -144,18 +145,15 @@ source: >-
         instruction is routed to the correct per-exchange execution adapter (presumably via the instrument's
         own listing-exchange metadata, not the strategy's venue string) was not traced — reporting unverified
         per the operator's DERIVED-readiness ruling rather than assuming pass.
-- [ ] [BACKEND] P1. **Gap: tradfi archetype slots declare `venue="cme"` but `get_position_adapter()` has no
-      `"cme"` match arm** (`strategy-service/strategy_service/position/position_interface/factory.py`
-      `_get_other_adapter` only matches `"ibkr"`) — every LIVE/PAPER(real) position read for the 8 real CME
-      slots (`ML_DIRECTIONAL_CONTINUOUS`/`RULES_DIRECTIONAL_CONTINUOUS`@cme-{es,nq,cl,gc} +
-      `archetype_slots_tradfi.py`'s 5 CME-venue slots) raises `ValueError: Unknown venue: 'cme'`; the same gap
-      applies to `"cboe"`/`"nasdaq"`/`"nyse"` if a slot is ever declared with those literal tokens instead of
-      the generic `"ibkr"` one. BATCH/PAPER(sim) is unaffected (ledger-backed, venue-agnostic). Done-when: either
-      `get_position_adapter` gains match arms for `cme`/`cboe`/`nasdaq`/`nyse`/`ice`/`fx` that route to
-      `IBKRPositionAdapter` (mirroring `execution-service`'s `TRADFI_VENUES` set), or the catalogue's CME slots
-      are corrected to `venue="ibkr"` (matching the equities-slot convention) with a cited reason for why CME
-      futures need their own token if execution-side does route per-exchange. Checked via grep before filing —
-      no existing plan/issue doc covers this (confirmed clean 2026-08-16).
+- [x] ✅ [BACKEND] P1. **Gap: tradfi archetype slots declare `venue="cme"` but `get_position_adapter()` has no
+      `"cme"` match arm** — SHIPPED `strategy-service@ff6c00870a`. `_get_other_adapter`'s `"ibkr"` match arm now
+      also matches `"cme"`/`"cboe"`/`"nasdaq"`/`"nyse"`/`"ice"`/`"fx"` — every one of `execution-service`'s
+      `TRADFI_VENUES` set — and routes them to the same `IBKRPositionAdapter` as the generic `"ibkr"` token, since
+      position reads for these venues resolve conid-scoped positions off the same underlying IBKR connection.
+      Updated the docstring's supported-values list and the `Unknown venue` error message's `Valid:` list to
+      match. Added `test_factory_tradfi_venues_route_to_ibkr` (parametrized over all 6 tokens) to
+      `tests/position/position_interface/unit/test_adapters.py`, alongside the pre-existing `test_factory_ibkr`.
+      Full local `quality-gates.sh` green on the committed HEAD.
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@48f83481ce`.
       TradFi transfers are architecturally broker-scoped, not per-exchange:
       `execution_service/trade_execution/adapters/ibkr_tradfi.py:47` — "Execution routes through IBKR" for
