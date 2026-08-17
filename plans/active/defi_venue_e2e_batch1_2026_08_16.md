@@ -206,14 +206,25 @@ source: >-
       missing their exit-side execution action). Every other protocol fails at least 2 of the 3 steps.
       `BLOCKED-ON` markers: all `oracle_prices`/`dex_pool_state`/`dex_pool_swaps`/`staking_yields` rows stay
       blocked on their step-5 gap todos above (unchanged, not re-investigated here).
-- [ ] [BACKEND] P0. **Gap: execution-service's live DeFi path has no exit-side action at all** —
-      `DeFiAdapter._dispatch_defi_operation` (`execution_service/adapters/defi_adapter.py:223-237`) branches
-      only on `SWAP/LEND/BORROW/STAKE`; there is no `WITHDRAW`, `REPAY`, or `UNSTAKE` case anywhere in the live
-      dispatch path, so even the 2 protocols with real live wiring (AAVE via LEND/BORROW, LIDO via STAKE) can
-      enter a position but never exit one through this layer. A correctness/safety gap, not just a coverage gap.
-      Done-when: WITHDRAW/REPAY/UNSTAKE dispatch exists and exercises a real connector for at least AAVE and
-      LIDO, or the omission is confirmed intentional (e.g. exits route through a documented separate path) with a
-      cited reason.
+- [x] ✅ [BACKEND] P0. **Gap: execution-service's live DeFi path has no exit-side action at all — DONE 2026-08-17
+      (slot-17).** `DeFiAdapter._dispatch_defi_operation` (`execution_service/adapters/defi_adapter.py`) now
+      routes `WITHDRAW`/`REPAY` into `_execute_lending` (calling `AAVEConnector.withdraw()`/`.repay()`, both
+      already complete + live-wired via `_execute_live_withdraw`/`_execute_live_repay`) and `UNSTAKE` into
+      `_execute_staking` (calling `LidoConnector.unstake()`, already complete + live-wired via `_unstake_live` —
+      honestly reports `staked_token="stETH"`, not WETH, since the Lido withdrawal queue isn't wired; also wired
+      `SymbioticConnector.withdraw()` for UNSTAKE, same pattern). This was purely a dispatch-table gap — every
+      connector method already existed. **Also fixed the upstream routing gate**: `DEFI_OPERATIONS` frozenset in
+      `live_execution_handler.py` was missing `WITHDRAW`/`REPAY` — without this fix those instructions would have
+      misrouted to `adapter_type="trade"` and never reached the new dispatch code at all. **Also fixed the true
+      root gap**: UAC's `InstructionActionV2` enum had no `WITHDRAW`/`REPAY` members at all, so no caller could
+      even construct such an instruction — added both (+ the paired `BENCHMARK_FILL_MODE_BY_ACTION` completeness
+      dict entry, caught by `execution-service`'s own exhaustiveness test). New unit tests:
+      `test_execute_withdraw`, `test_execute_repay`, `test_execute_unstake_lido`,
+      `test_execute_unstake_unsupported_venue`; fixed `test_execute_unsupported_operation` (asserted UNSTAKE was
+      unsupported — no longer true) and `test_defi_operations_constant`. Full `quality-gates.sh` green both repos.
+      Evidence: `unified-api-contracts@03ff79e8b8` (InstructionActionV2 WITHDRAW/REPAY) +
+      `unified-api-contracts@73a7594285` (BENCHMARK_FILL_MODE_BY_ACTION follow-up) +
+      `execution-service@b8115edffc` (dispatch + routing-gate + tests).
 - [ ] [BACKEND] P1. **Gap: execution-service's live `DeFiAdapter` wires only 5 of 12+ fully-built protocol
       connectors** — `defi_execution/protocols/` has complete, real connector modules for `morpho.py`,
       `kamino.py`, `etherfi.py`, `marinade.py`, `puffer.py`, `rocket_pool.py`, `solblaze.py`, but
