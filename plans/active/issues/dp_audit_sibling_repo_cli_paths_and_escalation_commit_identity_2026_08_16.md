@@ -62,7 +62,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 locked_since:
 context_scope: [e2e-testing/scripts/audit/manifest_hygiene_daily.py, e2e-testing/scripts/audit/_dp_common.py, e2e-testing/Dockerfile, unified-trading-library/Dockerfile, /codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md]
 source: >-
@@ -191,10 +191,40 @@ in the container's `unified-trading-pm` worktree before the container exits.
       `_dp_common.py` (or the Dockerfile), so a genuine RED finding's auto-filed issue doc actually persists instead
       of being silently dropped when the ephemeral Cloud Run container exits. Verify with a planted non-v9 row +
       confirm the issue doc lands on `origin/live-defi-rollout`. Repo: e2e-testing. — e2e-testing@7edd1a3d03
-- [ ] [CODE] P3. Once (1) is fixed, re-run `uts-prod-dp-manifest-hygiene-changed` and `-full` and confirm
+- [x] ✅ [CODE] P3. Once (1) is fixed, re-run `uts-prod-dp-manifest-hygiene-changed` and `-full` and confirm
       `DP_DIVERGENT_EMPTY`/`DP-COVERAGE`-class findings, if any exist in the real manifests, now surface for the
       first time — this may itself uncover a backlog of real, previously-invisible divergence findings worth a
-      follow-up triage pass. Repo: e2e-testing.
+      follow-up triage pass. Repo: e2e-testing. — confirmed live 2026-08-17, see Progress Log + new todos (6)/(7)
+      below for two DISTINCT bugs surfaced by this re-run.
+- [ ] [CODE] P2. `detect_manifest_divergence.py`'s classification CSV (`divergence_<date>.csv`) is never found on disk
+      by `manifest_hygiene_daily.py` inside `e2e-audit:latest` in PRODUCTION (confirmed live 2026-08-17, both
+      `-changed` and `-full` runs, all 5 AGs: `divergence CSV ... not found (CLI may have failed or been scoped out)`
+      immediately after every `invoking divergence: ...` line) — even though the CLI now RESOLVES + RUNS (todo (1)
+      fixed that half) and DOES emit `DIVERGENT_EMPTY` log lines the fallback stdout-counting path in
+      `_check_divergence` picks up. Root cause not yet diagnosed (candidates: the CLI writes to a path that doesn't
+      match `_divergence_csv_path()`'s `<pm-root>/plans/audit/results/divergence_<date>.csv` computation in-container;
+      a silent write failure; a working-directory mismatch). Consequence: EVERY `oracle_expects_but_empty` count
+      reported in production (5/5/1/5 across cefi/tradfi/sports/prediction on 2026-08-17) is coming from the
+      documented-unreliable stdout-substring fallback ("off by 2-3 orders of magnitude on real corpora" per the
+      code's own docstring), NOT the accurate CSV-based classification; `oracle_expects_no_manifest_row`
+      (MISSING_EXPECTED) has NO fallback at all and is 100% blind in production (`SKIPPED (divergence_csv_absent)`
+      on every AG, every run). Diagnose by invoking `detect_manifest_divergence.py --asset-group cefi` directly
+      inside a fresh `e2e-audit:latest` container shell and checking where it actually writes vs.
+      `_divergence_csv_path()`'s expectation. Repo: e2e-testing / unified-trading-library.
+- [ ] [CODE] P2. The escalation auto-commit collides when `-changed` and `-full` run the same UTC day: both call
+      `file_escalation_issue(slug="manifest_hygiene_red", ...)`, which derives the SAME date-based filename
+      `manifest_hygiene_red_all_<date>.md` (+ same-named per-AG candidate CSVs) regardless of which job wrote it.
+      Confirmed live 2026-08-17: `-changed` (11:39-11:49 UTC) committed + pushed successfully
+      (`unified-trading-pm@ceff608`); `-full` (11:39-12:45 UTC, ran concurrently) computed its OWN correct findings
+      (including full-mode-only `phantom_captured_no_parquet`/`shard_4pillar_fail` counts never captured by the
+      changed run) then hit an `add/add` rebase conflict on the identical filenames when it tried to commit ~1h
+      later, logged `WARNING commit-and-push failed (CalledProcessError)`, and exited 0 — so the full-mode-only
+      findings (cefi/tradfi/sports phantom=1 + shard_4pillar=1 each) were silently dropped, the exact
+      "computed correctly but never persisted" failure class todo (3)/(4) above already fixed for the git-identity
+      case, now recurring via a git-conflict path instead. Fix: make `file_escalation_issue`'s slug/filename
+      mode-aware (e.g. append `--mode` to the slug: `manifest_hygiene_red_changed_<date>.md` /
+      `manifest_hygiene_red_full_<date>.md`) so same-day changed+full runs never collide. Repo: e2e-testing
+      (`scripts/audit/_dp_common.py` / `manifest_hygiene_daily.py`'s `run()` → `file_escalation_issue` call).
 - [x] ✅ [CODE] P2. `_dp_common.py`'s `file_escalation_issue` template has drifted from the current
       `doc-frontmatter-schema.md` — a fresh escalation doc it wrote on 2026-08-16 (RED cefi finding, first real
       escalation since (1) above shipped) was missing `doc_type`/`summary`/`status`/`nature`/`asset_group`/`stage`/
@@ -322,3 +352,27 @@ in the container's `unified-trading-pm` worktree before the container exits.
   not reproducible from a worker slot without container access (same limitation the slot-5 git-identity fix
   for todo (3) already noted). Remaining open todo (4)/P3 (re-run + confirm `DP_DIVERGENT_EMPTY` findings
   now surface for real) is unaffected by this fix and still open.
+
+- **2026-08-17 (infra worker, slot-25)**: Shipped todo (4)/P3 — no code, live re-run + confirmation.
+  Triggered both `uts-prod-dp-manifest-hygiene-changed` (execution `r6bcv`, 11:39-11:49 UTC) and
+  `uts-prod-dp-manifest-hygiene-full` (execution `7pbdm`, 11:39-12:45 UTC — the GCS-walking phantom+4pillar
+  checks took ~65min) via `gcloud run jobs execute --region=asia-northeast1`, then read both executions'
+  logs via `gcloud logging read`. **Confirmed the core ask**: `oracle_expects_but_empty` (`DP_DIVERGENT_EMPTY`)
+  now surfaces real, non-zero counts for the first time — cefi=5, tradfi=5, sports=1, prediction=5, defi=0
+  (both runs agree) — a previously-invisible backlog exactly as anticipated, now flowing through the existing
+  escalation path (the `-changed` run's finding auto-filed + committed successfully as
+  `manifest_hygiene_red_all_2026_08_17.md` → `unified-trading-pm@ceff608`, already triaged/frontmatter-fixed
+  by other agents per this file's own git history). **But surfaced two DISTINCT new bugs while confirming**,
+  filed as new todos above rather than left as prose (findings-triage HARD RULE): (a) the divergence CLI's
+  classification CSV is never actually found on disk in-container in EITHER run/mode (`divergence CSV ...
+  not found` immediately after every `invoking divergence:` log line, all 5 AGs, both executions) — so every
+  reported `oracle_expects_but_empty` count is coming from the documented-unreliable stdout-substring
+  fallback, not the accurate CSV path, and `oracle_expects_no_manifest_row` (MISSING_EXPECTED) is 100% blind
+  in production (no fallback exists for it); (b) the `-full` run's OWN escalation commit (its full-mode-only
+  phantom/4-pillar findings, computed correctly ~1h after `-changed` had already committed) hit an `add/add`
+  git conflict on the identical same-day filename `-changed` had already landed, failed to commit, and was
+  silently dropped — recurrence of the exact "computed but never persisted" class todo (3) fixed for the
+  git-identity case, now via a filename-collision path instead. Did not fix either — both need a real code
+  change in `e2e-testing`, out of a re-run-and-confirm task's own scope; see the two new todos above for the
+  concrete fix directions. Fresh-pulled the PM worktree (`git fetch` + `ff-only`) before this edit; no code
+  shipped this task (pure plan-flip + Progress Log, PM repo only).
