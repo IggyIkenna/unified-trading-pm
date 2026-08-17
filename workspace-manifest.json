@@ -82,11 +82,11 @@
     "unified-trading-library": "0.88.0",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.30.4",
-    "e2e-testing": "0.41.21",
+    "e2e-testing": "0.41.22",
     "agent-orchestrator": "0.100.3",
     "greeks-service": "0.18.49",
     "trading-agent-service": "0.13.0",
-    "strategy-service": "0.71.8",
+    "strategy-service": "0.71.9",
     "ml-service": "0.58.30",
     "alerting-service": "0.63.36",
     "unified-trading-api": "0.4.2",
@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.136.5.dev1+gae52db7ff",
-      "published_at": "2026-08-17T04:51:02Z",
+      "version": "0.136.6.dev1+g8a02229bb",
+      "published_at": "2026-08-17T05:37:43Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
