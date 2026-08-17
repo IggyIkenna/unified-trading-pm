@@ -92,6 +92,12 @@ depends_on: []
 context_scope: [/plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md, deployment-api/deployment_api/routes/data_status/_distinct_values.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py, market-data-processing-service/market_data_processing_service/app/core/live_workers.py]
 ---
 
+> **📁 ARCHIVED 2026-08-17 (na-eligibility-audit, dispatch agt-1c51ee)** — every todo is `[x]` done (the sole
+> remainder, the `LC_TARBALL_FRESHNESS=enforce` proposal, closed via `sports_satellite_ao_dispatch_batch10_2026_08_06.md`
+> todo 3). The `⚠️ CORRECTION 2026-08-08` banner immediately below remains the accurate record — real canonicalisation
+> of the residual non-canonical values is owned end-to-end by `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md`
+> / `sports_taxonomy_p3_consumers_2026_08_08.md`, not by this (now-archived) doc. No open work remains here.
+
 > **⚠️ CORRECTION 2026-08-08 — this doc's "0/0 non-canonical, RESOLVED" all-clear is MISLEADING and must not be read as
 > evidence the sports axes are canonical.** The writer-bug fixes and the deploy-freeze recovery recorded here were real
 > and are not in question. But the **"venues/instrument_types/data_types/chains all 0/0 non-canonical"** headline was
@@ -319,10 +325,15 @@ confirming before scoping a re-stamp for it.
       (`canonical-migration-sports-football-cleanup-*`, registered prefix, SPOT, torn down after): dry-run confirmed
       exactly 194/194 `attempted_failed`/0 non-phantom, apply removed all 194, verify re-download confirmed 0 remaining.
       Fresh census re-run: **LADBROKES_UK/SPORT888/FOOTBALL all show 0 manifest rows.** (repo: market-tick-data-service)
-- [ ] [INFRA] P3. File (or fold into an existing infra doc) a proposal to default `mtds-live-*` VM relaunches to
+- [x] ✅ [INFRA] P3. **DONE-ELSEWHERE 2026-08-16 (slot-19) — verified 2026-08-17 (na-eligibility-audit).** File (or
+      fold into an existing infra doc) a proposal to default `mtds-live-*` VM relaunches to
       `LC_TARBALL_FRESHNESS=enforce` — see the trap noted in the VM-restart todo above; a live producer silently running
       stale code for days-to-weeks is a plausible root cause worth closing off generally, not just patching for this one
-      incident. (repo: deployment-service)
+      incident. (repo: deployment-service) `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3 already
+      satisfied this done-when: filed `/plans/active/issues/mtds_live_vm_tarball_freshness_default_proposal_2026_08_16.md`,
+      recommending `LC_TARBALL_FRESHNESS=auto` (not `enforce` — superseded by `deployment-service@c1e0481`/`@450b212`
+      already making `auto` safe), with `enforce` offered as the explicit alternative. This doc's own checkbox was
+      simply never flipped when that todo landed.
 
 ## Progress Log
 

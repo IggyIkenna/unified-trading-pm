@@ -24,7 +24,7 @@ tags: [vm-tarball-deployment, tarball-freshness, mtds-live, vm-launcher-runbook,
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md,
-    /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
+    /plans/archive/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
     /plans/active/issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,

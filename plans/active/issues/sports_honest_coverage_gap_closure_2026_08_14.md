@@ -543,3 +543,7 @@ live SSH-based root-cause session or patience with more relaunches).
 ## Progress Log
 
 - **context-scout 2026-08-15**: populated context_scope (2 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:cef44b24fc1e387e]: KEEP-NA, valid — sole open item ([DATA] P2,
+  odds-VM freshness-skip-window investigation) is open-ended diagnostic work, explicitly "investigated but not
+  confirmed" per the doc's own text, with an operator notification already pending (no answer yet) — not a
+  mechanical/scripted fix with a predetermined target state.

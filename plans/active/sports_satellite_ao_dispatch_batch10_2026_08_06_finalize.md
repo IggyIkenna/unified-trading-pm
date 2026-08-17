@@ -64,16 +64,15 @@ context_scope:
       [MODEL] P2 + §F [AUDIT] P2 remain parked (operator/conflict-gated). Source:
       `sports_features_layer_findings_sweep_2026_07_18.md`. Done when: the [CONFIG] P2 checkbox is flipped with evidence
       and the residual open items are correctly tagged.
-- [ ] [INFRA] P3. Reconcile `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` — once batch-10
-      todo 3 (LC_TARBALL_FRESHNESS proposal) lands, flip the doc's sole open [INFRA] P3 checkbox and archive the doc
-      (all substantive items are closed). Source:
-      `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: the checkbox is flipped with
-      the proposal citation and the doc is archived. **CORRECTED 2026-08-12 (/plan-reconcile)**: "all substantive items
-      are closed" is WRONG — do not archive on that basis. `sports_taxonomy_p2_migration_2026_08_08_finalize.md` (newer,
-      2026-08-08, cites a specific dated audit) found the source doc's own "RESOLVED 2026-08-05: live panel confirmed at
-      venues/instrument_types/data_types/ chains all 0/0 non-canonical" claim was produced by exclusion sets, not actual
-      canonicalisation — a false all-clear, not a genuine resolution. Read that finding before flipping/archiving; the
-      source doc likely needs a dated correction, not a clean close.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-17 (na-eligibility-audit, dispatch agt-1c51ee).** Reconcile
+      `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` — the 2026-08-12 correction's concern is
+      satisfied: the source doc already carries a dated `⚠️ CORRECTION 2026-08-08` banner (added the same day
+      `sports_taxonomy_p2_migration_2026_08_08_finalize.md` was authored) stating the "0/0 non-canonical, RESOLVED"
+      headline was produced by accepted-exceptions, not real canonicalisation, with measured real counts (31
+      venues/10 data types vs. the panel's 10/7) and a pointer to the doc that owns genuine canonicalisation
+      (`sports_taxonomy_p3_consumers_2026_08_08.md`). The sole remaining `[INFRA] P3` checkbox (LC_TARBALL_FRESHNESS
+      proposal) is now flipped citing `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3's DONE status +
+      the filed proposal doc. Doc archived to `plans/archive/issues/` this same commit.
 - [ ] [DATA] P1. Reconcile `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` — once batch-10 todo 4 (verify-then-fix
       blank fixture_id) lands, flip the doc's blank-fixture_id checkbox per the outcome (fix shipped + evidence, or
       fixed-already + citation); the 2,436-shard reconcile + CLV-retrain items stay open (conflict/time-gated). Source:

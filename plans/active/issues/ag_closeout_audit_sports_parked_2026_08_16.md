@@ -268,3 +268,9 @@ independently found real evidence of staleness or blockage worth operator awaren
   audit passes). 25 taxonomy-tagged residual-work entries + 2 investigation notes parked below (`parked_findings=27`,
   `entries_written=27` — balanced).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17** [body-hash:e84253640409296d]: KEEP-NA, valid — 0 open todos (this is a
+  findings/parked-work ledger doc, not a checkbox-tracked plan); independently reconfirmed via a fresh full read,
+  consistent with the doc's own self-framing ("informational/fixed-in-run is not a todo"). One secondary note (not
+  this doc's own fix): Finding 1 names a likely `ao`/`infra`-tranche mistag on a different doc
+  (`dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`) that needs that tranche's own future run to
+  directly re-read and correct — flagged here for visibility, not actioned by this pass.

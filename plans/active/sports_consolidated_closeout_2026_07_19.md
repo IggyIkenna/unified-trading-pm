@@ -1005,3 +1005,10 @@ section above, which conflated answered and open items):
   1-12, most recently `sports_satellite_ao_dispatch_batch11_2026_08_09.md`/`batch12` today, both of which reference this
   doc's Tracks without duplicating them) rather than a whole-doc flip — consistent with every prior audit pass. No new
   extractable item found beyond what batch9-12 already claimed. No flip.
+
+- **na-eligibility-audit 2026-08-17** (agt-1c51ee): RECLASSIFY-split verdict — ⛔ banner stands; 11 open items
+  already covered by existing extraction docs (citations not yet annotated here) + 2 bounded-unclaimed items
+  (lines 580/582) newly extracted to `sports_satellite_ao_dispatch_batch16_2026_08_17.md`. **NOT applying the 11
+  citation fixes this pass**: doc is 1007L (over the 1000L hard cap), no SCOPED line-cap exception fits a
+  multi-line prose append — referred to `/plan-reconcile` for a line-cap-split pass; full citation list is in
+  this run's evidence/chat report.

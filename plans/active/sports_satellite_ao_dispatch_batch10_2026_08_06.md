@@ -29,7 +29,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
     /plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
-    /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
+    /plans/archive/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
