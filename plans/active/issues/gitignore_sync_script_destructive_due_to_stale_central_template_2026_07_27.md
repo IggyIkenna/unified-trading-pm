@@ -150,3 +150,4 @@ each of the 24 sibling repos has independently accumulated that I did not audit 
   No action needed.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — verified all still resolve).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

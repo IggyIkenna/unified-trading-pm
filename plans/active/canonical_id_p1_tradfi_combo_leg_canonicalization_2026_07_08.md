@@ -225,6 +225,7 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 11)**: cadence confirmed correct as already documented
   — "after each future `build_instrument_catalogue.py` roll-up cycle" (line 213-224). The standing todo is
   already properly self-contained and dispatchable via the same rollout methodology used in batch1-8; no new

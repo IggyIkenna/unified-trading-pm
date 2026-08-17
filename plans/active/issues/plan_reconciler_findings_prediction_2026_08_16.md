@@ -37,6 +37,13 @@ author: plan_reconciler
 source: "Sharded daily /plan-reconcile prediction-tranche sweep, autonomous dispatch agt-23fdbb, slot 30, 2026-08-16."
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/epics/predictions_master.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
+  ]
 ---
 
 # 2026-08-16 plan_reconciler — prediction tranche
@@ -498,3 +505,11 @@ in this same run.
   **This dispatch asked no new blocked-questions** — completing via `/done` per STEP 8's "immediately if you asked
   none" clause; `BLK-e7b0e8da` remains the one standing operator-attention item, already durably tracked above, not
   lost.
+- **na-eligibility-audit 2026-08-17** [body-hash:38b693a541e8f6c0]: KEEP-NA, valid — Read in full (501 lines). 14 open
+  items: 6 in "Contradictions — CONFIRMED, NOT fixed" (grace-window re-checks + 1 standing operator escalation
+  `BLK-e7b0e8da`), 5 in "Filed" (cross-tranche routing / operator codex-addition ask / awareness note / actionable
+  follow-up), 3 in "Exit-gate observations" (routed to the tradfi tranche + a note flagging the NA-corpus ratchet to
+  this exact skill). None are worker-bounded AO-dispatchable work — every item is either time-gated (12h grace
+  re-check), routed to a different tranche/owner, or an unresolved operator governance question. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

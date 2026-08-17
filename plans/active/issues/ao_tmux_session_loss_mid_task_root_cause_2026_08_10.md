@@ -31,12 +31,7 @@ related:
   - /plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md
   - /codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md
   - /plans/active/ao_consolidated_closeout_2026_08_12.md
-context_scope:
-  - agent-orchestrator/server/tmux_spawn.py
-  - agent-orchestrator/server/orphan_reap.py
-  - agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh
-  - scripts/self-hosted-runners/tmpfs-disk-cleanup.sh
-  - /codex/15-runbooks/safe-service-restart-procedures.md
+context_scope: [agent-orchestrator/server/tmux_spawn.py, agent-orchestrator/server/orphan_reap.py, agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh, scripts/self-hosted-runners/tmpfs-disk-cleanup.sh, /codex/15-runbooks/safe-service-restart-procedures.md]
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
 parent_epic: orchestrator_master
@@ -664,3 +659,4 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
     server-wide crash" heuristic) has no way to tell a `reason="manual"` recycle-teardown apart from a genuine
     crash/kill without a separate journal/`slot_done` cross-reference, done by hand this session — todo filed above to
     close that gap in the tool itself.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

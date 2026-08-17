@@ -593,6 +593,12 @@ materialized.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the parent epic for the write-gate source
   (`sports_reference_core.py`) and the open E8 legacy-delete stub source (`_migrate_drop_stale.py`), the two remaining
   open-todo targets.
+- **na-eligibility-audit 2026-08-17** [body-hash:60ae679b5b38602f]: KEEP-NA, valid — sole open item (E8
+  legacy-delete --drop-stale/--apply) is a genuine, measured-not-yet-safe irreversible GCS delete: a real dry-run
+  census (2026-08-10, VM canonical-migration-sports-drop-stale-20260810-100832) measured twin-coverage at only
+  74.3% (132,519/178,291) against the required 100% Part-5 proof — delete stays operator-gated until the corpus
+  converges + a re-run census clears 100%. Measured factual blocker, not an unresolved judgment call. One of the
+  most thoroughly and recently audited docs in the corpus.
 
 ## Temporary states + their canonical follow-up
 

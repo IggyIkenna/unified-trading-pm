@@ -758,3 +758,5 @@ items end-to-end rather than rubber-stamping: (1) F1 kill-switch (L439) -- TIME-
 operator ruling quoted verbatim in the doc ('Standing 2026-07-23 ruling preserved... KEEP TRACKED, DO NOT FIX YET'; gate
 = execution-service handling live order flow, not yet true pre-live-trading) -- honored per the never-re-litigate rule;
 citation verified real by reading it in place. Tag: DEPENDENCY_BLOCKED.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

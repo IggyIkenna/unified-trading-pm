@@ -43,6 +43,8 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+assigned_vm: NA
+resolved_by:
 context_scope:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
@@ -52,8 +54,6 @@ context_scope:
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
     unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py,
   ]
-assigned_vm: NA
-resolved_by:
 ---
 
 ## What I found
@@ -974,3 +974,4 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
       **Documented usage**: `gcloud compute instances add-labels <vm> --zone=<zone> --labels=keep=true` immediately
       before starting actively-supervised manual work on a finished/RUNNING backfill VM; remove the label (or delete the
       VM) the moment that work ends.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

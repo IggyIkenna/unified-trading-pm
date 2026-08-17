@@ -170,9 +170,13 @@ Even once wired, the centralized data model can't yet serve everything an archet
 - [ ] [AGENT] P1. **Decide `aave.py`'s fate explicitly** — delete it in favor of the execution-service poller +
       PBMS pipeline, or finish it as the canonical feed. Don't leave a non-functional stub sitting alongside a
       working parallel path.
-- [ ] [AGENT] P2. **Fix the misleading `_process_health_factor()` docstring** in
+- [x] [AGENT] P2. **Fix the misleading `_process_health_factor()` docstring** in
       `features-service/features_service/onchain/engine/orchestrator.py:621-623` — it describes per-wallet Aave
       polling the function doesn't do; describe it as generic protocol-level rate-index data instead.
+      **na-eligibility-audit 2026-08-17**: KEEP-NA-STALE (already-duplicated) — this exact fix is already an open
+      todo in `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` line ~101 (status: active,
+      assigned_vm: planning). Converted this checkbox to a citation marker rather than extracting a competing
+      duplicate — track completion there, close this checkbox by citation once that todo lands.
 - [ ] [AGENT] P2. **Once the centralized path exists, document and enforce it as the pattern** for any future
       DeFi-leverage-capable archetype — see the companion codex doc
       [defi-position-risk-centralization](/codex/04-architecture/defi-position-risk-centralization.md), authored

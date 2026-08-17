@@ -43,6 +43,8 @@ context_scope:
   [
     /plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md,
     /plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md,
+    unified-api-contracts/unified_api_contracts/internal/schemas,
+    instruments-service/instruments_service/reference_data/adapters/prediction,
   ]
 ---
 
@@ -83,3 +85,4 @@ none of these 4 were previously tracked anywhere in the corpus (checked against 
 own open todos — DeFi's separate canonical-orthogonality candidates found in the same audit ARE already covered by
 that plan's existing "audit the data-type vocabulary for near-duplicates" / "audit for orphaned data types" P0
 todos, so those are not duplicated here).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

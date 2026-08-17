@@ -268,6 +268,7 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
 
 - **data_pipeline_failure escalation `agt-68d94a` (2026-08-12, slot 5)**: dispatched via `rb_infra_relaunch.md` with
   `CONTEXT=CRITICAL DP_VM_EXIT_NONZERO (DP-VM-001) — VM mdps-cefi-2019-20260810-023141 terminated with exit_code=1 ... RELAUNCH`.

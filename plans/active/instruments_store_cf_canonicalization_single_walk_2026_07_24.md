@@ -59,15 +59,7 @@ source:
     "plans/active/issues/plan_line_cap_remediation_2026_07_23.md",
   ]
 drift_direction: advance-code
-context_scope:
-  [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
-    instruments-service/scripts/audit_instruments_store_legacy_gcs_delete_list.py,
-    instruments-service/scripts/canonicalize_instruments_store_index.py,
-    instruments-service/instruments_service/engine/orchestrator,
-  ]
+context_scope: [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/02-data/availability-manifest-and-data-status.md, /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md, instruments-service/scripts/audit_instruments_store_legacy_gcs_delete_list.py, instruments-service/scripts/canonicalize_instruments_store_index.py, instruments-service/instruments_service/engine/orchestrator]
 ---
 
 # Instruments-store CF canonicalisation — inherited single-walk lineage
@@ -303,3 +295,4 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
   C0/E3-E6 single-walk todos are a coordinated migration requiring VM launch + writer-drain coordination (E6 explicitly
   IRREVERSIBLE, hands C-GREEN to a permanent legacy-bucket delete) -- no cheat-sheet precedent unblocks a whole-corpus
   irreversible single-walk migration.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

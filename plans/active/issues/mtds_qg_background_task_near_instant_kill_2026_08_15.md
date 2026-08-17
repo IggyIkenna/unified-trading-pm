@@ -47,8 +47,8 @@ context_scope:
   [
     /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
     /plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md,
-    scripts/dev/resource-watchdog.sh,
-    scripts/hooks/pkill-guard.sh,
+    unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.sh,
+    unified-trading-pm/scripts/hooks/pkill-guard.sh,
   ]
 ---
 
@@ -157,3 +157,4 @@ reaps its own child processes.
   ALSO had clean runs), consistent with a host/session-level reaper racing the QG process rather than something specific
   to either repo's QG content. Code stays safely committed locally at `deployment-service@65248727` (not a stash — an
   actual local commit); not pushed. Releasing this task GATED rather than continuing to retry.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

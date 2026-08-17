@@ -844,6 +844,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 > **History moved 2026-07-24**: the full dated Progress Log (2026-06-19 through 2026-06-22, zero open todos) was
 > extracted verbatim to keep this plan under its line-count cap — see
 > [`plans/archive/2026_07/citadel_paper_batch_live_reconciliation_history_2026_07_24.md`](/plans/archive/2026_07/citadel_paper_batch_live_reconciliation_history_2026_07_24.md)

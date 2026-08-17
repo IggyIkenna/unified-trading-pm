@@ -49,7 +49,7 @@ context_scope:
     /codex/09-strategy/architecture-v2/capability-wizard.md,
     /plans/archive/2026_08/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
     scripts/openapi/generate-unified-openapi.sh,
-    "unified-trading-system-ui/app/(public)/questionnaire/",
+    unified-trading-system-ui/app/(public)/questionnaire/,
     /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
   ]
@@ -240,3 +240,7 @@ references this source doc; no consolidated-closeout doc covers it.
 `ci_satellite_ao_dispatch_batch11_finalize_ 2026_08_09.md` (gated) reconciles this doc's Residual-1 checkbox once batch
 11 lands. This doc's own `assigned_vm` stays `NA` — a partial (per-item) extraction, not a whole-doc reclassify, since
 Residual 2 remains genuinely open.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

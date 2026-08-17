@@ -36,6 +36,11 @@ source: "na-eligibility-audit follow-up Q&A round 3, 2026-08-16"
 locked_by:
 context_scope: [/plans/active/cefi_consolidated_closeout_2026_07_18.md]
 locked_since:
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    instruments-service/scripts/canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py,
+  ]
 resolved_by:
 ---
 
@@ -50,5 +55,6 @@ resolved_by:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 3, operator ruling)**: extracted from
   `cefi_consolidated_closeout_2026_07_18.md`.

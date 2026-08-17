@@ -37,8 +37,6 @@ context_scope:
   [
     /plans/active/issues/cefi_tardis_date_serial_barrier_still_open_2026_08_16.md,
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
     unified-trading-library/unified_trading_library/service_framework/_adapter.py,
     unified-trading-library/unified_trading_library/manifest_writer/_vm_progress.py,
@@ -301,6 +299,7 @@ cap.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - 2026-08-16 — Filed from a dedicated opus-tier design investigation (full text preserved in the linked issue doc and
   this session's own record). Operator ruled: human plan, execute today, canary on the live VM.
 - 2026-08-16 — **Phase 1 (F1-F8) + Phase 2 implemented, tested, QG-green and SHIPPED** — mtds@bd07cfc3,
@@ -345,3 +344,7 @@ cap.
   `deployment-service`'s working tree carried unrelated foreign WIP (5 terraform files) blocking tarball builds
   throughout Phase 3 — handled each time via a scoped, named `git stash push`/`pop` around just the build step,
   content verified byte-identical before/after, never touched.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-17** [body-hash:bd100f2de8b438e0]: KEEP-NA, valid — First audit pass (fresh doc, created 2026-08-16, no prior marker). 4 open items are live continuations of an in-progress human-executed investigation (operator ruled: human plan, execute today, canary on the live VM — real prod backfill running under this plan's validated config). Item 1 (watermark-emission bug, line 244) touches live-critical-path checkpoint machinery this same session shipped — flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (low confidence) for next-run reassessment rather than extracted. Item 2 (concurrency-6 canary) blocked by the workspace's 1-concurrent-VM Tardis cap while the real backfill runs. Item 3 conditional on an unrun Phase-0 measurement. Item 4 (UTL semaphore hoist) is an undecided design fork on a fleet-shared primitive — flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (low confidence) for next-run reassessment. Doc stays assigned_vm: NA.

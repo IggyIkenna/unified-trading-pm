@@ -42,13 +42,13 @@ supersedes:
 superseded_by:
 resolved_by:
 source: "Interactive session, operator-directed full-corpus /plan-reconcile run, 2026-08-12."
+drift_direction: advance-code
+depends_on: []
 context_scope:
   [
     unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
     unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
-drift_direction: advance-code
-depends_on: []
 ---
 
 # plan_reconciler run — 2026-08-12 (interactive, full corpus)
@@ -743,3 +743,4 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   item (doc confirmed archived + fix shipped, checkbox simply never flipped). 24 items remain genuinely open — real
   unfinished work / judgment calls / corpus-wide disagreements not resolvable by this pass — left untouched. Doc NOT
   archived (still has open items).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

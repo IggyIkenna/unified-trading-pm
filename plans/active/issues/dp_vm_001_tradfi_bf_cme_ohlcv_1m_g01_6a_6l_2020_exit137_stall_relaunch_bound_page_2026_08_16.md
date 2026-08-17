@@ -31,13 +31,7 @@ related:
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -158,3 +152,4 @@ poison instrument/date range in that group/chain/year combination) rather than a
   Leaving this doc's own Todo 1/Todo 2 checkboxes as-is (not this worker's VM/session to close) but flagging Todo 2's
   "bound the offending call with `asyncio.wait_for`" branch as very unlikely to be the real fix — the adapter
   returned promptly with a 402, it did not hang.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

@@ -93,6 +93,7 @@ context_scope:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 > **2026-07-18 → 2026-07-20 narrative extracted** (line-cap compliance, 2026-07-24) to
 > [`cefi_4surface_migration_execution_log_history_part1_2026_07_24.md`](/plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md)
 > — covers the surface-C manifest cutover/apply, Track-6 resolver fixes, the NO-ORPHANS accounting, the surface-A
@@ -948,3 +949,4 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`, which this doc's own sole remaining open todo
   (the cicd-escalation-added Final 4-surface re-proof + archival gate) explicitly names as the doc to read instead of
   duplicate-driving from here.
+- **na-eligibility-audit 2026-08-17** [body-hash:19cf1ba844e6cee9]: KEEP-NA, valid — Reaffirmed. Sole open item (line 881, final 4-surface re-proof + this doc's own archival) is citation-hold class (a): redirects to `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` as the doc carrying the live work. Doc stays assigned_vm: NA.

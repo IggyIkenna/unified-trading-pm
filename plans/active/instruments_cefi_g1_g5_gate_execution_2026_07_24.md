@@ -45,15 +45,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
-    /plans/active/instruments_foundation_completeness_2026_06_24.md,
-    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    instruments-service/instruments_service/reference_data/adapters/cefi/extended.py,
-    instruments-service/instruments_service/engine/orchestrator/process_fetch.py,
-    deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh,
-  ]
+context_scope: [/codex/02-data/instruments-foundation-and-catalogue-completeness.md, /plans/active/instruments_foundation_completeness_2026_06_24.md, /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md, instruments-service/instruments_service/reference_data/adapters/cefi/extended.py, instruments-service/instruments_service/engine/orchestrator/process_fetch.py, deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh]
 supersedes:
 superseded_by:
 depends_on: [instruments_foundation_phase0_cross_cutting_2026_07_24]
@@ -768,3 +760,4 @@ Coverage is the verification lens — every number flows through `compute_honest
   raise-vs-fallback CF-11 honest-absence behavior) is a genuine behavior-change design decision with manifest
   implications, not mechanically bounded by any round-11 ruling. No reclassification.
 - **na-eligibility-audit 2026-08-16** [body-hash:0dbdac10b55b4a2a]: KEEP-NA, valid — Read the full 769-line doc end-to-end (both halves) plus grep-verified the open-todo count matches the Phase-0 inventory (2).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

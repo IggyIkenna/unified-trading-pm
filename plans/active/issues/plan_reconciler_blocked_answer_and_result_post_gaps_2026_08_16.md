@@ -50,13 +50,15 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+source: "Live-encountered during ao-tranche plan_reconciler run, dispatch agt-3eb42b, slot 28, 2026-08-16"
 context_scope:
   [
     agent-orchestrator/server/plan_health.py,
     agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/routes/agents.py,
+    agent-orchestrator/server/auth.py,
     unified-trading-pm/agents/plan_reconciler.md,
   ]
-source: "Live-encountered during ao-tranche plan_reconciler run, dispatch agt-3eb42b, slot 28, 2026-08-16"
 ---
 
 # plan_reconciler's own HTTP integration: 2 live gaps found 2026-08-16
@@ -221,3 +223,4 @@ worker's ability to read it back via the AO HTTP surface.
   independently re-investigated this pass — the existing Progress Log entries above already represent live,
   multi-session investigation with no new lead available from a doc-only re-check; still genuinely open. Doc NOT
   archived (3 items still open).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

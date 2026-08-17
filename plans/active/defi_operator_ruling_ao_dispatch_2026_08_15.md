@@ -41,6 +41,7 @@ context_scope:
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
     /plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
+    /plans/active/issues/plan_reconciler_findings_defi_2026_08_17.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 locked_since:
@@ -107,3 +108,4 @@ resolved_by:
   `/plans/active/defi_live_poller_phased_build_2026_08_15.md`. `status: draft` on the new plan — it needs an operator
   ruling on dispatch cadence (filed as a follow-up todo in that plan) before any tranche is extracted into an
   AO-dispatchable batch.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

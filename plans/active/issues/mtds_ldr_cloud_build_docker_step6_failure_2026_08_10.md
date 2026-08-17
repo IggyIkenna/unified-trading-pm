@@ -216,3 +216,4 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
   pushed (`cloud-build-router` empty-error-detail + credential scrub; the PM quality-gates false CRITICAL, which was an
   hourly LDR `workflow_dispatch` measuring the whole unpromoted backlog and NOT the innocent codex-docs commit the alert
   named).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

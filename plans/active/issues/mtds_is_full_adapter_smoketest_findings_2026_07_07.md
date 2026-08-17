@@ -37,7 +37,7 @@ related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
     /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     /plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
     ../prediction_capture_incident_remediation_2026_07_06.md,
   ]
@@ -54,13 +54,6 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/fluid_adapter.py,
-  ]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium
@@ -74,6 +67,13 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
+context_scope:
+  [
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/fluid_adapter.py,
+    /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
+  ]
 ---
 
 > **NOTIFY-OPERATOR class finding — largest single batch this session, spans every MTDS/IS adapter, includes multiple P0
@@ -694,3 +694,5 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
   master findings ledger; only 3 items genuinely still open, all open-ended research with no stated done-when beyond
   'investigate'.
 - **na-eligibility-audit 2026-08-16** [body-hash:bd1e6d7b79f57815]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-17** [body-hash:f5bb51df8e7a9e79]: KEEP-NA, valid — Reaffirmed. 4 remaining open items are all open-ended research/investigation (ODDS_API ownership question, 18-month FLUID coverage gap needing an alternate historical read path, untraced 273-row mistagging root-cause, an under-specified drilldown-mockup update) with no determinable done-when. Reaffirmed KEEP-NA 5 times prior (2026-07-30 x2, 2026-08-07, 08-09, 08-16). Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

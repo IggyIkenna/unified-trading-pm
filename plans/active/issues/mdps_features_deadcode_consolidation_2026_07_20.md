@@ -221,3 +221,5 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   NOTE is unchanged since 2026-05-08. Doc's remaining-open count stays 2, but todo 2 is now evidence-annotated and ready
   for a mechanical citation-only close in batch13.
 - **na-eligibility-audit 2026-08-16** [body-hash:bbdf20638a45ebde]: KEEP-NA, valid — 7 of 8 todos are already [x] with hard commit-SHA evidence (todos 1-3 = the original three "big finding" S1 items, closed via deployment-service@4150c6c2 / @c79f984c / @e7d17f2 across three separate reconciliation passes 2026-08-0…
+- **na-eligibility-audit 2026-08-17** [body-hash:554d56e76da47c1b]: KEEP-NA, valid — Reaffirmed. Sole open item (S3-b, sports dual entrypoint fold-vs-bless, line 155) remains an unresolved operator/design adjudication with two named options and no decided answer, reaffirmed unresolved across 7 prior audit passes through 2026-08-16 plus a dedicated finalize-pass re-check. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated context_scope (4 entries).

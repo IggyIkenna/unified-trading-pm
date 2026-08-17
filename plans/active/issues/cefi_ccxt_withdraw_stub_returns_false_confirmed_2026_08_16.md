@@ -132,14 +132,54 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
       moving real funds without operator authorization/credentials is outside what an autonomous worker should do;
       this is the workspace's own "credentials gate RUNNING, never BUILDING" pattern, not a shortfall. See the new
       P1 todo below for what remains before this is actually usable in production.
-- [ ] [BACKEND] P1. **Thread a real adapter into `HandlerRegistry` at actual service bootstrap** — the fix above
+- [x] ✅ [BACKEND] P1. **Thread a real adapter into `HandlerRegistry` at actual service bootstrap** — the fix above
       makes `HandlerRegistry` CAPABLE of using a real adapter, but no existing call site constructs
       `InstructionRouter`/`HandlerRegistry` with one: `InstructionRouter.__init__` only accepts `config`, and
       nothing in execution-service currently builds `create_transfer_adapter(mode, exchanges, ...)` from a live
-      `OperationalMode` + `ApiKeyReloader`-sourced CCXT exchanges and passes it through. Done-when: a real bootstrap
-      call site exists (or an existing one is identified and wired), the connection is exercised end-to-end against
-      a REAL exchange sandbox/testnet account (not a mock), and the result is verified against that exchange's own
-      confirmation — this is the remaining, genuinely live-credentialed half of the original done-when.
+      `OperationalMode` + `ApiKeyReloader`-sourced CCXT exchanges and passes it through. Original done-when: a real
+      bootstrap call site exists (or an existing one is identified and wired), the connection is exercised
+      end-to-end against a REAL exchange sandbox/testnet account (not a mock), and the result is verified against
+      that exchange's own confirmation. **SPLIT 2026-08-17** (mirrors this doc's own precedent, e.g. the
+      reachability-audit / CCXT-wiring split above): the bootstrap-call-site clause is DONE below;
+      the live-sandbox-verification clause moved to the new follow-up P1 todo immediately below (genuinely
+      credentialed, not something to bundle into this checkbox).
+      **Bootstrap wiring done, 2026-08-17 — `execution-service@b57e9e1284`.** Confirmed no production call site
+      constructed `InstructionRouter`/`HandlerRegistry` with a real adapter anywhere (searched every
+      `InstructionRouter(`/`HandlerRegistry(` call site — only `non_trade_processor.py`, a batch-only helper, and
+      the API tests construct either; `LiveExecutionHandler`'s live engine bypasses `InstructionRouter` entirely and
+      dispatches TRADE/sports/DeFi directly, never TRANSFER). Built
+      `execution_service/engine/transfers/wiring.py::build_transfer_wiring(config)`, mirroring the existing
+      `bybit_wiring.py`/`hyperliquid_wiring.py` pattern: for LIVE/MANUAL modes, resolves trade-scope CCXT
+      credentials via the existing `LiveExecutionHandler._load_venue_trade_credentials` resolver (reused, not
+      duplicated) for every `VENUE_WALLET_CAPABILITIES` venue whose `ccxt_exchange_id` is
+      binance/deribit/bybit/aster, builds real `ccxt.async_support` exchange instances (mirroring
+      `BinanceCCXTAdapter._get_exchange`'s options shape), and threads the resulting
+      `create_transfer_adapter(mode, exchanges)` into `HandlerRegistry(transfer_adapter=...)` /
+      `InstructionRouter`. PAPER/BACKTEST modes never fetch credentials (unchanged `MockTransferAdapter`). Wired at
+      FastAPI startup/shutdown in `api/app.py` (`app.state.transfer_wiring`), mirroring the bybit/hyperliquid
+      startup-event pattern exactly. Venues with no provisioned trade-scope secret
+      (okx/upbit/coinbase/coinbaseinternational/bitfinex/bitget/kraken — 8 of the 18 CEX_WITHDRAW venues) stay
+      honestly NOT-WIRED, not fabricated — `LiveCcxtTransferAdapter` already fails a per-venue lookup miss loud
+      rather than faking success. 8 new tests (`tests/unit/engine/test_transfer_wiring.py`): PAPER/BACKTEST never
+      fetch credentials, LIVE/MANUAL wire binance/deribit/bybit venues and leave OKX unwired, `defaultType` matches
+      the venue's spot/futures suffix, `disconnect()` closes every wired exchange (and survives one failing to
+      close). 8615 passed/21 skipped, full `quality-gates.sh --no-fix` green.
+      **Still open — the genuinely live-credentialed second half**: exercising this wiring end-to-end against a
+      REAL exchange sandbox/testnet account and verifying against that exchange's own confirmation needs
+      operator-provisioned sandbox credentials; moving toward a real withdrawal call without operator authorization
+      is outside what an autonomous worker should do (same "credentials gate RUNNING, never BUILDING" boundary this
+      doc's earlier todos already established) — `BLOCKED-CREDENTIALS`, not attempted this session. A follow-up P1
+      todo below tracks it. Also still open (out of THIS todo's scope, worth naming): no production caller submits
+      a `TRANSFER` `ExecutionInstruction` through `InstructionRouter` at all today — the wiring makes the router
+      dispatch-capable, but nothing yet calls `wiring.router.route_instruction(...)` for a CEX_WITHDRAW/
+      SUBACCOUNT_MOVE instruction in the live engine.
+- [ ] [BACKEND] P1. **New: exercise `build_transfer_wiring` end-to-end against a real exchange sandbox/testnet
+      account** (found 2026-08-17, completing the bootstrap-wiring todo above). Needs operator-provisioned sandbox
+      API credentials for at least one CEX_WITHDRAW venue (binance/deribit/bybit/aster testnet). Done-when: a real
+      `execute_withdrawal()` (or `execute_internal_transfer()`) call round-trips through
+      `wiring.router.route_instruction(...)` against that sandbox account and the result is verified against the
+      exchange's own transfer/withdrawal history endpoint — not just a mocked CCXT `AsyncMock`. `BLOCKED-CREDENTIALS`
+      until the operator provisions sandbox keys.
 - [x] ✅ [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** if it
       had ever been reachable — done-when: a cited answer, yes or no, with evidence. **Answer: NO — two
       independent reasons, evidence 2026-08-17.** (1) No existing reconciliation component checks a

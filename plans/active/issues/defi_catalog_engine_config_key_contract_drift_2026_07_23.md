@@ -40,15 +40,7 @@ resolved_by:
 locked_by:
 source: agent-discovered (orphaned-archetype build, mechanical pre-flight sweep, 2026-07-23)
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
-    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/,
-    strategy-service/strategy_service/engine/strategies/v2/orchestrator.py,
-    strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
-  ]
+context_scope: [/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md, /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md, strategy-service/strategy_service/engine/strategies/v2/target_universe/, strategy-service/strategy_service/engine/strategies/v2/orchestrator.py, strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py, strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py]
 ---
 
 # strategy-service catalog/engine config-key contract has no validation — systemic, cross-archetype
@@ -974,3 +966,4 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   not yet approved (see the entry immediately above). No new fact from today's sweep (credential/webhook unblocks)
   touches either item. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:c40a1852d57966c9]: KEEP-NA, valid — 976-line issue doc: systemic strategy-service catalog/engine config-key-contract-drift audit spanning DeFi + CeFi/TradFi/Sports archetypes, almost entirely resolved (the P0 design-decision todo and its 3 filed [SCRIPT] implementation todos are all checked [x] with shipped SHAs;.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

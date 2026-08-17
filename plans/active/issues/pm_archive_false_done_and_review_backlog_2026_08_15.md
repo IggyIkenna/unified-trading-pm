@@ -225,3 +225,5 @@ drift_direction: advance-code
   `verified:` field (same commit). This doc stays `status: open` — only the `[OPERATOR]` "Chunks 1/2 and Phase B"
   naming ask remains, and it cannot be resolved by a dispatched worker per its own text (genuine ambiguity, no
   data-derivable answer).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

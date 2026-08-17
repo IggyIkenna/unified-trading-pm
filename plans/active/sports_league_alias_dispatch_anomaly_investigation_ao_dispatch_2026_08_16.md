@@ -22,7 +22,7 @@ related:
   [
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md,
-    /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
+    /plans/archive/2026_08/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-16"
@@ -46,7 +46,7 @@ context_scope:
   [
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md,
-    /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
+    /plans/archive/2026_08/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
   ]
 locked_since:
 resolved_by:

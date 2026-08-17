@@ -39,7 +39,7 @@ drift_direction: advance-docs
 depends_on: []
 context_scope:
   [
-    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    unified-trading-pm/scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
@@ -92,3 +92,4 @@ full per-doc agentic classification pass to notice them incidentally, the way th
       outstanding corpus-wide (not just tradfi).
 - [ ] [DOC] P3. If the checker in the todo above finds more instances outside tradfi, route each to its owning
       tranche's next `/na-eligibility-audit` pass rather than fixing them all from this doc.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

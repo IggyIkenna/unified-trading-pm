@@ -175,3 +175,4 @@ independently-startable item any session can pick up without waiting on the phas
   next action" section points at real code, not just other docs). Note for the record: this doc's `repos:` frontmatter
   list is missing `strategy-service` even though the doc's whole subject is the strategy-service axis — a pre-existing
   frontmatter gap, not fixed here (out of this skill's scope, flagged for /plan-reconcile).
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

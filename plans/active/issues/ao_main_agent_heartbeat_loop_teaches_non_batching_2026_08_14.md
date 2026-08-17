@@ -35,12 +35,7 @@ execution_scope: local-only
 priority: P3
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/06-coding-standards/tool-call-batching.md,
-    /plans/archive/2026_08/issues/ao_kick_escalation_rate_limit_blind_force_kill_2026_08_14.md,
-    /plans/active/ao_consolidated_closeout_2026_08_12.md,
-  ]
+context_scope: [/codex/06-coding-standards/tool-call-batching.md, /agents/main.md, /plans/active/ao_consolidated_closeout_2026_08_12.md]
 ---
 
 # agents/main.md's poll loop teaches sequential, non-batched turns
@@ -65,3 +60,7 @@ activity.
       blocked-queue check together in ONE turn (two `tool_use` blocks in the same message) each tick, since they never
       depend on each other's result. Verify no other per-tick step in main.md's loop has the same numbered-step-without-
       dependency shape before calling this done — grep the full STEP sequence, not just 2A/2.5.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

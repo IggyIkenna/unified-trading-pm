@@ -58,13 +58,7 @@ source: >-
   13). Phase 0 via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90 members, 11 never-cited) + a
   manual asset_group:meta-sweep gap check (1 more member found). Phase 1 Workflow (12 agents) classified all 12; these 6
   verdicted exclude_cross_cutting with step-5 scope evidence.
-context_scope:
-  [
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
-    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
-  ]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md, /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md]
 ---
 
 # Parked findings — 2026-08-01 `/ag-closeout-audit cross-cutting` run
@@ -279,3 +273,4 @@ member, not just a retag.
   cross-tranche parked-findings register; the 2 remaining open todos are `[DOCS] P3` `asset_group` retags of docs owned
   by OTHER tranches, explicitly scoped "leave to the owning tranche's own audit" per the 2026-07-30
   concurrent-sharded-worker rule -- structurally not this tranche's write, not a defaulted-to-NA judgment call.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

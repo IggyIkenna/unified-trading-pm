@@ -1003,3 +1003,12 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       `instrument_type='OPTION'` "No SchemaContract registered" crash lines no longer appear. Low cost each — fold
       all 3 into ONE `--data-types "ohlcv_15m ohlcv_24h ohlcv_1m trades"` verification run over CME/NASDAQ/NYSE
       rather than three separate VM launches. Repo: market-data-processing-service.
+      **Addendum 2026-08-16 (slot 12, tradfi_satellite_ao_dispatch_batch14 todo 2 side-finding)**: a pre-fix VM
+      (`mdps-tradfi-2026-20260810-034610`, booted 6 days before `2b2cc58ef3` landed) shows the SAME
+      `instrument_type='OPTION'` "No SchemaContract registered" crash for `ohlcv_1m` and `ohlcv_1s` too
+      (109,853 occurrences total across all 3 timeframes on that one VM) — NOT just `ohlcv_15m`/`ohlcv_24h`. Since
+      `_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES` (the `2b2cc58ef3` fix) only scopes the COARSE-timeframe
+      scan path, this verification sweep's `--data-types` list should ALSO include `ohlcv_1m`/`ohlcv_1s` against a
+      CME OPTION instrument specifically (not just ETF, per item 2 above) to confirm whether the fine-timeframe
+      OPTION crash is still live post-fix — this was not directly re-verified this session (the evidence VM
+      predates the fix), only flagged so the sweep's scope covers it.

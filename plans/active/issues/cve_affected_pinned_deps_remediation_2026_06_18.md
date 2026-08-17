@@ -58,13 +58,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-30
-context_scope:
-  [
-    scripts/quality-gates-base/qg-common.sh,
-    workspace-constraints.toml,
-    canonical-dependency-manifest.json,
-    /codex/06-coding-standards/dependency-management.md,
-  ]
+context_scope: [scripts/quality-gates-base/qg-common.sh, workspace-constraints.toml, canonical-dependency-manifest.json, /codex/06-coding-standards/dependency-management.md]
 ---
 
 > **2026-07-30 (slot-21) — full re-audit of `QG_PIP_AUDIT_COMMON_IGNORES` against REAL current versions.** Re-verified
@@ -645,3 +639,4 @@ inline pin in place rather than adding a second, redundant `override-dependencie
   trimmed to the 4 standing-audit tooling paths (`qg-common.sh`'s ignore list, the workspace floor/manifest files, and
   the dependency-management codex SSOT) the sole remaining open todo — the inherently-unbounded "walk the remaining deps
   one-by-one" sweep — actually depends on.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

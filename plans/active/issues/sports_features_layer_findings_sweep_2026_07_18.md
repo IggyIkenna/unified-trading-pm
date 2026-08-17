@@ -804,3 +804,4 @@ have moved; use the section index above to locate it.
   (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`) — flagged inline at the todo itself for whoever
   executes batch10's copy; not re-extracted here (already `assigned_vm: planning` there, still open). `[MODEL] P2`
   reconfirmed still tracked and active in `sports_taxonomy_p3_consumers_2026_08_08.md`. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-17** [body-hash:931d4c9859cfad4a]: KEEP-NA-STALE (already-duplicated) — both open items cited to sports_satellite_ao_dispatch_batch10_2026_08_06.md and sports_taxonomy_p3_consumers_2026_08_08.md, both independently re-verified to exist and be status:active. 5 prior audit rounds agree, no drift.

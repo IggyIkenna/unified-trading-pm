@@ -159,14 +159,22 @@ context_scope:
       **Done when**: met — every item has either (a) a note it's ready/extracted with its gate-clearing evidence, or
       (b) an explicit re-verified confirmation it's still open, with evidence cited (all 11 above).
 
-- [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred/Flagged items to a tracked todo elsewhere (todo 2
-      above should have already resolved or re-confirmed all of them — verify none silently vanish) → add the archive
-      banner → run the codex-alignment check (batch8 creates no new durable contract; confirm no drift) → grep the
-      corpus for every referrer of `tradfi_satellite_ao_dispatch_batch8_2026_08_08` and fix each path to point at the
-      archived location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to
-      `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and this finalize doc itself is archived
-      alongside it in the same commit.
+- [x] ✅ [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`. DONE 2026-08-17 (slot 32,
+      data_engineering).** All 3 todos verified `[x]` with shipped evidence (direct read of todo 1/2's Progress Log
+      entries above); Deferred/Flagged items re-checked by todo 2, none silently vanish (all still explicitly
+      deferred/extracted with current-as-of-2026-08-16 evidence). No new durable codex contract from this plan — no
+      codex drift; `/codex/11-project-management/` + `plans/PLAN_FORMAT.md` remain the correct, unchanged SSOTs.
+      `locked_by` empty on both docs. Archived alongside this finalize doc in the same commit; every corpus PATH
+      referrer repointed to `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08(_finalize).md` in
+      `related:`/`context_scope` frontmatter across `tradfi_databento_account_billing_suspended_2026_08_09.md`,
+      `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md`, `tradfi_satellite_ao_dispatch_batch9_2026_08_16.md`,
+      `tradfi_satellite_ao_dispatch_batch9_2026_08_16_finalize.md`, `tradfi_consolidated_closeout_2026_07_18.md`, and
+      `plans/epics/tradfi_master.md`'s `../active/` links; bare-filename prose citations in Progress Logs and the two
+      `plan_reconciler_findings_*_2026_08_16.md` audit-report docs left untouched (historical narrative, not
+      navigational paths — nothing there 404s). `plans/active/INDEX.md` regenerated
+      (`scripts/plans/regenerate_active_plan_index.py`) to drop both now-archived entries. **Done when met**: the
+      plan moved to `plans/archive/2026_08/`, every corpus PATH referrer resolves to the new path, this finalize doc
+      archived alongside it in the same commit.
 
 ## Progress Log
 
@@ -189,6 +197,13 @@ context_scope:
   deliberately not extracted this pass (multi-file blast radius, flagged for a dedicated follow-up). Remaining 6 items
   re-verified still genuinely open/unchanged, evidence cited. See todo 2's own entry for the full per-item accounting.
   Next: todo 3 (archive batch8) is next in this sequential plan.
+- **2026-08-17 (slot 32, data_engineering)**: todo 3 (archive batch8) DONE — final todo in this sequential plan.
+  Verified both prerequisite todos still hold (direct re-read, no new drift since 2026-08-16). Added the ARCHIVED
+  banner to `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`, `git mv`'d both it and this finalize doc to
+  `plans/archive/2026_08/` in the same commit as this checkbox flip (single-repo mode-1 sanctioned shape per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), repointed every corpus PATH referrer
+  (6 active docs' `related:`/`context_scope` frontmatter + the epic's `../active/` links), and regenerated
+  `plans/active/INDEX.md`. See the todo's own checkbox text for the full accounting.
 
 ## Codex SSOTs
 

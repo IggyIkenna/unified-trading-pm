@@ -166,6 +166,7 @@ tracked, just no longer blocking the AO plan's own archival or reading as "why i
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **2026-08-16 (interactive session, operator directive)**: Authored per the operator's request to force AO plans to
   separate operator-blocking items (credentials, live-trading validation, data-completeness validation, account
   signups, design/investigation, post-audit human conflict-resolution) from worker-dispatchable todos, so dispatching

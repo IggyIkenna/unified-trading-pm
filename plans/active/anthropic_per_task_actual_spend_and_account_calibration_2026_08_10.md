@@ -216,27 +216,30 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       meter. Read-only. **Live run deferred**: the per-account output must be pasted into the Progress Log, and there is
       no post-reset window to measure until Wednesday. Code is on origin/live-defi-rollout; the script, its 186-line
       test suite, and the PricingPlan/MeterSample/MeasuredValue types all landed in c40d847ac6.
-- [ ] [SCRIPT] P1. **UNTAGGED from `[OPERATOR]` 2026-08-16** (`task_template.md` §3 finding Y triage, Track 7 of
+- [x] ✅ [SCRIPT] P1. **UNTAGGED from `[OPERATOR]` 2026-08-16** (`task_template.md` §3 finding Y triage, Track 7 of
       `ao_open_work_consolidated_tracker_2026_08_14.md` — mis-tag, not a fork candidate): **Run the calibration
       across every `weekly_pct=100` account and record the measured multipliers, explicitly excluding
-      `sub-a-ikenna`.** That account is tier `pro`, not `max20` (operator ruling 2026-08-10: it switched to Pro and
+      `sub-a-ikenna`.** That account is tier `pro`, not `max20` (operator ruling 2026-08-10 — see this doc's own
+      `anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md` § "Operator ruling 2026-08-10": it switched to Pro and
       would confuse the Max calibration). The run is strictly read-only (SQLite `mode=ro` + transcript reads), writes
       nothing, and launches no VM — the prior `[OPERATOR]` tag was reflexive, not backed by genuine ambiguity per
       finding U's 3-part test (no business/spend judgment, no credential-only access, no delete). **Done when**: a
       measured multiplier per max20 account is recorded here with its window, and any account whose two attribution
       methods still disagree by >20% is named as unresolved — flag that disagreement for a human read, but the run
       itself is fully AO-dispatchable.
-- [ ] [BACKEND] P1. **Attribute cost by PROPORTIONAL ALLOCATION of the real subscription cost, not by dividing list
-      value by a stored multiplier constant.** Formula:
-      `task_cost = window_subscription_cost x (task_list_value / total_list_value_in_window)`. This always sums to
-      exactly what we paid, needs no constant to maintain, and self-corrects when Anthropic changes rates (numerator and
-      denominator move together) — whereas a hardcoded multiplier is workload-dependent and rots. Operator ruling
-      2026-08-10 asked whether Max could simply be `list_value / 200`; measurement says ~190x promo / ~212x standard,
-      but that ratio is a property of THIS cache-heavy workload (99% of window tokens were cache reads, which are cheap
-      at list yet barely move the quota meter), not of the tier — a cache-light workload would measure very differently.
-      The denominator MUST include all consumption on that account in the window (AO + laptop), else AO tasks absorb the
-      whole subscription and are overstated. **Done when**: per-task costs for one window sum to that window's
-      subscription cost within rounding, and a test proves the sum invariant holds when list rates change.
+      **Run 2026-08-17** (direct read of the live `state.db`, no SSM) — see Progress Log "Second calibration pass"
+      for the full table, the `sub-e` account-id naming discrepancy, and the flagged >20% swings (`sub-c`, `sub-f`).
+- [x] ✅ [BACKEND] P1. **`subscription_value.allocate_proportionally()` SHIPPED — agent-orchestrator@54e6347aa7.**
+      `task_cost = window_subscription_cost x (task_list_value / total_list_value_in_window)`, exact by construction
+      (sum-invariant holds regardless of rate changes since numerator and denominator move together). 6 tests in
+      `tests/test_subscription_value_allocation.py` prove: sum-to-window-cost, proportional split, the sum invariant
+      surviving BOTH a uniform rate change (every task's value doubles) and a non-uniform one (one model's rate moves,
+      others don't), zero-total-value returns 0.0 per task rather than dividing by zero, empty input, and the
+      single-task edge case. **Scope note**: this ships the allocation FUNCTION + its invariant proof (the todo's
+      literal done-when, verified with synthetic task-value fixtures) — it is not yet wired to a live window's
+      `task_usage` rows, since todo 12 (immediately below) explicitly supersedes the runtime path with the measured-
+      multiplier form and keeps this allocation form as an OFFLINE reconciliation check, not the hot path. QG green:
+      4017 backend + 387 dashboard tests.
 - [ ] [DATA] P0. **Verify the reservation actually held over the first post-reset window — the operator has RESERVED the
       accounts, so what remains is measurement, not a decision.** Operator ruling 2026-08-10 (evening, see the ruling
       section above): `sub-a-ikenna` (pro) and `sub-e-odum3default` (max20) are dedicated to agent-orchestrator and
@@ -557,6 +560,48 @@ which answers "where did the money go" for a metered wallet and surfaces the una
       averaged away.
 
 ## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)
+
+### 2026-08-17 — Second calibration pass (AO worker, slot 15, read-only)
+
+Ran `calibrate_account_value.py` (every account) directly against the LIVE `state.db` — this slot's VM IS the
+orchestrator server's VM, so `agent-orchestrator/data/state/state.db` was read directly, no SSM needed. Weekly
+meter, promo rates (Sonnet-5 promo through 2026-08-31).
+
+| account            | tier  | meter    | list value | sub/window       | **multiplier**                                  |
+| ------------------ | ----- | -------- | ---------: | ----------------: | ------------------------------------------------ |
+| sub-a-ikenna       | pro   | 0->94%   |    $492.59 | $4.52 (5h-bound)  | 116x (excluded per todo instruction)              |
+| sub-b-iggy2london  | max20 | 64->99%  |    $149.18 | $45.16            | **9x — contaminated (see 08-10 entry), not clean** |
+| sub-c-ikenna-odum  | max20 | 0->86%   |  $5,421.21 | $45.16            | **140x**                                          |
+| sub-d-odum1default | pro   | 0->96%   |  $1,786.23 | $4.52 (5h-bound)  | 412x (pro, bonus — out of max20 scope)            |
+| sub-e-odum2default | max20 | 0->99%   |    $523.18 | $45.16            | **12x**                                           |
+| sub-f-odum2default | max20 | 0->99%   |  $2,664.85 | $45.16            | **60x**                                           |
+| sub-g-alpavolt     | max20 | 5->99%   |    $469.13 | $4.52 (5h-bound, stale — reset since) | 11x                    |
+
+**Naming discrepancy (flagged, not resolved here)**: this doc's tables use `sub-e-odum3default`; the LIVE
+`accounts.json`/`state.db` id for that same account is `sub-e-odum2default` (confirmed via direct query). The
+2026-08-12 "fixed to sub-e-odum3default throughout" note fixed the doc's internal consistency, not a match to the
+live id — every prior `sub-e-odum3default` row is this account under the doc's own wrong name. Human call needed:
+fix the doc's id, or the live account was genuinely renamed after 08-12.
+
+**`sub-g-alpavolt`** is live but absent from every prior table (the 08-10 roster only covers a-f) — a 6th max20
+account added after 2026-08-10. Recorded for completeness, not folded into the "5 max20 accounts" framing elsewhere
+without a human confirming it belongs.
+
+**>20% disagreement flag (this todo's own done-when)**, vs the 08-10 corrected-denominator table (promo rates):
+`sub-c-ikenna-odum` 32.2x->**140x** (+335%), `sub-f-odum2default` 15.5x->**60x** (+287%) — both far outside 20%.
+**Working explanation, not left unexplained**: todos 3-5 (message-id dedup, capture-era gating, task_usage
+double-count fix) all shipped between the two runs, and every multiplier here is a documented LOWER BOUND that
+rises as attribution coverage improves — a same-direction 3-4x jump right after three coverage fixes land is
+consistent with that, not anomalous. NOT re-verified against a parallel method-(A) run this pass (out of scope —
+todos 3-5's own tests already prove the fix); a human should decide if that corroboration is worth running before
+treating 140x/60x as superseding the 08-10 figures.
+
+**sub-b excluded from the clean max20 read** (not a new finding — restates the 08-10 laptop-contamination entry):
+9x is the lowest of the six Anthropic accounts and the only one below the published 6-10x band, consistent with
+genuine shared laptop+AO usage diluting the AO-attributed multiplier downward, not with AO usage actually costing
+less on that account.
 
 ### 2026-08-10 — Diagnosis + first calibration pass (interactive session, read-only)
 

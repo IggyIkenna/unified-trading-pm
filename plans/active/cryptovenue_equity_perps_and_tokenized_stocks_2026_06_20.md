@@ -532,6 +532,7 @@ note). No decision or code changed by this move — pure content relocation.
   flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE as future-extraction candidates (mirrors this doc's own 2026-08-09 extraction
   pattern for 4 other items), not enough to flip the whole doc.
 - **na-eligibility-audit 2026-08-16** [body-hash:89b292f04aa54ea9]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
 ## Temporary states + their canonical follow-up plans
 
@@ -843,3 +844,4 @@ answer rather than a paid tick vendor. This note is kept for historical record, 
   fixed (todo 8's entry was headed "todo 6"). **Doc-wide open count: 15/36, unchanged** (already checked at
   batch11-drafting; this pass only added evidence) — see the 2026-08-08 audit entry above for the breakdown.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).
+- **na-eligibility-audit 2026-08-17** [body-hash:cc9da032c76693c8]: KEEP-NA, valid — Full 847-line doc re-read end-to-end (grep confirms 10 open items, matching Phase-0's count). 8 of 10 are genuine [DESIGN]/[BACKEND] open-ended work or standing operator-affirmed "not single-worker bounded" builds (IBKR adapter line 772, dynamic-universe line 803). Reviewed the equity-perp-backfill sub-item-4 (line 108) against the doc's own Round5 (2026-08-08) annotation: sub-item 4 genuinely isn't done (only cataloguing/enum work is), and is duplicate-tracked as its own still-open item in cefi_consolidated_closeout_2026_07_18.md Track 0 (line 187) — left this compound checkbox open rather than force-closing it (closing would misrepresent an undone launch as resolved); flagging the duplicate for whoever next reconciles Track 0. KRX ohlcv_24h DIAG (line 228) stays flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (low confidence) for next-run pickup. Doc stays assigned_vm: NA.

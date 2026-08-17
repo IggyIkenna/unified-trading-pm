@@ -66,12 +66,7 @@ calibrated_ai_days: 0.05
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py,
-    deployment-service/deployment_service/data_pipeline_monitors/_captured_reader.py,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-  ]
+context_scope: [market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py, deployment-service/deployment_service/data_pipeline_monitors/_captured_reader.py, /codex/05-infrastructure/data-pipeline-alerts.md]
 ---
 
 ## What I found
@@ -130,3 +125,4 @@ detector issue doc rather than duplicated here.
   `quality-gates.sh` green. Filed this issue doc + appended finding 4 to
   `dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md` for the residual detector-side blind
   spot. Pinging authoring slot `dp-fleet-monitor` (not a numbered slot — skipping per role instructions).
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

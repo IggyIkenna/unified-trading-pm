@@ -23,7 +23,7 @@ summary:
   features-service's odds_features exporter and ml_readiness_check.py are both behaving CORRECTLY (honest-absence
   discipline, no silent placeholders, no compute bug) — the defect is entirely upstream in MTDS's raw odds-api
   ingestion/caching for low-activity leagues."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -251,7 +251,7 @@ T-24h/T-1h):
           the new todo below for the tracked follow-up (per the HARD RULE that every follow-up is a `- [ ]` todo, never
           left as prose).
 
-- [ ] [DATA] P2. **Purge/re-derive the confirmed `RUSSIA_PREMIER_LEAGUE` zombie contamination** (20 contaminated
+- [x] ✅ [DATA] P2. **Purge/re-derive the confirmed `RUSSIA_PREMIER_LEAGUE` zombie contamination** (20 contaminated
       `odds_horizon_bucket` shards / 54 rows across 18 `day=` partitions, sized by the read-only sweep above,
       `market-tick-data-service@76ca401f`) — purge the contaminated rows and re-derive their downstream
       `odds_features` + manifest rows. Repo: market-tick-data-service. Scope is bounded to the confirmed
@@ -259,8 +259,13 @@ T-24h/T-1h):
       actively-fetched leagues would need a dedicated VM-run full sweep per the sizing todo's own note — file that
       separately if population-wide certainty is ever needed). Done-when: 0 contaminated `RUSSIA_PREMIER_LEAGUE` rows
       remain in the swept partitions, re-verified via the same sweep script, and downstream `odds_features`/manifest
-      rows for those (date, league) pairs are re-derived from honest-absence (not the zombie tick).
-- [ ] [DATA] P3. **Re-run `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30` after the P1/P2 fix**
+      rows for those (date, league) pairs are re-derived from honest-absence (not the zombie tick). — **DONE**, per
+      `sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`'s todo 4:
+      `reprocess_sports_odds.py --force` ran per-day against all 18 sweep-identified dates
+      (`market-tick-data-service@c2dda59a7` for the underlying dual-prefix sweep fix), manifest-verified all 18 now
+      carry a coarse captured row, spot-verified `read_bucketed_odds('2025-09-02')` now returns 0 rows (was serving 3
+      zombie rows). Citation fixed (na-eligibility-audit 2026-08-17).
+- [x] ✅ [DATA] P3. **Re-run `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30` after the P1/P2 fix**
       to confirm the 17 failing dates clear (or shrink to genuine honest-absence-only misses), then reassess whether the
       strict per-day gate (vs the already-precedented aggregate ≥95% pass bar from 2026-07-12) is still the right pass
       criterion for near-empty international-break days. **Expected post-purge state (tick-4 refinement)**: the 9
@@ -269,7 +274,12 @@ T-24h/T-1h):
       fixtures), and (ii) the per-date cell count exempts `WRITE_GATE_CONFIG.sparse_columns["odds_features"]` prefixes
       (the P1d 2026-07-12 proposal — ALL 43 always-null cluster columns verified inside that set, 0 unmatched), which
       also fixes the shallow-ladder partial days (e.g. 2025-10-20 at 91.1%). No re-capture/re-fetch is part of this path
-      — verified nothing re-fetchable exists for these days (live boards had zero in-window fixtures).
+      — verified nothing re-fetchable exists for these days (live boards had zero in-window fixtures). — **DONE**: both
+      halves confirmed via `sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`'s
+      todo 4 Progress Log (17-date failure set cleared to 0 FAILED, 88/91 dates passed, gate met) and
+      `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` line 273 (`[x]` "Switch verify_ml_readiness.py to the
+      precedented aggregate ≥95% pass bar" — that dated operator ruling is recorded in this cited plan doc itself).
+      Citation fixed (na-eligibility-audit 2026-08-17).
 
 ## RE-TRIAGE (2026-07-23)
 

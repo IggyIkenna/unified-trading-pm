@@ -46,15 +46,7 @@ source: >-
   Found 2026-08-14 while writing and reviewing Phase 6's 12-scenario test matrix (e2e-testing@094246df1a) — 3 scenarios
   needed correcting against already-shipped Phase 2 policy, 2 are genuine gaps in that policy table.
 depends_on: []
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/04-architecture/autonomous-recovery-matrix.md,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency_revocation.py,
-    deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py,
-    deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py,
-    e2e-testing/tests/integration/revocation/,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/04-architecture/autonomous-recovery-matrix.md, /plans/active/alert_driven_dependency_revocation_2026_08_12.md, unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency_revocation.py, deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py, deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py]
 ---
 
 # Alert-driven revocation — 5 findings from Phase 6 verification
@@ -179,3 +171,4 @@ local check. Environment setup, not a code change.
   **6** (UTL `.venv` bootstrap) now literally duplicate open todos in the reopened plan (lines 108, 376, 176
   respectively as of `44b6410206`). Not resolved here — deciding which copy is canonical is a judgment call outside this
   gate-fix's scope; flagging for `/plan-reconcile` or the operator.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

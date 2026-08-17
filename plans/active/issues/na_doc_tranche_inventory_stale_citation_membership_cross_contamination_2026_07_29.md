@@ -61,20 +61,20 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.16
 locked_by:
 resolved_by:
-context_scope:
-  [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
-    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
-    scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
-  ]
 depends_on: []
 source: >-
   `/na-eligibility-audit infra` run 2026-07-29 (na_eligibility_auditor scheduled worker, slot 7) — Phase 0 inventory
   verification step, cross-checked against a direct frontmatter sweep after the sibling `ci`-tranche issue doc (filed
   earlier the same day) raised doubt about the whole `non_ag_cited`/citation-grep mechanism's soundness.
+context_scope:
+  [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    unified-trading-pm/cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    unified-trading-pm/cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
+    unified-trading-pm/scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    unified-trading-pm/scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+  ]
 ---
 
 # `generate_na_doc_tranche_inventory.py` cross-contaminates ao/ci/infra tranches via bare closeout-doc citation
@@ -254,3 +254,4 @@ class in a third script.
   round11. Sole open item ([SCRIPT] P3, bundle-vs-extract-a-shared-membership-test-module) remains a design-preference
   call with no stated done-when; not found in any active `ao_satellite_ao_dispatch_batch*` citation list through
   batch17.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

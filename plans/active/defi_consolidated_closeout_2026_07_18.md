@@ -93,7 +93,7 @@ related:
     /plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md,
     /plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
     archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md,
-    issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
     issues/phantom_captures_defi_2026_06_28.md,
     issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
@@ -981,3 +981,4 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   -shipped twin (`mtds@ff1b5d51`, `mtds@4cf0ea3d`). 12 open todos remain (grep-verified). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-16** [body-hash:cb8821f06e1e74fd]: KEEP-NA, stale items (citation-fix flagged, not applied this run) -- 983-line doc read end to end (2 Read calls), 10 open todos grep-confirmed matching Phase-0 (the docs own last marker self-reports 12 -- a stale count in that prior entry, not an under-read here: fence-aware grep, one fenced block contains no checkboxes). Doc-level depends_on+gate_on_depends gate (defi_track01 + defi_lending_writer_retire_prerequisite) reaffirmed live 2026-08-08/09 -- never-re-litigate citation respected. Two item-level findings, both flagged not applied: (1) the Residual canon walk C2-C12 item (line ~767) self-cites defi_track01_per_instrument_and_canon_id_2026_07_24.md:310 as the canonical tracking location -- same 3-way overlap with data_completion_defi_2026_07_15.md this run also found, needs one coordinated citation-fix pass across both docs, not a piecemeal edit; (2) the Resume-paused-DeFi-crons item (line ~792) is explicitly self-labeled a duplicate of the Track-8 resume-crons item above (line ~572) -- should be collapsed, not applied this run. Separately noted: the Track-3 PURGE-then-seed item (line ~436, a ~63.9M-row prod GCS purge+reseed) lacks an explicit [OPERATOR]/delete-safety citation unlike its sibling delete item (line ~681) -- worth a follow-up look, not a RECLASSIFY blocker since the doc stays NA on the frontmatter gate regardless. Doc stays NA.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

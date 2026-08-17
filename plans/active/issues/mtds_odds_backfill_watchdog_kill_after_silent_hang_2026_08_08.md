@@ -54,7 +54,8 @@ context_scope:
     deployment-service/scripts/vm/vm_zombie_watchdog.py,
     deployment-service/deployment_service/vm_prefix_registry.py,
     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
-    market-tick-data-service/scripts/setup-data-pipeline-vm.sh,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    /plans/active/issues/mtds_backfill_odds_smallchunk10_relaunch_budget_bug_and_oom_2026_08_09.md,
   ]
 ---
 
@@ -583,3 +584,5 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   here since it may be the same unroot-caused mechanism firing even earlier, or a related-but-distinct startup-race
   condition worth a future dedicated investigation. VM left as-is (not relaunched again this pass) since Phase 1 of
   the casing-standardization plan doesn't depend on this VM completing.
+- **na-eligibility-audit 2026-08-17** [body-hash:49e985c6b8be2428]: KEEP-NA, valid — both open items genuinely unbounded (opportunistic live-catch task with no schedulable done-when; tuning self-gated pending reconciliation of 2 newly-found failure signatures from 2026-08-15/16). Round-7/9 prior audits agree.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

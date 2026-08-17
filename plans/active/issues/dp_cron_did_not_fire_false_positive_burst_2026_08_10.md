@@ -112,12 +112,7 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-10
 locked_since:
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md,
-    deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md, deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py]
 source: >-
   Operator-reported: 10 DP_CRON_DID_NOT_FIRE alerts fired within ~90 seconds of each other at 2026-08-10T00:09-00:10Z,
   one already confirmed false-positive (agent-orch-planning-vm-, the real AWS orchestrator VM verified running
@@ -306,3 +301,4 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   (ancestry-verified against origin).
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-16** [body-hash:83cc19e793382ee1]: KEEP-NA, valid — Read end-to-end. 4 of 5 todos closed across a same-day follow-up session that shipped a formal ProducerLifecycleState mechanism (classifying 6 of 8 genuinely-absent producers NOT_YET_ACTIVE per the operator's own confirmation that these are pre-live-trading placeholders) plus a real dedicated AWS EC2 liveness check replacing an earlier blanket GCP-only exclusion for the orchestrator VM.
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

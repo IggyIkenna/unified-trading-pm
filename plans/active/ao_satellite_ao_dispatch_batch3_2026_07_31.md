@@ -241,6 +241,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **2026-07-31** — Authored by `/ag-closeout-audit ao` (autonomous mode, scheduled dispatch agt-23935a, role
   ag_closeout_auditor, slot 5). Phase 0 confirmed the covering-plan set is unchanged from batch2's 2026-07-30 run (5
   docs: batch1+finalize, batch2+finalize, `ao_open_issues_consolidated_close_out_2026_07_17`). Phase 1 ran a real

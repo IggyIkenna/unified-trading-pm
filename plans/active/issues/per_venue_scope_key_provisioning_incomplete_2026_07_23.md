@@ -40,14 +40,14 @@ source:
   ("Per-venue sub-key provisioning") and 2.C ("Per-scope key separation in adapters")
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 context_scope:
   [
     /codex/05-infrastructure/secret-manager-naming.md,
     /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
     execution-service/execution_service/trade_execution/base_adapter.py,
   ]
-drift_direction: advance-code
-depends_on: []
 ---
 
 # Per-venue read/trade/withdraw scope key provisioning stalled at 2/10 venues
@@ -253,3 +253,4 @@ All three are real design/priority calls, not something determinable from code o
   on an unresolved design call, Upbit/Kraken/Bitfinex/Bitget provisioning `[HUMAN P3]`) — unchanged by this Aster
   shipment.
 - **na-eligibility-audit 2026-08-16** [body-hash:65255e7671dec15f]: RECLASSIFY-SPLIT — extracted bounded item(s) 8 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 3 items remain genuinely NA (2 [HUMAN] exchange-login-only credential/priority calls, 1 [BACKEND] P2 design call gated on an unresolved per-venue mechanism choice). Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

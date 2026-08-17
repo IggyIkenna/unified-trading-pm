@@ -140,3 +140,4 @@ data from multiple modes), not a bounded mechanical fix:
       (`test_build_path_rejects_unconsumed_kwargs`,
       `test_build_path_mode_kwarg_carve_out_for_pending_migration_datasets`) in
       `tests/config_interface/unit/test_paths_registry_smoke.py`. QG green (316s), sentinel verified on origin.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

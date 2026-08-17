@@ -203,7 +203,7 @@ in the RE-TRIAGE section below. Full original investigation, evidence, and shipp
       place as the reference for what the leak produced. Do not promote or cite them. — **STALE-CHECK CLOSE
       2026-08-09**: this retrain was already completed and GCS-verified on 2026-08-03, tracked under a sibling doc's
       checkbox that this doc itself was never updated to cite.
-      `/plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s own `[ML] P2` todo
+      `/plans/archive/2026_08/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s own `[ML] P2` todo
       (sourced explicitly from "`sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` Open Todo #5" — i.e. this exact
       checkbox) was closed-by-citation on 2026-08-06 (na-eligibility-audit, KEEP-NA-STALE): 3 CLV model variants trained
       via `--operation train --skip-dependency-check --task-type regression` against real prod `features-sports-prd`

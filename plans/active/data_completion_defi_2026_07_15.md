@@ -473,6 +473,7 @@ NOT investigated further here — flagging for operator triage / a separate todo
 - **context-scout 2026-08-15**: line-cap remediation (extracted the folded-in-from-M-1 chronological block to
   `/plans/archive/2026_08/data_completion_defi_progress_log_history_2026_08_15.md`, 1033L→469L); re-verified
   context_scope (3 entries), unchanged.
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 
 ## Extracted items index (2026-08-15)
 

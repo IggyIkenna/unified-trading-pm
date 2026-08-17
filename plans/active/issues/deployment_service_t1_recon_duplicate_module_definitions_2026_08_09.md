@@ -60,13 +60,7 @@ source: >-
   prompted checking whether the target resource address was correct; comparing it against the plan's OTHER pending entry
   for the same physical job under a different Terraform address (`module.instruments_cefi_t1_recon_job`) surfaced the
   duplication.
-context_scope:
-  [
-    deployment-service/terraform/gcp/audit03_cron_provisioning.tf,
-    deployment-service/terraform/gcp/t1_recon_instruments_jobs.tf,
-    deployment-service/terraform/gcp/_imports_reconcile.tf,
-    deployment-service/terraform/gcp/t1_batch_scheduler.tf,
-  ]
+context_scope: [deployment-service/terraform/gcp/audit03_cron_provisioning.tf, deployment-service/terraform/gcp/t1_recon_instruments_jobs.tf, deployment-service/terraform/gcp/_imports_reconcile.tf, deployment-service/terraform/gcp/t1_batch_scheduler.tf]
 ---
 
 # Two Terraform module definitions manage the same live cefi/prediction T+1-recon Cloud Run jobs
@@ -196,3 +190,4 @@ because:
   blocks are unconditionally hardcoded to prod resource IDs with no env-gating, and dev/staging/prod share ONE GCP
   project — a live-verified structural risk (proven via the exact same aliasing bug just found+fixed for the single
   `t1_batch` SA), not yet known to have caused actual contamination. See the 2 new todos above.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

@@ -77,13 +77,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-context_scope:
-  [
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
-  ]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py]
 ---
 
 # Sports closeout-audit findings, 2026-08-16
@@ -273,3 +267,4 @@ independently found real evidence of staleness or blockage worth operator awaren
   (`sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` P1 Todo 2, 2-day-old shipped fix missed by 2 prior
   audit passes). 25 taxonomy-tagged residual-work entries + 2 investigation notes parked below (`parked_findings=27`,
   `entries_written=27` — balanced).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

@@ -388,3 +388,4 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   open items — `[DIAG] P2` (best-effort, non-gating, no bounded done-when) and `[OPERATOR] P2` (needs root
   `dmesg`/`journalctl -k` access this identity does not have, or an operator to grant kernel-ring-buffer read access) —
   both unresolved as of this pass, content otherwise unchanged since 2026-08-07.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

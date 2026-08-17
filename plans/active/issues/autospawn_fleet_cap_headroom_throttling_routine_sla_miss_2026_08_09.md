@@ -109,3 +109,4 @@ are irregular (0.6 min to 3h11min) rather than clustered around a fixed per-tick
   `ORCHESTRATOR_FLEET_WORKER_CAP` further / design priority-aware headroom allocation / accept-and-document) with real
   host-resource-degradation risk if the wrong branch is picked unilaterally — the doc's own text explicitly frames this
   as 'not resolvable as a bounded worker todo.' Genuine capacity/operator judgment call.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

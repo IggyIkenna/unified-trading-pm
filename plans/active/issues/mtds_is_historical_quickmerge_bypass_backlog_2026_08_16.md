@@ -22,6 +22,12 @@ parent_epic: infrastructure_master
 source: ci_reconciler /ci-reconcile sweep 2026-08-16
 assigned_vm: NA
 resolved_by:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    unified-trading-pm/scripts/cicd/check_strict_quickmerge.py,
+    unified-trading-pm/scripts/cicd/reprovenance_bypass.sh,
+  ]
 ---
 
 # MTDS + instruments-service historical strict-quickmerge bypass backlog
@@ -69,3 +75,4 @@ live promotion the same way `unified-trading-pm`'s `e560378a2d` did earlier in t
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-16** [body-hash:34c3d23d3f97c424]: KEEP-NA, valid — Doc created today (2026-08-16) by a /ci-reconcile sweep — no staleness window exists. All 3 open todos are genuinely operator-gated judgment work, not deterministic/bounded work.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

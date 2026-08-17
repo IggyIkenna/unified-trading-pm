@@ -48,12 +48,7 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-17
 locked_since:
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    alerting-service/alerting_service/core/dedup.py,
-    deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, alerting-service/alerting_service/core/dedup.py, deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py, /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md]
 source: >-
   6-hourly data_pipeline_alerts_reconciler dispatch (agt-112bed, 2026-08-17), running the
   /data-pipeline-alerts-reconcile skill's mandatory ground-truth Slack read + registry cross-check.
@@ -114,9 +109,10 @@ on the live capture process itself) is out of scope for this reconciliation swee
 
 - [x] ✅ [SCRIPT] P1. Fix `AlertDeduplicator` to exclude `attempted_age_hours` + generic `*_age_*` suffix fields from
       the identity hash. Evidence: `alerting-service@cd60a3e595`.
-- [ ] [SCRIPT] P2. Confirm the fix reached the live `dp-alerting-subscriber` Cloud Run revision (§4 deploy-chain
-      check: main ancestry, fresh Cloud Build, `latestReadyRevisionName` + traffic=100%) on the next
-      `data_pipeline_alerts_reconciler` sweep or a manual check.
+- [x] ✅ EXTRACTED — see `plans/active/cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 1 (na-eligibility-audit
+      2026-08-17, cefi tranche, conflict-checked clear). Original: [SCRIPT] P2. Confirm the fix reached the live
+      `dp-alerting-subscriber` Cloud Run revision (deploy-chain check: main ancestry, fresh Cloud Build,
+      `latestReadyRevisionName` + traffic=100%) on the next `data_pipeline_alerts_reconciler` sweep or a manual check.
 - [ ] [OPERATOR] P1. Investigate the 2 genuine live-capture stalls (BYBIT-FUTURES on
       `mtds-live-cefi-consolidated-20260814-041422`; CME trades on `mtds-live-tradfi-cme-trades-20260809-163443`) —
       both VMs running, both actively attempting, neither producing rows. Needs a look at the live capture
@@ -129,3 +125,5 @@ on the live capture process itself) is out of scope for this reconciliation swee
   the `DP_CRON_DID_NOT_FIRE` refire storm, root-caused it to a dedup-identity-hash bug (`attempted_age_hours` not
   excluded), fixed + shipped `alerting-service@cd60a3e595` with regression tests, and flagged the 2 real underlying
   live-capture stalls this fix does not resolve.
+- **na-eligibility-audit 2026-08-17** [body-hash:26ce733728bec47c]: RECLASSIFY-SPLIT — extracted bounded item 2 (deploy-chain verification) to `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 1, conflict-checked clear (no other active doc claims this ground). Item 3 ([OPERATOR] live-capture-stall investigation) stays genuinely NA — open-ended production debugging with unknown root cause, kept at lower confidence given the doc's own [OPERATOR] tag rather than reclassified outright. Doc stays assigned_vm: NA for that remaining item.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

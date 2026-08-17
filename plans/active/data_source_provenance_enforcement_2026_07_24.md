@@ -236,3 +236,4 @@ Scope exemptions (by design, not gaps): features-service / strategy / execution 
   -- the checkbox itself was the only stale part). Doc keeps 13 open `- [ ]` items (DeFi/cefi/sports corpus backfills,
   the tradfi read-path resolver PARTIAL, the manifest dedup-key FINDING, the QG checker wiring, the 6 big P0 rollups,
   the CODEX item) -- `status` stays `active`, nowhere near zero open work.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

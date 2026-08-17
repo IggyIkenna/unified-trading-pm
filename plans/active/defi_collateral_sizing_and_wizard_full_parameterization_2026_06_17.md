@@ -191,6 +191,7 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   `param_schema` block; R1 full-catalogue venue/instrument pickers; wire values through `strategy_config_loader`;
   food-chain parameterization (exec-algo / risk ladder / collateral posting mode / source routing). The UI manifest copy
   is already synced + ready; commit it with the render code.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 
 ## Phase A follow-ups (discovered during build)
 
@@ -251,3 +252,4 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   corpus's established pattern) not treated as a blocker. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 - **na-eligibility-audit 2026-08-16** [body-hash:f9bdb0f6bccfc5a3]: RECLASSIFY (per-todo split), applied — the codex-doc-update item (shipped-precondition now met) extracted to defi_satellite_ao_dispatch_batch15_2026_08_16.md (+ finalize, status: active). The remaining open item (wizard food-chain parameterization -- exec-algo params, risk ladder, collateral posting mode, source routing) is real cross-layer design/build work and stays NA. Also corrected a stale execution_scope: orchestrator-agent -> local-only (frontmatter mismatch vs assigned_vm: NA, unrelated to this reclassification). Doc stays assigned_vm: NA with 1 open item remaining.
+- **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — sole remaining item (wizard food-chain parameterization) is genuine cross-layer design/build work, independently reconfirmed across 7+ prior audit rounds. Doc stays assigned_vm: NA.

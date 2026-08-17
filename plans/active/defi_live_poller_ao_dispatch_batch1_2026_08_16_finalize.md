@@ -42,3 +42,7 @@ resolved_by:
 - [ ] [REVIEW] P2. Confirm both base classes landed with zero-behavior-change regression evidence for
       `UNISWAP_V3-ETHEREUM` and `AAVE_V3-ETHEREUM`; update `defi_live_poller_phased_build_2026_08_15.md`'s Tranche 0
       checkbox and TVL-ordering todo status; archive this batch plan once done and unlocked.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (1 entries)

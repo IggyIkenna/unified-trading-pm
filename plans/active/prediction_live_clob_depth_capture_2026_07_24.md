@@ -901,3 +901,11 @@ specific successor/blocker: it needs an instruments-service re-enumeration of a 
 `clob_token_ids`, then a re-run of the book backfill for that date (repo: instruments-service + deployment-service).
 Live book_snapshot_5 capture is already code-complete and live-proven; this is a batch-only row-proof residual, not a
 sports/prediction-track blocker.
+
+## Progress Log (cont'd)
+
+- **na-eligibility-audit 2026-08-17** [body-hash:7e6d571d7e2cefb3]: KEEP-NA, valid (not-applicable — 0 open todos,
+  `archive_exempt: true`). Re-confirmed: the depth-retention design question closed 2026-08-06 and the
+  DEFERRED-CROSS-DEP row-proof item was extracted to `prediction_satellite_ao_dispatch_batch10_2026_08_09.md`
+  (shipped/reconciled per that batch and its finalize). This doc's own frontmatter defers the archival call to
+  `/archive-candidates-audit` (complex referrer graph), not this skill — no action needed here.

@@ -356,17 +356,23 @@ context_scope:
       carries the value, `/api/backlog` returns 200, and `agt-95ede4` flipped to `status: dispatched, last_error: null`
       on the next retry tick (~90s later) — confirmed live, not just code-read. No source doc existed for this before
       today; tracked here per the operator's "plug into the 14th consolidated tracker, don't file a new doc" direction.
-- [ ] [DIAG] P1. **Root-cause why `.env.local` lost `ORCHESTRATOR_VM_ID` between 2026-08-13 and the 08:54:18Z
-      2026-08-16 `orchestrator.service` restart — NOT root-caused, only patched live** (see item directly above).
-      `refresh_env_from_sm.sh` is UPSERT-only by design and always backs up on `--apply` (`.env.local.bak.<epoch>`),
-      but the two existing backups on `planning` are from 2026-07-30 and 2026-08-08 — neither near the incident window
-      — so that script is not the obvious culprit as-observed; more likely a redeploy/reprovision step re-ran
-      `bootstrap_vm.sh`'s Step-5 `.env.local` overwrite-from-Secret-Manager path (correct only for a FRESH VM per that
-      script's own comment) without the identity-var upsert (`_upsert_env ORCHESTRATOR_VM_ID`) that's supposed to
-      follow it, on an already-provisioned long-lived host. Needs: `sudo journalctl` / shell history around the restart
-      window on `planning`, and confirmation whether any CI/redeploy workflow calls `bootstrap_vm.sh`'s overwrite path
-      against the already-provisioned central VM instead of `refresh_env_from_sm.sh`. Until root-caused, this can
-      silently recur on the next redeploy.
+- [x] ✅ [DIAG] P1. **Root-cause found + preventive fix shipped 2026-08-17 (slot-6, infra worker,
+      `ao_satellite_ao_dispatch_batch21`).** Mechanism confirmed had NEW forensic evidence: `planning` accumulated 6
+      `.env.local.bak.*` files by 2026-08-16 (2 pre-existing + 4 new same-day); exactly ONE
+      (`.env.local.bak.1786877088`) carries **zero** `ORCHESTRATOR_*` keys at all — every other backup, before and
+      after, carries them normally. That is the exact signature of `bootstrap_vm.sh` STEP 5b's raw `echo ... >
+      ${ENV_LOCAL}` overwrite (correct only for a FRESH VM per the step's own header comment) having run WITHOUT
+      reaching the identity-var re-add (`_upsert_env ORCHESTRATOR_VM_ID`, STEP 5b-append) a few lines later in the SAME
+      `else` block — only reproducible by a partial/killed run, or any caller invoking just the SM-blob-fetch logic in
+      isolation, against an already-provisioned host. The exact trigger (which process/redeploy path ran it) is NOT
+      identified — no root crontab visibility and no `.bash_history` hits from this sandboxed worker's vantage point —
+      but the mechanism itself is now pinned to a specific, evidenced code path rather than the prior best-guess.
+      **Preventive fix shipped** (`agent-orchestrator@bc9835a38d`): STEP 5b now checks whether `${ENV_LOCAL}`
+      already exists and already declares `ORCHESTRATOR_VM_ID` (= an already-provisioned host) — if so it UPSERTS the
+      Secret-Manager blob's keys in place (same technique `refresh_env_from_sm.sh` already uses) instead of the
+      destructive overwrite, so no VM-specific key can be dropped by this step again regardless of what triggers it or
+      whether the run completes. A genuinely fresh VM (no prior `ORCHESTRATOR_VM_ID`) still gets the original
+      overwrite-then-upsert path unchanged.
 - [x] [BACKEND] P0. **DESIGN RESOLVED 2026-08-15 (this session, operator discussion) — no longer operator-blocked, now
       bounded implementation work.** Design the dirty-worktree resolution policy (Ikenna, Slack 2026-06-12). Operator
       confirmed the revision directly in-session: keep steps 1-2 unchanged (QG-green→quickmerge /
@@ -774,6 +780,7 @@ plan can reach zero-open-todos and archive independently.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **2026-08-14 (authoring)**: Created from the 5-parallel-agent code-audit sweep of 44 AO-subject-matter docs run
   earlier this session. 10 already-implemented-but-unflipped items were fixed directly (not tracked here — see
   `unified-trading-pm@0969b12571`/`9906379de6`); the gcloud WIF-poisoning security issue was fully resolved + archived

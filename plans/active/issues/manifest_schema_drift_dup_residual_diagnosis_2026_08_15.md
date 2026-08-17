@@ -25,6 +25,13 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    unified-trading-library/unified_trading_library/manifest_consolidator.py,
+    instruments-service/scripts/dedupe_manifest_schema_drift.py,
+    /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
+  ]
 ---
 
 # Manifest schema-drift dup — root causes resolved, residual re-scoped
@@ -76,3 +83,7 @@ incremental-merge enhancement is an operator/design call, not a worker-determina
       consolidator cron structurally never re-examines once settled (measured 2026-08-15: BINANCE-FUTURES ~4.15% dup
       shard-keys at the true dedup key, all byte-identical twins predating the 2026-07-12/07-15 dedup-logic maturation).
       Repo: unified-trading-library (consolidator) + deployment-service (scheduler, if approved).
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (4 entries).

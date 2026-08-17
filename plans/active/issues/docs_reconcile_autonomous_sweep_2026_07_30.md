@@ -48,13 +48,7 @@ source:
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /cursor-configs/skills/docs-reconcile/SKILL.md,
-    /codex/11-project-management/doc-frontmatter-schema.md,
-    /codex/06-coding-standards/strategy-identity-versioning.md,
-    /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
-  ]
+context_scope: [/cursor-configs/skills/docs-reconcile/SKILL.md, /codex/11-project-management/doc-frontmatter-schema.md, /codex/06-coding-standards/strategy-identity-versioning.md, /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md]
 supersedes:
 superseded_by:
 ---
@@ -401,3 +395,4 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   rule outright) remains an explicit human decision on a rule whose backing script no longer exists; the other 3 of the
   original 4 P1-C rows were independently resolved/moot by 2026-08-08, correctly narrowing this item without a whole-doc
   flip. No new bounded content on independent re-read.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

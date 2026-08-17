@@ -361,3 +361,7 @@ four now route through the one helper.
 > **RESOLVED 2026-08-17 (plan_reconciler)**: no longer an archive-candidate trap — the doc now carries 3 tracked
 > `- [ ]` Follow-ups (including this exact benchmark-completion item), so `status: open` is correct and this note is
 > historical only.
+
+## Progress Log addendum
+
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.

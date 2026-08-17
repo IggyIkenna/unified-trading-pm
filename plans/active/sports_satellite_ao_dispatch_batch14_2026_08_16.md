@@ -41,7 +41,7 @@ related:
     /plans/active/sports_taxonomy_p2_consumer_inventory_2026_08_12.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     /plans/active/issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md,
-    /plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md,
+    /plans/archive/2026_08/issues/sports_honest_coverage_gap_closure_2026_08_14.md,
     /plans/active/issues/dp_vm_001_mdps_sports_2026_staleness_guard_and_timeouts_2026_08_16.md,
     /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,

@@ -822,6 +822,7 @@ family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27,
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a standing
   discoverability-index sync with no terminal done-state; by design a human-maintained digest, not a dispatchable unit.
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verified after the file's last

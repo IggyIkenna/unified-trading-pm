@@ -167,3 +167,5 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
   items. The `[BACKEND]` durable watchdog-escalation fix touches core dispatch-critical-path machinery (same caution
   class as the sibling context-pct-75 wedge doc). The `[OPERATOR]` slot-3 kill+respawn item is an explicit operator-only
   live-infra action main/workers cannot self-serve. 3 prior audits (08-04, 08-06, round7-08-08) consistently agree.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

@@ -24,15 +24,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-29
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
-    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
-    market-tick-data-service/market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py,
-    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
-  ]
+context_scope: [/plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md, /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md, /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md, market-tick-data-service/market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py, deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh]
 locked_since:
 resolved_by:
 ---
@@ -249,3 +241,4 @@ argument for that issue's Option A). Cross-linked from there.
   cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md's still-open [REVIEW] P2 re-verification todo (that
   todo explicitly re-checks the manifest and conditionally closes this doc; verified `- [ ]` open, not yet executed as
   of this run). Not yet ready to close here ahead of that gate.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

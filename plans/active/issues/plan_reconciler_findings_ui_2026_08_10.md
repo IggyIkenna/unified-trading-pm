@@ -405,3 +405,5 @@ staged batch before commit).
     and item 2 with a fresh re-confirmation that it's still moot (Phase 3's GO/NO-GO checklist still unmet). No git
     add/commit/push performed by this session — edits only, per this session's own instructions (someone else commits
     centrally afterward).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

@@ -72,13 +72,7 @@ source: >-
   never-cited) + a `check_ag_closeout_linkage.py` cross-check (4 more invisible candidates) + a widened Orthogonality
   HARD CHECK (5 more dual-tag hits). Phase 1 `Workflow` (13 agents) + 1 direct read classified all 14 genuinely-new
   candidates.
-context_scope:
-  [
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
-  ]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md, /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md]
 ---
 
 # Parked findings — 2026-08-08 `/ag-closeout-audit cross-cutting` run
@@ -352,3 +346,4 @@ ledger.
   question flagged "unruled since 2026-07-31" was actually ruled 2026-08-06 (option A) — re-verified against the target
   doc's own todo, now `[CODE] P2`, tag already corrected there. Flipped `[x]` and retagged `[DOCS]` here; no further
   action needed on this doc's side, implementation tracked at the target.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

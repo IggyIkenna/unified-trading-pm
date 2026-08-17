@@ -42,12 +42,7 @@ effort: medium
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    deployment-service/scripts/vm/lib/launcher_common.sh,
-    /plans/archive/2026_08/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
-  ]
+context_scope: [/codex/05-infrastructure/vm-launcher-runbook.md, deployment-service/scripts/vm/lib/launcher_common.sh, /plans/archive/2026_08/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md]
 supersedes:
 superseded_by:
 depends_on: []
@@ -410,3 +405,4 @@ exactly what this plan's own rules section says to avoid.
   tests: refuses a duplicate against a RUNNING shard, permits relaunch once no longer RUNNING). Updated
   `vm-launcher-runbook.md`'s Known Issues with what shipped + what was verified. This unblocks (but does not itself
   perform) the 79-launcher SPOT-tier migration, which is still deferred to a follow-up batch per `## Deferred` above.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

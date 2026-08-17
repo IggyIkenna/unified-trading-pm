@@ -898,6 +898,10 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries) -- `honest_coverage.py` (cited
   twice in-body, the canonical honest-coverage type this plan's sports-lane checks against) remains the correct source
   target alongside M-1 + the line-cap-remediation issue + the sports-floor/honest-coverage/vm-launcher codex SSOTs.
+- **na-eligibility-audit 2026-08-17** [body-hash:06b04300cfa92d2e]: KEEP-NA, valid — Transfermarkt backfill blocked by
+  a durable upstream Transfermarkt outage (API 502 since 2026-08-07, tracked in
+  sports_all_vendor_honest_coverage_convergence_2026_08_07.md); API-Football quota-tier decision genuinely an operator
+  question (live account tier contradicts doc's stated baseline). 5+ prior audit passes agree, no drift since.
 
 ## Deferred work — migrated to:
 

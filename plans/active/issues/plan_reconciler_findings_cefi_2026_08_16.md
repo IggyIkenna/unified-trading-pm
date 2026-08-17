@@ -28,6 +28,12 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler-agt-2e82f7
 depends_on: []
+context_scope:
+  [
+    unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-trading-pm/plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    unified-trading-pm/plans/active/cefi_satellite_ao_dispatch_batch20_2026_08_16.md,
+  ]
 ---
 
 # plan_reconciler cefi-tranche run — 2026-08-16
@@ -336,3 +342,5 @@ None — all 80 non-grace docs in the cefi tranche were read in full by the hunt
   not doc-hygiene gaps — **STILL-OPEN ORDINARY-WORK**. No RESOLVED/AUTO-FIXABLE items found this pass (the na-
   eligibility-audit pass earlier the same day already extracted every bounded item). Doc stays `status: open`,
   `assigned_vm: NA` — not archived (4 genuine open items remain).
+- **na-eligibility-audit 2026-08-17** [body-hash:fe51f315f7be41bd]: KEEP-NA, valid — Reaffirmed same-day. 4 remaining items (line-cap split gated on 2 design/judgment todos, an [OPERATOR] unidentified-VM confirmation, 2 [REVIEW] open-ended meta-process investigations outside this tranche's write scope) already independently re-verified by a same-day plan_reconciler Phase -1 pass. None clears the bounded-outcome bar. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

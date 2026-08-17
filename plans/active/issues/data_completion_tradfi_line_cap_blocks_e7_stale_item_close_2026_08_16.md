@@ -37,12 +37,7 @@ priority: P2
 execution_scope: local-only
 drift_direction: advance-docs
 depends_on: []
-context_scope:
-  [
-    /plans/active/data_completion_tradfi_2026_07_15.md,
-    scripts/plan-hygiene/check_line_caps.sh,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-  ]
+context_scope: [/plans/active/data_completion_tradfi_2026_07_15.md, scripts/plan-hygiene/check_line_caps.sh, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md]
 ---
 
 # data_completion_tradfi_2026_07_15.md is AT (not over) the 1000L hard cap — blocks even a marker-only edit
@@ -97,3 +92,7 @@ this file cleanly (`git checkout --`, verified clean, 1000L).
 - [ ] [SCRIPT] P3. Confirm with the `check_line_caps.sh` owner whether the marker-only/link-repoint carve-outs'
       "already over the hard cap" precondition should be `>=` instead of `>` the cap, so a doc sitting exactly at
       the boundary isn't blocked from even the cheapest maintenance edit. Not decided here — a design call.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

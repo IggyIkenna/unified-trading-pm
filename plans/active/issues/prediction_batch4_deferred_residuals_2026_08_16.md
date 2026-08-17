@@ -108,3 +108,12 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
   the `check_archive_candidates` CI ratchet blocking `live-defi-rollout`). Cross-checked all 4 Deferred sections
   against the live corpus (see table above) — 5 of 7 items already tracked elsewhere, 2 genuinely orphaned and
   migrated here as real `- [ ]` todos.
+- **na-eligibility-audit 2026-08-17** [body-hash:2a51a9fb2b7eda72]: KEEP-NA, valid — 2 open todos. Todo 1
+  ([OPERATOR][DATA] P2, reclassify 38,020 out-of-lifecycle manifest rows) is an explicit human-review-gated manual
+  `--apply` manifest write per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (a false positive would
+  silently mark good captured data as failed) — genuinely operator-gated. Todo 2 ([DATA] P3, investigate whether 49
+  canonical-only POLYMARKET trades days can recover title/slug/event_slug from the IS reference universe) reads as a
+  bounded, worker-determinable investigation with a clear done-when — tagging `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` for
+  a future pass to promote via per-todo split rather than reclassifying the whole doc off one item. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

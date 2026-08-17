@@ -38,6 +38,13 @@ superseded_by:
 source: measured while shipping /plans/archive/2026_08/revocation_arming_2026_08_14.md
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+    /codex/06-coding-standards/quality-gates.md,
+    unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+  ]
 ---
 
 # Local host: six concurrent quality gates, load 308
@@ -108,3 +115,7 @@ the single largest contributor measured here.
 - Slot attribution via `lsof -a -p <pid> -d cwd` over every `pgrep -f 'bash scripts/quality-gates.sh'` match.
 - **Counting caveat worth repeating**: a bare `ps aux | grep -c` over-counts — it catches parent shells, nested children
   and the grep's own wrapper. The honest figure was ~7 distinct runs, not the 10 first reported.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (4 entries).

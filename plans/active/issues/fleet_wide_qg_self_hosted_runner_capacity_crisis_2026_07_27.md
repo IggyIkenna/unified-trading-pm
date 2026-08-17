@@ -125,7 +125,7 @@ self-host rollout for execution-service"), routing its CPU-heavy `qg-slices` job
    already have `self_hosted_runner_labels` live** (only `deployment-ui` and `unified-trading-system-ui` don't yet — the
    JS/UI repos, likely a different template path). All 19 landed via near-identical
    `feat(ci): Phase 7 + quality-gates-v2 self-host rollout for <repo>` commits within roughly the same ~21:40-21:55 UTC
-   window today (2026-07-27) — e.g. `execution-service@4cd5b5c0` (21:53), `deployment-api@c19edcc2` (21:46).
+   window today (2026-07-27) — e.g. `execution-service@18b35928` (21:53), `deployment-api@c19edcc2` (21:46).
 4. Runner registration reality check (`gh api repos/IggyIkenna/<repo>/actions/runners`) on 9 sampled repos
    (execution-service, deployment-api, alerting-service, instruments-service, ml-service, unified-api-contracts,
    market-tick-data-service, unified-trading-library, agent-orchestrator): **every one shows exactly 1 runner** except
@@ -822,3 +822,4 @@ pool dead):
     an out-of-self-service-scope AWS IAM gap, not attempted-and-failed). Reconciling this back into
     `self_hosted_runner_public_repo_revert_2026_08_05.md`'s own todo 20 checkbox happens in that plan directly (same
     turn).
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.

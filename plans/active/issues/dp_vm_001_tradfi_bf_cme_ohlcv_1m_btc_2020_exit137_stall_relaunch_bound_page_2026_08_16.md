@@ -36,13 +36,7 @@ related:
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -163,3 +157,4 @@ operator weighing against the shard-specific hypothesis the `g01-6a-6l-2020` sib
   only `g01`-`g07` groups). Per RB-INFRA-RELAUNCH, did not relaunch. Filed this issue doc, flagging the
   3-distinct-shards-in-24h pattern as a candidate family-wide (not per-shard) defect, and paging the operator via
   `/blocked` per the escalation's explicit instruction. No code changed this session.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

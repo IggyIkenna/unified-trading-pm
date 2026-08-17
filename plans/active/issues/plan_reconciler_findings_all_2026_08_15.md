@@ -42,13 +42,13 @@ source:
   "Interactive session, operator-directed full-corpus /plan-reconcile fresh sweep, 2026-08-15 — 35+ parallel read-only
   sub-agents, several tranches self-partitioned (ao 5, tradfi 5, cefi 5, defi 5, cross-cutting 6, sports 5, infra 5+,
   prediction 3, ui 3+)."
+drift_direction: fix
+depends_on: []
 context_scope:
   [
     unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
     unified-trading-pm/plans/active/issues/operator_ruling_record_plan_reconcile_session_2026_08_15.md,
   ]
-drift_direction: fix
-depends_on: []
 ---
 
 # plan_reconciler — fresh full-corpus sweep, 2026-08-15
@@ -392,3 +392,4 @@ top of that.
   meta-docs/locked_by-sweep) still need their commits, IF the edits from that earlier apply-agent pass survived the
   session's repeated autostash cycles (confirmed at least the infra doc's edits did NOT survive and had to be redone —
   verify each remaining batch's target files before assuming the content is still there).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

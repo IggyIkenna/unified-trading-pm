@@ -31,12 +31,6 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 effort: medium
 drift_direction: advance-code
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
-    market-tick-data-service/scripts/quality-gates.sh,
-    /codex/06-coding-standards/quality-gates.md,
-  ]
 resolved_by:
 supersedes:
 superseded_by:
@@ -44,6 +38,12 @@ depends_on:
 locked_by:
 locked_since:
 source: MTDS quality-gates run during the 2026-08-14 batch-vs-live audit verification pass
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    market-tick-data-service/scripts/quality-gates.sh,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 ---
 
 # MTDS websocket_runner.py is 902 lines — the 900-line hard gate blocks every commit
@@ -110,3 +110,4 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
 - 2026-08-14: P0 line-cap breach resolved by the introducing commit's own author, market-tick-data-service@adf74dcf11
   (extracted `_register_lazy_buffer()`, 897 lines, quality gates green). P1 (blocked bybit consumer migration) and P2
   (gate error-message improvement) left open for their respective owners — not touched.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

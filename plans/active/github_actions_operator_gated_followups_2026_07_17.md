@@ -50,15 +50,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
-context_scope:
-  [
-    /codex/08-workflows/ci-cd-flow.md,
-    /codex/07-security/self-hosted-runner-security-posture.md,
-    /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
-    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    scripts/cicd/measure-billed-notify-cost.sh,
-    /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
-  ]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, /codex/07-security/self-hosted-runner-security-posture.md, /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md, /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md, scripts/cicd/measure-billed-notify-cost.sh, /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md]
 source:
   - "Split from /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the line-cap remediation
     triage (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 13, proposed action 2 of 3): the
@@ -736,3 +728,4 @@ assert-not-decorative: doc's own D3 table row states 'digest-drift-sweep still u
 bare-host bootstrap PROVE: container leg done, IMDS/EC2-role + GCP ADC (doc flags this leg 'interactive') + systemd +
 real GH runner registration 'structurally cannot' run in a container -- tied to 'the upcoming planning-VM deploy,' a
 genuine host rebuild.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

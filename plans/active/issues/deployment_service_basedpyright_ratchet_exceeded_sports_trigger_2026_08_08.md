@@ -33,13 +33,7 @@ resolved_by:
 archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 depends_on: []
-context_scope:
-  [
-    deployment-service/deployment_service/sports_trigger_evaluation.py,
-    deployment-service/deployment_service/sports_trigger_periodic.py,
-    /codex/06-coding-standards/quality-gates.md,
-    /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
-  ]
+context_scope: [deployment-service/deployment_service/sports_trigger_evaluation.py, deployment-service/deployment_service/sports_trigger_periodic.py, /codex/06-coding-standards/quality-gates.md, /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md]
 ---
 
 ## Finding
@@ -124,3 +118,4 @@ plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md (
 same-repo same-file-family basedpyright fix in sports_trigger_periodic.py one week prior (moved the ratchet 1293->1294
 via a reportPrivateUsage fix) and remains AO-dispatchable, creating a real race risk on the SAME shared repo-wide
 basedpyright counter/file family.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

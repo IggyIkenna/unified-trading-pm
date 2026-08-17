@@ -215,6 +215,18 @@ restated here.
 
 ## Progress Log
 
+- **2026-08-17 (slot-23, `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`'s P1 todo)**: the
+  `canonical_twin_path()` lookup-logic bug root-caused below (2026-08-09) was fixed prior to this pass
+  (instruments-service@271b3d33, 2026-08-14) — verified correct via regression tests + a live-GCS cross-check. **Twin
+  coverage re-measured against the existing 900-row `orphan_sweep_tradfi.parquet` report: still 0/900 deletable, but
+  the reason changed** — no longer "canonical twin NOT captured" (0% Part-5 coverage); now **all 900 rows report
+  "legacy object no longer exists"** — the legacy objects themselves have been deleted from GCS since the report was
+  generated (2026-07-30), independently confirmed for one sampled row (legacy URI → `gcs_describe_object` returns
+  `None`; its now-correctly-derived canonical twin → resolves to a real object, `last_modified=2026-08-10`). **The
+  delete gate below still does NOT clear** — the report this doc's measurement depends on is now itself stale (0
+  live candidates, not a coverage percentage), so no coverage number can be trusted until a fresh
+  `migration_orphan_sweep.py --asset-group tradfi` walk rebuilds the candidate list — tracked as the new follow-up
+  todo in the sibling plan above. Full detail + independent verification evidence in that plan's own Progress Log.
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA-STALE (already-duplicated) —
   citation gap fixed.** 2 open todos re-read end-to-end. The CODE P2 canonical_twin_path() fix was already ruled +
   extracted per the entry directly below, but its checkbox was never flipped to match — fixed above (checkbox now

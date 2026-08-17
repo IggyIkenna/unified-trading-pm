@@ -46,14 +46,7 @@ source:
   ]
 locked_by:
 locked_since:
-context_scope:
-  [
-    agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts,
-    agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts,
-    agent-orchestrator/dashboard/tests/e2e/worker-chat.spec.ts,
-    agent-orchestrator/dashboard/tests/e2e/backlog-collision.spec.ts,
-    /plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md,
-  ]
+context_scope: [agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts, agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts, agent-orchestrator/dashboard/tests/e2e/worker-chat.spec.ts, agent-orchestrator/dashboard/tests/e2e/backlog-collision.spec.ts, /plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md]
 ---
 
 # agent-orchestrator dashboard e2e suite: pre-existing intermittent failures, unrelated to slot-namespacing
@@ -306,3 +299,4 @@ shipped independently or these findings would still be sitting entirely undocume
   duplicated here. Item 1 (`deepseek-per-turn-metrics.spec.ts` + `deepseek-wallet-reconciliation.spec.ts`) remains
   genuinely open — no re-run confirmation exists against either fix yet, so this todo cannot fully close until that
   lands. Doc-level disposition unchanged (checkbox stays with the finalize plan per this doc's own governance rule).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

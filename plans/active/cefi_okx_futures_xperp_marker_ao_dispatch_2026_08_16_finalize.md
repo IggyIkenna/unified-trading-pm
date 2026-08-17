@@ -34,6 +34,12 @@ source: "na-eligibility-audit follow-up Q&A round 6, 2026-08-16"
 locked_by:
 context_scope: [/plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md]
 locked_since:
+context_scope:
+  [
+    /plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md,
+    /plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md,
+    deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
+  ]
 resolved_by:
 ---
 
@@ -49,24 +55,40 @@ resolved_by:
       Also confirmed the `[OPERATOR] P1` todo in `okx_futures_instid_marker_convention_mismatch_2026_07_30.md`
       was ALREADY flipped to done-with-sha before this session touched it (no action needed there). Full
       evidence in the Progress Log below.
-- [ ] [INFRA] P2.2. **NEW 2026-08-16 (slot 22, review — split from the original combined todo, mirroring the
-      P1.1/P1.2 precedent in `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`).** The
-      "live subscriptions for xperp contracts confirmed non-zero" half of the original todo is NOT yet true:
-      the currently-running live CeFi capture VM (`mtds-live-cefi-consolidated-20260814-041422`, created
-      2026-08-13/14) predates the fix commit (`3acdd478e5`, landed 2026-08-16) by 2-3 days, and this
-      deployment model bakes code in at VM-launch time (no live auto-pull) — so the running connector almost
-      certainly still lacks the `_XPERP` fix. Redeploy: confirm the floating `mtds-code` tarball manifest
-      (`gs://deployment-scripts-central-element-323112/code/mtds-code.manifest.json`) has `3acdd478e5` (or
-      later) as an ancestor, delete the stale VM, relaunch via the standard launcher
-      (`launch-mtds-live-cefi-consolidated.sh --env prod`), confirm all shard processes come up, then
-      live-verify (per the P1.1 precedent's method) real non-zero rows for one of the 28 fixed equity/ETF
-      xperp symbols (e.g. AAPL, `OKX-FUTURES:FUTURE:AAPL-USD@LIN-20310613`) in
-      `live-events/warm/cefi/{trades,book_snapshot_5,derivative_ticker}/*.parquet` objects timestamped AFTER
-      the redeploy. Then flip this todo and archive this plan (all conditions of the original combined todo
-      will be met). Repo: market-tick-data-service (host-level VM redeploy, no code diff).
+- [x] ✅ [INFRA] P2.2. **DONE 2026-08-17 (slot-17, infra).** Redeploy half only (split further below — see
+      P2.3 for the still-open live-verify half). Confirmed `3acdd478e5` is an ancestor of the floating
+      `mtds-code` tarball's pinned commit (`e9709d59054efb16b57eac1bf512ac1a6a3c58b0`, tarball refreshed
+      2026-08-17T02:42:25Z, `git_status_clean: true`) via `git merge-base --is-ancestor`. The stale VM
+      (`mtds-live-cefi-consolidated-20260814-041422`) was deleted and `mtds-live-cefi-consolidated-20260817-025031`
+      relaunched via the standard launcher — done by an earlier pass of this same session before a context
+      reset (no Progress Log entry existed for it yet; this entry documents the verification, not the action
+      itself, which this worker independently confirmed via evidence rather than assuming). Confirmed via SSH
+      (`ps aux`) that all 24 MVP shard processes are up, including all 3 OKX-FUTURES shards
+      (`cefi:OKX-FUTURES:trades`, `:book_snapshot_5`, `:derivative_ticker`). Old VM's heartbeat blob
+      (`vm-heartbeat/mtds-live-cefi-consolidated-20260814-041422.txt`) was still fresh (updated 02:48:36Z)
+      right up to the cutover — confirms this was a deliberate stale-code replacement per the VM-delete
+      guardrail (infra.md STEP 0.65), not a zombie/stale-detection case.
+- [ ] [DATA] P2.3. **⏸ PARKED 2026-08-17 (slot-17, infra) — genuinely time-gated, not worker-satisfiable
+      right now.** The live-verify half of the original P2.2 (real non-zero rows for a fixed xperp symbol in
+      warm-tier `live-events/warm/cefi/{trades,book_snapshot_5,derivative_ticker}/*.parquet` timestamped after
+      the redeploy) cannot be completed yet: investigation found the new VM's live connectors are correctly
+      up but sitting in an honest-absence retry loop (`IS universe empty ... retrying in 300s`) for **every**
+      CeFi venue, not just OKX-FUTURES — instruments-service's daily `is-daily-enum-cefi` job (13:30 UTC) has
+      not yet published `day=2026-08-17`'s instrument partition as of this check (03:15 UTC), and this MTDS
+      code path has no fallback to the prior day's partition on a cold start. Full root-cause + recommended
+      fix filed as `/plans/active/issues/mtds_live_cefi_redeploy_cold_start_is_universe_gap_2026_08_17.md`
+      (2 follow-up todos there, not this plan's scope to fix inline). This is self-resolving, not a genuine
+      blocker: expect real OKX-FUTURES xperp rows to start flowing automatically ~13:35-13:40 UTC today once
+      the daily job lands, no further redeploy needed. A future worker (or this same worker on a later pass)
+      should re-check after that time: read `live-events/warm/cefi/{trades,book_snapshot_5,derivative_ticker}/*.parquet`
+      objects timestamped after ~13:35 UTC 2026-08-17 for real `OKX-FUTURES:FUTURE:<SYMBOL>-USD@LIN-2031....`
+      rows (one of the 28 fixed equity/ETF xperp symbols, e.g. AAPL), then flip this todo and archive this
+      plan (all conditions of the original combined P2.2 todo will finally be met). Repo: market-tick-data-service
+      (verification only, no code diff expected).
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **2026-08-16 (slot 22, review, AO-dispatched)**: Picked up this finalize todo. Read the dependency plan
   (`cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md`) and the referenced issue doc
   (`okx_futures_instid_marker_convention_mismatch_2026_07_30.md`) first — found the `[OPERATOR] P1` checkbox
@@ -94,3 +116,25 @@ resolved_by:
   live-verify, mirroring the P1.1/P1.2 split pattern) instead of forcing a false "non-zero confirmed" claim or
   prematurely archiving this plan. Did not flip `[OPERATOR] P1` again (already correctly flipped) and did not
   archive this plan (P2.2 still open).
+- **2026-08-17 (slot-17, infra, AO-dispatched, resumed session)**: Picked up P2.2. Found the redeploy already
+  done by an earlier pass of this same session (no Progress Log entry existed for it — likely lost to a
+  context reset before it could be written) — independently verified rather than trusting the absence of a
+  record: `mtds-live-cefi-consolidated-20260817-025031` is the current RUNNING live-CeFi VM (old
+  `...-20260814-041422` is gone), tarball manifest pinned to `e9709d59054efb16b57eac1bf512ac1a6a3c58b0` with
+  `3acdd478e5` confirmed an ancestor (`git merge-base --is-ancestor`), all 24 MVP shard processes up via SSH
+  `ps aux` (incl. all 3 OKX-FUTURES shards). Split P2.2 further into P2.2 (redeploy — flipped done above) and
+  new P2.3 (live-verify — parked) after live-verify investigation found the new VM's connectors correctly up
+  but capturing ZERO rows for EVERY CeFi venue (not OKX-FUTURES-specific): SSH log tail showed
+  `IS universe empty ... retrying in 300s` for OKX-FUTURES/BINANCE-FUTURES/HYPERLIQUID alike, root-caused to
+  instruments-service's `is-daily-enum-cefi` Cloud Scheduler job (13:30 UTC daily) not yet having published
+  `day=2026-08-17`'s instrument partition (checked GCS directly: `day=2026-08-15`/`day=2026-08-16` exist,
+  `day=2026-08-17` does not, as of 03:15 UTC) combined with this MTDS code path having no fallback to the
+  prior day's partition on a cold start (confirmed the OLD VM, still running at 02:40-02:47 UTC today before
+  I/an earlier pass deleted it, was NOT hitting this gap — it resolves its universe once at process startup
+  and holds it, so only a fresh redeploy lands in this window). This is self-resolving (expect real data
+  ~13:35-13:40 UTC once the daily job lands) and affects the WHOLE live-CeFi fleet, not just this task's
+  scope, so filed it as its own issue doc rather than absorbing a code fix into this finalize plan:
+  `/plans/active/issues/mtds_live_cefi_redeploy_cold_start_is_universe_gap_2026_08_17.md` (2 follow-up todos:
+  a prior-day fallback in MTDS, and a launcher-comment warning in deployment-service). Did not flip P2.3 or
+  archive this plan — genuinely not done yet, time-gated on IS's daily refresh, not a judgment call this
+  session can resolve synchronously.

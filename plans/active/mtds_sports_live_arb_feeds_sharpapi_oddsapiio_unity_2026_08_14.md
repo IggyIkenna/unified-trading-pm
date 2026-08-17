@@ -296,3 +296,9 @@ sports cell that we actually have a provider for.
   original coarse subscription instrument_ids still show `venue=ODDS_API` (expected, they never receive direct ticks
   under this fan-out connector). Live now matches the batch convention. The `trades`-vs-`odds` data_type mismatch (P1
   todo above) remains open and unrelated to this fix.
+- **na-eligibility-audit 2026-08-17** [body-hash:e2be0b8bb82b478f]: KEEP-NA, valid — all 16 open items gated by a
+  doc-level depends_on+gate_on_depends:true on venue_capability_route_axis_and_cross_ag_declarations_2026_08_14
+  (verified status:active, gate genuinely still open — "the venues these feeds write must exist with a route before a
+  connector can claim them"). No active planning doc duplicates this content (checked). RECOMMEND FOLLOW-UP: re-audit
+  once the prerequisite doc resolves — 15 of 16 items are concrete build/port/test/deploy work with explicit DoDs, a
+  strong future RECLASSIFY-whole-doc candidate at that point (item 14 keeps its normal [OPERATOR] VM-launch tag).

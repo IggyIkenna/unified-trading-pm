@@ -168,5 +168,6 @@ to shape a plan.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries); doc had no prior Progress Log section,
   added a minimal one.

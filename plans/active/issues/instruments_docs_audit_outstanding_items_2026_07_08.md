@@ -687,3 +687,4 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   purged 2026-07-16). The "~9 more adapters" sub-claim was left explicitly marked unverified per this todo's own
   done-when (not silently dropped). No code changed — doc-only correction.
 - **na-eligibility-audit 2026-08-16** [body-hash:75d2d3b5e85aa8bb]: KEEP-NA, valid — Full end-to-end read (689 lines) confirms this remains a genuinely mixed operator-judgment index/tracker doc over the instruments-service reference-data docs audit.
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

@@ -45,14 +45,7 @@ depends_on: []
 resolved_by:
 source: >-
   slot-5 (data_engineering), 2026-08-06: post-VM log analysis for data_pipeline_check_mdps_features-056
-context_scope:
-  [
-    features-service/features_service/onchain/app/core/dependency_checker.py,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
-    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-  ]
+context_scope: [features-service/features_service/onchain/app/core/dependency_checker.py, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py, /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md, /plans/active/data_pipeline_check_mdps_features_2026_07_20.md]
 ---
 
 ## Finding summary
@@ -305,3 +298,4 @@ BLAZESTAKE still blocking — Option A still needed).
   CONFLICT-DEFERRED -- held by the active `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s operator-ruling-pending
   park. Not re-litigated. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:b4c51e03d639b97a]: KEEP-NA, valid (classifier flagged RECLASSIFY_WHOLE, overridden on independent review) -- the sole open todo ("verify the bounded_freshness_warmup() fix once redeployed") reads bounded on its own text, and IS narrower/different from the OLD "diagnose the lending_indices stall" item that defi_satellite_ao_dispatch_batch9_2026_08_06.md still holds parked under BLOCKED-OPERATOR-DECISION (genuine_conflict) in its own still-ACTIVE Deferred section -- that OLD item is now [x] DONE in this doc (root-caused + fixed 2026-08-14, Cloud Run Job OOM/timeout, independently well-evidenced via execution history + RSS-growth samples, not resolved via the manifest-surface re-read batch9s park text speculated about). Given this docs own history of repeated KEEP-NA/CONFLICT-DEFERRED reversals across 5+ prior audit passes (2026-07-30 through 2026-08-09) and that batch9 has NOT itself been updated to reflect the diagnosis completing, kept conservatively NA rather than reclassifying a narrower-but-adjacent todo on the same live incident thread -- a future pass should re-check whether batch9s park text has been reconciled before revisiting this verdict. Doc stays NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

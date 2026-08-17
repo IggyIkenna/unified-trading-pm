@@ -137,14 +137,18 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       `na-eligibility-auditor.timer` or a dedicated future dispatch. Cited into
       `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s Progress Log + the tracker's Track 2. Repo:
       unified-trading-pm.
-- [ ] [DIAG] P1. **Root-cause why `planning`'s `.env.local` lost `ORCHESTRATOR_VM_ID`** between 2026-08-13 and the
+- [x] ✅ [DIAG] P1. **Root-cause why `planning`'s `.env.local` lost `ORCHESTRATOR_VM_ID`** between 2026-08-13 and the
       2026-08-16 08:54:18Z `orchestrator.service` restart (only patched live so far via a direct `.env.local` write +
       `systemctl restart orchestrator`, not root-caused). Check `sudo journalctl` / shell history around the restart
       window on `planning`, and confirm whether any CI/redeploy workflow calls `bootstrap_vm.sh`'s Step-5
       overwrite-from-Secret-Manager path (correct only for a FRESH VM) against the already-provisioned central VM
       instead of `refresh_env_from_sm.sh`. **Done when**: either a concrete causal mechanism is identified with a
       preventive fix proposed (or shipped), or the investigation exhausts the available evidence and states so
-      explicitly — cite back into the tracker's Track 4. Repo: agent-orchestrator / infra.
+      explicitly — cite back into the tracker's Track 4. Repo: agent-orchestrator / infra. — ✅ DONE 2026-08-17:
+      mechanism identified (forensic `.env.local.bak.*` evidence pinned it to `bootstrap_vm.sh` STEP 5b's raw
+      overwrite running without reaching the identity-var re-add) and a preventive fix shipped
+      (`agent-orchestrator@bc9835a38d`). Exact trigger process not identified (no root crontab/journalctl access from
+      this sandboxed worker), stated explicitly — see full write-up in the tracker's Track 4.
 - [ ] [DIAG] P2. **Best-effort root-cause the 49.3G/16G-swap memory peak on `planning` more precisely.** The
       resource-watchdog enforcement is already shipped and live (`ReadinessWatchdog`,
       `agent-orchestrator@3b4a329`) — this is root-cause only, not new enforcement. Both previously-checked live
@@ -173,6 +177,7 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-16 (interactive session, operator request)**: Authored per the operator's request to wrap a new AO plan
   into the nearest live "consolidated" tracker via reference, plus a companion durable-rule change requiring AO plans
   to stay free of operator-gated items (see `task_template.md` §3 finding Y and the retroactive sweep plan). No
@@ -186,4 +191,15 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
   documented weekly quiet-day and the installed every-2h timer, filed as a new P2 follow-up todo. Full evidence in the
   flipped checkbox above + cited into the tracker's Track 2 +
   `/plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`.
+- **2026-08-17 (slot 6, infra worker, AO-dispatched)**: Worked the `ORCHESTRATOR_VM_ID` root-cause todo. Found forensic
+  evidence in `planning`'s own `agent-orchestrator/.env.local.bak.*` files: of 6 backups, exactly one
+  (`.env.local.bak.1786877088`) carries zero `ORCHESTRATOR_*` keys — the signature of `bootstrap_vm.sh` STEP 5b's raw
+  `.env.local` overwrite-from-Secret-Manager running without reaching the identity-var re-add (`_upsert_env
+  ORCHESTRATOR_VM_ID`) a few lines later in the same block. Shipped a preventive fix
+  (`agent-orchestrator@bc9835a38d`): STEP 5b now detects an already-provisioned host (existing `.env.local` already
+  declaring `ORCHESTRATOR_VM_ID`) and upserts the Secret-Manager blob's keys in place instead of overwriting the whole
+  file — mirroring `refresh_env_from_sm.sh`'s technique — so no VM-specific key can be dropped by this step again
+  regardless of what triggers a partial/isolated run. The exact triggering process/redeploy path was NOT identified
+  (no root crontab or full-system journalctl access from this sandboxed worker) — stated explicitly per the todo's own
+  done-when. Full write-up cited into the tracker's Track 4.
 </content>

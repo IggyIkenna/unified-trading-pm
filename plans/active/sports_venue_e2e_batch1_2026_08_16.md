@@ -96,12 +96,22 @@ source: >-
       needing raw `odds` data at all — a genuine undeclared-scope gap identical in kind to tradfi's 12 NONE rows,
       `BLOCKED-ON:archetype-declaration-backlog` for the whole AG, not investigated further (nothing declared to
       check implementation against).
-- [ ] [BACKEND] P1. **Gap: `BOVADA`/`NOVIG`/`PROPHETX`/`UNIBET_EU` have no batch or live odds capture at all**,
-      unlike the 3 explicitly-excluded (price-diff QA) or the 1 confirmed-dead-code (ONEXBET) venues — no cited
-      reason found for these 4 (`market_tick_data_service/market_interface/adapters/sports/
-      odds_api_adapter.py:REQUESTED_ODDS_API_BOOKMAKERS`). Done-when: either these 4 are added to the shared
-      collector's bookmaker scope, or the exclusion is confirmed intentional with a cited reason (mirroring the
-      `BETMGM`/`BETOPENLY`/`BETWAY` pattern).
+- [x] ✅ [BACKEND] P1. **Gap: `BOVADA`/`NOVIG`/`PROPHETX`/`UNIBET_EU` have no batch or live odds capture at all —
+      done 2026-08-17.** SHIPPED — `market-tick-data-service@1ca534260b`. Split 2+2: **NOVIG/PROPHETX are
+      already-intentional** — genuinely prediction-market exchange venues (`SPORTS_PREDICTION_MARKET_VENUES` in
+      UAC's `venue_constants.py`), structurally excluded from `bookmakers=` (never requested at all, sourced via
+      `asset_group=prediction` instead), already regression-locked by
+      `market-tick-data-service/tests/unit/test_sports_sentinel_scope.py::test_prediction_market_venues_excluded_structurally`
+      — no code change needed, confirmed intentional (not the BETMGM/BETOPENLY/BETWAY price-diff-QA pattern, a
+      different but equally cited reason). **BOVADA/UNIBET_EU were the genuine gap** — no exclusion reason found
+      anywhere (unlike the audited boylesports/betway/leovegas price-diff exclusions in
+      `odds_api_adapter.py`'s own comment block), yet both carry real historical captured manifest data
+      (`aggregator:ODDS_API` route, `batch_start_date=2025-07-31`, UAC's `VENUE_DATA_TYPE_CAPABILITIES`) — Odds-API
+      has a genuine `bovada` key (`odds_api_mapping.py::ODDS_API_KEY_TO_VENUE`), and UNIBET_EU is a confirmed
+      genuinely-distinct feed from bare `unibet`/`unibet_uk` (live content comparison,
+      `test_unibet_uk_is_not_folded_distinct_bookmaker_from_unibet`), not a `SPORTS_VENUE_FOLD` alias target. Added
+      both to `REQUESTED_ODDS_API_BOOKMAKERS` (23→25 keys); updated the regression-lock test's wire-string/count/
+      newly-expectable assertions in the same commit.
 - [ ] [BACKEND] P0. **Steps 6-8 per unit — strategy and execution**, across sports's 31 rows. **All 31 stay
       `BLOCKED-ON:archetype-declaration-backlog`** per the step-5 result above — nothing in this todo is
       dispatchable until at least one archetype declares needing `odds`. Re-check once the archetype-declaration
@@ -158,6 +168,13 @@ this todo is waiting on) — none exists; only this plan and `tradfi_venue_e2e_b
 condition, neither drives it. No ETA available. Skipping this task with `reason_code: GATED` (no code shipped —
 correctly nothing to ship while blocked) rather than fabricating work or falsely flipping the checkbox.
 
+**2026-08-17 — BOVADA/NOVIG/PROPHETX/UNIBET_EU gap todo closed.** SHIPPED —
+`market-tick-data-service@1ca534260b`. NOVIG/PROPHETX confirmed already-intentional (structural prediction-market
+exclusion, already regression-locked); BOVADA/UNIBET_EU were the real gap (real historical captured data, no
+exclusion reason found anywhere) — added both to `REQUESTED_ODDS_API_BOOKMAKERS` in
+`odds_api_adapter.py` and updated `test_sports_sentinel_scope.py`'s hardcoded wire-string/count assertions in the
+same commit. Full reasoning in the flipped checkbox above.
+
 **2026-08-17 — re-checked again (slot 15), still blocked, zero movement.** Re-dispatched against the same "Steps
 6-8 per unit" P0 todo. Re-ran `unified-api-contracts/scripts/generate_venue_work_list.py --csv` live and confirmed
 all 31 sports rows still show `archetype_consumers=NONE` — no change since the 2026-08-16 re-check above.
@@ -165,3 +182,14 @@ Re-searched `unified-trading-pm/plans/active/` for a plan that owns/drives the a
 still only this plan and `tradfi_venue_e2e_batch1_2026_08_16.md` cite the condition; neither drives it, and no new
 owning plan has appeared. No ETA available. Skipping with `reason_code: GATED` again — no code shipped, correctly
 nothing to ship while blocked.
+
+**2026-08-17 — re-checked a 4th time (slot 17), still blocked, zero movement.** Re-dispatched against the same
+"Steps 6-8 per unit" P0 todo. Re-ran `unified-api-contracts/scripts/generate_venue_work_list.py --csv` live
+(fast-forwarded `unified-api-contracts` to `origin/live-defi-rollout` first, already up to date) and confirmed all
+31 sports rows still show `archetype_consumers=NONE` — no change since every prior re-check. Re-searched
+`unified-trading-pm/plans/active/` for a plan owning/driving the archetype-declaration backlog — still only this
+plan and `tradfi_venue_e2e_batch1_2026_08_16.md` cite the condition; neither drives it. This is now the 4th
+dispatch against this exact todo with zero movement (2026-08-16 ×2, 2026-08-17 slot 15, 2026-08-17 slot 17) —
+skipping with `reason_code: GATED` and `park_now: true` this time (mirroring the parent
+`venue_e2e_wiring_2026_08_16.md`'s own fix for the identical repeat-dispatch pattern) so this stops re-dispatching
+to fresh slots on transient cooldown expiry alone.

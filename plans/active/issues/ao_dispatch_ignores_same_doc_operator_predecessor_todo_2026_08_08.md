@@ -118,3 +118,4 @@ Live, directly-observed during routine blocked-queue sweeps:
   `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`'s Progress Log for the full ruling +
   `unified-trading-pm@d765b4cfb1`. Flipped this doc's `[OPERATOR]` todo accordingly. The live `unpark` API call itself
   is left as a standing follow-up (no AO dashboard/API access from this session) — noted inline on the todo.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

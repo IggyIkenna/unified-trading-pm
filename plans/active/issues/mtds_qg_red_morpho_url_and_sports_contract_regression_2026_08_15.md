@@ -30,6 +30,7 @@ context_scope:
     /codex/04-architecture/shard-level-failure-isolation.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
     instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+    /plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16.md,
   ]
 ---
 
@@ -112,3 +113,5 @@ caused by my diff) via `git log -1 -- <file>` on each flagged file, both showing
   — `sports_honest_coverage_gap_closure_2026_08_14.md`'s "shipped, tested" claim was about the sports fix only and is
   confirmed accurate.
 - **na-eligibility-audit 2026-08-16** [body-hash:9cc73d463ea1fac2]: KEEP-NA-STALE (already-duplicated), applied — sole open todo (route the hardcoded Morpho URL through the UAC registry) is verbatim-duplicated in defi_satellite_ao_dispatch_batch14_2026_08_16.md (status: draft). Converted the checkbox to a citation marker rather than reclassifying (would open a second dispatch path once batch14 activates). Doc stays NA, 0 open checkboxes remaining.
+- **na-eligibility-audit 2026-08-17**: ARCHIVE-ready, reconfirmed — 0 open checkboxes. archive_exempt: true remains deliberately set per this doc's own note (flip-then-mv two-commit pattern) — not executed this run (hand off to the dedicated archive-candidates-audit pass).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

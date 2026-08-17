@@ -319,3 +319,4 @@ understanding the root cause to be valuable.
   active, unresolved investigation (todo 1) carries real risk of destroying another concurrent session's genuine
   uncommitted work, which is precisely what round11's own author chose to log rather than act on blind. Keeping it
   paired with the todo1/3 investigation is the safer, more conservative call.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

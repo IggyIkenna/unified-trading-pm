@@ -40,6 +40,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+depends_on: []
 context_scope:
   [
     agent-orchestrator/server/db.py,
@@ -48,7 +49,6 @@ context_scope:
     /plans/archive/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
-depends_on: []
 ---
 
 # Orchestrator DB pool exhaustion stalls /api/state + /api/poll; /health-green blind spot hides it from auto-restart
@@ -311,3 +311,4 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   Consider batching/serialising...") with no stated preference among the surviving options; per this same sweep's own
   established "Consider" = judgment-call-not-mandate reading (applied consistently to sibling docs in this tranche),
   this stays a genuine design fork, not a bounded mandate. No new bounded item found.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

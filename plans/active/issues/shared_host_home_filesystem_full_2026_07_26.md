@@ -412,3 +412,5 @@ this needs automation rather than an agent noticing.
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — still accurate).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

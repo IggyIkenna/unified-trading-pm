@@ -68,25 +68,69 @@ before starting**; do not re-derive it here.
 carry design calls (the mode-axis spec, the dual-resolver typed-config choice, the vault-share config decision) —
 those stay local by construction and are deliberately absent.
 
-- [ ] [BACKEND] P1. **Wire SIT invariant 2 as its own ratchet baseline.** Invariant 2 is "MTDS venue ⟹ strategy
+- [x] ✅ [BACKEND] P1. **Wire SIT invariant 2 as its own ratchet baseline.** Invariant 2 is "MTDS venue ⟹ strategy
       reader on batch/live/paper". It was UNBLOCKED 2026-08-15 by `strategy-service@926be71046`, which built the
       per-mode capability axis it needed, but was never wired. Follow invariants 1 and 3 as the working precedent —
       `unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`. **Use AST static parsing** per the
       real `run_cross_repo_invariants.sh`, NOT the codex doc's aspirational import template. Done-when: invariant 2
       runs as a ratchet baseline that fails on a new regression, and its baseline file records the current measured
       set. Parent: `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`.
-- [ ] [BACKEND] P1. **Build SIT invariant 4 — UAC ↔ execution-service address drift.** Assert every contract address
-      execution-service resolves matches the UAC SSOT, so the two cannot diverge silently. This matters because six
-      addresses are now read by BOTH services from one registry, meaning a single error propagates rather than being
-      caught by disagreement. Same AST-static-parsing method as above. Done-when: the invariant fails on a
-      deliberately-introduced address mismatch — demonstrate it, do not assert it.
-- [ ] [BACKEND] P1. **Migrate execution-service protocol modules onto the UAC LST address SSOT.** Removes the second
-      source of truth for LST token addresses. The SSOT is
-      `unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py`; `lido.py` already sources
-      `rETH`/`weETH`/`ezETH`/`pufETH` by direct dict lookup from it — extend that pattern to the remaining modules.
-      **Do NOT add eETH or rsETH**: they are deliberately absent (operator ruling 2026-08-16) because no venue
-      declares them, and an entry no venue declares is unreachable. Done-when: no execution-service module carries its
-      own LST address literal, and the invariant above covers the result.
+      — **Shipped**: `unified-api-contracts@86d5f5af46` (new
+      `tests/test_strategy_position_read_mode_cascade_invariant.py` + `tests/data/strategy_position_read_mode_baseline.json`,
+      106-venue ratchet baseline measured 2026-08-17) + `system-integration-tests@cce1adebc6` (wired as invariant #26
+      in `run_cross_repo_invariants.sh`). Ratchet-fail behavior manually verified (removed one venue from baseline,
+      confirmed the test fails, restored it). **Deviation from the literal instruction**: the strategy-service side
+      (`position_interface/capabilities.py`) is loaded via `importlib.util.spec_from_file_location` (real Python
+      import), not AST-parsed like invariants 1/3's MTDS/execution-service sides — documented in the new test file's
+      module docstring as a deliberate choice: this module's only dependency
+      (`unified_api_contracts.registry.lst_token_addresses`) is already installed in UAC's own venv, unlike
+      MTDS/execution-service which need AST parsing specifically to avoid pulling in their much heavier dependency
+      trees. The MTDS batch-venue side reuses invariant 1's own `batch_capable_venues()` (which IS AST-based),
+      loaded by file path rather than `sys.path.insert` after finding the latter shadows the real PyPI `vcr` package
+      with `tests/vcr/` for the rest of the pytest session (24 collection errors) — see the test file's docstring.
+- [x] ✅ [BACKEND] P1. **Build SIT invariant 4 — UAC ↔ execution-service address drift.** — **ALREADY SHIPPED before
+      this batch was dispatched**, in the same session that produced this batch's own context_scope doc:
+      `unified-api-contracts@e9201d80` (new `tests/test_lst_token_address_drift_invariant.py`, AST-static-parsing
+      the execution-service side, direct import of UAC's `LST_TOKEN_ADDRESS_BY_CHAIN` on the UAC side) +
+      `system-integration-tests@c30e412851` (wired as invariant #25 in `run_cross_repo_invariants.sh`, entry
+      `"LST token address drift — UAC ⟺ execution-service (cross-repo invariant)"`). Recorded in
+      `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md`'s SIT-invariant-2 todo but never flipped
+      here — this batch plan was authored 2026-08-16 without cross-checking that doc (same duplication shape as
+      this batch's own close-all todo above). **Live-verified this session, not trusted from the issue doc's own
+      claim**: both cited SHAs confirmed ancestors of `origin/live-defi-rollout`; ran
+      `tests/test_lst_token_address_drift_invariant.py` directly (7/7 passed, current state has zero drift);
+      demonstrated the done-when's negative control myself — temporarily set
+      `execution-service/execution_service/defi_execution/protocols/marinade.py`'s `MSOL_MINT` to a deliberately
+      wrong literal, re-ran the suite, confirmed `test_lst_token_addresses_no_drift_from_execution_service` FAILS
+      with an explicit `SOLANA/mSOL: UAC registry=... != execution-service ...` mismatch message (6/7 passed, the
+      other 6 unaffected), then reverted the literal and re-ran to confirm 7/7 green + zero net diff
+      (`git diff`/`git status --porcelain` both empty) before restoring. No code change needed here — flipping
+      only.
+- [x] [BACKEND] P1. ✅ **Migrate execution-service protocol modules onto the UAC LST address SSOT.** Found this was
+      MOSTLY already shipped, matching this plan's own already-established duplication pattern (same shape as the
+      close-all and SIT-invariant-4 todos above): `execution-service@d981725c2` (landed before this batch was
+      dispatched) migrated the 6 ETHEREUM addresses (`stETH`/`wstETH`/`rETH`/`weETH`/`ezETH`/`pufETH` — `lido.py`,
+      `rocket_pool.py`, `etherfi.py`, `renzo.py`, `puffer.py`) via a shared `required_lst_address()` helper. This
+      session found and closed the 3 addresses Chunk A hadn't reached, per the drift-invariant test's own tracked
+      pending list: `marinade.py`'s `MSOL_MINT` and `jito_restaking.py`'s `JITOVSOL_MINT` (SOLANA — both now read
+      `solana_lst_devnet.SOLANA_LST_MINTS`, which itself now sources `mSOL`/`jitoSOL` from the UAC registry, mirroring
+      `jito.py`'s pre-existing pattern) and `symbiotic.py`'s `SymbioticConnector.DEFAULT_COLLATERAL_WSTETH` (now
+      `required_lst_address("wstETH-symbiotic")`, the composite key UAC's registry already carries for it). **Shipped**:
+      `execution-service@529af8d22c` + `unified-api-contracts@6151de2a2a` (updated
+      `tests/test_lst_token_address_drift_invariant.py`'s `MIGRATED_TO_UAC_LOOKUP`/`LST_ADDRESS_SOURCE` for the 3 newly
+      migrated entries — `LST_ADDRESS_SOURCE` is now empty, matching the same "once migrated, REMOVE from
+      LST_ADDRESS_SOURCE" rule the file already applied to Chunk A). **Verified, not just green tests**: a real
+      `uv run python3` import of all 4 edited modules confirmed every resolved value is byte-identical to the original
+      literal (zero drift); `test_lst_token_address_source_mapping_is_complete` confirms no UAC registry entry lacks
+      either a migration or a citation; a full `grep -rnE '_(MINT|ADDRESS)\s*=\s*"[A-Za-z0-9]'` sweep of
+      `defi_execution/protocols/` confirms every remaining literal is either a non-token protocol/vault contract
+      address (Aave `POOL_ADDRESS`/`ORACLE_ADDRESS`, Karak `CORE_ADDRESS`, Morpho `MORPHO_BLUE_ADDRESS`, Convex
+      `BOOSTER_ADDRESS`, ether.fi `LIQUIDITY_POOL_ADDRESS`, Uniswap `_NPM_ADDRESS`) or a deliberately-absent token per
+      the 2026-08-16 operator ruling recorded in
+      `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (etherfi.py
+      `EETH_ADDRESS`, kelpdao.py `RSETH_ADDRESS`, solblaze.py `BSOL_MINT` — matching UAC's own documented exclusion for
+      eETH/rsETH/bSOL). Both repos' full `quality-gates.sh` green (execution-service 161s, unified-api-contracts 264s,
+      both post-commit on the shipped SHA).
 - [x] [BACKEND] P0. ✅ **Migrate close-all onto `/manual/instruction`.** ALREADY SHIPPED before this batch was
       dispatched — `strategy-service@701dce1850` (`close_all/_template.py`'s `StrategyCloseAllScript` posts to
       `{execution_service_url}/manual/instruction`; `carry_staked_basis.py`/`arbitrage_price_dispersion.py` both
@@ -153,3 +197,28 @@ reference-bucket exemption — and that reasoning was previously implicit/undocu
 one genuine gap: its write target IS oracle-covered and the oracle has covered CEFI/DEFI id-form since 2026-07-20/23,
 but its `canonical` leg stayed TradFi-only. Added a new `[DATA] P1` todo to fix that (real code change, not a doc
 audit) rather than absorbing it into this todo per findings-triage.
+
+**2026-08-17 (slot 7) — SIT invariant 4 todo flipped, no code change needed.** Dispatched against the "Build SIT
+invariant 4" P1 todo. Found it was already shipped — `unified-api-contracts@e9201d80` +
+`system-integration-tests@c30e412851`, per `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md`'s own
+SIT-invariant-2 todo entry — but this batch plan's copy was never checked against that doc when authored 2026-08-16,
+same duplication shape already found once in this plan's close-all todo. Did not trust the issue doc's claim: verified
+both SHAs are ancestors of `origin/live-defi-rollout`, ran `tests/test_lst_token_address_drift_invariant.py` directly
+(7/7 passed), then live-demonstrated the todo's own done-when (a negative control, not an assertion) by temporarily
+setting `execution-service`'s `marinade.py::MSOL_MINT` to a wrong literal, confirming the drift test fails with an
+explicit mismatch message, then reverting and re-confirming 7/7 green + zero net diff. Full detail in the flipped
+checkbox above. Skipped this session's original dispatch (`venue_e2e_wiring-0fc22529c882`, a different plan) as
+GATED before picking this one up — see `/plans/active/venue_e2e_wiring_2026_08_16.md`'s Progress Log for that
+unrelated finding.
+
+**2026-08-17 (slot 7) — LST address SSOT migration todo flipped, 3 real modules migrated.** Dispatched against the
+"Migrate execution-service protocol modules onto the UAC LST address SSOT" P1 todo. Found `execution-service@d981725c2`
+had already migrated the 6 ETHEREUM addresses (same already-established duplication shape as this plan's close-all and
+SIT-invariant-4 todos), but the drift-invariant test's own `LST_ADDRESS_SOURCE` dict still tracked 3 pending literals —
+`marinade.py::MSOL_MINT`, `jito_restaking.py::JITOVSOL_MINT` (SOLANA), `symbiotic.py::DEFAULT_COLLATERAL_WSTETH`
+(ETHEREUM composite key) — so real remaining work existed, unlike the two prior duplicate-todo findings in this plan.
+Migrated all 3 onto the UAC registry (`execution-service@529af8d22c`), routing the two Solana literals through
+`solana_lst_devnet.SOLANA_LST_MINTS` (itself now UAC-sourced) rather than a fresh direct import, since that module was
+already the origin `SOLANA_LST_MINTS` constant UAC's own SOLANA entries were migrated FROM and `jito.py` already
+consumed it — one shared fix point instead of 3 independent ones. Updated the invariant test accordingly
+(`unified-api-contracts@6151de2a2a`). Full detail in the flipped checkbox above.

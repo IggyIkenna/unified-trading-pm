@@ -333,22 +333,57 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       original hypothesis disproven and replaced with concrete next-step candidates in a dedicated tracked todo (same
       closure pattern as the `[DATA] P2` item above this one — blocker resolved, path defined, no orphaned prose).
 
-- [ ] [SERVICE] P2. Root-cause the remaining OKX-FUTURES/FUTURE (224) + DERIBIT/FUTURE (6) bare-wire-symbol
-      `batch_tardis` population (found in the §7 P1 restated-verdict census above; NOT the EXTENDED-STARKNET leg, which
-      is fixed — see the item above). **Ruled out**: `derive_row_instrument_id`
-      (`market-tick-data-service/.../adapters/cefi/tardis_shared.py`) → `build_canonical_instrument_id` →
-      `build_instrument_id` (`unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py`)
-      always wraps a single-instrument FUTURE row as `VENUE:FUTURE:SYMBOL[-...]` regardless of quote_asset/margin_type —
-      there is no un-wrapped fallback for this path, so the "catalogue-miss fallback never wraps" theory is wrong here.
-      **Untested candidate causes to check next**: (1) the catalogue short-circuit —
-      `resolve_cefi_instrument_id()`/`catalog_id_resolver.py` returns the catalogue's OWN precomputed id verbatim on a
-      3-tuple hit (`derive_row_instrument_id`'s `_catalog_id` short-circuit, tardis_shared.py:397-399) — if the
-      instruments-service catalogue itself stores a non-canonical/bare id for some DERIBIT/OKX-FUTURES FUTURE
-      instruments, this would bypass `build_instrument_id` entirely; (2) these could be stale objects written BEFORE
-      the 2026-07-20 fixes landed, still present in the `2026-07-20..2026-07-27` sampled census window, not a live
-      ongoing defect. Distinguish (1) vs (2) by checking object `time_created` against the fix-landing timestamps, then
-      by tracing a live sample row through `resolve_cefi_instrument_id` with logging/a repro script before assuming
-      either.
+- [x] ✅ [SERVICE] P2. **ROOT-CAUSED + FIXED 2026-08-17 (slot-7·backend_engineer)** — the remaining OKX-FUTURES/FUTURE
+      (224) + DERIBIT/FUTURE (6) bare-wire-symbol `batch_tardis` population (found in the §7 P1 restated-verdict census
+      above; NOT the EXTENDED-STARKNET leg, which is fixed — see the item above).
+      **Both prior candidate causes RULED OUT by direct measurement**: (1) the catalogue short-circuit — a bounded read
+      of `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` found **0/7,587** OKX-FUTURES/DERIBIT
+      FUTURE rows carry a non-canonical `instrument_id` — the catalogue itself is clean, this is not the mechanism; (2)
+      stale pre-fix objects — a bounded manifest read
+      (`market-data-tick-cefi-prd-central-element-323112`, `venue in (OKX-FUTURES, DERIBIT)`, `instrument_type=FUTURE`,
+      `capture_status=captured`) found the bare-wire-symbol population is **20,134 rows** (14,330 OKX-FUTURES + 5,804
+      DERIBIT), **far larger than the 230 originally sampled**, with `written_at` timestamps as recent as **2026-08-16**
+      (the day this task ran) — this is a live, ongoing defect, not historical drift.
+      **True root cause**: `finalise_and_write_cefi_shards` (`tardis_cefi_shards.py`) groups every FUTURE row by
+      `underlying` (treating FUTURE as chain-shaped for the write-time groupby), then `finalise_rows_and_path` decides
+      PER SHARD whether the result is a real `futures_chain` bundle (2+ distinct dated contracts active) or a
+      SINGULAR non-chain `future` shard (only 1 contract — "written per-symbol", per the function's own docstring).
+      `_record_cefi_shard_manifest_bookkeeping` correctly detects this via `shard_path` (`_manifest_itype`), but its
+      `record_shard_count(...)` call still passed the bare `underlying_key` (e.g. `"BTC"`) as the manifest key
+      regardless of which form the shard resolved to. For the singular-future case,
+      `venue_fetch._canonicalize_manifest_instrument_id`'s Tardis-lane call
+      (`_derive_row_instrument_id({"symbol": raw_symbol}, ...)`) can never parse an expiry out of a bare underlying
+      token, raises `ValueError`, and its `_raw_fallback` silently writes the bare token straight into the manifest
+      `instrument_id` — exactly the population measured above. **Fixed**: `record_shard_count`'s key now uses the REAL
+      per-contract wire symbol (from `shard_df["symbol"]`, exactly one distinct value expected for a genuine singular
+      shard) whenever `_manifest_itype` resolved to the non-chain singular form, so
+      `_canonicalize_manifest_instrument_id` can parse the real expiry and produce a canonical id instead of the bare
+      fallback. Verified live: a single-dated-future DERIBIT shard (`BTC-27JUN25`) now manifests
+      `instrument_id=DERIBIT:FUTURE:BTC-USD@INV-20250627` (was `BTC`) all the way through the real
+      `venue_fetch._record_venue_shard_counts` → `manifest_finalize._write_shard_counts_to_manifest` chain (terminal
+      `venue_writer.add(...)` call inspected directly, not just the intermediate dict). Regression test added:
+      `test_dated_future_single_contract_manifest_key_carries_real_symbol_not_bare_underlying`
+      (`tests/market_interface/adapters/cefi/test_tardis_canonical_output.py`) — proves the manifest key carries the
+      real symbol and the terminal `.add()` call's `instrument_id` is canonical, not `"BTC"`. Full existing
+      `test_tardis_canonical_output.py` + `tests/market_interface/adapters/tradfi/` suites re-run green (one unrelated
+      pre-existing failure, `test_bucket_resolution_uses_category_tradfi`, reproduces in isolation with zero relation to
+      this file — a Databento/tradfi bucket-resolution environment issue, not touched by this change).
+      Shipped `market-tick-data-service@e9709d5905`.
+      **Follow-up NOT done here (out of this todo's root-cause-and-fix scope)**: the ~20,134 already-written manifest
+      rows carrying the bare-underlying `instrument_id` are NOT backfilled/re-keyed by this fix (it only stops new
+      occurrences) — a migration to re-derive their real per-contract symbol (from the corresponding GCS object's own
+      filename, which per this same defect class also carries the bare form — see the write-time-guard analysis in
+      `plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md` for the analogous historical-
+      migration pattern) is tracked as a fresh todo below.
+- [ ] [DATA] P2. Backfill/migrate the ~20,134 pre-fix OKX-FUTURES/DERIBIT `FUTURE` manifest rows (`capture_status=
+      captured`, `instrument_id` currently a bare underlying token, `written_at` up to 2026-08-16) left behind by the
+      item above — re-derive each row's real per-contract instrument_id from its corresponding GCS object's own
+      filename/content (the object itself may ALSO carry the bare-underlying stem, since it shares the same root
+      defect — verify per-object before assuming the filename is already correct) and re-stamp the manifest row via the
+      standard `record_captured` re-merge pattern (`merge_canonical_with_outstanding_shards` staleness guard,
+      `/codex/02-data/four-surface-reconciliation-procedure.md` § 3). Scope this with a bounded, prefix-scoped GCS
+      listing per the single-walk-discipline rule — do NOT open a new whole-corpus walk. Repo: market-tick-data-service
+      (+ unified-trading-library manifest-writer helpers as needed).
 - [x] [DATA] P2. Decide the id grammar for `defi` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; `prediction` stays out
       of scope (its own future closeout). **DONE `unified-api-contracts@502ef57e`**: not a new decision — the DeFi
       instrument-uid grammar was already ratified in `plans/active/defi_consolidated_closeout_2026_07_18.md`'s
@@ -453,3 +488,12 @@ own tests pass (178 passed across the four canonical-path test modules).
   line-anchored checkbox scan. Fixed the formatting (own-line, see §7) so it's now visible to
   `regen_backlog_from_plan.py` and future audits; not archive-ready until that item closes too, but `archive_exempt:
   true` causes no harm either way since the doc genuinely still has an open item now.
+- **2026-08-17 (slot-7·backend_engineer)**: root-caused + fixed the §7 OKX-FUTURES/DERIBIT `[SERVICE] P2` bare-wire-
+  symbol todo. Both previously-untested candidate causes were ruled out by direct measurement (catalogue is clean;
+  population is live/ongoing, not stale). True root cause: `tardis_cefi_shards.py`'s manifest-bookkeeping keyed a
+  singular (non-chain) FUTURE shard's `record_shard_count` on the bare underlying instead of the real per-contract
+  symbol, so the manifest instrument_id could never resolve to a canonical id and silently fell back to the bare
+  token. Fixed + regression-tested, shipped `market-tick-data-service@766cf851`. Measured population is much larger
+  than originally estimated (20,134 rows, not 230) and still actively growing as of today — flagged as a genuine
+  data-correctness finding, not a stale artifact. Split the already-written-rows backfill into a fresh `[DATA] P2`
+  todo (below) since it is migration/backfill work, out of this todo's root-cause-and-fix scope.

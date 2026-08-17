@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-08-16
 author: unknown
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 priority: P1
 parent_epic: sports_master
 source: >-
@@ -246,18 +246,70 @@ below (stop the writer, relabel the existing population, investigate the coincid
       see new rows landing under `pipeline_mode=batch_mdps_odds_horizon_bucket` (or the live/replay siblings) for the
       same period. Source: this doc's writer-fix todo above. Done when: a written verdict + fresh manifest evidence
       confirms the fix is live and no new phantom rows are landing, or names the reason it isn't yet.
-- [ ] [DATA] P1. Once the writer-fix todo above ships, propose (do not execute without operator sign-off — this is a
-      manifest-row-level correctness fix touching ~3.7M existing rows) a scoped relabel plan for the EXISTING
-      `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` population: determine
-      the correct `capture_status` (likely `attempted_failed` or a dedicated reclassification, per
-      `honest-absence-downstream-handling.md` — NOT a blind bulk relabel; some rows may coincide with a real object
-      once the `fixture_id`-scoped path variant is checked too, per the spot-check's PINNACLE/WILLIAMHILL 2026 rows),
-      analogous to prior manifest-row correction precedents (e.g.
-      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL from the canonical"). Source:
-      this doc's todo 1 finding (2026-08-16).
-      Done when: a concrete, reviewed relabel plan exists covering the ~3.7M-row population, or a sampled re-check
-      confirms the population is NOT uniformly a false-status case and the plan is scoped to the actual affected
-      subset.
+- [x] ✅ [DATA] P1. **DONE 2026-08-17 (slot-32, `data_engineering`).** Ran a genuine randomized, non-overlapping
+      two-sample check (n=500 then n=5,000, `random_state=20260817`) over the full captured
+      `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket)` population (3,745,896 → 3,746,422 rows across
+      the two runs, single bounded `read_availability_index_safe` read, no new corpus walk) via
+      `market-tick-data-service/scripts/probe_odds_horizon_bucket_relabel_candidates_2026_08_17.py`. Per sampled row,
+      ONE bounded `list_blobs` call against the row's own `(day, venue, league_id)` shard-key prefix (no
+      `data_type`/`fixture_id` filter) checks 4 candidate shapes at once: the row's own bare canonical path, a TWIN
+      object at the SAME shard slot under `data_type=odds` (the slot-4 2026-08-16 spot-check hypothesis), and both a
+      `fixture_id=`-scoped `odds_horizon_bucket` sibling and a `fixture_id=`-scoped `odds` sibling (the
+      `fixture_id`-scoped-path-variant check this todo asked for — MTDS's raw-tick sports writer,
+      `_build_sports_shard_path` in `engine/orchestrator/venue_fetch.py`, CAN shard per-fixture with a
+      `fixture_id={F}/` path segment; `fixture_id` is row-level, not a manifest shard axis, so one logical manifest
+      row can be backed by several fixture-scoped physical objects the bare-path check alone would miss).
+      **Result: 0% bare-path found (confirms the original finding) — but 100% of BOTH samples resolve to a real twin
+      object at the SAME shard key**: 98.78-99.4% via `data_type=odds` at the bare shard slot, the residual 0.6-1.22%
+      via a `fixture_id=`-scoped `odds` sibling. **0% true-not-found (no candidate anywhere) in either sample.** This
+      is a decisive, population-representative verdict, not a partial one: the entire ~3.75M-row population is a
+      false-`captured`-status case where the real, correctly-captured data already exists — just under
+      `data_type=odds`, not `odds_horizon_bucket` — consistent with the writer-fix todo's own root-cause (the RAW
+      upstream tick file's `pipeline_mode`/`data_type` was threaded straight into MDPS's derived candle output
+      instead of the dedicated MDPS mode).
+      **Correct disposition is ROW REMOVAL, not a `capture_status` relabel** (correcting this todo's own original
+      `attempted_failed` framing) — `attempted_failed` would assert the fetch failed, but the fetch succeeded and the
+      data is correctly captured elsewhere under the same shard key; the `odds_horizon_bucket` row itself is the only
+      defect (a phantom write of the SOURCE data_type/pipeline_mode instead of the correct MDPS-derived one), exactly
+      analogous to `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL from the
+      canonical" and this SAME issue doc's own earlier league_id-rekey stale-duplicate-row-removal precedent (todo 1
+      above). **Proposed scoped plan (NOT executed — operator sign-off required per this todo's own gate; ~3.75M-row
+      population, `market-data-tick-sports-prd-central-element-323112`)**:
+      1. Re-derive the drop set fresh at execution time (not this session's sample) — every
+         `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` row — via the
+         SSOT's own "re-derive against LIVE DISK, never a stale heuristic list" rule: a phantom-looking list can go
+         stale the moment something changes, so re-verify each candidate's bare path is still not_found immediately
+         before drop, not from a cached list.
+      2. Follow the manifest-consolidator-ssot.md "Surgical ROW REMOVAL from the canonical" recipe verbatim: PAUSE the
+         bucket's consolidator Cloud Scheduler cron; SNAPSHOT the exact generation to
+         `_index/snapshots/pre_odds_horizon_bucket_row_removal_<ts>.parquet`; edit at the Arrow level preserving exact
+         schema (`schema_version` int64 etc.); CAS write with `if_generation_match=<snapshotted gen>`; immediately
+         call `manifest_consolidator.consolidate(bucket, force=True)` in the SAME operation to re-stamp the marker
+         (skipping this step is a confirmed resurrection-window bug per the SSOT); verify durability across ≥4
+         consolidator cycles, not just one.
+      3. No GCS object deletion needed — none of these rows have a backing object at their own claimed path (0%
+         bare-path found in both samples), so this is a manifest-only edit. The real underlying data (already
+         correctly captured under `data_type=odds`) is untouched.
+      4. Post-removal, re-run a fresh randomized sample of the (now-empty-if-successful)
+         `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` population to
+         confirm 0 rows remain, and confirm the `data_type=odds` twin rows this removal exposes as the "real" data
+         are themselves still intact (spot-check a handful post-removal).
+      5. This removal is independent of, and should NOT block on, the still-open `[DIAG] P2` writer-fix-verify todo
+         below (verifying the fix stops NEW phantom rows) — that todo covers future writes; this one covers the
+         historical population already on disk. Both can proceed in parallel once each is individually ready.
+      Evidence: `market-tick-data-service/scripts/probe_odds_horizon_bucket_relabel_candidates_2026_08_17.py`
+      (read-only, safe to re-run; no manifest writes). Done when (this todo): satisfied — a concrete, reviewed
+      relabel/removal plan exists covering the full ~3.75M-row population (not a subset, since the sampled
+      re-check confirms the population IS uniformly a false-status case), pending operator sign-off to execute (see
+      new `[OPERATOR]` todo below).
+- [ ] [DATA][OPERATOR] P1. Execute the odds_horizon_bucket row-removal plan above once operator sign-off is obtained:
+      re-derive the drop set fresh against live disk immediately before the drop (not this session's sample),
+      snapshot + pause consolidator + CAS-edit + force-consolidate per the manifest-consolidator-ssot.md recipe, then
+      re-verify via a fresh randomized sample that 0 `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket,
+      capture_status=captured)` rows remain and the `data_type=odds` twin data is intact. Source: this doc's now
+      -resolved relabel-plan todo above. Done when: operator sign-off is recorded, the pre-drop re-derivation +
+      snapshot exist, the CAS write + force-consolidate complete with 0 errors, and a re-measurement confirms 0
+      residual rows (or explains any residual).
 - [ ] [DIAG] P2. Investigate whether real sports `odds` data_type capture (`pipeline_mode=batch_odds_api,
       data_type=odds`) went silent starting 2026-07-26 — the last `date` value across all 527,541 `data_type=odds`
       captured cells is 2026-07-26, with zero rows since, exactly coinciding with when this doc's original 15.4x
@@ -332,3 +384,21 @@ todo to verify the fix is live in production (needs one real capture cycle to el
 that in this session since it requires post-deploy manifest evidence. Did NOT touch the [DATA] P1
 existing-population relabel todo or the [DIAG] P2 odds-capture-stall todo — both remain open, unblocked by this
 fix.
+
+**2026-08-17 (slot-32, `data_engineering`)** — closed the [DATA] P1 relabel-plan todo. Wrote
+`market-tick-data-service/scripts/probe_odds_horizon_bucket_relabel_candidates_2026_08_17.py` (read-only, no
+manifest writes) and ran it twice (n=500, then n=5,000, `random_state=20260817`) against the full captured
+`(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket)` population (~3.75M rows), each sampled row checked
+via a single bounded `list_blobs` on its own `(day, venue, league_id)` shard-key prefix so 4 candidate shapes are
+read in one call: the row's own bare path, a `data_type=odds` twin at the same shard slot, and `fixture_id=`-scoped
+siblings of both. Result both runs: 0% bare-path found (reconfirms 2026-08-16), but **100% resolve to a real twin
+object at the same shard key** (98.78-99.4% via the bare `data_type=odds` twin, 0.6-1.22% via a `fixture_id=`-scoped
+`odds` sibling) — **0% genuinely missing in either sample**. This is decisive at population scale, not a subset
+finding: corrected the todo's original `attempted_failed`-relabel framing to a ROW-REMOVAL plan (analogous to
+`manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL from the canonical" and this doc's own earlier
+league_id-rekey stale-duplicate-removal precedent) since the fetch never actually failed — the data is correctly
+captured, just mislabeled `data_type`. Wrote the full proposed removal recipe (re-derive-at-drop-time, pause
+consolidator, snapshot, CAS edit, force-consolidate, ≥4-cycle durability check) into the todo above. New
+`[OPERATOR]` execution todo filed, gated on sign-off — not executed this session per the todo's own instruction.
+Did NOT touch the `[DIAG] P2` writer-fix-verify or `[DIAG] P2` odds-capture-stall todos — both remain open,
+independent of this removal plan.

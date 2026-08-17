@@ -70,3 +70,4 @@ source: >-
 - **2026-08-16 (na-eligibility-audit, defi tranche)**: drafted alongside the whole-doc RECLASSIFY flip on the
   source doc (conflict-checked against active defi/infrastructure_master planning plans + batch14, zero prior
   claim found).
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

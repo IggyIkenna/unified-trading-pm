@@ -33,20 +33,12 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
     /plans/active/issues/dp_vm_001_mdps_tradfi_2025_exit_nonzero_page_2026_08_16.md,
-    /plans/active/issues/dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md,
+    /plans/archive/issues/dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_mdps_tradfi_2026_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/05-infrastructure/vm-tarball-deployment.md,
-    market-data-processing-service/market_data_processing_service/app/adapters/__init__.py,
-    market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py,
-    deployment-service/scripts/vm/create-code-tarballs.sh,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /codex/05-infrastructure/vm-tarball-deployment.md, market-data-processing-service/market_data_processing_service/app/adapters/__init__.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py, deployment-service/scripts/vm/create-code-tarballs.sh]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -166,7 +158,7 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
       same `--start-date 2021-01-01 --end-date 2021-12-31` range should skip already-captured shards, not redo the
       full year.
 - [x] ✅ [SCRIPT] P1. **EXTRACTED 2026-08-16 (na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b) →
-      `/plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2** (consolidates
+      `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2** (consolidates
       `dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md` todo 1's narrower ask for the 2023 VM
       specifically, so the same run.log pull isn't dispatched twice). Confirm/refute the "shared root cause across all
       six" hypothesis — pull `run.log` for the four other still-recent `mdps-tradfi-`/`tradfi-bf-` sibling VMs (2023,
@@ -207,3 +199,18 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   identical narrower ask) — extracted to `tradfi_satellite_ao_dispatch_batch14_2026_08_16.md`. Todo 1 (operator
   relaunch-now decision) and todo 3 (tarball-refresh-cadence design question) stay genuinely operator/design-gated.
   Doc stays `assigned_vm: NA`.
+- **2026-08-16 (slot 12, batch14 todo 2 — cross-VM confirm/refute).** Pulled `run.log` for the 4 sibling VMs via the
+  same `_gcs.read_text` method used here, and greped each for `No adapter for tradfi/<data_type>`. **Verdict: 3-of-5
+  now confirmed sharing this doc's stale-tarball root cause** (this VM + `mdps-tradfi-2023-20260815-040118` [2497
+  occurrences, ohlcv_1m/ohlcv_1s] + `mdps-tradfi-2025-20260815-020059` [2518 occurrences, ohlcv_1m/ohlcv_1s] — same
+  signature, same `rc=1` terminal shape). **2-of-5 REFUTED — distinct causes**: `mdps-tradfi-2026-20260810-034610` has
+  ZERO adapter-error lines (its `rc=1` is a different, still-live bug — missing `SchemaContract` for
+  `instrument_type='OPTION'` on `ohlcv_1s`/`ohlcv_1m`/`ohlcv_15m` at CME, 109,853 occurrences);
+  `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` has ZERO adapter-error lines too and its own short run.log (1561
+  lines) confirms the already-recorded `WORKER_STALLED` classification (`exit_code=137`, stall not OOM) — no
+  adapter/tarball involvement at all. Full detail + evidence recorded per-doc in each sibling's own Progress Log.
+  This converts "5-6 isolated pages" into: one shared incident (3 VMs, already self-resolved by the routine
+  2026-08-16 11:06 tarball rebuild — the standing P2 todo below about refresh cadence is the actual remaining fix) +
+  2 genuinely independent failures needing their own follow-up (tracked in their own docs). Shipped via
+  `safe-doc-push.sh` (docs-only change, no code).
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

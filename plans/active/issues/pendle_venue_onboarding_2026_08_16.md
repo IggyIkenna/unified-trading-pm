@@ -97,3 +97,4 @@ context_scope:
   incidental mentions (karak decommission doc, venue-coverage asymmetry doc, and 5 others) into its own dedicated
   doc, matching karak/symbiotic's pattern. No code changed this entry — scoping only.
 - **na-eligibility-audit 2026-08-16** [body-hash:421769a9fe30ba85]: KEEP-NA, valid — Freshly authored issue doc (created TODAY, 2026-08-16, zero code changed yet -- doc's own Progress Log: 'issue authored...No code changed this entry -- scoping only'), explicitly split out of parent venue_readiness_and_registry_hardening_2026_08_16.md (also assigned_vm:NA) at that parent's own explicit direction (L361), matching the SAME doc-shape/pattern its two siblings use: karak_decommission_2026_08_16.md (status:open, assigned_vm:NA) and the now-ARCHIVED symbiotic_venue_onboarding_2026_08_16.md (assigned_vm:NA) -- both confirmed via direct grep this session.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

@@ -32,15 +32,7 @@ source: [dart_ui_capability_manifest_and_catalogue_formatting_gaps-003]
 resolved_by:
 locked_by:
 archive_exempt: true
-context_scope:
-  [
-    /codex/06-coding-standards/ui-testing-layers.md,
-    unified-trading-system-ui/app/(public)/login/page.tsx,
-    unified-trading-system-ui/lib/auth/personas.ts,
-    unified-trading-system-ui/tests/e2e/user-management.spec.ts,
-    unified-trading-system-ui/tests/e2e/admin-strategy-assignments.spec.ts,
-    /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md,
-  ]
+context_scope: [/codex/06-coding-standards/ui-testing-layers.md, unified-trading-system-ui/app/(public)/login/page.tsx, unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/tests/e2e/user-management.spec.ts, unified-trading-system-ui/tests/e2e/admin-strategy-assignments.spec.ts, /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md]
 depends_on: []
 ---
 
@@ -228,3 +220,4 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   this doc must remain active so that verification can land (and then archive) once that fix ships. The finalize plan
   (`plans/archive/2026_08/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`) is archived with
   the decision recorded.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

@@ -48,6 +48,7 @@ drift_direction: advance-code
 source: [operator request, sports_consolidated_closeout hygiene audit session 2026-07-23]
 resolved_by:
 locked_by:
+depends_on: []
 context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -57,7 +58,6 @@ context_scope:
     /plans/active/issues/reference_path_convention_2026_07_23.md,
     scripts/plan-hygiene/run_hygiene_sweep.sh,
   ]
-depends_on: []
 ---
 
 # Plan-quality four-line-of-defense architecture
@@ -382,3 +382,4 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
   "not a bounded/deterministic todo per task_template.md's dispatch-scope-eligibility rule" (item 2's acceptance test)
   and a genuine unresolved 3-option design fork with no tiebreaker (item 1, line-1-completeness vs. proseWrap). No new
   evidence since the 2026-08-08 operator-Q&A investigation entry changes either disposition.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

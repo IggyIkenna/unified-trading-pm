@@ -252,3 +252,4 @@ reasoning above.
   `cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md`), QG green (10968 passed, 0 failed). Filed new
   `[RESEARCH] P2` above for the 76 unenumerated crypto xperp base symbols — genuine remaining gap, not fully closed
   by this fix.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

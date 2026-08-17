@@ -53,12 +53,7 @@ execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 supersedes: ag_closeout_audit_ci_parked_2026_08_10
-context_scope:
-  [
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
-  ]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md, /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md]
 ---
 
 # ag-closeout-audit ci delta report — 2026-08-16
@@ -258,3 +253,4 @@ chat-ephemeral, home" rule regardless.
 correctly re-confirmed, not silently dropped, per the "informational finding is not a todo" rule). **9 findings
 generated this run, 9 accounted for (5 as todos + 4 as explicit no-new-action re-confirmations documented above) —
 balanced.**
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

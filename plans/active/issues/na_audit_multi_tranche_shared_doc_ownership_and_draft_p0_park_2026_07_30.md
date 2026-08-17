@@ -58,21 +58,21 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
-context_scope:
-  [
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
-    scripts/plan-hygiene/check_line_caps.sh,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
-    /plans/active/task_template.md,
-  ]
 depends_on: []
 source:
   [
     "Scheduled /na-eligibility-audit prediction run 2026-07-30 (na_eligibility_auditor, autonomous, one of 9 concurrent
     per-tranche dispatches). No operator was reachable during the run, so every judgment call below is PARKED with
     options + a marked recommendation rather than applied.",
+  ]
+context_scope:
+  [
+    unified-trading-pm/cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    unified-trading-pm/scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
+    unified-trading-pm/plans/active/task_template.md,
   ]
 ---
 
@@ -309,3 +309,4 @@ scope on every run. Fix belongs with Finding 3's script todo.
   are now closed; added the two concrete script targets (`generate_na_doc_tranche_inventory.py`, `check_line_caps.sh`)
   and `task_template.md` that were previously named in prose but not cited.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

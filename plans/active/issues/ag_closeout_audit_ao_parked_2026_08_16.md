@@ -38,6 +38,7 @@ source: >-
   /ag-closeout-audit ao, dispatch agt-1628ee, slot 15, 2026-08-16. Phase 1 classified 59 candidate docs (9-group
   Workflow fan-out); 12 archivable_now flipped+archived directly; 6 fed batch22 (drafted, status:draft); 1
   exclude_cross_cutting; the 36 below are the remainder — genuinely orphaned, genuinely not AO-eligible right now.
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active/ao_consolidated_closeout_2026_08_12.md, /plans/active/ao_satellite_ao_dispatch_batch22_2026_08_16.md, /plans/active/ao_open_work_consolidated_tracker_2026_08_14.md]
 ---
 
 # `/ag-closeout-audit ao` 2026-08-16 — parked findings
@@ -206,3 +207,7 @@ deliberate observation/burn-in gate with no worker-executable done-state.
 - Every doc named above was read in full (not classified from checkbox count alone) by this run's Phase 1 Workflow
   (9 agents, 59 docs) before being marked orphaned; see the run's own chat report for the per-doc verdict + evidence
   citation this parked doc doesn't repeat.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

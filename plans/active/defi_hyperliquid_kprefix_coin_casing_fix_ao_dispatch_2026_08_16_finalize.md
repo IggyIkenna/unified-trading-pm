@@ -12,7 +12,7 @@ tags: [defi, finalize]
 related:
   [
     /plans/active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -41,3 +41,7 @@ resolved_by:
 
 - [ ] [REVIEW] P3. Confirm the fix landed with evidence (non-zero captured rows for k-prefix coins post-fix);
       flip the source `[FIX] P3` todo to done; archive this plan once done and unlocked.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (1 entries)

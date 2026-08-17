@@ -64,7 +64,7 @@ would be destroyed with no real content-equivalence proof.
 ## Todos
 
 - [x] ✅ [SCRIPT] P1. **EXTRACTED 2026-08-16 (na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b) →
-      `/plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 1.** Harden `_apply_one`'s
+      `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 1.** Harden `_apply_one`'s
       destination-exists branch to do a real content/byte comparison (not size only) before deleting the source —
       mirror the compound-key content-comparison pattern already proven earlier this session for a similar
       duplicate-verification task (sort/compare on a stable row key, not just a coarse proxy like size or row count).

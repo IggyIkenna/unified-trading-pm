@@ -31,7 +31,7 @@ related:
   [
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
     /plans/archive/2026_08/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
-    /plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
+    /plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md,
   ]
 created: 2026-08-15
@@ -533,3 +533,4 @@ Exactly the observed symptom: the VM can read its startup script but can never w
   unblocked for a future dispatch (not attempted here — cost-conscious per `vm-launcher-runbook.md`, 7 billable VM
   launches already spent on this doc with zero real throughput; a relaunch is a separate, already-tracked next step, not
   mine to absorb per `/boot-per-shippable-unit`'s "don't fan out to multiple tasks in one session").
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

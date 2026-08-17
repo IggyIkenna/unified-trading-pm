@@ -71,3 +71,5 @@ source: >-
       with evidence.
 
 ## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

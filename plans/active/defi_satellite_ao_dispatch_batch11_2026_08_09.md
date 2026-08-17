@@ -48,14 +48,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-context_scope:
-  [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/02-data/defi-canonical-naming-ssot.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md]
 depends_on: []
 source: >-
   Targeted satellite-batch extraction (2026-08-09), scoped to the 18-doc list a same-day RECLASSIFY sweep flagged as NOT
@@ -977,6 +970,7 @@ at 39th — draining, not empty); consolidator `uts-prod-manifest-consolidator-m
 `bihvw0oqv` (regenerable); `ffpulltokens.M8PY67` = slot ff-pull cron's ACTIVE automation token (mode 600, ref
 `slot-cron-ff-pull.sh`) — intentionally NOT touched; 40 parked stashes foreign. No chat-only findings; no new lessons.
 ⚠️ Plan now ~993/1000 — next tick MUST condense 35th-38th-era journal entries (recurring cap-pressure rule).
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries, compact)
 
 ## Deferred work after 2026-08-10
 

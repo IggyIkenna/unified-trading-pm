@@ -46,14 +46,7 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
-    /plans/archive/2026_08/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
-    /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py,
-    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
-  ]
+context_scope: [/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md, /plans/archive/2026_08/issues/deribit_combo_perpetual_partition_move_2026_07_21.md, market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py, /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md]
 resolved_by:
 ---
 
@@ -252,3 +245,4 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
   declared. Sole todo bundles an untraced root-cause investigation (no code path identified) plus a ~988GB/497-day
   reclassification migration gated on that root cause.
 - **na-eligibility-audit 2026-08-16** [body-hash:e0e6e2c3ca7c4051]: KEEP-NA, valid — Doc read in full end-to-end. Todo 1 (writer root-cause) is genuinely DONE: independently verified commit market-tick-data-service@06c07089 is an ancestor of origin/live-defi-rollout (checked pre- and post-fetch in the slot's own c…
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

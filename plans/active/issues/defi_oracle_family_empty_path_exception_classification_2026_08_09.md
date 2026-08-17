@@ -41,13 +41,7 @@ priority: P3
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_aave_oracle_collection.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
-  ]
+context_scope: [/codex/02-data/honest-absence-downstream-handling.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, market-tick-data-service/market_tick_data_service/cli/handlers/_aave_oracle_collection.py, market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py]
 ---
 
 # DeFi RPC-oracle families — deferred aggregate-zero-path + Pyth fidelity follow-ups
@@ -197,3 +191,4 @@ P3.
   warnings — STEP 5.5 broad-except, STEP 5.101 empty-string-fallback — are pre-existing and not from this diff, do not
   treat as blocking), ship via `quickmerge --agent --files` once green, THEN flip this checkbox with the
   `market-tick-data-service@<sha>` evidence.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

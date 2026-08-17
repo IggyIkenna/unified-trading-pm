@@ -609,6 +609,7 @@ Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-servi
 > this plan had grown back over its 1000-line hard cap after the todo-14 codex-audit entry above. Nothing summarized or
 > lost; every still-open todo referenced by those entries (8's remaining scope, 9b, 11) stays tracked in this file's own
 > `## Todos` section, not in the extracted narrative.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 
 ## Deferred work after 2026-07-27
 
@@ -946,7 +947,7 @@ wakeup at ~03:22 UTC to collect numbers and flip the checkbox.
 FUTURE/futures_chain only (no perpetual swaps). FX underlyings 6A/6B/6C/6E/6J from IS catalogue have no PERPETUAL
 records → 0 spot prices → 0 features computed (honest-absence guard correct). **BLOCKED-OPERATOR-DECISION** — fix
 requires making `_resolve_spot_perp` TRADFI-aware (use futures_chain). Issue:
-`/plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
+`/plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
 
 **DEFI:onchain** — VM `features-e2e-defi-20260806-025432-onch5` exit_code=1. 3 deps failed on 2026-07-27: (1) lst_rates:
 BLAZESTAKE venue has `attempted_failed` on every date; no known-outage exemption in `_KNOWN_OUTAGE_VENUES_BY_SVC`;

@@ -71,15 +71,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope:
-  [
-    /plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md,
-    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
-    features-service/scripts/run_cefi_perp_funding_corpus.py,
-    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
-    instruments-service/scripts/migration_orphan_sweep.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md, /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md, features-service/scripts/run_cefi_perp_funding_corpus.py, strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py, instruments-service/scripts/migration_orphan_sweep.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 ---
 
 # DeFi/CeFi venue+chain axis cross-contamination (2026-07-28)
@@ -351,7 +343,33 @@ in this read-only audit pass (time-bounded scope).
       async-wait discipline, a 9-11h wait does not belong in this single-task session; verifying the actual first fire
       + corpus-freshness recovery is the follow-up todo immediately below. **Repo: deployment-service** (VM launch
       only, no code change).
-- [ ] [INFRA] P1. **NEW 2026-08-16 (slot-17) — the two 2026-08-15 cron-host launches (task -1b75e9a1f3d4)
+- [x] ✅ [INFRA] P1. **DONE 2026-08-17 (slot-17) — both root causes fixed + shipped, live VMs hot-fixed;
+      corpus-freshness itself still gated on the sibling verification todo below (needs a fire to actually land).**
+      SHIPPED — `deployment-service@fb87cb2e1c` (+ `deployment-service@10edddb2` folded into the same push). (1)
+      **Guard-script fix**: added `tardis-concurrency-guard.sh` staging to both the one-shot install step and the
+      recurring cron line in `launch-cefi-fwd-daily-cron-vm.sh`, per the fix below. Deeper root cause found beyond
+      what this todo scoped: `create-code-tarballs.sh`'s bare-launcher publish loop only globs `launch-*.sh` + `lib/
+      *.sh` — `tardis-concurrency-guard.sh` matches neither, so even a manual publish run would have kept dropping it
+      silently. Fixed that loop too (explicit extra-helpers publish list) and published the file to GCS directly via
+      UTL `upload_to_storage` (bounded single-object write, not a subprocess `gsutil`) since the publish script itself
+      is manual-only and not due to run. **Hot-fixed the live `cefi-fwd-daily-cron-20260815-212910` VM**: staged the
+      guard script at `/opt/deployment-service/scripts/vm/` and rewrote `/etc/cron.d/cefi-fwd-daily` to fetch it each
+      fire, so tomorrow's 09:00 UTC fire works without waiting on a manual `create-code-tarballs.sh` run. (2)
+      **`cefi-perp-funding-daily-cron` root cause PINNED** (was "not pinned" in this todo's original text): live
+      `xxd`/crontab read confirmed the `--start-date`/`--end-date`/log-fallback date formats
+      (`%F`/`%FT%TZ`) were UNESCAPED in the cron.d heredoc — cron truncates a command at the first bare `%` and feeds
+      the remainder to the command's stdin, so the ENTIRE compound command (including the `|| echo ... FAILED`
+      fallback) silently never ran end-to-end, matching every observed symptom (0 `CRON[...]` exec lines, no log file
+      created) despite a syntactically-valid crontab. This is the exact same bug CLASS the `cefi-fwd` twin was already
+      fixed for (2026-08-09 incident) — this cron's crontab was simply missing that escape. Fixed to `\%F`/`\%FT\%TZ`
+      in `launch-cefi-perp-funding-daily-cron-vm.sh`, mirroring the fwd script exactly; **hot-fixed the live
+      `cefi-perp-funding-daily-cron-20260815-212924` VM's crontab** directly (confirmed via a fresh `xxd`/cat read
+      post-fix — correct escaping present) so tomorrow's 07:00 UTC fire actually runs. Neither fix has had its first
+      live fire verified yet (both next fires are hours out from this session) — that verification is the sibling
+      "follow-up: verify the two cron hosts... actually FIRED" todo below, unchanged in scope. **Repo:
+      deployment-service.**
+
+- [x] ✅ [INFRA] P1 (superseded original text, kept for record). **NEW 2026-08-16 (slot-17) — the two 2026-08-15 cron-host launches (task -1b75e9a1f3d4)
       cannot clear the step-1 corpus-freshness gate as configured; root-caused via live SSH + source read, not
       guessed.** (1) **`cefi-fwd-daily-cron-20260815-212910`'s 09:00 UTC `launch-cefi-forward-poll.sh` fire FAILS
       every day** — live log (`/var/log/cefi-fwd-cron.log`, first lines) shows
@@ -466,6 +484,18 @@ in this read-only audit pass (time-bounded scope).
           todo's "no further action needed" claim without reading that doc first.
 
 ## Progress Log
+
+- **slot-17 2026-08-17 (task -1b75e9a1f3d4 fix)**: fixed + shipped both root causes named in the todo above —
+  `deployment-service@fb87cb2e1c` (+ `10edddb2` in the same push). cefi-fwd: staged the missing
+  `tardis-concurrency-guard.sh` at both the one-shot install step and the recurring cron line, and fixed the deeper
+  gap that caused it (`create-code-tarballs.sh`'s bare-launcher publish glob never covered non-`launch-*.sh`/non-`lib/`
+  helpers); published the file to GCS directly via UTL `upload_to_storage`. cefi-perp-funding: pinned the previously
+  unpinned mechanism — an unescaped `%F`/`%FT%TZ` in the cron.d heredoc, the same bug class already fixed on the
+  cefi-fwd twin for a 2026-08-09 incident, silently truncating the ENTIRE compound command (explains the observed 0
+  exec lines + no log file). Both live cron-host VMs hot-fixed via SSH (guard staged + crontab rewritten on
+  `cefi-fwd-daily-cron-20260815-212910`; crontab rewritten on `cefi-perp-funding-daily-cron-20260815-212924`) so
+  tomorrow's fires don't wait on a manual `create-code-tarballs.sh` run. First live fire of either fix not yet
+  observed this session (both next fires are hours out) — that's the sibling cron-fire-verification todo, unchanged.
 
 Progress Log entries 2026-07-30 through 2026-08-10 moved **verbatim** — nothing summarized, rewritten, or dropped — to
 `/plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md` (line-cap remediation — see that
@@ -599,6 +629,39 @@ doc for the full history).
   cron-verification follow-up todo — this is the real blocker, not mere elapsed-time waiting. My own task remains
   correctly GATED on step 1 (+ the still-outstanding fresh 5-part delete-safety proof once it does land). No delete
   executed, no code shipped. Released `reason_code=GATED`.
+
+- **slot-33 2026-08-17 (data_engineering, task `defi_cefi_venue_chain_axis_contamination-345201378396`, step-3
+  physical-delete re-check)**: Fresh-pulled all repos (clean, no doc drift). Re-verified both gates fresh. (1)
+  **Gate 2 (in-flight defi rebuild) CLEAR**: `gcloud compute instances list --filter="name~canonical-migration"`
+  returns empty — no `canonical-migration-defi-rebuild-*` instance running. (2) **Gate 1 (corpus freshness) still
+  FAIL**: bounded UTL `list_blobs` probe (Python via `unified_trading_library.cloud_interface.get_storage_client`,
+  single-prefix-per-(day,venue,data_type), not a corpus walk) of `market-data-tick-defi-prd-central-element-323112`
+  at the exact writer-shape prefix
+  `raw_tick_data/by_date/day={D}/pipeline_mode=batch_tardis/asset_group=cefi/venue={VENUE}/instrument_type=perpetual/data_type={perp_funding|perp_daily_ctx}/`
+  for all 6 `catalog_carry.py` venues × both data_types × 2026-08-13..17: **0 matched objects, every cell** —
+  `funding_window()` still returns empty for current days. Step 1 remains un-landed, unchanged since slot-17's
+  2026-08-16 check. **Root-cause confirmation**: re-checked slot-17's filed `[INFRA] P1` fix
+  (`tardis-concurrency-guard.sh` never staged to the fwd-cron VM) — `grep -n "tardis-concurrency-guard.sh"
+  deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` still returns **zero hits**: the fix has NOT been
+  shipped yet, so the 09:00Z forward-poll cron is still expected to fail every fire and the corpus-freshness gate
+  cannot clear until that lands (out of this task's craft/repo scope — `[INFRA]`/deployment-service, not
+  `[DATA]`/data_engineering — not actioned here, left for the infra-role dispatch that todo already names). My own
+  task remains correctly GATED on step 1. No delete executed, no code shipped. Released `reason_code=GATED`.
+
+- **slot-12 2026-08-17T02:35Z (data_engineering, task `defi_cefi_venue_chain_axis_contamination-345201378396`,
+  step-3 physical-delete re-check — same-day repeat of slot-33's check above)**: Fresh-pulled repos, re-verified both
+  gates independently. (1) **Gate 2 (in-flight defi rebuild) CLEAR**: `gcloud compute instances list
+  --filter="name~canonical-migration"` returns empty. (2) **Gate 1 (corpus freshness) still FAIL**: bounded UTL
+  `list_blobs` probe (`unified_trading_library.cloud_interface.get_storage_client` +
+  `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`, single-prefix-per-(day,venue,data_type),
+  not a corpus walk) of `market-data-tick-defi-prd-central-element-323112` for all 6 `catalog_carry.py` venues × both
+  data_types × 2026-08-13..17: **0 matched objects, every cell**. (3) Re-confirmed the blocking `[INFRA] P1` fix
+  (`tardis-concurrency-guard.sh` staging into `deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh`) is
+  still unshipped: fresh `grep -n "tardis-concurrency-guard.sh" scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` on
+  `origin/live-defi-rollout` → 0 hits. No new information versus slot-33's same-day check — logged for the dispatch
+  audit trail per this doc's own re-check convention, not because anything changed. Fixing the `[INFRA]`/
+  deployment-service blocker directly is out of this task's `[DATA]`/data_engineering craft+repo scope (already
+  separately tracked as its own todo above). No delete executed, no code shipped. Released `reason_code=GATED`.
 
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
@@ -801,3 +864,4 @@ reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caugh
 
 - **P1 corpus recompute**: historical window landed (confirmed 08-09); blocked on the NEW 08-06+ forward-poll cron gap
   (`[INFRA] P1`), filed in `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

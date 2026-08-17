@@ -63,6 +63,7 @@ resolved_by:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 6, operator ruling)**: extracted from
   `okx_futures_instid_marker_convention_mismatch_2026_07_30.md`; operator chose option (b) of the 3 listed
   disambiguation options (lookup via instruments-service / encode in instFamily / expiry heuristic).

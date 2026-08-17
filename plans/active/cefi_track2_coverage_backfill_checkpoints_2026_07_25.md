@@ -209,6 +209,7 @@ context_scope:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-07-28 (slot-6)**: The POST-BACKFILL FINAL GATE todos (`/data-pipeline-check-is` + `/data-pipeline-check-mtds`)
   were dispatched via the backlog but PARKED — the coverage backfill VM
   (`cefi-queue-heavy-binancefutu-x17-20260727-210013`) is nowhere near complete. Measured: started ~2026-07-27T21:00Z

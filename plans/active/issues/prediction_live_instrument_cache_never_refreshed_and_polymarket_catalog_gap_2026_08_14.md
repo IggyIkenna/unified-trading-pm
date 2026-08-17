@@ -129,3 +129,14 @@ and is flagged, not diagnosed further, here.
   run silent — `live_stream_watcher.build_prediction_live_shards()` resolving the wrong GCS bucket kind and silently
   returning zero shards every sweep) was fixed directly in this session, not filed here — see
   `deployment-service@ebeef843c9` (verified reachable ancestor of `origin/live-defi-rollout` — plan_reconciler 2026-08-17) and the parity plan's Progress Log.
+- **na-eligibility-audit 2026-08-17** [body-hash:d4ac8fe6162f4ea9]: KEEP-NA, valid — 3 open todos, all real, unblocked
+  root-cause/design investigations (P1 CODE: wire `cache_refresh_consumer=` into the live runner or add a periodic
+  re-resolution loop; P1 DATA: root-cause why the IS Polymarket catalog writer stopped after 2026-08-05; P2 CODE:
+  diagnose the zero-ever-captured Polymarket connector gap), each explicitly self-labeled "not this session's
+  ownership" and pointing at `cross_ag_live_capture_parity_2026_08_14.md` or instruments-service as the likely
+  executing owner. **Not independently cross-checked against `cross_ag_live_capture_parity_2026_08_14.md` for a
+  duplicate claim this run** (out of this pass's budget) — flagging for a future pass to verify before treating these
+  as this doc's own dispatch surface. None are mechanically bounded (root-cause + design-decision work). Doc stays
+  NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

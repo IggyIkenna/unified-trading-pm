@@ -304,3 +304,5 @@ timeframe rows also have blank `league_id` (exact marker signature, zero excepti
 findings shipped as `unified-trading-pm@ddef9f25f5` (SAFETY) and this commit (MDPS confirmation). Of this doc's 7
 todos, 6 are now done; the sole remaining item is the `[OPERATOR] P2` remediation-policy decision for the 2026-07-13
 "blank from birth" gap — correctly not started, awaiting the operator.
+
+- **na-eligibility-audit 2026-08-17** [body-hash:2e182f89d59f1516]: KEEP-NA, valid — sole open item is an explicit [OPERATOR] remediation-policy decision (2026-07-13 cluster's "blank from birth" gap: accept as safe-to-leave vs backfill real timeframe); doc's own frontmatter `resolved_by` field confirms "6/7 todos done, sole remainder is OPERATOR decision, cannot auto-resolve."

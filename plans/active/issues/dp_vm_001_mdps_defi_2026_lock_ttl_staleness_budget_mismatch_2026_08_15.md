@@ -76,13 +76,7 @@ related:
     /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md,
   ]
-context_scope:
-  [
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    unified-trading-library/unified_trading_library/manifest_consolidator.py,
-    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
-  ]
+context_scope: [/codex/05-infrastructure/manifest-consolidator-ssot.md, /codex/05-infrastructure/data-pipeline-alerts.md, unified-trading-library/unified_trading_library/manifest_consolidator.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py]
 created: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -178,3 +172,4 @@ together once the real fix lands.
   into tracked checkboxes (Phase 2 zero-checkbox-doc sweep) — it previously contributed zero dispatchable work despite
   `assigned_vm: planning`.
 - **na-eligibility-audit 2026-08-16** [body-hash:a6972d17406fe69b]: KEEP-NA, valid — Live operational escalation doc (filed 2026-08-15), correctly in scope -- no na-eligibility-audit marker exists yet; a same-day 2026-08-16 plan_reconciler Progress Log entry only converted prose into checkboxes (Phase 2 zero-checkbox-doc sweep), it is not a na-eligibility-audit verdict marker.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

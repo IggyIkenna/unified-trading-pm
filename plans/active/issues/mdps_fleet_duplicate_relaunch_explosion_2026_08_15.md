@@ -55,16 +55,12 @@ source: >-
 drift_direction: advance-code
 context_scope:
   [
-    deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh,
     deployment-service/scripts/recovery/relaunch_backfill_vm.py,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_classify.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py,
-    deployment-service/scripts/wave_launcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/scripts/vm/vm_zombie_watchdog.py,
-    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
-    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh,
+    deployment-service/scripts/wave_launcher.py,
   ]
 ---
 
@@ -573,3 +569,4 @@ Exactly one watchdog VM now live in the fleet, running the fixed code.
 not historically scoped beyond this session's 1-day sweep; and the tarball-install swallowed-failure bug in
 `launch-vm-zombie-watchdog.sh` is a separate, real bug worth its own fix.
 - **na-eligibility-audit 2026-08-16** [body-hash:ab4937fd4fed9448]: RECLASSIFY-SPLIT — extracted bounded item(s) 5, 6, 7 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 2 items remain genuinely NA ([OPERATOR] P0 cron re-enable pending a multi-step deploy-propagation verification chain, [OPERATOR] P1 historical false-kill scope-back investigation). Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-17** [body-hash:a6abdc8b393969de]: KEEP-NA, valid — Reaffirmed. Sole open item ([OPERATOR] P0, re-enable uts-prod-dp-exit-code-monitor-cron, line 337) is a multi-step live-infra verification-then-action chain explicitly deferred by the doc's own author to avoid recreating the 676-VM incident on a still-unpatched deployed image. Doc stays assigned_vm: NA.

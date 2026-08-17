@@ -304,13 +304,16 @@ last_updated: 2026-08-15 # (was: 2026-06-27 -- plan-reconcile 2026-08-15: stale 
       counted over a TRAILING 14-DAY WINDOW (`ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14`, `deployment-service@96271280`)
       while `captured` is ALL-TIME. Every "ratio" in every DP_RUN_MOSTLY_EMPTY alert is a 14-day numerator over an
       all-time denominator. Either window both or drop the ratio.
-- [ ] [OPERATOR] P1. **Cross-cloud identity for the AO VM — prerequisite for the #17 timer.** The orchestrator VM has NO
+- [x] ✅ [OPERATOR] P1. **Cross-cloud identity for the AO VM — prerequisite for the #17 timer.** The orchestrator VM has NO
       GCP identity at all: it is AWS EC2, `gcloud auth list` returns no credentialed accounts, there is no SA key or
       `GOOGLE_APPLICATION_CREDENTIALS`, and no AWS→GCP Workload Identity Federation pool is wired to it
       (`gcloud iam workload-identity-pools list` shows only github-actions-pool / gitlab-wlif / aws-glue-runners /
       github-pool). So `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN` is NOT a one-line grant. Until
       WIF is stood up, DO NOT install the timer — a dispatched worker would spawn, fail the skill's §0 Slack read, and
-      burn a slot every cycle. Ship the code, hold the installer.
+      burn a slot every cycle. Ship the code, hold the installer. **DONE 2026-08-16** — WIF stood up and the live
+      `orchestrator.service` process confirmed picked up the credential (slot 6 / slot 22 infra); see
+      `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md` items 1-2 and this doc's own 2026-08-16 Progress Log
+      entry. na-eligibility-audit 2026-08-17: stale-checkbox close, citing that evidence.
 - [x] [SCRIPT] P1. STALE CHECKBOX — na-eligibility-audit 2026-08-16: already SHIPPED via `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` (lines 401-412), features-service@656f2e10 (2026-08-15, slot-7), new _dependency_missing_gate.py. Original text: Sports reference-table exporter FABRICATES `http_status=200` `FetchEvidence` for a GCS-missing
       upstream that it classifies `SOURCE_RETURNED_ZERO`. `FetchEvidence` is the gate that makes `empty_confirmed`
       trustworthy at all — fabricating it defeats the honest-absence model at its root.
@@ -508,6 +511,7 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   the corresponding extraction todo in `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` in the same commit (per the
   shared conflict-check protocol §3.4, "already-shipped elsewhere, checkbox just never flipped").
 - **na-eligibility-audit 2026-08-16** [body-hash:add50697ab60b2c8]: KEEP-NA, valid (parked CONFLICT) — 10 of 12 originally-flagged RECLASSIFY_SPLIT candidates were already-shipped duplicates of `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` items (stale checkboxes now fixed with citations, per conflict-check protocol step 4 -- not a reclassification). The remaining 2 (MDPS per-date sharding, MDPS VM rightsizing) are individually bounded/CLEAR but were explicitly marked OUT-OF-SCOPE by batch19's own 2026-08-13 operator-scoping instruction -- not re-litigated here, left annotated + NA pending that scoping decision changing. Full conflict-check evidence in this run's Phase-1 classification output.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 
@@ -752,12 +756,16 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       2026-08-11 while following the hook's advice after it correctly blocked a `gcloud storage` call. A guardrail that
       blocks the wrong path and then hands out a broken replacement costs every agent the same round-trip —
       agent-orchestrator@03848b608c.
-- [ ] [SCRIPT] P2. `output_schemas.py`'s `expiration.applies_to={"options_chain", "futures_chain"}` is hardcoded and did
+- [x] ✅ [SCRIPT] P2. `output_schemas.py`'s `expiration.applies_to={"options_chain", "futures_chain"}` is hardcoded and did
       NOT follow UAC adding `combo_chain` to `CEFI_CHAIN_INSTRUMENT_TYPES`. Bundle ROUTING follows automatically
       (`is_chain_bundle_data_type` reads the UAC frozenset), so the drift pin in `test_output_path_helpers.py` was
       re-pinned rather than widened blind — but whether a combo chain should carry `expiration` is a real domain
       question nobody has answered. Surfaced 2026-08-11 by the pin failing the whole MDPS suite, which is exactly its
-      job.
+      job. **RULED 2026-08-16**: no separate field needed — each leg's own `instrument_id` already carries expiration
+      (verified against `_partition_path_canonicality.py`, matches the options_chain/futures_chain precedent); the
+      doc-update follow-up is tracked as its own `[DOCS] P3` item in `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md`.
+      See this doc's own 2026-08-16 Progress Log entry. na-eligibility-audit 2026-08-17: stale-checkbox close, citing
+      that ruling.
 - [x] ✅ [SCRIPT] P1. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
       pre-existing, unrelated to the inverse-notional fix, and TOTAL not partial.** UPGRADED P2->P1 and corrected
       2026-08-12: originally described (from a mid-run sample) as affecting "some KRAKEN-FUTURES shards" while 1d was
@@ -950,3 +958,7 @@ alone was proven misleading here) before declaring the re-derive done.
     every claim from the tracing sub-agent was re-verified against the live contract-builder, schema-fallback, and
     schema-definition code before the fix shipped — a plausible, detailed, wrong theory reads identically to a correct
     one until checked.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-17** [body-hash:d7d2cf1fc4fcf46e]: KEEP-NA, stale-items closed — full 953-line re-read end-to-end. Closed 2 of 8 open items with hard evidence: the WIF cross-cloud-identity item (now DONE 2026-08-16, verified live) and the combo_chain expiration-field item (ruled "no separate field needed" 2026-08-16, doc-update follow-up tracked separately in data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md). 3 items are citation-hold class (a) redirects to other active/dated-scoped docs (chain-relabel part 2, date-sharding, VM-rightsizing — the latter two explicitly marked OUT-OF-SCOPE by batch19's own 2026-08-13 operator-scoping ruling). Remaining 3 (liquidations root-cause umbrella, ~4,113+ wrong-inverse-notional re-derive, full re-drive attribution question) are live, multi-session data-correctness investigations, not bounded single-worker tasks. Doc stays assigned_vm: NA.

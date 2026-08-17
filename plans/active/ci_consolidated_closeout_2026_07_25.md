@@ -201,6 +201,7 @@ unblocked on a CI runner.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **2026-07-25** — Doc authored from the same corpus-wide classification pass as
   `ao_consolidated_closeout_2026_07_25.md`. 33 docs classified into this CI tranche (2 from `orchestrator_master` + 10
   from `deployment_and_user_management_master` + 1 from `strategy_master` + 20 reclassified out of

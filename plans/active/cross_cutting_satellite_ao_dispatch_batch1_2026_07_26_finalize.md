@@ -119,6 +119,7 @@ context_scope:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **2026-07-30 (slot 14, review-craft-adopted) — todo 1 PARTIAL, NOT flipped: the "31 now-done" premise is stale/false
   right now.** Picked up finalize-001 via `/boot`. Before reconciling, checked the live backlog (`GET /api/backlog`)
   against the two `depends_on` plans this doc's own `gate_on_depends: true` should have blocked on: **9 of batch1's

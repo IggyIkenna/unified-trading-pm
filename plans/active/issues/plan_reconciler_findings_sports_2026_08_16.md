@@ -37,6 +37,12 @@ author: plan_reconciler
 source: "Sharded daily /plan-reconcile sports-tranche sweep, autonomous dispatch agt-2be768, slot 10, 2026-08-16."
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
+    /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
+  ]
 ---
 
 # plan_reconciler findings — sports — 2026-08-16
@@ -106,3 +112,11 @@ should be pointing sharded workers at their slot clone.
     promises. This will happen via the standing weekly/daily AO `plan-reconciler.timer` cadence; not manually
     re-triggered here (never `gh workflow run`/manual-dispatch a shared reconciler slot, per async-wait discipline)
     — flagging for operator awareness that today's sports-tranche daily shard produced nothing.
+- **na-eligibility-audit 2026-08-17** [body-hash:73478217b96602f1]: KEEP-NA, valid — 0 open todos but this is
+  a dead-dispatch state marker, NOT an archive candidate: the doc's own text explicitly argues against its own
+  archival ("would misrepresent the sports tranche as reconciled when it was not"), independently corroborated
+  the same day by ag_closeout_audit_sports_parked_2026_08_16.md's own dead-lock/staleness finding. Awaiting the
+  standing plan-reconciler.timer to naturally re-run /plan-reconcile sports — per async-wait-discipline this
+  should not be manually force-triggered.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

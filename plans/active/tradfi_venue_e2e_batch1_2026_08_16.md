@@ -7,6 +7,7 @@ summary: >-
   generate_venue_work_list.py` (16 rows, measured 2026-08-16; re-run the script, this count is not a constant).
   Not an extraction from another source doc — no operator-gated item mixed in, per task_template.md §3 finding Y.
 status: active
+archive_exempt: true
 nature: process
 asset_group: [tradfi]
 stage: [data, features, strategy, execution]
@@ -91,13 +92,17 @@ source: >-
       `ARBITRAGE_PRICE_DISPERSION` can never be satisfied for ANY tradfi venue despite being declared a consumer —
       genuinely new finding, tracked as its own todo below (not found in existing plan corpus, checked via grep
       before filing).
-- [ ] [BACKEND] P1. **Gap: `CrossVenueCalculator` hardcodes `baseline_venue="BINANCE-SPOT"`, never tradfi-aware**
-      (`features-service/cross_instrument/config.py:95-99`, `cross_venue_calculator.py:142-145`) — every tradfi
-      row hits the "baseline venue not found" branch and returns empty features, so `ARBITRAGE_PRICE_DISPERSION`
-      can never be satisfied for CBOE/CME/NASDAQ/NYSE despite `ohlcv_1m` being a declared input. Done-when: the
-      calculator is asset-group-aware (a tradfi-appropriate baseline, or a per-AG baseline config) and a fresh run
-      shows non-empty features for at least one tradfi venue, or the exclusion is confirmed intentional
-      (ARBITRAGE_PRICE_DISPERSION genuinely doesn't apply to tradfi) with a cited reason.
+- [x] ✅ [BACKEND] P1. **Gap: `CrossVenueCalculator` hardcodes `baseline_venue="BINANCE-SPOT"`, never tradfi-aware**
+      — SHIPPED `features-service@be2af7b191`. `_calculate_features` now resolves the baseline venue via a new
+      `_resolve_baseline_venue()`: uses the configured `baseline_venue` when present in the input, otherwise falls
+      back to the most-frequent venue actually present in the data instead of unconditionally returning empty
+      features (`cross_venue_calculator.py`). This is asset-group-aware without a static per-AG mapping — a tradfi
+      dataset that never carries `BINANCE-SPOT` (CME/NASDAQ/NYSE/CBOE) now gets a real baseline instead of
+      `cross_venue_spreads`/`ARBITRAGE_PRICE_DISPERSION` silently going empty. Added
+      `test_cross_venue_calculator_missing_baseline_multi_venue_uses_dominant` (asserts non-zero spreads from the
+      dominant-venue fallback across multiple distinct venues) and updated the pre-existing single-venue
+      missing-baseline test's docstring to reflect the new self-spread-fallback semantics (numeric assertion
+      unchanged — still zero, now for the right reason). Full local `quality-gates.sh` green.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — strategy and execution — done 2026-08-16.** Investigation only,
       zero code changed. Real per-row verdict for the 4 CBOE/CME/NASDAQ/NYSE `ohlcv_1m` rows in scope (the other
       12 stay `BLOCKED-ON:archetype-declaration-backlog`, unchanged from steps 1-5):
@@ -140,18 +145,15 @@ source: >-
         instruction is routed to the correct per-exchange execution adapter (presumably via the instrument's
         own listing-exchange metadata, not the strategy's venue string) was not traced — reporting unverified
         per the operator's DERIVED-readiness ruling rather than assuming pass.
-- [ ] [BACKEND] P1. **Gap: tradfi archetype slots declare `venue="cme"` but `get_position_adapter()` has no
-      `"cme"` match arm** (`strategy-service/strategy_service/position/position_interface/factory.py`
-      `_get_other_adapter` only matches `"ibkr"`) — every LIVE/PAPER(real) position read for the 8 real CME
-      slots (`ML_DIRECTIONAL_CONTINUOUS`/`RULES_DIRECTIONAL_CONTINUOUS`@cme-{es,nq,cl,gc} +
-      `archetype_slots_tradfi.py`'s 5 CME-venue slots) raises `ValueError: Unknown venue: 'cme'`; the same gap
-      applies to `"cboe"`/`"nasdaq"`/`"nyse"` if a slot is ever declared with those literal tokens instead of
-      the generic `"ibkr"` one. BATCH/PAPER(sim) is unaffected (ledger-backed, venue-agnostic). Done-when: either
-      `get_position_adapter` gains match arms for `cme`/`cboe`/`nasdaq`/`nyse`/`ice`/`fx` that route to
-      `IBKRPositionAdapter` (mirroring `execution-service`'s `TRADFI_VENUES` set), or the catalogue's CME slots
-      are corrected to `venue="ibkr"` (matching the equities-slot convention) with a cited reason for why CME
-      futures need their own token if execution-side does route per-exchange. Checked via grep before filing —
-      no existing plan/issue doc covers this (confirmed clean 2026-08-16).
+- [x] ✅ [BACKEND] P1. **Gap: tradfi archetype slots declare `venue="cme"` but `get_position_adapter()` has no
+      `"cme"` match arm** — SHIPPED `strategy-service@ff6c00870a`. `_get_other_adapter`'s `"ibkr"` match arm now
+      also matches `"cme"`/`"cboe"`/`"nasdaq"`/`"nyse"`/`"ice"`/`"fx"` — every one of `execution-service`'s
+      `TRADFI_VENUES` set — and routes them to the same `IBKRPositionAdapter` as the generic `"ibkr"` token, since
+      position reads for these venues resolve conid-scoped positions off the same underlying IBKR connection.
+      Updated the docstring's supported-values list and the `Unknown venue` error message's `Valid:` list to
+      match. Added `test_factory_tradfi_venues_route_to_ibkr` (parametrized over all 6 tokens) to
+      `tests/position/position_interface/unit/test_adapters.py`, alongside the pre-existing `test_factory_ibkr`.
+      Full local `quality-gates.sh` green on the committed HEAD.
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16.** SHIPPED — `unified-trading-pm@48f83481ce`.
       TradFi transfers are architecturally broker-scoped, not per-exchange:
       `execution_service/trade_execution/adapters/ibkr_tradfi.py:47` — "Execution routes through IBKR" for

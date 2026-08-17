@@ -125,3 +125,6 @@ already-credentialed Odds-API/footystats path). Once provisioned:
   `live-defi-rollout` gate (see `plans/archive/2026_08/issues/ag_closeout_linkage_ratchet_blocks_pm_promote_2026_08_16.md`).
   Added `/plans/active/sports_consolidated_closeout_2026_07_19.md` to `related:` above — the single unambiguous
   sports closeout family for this doc's `asset_group`. No content change.
+- **na-eligibility-audit 2026-08-17** [body-hash:158a275d28bb3d58]: KEEP-NA, valid — OPERATOR scope decision (Sportradar's intended role vs Odds-API/footystats overlap) + CREDENTIAL_BLOCKED ($499/mo vendor key, no GSM secret exists as of last check).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

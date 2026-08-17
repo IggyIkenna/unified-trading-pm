@@ -140,3 +140,7 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
 - **ag-closeout-audit 2026-08-13**: a same-session ag-closeout-audit classifier flagged this doc archivable_now,
   contradicting this doc's OWN round7/round11 na-eligibility-audit KEEP-NA rulings above ("not re-litigated").
   Independently re-verified wrong and overturned before any archival action. Stays open, untouched.
+- **na-eligibility-audit 2026-08-17** [body-hash:a1534363aac3d5a9]: KEEP-NA-STALE (already-duplicated) — dated
+  OPERATOR RULING 2026-08-08 ("accept and LABEL the staleness, do NOT build a live-day overlay") resolved by
+  sports_taxonomy_p3_consumers_2026_08_08.md (verified status:active). Also survived a 2026-08-13 ag-closeout-audit
+  "archivable_now" false-flag, independently overturned in this doc's own Progress Log.

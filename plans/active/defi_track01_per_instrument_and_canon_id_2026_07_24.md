@@ -992,3 +992,4 @@ against). Moved verbatim, nothing summarized, to
   report this finding is part of.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).
 - **na-eligibility-audit 2026-08-16** [body-hash:cc2c48afab816294]: KEEP-NA, valid — Read this 994-line plan end to end across two passes (including the full R1-R8 build history and Track 1 residual-canon-walk section, plus the ~70 line-cap-extraction and operator-ruling entries), not just its checkboxes -- content changed substantially since the 2026-08-09 verdict marker (which counted 4 open items): a 2026-08-13 line-cap remediation extracted 5 already-done deferred items to an archive doc, and two 2026-08-16 operator rulings (DEX-relevance no-TVL-fallback WON'T-DO;.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

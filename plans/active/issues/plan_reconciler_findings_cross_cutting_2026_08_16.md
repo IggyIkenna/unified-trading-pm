@@ -35,7 +35,14 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
-context_scope: [/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
+    /codex/02-data/external-data-always-available-rule.md,
+    /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
+  ]
 ---
 
 # plan_reconciler findings — cross-cutting tranche — 2026-08-16
@@ -313,3 +320,4 @@ cross-cutting run should prioritize these.
   `archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`'s same-day ruling. Left
   batches 5-9 and the "confirmed findings not applied" list untouched — genuine remaining ordinary work, not a
   doc-hygiene gap this Phase -1 pass exists to close.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

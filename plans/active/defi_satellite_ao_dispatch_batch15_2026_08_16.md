@@ -41,7 +41,10 @@ context_scope:
   [
     /plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md,
     /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
+    /codex/09-strategy/architecture-v2/capability-wizard.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    strategy-service/strategy_service/portfolio_allocator/archetypes_rank.py,
+    strategy-service/strategy_service/engine/strategies/v2/param_schema.py,
   ]
 effort: medium
 drift_direction: advance-code
@@ -77,3 +80,4 @@ source: >-
   source-routing) is real design/build work and was NOT extracted, per the bounded-outcome bar. Paired with
   `defi_satellite_ao_dispatch_batch15_2026_08_16_finalize.md` (`depends_on` + `gate_on_depends: true`,
   `status: active`) in the same turn.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

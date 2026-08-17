@@ -390,3 +390,4 @@ it's titled after never consults the manifest) is unchanged today.
   todos** — set `archive_exempt: true` rather than archiving here directly, since
   `sports_taxonomy_p3_consumers_2026_08_08_finalize.md` todo 1 explicitly names this doc as one of six it will flip +
   archive together; archiving it unilaterally here would race/duplicate that already-scoped finalize step.
+- **na-eligibility-audit 2026-08-17** [body-hash:8f8b354c2880c350]: KEEP-NA-STALE (already-duplicated) — archive_exempt:true, 0 open todos, archival deferred to sports_taxonomy_p3_consumers_2026_08_08_finalize.md todo 1 (batch-archival of 6 docs, verified status:active/unlocked). Not archived unilaterally here — would race that finalize plan's own batch ritual.

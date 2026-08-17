@@ -28,20 +28,14 @@ related:
   [
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md,
+    /plans/archive/issues/dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_mdps_tradfi_2026_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -161,3 +155,14 @@ class of failure repeatedly.
   explicit `[OPERATOR]` root-cause-and-decide judgment call; the mechanical confirm-for-2025 half is now tracked via
   `tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` (this run's own extraction from the 2021 sibling doc).
   `assigned_vm` unchanged.
+- **2026-08-16 (slot 12, batch14 todo 2 — cross-VM confirm/refute, closes the mechanical half of the open todo
+  above).** Pulled this VM's `run.log` (4,742,244 lines) via `_gcs.read_text` and greped for
+  `No adapter for tradfi/<data_type>`: **2518 occurrences** (ohlcv_1m + ohlcv_1s; first at 2026-08-15 02:12:01
+  ohlcv_1s, last at 23:55:05 ohlcv_1m), same terminal `rc=1`/`DEPLOYMENT_FAILED` shape as `mdps-tradfi-2021`/`-2023`.
+  **CONFIRMED — shares the stale-tarball root cause.** 3 of the 5-6 same-shape pages (2021, 2023, this one) now
+  share one root cause, already self-resolved by the routine tarball rebuild; the remaining open work is the
+  tarball-refresh-cadence P2 todo tracked in the `mdps-tradfi-2021` sibling doc, not a per-VM fix. The still-open
+  `[OPERATOR]` todo above (root-cause-and-decide) is now answerable with this evidence — leaving the checkbox as-is
+  since the decide half is still genuinely operator-gated, but the root-cause half is DONE. Full cross-VM roundup
+  (incl. the 2 refuted VMs) recorded in the 2021 sibling doc's Progress Log.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

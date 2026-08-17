@@ -278,3 +278,5 @@ implementation todos on that check, since they're each independently reviewable 
   bounded todos. Not implemented — design only. Recommend a quick operator/engineering sanity check on §5b before the
   implementation todos ship, given this governs a live production correctness gate for options-chain/derivative data.
 - **na-eligibility-audit 2026-08-16** [body-hash:5c31e82a03b5597f]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-17** [body-hash:2217935cc9688abd]: KEEP-NA, valid — Reaffirmed. Sole open item (Stage 2, schema v10 instrument_id_form) is DEPENDENCY_BLOCKED per the doc's own staged-rollout table ("Depends on: Stage 1 + the v2 dedup --apply"), reaffirmed across 5+ prior audit passes. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.

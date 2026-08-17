@@ -8,10 +8,7 @@ summary: >-
   2026-07-26, 21 days old as of 2026-08-16, with the tool's own log line calling out "upstream download cron
   unhealthy". This is a live data-pipeline health issue (data-pipeline-correctness-hard-rule heartbeat), separate
   from GATE C's `_index` schema-version status.
-status: open
-archive_exempt: true # TEMPORARY: cross-repo (mode-2) flip commit lands the checkbox flip alone per
-  # plan-completion-and-archival-discipline.md's two-commit sequencing rule (flip at the active path FIRST,
-  # git mv follows in a separate commit) — removed in the immediate follow-up archival commit, same session.
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]

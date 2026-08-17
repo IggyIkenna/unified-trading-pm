@@ -396,3 +396,5 @@ boxed audit run, not a script-debugging session) — flagged for whoever next re
       tests: pre-existing-unmerged hard-stops naming the path; the checkout is left untouched,
       never staged; isolated mode also refuses before its copy loop runs; a clean checkout is
       unaffected). Full `tests/test_safe_doc_push_*.bats` suite: 71/71 green (no regressions).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

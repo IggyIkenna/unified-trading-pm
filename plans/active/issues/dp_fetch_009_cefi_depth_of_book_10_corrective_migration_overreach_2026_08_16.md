@@ -47,14 +47,7 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py,
-    market-tick-data-service/scripts/revert_cefi_live_corrective_migration_overreach_2026_08_16.py,
-    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
-  ]
+context_scope: [/plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md, /codex/05-infrastructure/data-pipeline-alerts.md, market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py, market-tick-data-service/scripts/revert_cefi_live_corrective_migration_overreach_2026_08_16.py, market-tick-data-service/market_tick_data_service/live/websocket_runner.py]
 ---
 
 # DP-FETCH-009 cefi/depth_of_book_10 — root cause was a corrective-migration scoping overreach
@@ -153,10 +146,11 @@ larger data-correctness regression riding on the same commit.
       buggy path, build the same kind of scoped revert this doc's script demonstrates. The
       presence of 2025/2026 dates (not just the original 2020 incident window) in this
       population is itself a signal worth re-checking, not necessarily proof of a problem.
-- [ ] [DATA] P3. Consider whether `migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py`
-      (still present, not yet deleted per its own `# Delete-when:` header) should be annotated
-      with a pointer to this doc's finding, so a future reader of that script doesn't trust its
-      "any row carrying this error_reason shares the same defect" claim at face value.
+- [x] ✅ EXTRACTED — see `plans/active/cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 2 (na-eligibility-audit
+      2026-08-17, cefi tranche, conflict-checked clear). Original: [DATA] P3. Consider whether
+      `migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py` (still present, not yet deleted per its own
+      `# Delete-when:` header) should be annotated with a pointer to this doc's finding, so a future reader of that
+      script doesn't trust its "any row carrying this error_reason shares the same defect" claim at face value.
 
 ## Progress Log
 
@@ -164,3 +158,5 @@ larger data-correctness regression riding on the same commit.
   root-causing DP-FETCH-009 for cefi/depth_of_book_10 to this corrective-migration overreach.
   Reverted + independently re-verified the live-side population (14,112 rows); the batch-side
   question is left open per findings-triage ("ambiguous → diagnose both sides", not guess).
+- **na-eligibility-audit 2026-08-17** [body-hash:d6517143ed480bc9]: RECLASSIFY-SPLIT — extracted bounded item 3 (annotate the migration script with a pointer to this finding) to `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 2, conflict-checked clear. Item 2 (determine whether the 149,309-row batch population is correctly/incorrectly caught) stays genuinely NA at lower confidence — the investigation approach is well-specified but the likely outcome (another manifest CAS revert at larger scale) brushes against the plan-authoring rule's manifest-write gating, so it wasn't confidently extracted without an explicit safe-idempotent justification. Doc stays assigned_vm: NA for that remaining item.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

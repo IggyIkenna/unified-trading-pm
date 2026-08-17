@@ -40,14 +40,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
-    instruments-service/instruments_service/reference_data/adapters/defi/pyth.py,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py, instruments-service/instruments_service/reference_data/adapters/defi/pyth.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py, /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md]
 ---
 
 # Pyth oracle_prices manifest seeds expected_unattempted for feeds the collector cannot fetch
@@ -448,3 +441,4 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   reconciliation produced a false "77 gap days" result via a last-writer-wins merge shadowing real data. Multiple
   standing audits (2026-08-04/07/08) independently reached KEEP-NA. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:6e8ce2a479c03735]: KEEP-NA, valid — Read end-to-end, including the extensive Progress Log documenting a two-mechanism active data-loss regression (seeded-unfetchable family-3 rows AND a live BTC/ETH/INF drop via _filter_pyth_rows_to_is), both since fixed and live-verified via a VM capturing all 12 PYTH SOLANA feeds. 5 of 6 original todos are closed;.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

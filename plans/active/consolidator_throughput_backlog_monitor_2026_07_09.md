@@ -362,6 +362,7 @@ context_scope:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - 2026-07-13 — **Phantom + re-probe visibility SHIPPED end-to-end (todos 313/319/324).** The two dark data-correctness
   actors now self-publish a stable per-AG summary the cockpit reads. **Writers**: the cross-AG phantom reconciler writes
   `_index/phantom_audit_latest.json` (phantom_count + triage link) to the AG's manifest bucket

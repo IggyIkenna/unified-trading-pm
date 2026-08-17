@@ -822,3 +822,4 @@ duplicating a new issue doc. Skipping via `reason_code: GATED` per this doc's es
   (status:draft-upstream non-derivation, markdown-bold/indented-sub-bullet derivation-regex edge cases) still under
   active investigation via ongoing recurrence notes (most recently 2026-08-09) — genuinely not yet bounded to a single
   fix, consistent with every prior pass on this doc.
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.

@@ -32,7 +32,7 @@ source: ["AO dispatch of cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/configs/venue_data_types.yaml]
+context_scope: [market-tick-data-service/configs/venue_data_types.yaml, deployment-api/deployment_api/routes/batch_config_utils.py, deployment-api/deployment_api/routes/data_batch_processing.py, /plans/archive/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md, /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -109,3 +109,7 @@ progress that no single plan tracks to completion.
       per asset_group and report real per-venue/per-data_type completeness gaps for non-`trades` data_types.
 - [ ] [DATA] P3. From that report, draft per-AG (or per-venue) bounded `assigned_vm: planning` backfill todos for any
       genuine gaps found — do not re-open this todo's original umbrella scope.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

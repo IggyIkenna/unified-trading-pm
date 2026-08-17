@@ -42,3 +42,7 @@ resolved_by:
 - [ ] [REVIEW] P2. Confirm every archetype's identity landed with evidence (QG green, `is_mvp()` curtailment
       wired); flip the source todo in `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md` to done;
       archive this plan once done and unlocked.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (1 entries)

@@ -37,13 +37,7 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: infra
 effort: high
 drift_direction: advance-code
-context_scope:
-  [
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
-    /plans/archive/2026_08/revocation_arming_2026_08_14.md,
-  ]
+context_scope: [deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/deployment_service/data_pipeline_monitors/escalation.py, /plans/archive/2026_08/revocation_arming_2026_08_14.md]
 resolved_by:
 supersedes:
 superseded_by:
@@ -243,3 +237,4 @@ the release bookend.
 **Recommended next item**: fix the basedpyright ratchet blocker
 (`deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md`) — it blocks ALL deployment-service
 shipping, including the already-written, already-tested Todo 2 fix sitting uncommitted in this checkout.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

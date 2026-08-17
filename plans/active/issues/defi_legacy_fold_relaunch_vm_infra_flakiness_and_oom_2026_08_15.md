@@ -68,13 +68,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope:
-  [
-    deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh,
-    deployment-service/scripts/vm/vm_zombie_watchdog.py,
-    market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py,
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-  ]
+context_scope: [deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh, deployment-service/scripts/vm/vm_zombie_watchdog.py, market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py, /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md, /codex/15-runbooks/incidents/rb_infra_relaunch.md]
 ---
 
 # `backfill-defi-legacy-datatype-fold-` relaunch: consolidator fresh, but VM infra failed twice (2026-08-15)
@@ -173,3 +167,4 @@ precondition-satisfied but not yet executed to completion. Per `/codex/15-runboo
   relaunch twice, root-caused attempt 2's OOM, shipped the worker-count fix. Filed this doc per the findings-closure
   hard rule since the underlying relaunch is not yet complete and both failure signatures are worth tracking separately
   from the source doc's original (already-resolved) stale-fallback concern.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

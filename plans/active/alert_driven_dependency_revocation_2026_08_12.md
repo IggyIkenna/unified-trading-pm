@@ -638,6 +638,7 @@ conserved and each line names where the work went, per `check_todo_regression.sh
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (12 entries)
 - 2026-08-13 — **Phases 2-5 all landed.** `unified-api-contracts@c206f9100d` (Phase 2 policy evaluator + Phase 3 retry
   budgets, 41 tests) · `deployment-service@e38b2a0e6e` (Phase 4 push actuator + Phase 5 VM-side poll/skip gate, 92
   tests) · `deployment-service@c55faf2c81` (unrelated: prod project id removed from a vm-launcher test fixture that was

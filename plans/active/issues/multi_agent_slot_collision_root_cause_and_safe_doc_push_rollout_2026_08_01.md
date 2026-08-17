@@ -65,8 +65,8 @@ context_scope:
     /plans/archive/2026_08/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md,
     /plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
     /plans/active/issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md,
-    scripts/dev/safe-doc-push.sh,
-    scripts/dev/check-slot-commit-identity.sh,
+    unified-trading-pm/scripts/dev/safe-doc-push.sh,
+    unified-trading-pm/scripts/dev/check-slot-commit-identity.sh,
   ]
 ---
 
@@ -414,3 +414,4 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   dedicated
   `/plans/active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`, not
   by `batch5_finalize`.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

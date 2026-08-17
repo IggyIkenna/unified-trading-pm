@@ -125,9 +125,20 @@ resolved_by:
       the instance role, not this user key, so it is unaffected by and does not depend on this finding). Investigate
       whether anything actually needs this static user key vs. the ambient instance role, and if not, retire it.
       Repo: infra (host-level, `planning` VM).
-- [ ] [DATA] P1. Re-verify the chain relabel migration part 2 execution plan is still current against live state
-      (per line 332 — direction already approved), then dispatch execution. Given how much has landed on this
-      branch recently, do not trust a stale citation — re-measure before executing. (repo: instruments-service)
+- [x] ✅ [DATA] P1. Re-verified the chain relabel migration part 2 execution plan
+      (`plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md`) against live state — **still
+      current**: every Phase 1 (UAC)/Phase 2 (MTDS) file:line citation individually checked against post-draft
+      commits, all still accurate despite 4 intervening MTDS commits + 1 UAC-adjacent commit (none touched the cited
+      chain-relabel code paths — see that plan's 2026-08-17 Progress Log for full per-commit evidence). **Dispatched
+      execution**: flipped that plan's `assigned_vm: NA` → `planning` + added `sequential: true`, and closed a real
+      `[OPERATOR]`-todo sequential-chain gap (`task_template.md` § 4 — a bare `sequential: true` chain skips a
+      non-ingested `[OPERATOR]` todo when computing the predecessor) with an explicit dispatchable Phase-4 gate todo,
+      so the oracle-narrowing step cannot dispatch before the Phase 3 backfill actually completes. Authored the
+      required companion `cefi_chain_relabel_migration_options_futures_2026_08_15_finalize.md` (depends_on +
+      gate_on_depends + sequential) per the mandatory finalize-plan hard rule. **Correction**: this todo's own
+      `(repo: instruments-service)` tag was wrong — the plan touches none of instruments-service; its real repos are
+      market-tick-data-service, unified-api-contracts, market-data-processing-service, deployment-api, deployment-ui
+      (per that plan's own `repos:` frontmatter). — unified-trading-pm@93622e3714
 - [ ] [DOCS] P3. Record the combo_chain expiration ruling: `combo_chain` is a chain-type shard (same
       `CEFI_CHAIN_INSTRUMENT_TYPES`/`TRADFI_CHAIN_INSTRUMENT_TYPES` frozenset as `options_chain`/`futures_chain` in
       `unified_api_contracts/canonical/_partition_path_canonicality.py`) — each leg-row carries its own full
@@ -173,3 +184,4 @@ resolved_by:
   different slot (`slot-2·laptop`) — checked the content diff against `origin/main`'s tip and it's byte-identical
   (already landed upstream under a different SHA), so it's a harmless stale local artifact, not lost work; left
   untouched as out-of-scope for this task.
+**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

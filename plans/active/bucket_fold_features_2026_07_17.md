@@ -173,6 +173,7 @@ design's counts are 2026-07-13).
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-07-17, authored** as the features successor of [[bucket_estate_fold_design_2026_07_13]] §3 todo 1. Object
   counts NOT re-measured this session (larger corpus) — the executor must re-measure per (ag, kind) at provision time,
   especially the features-onchain-defi twin. Nothing executed yet.

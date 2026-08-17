@@ -40,11 +40,7 @@ priority: P1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/terraform/gcp/defi_collection_scheduler.tf,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/terraform/gcp/defi_collection_scheduler.tf, /plans/active/defi_consolidated_closeout_2026_07_18.md]
 ---
 
 # 3 defi MTDS collect-* Cloud Scheduler jobs silently paused since 2026-07-18
@@ -152,3 +148,4 @@ one-shot dispatch.
   filed this doc after discovering the pattern while diagnosing the oracle_prices sibling.
   Resumed oracle-prices myself (see companion doc); left these 3 for operator/next-dispatch
   triage since I hadn't done the equivalent "is it safe" check for them.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

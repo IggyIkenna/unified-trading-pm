@@ -187,3 +187,4 @@ Missing: market-tick-data-service-perp
   before re-running it (not re-verified here). Evidence: script output above; full quality-gates.sh green on the shipped
   SHA.
 - **na-eligibility-audit 2026-08-16** [body-hash:3f114e9828f6de1c]: KEEP-NA-STALE (already-duplicated), applied — todo 3 (re-run backfill_lst_yields_30day.sh) is verbatim-duplicated in defi_satellite_ao_dispatch_batch14_2026_08_16.md (status: draft). Todos 1-2 already [x] done. Converted todo 3s checkbox to a citation marker rather than reclassifying (would open a second dispatch path once batch14 activates). Doc stays NA, 0 open checkboxes remaining.
+- **na-eligibility-audit 2026-08-17**: KEEP-NA-STALE (already-duplicated), reconfirmed — citation to defi_satellite_ao_dispatch_batch14_2026_08_16.md:171 (status: draft) independently re-verified real. Doc stays NA, 0 open checkboxes.

@@ -414,3 +414,4 @@ uncommitted across a checkpoint boundary, even mid-task.
   `instrument_id`), fix, regression tests, and evidence. Confirmed via live SSH read of the actual backfill VM's own
   log (`mdps-cefi-2021-20260813-174738:/tmp/vm-exec-5128.log`), not just static code tracing. Shipped:
   `market-data-processing-service@a3ff10f0dd`.
+- **na-eligibility-audit 2026-08-17** [body-hash:f9e2a037984a3a3c]: KEEP-NA, valid — Reaffirmed. 8 of 10 todos [x] with hard sha evidence. 2 remaining: an [OPERATOR] Tardis-tier spend decision, and a monitor-to-completion task gated on a still-running VM (ETA ~2026-08-22..26) with an open-ended diagnose-if-it-dies-again branch. Doc stays assigned_vm: NA.

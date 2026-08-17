@@ -870,3 +870,4 @@ offered to the queue once these are the only real blockers.
   (today). That same ledger separately flags this doc's own untracked residual (the human-gated final delete of ~256,954
   old non-canonical objects) for a future dedicated delete-safety pass, not a batch todo — a new finding, not a reason
   to flip. No flip, no extraction (would duplicate the tracked prereqs pair).
+- **na-eligibility-audit 2026-08-17** [body-hash:11e001d00bd4ee15]: KEEP-NA-STALE (already-duplicated) — sole open item (Track H registry-aware honest-coverage denominator) tracked via sports_track_h_denominator_gated_2026_07_28.md + its _prereqs_2026_07_28.md sibling (both confirmed to exist). Note: per ag_closeout_audit_sports_parked_2026_08_16.md, the Track-H Path-A-vs-Path-B design fork has now sat unruled for 18+ days — worth an operator nudge, but that finding belongs to that doc, not a new item here.

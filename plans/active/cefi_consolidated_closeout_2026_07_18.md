@@ -622,6 +622,7 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 10)**: confirmed against
   `/codex/02-data/cross-asset-canonical-target-ssot.md` D1 — manifest `instrument_type` COLUMN case is
   UPPERCASE for cefi (operator-ruled 2026-07-20, "uppercase is fine"), matching this same line 523/2,982-row

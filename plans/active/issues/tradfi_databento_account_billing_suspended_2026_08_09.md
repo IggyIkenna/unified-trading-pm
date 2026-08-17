@@ -26,7 +26,7 @@ tags: [tradfi, databento, billing, backfill, mtds, operator-decision, outage]
 related:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,

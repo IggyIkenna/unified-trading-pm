@@ -19,10 +19,11 @@ scope: [engineer]
 tags: [tradfi, ao-dispatch, close-out, batch-9, satellite-docs, conflict-checked]
 related:
   [
-    /plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
+    /plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -49,7 +50,7 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
+    /plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 ---

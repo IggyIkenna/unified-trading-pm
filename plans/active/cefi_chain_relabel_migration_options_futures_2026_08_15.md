@@ -6,9 +6,10 @@ summary: >-
   members but are currently written into the instrument_type= GCS path segment (data_type= carries the literal "trades")
   across market-tick-data-service, unified-api-contracts (incl. the canonical-path oracle itself),
   market-data-processing-service, deployment-api, and deployment-ui. Drafted per operator ruling on BLK-f5cd6b22
-  (2026-08-15) — this is a genuine cross-repo entity-rename plus a live production GCS data move with unmeasured blast
-  radius, not a mechanical 1-hour fix, so it is scoped here as a phased LOCAL plan (assigned_vm: NA) rather than a
-  single AO-dispatched todo.
+  (2026-08-15) — a genuine cross-repo entity-rename plus a live production GCS data move with unmeasured blast radius,
+  not a mechanical 1-hour fix, so it was scoped as a phased plan rather than a single AO-dispatched todo. Re-verified
+  current and flipped to AO-dispatched (`assigned_vm: planning`) 2026-08-17 per operator ruling; phase gating enforced
+  via `sequential: true` plus an explicit dispatchable Phase-3→4 gate todo (see Progress Log).
 status: active
 nature: design
 asset_group: [cefi]
@@ -19,15 +20,18 @@ tags: [cefi, entity-rename, chain-relabel, options-chain, futures-chain, migrati
 related:
   [
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
+    /plans/active/data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md,
+    /plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15_finalize.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch19_2026_08_13.md,
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-15"
+last_updated: "2026-08-17"
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+sequential: true
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 6
@@ -38,11 +42,10 @@ context_scope:
   [
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
     unified-api-contracts/unified_api_contracts/canonical/_partition_path_canonicality.py,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
+    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
   ]
 supersedes:
 superseded_by:
@@ -53,6 +56,11 @@ source: >-
   data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:332-338 (todo #9). Operator ruling on the blocked question
   (2026-08-15): scope down to a phased plan, default assigned_vm: NA given the cross-repo blast radius and
   canonical-oracle change, do not resolve the move-vs-copy tactical question outside the plan's own drafting.
+  SUPERSEDED 2026-08-17: na-eligibility-audit follow-up Q&A round 2 (2026-08-16, recorded in
+  data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md) ruled "re-verify plan is current, then dispatch
+  execution" — re-verification found every Phase 1/2 file:line citation still accurate against live state despite
+  4 intervening MTDS commits + 1 UAC-adjacent commit (none touched the cited chain-relabel code paths); assigned_vm
+  flipped to planning accordingly (see Progress Log for full evidence).
 assigned_role: backend_engineer
 effort: high
 drift_direction: advance-code
@@ -60,12 +68,20 @@ drift_direction: advance-code
 
 # CeFi options_chain/futures_chain path-position entity-rename migration
 
-> **Why this is a separate LOCAL plan, not an AO todo**: the source todo bundled a genuine 5-repo entity-rename (writer,
-> the canonical-path oracle itself, adapters, the whole data-status/catalogue stack, UI) with a live production GCS data
-> move over "6+ years" of vintage data and no measured blast radius.
-> `entity-rename-and-split- consumer-migration-rule.md` requires every consumer to migrate in the SAME change; that is
-> not a 1-hour, single- worker, unattended task. See `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s todo item for
-> the full investigation this plan was drafted from (file:line citations for every consumer below).
+> **Why this WAS a separate LOCAL plan (2026-08-15), and why it is now AO-dispatched (2026-08-17)**: the source todo
+> bundled a genuine 5-repo entity-rename (writer, the canonical-path oracle itself, adapters, the whole
+> data-status/catalogue stack, UI) with a live production GCS data move over "6+ years" of vintage data and no measured
+> blast radius — too much for a 1-hour, single-worker, unattended task, so it was drafted as a phased LOCAL plan.
+> `entity-rename-and-split-consumer-migration-rule.md` requires every consumer to migrate in the SAME change. See
+> `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s todo item for the full investigation this plan was drafted from
+> (file:line citations for every consumer below). **2026-08-17 update**: the operator's na-eligibility-audit follow-up
+> Q&A round 2 (2026-08-16) explicitly ruled to dispatch this plan's execution once re-verified current — see the
+> Progress Log. Per-phase gating stays enforced via `sequential: true` plus the explicit Phase-3→4 dispatchable gate
+> todo below: `task_template.md` documents that a bare `sequential: true` chain SKIPS a non-ingested `[OPERATOR]` todo
+> when computing "immediate predecessor," so Phase 3's `[OPERATOR]` backfill todo alone cannot be trusted to block
+> Phase 4 — the gate todo closes that specific hole. Phase 3's live GCS move/delete still requires the operator per its
+> own `[OPERATOR]` tag and the delete-safety protocol; only the plan's DISPATCH READINESS changed, not who may execute
+> a destructive step.
 
 ## Consumer inventory (entity-rename rule step 1 — already compiled, 2026-08-15 investigation)
 
@@ -108,17 +124,10 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ### Phase 0 — resolve the move-vs-copy tactical question (must close before Phase 4 is scheduled, not before drafting)
 
-- [ ] [DATA] P0. Determine the operator's actual reasoning behind "move, don't copy-then-delete-separately"
-      (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:335`, dated 2026-08-10) for THIS migration
-      specifically, vs. the general copy-then-verify-then-delete precedent in
-      `market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py` (copy-only, delete as a
-      separate later delete-safety-gated step, because GCS has no atomic move and a bare move risks data loss on partial
-      failure). Grep `unified-trading-pm/plans/active/issues/autonomous_session_operator_decisions_*.md` and any
-      Slack/blocked-question history around 2026-08-10 for the stated rationale. Produce one of: (a) a reconciling
-      reading (e.g. "copy + crc32c-verify + delete inside the SAME script run IS what 'move' meant colloquially here —
-      satisfies both"), or (b) an explicit unresolved-conflict flag requesting a fresh operator ruling before Phase 4 is
-      scheduled. Done when: this plan's Progress Log records the resolved backfill strategy with its source citation (or
-      the explicit "no record found, re-asked, operator said X" trail).
+- [x] ✅ [DATA] P0. **RESOLVED 2026-08-17 (slot 20, data_engineering) — reconciling reading (a), no fresh operator
+      ruling needed.** Determined the operator's actual reasoning behind "move, don't copy-then-delete-separately"
+      (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:335`, dated 2026-08-10). See Progress Log for the full
+      search trail and resolved backfill strategy.
 
 ### Phase 1 — UAC canonical layer (must land before Phase 2; the oracle is the SSOT every other repo trusts)
 
@@ -164,6 +173,16 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ### Phase 4 — close out (gated on Phase 3 completing + verifying zero remaining legacy-shape rows)
 
+- [ ] [DATA] P1. **Dispatch gate — do not skip.** `sequential: true` alone does NOT hold this boundary: Phase 3's
+      `[OPERATOR]` todo is excluded from AO ingestion, so the sequential chain's "immediate predecessor" computation
+      SKIPS it and would otherwise make this Phase 4 dispatchable the moment Phase 2 lands
+      (`plans/active/task_template.md` § 4, "`sequential: true` only orders ... ingested/dispatchable todos"). This
+      todo is the real, dispatchable gate: query the manifest (+ a scoped GCS listing) for any remaining legacy-shape
+      (`instrument_type=options_chain`/`futures_chain`/`combo_chain`) rows or objects. If ANY remain, Phase 3's
+      backfill has not finished — `skip-current-task` with `reason_code: GATED` (per `worker.md` § 4c) rather than
+      proceeding; do NOT narrow the oracle while legacy-shape data still exists in production, or every untouched
+      legacy-shape shard starts failing `canonical_path_violations()`. If zero remain, record the verifying query +
+      zero-count here and this todo is done — Phase 4 may proceed.
 - [ ] [BACKEND] P2. Narrow `_partition_path_canonicality.py`'s oracle back to ONLY the corrected shape (remove
       legacy-shape acceptance), completing the entity-rename per the "shard atom identical across writer/manifest/
       status/gate/UI" discipline.
@@ -175,9 +194,67 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-15 (slot-28·backend_engineer)**: drafted this plan per operator ruling on `BLK-f5cd6b22` (scope the
   chain-relabel migration down from a single AO todo into a phased LOCAL plan; default `assigned_vm: NA`; do not resolve
   the move-vs-copy question outside the plan's own drafting). Consumer inventory + file:line citations carried over from
   this session's 2-pass Explore-agent investigation (see the source todo's own Progress Log entry in
   `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` for the raw investigation transcript). No code changed.
 - **na-eligibility-audit 2026-08-16** [body-hash:d9dd38ca14bec7be]: KEEP-NA, valid — Read the full 183-line doc end-to-end (single Read, no truncation) plus cross-checked the redirect chain.
+- **2026-08-17 (slot 1, data_engineering, AO-dispatched via `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md`)**:
+  Re-verified this plan against live state per the operator's na-eligibility-audit follow-up Q&A round 2 ruling
+  ("re-verify plan is current, then dispatch execution"). **Result: still current.** Checked every cited file for
+  post-draft (>2026-08-15) commits: UAC's `partition_paths.py`/`_partition_path_canonicality.py` had ZERO commits
+  since the draft — `build_cefi_partition_path`/`build_tradfi_partition_path` still at lines 219/320,
+  `CEFI_CHAIN_INSTRUMENT_TYPES`/`TRADFI_CHAIN_INSTRUMENT_TYPES` still at lines 61/70, `canonical_path_violations`
+  still at line 503, all exactly as cited. MTDS had 4 intervening commits touching the 3 cited orchestrator files
+  (`bd07cfc3`, `ecedb15f`, `83948068`, `28e2eb36`) but none touched the chain-relabel code paths this plan cites —
+  `_write_bundle_shard_row` still at line 164, `_MERGED_DATA_TYPE_MAP` still at line 160 — confirmed by reading each
+  commit's diff (sports `data_type` sanitization, `quarantined_legs` threading, a new Stage-3 read-gate function, and
+  a per-date concurrency fix — all additive/orthogonal, none touched the `instrument_type=`/`data_type=` chain-relabel
+  logic). MDPS's chain adapters + deployment-api's data-status stack: zero commits since draft. deployment-ui: one
+  commit (`080ceb8`) touched only `DataStatusTab.tsx` (coverage-breakdown + asset-group toggle UI, unrelated to
+  path-position rendering) — Phase 2's UI todo is unaffected. **Dispatch-readiness change**: flipped
+  `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`, added `sequential: true`.
+  Before doing so, read `task_template.md` § 4 in full and found a real hazard: a bare `sequential: true` chain skips
+  non-ingested todos (incl. `[OPERATOR]`-tagged ones) when computing the predecessor, so Phase 3's `[OPERATOR]`
+  backfill todo would NOT actually have blocked Phase 4 from dispatching right after Phase 2 landed — closed by
+  inserting an explicit dispatchable `[DATA] P1` gate todo at the top of Phase 4 that checks for zero remaining
+  legacy-shape rows and self-defers via `skip-current-task reason_code=GATED` otherwise (see Phase 4). Authored the
+  required companion finalize plan per the "every AO-dispatched plan needs a gated finalize plan" hard rule:
+  `cefi_chain_relabel_migration_options_futures_2026_08_15_finalize.md`. **Also found**: the citing todo in
+  `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md` tagged this work `(repo: instruments-service)` — wrong;
+  this plan touches none of instruments-service, and its real repos are the 5 in this doc's own `repos:` frontmatter.
+  Flipped that checkbox with the corrected repo list as part of this same session.
+- **2026-08-17 (slot 20, data_engineering) — Phase 0 move-vs-copy tactical question RESOLVED, reading (a).** Searched
+  the corpus for the operator's stated rationale behind "move, don't copy-then-delete-separately"
+  (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:335`): grepped every
+  `unified-trading-pm/plans/active/issues/autonomous_session_operator_decisions_*.md` file, every `BLK-*` id logged
+  against 2026-08-10 across `plans/active/issues/` and `plans/archive/` (~80 hits), and every doc created 2026-08-10 —
+  none reference this specific decision. The source doc's own frontmatter explains why: its `source:` line records
+  "Interactive session 2026-08-10 ... Operator decisions recorded inline" — this was a live chat instruction during an
+  ad-hoc session, not a structured `/blocked` ruling (no `BLK-*` id) or a Slack post, so no deeper transcript exists
+  anywhere in the corpus to recover — the cited line IS the complete primary source. This confirms option (b)'s
+  "no record found" branch for the SEARCH half, but a fresh operator ruling is not actually needed here because the
+  task's own reconciling-reading example — already drafted into this exact todo by the 2026-08-16
+  na-eligibility-audit/dispatch session — resolves the apparent conflict without contradicting either side: **"copy +
+  content-verify (checksum) + delete inside the SAME script run" satisfies both the operator's framing (the end state
+  is a MOVE — no legacy-shape duplicate survives the run) and the `backfill_defi_dex_pool_swaps_source_correction.py`
+  precedent's safety rationale (GCS has no atomic move primitive; a bare move risks data loss on partial failure, so
+  the underlying mechanics are always copy-then-verify-then-delete regardless of what the combined operation is
+  called).** Read that precedent script in full
+  (`market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py:1-73`): it also
+  deliberately does NOT delete the source at all (`ALREADY_COVERED`/gap-fill only, ADDITIVE not a migration) — a
+  genuinely different shape from this migration's requirement (Phase 3 must actually retire the legacy-shape object
+  once its corrected-shape twin is copy+verified), so its "copy-not-move" framing was never in tension with "move" as
+  a description of Phase 3's overall operation; it was only ever in tension with a naive interpretation of "move" as a
+  single atomic GCS call, which GCS does not offer and which
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s Part 5 (the legacy-COPIED-not-MOVED invariant) already
+  forbids skipping regardless of this todo. **Resolved backfill strategy for Phase 3**: per legacy-shape object, copy
+  to the corrected-shape target (`gcs_copy_object`), content-verify (checksum per Part 2 of the delete-safety
+  protocol — not existence-only), update the manifest row at the corrected coordinates, THEN delete the legacy-shape
+  object via `gcs_conditional_delete` scoped to the verified generation (per the five-part proof + §3a reversibility
+  check) — all within the same script/session, so the net observable effect is a move (nothing legacy-shaped survives
+  once the run completes) while the mechanics stay the always-required copy-verify-delete sequence. This does not
+  change Phase 3's `[OPERATOR]` tag, its delete-safety gating, or its blast-radius-measurement requirement — only
+  confirms the backfill script's shape before it is written. No code changed by this todo.

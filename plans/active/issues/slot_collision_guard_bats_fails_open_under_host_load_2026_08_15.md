@@ -39,6 +39,15 @@ superseded_by:
 source: measured while shipping the plan-hygiene stale-base guard (quickmerge re-gate, 2026-08-15)
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+    /plans/active/issues/local_host_concurrent_qg_serial_rule_violated_2026_08_15.md,
+    /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md,
+    cursor-configs/hooks/pretooluse-slot-collision-guard.py,
+    cursor-configs/hooks/lib/slot-collision-detect.sh,
+    tests/test_pretooluse_slot_collision_guard.bats,
+  ]
 ---
 
 # Slot-collision guard: fails open under load, and the test asserts it does not
@@ -128,3 +137,5 @@ this case and will send the next agent hunting a regression in unrelated files.
 - `uptime` at diagnosis: `load averages: 164.28 186.07 187.87`.
 - The change being shipped when this fired touched only `scripts/plan-hygiene/`, which the failing tests do not import,
   invoke or reference.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

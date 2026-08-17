@@ -68,13 +68,7 @@ source: >-
   `/ag-closeout-audit cross-cutting` run 2026-08-07 (ag_closeout_auditor scheduled worker, dispatch `agt-a2b8a4`, slot
   5). Phase 0 via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (83 members, 6 covering docs, 11
   never-cited). Phase 1 Workflow (7 agents) classified the 7 genuinely-new candidates, all `exclude_cross_cutting`.
-context_scope:
-  [
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
-  ]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md, /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md]
 ---
 
 # Parked findings — 2026-08-07 `/ag-closeout-audit cross-cutting` run
@@ -337,3 +331,4 @@ spot per this skill's SKILL.md).
   "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute these itself by
   construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

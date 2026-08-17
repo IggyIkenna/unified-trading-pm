@@ -135,3 +135,4 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
   citing that approval; todos 1-2 (the corpus-wide Option A/B/C ruling for the remaining 95 docs) remain open — this was
   a targeted single-doc exception, not a resolution of the underlying corpus-wide question.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.

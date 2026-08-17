@@ -814,3 +814,5 @@ automator still alive, re-launch if session teardown killed it.
   completed, stalled, or was abandoned. Flagging for the next session with infra-query scope: re-check
   `af-backfill-*` VM state and the chain automator's liveness before assuming this task is still genuinely
   in-flight rather than silently stalled.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

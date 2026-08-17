@@ -677,6 +677,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 > /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
 ---
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
 ## Deferred work after 2026-07-20
 

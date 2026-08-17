@@ -655,3 +655,4 @@ are unaffected.
   case) so this done-when is now CI-proven, not a one-time manual check. Full quality-gates.sh green. This closes the
   last open `[BACKEND]` todo in this plan — the only remaining open items are the `[OPERATOR]` P3 live-fire test and
   the `[INFRA]` P1 resource-watchdog installed-copy update, both already tracked below.
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

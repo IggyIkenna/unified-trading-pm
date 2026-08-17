@@ -74,3 +74,4 @@ resolved_by:
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling)**: extracted from
   `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s "NEW finding 2026-07-28" todo; operator chose
   the full-scope option (all ~26-29 rows) over starting with the smaller already-drivable subset.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

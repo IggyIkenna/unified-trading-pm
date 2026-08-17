@@ -941,3 +941,4 @@ overwrite.
   (line ~407, ~462) still correctly cite `sports_consolidated_closeout_2026_07_19.md` Track E as the owning doc; that
   Track's matching `[CODE] P1` ("repoint the remaining stale `entity=fixtures` consumers, 7-file list") re-verified
   still `- [ ]` open there (live-read today). No new work surfaced; doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-17** [body-hash:dc68418215fe614e]: KEEP-NA-STALE (already-duplicated) — both open items (§R) cited to sports_consolidated_closeout_2026_07_19.md Track E (verified status:active); doc's own text confirms the two items are literal duplicates of each other.

@@ -132,3 +132,35 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo. **2026-08-17 note**: the plan's own CEFI driver
    (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) was STILL RUNNING (not terminal) as of this check — do not
    relaunch it; the DEFI re-run this todo needs is independent and can proceed without waiting on CEFI.
+   **2026-08-17 update — first re-run attempt (`pipeline-e2e-check-mdps-20260817-005300-c59390`, launched 00:53
+   UTC) CRASHED silently, relaunching (see item 5 for root cause + why this is a relaunch-safe mitigation, not a
+   blind retry).**
+5. `[DATA] P1.` NEW finding 2026-08-17 (slot-3, data_engineering). The 00:53 UTC DEFI re-run (`c59390`) died
+   silently mid-run: `run.log` goes dead at `2026-08-17 01:18:49Z` (last line, no error/traceback), `EXIT_STATUS`
+   never advanced past `RUNNING`, and the VM is **absent entirely** from `gcloud compute instances list` (not
+   `TERMINATED` — gone), confirmed via a direct `gcloud compute instances list --filter="name~c59390"` returning
+   zero rows while sibling VMs (CEFI's driver, CEFI's own backfill sub-VM) still list normally. **Root cause,
+   inferred from the driver's own RSS-checkpoint log**: after leg 1 (`pipelinecheck`)'s manifest read+groupby,
+   `peak_rss=38052.1MB`; by leg 2 (`pcskip`)'s sub-VM-poll ticks, `driver RSS peak` had grown to **62413.7MB** —
+   this run WAS on `e2-highmem-8` (64GB; the 38GB leg-1 read alone already exceeds e2-highmem-4's 32GB default,
+   so the override must have carried), meaning leg 2 pushed RSS to ~97% of the machine's ceiling. This is
+   consistent with a kernel OOM-kill (SIGKILL bypasses any `finally`-block EXIT_STATUS write, but the VM's
+   unconditional shutdown-trap self-delete still fires) — **the driver is not releasing leg 1's in-memory
+   DataFrame/index structures before starting leg 2**, so RSS accumulates ACROSS legs instead of peaking once
+   per leg. This is separate from item 3 (bounding the single manifest read) — even a perfectly row-group-bounded
+   read will keep accumulating leg-over-leg if the driver never frees prior legs' objects, and the next AG with
+   >2 legs will hit this ceiling on ANY machine size. **Mitigation applied for THIS re-run** (relaunch-safe,
+   not a design change): relaunched with `PIPELINE_E2E_CHECK_DRIVER_MACHINE_TYPE=e2-highmem-16` (128GB) — with
+   only 2 legs and an observed ~24GB leg-2 increment, 128GB leaves ample headroom to reach a real terminal
+   verdict without masking the underlying leak. **Relaunched 2026-08-17 02:42 UTC**: VM
+   `pipeline-e2e-check-mdps-20260817-024215-f56c11` (identical `--day 2026-07-05 --asset-group DEFI --legs
+   force,skip --require-captured --auto-day` invocation), confirmed `e2-highmem-16` / `PREEMPTIBLE=` (blank —
+   NOT spot, ruling out preemption and supporting the OOM-kill inference) / `STATUS=RUNNING` via the launcher's
+   own `gcloud compute instances create` output. **Real fix still needed** (separate P2 follow-up, not blocking
+   this relaunch): explicit `del`/`gc.collect()` of each leg's large intermediate structures
+   (`_captured_days_by_cell`'s frame/groupby results) in `pipeline_e2e_check.py` between legs, or run each leg
+   in its own subprocess so OS-level cleanup is guaranteed.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (5 entries).

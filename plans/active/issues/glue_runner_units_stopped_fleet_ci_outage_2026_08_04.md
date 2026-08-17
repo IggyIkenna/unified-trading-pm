@@ -455,3 +455,4 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
   are lower-confidence AO-eligible candidates — flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` in this audit's report rather
   than reclassified here, given this doc's history of misdiagnosis from ambiguous instance naming.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.

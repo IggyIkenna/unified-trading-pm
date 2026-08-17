@@ -257,3 +257,4 @@ outcome, so they belong on this list rather than in an audit report nobody owns.
       Phase-1 sweep per tranche, or explicitly document its orphan counts as a lower bound.** The 2-vs-31 orphan gap
       between two same-day tradfi passes is a real methodology difference, not noise — an operator reading only an
       `all`-mode report would not currently know the count is partial. Carried 2026-08-10.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

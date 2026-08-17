@@ -13,7 +13,7 @@ summary: >-
   issue's own finding, prediction's todos all read `[x]` except the still-open apply/resume pair (gated on the same
   pause/apply/resume protocol as tradfi); tradfi is likewise all done except apply/resume — so most of the plan's
   historical Progress Log entries document already-CLOSED lanes and are archival candidates, not live work.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, prediction]
 stage: [data]
@@ -41,7 +41,7 @@ source: >-
 execution_scope: orchestrator-agent
 drift_direction: correct-docs
 depends_on: []
-last_updated: 2026-07-31
+last_updated: 2026-08-17
 context_scope:
   [
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
@@ -51,6 +51,10 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-17** — both todos closed (split done 2026-08-01; the cross-plan `depends_on`+`gate_on_depends`
+> restructure moot since the target plan is itself already archived complete with every apply/resume todo `[x]`). No
+> successor doc.
 
 # mtds_available_at_cross_asset_backfill_2026_07_13.md line-cap remediation
 
@@ -111,7 +115,7 @@ running against it) — check the plan's own status before starting.
       from the trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active
       plan, landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
       splitting. (repo: unified-trading-pm) — ✅ 2026-08-01 (slot-11, cicd): see Progress Log for full evidence.
-- [ ] [PLAN] P2. **CORRECTED 2026-08-16 (plan_reconciler)**: the split todo above finished 2026-08-01 — this is a
+- [x] ✅ [PLAN] P2. **CORRECTED 2026-08-16 (plan_reconciler)**: the split todo above finished 2026-08-01 — this is a
       standalone follow-up now, not a "while splitting" concurrent step. Add explicit per-todo sequencing between each
       asset group's "Apply
       `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos via the
@@ -119,7 +123,22 @@ running against it) — check the plan's own status before starting.
       `prereqs.completed_tasks`-on-a-single-todo mechanism this todo originally suggested is NOT a valid authoring
       mechanism; do not attempt it) so the resume todo cannot dispatch before its apply sibling is done. Verify by
       confirming `mtds_available_at_cross_asset_backfill-006`-equivalent (post-split) does not appear
-      `queued`/dispatchable while its apply counterpart is open. (repo: unified-trading-pm)
+      `queued`/dispatchable while its apply counterpart is open. (repo: unified-trading-pm) — ✅ 2026-08-17 (slot-16,
+      infra): MOOT — verified the target plan itself,
+      `plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`, is already `status: complete` and
+      archived (moved out of `plans/active/` some time between 2026-08-01 and now). Read its full Todos section:
+      every prediction/tradfi apply+resume todo pair (lines 165/182/195/299/319/361) is `[x]` closed, including both
+      "Resume the {prediction,tradfi} consolidator cron" todos this restructure was meant to gate — the
+      apply-before-resume ordering hazard the `-006`-class findings (Progress Log below) warned about never actually
+      manifested a bad outcome; every dispatch of the resume todo ahead of its apply sibling was correctly declined by
+      the workers who hit it (per the Progress Log entries below), and the plan reached completion through manual
+      per-dispatch vigilance rather than a machine-enforced `depends_on`+`gate_on_depends` split. Since the plan this
+      todo would have restructured no longer exists in `plans/active/` (nothing left to split, no live apply/resume
+      pair left to gate), the cross-plan-fork mechanism this todo specifies has no target to act on. Not implementing
+      the general "add machine-enforced sequencing to prevent a class of dispatch-order violation on future
+      cross-asset backfills like this one" idea — that is a genuinely new, broader initiative (not this doc's scope,
+      which was always this ONE plan's line-cap remediation) and is not something either sibling Progress Log entry
+      below asked for as standing infra; no new todo filed for it.
 
 ## Progress Log
 
@@ -235,3 +254,12 @@ to hit the same block.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+**2026-08-17 (slot-16, infra)**: dispatched to the remaining `[PLAN] P2` todo (`-002`). Checked the target plan first
+(per the sibling declines' own recommended precondition) and found it already `status: complete` and archived at
+`plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md` — all 6 previously-open apply/resume todos
+(prediction + tradfi, lines 165/182/195/299/319/361) are `[x]`. The cross-plan `depends_on`+`gate_on_depends` restructure
+this todo specifies has no live plan left to act on, so marked it `[x]` MOOT rather than performing a no-op split (see
+inline annotation above for full reasoning). Both todos in this doc are now closed and it carries no `locked_by` — this
+doc is itself archival-eligible per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 1, archiving
+it in this same turn (`doc_type: issue` → flat `plans/archive/issues/`).

@@ -150,6 +150,7 @@ reliability/escalation shape, not re-running its normal audit content.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-09 (interactive session)**: plan authored following the operator's explicit "human plan" ruling on this
   exact scope. Track A's 25-PR list and Track B's 7-job list both pulled live from `gh pr list` / the installer-script
   directory listing this same session, immediately before authoring.

@@ -71,14 +71,7 @@ source: >-
   follow-ups.
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    instruments-service/scripts/enumerate_expected_universe.py,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/15-runbooks/incidents/rb_infra_relaunch.md, instruments-service/scripts/enumerate_expected_universe.py, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh]
 ---
 
 # DP-VM-001 false-paged expected-universe-v2-sports halt-safety exit — root-caused + fixed
@@ -243,3 +236,5 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   already established in `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s "Genuinely human-only / multi-tranche
   index" section, writing this doc's extraction is the `observability_master`/infra tranche's call, not sports'.
   Reporting the bounded verdict here for the record; no sports-tranche action taken. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-17** [body-hash:a7853aa3849808f9]: KEEP-NA, valid — sole open item is an open-ended generalization judgment call ("should page_operator distinguish active-supervising vs orphaned before paging"); main fix already shipped+verified (deployment-service@27fd5779). 5 prior re-verification passes agree.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

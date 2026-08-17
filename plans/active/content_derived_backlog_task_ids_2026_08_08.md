@@ -614,6 +614,7 @@ a shipped, tested script mid-draft, without operator direction, is out of scope 
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-08 (interactive session, slot 1)**: Authored. Operator selected Option B (full backfill) over Option A
   (new-minting-only) and directed `assigned_vm: planning` + `status: active`. Phasing and gates come from a blast-radius
   map produced the same session, which is the prerequisite the source issue doc's 2026-07-31 entry required before any

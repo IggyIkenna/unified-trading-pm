@@ -62,15 +62,7 @@ related:
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/issues/dp_vm_003_canonical_migration_cefi_deribit_sweep_wedged_relaunched_fresh_name_2026_08_16.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
-    deployment-service/scripts/recovery/relaunch_stalled_vm.py,
-    deployment-service/scripts/vm/launch-mdps-backfill-vm.sh,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/scripts/recovery/relaunch_stalled_vm.py, deployment-service/scripts/vm/launch-mdps-backfill-vm.sh]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -136,3 +128,4 @@ duplicate the shard for no benefit. This dispatch is a no-op, mirroring the 2026
   evidence + the open checkpoint-frontier question as a P3 follow-up. `AUTHORING_SLOT=dp-fleet-monitor` is not a
   numeric slot id, so the authoring-slot ping step was skipped per `data_pipeline_failure.md`'s own rule (the
   dispatch-time Slack alert already covers the FYI). `/done` posted with `one_shot_complete: true`.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

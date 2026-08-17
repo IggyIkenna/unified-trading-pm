@@ -285,3 +285,5 @@ mtds_deployment_env_race_survives_single_worker_2026_07_23.md (status: open). **
 — both now `status: resolved` at `/plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`
 and `/plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md`. That same commit already
 repointed this doc's `context_scope` and one resolution-checklist link but left this verdict paragraph unrevised.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

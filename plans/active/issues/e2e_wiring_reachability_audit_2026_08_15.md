@@ -34,14 +34,7 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
-    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
-    strategy-service/strategy_service/close_all/carry_staked_basis.py,
-    execution-service/execution_service/api/app.py,
-    unified-api-contracts/unified_api_contracts/internal/modes.py,
-  ]
+context_scope: [/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md, /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md, strategy-service/strategy_service/close_all/carry_staked_basis.py, execution-service/execution_service/api/app.py, unified-api-contracts/unified_api_contracts/internal/modes.py]
 ---
 
 # E2E wiring — built vs REACHABLE
@@ -863,3 +856,4 @@ rendered as a broken grid, because that component expects `div > b + span`.
   blind-retrying the full quickmerge — cheaper and matches "poll on a progress metric, not activity." Detected the real
   fix (`unified-trading-pm@bb6faddb`) on the watchdog's first check; re-verified independently before flipping this
   todo (0 occurrences, real 1-line-deletion diff — not another hollow claim).
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

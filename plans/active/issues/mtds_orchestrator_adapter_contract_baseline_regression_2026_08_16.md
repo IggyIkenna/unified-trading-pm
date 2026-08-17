@@ -36,6 +36,14 @@ related:
   ]
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/cefi_tardis_date_concurrency_2026_08_16.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
+    unified-trading-pm/scripts/quality_gates/check_adapter_contract_regression.py,
+    unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml,
+  ]
 ---
 
 # market-tick-data-service — adapter-contract-call baseline regression on live-defi-rollout HEAD
@@ -95,3 +103,11 @@ fully unrelated file set — `api/main.py` + `api/routers/`). Confirmed not caus
 Filed rather than fixed per the findings-triage rule (outside every plan this session is working,
 ambiguous intentionality) — see `/codex/12-agent-workflow/measurement-claims-discipline.md` on not
 guessing past a bounded investigation.
+
+**2026-08-17 — na-eligibility-audit.** [body-hash:81969e197c23c7ba] KEEP-NA, valid — First audit pass (fresh doc,
+created 2026-08-16, no prior marker; 0 checkbox todos, pure narrative blocking issue). The doc's own "Needed"
+section poses a binary (regenerate the baseline as intentional vs. restore a missing shard-failure-isolation call
+site) the filer explicitly declined to resolve alone, citing risk of masking a real regression or fighting an
+intentional design change without the F1-F8 refactor author's context — a genuine unresolved judgment call, not a
+bounded worker-alone task. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

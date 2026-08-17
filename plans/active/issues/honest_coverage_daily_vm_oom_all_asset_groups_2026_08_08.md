@@ -309,3 +309,4 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   Full detail + evidence: `/plans/archive/2026_08/honest_coverage_and_data_status_rollup_health_2026_08_16.md`. Not re-opening
   this doc's own todos (both already closed, `archive_exempt` unaffected) — this entry exists so a future reader of
   this doc's Terraform-fix history sees the loop actually closed.
+- **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.

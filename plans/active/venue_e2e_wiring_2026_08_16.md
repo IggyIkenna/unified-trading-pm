@@ -217,3 +217,31 @@ filing a fresh issue doc since the gap is already named in-plan; noting it here 
 against this same todo doesn't re-derive the same investigation. Skipped with `reason_code: GATED`, no code
 shipped — correctly nothing to verify/ship while the AG batches (the thing that would close any cascade gaps) are
 still open.
+
+**2026-08-17 — dispatched a THIRD time, still 0/5, parking durably this time (slot 15).** Re-dispatched against the
+same "cascade invariants" Definition-of-done todo despite `gate_on_depends: true`. Re-confirmed live:
+`defi_venue_e2e_batch1` 6 open, `cefi_venue_e2e_batch1` 4 open, `tradfi_venue_e2e_batch1` 2 open,
+`sports_venue_e2e_batch1` 3 open, `prediction_venue_e2e_batch1` 7 open — still 0/5 complete. Per CLAUDE.md,
+`depends_on` (and `gate_on_depends`) documents ordering + gates archival but does NOT affect dispatch — expected
+behavior, not a fresh bug; the actually-implemented durable-gate mechanism is the separate `park_now` /
+`auto_unpark__<task-id>` DB-condition path fixed in
+`ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md`. Skipping with `reason_code: GATED` and
+`park_now: true` this time so the task actually stays gated until the 5 AG batches land, instead of relying on the
+transient fleet cooldown alone (which is what let this redispatch a 2nd/3rd time).
+
+**2026-08-17 — a SECOND, DIFFERENT Definition-of-done todo dispatched (slot 7): the "every unit reaches
+`BACKTESTABLE`" P0 line, task id `venue_e2e_wiring-0fc22529c882` — not a repeat of the already-parked
+"cascade invariants" todo (`venue_e2e_wiring-0920c40e9eed`, priority 999, still correctly parked).** Content-derived
+task ids are per-checkbox-line, so each of this section's 3 todos is its own backlog row and `park_now` only gates
+the one row it was called on — parking one Definition-of-done todo does NOT gate its siblings. Confirmed live via
+`GET /api/backlog`: `venue_e2e_wiring-0920c40e9eed` (cascade invariants) parked priority 999 as expected;
+`venue_e2e_wiring-0fc22529c882` (this one) was dispatchable at priority 10 with no blocking prereq; the third,
+`venue_e2e_wiring-f798d2829e48` (the P1 carve-out-scope todo), is ALSO still unparked and dispatchable at priority
+20 — same exposure, next in line for a wasted dispatch. Re-confirmed the gate is still not met: `defi_venue_e2e_batch1`
+6 open, `cefi_venue_e2e_batch1` 4 open, `sports_venue_e2e_batch1` 2 open, `tradfi_venue_e2e_batch1` 0 open
+(`status: active`, not yet archived — likely done pending archival, but the other 4 batches still carry real open
+work regardless), `prediction_venue_e2e_batch1` 7 open. Skipped `venue_e2e_wiring-0fc22529c882` with
+`reason_code: GATED` + `park_now: true` (confirmed: `auto_parked_condition:
+"auto_unpark__venue_e2e_wiring-0fc22529c882"`). **Follow-up still open**: `venue_e2e_wiring-f798d2829e48` remains
+unparked — whichever slot it dispatches to next should park it the same way, or main/operator can pre-park it via
+`manual_park` directly rather than waiting for a live dispatch to catch it.

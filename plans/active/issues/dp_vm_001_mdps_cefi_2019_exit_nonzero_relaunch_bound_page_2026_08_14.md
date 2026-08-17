@@ -29,13 +29,7 @@ related:
     /plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-14"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -122,3 +116,4 @@ guidance both point the same direction: stop and page.
   relaunch. Filed this issue doc and paged the operator via `/blocked` per the escalation's explicit instruction. No
   code changed this session.
 - **na-eligibility-audit 2026-08-16** [body-hash:b0c9395683099ac8]: RECLASSIFY-SPLIT — extracted bounded item(s) 2 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 1 item remains genuinely NA ([OPERATOR] P1 relaunch-vs-wait decision). Doc stays assigned_vm: NA.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

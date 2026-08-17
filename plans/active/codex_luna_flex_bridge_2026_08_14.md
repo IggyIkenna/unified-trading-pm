@@ -221,6 +221,7 @@ template, minus the third-party dependency).
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-14 (interactive session)**: Plan authored from a same-session design conversation covering provider
   identification, billing-model pivot (metered API → ChatGPT Pro subscription bridge), OpenCode alternative investigated
   and ruled out, and real 7-day AO usage data pulled to ground the utilization estimate. No code written yet.

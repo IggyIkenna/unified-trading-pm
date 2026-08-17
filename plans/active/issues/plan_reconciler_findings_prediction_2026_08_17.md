@@ -39,6 +39,12 @@ author: plan_reconciler
 source: "Sharded daily /plan-reconcile prediction-tranche sweep, autonomous dispatch agt-2934ac, slot 30, 2026-08-17."
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/plan_reconciler_findings_prediction_2026_08_16.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md,
+  ]
 ---
 
 # 2026-08-17 plan_reconciler — prediction tranche
@@ -243,3 +249,9 @@ requiring this specific run to act (all were already correctly left open by the 
   edits. Inventory regenerated clean (350 plans, 0 orphans). **This dispatch asked no new blocked-questions** —
   completing via `/done` per STEP 8's "immediately if you asked none" clause. `BLK-e7b0e8da` remains the one standing
   operator-attention item, carried forward faithfully (not re-escalated, not lost) — now open 3 calendar days.
+- **na-eligibility-audit 2026-08-17** [body-hash:91eb09682a91be9c]: KEEP-NA, valid — Read in full (246 lines). 2 open
+  items in "Filed": a grace-blocked archival referrer-fix (self-resolves once the epic clears its 12h grace window)
+  and the standing `BLK-e7b0e8da` operator governance escalation (now open 3 calendar days, carried forward, not
+  re-escalated). Neither is worker-bounded AO-dispatchable work. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

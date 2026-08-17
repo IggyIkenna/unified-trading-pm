@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: "Sports honest-coverage gap closure — 2026-08-14"
-status: open
+status: resolved
 priority: P1
 assigned_vm: NA
 execution_scope: local-only
@@ -296,7 +296,7 @@ rows (confirmed deliberately out of scope).
       uppercase" in the entry above was itself an unverified claim inherited from a stale code comment, not an
       independent measurement — exactly the CLAIM ≤ MEASUREMENT trap this workspace's rules exist to catch.
 
-- [ ] [SCRIPT] P1. **SFI: retry the 7 dates behind the 112 `attempted_failed` rows** — 2 confirmed-retriable root
+- [x] ✅ [SCRIPT] P1. **SFI: retry the 7 dates behind the 112 `attempted_failed` rows** — 2 confirmed-retriable root
       causes, no structural gap: 79 rows (`JSONDecodeError`, 6 dates in 2022-2023, all attempted 2026-08-07) were hit by
       a truncated-JSON bug already fixed same-session by `instruments-service@ecfc2749` (2026-08-10) — genuinely
       retriable now. 33 rows (`TimeoutError`, single date 2026-08-10) are a one-off transient slowness, also retriable.
@@ -309,6 +309,11 @@ rows (confirmed deliberately out of scope).
       exactly the same 112 rows, same 7 dates, as originally diagnosed. The "general-purpose agent mid-test on
       2023-04-22" previously mentioned here was NOT confirmed to have made any progress — treat the retry as not
       started, not partially done. Not yet started this round — next pass should just run the 7-date retry list above.
+      — **DONE 2026-08-16** (see this same doc's own entry below, "SFI's 7-date retry DONE 2026-08-16"): all 7 dates
+      retried twice, second pass via the sanctioned per-VM-shard write path, 231 shard entries, zero refusals. Waiting
+      only on the standing consolidator's next cycle to absorb the shard file (not a CLI action). Citation fixed
+      (na-eligibility-audit 2026-08-17) — this checkbox was simply never flipped even though the identical work was
+      completed and documented later in this same doc/session.
 
 ## What NOT to re-derive — already answered this session
 

@@ -4,9 +4,7 @@ status: open
 nature: issue
 scope: [engineer, admin]
 related: []
-context_scope:
-  - agent-orchestrator/server/auto_park.py
-  - agent-orchestrator/server/dispatch.py
+context_scope: [agent-orchestrator/server/auto_park.py, agent-orchestrator/server/dispatch.py]
 parent_epic: infrastructure_master
 title:
   AO durable park wiring missing from a task's backlog entry → a false condition does NOT gate dispatch (3rd premature
@@ -133,3 +131,4 @@ recorded in the P3 plan's Progress Log (slots 15/22/10).
   same-day conflict this sidesteps, using its documented `archive_exempt: true` bridge). A follow-up commit flips
   `status: resolved` + performs the real 6-step archival ritual + drops this exemption key.
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
