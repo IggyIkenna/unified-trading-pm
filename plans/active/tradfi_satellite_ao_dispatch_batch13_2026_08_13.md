@@ -25,7 +25,7 @@ related:
     /plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md,
     /plans/active/issues/tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md,
     /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
-    /plans/active/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md,
+    /plans/archive/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md,
     /plans/active/issues/tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md,
     /plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md,
@@ -505,7 +505,7 @@ source: >-
 
 - [x] ✅ [CODE] P2. Surgical phantom-row-targeted re-capture of the confirmed KRW/USD (pair,date) cells — fold
       into/mirror the archived remediation plan's design intent, no blind --force-recapture across all 12 FX pairs
-      Source: `plans/active/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md`
+      Source: `plans/archive/issues/tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md`
 
       **DONE 2026-08-15 (slot-7, backend_engineer) — premise was stale, real fix already scoped + shipped by the
           script; completed the pending --apply.** The source doc's title was already CORRECTED 2026-08-14: the

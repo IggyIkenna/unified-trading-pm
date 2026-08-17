@@ -19,7 +19,7 @@ summary: >-
   any reader querying strictly by the manifest's claimed prefix find nothing, even though the data genuinely exists and
   is genuinely 100% Yahoo-sourced. Needs a `pipeline_mode` RE-STAMP (mirroring the already-proven disposition the
   archived doc's superseding fix used for the blank-`instrument_id` population), never a recapture/delete.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -102,10 +102,20 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
       generation=1786803145007040, unrelated to any of the apply attempts) confirms 0 mislabeled rows remain**
       (`Classification: yahoo_only=60 databento_only=0 both=15 phantom=0` — down from the original 2,023 candidates, the
       missing ~1,949 now correctly stamped `batch_databento`) — the fix is live in production.
-- [ ] [DATA] P3. Check whether the same `batch_yahoo`-claimed/`batch_databento`-actual mislabel affects the other 11 FX
-      pairs too (this doc only sampled KRW-USD) — if so, widen the re-stamp to the full FX venue rather than
-      re-discovering this pair-by-pair. The shipped re-stamp script is a direct template (change
-      `_TARGET_INSTRUMENT_ID`).
+- [x] ✅ [DATA] P3. **CHECKED 2026-08-17 — NOT affected, no re-stamp needed.** `FX_SPOT_PAIRS` has 11 pairs total
+      (not 12 as originally guessed), so this is "the other 10", not 11. A read-only oneoff script
+      (`market-tick-data-service/scripts/check_tradfi_fx_other_pairs_pipeline_mode_mislabel_2026_08_17.py`, deleted
+      in the same commit as this todo's resolution per its own `Lifecycle: oneoff` marker — its findings are
+      preserved here) sampled up to 30
+      `capture_status=captured`+`pipeline_mode=batch_yahoo` dates per pair against the live manifest (single load,
+      `download_bytes_with_generation` — the same contention-safe pattern the KRW/USD restamp script already
+      proved, needed here too after a first attempt 404'd against a superseded generation on the actively-written
+      manifest) and classified GCS backing under both known FX prefixes. Result: **all 10 pairs 100% clean** — 300/300
+      sampled dates resolve correctly under `batch_yahoo` (EUR-USD, GBP-USD, USD-JPY, AUD-USD, USD-CAD, USD-CHF,
+      NZD-USD, EUR-GBP, EUR-JPY, USD-MXN — each ~55-56 total candidates, a small fraction of KRW-USD's 2,023-row
+      outlier population). The mislabel was genuinely KRW/USD-specific (plausibly its non-major-currency status
+      routed through a different historical fetch path at some point), not a fleet-wide FX defect — confirms the
+      already-shipped KRW/USD-only fix was correctly scoped and needs no widening.
 
 ## Progress Log
 
