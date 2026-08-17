@@ -136,15 +136,26 @@ file an issue") already points here, but the reasoning is worth recording:
       once or twice before giving up. This directly targets the most likely root cause (a transient per-VM-shard vs
       consolidated-index race under concurrent same-asset-group load) without weakening the guard's correctness intent
       — it still hard-refuses if the row is genuinely absent after the retry window. Add a regression test asserting a
-      row that appears on the SECOND check is accepted (not just the first).
+      row that appears on the SECOND check is accepted (not just the first). **Already tracked as
+      `sports_satellite_ao_dispatch_batch14_2026_08_16.md` todo 9** (`assigned_vm: planning`, status: draft — not yet
+      dispatched, "Add bounded retry-with-backoff to the SPORTS staleness guard... Source: ... (items 2, 3 only)").
+      Checkbox here flips once batch14 todo 9 lands.
 - [ ] [CODE] P3. **Investigate the 15 subprocess-per-date 1800s TIMEOUTs** (`_run_date_as_subprocess`,
       `process_handler.py`) — determine whether these are the SAME consolidator-contention symptom manifesting as a
       hang (e.g. `read_availability_index` retry-looping or blocking under 5-way concurrent bucket access) rather than
       genuine per-date compute slowness; if so, the P2 fix may also reduce these. If unrelated, this needs its own root
-      cause (the dates are NOT the same as the 61 staleness-refused dates, so it may be independent).
+      cause (the dates are NOT the same as the 61 staleness-refused dates, so it may be independent). **Also covered by
+      the same batch14 todo 9** (its second clause: "investigate whether the 15 subprocess-per-date timeouts... share
+      the same manifest-consolidator-contention root cause"). Checkbox here flips once batch14 todo 9 lands.
 
 ## Progress Log
 
 - 2026-08-16 — Filed by escalation agt-e65b3f (data_pipeline_failure worker, slot 4). Full diagnosis above; did not fire
   a relaunch (see "Why a naive relaunch is wrong here"). Verified via `deployment_service.data_pipeline_monitors._gcs`
   read helpers (never raw `gsutil`/`gcloud storage`) + one `gcloud compute instances list` fleet check.
+- **na-eligibility-audit 2026-08-17**: KEEP-NA, mixed verdict — item 1 ([OPERATOR], wait for sibling VMs) is a genuine
+  operator/time gate, stays NA. Items 2 and 3 are ALREADY tracked, verbatim, as
+  `sports_satellite_ao_dispatch_batch14_2026_08_16.md` todo 9 (status: draft, not yet dispatched) — REVISES an
+  earlier same-run classification of items 2/3 as a fresh RECLASSIFY-split candidate; the conflict-check caught that
+  batch14 (drafted the same day) already claims this exact ground. Citation-only fix, not a reclassification. Doc
+  stays `assigned_vm: NA`.

@@ -16,7 +16,7 @@ summary: >-
   `[OPERATOR]` step needed), split 2026-08-04 into census+inspection (DONE — path-only rewrite confirmed, no
   content-column rewrite needed) / build+dry-run / gated-apply (see Todos). Must NOT be folded into the odds-tick
   relocation.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -169,13 +169,18 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
       `fixtures` object exists to borrow a resolution from. **Done when**: a dry-run report exists with per-
       entity/per-pipeline_mode counts, the resolved canonical mapping for every found raw value, and the quarantine
       population size — reviewable before any prod write. (repo: instruments-service / market-tick-data-service).
-- [ ] [DATA] P2. **Apply the migration to prod, gated on todo 2's dry-run review.** No `[OPERATOR]` step required
+- [x] ✅ [DATA] P2. **Apply the migration to prod, gated on todo 2's dry-run review.** No `[OPERATOR]` step required
       (delete-safety §3a bucket-retention check already cleared, see the split todo above) — gated on a human or a fresh
       session reviewing todo 2's dry-run artifact first, per BLK-88a22681's answer (build+dry-run now, defer `--apply`
       to a reviewed follow-up). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
       carrying the country-prefixed vocabulary (excluding the quarantine population, tracked separately if non-empty).
       (repo: instruments-service / market-tick-data-service). Cite todo 2's dry-run report path as evidence before
-      applying.
+      applying. — **DONE via market-tick-data-service@b37b8553 (2026-08-10)**: evidenced in
+      `/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` (status:resolved, all todos
+      [x]) — `--delete-prod --confirm-delete` ran, 12,988 DELETED (verified byte-identical twins), 928 QUARANTINED
+      (differing twins, kept pending a content-union decision), fresh census confirms 0 delete-eligible remain,
+      matching this todo's done-when exactly (quarantine-exclusion clause included). Citation fixed
+      (na-eligibility-audit 2026-08-17).
 
 ## Progress Log
 

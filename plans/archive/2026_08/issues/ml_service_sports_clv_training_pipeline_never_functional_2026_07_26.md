@@ -18,7 +18,7 @@ summary: >-
   for the exact date probed (`gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-04-17/`),
   ruling out data-absence — this is a genuine, unimplemented code path. **ml-service has likely never successfully
   trained on real SPORTS features at all**, not just for CLV.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [backtest]
@@ -166,12 +166,20 @@ same CLI path would hit the identical wall.
       `_build_pipeline_config()` (same `getattr(..., None) or default` gotcha in each). Live-verified: the exact repro
       command from this doc (`--target-types clv`, `--target-type` omitted) no longer crashes with
       `'None' is not a valid TargetType`.
-- [ ] [CODE] P3. Either wire `--family` to actually scope SPORTS training (leagues/target-types per family) or drop the
+- [x] ✅ [CODE] P3. Either wire `--family` to actually scope SPORTS training (leagues/target-types per family) or drop the
       required-argument validation if it's intentionally vestigial — currently it validates but does nothing. (repo:
       ml-service) — **EXPLICITLY DEFERRED 2026-07-26** (slot-6, `data_engineering`): confirmed still true
       (`grep -rn family ml_service/training/cli/handlers/*.py` returns zero hits outside `parser.py`'s validation gate).
       Not fixed this session — this doc's own framing ("either wire it or drop it") is a genuine design decision, not a
       mechanical fix, and P3/non-blocking per this doc's own priority. Left open for whoever picks up the design call.
+      — **DONE via ml-service@bfdcff2 (2026-08-09)**, resolving the operator ruling at the top of this doc ("WIRE IT").
+      `sports_taxonomy_p3_consumers_2026_08_08.md` line 243 confirms `[x]`: added `SPORTS_FAMILY_LEGACY_TARGET_TYPES` +
+      `legacy_target_types_for_families()` in `family_router.py`; `train_handler.py::_generate_sports_variants` now
+      scopes `target_types` to `--family`; `pipeline_handler.py` validates the single `--target-type` against family
+      scope. 9 new unit tests, `quality-gates.sh` green (2177 passed). Citation fixed (na-eligibility-audit 2026-08-17).
+      Note: mechanical archival of this now-fully-resolved doc is owned by
+      `sports_taxonomy_p3_consumers_2026_08_08_finalize.md` todo 1 (batch of 6 source docs) — not archived
+      independently here to avoid racing that finalize plan's own ritual.
 - [x] ✅ [CODE] P2. Add a SPORTS branch to `cloud_feature_provider.py`'s feature dispatcher (mirroring
       `_query_defi_features`'s non-instrument-id pattern) that reads
       `sports_features/by_date/day={D}/ feature_group={G}/` by fixture/league instead of by `instrument_ids`. This is

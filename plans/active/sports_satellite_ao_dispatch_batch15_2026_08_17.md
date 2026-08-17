@@ -1,0 +1,159 @@
+---
+doc_type: plan
+title: Sports satellite AO batch 15 — na-eligibility-audit residual extraction (2026-08-17)
+summary: >-
+  Fifteenth AO-dispatch batch for sports, drafted by the daily /na-eligibility-audit sports run (dispatch agt-555dfd,
+  slot 26). Extracts 11 conflict-clear bounded items from two source docs that could not be whole-doc-reclassified:
+  sports_consolidated_closeout_2026_07_19.md (standing 2026-07-23 operator ruling against a direct assigned_vm flip —
+  per-item extraction is its established cadence) and sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md
+  (mixed bounded + one genuinely [OPERATOR]-gated prod-delete item, split per task_template.md Finding Y, 2026-08-16 —
+  an operator-gated item must not share a file with AO-dispatched todos). Every item conflict-checked against batch14
+  (2026-08-16, drafted one day prior) and every other active satellite batch before inclusion — none overlap.
+status: active
+nature: process
+asset_group: [sports]
+stage: [data]
+repos:
+  [
+    instruments-service,
+    market-tick-data-service,
+    market-data-processing-service,
+    features-service,
+    deployment-service,
+  ]
+scope: [engineer]
+tags: [sports, ao-dispatch, close-out, batch-15, satellite-docs, na-eligibility-audit]
+related:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md,
+    /plans/active/sports_satellite_ao_dispatch_batch14_2026_08_16.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+  ]
+created: "2026-08-17"
+last_updated: "2026-08-17"
+parent_epic: sports_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 2.2
+estimate_calibrated_ai_days: 1.76
+assigned_role: data_engineering
+effort: high
+drift_direction: advance-code
+sequential: false
+depends_on: []
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source: >-
+  /na-eligibility-audit sports (2026-08-17, dispatch agt-555dfd, slot 26) Phase 3, per
+  /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md §3's shared conflict-check protocol,
+  task_template.md's dispatch-scope eligibility test, and task_template.md §3 Finding Y (2026-08-16).
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
+---
+
+# Sports satellite AO batch 15 — na-eligibility-audit residual extraction (2026-08-17)
+
+## Conflict-check findings
+
+Both source docs were read end-to-end and checked against `sports_satellite_ao_dispatch_batch14_2026_08_16.md`
+(status: draft, drafted 2026-08-16 — one day prior), every other active sports satellite batch (5, 9, 10, 12, and
+14's own dependencies), and `sports_consolidated_closeout_2026_07_19.md`'s own Track content, per
+`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3. Two candidates from the SAME initial
+Phase-1 pass were found to already be claimed by batch14 and were correspondingly NOT extracted here (see the
+citation-only fixes landed directly in their source docs instead):
+`sports_catalogue_reroll_2019_corpus_scale_killed_2026_08_15.md`'s two follow-up todos (batch14 todo 2 already merges
+this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and_timeouts_2026_08_16.md`'s items 2-3
+(batch14 todo 9 already covers both). No other overlap found for any of the 11 items below.
+
+## Todos
+
+- [ ] [DIAG] P3. **Re-run the PERPETUAL/football `instrument_type`-axis watch-census.** Two independent read-only
+      censuses against `market-data-tick-sports-prd-central-element-323112` (`read_availability_index`, no new GCS
+      walk) previously found ZERO rows for both `PERPETUAL` and `football` — re-run once more; if either value
+      reappears, trace `written_at`/`service_name` on the specific row before treating it as live; if both remain
+      zero, strike the finding as confirmed-dead. Source: `sports_consolidated_closeout_2026_07_19.md` Track C (the
+      PERPETUAL/football watch item). Repo: market-tick-data-service. Done when: the census result is cited and the
+      source doc's checkbox is flipped either way.
+- [ ] [DOC] P2. **Correct the cutover runbook's canonical-is-a-superset premise for raw odds on early dates.**
+      `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` is `status: resolved` (corpus-destroying
+      risk already remediated, byte-exact GCS soft-delete restore verified) — the runbook still states the disproven
+      premise; correct it and cite that doc. Source: `sports_consolidated_closeout_2026_07_19.md` Track S. Done when:
+      the runbook is corrected and cites the resolved doc.
+- [ ] [CODE] P2. **Upgrade the sports instrument catalogue's player grain** from `entity=injuries` (injured-only) to
+      `entity=fixture_lineups` (full roster, now carries 100% player/coach identity) in
+      `build_instrument_catalogue.py`. Source: `sports_consolidated_closeout_2026_07_19.md` Track V. Repo:
+      instruments-service. Done when: the catalogue build reads from `fixture_lineups`, verified via a fresh
+      row-count/identity spot-check against real data.
+- [ ] [DIAG] P2. **Identify which launcher ran the most recent sports features backfill** — serial
+      `launch-features-sports-backfill-vm.sh` or parallel `launch-features-sports-parallel-backfill-vm.sh` — via VM
+      launch history/logs; if serial, file a follow-up todo requiring the parallel launcher for every future sports
+      features backfill. Source: `sports_consolidated_closeout_2026_07_19.md` Track V. Done when: the launcher used
+      is named with its citing VM log/dispatch record, and the source doc's checkbox is flipped.
+- [ ] [BACKEND] P2. **Confirm whether any primary sports entrypoint exposes a fixture-level shard-splitting targeting
+      flag** for a backfill run (not a one-off script); if none does, file a todo to add one to the primary
+      features/MDPS backfill CLI. Source: `sports_consolidated_closeout_2026_07_19.md` Track K. Done when: either a
+      cited flag+file is named, or the add-flag todo exists naming a target CLI.
+- [ ] [DATA] P1. **Run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check, post-backfill final
+      gate) for EACH of the 5 required pipeline-check mechanisms** (`/data-pipeline-check-is`/`-mtds`/`-mdps`/
+      `-features` + `/data-pipeline-reconciliation`) against sports — currently ZERO real run-todos exist for any of
+      the 5 despite all 5 already supporting sports's shard atoms. Source: `sports_consolidated_closeout_2026_07_19.md`
+      Track K, `task_template.md` §3 finding K. Done when: each of the 5 mechanisms has 3 dated runs cited by report
+      path/dispatch_id, baseline through final, and the source doc's checkbox is flipped.
+- [ ] [DATA] P1. **Verify no downstream regression for at least one full boundary cycle post-writer-flip** on the
+      sports `odds_api` writer cutover (`data_type=trades`→`odds`): confirm MDPS's bucket assignment still finds the
+      shard, features pipeline reads continue, and the live-capture staleness monitor (`DP-LIVE-004`) does not
+      false-page. A full boundary cycle has elapsed since the 2026-08-16 14:50 UTC VM launch. Source:
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 1. Repo: market-data-processing-service,
+      features-service. Done when: specific manifest/event evidence is cited (not "looks fine"), and the source doc's
+      checkbox is flipped.
+- [ ] [DIAG] P2. **Confirm with `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`'s owner whether to
+      run its drafted IS-bucket relabel now.** Phase 0/1 of the writer-flip plan have both landed, so per that plan's
+      own text ("running before the flip means re-running after"), "run now" is the self-consistent answer. Source:
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 2. Done when: the issue doc is updated
+      with the decision + evidence, and the source doc's checkbox is flipped.
+- [ ] [REVIEW] P2. **Pick up (or confirm claimed by its owner) `sports_taxonomy_p2_migration_2026_08_08.md`'s dangling
+      Verification section** (four-surface reconciliation, accepted-exception shrinkage, honest-coverage re-run) — now
+      unblocked since the writer has stopped re-accumulating `trades`. Source:
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 2. Done when: the section is either
+      picked up with progress cited or confirmed already claimed by an active owner, and the source doc's checkbox is
+      flipped.
+- [ ] [DATA] P2. **Census every remaining `data_type=trades` GCS object in the sports raw-tick bucket** as of the
+      writer-flip Phase 1 completion; split into (a) objects already twinned by the 2026-08-12 restamp (safe to
+      delete later — a verified duplicate exists) vs (b) objects written after that restamp that were never relabeled
+      (need restamping first). Read-only, no delete. Source:
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 3. Repo: market-tick-data-service.
+      Done when: the census report cites both population counts, and the source doc's checkbox is flipped.
+- [ ] [SCRIPT] P2. **Re-run `restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py`
+      against census population (b) from the item above**, so 100% of remaining `trades`-labeled content has a
+      verified `odds`-labeled twin before any deletion proceeds. Sequenced after the census item above (same-doc
+      dependency — both touch the same population, run the census first). Source:
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 3. Repo: market-tick-data-service.
+      Done when: verified-twin coverage reaches 100% for population (b), cited with counts, and the source doc's
+      checkbox is flipped.
+
+## Codex SSOTs
+
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility"
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3 — the shared conflict-check
+  protocol applied to every item above
+- `plans/active/task_template.md` §3 Finding Y — why the writer-flip plan's `[OPERATOR]`-gated delete (items 6-7)
+  stays in its own NA source doc rather than being extracted here
+
+## Progress Log
+
+- **2026-08-17 (na-eligibility-audit sports, dispatch agt-555dfd, slot 26)**: authored from 2 source docs' Phase-1
+  classification during the sports-tranche `/na-eligibility-audit` run — `sports_consolidated_closeout_2026_07_19.md`
+  (6 items, standing 2026-07-23 no-whole-doc-flip ruling, per-item extraction is its established pattern) and
+  `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` (5 items, split path per Finding Y — its
+  `[OPERATOR]`-gated delete + dependent script-retirement item stay in the source doc). Both source docs' own
+  checkboxes annotated with the extraction citation in the same run. **Status set `active`** (not `draft`) per the
+  2026-07-30 no-double-gate ruling this skill's own verdict already constitutes the operator decision to apply.

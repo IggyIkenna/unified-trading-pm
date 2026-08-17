@@ -161,7 +161,9 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
 - [ ] [DATA] P1. Verify no downstream regression for at least one full boundary cycle post-flip: MDPS's bucket
       assignment still finds the shard (it already dual-accepts the old+new tokens per Phase 0's finding), features
       pipeline reads continue, and the live-capture staleness monitor (`DP-LIVE-004`) does not false-page on the
-      cutover. DoD: cite the specific manifest/event evidence checked, not just "looks fine."
+      cutover. DoD: cite the specific manifest/event evidence checked, not just "looks fine." **Extracted 2026-08-17
+      to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`) — a full boundary cycle has
+      now elapsed since the 2026-08-16 14:50 UTC VM launch.
 
 ## Phase 2 -- close the dependent verification (reference, do not duplicate)
 
@@ -172,11 +174,13 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
       not yet run against prod) and explicitly notes it may need a re-run once this plan's Phase 0 lands. Once Phase 0
       ships: confirm with that issue's owner whether to execute its drafted relabel now or wait for this plan's flip to
       stop new `trades` rows first (running it before the flip means re-running it after); update that issue doc, do not
-      re-derive its census here.
+      re-derive its census here. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`**
+      (`assigned_vm: planning`) — Phase 0/1 are both landed, so this decision is now determinable.
 - [ ] [DATA] P2. Once this plan's Phase 0/1 land, `sports_taxonomy_p2_migration_2026_08_08.md`'s own dangling
       Verification section (four-surface reconciliation, accepted-exception shrinkage, honest-coverage re-run) can
       finally run against a writer that has stopped re-accumulating `trades` -- flag that plan's owner (or pick it up
-      directly if unclaimed) rather than duplicating those todos here.
+      directly if unclaimed) rather than duplicating those todos here. **Extracted 2026-08-17 to
+      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`).
 
 ## Phase 3 -- retire the orphaned old-path objects ([OPERATOR]-gated GCS delete)
 
@@ -184,11 +188,27 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
       completion, split into: (a) objects whose content was already copied to an `odds`-labeled twin by the 2026-08-12
       restamp (safe to delete -- a real, verified duplicate exists), vs (b) objects written between the 2026-08-12
       restamp and this plan's Phase 0 flip landing that were never relabeled (the re-accumulated ~362K-row population
-      the P2 plan's own census found) -- these need restamping FIRST, not direct deletion.
+      the P2 plan's own census found) -- these need restamping FIRST, not direct deletion. **Extracted 2026-08-17 to
+      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`) — read-only census, no delete.
 - [ ] [SCRIPT] P2. Re-run `restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py`
       (or updated copies, if their `--days-out` window needs extending to cover the gap) against population (b) from the
       census above, so 100% of remaining `trades`-labeled content has a verified `odds`-labeled twin before any deletion
-      proceeds.
+      proceeds. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm:
+      planning`) — creates verified twins only, does not delete source (same-doc-sequenced after the census item).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17**: RECLASSIFY-split (verdict 5) — banner is the standard default-NA operator stamp
+  (2026-08-15), not a content-specific DO-NOT-DISPATCH ruling; fresh per-todo read found 5 of 7 open items genuinely
+  bounded/worker-determinable (a boundary cycle has now elapsed since the Phase-1 VM launch). Extracted those 5 items
+  (Phase 1 regression-verify, both Phase 2 items, both Phase 3 census/restamp items) to
+  `sports_satellite_ao_dispatch_batch15_2026_08_17.md` per task_template.md's Finding Y (2026-08-16) — an
+  [OPERATOR]-gated item (the Phase 3 physical delete) must not share a file with AO-dispatched todos. Items 6
+  ([OPERATOR] delete, correctly tagged + cites delete-safety §3a, no gap) and 7 (depends on item 6) stay in this NA
+  doc. Also flagged, not fixed: this doc's own Progress Log twice claims "Phase 0 and Phase 1 are now both 100%
+  complete with nothing outstanding," which contradicted item 1's own still-open checkbox at the time of that claim —
+  now resolved by the extraction above (a fresh worker executing batch15's item 1 will close this contradiction for
+  real). Doc stays `assigned_vm: NA` for the remaining items 6-7.
 - [ ] [OPERATOR] P2. Physically delete the orphaned `data_type=trades` GCS objects -- gated per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, following the same reversibility-qualified
       copy-verified-then-delete-source pattern `restamp_sports_trades_inplay_to_odds_2026_08_13.py` already used

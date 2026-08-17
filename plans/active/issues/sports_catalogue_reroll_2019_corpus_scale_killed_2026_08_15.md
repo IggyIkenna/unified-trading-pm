@@ -104,11 +104,21 @@ here.
       `catalog.parquet`, (b) the new row count is `>=` the current 534,023-row baseline plus roughly the expected
       +26,894 net new rows (exact delta may differ from the plan's original estimate since that estimate predates this
       session's live numbers — treat 534,023 as the current authoritative baseline, not the plan's original figure).
-      repo: instruments-service.
+      repo: instruments-service. **Already tracked as `sports_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2**
+      (`assigned_vm: planning`, status: draft — not yet dispatched), which merges this exact VM-launch action with the
+      identical citation from `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`'s Track V item.
+      Do NOT dispatch a second, competing todo for this — checkbox here flips once batch14's todo 2 lands.
 - [ ] [DIAG] P3. If the VM-launched run is ALSO killed/interrupted before completion, capture `dmesg` + peak RSS + full
       stdout/stderr AT the moment of the kill (not after) so the root cause (protective host action vs. a genuine bug in
-      the roll-up itself) is actually confirmed before a third attempt.
+      the roll-up itself) is actually confirmed before a third attempt. **Also covered by batch14 todo 2** ("capture
+      dmesg/RSS diagnostics if it is killed again") — same source, same status.
 
 ## Progress Log
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17**: KEEP-NA-STALE (already-duplicated) — both open todos here are the SAME action
+  `sports_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2 already merges (verified: that batch's own
+  "Conflict-check findings" section explicitly names this doc + explains the merge). REVISES an earlier same-run
+  classification of this doc as an independent RECLASSIFY candidate — the conflict-check caught that batch14 (drafted
+  one day prior) already claims this exact ground; dispatching a second copy would race the same VM launcher.
+  Citation-only fix, not a reclassification. Doc stays `assigned_vm: NA`.
