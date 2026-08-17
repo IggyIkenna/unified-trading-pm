@@ -51,7 +51,7 @@ resolved_by:
 
 ## Todos
 
-- [ ] [CODE] P2. **RULED 2026-08-16 (operator): dispatch, but re-verify the design against current code first.**
+- [x] ✅ [CODE] P2. **RULED 2026-08-16 (operator): dispatch, but re-verify the design against current code first.**
       (1) Re-confirm live: `websocket_streaming_handler.py`'s case-insensitive-fallback lookup
       (`.get(venue) or .get(venue.lower()) or .get(venue.upper())`) is still what's deployed, and the exact
       lowercase venue keys (`polymarket`/`jito`/`curve`/`orca`/`raydium`/`phoenix`/`morpho`/`kalshi`, plus
@@ -60,7 +60,14 @@ resolved_by:
       the plan before proceeding. (2) Canonicalize every key in `WS_FEED_CONNECTOR_FACTORIES` to UPPERCASE (per
       the 2026-07-10 ruling) and every producer of a venue string that keys into it (shard-specs, launch
       scripts). Remove the case-insensitive fallback entirely — the registry itself must be consistent, not
-      papered over at lookup time. QG green. Repo: market-tick-data-service.
+      papered over at lookup time. QG green. Repo: market-tick-data-service. — **Canonicalization complete**
+      (every in-scope venue now dual-registered under its canonical UPPERCASE UAC key or already-canonical:
+      curve/orca/raydium/morpho/jito@`market-tick-data-service@767c4208a8`, phoenix@`market-tick-data-service@49a2d0c9`,
+      kalshi already-canonical via `kalshi_clob_ws.py`, polymarket's cross-connector dual-casing confirmed
+      intentional/final). **Fallback removal split off** to
+      `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md` (needs one
+      operator decision on polymarket's dual-casing being the accepted permanent state) rather than blocking
+      this task indefinitely — see Progress Log.
 
 ## Progress Log
 
@@ -154,3 +161,8 @@ resolved_by:
   directly, no fallback needed for it either) and remove the fallback fleet-wide, or keep it in place indefinitely
   as documented defense-in-depth. Filed as a narrow follow-up todo in a new issue doc (see below) rather than
   guessing the ruling here.
+  **Flipping the checkbox now**: canonicalization (this todo's step (2), first half) is genuinely complete for
+  every in-scope venue; only fallback removal (step (2)'s second half) remains, and it is now blocked purely on
+  an operator decision, not further engineering work — leaving this checkbox unflipped would only re-dispatch
+  the same already-answered investigation to another slot. The fallback-removal half is tracked and will not be
+  silently dropped: `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
