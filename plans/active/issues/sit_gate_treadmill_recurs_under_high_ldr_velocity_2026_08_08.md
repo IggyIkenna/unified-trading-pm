@@ -350,3 +350,22 @@ for isolating whether that PAT specifically lost repo-scoped access to market-ti
 GitHub's fine-grained-PAT settings UI, outside this session's tool access. No orphaned promote PR existed throughout.
 Exiting with the wall still technically open (detector shows 10 repos stuck) but with both real root causes identified
 and documented — the remaining blocker is genuinely operator-scoped, not a code fix I'm withholding.
+
+**Same escalation agt-f2579b, continued after a session restart (~15:00Z-15:25Z) — corrects Finding 2 above: it is
+GitHub-platform-wide, not MTDS-token-specific.** By 15:01Z-15:25Z the streak had grown to 12 repos, all converged at the
+SAME count (8), meaning every tick since had failed identically fleet-wide, not just for market-tick-data-service.
+Live-diagnosed the newest failures (`full-workspace-sit` runs `32040998095` 15:01Z, and `ci-status-update` sub-runs it
+dispatched, e.g. `32042008085` for trading-agent-service) via `gh run view --log-failed`: the actual failure is
+`codeload.github.com` returning 502/`503 Service Unavailable` when the `ci-status-update.yml` runner tries to download
+the `google-github-actions/auth@v3` action tarball — a GitHub Actions **platform-level** availability issue (action
+tarball download, not our workflow logic), hitting `alerting-service`/`deployment-api`/`deployment-service`/
+`greeks-service`/`market-data-processing-service`/`ml-service`/`strategy-service`/`trading-agent-service`'s
+`ci-status-update` dispatches indiscriminately — not scoped to market-tick-data-service or its LDR-tree read at all.
+This supersedes Finding 2's token-access hypothesis as the CURRENT active cause (that hypothesis may still be worth a
+follow-up, but is not what's blocking convergence right now). Nothing in this repo fleet can fix a GitHub-side 502/503
+on `codeload.github.com` — this is squarely the "self-heals once the platform recovers" case CLAUDE.md's async-wait
+discipline describes, not a masked bug to keep chasing. Root-cause code fix (PHOENIX-SOLANA baseline, Finding 1) is
+confirmed shipped and verified (`unified-api-contracts` live-defi-rollout content checked directly, 0 occurrences).
+Closing out this escalation on that basis — the next `cicd` dispatch (if the streak is still non-zero once GitHub's
+platform issue clears) should re-run `sit_gate_stuck_detector.py` fresh rather than re-diagnose from this doc's Finding
+2, which is now superseded.
