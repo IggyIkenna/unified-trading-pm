@@ -1,0 +1,7 @@
+asset_group,finding,event,detail
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"  DIVERGENT_EMPTY                            58,362 ❌"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-17 11:41:34,114 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=trades date=2026-08-14"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-17 11:41:34,114 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=trades date=2026-08-15"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-17 11:41:34,114 WARNING DIVERGENT_EMPTY asset_group=cefi venue=UPBIT data_type=trades date=2026-08-16"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"DIVERGENT_EMPTY:  58,362"
+cefi,schema_version_not_v9,DP_NOT_V9,"1/29938146 rows non-v9 (legacy_version=0, missing=1, contaminated=0); dist={'None': 1, '9.0': 29938145}"
