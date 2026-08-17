@@ -65,7 +65,7 @@ source: >-
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Confirm the `alerting-service` dedup fix (`attempted_age_hours` + generic `*_age_*` suffix
+- [x] ✅ [SCRIPT] P2. Confirm the `alerting-service` dedup fix (`attempted_age_hours` + generic `*_age_*` suffix
       exclusion added to `AlertDeduplicator`, shipped `alerting-service@cd60a3e595`) reached the live
       `dp-alerting-subscriber` Cloud Run revision: (1) confirm the sha (or later) is an ancestor of `origin/main`,
       (2) confirm a fresh Cloud Build ran against that content, (3) confirm
@@ -73,6 +73,13 @@ source: >-
       (`gcloud run services describe`). Source: `plans/active/issues/dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md`
       item 2. Done-when: all 3 conditions confirmed with cited evidence (commit ancestry, Cloud Build id, traffic
       split), or a fresh Cloud Build is triggered and its result cited if propagation hadn't happened yet.
+      **Done — all 3 confirmed 2026-08-17**: (1) content-on-main match (ancestry inconclusive as expected, squash
+      merge); (2) Cloud Build `821c691f-8da4-426e-b7b1-9d0614097064` SUCCESS `00:48:57Z`; (3)
+      `dp-alerting-subscriber-00103-zhw` @ 100% traffic, container-content-verified via `docker pull`+extract.
+      Evidence: cloudbuild=821c691f-8da4-426e-b7b1-9d0614097064. Deploy
+      chain is clean — but live behavior is STILL broken (cooldown violated as of 07:06Z, ~6h15m post-deploy), a
+      SEPARATE unresolved defect filed as
+      `plans/active/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (P1, 2 new todos).
 - [ ] [DATA] P3. Annotate
       `market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py` (still present,
       not yet deleted per its own `# Delete-when:` header) with a pointer to
@@ -91,3 +98,8 @@ source: >-
   this batch at authoring time. A third RECLASSIFY_SPLIT candidate (`cloud_interface_list_blobs_stale_read_misled_vm_stall_diagnosis_2026_08_15.md`)
   was found but excluded — owning tranche is `infra`, not `cefi`, per the Phase-0 primary-owner rule; reported to
   that tranche's own audit instead of acted on here.
+- **2026-08-17 (slot 18, backend_engineer craft, task cefi_satellite_ao_dispatch_batch21-5517a0a936a2)**: item 1
+  closed — all 3 deploy-chain conditions confirmed (content-on-main, Cloud Build `821c691f-8da4-426e-b7b1-9d0614097064`,
+  live revision `dp-alerting-subscriber-00103-zhw` @ 100% traffic, container-content-verified). Residual finding (fix
+  deployed but live behavior still violates the cooldown) filed separately:
+  `plans/active/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md`.

@@ -55,6 +55,10 @@ VERSION_COHERENCE_COLLECTION: str = "version_coherence_verdicts"
 CHANGE_FREEZE_COLLECTION: str = "change_freeze_verdicts"
 """Collection for change-freeze-check.yml verdicts — one document per check_type."""
 
+TEMPLATE_DRIFT_COLLECTION: str = "template_drift_verdicts"
+"""Collection for detect_template_drift.py verdicts (via the template-drift-daily-check systemd
+timer) — one document per repo. Verdict one of ``CLEAN`` / ``WARN`` / ``ERROR``."""
+
 
 def resolve_verdict(
     prev_checked_at: str | None,

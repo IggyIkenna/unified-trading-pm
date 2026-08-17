@@ -135,7 +135,7 @@ this whole `/ag-closeout-audit` rollout — self-referential, included for compl
 (corpus-wide sweep for prose-only, zero-checkbox issue docs) ·
 [issues/plan_quality_four_line_defense_architecture_2026_07_23.md](/plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md)
 (plan-quality four-line-of-defense architecture: task_template/QG hygiene/reconcile skills) ·
-[issues/reference_path_convention_2026_07_23.md](/plans/active/issues/reference_path_convention_2026_07_23.md)
+[issues/reference_path_convention_2026_07_23.md](/plans/archive/issues/reference_path_convention_2026_07_23.md)
 (cross-reference leading-slash path convention rollout) ·
 [l0_doc_index_generator_2026_06_24.md](/plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md) (ARCHIVED 2026-07-27
 — re-verified 2026-07-28 directly against the filesystem after a false "not yet archived" correction landed here

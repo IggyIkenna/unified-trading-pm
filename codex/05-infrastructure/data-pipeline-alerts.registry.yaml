@@ -228,8 +228,7 @@ failure_modes:
       kind: scriptable,
       escalation: file_issue,
       status: verbose,
-      fires:
-        "IS universe bare ticker (e.g. KALSHI KXMVE-26JAN) not rebuilt to connector form
+      fires: "IS universe bare ticker (e.g. KALSHI KXMVE-26JAN) not rebuilt to connector form
         KALSHI:PREDICTION_MARKET:{ticker} -> WS 'unknown instrument; skipping' -> 0 capture (cefi/prediction live
         silent-empty, 2026-06-22)",
     }
@@ -346,8 +345,7 @@ failure_modes:
       kind: scriptable,
       escalation: auto_recover,
       status: verbose,
-      fires:
-        "terminated VM has no durable exit marker (exit_code is None) but captured climbed — ambiguous
+      fires: "terminated VM has no durable exit marker (exit_code is None) but captured climbed — ambiguous
         CLEAN-vs-premature-kill",
     }
   - {
@@ -540,8 +538,7 @@ failure_modes:
       kind: scriptable,
       escalation: file_issue,
       status: verbose,
-      fires:
-        "sampled raw shard row_count != manifest's own recorded row_count for the same captured cell (epsilon=0
+      fires: "sampled raw shard row_count != manifest's own recorded row_count for the same captured cell (epsilon=0
         drilldown-correctness drift)",
     }
   - {
@@ -564,8 +561,7 @@ failure_modes:
       kind: scriptable,
       escalation: page_operator,
       status: verbose,
-      fires:
-        "monotonic-guard rejected a catalogue promotion whose row count shrank vs. current canonical (previous good
+      fires: "monotonic-guard rejected a catalogue promotion whose row count shrank vs. current canonical (previous good
         catalogue kept)",
     }
   - {
@@ -599,8 +595,7 @@ failure_modes:
       kind: scriptable,
       escalation: page_operator,
       status: verbose,
-      fires:
-        "dp-fleet-monitor's own run_lifecycle() terminal-failure event (meta, like the watcher-down siblings above)",
+      fires: "dp-fleet-monitor's own run_lifecycle() terminal-failure event (meta, like the watcher-down siblings above)",
     }
   - {
       id: DP-WATCHER-004,
@@ -615,6 +610,95 @@ failure_modes:
         "non--legacy- manifest-consolidator Cloud Scheduler job is PAUSED with no live maintenance window covering it
         (accidental pause, not a sanctioned backfill pause) — previously misassigned DP-WATCHER-003's id, colliding with
         DP_FLEET_MONITOR_RUN_FAILED",
+    }
+  - {
+      id: DP-WATCHER-005,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: DP_MANIFEST_CONSOLIDATOR_DOWN,
+      detector: meta_watchers_oom_classification,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: active,
+      fires: "an OOM-killed consolidator reaches CONSOLIDATOR_DOWN (DP-MANIFEST-001) by a different route (OOM vs staleness)",
+    }
+  - {
+      id: DP-WATCHER-006,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: DP_CLOUD_RUN_JOB_EXECUTION_FAILED,
+      detector: fleet_wide_job_execution_failure_sweep,
+      kind: scriptable,
+      escalation: page_operator,
+      status: active,
+      fires:
+        "generic per-execution Cloud Run Job failure, fired across the whole job registry — registered so the identity
+        resolves to an explicit no-op rather than an unregistered-id silent drop; no per-job dependent action exists yet",
+    }
+  - {
+      id: DP-VM-012,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_CLOUD_RUN_SERVICE_CONDITION_FAILED,
+      detector: cloud_run_service_condition_probe,
+      kind: scriptable,
+      escalation: page_operator,
+      status: active,
+      fires: "a Cloud Run Service's terminal_condition entered CONDITION_FAILED -- the service is not serving",
+    }
+  - {
+      id: DP-LIVE-001,
+      category: LIVE,
+      severity: CRITICAL,
+      event: DP_LIVE_STREAM_DEAD,
+      detector: live_stream_watcher.check_live_capture_productivity,
+      kind: scriptable,
+      escalation: page_operator,
+      status: active,
+      fires: "VM alive, data dead -- a live shard stopped ATTEMPTING entirely (no fresh attempted_at); shares
+        DP-WATCHER-002's shape (never even attempted)",
+    }
+  - {
+      id: DP-LIVE-002,
+      category: LIVE,
+      severity: CRITICAL,
+      event: DP_LIVE_SINK_MISMATCH,
+      detector: live_stream_watcher_gcs_vs_manifest,
+      kind: scriptable,
+      escalation: page_operator,
+      status: active,
+      fires:
+        "manifest captured, GCS empty -- sink mismatch; DP-LIVE-001 misses this because attempted_at stays fresh even
+        though the sink silently discarded rows",
+    }
+  - {
+      id: DP-LIVE-003,
+      category: LIVE,
+      severity: CRITICAL,
+      event: DP_LIVE_PRODUCER_MISSING,
+      detector: producer_lifecycle,
+      kind: scriptable,
+      escalation: page_operator,
+      status: active,
+      fires:
+        "a registered LONG_LIVED_LIVE producer prefix has ZERO running instances -- the condition that hid a 5-week CME
+        capture gap (deleted 2026-06-30, found 2026-08-09)",
+    }
+  - {
+      id: DP-LIVE-004,
+      category: LIVE,
+      severity: WARN,
+      event: DP_CRON_DID_NOT_FIRE,
+      detector: live_stream_watcher.check_live_capture_productivity,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: active,
+      fires:
+        "shard alive, zero recent captures -- a live shard still actively attempting but never captured a row within
+        its staleness budget; productivity gap, not a correctness one. Reuses the DP_CRON_DID_NOT_FIRE event name
+        (registry_id distinguishes it from DP-WATCHER-002, per the DP-FETCH-007/009 precedent). 2026-08-17: found
+        defeating AlertDeduplicator's dedup via a volatile attempted_age_hours detail field -- see
+        plans/active/issues/dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md",
     }
 
   # --- DP-REVOCATION (alert-driven dependency revocation, 2026-08-14) ---

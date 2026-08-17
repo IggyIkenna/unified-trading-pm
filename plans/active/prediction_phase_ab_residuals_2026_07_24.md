@@ -429,7 +429,7 @@ context_scope:
       `fixture_date`) OR by parsing the human-readable canonical name, stamping `af_fixture_match_status`. Honest nulls
       where unresolved; the match-rate summary line logged per (league, day). (repos: market-tick-data-service,
       instruments-service)
-- [ ] [DATA] P1. **RULED 2026-07-28 — apply the standing canonicalization precedent by default; escalate only a genuine
+- [x] [DATA] P1. **RULED 2026-07-28 — apply the standing canonicalization precedent by default; escalate only a genuine
       residual.** This was previously `[DECISION] P1`, gated on an operator decision, pending a fresh enumeration of the
       A0 ambiguous set. Ruling (general theme — canonicalization work should be done properly, not left as an open-ended
       standing gate): (1) enumerate the FULL A0-ambiguous set live (this is itself a bounded, checkable task — the
@@ -445,6 +445,9 @@ context_scope:
       elsewhere in this corpus (see `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s per-item
       operator-decision-gate bullets for the pattern). Done when: the full ambiguous set is enumerated with a
       disposition (resolved-by-precedent or escalated-as-residual) recorded per value in this doc's Progress Log.
+      **Extracted 2026-08-17 (na-eligibility-audit, per-todo RECLASSIFY_SPLIT)** — the ruling is already on record, the
+      procedure is bounded/worker-determinable; promoted to `prediction_satellite_ao_dispatch_batch12_2026_08_17.md`
+      todo 1. Execution now tracked there, not here.
 - [ ] [DATA] P0. **Re-verify + close the `instrument_type` casing/canonicalisation gap to literal 100% (operator,
       2026-07-24) — the historical numbers in this doc DISAGREE and need reconciling, not just re-citing.** The tick-18
       `--apply` (line 229 above) measured `instrument_type` 11.80%→100% live on 2026-07-19; but the cross-AG D1 ruling
@@ -460,7 +463,7 @@ context_scope:
       ruling actually mandates** (`/codex/02-data/reconciliation- finding-taxonomy.md` §5.1 — UPPERCASE target,
       `migration_pending`, compared case-INSENSITIVELY, no casing finding during the migration window) — **still open,
       see 2026-07-27 Progress Log entry**: a fresh read found 176 genuinely-malformed (non-casing) rows, not 0.
-- [ ] [DIAG] P2. **NEW 2026-07-27 — prediction manifest blank/null `instrument_type` rows are ACTIVELY GROWING, not
+- [x] [DIAG] P2. **NEW 2026-07-27 — prediction manifest blank/null `instrument_type` rows are ACTIVELY GROWING, not
       static residue (found while re-verifying the casing item above).** Live counts across 3 dated reads: 30
       (2026-07-20) → 70 (2026-07-24) → 100 (2026-07-27) — a consistent ~10 rows/day linear rate over both intervals (+40
       over 4 days, +30 over 3 days, both ≈10.0/day). This contrasts with the co-located 76-row `prediction` (singular)
@@ -473,7 +476,9 @@ context_scope:
       was lowercase `"prediction"`, not blank) or a different live/per-CID path — and either a fix ships and is verified
       against the next day's count, or the ~10/day gap is recorded as accepted with a stated reason. Repo:
       market-tick-data-service. Source: `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2 (this doc's item
-      9 re-verify surfaced it as a byproduct).
+      9 re-verify surfaced it as a byproduct). **Extracted 2026-08-17 (na-eligibility-audit, per-todo
+      RECLASSIFY_SPLIT)** — bounded diagnose-then-fix-or-accept task, no open design/judgment call; promoted to
+      `prediction_satellite_ao_dispatch_batch12_2026_08_17.md` todo 2. Execution now tracked there, not here.
 - [ ] [DATA] P2. **`/data-pipeline-reconciliation` post-migration 3x-cadence + duplicate-note merge (relocated
       2026-07-25 from the parent's "Queued audits + reviews" + "Distinct Values / axis-value census" P3 sections — both
       tracked the same underlying action, merged into this one todo).** Reach the 3x dated-pass cadence
@@ -715,3 +720,13 @@ context_scope:
   enumerate+apply+escalate-residuals-only procedure, and the "blank/null instrument_type ACTIVELY GROWING" item reads
   as a bounded root-cause diagnostic — both tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for the next run to weigh
   independently. Doc stays NA.
+
+- **na-eligibility-audit 2026-08-17 (per-todo RECLASSIFY_SPLIT)** [body-hash:ec3591907e5e446e]: re-assessed the 2
+  items the same-day marker above tagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` (the canonicalization-precedent-application
+  todo and the growing-blank-instrument_type diagnostic) — both promoted: the ruling is already on record for the
+  former, and the latter is a bounded diagnose-then-fix-or-accept task, neither requiring an open design/judgment
+  call. Both extracted to `prediction_satellite_ao_dispatch_batch12_2026_08_17.md` (todos 1 and 2 respectively),
+  checkboxes flipped `[x]` citing the batch. Remaining 4 open Phase-B items (enumeration-driven manifest migration
+  `--apply`, fixture-attribute historical backfill, instrument_type casing re-verify to 100%, 3x-cadence
+  reconciliation top-up) stay NA — each still ends in an operator-held race-sensitive `_index` CAS `--apply`, an
+  infra drain window, or a same-doc dependency. Doc stays NA (4 open items remain, down from 6).

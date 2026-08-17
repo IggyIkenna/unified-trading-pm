@@ -150,3 +150,10 @@ state at current preemption volume?).
   hard cap rule, and captured the exact recipe (launch_env + checkpoint) for the next worker. `AUTHORING_SLOT` was
   `dp-fleet-monitor` (non-numeric) — skipped the authoring-slot ping per the runbook's documented carve-out (the
   dispatch-time Slack alert already covers the FYI).
+- 2026-08-17 — [INFRA] P2 todo dispatched to infra worker (slot 16). Re-verified live: `tardis_running_vm_count
+  asia-northeast1-c central-element-323112` (sourced fresh from `tardis-concurrency-guard.sh`) still returns `1` —
+  `cefi-binance-futures-2026-heavy-20260817-010713` is still RUNNING and holds the cap; `gcloud compute instances
+  list --filter="name~'^cefi-lighter-zksync'"` confirms no live replacement exists. The todo's own gate ("once the
+  count returns 0") is not met, so per the same reasoning as the filing worker, declined to `FORCE=1`. Skipping this
+  task with `reason_code=GATED` rather than holding a session open across a multi-day-scale wait — the next
+  dispatch should re-check the cap live (do not trust this snapshot) before relaunching per option A.

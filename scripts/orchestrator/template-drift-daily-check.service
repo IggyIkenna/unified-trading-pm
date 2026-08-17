@@ -1,0 +1,21 @@
+[Unit]
+Description=Daily workflow-template drift verdict refresh (rollout-ratchet panel backend)
+Documentation=unified-trading-pm/scripts/orchestrator/template-drift-daily-check.sh
+After=network.target
+
+[Service]
+Type=oneshot
+# Runs as the same user as the other orchestrator cron units (pm-pull/reap-stale-blockers/
+# ldr-to-main-promote-heartbeat/qg-baseline-daily-promote) so it shares the same host environment
+# + Secret Manager / ambient GCP identity access path (needed for the Firestore verdict write).
+User=root
+EnvironmentFile=-/etc/orchestrator-env
+ExecStart=/usr/bin/env bash \
+    /home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/orchestrator/template-drift-daily-check.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=template-drift-daily-check
+Environment=ORCHESTRATOR_TAG=orchestrator_master
+
+[Install]
+WantedBy=multi-user.target

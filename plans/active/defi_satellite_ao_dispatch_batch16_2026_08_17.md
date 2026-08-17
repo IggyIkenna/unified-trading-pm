@@ -160,3 +160,28 @@ drift_direction: advance-code
   (stale/inverted premise per the retired-dedicated-bucket-architecture finding), not a clean extraction as worded.
   Paired with `defi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md` (`depends_on` + `gate_on_depends: true`,
   `status: active`) in the same turn.
+
+### Todo 1 — code-complete, blocked on cross-repo QG red — 2026-08-17 (slot-6)
+
+Root cause found: `market-tick-data-service/.../solana_defi_handler.py`'s `_SOLANA_PROTOCOL_SOURCE_OVERRIDES` had no
+entry for 9 of 10 Solana protocols, so their manifest `source=` was stamped empty. Fixed per the ruled mapping
+(ORCA/RAYDIUM/PHOENIX/KAMINO/MARINADE/JITO -> `solana_rpc`; MARGINFI/SOLEND -> `defillama`) — committed locally
+(mtds@460db09f, tests updated + verified). The DeFi-perp-venue half of the ticket (ASTER/DRIFT/PACIFICA) is STALE
+against the current registry — DRIFT purged 2026-07-16, PACIFICA/ASTER reclassified DeFi->CeFi 2026-07-06, no live
+DeFi perp venue exists — nothing to fix there.
+
+**Discovered the two repos are load-bearing together, not independent**: `write_defi_rows`'s actual GCS upload-path
+pipeline_mode derivation goes through UTL `resolve_pipeline_mode(venue=...)`, which consults `_VENUE_OVERRIDES` —
+NOT just the MTDS manifest-recorder fix alone. Verified directly: with only the MTDS fix present, the write path still
+mis-resolves `batch_onchain_subgraph` for these venues; with the companion UTL `_VENUE_OVERRIDES` additions ALSO in
+the working tree, both regression tests pass. So the real fix is the pair of changes together.
+
+**Blocked from shipping**: `unified-trading-library` has a pre-existing, unrelated QG-red test
+(`test_manifest_writer_v6.py::TestManifestWriterRecordEmptyV6::test_record_empty_with_v6_key` — see
+`plans/active/issues/utl_manifest_writer_v6_record_empty_options_chain_path_2026_08_17.md`), so the UTL half can't be
+committed under the green-tree HARD RULE, and MTDS's own quickmerge pre-flight refuses to ship while a path dependency
+carries uncommitted changes. A second, independent session (interactive slot-27, different feature) hit the exact same
+UTL red and was told by the operator to park locally and wait for AO to clear it — same resolution applies here.
+**State left**: MTDS fix committed locally (unpushed, `460db09f`); UTL fix present in the working tree, uncommitted.
+Nothing lost. Releasing this todo `GATED` on `RB-36315e6e` (unified-trading-library qg_red) — resume once that clears:
+commit + ship UTL first, then re-verify + ship MTDS.

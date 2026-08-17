@@ -127,3 +127,60 @@ on the live capture process itself) is out of scope for this reconciliation swee
   live-capture stalls this fix does not resolve.
 - **na-eligibility-audit 2026-08-17** [body-hash:26ce733728bec47c]: RECLASSIFY-SPLIT — extracted bounded item 2 (deploy-chain verification) to `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 1, conflict-checked clear (no other active doc claims this ground). Item 3 ([OPERATOR] live-capture-stall investigation) stays genuinely NA — open-ended production debugging with unknown root cause, kept at lower confidence given the doc's own [OPERATOR] tag rather than reclassified outright. Doc stays assigned_vm: NA for that remaining item.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **data_pipeline_alerts_reconciler 2026-08-17 (slot 28, dispatch agt-f4501d), follow-up sweep**: fresh ground-truth
+  Slack read (`slack-read-channel.py data-pipeline-alerts 24`) found the storm SIGNIFICANTLY WORSE than the earlier
+  sweep captured, not resolved: 2993 total messages / 24h (990 `DP_CRON_DID_NOT_FIRE`, 544 `DP_RUN_MOSTLY_EMPTY`, plus
+  large VM-churn volume). Attempted the item-2 deploy-chain verification (now tracked as
+  `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 1):
+  1. **Commit content on main**: CONFIRMED — `git show origin/main:alerting_service/core/dedup.py` contains
+     `attempted_age_hours` in `_VOLATILE_DETAIL_KEYS` and the `_VOLATILE_DETAIL_KEY_SUFFIXES` tuple.
+     `git merge-base --is-ancestor cd60a3e595 origin/main` reports false (expected on a squash-merge promotion PR per
+     this skill's own §4 caveat — content-check is the correct test here, not ancestry).
+  2. **Live behavioral check**: sampled one identity's fire cadence directly from Slack
+     (`HYPERLIQUID`/`derivative_ticker` on `mtds-live-cefi-consolidated-20260817-025031`): fires at 03:21, 04:06
+     (45min gap), 04:22 (16min — **violates the 1800s cooldown**), 04:51 (29min), 05:06 (15min — **violates**), 05:36
+     (30min), 06:07 (31min), RESOLVED 06:21. The alternating ~30min/~15min pattern is inconsistent with a correctly
+     working 1800s dedup cooldown as late as 06:07Z — i.e. ~5h after the fix commit landed on main.
+  3. **Cloud Build / Cloud Run provenance**: `gcloud run services describe dp-alerting-subscriber` shows live revision
+     `dp-alerting-subscriber-00103-zhw` (100% traffic), created 2026-08-17T00:54:00Z — 12min after the fix commit
+     (00:42:49Z), which read as suggestive at first. But `gcloud builds list` (initially run WITHOUT `--region`,
+     which silently scopes to the `global` region and misses everything — a methodology error, corrected mid-sweep)
+     found no `global`-region build near that time; `gcloud builds triggers list --region=asia-northeast1` located
+     the real `alerting-service-build` trigger in that region. A `--region=asia-northeast1` build-history query
+     against that trigger returned nothing conclusive on the first pass (a bad `--filter` field name produced a
+     "filter key not present" warning rather than a real 0-result answer), but a broader unfiltered regional query
+     showed **live build activity for this trigger in the last ~10 minutes of this sweep** (builds `WORKING`/`SUCCESS`
+     between 06:36:58Z and 06:43:30Z) — i.e. concurrent with this sweep, not provably tied to `cd60a3e595`.
+  4. **Verdict**: items (1) partially confirmed (content on main, ancestry inconclusive as expected), (2) and (3) of
+     the skill's §4 three-part check are **NOT conclusively confirmed** — the live-behavior evidence in point 2 leans
+     toward "fix not yet effectively live," but I could not pin an exact broken link in the deploy chain with the
+     `gcloud` access/permissions available this session (Container Analysis API is disabled on this project, blocking
+     image-provenance lookup by label; `containeranalysis.googleapis.com` enablement was not attempted — that's an
+     API-enablement action beyond this sweep's proportionate scope to request unprompted). The build activity
+     observed in point 3 in the final minutes of this sweep may resolve this on its own; a follow-up sweep should
+     re-check the live fire-cadence for the same identity to see if it now respects the 1800s cooldown.
+  5. Registry hygiene (§6 of the skill) done separately this sweep: DP-WATCHER-005/006, DP-VM-012, DP-LIVE-001/002/003/004
+     transcribed into `data-pipeline-alerts.md` + `.registry.yaml` (were code-registered but doc-stale since
+     2026-08-15/16 per this doc's own flagged gap).
+  6. **CONFIRMED, not just "leans toward" (re-sampled 06:50Z, after the build activity window closed)**: pulled a
+     fresh 1h Slack window and found `mtds-live-cefi-consolidated-20260817-025031`/BYBIT-FUTURES/`book_snapshot_5`
+     fired at 06:35Z and again at 06:50Z — exactly 15min apart, a second, cleaner cooldown-violation than point 2's
+     sample (no ambiguity from alternating gaps this time), and `derivative_ticker` on the same VM/venue shows the
+     same 06:35→06:50 pattern. This is well past the 06:36:58-06:43:30Z build-activity window noted in point 3, so
+     that build activity — whatever it was — did NOT fix the live cadence. **Verdict upgraded from "leans toward
+     not-live" to CONFIRMED not-live as of 06:50Z, ~6h after the fix commit landed on main.** The deploy-chain break
+     is real and current, not a stale/already-resolving observation.
+  - Todo 2 (extracted to batch21 item 1) left **unflipped** — the done-when bar ("all 3 conditions confirmed" or "a
+    fresh Cloud Build is triggered and its result cited") is not yet met; the next sweep or AO dispatch of that item
+    should re-check the live fire-cadence first (cheapest, most direct signal) before re-attempting the build/image
+    provenance chase.
+- **2026-08-17 (slot 18, backend_engineer craft, task cefi_satellite_ao_dispatch_batch21-5517a0a936a2)**: batch21 item
+  1 (the extracted deploy-chain check) now CLOSED — all 3 conditions confirmed with hard evidence (content-on-main;
+  Cloud Build `821c691f-8da4-426e-b7b1-9d0614097064` SUCCESS `00:48:57Z`; live revision `dp-alerting-subscriber-00103-zhw`
+  @ 100% traffic, container-content-verified via `docker pull`+extract — the running container genuinely has the fix,
+  not just the registry tag). The deploy chain was never actually broken. But a fresh live-behavior re-check
+  (`06:35Z/06:50Z/07:06Z`) confirms the SAME identity is still firing every 15-16min, ~6h15m post-deploy — a separate,
+  unresolved runtime defect (several obvious hypotheses ruled out: singleton deduplicator, minScale=1/maxScale=1,
+  correct 1800s constant, no override-function interference, no other volatile field in this emission's details).
+  Filed as `plans/active/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (P1, 2 new
+  todos) for the next dispatch to root-cause.

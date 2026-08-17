@@ -54,7 +54,7 @@ related:
   ]
 created: 2026-07-25
 author: unknown
-last_updated: 2026-08-08
+last_updated: 2026-08-17
 priority: P1
 parent_epic: orchestrator_master
 source:
@@ -413,10 +413,52 @@ healthy at the start, because the first 30 minutes were spent draining pre-exist
 against the already-clean fleet specifically to close that gap rather than claim the criterion on 21 minutes of tail
 data.
 
-- [ ] [BACKEND] P2. **Re-run the 60-minute validation after any future change to the context signal, starting from a
+- [x] ✅ [BACKEND] P2. **Re-run the 60-minute validation after any future change to the context signal, starting from a
       fleet with no slot above ~60%.** The first run's headline number (4 wedges) is dominated by inherited saturation
       and understates the fix; a clean-start window is the only way to measure the steady state honestly. Baseline to
-      beat: forces in 60-85, zero wedges.
+      beat: forces in 60-85, zero wedges. — ✅ DONE 2026-08-17 (slot 12, `ao_satellite_ao_dispatch_batch21` todo 1):
+      PASS on both criteria. See "2026-08-17 validation window — measured result" below for the full write-up.
+
+## 2026-08-17 validation window — measured result (PASS, both criteria)
+
+Re-run per the 2026-08-08 session's own stated follow-up ("re-run after any future change to the context signal,
+starting from a fleet with no slot above ~60%"). Multiple qualifying commits landed since then (`a1e2969`, `59d9417`,
+`c00dc13`, `acc41b1`, `4af78dc`, `ac9ba18`, `905c210`, `c730f46`, `e943d72`+), and the boundary-confirmed-compaction
+fix (`context_lifecycle.py::_tick_target`, `agent-orchestrator@9ba4391e60`, per the tracker's Track 1) landed in the
+same window with no re-validation recorded since 2026-08-10.
+
+**Pre-flight**: confirmed via `GET /api/state` that every `status=working` slot sat at ≤60% context (max was exactly
+60%; two `idle`/`stale` outliers at 64%/69% don't count — idle sessions don't accumulate force-compact events). This
+is a genuine clean start, not a partially-drained fleet like the 2026-08-08 run's first 30 minutes.
+
+**Method**: a background monitor polled `GET /api/activity?types=forced_compact,forced_precompact,forced_compact_
+ineffective,frozen_at_high_context,spawn_retry_cap_reached,slot_wedged_killed_for_resume,context_saturated_session_
+lost_task_requeued,context_wedge_recovered,worker_kicked,worker_kick_failed,tmux_session_lost&since=<window_start>`
+every 10 minutes for 60 minutes (window: `2026-08-17T06:01:54Z` → `2026-08-17T07:02:15Z`), then pulled the full event
+set for the window and computed the `details.pct` distribution of `forced_compact`/`forced_precompact` events plus a
+count of wedge-terminal events (`spawn_retry_cap_reached` / `slot_wedged_killed_for_resume` / `context_saturated_
+session_lost_task_requeued`).
+
+**Result — PASS on both criteria the 2026-08-08 follow-up specified:**
+
+- **Force-distribution criterion: PASS.** 21 forces (11 `forced_compact` + `forced_precompact` pairs across 2 slots),
+  distribution `60×11 · 69×10` — every force between 60 and 69, entirely inside the 2026-08-08 baseline's 60-85 range
+  and tighter than it. All 21 forces came from just two sessions (slot 2 repeatedly at 69%, slot 27 repeatedly at
+  60%) — both plateaued at their own threshold rather than climbing, consistent with a compact that's landing
+  correctly each cycle (no `forced_compact_ineffective` events fired for either).
+- **Zero-wedges criterion: PASS — the criterion the 2026-08-08 run explicitly did NOT meet.** Zero
+  `spawn_retry_cap_reached` / `slot_wedged_killed_for_resume` / `context_saturated_session_lost_task_requeued` events
+  across the full 60-minute window (vs. 4 in 2026-08-08, all attributed there to inherited pre-clean-start
+  saturation). 87 total context-lifecycle-family events observed in-window; none were wedge-terminal.
+
+**Reading**: with a genuinely clean start (unlike 2026-08-08's first 30 minutes, which were still draining
+pre-existing saturation), the fix now holds a fully healthy steady state for the whole hour — no wedges at all, not
+just a reduced rate. This closes the 2026-08-08 follow-up's own stated gap ("does NOT by itself establish a clean
+60-minute window on a fleet that was healthy at the start").
+
+Raw event data + per-checkpoint fleet-max snapshots retained in this session's scratchpad
+(`context_signal_validation_60min.sh` / `validation_report.json` / `validation_log.txt`) if a future audit wants the
+full per-event detail beyond the summary above.
 
 ## Progress Log (cont.)
 

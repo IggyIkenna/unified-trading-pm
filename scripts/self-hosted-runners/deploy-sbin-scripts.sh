@@ -42,6 +42,7 @@ DEPLOY_SCRIPTS=(
   glue-runner-crash-loop-watchdog.sh
   docker-disk-cleanup.sh
   tmpfs-disk-cleanup.sh
+  prune-shared-bare-repo-worktrees.sh
   ci-vm-resource-watchdog.sh
 )
 

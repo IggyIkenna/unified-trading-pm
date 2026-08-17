@@ -209,3 +209,9 @@ context_scope:
   prerequisite still carries 6 open todos, gate not cleared. KEEP-NA on that citation alone; both remaining items are
   also independently genuine multi-file design/build work on live dispatch-critical machinery, not RECLASSIFY-eligible
   even setting the gate aside — consistent with 6 prior audit passes (07-30 through 08-10). Doc stays NA.
+
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:da3d38da5ff6c1be]: KEEP-NA, valid —
+  2 open items re-confirmed. The double `depends_on: [prediction_phase_ab_residuals_2026_07_24,
+  prediction_phase_d_formal_smoke_and_backfill_2026_07_24]` + `gate_on_depends: true` gate is still live (both
+  prerequisites re-verified `status: active`); both items are also independently genuine multi-file design/build work
+  on live dispatch-critical arb-matching machinery. Doc stays NA.

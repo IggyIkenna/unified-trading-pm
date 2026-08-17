@@ -109,7 +109,7 @@ disk until someone completes this triage (do not delete pending resolution).
 
 A second, unrelated safe-doc-push run in the SAME session hit the identical orphaned-patch warning again, for
 `/home/ubuntu/.cache/prek/patches/1786946339254-2938102.patch`, touching
-`plans/active/alert_driven_dependency_revocation_2026_08_12.md` +
+`plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` +
 `plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`. This one is a DIFFERENT failure shape — not an
 unshipped draft, but real work that WAS shipped and then fell off the branch:
 

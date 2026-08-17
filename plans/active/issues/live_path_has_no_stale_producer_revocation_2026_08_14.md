@@ -20,7 +20,7 @@ related:
     /codex/04-architecture/dependency-health-policy.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/04-architecture/kill-switch-circuit-breaker.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/archive/2026_08/revocation_arming_2026_08_14.md,
   ]
 created: "2026-08-14"
@@ -43,7 +43,7 @@ context_scope:
     /codex/04-architecture/dependency-health-policy.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/04-architecture/kill-switch-circuit-breaker.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/archive/2026_08/revocation_arming_2026_08_14.md,
   ]
 ---
@@ -138,7 +138,7 @@ delta-neutral book that is a slow bleed; for a leveraged one it is the liquidati
 
 ## Relationship to the batch work
 
-`/plans/active/alert_driven_dependency_revocation_2026_08_12.md` built exactly this mechanism for the DATA PIPELINE:
+`/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` built exactly this mechanism for the DATA PIPELINE:
 alert identity → `DependentAction` → markers a dependent reads → hold admission / drain in flight. The live path has the
 same shape of problem and none of the machinery. **Do not simply reuse the batch actuator**: its delivery is GCS markers
 polled on a heartbeat tick, which is right for a VM doing hour-long shards and far too slow for an execution loop. The

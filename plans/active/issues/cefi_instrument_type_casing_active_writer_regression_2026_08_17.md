@@ -30,6 +30,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
 resolved_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
@@ -120,13 +122,43 @@ is genuinely VM-scale work, not shared-host-scale:
 
 ## Recommended decision
 
-- [ ] [BACKEND] P1. Confirm and fix the writer-side root cause: trace whether
-      `manifest_finalize.py`'s `itype_key` (and any other `record_captured`/`record_failed` call
-      site for SINGLE-instrument, non-bundle CeFi shards) derives its row-key `instrument_type` from
-      the GCS-path-lowercased column; if so, re-map to the canonical uppercase UAC `InstrumentType`
-      specifically for the manifest write, keeping the lowercase value only for
-      `build_*_partition_path`. Until this ships (or a different root cause is found and fixed), any
-      `--apply` casing fix will keep regrowing. (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-17 (slot-11, backend_engineer craft)** — Confirmed and fixed the
+      writer-side root cause. `market-tick-data-service@c07cc70e93`.
+
+      **Confirmed**: `venue_fetch.py`'s `_record_venue_shard_counts` derives `manifest_itype` (the
+      value that becomes `manifest_finalize.py`'s `itype_key`) via
+      `fallback_itype = _tms._tradfi_manifest_itype(venue, itype)` (line ~410), where `itype` comes
+      from `writer.underlying_counts` — keyed on the SAME lowercased `instrument_type` column
+      `partitioned_writer.py::_resolve_instrument_type_column` stamps for GCS-path-building.
+      `_tradfi_manifest_shard.py::_tradfi_manifest_itype` (pre-fix) hardcoded
+      `if VENUE_TO_ASSET_GROUP.get(venue) != "tradfi": return itype` — so every CeFi venue (asset_group
+      `cefi`, not `tradfi`) fell through this gate and the lowercase value was passed straight into
+      the manifest row-key, unchanged. The shared UTL canon
+      (`unified_trading_library.canonical.canonicalize_manifest_instrument_type`) already ships a
+      `cefi` mapping table (`perpetual`/`spot_pair`/`spot`/`option`/`future` → canonical
+      `InstrumentType`) — it was simply never reached for cefi.
+
+      **Fix**: `_tradfi_manifest_itype` now calls
+      `canonicalize_manifest_instrument_type(VENUE_TO_ASSET_GROUP.get(venue, ""), itype)`
+      unconditionally, letting the shared canon's own asset_group gating (only `tradfi`/`cefi` have
+      mapping tables; every other asset_group + the bundle-grain exclusion set — `futures_chain`/
+      `options_chain`/`combo`/`combo_chain`/`continuous_future` — pass through unchanged) do the work,
+      instead of re-gating on `== "tradfi"` in this file. The lowercase value is still used verbatim
+      for `build_*_partition_path` (`partitioned_writer.py`/`tardis_shared.py` untouched) — only the
+      MANIFEST-column casing changes, per the plan's own scoping.
+
+      **Tests**: added `test_tradfi_manifest_itype_upgrades_cefi_venue` (BINANCE-SPOT/BYBIT/DERIBIT
+      lowercase → canonical uppercase) and `test_tradfi_manifest_itype_bundle_grain_axis_still_unchanged_for_cefi`
+      (Deribit `futures_chain`/`options_chain` stay lowercase, confirming the bundle-grain exclusion is
+      asset-group-agnostic). Full `tests/unit/engine/test_tradfi_manifest_shard.py` +
+      `tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py` +
+      `tests/unit/engine/test_sentinels_coverage.py` (111 tests) green — no pre-existing test assumed
+      the buggy cefi-passthrough behavior as correct. Full `quality-gates.sh` green on `c07cc70e93`
+      (sentinel-verified).
+
+      This does NOT itself shrink the existing 39,286-row residual (that's todo 2's `--apply` VM
+      dispatch, gated behind this fix per the plan) — it stops new lowercase-cased rows from being
+      minted going forward, which is this todo's own done-when.
 - [ ] [DATA] P2. Dispatch `scripts/normalize_instrument_type_casing.py --all-buckets --apply` (the
       corrected, safety-fixed version shipped this session — mask restricted to genuine casing
       variants, collision-dedup, timestamped backup) to a dedicated one-off VM per

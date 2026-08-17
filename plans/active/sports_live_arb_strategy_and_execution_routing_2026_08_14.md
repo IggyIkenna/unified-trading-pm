@@ -313,3 +313,9 @@ concurrent session's index/working-tree state, so this write bypasses that check
   reconfirmed independently — same verdict, KEEP-NA valid, both prerequisites still open. Hash refreshed (prior
   marker's stored hash had drifted from the live body despite no substantive content change since it was written;
   same class as the cefi-tranche "re-drifted incremental-skip marker hash" fix — not investigated further here).
+- **na-eligibility-audit 2026-08-17** (dispatch agt-952948, third same-day pass): reconfirmed independently — same
+  verdict, KEEP-NA valid, both prerequisites still open. Notably, the immediately-prior marker's cited body-hash
+  (810f8a7668f535c4) EXACTLY matches this run's own freshly-computed inventory hash for this doc, yet Phase 0's
+  `incremental_skip` still reported `false` — a sharper data point on the same hash-drift anomaly flagged on sibling
+  sports docs today; worth a real look by whoever next touches `generate_na_doc_tranche_inventory.py`'s hash logic.
+  Not re-adding a `[body-hash:...]` tag given a verified-exact-match anchor already exists two lines above.

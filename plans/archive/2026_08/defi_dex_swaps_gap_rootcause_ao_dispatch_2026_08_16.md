@@ -14,7 +14,7 @@ summary: >-
   today — dispatching the full migration design would repeat exactly the mistake this doc's own R5 precedent
   warns against. Scoping the dispatch to this one bounded step; the actual migration (once root-caused) needs its
   own follow-on plan and a full five-part delete-safety proof, not this one.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -27,7 +27,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,6 +53,11 @@ resolved_by:
 ---
 
 # Root-cause the dex_swaps recent multi-venue gap cluster
+
+> **🟢 ARCHIVED 2026-08-17** — sole todo done: root-caused the gap cluster, finding reported into
+> `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`'s Progress Log. Gated finalize
+> (`/plans/archive/2026_08/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16_finalize.md`) independently verified
+> the finding + evidence and confirmed no live writer needs stopping/redirecting.
 
 ## Todos
 
@@ -93,6 +98,14 @@ resolved_by:
   dex_swaps → dex_pool_swaps content-migration scope (scattered 2023-era legacy-only dates on 22 of 24 pairs,
   up to 84% on `SUSHISWAP_V3/ARBITRUM`) remains open and unresolved — full finding filed in the source doc's
   Progress Log. Not proceeding to migration design in this dispatch, per scope.
+- **2026-08-17 (slot 14, review-craft, finalize plan)**: gated finalize confirmed the root-cause finding above landed
+  in `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`'s Progress Log with evidence, confirmed no
+  live writer needs stopping/redirecting, and archived the finalize plan to
+  `/plans/archive/2026_08/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16_finalize.md`. Per the plan-hygiene
+  `check_archive_candidates` gate (fired on this plan itself — 0 open todos, done, unlocked), this plan is archived
+  in the SAME commit to `/plans/archive/2026_08/`; referrers in
+  `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` and
+  `defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md` updated to the new path.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 7, operator ruling — scoped)**: operator asked to dispatch
   the dex_swaps migration; scoped down to only the bounded root-cause step per repeated `too_large_or_risky`
   corroboration in the source doc (see summary above) — the full migration is NOT dispatched by this plan.

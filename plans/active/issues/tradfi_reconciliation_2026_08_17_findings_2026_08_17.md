@@ -99,30 +99,41 @@ engineering-latitude choice, not an authority-level call. Item 7 is a one-line "
 
 ## Todos
 
-- [ ] [DATA] P1. Root-cause + fix the FX `ohlcv_24h` `source=databento` mis-stamping — the remaining piece of the
-      2026-07-24 G2 finding after ICE/KRX were already fixed. Re-stamp the 1,008 affected historical rows once fixed.
-      (repo: market-tick-data-service)
-- [ ] [DATA] P2. Finish the FX manifest `instrument_id` "ticks"-literal backfill residual (670 rows) — the
-      2026-08-04 restamp (`market-tick-data-service@c86016f6`) did not cover this sub-population; extend it or run a
-      targeted follow-up CAS-apply. (repo: market-tick-data-service)
-- [ ] [DATA] P1. Re-measure `_quarantine/` with an uncapped, time-boxed VM walk (heavy-I/O rule — VM, not
-      interactive) and identify the feeding process; either drain it faster or confirm the growth is a bounded,
-      expected side-effect. (repo: market-tick-data-service or deployment-service)
-- [ ] [DOCS] P3. Confirm the provenance of `_migration_backup_2026_07_25/` and add a disposition line to
-      `/codex/02-data/non-canonical-path-inventory.md` (register-patch stanza already drafted in
-      `data_pipeline_reconciliation_tradfi_2026_08_17.md` Phase 2). (repo: unified-trading-pm)
+- [x] ✅ [DATA] P1. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 1. Root-cause + fix the FX `ohlcv_24h`
+      `source=databento` mis-stamping — the remaining piece of the 2026-07-24 G2 finding after ICE/KRX were already
+      fixed. Re-stamp the 1,008 affected historical rows once fixed. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 2. Finish the FX manifest `instrument_id`
+      "ticks"-literal backfill residual (670 rows) — the 2026-08-04 restamp (`market-tick-data-service@c86016f6`) did
+      not cover this sub-population; extend it or run a targeted follow-up CAS-apply. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 3. Re-measure `_quarantine/` with an uncapped,
+      time-boxed VM walk (heavy-I/O rule — VM, not interactive) and identify the feeding process; either drain it
+      faster or confirm the growth is a bounded, expected side-effect. (repo: market-tick-data-service or
+      deployment-service)
+- [x] ✅ [DOCS] P3. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 4. Confirm the provenance of
+      `_migration_backup_2026_07_25/` and add a disposition line to `/codex/02-data/non-canonical-path-inventory.md`
+      (register-patch stanza already drafted in `data_pipeline_reconciliation_tradfi_2026_08_17.md` Phase 2). (repo:
+      unified-trading-pm)
 - [ ] [DATA] P3. Design + apply a join convention for multi-token equity symbols (e.g. `BRK B` -> `BRK-B` or
       `BRK.B`) and re-stamp the affected rows once decided. (repo: unified-api-contracts + market-tick-data-service)
-- [ ] [DATA] P3. Investigate the 4,142 `venue=CME, instrument_type=UNKNOWN, data_type=ohlcv_1m, attempted_failed`
-      rows. (repo: market-tick-data-service)
-- [ ] [DATA] P3. Run a fresh tradfi phantom audit — published count is 18 days stale and grew 10x since the last
-      measurement. (repo: market-tick-data-service)
-- [ ] [DOCS] P3. Clean up the `venue=BARCHART` residual (9,119 `empty_confirmed` rows, unchanged 4 consecutive
-      reconciliation runs since removal from the vocabulary 2026-06-24). (repo: market-tick-data-service or
-      unified-api-contracts)
-- [ ] [DOCS] P3. Apply the `manifest_dedup_2026_07_10/` register-patch line to
-      `/codex/02-data/non-canonical-path-inventory.md` — proposed 07-21, re-flagged 07-24, re-flagged again 08-17,
-      never applied. (repo: unified-trading-pm)
+- [x] ✅ [DATA] P3. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 5. Investigate the 4,142
+      `venue=CME, instrument_type=UNKNOWN, data_type=ohlcv_1m, attempted_failed` rows. (repo:
+      market-tick-data-service)
+- [x] ✅ [DATA] P3. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 6. Run a fresh tradfi phantom audit — published
+      count is 18 days stale and grew 10x since the last measurement. (repo: market-tick-data-service)
+- [x] ✅ [DOCS] P3. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 7. Clean up the `venue=BARCHART` residual (9,119
+      `empty_confirmed` rows, unchanged 4 consecutive reconciliation runs since removal from the vocabulary
+      2026-06-24). (repo: market-tick-data-service or unified-api-contracts)
+- [x] ✅ [DOCS] P3. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
+      `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 8. Apply the `manifest_dedup_2026_07_10/`
+      register-patch line to `/codex/02-data/non-canonical-path-inventory.md` — proposed 07-21, re-flagged 07-24,
+      re-flagged again 08-17, never applied. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -130,3 +141,20 @@ engineering-latitude choice, not an authority-level call. Item 7 is a one-line "
   (`tradfi_phase_d_terminal_gate_2026_07_24.md` P1). Two doc-coverage findings (venue=FRED undocumented, the ratified
   CME/CBOE null-instrument_id chain-bundle carve-out) were fixed inline in
   `.claude/skills/data-pipeline-reconciliation/reference-tradfi.md` in the same commit as this doc, not tracked here.
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-071b5c) [body-hash:ddfe2c490493c7bc]: RECLASSIFY, per-todo split. 8 of this
+  doc's 9 todos are bounded/worker-determinable engineering fixes (root-cause+fix / mechanical backfill-extend /
+  documentation+register-patch / diagnostic-with-clear-target-population / re-run-existing-tooling shapes, several
+  with precedent already shipped this week on the sibling ICE/KRX finding or the 2026-08-04 restamp) — conflict-checked
+  clean (grepped `plans/active/*.md` + `issues/*.md` for every item's distinctive terms; the 2 near-hits found,
+  `tradfi_phase_d_terminal_gate_2026_07_24.md` and `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s KRW-USD
+  `pipeline_mode` restamp, are confirmed different ground on inspection — the former is this doc's own parent
+  pointing back here, the latter is a different axis (`pipeline_mode`/storage-location, not `source=`-field
+  provenance) already-done for one FX pair only, explicitly scoped out of widening to others) — extracted to
+  `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todos 1-8 (see checkboxes above). **Todo 5 (multi-token equity
+  symbol join convention, `BRK B` -> `BRK-B`/`BRK.B`) stays KEEP-NA, deliberately NOT extracted despite this doc's own
+  "Recommended decision" section listing it as bounded** — picking between undecided naming conventions with no
+  existing corpus precedent (checked: no multi-token-ticker convention exists anywhere in codex/UAC) is a genuine
+  design call per the AO-dispatch-scope-eligibility bar, not a worker-determinable fact; the source doc's own
+  optimism on this one item is not taken at face value per this skill's explicit "stay skeptical of a todo's own
+  self-framing" guidance. Doc stays `assigned_vm: NA` for this remaining item (per-todo split — the doc itself is
+  never whole-doc-reclassified when a mix like this exists).

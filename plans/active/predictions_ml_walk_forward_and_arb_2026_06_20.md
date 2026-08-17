@@ -249,3 +249,8 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
   the still-open cross-plan 🔴 `sports_master:Group E` gate (FSS ≥95% non-NULL features banner) — re-confirmed
   `plans/epics/sports_master.md` line 644 still unchecked live. KEEP-NA on that cross-plan gate citation alone,
   consistent with 6 prior audit passes (07-30 ×2, 08-06, round11 08-09, 08-10). Doc stays NA.
+
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:3e29410bfa0472f6]: KEEP-NA, valid —
+  4 open items re-confirmed all chained/blocked on the still-open cross-plan `sports_master:Group E` gate (line 644,
+  re-verified live unchecked) — a genuine cross-asset-group prerequisite not resolvable by an isolated worker. Doc
+  stays NA.

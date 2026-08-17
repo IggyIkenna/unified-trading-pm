@@ -578,7 +578,7 @@ def run(
     reports: list[RepoDriftReport] = []
     for repo_name, repo_meta in manifest.items():
         repo_type = repo_meta.get("type", "service")
-        archived = bool(repo_meta.get("archived_into", ""))
+        archived = bool(repo_meta.get("archived_into", ""))  # noqa: qg-empty-fallback — absent key is legitimately "not archived", "" is meaningful falsy
 
         if archived:
             continue

@@ -19,7 +19,7 @@ tags: [alerting, self-healing, vm-lifecycle, monitoring, cloud-run, revocation]
 related:
   [
     /plans/archive/2026_08/revocation_arming_2026_08_14.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md,

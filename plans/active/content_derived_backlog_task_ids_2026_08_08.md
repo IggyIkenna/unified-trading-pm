@@ -282,13 +282,15 @@ Both were established by reading the code, and both are silent — neither raise
       normal concurrent `PlanRegenLoop` activity during the run, not a migration side-effect; the apply script's own
       internal row-count assertion, which IS migration-scoped, showed no discrepancy). Repo: agent-orchestrator (SSM
       action + live data migration, no code change).
-- [ ] [BACKEND] P2. **Re-verify the two live collisions are gone and stay gone — partially confirmed 2026-08-16, needs
-      a full-cycle re-check.** `fleet_promoter_glue_runner_stall-001` (resolved 2026-08-08 by closing its last todo)
-      and `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues-002` (open at authoring time). The live-apply
-      todo above's immediate post-apply check already showed 0 occurrences in the 10 minutes right after migration —
-      a good sign, but that window is shorter than one full `PlanRegenLoop` cycle (~30 min). Done-when: re-run
-      `journalctl -u orchestrator.service --since "1 hour ago" | grep -c "REFUSING to reset"` and confirm 0 across a
-      full cycle that has elapsed since the 2026-08-16 live apply. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-17 (slot-32, backend_engineer).** Re-ran the done-when check directly on the
+      orchestrator VM (this slot is colocated, `journalctl -u orchestrator.service` reachable without SSM):
+      `journalctl -u orchestrator.service --since "1 hour ago" | grep -c "REFUSING to reset"` → **0**. Widened the
+      window to cover the FULL span since the live apply rather than trusting a 1h sample —
+      `journalctl -u orchestrator.service --since "2026-08-16 15:40:00"` (the apply's own backup-dir timestamp) through
+      now (`2026-08-17T07:39:55Z`, ~16h, well over 30x one `PlanRegenLoop` cycle) → also **0** occurrences of
+      "REFUSING to reset". Both `fleet_promoter_glue_runner_stall-001` and
+      `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues-002` have not re-fired the guard since the
+      2026-08-16 backfill. Done-when satisfied. Repo: agent-orchestrator (verification only, no code change).
 
 ### Drafted commands for the two `[OPERATOR]` todos above (2026-08-09)
 

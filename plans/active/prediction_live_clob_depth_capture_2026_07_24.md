@@ -909,3 +909,8 @@ sports/prediction-track blocker.
   DEFERRED-CROSS-DEP row-proof item was extracted to `prediction_satellite_ao_dispatch_batch10_2026_08_09.md`
   (shipped/reconciled per that batch and its finalize). This doc's own frontmatter defers the archival call to
   `/archive-candidates-audit` (complex referrer graph), not this skill — no action needed here.
+
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:d9898a365d8c52dc]: KEEP-NA, valid
+  (not-applicable — re-confirmed 0 open todos via a fresh full read + grep; every prose "[ ]" mention is historical
+  narration, not a live checkbox). `archive_exempt: true` defers the archival call to `/archive-candidates-audit`, not
+  this skill. Doc stays NA.

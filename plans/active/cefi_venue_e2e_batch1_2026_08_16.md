@@ -87,11 +87,27 @@ source: >-
       Only orphan: `polymarket_market_microstructure` for `book_snapshot_5` — the same cross-AG naming-artifact
       already identified in the prediction batch (its real consumer is `microstructure`, a different feature_group),
       not a cefi implementation gap.
-- [ ] [BACKEND] P2. **Gap: `COINBASE-FUTURES` has a real batch collector but no live WS connector registered
+- [x] ✅ [BACKEND] P2. **Gap: `COINBASE-FUTURES` has a real batch collector but no live WS connector registered
       anywhere** in `market-tick-data-service/live/connectors/` — `coinbase_book_ws.py` is a helper imported by
       `coinbase_spot_ws.py`, not its own registered venue. A real hard-rule violation ("live for every batch").
       Done-when: a `COINBASE-FUTURES` live connector is registered, or the exclusion is confirmed intentional with
-      a cited reason.
+      a cited reason. **Connector registered — BLOCKED-CREDENTIALS, SHIPPED
+      `market-tick-data-service@75ef3ef084`.** Live-verified against production (no fixture):
+      `wss://ws-md.international.coinbase.com` (Coinbase INTX) accepts a structurally-valid
+      `{"type":"SUBSCRIBE","product_ids":[...],"channel":"<name>"}` message (unmarshal succeeds — confirmed via the
+      server's own "Failed to unmarshal" vs "Unable to authenticate" REJECT-reason distinction) but rejects EVERY
+      channel tested (`MATCHES`/`INSTRUMENTS`/`LEVEL1`/`TICKER`/`FUNDING`) with `"Unable to authenticate"`, including
+      with plausible `key`/`passphrase`/`signature`/`time` auth fields attached — unlike sibling COINBASE-SPOT/
+      COINBASE-CDE connectors, INTX exposes no public/unauthenticated market-data channel at all, and no INTX
+      credential is provisioned anywhere in this fleet (execution-service's transfer wiring only enumerates
+      `coinbaseinternational` as a CCXT withdraw-venue string, it loads no credential for it). New file
+      `coinbase_intx_ws.py` registers a Protocol-conforming BLOCKED-CREDENTIALS scaffold under venue key
+      `COINBASE-FUTURES` (mirrors the `EXTENDED-STARKNET`/`LIGHTER-ZKSYNC` precedent: connect/subscribe/unsubscribe/
+      close work today; `stream()` no-ops + logs the credential gap until real INTX API credentials land and
+      `_CREDENTIALS_AVAILABLE` is flipped) — deliberately does not fabricate an unverified WS auth signing scheme for
+      a live-trading-adjacent data path. Credential ask to unblock: a funded Coinbase International Exchange account
+      + issued API key/secret/passphrase, stored under a new GSM secret (suggested name
+      `coinbase-intx-api-credentials`).
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, 0 of 12 major venues reach a complete
       end-to-end state.** SHIPPED — `unified-trading-pm@4686d503ad`. 3 parallel research passes — strategy-service
       (positions), strategy-service + unified-api-contracts (archetype/slot declarations — the prediction batch's
@@ -261,13 +277,19 @@ source: >-
       loud — the root cause is tracked, this specific misrouting consequence is not, new gap todo below.
       `KALSHI-PERP` is fiat-only (ACH/wire/debit per its own registry comment) with no fiat-transfer rail modeled
       at all, and also misroutes to the same wrong `CEX_WITHDRAW` default — new gap todo below.
-- [ ] [BACKEND] P1. **Gap: `classify_transfer_type` silently defaults to `CEX_WITHDRAW` for venues with neither
+- [x] ✅ [BACKEND] P1. **Gap: `classify_transfer_type` silently defaults to `CEX_WITHDRAW` for venues with neither
       an ON_CHAIN/custody match nor a real CCXT integration** — confirmed for `EXTENDED-STARKNET` (empty
       `custody_provider`, root cause already tracked) and `KALSHI-PERP` (fiat-only, `ccxt_exchange_id` unset).
       Both would attempt a CCXT `withdraw()` call that cannot succeed, rather than failing loud with a clear
       "no transfer rail for this venue" error. Done-when: `classify_transfer_type` (or its caller) fails loud for
       a venue with no real rail, instead of defaulting to a semantic that cannot work; cite the fix against both
-      venues.
+      venues. **The fix was already shipped — `unified-api-contracts@f1c5d63b` (2026-08-17) added the exact
+      fail-loud `ValueError` this todo asked for, citing both EXTENDED-STARKNET and KALSHI-PERP by name in its
+      own comment — but landed with zero test coverage. Closed here by adding the missing regression tests —
+      `unified-api-contracts@4567adfe11`**: explicit coverage for both named venues raising `ValueError` (not
+      silently returning `CEX_WITHDRAW`), a positive-control (BINANCE-FUTURES, which has a real
+      `ccxt_exchange_id`, still classifies as `CEX_WITHDRAW`), and the fully-unknown-venue case. QG green (572s,
+      unified-api-contracts), sentinel-verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P1. **Record every gap found — done 2026-08-16.** 3 genuinely new gaps tracked (COINBASE-FUTURES
       live connector, the CCXT-withdraw-stub issue doc, the wrong-default transfer misrouting); several other
       apparent gaps (KALSHI-PERP/POLYMARKET-PERP step-2 scaffolds, EXTENDED-STARKNET missing batch adapter,
@@ -279,6 +301,17 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-17 — transfer-misrouting gap closed; fix was already shipped, real remaining work was missing test
+  coverage.** SHIPPED — `unified-api-contracts@4567adfe11` (slot 16). Dispatched against the `classify_transfer_type`
+  todo; direct read of the live function found `unified-api-contracts@f1c5d63b` (slot 18, same day) had already
+  landed the fail-loud `ValueError` for EXTENDED-STARKNET and KALSHI-PERP before this task was picked up — verified
+  by reading the function body + both venues' `VENUE_WALLET_CAPABILITIES` entries directly, not taken on the
+  commit message's word alone. That fix shipped with zero regression coverage, so the genuine remaining work was
+  tests, not a second fix: added 4 unit tests in
+  `tests/internal/unit/domain/execution_service/test_transfer_types.py` (both named venues fail loud, a
+  real-CCXT-rail venue still classifies normally as a positive control, and a fully-unknown venue also fails
+  loud). QG green (572s); quickmerge landed after sentinel/push-race retries under branch churn — independently
+  verified `4567adfe11` is an ancestor of `origin/live-defi-rollout` before citing it here.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 **2026-08-16 — full contract sweep done, 1 major finding escalated, 3 new gaps total.** SHIPPED —
 `unified-trading-pm@69d861ef2d`. 4 parallel research passes across all 4 repos. Cefi confirmed genuinely

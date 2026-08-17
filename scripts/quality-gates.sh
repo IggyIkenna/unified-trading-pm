@@ -449,6 +449,14 @@ if [ -f "$MANIFEST" ]; then
         || { echo "❌ workspace-manifest.json is not byte-canonical — fix the writer (see checker output)" >&2; exit 1; }
 fi
 
+# ── Cron branch-override parity guard (unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17) ──
+# scripts/dev/cron-branch-overrides.txt is a THIRD, hand-maintained branch-resolution registry
+# (agent-orchestrator's _REPO_INTEGRATION_BRANCH is the first, setup-tab-worktrees.sh's manifest
+# read is the second) that a repo's non-default integration_branch can silently miss — the exact
+# gap that caused a ~30-slot FM5 branch-quarantine storm every 5 minutes on 2026-08-17.
+python3 "${REPO_ROOT}/scripts/quality_gates/check_cron_branch_override_parity.py" \
+    || { echo "❌ cron-branch-overrides.txt has drifted from workspace-manifest.json (see checker output)" >&2; exit 1; }
+
 # ── QG_SLICE completeness guard (local↔CI parity, cicd_mvp Phase-2 2026-07-02) ──
 # Machine-enforces the "3 CI slices = zero lost coverage vs the local full run"
 # partition claim; catches a slice-flag edit that would silently drop a phase

@@ -152,3 +152,11 @@ context_scope:
   [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` re-confirmed live — prerequisite still carries
   6 open todos, gate not cleared. KEEP-NA on that citation alone, consistent with 5 prior audit passes (07-30 through
   08-10). Doc stays NA.
+
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:fdb7258ca90655c0]: KEEP-NA, valid —
+  real `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` gate re-confirmed still
+  open (6 todos) — KEEP-NA on that citation alone. Separate finding, not overriding the gate: the dimensions-
+  enumeration panel this doc's P0 todo asks for has substantially shipped cross-cuttingly via Track-6
+  (`deployment-ui@3fb6779` AxisValueCensus panel), though the CQG-axis addition the todo also names is confirmed
+  still missing (0 `cqg`/`canonical_question_group` hits in either shipped file) — real residual scope survives once
+  the gate clears. Doc stays NA.

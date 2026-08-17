@@ -194,7 +194,10 @@ context_scope:
 - [ ] [BACKEND] P2. **Re-run the 60-min context-signal validation after a clean fleet — overdue.** Multiple qualifying
       changes to `context_lifecycle.py`/`context_probe.py` have landed since 2026-08-08 (`a1e2969`, `59d9417`,
       `c00dc13`, `acc41b1`, `4af78dc`, `ac9ba18`, `905c210`, `c730f46`, `e943d72`+) with no re-run recorded since the
-      2026-08-10 audit. Source: same doc, line ~411.
+      2026-08-10 audit. Source: same doc, line ~411. — **RE-RUN DONE 2026-08-17** (slot 12, `ao_satellite_
+      ao_dispatch_batch21` todo 1): fresh 60-min clean-start window, PASS on both criteria (21 forces, `60×11 · 69×10`,
+      zero terminal wedges — see the source issue doc's "2026-08-17 validation window" section for the full write-up).
+      Checkbox left unflipped here per this batch's own rule; `batch21_finalize` reconciles it.
 - [x] [REVIEW] P3. **DONE.** `DoneRequest.claude_session_id` field exists (`server/models/worker_api.py:275`);
       `_done_one_off` (`server/routes/slots_worker.py:1912-1924`) matches it against the archived row's own
       `claude_session_id` and returns idempotent 200 instead of 409. Tracker's premise ("still has no field") is stale.

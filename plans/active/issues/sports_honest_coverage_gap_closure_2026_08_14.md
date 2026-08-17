@@ -404,7 +404,7 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       at 18:24Z, 1.5h after its startup script reported `exit status 0`: no MTDS python process running, load avg
       0.00, and `/home/ikennaigboaka/logs/mtds-backfill.log` (708 bytes, last written 16:57:28Z — i.e. within seconds
       of boot) shows the actual terminal line: `[vm-exec] admission HELD by alert-driven revocation — skipping run
-      (exit 75)`. This is Phase 5 of `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` working exactly
+      (exit 75)`. This is Phase 5 of `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` working exactly
       as designed — a launcher preflight (`revocation_admission_cli.py`) correctly declines to run when a hold marker
       exists, exit 75 (`EX_TEMPFAIL`), logged as a clean skip not a crash. Read the actual marker
       (`vm-census/admission-hold/mtds-backfill-odds-1.json` in `deployment-scripts-central-element-323112`, via UTL's
@@ -560,3 +560,14 @@ live SSH-based root-cause session or patience with more relaunches).
   odds-VM freshness-skip-window investigation) is open-ended diagnostic work, explicitly "investigated but not
   confirmed" per the doc's own text, with an operator notification already pending (no answer yet) — not a
   mechanical/scripted fix with a predetermined target state.
+- **na-eligibility-audit 2026-08-17** (dispatch agt-952948, second same-day pass, re-verified end-to-end): KEEP-NA,
+  valid — but the doc's content has genuinely moved since the marker above: the freshness-skip-window item it cited
+  is now RESOLVED (see this doc's own "RESOLVED 2026-08-17 — the freshness-skip window is deliberate..." entry
+  higher up). The doc's only remaining open item is now the `[SCRIPT] P2` "Run the sports manifest rescan once the
+  weather VM completes" todo (line ~520) — not yet actionable (`weather-backfill-20260816-192237` still running as
+  of today) and, once actionable, is a VM-launch action (`launch-sports-manifest-rescan-vm.sh`) with no established
+  safe-idempotency citation in this doc (per CLAUDE.md's VM-launch/GCS-`--apply` gating rule) on a doc whose
+  character throughout is a live, frequently multi-touched operational ops journal rather than a bounded task list.
+  Considered and declined RECLASSIFY: staying NA rather than promoting the whole doc's `assigned_vm` for one
+  VM-gated, not-yet-actionable script-run todo. Re-flag once the weather VM completes and the rescan is either run
+  or explicitly self-justified.

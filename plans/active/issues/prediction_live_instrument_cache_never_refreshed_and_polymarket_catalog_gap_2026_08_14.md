@@ -140,3 +140,9 @@ and is flagged, not diagnosed further, here.
   NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+
+- **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:53901990cf58bd20]: KEEP-NA, valid —
+  3 open items re-confirmed as genuine, unblocked root-cause/design investigations on live-dispatch-critical capture
+  code. Cross-checked `cross_ag_live_capture_parity_2026_08_14.md` and confirmed a mutual redirect (that plan's own
+  todo 224 stays open specifically pending this doc's fix), not a duplicate extraction — `KEEP_NA_STALE_DUPLICATE`
+  does not apply. Doc stays NA.

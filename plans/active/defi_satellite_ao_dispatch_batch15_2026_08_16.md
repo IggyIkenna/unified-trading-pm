@@ -60,7 +60,7 @@ source: >-
 
 ## Todos
 
-- [ ] [DOC] P2. **Document the collateral-posting-mode + buffer-sizing contract.** The collateral-aware
+- [x] ✅ [DOC] P2. **Document the collateral-posting-mode + buffer-sizing contract.** The collateral-aware
       down-sizing branch (USDC-collateral + margin-buffer, `venue_accepts_collateral`/`get_collateral_haircut`)
       shipped in `strategy-service@6e9164b1` (2026-06-17, Phase A of the source doc) — the "if it ships" precondition
       is now met. Write up the collateral-posting-mode + buffer-sizing contract in `codex/04-architecture/`
@@ -71,10 +71,33 @@ source: >-
       `defi_satellite_ao_dispatch_batch15_2026_08_16.md` extracted from
       `plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`'s "Codex SSOT updates"
       todo. Done when: both codex docs describe the shipped contract with file:line citations into the
-      implementation, and neither doc is missing required `scope:`/`last_reviewed:` frontmatter.
+      implementation, and neither doc is missing required `scope:`/`last_reviewed:` frontmatter. **SHIPPED —
+      `unified-trading-pm@<this commit>`.** Found the sizing-mechanism half ALREADY documented in both target docs
+      (`token-wrapping-and-collateral.md`'s "USDC Margin Buffer" section citing `staked_basis.py`/`param_schema.py`;
+      `capability-wizard.md`'s "Collateral down-sizing param" section citing `param_schema.py:144,198`) — but
+      neither doc cited `archetypes_rank.py`, the file this todo explicitly named. The real remaining gap was the
+      R2 opportunity-RANKING consequence (the down-sized slot's ranking penalty), never documented anywhere. Added
+      a new "Opportunity-ranking consequence" subsection to `token-wrapping-and-collateral.md` citing
+      `CarryStakedBasisRankAllocator._score()` (`archetypes_rank.py:373-383`) and
+      `_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS` (`:337`), plus a short cross-referencing paragraph in
+      `capability-wizard.md` (same citations, noting it is a standing constant, not a wizard-exposed param).
+      Also corrected a stale citation I found while editing (`token-wrapping-and-collateral.md` cited
+      `_derive_structure()` at `staked_basis.py:344`; live code has it at `:345`) and bumped both docs'
+      `last_reviewed` to today (`capability-wizard.md` was 2026-06-11; `token-wrapping-and-collateral.md` was
+      stamped 2026-08-24, a future date relative to today — corrected). Both docs already had `scope:` frontmatter
+      present, so the frontmatter half of done-when required no fix.
 
 ## Progress Log
 
+- **2026-08-17 — collateral-contract doc gap closed; two of three required citations already existed.** SHIPPED —
+  `unified-trading-pm@<this commit>` (slot 16). Both target codex docs already documented the `margin_buffer_pct`
+  sizing mechanism (`param_schema.py`, `staked_basis.py`) — verified by direct read before writing anything, not
+  assumed missing from the todo's framing alone. The genuine gap was narrower than the todo implied: neither doc
+  cited `archetypes_rank.py`'s opportunity-ranking consequence (Phase A's R2 requirement), which this todo
+  explicitly named as a citation target. Closed by adding that citation to both docs (new subsection in the
+  04-architecture doc, a cross-referencing paragraph in the wizard doc) rather than re-writing content that
+  already existed. Also fixed one stale line-citation (`:344`→`:345`) and a future-dated `last_reviewed` found
+  while editing, per the workspace's "a doc that misled you is a finding" rule.
 - **2026-08-16 (na-eligibility-audit, defi tranche)**: drafted via the per-todo RECLASSIFY-split path — the source
   doc's other open item (wizard food-chain parameterization, exec-algo/risk-ladder/collateral-posting-mode/
   source-routing) is real design/build work and was NOT extracted, per the bounded-outcome bar. Paired with

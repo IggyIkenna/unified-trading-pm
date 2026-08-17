@@ -21,7 +21,7 @@ sitting, but it must never get WORSE):
    never-shipped codex content, references to plans since renamed/archived under a
    different name, etc.) — a real corpus-health finding, not something this migration
    caused; tracked as its own cleanup in
-   plans/active/issues/reference_path_convention_2026_07_23.md.
+   plans/archive/issues/reference_path_convention_2026_07_23.md.
 
 `depends_on` / `parent_epic` / `supersedes` / `superseded_by` / `entry_point_for` are
 deliberately OUT OF SCOPE — those are machine-parsed bare-slug fields per
@@ -119,7 +119,7 @@ def write_baseline(format_count: int, existence_count: int, existing: Baseline) 
         "# NEVER hand-raise a count.\n"
         "#\n"
         "# SSOT: /codex/11-project-management/cross-reference-path-convention.md,\n"
-        "# /plans/active/issues/reference_path_convention_2026_07_23.md.\n"
+        "# /plans/archive/issues/reference_path_convention_2026_07_23.md.\n"
         f"note: Seeded 2026-07-23 — corpus-wide migration via fix_reference_paths.py.\n"
         f"format_count: {new_format}\n"
         f"existence_count: {new_existence}\n",
@@ -392,7 +392,7 @@ def main() -> int:
     )
     print(
         f"{'✅' if exist_ok else '❌'} check_reference_paths (existence): {exist_n} dangling ref(s) "
-        f"(baseline {baseline.existence_count}) — see plans/active/issues/reference_path_convention_2026_07_23.md"
+        f"(baseline {baseline.existence_count}) — see plans/archive/issues/reference_path_convention_2026_07_23.md"
     )
 
     if update:

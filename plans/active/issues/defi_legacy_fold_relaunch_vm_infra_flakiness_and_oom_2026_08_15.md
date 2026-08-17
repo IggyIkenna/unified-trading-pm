@@ -158,7 +158,8 @@ precondition-satisfied but not yet executed to completion. Per `/codex/15-runboo
   ~3.26M rows across 4 docs that don't cross-reference each other, this one included:
   `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`,
   `/plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`,
-  `/plans/active/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md`. Both this doc's VM-infra failures AND the
+  `/plans/archive/2026_08/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md` (archived 2026-08-17). Both this
+  doc's VM-infra failures AND the
   cross-doc row-count conflict involve the same manifest-consolidator/rebuild machinery and the same bucket — they may
   share a root cause. Added per `plan_reconciler_findings_defi_2026_08_16.md`'s Contradiction #2 recommendation so a
   worker on any one of these 4 docs sees the others; the row-count conflict itself is NOT resolved here (needs a fresh

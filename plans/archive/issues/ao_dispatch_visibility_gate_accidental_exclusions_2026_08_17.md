@@ -9,7 +9,7 @@ summary: >-
   `qg_resource_baseline.json`); confirmed unrelated to that change (this gate scans
   `plans/active/*.md` todo text only, the shipped diff touched only a `scripts/dev/*.json` data
   file).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -23,7 +23,7 @@ source: >-
   Found while shipping ci_satellite_ao_dispatch_batch15_2026_08_16.md's qg-baseline
   re-measurement todo; discovered via a quality-gates.sh pre-commit failure on
   unified-trading-pm, confirmed unrelated to that shipped diff.
-resolved_by:
+resolved_by: slot-8 (review-craft, 2026-08-17)
 locked_by:
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -138,9 +138,28 @@ remedy text.
       than opening the checkbox line's head, so `_is_declared()` correctly classified it accidental
       per its "must open the checkbox line" rule. Fixed by moving `BLOCKED-CREDENTIALS:` to the head
       of the description (right after `[BACKEND] P1.`) — no semantic change to the todo's content.
-- [ ] [REVIEW] P1. Classify
+- [x] ✅ [REVIEW] P1. Classify
       `issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`'s
-      flagged todo (repo: unified-trading-pm).
+      flagged todo (repo: unified-trading-pm) — 2026-08-17 (slot-8, review-craft): genuinely open, not a
+      legitimate exception — same bug class as items 1, 2, and 4: a blockquote note SITTING BETWEEN the
+      flagged `[DATA] P2` todo and the next `- [ ]` checkbox (the `[DATA] P3` item) still contained the
+      literal string `BLOCKED-OPERATOR-DECISION`, describing batch5's now-superseded 2026-08-02
+      characterization of the P2 todo as gated under the 2026-07-30 KEEP-NA ruling. `_TODO_BLOCK_BOUNDARY_RE`
+      (`agent-orchestrator/server/regen_backlog_from_plan.py`) only stops continuation-scanning at the next
+      `- [` checkbox or a `#` header — a blockquote line matches neither, so the note's stale marker text sat
+      inside the P2 todo's scanned continuation block and `_has_live_blocked_token` read it as a currently-live
+      hold (its 60-char stale-prefix/-suffix guards didn't match the surrounding prose: "Deferred — " before,
+      ", upholding the 2026-07-30 KEEP-NA ruling" after — neither hits the `was`/`no longer`/`retagged from`/
+      `previously` prefix set or the `was/is/were retired/resolved/...` suffix set). The P2 todo's own current
+      text already says "**NOT operator-gated (round5-cefi-question-resolution 2026-08-08)**", and the doc's
+      own 2026-08-12 Progress Log entry independently reclassified `assigned_vm: NA` → `planning` on the same
+      finding — the blockquote note was simply never updated to match. Fixed by rewriting the note to describe
+      the same history without the literal `BLOCKED-` token (paraphrased as "held on the 2026-07-30 KEEP-NA
+      ruling ... cleared 2026-08-08"), and corrected its stale "this doc stays `assigned_vm: NA`" closing claim
+      to match the doc's actual current frontmatter. Verified live:
+      `python3 scripts/quality_gates/check_ao_dispatch_visibility_gate.py --json` now shows
+      `accidental_exclusions: 0` (down from 1), and this doc's own `excluded` list is empty. Repo:
+      unified-trading-pm.
 
 ## Progress Log
 

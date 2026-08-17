@@ -26,7 +26,7 @@ referenced_by:
     plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
   ]
 owner:
-last_reviewed: 2026-06-11
+last_reviewed: 2026-08-17
 code_refs:
 ---
 
@@ -135,6 +135,14 @@ Param-schema locations in `strategy_service/engine/strategies/v2/param_schema.py
 - `PARAM_SCHEMA_REGISTRY["CARRY_STAKED_BASIS_PERP"]` → `margin_buffer_pct` (line 144, default `"0.20"`, units
   `fraction`, `min="0" max="1"`, source `staked_basis.py:219,328`)
 - `PARAM_SCHEMA_REGISTRY["CARRY_STAKED_BASIS_DATED"]` → `margin_buffer_pct` (line 198, same schema)
+
+The down-sizing also feeds opportunity RANKING, not just position sizing — `CarryStakedBasisRankAllocator._score()`
+(`strategy_service/portfolio_allocator/archetypes_rank.py:373-383`) scores a buffered slot below its
+full-collateral counterpart on both effective size and a cross-exchange/dual-deposit capital-cost penalty
+(`_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS`, `:337`) — not currently a wizard-exposed param (standing constant,
+operator-confirmed 2026-08-08). Full mechanism + ranking contract:
+`/codex/04-architecture/token-wrapping-and-collateral.md` § "USDC Margin Buffer" and its "Opportunity-ranking
+consequence" subsection.
 
 ## How to run / view
 

@@ -179,21 +179,82 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ### Phase 2 — writer + adjacent consumers migrate together (gated on Phase 1 landing)
 
-- [ ] [BACKEND] P1. market-tick-data-service: switch `PartitionedTickWriter`/`symbol_rules.py`/`manifest_finalize.py` to
+- [x] ✅ [BACKEND] P1. market-tick-data-service: switch `PartitionedTickWriter`/`symbol_rules.py`/`manifest_finalize.py` to
       emit the corrected shape for all NEW writes going forward (existing GCS objects/manifest rows at the old shape are
       untouched by this todo — Phase 4 handles them). Regression test asserting a fresh options_chain/ futures_chain
-      write lands at the corrected path + manifest coordinates.
-- [ ] [BACKEND] P1. market-data-processing-service: update `options_chain_adapter.py`/`futures_chain_adapter.py` +
+      write lands at the corrected path + manifest coordinates. — market-tick-data-service@5389036c31 (+ follow-up
+      market-tick-data-service@5c98f404c8 fixing a line-cap regression from the first commit). CeFi's raw
+      `instrument_type` (still the chain token, upstream Tardis adapters unchanged) is swapped with `data_type` (real
+      schema value) at write time via `_corrected_chain_write_shape`/`_resolve_chain_write_context`
+      (`chain_partition_dims.py`); TradFi's parallel bug fixed too (`_DATA_TYPE_TO_INSTRUMENT_TYPE` previously
+      duplicated the chain token into `instrument_type` instead of resolving the real type). Chain-shard detection
+      made symmetric (`_is_chain_shard`, either axis) across `_get_writer`/`_write_group`/`venue_fetch.py`/
+      `manifest_finalize.py`/`_cluster_bookkeeping.py` so both legacy and corrected shapes are recognized during the
+      dual-acceptance window; `_resolve_partition_data_type` no longer merges a genuine chain-bundle
+      `options_chain`/`futures_chain` `data_type` value into a shared partition (previously collapsed the two
+      distinct corrected-shape data_types together, defeating the migration). `combo_chain` explicitly out of scope
+      (never mislabeled the same way). New regression tests:
+      `tests/unit/test_partitioned_writer_cefi_chain_relabel_corrected_shape.py` (fresh options_chain/futures_chain
+      writes land at the corrected path + shard-atom; combo_chain unaffected); updated 2 pre-existing
+      `test_partitioned_writer_cluster_counts.py` assertions to the corrected atom. Full `quality-gates.sh` green
+      (11025 passed, `.qg_last_passed_sha=5c98f404c83f8035b100b88dee9b5682ec65ddcd`).
+- [x] ✅ [BACKEND] P1. market-data-processing-service: update `options_chain_adapter.py`/`futures_chain_adapter.py` +
       `output_schemas.py`'s hardcoded `applies_to` sets + `output_path_helpers.py::is_chain_bundle_data_type` to
       recognize the corrected shape IN ADDITION to the legacy shape (historical data still needs to resolve until Phase
-      4 completes).
-- [ ] [BACKEND] P1. deployment-api: update the data-status/catalogue stack (files listed in the consumer inventory
+      4 completes). — market-data-processing-service@bef6495bed. **Investigation found the real functional gap was
+      NOT in the 3 named files** — all three already recognize both shapes by construction (see Progress Log for the
+      full evidence trail): they operate exclusively on the canonical LOGICAL `data_type` (the value
+      `CandleAdapterRegistry` keys on and `CandleOutput.data_type` carries, always `"options_chain"`/`"futures_chain"`
+      regardless of which raw on-disk shape a shard was read from), never on the raw source
+      `instrument_type=`/`data_type=` path segments. The actual gap was one level upstream:
+      `orchestration_scanner.py::_blob_matches_data_type_partition` — MDPS's raw-tick file-DISCOVERY matcher — only
+      matched the legacy shape (`instrument_type={data_type}/`), so a freshly-written corrected-shape shard
+      (`data_type=options_chain/`, real type at `instrument_type=option/`) would never enter the candidate set at
+      all, and the 3 named files (already shape-agnostic) would simply never be reached for that shard. Fixed to
+      match EITHER segment. 2 new regression tests
+      (`test_chain_type_matches_corrected_data_type_segment`,
+      `test_futures_chain_type_matches_corrected_data_type_segment`) in `test_orchestration_scanner_coverage.py`.
+      Full `quality-gates.sh` green (2462 passed, 2 skipped, `.qg_last_passed_sha=bef6495bed60e95462ede20b5dec463971ce13aa`).
+- [x] ✅ [BACKEND] P1. deployment-api: update the data-status/catalogue stack (files listed in the consumer inventory
       above) to read/aggregate both shapes as the same logical entity during the migration window — a shard must not
-      appear to double-count or vanish depending on which shape it's currently in.
+      appear to double-count or vanish depending on which shape it's currently in. — deployment-api@2a1e504afc. New
+      shared `deployment_api.utils.chain_bundle_shapes` module (dual-shape detection + alternate-axes resolution,
+      `combo_chain` explicitly out of scope). Fixed: `data_status_hierarchical.py` normalizes legacy `data_type`
+      ("trades") to the chain token so the drilldown TREE merges both shapes into one `data_type` node (the exact
+      double-count/vanish failure mode); `shard_detail/_shard_core.py::_mtds_shard_path` now probes the alternate
+      shape on a miss (also fixed a pre-existing `is_derivative_bundle` AND-vs-OR bug that meant neither pure shape's
+      v6 bundle tail was ever correctly detected — found investigating this todo, fixed same file/commit);
+      `data_status_drilldown/_instruments.py::_list_instruments_full` gets a dual-shape prefix fallback so a shard
+      doesn't "vanish" from the per-instrument listing, and `_bundling_mode` now takes `data_type` so a
+      corrected-shape bundle classifies `per_underlying` (not `per_symbol`); `path_combinatorics.py`'s
+      `CombinatoricEntry.to_gcs_prefixes` emits the alternate-shape prefix for options_chain/futures_chain combos
+      only (no widening of the rest of the combinatorics matrix — efficiency north-star). 26 new unit tests across
+      5 test files; full `quality-gates.sh` green (`.qg_last_passed_sha=2a1e504afcf74a632790d424524539ff7158d35e`).
+      **Explicitly NOT fixed (documented, not silently left)**: `get_shard_info`/`_collect_instrument_types`
+      (`_instruments.py`) enumerates raw `instrument_type=` path segments without filtering by `data_type` — a
+      pre-existing gap (its own docstring's claim of per-`data_type` scoping doesn't match its actual GCS-prefix
+      scan) that predates this migration; during the dual-shape window it will list a corrected-shape bundle's real
+      type (`option`/`future`) as a distinct entry alongside any genuine single-instrument TradFi `option`/`future`
+      data for the same venue/day, which this todo's scope didn't extend to disambiguating. `routes/data_status/*.py`
+      (`_distinct_values.py`/`_axis_census.py`/`_downloads.py`/`_query_meta.py`/`_live_coverage.py`) were checked and
+      confirmed to be thin passthroughs with no independent chain-bundle prefix-building/aggregation logic of their
+      own — no code change needed there; they inherit the fix via the services they call.
 - [ ] [UI] P2. deployment-ui: verify whether `DataStatusTab.tsx`/`DataStatusDrilldown.tsx`/`ShardDetailModal.tsx`/
       `mock-api.ts` branch on path-position client-side. If they're a pure passthrough of backend-shaped data (likely,
       per deployment-api already normalizing above), state that explicitly and skip; only change code if a real
       client-side assumption is found.
+- [ ] [BACKEND] P2. market-data-processing-service: `app/utils/path_parsing.py::blob_matches_canonical_instrument_id_stems`
+      has a related, NOT-yet-fixed gap found during the file-discovery-matcher investigation above (see Progress Log):
+      for a TradFi instrument-id-filtered backfill request (a reference id like `CME:OPTION:ES`), the function's first
+      branch (`instrument_type={inst_lower}/` direct match) now ALSO matches the corrected shape's real-type segment
+      (`instrument_type=option/`) — but then requires the bundle filename to equal `{stem}.parquet` (an individual
+      instrument id), which a chain-bundle file never satisfies (it's `ticks.parquet`). It returns `False` without ever
+      falling through to `_tradfi_chain_bundle_match`'s underlying-root matcher — which DOES handle bundles correctly,
+      but is only reachable when the direct branch fails outright, not when it half-matches. Net effect: a
+      corrected-shape TradFi options/futures chain bundle becomes undiscoverable via instrument-id-filtered requests
+      (the whole-day scanner path fixed above is unaffected — this is a distinct code path). Needs the branch order
+      reworked so a bundle-shaped blob (no per-instrument stem match) falls through to the chain-bundle matcher instead
+      of short-circuiting on the direct instrument_type hit.
 
 ### Phase 3 — backfill existing GCS objects + manifest rows (gated on Phase 0's decision AND Phase 2 landing; delete-safety-gated)
 
@@ -293,3 +354,44 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   once the run completes) while the mechanics stay the always-required copy-verify-delete sequence. This does not
   change Phase 3's `[OPERATOR]` tag, its delete-safety gating, or its blast-radius-measurement requirement — only
   confirms the backfill script's shape before it is written. No code changed by this todo.
+- **2026-08-17 (slot 4, backend_engineer) — Phase 2 MDPS todo done, market-data-processing-service@bef6495bed.**
+  Investigated the 4 named consumers (`options_chain_adapter.py`, `futures_chain_adapter.py`,
+  `output_schemas.py`'s `applies_to` sets, `output_path_helpers.py::is_chain_bundle_data_type`) by tracing the actual
+  variable threading, not just grepping for the token: `data_type` reaches all 4 as the canonical LOGICAL request name
+  (`"options_chain"`/`"futures_chain"` — the same value `CandleAdapterRegistry.get_adapter(data_type=...)` keys on and
+  `CandleOutput`'s own `data_type` field always carries), never the raw source `instrument_type=`/`data_type=` GCS path
+  segments. Confirmed via `live_workers_chain.py::_resolve_chain_adapter_data_type`'s docstring + logic (the "already
+  fixed part-1" routing cited in this plan's consumer inventory) — it normalizes BOTH shapes to the same logical
+  `data_type` BEFORE any of the 4 named files ever see it. So none of the 4 needed a code change; verified with an
+  explicit trace, not assumed.
+  **Found the real gap one level upstream**: `orchestration_scanner.py::_blob_matches_data_type_partition` — the
+  raw-tick file-DISCOVERY matcher that decides which blobs even become read/routing candidates — checked ONLY
+  `instrument_type={data_type}/` (the legacy on-disk shape). Since MTDS's Phase 2 writer todo
+  (`market-tick-data-service@5389036c31`) now emits the corrected shape (`data_type=options_chain/`, real type at
+  `instrument_type=option/`) for fresh writes, this matcher would silently never discover any freshly-written
+  corrected-shape shard — it never enters the candidate set, so the (already shape-agnostic) adapter/schema/path-helper
+  logic never gets a chance to run on it. Fixed to accept EITHER `instrument_type={data_type}/` OR
+  `data_type={data_type}/`. 2 new regression tests in `test_orchestration_scanner_coverage.py` pin both
+  options_chain and futures_chain corrected-shape blobs as discoverable. Full `quality-gates.sh` green (2462 passed,
+  2 skipped, `.qg_last_passed_sha=bef6495bed60e95462ede20b5dec463971ce13aa`).
+  **What was NOT fixed (tracked as a new Phase 2 P2 todo above, not silently left)**: `path_parsing.py`'s
+  `blob_matches_canonical_instrument_id_stems` (the TradFi instrument-id-filtered backfill matcher — a distinct code
+  path from the whole-day scanner fixed here) has a related gap: its direct `instrument_type=` branch now half-matches
+  the corrected shape's real-type segment but then fails the per-instrument-stem filename check (bundle files are
+  `ticks.parquet`, not `{stem}.parquet`), short-circuiting before ever reaching the chain-bundle underlying-root
+  matcher that would actually resolve it correctly. Left as a distinct, correctly-scoped follow-up rather than folded
+  into this commit, since fixing it requires reordering the function's branches (a different, riskier change) and this
+  plan's own todo scope named MDPS's chain-ADAPTER consumers, not the TradFi instrument-id-filter path.
+  **Also fixed (this file, same commit)**: the prior Phase 2 MTDS todo's `<repo>@<sha>` citations swapped the two
+  commits and cited an unresolvable SHA — `plan-hygiene`'s commit-SHA-evidence check caught this when I staged the
+  file. Verified against `market-tick-data-service`'s real history: the FIRST commit ("emit corrected shape") is
+  `5389036c31` (was mis-cited as `5c98f404c8`), and the follow-up line-cap fix is `5c98f404c8` (was mis-cited as the
+  non-existent `6e06fe17`) — its message literally reads "shrink writer to 900-line cap", confirming the swap. Fixed
+  both citations plus the QG sentinel SHA at the same todo, and my own new Progress Log entry above which had copied
+  the same wrong SHA before I caught it.
+- **2026-08-17 (slot 23, backend_engineer) — Phase 2 deployment-api todo done, deployment-api@2a1e504afc.** See the
+  checkbox annotation above for the full change list + explicit not-fixed scope. Also fixed a QG false-positive this
+  work exposed: the new `_probe_mtds_shard_axes` helper inserted above `_shard_core.py::_manifest_row_for_coord`
+  shifted that pre-existing, already-baselined bare `read_availability_index` call from line 525 to 565 —
+  re-pointed the line-keyed baseline entry (`unified-trading-pm@b7131a09a0`, direct-pushed per the GATE-INFRA
+  `scripts/quality_gates/` carve-out) so the ratchet check keeps recognizing it instead of misreporting it as new.

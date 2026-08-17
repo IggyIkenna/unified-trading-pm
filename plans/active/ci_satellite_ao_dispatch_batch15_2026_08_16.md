@@ -109,7 +109,8 @@ source: >-
       22MB/541MB `local` entries are now backed by fresh `vm` entries: `unified-trading-system-ui` 3821MB,
       `deployment-ui` 743MB). Blocked mid-ship by a pre-existing, unrelated `check_ao_dispatch_visibility_gate` red
       (corpus-wide undeclared-exclusion drift, confirmed via stash test to have zero relation to this diff) — filed
-      `plans/active/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` +
+      `/plans/archive/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` (archived 2026-08-17, all
+      6 items resolved) +
       repo-blocker RB-e08a525b per RULES.md §4b; resolved collectively by the fleet (concurrent slots fixing the
       flagged docs) before I could finish my own partial fix, gate green again (5 ≤ baseline 0 + buffer 5) as of this
       ship.
@@ -137,9 +138,47 @@ source: >-
       loop (extracted verbatim, stub `process_repo`) proving both the staggered case (min gap ≥ ~900ms at
       stagger=1s) and the opt-out case (stagger=0 completes near-instantly, no forced delay).
 
-- [ ] [INFRA] P2. **Share bare repos + `git worktree` for sibling-clone I/O** instead of full clones per slot — explicit
+- [x] ✅ [INFRA] P2. **Share bare repos + `git worktree` for sibling-clone I/O** instead of full clones per slot — explicit
       do/don't scope already given in the source doc. Source: same doc (line ~634). Gate: sibling-clone disk I/O
-      measurably reduced; existing slot isolation guarantees unaffected.
+      measurably reduced; existing slot isolation guarantees unaffected. **DONE 2026-08-17 (slot 13, infra craft) —
+      `unified-trading-ci@3209654`, `unified-trading-pm@10fb8339dc`.** Scope note: this todo's "sibling-clone I/O"
+      is CI dep-repo cloning inside `python-quality-gates-v2.yml`'s `clone_repo()` (the self-hosted glue-runner host
+      cloning every dep repo fresh on every QG job), NOT the AO slot-worktree model (`.tabs/<N>/<repo>`, which is
+      already Path-B — its own `.git` per slot, no shared-repo change applicable there; that model is unrelated to
+      this todo despite the similar name).
+      Added `clone_repo_via_shared_bare()` to the reusable workflow's `clone_repo()` (inserted right after the
+      PIN_SHA-override block, ahead of the existing 3-attempt LDR clone loop): opt-in via `SHARED_BARE_ROOT`
+      (default `/opt/glue-shared-bare-repos`) — if the dir doesn't exist (ubuntu-latest, or any unprovisioned
+      self-hosted host) the function returns 1 immediately and every job gets byte-identical behavior to before this
+      change. When provisioned: seeds/fetches a persistent bare mirror (`--filter=blob:none`, `gc.auto=0` per the
+      source doc's explicit requirement) instead of a cold full clone, then `git worktree add`s the job's dep dir
+      from it, with a hard HEAD-match verification backstop (same philosophy as `fast-checkout.sh`'s mirror path) —
+      ANY failure at ANY step falls straight through to the unchanged `clone_repo()` chain, never worse than today.
+      Explicitly excludes the `cp -al` shared-venv half the source doc calls out as superseded/unsafe — no shared
+      venv path introduced (venv immutability contract: satisfied by inaction, each job still builds its own via
+      `uv`).
+      Standing `git worktree prune` timer per the source doc's explicit requirement:
+      `scripts/self-hosted-runners/prune-shared-bare-repo-worktrees.{sh,service,timer}` +
+      `install-prune-shared-bare-repo-worktrees.sh` (hourly backstop; the fast path itself also prunes
+      opportunistically before every fetch — required ordering, see below) + wired into
+      `deploy-sbin-scripts.sh`'s `DEPLOY_SCRIPTS` so the `.sh` actually reaches `/usr/local/sbin/` via the existing
+      `github-glue-deploy-sync.timer` sync. **Not yet installed on the CI VM** — the installer is `[OPERATOR]`-run by
+      design (root + `/etc/systemd/system`), same posture as this batch's other sibling installers
+      (`install_qg_baseline_daily_promote.sh`); `SHARED_BARE_ROOT` also doesn't exist on the host yet, so the fast
+      path stays fully dormant (return-1-immediately, zero behavior change) until an operator provisions it —
+      by design, not an oversight: this ships the code path safely inert, the VM-side activation is a separate,
+      deliberately-gated step.
+      **Verified functionally** (not just `bash -n`/YAML-parse — a scratch harness against a real local `git`
+      origin, no GitHub needed): cold-seed + worktree-add + HEAD-match verification; a wiped `_work` dir across two
+      simulated jobs reproducing `job-cleanup.sh`'s own failure mode; the standalone prune sweep reducing worktree
+      count; and the unprovisioned-host fallback returning 1 cleanly. Two real bugs caught and fixed during this
+      verification (both would have silently broken the fast path in production without ever failing loud, since
+      every step falls through to the existing chain on failure — these bugs would just have meant "the fast path
+      quietly never returns 0"): (1) `git -C <bare> worktree add <relative-path>` resolves the path against
+      `<bare>`'s own directory, not the caller's cwd — fixed by computing an absolute target path before the `-C`
+      call; (2) `git worktree prune` MUST run *before* the fetch, not after — a stale worktree admin entry left by a
+      wiped `_work` dir makes git refuse to fetch into that branch AT ALL ("refusing to fetch into branch ... checked
+      out at ..."), not just refuse the worktree add.
 
 - [ ] [INFRA] P3. **Reap the governor's 344-file marker-file leak.** Source: same doc (line ~665). Gate: stale marker
       files cleaned; a regression test confirms new markers don't accumulate unbounded.
@@ -154,6 +193,16 @@ source: >-
       runtime-level deploy signal (diff running SHA vs `main` HEAD). Source:
       `plans/active/monitoring_control_plane_master_2026_06_10.md` (lines ~260, ~262, ~465). Gate: one panel showing
       rollout-ratchet + ruleset-drift status; a separate widget showing running-vs-HEAD SHA diff per service.
+      **INVESTIGATED, NOT DONE 2026-08-17 (slot-1, ui_developer) — mis-scoped `[UI]`-only, needs a backend
+      counterpart first.** Neither `detect_template_drift.py` nor `rules-alignment-agent.yml` writes to any
+      API-readable store today (QG-gate-only / Slack-only respectively) — 2 of 3 ratchet columns have zero backend
+      data to render. The 3rd column + the separate widget overlap conceptually with the already-active, separate
+      `artifact_pipeline_observability_2026_07_17.md` feature's `/ops/artifacts` running view (`DRIFT_PINNED`/
+      `DRIFT_STALE` classification) and need reconciliation before new UI is built. Full investigation + a concrete
+      backend/UI split recommendation filed:
+      `/plans/active/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`. Left `- [ ]` open
+      (not mine to re-split unilaterally — review/main's call per `ui_developer.md`'s escalation instruction); did
+      not build UI against a guessed/mocked contract.
 
 - [ ] [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate in `sit_gate_treadmill`'s remaining
       scope** (mirrors the same hoist pattern batch13 already applied to `ldr_to_main_fleet_promote.sh` for a sibling
@@ -328,3 +377,9 @@ source: >-
   `scripts/cicd/ldr_to_main_fleet_promote.sh` so successive `process_repo` launches are spread out instead of
   firing back-to-back, plus a new regression test
   (`scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh`, 6/6 assertions pass). Flipped this item.
+- **2026-08-17 (slot 13, AO-dispatched worker, infra craft).** Shipped the "Share bare repos + `git worktree` for
+  sibling-clone I/O" todo: `unified-trading-ci@3209654` (the reusable `python-quality-gates-v2.yml` — that's where
+  `clone_repo()` actually lives, not the caller `.tmpl` in this repo) + `unified-trading-pm@10fb8339dc` (the
+  standing worktree-prune timer). Full detail on the checkbox above. Fast path is code-shipped but dormant on the CI
+  VM until an operator provisions `SHARED_BARE_ROOT` and installs the prune timer — both deliberately gated, not
+  overlooked.

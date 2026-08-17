@@ -12,7 +12,7 @@ summary: >-
   migration could NOT safely auto-fix (109 format violations — ambiguous or genuinely dangling bare filenames) and what
   it surfaced but didn't cause (1,286 pre-existing dangling /plans/ + /codex/ references) as its own cleanup backlog,
   plus the separate finding that CLAUDE.md's 5-step archival ritual never actually named a reference-update step.
-status: open
+status: complete
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -49,6 +49,14 @@ estimate_calibrated_ai_days: 1.6
 ---
 
 # Cross-reference path convention rollout
+
+> **✅ ARCHIVED 2026-08-17** — all 5 todos done. Live-verified via `check_reference_paths.py`:
+> `format_count: 0 (baseline 0)`, `existence_count: 34 (baseline 34)`, both at zero slack. The
+> sports_satellite_batch2 body-prose fix was confirmed coexisting with that file's whole-archival (no split needed —
+> the archived location falls outside `check_line_caps.sh`'s scope). Closed out by the gated finalize plan
+> `/plans/archive/2026_08/reference_path_convention_2026_07_23_finalize_2026_08_08.md`. Superseded by no successor doc
+> (this backlog is closed, not migrated). See `/codex/11-project-management/cross-reference-path-convention.md` for
+> the standing rule this doc implemented.
 
 ## What shipped 2026-07-23
 

@@ -141,7 +141,8 @@ context_scope:
   (this plan's own Progress Log names it as the root cause the gate never held -- load-bearing, not previously scoped) +
   the batch4-finalize sibling this plan's pattern mirrors.
 - **2026-08-17 (slot-5, review-craft)**: classified todo 2's flagged accidental exclusion (dispatch of
-  `ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` item 2). Root cause: `_PERMANENT_NON_DISPATCHABLE_RE`
+  `/plans/archive/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` item 2, archived 2026-08-17).
+  Root cause: `_PERMANENT_NON_DISPATCHABLE_RE`
   in `agent-orchestrator/server/regen_backlog_from_plan.py` false-matched the literal substring "not-AO-eligible" inside
   todo 2's own parenthetical enumeration of batch6's 6 exclusion categories — the phrase names a CATEGORY LABEL for
   OTHER excluded docs, not a live assertion about this todo's own dispatchability. Verified live: the finalize plan's

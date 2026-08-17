@@ -194,10 +194,14 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
       14 re-checked slots ~2 min apart, no new FM5/FM7 autospawn-failure page after `05:31:22 UTC`; see
       "Verification" section above. Also reconciled the 12 idle/killed slots still carrying pre-fix stale
       content (see "Idle-slot reconciliation" section) per operator direction.
-- [ ] [SCRIPT] P2. Add a CI/QG check asserting every `workspace-manifest.json` repo with
+- [x] ✅ [SCRIPT] P2. Add a CI/QG check asserting every `workspace-manifest.json` repo with
       `integration_branch != live-defi-rollout` has a matching row in `scripts/dev/cron-branch-overrides.txt`
       (mirrors agent-orchestrator's existing `test_branch_state_integration_branch_matches_manifest` pattern for
-      registry (A)) — closes the systemic gap, not just this one instance. Repo: unified-trading-pm.
+      registry (A)) — closes the systemic gap, not just this one instance. Repo: unified-trading-pm. —
+      **unified-trading-pm@434e3adebc** (2026-08-17). Shipped `scripts/quality_gates/check_cron_branch_override_parity.py`
+      (missing/wrong/stale-row detection, mirrors the agent-orchestrator parity-test pattern) + 10 unit tests
+      (`test_check_cron_branch_override_parity.py`, incl. a live end-to-end smoke against the real repo files) +
+      wired into `quality-gates.sh` alongside the existing manifest-canonical guard. Full `quality-gates.sh` green.
 - [ ] [OPERATOR] P3. Decide whether to collapse registries (B)/(C) into a single manifest-driven lookup
       (removes the duplicate-registry class of bug entirely) or keep them separate with the new parity test as
       the guard — design call, not blocking. Repo: unified-trading-pm.

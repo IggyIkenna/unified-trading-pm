@@ -182,7 +182,8 @@ context_scope:
   the `dex_swaps` migration. Given this doc's own repeated `too_large_or_risky` corroboration (2026-08-04 x2,
   2026-08-07, 2026-08-09 — the migration design itself has no predetermined outcome until the recent multi-venue
   gap cluster is root-caused), scoped the dispatch DOWN to only the bounded root-cause step:
-  `/plans/active/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md` (+ finalize). The full content migration
+  `/plans/archive/2026_08/defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md` (+ finalize, both archived
+  2026-08-17 — root-caused and confirmed no live writer active). The full content migration
   is NOT dispatched — it stays gated on that finding plus a full five-part delete-safety proof, per this doc's own
   standing caution. This doc stays `assigned_vm: NA` until the migration itself is scoped.
 - **interactive session 2026-08-05**: executed the `dex_pools` half only (see the flipped todo above for full detail).

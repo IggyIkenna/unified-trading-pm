@@ -105,13 +105,17 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Re-run the 60-minute context-signal validation pass** (`context_lifecycle.py` /
+- [x] ✅ [BACKEND] P2. **Re-run the 60-minute context-signal validation pass** (`context_lifecycle.py` /
       `context_probe.py`) across a clean fleet window — no mid-window compaction/model-tier change confounding the
       signal. Multiple qualifying commits (`a1e2969`, `59d9417`, `c00dc13`, `acc41b1`, `4af78dc`, `ac9ba18`, `905c210`,
       `c730f46`, `e943d72`+) have landed since 2026-08-08 with no re-run recorded since the 2026-08-10 audit. **Done
       when**: a fresh dated validation report (pass/fail per signal) exists and is cited back into the tracker's Track 1
       + `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`. Repo:
-      agent-orchestrator.
+      agent-orchestrator. — ✅ DONE 2026-08-17 (slot 12): confirmed fleet clean-start (all `working` slots ≤60% ctx),
+      ran the full 60-min window via `GET /api/activity`. **Result: PASS on both criteria** — 21 forces, distribution
+      `60×11 · 69×10` (well inside the 60-08-08 baseline's 60-85 range), **zero terminal wedges** over the full
+      60 minutes (the 2026-08-08 run only partial-passed, 4 inherited wedges). Full write-up in the issue doc's new
+      "2026-08-17 validation window" section + cited into the tracker's Track 1.
 - [x] ✅ [SCRIPT] P1. **Re-run `/plan-reconcile` (whole-corpus) SOLO** — DONE 2026-08-16 (as the todo's own stated
       pre-check, not a completed corpus run). Ran the required gate ("confirm no concurrent session is running the
       same sweep before starting") and it correctly FAILED: `GET /api/agents` at `2026-08-16T18:32:26Z` (Sunday)
@@ -149,14 +153,22 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       overwrite running without reaching the identity-var re-add) and a preventive fix shipped
       (`agent-orchestrator@bc9835a38d`). Exact trigger process not identified (no root crontab/journalctl access from
       this sandboxed worker), stated explicitly — see full write-up in the tracker's Track 4.
-- [ ] [DIAG] P2. **Best-effort root-cause the 49.3G/16G-swap memory peak on `planning` more precisely.** The
+- [x] ✅ [DIAG] P2. **Best-effort root-cause the 49.3G/16G-swap memory peak on `planning` more precisely.** The
       resource-watchdog enforcement is already shipped and live (`ReadinessWatchdog`,
       `agent-orchestrator@3b4a329`) — this is root-cause only, not new enforcement. Both previously-checked live
       candidate processes were ruled out; check for any newly-observed high-memory process across the last 3+ restarts.
       Explicitly best-effort — **done when**: either a plausible culprit is identified, or the investigation is judged
       infeasible within a bounded pass and closed as best-effort-exhausted (state which). Cite back into
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` + the tracker's Track 4.
-      Repo: agent-orchestrator / infra.
+      Repo: agent-orchestrator / infra. — ✅ DONE 2026-08-17 (slot 10): the original 2026-08-02 peak itself is
+      best-effort-exhausted (predates resource-watchdog, no forensic trail survives). Redirected to the fallback
+      ("newly-observed high-memory process") via resource-watchdog's own kill corpus: 187 kills/7d, 25 >10GB RSS (peak
+      20.2GB), concentrated on slots 6/2/25/27/14, all tracing to 4 unbounded CEFI-manifest scripts in
+      `market-tick-data-service/scripts/` (`normalize_instrument_type_casing.py`,
+      `audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`,
+      `revert_cefi_live_corrective_migration_overreach_2026_08_16.py`, `measure_shard_duration_p95.py`). Landed a new
+      `[INFRA] P2` follow-up todo in the issue doc naming these scripts for a bounded-read/streaming fix. Full write-up
+      in the issue doc's new Progress Log entry + flipped `[DIAG] P2` todo.
 - [ ] [DATA] P2. **Audit `unified-trading-system-repos/` (157G, the dominant disk consumer on the shared host) for real
       cleanup headroom.** Enumerate the largest subtrees; distinguish live-repo working-tree bloat from stale
       worktrees/branches/build-artifacts that are safe to prune. **Audit only — do not delete anything in this todo.**
@@ -177,6 +189,22 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 ## Progress Log
 
+- **2026-08-17 (slot 10, infra worker, AO-dispatched)**: Worked the 49.3G/16G-swap best-effort root-cause todo.
+  Original 2026-08-02 peak predates resource-watchdog (shipped 2026-08-05) — no forensic trail survives, closed
+  best-effort-exhausted. Redirected to the fallback: queried resource-watchdog's own kill corpus and found 187
+  kills/7d, 25 >10GB RSS, all tracing to 4 unbounded CEFI-manifest scripts in `market-tick-data-service/scripts/`.
+  Landed a new `[INFRA] P2` follow-up todo in
+  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` naming the scripts. Full
+  detail in that doc's Progress Log.
+- **2026-08-17 (slot 12, AO-dispatched)**: Worked the 60-minute context-signal validation re-run todo. Verified the
+  fleet was clean-start (all `working` slots ≤60% context) before beginning — the exact precondition the 2026-08-08
+  session's own follow-up demanded. Ran a background monitor (6× 10-min checkpoints) over the live `/api/activity`
+  feed for `forced_compact`/`forced_precompact`/wedge-terminal event types across the full window. Result: 21 forces,
+  distribution `60×11 · 69×10` (tighter than the 2026-08-08 baseline's 60-85 range), zero terminal wedges — a clean
+  PASS where the 2026-08-08 run only partial-passed (4 wedges, all inherited saturation from a dirty start). Full
+  write-up appended to `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`'s own "2026-08-17
+  validation window" section (its matching follow-up todo flipped) + a citation note appended to the tracker's
+  Track 1 (checkbox itself left unflipped per this plan's own rule — `batch21_finalize` reconciles it).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-16 (interactive session, operator request)**: Authored per the operator's request to wrap a new AO plan
   into the nearest live "consolidated" tracker via reference, plus a companion durable-rule change requiring AO plans

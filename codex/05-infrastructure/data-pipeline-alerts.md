@@ -186,6 +186,35 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 | DP-WATCHER-002  | 🔴  | a scheduled audit/consolidator/digest cron did not fire on schedule                                                                                                                                                                                                                                                                                               | [S] cron-alive probe                                                     | page                                               | active  |
 | DP-WATCHER-003  | 🔴  | `dp-fleet-monitor`'s own `run_lifecycle()` terminal-failure event (meta)                                                                                                                                                                                                                                                                                          | [S] `run_lifecycle(service_name="dp-fleet-monitor")`                     | page                                               | verbose |
 | DP-WATCHER-004  | 🔴  | a non-`-legacy-` manifest-consolidator Cloud Scheduler job is PAUSED with no live maintenance window covering it (accidental pause)                                                                                                                                                                                                                               | [S] `check_consolidator_scheduler_paused`                                | page                                               | active  |
+| DP-WATCHER-005  | 🔴  | an OOM-killed consolidator — reaches `CONSOLIDATOR_DOWN` (DP-MANIFEST-001's condition) by a different route than DP-WATCHER-004 (OOM vs staleness); same dependent action                                                                                                                                                                                         | [S] `meta_watchers` OOM classification                                   | auto-recover (re-merge) then page                  | active  |
+| DP-WATCHER-006  | 🔴  | generic per-execution Cloud Run Job failure, fired across the whole job registry — registered so the identity resolves to an explicit no-op rather than an unregistered-id silent drop; no per-job dependent action exists yet                                                                                                                                    | [S] fleet-wide Cloud Run Job execution-failure sweep                     | page                                               | active  |
+| DP-VM-012       | 🔴  | a Cloud Run Service's `terminal_condition` entered `CONDITION_FAILED` — the service is not serving                                                                                                                                                                                                                                                                | [S] Cloud Run Service condition probe                                    | page                                               | active  |
+
+### DP-LIVE — live-VM data-stream blindspots (`deployment_service/data_pipeline_monitors/live_stream_watcher.py`, `producer_lifecycle.py`)
+
+| ID          | Sev | Fires when                                                                                                                                                                                                                                    | Detector                                                            | Escalation                                                                  | Status |
+| ----------- | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------ |
+| DP-LIVE-001 | 🔴  | "VM alive, data dead" — a live shard has stopped ATTEMPTING entirely (no fresh `attempted_at`); shares DP-WATCHER-002's shape (never even attempted, downstream would read absence as honest)                                                 | [S] `live_stream_watcher.check_live_capture_productivity`           | page                                                                        | active |
+| DP-LIVE-002 | 🔴  | "manifest captured, GCS empty" sink mismatch — manifest asserts data that does not exist on GCS; DP-LIVE-001 misses this because `attempted_at` stays fresh even though the sink silently discarded rows                                      | [S] `live_stream_watcher` GCS-vs-manifest cross-check               | page                                                                        | active |
+| DP-LIVE-003 | 🔴  | a registered `LONG_LIVED_LIVE` producer prefix has ZERO running instances — nothing is producing (the condition that hid a 5-week CME capture gap, deleted 2026-06-30, found 2026-08-09)                                                      | [S] `producer_lifecycle` must-be-running set vs live instance count | page                                                                        | active |
+| DP-LIVE-004 | 🟠  | "shard alive, zero recent captures" productivity gap, ALL asset groups — a live shard is still actively attempting but never captured a row within its staleness budget; a productivity gap, not a correctness one (nothing false is written) | [S] `live_stream_watcher.check_live_capture_productivity`           | auto-recover (visibility only — see 2026-08-17 dedup-defeat incident below) | active |
+
+> **2026-08-15/16 registry-gap fix**: DP-WATCHER-005/006, DP-VM-012, DP-LIVE-001/002/003/004 were emitting live
+> (`registry_id=` resolves in `unified_api_contracts.DP_FAILURE_MODE_ACTIONS`, per the "third anti-inertness class"
+> note above) but were never transcribed into this table — this doc's own staleness note flagged the gap; this edit
+> closes it. See `unified_api_contracts/canonical/crosscutting/_dependency_revocation_policies.py` for the full
+> per-id revocation-policy rationale (each id's `DependentAction` + reasoning).
+>
+> **2026-08-17 incident (`plans/active/issues/dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md`)**: DP-LIVE-004
+> emits `details={"attempted_age_hours": ...}`, a value recomputed every sweep; this defeated `AlertDeduplicator`'s
+> identity-hash dedup (the differing value changed the hash every sweep), making the registered 1800s
+> `DP_CRON_DID_NOT_FIRE` cooldown a no-op for this detector specifically. Fixed (`alerting-service@cd60a3e595`,
+> `attempted_age_hours` + a generic `*_age_hours/days/minutes/seconds` suffix added to
+> `AlertDeduplicator._VOLATILE_DETAIL_KEYS`), confirmed present in `origin/main` content — but a follow-up 2026-08-17
+> sweep (this doc's own reconciler) found the storm still live in `#data-pipeline-alerts` as of 06:38Z (same identity
+> re-firing at ~15-16min intervals, violating the 1800s cooldown), and could not confirm via `gcloud builds
+list`/`gcloud builds triggers list` that a fresh build of the fix actually reached the live `dp-alerting-subscriber`
+> Cloud Run revision — see the issue doc for the open deploy-chain-verification thread.
 
 ### DP-DIGEST — routine INFO telemetry (never the incident path)
 
@@ -368,15 +397,12 @@ coding-standards pointer above for the batch-vs-live scope distinction.
 | ----------------- | --- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- | ------ |
 | DP-REVOCATION-001 | 🔵  | `RevocationActuator` delivers `FLEET_HALT` — Cloud Scheduler jobs paused for a target's asset group | [S] `RevocationActuator._pause_schedulers` | auto-recover (visibility only, never pages — the actuator IS the recovery) | active |
 
-**Known gap, PARTIALLY closed 2026-08-16**: a `FLEET_HALT` pause registers no `MaintenanceWindow`, so `DP-WATCHER-004`
-(above) may treat it as an ACCIDENTAL pause rather than a deliberate one. The mechanism now exists —
-`RevocationActuator.__init__` accepts an injected `consolidator_bucket_resolver` callable and
-`_register_maintenance_windows()` registers a `pause_for_maintenance()` window (surface-scoped-per-target,
-`ttl_minutes=1440`) before pausing — but no production call site passes the resolver yet (`None` at every current
-`RevocationActuator()` construction is a verified no-op). Wiring it in is blocked on a real import cycle (this module
-sits below `escalation.py`; the resolver function sits behind `meta_targets.py`→`meta_watchers.py`→`escalation.py`→
-back to this module) — tracked as an AO-dispatchable todo in
-`/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`. Do not assume suppression works until that lands.
+**Known gap, CLOSED 2026-08-17**: a `FLEET_HALT` pause previously registered no `MaintenanceWindow`, so `DP-WATCHER-004`
+(above) could treat it as an ACCIDENTAL pause rather than a deliberate one. Fixed via
+`/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2 (`deployment-service@ae49548487`):
+both prod call sites (`escalation.py`'s `_apply_revocation` and `meta_watchers.py`'s release bookend) now pass the
+`consolidator_bucket_resolver`, so `_register_maintenance_windows()` registers a `pause_for_maintenance()` window
+(surface-scoped-per-target, `ttl_minutes=1440`) before every FLEET_HALT pause. Suppression is live.
 
 **A third anti-inertness class, found live 2026-08-15/16: an identity that is EMITTED but never REGISTERED.** The
 "built but not called" failure mode above (actuator with no caller) and "no dependent target resolves" (the
@@ -392,12 +418,13 @@ bare `log_event()` without also reaching `route_finding()`/`emit_finding()` some
 the ORIGINAL `DP-MANIFEST-001` bug, before this session's fix — a bare `log_event()` call has no `registry_id=`
 literal for arm 1 to see at all). This guard already caught `DP-VM-013` live, on its first run, before it shipped.
 
-**`codex/05-infrastructure/data-pipeline-alerts.registry.yaml` (below) is currently STALE relative to the code**: the
-8 ids named above resolve in `DP_FAILURE_MODE_ACTIONS` but are not yet transcribed into this file's own table — the
-UAC test suite's `_DP_REGISTRY_IDS` literal is deliberately AHEAD of this file until it's updated to match (tracked,
-not forgotten — see `revocation_arming_2026_08_14.md`'s Progress Log, now archived, for the full accounting). Do not
-trust this doc's registry table as a complete list of registered ids without cross-checking
-`DP_FAILURE_MODE_ACTIONS` directly.
+**GAP CLOSED 2026-08-17**: the 8 ids named above (DP-WATCHER-005/006, DP-VM-012, DP-LIVE-001/002/003/004, DP-VM-013)
+are now transcribed into this file's table above and into `data-pipeline-alerts.registry.yaml` (same dir) — closed by
+the `data_pipeline_alerts_reconciler` 6-hourly sweep. `DP_FAILURE_MODE_ACTIONS`
+(`unified_api_contracts/canonical/crosscutting/_dependency_revocation_policies.py`) remains the code-level SSOT for
+the per-id `DependentAction` policy itself; this doc's table is the human-readable failure-mode registry. Re-run
+`test_registry_id_closed_set.py` (deployment-service) after adding any NEW `registry_id=` literal to catch the next
+drift before it accumulates.
 
 ## Watching the watchers — meta-monitoring coverage + the KNOWN SPOF (2026-06-23)
 

@@ -17,7 +17,7 @@ tags: [infra, ao-dispatch, revocation, alerting, satellite, batch-18]
 related:
   [
     /plans/archive/2026_08/revocation_arming_2026_08_14.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md,
     /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -37,7 +37,7 @@ effort: medium
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope: [deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py, deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py, deployment-service/deployment_service/data_pipeline_monitors/meta_targets.py, deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py, deployment-service/deployment_service/data_pipeline_monitors/escalation.py, deployment-service/scripts/recovery/_durable_state.py, /plans/archive/2026_08/revocation_arming_2026_08_14.md, /plans/active/alert_driven_dependency_revocation_2026_08_12.md]
+context_scope: [deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py, deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py, deployment-service/deployment_service/data_pipeline_monitors/meta_targets.py, deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py, deployment-service/deployment_service/data_pipeline_monitors/escalation.py, deployment-service/scripts/recovery/_durable_state.py, /plans/archive/2026_08/revocation_arming_2026_08_14.md, /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md]
 supersedes:
 superseded_by:
 depends_on: []
@@ -48,7 +48,7 @@ source: >-
 
 > **ARCHIVED 2026-08-17** — all 3 todos done, unlocked, closed out via the standard 6-step ritual. The item-1
 > drain-budget worst-case number (34072.0s) is migrated into
-> `/plans/active/alert_driven_dependency_revocation_2026_08_12.md`'s own Phase 0 item, which points back here (this
+> `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`'s own Phase 0 item, which points back here (this
 > doc's Progress Log below) for the full per-family table. This doc is retained for provenance only.
 
 # Infra satellite — alert-driven-revocation follow-up work (batch 18)
@@ -172,7 +172,8 @@ Verdict: clear on all 3 items — proceed.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)
 - **2026-08-17 (slot 24, review-craft)**: classified item 1's flagged
-  `ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` exclusion — verified live that
+  `/plans/archive/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_17.md` exclusion (archived
+  2026-08-17) — verified live that
   `state_bucket()` resolves on the orchestrator VM (bucket `deployment-scripts-central-element-323112`), so the
   todo was genuinely open, not a legitimate block. Rewrote the todo to drop the stale `BLOCKED-CREDENTIALS`
   phrasing (which was tripping the AO dispatch-visibility parser's undeclared-marker exclusion) so it dispatches

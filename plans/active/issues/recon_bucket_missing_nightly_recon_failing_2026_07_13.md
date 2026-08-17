@@ -215,3 +215,14 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   depending on env) and the producer gap is unchanged, this is a recurring daily DP-WATCHER-006 page, not a one-off —
   worth the operator's attention alongside the original promote-now recommendation, since every day it stays unpromoted
   is another guaranteed page with no actionable new information.
+
+- **data_pipeline_failure escalation 2026-08-17 (`agt-ea1a56`, DP-WATCHER-006/DP_CLOUD_RUN_JOB_FAILED)**: a second
+  dispatch on the SAME alert instance (1 failed task, ~274m old at this dispatch vs ~154m at `agt-0e4c67`'s). Live
+  `gcloud run jobs executions list` confirms this is NOT a new execution: the latest is still
+  `uts-prod-blrs-daily-determinism-jm2mn` (started 2026-08-17T02:30:08Z, completed 2026-08-17T02:32:12Z,
+  `NonZeroExitCode`) — the identical execution `agt-0e4c67` already diagnosed above; the daily scheduler has not fired
+  again since (next fire is tomorrow 02:30Z). No new diagnosis performed and no fix attempted — the root cause and
+  scope are unchanged from the entry immediately above, and re-running the same investigation on the same execution
+  would add no information. Not re-filing a duplicate `/blocked` — `BLK-8bb28da4` (2026-08-10) is still open and
+  unresolved. This confirms the "recurring daily page" flag from the prior entry: two separate escalation dispatches
+  fired for one underlying failure, which will keep happening every day the producer chain stays unpromoted.
