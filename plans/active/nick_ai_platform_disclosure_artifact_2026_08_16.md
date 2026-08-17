@@ -52,6 +52,7 @@ supersedes:
 superseded_by:
 context_scope:
   [
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
@@ -414,3 +415,4 @@ is a finding fixed on contact.
 a client document, per this plan's own instruction. The "Build the artifact" and "Operator review" todos below
 remain unchecked, correctly blocked on that review.
 - **na-eligibility-audit 2026-08-17** [body-hash:13e6f20212196355]: KEEP-NA, valid -- Client-facing disclosure artifact with an explicit, hard disclosure boundary (archetypes-yes/edge-no, no commercial figures, code snippets limited to schemas/contracts) requiring ongoing editorial judgment against that boundary, not a mechanical build. All 7 pre-audit measurement todos are already done (checked). The 2 remaining todos are 'build the artifact' (content/design judgment applying the disclosure boundary to a large coverage dataset) and an explicit operator-review gate before any client-facing send. The doc's own Progress Log states this was deliberate.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- added `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`, the doc's own "read this first" comparison-track cite; other 3 re-verified, still resolve.

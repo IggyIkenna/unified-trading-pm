@@ -45,7 +45,10 @@ superseded_by:
 context_scope:
   [
     /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
+    /plans/epics/system_readiness_master.md,
+    /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
     /codex/02-data/honest-coverage-model.md,
+    unified-api-contracts/scripts/generate_venue_universe_denominator.py,
   ]
 ---
 
@@ -129,3 +132,7 @@ the PAPER-READY clause instead); (3) added an explicit `BLOCKED-ON:system_readin
 above. Remaining open in this plan: W6 itself (blocked as stated) and the "check W2 scaffold review" todo (asked
 the operator directly in-session rather than trying to infer it from files). Archival stays gated on both.
 - **na-eligibility-audit 2026-08-17** [body-hash:e69f016a4e685458]: KEEP-NA, valid -- Gated finalize companion (depends_on + gate_on_depends: true on the main nick_ai remediation plan) -- criterion (b) applies directly. Of its 3 open todos: todo 1 (W6 codex refresh) carries an explicit 2026-08-17 BLOCKED-ON marker redirecting the actual instrument_type-axis prerequisite work to a DIFFERENT doc, /plans/epics/system_readiness_master.md W3, 'owned by a different live session -- do not duplicate it here' (criterion c, redirect); todo 2 depends on the OPERATOR's own external review status of a Claude.ai artifact (explicitly described as 'operator-paced'); todo 3 (archive both plans) is gated on todos 1-2 completing first, per its own text ('once every todo above is done and unlocked').
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added `/plans/epics/system_readiness_master.md`
+  (the epic W6 is now formally `BLOCKED-ON`, per this doc's own 2026-08-17 Progress Log), the sibling
+  `venue_readiness_and_registry_hardening_2026_08_16.md` plan (evidence was reconciled into it this same doc's run), and
+  `generate_venue_universe_denominator.py` (the script this doc's own findings cite twice as still 2-tuple-only).

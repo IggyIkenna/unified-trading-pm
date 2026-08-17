@@ -548,3 +548,4 @@ orchestrator-dispatched).
   checkbox once batch10 lands.
 - **na-eligibility-audit 2026-08-16** [body-hash:e5f5a4cafd09098c]: KEEP-NA, valid — All 7 open todos live inside Workstream B Phases 1-4 (perp-adapter demo repoint + prod cutover), every one explicitly banner-tagged `[DESCOPED-NOT-MVP 2026-07-14]` (Phases 1-3) or `[RESOLVED-BY-RULING 2026-07-14: DESCOPED — perps…
 - **na-eligibility-audit 2026-08-17** [body-hash:ff45c04bcdb44229]: KEEP-NA, valid — Reaffirmed. All 7 open todos remain banner-tagged [DESCOPED-NOT-MVP 2026-07-14]/[RESOLVED-BY-RULING 2026-07-14] under the 2026-07-14 operator ruling that Kalshi/Polymarket perps prod access is not MVP — citation-hold class (a), reaffirmed across 6 prior audit passes. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
