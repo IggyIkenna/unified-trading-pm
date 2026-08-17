@@ -43,6 +43,7 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /codex/04-architecture/exposure-reduction-unification.md,
     execution-service/execution_service/algo_library/deleverage_executor.py,
     execution-service/execution_service/validation/freshness_gate.py,
     execution-service/execution_service/engine/kill_switch_bus_bridge.py,
@@ -200,3 +201,7 @@ measurement that justified the number.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17** [body-hash:9e6046fe7dd8ae5a]: KEEP-NA, valid -- source: frontmatter + body blockquote confirm this is the operator's own dated risk decision (2026-08-14), verbatim requirements captured. All 23 open todos (Phases 1-5a/5) are live-trading risk-management design+build spanning execution-service/strategy-service/batch-live-reconciliation-service/alerting-service/UAC -- nature:design, effort:xhigh, P0. Exactly the "multi-file, multi-day, live-dispatch-critical-path" class the bounded-outcome bar excludes even where individual todos read as one clean line. Cross-cutting tranche audit.
+- **na-eligibility-audit 2026-08-17** [body-hash:d111b57d45b48364]: KEEP-NA, valid -- Operator risk-decision doc (2026-08-14) recording the producer-silence flatten protocol; the source field and intro blockquote explicitly cite the operator's own dated ruling as the doc's basis (NEVER-RE-LITIGATE criterion a). All 23 open todos are live-trading risk-management design+build work spanning execution-service/strategy-service/batch-live-reconciliation-service/alerting-service (net-delta calculators, post-trade-leverage trade selection, producer-liveness detection, the exposure-reduction unification per the cited /codex/04-architecture/exposure-reduction-unification.md design SSOT) -- genuine judgment-heavy work on live-dispatch-critical-path machinery, not mechanically bounded. One item is explicitly [OPERATOR]-tagged (SLA numbers); one downstream test depends on that SLA existing first.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — added the Phase 5a Design SSOT
+  (`/codex/04-architecture/exposure-reduction-unification.md`, explicitly cited in-doc but missing from the prior
+  source-only list), kept all 5 existing source paths.

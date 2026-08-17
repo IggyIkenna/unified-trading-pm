@@ -32,6 +32,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/epics/predictions_master.md,
+    /plans/epics/sports_master.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     ml-service/ml_service/training/backtest_v2/acceptance_metrics.py,
     features-service/features_service/sports/arb/arb_calculator.py,
@@ -254,3 +255,5 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
   4 open items re-confirmed all chained/blocked on the still-open cross-plan `sports_master:Group E` gate (line 644,
   re-verified live unchecked) — a genuine cross-asset-group prerequisite not resolvable by an isolated worker. Doc
   stays NA.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — added `/plans/epics/sports_master.md`, the
+  doc this doc's own P0 walk-forward work is gated on (Group E gate), alongside the prior 5 unchanged.

@@ -49,10 +49,10 @@ superseded_by:
 context_scope:
   [
     /plans/active/venue_e2e_wiring_2026_08_16.md,
-    /codex/06-coding-standards/integration-testing-layers.md,
-    /codex/04-architecture/shard-level-failure-isolation.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     unified-api-contracts/scripts/generate_venue_work_list.py,
+    strategy-service/strategy_service/position/position_interface/adapters/polymarket.py,
+    features-service/features_service/cross_instrument/engine/prediction_ingest.py,
   ]
 source: >-
   Forked from `venue_e2e_wiring_2026_08_16.md`'s "Fork per-asset-group dispatch batches" P0 todo, 2026-08-16
@@ -372,3 +372,8 @@ POLYMARKET book data), both now tracked as P1 gap todos, not left as prose. Step
 first, with the other 3 explicitly `BLOCKED-ON` their respective gap todo. Confirms the earlier archetype-count
 correction was right to make: the real blocker for prediction was never archetype declaration, it was these 2 code
 gaps — a different root cause than what this doc originally (wrongly) assumed.
+
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) — swapped 2 general codex SSOTs
+  (integration-testing-layers, shard-level-failure-isolation) for the 2 concrete open-gap source targets (the
+  POLYMARKET live position-adapter stub, and the shipped `prediction_ingest.py` the stale-WIP triage todo compares
+  against).
