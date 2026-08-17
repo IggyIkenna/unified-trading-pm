@@ -179,10 +179,25 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ### Phase 2 — writer + adjacent consumers migrate together (gated on Phase 1 landing)
 
-- [ ] [BACKEND] P1. market-tick-data-service: switch `PartitionedTickWriter`/`symbol_rules.py`/`manifest_finalize.py` to
+- [x] ✅ [BACKEND] P1. market-tick-data-service: switch `PartitionedTickWriter`/`symbol_rules.py`/`manifest_finalize.py` to
       emit the corrected shape for all NEW writes going forward (existing GCS objects/manifest rows at the old shape are
       untouched by this todo — Phase 4 handles them). Regression test asserting a fresh options_chain/ futures_chain
-      write lands at the corrected path + manifest coordinates.
+      write lands at the corrected path + manifest coordinates. — market-tick-data-service@5c98f404c8 (+ follow-up
+      market-tick-data-service@6e06fe17 fixing a line-cap regression from the first commit). CeFi's raw
+      `instrument_type` (still the chain token, upstream Tardis adapters unchanged) is swapped with `data_type` (real
+      schema value) at write time via `_corrected_chain_write_shape`/`_resolve_chain_write_context`
+      (`chain_partition_dims.py`); TradFi's parallel bug fixed too (`_DATA_TYPE_TO_INSTRUMENT_TYPE` previously
+      duplicated the chain token into `instrument_type` instead of resolving the real type). Chain-shard detection
+      made symmetric (`_is_chain_shard`, either axis) across `_get_writer`/`_write_group`/`venue_fetch.py`/
+      `manifest_finalize.py`/`_cluster_bookkeeping.py` so both legacy and corrected shapes are recognized during the
+      dual-acceptance window; `_resolve_partition_data_type` no longer merges a genuine chain-bundle
+      `options_chain`/`futures_chain` `data_type` value into a shared partition (previously collapsed the two
+      distinct corrected-shape data_types together, defeating the migration). `combo_chain` explicitly out of scope
+      (never mislabeled the same way). New regression tests:
+      `tests/unit/test_partitioned_writer_cefi_chain_relabel_corrected_shape.py` (fresh options_chain/futures_chain
+      writes land at the corrected path + shard-atom; combo_chain unaffected); updated 2 pre-existing
+      `test_partitioned_writer_cluster_counts.py` assertions to the corrected atom. Full `quality-gates.sh` green
+      (11025 passed, `.qg_last_passed_sha=6e06fe174e4557463095b23702ca4fe118e5faf2`).
 - [ ] [BACKEND] P1. market-data-processing-service: update `options_chain_adapter.py`/`futures_chain_adapter.py` +
       `output_schemas.py`'s hardcoded `applies_to` sets + `output_path_helpers.py::is_chain_bundle_data_type` to
       recognize the corrected shape IN ADDITION to the legacy shape (historical data still needs to resolve until Phase
