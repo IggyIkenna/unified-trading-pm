@@ -155,3 +155,14 @@ whether today's specific gap (this one `2026-20260816-040430` shard) should just
 - **2026-08-16 (na-eligibility-audit follow-up, operator ruling)**: option B ruled (scale relaunch-dispatch budget by
   concurrent fleet size, or a finer grouping key) — same fix as `cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md`,
   do not implement twice, close both against the same `escalation_dedup.py` commit.
+- **2026-08-17 (slot 23, backend_engineer, AO task `cefi_aster_relaunch_dispatch_budget_hit-c3b611e212f2`) — RESOLVED,
+  closing per the shared-commit instruction above.** Implemented option B as a `(launcher-family, shard-year)` finer
+  grouping key (not fleet-size scaling) in
+  `deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py` — `_shard_group_key()` now folds
+  the bare 4-digit shard-year segment parsed from `vm_name` (e.g. `cefi-extended-starknet-2026-...` -> `"2026"`) into
+  the day-partition budget key alongside the launcher-family prefix, so `cefi-extended-starknet-2024-*`,
+  `-2025-*`, and `-2026-*` now bound independently instead of sharing one flat ≤2/day cap across all three
+  shard-years. Repo correction: this code lives in `deployment-service`, not `agent-orchestrator`. Full
+  `quality-gates.sh` green (3443 passed; one pre-existing unrelated flaky VM-launcher timing test did not reproduce
+  on re-run), shipped via quickmerge: `deployment-service@2058bab339`. Fixed once, closing both this doc and
+  `cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md` against this same commit.
