@@ -1,8 +1,8 @@
 ---
-doc_type: issue
+doc_type: plan
 title: Finalize — DeFi KAMINO_LENDING/BLAZESTAKE regrowth root-cause
 summary: Gated finalize companion for defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md.
-status: open
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -33,7 +33,6 @@ source: "na-eligibility-audit defi tranche, 2026-08-17 (dispatch agt-f4fef7)"
 locked_by:
 context_scope: [/plans/active/issues/defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md]
 locked_since:
-resolved_by:
 ---
 
 # Finalize — DeFi KAMINO_LENDING/BLAZESTAKE regrowth root-cause

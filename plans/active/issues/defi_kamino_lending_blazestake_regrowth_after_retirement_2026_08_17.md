@@ -135,5 +135,5 @@ P0 POOL-recurrence work already in flight.
   BLAZESTAKE mentions are prior-art citations of its retirement SCRIPT pattern for an unrelated venue retirement,
   not a claim on this regrowth). Flipped `assigned_vm: NA -> planning`, `execution_scope -> orchestrator-agent` in
   place (no rename); `assigned_role: data_engineering` already correct. Paired with
-  `defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17_finalize.md` (`depends_on` +
-  `gate_on_depends: true`, `status: open`).
+  `plans/active/defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md` (`depends_on` +
+  `gate_on_depends: true`, `status: active`).
