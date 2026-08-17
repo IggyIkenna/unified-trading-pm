@@ -1014,3 +1014,7 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       CME OPTION instrument specifically (not just ETF, per item 2 above) to confirm whether the fine-timeframe
       OPTION crash is still live post-fix — this was not directly re-verified this session (the evidence VM
       predates the fix), only flagged so the sweep's scope covers it.
+
+  **na-eligibility-audit 2026-08-17**: item 15 RECLASSIFIED, extracted to
+  `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 1 (checkbox above). Items 1/3-14 re-read, unchanged
+  standing verdicts (operator/credential/design/dependency-gated). Doc stays `assigned_vm: NA`.
