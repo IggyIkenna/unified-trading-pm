@@ -106,13 +106,31 @@ those stay local by construction and are deliberately absent.
       other 6 unaffected), then reverted the literal and re-ran to confirm 7/7 green + zero net diff
       (`git diff`/`git status --porcelain` both empty) before restoring. No code change needed here — flipping
       only.
-- [ ] [BACKEND] P1. **Migrate execution-service protocol modules onto the UAC LST address SSOT.** Removes the second
-      source of truth for LST token addresses. The SSOT is
-      `unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py`; `lido.py` already sources
-      `rETH`/`weETH`/`ezETH`/`pufETH` by direct dict lookup from it — extend that pattern to the remaining modules.
-      **Do NOT add eETH or rsETH**: they are deliberately absent (operator ruling 2026-08-16) because no venue
-      declares them, and an entry no venue declares is unreachable. Done-when: no execution-service module carries its
-      own LST address literal, and the invariant above covers the result.
+- [x] [BACKEND] P1. ✅ **Migrate execution-service protocol modules onto the UAC LST address SSOT.** Found this was
+      MOSTLY already shipped, matching this plan's own already-established duplication pattern (same shape as the
+      close-all and SIT-invariant-4 todos above): `execution-service@d981725c2` (landed before this batch was
+      dispatched) migrated the 6 ETHEREUM addresses (`stETH`/`wstETH`/`rETH`/`weETH`/`ezETH`/`pufETH` — `lido.py`,
+      `rocket_pool.py`, `etherfi.py`, `renzo.py`, `puffer.py`) via a shared `required_lst_address()` helper. This
+      session found and closed the 3 addresses Chunk A hadn't reached, per the drift-invariant test's own tracked
+      pending list: `marinade.py`'s `MSOL_MINT` and `jito_restaking.py`'s `JITOVSOL_MINT` (SOLANA — both now read
+      `solana_lst_devnet.SOLANA_LST_MINTS`, which itself now sources `mSOL`/`jitoSOL` from the UAC registry, mirroring
+      `jito.py`'s pre-existing pattern) and `symbiotic.py`'s `SymbioticConnector.DEFAULT_COLLATERAL_WSTETH` (now
+      `required_lst_address("wstETH-symbiotic")`, the composite key UAC's registry already carries for it). **Shipped**:
+      `execution-service@529af8d22c` + `unified-api-contracts@6151de2a2a` (updated
+      `tests/test_lst_token_address_drift_invariant.py`'s `MIGRATED_TO_UAC_LOOKUP`/`LST_ADDRESS_SOURCE` for the 3 newly
+      migrated entries — `LST_ADDRESS_SOURCE` is now empty, matching the same "once migrated, REMOVE from
+      LST_ADDRESS_SOURCE" rule the file already applied to Chunk A). **Verified, not just green tests**: a real
+      `uv run python3` import of all 4 edited modules confirmed every resolved value is byte-identical to the original
+      literal (zero drift); `test_lst_token_address_source_mapping_is_complete` confirms no UAC registry entry lacks
+      either a migration or a citation; a full `grep -rnE '_(MINT|ADDRESS)\s*=\s*"[A-Za-z0-9]'` sweep of
+      `defi_execution/protocols/` confirms every remaining literal is either a non-token protocol/vault contract
+      address (Aave `POOL_ADDRESS`/`ORACLE_ADDRESS`, Karak `CORE_ADDRESS`, Morpho `MORPHO_BLUE_ADDRESS`, Convex
+      `BOOSTER_ADDRESS`, ether.fi `LIQUIDITY_POOL_ADDRESS`, Uniswap `_NPM_ADDRESS`) or a deliberately-absent token per
+      the 2026-08-16 operator ruling recorded in
+      `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (etherfi.py
+      `EETH_ADDRESS`, kelpdao.py `RSETH_ADDRESS`, solblaze.py `BSOL_MINT` — matching UAC's own documented exclusion for
+      eETH/rsETH/bSOL). Both repos' full `quality-gates.sh` green (execution-service 161s, unified-api-contracts 264s,
+      both post-commit on the shipped SHA).
 - [x] [BACKEND] P0. ✅ **Migrate close-all onto `/manual/instruction`.** ALREADY SHIPPED before this batch was
       dispatched — `strategy-service@701dce1850` (`close_all/_template.py`'s `StrategyCloseAllScript` posts to
       `{execution_service_url}/manual/instruction`; `carry_staked_basis.py`/`arbitrage_price_dispersion.py` both
@@ -192,3 +210,15 @@ explicit mismatch message, then reverting and re-confirming 7/7 green + zero net
 checkbox above. Skipped this session's original dispatch (`venue_e2e_wiring-0fc22529c882`, a different plan) as
 GATED before picking this one up — see `/plans/active/venue_e2e_wiring_2026_08_16.md`'s Progress Log for that
 unrelated finding.
+
+**2026-08-17 (slot 7) — LST address SSOT migration todo flipped, 3 real modules migrated.** Dispatched against the
+"Migrate execution-service protocol modules onto the UAC LST address SSOT" P1 todo. Found `execution-service@d981725c2`
+had already migrated the 6 ETHEREUM addresses (same already-established duplication shape as this plan's close-all and
+SIT-invariant-4 todos), but the drift-invariant test's own `LST_ADDRESS_SOURCE` dict still tracked 3 pending literals —
+`marinade.py::MSOL_MINT`, `jito_restaking.py::JITOVSOL_MINT` (SOLANA), `symbiotic.py::DEFAULT_COLLATERAL_WSTETH`
+(ETHEREUM composite key) — so real remaining work existed, unlike the two prior duplicate-todo findings in this plan.
+Migrated all 3 onto the UAC registry (`execution-service@529af8d22c`), routing the two Solana literals through
+`solana_lst_devnet.SOLANA_LST_MINTS` (itself now UAC-sourced) rather than a fresh direct import, since that module was
+already the origin `SOLANA_LST_MINTS` constant UAC's own SOLANA entries were migrated FROM and `jito.py` already
+consumed it — one shared fix point instead of 3 independent ones. Updated the invariant test accordingly
+(`unified-api-contracts@6151de2a2a`). Full detail in the flipped checkbox above.
