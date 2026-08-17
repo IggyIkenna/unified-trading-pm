@@ -182,3 +182,14 @@ Re-searched `unified-trading-pm/plans/active/` for a plan that owns/drives the a
 still only this plan and `tradfi_venue_e2e_batch1_2026_08_16.md` cite the condition; neither drives it, and no new
 owning plan has appeared. No ETA available. Skipping with `reason_code: GATED` again — no code shipped, correctly
 nothing to ship while blocked.
+
+**2026-08-17 — re-checked a 4th time (slot 17), still blocked, zero movement.** Re-dispatched against the same
+"Steps 6-8 per unit" P0 todo. Re-ran `unified-api-contracts/scripts/generate_venue_work_list.py --csv` live
+(fast-forwarded `unified-api-contracts` to `origin/live-defi-rollout` first, already up to date) and confirmed all
+31 sports rows still show `archetype_consumers=NONE` — no change since every prior re-check. Re-searched
+`unified-trading-pm/plans/active/` for a plan owning/driving the archetype-declaration backlog — still only this
+plan and `tradfi_venue_e2e_batch1_2026_08_16.md` cite the condition; neither drives it. This is now the 4th
+dispatch against this exact todo with zero movement (2026-08-16 ×2, 2026-08-17 slot 15, 2026-08-17 slot 17) —
+skipping with `reason_code: GATED` and `park_now: true` this time (mirroring the parent
+`venue_e2e_wiring_2026_08_16.md`'s own fix for the identical repeat-dispatch pattern) so this stops re-dispatching
+to fresh slots on transient cooldown expiry alone.
