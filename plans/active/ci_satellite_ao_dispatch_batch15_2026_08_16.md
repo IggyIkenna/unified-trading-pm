@@ -200,7 +200,7 @@ source: >-
       `artifact_pipeline_observability_2026_07_17.md` feature's `/ops/artifacts` running view (`DRIFT_PINNED`/
       `DRIFT_STALE` classification) and need reconciliation before new UI is built. Full investigation + a concrete
       backend/UI split recommendation filed:
-      `/plans/active/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`. Left `- [ ]` open
+      `/plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`. Left `- [ ]` open
       (not mine to re-split unilaterally — review/main's call per `ui_developer.md`'s escalation instruction); did
       not build UI against a guessed/mocked contract.
 

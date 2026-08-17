@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [ci, quickmerge, safe-doc-push, ship-discipline, repo-blocker, process-gap]
 related:
   [
-    /plans/active/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md,
+    /plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md,
     /plans/archive/issues/unified_trading_pm_empty_string_fallback_baseline_stale_2026_08_17.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
