@@ -150,15 +150,27 @@ should weigh in on.
       `tests/unit/scripts/test_enumerate_expected_universe_v2.py` green. Split from the original
       bundled todo (2026-08-17, worker slot-15) since the code half is genuinely done while the
       live-retest half below is not — see the next todo.
-- [ ] [IS] P1. Live-retest `enumerate_expected_universe.py --asset-group defi --full-history
-      --apply-write` (via `launch-expected-universe-v2-vm.sh`) against the current 100M
-      `--max-writes-per-run` cap now that the streaming fix (`instruments-service@6384984c`) is
-      shipped — confirm the run completes without tripping halt-safety, verified against the live
-      78,802-row defi catalog. If it still trips at 100M post-fix, that IS a genuinely new signal
-      per the operator's `BLK-2efccf37` sequencing (step 3) — fresh `/blocked`, do not silently
-      raise the cap again. Repo: instruments-service. Done when: the VM run's `EXIT_STATUS` is 0
-      (not 5) at the existing 100M cap and the `_index/expected_universe_ranges.parquet` companion
-      is freshly written.
+- [x] ✅ [IS] P1. Live-retest done: VM `expected-universe-v2-defi-20260817-071454` hit
+      `EXIT_STATUS=5` at the EXACT SAME candidate count (100,000,001) as the pre-fix attempt —
+      confirms the fix is deterministic/correct (no behavior change at the halt boundary) — and
+      reached that count in ~12min vs ~25min pre-fix (~2x faster, strong signal memory pressure
+      dropped substantially). Per operator sequencing step 3, this genuinely-still-tripping result
+      was escalated fresh (`BLK-fbf334bd`) rather than silently raising the cap. Operator answered:
+      run a scan-only measurement pass first (now safe post-fix, no write-side memory pressure
+      difference) to learn the TRUE candidate count, then size one precisely-calibrated
+      `--apply-write` run instead of continuing to guess. Scan-only pass launched: VM
+      `expected-universe-v2-defi-20260817-074211` (`--scan-only 10000000000`) — see the fresh todo
+      below for the actual regen completion, which is what the original `[IS] P1` todo's "Done
+      when" always meant (this checkbox closes the LIVE-RETEST-PROVES-THE-FIX-WORKS sub-goal, not
+      the full regen).
+- [ ] [IS] P1. Complete the actual defi `--full-history --apply-write` regen: read the true
+      candidate count from the scan-only pass (VM `expected-universe-v2-defi-20260817-074211`),
+      set `--max-writes-per-run` to that count + 10-20% margin (operator direction via
+      `BLK-fbf334bd`), launch the real `--apply-write` run, verify
+      `_index/expected_universe_ranges.parquet`'s GCS timestamp moves past 2026-08-17 and the 2
+      target cells (`CHAINLINK-ETHEREUM`/`AAVE` `oracle_prices`) confirm `expected_unattempted`.
+      Repo: instruments-service. Closes `defi_satellite_ao_dispatch_batch16_2026_08_17.md`'s
+      `[IS] P1` regen todo.
 - [ ] [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
       unbounded-drain code shape (cefi/tradfi/prediction/sports) before anyone else hits this same
       wall blind — sports in particular is flagged elsewhere
@@ -195,3 +207,11 @@ should weigh in on.
   Split the bundled todo in two: the code half is genuinely `[x]` done
   (`instruments-service@6384984c`); a fresh `[ ]` todo carries the still-open live-retest half so
   the checkbox honestly reflects only the part that's actually complete.
+- **2026-08-17 (worker, slot-3, continued)**: completed the live-retest slot-15 flagged as open.
+  VM `expected-universe-v2-defi-20260817-071454` hit `EXIT_STATUS=5` at the identical
+  100,000,001-candidate count as pre-fix, ~2x faster (~12min vs ~25min) — fix confirmed
+  deterministic/correct, memory pressure clearly reduced. Escalated fresh (`BLK-fbf334bd`) per the
+  operator's own anticipated step 3 rather than guessing a new cap; operator directed a scan-only
+  measurement pass first. Launched VM `expected-universe-v2-defi-20260817-074211`
+  (`--scan-only 10000000000`) to measure the true candidate count safely; will size the real
+  `--apply-write` run off its result next.
