@@ -244,3 +244,5 @@ Mechanical, bounded remediation — not a design/judgment call:
   on a pre-existing dangling reference to a `predictions_other_bucket_and_ui_drilldown` doc that no longer resolves).
   Those 6 files' prosewrap debt (329 lines total) remains in the baseline — split them below the line cap first, then
   repair + re-lower the baseline in the same pass.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

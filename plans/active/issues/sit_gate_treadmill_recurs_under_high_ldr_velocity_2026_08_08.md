@@ -268,3 +268,5 @@ summary lists market-tick-data-service under `Promoted (8)` — i.e. the PR was 
 consistent with the doc's "an existing PR is itself proof the gate passed" framing. No orphaned PR left behind (list is
 empty post-merge). Todos 1 (dedup-key) and 3 (hoist PR cleanup) are unchanged/still open — this occurrence did not
 exercise either (no PR ever went stale).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

@@ -497,3 +497,5 @@ in `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` by a separate o
 exact todo again before that doc reports convergence into the target range would just repeat this same re-verification
 with no new information. Leaving checkbox unchecked; recommend the next dispatch of this todo be gated on that doc's
 convergence, not on a fixed cadence.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

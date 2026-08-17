@@ -44,6 +44,13 @@ source:
   (slot-14)
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    scripts/dev/safe-doc-push.sh,
+    /plans/active/issues/safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md,
+  ]
 ---
 
 # safe-doc-push.sh's stash-quarantine retry loop can't re-stage a rename (old path is gone)
@@ -100,3 +107,5 @@ quarantine trigger and confirms the retry loop succeeds instead of exhausting.
       it the same way the isolated-worktree copy-and-rm fix already does. Add a regression test: stage a `git mv`
       archival rename, force the quarantine path (16+ synthetic stash entries), confirm the retry loop succeeds instead
       of exhausting all 6 attempts. (repo: unified-trading-pm)
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

@@ -229,3 +229,5 @@ the doc's own root-cause section (an apostrophe inside a `${VAR:-...}` default w
 assignment) mandates a `--selfcheck` whole-script validation mode plus a one-unit-at-a-time canary rollout before any
 retry -- exactly the 'multi-file/multi-day rewrite of live-dispatch-critical-path machinery' caution class, not a
 small/low-risk change despite being bundled into one todo.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

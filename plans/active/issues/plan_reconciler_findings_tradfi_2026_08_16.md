@@ -28,6 +28,13 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler-agt-a74a6a
 depends_on: []
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
+  ]
 ---
 
 # plan_reconciler tradfi-tranche run — 2026-08-16
@@ -325,3 +332,5 @@ routing (RESOLVED / STILL-OPEN AUTO-FIXABLE / STILL-OPEN NEEDS-CODEX-RULING / ST
 2 half-done items with real remaining work (5 archival-deferred, 8 partial-grace-blocked) — this findings doc is NOT
 fully resolved and stays
 `status: open` in `plans/active/issues/`, not archived.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

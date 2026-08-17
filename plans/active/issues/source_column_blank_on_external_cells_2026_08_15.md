@@ -35,6 +35,14 @@ summary: >-
   data_source_provenance_enforcement_2026_07_24.md backfill scope to these named cells.
 drift_direction: advance-code
 last_updated: "2026-08-15"
+context_scope:
+  [
+    /plans/active/data_source_provenance_enforcement_2026_07_24.md,
+    scripts/quality_gates/audit_source_column_distribution.py,
+    market-tick-data-service/scripts/backfill_cefi_source_column.py,
+    market-tick-data-service/scripts/restamp_tradfi_cme_ohlcv15m_blank_source_2026_08_15.py,
+    /plans/archive/issues/hyperliquid_trades_blank_pipeline_mode_write_path_gap_2026_08_15.md,
+  ]
 ---
 
 # source column blank on 15 external-vendor manifest cells — post-backfill audit finding
@@ -216,3 +224,5 @@ leaving it as an unscoped "run a corpus backfill" todo.
   whose job is only to flip a checkbox. **Precondition ("zero-blank on cefi + tradfi") is therefore still not met — todo
   4 stays `- [ ]`, correctly unflipped.** GATED-skipping again; this is now blocked on the Write-path P0 todo's deferred
   1-row patch, not on the (now-complete) P1 backfills.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

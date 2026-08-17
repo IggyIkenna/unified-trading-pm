@@ -138,3 +138,5 @@ and is flagged, not diagnosed further, here.
   duplicate claim this run** (out of this pass's budget) — flagging for a future pass to verify before treating these
   as this doc's own dispatch surface. None are mechanically bounded (root-cause + design-decision work). Doc stays
   NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

@@ -428,3 +428,5 @@ data.
   audits (07-30 through 08-08) consistently kept this NA on this exact reasoning; the doc's own most recent entries
   (2026-08-08) show it is still being actively characterized (a second, possibly-distinct wedge sub-mode found), not
   settled enough for a bounded worker fix. Not re-litigated.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

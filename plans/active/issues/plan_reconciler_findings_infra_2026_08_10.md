@@ -411,3 +411,5 @@ referrer docs' commit ages first and complete the 6-step ritual if clear.
   local `main` unreachable from `origin/main` (bigger than originally scoped) — deliberately left untouched, foreign
   repo/branch state this pass cannot safely act on blind. Doc stays `status: open` (1 genuine open todo remains) — not
   archived.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

@@ -35,6 +35,12 @@ supersedes:
 superseded_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    scripts/plan-hygiene/check_prosewrap_padding.sh,
+    /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
+    /plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md,
+  ]
 ---
 
 # Re-check whether the prosewrap-padding baseline is still climbing
@@ -59,3 +65,5 @@ depends_on: []
 - **2026-08-16 (na-eligibility-audit follow-up, operator ruling)**: operator explicitly did not accept the worker's
   hand-raise recommendation on the original finding's evidence alone — wants it re-verified fresh first, given how
   much concurrent activity this branch has seen.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

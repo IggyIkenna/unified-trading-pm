@@ -260,3 +260,5 @@ branch check should broaden to recognise live-defi-rollout/staging as production
 same-repo TRIAL FIX that was built, applied, and locally re-gated -- it eliminated the 5 originally-failing tests but
 immediately surfaced 2 DIFFERENT failures elsewhere in the same repo, because a second config surface
 (UnifiedCloudServicesConfig) has the OPPOSITE documented default from the first (resolve_bucket_name).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

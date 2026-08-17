@@ -559,3 +559,5 @@ per qg-host-governor.sh) is itself direct evidence recurrence continued PAST the
   ratchet class). Zero `Timeout (>150s)` / pytest-timeout recurrence anywhere. Window NOT yet closed (day ~7 of ~14,
   closes ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per
   the founding doc's slot-32 precedent.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

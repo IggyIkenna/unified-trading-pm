@@ -115,3 +115,5 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
   canonical-only POLYMARKET trades days can recover title/slug/event_slug from the IS reference universe) reads as a
   bounded, worker-determinable investigation with a clear done-when — tagging `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` for
   a future pass to promote via per-todo split rather than reclassifying the whole doc off one item. Doc stays NA.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

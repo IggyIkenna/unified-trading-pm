@@ -197,3 +197,5 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   identical verdict: `BLK-8bb28da4` (options A-D, recommendation A — promote now, `assigned_vm: planning`). Not creating
   the wrapper plan myself — that is exactly the "ask before creating" call this doc's own prior audits already deferred
   to the operator.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

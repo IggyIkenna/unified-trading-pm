@@ -983,3 +983,5 @@ repos: list have in fact already been individually assessed one way or another v
 unified-trading-api/features-service/deployment-service/execution-service/market-data-processing-service all received
 the identical PYTEST_TIMEOUT=300 mitigation; instruments-service/ml-service/alerting-service were each explicitly
 checked against the 'sustained non-self-clearing red' bar and found NOT to qualify (self-clea...
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

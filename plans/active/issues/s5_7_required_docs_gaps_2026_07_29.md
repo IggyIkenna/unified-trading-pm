@@ -172,3 +172,5 @@ the dispatch-scope-eligibility ruling):
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).

@@ -196,3 +196,5 @@ should be filed as its own todo against that decision's outcome.
   either candidate data_type, a bigger/different finding than the 2026-08-08 ruling assumed. See the todo above for the
   full evidence trail; corrected the DESIGN follow-up's scope to match. Doc remains `assigned_vm: NA` — the corrected
   DESIGN todo is still a genuine open decision (real per-data_type contracts, or a reframing of seed_validator's role).
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).

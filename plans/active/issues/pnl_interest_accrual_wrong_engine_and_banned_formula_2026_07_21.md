@@ -821,3 +821,5 @@ code.
   inherently a judgment/3-lens-review task, not a bare mechanical build. Doc stays `assigned_vm: NA` (KEEP-NA valid,
   round11).
 - **na-eligibility-audit 2026-08-16** [body-hash:1c8918d7c9daea13]: KEEP-NA, valid — This is a long-running, heavily-audited money-path issue doc (interest-PnL accrual in the determinism-critical client-reporting spine) that has already shipped three legs (FUNDING/E1, STAKING/E4/E2-partial, LENDING row-set drop) under an explicit standing '## OPERATOR GATE' requiring a 3-lens money-path review before any accrual/NAV change ships.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

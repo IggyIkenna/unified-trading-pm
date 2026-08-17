@@ -323,3 +323,5 @@ convention's scope).
   live numbers + closed the now-moot 2026-08-03 baseline-drift item. **Practical effect**: a future AO dispatch of this
   doc's existence-violation todo will now correctly size a single-session sweep instead of over-provisioning a large
   fan-out for a backlog that no longer exists at that size.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
