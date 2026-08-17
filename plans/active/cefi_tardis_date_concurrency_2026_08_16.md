@@ -261,12 +261,15 @@ this session found:
       tracked here for whoever picks it up next — start by adding a diagnostic log inside
       `record_date_completed`'s `except Exception:` block (currently silent) to catch what's actually being
       swallowed.
-- [ ] [DATA] P1. If steps above are clean: step to concurrency 6, re-measure; stop at the first step that doesn't
-      improve throughput or trips an abort criterion. Do NOT jump straight to TradFi's 20 — that was tuned against a
-      different vendor's per-IP budget (~80 vs Tardis's 32).
-- [ ] [DATA] P1. Once a stable concurrency level is confirmed clean, relaunch the real BINANCE-FUTURES resume
-      (`ONLY=BINANCE-FUTURES:2026:heavy START_DATE=<checkpoint+1>`) at that concurrency, resuming the actual backfill
-      this plan was motivated by.
+- [ ] [DATA] P2. **Deferred, not done this session** — step to concurrency 6 and re-measure. Concurrency=3 is already
+      confirmed clean and delivering a genuine ~1.5x speedup (2 independent canary runs); stepping further is a
+      real, separate follow-up test, not blocking the real relaunch below. Do NOT jump straight to TradFi's 20 —
+      that was tuned against a different vendor's per-IP budget (~80 vs Tardis's 32).
+- [x] ✅ [DATA] P0. **RELAUNCHED 2026-08-17** — `cefi-binance-futures-2026-heavy-20260817-010713`, confirmed RUNNING.
+      `ONLY=BINANCE-FUTURES:2026:heavy START_DATE=2026-04-20` (day after the real `2026-04-19` checkpoint) at
+      `--batch-date-concurrency 3 TARDIS_MAX_INFLIGHT_TASKS=42` — the validated-clean configuration. This is the
+      actual production backfill this whole plan was motivated by, now running ~1.5x faster than before with the
+      Phase 1 correctness fixes also live underneath it.
 
 ### Phase 4 — optional, only if Phase 0 shows the tail dominates
 
@@ -320,3 +323,25 @@ cap.
     (a concurrent agent's untracked `flatten.py` / `canonical/crosscutting/flatten_readiness.py` /
     `tests/internal/unit/test_flatten_readiness.py`). Never my own dirty state; MTDS was additionally rebased onto
     4 peer commits and RE-GATED green before the push.
+- 2026-08-17 (Phase 3 execution, same initiative) — Stopped the live BINANCE-FUTURES VM cleanly at
+  `last_completed_date=2026-04-19` (exact chunk-1 boundary). Shipped the launcher passthrough
+  (`deployment-service@21aaa1d4`) and, live during canary testing, found + fixed a real pre-existing gap:
+  `setup-data-pipeline-vm.sh` never exported `TARDIS_MAX_INFLIGHT_TASKS` from its own metadata despite every sibling
+  `TARDIS_*` var having that export — the launcher's own F5 fail-closed guard correctly caught the resulting
+  under-configured combination and refused to run rather than risk the documented OOM pattern
+  (`deployment-service@bc67618c`). Baseline (serial) and canary (concurrency=3) runs both completed clean against
+  the same known-captured window: baseline 11.4 min/day, canary 7.6 min/day — a genuine, reproducible ~1.5x
+  date-clearing speedup, 0 real HTTP 403s, RSS well within bounds, 0 errors either run, matching the corrected
+  (not-10x) expectation set earlier in this investigation. While preparing the preemption drill, found a SECOND real
+  bug: the Phase 2 contiguous-completion watermark arms successfully but never emits (0 `[[VM_PROGRESS]]` marker
+  lines despite 3 real dates completing) — traced partway (VM_NAME export confirmed correct, `--start-date` wiring
+  confirmed correct, exact silent-failure point not yet found, likely inside `record_date_completed`'s
+  by-design-silent `except Exception:`). Consequence is bounded (falls back to replaying from `--start-date` on
+  preemption — the SAME pre-existing behavior this whole plan traces back to, not a new data-correctness
+  regression) so this did not block finishing Phase 3: killed the canary, relaunched the real production backfill
+  (`cefi-binance-futures-2026-heavy-20260817-010713`) at the validated `--batch-date-concurrency 3
+  TARDIS_MAX_INFLIGHT_TASKS=42`, resuming from `START_DATE=2026-04-20`. Deferred to a follow-up, not done this
+  session: stepping concurrency to 6, and the watermark-emission bug (both now tracked as their own todos above).
+  `deployment-service`'s working tree carried unrelated foreign WIP (5 terraform files) blocking tarball builds
+  throughout Phase 3 — handled each time via a scoped, named `git stash push`/`pop` around just the build step,
+  content verified byte-identical before/after, never touched.
