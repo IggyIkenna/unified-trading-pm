@@ -809,24 +809,15 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
   candidate + unconditionally on every PREEMPTED verdict). Measured ~900s per-VM stalls in the classify loop with zero
   GCS-read warnings nearby, ruling out every mechanism this doc previously fixed. Fixed via the same
   `_gcs.call_with_timeout` bound the rest of this module already uses (`deployment-service@d1cb5f0809`), QG green, 2
-  new regression tests. Live-verify pending via a background watchdog — see the sibling doc's Todo 5 for the full
-  writeup + evidence; not duplicated here per this doc's own established "cross-reference, don't duplicate" pattern.
-
-- 2026-08-17 (companion finding, filed primarily on the sibling doc
-  [`dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md`](/plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md)
-  Todo 5 — cross-referenced here since this doc owns the full GCS/OOM bottleneck history this new finding is
-  DISTINCT from): live measurement (20 consecutive hourly executions, 2026-08-16T23:00Z→2026-08-17T18:00Z) found the
-  sweep is no longer chronically failing (18/20 clean) but 2/20 still hit the full 1800s timeout. Root cause is a
-  FOURTH bottleneck class this doc's own exhaustive 2026-08-14/15 investigation (GCS throttling → double-downloads →
-  worker-count → run-log-prefetch OOM → `read_terminal_exit_code` fallback OOM, all in `_gcs.py`/`_gcs_tail.py`) never
-  touched: `_compute_ops.py`'s `preemption_op_checker`/`scheduling_model_checker` call the raw Compute Engine API
-  (`was_instance_preempted`/`aggregated_list_instances`) with NO bounded-call timeout — the same "synchronous blocking
-  paginated gRPC stream with no built-in timeout" class `cli.py._list_running_vms` already documents and bounds for
-  the whole-fleet census, but never applied to these two PER-VM call sites (consulted on every GONE_NO_CAPTURE
-  candidate + unconditionally on every PREEMPTED verdict). Measured ~900s per-VM stalls in the classify loop with zero
-  GCS-read warnings nearby, ruling out every mechanism this doc previously fixed. Fixed via the same
-  `_gcs.call_with_timeout` bound the rest of this module already uses (`deployment-service@d1cb5f0809`), QG green, 2
-  new regression tests. **RESOLVED, live-verified 2026-08-17 20:36Z**: 5/5 consecutive post-deploy executions clean
-  (44-71s each, 0 stall/timeout warnings) — see the sibling doc's Todo 5 for the full writeup + evidence (incl. two
-  real bugs caught and fixed in the verification tooling itself: a stale-SHA main-landed check and a local-vs-UTC
-  timestamp mixup); not duplicated here per this doc's own established "cross-reference, don't duplicate" pattern.
+  new regression tests. **CORRECTION**: a concurrent session working THIS doc's own `--only-group` CME-launcher-scoping
+  fix (see the Todo above, `deployment-service@451753fd1d`) found direct log-line proof that the ACTUAL mechanism for
+  `r2tsj`/`7tbv2`'s specific ~900s stalls was the unscoped relaunch-launcher subprocess (bracketed precisely between the
+  "dispatching" INFO line and the "verdict=" line), not this `_compute_ops.py` path — my grep filter never looked for
+  "timed out"/"relaunch"/"failed" so I never saw that line, and the "VM after the gap is always preempted" correlation
+  I used is a confound (`route_finding`'s relaunch dispatch also only fires on preempted-verdict VMs). This fix is
+  still real, still shipped, and still a genuine independent hardening — but it is NOT proven to be what caused those
+  2 specific incidents. **RESOLVED (this fix), live-verified 2026-08-17 20:36Z**: 5/5 consecutive post-deploy
+  executions clean (44-71s each, 0 stall/timeout warnings) — but these cannot be cleanly attributed between the two
+  fixes since both shipped in the same promote batch. See the sibling doc's Todo 5 for the full writeup + evidence
+  (incl. two real bugs caught and fixed in the verification tooling itself: a stale-SHA main-landed check and a
+  local-vs-UTC timestamp mixup), and this doc's own Todo above for the better-evidenced CME-launcher fix.

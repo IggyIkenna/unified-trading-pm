@@ -6,23 +6,16 @@ title:
 summary: |
   uts-prod-dp-exit-code-monitor was killed by the Cloud Run 1800s task timeout on every execution measured at filing
   (2026-08-14), spending the whole budget on per-VM run.log downloads that each blew the 30s bounded-call. That GCS/OOM
-  bottleneck was fixed 2026-08-14/15 (see Todo 1). **UPDATE 2026-08-17**: NOT fully resolved — live measurement of 20
-  consecutive hourly executions found 2/20 (10%) still hit the full 1800s timeout, root-caused to a SEPARATE,
-  previously-undiagnosed bottleneck: `_compute_ops.py`'s `preemption_op_checker`/`scheduling_model_checker` call the
-  Compute Engine API directly with NO bounded-call timeout (unlike every GCS read in this module family), and stall
-  ~900s per VM when hit — fixed via `deployment-service@d1cb5f0809`, live-verify in progress (see Todo 5). "on every
-  execution" is no longer literally true post-2026-08-15 (see the 2026-08-17 Progress Log for the real distribution)
-  but the underlying promise ("the sweep completes reliably") remained broken until this fix.
-  uts-prod-dp-exit-code-monitor was killed by the Cloud Run 1800s task timeout on every execution measured at filing
-  (2026-08-14), spending the whole budget on per-VM run.log downloads that each blew the 30s bounded-call. That GCS/OOM
-  bottleneck was fixed 2026-08-14/15 (see Todo 1). A SEPARATE, previously-undiagnosed bottleneck survived that fix:
-  `_compute_ops.py`'s `preemption_op_checker`/`scheduling_model_checker` called the Compute Engine API directly with NO
-  bounded-call timeout (unlike every GCS read in this module family), stalling ~900s per VM when hit — measured live
-  2026-08-17 at a 2/20 (10%) intermittent failure rate. **RESOLVED 2026-08-17**: fixed via
-  `deployment-service@d1cb5f0809`, live-verified with 5 consecutive clean post-deploy executions (44-71s each, zero
-  stall warnings) — see Todo 5 for full evidence and honest caveats. "on every execution" was never literally true
-  post-2026-08-15 (see the 2026-08-17 Progress Log for the real distribution) but the underlying promise ("the sweep
-  completes reliably") was broken until this fix.
+  bottleneck was fixed 2026-08-14/15 (see Todo 1). Live measurement 2026-08-17 found a 2/20 (10%) residual intermittent
+  failure rate. TWO sessions working in parallel found and fixed TWO distinct, real bugs in the same window: (1, the
+  BETTER-EVIDENCED explanation for the specific `r2tsj`/`7tbv2` incidents, direct log-line proof) an unscoped CME
+  relaunch launcher subprocess mass-relaunching ~40-50 VMs per dispatch and timing out at exactly 900s
+  (`deployment-service@451753fd1d`, see the concurrent-session todo); (2, a genuine but less-certain-for-these-specific-
+  incidents finding, correlational not directly proven) `_compute_ops.py`'s Compute Engine API calls with no
+  bounded-call timeout (`deployment-service@d1cb5f0809`, see Todo 5 + its correction note). **RESOLVED 2026-08-17**:
+  both shipped together, live-verified with 5+ consecutive clean post-deploy executions (44-71s each, zero stall
+  warnings) — the clean runs cannot be cleanly attributed between the two fixes since they landed in the same promote
+  batch. "on every execution" was never literally true post-2026-08-15 (see the 2026-08-17 Progress Log).
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -166,41 +159,11 @@ that plan.
       actuating. **New defect found in the same pass** (not this issue's scope): the release half of the bookend fails
       on every call — filed separately as
       [`dp_revocation_release_never_resolves_identity_2026_08_15.md`](/plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md).
-- [ ] [INFRA] P1. **ADDED 2026-08-17 (measurement-claims-discipline check on this doc's own "resolved" claim)** — did
-      NOT trust Todo 1's 2026-08-15 resolution at face value; pulled `gcloud run jobs executions list` for the 20
-      consecutive hourly `uts-prod-dp-exit-code-monitor` executions covering 2026-08-16T23:00Z→2026-08-17T18:00Z. Result:
-      18/20 completed in 1-30 min (highly variable but bounded); **2/20 (`r2tsj` 08:00Z, `7tbv2` 00:00Z) still hit the
-      full 1800s task timeout and failed** — so this doc's title/original summary ("on every execution") is now STALE
-      but the underlying defect (the sweep is not reliably bounded) was NOT fully closed by the 2026-08-14/15 GCS/OOM
-      work. Root-caused via `gcloud logging read` on both failed executions: the classify loop logs one `verdict=`
-      line, then goes SILENT for ~900s (907s in `r2tsj`, 905s in `7tbv2`) with ZERO `download_bytes`/GCS bounded-call
-      warnings anywhere near the gap — ruling out every previously-fixed GCS/run.log mechanism on this doc and its
-      sibling `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. The VM printed immediately after EVERY gap in
-      both executions was a `verdict=preempted`. Reading `exit_code_fleet_monitor.sweep()`'s classify loop end-to-end:
-      `scheduling_model_checker` (`_compute_ops.make_scheduling_model_checker`) is called UNCONDITIONALLY on every
-      candidate-preempted verdict (line ~703), and `preemption_op_checker` on every GONE_NO_CAPTURE candidate — both
-      call the raw Compute Engine API (`was_instance_preempted` / `aggregated_list_instances`) with **NO bounded-call
-      timeout**, unlike every GCS read in this module (`_gcs._call_with_timeout`). `cli.py._list_running_vms` already
-      documents this EXACT failure class for the whole-fleet census — "a synchronous blocking paginated gRPC stream
-      with no built-in timeout... stalls the entire Cloud Run Job" — and bounds it there (`ThreadPoolExecutor` +
-      `future.result(timeout=_LIST_VMS_TIMEOUT_SECS)`), but the two PER-VM call sites in `_compute_ops.py` never got
-      the same treatment. **Fix**: wrapped both calls in the existing `_gcs.call_with_timeout` daemon-thread bound
-      (30s default, now a `timeout_seconds` kwarg on both factory functions) — a stalled call now fails fast (returns
-      `False`/`None`, the existing documented fail-safe) instead of blocking the sequential loop for ~900s.
-      `deployment-service@d1cb5f0809`, QG green (392s, full gate), 2 new regression tests
-      (`test_make_preemption_op_checker_returns_false_promptly_on_a_stalled_call`,
-      `test_make_scheduling_model_checker_returns_none_promptly_on_a_stalled_call`) prove both checkers return in
-      under 5s against a deliberately-hung fake client (mirrors the existing `test_is_vm_preempted_returns_false_
-      promptly_on_stall` pattern this module already uses for every other bounded-call site). **This is a resource
-      bump alone would NOT have fixed** — no amount of CPU/memory/timeout addresses an unbounded blocking call; this
-      is the genuine root-cause fix the operator's brief asked for, not a stopgap. **Live-verify PENDING** — a
-      background watchdog (`dp_exit_code_monitor_watchdog.sh`, started 2026-08-17T18:39Z) is polling for the fix to
-      reach `main`, confirming the redeployed image carries it (direct in-container `inspect.getsource` check, not
-      just a build-green claim), then watching the next several hourly executions for the absence of the ~900s-gap
-      signature. Do not re-diagnose this class if the watchdog's log still shows executions in flight — check
-      `/private/tmp/claude-501/.../scratchpad/dp_exit_code_monitor_watchdog.log` (session-scoped path; if the file no
-      longer exists, the watchdog's session ended — resume by checking `gcloud run jobs executions list` fresh instead
-      of assuming it completed).
+- [x] [INFRA] P1. ✅ SUPERSEDED — a stale, unchecked duplicate of the Todo below (same title/body) was accidentally
+      landed by a `safe-doc-push` shared-index reconcile merge (2026-08-17, two concurrent sessions editing this doc at
+      once). Not real content — kept as a stub (rather than deleted outright) so the todo-conservation check
+      (`check_todo_regression`) doesn't misread the dedup as a content drop. See the checked, evidenced copy below for
+      the actual Compute-Engine-API-timeout finding + its correction note.
 - [x] [BACKEND] P0. **ADDED 2026-08-17 (concurrent session, same measurement window as Todo 5
       above)** — ✅ **The DIRECT, confirmed mechanism for both `r2tsj`/`7tbv2` timeouts, precisely
       distinguished from Todo 5's `_compute_ops.py` finding.** Tracing the exact log-line order in
@@ -245,7 +208,23 @@ that plan.
       line, then goes SILENT for ~900s (907s in `r2tsj`, 905s in `7tbv2`) with ZERO `download_bytes`/GCS bounded-call
       warnings anywhere near the gap — ruling out every previously-fixed GCS/run.log mechanism on this doc and its
       sibling `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. The VM printed immediately after EVERY gap in
-      both executions was a `verdict=preempted`. Reading `exit_code_fleet_monitor.sweep()`'s classify loop end-to-end:
+      both executions was a `verdict=preempted`, which I read as pointing at this file's `scheduling_model_checker`.
+      **CORRECTION (same day, reconciled against the concurrent-session todo above)**: that read was wrong for
+      these 2 specific incidents. My `gcloud logging read` grep filter never included "timed out"/"relaunch"/"failed"
+      patterns, so I never saw the log line the concurrent session found: an EXPLICIT
+      `relaunch_preempted_vm: launcher launch-tradfi-bf-cme-ohlcv-1m.sh failed: ... timed out after 900 seconds`,
+      precisely bracketed between the "dispatching" INFO line and the "verdict=" line — i.e. the stall was in
+      `route_finding()`'s relaunch-actuator dispatch (an unscoped CME launcher subprocess), not in the
+      pre-classify `scheduling_model_checker`/`preemption_op_checker` calls this todo targets. Correlating "VM after
+      the gap is always preempted" with "my fix touches preempted-verdict VMs" was a confound — `route_finding`'s
+      relaunch dispatch ALSO only fires for preempted-verdict VMs, so the same correlation is consistent with either
+      mechanism, and I didn't have the direct evidence to distinguish them until the concurrent session did. This
+      fix (below) is still real, still shipped, and still a genuine hardening (an unbounded Compute Engine API call
+      is a real latent risk on its own terms, matching the same fail-fast discipline used for every GCS read in this
+      module) — but it is NOT proven to be what caused `r2tsj`/`7tbv2` specifically; the concurrent session's
+      CME-launcher-scoping fix is the better-evidenced explanation for those two incidents. Both fixes shipped in the
+      same promote batch (see Todo above), so the clean post-deploy executions cited below cannot be cleanly
+      attributed to this fix alone. Reading `exit_code_fleet_monitor.sweep()`'s classify loop end-to-end:
       `scheduling_model_checker` (`_compute_ops.make_scheduling_model_checker`) is called UNCONDITIONALLY on every
       candidate-preempted verdict (line ~703), and `preemption_op_checker` on every GONE_NO_CAPTURE candidate — both
       call the raw Compute Engine API (`was_instance_preempted` / `aggregated_list_instances`) with **NO bounded-call
@@ -328,18 +307,6 @@ open/unedited (it is correct on its own terms, just not the explanation for its 
 and tracking the confirmed mechanism + its fix in the sibling doc, this doc's actual SSOT for the
 fix chain. Live-verification of the CME-scoping fix (5+ post-deploy executions) is running in the
 background at the time of this entry.
-
-### 2026-08-17 — residual root-cause found + fixed (unbounded Compute Engine API calls)
-
-Picked up this task from the operator with an explicit instruction NOT to trust the 2026-08-15 "resolved" claim without
-fresh measurement (measurement-claims-discipline). Verified via `gcloud run jobs executions list` (20 consecutive hourly
-executions) that the sweep is genuinely much better than at filing (18/20 clean, vs. 100% failure at 2026-08-14) but
-NOT fully fixed (2/20 still hit the full 1800s cap). Diagnosed a THIRD class of bottleneck this doc's and the sibling
-overlap-storm doc's extensive 2026-08-14/15 GCS/OOM fix history never touched: two unbounded Compute Engine API calls
-in `_compute_ops.py`, called per-VM inside the sequential classify loop. Fixed via the same bounded-call pattern
-already used throughout this module (`deployment-service@d1cb5f0809`). See Todo 5 above for full evidence. Live-verify
-of post-deploy executions is running in the background (watchdog log path in Todo 5) — this doc stays `status: open`
-until that confirms clean executions across the deploy.
 
 ### 2026-08-17 — residual root-cause found + fixed (unbounded Compute Engine API calls)
 
