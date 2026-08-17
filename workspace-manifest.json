@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "98033a903277ed6c908918c6c6ffa05e4a4d3418"
+      "ldr_ci_status_sha": "7d6e5e48f9d379273dc69f5709edac17eadceece"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "d89508a41b06e213e4d3ced8c156e8124d075a0f"
+      "ldr_ci_status_sha": "f43ba579e39aa4d8137c2eb89e6a9bf69f163c7c"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
