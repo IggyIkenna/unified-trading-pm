@@ -190,6 +190,41 @@ _(none this run so far)_
   `na_eligibility_audit_defi_blocks_2026_08_16.md`, a pure index doc), ~10 AO-dispatch-readiness issues, ~10
   dangling-ref/hedge-pointer findings, ~15 structural/line-cap/format findings.
 
-## Plans not reached
+## Plans not reached (lower-priority hunter candidates, not independently acted on this run)
 
-_(being compiled — see next checkpoint)_
+- **`defi_operator_ruling_ao_dispatch_2026_08_15.md`'s PHOENIX-SOLANA registry claim** (hunter batch C) — partially
+  verified: PHOENIX-SOLANA DOES appear in `unified-api-contracts`'s `defi_venues.py` venue list + adapter mapping +
+  `defi_venue_capabilities.py` (capability since 2023-02-01), so `uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`'s
+  "IS present in ALL_DEFI_VENUES" claim checks out. But `defi_venues.py:800` also carries a
+  "METEORA-SOLANA / LIFINITY-SOLANA / PHOENIX-SOLANA excluded 2026-07-22" comment, whose exact target list I did not
+  fully resolve — `cross_ag_live_capture_parity_2026_08_14.md`'s "not in VENUES_BY_ASSET_GROUP" claim may ALSO be
+  correct if that's a different, narrower structure than `ALL_DEFI_VENUES`, which would mean this isn't actually a
+  contradiction (both claims true of different registry structures). Needs one more grep to fully resolve before
+  the still-open dead-code-deletion todo in `defi_operator_ruling_ao_dispatch_2026_08_15.md:54` is actioned either
+  way — not resolved here.
+- **Cross-link asymmetry among the 4 `dex_swaps` row-count-conflict docs** (hunter batch B) — 2 of the 4 docs
+  (`defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md`, `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`)
+  still carry no reciprocal cross-link note, and the 2 that do have one disagree on membership (one lists only 2 of
+  the other 3 docs). Mechanical fix (add/complete 4 cross-reference notes) not applied this run — lower priority
+  than the contradictions actually fixed above.
+- **`~2025-07-27→2025-08-06` date in the dex_swaps docs** (hunter batch B, flagged as a possible year-typo) —
+  checked: both `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` and the newly-authored
+  `defi_dex_swaps_gap_rootcause_ao_dispatch_2026_08_16.md` consistently say "2025", not "2026" — **REFUTED as a
+  propagation-typo finding** (the two docs agree with each other, so there's no cross-doc contradiction here,
+  whatever the actual correct year is — that's a separate empirical question needing a live manifest check, out of
+  scope for doc reconciliation).
+- **`defi_expected_unattempted_backlog_1m_2026_07_03.md`'s `locked_by:` field** (hunter batch B) — confirmed via
+  `git log -p`: the lock (`locked_by: live-defi-rollout`, `locked_since: 2026-07-03`) WAS deliberately cleared in a
+  commit carrying `last_updated: "2026-08-08"`. Current state: no lock. This means the finalize plan's archival
+  todos (which 7 prior dispatch cycles declined to act on citing this exact lock) may now be actionable — but
+  actually running the archival needs a fresh full read confirming every todo is genuinely done first (the 6-step
+  ritual), which I did not do this pass (time-boxed). Flagging as a high-confidence, concretely actionable item for
+  a focused follow-up, not attempted here.
+- Assorted P3 format/cosmetic items (missing `[ ]`/`[x]` checkbox brackets on several `CANCELLED — extracted...`
+  bullets across multiple docs) — all corroborate an ALREADY-tracked corpus-wide issue
+  (`todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md` per hunter batch A), not
+  re-filed separately.
+- Minor AO-dispatch-readiness tagging gaps on 2 still-`status: draft` docs (`defi_satellite_ao_dispatch_batch14_2026_08_16.md`
+  VM-launch todos untagged `[OPERATOR]`; `solana_dex_pool_swaps_indexer_2026_08_08.md` todo 5, low-confidence per
+  the hunter itself) — pre-dispatch check window, not urgent while still draft/scoped, noted for whoever reviews
+  before flipping to active.
