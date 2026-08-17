@@ -99,15 +99,18 @@ context_scope:
       round9-reclassify-satellite-sweep) as genuinely NOT AO-dispatchable (a second design sub-decision on
       features-service's per-candidate feature-naming shape + a 3-repo scoping pass remain outstanding), correctly held
       `assigned_vm: NA`. No new bounded batch7 work to fold in for either item.
-- [ ] [DOC] P2. Re-check the 27-doc non-batchable Deferred taxonomy list for any operator-gated/time-gated item that has
-      since cleared (an operator ruling landed, a gating VM/backfill completed, a dependent doc's status changed) — move
-      any now-clear item into a fresh batch7 candidate list rather than re-triaging the whole corpus from scratch. Repo:
-      unified-trading-pm. Done when: each item has a dated re-check note (cleared / still blocked, with the specific
-      evidence checked).
-- [ ] [DOC] P3. Verify the `mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` todos 3+5 re-checks (held pending
-      this batch's todo-6-superseding fix landing) are now actionable — if the subgraph-cascade fix todo above has
-      shipped, fold todos 3+5 into a batch7 candidate; otherwise leave deferred. Repo: unified-trading-pm. Done when: a
-      verdict is recorded.
+- [x] ✅ [DOC] P2. **DONE 2026-08-17 (slot-9, data_engineering).** Re-checked all 27 non-batchable Deferred taxonomy
+      items against current doc state. Full per-item verdicts recorded in the Progress Log below. **Summary: 1 item's
+      gating decision cleared but already spawned its own independently-tracked dispatchable plan (no new batch7 todo
+      needed); 1 item is fully resolved with 0 open todos (nothing to fold in — archival-ready, not a batch7 candidate);
+      the remaining 25 items are still genuinely blocked** (operator-gated design/judgment calls unruled, or time-gated
+      on an in-flight process) — no fresh batch7 candidate work identified this pass.
+- [x] ✅ [DOC] P3. **DONE 2026-08-17 (slot-9, data_engineering).** `mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
+      is now fully archived (`plans/archive/2026_08/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`,
+      **ARCHIVED 2026-08-16**) with all 17 top-level todos `[x]`, including the todo-3/todo-5 re-checks this item was
+      waiting on (confirmed via `grep -n "^- \[x\]"` over the archived doc — the manifest cross-check and OOM-recurrence
+      spot-checks both landed `[x]` DONE 2026-08-05/2026-08-16). Nothing to fold into batch7 — the source doc closed on
+      its own before this re-check ran.
 - [ ] [DOC] P1. Archive `defi_satellite_ao_dispatch_batch6_2026_07_30.md` via the standard 6-step ritual (migrate any
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch6 is in
@@ -155,3 +158,101 @@ context_scope:
   checkbox was just stale-unflipped, corrected by `na-eligibility-audit 2026-08-01`), and that doc's whole-doc
   operator-gate has since substantially cleared via 2026-08-08/09 rulings — its one remaining open item
   (pollable-candidate-registry design) is correctly still human-gated, not a batch7 candidate.
+- **2026-08-17 (slot-9, data_engineering)**: Completed todo 3 (27-doc non-batchable taxonomy re-check) and todo 4
+  (`mtds_dex_pools_swaps_backfill_verification` todos-3/5 re-check). Per-item verdicts:
+
+  **Operator-gated (16 distinct docs):**
+  - `data_completion_defi_2026_07_15.md` — STILL BLOCKED. `status: active`, `last_updated: 2026-08-15`, still 16 open
+    todos; the G2/G3/G4 human-only promote chain and G6 Jupiter-historical-reconstruction items named by batch6 remain
+    unruled. No batch7 fold-in.
+  - `defi_dedicated_bucket_shared_migration_2026_07_13.md` — CLEARED (ownership question) but NOT the specific
+    batch6-named item. Doc carries a "✅ OWNERSHIP RESOLVED 2026-07-31" banner, but that resolved doc-ownership, not the
+    repoint/delete-8-dead-scripts ambiguous-condition item batch6 flagged — body still shows the perp-funding script
+    "confirmed dead... cannot currently run" with no operator ruling on re-scoping. STILL BLOCKED, same item.
+  - `defi_migration_audit_log_2026_07_24.md` — STILL BLOCKED (7 open todos remain; multiple 2026-08 operator rulings
+    landed on OTHER items in this doc — e.g. the 2026-08-15 DELETE-orphan-buckets ruling, the 2026-08-08
+    governance_events MVP-scope ruling — but none touch the specific Era-B/Solana-mapping/gas-fees-denominator items
+    batch6 named as still-open design calls). No new batch7 fold-in from the named items; the orphan-bucket DELETE
+    ruling is already covered separately below (Too-large-or-risky).
+  - `issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` — STILL BLOCKED. 1 open todo remains
+    (the CARRY_STAKED_BASIS delete-vs-re-leg strategy-domain call); no operator ruling found post-2026-07-30.
+  - `issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md` — **CLEARED, 0 open todos.** A
+    2026-08-16 operator ruling (round7 Q&A, MVP_SCOPE catalog-identity item) closed the doc's last open item. No new
+    batch7 work to fold in — the doc is fully resolved, archival-ready (separate hygiene sweep, not this batch's scope).
+  - `issues/defi_adapter_dead_code_audit_2026_07_24.md` — PARTIALLY CLEARED. 2026-08-07/08 operator rulings resolved 2
+    of 4 named items (governance-parameters-refresh scoping now bounded; `thegraph_ws_adapter.py` ruled DELETE), but 1
+    open todo remains (jupiter.py register-vs-delete still needs the operator per doc content) — STILL BLOCKED overall,
+    no clean batch7 fold-in without a fresh read of the 1 remaining item (out of this todo's re-check-only scope).
+  - `issues/defi_code_codex_drift_2026_05_27.md` — CLEARED but not net-new: doc is fully **ARCHIVED 2026-08-13** (D1-D13
+    closed); the specific batch6-named item (D15 HYPERLIQUID/ASTER migration) was independently resolved 2026-08-02 via
+    `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (already reconciled by batch6's own todo 24 /
+    this finalize plan's todo 1 reconciliation pass). No new batch7 work — already fully accounted for.
+  - `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` — `status: resolved`, `last_updated:
+    2026-08-08`; the operator/engineering ruling batch6 was waiting on has landed and the doc is resolved. The
+    large-scale 63.9M-row seed-apply execution itself is separately tracked below (Too-large-or-risky) — that piece
+    still needs its own dedicated VM-backed plan, not a batch7 todo.
+  - `issues/defi_lst_empty_marker_hardcoded_venue_2026_07_27.md` — ARCHIVED 2026-07-31, but the ARCHIVED banner resolved
+    only the stale `locked_by` blocker batch6 also mentioned — the physical-marker-write-vs-manifest-only architecture
+    decision itself is confirmed still explicitly "left for a future decision" in the doc body. STILL BLOCKED.
+  - `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` — STILL BLOCKED. 1 open todo remains, no operator
+    ruling found post-2026-07-30 on the double-counting-risk question named by batch6.
+  - `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md` — STILL BLOCKED. 1 open todo remains, no
+    post-2026-07-30 dated activity in the doc.
+  - `/plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md` — already noted RESOLVED +
+    archived by batch6 itself; re-confirmed still archived, no change, no action.
+  - `issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` — STILL BLOCKED. 1 open todo remains;
+    the generator-vs-committed-files authority ruling batch6 named is not present in the doc's operator-ruling mentions
+    (both hits are the older 2026-07-16 DRIFT/PACIFICA-kill ruling, unrelated to this item).
+  - `issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` — STILL BLOCKED. 2 open todos remain (D1
+    deferred-by-design, D4 BLOCKED-CREDENTIALS); no clearing evidence found.
+  - `issues/lst_yields_writegate_permanently_blocked_2026_07_28.md` — PARTIALLY CLEARED but ARCHIVED as resolved
+    2026-08-06: the wBETH/sanctumSOL UAC-registry naming item batch6 named IS done (`[x]`, unified-api-contracts@8f1c11c8),
+    and PARTIAL_OK adoption shipped too. Doc fully resolved/archived — no residual open item to fold into batch7.
+  - `issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md` — STILL BLOCKED. 1 open todo remains;
+    doc's own "Needs an explicit operator ruling" section is still open (money-path review + ShareClass convergence),
+    matching batch6's characterization exactly.
+  - `issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md` (+ its Solana-DEX-handlers-gap counterpart in
+    `lst_exchange_rate_data_availability_2026_07_21.md`) — **CLEARED at the authoring-decision level**: operator ruled
+    2026-08-08 "prioritize it now"; a dedicated implementation plan (`/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`,
+    `assigned_vm: planning`, 5 todos, sequential) + gated finalize companion were authored and are already independently
+    dispatchable. No new batch7 todo needed — the real build work is already tracked outside this batch, exactly as the
+    authoring decision was supposed to unblock. `lst_exchange_rate_data_availability_2026_07_21.md` itself is separately
+    ARCHIVED 2026-07-30 (its own item #4 Aave-oracle wire was already done pre-batch6) — its Solana-DEX-gap follow-up
+    (#5 in its own doc) is the same gap now covered by the new indexer plan, not independently open.
+  - `lst_rate_honest_coverage_2026_07_21.md` — STILL BLOCKED. Phase 6 E3 recursive-staking-borrow leg (money-path) and
+    the ShareClass enum convergence remain flagged "needs an explicit operator ruling" per the doc's own Phase 6 E2 row;
+    Phase 5 #4 stays explicitly operator-owned by design (runner script forbids agent execution). No clearing found.
+
+  **Time-gated (3 items):**
+  - `defi_expected_unattempted_seeder_design_2026_07_26.md` / `defi_dex_pool_symbol_fix_backfill_purge_*` — already
+    verdicted archivable/covered by batch6 itself; re-confirmed no change, no action needed.
+  - `issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md` — ARCHIVED 2026-08-02, resolved; already
+    independently closed by batch6's own 2026-07-30 slot-14 Progress Log entry (D1 unblocked same day). No new work.
+  - `lst_rate_honest_coverage_2026_07_21.md`'s Phase 5 #1 (blocked on `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`)
+    — STILL BLOCKED. The gating doc is `status: open` with 2 open todos remaining (root-cause diagnostic work), not yet
+    fully closed — the memory-hang bug itself is not confirmed fixed (a related but distinct VM-reaping bug was fixed
+    2026-08-14). Phase 5 #2 dex_pool_swaps 3-VM fleet — not independently re-checked this pass (multi-week watch item,
+    outside this todo's taxonomy scope).
+
+  **Too-large-or-risky (3 items, unchanged by design):**
+  - `defi_migration_audit_log_2026_07_24.md`'s DELETE-duplicate-orphan-buckets item — operator ruling landed 2026-08-15
+    per the doc's own Progress Log, but a GCS delete still requires explicit operator sign-off per the delete-safety HARD
+    RULE regardless of the ruling — correctly stays a human-execution item, not a batch7 todo.
+  - `/plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s 63.9M-row seed-apply — doc now
+    `status: resolved`, but the large-scale execution itself still needs its own dedicated VM-backed plan per batch6's
+    original characterization — unchanged, not a batch7-sized todo.
+  - `plans/archive/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`'s §6.3 (11 of 14 UAC-declared staking
+    protocols unimplemented) — doc now `status: resolved`, `last_updated: 2026-08-15`, but §6.3 was explicitly named as a
+    substantial multi-protocol build, not a bounded single todo — unchanged in scope even though the doc itself closed.
+
+  **Human-only, permanently (2 items):** `data_completion_defi_2026_07_15.md`'s Progress-Log P2 sub-bucket phantom-audit
+  item and `defi_migration_audit_log_2026_07_24.md`'s remaining uncategorized items — both docs confirmed still
+  active/open above; no change to this classification.
+
+  **Net result: zero new batch7 candidates drafted this pass.** The one item whose gating decision genuinely cleared
+  (Solana DEX indexer authoring) already spawned its own independently-tracked, already-dispatchable plan pair outside
+  this batch — exactly the outcome the deferral was waiting for, requiring no batch7 todo of its own. The
+  `defi_archetype_universe_no_curtailment_mechanism` doc fully resolved (0 open todos) but produced no residual scope to
+  fold in. All other items remain genuinely operator-gated, time-gated, or scope-unchanged-despite-doc-closure exactly as
+  batch6 characterized them. Todo 4 (mtds_dex_pools_swaps_backfill_verification): confirmed archived 2026-08-16 with all
+  17 todos `[x]` including the todo-3/todo-5 re-checks — nothing to fold in, the source doc closed on its own.
