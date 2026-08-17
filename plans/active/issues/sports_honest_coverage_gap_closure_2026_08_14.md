@@ -622,20 +622,34 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       machine-type from `e2-standard-4` to whatever size the (memory-bounded) fixed version needs, and spot-check
       that the weather VM's new captures show up as `empty_confirmed` (not still `expected_unattempted`) in the
       manifest.
-- [ ] [SCRIPT] P2. **`rescan_sports_fixtures_canonical.py` needs a streaming/chunked manifest-merge — confirmed
-      OOM at 64GB, not a sizing problem.** Root-caused via the todo above (8 relaunch attempts, 2026-08-16/17): the
-      script scans cleanly (47,053,527 per-(date, league_id) FIXTURES rows across 142,894 blobs, no memory issue
-      through the whole scan) but then reads the FULL existing manifest and merges it with the freshly-scanned
-      rows in-memory — this step SIGKILLs even on `e2-highmem-8` (64GB), confirmed twice (attempts 5 and 8,
-      identical `exit_code=137` signature both times). Needs the same class of fix already applied elsewhere in
-      this codebase for the identical problem shape (see `check_shard_freshness()`'s "Slim + date-filtered read"
-      pattern, `unified-trading-library/unified_trading_library/manifest_writer/_queries.py:247` — filtered/
-      chunked reads instead of loading a whole large index) — read the existing-manifest merge in
-      `rescan_sports_fixtures_canonical.py` and rewrite it to merge in bounded chunks (e.g. per-league or
-      per-date-range) rather than one full in-memory join. Not urgent (this is materializing `empty_confirmed`
-      rows for the weather VM's new captures — a data-quality cleanup, not a correctness-blocking gap), but
-      genuinely needed — don't relaunch the rescan again without this fix, it will OOM the same way regardless of
-      machine size.
+- [ ] [SCRIPT] P2. **PRECISE FIX LOCATION FOUND 2026-08-17 (operator-directed, do this in a fresh session) —
+      `ManifestMigrator.merge_into_canonical()` needs a streaming/chunked rewrite. Confirmed OOM at 64GB, not a
+      sizing problem, not fixable by more `--chunks`/`--workers` parallelism.** Root-caused via the todo above (8
+      relaunch attempts, 2026-08-16/17): the SCAN phase is fine (47,053,527 per-(date, league_id) FIXTURES rows
+      across 142,894 blobs, no memory issue) and CAN already be parallelized safely — `--chunks N` workers write to
+      isolated `_index/partial/<run-id>/<chunk-id>.parquet` paths, never touching the canonical index, so there is
+      genuinely no manifest-consolidator race during scanning (confirmed by reading the docstring's own claim AND
+      the `run_worker`/`run_coordinator` implementation). **But chunking the scan does NOT avoid the OOM** — the
+      exact function that SIGKILLs (confirmed twice, attempts 5 and 8, identical `exit_code=137` both times) is
+      `merge_into_canonical()` in
+      `unified-trading-library/unified_trading_library/manifest_migrations/migrator.py:216-235`, called once at
+      the end regardless of mode (`run_single_vm` calls it directly; `run_coordinator` hits the same shape via
+      `_load_partial_shard_rows` loading ALL partial shards into one list before its own combine step). Read the
+      actual code — it has THREE separate full-data-copies stacked in one call: `pd.read_parquet(...)` (whole
+      existing manifest into memory) → `existing_df.apply(self._drop_canonical_row, axis=1)` (row-wise Python
+      call, not vectorized — slow AND memory-heavy for 47M+ rows) → `.to_dict("records")` (DataFrame → list of
+      dicts, its own expensive copy) → `pd.DataFrame(new_entries + existing_entries)` (list-concat then back to a
+      DataFrame) → `.to_dict("records")` again inside `upload_parquet_rows`. **The fix**: rewrite
+      `merge_into_canonical()` (and `_coordinator_merge_and_cleanup`'s equivalent combine step, same file) to
+      merge in bounded batches (e.g. per-date-range or per-league, mirroring `check_shard_freshness()`'s "Slim +
+      date-filtered read" pattern at
+      `unified-trading-library/unified_trading_library/manifest_writer/_queries.py:247`) instead of one
+      all-at-once combine, and replace the row-wise `.apply(axis=1)` drop-filter with a vectorized boolean mask
+      (should also be materially faster, not just lower-memory). Both call sites live in the SAME file
+      (`migrator.py`) — fix once, both `run_single_vm` and `run_coordinator` benefit. Not urgent (this closes out
+      materializing `empty_confirmed` rows for the weather VM's new captures — a data-quality cleanup, not a
+      correctness-blocking gap), but genuinely needed — don't relaunch the rescan again without this fix, it will
+      OOM the same way regardless of machine size or scan-chunking.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
@@ -651,20 +665,22 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       consolidation; that is the standing consolidator's job on its own cadence, not a CLI action to improvise.
       Re-check `_index/latest.json`'s `last_run_at` after it advances past 2026-08-16T21:15Z to confirm absorption.
 
-## Deferred work after 2026-08-16
+## Deferred work after 2026-08-17
 
 | Item | State / why deferred | Blocked on |
 | --- | --- | --- |
-| UAC pinning-test stash (above) | Not done — real work, quick | Nobody — pick it up first, it's the cheapest |
-| odds_api 278-day backfill (above) | Admission-hold self-deadlock FIXED + hardened (24h TTL). New open question: a possible freshness-skip-window mismatch, investigated but not confirmed — see the new P2 item above | Operator decision on pause-vs-continue (notified, no answer yet); resolving the freshness question doesn't need the operator, just more careful reading |
-| Weather VM completion + rescan | Relaunched 2026-08-16, confirmed live — rescan script still pending until it completes | Nobody — just wait for completion |
-| SFI 7-date retry (above) | Done 2026-08-16 — data + manifest shard both correct | Nobody — waiting only on the standing consolidator's next cycle |
+| **`ManifestMigrator.merge_into_canonical()` streaming rewrite** (new todo above) | Precisely root-caused 2026-08-17 (exact file/line/function), NOT yet fixed — operator explicitly asked for this to be done in a **fresh session** after this pre-compact | Nobody — self-contained code fix, no operator input needed once picked up |
+| odds_api 278-day backfill (above) | Admission-hold self-deadlock FIXED + hardened (24h TTL, `deployment-service@80123c3ccc`). Freshness-skip-window question fully INVESTIGATED AND RESOLVED 2026-08-17: confirmed deliberate/tested anti-regression behavior, not a bug — no code change needed. VM currently RUNNING (`mtds-backfill-odds-20260817-062648`), genuinely progressing (`2020-10-22` as of last check, launched from `2020-06-06`) | Nobody — just keep monitoring to completion or next preemption+relaunch, same pattern as weather |
+| Weather VM completion + rescan | Weather VM **COMPLETED FULLY** 2026-08-17 (`last_completed_date=2026-08-02`, clean exit). Rescan attempted **8 times** (2026-08-16→17) — 2 real infra bugs found+fixed along the way (`deployment-service@a06dffebdf` machine-type override, `deployment-service@78dfe2efeb` missing `VM_ASSET_GROUP` defaulting to CEFI), but the rescan itself hits a confirmed, repeatable OOM in `merge_into_canonical()` regardless of machine size — see the new todo above, this is now properly scoped as its own code fix rather than more relaunches | The `merge_into_canonical()` streaming rewrite (row above) — don't relaunch the rescan again until that lands |
+| SFI 7-date retry (above) | Done 2026-08-16 — data + manifest shard both correct, absorbed into the canonical index (confirmed via a later consolidator run showing `verdict: produced`) | Nobody — complete |
+| UAC pinning-test stash (`odds_api_source_not_venue_fix` in `unified-api-contracts`) | Last known state: still stranded as of 2026-08-16 (not re-verified this session — may have been picked up by a peer session or gone stale; check `git stash list` fresh before assuming) | Nobody — cheap, standalone, unrelated to everything else in this doc |
 | api_football derived-entity backlog reclassification `--apply` (748,363→ now merged; the SEPARATE 72,955 genuine-gap cells from the original FIXTURES_OUTCOMES dry-run) | Operator-owned — needs a decision on the 72,955 unprovable cells, not a mechanical retry | Operator review of the original dry-run counts (see the FIXTURES_OUTCOMES todo higher in this doc) |
 | Broader multi-venue `ODDS`/`odds` casing pattern (betfair, footystats) found but explicitly out-of-scope this session | Already tracked elsewhere, not lost | See `plans/active/issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md` — a peer session already filed this independently |
 
-**Recommended next item**: the UAC stash (cheapest, zero risk, five minutes) — then SFI's retry (mechanical, no
-investigation needed) — then the odds_api backfill investigation (the real remaining substantive gap, needs either a
-live SSH-based root-cause session or patience with more relaunches).
+**Recommended next item (operator-directed)**: the `merge_into_canonical()` streaming rewrite, in a fresh session —
+exact file/function/line and the 3-stage fix already scoped in the todo above, no re-diagnosis needed. Everything
+else in this doc is either complete, self-sustaining (odds VM keeps running/relaunching on its own pattern), or
+genuinely operator-gated.
 
 ## Progress Log
 
@@ -688,3 +704,18 @@ live SSH-based root-cause session or patience with more relaunches).
   Considered and declined RECLASSIFY: staying NA rather than promoting the whole doc's `assigned_vm` for one
   VM-gated, not-yet-actionable script-run todo. Re-flag once the weather VM completes and the rescan is either run
   or explicitly self-justified.
+- **Pre-compact 2026-08-17 (interactive `/autonomous` session, operator-directed handoff to a fresh session for the
+  `merge_into_canonical()` fix)**: session covered, in order: (1) the odds-VM admission-hold self-deadlock fixed +
+  hardened with a 24h TTL; (2) the freshness-skip-window question fully investigated and closed as deliberate,
+  tested, correct-as-is behavior (not a bug — reopening it would regress a real, already-fixed 572-day-pinned-empty
+  incident); (3) weather VM ran to full completion; (4) 8 rescan attempts that found and fixed 2 real, independent
+  infra bugs (missing `--machine-type` override, missing `VM_ASSET_GROUP` silently defaulting the consolidator
+  watchdog to CEFI's bucket) before precisely root-causing a genuine OOM in `ManifestMigrator.
+  merge_into_canonical()` that machine-size escalation cannot fix. **Lesson worth carrying (cost real time twice
+  this session)**: this laptop's local clock is BST (UTC+1); Python's default logging handler stamps LOCAL time,
+  while every GCS blob's `last_modified`/manifest `written_at`/`requested_at` field is UTC. Comparing a locally-run
+  CLI's own printed log timestamps directly against GCS metadata timestamps (or against each other across that
+  boundary) without normalizing first produces a false ~1h skew that reads as "this is stale/missing/an hour
+  behind" when it is not — this nearly triggered a false fleet-wide Cloud-Scheduler-outage escalation earlier this
+  session and caused a second, smaller false "stale log" read. Always run `date -u` fresh before reasoning about
+  timestamp deltas that mix a local shell/log source with a GCS-read source.
