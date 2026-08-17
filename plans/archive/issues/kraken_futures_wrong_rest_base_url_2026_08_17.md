@@ -12,8 +12,7 @@ summary: >-
   implements. Found 2026-08-17 while researching amend_order's real per-venue wiring for the P2 todo above — the
   class's own docstring even says "For futures testnet, use KrakenFuturesCeFiAdapter", a class that does not exist
   anywhere in this repo, suggesting the futures-specific implementation was planned but never built.
-status: open
-archive_exempt: true
+status: archived
 nature: issue
 asset_group: [cefi]
 stage: [execution]
@@ -56,6 +55,10 @@ context_scope:
     execution-service/execution_service/trade_execution/adapters/kraken_rest_mapping.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-17** — all 3 todos closed (P0 reachability confirmation, P0 real Futures transport
+> implementation, P1 fleet-wide multi-product-adapter audit — found none). Shipped:
+> `execution-service@843fc31e38`.
 
 # KRAKEN-FUTURES silently uses the Kraken SPOT REST API today
 
