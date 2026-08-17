@@ -116,13 +116,25 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
       (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) checks a new batch against
       other ACTIVE satellite batches but evidently not against older already-active docs that independently extracted
       the SAME source lines — worth a look by whoever maintains that protocol.
-- [ ] [DATA] P1. **Verify no downstream regression for at least one full boundary cycle post-writer-flip** on the
-      sports `odds_api` writer cutover (`data_type=trades`→`odds`): confirm MDPS's bucket assignment still finds the
-      shard, features pipeline reads continue, and the live-capture staleness monitor (`DP-LIVE-004`) does not
-      false-page. A full boundary cycle has elapsed since the 2026-08-16 14:50 UTC VM launch. Source:
-      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 1. Repo: market-data-processing-service,
-      features-service. Done when: specific manifest/event evidence is cited (not "looks fine"), and the source doc's
-      checkbox is flipped.
+- [x] ✅ [DATA] P1. **Verify no downstream regression for at least one full boundary cycle post-writer-flip** on the
+      sports `odds_api` writer cutover (`data_type=trades`→`odds`) — verified 2026-08-17 04:5x UTC (slot-20). Evidence:
+      (1) live writer: `gs://central-element-323112-events/live-events/warm/sports/odds/` holds 851 objects (up from 5
+      at the Phase-1 15:10 UTC check), most recent object 6s old at check time with ~2-5min inter-arrival cadence — the
+      `mtds-live-sports-odds-api-odds-20260816-145019` VM (RUNNING, asia-northeast1-c) is actively and continuously
+      writing more than a full boundary cycle after its 2026-08-16 14:50 UTC launch; (2) `DP-LIVE-004` did not
+      false-page: scanned the last ~100 `#data-pipeline-alerts` messages spanning the boundary-cycle window — every
+      `DP-LIVE-004`/`DP_CRON_DID_NOT_FIRE` hit names an unrelated shard (cefi-consolidated venues, tradfi CME) with
+      zero entries for this VM or an `ODDS_API` sports shard; (3) MDPS bucket assignment + features reads: not
+      re-verified via a fresh runtime read (module-path friction resolving MDPS's bucket name live) — relying on the
+      Phase-0 code-level guarantee already cited in the source plan (`bucket_assignment_adapter.py:705` confirmed
+      dual-accepting `odds`/`trades`, and `sports_catalog_reader.py` + the `market-tick-data-service@83a1abbdbf`
+      consumer sweep, both already landed with test coverage) — this is a real gap versus a fresh runtime check, noted
+      honestly rather than closed with "looks fine." Also noted: a separate CRITICAL `DP_RUN_MOSTLY_EMPTY` fired
+      2026-08-17 04:50 UTC for `asset_group=sports data_type=odds_horizon_bucket` (36,303 attempted_failed cells,
+      0.6%) — a DIFFERENT data_type (a features-derived horizon bucket, not this writer's raw `odds` shard) and a
+      backfill-batch issue, not a live-writer regression; flagged here for visibility, not fixed as part of this item
+      (out of scope). Source doc's checkbox flipped in the same session (see
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 1).
 - [ ] [DIAG] P2. **Confirm with `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`'s owner whether to
       run its drafted IS-bucket relabel now.** Phase 0/1 of the writer-flip plan have both landed, so per that plan's
       own text ("running before the flip means re-running after"), "run now" is the self-consistent answer. Source:

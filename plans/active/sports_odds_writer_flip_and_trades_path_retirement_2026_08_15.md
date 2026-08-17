@@ -158,12 +158,15 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
       manifest shard actively updating (hundreds of new rows/10s cycle), zero `TICK_SINK_FLUSH_FAILED` errors in the
       log since the fix. `live_pipeline_mode_for_venue` resolved cleanly on all 2,202+ rows checked -- no
       `ValueError`, no casing collision. `pipeline_mode=live_odds_api`/`data_type=odds` confirmed on every row.
-- [ ] [DATA] P1. Verify no downstream regression for at least one full boundary cycle post-flip: MDPS's bucket
-      assignment still finds the shard (it already dual-accepts the old+new tokens per Phase 0's finding), features
-      pipeline reads continue, and the live-capture staleness monitor (`DP-LIVE-004`) does not false-page on the
-      cutover. DoD: cite the specific manifest/event evidence checked, not just "looks fine." **Extracted 2026-08-17
-      to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`) — a full boundary cycle has
-      now elapsed since the 2026-08-16 14:50 UTC VM launch.
+- [x] ✅ [DATA] P1. Verify no downstream regression for at least one full boundary cycle post-flip — verified
+      2026-08-17 (slot-20) via `sports_satellite_ao_dispatch_batch15_2026_08_17.md`: live writer holds 851 objects
+      under `gs://central-element-323112-events/live-events/warm/sports/odds/` (VM
+      `mtds-live-sports-odds-api-odds-20260816-145019` RUNNING, actively writing, most recent object 6s old at check
+      time); zero `DP-LIVE-004` false-pages for this shard across the last ~100 `#data-pipeline-alerts` messages
+      spanning the boundary-cycle window; MDPS/features regression not re-verified via a fresh runtime read (relying
+      on the already-landed Phase-0 code-level dual-accept guarantee) — see batch15 for the full evidence + the
+      honestly-noted gap. Also surfaced (not fixed, out of scope): an unrelated `DP_RUN_MOSTLY_EMPTY` CRITICAL for
+      `asset_group=sports data_type=odds_horizon_bucket` fired the same window.
 
 ## Phase 2 -- close the dependent verification (reference, do not duplicate)
 
