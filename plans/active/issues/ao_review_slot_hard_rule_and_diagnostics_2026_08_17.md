@@ -50,10 +50,10 @@ context_scope:
   [
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/routes/agents.py,
-    agent-orchestrator/server/config.py,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/plan_health.py,
-    agent-orchestrator/dashboard/src,
+    /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 ---
 
@@ -154,15 +154,7 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
   `/plans/active/ao_open_work_consolidated_tracker_2026_08_14.md` that still read "NOT YET SHIPPED" for the
   already-landed `human_claim` fix (`agent-orchestrator@d13788ec2f`) — condensed in place, pointed here for the new
   work instead of duplicating.
-
-## Progress Log
-
-- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:dbb145b0f0f556f3]: KEEP-NA, valid — first verdict; doc
-  created same day. 4 of 6 open items explicitly need a design pass before implementation (generalize-hard-rule;
-  dispatch-exclusion and UI-tagging both gated on that design's outcome; the auto-dispatch recovery agent explicitly
-  states "needs a proper design pass... do not rush a change to this code path"). The remaining 2 (resume
-  IDE-compatible heartbeat; harden heartbeat setup into pre-commit) read as individually bounded/mechanical with
-  existing patterns to mirror, but are same-session "interrupted work" (deprioritized for a fleet-crisis pivot, not
-  abandoned) not yet revisited by the filing session — tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for re-assessment on
-  a future pass rather than extracted now, given this tranche's own on-record caution against extracting freshly
-  authored same-day content before the filing session/operator has settled it.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- kept the 4 source files this doc's
+  own body names directly (the shipped fix + Todo 1's exact 2 generalization targets), swapped `server/config.py`
+  and `dashboard/src` (lower-precision/single-todo-only) for the sibling reserved-slot-bypass issue doc Todo 2 cites
+  by path and the worker-liveness codex SSOT, neither previously included.

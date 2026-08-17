@@ -54,10 +54,11 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_migration_audit_log_2026_07_24.md,
+    /plans/active/issues/plan_reconciler_findings_defi_2026_08_17.md,
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/02-data/defi-canonical-naming-ssot.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/defi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md,
   ]
 source: >-
   `/na-eligibility-audit defi` (2026-08-17). Every item below cleared the shared conflict-check
@@ -307,3 +308,8 @@ full citations + 5 concrete follow-up todos as `/plans/active/issues/defi_gas_ne
 fix here (out of data_engineering craft scope, and bigger than this todo's 1-hour estimate). Flipped this todo's
 checkbox — the verification itself is complete and its literal done-when is satisfied (at least one strategy
 confirmed netting real gas cost); the newly-discovered partial-wiring gap is tracked forward, not left unactioned.
+
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) -- swapped the AG-wide closeout hub, the
+  canonical-naming SSOT, and the na-eligibility-audit skill doc (none needed to execute a specific remaining todo)
+  for the 3 actual per-todo source docs every still-open item cites by name+line-number; kept the naming/
+  conflict-check codex (cited in this doc's own `source:` field) and added the gated finalize sibling.

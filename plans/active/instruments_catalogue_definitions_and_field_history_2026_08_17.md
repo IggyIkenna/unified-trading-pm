@@ -50,6 +50,7 @@ context_scope:
     /codex/04-architecture/instrument-universe-registry-consolidation.md,
     /codex/04-architecture/tier-and-import-architecture.md,
     /plans/active/data_pipeline_completion_2026_08_21.md,
+    /plans/active/strategy_service_centralization_fixes_2026_08_16.md,
   ]
 ---
 
@@ -245,3 +246,8 @@ not a design call). Extracted to `cross_cutting_satellite_ao_dispatch_batch15_20
 (#3, #5, #6, #8), plus #4/#9/#10 (MISCLASSIFIED_LIKELY_AO_ELIGIBLE, lower confidence -- not extracted this round per
 the rubric's "not a fallback for borderline items" rule), and #11 (explicit non-scope placeholder note). Conflict-check
 clear. Cross-cutting tranche audit.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added
+`strategy_service_centralization_fixes_2026_08_16.md`, named directly in this doc's own query-don't-derive gate
+section as sharing "the same class as the reference-data-in-a-code-path rule" with a note the two checks should
+share one discriminator; kept the 3 architecture codex SSOTs + the parent gate-register plan. No source path added --
+this is a pure design proposal awaiting operator ratification, not yet executed.

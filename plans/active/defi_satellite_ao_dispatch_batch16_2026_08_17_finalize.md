@@ -41,6 +41,9 @@ superseded_by:
 context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch16_2026_08_17.md,
+    /plans/active/defi_migration_audit_log_2026_07_24.md,
+    /plans/active/issues/plan_reconciler_findings_defi_2026_08_17.md,
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 source: >-
@@ -71,3 +74,6 @@ Do not start manually before then.
 
 - **2026-08-17 (na-eligibility-audit, defi tranche)**: finalize plan authored alongside batch16's draft, per
   `task_template.md`'s finalize-plan-coverage rule.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) -- added the 3 source docs batch16's own 9 todos
+  cite by name (this finalize's own job is to re-verify against "the 3 source docs' own citations"), so a reviewer
+  can reach them directly instead of hopping through batch16 first; kept the batch16 doc + archival-discipline codex.

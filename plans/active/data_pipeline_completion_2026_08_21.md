@@ -58,9 +58,9 @@ context_scope:
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/orphan-object-detection.md,
   ]
 ---
 
@@ -321,3 +321,9 @@ sign-off `[OPERATOR]`, PAPER/LIVE+12-batch gate ratification `[OPERATOR]`, and t
 resolver design work (line 213 + its dependent at 215 — cross-service, no cited existing pattern, matches the
 "multi-file rewrite, not bounded" bar even though phrased as one todo). Conflict-check clear. Cross-cutting tranche
 audit.
+**context-scout 2026-08-17**: refreshed context_scope (6 entries) -- swapped `spot-vms-for-backfill.md` for
+`orphan-object-detection.md`, which the doc's own B22 gate text cites as "SSOT:" twice but which was missing from the
+original list; the other 5 entries (VM-launcher, VM-preemption-billing-waste, four-surface-reconciliation,
+honest-coverage, availability-manifest) remain accurate for this gate register's broad scope. No source path added --
+this plan is explicitly a gate register that links to owning plans rather than implementing directly ("this plan is
+the gate register; the work lives where it already lives").
