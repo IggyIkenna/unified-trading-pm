@@ -97,7 +97,10 @@ guidance both point the same direction: stop and page.
 ## Todos
 
 - [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `mdps-cefi-2019-20260810-043116`'s shard (cefi/2019 MDPS candles) per
-      the recommended decision above; the `mdps-cefi-` family relaunch bound is already exhausted for today.
+      the recommended decision above. **The "relaunch bound already exhausted for today" framing is now STALE
+      (2026-08-14 → today)** — see the 2026-08-17 Progress Log entry below: the shard has since seen 2 further
+      relaunch attempts, with a 4th VM currently RUNNING. Still open because the running VM has not yet reached a
+      terminal state — re-check its outcome before treating this as resolved.
 - [x] [BACKEND] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
       `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 2. Original text: Pull + read `run.log` for
       `mdps-cefi-2019-20260810-043116` via
@@ -117,3 +120,24 @@ guidance both point the same direction: stop and page.
   code changed this session.
 - **na-eligibility-audit 2026-08-16** [body-hash:b0c9395683099ac8]: RECLASSIFY-SPLIT — extracted bounded item(s) 2 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 1 item remains genuinely NA ([OPERATOR] P1 relaunch-vs-wait decision). Doc stays assigned_vm: NA.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **backend_engineer 2026-08-17 (slot-12, `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 2)**: Pulled +
+  read `mdps-cefi-2019-20260810-043116`'s `run.log` via `_gcs_tail.read_terminal_exit_code`/`read_text_tail` (SDK,
+  tail-capped — `read_terminal_exit_code` moved from `_gcs.py` to `_gcs_tail.py` 2026-08-15). `exit_code=1`
+  confirmed. Root cause: the SAME bug `mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md`
+  already diagnosed + fixed (`market-data-processing-service@cc65f076ae`) — both this VM's
+  `Handler returned non-zero exit code` lines (`cefi/liquidations/PERPETUAL: ALL FAILED (2/2)`,
+  `cefi/trades/FUTURE: ALL FAILED (4/4)`) are the `'>' not supported between instances of 'Timestamp' and 'float'`
+  TypeError (8 occurrences) on the shard's final date `2019-12-31` — a 3rd confirmed pre-fix instance (launched
+  2026-08-10 04:31, before the 2026-08-12 fix) within the archived doc's own 19-VM blast-radius-audited set. **The
+  archived fix already covers this — verify-only, no new code shipped.**
+
+  **Adjacent finding — the relaunch-bound framing in the `[OPERATOR]` todo above was stale.** The shard's relaunch
+  chain continued past what the archived doc verified: `mdps-cefi-2019-20260814-193801` (that doc's own fix-verify
+  relaunch of a SECOND pre-fix VM) itself terminated with **no durable exit signal** (`exit_code=None` — neither an
+  `EXIT_STATUS` blob nor a `command exited rc=<n>` run.log line) after reaching only
+  `last_completed_date=2019-05-14` (~37min into its run, 2026-08-14 20:31) — a `PARTIAL_UNCONFIRMED`-shaped
+  termination the archived doc never verified to completion (its own text: "did not wait for the full multi-hour
+  run to complete"). Confirmed via the live GCE compute API this session: a further relaunch,
+  `mdps-cefi-2019-20260816-111308`, is **currently RUNNING** — the shard is NOT abandoned/exhausted-bound as the
+  stale framing suggested; a 4th attempt is actively in flight. This does not yet confirm the shard is complete
+  (the running VM hasn't reached a terminal state) — the `[OPERATOR]` todo stays open pending that outcome.
