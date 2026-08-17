@@ -39,7 +39,11 @@ locked_since:
 resolved_by:
 source: >-
   ui_satellite_ao_dispatch_batch1-003 ("Fix the 5 named dual-cloud-image-builds.md codex drifts"), 2026-08-08, slot 5.
-context_scope: [/codex/05-infrastructure/dual-cloud-image-builds.md]
+context_scope:
+  [
+    /codex/05-infrastructure/dual-cloud-image-builds.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+  ]
 ---
 
 # Follow-up findings from fixing dual-cloud-image-builds.md's codex drifts
@@ -159,3 +163,6 @@ access from this worktree).
   the decision is made but execution requires the operator's own AWS console/CLI access, which no worker can self-serve
   for this identity. Stays open pending the actual grant + a live re-verification.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:c379fed54f923515]: KEEP-NA, valid — sole open item is a standing [OPERATOR] action with an explicit dated operator ruling already cited in-doc — execution needs the operator's own AWS access.
+- **context-scout 2026-08-17**: refreshed context_scope (2 entries) — added `orchestrator-cloud-identity-self-service.md`
+  alongside the existing `dual-cloud-image-builds.md`, since the sole remaining open item (the AWS IAM grant) is exactly
+  the self-service-boundary question that doc explains.

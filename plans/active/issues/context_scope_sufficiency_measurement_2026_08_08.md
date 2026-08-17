@@ -97,3 +97,5 @@ properly (likely via `/plan-brainstorm`) before authoring any implementation wor
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
   item, self-flagged in its own text as 'genuinely open-ended — resolve via /plan-brainstorm before any implementation
   todo is authored.' No concrete spec exists yet. Agrees with round9 (2026-08-09).
+- **context-scout 2026-08-17**: re-scouted; context_scope unchanged (3 entries), still accurate — genuinely code-free
+  design/proposal doc, no source paths.

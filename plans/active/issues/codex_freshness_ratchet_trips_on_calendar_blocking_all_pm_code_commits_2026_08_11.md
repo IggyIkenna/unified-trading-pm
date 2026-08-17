@@ -44,8 +44,8 @@ locked_since:
 context_scope:
   [
     scripts/quality_gates/check_codex_doc_freshness.py,
-    /codex/05-infrastructure/live-deployment-monitoring.md,
-    /codex/05-infrastructure/strategy-vm-launcher-shape.md,
+    scripts/quality_gates/codex_doc_freshness_baseline.yaml,
+    /codex/12-agent-workflow/measurement-claims-discipline.md,
   ]
 ---
 
@@ -235,3 +235,9 @@ delimiter that was never missing.
       actually blocks a commit either way — this is purely about the diagnostic pointing the next person at the right
       fix on the first read instead of a false "you're missing the frontmatter block entirely" lead. Repo:
       unified-trading-pm.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (3 entries) — swapped the two now-resolved example docs
+  (`live-deployment-monitoring.md`/`strategy-vm-launcher-shape.md`, both re-reviewed and closed) for the checker script's
+  own ratchet baseline and `measurement-claims-discipline.md`, the doc's own real recurring theme across all 4 Updates.

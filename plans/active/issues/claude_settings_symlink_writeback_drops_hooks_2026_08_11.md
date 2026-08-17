@@ -43,7 +43,7 @@ context_scope:
   [
     scripts/workspace/link-claude-skills.sh,
     scripts/workspace/migrate-personal-settings-keys.sh,
-    unified-trading-pm/cursor-configs/settings.json,
+    cursor-configs/settings.json,
     /codex/05-infrastructure/claude-code-settings-symlink.md,
   ]
 locked_by:
@@ -205,3 +205,8 @@ operator, plausibly a typo'd re-run of the documented `settings.json`-symlink lo
 automated linker existed). No further code-level root cause exists to chase. The 2026-08-11 guard (refuse to write
 through a symlink) plus `check_settings_symlink_hygiene.sh` are therefore the complete fix for this failure class, not a
 backstop pending a future root-cause patch.
+
+**context-scout 2026-08-17**: refreshed context_scope (4 entries) -- corrected `unified-trading-pm/cursor-configs/settings.json`
+(did not resolve from the PM repo root, since the doc lives inside that same repo -- there is no nested
+`unified-trading-pm/` directory) to the repo-relative `cursor-configs/settings.json`, matching this doc's own body
+convention for every other same-repo path.

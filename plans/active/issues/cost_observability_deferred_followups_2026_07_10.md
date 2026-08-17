@@ -169,3 +169,4 @@ context_scope:
   `infra_satellite_ao_dispatch_batch17_2026_08_16.md` (dated one day before this audit), the other 104 split across 3
   tiers still gated on unresolved operator design decisions. Corroborates, does not contradict, the 2026-08-08/09
   findings already in this doc.
+- **context-scout 2026-08-17**: re-scouted; context_scope unchanged (5 entries), still accurate.
