@@ -7,7 +7,7 @@ summary: >-
   Escalation agt-9d78d2 (wall_type=data_pipeline_failure) reported `manifest-recon-cefi-20260815-093854` (asset_group
   cefi, launched via `deployment-service/scripts/vm/launch-manifest-recon-all-vm.sh cefi` with `UNPHANTOM_ONLY=true
   VENUES=BINANCE-FUTURES,KRAKEN-FUTURES`, satisfying the still-open todo in
-  `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`) with a 12-minute-stale heartbeat. Live diagnosis (via
+  `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md`) with a 12-minute-stale heartbeat. Live diagnosis (via
   `deployment_service.data_pipeline_monitors._gcs` SDK reads, never subprocess gsutil/gcloud storage) found the VM's
   `run.log` froze immediately after `Loading manifest from
   gcp://market-data-tick-cefi-prd-central-element-323112/_index/ availability_index.parquet` — the single blocking
@@ -49,7 +49,7 @@ related:
   [
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /plans/archive/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md,
     /plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md,
     /plans/archive/issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md,
@@ -84,7 +84,7 @@ source: >-
 
 1. `manifest-recon-cefi-20260815-093854` (asset_group=cefi, `e2-standard-4`, launched via
    `launch-manifest-recon-all-vm.sh cefi` with `UNPHANTOM_ONLY=true VENUES=BINANCE-FUTURES,KRAKEN-FUTURES` — the exact
-   invocation `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo #P3 (line 505) names) fired
+   invocation `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo #P3 (line 505) names) fired
    `DP_VM_STALL` at 12 minutes heartbeat-stale.
 2. Live re-check (via `deployment_service.data_pipeline_monitors._gcs.run_log_signals`/`heartbeat_blob_age_minutes`/
    `read_terminal_exit_code`, SDK-only per the workspace GCS-object-ops hard rule): `run.log` froze at
@@ -160,7 +160,7 @@ was never previously flagged as at-risk for this same unsliced read.
       (manual-judgment-only) should stand. If kept `None`, no action needed; if changed, the ≤2/(vm-prefix,day) budget
       already applies uniformly via `vm_prefix()`'s longest-prefix match.
 - [x] ✅ [OPERATOR] P3. Confirm `manifest-recon-cefi-20260815-100959` (currently running on `e2-highmem-16`) completes
-      successfully and its output satisfies `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo #P3
+      successfully and its output satisfies `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo #P3
       (cefi BINANCE-FUTURES/KRAKEN-FUTURES `--unphantom-only` re-run) — flip that checkbox once confirmed; this issue
       doc does not flip it directly since the run had not completed as of this write-up. **CONFIRMED 2026-08-15
       (slot-17)**: completed cleanly, `exit_code=0`, `Manifest rows: 29,707,581`, "No phantoms found and nothing to
@@ -196,7 +196,7 @@ was never previously flagged as at-risk for this same unsliced read.
   fix; scoping alone doesn't avoid the full-manifest load). Re-ran on `e2-highmem-16` (128GB):
   `manifest-recon-cefi-20260815-100959` completed cleanly (`exit_code=0`), `Manifest rows: 29,707,581`, "No phantoms
   found and nothing to unphantom. Manifest is clean." — flipped this doc's todo #3 and
-  `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. The `columns=` slim-read todo above remains
+  `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. The `columns=` slim-read todo above remains
   open — a genuine efficiency fix, not required to close batch6's todo now that a correctly-sized VM proved sufficient.
 - **na-eligibility-audit 2026-08-16** [body-hash:ff4d339f25828573]: RECLASSIFY-SPLIT — extracted bounded item(s) 3 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 1 item remains genuinely NA ([OPERATOR] P3 launcher-registry auto-recovery-binding decision). Doc stays assigned_vm: NA.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

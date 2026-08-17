@@ -24,8 +24,9 @@ tags: [defi, perp-daily-ctx, perp-funding, hyperliquid, mark-price, honest-absen
 related:
   [
     /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
-    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /plans/active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

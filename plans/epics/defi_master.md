@@ -50,22 +50,31 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md
+  - ../active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16_finalize.md
   - ../active/defi_consolidated_closeout_2026_07_18.md
+  - ../active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize.md
+  - ../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md
+  - ../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16_finalize.md
+  - ../active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16_finalize.md
+  - ../active/defi_live_poller_ao_dispatch_batch1_2026_08_16.md
+  - ../active/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md
+  - ../active/defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16.md
   - ../active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md
-  - /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md
-  - ../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
+  - ../active/defi_satellite_ao_dispatch_batch14_2026_08_16_finalize.md
+  - ../active/defi_satellite_ao_dispatch_batch16_2026_08_17.md
+  - ../active/defi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch2_2026_07_26.md
   - ../active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md
-  - ../active/defi_satellite_ao_dispatch_batch6_2026_07_30.md
-  - ../active/defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md
   - ../active/defi_strategy_pnl_axis_index_2026_07_24.md
   - ../active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
   - ../active/defi_track5_coverage_mvp_backfill_2026_07_24.md
+  - ../active/pacifica_solana_perp_reintegration_2026_08_14.md
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -1703,102 +1712,112 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 
 ## Assigned active plans
 
-_18 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
-Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_25 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`defi_consolidated_closeout_2026_07_18`](../active/defi_consolidated_closeout_2026_07_18.md)
-
 **status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
 ### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
-
 **status**: active · **estimate**: 4 cal AI-days (class: infra)
 
 ### [`defi_track01_per_instrument_and_canon_id_2026_07_24`](../active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)
-
-**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: DeFi Track 0-1 — per-instrument
-re-architecture + instrument-ID canonicalization (the gating id migration)
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
+**title**: DeFi Track 0-1 — per-instrument re-architecture + instrument-ID canonicalization (the gating id migration)
 
 ### [`defi_track5_coverage_mvp_backfill_2026_07_24`](../active/defi_track5_coverage_mvp_backfill_2026_07_24.md)
-
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: DeFi Track 5 — COVERAGE backfill → MVP-100%
-(forked from defi_consolidated_closeout_2026_07_18.md)
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+**title**: DeFi Track 5 — COVERAGE backfill → MVP-100% (forked from defi_consolidated_closeout_2026_07_18.md)
 
 ## P1 — important; post-current-gate
 
+### [`defi_instruments_store_v9_gate_c_apply_write_2026_08_16_finalize`](../active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16_finalize.md)
+**status**: active · **estimate**: 0.15 cal AI-days (class: research)
+**title**: Finalize — DeFi instruments-store v9 GATE C explicit --apply-write
+
+### [`defi_satellite_ao_dispatch_batch14_2026_08_16_finalize`](../active/defi_satellite_ao_dispatch_batch14_2026_08_16_finalize.md)
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
+**title**: DeFi satellite AO batch 14 — finalize (reconcile 8 source docs + archive)
+
 ### [`defi_satellite_ao_dispatch_batch3_2026_07_26_finalize`](../active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md)
-
-**status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: DeFi satellite AO batch 3 — finalize
-(reconcile source docs + resolve deferrals + archive)
-
-### [`defi_satellite_ao_dispatch_batch6_2026_07_30`](../active/defi_satellite_ao_dispatch_batch6_2026_07_30.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: DeFi satellite AO batch 6 — residual-orphan
-triage after batch5 (scheduled ag_closeout_auditor)
-
-### [`defi_satellite_ao_dispatch_batch6_2026_07_30_finalize`](../active/defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md)
-
-**status**: active · **estimate**: 0.6 cal AI-days (class: infra) **title**: DeFi satellite AO batch 6 — finalize
-(reconcile source docs + resolve deferrals + archive)
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra)
+**title**: DeFi satellite AO batch 3 — finalize (reconcile source docs + resolve deferrals + archive)
 
 ### [`defi_strategy_pnl_axis_index_2026_07_24`](../active/defi_strategy_pnl_axis_index_2026_07_24.md)
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra)
+**title**: DeFi strategy/PnL/backtest axis index — entry point for the strategy-service track
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: DeFi strategy/PnL/backtest axis index —
-entry point for the strategy-service track
+### [`pacifica_solana_perp_reintegration_2026_08_14`](../active/pacifica_solana_perp_reintegration_2026_08_14.md)
+**status**: active · **estimate**: 6.5 cal AI-days (class: infra)
+**title**: >-
 
 ## P2 — useful; opportunistic
 
-### [`defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08`](../active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md)
+### [`defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16`](../active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md)
+**status**: active · **estimate**: 1.6 cal AI-days (class: refactor)
+**title**: Extend canonical instrument_type/asset_group identity to all ~26-29 DeFi strategy-archetype catalog rows
 
-**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Finalize — HYPERLIQUID perp_daily_ctx
-forward-write gap close-out
+### [`defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16_finalize`](../active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16_finalize.md)
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor)
+**title**: Finalize — DeFi archetype catalog identity extension
+
+### [`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize`](../active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize.md)
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
+**title**: DeFi distinct-values zero-non-canonical dispatch — finalize
+
+### [`defi_live_poller_ao_dispatch_batch1_2026_08_16`](../active/defi_live_poller_ao_dispatch_batch1_2026_08_16.md)
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
+**title**: DeFi live-poller Tranche 0 — connector-pattern extraction
+
+### [`defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize`](../active/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md)
+**status**: active · **estimate**: 0.15 cal AI-days (class: infra)
+**title**: Finalize — DeFi live-poller Tranche 0 connector-pattern extraction
+
+### [`defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08`](../active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md)
+**status**: active · **estimate**: 0.12 cal AI-days (class: refactor)
+**title**: Finalize — HYPERLIQUID perp_daily_ctx forward-write gap close-out
 
 ### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md)
-
-**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
-
-### [`defi_satellite_ao_dispatch_batch10_2026_08_06`](/plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md)
-
-**status**: active · **estimate**: 2.88 cal AI-days (class: infra) **title**: DeFi satellite AO batch 10 —
-ag-closeout-audit defi tranche orphan extraction (2026-08-06)
-
-### [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize`](../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
-
-**status**: complete · **estimate**: 0.48 cal AI-days (class: infra) **title**: DeFi satellite AO batch 10 — finalize
-(archived 2026-08-11) (reconcile 9 source docs + archive)
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra)
+**title**: >-
 
 ### [`defi_satellite_ao_dispatch_batch11_2026_08_09`](../active/defi_satellite_ao_dispatch_batch11_2026_08_09.md)
-
 **status**: active · **estimate**: 3.6 cal AI-days (class: infra)
 
 ### [`defi_satellite_ao_dispatch_batch11_2026_08_09_finalize`](../active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
+**status**: active · **estimate**: 0.48 cal AI-days (class: infra)
+**title**: DeFi satellite AO batch 11 — finalize (reconcile 6 source docs + archive)
 
-**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: DeFi satellite AO batch 11 — finalize
-(reconcile 6 source docs + archive)
+### [`defi_satellite_ao_dispatch_batch16_2026_08_17`](../active/defi_satellite_ao_dispatch_batch16_2026_08_17.md)
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra)
+**title**: DeFi satellite AO batch 16 — per-todo RECLASSIFY-split extraction from na-eligibility-audit 2026-08-17
 
 ### [`defi_satellite_ao_dispatch_batch2_2026_07_26`](../active/defi_satellite_ao_dispatch_batch2_2026_07_26.md)
-
-**status**: active · **estimate**: 2.2 cal AI-days (class: infra) **title**: DeFi satellite AO batch 2 — fresh
-Phase-1/Phase-3 triage of the defi closeout-orphan corpus
+**status**: active · **estimate**: 2.2 cal AI-days (class: infra)
+**title**: DeFi satellite AO batch 2 — fresh Phase-1/Phase-3 triage of the defi closeout-orphan corpus
 
 ### [`defi_satellite_ao_dispatch_batch2_2026_07_26_finalize`](../active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md)
-
-**status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: DeFi satellite AO batch 2 — finalize
-(reconcile source docs + resolve deferrals + archive)
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra)
+**title**: DeFi satellite AO batch 2 — finalize (reconcile source docs + resolve deferrals + archive)
 
 ## P3 — backlog; revisit quarterly
 
-_(no PLANS currently assigned at this priority — the auto-generated block above only lists real plan docs. The 5 items
-below are orphaned P3 backlog work with no tracked plan/issue doc anywhere in the corpus; hand-added 2026-08-13 per
-blocked-question BLK-02d1163f so they aren't lost, not auto-generated.)_
+### [`defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16`](../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md)
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
+**title**: Fix HYPERLIQUID k-prefix coin case-sensitivity mismatch (operator-ruled 2026-08-16, canonical uppercase)
 
-- [ ] AWS SNS/SQS mirroring (post-cutover backlog item, no scoping done yet).
-- [ ] Cross-cloud WIF (workload identity federation) for DeFi compute.
-- [ ] CEFFU integration / LTV-tuning follow-up.
-- [ ] DeFi-data vendor credential rotation backlog.
-- [ ] Firebase SA JSON — retire or rotate, no scoping done yet.
+### [`defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16_finalize`](../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16_finalize.md)
+**status**: active · **estimate**: 0.15 cal AI-days (class: infra)
+**title**: Finalize — HYPERLIQUID k-prefix coin casing fix
+
+### [`defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16`](../active/defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16.md)
+**status**: active · **estimate**: 0.08 cal AI-days (class: infra)
+**title**: Finalize — defi_migration_dedicated_bucket_architecture_retired_2026_08_14 reclassification
+
+### [`defi_satellite_ao_dispatch_batch16_2026_08_17_finalize`](../active/defi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md)
+**status**: active · **estimate**: 0.12 cal AI-days (class: refactor)
+**title**: Finalize — DeFi satellite AO batch 16 close-out
 
 ## Cross-references
 
@@ -1865,6 +1884,18 @@ gate MET.
   Blocked-after-MTDS+FEATURES sweep.
 - **Phase 0.B + Phase 12 ratchet (OPERATOR ACTION)**: `measure-honest-coverage.py` doesn't exist. Operator runs from GCE
   VM.
+
+## P3 — backlog; revisit quarterly
+
+_(no PLANS currently assigned at this priority — the auto-generated block above only lists real plan docs. The 5 items
+below are orphaned P3 backlog work with no tracked plan/issue doc anywhere in the corpus; hand-added 2026-08-13 per
+blocked-question BLK-02d1163f so they aren't lost, not auto-generated.)_
+
+- [ ] AWS SNS/SQS mirroring (post-cutover backlog item, no scoping done yet).
+- [ ] Cross-cloud WIF (workload identity federation) for DeFi compute.
+- [ ] CEFFU integration / LTV-tuning follow-up.
+- [ ] DeFi-data vendor credential rotation backlog.
+- [ ] Firebase SA JSON — retire or rotate, no scoping done yet.
 
 ## Folded plans (archived 2026-05-07)
 
