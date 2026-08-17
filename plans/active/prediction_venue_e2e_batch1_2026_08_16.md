@@ -109,6 +109,16 @@ source: >-
       `_filter_feature_groups_for_asset_group` (`batch_handler.py:797-812`) — real captured book data (batch+live,
       confirmed PASS above) is fully orphaned. Done-when: at least one feature_group reads POLYMARKET
       book_snapshot_5, or the gap is confirmed intentional with a cited reason.
+- [ ] [BACKEND] P2. **Triage stale abandoned WIP in `.tabs/8/features-service-clean-check`** (found by a review
+      agent 2026-08-17, 15.9 days stale, 9 files staged: deletes `kalshi_microstructure_calculator.py` +
+      `prediction_ingest.py`; edits `batch_handler.py`/`config.py`/`orchestrator.py`/`feature_builder_registry.py`/
+      `feature_definitions.yaml`/`test_batch_handler.py`). Looks like an earlier, abandoned attempt at the KALSHI
+      PREDICTION-ingest P1 gap todo above — but that todo is already SHIPPED (`unified-trading-pm@fd06d1dee`-era
+      fix ADDED `KalshiMicrostructureCalculator` + moved logic into a new `engine/prediction_ingest.py`), whereas
+      this stale WIP stages DELETES of those exact two files. Strong signal this is a superseded, now-dangerous
+      duplicate — committing it as-is would likely REVERT the shipped fix. Done-when: a fresh triage confirms
+      superseded-by-shipped-fix and discards the stale WIP (`git stash`/reset, not a blind restore), OR a closer
+      read finds the staged deletes target genuinely different dead code and the WIP is salvaged instead.
 - [x] ✅ [BACKEND] P0. **Steps 6-8 per unit — done 2026-08-16, (POLYMARKET, trades) also fails.** SHIPPED —
       `unified-trading-pm@8bfa440ac1`. The other 3 rows stay `BLOCKED-ON` their step-5 gap todos above,
       unchanged. For (POLYMARKET, trades) — the one row that cleared step 5 — real per-item verdict:
