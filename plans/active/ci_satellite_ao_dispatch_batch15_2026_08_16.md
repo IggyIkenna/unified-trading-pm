@@ -155,6 +155,16 @@ source: >-
       runtime-level deploy signal (diff running SHA vs `main` HEAD). Source:
       `plans/active/monitoring_control_plane_master_2026_06_10.md` (lines ~260, ~262, ~465). Gate: one panel showing
       rollout-ratchet + ruleset-drift status; a separate widget showing running-vs-HEAD SHA diff per service.
+      **INVESTIGATED, NOT DONE 2026-08-17 (slot-1, ui_developer) — mis-scoped `[UI]`-only, needs a backend
+      counterpart first.** Neither `detect_template_drift.py` nor `rules-alignment-agent.yml` writes to any
+      API-readable store today (QG-gate-only / Slack-only respectively) — 2 of 3 ratchet columns have zero backend
+      data to render. The 3rd column + the separate widget overlap conceptually with the already-active, separate
+      `artifact_pipeline_observability_2026_07_17.md` feature's `/ops/artifacts` running view (`DRIFT_PINNED`/
+      `DRIFT_STALE` classification) and need reconciliation before new UI is built. Full investigation + a concrete
+      backend/UI split recommendation filed:
+      `/plans/active/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`. Left `- [ ]` open
+      (not mine to re-split unilaterally — review/main's call per `ui_developer.md`'s escalation instruction); did
+      not build UI against a guessed/mocked contract.
 
 - [ ] [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate in `sit_gate_treadmill`'s remaining
       scope** (mirrors the same hoist pattern batch13 already applied to `ldr_to_main_fleet_promote.sh` for a sibling
