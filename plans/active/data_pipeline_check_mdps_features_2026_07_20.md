@@ -288,9 +288,13 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mdps-20260817-005300-c59390/EXIT_STATUS`
       directly — `RUNNING` = in flight, anything else = terminal, read the sibling `run.log` for the verdict and
       proceed to (c) consolidation. Do not relaunch a second DEFI driver while this one is unterminated.
-- [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
+- [x] ✅ [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
-      2026-08-12 ruling.
+      2026-08-12 ruling. **RESOLVED-AS-MOOT 2026-08-17 (slot-3, data_engineering)**: the gate condition is already
+      `status: resolved` (see line ~207 above), and the P0 item's remaining scope was already split IN-PLACE as the
+      `mdps-e2e-full-matrix-terminal-consolidation` todo above (same plan, not a separate file) — a genuinely
+      separate gated plan now would be pure process overhead, since the gate is clear and the work is already
+      tracked + actively executing here. No new plan created.
 - **[DATA] P0. 9.** RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
   force+skip for every MVP feature shard (all families × valid AGs). Report written. **Non-checkbox rollup header —
   restructured 2026-07-27 (slot-3)**, same pattern as todo 11's split: the run against CEFI:delta_one surfaced and
