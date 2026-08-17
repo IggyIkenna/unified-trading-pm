@@ -109,16 +109,19 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
       2026-08-08. This is the safe/reversible interim state — a paused scheduler is not a data-loss risk, only a
       staleness one, and the tradfi catalogue was already 6+ weeks stale-in-content (re-baking the same known pollution,
       not advancing) so this changes nothing about catalogue freshness for legitimate rows.
-- [ ] [INFRA] P1. **Add the durable build-time exclusion filter** to `build_instrument_catalogue.py`
+- [x] ✅ [INFRA] P1. **Add the durable build-time exclusion filter** to `build_instrument_catalogue.py`
       `build_catalogue_dataframe` (or an equivalent pre-write filter step) excluding `venue=ICE`,
       `venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR)`, and the 2 VIX-cash `INDEX` ids from every future rebuild
       — this is the fix that makes it safe to re-enable both schedulers without re-baking the just-purged pollution.
-      Repo: instruments-service. **CITATION (na-eligibility-audit 2026-08-09, tradfi tranche, dispatch agt-3df41f):**
-      this exact filter is already tracked verbatim in
-      `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (`status: active`,
-      `assigned_vm: planning`, still open there too) — cross-referenced from
-      `instruments_completion_tracker_2026_07_06.md` line ~474-478 ("EXTRACTED 2026-08-09 -> ...batch2..."). Track the
-      fix THERE, not here, to avoid a double-dispatch; this checkbox stays open as a pointer, not independent scope.
+      Repo: instruments-service. **CITATION (na-eligibility-audit 2026-08-09, tradfi tranche, dispatch agt-3df41f) —
+      DONE, verified 2026-08-17 (quality_gate_resolution, agt-2cbd2d):** this exact filter was tracked verbatim in
+      `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (path corrected here — the doc
+      was archived 2026-08-16T23:36Z, `unified-trading-pm@c21b41641f7`, without this referrer being updated, which is
+      what broke `check_reference_paths.py`'s existence ratchet 34->35) — cross-referenced from
+      `instruments_completion_tracker_2026_07_06.md` line ~474-478 ("EXTRACTED 2026-08-09 -> ...batch2..."). The
+      archived copy's own checkbox now reads `[x]`, shipped `instruments-service@22a5f197` (new
+      `_is_retired_tradfi_catalogue_row()` predicate + the 3 named constants) — this pointer resolves too, not just the
+      reference.
 - [ ] [INFRA] P2. **Once the filter above ships + is verified (dry-run a manual regen, confirm the 4 legs stay
       excluded), re-enable both schedulers** (`gcloud scheduler jobs resume`). Do not re-enable before the filter lands.
 - [x] ✅ [DIAG] P2. **ANSWERED 2026-08-09** (data_engineering worker, slot 18, via
