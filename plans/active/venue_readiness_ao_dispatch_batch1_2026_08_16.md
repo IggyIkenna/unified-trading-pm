@@ -190,7 +190,7 @@ those stay local by construction and are deliberately absent.
       `plans/active/issues/gate_on_depends_checks_completion_not_outcome_2026_08_17.md`.
 - [x] ✅ [DOC] P2. **Fix the venue-coverage issue doc's stale frontmatter.** Its `summary` still said "~30 DeFi
       protocols" while the body carried the corrected figure. Done-when: frontmatter and body agree, sourced from the
-      body's measured number, not re-counted. — **Shipped: `unified-trading-pm@<pending-sha>`.** Both `title` and
+      body's measured number, not re-counted. — **Shipped: `unified-trading-pm@dabf8d36ec`.** Both `title` and
       `summary` cited "~30" execute / "3" read — both stale, and both explicitly named replacements exist in the body
       already (no re-counting): execute → "~16 genuinely live" (the P0 "Re-measure DeFi execute coverage" todo's own
       corrected figure, which explicitly supersedes the earlier "~10, not ~30" table value); read → "8" (the "READ
