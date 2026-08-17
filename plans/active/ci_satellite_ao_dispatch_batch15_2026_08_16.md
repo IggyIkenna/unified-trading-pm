@@ -320,10 +320,15 @@ source: >-
       PR from 6+ days ago under a fleet that promotes every 15 min — re-verify live via `gh pr view 2714` before
       flipping. Gate: both items flipped with fresh evidence, not assumed from staleness alone.
 
-- [ ] [REVIEW] P2. **Reconcile `cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`'s 1 open item** —
+- [x] ✅ [REVIEW] P2. **Reconcile `cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`'s 1 open item** —
       already shipped via `ci_satellite_ao_dispatch_batch13_2026_08_13.md` (`unified-trading-pm@b167edbaf4`, new
-      `find_dropped_substitution_keys()` guard). Flip `[x]` with citation. Gate: verify the cited commit is real and on
-      origin before flipping (per `check_plan_commit_sha_evidence.py`'s discipline).
+      `find_dropped_substitution_keys()` guard). **VERIFIED 2026-08-17 (slot 20):** `b167edbaf4` confirmed a real
+      ancestor of `origin/live-defi-rollout` (`git merge-base --is-ancestor` passes), and
+      `find_dropped_substitution_keys()` is present and live in `scripts/propagation/rollout-cloudbuild.py:240`,
+      called from the `--apply` write path at line ~413. The source issue doc
+      (`plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`) already carries 0 open
+      `- [ ]` checkboxes — every one of its todos is independently marked `[x]` done. No further code change
+      needed; this item was pure checkbox-reconciliation.
 
 - [ ] [REVIEW] P3. **Reconcile `sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`'s stale duplicate
       item** (line ~160, "re-check after LDR goes quiet") — directly answered by the doc's own 2026-08-10 measured
