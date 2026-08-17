@@ -531,7 +531,15 @@ Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 2 Progre
       findings without an existing ruling filed as a new followup (not silently accepted):
       `issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`. Full evidence:
       `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5, archived).
-- [ ] [DATA] P2. **na-eligibility-audit 2026-08-16**: extracted to `cefi_casing_residual_ao_dispatch_2026_08_16.md` (+ finalize), assigned_vm: planning, status: active -- re-verify count live there, not this checkbox. Stays open here (source doc), not yet done. Original text: **Folded in 2026-08-02 from
+      **Superseded 2026-08-17**: the `instrument_type` 2,982 figure above is stale — re-verified live and found to
+      have grown 13x to 39,286 (an active writer regression, since fixed); the `instrument_id` figures above are
+      unaffected. See `issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`.
+- [ ] [DATA] P2. **na-eligibility-audit 2026-08-16**: extracted to `cefi_casing_residual_ao_dispatch_2026_08_16.md`
+      (+ finalize) — **both now archived 2026-08-17** (`plans/archive/2026_08/`); re-count done (residual is
+      39,286, not 2,982 — active writer regression, since fixed via `market-tick-data-service@c07cc70e93`), but the
+      literal-0 done-when below is NOT yet met — the `--apply` VM dispatch is in flight, not complete. Stays open
+      here (source doc), tracking through to `issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`
+      (live follow-up) until that reaches 0. Original text: **Folded in 2026-08-02 from
       `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (operator directive,
       2026-07-24).** cefi's `instrument_type` casing target is literal **100% UPPERCASE**, not the "substantially
       complete"/99.41%-snapshot framing above — the 2,982-row non-canonical residual the checkpoint todo just above
@@ -622,6 +630,12 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 
 ## Progress Log
 
+- **slot-3 2026-08-17 (review)**: `cefi_casing_residual_ao_dispatch_2026_08_16.md` (+ finalize) archived to
+  `plans/archive/2026_08/` — re-verified independently, writer-regression fixed
+  (`market-tick-data-service@c07cc70e93`), VM apply dispatched (not yet complete). Annotated the stale 2,982
+  `instrument_type` citation above (P1 checkpoint) as superseded; updated the P2 todo below to track through to
+  `issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md` (kept open — literal-0 done-when not
+  yet met).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 10)**: confirmed against
   `/codex/02-data/cross-asset-canonical-target-ssot.md` D1 — manifest `instrument_type` COLUMN case is

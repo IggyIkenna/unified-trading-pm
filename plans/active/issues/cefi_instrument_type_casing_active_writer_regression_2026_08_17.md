@@ -17,14 +17,14 @@ scope: [engineer]
 tags: [cefi, instrument-type, casing, manifest, writer-regression]
 related:
   [
-    /plans/active/cefi_casing_residual_ao_dispatch_2026_08_16.md,
+    /plans/archive/2026_08/cefi_casing_residual_ao_dispatch_2026_08_16.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md,
   ]
 created: 2026-08-17
 author: slot-14 (data_engineering)
 parent_epic: cefi_master
-source: [cefi_casing_residual_ao_dispatch_2026_08_16.md]
+source: [/plans/archive/2026_08/cefi_casing_residual_ao_dispatch_2026_08_16.md]
 priority: P1
 assigned_vm: planning
 execution_scope: orchestrator-agent
