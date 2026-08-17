@@ -275,19 +275,19 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       all 5 AGs' reports into one summary and close this plan's headline DeFi-MVP-ETA goal for real. Also pick up
       issue-doc todo 3 (bound `_read_input_index_frame`'s read, P2 — separate, not blocking this todo). Repos:
       market-data-processing-service, unified-trading-library.
-      **IN FLIGHT 2026-08-17 (slot-3, data_engineering)**: (a) re-checked — CEFI driver
-      `pipeline-e2e-check-mdps-20260816-224232-71d52d` still RUNNING as of 2026-08-17T00:4x UTC, genuinely
-      progressing (poll-tick counter climbing in its own `run.log`); left untouched. (b) LAUNCHED — no
-      duplicate/in-flight DEFI driver found first, then launched
-      `pipeline-e2e-check-mdps-20260817-004134-37eaf1` (`e2-highmem-8`, `--day 2026-07-05 --asset-group DEFI
-      --legs force,skip --require-captured --auto-day --wall-clock-timeout-sec 14400`, confirmed running the
-      fixed tarball `market-data-processing-service-code @ fae666bef27d`), status RUNNING at last check. **If
-      you are resuming this todo and find no background watchdog still reporting**: poll
-      `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mdps-20260817-004134-37eaf1/EXIT_STATUS`
-      directly — `RUNNING` = still genuinely in flight (check its own `run.log`'s poll-tick counter for progress
-      before assuming stall, same as the CEFI check above), any other value = terminal, read the sibling
-      `run.log` for the verdict and proceed straight to (c) consolidation. Do not relaunch a second DEFI driver
-      while this one is unterminated.
+      **IN FLIGHT 2026-08-17 (slot-3, data_engineering)**: (a) CEFI driver
+      `pipeline-e2e-check-mdps-20260816-224232-71d52d` re-checked 2026-08-17T00:53Z — still RUNNING; left
+      untouched. (b) First DEFI relaunch attempt (`...37eaf1`) used an invalid CLI flag
+      (`--wall-clock-timeout-sec`, which does not exist on `pipeline_e2e_check.py` — the real flag is
+      `--timeout-sec`; the launcher passes unrecognized flags straight through with no validation) and died in
+      under a minute on an argparse error (`EXIT_STATUS=2`), never running the actual check — a launch mistake,
+      not a driver/data finding. **Corrected relaunch**: `pipeline-e2e-check-mdps-20260817-005300-c59390`
+      (`e2-highmem-8`, `--day 2026-07-05 --asset-group DEFI --legs force,skip --require-captured --auto-day
+      --timeout-sec 14400`, fixed tarball `market-data-processing-service-code @ fae666bef27d`), status RUNNING
+      at last check. **If resuming and no background watchdog is reporting**: poll
+      `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mdps-20260817-005300-c59390/EXIT_STATUS`
+      directly — `RUNNING` = in flight, anything else = terminal, read the sibling `run.log` for the verdict and
+      proceed to (c) consolidation. Do not relaunch a second DEFI driver while this one is unterminated.
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.
