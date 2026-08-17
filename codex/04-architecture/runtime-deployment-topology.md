@@ -452,7 +452,10 @@ see/experience differently.
 - **Position:** Gets current position from position-balance-monitor-service (PubSub subscription). At startup, PBM
   publishes initial position state (from exchange query). Strategy uses this to decide trades. Strategy does NOT query
   execution-service for position.
-- **Current implementation gap:** Uses internal PositionMonitor. Target: subscribes to PBM.
+- **Current implementation gap:** Uses internal PositionMonitor. Target: subscribes to PBM. PBM itself is not yet
+  a standalone service — its role currently lives inside strategy-service's `position/` package
+  (`margin_event_emitter.py` on top of `unified_trading_library.margin_and_liquidation`). Extraction into a real
+  standalone service targeted November 2026, tracked in `/plans/epics/system_readiness_master.md` W7 (2026-08-17).
 - **Data produced:** `signals_backtest_results` (GCS), live trade signals (PubSub)
 - **Data consumed:** predictions (PubSub), market data (PubSub), features (PubSub), positions (PubSub from PBM)
 

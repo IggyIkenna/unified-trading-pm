@@ -236,6 +236,25 @@ The registry must answer commercial and operational questions, not just "does th
 - [ ] [BACKEND] P0. **Reference / registry / config data must never live inside a single strategy's code path** — the
       four-destination rule (UAC / service config via the reloader / UTL / a centralised domain module) decides where
       it goes. Tracked in `/plans/active/strategy_service_centralization_fixes_2026_08_16.md`.
+- [ ] [BACKEND] P0. **Position-risk / margin health must be asset-group-agnostic** — DeFi, CeFi and (once built)
+      TradFi leverage share ONE generic collateral/exposure/health-ratio core; only the per-venue-type sourcing
+      adapter differs. Ruled 2026-08-17: not an asset-group-specific module. SSOT:
+      [position-risk-centralization](/codex/04-architecture/position-risk-centralization.md).
+- [ ] [AGENT] P0. **Reconcile the two parallel position-risk mechanisms discovered 2026-08-17** —
+      `DeFiHealthAggregator` (DeFi-only, not live-fed) versus the already-live, already-cross-service
+      `margin_event_emitter.py`/`MarginEvent` pipeline built on UTL's generic core. Converge on one before any
+      archetype wires onto either. Tracked in
+      `/plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md`.
+- [ ] [OPERATOR] P3. **Target November 2026 — decide whether to extract `position-balance-monitor-service` (PBM)
+      into its own deployed service.** Today PBM's role lives inside strategy-service's `position/` package on top
+      of UTL, so a strategy-service restart has no external source to recover position/margin truth from, and
+      `margin_event_emitter.py`'s own docstring names execution-service, alerting-service and
+      risk-and-exposure-service as consumers whose position-awareness is currently coupled to strategy-service's
+      uptime for no domain reason. Deliberately deferred — not blocking this epic's 2026-08-25 target. Full
+      reasoning and the target topology: `/codex/04-architecture/runtime-deployment-topology.md` (Layer 6). The
+      same un-split gap likely applies to `risk-and-exposure-service` and `pnl-attribution-service`, named in the
+      same doc's Layer 6 as separate target services that also don't exist as separate repos today — worth scoping
+      as one extraction decision rather than three.
 
 ## W8 — Weightings, declared not inferred
 
@@ -403,3 +422,11 @@ One measurement correction recorded at authoring time: an mtime-based sweep repo
 within 7 days, which is an artefact of pulls touching files rather than real recency. W19's audit must key off the
 `created:` frontmatter field instead — chasing the 781 would waste a large fraction of the audit budget on docs that
 have not changed.
+
+**2026-08-17 — W7 extended, asset-group-agnostic ruling.** Interactive session established that position-risk /
+margin-health centralization (the DeFi-only fix already tracked under W7) must be asset-group-agnostic across
+DeFi, CeFi and TradFi, not DeFi-specific — same four-destination rule, applied to a concrete case. That
+investigation also surfaced a previously-missed second centralized mechanism
+(`margin_event_emitter.py`/`MarginEvent`, already live and cross-service) alongside the one the corpus already
+tracked, added as a new P0 reconciliation todo. Full detail:
+[position-risk-centralization](/codex/04-architecture/position-risk-centralization.md).

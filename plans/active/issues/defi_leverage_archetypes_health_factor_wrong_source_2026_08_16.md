@@ -53,8 +53,9 @@ resolved_by:
 context_scope:
   [
     /codex/04-architecture/defi-execution-overview.md,
-    /codex/04-architecture/defi-position-risk-centralization.md,
+    /codex/04-architecture/position-risk-centralization.md,
     strategy-service/strategy_service/position/core/defi_health_aggregator.py,
+    strategy-service/strategy_service/position/core/margin_event_emitter.py,
     strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
   ]
 source: >-
@@ -143,13 +144,38 @@ Even once wired, the centralized data model can't yet serve everything an archet
   that threshold is **hardcoded to `MarginModel.AAVE_V3`** (`positions_health.py:70-72`), not resolved per the
   position's actual protocol, so it silently gives a wrong answer for a non-Aave position.
 
+## Finding, second pass (2026-08-17) — a second centralized mechanism exists and was missed
+
+Reconsidering this issue while generalizing the fix to be asset-group-agnostic (DeFi/CeFi/TradFi, not DeFi-only)
+surfaced a mechanism this issue's original investigation never found:
+`strategy_service/position/core/margin_event_emitter.py`, predating this issue's filing by 3+ months (its own
+docstring: "Wave C1 — workspace audit 2026-05-01"). It states it **is** "the single canonical producer of
+`MarginEvent`," built on `unified_trading_library.margin_and_liquidation` (the same generic, already CeFi-aware
+core `DeFiHealthAggregator` does NOT use), and is **already live-called** from
+`position/cli/handlers/monitor_handler.py` (a CLI handler, not a test) and **already consumed by
+execution-service** in production (`execution_service/algo_library/deleverage_executor.py`). A dedicated test,
+`tests/position/unit/test_emit_live_cefi_margin_events.py`, exercises the CeFi path specifically.
+
+This means the premise of this issue's original fix shape — "the correct centralized module exists but nothing
+calls it or feeds it" — was true for `DeFiHealthAggregator` specifically, but not the whole story: a second,
+more general, already-cross-service-wired mechanism exists alongside it. Full detail:
+[position-risk-centralization § Two parallel mechanisms](/codex/04-architecture/position-risk-centralization.md).
+
 ## Todos
 
-- [ ] [OPERATOR] P0. **Decide the fix shape**: (a) build a thin in-process/client-callable path from
-      `engine/strategies/v2/*` into `DeFiHealthAggregator`/`positions_health` (new function, or a call to the
-      existing HTTP route), or (b) a shared helper both strategy-service and execution-service import, keyed by
-      wallet/client. Currently only the HTTP-route path exists; an archetype's `on_tick()` needs something callable.
-- [ ] [AGENT] P0. **Wire a live feed into `DeFiHealthAggregator`.** Either finish `aave.py`'s
+- [x] [OPERATOR] P0. ✅ RULED 2026-08-17 — **Decide the fix shape**: neither option (a) nor (b) as originally
+      framed — building either would risk a *third* parallel implementation now that `margin_event_emitter.py` is
+      known. See the reconciliation todo immediately below, which must resolve first.
+- [ ] [AGENT] P0. **Reconcile `DeFiHealthAggregator` against `margin_event_emitter.py`/`MarginEvent` before
+      building or wiring anything new.** Determine whether `MarginEvent`'s payload already carries what an
+      archetype's `on_tick()` gate needs (HF, LTV, liquidation price, distance-to-liquidation, per-position not
+      just per-portfolio). If yes, wire `staked_basis.py`/`recursive_staked.py` onto `MarginEvent` (subscribe, or
+      read the latest cached value) and retire `DeFiHealthAggregator`/`positions_health.py` rather than fixing
+      them in place. If no — some needed field is genuinely missing from `MarginEvent` — extend it there rather
+      than duplicating the aggregation logic in a second module. Done-when: a stated decision with evidence,
+      before the next two todos proceed.
+- [ ] [AGENT] P0. **(Superseded pending the reconciliation above.)** Wire a live feed into `DeFiHealthAggregator`.
+      Either finish `aave.py`'s
       `AavePositionAdapter` (fixing its schema mismatch — emit `DeFiLendingPosition`, not `CanonicalPosition`) or
       route execution-service's already-working `health_factor_monitor.py` output into the aggregator's state via
       `update_wallet_health_from_lending`. Do not build a third parallel poller.
@@ -180,9 +206,9 @@ Even once wired, the centralized data model can't yet serve everything an archet
       assigned_vm: planning). Converted this checkbox to a citation marker rather than extracting a competing
       duplicate — track completion there, close this checkbox by citation once that todo lands.
 - [ ] [AGENT] P2. **Once the centralized path exists, document and enforce it as the pattern** for any future
-      DeFi-leverage-capable archetype — see the companion codex doc
-      [defi-position-risk-centralization](/codex/04-architecture/defi-position-risk-centralization.md), authored
-      in the same session.
+      leverage-capable archetype, in any asset group — see the companion codex doc
+      [position-risk-centralization](/codex/04-architecture/position-risk-centralization.md), authored in the
+      same session and rescoped asset-group-agnostic 2026-08-17.
 - [ ] [OPERATOR] P2. **Design the mode-aware dispatch** (operator direction, 2026-08-16): batch → real historical
       data for that window; live → real-time poll against the actual wallet; paper splits into **paper-testnet**
       (poll a testnet deployment, validates wiring without touching production wallets) and **paper-live**
@@ -210,3 +236,10 @@ Even once wired, the centralized data model can't yet serve everything an archet
 - **context-scout 2026-08-17**: populated context_scope (4 entries) — added the correct centralized module
   (`defi_health_aggregator.py`, unused today) and `staked_basis.py` (the first archetype the P0 fix switches over)
   alongside the two companion codex architecture docs.
+- **2026-08-17 (operator session, rescoped asset-group-agnostic)** — Generalizing the fix to cover CeFi/TradFi (not
+  just DeFi) surfaced `margin_event_emitter.py`, a second centralized position-risk mechanism this issue's original
+  investigation missed — already live-called, already cross-service, built on UTL's already-asset-group-agnostic
+  `margin_and_liquidation` core. Original "decide the fix shape" todo resolved by ruling; replaced with a new P0
+  reconciliation todo that must land first. Companion codex doc renamed
+  `defi-position-risk-centralization.md` → `position-risk-centralization.md` and rewritten; `context_scope` updated
+  to match.
