@@ -181,3 +181,18 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
   (optional watchdog hardening) is bounded/deterministic — extracted, see checkbox above. Todo 1 (pay invoice) stays
   NA — verbatim duplicate of `tradfi_databento_account_billing_suspended_2026_08_09.md`'s own P0 OPERATOR todo. Doc
   stays `assigned_vm: NA`.
+- **2026-08-17 (slot 6, data_pipeline_failure escalation agt-266fcc)**: Received a fresh DP-VM-001 escalation for
+  `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260817-110153` (same shard token, `g01-6a-6l-2020`, as this doc's
+  original occurrence — a re-launched attempt against the same 2020 CME shard), exit_code=137, family again at
+  2/2 relaunch dispatches today. Checked `plans/active/issues/` for an existing open doc first — this one.
+  Read `LAUNCH_PARAMS.json`/`PROGRESS.json`/`run.log` for this exact VM via GCS SDK (`download_from_storage`, no
+  subprocess): `PROGRESS.json` shows monotonic progress to `2020-05-12` (19/53 chunks), then `run.log` shows the
+  identical `GLBX.MDP3/ohlcv_1m|1s failed [402]: 402 account_delinquent_invoice` signature recurring from
+  `2020-01-03` onward (747 matching 402/429/SHARD_INCOMPLETE lines total), with `SHARD_INCOMPLETE` partials
+  written honestly for each blocked date, then a burst of `429 transient error` retry/backoff noise
+  (attempt 2/15 → 8/15, 0.5s→32s backoff) immediately before the stall-watchdog kill at `stalled_for=3928
+  threshold=3900`. Same root cause as this doc's original finding — the still-`status: blocked` P0
+  `tradfi_databento_account_billing_suspended_2026_08_09.md` CME/GLBX.MDP3 billing block, now reconfirmed live at
+  `2026-08-17T12:11Z`. No new information beyond the existing wave-scale finding already paged in that P0 doc's
+  Progress Log (2026-08-17, slot 16) — did not re-page the operator (would be a duplicate ask); did not relaunch
+  per RB-INFRA-RELAUNCH. No code changed this session.
