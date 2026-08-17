@@ -58,6 +58,11 @@ context_scope:
 
 # tradfi satellite AO dispatch batch 14
 
+> **ARCHIVED 2026-08-16 — COMPLETE.** Both todos done (todo 1 found already-shipped on dispatch; todo 2's cross-VM
+> confirm/refute ran 2026-08-16, slot 12 — see this doc's Progress Log for the full verdict). Reconciliation into the
+> 5 source docs + `data_completion_tradfi_2026_07_15.md` already done inline; `tradfi_satellite_ao_dispatch_batch14_2026_08_16_finalize.md`'s
+> remaining todos are a no-op confirmation pass.
+
 > Extracted from 2 NA docs by na-eligibility-audit's per-todo split path — each source doc keeps its remaining
 > genuinely operator-gated item(s) and stays `assigned_vm: NA`; only the conflict-cleared bounded items below dispatch
 > through this batch.
@@ -77,7 +82,7 @@ context_scope:
       kept only for the freshly-copied-by-us branch) and added 2 unit tests (mismatch-kept / match-deletes). This
       predates the 2026-08-16 na-eligibility-audit extraction that created this todo — the source issue doc's "What's
       blocked" section was stale by one day at extraction time. No new code needed; nothing to ship.
-- [ ] [SCRIPT] P1. **Time-sensitive — vm-logs/ GCS objects age out on a 14-day retention window.** Pull `run.log` (via
+- [x] ✅ [SCRIPT] P1. **Time-sensitive — vm-logs/ GCS objects age out on a 14-day retention window.** Pull `run.log` (via
       `deployment_service.data_pipeline_monitors._gcs.read_text`, UTL storage client — never subprocess
       `gsutil`/`gcloud storage`) for the 4 other recent `mdps-tradfi-`/`tradfi-bf-` VMs — `mdps-tradfi-2023-20260815-040118`,
       `mdps-tradfi-2025-20260815-020059`, the `mdps-tradfi-2026` shard, `tradfi-bf-cme-ohlcv-1m-es-2020` — and grep
@@ -101,3 +106,19 @@ context_scope:
   (2026-08-16) read the source issue doc's "What's blocked" prose, which was already one day stale at extraction
   time — the doc's own todo checkbox was correctly marked done/extracted, but the prose above it wasn't reconciled
   against current code state before the extraction ran.
+- **2026-08-16 — todo 2 done.** Pulled `run.log` for all 4 sibling VMs via `deployment_service.data_pipeline_monitors
+  ._gcs.read_text` (UTL storage client) and greped each for `No adapter for tradfi/<data_type>`. **Verdict: CONFIRMED
+  for 2-of-4** (`mdps-tradfi-2023-20260815-040118`: 2497 occurrences; `mdps-tradfi-2025-20260815-020059`: 2518
+  occurrences — both match `mdps-tradfi-2021`'s stale-tarball signature exactly, same terminal `rc=1` shape).
+  **REFUTED for 2-of-4** (`mdps-tradfi-2026-20260810-034610`: 0 occurrences — distinct root cause, a live
+  `SchemaContract` gap for `instrument_type='OPTION'` on CME `ohlcv_1s`/`ohlcv_1m`/`ohlcv_15m`, 109,853 occurrences;
+  `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216`: 0 occurrences — confirms the already-recorded `WORKER_STALLED`
+  classification, unrelated to adapters). Overall: 3-of-6 same-shape pages (2021/2023/2025) now share one incident,
+  root-caused and already self-resolved by the routine tarball rebuild — did NOT open a new tarball-refresh-cadence
+  todo since one already exists (`dp_vm_001_mdps_tradfi_2021_...` todo 3, P2); instead cross-referenced it from each
+  confirming doc. The 2 refuted VMs' distinct causes are recorded in their own docs' Progress Logs, with the 2026
+  VM's SchemaContract finding also cross-linked into `data_completion_tradfi_2026_07_15.md`'s existing P3
+  verification todo (same failure class, already tracked there) rather than filing a duplicate issue doc. Findings
+  written to all 5 source docs' Progress Logs per the todo's own done-condition; `mdps-tradfi-2023`'s own systemic
+  cross-check todo (`[DEVOPS] P2`) was also flipped done as a direct consequence. Docs-only change (no repo code
+  touched — this was a read-only diagnostic), shipped via `safe-doc-push.sh`. Plan fully done — archiving next.

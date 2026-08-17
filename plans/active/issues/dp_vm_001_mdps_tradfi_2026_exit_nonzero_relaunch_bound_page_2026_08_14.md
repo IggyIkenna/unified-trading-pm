@@ -138,3 +138,19 @@ guidance both point the same direction: stop and page.
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Sole open todo is an
   explicit [OPERATOR] relaunch-vs-wait judgment call (family relaunch bound exhausted, shard criticality unknown to
   a worker). Genuinely operator-gated. assigned_vm unchanged.
+- **2026-08-16 (slot 12, batch14 todo 2 — cross-VM confirm/refute, closes the BACKEND diagnostic todo above).**
+  Pulled this VM's `run.log` (5,841,296 lines) via `_gcs.read_text` and greped for `No adapter for tradfi/<data_type>`:
+  **ZERO occurrences.** **REFUTED — this VM does NOT share the `mdps-tradfi-2021`/`-2023`/`-2025` stale-tarball root
+  cause.** Distinct root cause found instead: **109,853** occurrences of
+  `[CRITICAL] unknown error in market-data-processing-service.process_instrument_file: No SchemaContract registered
+  for asset_group='tradfi' instrument_type='OPTION' data_type='ohlcv_1s'/'ohlcv_1m'/'ohlcv_15m' venue='CME'` across
+  the run (dominant failure mode by far), plus one distinct, unrelated `DEPENDENCY CHECK FAILED` error for
+  2026-08-06 (`Missing: instruments-service ... No data for 2026-08-06/tradfi`). This VM booted 2026-08-10, **six
+  days before** `market-data-processing-service@2b2cc58ef3` (landed 2026-08-16) added `instrument_type=option` to
+  `_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES` — but that exclusion only scopes `ohlcv_15m`/`ohlcv_24h`
+  (COARSE timeframes); `ohlcv_1m`/`ohlcv_1s` are NOT covered, so this VM's `ohlcv_1m`/`ohlcv_1s` OPTION crashes are
+  a **still-live gap post-fix too**, not fully explained by the fix's own scope. Noted this against the related P3
+  live-re-verification todo in `/plans/active/data_completion_tradfi_2026_07_15.md` (same doc that already tracks
+  the `2b2cc58ef3` verification) so the fine-timeframe gap isn't lost. Did not relaunch this VM or attempt a code
+  fix — out of this todo's scope (confirm/refute the specific adapter hypothesis, not root-cause every VM from
+  scratch); the `[OPERATOR]` relaunch-vs-wait decision above and the SchemaContract gap both remain open follow-ups.

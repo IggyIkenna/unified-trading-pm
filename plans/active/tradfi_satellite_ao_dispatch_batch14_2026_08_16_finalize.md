@@ -15,10 +15,10 @@ scope: [engineer]
 tags: [tradfi, ao-dispatch, satellite-batch, close-out, finalize]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md,
     /plans/active/issues/tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md,
     /plans/active/issues/dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md,
-    /plans/active/issues/dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md,
+    /plans/archive/issues/dp_vm_001_mdps_tradfi_2023_exit_nonzero_relaunch_bound_page_2026_08_15.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
@@ -41,7 +41,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 source: >-
@@ -53,8 +53,10 @@ source: >-
 
 # tradfi satellite AO batch 14 — finalize
 
-> **Machine-gated on `/plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md`** (`depends_on` +
-> `gate_on_depends: true`) — will not dispatch until both todos in that batch are `done`.
+> **Machine-gated on `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md`** (`depends_on` +
+> `gate_on_depends: true`) — will not dispatch until both todos in that batch are `done`. **Both are now done
+> (2026-08-16, slot 12) and the source batch is already archived** — this finalize plan's remaining todos should find
+> the reconciliation + archival already complete when dispatched; confirm and close rather than redo.
 
 ## Todos
 

@@ -142,3 +142,14 @@ retry, not genuinely new information.
 - **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 1 is an explicit
   [OPERATOR] relaunch-vs-wait judgment call. Todo 2 names a candidate hypothesis but is not yet a bounded, committed
   action. Genuinely operator-gated. assigned_vm unchanged.
+- **2026-08-16 (slot 12, batch14 todo 2 — cross-VM confirm/refute).** Pulled this VM's `run.log` via `_gcs.read_text`
+  — only **1561 lines / 151KB** (this VM stalled ~4 minutes after start, so the log is short by construction).
+  Greped for `No adapter for tradfi/<data_type>`: **ZERO occurrences.** **REFUTED — this VM does NOT share the
+  `mdps-tradfi-` stale-tarball root cause**; it never got far enough into per-date processing to hit that codepath
+  at all. Confirms the doc's existing classification: the log tail shows `watchdog exiting iter=65 reason=stall`,
+  `[vm-exec] DEPLOYMENT_FAILED cause=stall reason=WORKER_STALLED mode=no-progress-marker stalled_for=3939
+  threshold=3900`, `exit_code=137` — a genuine stall-induced SIGKILL, not OOM and not an adapter-registry crash. The
+  log also carries a kernel stall-dump stack trace, but it's for the `tee` wrapper process (`pid=15455 comm=tee`,
+  blocked in `anon_pipe_read`), not the actual worker process — so this pull does NOT identify which call in the
+  CME OHLCV 1m capture path actually hung; that remains open work for the BACKEND todo above (candidate: an
+  unbounded outbound call lacking `timeout=`), not resolved by this cross-VM check.

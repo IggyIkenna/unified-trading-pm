@@ -74,6 +74,10 @@ source: >-
 
 # DP-VM-001 — mdps-tradfi-2023-20260815-040118 exit_code=1, relaunch-bound, page not relaunch
 
+> **ARCHIVED 2026-08-16 — COMPLETE.** Both todos done: todo 1 (root cause) confirmed shared stale-tarball cause with
+> the `mdps-tradfi-2021`/`-2025` siblings (2497 `No adapter for tradfi/<data_type>` occurrences); todo 2 (systemic
+> cross-check) resolved by the same cross-VM sweep. See Progress Log for evidence.
+
 ## What happened
 
 - VM: `mdps-tradfi-2023-20260815-040118` (asset_group=tradfi, year-shard=2023, launcher-family prefix `mdps-tradfi-` →
@@ -133,16 +137,24 @@ launcher/adapter is cheaper than repeatedly burning the daily relaunch bound on 
      checkboxes despite real remaining work (invisible to backlog generation / archive-candidate detection). -->
 
 - [x] ✅ [SCRIPT] P1. **RETAGGED [OPERATOR]→[SCRIPT] + EXTRACTED 2026-08-16 (na-eligibility-audit, tradfi tranche,
-      dispatch agt-45ad7b) → `/plans/active/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2** (consolidated
+      dispatch agt-45ad7b) → `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2** (consolidated
       with `dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md` todo 2's broader ask, which
       already names this same 2023 VM — dispatched once, not twice). Was mistagged `[OPERATOR]`: pulling a run.log and
       grepping it for a known error string is a bounded read-only diagnostic, not a judgment call. Pull `run.log` for
       `mdps-tradfi-2023-20260815-040118` from its GCS log path and diagnose the `exit_code=1` root cause. Done when:
       root cause identified and either fixed before the next scheduled tradfi-2023 backfill attempt, or a targeted
       follow-up is filed.
-- [ ] [DEVOPS] P2. Cross-check the `mdps-tradfi-`/`tradfi-bf-` launcher/adapter code path for a systemic non-OOM
-      failure mode — this is the THIRD same-shape relaunch-bound-page doc in 48h (see `related:` for the other two).
-      Done when: either a shared root cause is confirmed and fixed, or the 3 occurrences are confirmed independent.
+- [x] ✅ [DEVOPS] P2. **RESOLVED 2026-08-16 (slot 12, batch14 todo 2).** Cross-VM check done: this VM's `run.log`
+      (4,029,650 lines) shows 2497 occurrences of `ERROR [<data_type>] : No adapter for tradfi/<data_type>`
+      (ohlcv_1m + ohlcv_1s; first at 2026-08-15 04:09:27, last at 20:32:32, same terminal `rc=1`/`DEPLOYMENT_FAILED`
+      shape) — matches the `mdps-tradfi-2021` sibling's already-root-caused signature exactly (stale/floating MDPS
+      tarball fetched at boot, predating the `2dcccb85` adapter registrations; refreshed hours later). **Shared root
+      cause CONFIRMED for this VM** (also confirmed independently for `mdps-tradfi-2025`; refuted for
+      `mdps-tradfi-2026` and the CME-2020 stall VM, which have distinct causes — see
+      `dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md`'s Progress Log for the full
+      cross-VM roundup). No code fix needed for this specific VM (the stale tarball already self-resolved via the
+      routine rebuild); the systemic fix is the tarball-refresh-cadence P2 todo already tracked in the 2021 sibling
+      doc. Done per this doc's own bar: shared root cause confirmed.
 
 ## Progress Log
 
