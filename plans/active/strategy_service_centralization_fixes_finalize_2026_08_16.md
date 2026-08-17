@@ -41,7 +41,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: Authored alongside the parent plan per this workspace's mandatory finalize-plan rule (task_template.md §4).
-context_scope: [/plans/active/strategy_service_centralization_fixes_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/strategy_service_centralization_fixes_2026_08_16.md,
+    /plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md,
+    /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
+    /plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md,
+  ]
 ---
 
 # Strategy-service centralization fixes — finalize
@@ -67,3 +73,5 @@ context_scope: [/plans/active/strategy_service_centralization_fixes_2026_08_16.m
   ingested immediately but machine-held until every parent-plan task is done, per task_template.md §4's
   already-finalized-downstream mechanism (distinct from draft-gating, which is for a NOT-yet-finalized later
   phase).
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added the 3 source issue docs this finalize's
+  own first todo names as reconciliation targets.

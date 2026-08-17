@@ -38,6 +38,8 @@ context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md,
+    /plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md,
   ]
 locked_since:
 resolved_by:
@@ -79,3 +81,8 @@ resolved_by:
 - **2026-08-17 (slot 27, data_engineering)**: Picked up the P1 live-writer-check todo (the P2 Track C venue-vocab todo
   remains open, not this session's assigned task). See the issue doc's 2026-08-17 Progress Log entry for full
   evidence. Checkbox flipped above.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added
+  `sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md` (where the DONE todo's own evidence actually
+  lands, cited directly in this doc's checkbox) and the archived
+  `sports_legacy_league_vocab_recontamination_2026_08_10.md` (the sibling doc this plan's own summary cites as
+  finding the same-class live-writer bug).

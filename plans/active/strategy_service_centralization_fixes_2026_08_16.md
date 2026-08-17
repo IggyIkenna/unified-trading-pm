@@ -67,6 +67,9 @@ context_scope:
     /codex/04-architecture/defi-position-risk-centralization.md,
     /plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md,
     /plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md,
+    /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
+    /plans/active/registry_ssot_hardening_2026_08_16.md,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
   ]
 ---
 
@@ -185,3 +188,7 @@ logic and that no second archetype could ever want. That must be stated, not ass
   plan). `sequential: true` set deliberately given the real chain among the first several todos — not a reflexive
   default. Companion finalize plan:
   [strategy_service_centralization_fixes_finalize_2026_08_16](/plans/active/strategy_service_centralization_fixes_finalize_2026_08_16.md).
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- added
+  `per_client_config_surface_keying_and_missing_axes_2026_08_12.md` (the config-loader todo's own cited source doc),
+  `registry_ssot_hardening_2026_08_16.md` (the W2 plan the GENERAL CLASS section says this plan consumes rather than
+  pre-empts), and `staked_basis.py` (the doc's own named exemplar file for the 69-candidate audit).

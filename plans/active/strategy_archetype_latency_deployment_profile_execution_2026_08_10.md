@@ -48,10 +48,11 @@ locked_since:
 context_scope:
   [
     unified-trading-pm/configs/runtime-topology.yaml,
-    strategy-service/strategy_service/portfolio_allocator/archetypes.py,
-    strategy-service/strategy_service/engine/strategies/v2/archetype_slots_common.py,
-    deployment-service/deployment_service/runtime_topology_validator.py,
-    deployment-service/deployment_service/dependencies.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py,
+    deployment-service/deployment_service/deployment_profile_derivation.py,
+    deployment-service/deployment_service/deployment_profile_sizing.py,
+    strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py,
+    /codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md,
   ]
 supersedes:
 superseded_by:
@@ -379,3 +380,12 @@ source: >-
   sentinel `.qg_last_passed_sha=34bca6e6b6967d42d1275bb8e0121a65f79b3352`. Every remaining open item in this plan is
   the residual-gaps todo, which self-declares not-AO-eligible (operator ruling required) — this plan is not
   fully done and stays active.
+
+- **context-scout 2026-08-17**: rewrote context_scope (6 entries) -- the prior list's `runtime_topology_validator.py`
+  was todo 3's own HEDGED guess ("likely in deployment-service, alongside runtime_topology_validator.py"); confirmed
+  wrong via the Progress Log's own SHAs, real owner is `deployment_profile_derivation.py`. `archetypes.py`/
+  `archetype_slots_common.py`/`dependencies.py` were never named anywhere in this doc's own body text either and
+  don't match any shipped SHA -- replaced all 4 with the files the Progress Log actually cites (`enums.py`,
+  `deployment_profile_derivation.py`, `deployment_profile_sizing.py`, `archetype_slot_resolver.py` -- the last
+  confirmed "the ACTUAL registered archetype set" in the 2026-08-15 verification entry) plus the decision-artifact
+  doc this whole plan implements.
