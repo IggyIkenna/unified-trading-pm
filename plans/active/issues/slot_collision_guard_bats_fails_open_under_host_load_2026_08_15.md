@@ -27,8 +27,8 @@ related:
 created: "2026-08-15"
 last_updated: 2026-08-15
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 assigned_role: infra
 locked_by:

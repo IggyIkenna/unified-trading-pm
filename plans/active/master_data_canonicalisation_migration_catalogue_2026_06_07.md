@@ -924,6 +924,7 @@ sequenced and nothing is unblocked-out-of-order or orphaned.
   doc's own stated role is "a PURE COORDINATOR -- executes nothing" (operator 2026-06-07), stays NA.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
 
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:4cd66b45279168a4]: KEEP-NA, valid — umbrella:true PURE COORDINATOR (operator's own stated role, repeated: 'it tracks, gates, and links; it executes nothing'). Full read of the remaining ~500 lines confirms no additional open checkboxes or overriding RE-TRIAGE beyond the 2 grep found. Both are real and genuinely gated: slot-2 DeFi G4 --apply confirmed STILL NOT COMPLETE per a 2026-08-16 re-verification (12% residual delta), with its own successor operator-gated draft plan already filed and a 2026-08-16 Progress Log entry describing the re-verification extraction; WAVE-5/G5 live-side is explicitly gated on G4 finishing fully. Re-confirmed KEEP-NA valid by na-eligibility-audit on 2026-08-06, 2026-08-07, and 2026-08-08. Ruling/citation: Doc's own Progress Log: na-eligibility-audit 2026-08-06, 2026-08-07, 2026-08-08(round7), all KEEP-NA valid citing the doc's own 'PURE COORDINATOR -- executes nothing' role (operator 2026-06-07).
 ## Deferred work — migrated to:
 
 **Corrected by plan_reconciler 2026-08-10 — both entries below were stale.** This section predates the 2026-07-24

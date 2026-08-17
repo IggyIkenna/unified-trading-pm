@@ -244,7 +244,7 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
       evidence, no genuine judgment call blocking it): retagged, banner added, moved to
       `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`, all 6 corpus referrers fixed. See that
       doc's own Progress Log for the full ritual trail.
-- [ ] [DOCS] P3. Retag `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
+- [x] ✅ [DOCS] P3. **MOOT 2026-08-17 (na-eligibility-audit) — target doc archived** (confirmed via `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`'s 2026-08-16 refresh: "ARCHIVED since... no longer needs retagging"). Was: Retag `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
       `asset_group` `[defi, cross-cutting]` → `[ci]` or `[infrastructure]` (finding 5, owning tranche TBD by content) —
       leave to whichever of those two tranches' own audit claims it first. Done when: the tag is corrected to a single
       real tranche and the doc is folded into that tranche's closeout membership.

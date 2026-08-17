@@ -110,8 +110,12 @@ is killed — hence both the spin and the leak.
       constraint worth keeping**: the socket dir must be SHORT and NOT nested under `BATS_TEST_TMPDIR` —
       `sockaddr_un.sun_path` caps a unix socket path at ~104 B and macOS `BATS_TEST_TMPDIR` is already ~90, so the
       obvious nesting fails every session with `error connecting to ... (File name too long)`.
-- [ ] [SCRIPT] P2. Make the claim/heartbeat behaviour under test injectable so the common cases can be covered WITHOUT a
-      real tmux server at all, leaving only a small number of genuine integration cases behind a marker.
+- [x] ✅ **DONE — unified-trading-pm@ef78ddc842 (2026-08-15): factored the tmux has-session check into
+      `_claim_heartbeat_session_alive()` in `scripts/dev/slot-git-status-report.sh`; stubbed
+      `tests/test_slot_git_status_claim_heartbeat.bats` for the common cases, leaving only the exact-match-collision
+      case behind a real tmux server tagged `integration,tmux`.** Was: [SCRIPT] P2. Make the claim/heartbeat behaviour
+      under test injectable so the common cases can be covered WITHOUT a real tmux server at all, leaving only a small
+      number of genuine integration cases behind a marker.
 - [x] ✅ [OPERATOR] P2. Sweep the host for pre-existing leaked `bats-claim-hb-test-*` sessions — done 2026-08-10 on the
       ORCHESTRATOR VM (the laptop is a separate sweep; see the AO-VM section above). **41 reaped, not 7** — the count
       had grown 25 → 41 during the diagnosing session itself (~1 new leak / 4 min). Swept surgically: only names

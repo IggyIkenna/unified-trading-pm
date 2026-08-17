@@ -148,7 +148,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       "dex-pools-prd purge-lifecycle armed (24h async; disarm window if concerns)" was stale vs. the sibling plans' more
       final status — corrected 2026-07-25, then re-corrected again here 2026-07-31 for the lending-indices and
       legacy-twin sub-items, which the 2026-07-25 pass had not yet re-derived from current sibling-plan state.
-- [ ] [DATA] P1. **ml legacy variants**: `ml-models-store` flat (data already migrated §5e, resolver fixed §5h — verify
+- [x] ✅ [DATA] P1. **DONE 2026-08-17 (na-eligibility-audit) — already executed via `bucket_fold_ml_2026_07_17.md`'s 'Delete sources' P0, DONE 2026-08-08, operator-authorized.** Was: **ml legacy variants**: `ml-models-store` flat (data already migrated §5e, resolver fixed §5h — verify
       no new writes since, then delete) + `ml-models-store-{dev,prod,staging}`,
       `ml-configs-store`/`ml-predictions-store` flat twins (empty). Verify
       `deployment-api/deployment_api_config.py:642`'s flat `ml-configs-store-{pid}` default is repointed first.

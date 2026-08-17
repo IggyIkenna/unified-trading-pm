@@ -52,10 +52,11 @@ last_updated: 2026-08-16
 parent_epic: infrastructure_master
 priority: P1
 source: ci-reconcile skill, scheduled hourly ci_reconciler dispatch agt-d02274 (slot 8)
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: infra
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---

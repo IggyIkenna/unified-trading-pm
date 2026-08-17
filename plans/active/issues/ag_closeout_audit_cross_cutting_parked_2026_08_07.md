@@ -269,8 +269,9 @@ spot per this skill's SKILL.md).
       `[cross-cutting]` → `[ci]` (finding 2) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ci`'s closeout membership, and current incident state (was blocked on an
       external GH Actions outage as of 2026-08-06) is re-verified before treating any of its 3 todos as stale.
-- [ ] [DOCS] P3. Retag
-      `plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`'s `asset_group`
+- [x] ✅ [DOCS] P3. **DONE — `unified-trading-pm@e95abc7b0f`, live-reverified 2026-08-16 per
+      `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`'s own todo (na-eligibility-audit 2026-08-17).** Was:
+      Retag `plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`'s `asset_group`
       `[cross-cutting]` → `[ci]` or `[infrastructure]` (finding 3, `ci` recommended, `infrastructure` defensible) —
       owning-tranche fix. Done when: the tag is corrected to a single real tranche and folded into that tranche's
       closeout membership.
@@ -289,11 +290,14 @@ spot per this skill's SKILL.md).
       and archived to `plans/archive/2026_08/issues/` before the `ci` tranche picked up this retag; asset_group no
       longer matters for an archived, resolved doc. No action taken (retagging a closed archive entry has no downstream
       effect on closeout membership).
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. **MOOT — target doc resolved+archived 2026-08-15 before any tranche picked up the retag
+      (na-eligibility-audit 2026-08-17).** Was: Retag
       `plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s
       `asset_group` `[cross-cutting]` → `[ci]` (finding 6) — owning-tranche fix, leave to the `ci` tranche's own audit.
       Done when: the tag is corrected and the doc is folded into `ci`'s closeout membership.
-- [ ] [DOCS] P3. Retag `plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`'s `asset_group`
+- [x] ✅ [DOCS] P3. **DONE — was ALREADY `[infrastructure]` (fixed 2026-08-07 by a different tranche's ag-closeout-audit
+      run), confirmed via 2026-08-16 live re-check (na-eligibility-audit 2026-08-17).** Was: Retag
+      `plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`'s `asset_group`
       `[cross-cutting]` → `[infrastructure]` (finding 7) — owning-tranche fix, leave to the `infra` tranche's own audit.
       Done when: the tag is corrected and the doc is folded into `infra`'s closeout membership.
 

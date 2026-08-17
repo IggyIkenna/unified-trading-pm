@@ -114,7 +114,9 @@ host it is partly a function of concurrent load (the run above spent 12s queued 
       back under budget or re-baseline the budget with a stated justification. Note the shared-host coupling: queue-wait
       counts toward the wall figure, so this check can fail purely from concurrent QG load on a busy laptop/VM — decide
       whether queue-wait SHOULD count before re-baselining. Repo: strategy-service.
-- [ ] [BACKEND] P3. **strategy-service's gate points at an archived doc.** Its BaseModel failure message sends you to
+- [x] ✅ [BACKEND] P3. **DONE — fixed the gate's stale `SCHEMA_CONTRACTS_AUDIT.md` pointer fleet-wide,
+      unified-trading-pm@144a18fed5 (2026-08-14), per cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md.** Was:
+      **strategy-service's gate points at an archived doc.** Its BaseModel failure message sends you to
       the `active/` copy of `SCHEMA_CONTRACTS_AUDIT` (Section 3b), but that doc was archived — it now lives at
       /plans/archive/SCHEMA_CONTRACTS_AUDIT.md. Anyone following the gate's own instruction hits a missing file at the
       moment they most need the guidance. Update the message in strategy-service's `quality-gates.sh` (and grep the

@@ -111,11 +111,15 @@ each depending on plan). Once provisioned:
       wire it into a collect handler (which downstream feature consumer needs on-chain analytics is a separate design
       decision — do not guess a handler; ask if unclear). `BLOCKED-CREDENTIALS` — awaiting `glassnode-api-key`. Repo:
       market-tick-data-service.
-- [ ] [CODE] P2. Promote `KaikoAdapter` (`market_tick_data_service/market_interface/adapters/onchain/kaiko.py`, added
+- [x] ✅ [CODE] P2. **MOOT 2026-08-17 (na-eligibility-audit) — Kaiko adapter/test/registry-entry/UAC-capability all
+      DELETED per this doc's own "Kaiko removal COMPLETE (2026-08-10)" section (`unified-api-contracts@c48238266b`,
+      `market-tick-data-service@da86db197e`); nothing left to promote.** Was: Promote `KaikoAdapter`
+      (`market_tick_data_service/market_interface/adapters/onchain/kaiko.py`, added
       2026-08-09) from `PLANNED_VENUES` into `VENUE_REGISTRY` + `get_adapter()` dispatch, and wire it into a collect
       handler (same caveat as above — target handler is a design decision, not a guess). `BLOCKED-CREDENTIALS` —
       awaiting `kaiko-api-key`. Repo: market-tick-data-service.
-- [ ] [DATA] P3. Once live-credential integration tests are added (mirroring
+- [x] ✅ [DATA] P3. **MOOT 2026-08-17 (na-eligibility-audit) — Kaiko fully deleted (see item above); nothing to add a
+      test counterpart for.** Was: Once live-credential integration tests are added (mirroring
       `tests/integration/test_glassnode_integration.py`'s `@pytest.mark.requires_credentials` pattern), add a Kaiko
       counterpart. Repo: market-tick-data-service.
 

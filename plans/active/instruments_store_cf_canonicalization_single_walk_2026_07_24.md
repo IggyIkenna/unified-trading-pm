@@ -141,11 +141,16 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
           UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
           (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
-- [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
-      calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
-      (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
-      is already canonical — 500 rows, 0 blank, 0 dup → nothing to canonicalize), but the `--asset-group prediction`
-      choice is a dead path. Fix `_bucket_for` to route prediction →
+- [x] ✅ [SCRIPT] P3. **DONE — instruments-service@60552cb8832a846705e1065d918690876671176c (2026-08-05, verified
+      ancestor-of-origin/live-defi-rollout): `_bucket_for()` now special-cases `asset_group=='prediction'` →
+      `resolve_bucket_name(kind='instruments-store-prediction', asset_group=None)`, confirmed live in current HEAD of
+      `scripts/canonicalize_instruments_store_index.py:126-135`. Also logged in
+      `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md:797-804` as a checked stale-checkbox entry citing this
+      doc as Source.** Was: **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** —
+      `_bucket_for` calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises
+      `BucketNamingError` (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today
+      (prediction `_index` is already canonical — 500 rows, 0 blank, 0 dup → nothing to canonicalize), but the
+      `--asset-group prediction` choice is a dead path. Fix `_bucket_for` to route prediction →
       `kind="instruments-store-prediction", asset_group=None` if prediction ever needs re-canonicalisation.
       **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
 

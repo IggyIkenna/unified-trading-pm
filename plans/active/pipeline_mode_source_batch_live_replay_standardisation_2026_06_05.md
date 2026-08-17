@@ -996,3 +996,4 @@ M6/M7/T+1/M8.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) -- content already correct (marker undercounted at
   "2"); all 6 paths confirmed on disk, unchanged.
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:0d4347c052d3f9e4]: KEEP-NA, valid — Repeatedly reaffirmed KEEP-NA by na-eligibility-audit itself (2026-08-01, 2026-08-07): the 7 open items are 4 real cross-repo build items (M6 startup gate / M7 autonomous recovery / T+1 recon+live-TTL / M8 cadence writer-stamp) spanning batch-live-reconciliation-service/strategy-service/MTDS/alerting-service, 1 design fix with a documented reverted naive prior attempt (_merge_dataframes dedup-key), 1 doc-coherence audit explicitly gated on the M1-M8 contract stabilizing first, and 1 unverified cross-AG test-coverage residual — none is a bounded single-worker mechanical task.

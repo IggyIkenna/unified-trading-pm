@@ -87,3 +87,4 @@ incremental-merge enhancement is an operator/design call, not a worker-determina
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:34db568726207d9c]: KEEP-NA, valid — The doc's own 'Recommended decision' section states the choice (scheduled periodic force=True full-rebuilds vs. a narrower incremental-merge code enhancement) is 'an operator/design call, not a worker-determinable outcome' — matches the audit rubric's AO-eligibility bar exactly, explicitly self-applied by the doc's author. Root causes of the original 2026-05-04 finding (casing/schema_version drift) are independently re-verified resolved; only this scheduling decision remains, cleanly tagged [OPERATOR].

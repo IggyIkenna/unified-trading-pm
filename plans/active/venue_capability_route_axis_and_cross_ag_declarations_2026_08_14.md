@@ -26,8 +26,8 @@ related:
 created: 2026-08-14
 last_updated: 2026-08-14
 parent_epic: batch_live_symmetry_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 6

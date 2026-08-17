@@ -124,8 +124,13 @@ items:
       was still `- [ ]` open as of this correction; the "100% v9" completeness claim above does not hold as stated.)**
       **`DP_NOT_V9`** originally (13,670 tradfi rows NOT at canonical schema_version=9), surfaced by the now-live
       `manifest_hygiene_daily` audit. Re-walk/canonicalise those rows to v9. — market-tick-data-service
-- [ ] [DATA] P1. **Retry the tradfi `attempted_failed`** (13 cells / ~12.5k rows) — surfaced by the digest. Re-run the
-      backfill for the failed (venue,data_type,day) cells. — market-tick-data-service
+- [x] ✅ **SUPERSEDED — the premise was stale: cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md
+      re-investigated (citing this doc as Source) and found the real number is 798,028 `attempted_failed` rows / 16,171
+      distinct cells (not 13 cells / ~12.5k rows), the bulk genuinely non-retriable (real source-absence/schema
+      reasons), and the one genuine gap found — a CME `ohlcv_1s`/`ohlcv_1m` blank-underlying bug in `_derive_cme_root()`
+      — is already fixed and shipped: deployment-service@8e22704756, 6 new unit tests, QG green, quickmerge-verified
+      landed.** Was: [DATA] P1. **Retry the tradfi `attempted_failed`** (13 cells / ~12.5k rows) — surfaced by the
+      digest. Re-run the backfill for the failed (venue,data_type,day) cells. — market-tick-data-service
 - [x] ✅ [INFRA] P2. **UAC image-packaging bug — already RESOLVED 2026-06-23** (see this doc's own "2026-06-23
       follow-ups RESOLVED" note above: clean alerting image bundles `registry/data/*.json`, `dp-alerting-subscriber`
       redeployed clean rev 00008-csc with NO datafix layer, UAC wheel 0.48.0 exports `build_fetch_evidence`).

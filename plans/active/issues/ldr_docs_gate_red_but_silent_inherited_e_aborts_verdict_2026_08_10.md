@@ -108,18 +108,21 @@ when the violation list is empty.
       them and NO corpus edit is required. Lesson worth keeping: a probe that reports "file absent" is only evidence
       once you have confirmed the probe looked in the right place, the same failure shape the reconciliation codex
       already warns about for vocabulary probes.
-- [ ] [BACKEND] P2. **A `workflow_dispatch`/`schedule` workflow runs the file from the DEFAULT branch (main), not the
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-15 — added a paragraph documenting the default-branch/scheduled-workflow
+      circular-dependency gap in `/codex/08-workflows/ci-cd-flow.md`, unified-trading-pm@83a3227b7d.** Was: **A `workflow_dispatch`/`schedule` workflow runs the file from the DEFAULT branch (main), not the
       checked-out ref** — so this doc's own `set +e` fix was inert for every scheduled run the moment it landed on LDR,
       and stays inert until promotion carries it to main. That is a circular dependency: the fix for a silent-alert bug
       is gated behind the promotion it exists to help unblock. Any future fix to a scheduled workflow's own YAML has the
       same property. Document it in `/codex/08-workflows/ci-cd-flow.md` next to the existing "a scheduled/push workflow
       fires ONLY from the DEFAULT branch" line, and note the `gh workflow run <wf> --ref <branch>` escape hatch used to
       verify this one. Repo: unified-trading-pm.
-- [ ] [BACKEND] P2. **Sweep the fleet for the same `-e` trap.** Grep every workflow for a `run:` block that sets
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-15 — fleet-wide grep sweep across 28 repos found zero live unfixed instances
+      (only the already-fixed source site).** Was: **Sweep the fleet for the same `-e` trap.** Grep every workflow for a `run:` block that sets
       `-uo pipefail` (without `e`) and then captures a checker's output into a variable whose failure is meant to be
       handled by a following `RC=$?`: `rg -n 'set -uo pipefail' -A 4 .github/workflows/ | rg -B1 'RC=\$\?'`. Each hit is
       a monitor that fails closed-and-quiet the same way. Repo: unified-trading-pm (+ any per-repo copies).
-- [ ] [BACKEND] P2. **A monitor whose failure path cannot page is a coverage hole, not just a bug.** Add a
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-15 — added `check_verdict_output_failure_path.py`, wired into
+      `base-service.sh` fleet-wide, unified-trading-pm@cb1a09203b.** Was: **A monitor whose failure path cannot page is a coverage hole, not just a bug.** Add a
       meta-assertion: any job that publishes a `verdict` output consumed by a notify job must emit that output on the
       failure path too (e.g. write `verdict=red` in a `trap`/`if: always()` step rather than inline in the gate step).
       Cross-reference `/codex/04-architecture/ci-alerting.md`'s dedup/read-back contract — this is the same class as a

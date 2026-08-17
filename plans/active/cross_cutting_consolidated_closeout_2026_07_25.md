@@ -709,9 +709,10 @@ batch)
 ## Todos
 
 - [ ] [DOC] P1. **Track open items are not tracked as checkbox work in this digest** — e.g. Track 1's G5 ("no AG has
-      started backfill-to-100%", gated but not tracked as executable work anywhere in this corpus) and Track 14's
+      started backfill-to-100%", gated but not tracked as executable work anywhere in this corpus) and ~~Track 14's
       CF-manifest-audit job (`uts-prod-cf-manifest-audit` Cloud Run Job, failing daily since 2026-07-04, fully open and
-      unresolved).
+      unresolved)~~ **[STALE 2026-08-17 (na-eligibility-audit) — `cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md`
+      is status:resolved, all 3 todos `[x]`]**. Track 1's G5 citation remains genuinely open. Item stays `[ ]`.
 
 ## Codex SSOTs (read before touching a track)
 

@@ -230,7 +230,9 @@ Kamino/Jupiter conflated the two.
 
 ## Todos
 
-- [ ] [AGENT] P0. **Build DeFi position adapters for the carve-out path first** — Lido, Marinade, Kamino, Jupiter. These
+- [x] ✅ [AGENT] P0. **DONE 2026-08-17 (na-eligibility-audit) — all 4 sub-items complete per this doc's own
+      Deferred-work table (Lido/Marinade/Kamino shipped, Jupiter determined not needed).** Was: **Build DeFi position
+      adapters for the carve-out path first** — Lido, Marinade, Kamino, Jupiter. These
       are not "more venues"; they are the reconciliation side of the two archetypes we are shipping real. Build the code
       fully (operator: _"we don't need credentials to fully build the code, not just stubs"_) — credentials gate RUNNING
       an adapter, not writing one. **Status 2026-08-15 (de-duplicated — this todo's body was accidentally double-pasted;
@@ -496,7 +498,8 @@ Kamino/Jupiter conflated the two.
       now issues are genuinely real, but its HF-gate abort check and post-iteration position readback are best-effort
       until this method reads a real `Pool.getUserAccountData()` view call. Not fixed inline — separate, larger scope
       than the P0 dispatcher-wiring todo that found it (that todo was about writes, this is a read).
-- [ ] [OPERATOR] P2. **Disclosure decision on out-of-mandate adapters.** `betfair`, `ibkr` and `polymarket` are working
+- [x] ✅ [OPERATOR] P2. **RULED 2026-08-16 (na-eligibility-audit 2026-08-17 closing the loop) — "Ship as-is", per this
+      doc's own Deferred-work table.** Was: **Disclosure decision on out-of-mandate adapters.** `betfair`, `ibkr` and `polymarket` are working
       credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
       question of what we disclose. Record the decision in the Elysium plan § E.

@@ -551,8 +551,11 @@ reconciling + signing off, not redoing.)_
 ## Stage 6 — Hygiene (run in parallel; non-blocking)
 
 - [ ] [ADMIN] P2. Flip stale / self-contradictory checkboxes (`instruments_mtds_subset`: `N9c`, `N5r/N6r`,
-      "migrate-first 4 AGs"; `instruments_catalogue_incremental_rollup` → completed). **STILL OPEN (reconciled
-      2026-07-28)** — targets docs outside this todo's 7 named archived children; not covered here.
+      "migrate-first 4 AGs"; ~~`instruments_catalogue_incremental_rollup` → completed~~ **[this sub-clause DONE — see
+      Stage 0 admin item, `[x]`, 2026-07-10]**). **STILL OPEN (reconciled 2026-07-28)** — targets docs outside this
+      todo's 7 named archived children; not covered here. **na-eligibility-audit 2026-08-17**: only the
+      incremental-rollup sub-clause is closeable; N9c/N5r/N6r/migrate-first-4-AGs remain open (N5r/N6r tracked in
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`). Item stays `[ ]`.
 - [x] ✅ [VERIFY] P2. `honest_coverage_smoke_harness`: run the deferred **cefi / defi / tradfi / prediction**
       live-verify slices (only sports ran). **DONE — reconciled 2026-07-28 against
       `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete, own todo `[x]`, 2026-07-06,

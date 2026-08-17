@@ -166,7 +166,10 @@ the call is still awaited (ordering preserved), and check the file's line/functi
       address within the single multicall-style EVM fetch, or across the EVM/Solana split) worth parallelizing, or close
       this handler out of "the 8 residual DeFi handlers" scope as not-applicable — it has no `for protocol: for chain:`
       loop to convert. Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
-- [ ] [INFRA] P3. **Fix the 2 blocking-write sites in SYNC functions** — per "Open — in priority order" item 3:
+- [x] ✅ [INFRA] P3. **DONE — dispatched the write via a dedicated executor,
+      cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (2026-08-15, slot-18), shipped
+      market-tick-data-service@c3e5ce2a04, matching this item's own "Done when" criteria.** Was: **Fix the 2
+      blocking-write sites in SYNC functions** — per "Open — in priority order" item 3:
       `live/websocket_runner.py::_record_empty_window` and
       `unified_trading_library/streaming/live_aggregator.py::_handle_zero_tick_window` perform the same blocking
       manifest write as items 1-2 but from sync functions, so the fix needs signature changes up the call chain (make

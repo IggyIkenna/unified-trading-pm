@@ -100,7 +100,12 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
       plan-destination question (dispatch batch = `planning` or `NA`?) is answered by the standing "Plan destination —
       ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly overrides. No live operator input
       required to apply the default.
-- [ ] [DIAG] P2. **Multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions (migrated 2026-08-10 from
+- [x] ✅ [DIAG] P2. **DONE 2026-08-15 — CONFIRMED: NO, never cited in any actual promotion/sizing decision; nothing
+      to flag. Investigated via cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (slot-29-infra) with 4
+      converging lines of evidence: `MinimalCandidateManifest.score_vector` has no fill_rate/slippage field; the 5
+      promote pre-flight gates are purely operational; the capital-sizing/portfolio-allocator reads NAV/returns not
+      fill-rate/slippage; a corpus-wide grep for `STRATEGY_PROMOTED_TO_PAPER`/`LIVE` co-occurring with
+      `carry_staked_basis`/`carry_basis_perp` returns zero hits.** Was: **Multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions (migrated 2026-08-10 from
       `plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`, which was closed + archived once its
       execution plan shipped)** — confirm whether any CARRY_STAKED_BASIS / CARRY_BASIS_PERP paper run's fill-rate or
       slippage figures were cited in an actual promotion/sizing decision (vs. only the directional P&L signal); if so,

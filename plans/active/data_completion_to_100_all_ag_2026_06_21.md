@@ -511,6 +511,7 @@ exclusions remain in this loop's termination criteria. [SYNCED 2026-07-14, findi
 > cefi/defi/tradfi/prediction did). This scope moved VERBATIM to that plan; it is tracked THERE, not here. Nothing was
 > dropped or reworded in the move.
 
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:8b941f25a525ab29]: KEEP-NA, valid — 895-line P0 umbrella data-completion coordinator. Twice independently re-confirmed KEEP-NA valid by na-eligibility-audit (2026-08-03, 2026-08-07) with GENUINE_WORK reasoning on remaining items. Full re-read confirms no material change since -- the 2026-08-15 EXTENDED-STARKNET banner shows the doc is still actively live-tracking real VM work, not stale/abandoned. Ruling/citation: Doc's own Progress Log: na-eligibility-audit 2026-08-03 and 2026-08-07, both KEEP-NA valid with GENUINE_WORK reasoning on the same remaining items.
 ## Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17` (2026-06-30 consolidation merge)
 
 > **MERGE (consolidation §6 B4.4).** `path_to_100pct_backfill_mtds_is` (the M-1 backfill-framework survivor) is

@@ -31,8 +31,8 @@ estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
 assigned_role: review
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 locked_since:
 supersedes:

@@ -109,3 +109,4 @@ Recover with `git stash apply stash@{0}` if any of it is worth salvaging.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:7705874b65fa6859]: KEEP-NA, valid — Item 1 is explicitly OPERATOR-gated (another session's parked stashed work — 'an agent should not drop it unilaterally'); item 2 self-frames as a judgment call ('decide whether X is worth building... or explicitly rejected, record which and why') rather than a bounded deterministic outcome, so the doc as a whole is not a clean RECLASSIFY_WHOLE and item 2 alone is too small/ambiguous to warrant a formal split.

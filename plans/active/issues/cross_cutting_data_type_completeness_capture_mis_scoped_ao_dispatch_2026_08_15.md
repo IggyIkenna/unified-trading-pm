@@ -113,3 +113,4 @@ progress that no single plan tracks to completion.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:6b8c25824bd0d572]: KEEP-NA, valid — Doc's own investigation found the blocking measurement call (query_specific_prefixes_for_asset_group at include_sub_dimensions=True scale) is unbounded/hangs, distinct from a sibling axis-census function whose fix landed 2026-08-15. Verified independently: axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md is fully resolved/archived, but its fix touched get_axis_value_census/_read_availability_index, NOT query_specific_prefixes_for_asset_group. Grepped the corpus for any doc/fix touching that function since -- none found -- confirming todo-1's own gating condition ('once the fix lands') is still genuinely unmet for the actual blocking call.

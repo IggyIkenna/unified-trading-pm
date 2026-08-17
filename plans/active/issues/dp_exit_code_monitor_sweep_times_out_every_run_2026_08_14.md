@@ -223,6 +223,7 @@ the `registry_id` the deliver path used) — filed as its own issue,
 since fixing it needs a design call on where the identity is threaded from and this doc's own scope is the timeout, not
 the release bookend.
 
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:907eaf69a8ce925b]: KEEP-NA, valid — Sole open todo (make a truncated sweep loud instead of silent) has code+tests already written and compile-checked, but is explicitly DEPENDENCY_BLOCKED on a separately-tracked, currently-unresolved basedpyright-ratchet-break issue doc (deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md); doc's own text: 'Do not redo this work — resume by fixing that blocker, then quickmerge.sh the two already-written files.' Nothing to dispatch until the named blocker doc resolves.
 ## Deferred work after 2026-08-15
 
 | Item                                                                            | State / why deferred                                                                                                   | Blocked on                                                                                                                |

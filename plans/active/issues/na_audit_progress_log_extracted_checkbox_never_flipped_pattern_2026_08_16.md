@@ -28,13 +28,14 @@ related:
 parent_epic: agent_operating_framework_master
 source: "na-eligibility-audit, tradfi tranche, dispatch agt-45ad7b, 2026-08-16 — found incidentally while processing
   KEEP-NA-STALE-DUPLICATED and KEEP-NA-STALE-ITEMS verdicts"
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: infra
 created: 2026-08-16
 resolved_by:
 locked_by:
 locked_since:
 priority: P2
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
 context_scope:

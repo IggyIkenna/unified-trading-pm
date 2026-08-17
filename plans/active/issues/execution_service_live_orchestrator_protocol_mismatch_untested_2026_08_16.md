@@ -26,13 +26,13 @@ source: >-
   fill, and in doing so found the actual production orchestrator doesn't satisfy the protocol.
 parent_epic: infrastructure_master
 priority: P1
-assigned_vm: NA
+assigned_vm: planning
 assigned_role: backend_engineer
 effort: medium
 locked_by:
 resolved_by:
 context_scope: [/plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md, execution-service/execution_service/cli/handlers/live_execution_handler.py, execution-service/execution_service/orchestration/orchestrator.py]
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---

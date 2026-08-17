@@ -250,8 +250,14 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   done-but-unchecked, 25 zero-checkbox, 56 AO-readiness, 16 codex-drift findings — 4 days stale as of this check, and
   that doc is itself still being actively re-verified piecemeal by today's sharded runs (multiple "verified
   2026-08-16" entries already present in it as of this check).
-- [ ] [SCRIPT] P2. **New finding 2026-08-16 (from the batch21 plan-reconcile re-ask above)**: verify whether
-      `/plan-reconcile` SKILL.md's documented weekly Sun-Fri-sharded/Saturday-unsharded cadence is actually
+- [x] ✅ [SCRIPT] P2. **DONE — the DOW branch already exists in
+      `agent-orchestrator/scripts/install-plan-reconciler-timer.sh` (`date -u +%u` Sun-Fri-sharded/Saturday-unsharded
+      branching, commits 5f15d0ab0+4a77bfe13, refined c3a85c3b4), and `cursor-configs/skills/plan-reconcile/SKILL.md`
+      already documents it accurately (commits d11d0a7658a, 57425ce3efc) — both predate this todo's own 2026-08-16
+      filing by over a week, so the "unverified this pass" framing was itself stale/incomplete investigation.
+      Independently corroborated in `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (~line 814-826) citing
+      this doc as Source.** Was: **New finding 2026-08-16 (from the batch21 plan-reconcile re-ask above)**: verify
+      whether `/plan-reconcile` SKILL.md's documented weekly Sun-Fri-sharded/Saturday-unsharded cadence is actually
       implemented anywhere (the dispatched job logic, not the timer unit) — the installed
       `agent-orchestrator/scripts/install-plan-reconciler-timer.sh` OnCalendar spec (`*-*-* 0/2:${FIRE_MINUTE}:00
       UTC`) fires every 2 hours with no visible day-of-week gate at the timer level, so either (a) the day-of-week
@@ -289,15 +295,19 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       before this fix, so corpus coverage was never truly zero; the real defect was narrower — the **scheduled
       automation** for that coverage never existed, so it depended entirely on manual invocations. That defect is now
       fixed.
-- [ ] [SCRIPT] P2. **New finding from the context-scout fix above**: the orchestrator VM's shared PM checkout
-      (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`, the exact path passed as `pm_repo_path` to every
-      scheduled dispatch) was found **404 commits behind `origin/live-defi-rollout`** at fix time
-      (`git rev-list --left-right --count HEAD...origin/live-defi-rollout` → `0  404`), with uncommitted changes already
-      present (`M plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`, one untracked new
-      issue doc) from other concurrently-dispatched workers. Unclear whether each scheduled skill's own SKILL.md does a
-      `git pull --ff-only` before reading/writing this checkout (in which case this is transient and self-healing) or
-      whether dispatched workers can silently operate against/commit on top of a badly stale tree. Worth a quick read of
-      one scheduled skill's SKILL.md STEP 0 to confirm, and if there's no pre-work pull, add one.
+- [x] ✅ [SCRIPT] P2. **DONE — unified-trading-pm@8f01162ac9 (2026-08-15) added a fetch+rebase to STEP 0 of
+      `agents/ag_closeout_auditor.md`, `agents/plan_health.md`, `agents/docs_reconciler.md`, and
+      `agents/context_scout_auditor.md` (`na_eligibility_auditor.md`/`plan_reconciler.md` already had it).
+      Independently corroborated in `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (~line 814-826) citing
+      this doc as Source.** Was: **New finding from the context-scout fix above**: the orchestrator VM's shared PM
+      checkout (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`, the exact path passed as
+      `pm_repo_path` to every scheduled dispatch) was found **404 commits behind `origin/live-defi-rollout`** at fix
+      time (`git rev-list --left-right --count HEAD...origin/live-defi-rollout` → `0  404`), with uncommitted changes
+      already present (`M plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`, one
+      untracked new issue doc) from other concurrently-dispatched workers. Unclear whether each scheduled skill's own
+      SKILL.md does a `git pull --ff-only` before reading/writing this checkout (in which case this is transient and
+      self-healing) or whether dispatched workers can silently operate against/commit on top of a badly stale tree.
+      Worth a quick read of one scheduled skill's SKILL.md STEP 0 to confirm, and if there's no pre-work pull, add one.
 - [ ] [DOC] P2. Update the published benchmark artifact
       (`https://claude.ai/code/artifact/246c4f9a-c3c8-4643-b099-d7023f7c17a4`) with the clean re-run numbers once both
       of the above land, and with the final status of every ruled decision above (shipped / still-open /

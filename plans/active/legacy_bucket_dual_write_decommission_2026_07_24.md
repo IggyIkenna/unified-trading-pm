@@ -215,7 +215,10 @@ context_scope:
       use) from the retired `unified-cloud-interface` one, and codified the "new writers call `resolve_bucket_name()`
       directly, never `get_bucket_name()` or hand-rolled string-concat" rule there.
 
-- [ ] [INFRA] P2. **DEFERRED** Fix the 6 BQ `feature_external` external tables in
+- [x] ✅ [INFRA] P2. **DUPLICATE-TRACKED 2026-08-17 (na-eligibility-audit) — this doc's own "Deferred work — migrated
+      to:" section already cites `bigquery_feature_ml_compute_engine_option_2026_06_08.md` (confirmed live/active,
+      cites the same terraform file) as the owning plan; closing the duplicate copy here, work itself remains real and
+      open THERE.** Was: **DEFERRED** Fix the 6 BQ `feature_external` external tables in
       `deployment-service/terraform/gcp/bigquery_feature_external_tables.tf` — point `source_uri_prefix` at each
       bucket's actual hive-partitioned SUBTREE (not the bucket root, which sweeps
       `_index/`/`backfill-logs/`/`raw_tick_data/` and fails BQ CUSTOM partition validation) and reconcile the declared

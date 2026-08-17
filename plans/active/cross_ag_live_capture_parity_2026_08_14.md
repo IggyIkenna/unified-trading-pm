@@ -345,13 +345,17 @@ separate CODE tasks after operator triage". A grep of `plans/active/` for that f
 
 So the tracked record says DeFi live is resolved, while 40 venues cannot stream and 52 more have no connector at all.
 
-- [ ] [OPERATOR] P1. Decide whether DeFi live capture is in scope at all before any build — there is no defi live VM, no
-      defi live launcher, and DeFi is nominally the May-23 critical path; the honest options are to build the pollers,
-      or to declare DeFi live BATCH-ONLY-BY-DESIGN and stop carrying 40 placeholder registrations that read as coverage
-      — DoD: the ruling is recorded here.
-- [ ] [DATA] P1. Whichever way that ruling goes, make the archived gap doc's status honest — DoD: either the follow-up
-      tasks exist as tracked todos, or the placeholders are reclassified with the ruling cited; "resolved" must not mean
-      "scaffolded".
+- [x] ✅ [OPERATOR] P1. **RULED 2026-08-15 (na-eligibility-audit 2026-08-17 closing the loop) — operator approved
+      building the ~40 pollers, extracted+executed via `defi_operator_ruling_ao_dispatch_2026_08_15.md` todo 3
+      (archived 2026-08-17 DONE, produced `/plans/active/defi_live_poller_phased_build_2026_08_15.md`).** Was: Decide
+      whether DeFi live capture is in scope at all before any build — there is no defi live VM, no defi live launcher,
+      and DeFi is nominally the May-23 critical path; the honest options are to build the pollers, or to declare DeFi
+      live BATCH-ONLY-BY-DESIGN and stop carrying 40 placeholder registrations that read as coverage — DoD: the ruling
+      is recorded here.
+- [x] ✅ [DATA] P1. **DONE 2026-08-17 (na-eligibility-audit) — DoD met: follow-up tasks now exist as a tracked plan,
+      `/plans/active/defi_live_poller_phased_build_2026_08_15.md`.** Was: Whichever way that ruling goes, make the
+      archived gap doc's status honest — DoD: either the follow-up tasks exist as tracked todos, or the placeholders
+      are reclassified with the ruling cited; "resolved" must not mean "scaffolded".
 
 ## Finding E — DeFi index prefix carries 17k objects and tens of GB of stale backups
 
@@ -363,9 +367,11 @@ any full-index read is impractical — it defeated a read in this session and is
 Note the manifest consolidator itself is healthy — `uts-prod-manifest-consolidator-market-data-defi` executes every 60s
 and succeeded on all recent runs; the index's age reflects the incremental-cutoff design and scale, not a broken job.
 
-- [ ] [OPERATOR] P1. Rule on retention for the `_index/*.bak*` snapshots in the defi prod bucket — prod-bucket deletes
-      are human-only unless reversibility-qualified; cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` —
-      DoD: a retention rule recorded here, then executed under that protocol.
+- [x] ✅ [OPERATOR] P1. **RULED 2026-08-15 (na-eligibility-audit 2026-08-17 closing the loop) — "leave as-is
+      indefinitely, no dispatch", recorded verbatim in this doc's own 2026-08-15 Progress Log entry.** Was: Rule on
+      retention for the `_index/*.bak*` snapshots in the defi prod bucket — prod-bucket deletes are human-only unless
+      reversibility-qualified; cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — DoD: a retention rule
+      recorded here, then executed under that protocol.
 - [ ] [DATA] P2. Give consumers a projected/filtered read path for the defi index so an audit does not need the full 7.3
       GB — DoD: a documented `read_availability_index` call pattern (column projection plus pipeline_mode filter) that
       answers "which live shards captured" without a full decode.

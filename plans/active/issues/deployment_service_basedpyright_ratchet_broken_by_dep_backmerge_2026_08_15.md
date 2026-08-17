@@ -281,3 +281,4 @@ independent of whether Todo 3's cache-hit investigation ever resolves the "why."
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:0196a6655c035b95]: KEEP-NA, valid — 1 open todo, explicitly [OPERATOR]-tagged BLOCKED-OPERATOR-DECISION, an active unresolved tradeoff (relax the ratchet-only-goes-down norm 1259->1261 vs. hold all deployment-service shipping) further complicated by a same-day cross-slot measurement discrepancy documented in the doc's own text (1261 in this checkout vs 1259 in slot 5's checkout) that explicitly says the recommendation should NOT be actioned yet pending that discrepancy. Genuine live judgment call, still current as of the doc's 2026-08-15 last update, no contradicting later evidence found.

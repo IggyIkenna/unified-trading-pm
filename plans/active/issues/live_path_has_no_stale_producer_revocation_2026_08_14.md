@@ -235,3 +235,4 @@ none of them appear as todos in that plan.
 ## Progress Log addendum
 
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:97545a17d064f199]: KEEP-NA, valid — Items 3-4 wire a brand-new automatic actuator onto the live-trading kill-switch bus (dependency-health probe injection -> service registration -> SEV0 arming) — safety-critical live-dispatch-critical-path machinery per the rubric's explicit caution against reclassifying such work even when procedurally sequenced; item 6 is an explicit unresolved [OPERATOR] launcher admission-gate decision with 3 named options, doc's own words 'Blocked on this decision, not further investigation.'

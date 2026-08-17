@@ -199,7 +199,10 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
       asserting the SAME VM shape without a tombstone still classifies `PARTIAL_UNCONFIRMED`, so the positive test
       cannot pass for the wrong reason. Evidence: gate green, 3,322 passed, basedpyright 1259/1259 (ratchet held, not
       raised); `_gcs.py` 982 → 939 via the `_vm_markers` leaf split rather than raising the 960-line cap.
-- [ ] [SCRIPT] P0. **UNPAUSE `uts-prod-dp-exit-code-monitor-cron` — BLOCKED on deploy + tombstone backfill, in that
+- [x] ✅ [SCRIPT] P0. **DONE — cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (2026-08-15), in 3 verified
+      steps: confirmed deployment-api image built from HEAD, ran `reap_vms.py --tombstone-only` on 393 names (393/393
+      tombstoned), resumed the cron (state=ENABLED).** Was: **UNPAUSE `uts-prod-dp-exit-code-monitor-cron` — BLOCKED on
+      deploy + tombstone backfill, in that
       order.** The code is on LDR but landing on `main` deploys nothing: the monitor runs `deployment-api:latest` via
       Cloud Build, so (1) wait for the image to carry `ecd6d2bd90`, (2) run
       `reap_vms.py --tombstone-only --vms-file /plans/active/issues/vm_reap_lists/reaped_vms_2026_08_11.txt` (the exact

@@ -60,8 +60,9 @@ related:
 created: 2026-08-16
 priority: P2
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 sequential: false
 depends_on: []
 locked_by:

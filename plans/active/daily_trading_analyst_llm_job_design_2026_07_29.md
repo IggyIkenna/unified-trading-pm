@@ -315,11 +315,16 @@ job's per-category input adapters for the reconciliation-derived categories, per
 - [ ] [BACKEND] P3. **Remove BLRS Stage 4's `_write_agent_report()` write path** once the new job is confirmed live and
       its findings are landing — `agent_report_{date}.md` becomes fully redundant (§0, §4). (repo:
       `batch-live-reconciliation-service`)
-- [ ] [DATA] P2. **File the dead-`mode`-kwarg bug as its own issue doc** found in §2.1/§2.2/§2.4 (`execution_fills`,
-      `positions`, `strategy_instructions`, `pnl_attribution` all accept a `mode=` parameter their path template
-      silently drops, so batch/paper/live write to the SAME object path) — a real, independently-worth-fixing
-      correctness bug this design's research surfaced. Explicitly NOT folded into this plan's scope: file it separately
-      per the findings-triage rule, then this todo is done. (repo: `unified-trading-pm` for the issue doc;
+- [x] ✅ [DATA] P2. **DONE — the issue doc already exists:
+      `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`
+      (status:open, assigned_vm:planning, already dispatched/tracked), whose own frontmatter `source` field cites this
+      doc's §2.1/§2.2/§2.4 research as its origin, filed via
+      `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s corresponding todo.** Was: **File the
+      dead-`mode`-kwarg bug as its own issue doc** found in §2.1/§2.2/§2.4 (`execution_fills`, `positions`,
+      `strategy_instructions`, `pnl_attribution` all accept a `mode=` parameter their path template silently drops, so
+      batch/paper/live write to the SAME object path) — a real, independently-worth-fixing correctness bug this
+      design's research surfaced. Explicitly NOT folded into this plan's scope: file it separately per the
+      findings-triage rule, then this todo is done. (repo: `unified-trading-pm` for the issue doc;
       `unified-trading-library` for the eventual fix)
 - [ ] [DATA] P2. **Fix the stale scheduled-jobs table** in
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality

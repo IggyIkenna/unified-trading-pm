@@ -829,6 +829,17 @@ Script:
       monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record, the
       Instruments Completion Tracker (33/37 open), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block (per the final
       `wf_60ecfd13-752` Progress Log entry).
+
+  **na-eligibility-audit 2026-08-17 note**: live-verified 2026-08-17 (file paths + status fields, not a guess). 3 of
+  the 6 named items are now resolved/archived — CeFi monotonicity guard alerting →
+  `plans/archive/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md`; is-daily-enum cloud crash →
+  `plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`; Layer-1 tradfi's
+  `tradfi_v9_stage1_finish` block → `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md` (status: resolved).
+  The other 3 (Turbo API — `plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`; 59-bug
+  smoketest — `plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`; Instruments Completion
+  Tracker — `plans/active/instruments_completion_tracker_2026_07_06.md`) remain genuinely open but are independently
+  tracked in their own dedicated docs. Item stays `[ ]` — umbrella todo not fully closeable, but its text is stale re:
+  the 3 resolved items.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo is an umbrella 'close the 6
   remaining Headline P0s not covered by any in-flight workflow' across a 979-line, 5-asset-group audit — a portfolio of
   independently-scoped P0s, not a single determinable outcome, and several of its constituents are themselves

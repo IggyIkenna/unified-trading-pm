@@ -166,3 +166,4 @@ Option 1 is the structural fix; option 2 is a stopgap that only covers the 3 eve
 ## Progress Log
 
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:43bcf5289ade19ff]: KEEP-NA, valid — 2 of 3 todos already [x] done (the actual code fix + regression test, both shipped deployment-service@bf69b2b289). Sole open todo is explicitly tagged [OPERATOR] — a manual-clear-vs-self-heal decision for pre-fix stuck holds, DoD 'a stated decision, not a default'.

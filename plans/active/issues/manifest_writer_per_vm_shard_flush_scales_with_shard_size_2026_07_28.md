@@ -144,3 +144,4 @@ its own review):
   annotation), not pre-committed implementation.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:552ffed4150d81ba]: KEEP-NA, valid — Doc's own text + 4 prior audit rounds (2026-07-30/08-03/08-06/08-08) consistently characterize all 3 todos as shared-infra concurrency-critical performance-design investigation/tradeoff work ('name the investigation + design work, not a pre-committed implementation'); the P3 alternative explicitly needs an unresolved durability-vs-throughput policy call. Unchanged on this fresh read.

@@ -223,6 +223,7 @@ source: >-
   flipped `[x]` with citations; full evidence in the satellite batch1 plan.
 - **context-scout 2026-08-03**: re-scouted; refreshed context_scope (5 entries) — added the v9 re-stamp source script.
 
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:4fc17ae72e7a34ce]: KEEP-NA, valid — 3 open items, independently re-confirmed after 4 prior na-eligibility-audit KEEP-NA passes (2026-07-30, 08-01, 08-03, 08-08 round7): item 2 (re-stamp legacy schema_version tails, ~139K rows) is an explicit operator sign-off gate on an irreversible --apply, deferred 2026-06-22 pending a backfill-fleet quiet window; item 3 (Execution-config compatibility pre-flight) is a pointer-only item whose own text says 'File under the execution epic' plus genuine DESIGN-tagged judgment work (composing multiple capability matrices into a new assert function); item 1 (FULL AUDIT) is a broad, open-ended 'confirm shipped-vs-left across 6 named source plans, then finish any non-operator-gated remainder' sweep — still genuinely investigative/unbounded in scope, not a single deterministic outcome. Ruling/citation: na-eligibility-audit 2026-07-30 / 2026-08-01 / 2026-08-03 / 2026-08-08 (round7) all independently ruled KEEP-NA, valid, on the same 2-3 remaining items; re-confirmed here on fresh read, not re-derived.
 ## Deferred work — migrated to:
 
 - P3 (re-stamp legacy schema_version tails): N/A — no migration, still owned + open in this plan. Deferred per operator

@@ -816,3 +816,4 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   flipped `[x]` 2026-08-10 (E2E verified, commit `eb096a69b7`). Only 1 genuinely open item remains (the yield-stub
   wiring half, line 751) so `status` stays `active`, not `resolved`.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:28890146b802ff05]: KEEP-NA, valid — Sole remaining open todo (usdc_idle_yield_apy_bps wiring half) is explicitly dependency-blocked on features-onchain shipping venue_funding_yield, which has not shipped as of the most recent Progress Log entries through 2026-08-15. Reaffirmed by 3 prior na-eligibility-audit rounds (2026-08-01, 2026-08-07, 2026-08-08) plus a 2026-08-09/2026-08-12 reconciliation pass that correctly flipped the other 3 of the original 4 'Open Track-1 todos' to done -- nothing material has changed.

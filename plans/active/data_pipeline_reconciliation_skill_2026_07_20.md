@@ -679,6 +679,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 ---
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:c8f04acd8336204f]: KEEP-NA, valid — 0 open todos (42/42 done) by design — archive_exempt:true + explicit operator ruling (autonomous_session_operator_decisions_2026_07_25.md entry #10, option A) mark this a standing reference surface in plans/active/, not subject to normal archival lifecycle; 0 open being the expected steady state is stated in the doc's own summary. Ruling/citation: autonomous_session_operator_decisions_2026_07_25.md entry #10 option A + cross_cutting_consolidated_closeout_2026_07_25.md Track 13 + archive_exempt:true frontmatter.
 ## Deferred work after 2026-07-20
 
 All 15 build todos + the audit/ruling/integration work (todos 1–23, 26–30, 33) are DONE and shipped. Four todos remain —

@@ -196,3 +196,7 @@ measurement that justified the number.
       decision component has a non-test caller. Three separate systems in this estate were individually complete,
       individually tested, and collectively inert; this plan adds several more components to that surface. Repo:
       execution-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:d111b57d45b48364]: KEEP-NA, valid — Nature:design, operator-decision-sourced (2026-08-14) brand-new flattening subsystem spanning execution-service/strategy-service/UAC/alerting-service/BLRS — 23 sequentially-dependent todos across 5 phases including one live unresolved [OPERATOR] SLA-setting item that 'every threshold in this plan inherits from'; multi-file, multi-day rewrite of live-dispatch-critical-path machinery (CLAUDE.md's own caution against reflexively splitting this class applies) with genuine algorithmic judgment calls (post-trade-leverage trade selection, mandate/contract schema design, ReductionMandate generalisation). Not independently AO-dispatchable in pieces — nearly every item builds on a prior undone item in the same doc/phase.

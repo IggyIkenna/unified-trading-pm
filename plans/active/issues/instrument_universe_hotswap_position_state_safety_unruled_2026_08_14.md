@@ -95,3 +95,4 @@ Left unruled, the codex SSOT keeps contradicting the shipped code on a live-trad
   off from `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` at archival time so this genuine unresolved
   judgment call stays a tracked todo instead of evaporating as prose in the archived parent.
 - **context-scout 2026-08-17**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:5e6b7fed4d4c0336]: KEEP-NA, valid — Single [OPERATOR]-tagged live-trading-safety judgment call (Rule A vs B on instrument-universe hot-swap position-state continuity) -- deliberately split off from an archived parent specifically to keep this exact judgment call tracked per plan-completion-and-archival-discipline.md Section 2; codex SSOT (live-strategy-config-hot-reload.md) itself still marked contradicted/unenforced pending this ruling.

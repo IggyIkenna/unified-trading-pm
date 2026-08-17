@@ -347,3 +347,4 @@ ledger.
   doc's own todo, now `[CODE] P2`, tag already corrected there. Flipped `[x]` and retagged `[DOCS]` here; no further
   action needed on this doc's side, implementation tracked at the target.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17 (cross-cutting tranche, dispatch agt-3931fd)** [body-hash:512467bfd55ad790]: KEEP-NA, valid — Sole open todo is a cross-tranche retag handoff (owning-tranche fix by design, per the 2026-07-30 concurrent-sharded-worker primary-owner rule) — 3 of 13 findings (ao slice) already closed by the ao tranche's own audit (2026-08-09); 10 remain (ci ×6, infrastructure ×3, meta ×1), genuinely un-actioned by this cross-cutting doc. Two prior na-eligibility-audit passes (2026-08-08 same-day, 2026-08-08 round7) already confirmed KEEP-NA valid on this exact scope. Ruling/citation: na-eligibility-audit 2026-08-08 (both same-day and round7 passes) KEEP-NA valid

@@ -144,18 +144,23 @@ byte-identical output before/after).
 
 ### From `mtds_coverage_75_and_codex_zero_2026_06_11` (archived — 5/8 done; coverage→82% + codex→0 SHIPPED)
 
-- [ ] [REFACTOR] P1. **Split the remaining MTDS >900L files + extract oversized fns/methods** — the 8 >900L excluded
-      files + 2 `market_interface` >900 (databento_adapter 1,361, polymarket_adapter 1,022); extract 6 fns >200L + ~150
-      methods >50L (75 violations); delete ALL exclude entries; REUSE UTL for cross-cutting pure calcs (search UTL
-      first, flag promotion candidates). **Overlaps the file-size table above — execute as one programme.** Repo:
-      market-tick-data-service. (MIGRATED FROM: `mtds_coverage_75_and_codex_zero_2026_06_11`.)
-- [ ] [TEST] P3. **Re-add 17 connector reconnect tests** that were deleted (mock-flawed: never-closing mocked websockets
-      spun the reconnect loop) using terminating mocks (the `ws.closed` flip pattern in
+- [x] ✅ **DONE — market-tick-data-service@21b2f7193a: 10 files' 15 oversized methods extracted, exclude list deleted,
+      QG green.** Was: [REFACTOR] P1. **Split the remaining MTDS >900L files + extract oversized fns/methods** — the 8
+      >900L excluded files + 2 `market_interface` >900 (databento_adapter 1,361, polymarket_adapter 1,022); extract 6
+      fns >200L + ~150 methods >50L (75 violations); delete ALL exclude entries; REUSE UTL for cross-cutting pure calcs
+      (search UTL first, flag promotion candidates). **Overlaps the file-size table above — execute as one programme.**
+      Repo: market-tick-data-service. (MIGRATED FROM: `mtds_coverage_75_and_codex_zero_2026_06_11`.)
+- [x] ✅ **DONE — market-tick-data-service@26eef1999f: 17 gaps covered via terminating-mock pattern, QG green, landed on
+      LDR.** Was: [TEST] P3. **Re-add 17 connector reconnect tests** that were deleted (mock-flawed: never-closing
+      mocked websockets spun the reconnect loop) using terminating mocks (the `ws.closed` flip pattern in
       `test_deribit_book_ticker_ws_coverage.py`). Repo: market-tick-data-service. (MIGRATED FROM: same.)
-- [ ] [CODE] P3. **UAC generated-artifact churn** — UAC QG regenerates `openapi/ui-reference-data.json` in a new format
-      (18k-line churn) + emits untracked `openapi/capability-manifest.json` + `capability-orphan-report.txt`; per the
-      generated-artifacts HARD RULE, gitignore + `git rm --cached` (or re-commit the tracked copy from the current
-      generator). Repo: unified-api-contracts. (MIGRATED FROM: same.)
+- [x] ✅ **DONE — unified-api-contracts@f70f29c8: ui-reference-data.json gitignored+git-rm--cached; capability-
+      manifest.json deliberately kept tracked (agent-orchestrator's manifest_loader.py hard-requires it), follow-up
+      shipped agent-orchestrator@16f8c4f66a.** Was: [CODE] P3. **UAC generated-artifact churn** — UAC QG regenerates
+      `openapi/ui-reference-data.json` in a new format (18k-line churn) + emits untracked
+      `openapi/capability-manifest.json` + `capability-orphan-report.txt`; per the generated-artifacts HARD RULE,
+      gitignore + `git rm --cached` (or re-commit the tracked copy from the current generator). Repo:
+      unified-api-contracts. (MIGRATED FROM: same.)
 
 ### From `mdps_adapter_protocol_pandas_to_polars_2026_06_21` (archived — not started; operator-directed LATER migration)
 
@@ -182,8 +187,9 @@ byte-identical output before/after).
 
 ### From `mdps_coverage_85pct_2026_06_10` (archived — 9/10 done; MDPS coverage→86.71% SHIPPED)
 
-- [ ] [QG] P2. **Run PM `bash scripts/quality-gates.sh`** to confirm the plan + codex update pass
-      (`unified-trading-pm`). (MIGRATED FROM: `mdps_coverage_85pct_2026_06_10`.)
+- [x] ✅ **DONE — unified-trading-pm@8b7e53a624: confirmed green after fixing a real pacifica_solana venue-token
+      regression found along the way.** Was: [QG] P2. **Run PM `bash scripts/quality-gates.sh`** to confirm the plan +
+      codex update pass (`unified-trading-pm`). (MIGRATED FROM: `mdps_coverage_85pct_2026_06_10`.)
 
 ### Live issue docs this survivor tracks (referenced, NOT folded — they are active blockers with their own lifecycle)
 

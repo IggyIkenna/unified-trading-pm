@@ -199,13 +199,15 @@ member, not just a retag.
       `[ao, ci]` to `[ci]` only, not a discrepancy), and it carries a full `✅ ARCHIVED 2026-08-02` banner citing
       `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 22 as the archival
       authorization (all 8/8 todos done, `locked_by` cleared).
-- [ ] [DOCS] P3. Retag
-      `plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`'s `asset_group`
-      `[cross-cutting]` → `[ao]` (finding 2). Done when: the tag is corrected and the doc is folded into
-      `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per the 2026-07-31 audit — confirm the
-      retag catches up to that citation). **na-eligibility-audit 2026-08-03**: `ao_consolidated_closeout_2026_07_25.md`
-      is now archived `status: complete` (2026-07-30), but that doesn't close this todo — checked the target doc's
-      current frontmatter and the retag has NOT happened yet:
+- [x] ✅ [DOCS] P3. **DONE 2026-08-17 (na-eligibility-audit) — resolved by a real code fix, not a retag: target doc
+      archived 2026-08-15 via `unified-trading-pm@49d4fb0539a803dfb4e7580fc285970ff8b15095` ("archive
+      checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard (resolved, agent-orchestrator@7889a7c)"); now at
+      `plans/archive/2026_08/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`.
+      Supersedes the 2026-08-03/07 "still genuinely open" findings below — the archival happened after those passes.**
+      Was: Retag `plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`'s
+      `asset_group` `[cross-cutting]` → `[ao]` (finding 2). **na-eligibility-audit 2026-08-03**:
+      `ao_consolidated_closeout_2026_07_25.md` is now archived `status: complete` (2026-07-30), but that doesn't close
+      this todo — checked the target doc's current frontmatter and the retag has NOT happened yet:
       `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` still carries
       `asset_group: [cross-cutting]`. Still genuinely open; not flipping.
 - [x] ✅ [DOCS] P3. ~~Retag
@@ -215,7 +217,9 @@ member, not just a retag.
       already correct on trunk — and the doc has been archived to
       `/plans/archive/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md` per the
       archival-discipline HARD RULE (zero open todos, `locked_by:` empty). No retag needed on an archived doc.
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. **DONE (already) — confirmed via direct read 2026-08-17 (na-eligibility-audit): the doc's own
+      `asset_group` frontmatter already reads `[infrastructure]`; retag already done, timing/author not recorded.**
+      Was: Retag
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`'s `asset_group`
       `[cross-cutting]` → `[infrastructure]` (finding 4). Done when: the tag is corrected, the doc is folded into
       `infra_consolidated_closeout_2026_07_25.md`'s membership, and its 2 AO-eligible items (live SA enumeration;
