@@ -164,10 +164,16 @@ blank-instrument `empty_confirmed` placeholder since the launcher's creation (20
 captured. The fix is **data-type-scoped** (only the `ohlcv_24h` INDEX payload is exempted), so it does not
 blanket-exempt CBOE's VX-futures `ohlcv_1s`/`ohlcv_1m` traffic, which still correctly requires `--source databento`.
 
-**Known follow-on limitation**: `is_venue_available()` (the discovery-floor check) is venue-level, not venue+data_type —
-CBOE's registered floor is the Databento VX-futures genesis (2020-06-01, table below), so CBOE `ohlcv_24h` dates before
-that are honest-absence-skipped even though the real Yahoo Treasury series has genuine history back to 2000-01-03 (4 of
-5 tenors) / 2018-08-13 (US2Y). Tracked separately:
+**Follow-on limitation — FIXED 2026-08-12.** `is_venue_available()` (the discovery-floor check) used to be venue-level,
+not venue+data_type — CBOE's registered floor is the Databento VX-futures genesis (2020-06-01, table below), so CBOE
+`ohlcv_24h` dates before that were honest-absence-skipped even though the real Yahoo Treasury series has genuine
+history back to 2000-01-03 (4 of 5 tenors) / 2018-08-13 (US2Y). Shipped `UAC@a65c2fa9` (`_data_type_floor_overrides`
+field on `VenueMapping`) + `MTDS@fe000178` (`data_type` param threaded onto `is_venue_available()`), so a CBOE
+`ohlcv_24h` request now resolves against the Yahoo-specific floor instead of the Databento genesis. **The code fix
+shipping does not mean the backfill is done** — relaunching the CBOE Treasury-INDEX backfill for the newly-unblocked
+window (`launch-tradfi-bf-cboe-indices-ohlcv-24h.sh --start-floor 2018-01-01`, capped at 2018 rather than the real
+2000-01-03 floor per operator decision 2026-08-10) is still open, tracked in
+`/plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` todo 2. Full history:
 `/plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`.
 
 ### Per-venue genesis / discovery-start floors — never backfill below them (expected-absent)
@@ -332,6 +338,25 @@ the fix):
     > permanent entitlement breach → dataset-isolated (filtered from the universe, not a per-cell failure).
 
 The DEFINITION-schema symbology path (`databento_symbology.py`) is L0/free and unaffected.
+
+### Exchange-code → human-name mapping (`tradfi_symbology.py::EXCHANGE_CODE_TO_NAME`)
+
+`unified_api_contracts/registry/tradfi_symbology.py` is the SSOT module for Databento parent/options symbol
+validation, exchange-code mappings, and TradFi venue instrument definitions — "previously scattered across
+instruments-service config files, centralized here as the system SSOT per UAC registry pattern" (module docstring).
+Its `EXCHANGE_CODE_TO_NAME: dict[str, str]` (root ticker code → human-readable product name, e.g. `"ES": "SP500"`,
+`"CL": "CRUDE"`, `"6A": "AUD"`, 33 entries) is the one re-exported through `unified_api_contracts.registry`
+(`from unified_api_contracts.registry import EXCHANGE_CODE_TO_NAME`) and is the live, fleet-consumed SSOT —
+canonicalization/migration scripts, chain-bundle rewrite tooling, `_tradfi_manifest_shard.py`, and `reader.py` all
+resolve root→human-name through it.
+
+**A second, same-named module-level `EXCHANGE_CODE_TO_NAME` dict lives in
+`unified_api_contracts/registry/tradfi_instrument_universe.py`** (added 2026-08-07, extends the naming convention to
+MICRO-contract codes, e.g. `"M6A": "MICRO-AUD"`). It is **not** re-exported through `registry/__init__.py` — that
+file's `tradfi_instrument_universe` import block does not include it — and has zero confirmed consumers, including
+within its own module (checked: not imported elsewhere, and not referenced past its own definition). Grepping the
+bare name `EXCHANGE_CODE_TO_NAME` will surface both files; `tradfi_symbology.py`'s is the one that's actually part of
+the public UAC registry surface.
 
 ## PAYG re-frame — cost emission is credit-burn telemetry, not a hard block
 
