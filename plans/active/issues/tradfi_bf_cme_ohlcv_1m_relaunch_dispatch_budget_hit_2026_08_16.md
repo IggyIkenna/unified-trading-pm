@@ -157,3 +157,26 @@ a repeat of the `cefi-aster-` pollution issue.
   is absent from the family's current 36-instance relaunch wave (all other g02-6m-cl years present). Per
   RB-INFRA-RELAUNCH, did not relaunch. Filed this issue doc and paged the operator via `/blocked`. No code changed
   this session.
+- 2026-08-17 (slot 1, data_pipeline_failure escalation agt-127f28): Received escalation for DP-VM-008
+  `tradfi-bf-cme-ohlcv-1m-g07-xau-zc-2023-20260817-011717` preempted, `tradfi-bf-cme-ohlcv-1m-` family again at 2/2
+  relaunch dispatches today (a fresh day's counter — not a continuation of the 2026-08-16 count above). This is the
+  family's 4th same-mechanism relaunch-block in 3 calendar days (2026-08-15 ×1 DP-VM-001, -16 ×3 across DP-VM-001
+  and this doc, -17 ×1 here). Checked `plans/active/issues/` for an existing open issue doc — this one, still open
+  with both operator todos below unresolved — appending here rather than filing a near-duplicate. UNLIKE the
+  2026-08-16 `g02-6m-cl-2024` occurrence above: `gcloud compute instances list` confirmed the exact preempted VM
+  gone AND found a fresh RUNNING replacement `tradfi-bf-cme-ohlcv-1m-g07-xau-zc-2023-20260817-021631` (~59 min
+  later, same zone `asia-northeast1-a`) — confirmed via `read_launch_params()`/`read_progress_checkpoint()` (UTL
+  GCS read via `unified_trading_library.get_storage_client()`, never subprocess) that its `LAUNCH_PARAMS.json` is
+  byte-identical to the preempted VM's (`VENUE=CME`, `START_DATE=2023-01-01`, `END_DATE=2023-12-31`, same 12-symbol
+  XAU/XAV/XAY/YM/ZB/ZC FUT+OPT instrument list, `VM_FORCE=false`) — a genuine same-shard replacement per the
+  runbook's "check for an already-running replacement" guidance, not coincidence; no other live instance carries
+  the `g07-xau-zc-2023` shard token, so no duplicate-launch risk either (unlike the `cefi-aster-` sibling's
+  pollution case). Neither VM has a `PROGRESS.json` checkpoint yet (both too early in their run to have written
+  one). **This specific shard needs no operator action** — some mechanism independent of the escalation-dispatch
+  path (most likely the family's own periodic/batch relaunch wave, the same shape as the 36-instance single-wave
+  launch the 2026-08-16 entry observed) already re-covered it before this escalation was even read. New evidence
+  for the still-open P2 decision below: the "un-relaunched shard" cost option A accepts may be smaller in practice
+  than assumed, since gaps the escalation-dispatch budget leaves appear to get independently re-covered at least
+  some of the time — worth the operator weighing alongside the pending A/B call. Per RB-INFRA-RELAUNCH, did not
+  relaunch (moot — a matching replacement was already running). Paged the operator via `/blocked` with this update
+  (FYI + recurrence-pattern flag, no new decision blocking). No code changed this session.
