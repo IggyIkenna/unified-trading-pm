@@ -125,6 +125,34 @@ gone quiet or the streak has reset." Run live from an interactive session with A
 
 ## Todos
 
+- [ ] [OPERATOR] P1. **NEW 2026-08-17 (cicd escalation agt-f2579b) — persistent `ERR_LDR` tree-read failure for
+      `market-tick-data-service` specifically, distinct from the moving-tree race, cascading to 9 other repos'
+      promotions.** `ldr_to_main_fleet_promote.sh:638` (`gh api repos/$OWNER/$REPO/commits/live-defi-rollout`) has
+      returned empty (`LDR_TREE` degrading to the `ERR_LDR` sentinel, line 641) for market-tick-data-service on every
+      tick from ~13:32Z through at least 14:09Z (3+ consecutive ticks, 40+ min) while succeeding for all other ~22
+      SIT-covered repos in the SAME runs — repo-specific, not a global rate-limit/outage. Line 1029's "retry next
+      tick" is the intentional fail-closed design (safe — no incorrect promotion, no data loss), but this has now
+      outlasted a normal transient-rate-limit window. Cannot root-cause further from this session: my own `gh` token
+      also 403s on this exact endpoint for OTHER (working) repos too (`Resource not accessible by personal access
+      token`), so it can't be used to probe whether `GH_PAT_FOR_ARM` (`secrets.GH_PAT`, a fine-grained PAT) has lost
+      per-repo `Contents:read` access specifically for market-tick-data-service — that requires GitHub
+      Settings→Developer settings→fine-grained token repo-access-list inspection, outside this session's tool access.
+      **Concrete symptom to check first**: does `GH_PAT`'s configured repository list still include
+      market-tick-data-service (compare against a working repo like unified-api-contracts)? If the PAT list is
+      correct, check GitHub's secondary-rate-limit status for that token around 13:32Z. Cascading impact while open:
+      the promoter's dep-order/Tier-A gate blocks any repo depending on market-tick-data-service from promoting too —
+      measured 2026-08-17T14:09Z: `deployment-api`, `deployment-service`, `execution-service`, `features-service`,
+      `market-data-processing-service`, `strategy-service`, `trading-agent-service`, `unified-api-contracts`,
+      `unified-trading-library` all accumulated 3-4 straight SIT-gate-blocked ticks purely from this cascade, not
+      independent breaks. No orphaned promote PR for market-tick-data-service throughout (`gh pr list --search
+      "chore(promote)"` empty). Separately, and NOT the same finding: this occurrence's ORIGINAL trigger (streak
+      4→8+ before this was found) WAS a real regression — `test_mtds_venue_coverage_cascade_invariant.py`'s
+      `PHOENIX-SOLANA` ratchet-baseline staleness — already fixed inline by a concurrent, unrelated session
+      (`unified-api-contracts@724e2d11`, 13:45:45Z); at least 2 subsequent SIT rounds re-failed on it anyway purely
+      because their UAC checkout happened seconds-to-minutes before that fix landed (one run's checkout preceded the
+      fix by only 34s) — not a masked second bug, just unlucky timing against the documented race. **Do not close this
+      todo on the PHOENIX-SOLANA fix alone** — the ERR_LDR finding is the reason the gate is STILL blocked as of
+      14:09Z+ even with the real regression already fixed.
 - [x] [DEVOPS] P2. **`promotion_lag_monitor.py` reported every BLOCKED promote PR as "cause unknown".** ✅ Root cause:
       `_open_promote_pr()` read the PR **list** endpoint, which GitHub does not populate with `mergeable`/
       `mergeable_state` (only `GET /pulls/{number}` does — mergeability is computed on demand). `_promote_pr_cause`'s
@@ -290,3 +318,35 @@ escalation covers, not investigated here as it's outside `sit_gate_stuck` scope)
 cleanup) are unchanged/still open — this occurrence did not exercise either (no PR ever went stale). This is the 5th
 consecutive occurrence of this exact wall type all resolving to "self-converges, no code fix" — the pattern is now
 well-established across 5 different repos (deployment-api, execution-service, market-tick-data-service ×2, this one).
+
+**cicd escalation agt-f2579b, 2026-08-17 ~13:00Z (6th occurrence, market-tick-data-service, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32028104167`): BREAKS the "self-converges, no code fix"
+pattern — two DISTINCT real findings, one already fixed by another session, one still open and NOT fixable from this
+session.** Streak climbed unusually (4→8+, 5th occurrence's median was ~15-25 min to converge; this one ran 40+ min
+without converging) so live-diagnosed via `gh run view --log-failed` on the actual `full-workspace-sit` runs instead of
+assuming the moving-tree race. **Finding 1 (the original trigger, now fixed)**: run `32034285923` (13:17:20Z→13:30:09Z)
+genuinely FAILED (not cancelled) on
+`test_mtds_venue_coverage_cascade_invariant.py::test_mtds_batch_venues_have_live_coverage_no_new_regressions` —
+`PHOENIX-SOLANA` gained a live connector but was still listed in the ratchet baseline
+(`unified-api-contracts/tests/data/mtds_batch_live_coverage_baseline.json`), which only ratchets down. Root-caused via
+`git log`/`git show` on the baseline file; found it was ALREADY fixed, concurrently, by an unrelated session
+(`unified-api-contracts@724e2d11`, 13:45:45Z, "register Unity's 10 child books..." — fixed this inline per the
+findings-triage rule as a small unrelated cleanup). Two subsequent SIT rounds (`32035579457`,
+`32036536815`'s early portion) still failed on the SAME already-fixed assertion purely because their UAC checkout
+predated 13:45:45Z by seconds-to-minutes (one by only 34s) — confirms the doc's own "SIT validates whatever LDR is now"
+framing, not a masked second bug. **Finding 2 (NEW, still open, filed as todo 1 above)**: independent of the above,
+`market-tick-data-service`'s own `LDR_COMMIT_JSON` read in `ldr_to_main_fleet_promote.sh` has returned `ERR_LDR`
+(empty/failed `gh api commits/live-defi-rollout`) on every tick from ~13:32Z through 14:09Z+ (checked directly via
+`gh run view --log`, not inferred), while the SAME calls succeed for all ~22 other SIT-covered repos in the identical
+runs. This — not the moving-tree race — is why the gate stayed BLOCKED for market-tick-data-service even after
+Finding 1's fix landed and a SIT round (`32036536815`) actually SUCCEEDED against the fixed tree: the promoter can
+never register that success because it can't read a real LDR tree to compare against. Cascaded via the dep-order/Tier-A
+gate to block 9 dependent repos (deployment-api, deployment-service, execution-service, features-service,
+market-data-processing-service, strategy-service, trading-agent-service, unified-api-contracts,
+unified-trading-library) — all independently confirmed innocent (their own SIT/CI is fine; they're purely waiting on
+market-tick-data-service's dep-order gate). Could not root-cause further: my own interactive `gh` token 403s on
+`commits/{ref}` for EVERY repo tested including ones the workflow's own `GH_PAT_FOR_ARM` succeeds on, so it's useless
+for isolating whether that PAT specifically lost repo-scoped access to market-tick-data-service — that diagnosis needs
+GitHub's fine-grained-PAT settings UI, outside this session's tool access. No orphaned promote PR existed throughout.
+Exiting with the wall still technically open (detector shows 10 repos stuck) but with both real root causes identified
+and documented — the remaining blocker is genuinely operator-scoped, not a code fix I'm withholding.
