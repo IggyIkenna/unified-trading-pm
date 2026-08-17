@@ -96,3 +96,4 @@ data would resolve.
   findings record + a single future-dated revisit todo, explicitly gated "no earlier than ~2026-09-15" and
   requiring a stabilization judgment call on a still-growing cost baseline. Added this Progress Log section (doc
   had none) so future incremental runs can skip it via the dated marker.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (1 entry).

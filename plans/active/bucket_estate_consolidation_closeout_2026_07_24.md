@@ -56,10 +56,8 @@ source:
 last_updated: 2026-07-25
 context_scope:
   [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     batch-live-reconciliation-service/batch_live_reconciliation_service/config.py,
-    /plans/active/bucket_fold_ml_2026_07_17.md,
   ]
 ---
 
@@ -440,3 +438,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   `/plans/active/bucket_fold_ml_2026_07_17.md`, the confirmed actual execution record for the ml legacy variants delete
   per the 2026-08-12 note above.
 - **na-eligibility-audit 2026-08-17** [body-hash:7303f1e987fef5b3]: KEEP-NA, stale-item corrected -- closed the 'ml legacy variants' P1 todo: the underlying prod-bucket delete already executed via the sibling bucket_fold_ml_2026_07_17.md plan ([x] DONE 2026-08-08, operator-authorized), independently live-verified 2026-08-17 the flat ml-models-store bucket no longer exists -- this is the formal reconciliation the doc's own 2026-08-12 note explicitly left for a future pass, not a new delete action (none performed this session). Doc stays assigned_vm: NA for its 1 remaining item (the recon-bucket E2E producer-chain, explicitly out-of-scope multi-repo feature work). Cross-cutting tranche audit.
+- **context-scout 2026-08-17**: trimmed context_scope to 2 entries (from 4) — dropped `gcs-and-manifest-delete-safety-protocol.md`
+  and `bucket_fold_ml_2026_07_17.md` now that today's na-eligibility-audit closed the ml-legacy-variants todo (that
+  citation's purpose resolved); the sole remaining open item (recon-bucket E2E chain) is provision/wiring work, not a
+  delete, so the recon issue doc + BLRS config.py resolver are the accurate minimal set.

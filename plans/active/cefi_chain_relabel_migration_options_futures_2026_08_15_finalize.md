@@ -91,3 +91,4 @@ drift_direction: advance-code
 - **2026-08-17 (slot 1, data_engineering)**: drafted this finalize plan alongside dispatching the parent plan, per
   the mandatory finalize-plan hard rule (`task_template.md` § 4). No parent-plan phases have landed yet — this plan
   is gated and will not dispatch until they do.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

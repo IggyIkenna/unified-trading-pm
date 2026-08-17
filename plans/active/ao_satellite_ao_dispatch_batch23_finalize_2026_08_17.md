@@ -91,3 +91,4 @@ source: >-
 - **2026-08-17 (na_eligibility_auditor, dispatch agt-8a918a, later same day)**: Updated todo 1/2 to cover batch23's
   new 6th todo (`orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`) — see batch23's own Progress Log
   for the conflict-check evidence.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

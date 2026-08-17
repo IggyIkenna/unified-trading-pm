@@ -48,7 +48,9 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/issues/dp_fetch_009_cefi_depth_of_book_10_corrective_migration_overreach_2026_08_16.md,
+    market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py,
+    /plans/active/issues/dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 source: >-
@@ -126,3 +128,12 @@ source: >-
   `generate_na_doc_tranche_inventory.py`, fixed at the root this same run
   (`na_eligibility_same_date_marker_tiebreak_keeps_first_not_last_2026_08_17.md`). Source doc's own checkbox
   flipped to cite this item.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) — swapped the generic
+  na-eligibility-audit SKILL.md pointer for the sole remaining open todo's actual Source doc + its named target
+  script, matching this doc's now-narrowed remaining scope (item 1 closed this session). Fingerprint match: item 1's
+  cited sha `alerting-service@cd60a3e595` and revision `dp-alerting-subscriber-00103-zhw`/build
+  `821c691f-8da4-426e-b7b1-9d0614097064` also appear in
+  `plans/active/issues/dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md` (open, filed same day),
+  which documents the SAME DP_CRON_DID_NOT_FIRE storm recurring hours after this batch's item-1 verification —
+  added as a 3rd entry so a future reader of this batch sees the current (still-open) state of that residual, not
+  just the stale "deploy chain is clean" snapshot in this doc's own Progress Log.

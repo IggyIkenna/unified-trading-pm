@@ -56,7 +56,7 @@ depends_on:
 source: operator request 2026-07-17 (interactive, tab-2)
 assigned_role: infra
 drift_direction: advance-code
-context_scope: [/codex/05-infrastructure/dual-cloud-image-builds.md, /codex/05-infrastructure/vm-tarball-deployment.md, /codex/06-coding-standards/ui-testing-layers.md]
+context_scope: [/codex/05-infrastructure/dual-cloud-image-builds.md, /codex/05-infrastructure/vm-tarball-deployment.md, /codex/06-coding-standards/ui-testing-layers.md, deployment-api/deployment_api/services/artifact_pipeline, deployment-ui/src/pages/ArtifactPipeline.tsx]
 ---
 
 # Artifact pipeline observability — build → artifact → deploy lineage
