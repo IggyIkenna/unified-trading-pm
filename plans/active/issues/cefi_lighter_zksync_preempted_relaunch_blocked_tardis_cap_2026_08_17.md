@@ -157,3 +157,14 @@ state at current preemption volume?).
   count returns 0") is not met, so per the same reasoning as the filing worker, declined to `FORCE=1`. Skipping this
   task with `reason_code=GATED` rather than holding a session open across a multi-day-scale wait — the next
   dispatch should re-check the cap live (do not trust this snapshot) before relaunching per option A.
+
+- 2026-08-17T09:25Z — [INFRA] P2 todo dispatched to infra worker (slot 13, same session that just declined the
+  sibling `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` 10th-relaunch todo ~2min earlier for the
+  identical root cause). Re-verified live: `tardis_running_vm_count asia-northeast1-c central-element-323112`
+  (sourced fresh) still returns `1` — `cefi-binance-futures-2026-heavy-20260817-010713` still `RUNNING`/SPOT, ~9h13m
+  uptime since its `2026-08-17T00:11:46 UTC` launch. `gcloud compute instances list --filter="name~'^cefi-lighter-
+  zksync'"` confirms still empty — no live replacement. Gate ("count returns 0") remains unmet. Declining to
+  `FORCE=1` for the same reason as both prior entries. Skipping via `reason_code=GATED` — the next dispatch (for
+  either this todo or the sibling `cefi_track2` 10th-relaunch todo) should re-check the cap live; both todos share
+  the exact same blocking condition and will likely clear together once
+  `cefi-binance-futures-2026-heavy-20260817-010713` finishes or is preempted.
