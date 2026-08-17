@@ -9,7 +9,7 @@ summary: >-
   commit gate blocks all execution-service shipping until this is fixed. Found 2026-08-17 while
   shipping kraken_futures_wrong_rest_base_url_2026_08_17.md's P0 (unrelated Kraken Futures
   transport work) — QG failed with this single test as the only failure.
-status: resolved
+status: archived
 nature: issue
 asset_group: [defi]
 stage: [execution]
@@ -18,7 +18,6 @@ scope: [engineer]
 tags: [ci, quality-gates, test-failure, blocking, defi, gcs-paths, pipeline-mode]
 related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-17
-resolved: 2026-08-17
 author: interactive-session
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -46,6 +45,10 @@ context_scope:
     execution-service/execution_service/providers/solana_amm_depth_provider.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-17** — fixed and shipped, `execution-service@1554abdf19`. The pipeline_mode resolver was
+> correct (an intentional 2026-07-28 ruling); the test's literal was stale. See the flipped todo below for the
+> full diagnosis.
 
 # `test_canonical_prefix_literal_shape` fails on a clean tree — blocks execution-service QG fleet-wide
 
