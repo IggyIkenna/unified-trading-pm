@@ -37,10 +37,8 @@ drift_direction: advance-code
 context_scope:
   [
     e2e-testing/scripts/sports/live_arb_scanner.py,
-    strategy-service/strategy_service/adapters/sports/arbitrage_detector.py,
-    strategy-service/strategy_service/position/core/sports_arb_engine.py,
     strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py,
-    strategy-service/strategy_service/adapters/sports_feature_subscriber.py,
+    strategy-service/strategy_service/adapters/sports/arbitrage_detector.py,
     execution-service/execution_service/sports_execution/adapters/,
     unified-api-contracts/unified_api_contracts/internal/unity_child_books.py,
     /codex/02-venues/unity-integration.md,
@@ -325,3 +323,7 @@ concurrent session's index/working-tree state, so this write bypasses that check
   same-day markers left `best` pinned on the FIRST one's stored hash instead of the correct later one — fixed this
   run (`generate_na_doc_tranche_inventory.py`, `>` → `>=`, regression test added reproducing this exact doc's
   symptom). Should be the last redundant same-day marker here.
+- **context-scout 2026-08-17**: trimmed context_scope from 8 to 6 entries — dropped `sports_arb_engine.py` (this doc's
+  own 2026-08-14 delta table confirms it's post-fill P&L bookkeeping, not part of the detection migration despite being
+  named in "What already exists") and `sports_feature_subscriber.py` (secondary to the retire-or-keep decision, which
+  `arbitrage_detector.py` already anchors); all 6 remaining entries verified to resolve.

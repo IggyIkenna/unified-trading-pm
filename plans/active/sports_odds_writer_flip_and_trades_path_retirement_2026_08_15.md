@@ -46,16 +46,12 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
-    market-tick-data-service/market_tick_data_service/engine/sports_catalog_reader.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_table.py,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_sports_manifest_v9.py,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
-    unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py,
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     market-tick-data-service/scripts/sports/restamp_sports_trades_to_odds_2026_08_12.py,
-    market-tick-data-service/scripts/sports/manifest_swap_trades_to_odds_2026_08_12.py,
-    market-tick-data-service/scripts/sports/census_sports_trades_to_odds_scope_2026_08_12.py,
   ]
 ---
 
@@ -572,3 +568,10 @@ reader" pattern this workspace's findings-triage rule flags): a fresh session gr
 handled. A separate, unrelated `consumer-qg-check` CI failure seen the same day (`31958119386`, 16:16:19Z) is NOT
 this bug -- it's a cross-repo candidate-UAC checkout hitting a stale/nonexistent ref (`repository not found`), pure
 CI infra noise, out of scope here.
+
+- **context-scout 2026-08-17**: trimmed context_scope from 10 to 6 entries and fixed a dead path —
+  `_source_priority_data.py` no longer exists (this doc's own 2026-08-15 text confirms it was split into
+  `_source_priority_table.py`, confirmed on disk); swapped in the correct post-split path. Re-prioritized toward the
+  doc's now-remaining open work (Phase 2/3 — GCS delete safety protocol, the P2-migration predecessor plan, the writer,
+  the registration site, the manifest backward-compat reader, the restamp script) over Phase 0/1's already-shipped
+  consumer-sweep files.

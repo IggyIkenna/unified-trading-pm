@@ -129,3 +129,4 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `check_line_caps.sh`, the script todo 1
   directs the worker to actually run against the parent doc.
+- **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries, all resolve).

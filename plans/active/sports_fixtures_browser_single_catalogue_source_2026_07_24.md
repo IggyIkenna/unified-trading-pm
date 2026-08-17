@@ -47,6 +47,7 @@ source: >-
 context_scope:
   [
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     deployment-api/deployment_api/services/fixtures_browser.py,
     instruments-service/scripts/build_instrument_catalogue.py,
     /codex/02-data/sports-2020-06-data-floor.md,
@@ -144,3 +145,5 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   OPERATOR RULING 2026-08-08 ("accept and LABEL the staleness, do NOT build a live-day overlay") resolved by
   sports_taxonomy_p3_consumers_2026_08_08.md (verified status:active). Also survived a 2026-08-13 ag-closeout-audit
   "archivable_now" false-flag, independently overturned in this doc's own Progress Log.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries) — added `sports_taxonomy_p3_consumers_2026_08_08.md`,
+  the confirmed implementer of the sole remaining open item per the dated operator ruling banner.
