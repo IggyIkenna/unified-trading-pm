@@ -13,6 +13,16 @@ summary: |
   ~900s per VM when hit — fixed via `deployment-service@d1cb5f0809`, live-verify in progress (see Todo 5). "on every
   execution" is no longer literally true post-2026-08-15 (see the 2026-08-17 Progress Log for the real distribution)
   but the underlying promise ("the sweep completes reliably") remained broken until this fix.
+  uts-prod-dp-exit-code-monitor was killed by the Cloud Run 1800s task timeout on every execution measured at filing
+  (2026-08-14), spending the whole budget on per-VM run.log downloads that each blew the 30s bounded-call. That GCS/OOM
+  bottleneck was fixed 2026-08-14/15 (see Todo 1). A SEPARATE, previously-undiagnosed bottleneck survived that fix:
+  `_compute_ops.py`'s `preemption_op_checker`/`scheduling_model_checker` called the Compute Engine API directly with NO
+  bounded-call timeout (unlike every GCS read in this module family), stalling ~900s per VM when hit — measured live
+  2026-08-17 at a 2/20 (10%) intermittent failure rate. **RESOLVED 2026-08-17**: fixed via
+  `deployment-service@d1cb5f0809`, live-verified with 5 consecutive clean post-deploy executions (44-71s each, zero
+  stall warnings) — see Todo 5 for full evidence and honest caveats. "on every execution" was never literally true
+  post-2026-08-15 (see the 2026-08-17 Progress Log for the real distribution) but the underlying promise ("the sweep
+  completes reliably") was broken until this fix.
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -48,6 +58,7 @@ superseded_by:
 depends_on:
 locked_by:
 locked_since:
+archive_exempt: true
 source: Live confirmation pass on revocation_arming_2026_08_14's OPERATOR P0 todo, 2026-08-14
 ---
 
@@ -224,6 +235,52 @@ that plan.
       bugs in the same classify loop — see the sibling doc
       (`dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`, this job's fix-chain SSOT) for the
       full evidence trail. Repo: deployment-service.
+- [x] [INFRA] P1. ✅ **ADDED 2026-08-17 (measurement-claims-discipline check on this doc's own "resolved" claim)** — did
+      NOT trust Todo 1's 2026-08-15 resolution at face value; pulled `gcloud run jobs executions list` for the 20
+      consecutive hourly `uts-prod-dp-exit-code-monitor` executions covering 2026-08-16T23:00Z→2026-08-17T18:00Z. Result:
+      18/20 completed in 1-30 min (highly variable but bounded); **2/20 (`r2tsj` 08:00Z, `7tbv2` 00:00Z) still hit the
+      full 1800s task timeout and failed** — so this doc's title/original summary ("on every execution") is now STALE
+      but the underlying defect (the sweep is not reliably bounded) was NOT fully closed by the 2026-08-14/15 GCS/OOM
+      work. Root-caused via `gcloud logging read` on both failed executions: the classify loop logs one `verdict=`
+      line, then goes SILENT for ~900s (907s in `r2tsj`, 905s in `7tbv2`) with ZERO `download_bytes`/GCS bounded-call
+      warnings anywhere near the gap — ruling out every previously-fixed GCS/run.log mechanism on this doc and its
+      sibling `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. The VM printed immediately after EVERY gap in
+      both executions was a `verdict=preempted`. Reading `exit_code_fleet_monitor.sweep()`'s classify loop end-to-end:
+      `scheduling_model_checker` (`_compute_ops.make_scheduling_model_checker`) is called UNCONDITIONALLY on every
+      candidate-preempted verdict (line ~703), and `preemption_op_checker` on every GONE_NO_CAPTURE candidate — both
+      call the raw Compute Engine API (`was_instance_preempted` / `aggregated_list_instances`) with **NO bounded-call
+      timeout**, unlike every GCS read in this module (`_gcs._call_with_timeout`). `cli.py._list_running_vms` already
+      documents this EXACT failure class for the whole-fleet census — "a synchronous blocking paginated gRPC stream
+      with no built-in timeout... stalls the entire Cloud Run Job" — and bounds it there (`ThreadPoolExecutor` +
+      `future.result(timeout=_LIST_VMS_TIMEOUT_SECS)`), but the two PER-VM call sites in `_compute_ops.py` never got
+      the same treatment. **Fix**: wrapped both calls in the existing `_gcs.call_with_timeout` daemon-thread bound
+      (30s default, now a `timeout_seconds` kwarg on both factory functions) — a stalled call now fails fast (returns
+      `False`/`None`, the existing documented fail-safe) instead of blocking the sequential loop for ~900s.
+      `deployment-service@d1cb5f0809`, QG green (392s, full gate), 2 new regression tests
+      (`test_make_preemption_op_checker_returns_false_promptly_on_a_stalled_call`,
+      `test_make_scheduling_model_checker_returns_none_promptly_on_a_stalled_call`) prove both checkers return in
+      under 5s against a deliberately-hung fake client (mirrors the existing `test_is_vm_preempted_returns_false_
+      promptly_on_stall` pattern this module already uses for every other bounded-call site). **This is a resource
+      bump alone would NOT have fixed** — no amount of CPU/memory/timeout addresses an unbounded blocking call; this
+      is the genuine root-cause fix the operator's brief asked for, not a stopgap. **Live-verify COMPLETE, 2026-08-17
+      20:36Z** — the fix reached `origin/main` at `19:13:50Z` (commit `d0b02e74`, content-verified: `git show
+      origin/main:.../_compute_ops.py | grep call_with_timeout` → 5 hits) after being briefly blocked by an UNRELATED
+      transient GitHub API 503 outage on the fleet-shared `sit-gate/fleet-green` check (the actual cross-repo
+      invariant suite passed; only a SIT_VALIDATED-stamp dispatch step hit `gh: No server is currently available`,
+      self-recovered on the next SIT run — not a defect in this fix). `deployment-api:latest`'s digest advanced past
+      the pre-fix baseline (`sha256:6de48093...` → `sha256:077b8fd5...`, confirmed via `gcloud artifacts docker images
+      describe`, not a Docker daemon on this host — none was running, so direct in-container content-inspection
+      wasn't available; digest-advance past the known pre-fix baseline was the best available signal instead).
+      **5 consecutive post-deploy executions, ALL clean, ZERO failures, ZERO stall/timeout warnings** (verified
+      directly via `gcloud run jobs executions list`, not just the watchdog's own log — the watchdog itself missed 2
+      of these 5 due to its own `--limit=1`-per-poll blind spot, caught and cross-checked manually): `vt8zl`
+      (20:00:02Z, 71s), `fk9sp` (20:08:39Z, 50s), `cbwcq` (20:32:37Z, 54s), `pstvf` (20:33:59Z, 44s), `zbcs6`
+      (20:35:09Z, 52s) — all 44-71s, versus the pre-fix baseline's bimodal 1-30min-or-1800s-timeout pattern. Honest
+      caveat: against the pre-fix ~10% (2/20) intermittent failure rate, 5/5 clean has a non-trivial (~59%) chance of
+      occurring by luck alone if the underlying bug somehow still existed at the same rate — this is strong,
+      mechanistically-grounded evidence (the exact previously-observed ~900s silent-gap signature is absent, and the
+      fix directly closes the specific unbounded call class that produced it), not an absolute statistical proof.
+      Continued casual observation of future hourly executions is worthwhile but not blocking further work.
 
 ## Progress Log
 
@@ -283,6 +340,39 @@ in `_compute_ops.py`, called per-VM inside the sequential classify loop. Fixed v
 already used throughout this module (`deployment-service@d1cb5f0809`). See Todo 5 above for full evidence. Live-verify
 of post-deploy executions is running in the background (watchdog log path in Todo 5) — this doc stays `status: open`
 until that confirms clean executions across the deploy.
+
+### 2026-08-17 — residual root-cause found + fixed (unbounded Compute Engine API calls)
+
+Picked up this task from the operator with an explicit instruction NOT to trust the 2026-08-15 "resolved" claim without
+fresh measurement (measurement-claims-discipline). Verified via `gcloud run jobs executions list` (20 consecutive hourly
+executions) that the sweep is genuinely much better than at filing (18/20 clean, vs. 100% failure at 2026-08-14) but
+NOT fully fixed (2/20 still hit the full 1800s cap). Diagnosed a THIRD class of bottleneck this doc's and the sibling
+overlap-storm doc's extensive 2026-08-14/15 GCS/OOM fix history never touched: two unbounded Compute Engine API calls
+in `_compute_ops.py`, called per-VM inside the sequential classify loop. Fixed via the same bounded-call pattern
+already used throughout this module (`deployment-service@d1cb5f0809`). See Todo 5 above for full evidence.
+
+**Live-verify closed out the same session, 2026-08-17 20:36Z-21:00Z.** The operator (coordinator) explicitly pushed back
+twice mid-session on premature "waiting on it" claims when the background watchdog had not actually produced results
+yet — both times correct: once when a heartbeat notification fired before the watchdog had left Phase 1, and once when
+the watchdog's own SHA-ancestor / timestamp-based deploy-detection logic turned out to be genuinely buggy (Option-B
+direct-promote rewrites commit SHAs so `merge-base --is-ancestor` false-negatives; separately, this host's Artifact
+Registry CLI output appears to render `CREATE_TIME` in local time, not UTC, which produced one false-positive "deployed"
+verdict that let Phase 3 briefly count a PRE-fix execution as clean). Both bugs were caught, fixed (content-based main
+check; digest-comparison deploy check; an in-flight-execution guard to stop a running-not-yet-complete execution from
+being miscounted), and the watchdog re-run cleanly from a fresh baseline. Final ground truth (cross-checked directly via
+`gcloud run jobs executions list`, not solely the watchdog's own log — the watchdog itself missed 2 of the 5 executions
+below due to its own `--limit=1`-per-poll design, since multiple executions landed between 5-minute polls): **5/5
+consecutive post-deploy executions clean, 0 failures, 0 stall/timeout warnings** (`vt8zl` 71s, `fk9sp` 50s, `cbwcq` 54s,
+`pstvf` 44s, `zbcs6` 52s — all 2026-08-17 20:00Z-20:36Z). Also found, while chasing why promotion to `main` was slow, an
+UNRELATED transient GitHub API 503 outage that briefly blocked the fleet-shared `sit-gate/fleet-green` promotion gate
+for ALL repos (not specific to this fix) — self-recovered on the next SIT run, not escalated further per this
+workspace's own CI-flake auto-recovery guidance.
+
+Marking `archive_exempt: true` rather than archiving outright: this doc is (like its sibling
+`dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`) still likely cited as a source doc by other active
+plans/dispatch-batches in this corpus, and a referrer sweep to safely archive it was out of scope for this session — a
+future `/archive-candidates-audit` pass can do that properly. All 5 todos are now `[x]` done; nothing further is open on
+this doc.
 
 ### 2026-08-14 — checkpoint (context compaction)
 
