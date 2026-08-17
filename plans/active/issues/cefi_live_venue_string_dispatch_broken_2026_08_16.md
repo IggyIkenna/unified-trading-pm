@@ -216,9 +216,34 @@ and is worth surfacing to that doc's owner. No other plan or issue doc tracks th
       call on an unnormalized bare-token match). The remaining ~17 raw hits were NOT individually read; this is
       an honest partial coverage, not a claim of exhaustive fleet coverage — a full sweep is exactly the scope of
       the P2 todo below, which remains open for that reason.
-- [ ] [BACKEND] P2. **Audit whether this same disease exists for non-CEFI major venues** (the other 4 asset
+- [x] ✅ [BACKEND] P2. **Audit whether this same disease exists for non-CEFI major venues** (the other 4 asset
       groups' own venue-e2e batches) — done-when: a cited answer, yes or no per asset group, filed as its own
-      follow-up if any hit.
+      follow-up if any hit. **Done — `unified-trading-pm@<this commit>`.** Per-AG cited answer:
+      - **defi — NO.** `strategy_service/position/position_interface/factory.py::get_position_adapter` already
+        applies `venue.lower().replace("-", "_")` normalization to every venue family, not just cefi
+        (`factory.py:441`), and DeFi's own dash-form canonical venue tokens (`AAVE-V3`, `UNISWAP-V3`, etc.) match
+        their case arms cleanly — no CEFI-style stale-dispatch-table bug. `defi_venue_e2e_batch1_2026_08_16.md`'s
+        own steps 6-8 sweep (2026-08-16/17) already found 0/45 rows fully wired, but for architecturally
+        different reasons: missing protocol adapters (9 lending protocols), missing archetype declarations,
+        missing exit-side execution actions (WITHDRAW/REPAY/UNSTAKE), and a confirmed-by-design (not-a-bug)
+        chain-is-not-part-of-venue-identity decision — none share cefi's "real adapter, stale vocabulary" shape.
+      - **tradfi — NO (already found + fixed).** The identical disease WAS present for TradFi's IBKR routing
+        (`cme`/`cboe`/`nasdaq`/`nyse`/`ice`/`fx` had no position-factory match arm at all) and was independently
+        found + fixed 2026-08-17 via `tradfi_venue_e2e_batch1_2026_08_16.md`'s own P1 (now archived, done) —
+        see `factory.py`'s `_get_other_adapter` docstring citing that fix directly. Execution-side `TRADFI_VENUES`
+        (`execution-service/execution_service/trade_execution/factory.py`) has no dash-suffix variant forms
+        needing a base+suffix split, so no residual risk there either.
+      - **sports — YES, genuine hit, filed.** `_get_other_adapter`'s bare `"betfair"` case never matches sports's
+        real canonical venue spellings (`BETFAIR_EX_UK`/`BETFAIR_SB_UK`/`BETFAIR_EX_EU`) despite a real, working
+        `BetfairPositionAdapter` existing — same "real adapter, stale dispatch vocabulary" shape as this issue's
+        original cefi finding. Already independently observed by `sports_venue_e2e_batch1_2026_08_16.md`'s own
+        step-9 finding but never filed as its own fix todo until now — added as a new P1 gap todo there
+        2026-08-17.
+      - **prediction — YES, related hit, filed.** KALSHI (one of prediction's only 2 declared canonical venues)
+        has ZERO position-read adapter anywhere in strategy-service — no file, no import, no case arm — despite
+        having a real, wired LIVE order-execution path via `sports_factory.py`. Distinct root cause from cefi's
+        (a feature never built, not a stale dispatch table) but the same class of live-trading-readiness gap;
+        added as a new P1 gap todo to `prediction_venue_e2e_batch1_2026_08_16.md` 2026-08-17.
 - [ ] [BACKEND] P3. **`strategy_service/position/position_interface/routing.py::_map_venue_to_ccxt`** (lines
       174-189) has the identical disease shape the P1 fix eliminated elsewhere: a hand-written
       `dict[str, str]` mapping bare lowercase tokens (`"binance"`, `"bybit"`, `"okx"`, `"kucoin"`, `"bitget"`,
@@ -240,6 +265,18 @@ and is worth surfacing to that doc's owner. No other plan or issue doc tracks th
 
 ## Progress Log
 
+- **2026-08-17 (latest)**: Picked up as backlog task `cefi_live_venue_string_dispatch_broken-99d9aced8943` (the P2
+  non-CEFI audit todo). Read all 3 non-CEFI-batch venue-e2e plans that could carry the same disease
+  (`defi_venue_e2e_batch1_2026_08_16.md`, `sports_venue_e2e_batch1_2026_08_16.md`,
+  `prediction_venue_e2e_batch1_2026_08_16.md`) plus `strategy_service/position/position_interface/factory.py` and
+  `execution_service/trade_execution/factory.py` directly (tradfi's own batch is already archived done). Cited
+  per-AG answer above (P2 todo body). 2 genuine hits filed as new P1 gap todos in their own AG batch plans
+  (sports's BETFAIR bare-token mismatch, prediction's KALSHI missing-adapter gap) rather than duplicated here —
+  those plans are the live tracking home for their AG's own venue-readiness gaps, per this issue doc's own
+  "Relation to existing tracked docs" precedent. No code changed this session — pure audit + doc filing, per the
+  todo's own done-when ("a cited answer... filed as its own follow-up if any hit"). Only the 2 P3 todos
+  (`routing.py::_map_venue_to_ccxt` dead-code migration, `capabilities.py` staleness) remain open in this issue
+  doc.
 - **2026-08-17 (later still)**: Picked up as backlog task `cefi_live_venue_string_dispatch_broken-f5fb15802efc`;
   found the P0/P1 work already landed by a concurrent slot (`unified-api-contracts@9264cf2adc`,
   `execution-service@cba9ff511d`, `strategy-service@c44322ddc0`, both P0 fixes) — a genuine duplicate-dispatch
