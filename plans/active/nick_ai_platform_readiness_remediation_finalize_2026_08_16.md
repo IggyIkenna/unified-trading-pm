@@ -5,7 +5,7 @@ summary: >-
   Gated finalize for nick_ai_platform_readiness_remediation_2026_08_16.md — refresh the stale codex honest-coverage
   numbers using the FINAL post-remediation state (not the pre-remediation snapshot), reconcile shipped evidence back
   into the sibling nick_ai + venue-readiness plans, re-check whether the W2 scaffold has been reviewed, then archive.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, strategy, execution]
@@ -86,3 +86,18 @@ context_scope:
 
 **2026-08-16 — authored alongside the main remediation plan**, per the operator's explicit "+ gated finalize
 companion" instruction. Not yet active — gated on the main plan's completion.
+
+**2026-08-17 — flipped to `active`.** Every dispatched item in the main plan is shipped and verified: W1 (all 3
+services), W3, W4 (CeFi/both Sports halves/Prediction), W5. The only 2 items still open there are BOTH deliberately
+deferred, not blocked-and-broken: W2's "20 rows not declared" (P2, explicitly operator-paced, no urgency) and the
+`market-tick-data-service` todo's own text (now shipped — was blocked on a fleet-wide QG regression from an unrelated
+concurrent session, cleared on its own, verified via `check_adapter_contract_regression.py` returning OK before
+shipping, no rework needed). Neither blocks this finalize plan's own scope.
+
+**Flag for whoever executes W6 (codex refresh)**: a DIFFERENT concurrent session (not this one) landed a real,
+operator-ruled finding directly in the main plan's W3 section on 2026-08-17 — the venue-universe denominator is
+`(venue, data_type)` 2-tuples (353 pairs, no instrument_type axis) while coverage numerators often compute at
+3-tuple granularity, a genuine unit mismatch the operator ruled to fix by landing the instrument_type axis first
+(read the main plan's W3 section in full before starting W6 — this may change what "final" coverage numbers actually
+are, separately from anything tracked in this finalize plan). This session did not investigate that thread further
+— it's another session's active work, not re-derived or duplicated here.
