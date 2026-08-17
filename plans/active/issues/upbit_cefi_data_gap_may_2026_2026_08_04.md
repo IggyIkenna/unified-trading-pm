@@ -245,3 +245,11 @@ ago, same session day, and a preempted VM would read `TERMINATED` here, not `RUN
 trip re-confirming liveness slot-3 already established). Not forcing past the cap. Releasing again with
 `reason_code: GATED` rather than busy-polling a multi-hour VM from an interactive slot — resume condition unchanged:
 the fleet check above returning nothing `RUNNING` for the cefi/tradfi heavy/light pattern.
+
+### Re-checked again, cap still occupied — 2026-08-17 (slot-6, data_engineering)
+
+Re-dispatched onto this same todo (resumed session). Fleet check (`gcloud compute instances list
+--filter="name~'^(cefi|tradfi)-.*-(heavy|light)-'"`) shows the same VM `cefi-binance-futures-2026-heavy-20260817-010713`
+still `RUNNING`, same zone. No change since slot-21's check. Not forcing past the Tardis 1-concurrent-VM cap. Releasing
+again with `reason_code: GATED` — resume condition unchanged: the fleet check above returning nothing `RUNNING` for the
+cefi/tradfi heavy/light pattern.
