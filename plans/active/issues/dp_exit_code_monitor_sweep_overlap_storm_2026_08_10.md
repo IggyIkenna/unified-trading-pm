@@ -38,7 +38,7 @@ depends_on: []
 locked_by:
 archive_exempt: true
 resolved_by:
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 locked_since:
 context_scope: [/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py, /codex/05-infrastructure/data-pipeline-alerts.md]
 source: >-
@@ -732,3 +732,20 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
   follow-up (cron `uts-prod-dp-exit-code-monitor-cron` stays PAUSED until that todo confirms ≥3 clean scheduled
   executions, then resumes it) — this is deliberately NOT closed out as fully resolved.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+
+- 2026-08-17 (companion finding, filed primarily on the sibling doc
+  [`dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md`](/plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md)
+  Todo 5 — cross-referenced here since this doc owns the full GCS/OOM bottleneck history this new finding is
+  DISTINCT from): live measurement (20 consecutive hourly executions, 2026-08-16T23:00Z→2026-08-17T18:00Z) found the
+  sweep is no longer chronically failing (18/20 clean) but 2/20 still hit the full 1800s timeout. Root cause is a
+  FOURTH bottleneck class this doc's own exhaustive 2026-08-14/15 investigation (GCS throttling → double-downloads →
+  worker-count → run-log-prefetch OOM → `read_terminal_exit_code` fallback OOM, all in `_gcs.py`/`_gcs_tail.py`) never
+  touched: `_compute_ops.py`'s `preemption_op_checker`/`scheduling_model_checker` call the raw Compute Engine API
+  (`was_instance_preempted`/`aggregated_list_instances`) with NO bounded-call timeout — the same "synchronous blocking
+  paginated gRPC stream with no built-in timeout" class `cli.py._list_running_vms` already documents and bounds for
+  the whole-fleet census, but never applied to these two PER-VM call sites (consulted on every GONE_NO_CAPTURE
+  candidate + unconditionally on every PREEMPTED verdict). Measured ~900s per-VM stalls in the classify loop with zero
+  GCS-read warnings nearby, ruling out every mechanism this doc previously fixed. Fixed via the same
+  `_gcs.call_with_timeout` bound the rest of this module already uses (`deployment-service@d1cb5f0809`), QG green, 2
+  new regression tests. Live-verify pending via a background watchdog — see the sibling doc's Todo 5 for the full
+  writeup + evidence; not duplicated here per this doc's own established "cross-reference, don't duplicate" pattern.

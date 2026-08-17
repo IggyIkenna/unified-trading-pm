@@ -4,11 +4,15 @@ title:
   dp-exit-code-monitor times out at 1800s on every execution — the sweep never finishes, so revocation coverage will be
   truncated
 summary: |
-  uts-prod-dp-exit-code-monitor is killed by the Cloud Run 1800s task timeout on every execution measured, spending the
-  whole budget on per-VM run.log downloads that each blow the 30s bounded-call. route_finding() runs inline per VM, so
-  once the revocation wiring deploys it will actuate only for the VMs the sweep reaches before the kill — partial
-  coverage biased by iteration order, with no signal that anything was skipped. Separate from, and surviving, the
-  arming work in revocation_arming_2026_08_14.
+  uts-prod-dp-exit-code-monitor was killed by the Cloud Run 1800s task timeout on every execution measured at filing
+  (2026-08-14), spending the whole budget on per-VM run.log downloads that each blew the 30s bounded-call. That GCS/OOM
+  bottleneck was fixed 2026-08-14/15 (see Todo 1). **UPDATE 2026-08-17**: NOT fully resolved — live measurement of 20
+  consecutive hourly executions found 2/20 (10%) still hit the full 1800s timeout, root-caused to a SEPARATE,
+  previously-undiagnosed bottleneck: `_compute_ops.py`'s `preemption_op_checker`/`scheduling_model_checker` call the
+  Compute Engine API directly with NO bounded-call timeout (unlike every GCS read in this module family), and stall
+  ~900s per VM when hit — fixed via `deployment-service@d1cb5f0809`, live-verify in progress (see Todo 5). "on every
+  execution" is no longer literally true post-2026-08-15 (see the 2026-08-17 Progress Log for the real distribution)
+  but the underlying promise ("the sweep completes reliably") remained broken until this fix.
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -26,7 +30,7 @@ related:
     /plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -121,20 +125,24 @@ that plan.
       on local branch `parked/exit-code-sweep-budget-2026-08-15` in slot 5's deployment-service clone, and the trunk was
       returned to origin via `git reset --keep` (clean tree, nothing uncommitted destroyed). It is local-only and will
       vanish with that clone — that is intended; nothing needs recovering from it.
-- [ ] [INFRA] P0. Make a truncated sweep loud instead of silent — if the fleet is not fully walked, the run must say so
-      (count examined vs total, non-zero exit or an explicit alert) — DoD: a deliberately shortened run emits a "sweep
-      incomplete, N of M examined" signal rather than looking identical to a clean pass. **Code + tests WRITTEN
-      2026-08-15 (slot 15), compile-checked, NOT YET SHIPPED** — a `vm-census/exit-code-sweep-progress.json` marker
-      records `{total, classified}` before the sequential classify loop starts and on every `_checkpoint_census()` call
-      (periodic + final); the NEXT sweep reads it first and `logger.error`s "PRIOR SWEEP TRUNCATED — N/M examined" when
-      a prior pass never reached `classified == total` (the only way to surface a mid-loop Cloud-Run-SIGKILL truncation,
-      since nothing can log AFTER the kill itself). Two new regression tests in
-      `tests/unit/test_data_pipeline_monitors.py` (`test_sweep_detects_and_logs_prior_truncated_sweep`,
-      `test_sweep_clean_prior_pass_never_logs_truncation`). **Blocked on shipping** by an unrelated, pre-existing
-      basedpyright ratchet break (1261 > 1259, zero deployment-service source involved — traced to the two
-      editable-installed local deps) — filed as
-      [`deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md`](/plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md).
-      Do not redo this work — resume by fixing that blocker, then `quickmerge.sh` the two already-written files.
+- [x] [INFRA] P0. ✅ Make a truncated sweep loud instead of silent — if the fleet is not fully walked, the run must say
+      so (count examined vs total, non-zero exit or an explicit alert) — DoD: a deliberately shortened run emits a
+      "sweep incomplete, N of M examined" signal rather than looking identical to a clean pass. **Shipped via a
+      DIFFERENT implementation than the one drafted 2026-08-15 (slot 15)** — the `vm-census/exit-code-sweep-progress.json`
+      / "detect on the NEXT run" marker design described above was superseded, never shipped, and should not be
+      resumed. What actually landed (`deployment-service@1b7d1d35`, "bound exit_code_fleet_monitor's sweep to its task
+      timeout"): `sweep()` now takes a `deadline_monotonic` + `coverage_sink`; `cli.py` computes ONE deadline for the
+      whole task (`_TASK_TIMEOUT_SECS - 60s`, once per task, not per storm-resweep pass) and passes it in; past the
+      deadline the classify loop checkpoints (`_checkpoint_census`) and stops itself EARLY instead of risking a
+      mid-VM Cloud-Run SIGKILL, then `report_sweep_incomplete()` routes a CRITICAL `DP_VM_SWEEP_INCOMPLETE` finding
+      (registry `DP-VM-013`) and `write_monitor_last_run` is called with `ok=False` — so the gap pages in the SAME run
+      instead of only being detectable retroactively on the next tick. This meets the todo's DoD via self-detection
+      rather than next-run detection, which is strictly better (no window where a truncated sweep looks clean).
+      **Evidence** (2026-08-17): confirmed live in the current `live-defi-rollout` HEAD via direct code read
+      (`exit_code_fleet_monitor.py`'s `_sweep_deadline_passed`/`report_sweep_incomplete`, `cli.py`'s
+      `overall_deadline`/`_TASK_TIMEOUT_SECS` wiring) plus a fresh clean `quality-gates.sh` run this session (STEP
+      5.21/5.22 basedpyright both pass) — the basedpyright ratchet blocker this todo was stuck behind is no longer
+      blocking; whichever session actually shipped `1b7d1d35` is not reconstructed here, only that it is live now.
 - [x] [INFRA] P1. ✅ Reconcile the schedule discrepancy — `revocation_arming_2026_08_14.md`'s OPERATOR todo states the
       job runs on a `*/5` schedule, but executions are hourly (09:00Z, 10:00Z, 11:00Z, 12:00Z starts) — DoD: either the
       Cloud Scheduler cron or the plan's claim is corrected, stating which was wrong; a 30-minute run on a `*/5` cadence
@@ -147,8 +155,55 @@ that plan.
       actuating. **New defect found in the same pass** (not this issue's scope): the release half of the bookend fails
       on every call — filed separately as
       [`dp_revocation_release_never_resolves_identity_2026_08_15.md`](/plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md).
+- [ ] [INFRA] P1. **ADDED 2026-08-17 (measurement-claims-discipline check on this doc's own "resolved" claim)** — did
+      NOT trust Todo 1's 2026-08-15 resolution at face value; pulled `gcloud run jobs executions list` for the 20
+      consecutive hourly `uts-prod-dp-exit-code-monitor` executions covering 2026-08-16T23:00Z→2026-08-17T18:00Z. Result:
+      18/20 completed in 1-30 min (highly variable but bounded); **2/20 (`r2tsj` 08:00Z, `7tbv2` 00:00Z) still hit the
+      full 1800s task timeout and failed** — so this doc's title/original summary ("on every execution") is now STALE
+      but the underlying defect (the sweep is not reliably bounded) was NOT fully closed by the 2026-08-14/15 GCS/OOM
+      work. Root-caused via `gcloud logging read` on both failed executions: the classify loop logs one `verdict=`
+      line, then goes SILENT for ~900s (907s in `r2tsj`, 905s in `7tbv2`) with ZERO `download_bytes`/GCS bounded-call
+      warnings anywhere near the gap — ruling out every previously-fixed GCS/run.log mechanism on this doc and its
+      sibling `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. The VM printed immediately after EVERY gap in
+      both executions was a `verdict=preempted`. Reading `exit_code_fleet_monitor.sweep()`'s classify loop end-to-end:
+      `scheduling_model_checker` (`_compute_ops.make_scheduling_model_checker`) is called UNCONDITIONALLY on every
+      candidate-preempted verdict (line ~703), and `preemption_op_checker` on every GONE_NO_CAPTURE candidate — both
+      call the raw Compute Engine API (`was_instance_preempted` / `aggregated_list_instances`) with **NO bounded-call
+      timeout**, unlike every GCS read in this module (`_gcs._call_with_timeout`). `cli.py._list_running_vms` already
+      documents this EXACT failure class for the whole-fleet census — "a synchronous blocking paginated gRPC stream
+      with no built-in timeout... stalls the entire Cloud Run Job" — and bounds it there (`ThreadPoolExecutor` +
+      `future.result(timeout=_LIST_VMS_TIMEOUT_SECS)`), but the two PER-VM call sites in `_compute_ops.py` never got
+      the same treatment. **Fix**: wrapped both calls in the existing `_gcs.call_with_timeout` daemon-thread bound
+      (30s default, now a `timeout_seconds` kwarg on both factory functions) — a stalled call now fails fast (returns
+      `False`/`None`, the existing documented fail-safe) instead of blocking the sequential loop for ~900s.
+      `deployment-service@d1cb5f0809`, QG green (392s, full gate), 2 new regression tests
+      (`test_make_preemption_op_checker_returns_false_promptly_on_a_stalled_call`,
+      `test_make_scheduling_model_checker_returns_none_promptly_on_a_stalled_call`) prove both checkers return in
+      under 5s against a deliberately-hung fake client (mirrors the existing `test_is_vm_preempted_returns_false_
+      promptly_on_stall` pattern this module already uses for every other bounded-call site). **This is a resource
+      bump alone would NOT have fixed** — no amount of CPU/memory/timeout addresses an unbounded blocking call; this
+      is the genuine root-cause fix the operator's brief asked for, not a stopgap. **Live-verify PENDING** — a
+      background watchdog (`dp_exit_code_monitor_watchdog.sh`, started 2026-08-17T18:39Z) is polling for the fix to
+      reach `main`, confirming the redeployed image carries it (direct in-container `inspect.getsource` check, not
+      just a build-green claim), then watching the next several hourly executions for the absence of the ~900s-gap
+      signature. Do not re-diagnose this class if the watchdog's log still shows executions in flight — check
+      `/private/tmp/claude-501/.../scratchpad/dp_exit_code_monitor_watchdog.log` (session-scoped path; if the file no
+      longer exists, the watchdog's session ended — resume by checking `gcloud run jobs executions list` fresh instead
+      of assuming it completed).
 
 ## Progress Log
+
+### 2026-08-17 — residual root-cause found + fixed (unbounded Compute Engine API calls)
+
+Picked up this task from the operator with an explicit instruction NOT to trust the 2026-08-15 "resolved" claim without
+fresh measurement (measurement-claims-discipline). Verified via `gcloud run jobs executions list` (20 consecutive hourly
+executions) that the sweep is genuinely much better than at filing (18/20 clean, vs. 100% failure at 2026-08-14) but
+NOT fully fixed (2/20 still hit the full 1800s cap). Diagnosed a THIRD class of bottleneck this doc's and the sibling
+overlap-storm doc's extensive 2026-08-14/15 GCS/OOM fix history never touched: two unbounded Compute Engine API calls
+in `_compute_ops.py`, called per-VM inside the sequential classify loop. Fixed via the same bounded-call pattern
+already used throughout this module (`deployment-service@d1cb5f0809`). See Todo 5 above for full evidence. Live-verify
+of post-deploy executions is running in the background (watchdog log path in Todo 5) — this doc stays `status: open`
+until that confirms clean executions across the deploy.
 
 ### 2026-08-14 — checkpoint (context compaction)
 
@@ -230,7 +285,8 @@ the release bookend.
 | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Push deployment-service commit `f13d5859` (sweep budget + `DP_SWEEP_TRUNCATED`) | **SUPERSEDED, do not resume** — the timeout it targeted is independently fixed (Todo 1 evidence, 2026-08-15)           | n/a — was never in this checkout, stranded elsewhere                                                                      |
 | Live confirmation of revocation (parent plan's `[OPERATOR]` P0)                 | **DONE 2026-08-15** — see Todo 4 evidence                                                                              | n/a                                                                                                                       |
-| Make truncated sweep loud instead of silent (Todo 2)                            | **Code+tests WRITTEN 2026-08-15, uncommitted** — ready to ship as-is                                                   | unrelated basedpyright ratchet break, see `deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md` |
+| Make truncated sweep loud instead of silent (Todo 2)                            | **DONE** — shipped via a different design (`deadline_monotonic`+`coverage_sink`+`DP_VM_SWEEP_INCOMPLETE`, `deployment-service@1b7d1d35`), confirmed live 2026-08-17                                                   | n/a |
+| Residual ~10% intermittent 1800s timeout — unbounded Compute Engine API calls in `_compute_ops.py` (found 2026-08-17) | **FIXED, live-verify pending** — `deployment-service@d1cb5f0809`, background watchdog running | watchdog completing (see Todo 5) |
 | Route `DP_SWEEP_TRUNCATED` to a registered alert code                           | **Not done** — needs an entry in the alerting registry SSOT another team owns                                          | nobody, but coordinate                                                                                                    |
 | Revocation release fails on every call (new, 2026-08-15)                        | **DONE 2026-08-15** — deployment-service@bf69b2b289, see `dp_revocation_release_never_resolves_identity_2026_08_15.md` | n/a                                                                                                                       |
 | Prediction live-capture stall                                                   | **Not done** — diagnosed, filed separately                                                                             | its own issue doc                                                                                                         |
