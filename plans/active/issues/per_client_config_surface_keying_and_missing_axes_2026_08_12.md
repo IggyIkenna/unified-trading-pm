@@ -34,14 +34,6 @@ related:
     /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
-context_scope:
-  [
-    /codex/04-architecture/per-client-isolation-architecture.md,
-    /codex/06-coding-standards/strategy-identity-versioning.md,
-    /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md,
-    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
-    strategy-service/strategy_service/client_context.py,
-  ]
 created: 2026-08-12
 last_updated: 2026-08-12
 parent_epic: agent_operating_framework_master
@@ -61,6 +53,14 @@ source: >-
   the three config surfaces owns what.
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+    /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    strategy-service/strategy_service/client_context.py,
+  ]
 ---
 
 # Per-client config: wrong primary key, and three missing axes
@@ -425,3 +425,4 @@ same tick. That is the difference between an implementation that works and one t
   absence-from-one-probe class recorded in
   [measurement-claims-discipline](/codex/12-agent-workflow/measurement-claims-discipline.md), and the first where the
   wrong verdict would have reached a written issue doc rather than only chat.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

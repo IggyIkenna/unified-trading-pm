@@ -26,6 +26,14 @@ parent_epic: defi_master
 resolved_by:
 depends_on: []
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_migration_audit_log_2026_07_24.md,
+    /plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md,
+    /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
+    deployment-service/configs/cloud-providers.yaml,
+  ]
 ---
 
 # plan_reconciler defi-tranche findings — 2026-08-16
@@ -278,3 +286,4 @@ once this doc is split.
   This doc still carries genuine open work (no items resolved to zero) — stays in `plans/active/issues/`, unlocked.
   Continuing to today's fresh `defi`-tranche sweep in `plan_reconciler_findings_defi_2026_08_17.md`.
 - **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — 0 open todos confirmed (this is plan_reconciler's own run-journal, not a task-tracking doc); today's plan_reconciler Phase -1 pass (dispatch agt-5dedc7) re-checked every still-open item with no drift found. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

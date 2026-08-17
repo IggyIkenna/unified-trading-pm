@@ -41,10 +41,11 @@ locked_by:
 last_updated: 2026-08-13
 context_scope:
   [
-    market-tick-data-service/market_tick_data_service/live/connectors/websocket_streaming_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_clob_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/jito_defi_ws.py,
+    /plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md,
   ]
 ---
 
@@ -102,3 +103,4 @@ documented decision going silently unimplemented, and a new venue integration th
   extracted to `/plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md` (+ finalize)
   for AO dispatch, since this doc stays `assigned_vm: NA`. Operator asked to re-confirm the design against
   current code before executing, folded into the dispatched todo.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

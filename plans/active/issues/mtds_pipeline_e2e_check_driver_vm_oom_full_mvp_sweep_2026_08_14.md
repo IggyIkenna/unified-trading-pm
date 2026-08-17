@@ -58,7 +58,7 @@ depends_on: []
 context_scope:
   [
     market-tick-data-service/scripts/pipeline_e2e_check.py,
-    unified_trading_library/pipeline_e2e_check/launcher.py,
+    unified-trading-library/unified_trading_library/pipeline_e2e_check/launcher.py,
     deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh,
     unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     /plans/archive/2026_08/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
@@ -606,3 +606,4 @@ Two independent angles, not mutually exclusive:
   hours-long run completes (every prior session's own finding) — a fresh DEFI launch needs either direct in-session
   presence to poll to `EXIT_STATUS`, or this new earlier-death signature root-caused first, before a 4th blind
   launch.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

@@ -21,8 +21,6 @@ related:
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
-context_scope:
-  [/cursor-configs/skills/plan-reconcile/SKILL.md, /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md]
 created: 2026-08-15
 parent_epic: plan_hygiene_master
 assigned_vm: NA
@@ -36,6 +34,12 @@ source:
   "Interactive laptop session, 2026-08-15 — operator answered a batched Q&A while reviewing the plan_reconciler's
   residual findings across 10 tranches"
 depends_on: []
+context_scope:
+  [
+    /cursor-configs/skills/plan-reconcile/SKILL.md,
+    /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md,
+    /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
+  ]
 ---
 
 # Operator ruling record — /plan-reconcile session, 2026-08-15
@@ -103,3 +107,4 @@ continuous interactive session, not a later worker citing a claimed-but-unverifi
 - **2026-08-15 (interactive /plan-reconcile session)**: created to give this session's 7 batched rulings a traceable
   home; rulings applied across ~9 commits the same session (ao/ci/cross_cutting/infra/prediction/sports/ui tranches, the
   2026-08-08 findings-doc archival, the meta/incident docs, and the locked_by placeholder sweep).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

@@ -53,6 +53,7 @@ context_scope:
   [
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
     features-service/features_service/onchain/engine/lst_features.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
   ]
 ---
 
@@ -146,3 +147,4 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   still read as an open question after batch12 had already answered it — updated to state the verified RAW finding with
   the same file:line citations, so no stale "still looks open" text remains.
 - **na-eligibility-audit 2026-08-16** [body-hash:3756a5f40913cd65]: KEEP-NA, valid — Of the doc's original 2 todos, todo 1 ([DIAG] P2, a bounded diagnostic: confirm whether CARRY_STAKED_BASIS consumes staking_apy_bps raw or smoothed) was already extracted via this exact skill's per-todo RECLASSIFY-split path on 2026-08-09 (round9-reclassify-satellite-sweep) into `defi_satellite_ao_dispatch_batch12_2026_08_09.md` (now archived, both its todos done) -- it no longer appears as a live `- [ ]` checkbox in this doc (shown only as struck-through/annotated prose, correctly excluded from the grep count).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

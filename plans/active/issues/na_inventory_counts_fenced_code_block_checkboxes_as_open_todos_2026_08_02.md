@@ -193,3 +193,4 @@ by a subsequent `/na-eligibility-audit` pass applying that same self-assessment.
   `sequential:`/`depends_on`+`gate_on_depends` backed it — per CLAUDE.md, same-plan todos run concurrently by default,
   so AO could have dispatched todo 3 (bake the corrected baseline) before todos 1+2 shipped (the fence-parsing fix),
   baking in the inflated baseline the fix exists to correct. Todo 3's own warning is now machine-enforced.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

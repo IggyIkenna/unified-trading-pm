@@ -21,11 +21,6 @@ related:
     /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
   ]
-context_scope:
-  [
-    /plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
-    /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md,
-  ]
 created: 2026-08-08
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -37,6 +32,11 @@ resolved_by:
 locked_by:
 source: "slot-3 interactive, 2026-08-08 — transcribed from the six citing todos to unblock a repo-wide quickmerge stall"
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
+    /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md,
+  ]
 ---
 
 # Operator ruling record — "ao round-5 apply session", 2026-08-08
@@ -129,3 +129,4 @@ cannot be audited for completeness.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since round9.
   Item 1 remains operator-only-by-design (only the operator can confirm they personally issued a ruling); item 2 remains
   an unresolved 3-way convention design choice with no stated preference in the doc itself.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

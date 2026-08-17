@@ -30,10 +30,15 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
-context_scope: [/cursor-configs/skills/na-eligibility-audit/SKILL.md]
 source: >-
   /na-eligibility-audit defi (2026-08-16, dispatch agt-354c08, slot 27) — Phase 1b consolidation across all 52
   classified docs (40 defi-owned + 12 report-only from other tranches).
+context_scope:
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16.md,
+  ]
 ---
 
 > **SUPERSEDED 2026-08-17** by
@@ -143,3 +148,4 @@ Still genuinely open, for the next run to re-assess against the primary RECLASSI
 - **2026-08-16 (na-eligibility-audit, defi tranche, dispatch agt-354c08)**: drafted as the Phase 1b consolidation
   artifact for this run's 52-doc classification pass (40 defi-owned). See
   `defi_consolidated_closeout_2026_07_18.md` for the tranche's own AG closeout tracker.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

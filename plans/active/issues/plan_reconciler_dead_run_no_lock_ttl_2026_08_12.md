@@ -71,6 +71,7 @@ source:
   (defi/cefi/ci/cross_cutting) die mid-flight with zero forward progress, leaving their findings docs locked_by:
   plan_reconciler with no self-healing since? Someone else is handling the doc-level unlock+archive of the 4 dead-run
   docs themselves (operator-approved) — this doc is the root-cause + systemic-fix write-up only."
+depends_on: []
 context_scope:
   [
     agent-orchestrator/server/plan_health.py,
@@ -80,7 +81,6 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
-depends_on: []
 ---
 
 # plan_reconciler dead-run lock has no TTL / self-healing — 4 of 10 tranches stuck on 2026-08-09, recurring pattern
@@ -301,3 +301,4 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
   lock-stamping STEP, not just grepping code) — left open as-is. All 3 todos confirmed genuinely open, real
   unimplemented engineering work in `agent-orchestrator` — no doc-level fix applies. Doc NOT archived (3 items still
   open).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

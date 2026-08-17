@@ -332,3 +332,4 @@ None — full tranche coverage achieved this run.
   located), (c) ~10 of 11 codex-alignment findings (unrecoverable — original hunter context lost), (d) 2 truncated
   Progress Log entries in sibling pytest-timeout docs, (e) 5 confirmed-archivable docs left unarchived. Staying
   `status: open` — not archived.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

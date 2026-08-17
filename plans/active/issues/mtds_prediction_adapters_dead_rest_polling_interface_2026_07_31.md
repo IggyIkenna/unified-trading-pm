@@ -166,3 +166,4 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   `archive_exempt: true`). Confirms the 2026-08-16 plan_reconciler correction: this doc is genuinely NOT an archive
   candidate despite 0 open todos — `archive_exempt: true` is set in its own frontmatter and is the correct standing
   marker per the archival-discipline codex SSOT. No action needed.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

@@ -55,6 +55,7 @@ source: >-
   same session.
 resolved_by:
 locked_by:
+locked_since:
 context_scope:
   [
     /plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
@@ -63,7 +64,6 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer/_writer.py,
     market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py,
   ]
-locked_since:
 ---
 
 # gas_fees migration script — unbounded memory via ManifestWriter legacy path, caused 2 fleet-wide API outages in ~15 minutes
@@ -231,3 +231,4 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   sibling-scripts item closed 2026-08-02 via batch7 extraction). Both remaining items are explicit undecided design
   forks in their own text (a loud-warning-vs-refuse-construction choice; an out-of-scope-flagged RSS-ceiling pattern).
   Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

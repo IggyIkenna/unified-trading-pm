@@ -26,6 +26,13 @@ parent_epic: defi_master
 resolved_by:
 depends_on: []
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/plan_reconciler_findings_defi_2026_08_16.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
+  ]
 ---
 
 # plan_reconciler defi-tranche findings — 2026-08-17
@@ -302,3 +309,4 @@ Corroborating only — already tracked elsewhere, no new todo (would duplicate e
   scope call, line ~168 explicit `[OPERATOR]` gate, line ~278 AO-dispatch-readiness tagging judgment) stay KEEP-NA —
   each is a genuine design/operator call per its own text. This doc's own remaining open work is now 0 items in
   this session's population (all 8 resolved to extraction/conflict-citation/correctly-gated).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

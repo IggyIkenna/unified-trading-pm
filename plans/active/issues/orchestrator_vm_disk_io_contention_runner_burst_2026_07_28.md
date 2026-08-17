@@ -45,6 +45,7 @@ assigned_vm: NA
 resolved_by:
 archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
+locked_since:
 context_scope:
   [
     agent-orchestrator/scripts/bootstrap_vm.sh,
@@ -54,7 +55,6 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     agent-orchestrator/scripts/rescale-memory-cap.sh,
   ]
-locked_since:
 ---
 
 # Runner-registration burst drove the shared VM into real I/O contention
@@ -458,3 +458,4 @@ per the doc's own guidance, no new issue doc filed.
   defect — stays open, doc NOT archived. Re-check only if a `PYRIGHT_TIMEOUT`-triggered `exit=124` kill recurs outside a
   burst/fan-out window.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

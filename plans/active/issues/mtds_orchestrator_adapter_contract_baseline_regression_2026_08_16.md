@@ -36,6 +36,14 @@ related:
   ]
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/cefi_tardis_date_concurrency_2026_08_16.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
+    unified-trading-pm/scripts/quality_gates/check_adapter_contract_regression.py,
+    unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml,
+  ]
 ---
 
 # market-tick-data-service — adapter-contract-call baseline regression on live-defi-rollout HEAD
@@ -102,3 +110,4 @@ section poses a binary (regenerate the baseline as intentional vs. restore a mis
 site) the filer explicitly declined to resolve alone, citing risk of masking a real regression or fighting an
 intentional design change without the F1-F8 refactor author's context — a genuine unresolved judgment call, not a
 bounded worker-alone task. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

@@ -247,3 +247,4 @@ a normal ratchet into a self-reinforcing wall.
   leaving this 6-doc overage for the next `/na-eligibility-audit` pass or a reviewed baseline bump. `AUTHORING_SLOT`
   for this escalation is the `ldr-ci-monitor` sentinel (not a numbered slot) — no slot-ping applicable per this role's
   skip-rule.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
