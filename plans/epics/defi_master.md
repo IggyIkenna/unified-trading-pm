@@ -57,8 +57,8 @@ related_plans:
   - ../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md
   - ../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16_finalize.md
   - ../active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16_finalize.md
-  - ../active/defi_live_poller_ao_dispatch_batch1_2026_08_16.md
-  - ../active/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md
+  - ../archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16.md
+  - ../archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md
   - ../active/defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16.md
   - ../active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
@@ -1766,12 +1766,12 @@ _25 active plans declare `parent_epic: defi_master` in their frontmatter. Worker
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra)
 **title**: DeFi distinct-values zero-non-canonical dispatch — finalize
 
-### [`defi_live_poller_ao_dispatch_batch1_2026_08_16`](../active/defi_live_poller_ao_dispatch_batch1_2026_08_16.md)
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
+### [`defi_live_poller_ao_dispatch_batch1_2026_08_16`](../archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16.md)
+**status**: complete · **estimate**: 2.4 cal AI-days (class: infra)
 **title**: DeFi live-poller Tranche 0 — connector-pattern extraction
 
-### [`defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize`](../active/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md)
-**status**: active · **estimate**: 0.15 cal AI-days (class: infra)
+### [`defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize`](../archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md)
+**status**: complete · **estimate**: 0.15 cal AI-days (class: infra)
 **title**: Finalize — DeFi live-poller Tranche 0 connector-pattern extraction
 
 ### [`defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08`](../active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md)

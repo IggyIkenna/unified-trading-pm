@@ -108,16 +108,18 @@ committing agent time to the lower tranches — see todo below.
 
 ### Tranche 0 — connector-pattern extraction (prerequisite, unlocks all tranches)
 
-- [ ] [DATA] P2. Extract `SubgraphPollingConnector`, a config-driven `WSFeedConnector` parameterized
+- [x] ✅ [DATA] P2. Extract `SubgraphPollingConnector`, a config-driven `WSFeedConnector` parameterized
       by `(protocol, chain, subgraph_id, swap_query_template, pool_query_template)`, generalizing
       `dex_swap_uniswap_v3_ws.py`'s implementation. DoD: `UNISWAP_V3-ETHEREUM` re-implemented on
       top of the new base class with zero behavior change (regression: existing unit tests still
-      pass unmodified). (repo: market-tick-data-service)
-- [ ] [DATA] P2. Extract `OnChainLiquidationPoller`, a config-driven `WSFeedConnector` parameterized
+      pass unmodified). (repo: market-tick-data-service) — market-tick-data-service@5ef71f1084,
+      confirmed via `plans/archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16.md`.
+- [x] ✅ [DATA] P2. Extract `OnChainLiquidationPoller`, a config-driven `WSFeedConnector` parameterized
       by `(protocol, chain, rpc_resolver_key, contract_address, event_topic, log_parser)`,
       generalizing `aave_liquidations_ethereum_ws.py`'s implementation. DoD: `AAVE_V3-ETHEREUM`
       re-implemented on top of the new base class with zero behavior change. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@0eb87e61f9,
+      confirmed via `plans/archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16.md`.
 
 ### Tranche 1 — Ethereum-mainnet gaps (7 venues)
 
@@ -168,3 +170,14 @@ chain-footprint proxy.
   produce at 39x scale without extraction — Tranche 0 exists specifically to avoid that. Chain-
   footprint tranche ordering is a stated proxy, not measured TVL; follow-up todo filed to confirm
   before later tranches dispatch.
+- **2026-08-17 (review, slot 12, `defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize`)**: both
+  Tranche 0 todos confirmed landed with independently-verified zero-behavior-change regression
+  evidence — ran `market-tick-data-service`'s full `quality-gates.sh` on live-defi-rollout HEAD: all
+  34 pre-existing unit tests across `test_dex_swap_uniswap_v3_ws_connector.py` +
+  `test_aave_liquidations_ws_connector.py` pass unmodified (11052 passed / 1 pre-existing unrelated
+  failure tracked separately at `plans/active/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`,
+  not touching the connectors package). Tranche 0 checkboxes above flipped. The TVL-ordering
+  follow-up todo below is UNCHANGED/still open — Tranche 0 landing unlocks Tranches 1-2 dispatch
+  (same-chain reuse of the now-proven base classes) but does not itself resolve the TVL-snapshot
+  measurement Tranches 3-4 still need. Batch plan + its finalize archived to
+  `plans/archive/2026_08/`.
