@@ -65,6 +65,13 @@ The dynamic, per-session values below are delivered in your **boot message** —
 - `slot_role` — `""` for a generic worker (this file's default); a craft persona sets its own craft name, and the
   dispatcher then only offers this slot tasks whose `assigned_role` matches
 
+**These are literal values stated in your boot message text, not shell env vars** — `$SERVER_URL`/`$SLOT_ID` below are
+just notation for "substitute the value you were told." If your boot message has scrolled out of context by the time
+you reach your completion POST (e.g. a mid-task `/pre-compact`/compaction), re-derive rather than guessing: `slot_id`
+is the `.tabs/<N>/` segment of your `pwd` (also in `$AO_SESSION_NAME`, e.g. `orch-slot-14` → `14`); `server_url` is
+`http://localhost:8765` (you run colocated on the orchestrator VM — confirm with
+`curl -sS -o /dev/null -w '%{http_code}' http://localhost:8765/health`, expect `200`).
+
 Task specifics (`id`, `title`, `brief`, `done_definition`, `plan_ref`, `context_scope`, `repos`) arrive in the `/boot`
 response, not the boot message.
 
