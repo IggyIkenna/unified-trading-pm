@@ -154,13 +154,30 @@ state at current preemption volume?).
       the stamp: `1` (only `cefi-binance-futures-2026-heavy` counted). After: `4` (the true live occupancy). This
       closes the live undercount immediately — any future guard-integrated launch attempt now correctly refuses
       instead of silently stacking a 5th+ concurrent Tardis consumer on top of an already-over-cap fleet.
-- [ ] [INFRA] P2. Fleet-wide sweep: are there other currently-running VMs launched via a DIFFERENT, non-guard-
-      integrated launcher that touch a non-Tardis-cap-exempt venue's Tardis-only data type (same undercounting
-      class this doc found for `launch-cefi-hl-aster-historical-backfill.sh`)? This session only found + fixed the
-      ONE launcher + its 3 live VMs it happened to trip over while re-verifying this todo's gate — it was not a
-      deliberate fleet audit. Repo: deployment-service (grep every `launch-*.sh` for `VM_DATA_TYPES.*derivative_
-      ticker` or similar Tardis-only markers without a `source .../tardis-concurrency-guard.sh` nearby; cross-check
-      running instances' metadata the same way this session did).
+- [x] ✅ [INFRA] P2. Fleet-wide sweep done — deployment-service@bd3d5fa0ed. Grepped every `launch-*.sh` for
+      `derivative_ticker`/Tardis-only markers without the guard sourced nearby, cross-checked against
+      `TARDIS_CAP_EXEMPT_VENUES`. Found and fixed a SECOND launcher with the exact same undercounting gap:
+      `launch-cefi-onchain-forward-poll.sh` launches LIGHTER-ZKSYNC `derivative_ticker` worker VMs
+      (`cefi-lighter-<ts>`, matches neither `TARDIS_VM_NAME_PATTERN` nor any metadata stamp) without ever
+      sourcing `tardis-concurrency-guard.sh` — fixed to source the guard, gate per-venue via
+      `tardis_venue_list_needs_guard`, stamp `VM_TARDIS_CONSUMER` in VM metadata, and call
+      `tardis_guard_reserve_slot` before create (verified via `bash -n` + `DRY_RUN=1` dry-runs for both
+      LIGHTER-ZKSYNC (`VM_TARDIS_CONSUMER=1`) and HYPERLIQUID (`VM_TARDIS_CONSUMER=0`)). Also found the PRIOR
+      session's fix to `launch-cefi-hl-aster-historical-backfill.sh` was itself incomplete: it added the
+      pre-flight `tardis_guard_reserve_slot()` call but never actually stamped `VM_TARDIS_CONSUMER` into the
+      created VM's metadata (`needs_tardis_guard` was computed and used for the reserve-slot gate only) — so
+      those VMs remained invisible to every OTHER launcher's guard check despite this launcher's own gate
+      correctly refusing over-cap; added the missing stamp line. Checked all other `derivative_ticker`-mentioning
+      launchers (`launch-aster-forward-poll.sh`, `launch-cefi-extended-starknet-funding-timestamp-vm.sh` — both
+      cap-exempt venues only; `launch-cefi-funding-timestamp-fix-vm.sh` — reprocesses already-captured parquet,
+      no new Tardis fetch; `launch-cefi-perp-funding-daily-cron-vm.sh` — no venue/create, downstream compute
+      only; `launch-mtds-live*.sh` — live WS streaming, not batch Tardis; `launch-cefi-onchain-fwd-daily-cron-vm.sh`
+      — only launches the tiny e2-micro cron host, not a Tardis-consuming VM itself; `launch-canonical-migration-vm.sh`
+      — `LIGHTER-ZKSYNC` appears only in a comment, no fetch) — none needed the guard. Live-fleet check
+      (`gcloud compute instances list --filter="name~'^cefi-lighter-|^cefi-extended-|^cefi-hyperliquid-|^aster-fwd-'"`)
+      confirmed no currently-running VM from either fixed launcher needs retroactive metadata stamping — the gap
+      was in the CODE PATH, not currently manifesting as a live undercount. QG green (248s) → quickmerge --agent
+      → verified `bd3d5fa0e` ancestor-of `origin/live-defi-rollout`.
 
 ## Progress Log
 
