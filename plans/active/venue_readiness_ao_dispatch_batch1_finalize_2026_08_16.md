@@ -114,7 +114,7 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
       or the `instrument_type`/`data_type`/`venue`/`chain` values. Confirm each skill either checks those separately
       or explicitly declares them unchecked — "routes through the oracle" alone is not the bar.
       — **All four `Canonical-oracle audit (2026-08-16)` sections re-read against this bar; three were already
-      correct, one was stale and fixed this session (`unified-trading-pm@<pending-sha>`).** IS, features, MDPS each
+      correct, one was stale and fixed this session (`unified-trading-pm@06d3a9062c`).** IS, features, MDPS each
       correctly declare filename id-form / instrument_type / data_type / venue / chain either N/A (axis doesn't exist
       in that checker's shard atom/path grammar) or explicitly **unchecked** — meets the bar as written, no change
       needed. **MTDS's section was stale**: it still read "GAP, not yet routed" for CEFI/DEFI oracle routing, but the
@@ -171,6 +171,6 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
   (`market-tick-data-service@f90bf09a37`) without the audit doc being updated to match — live-verified via `grep` of
   the current `pipeline_e2e_check.py` that `_run_oracle_canonical_leg` really dispatches through
   `canonical_path_violations()` for CEFI/DEFI before editing. Updated the SKILL.md section
-  (`unified-trading-pm@<pending-sha>`) to state the fix is shipped; left the value-blind declaration unchanged since
+  (`unified-trading-pm@06d3a9062c`) to state the fix is shipped; left the value-blind declaration unchanged since
   that half was already accurate. Only the `[DOC] P2` archival-ritual todo and its sibling `[DOC] P3` remain open in
   this plan.
