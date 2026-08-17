@@ -96,3 +96,15 @@ this file cleanly (`git checkout --`, verified clean, 1000L).
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA, valid — both items re-read,
+  no change.** Item 1 (split the source doc) remains genuine content-judgment work, now more overdue (the source
+  doc, `data_completion_tradfi_2026_07_15.md`, is now 1014 lines, up from 1000 at this issue's filing). Item 2
+  (`>=` vs `>` design call) is LIKELY already answered in the live script — `check_line_caps.sh`'s
+  `SMALL_MARKER_APPEND` (line ~238) and `SINGLE_TODO_FLIP` (line ~270) carve-out preconditions both already use
+  `-ge`, landed via commits `1f65e146466` (2026-08-09) and `2efd6f0ca17` (2026-08-15) respectively — both predating
+  this issue's 2026-08-16 filing. Not closing item 2 unilaterally here (this audit did not independently re-attempt
+  the original blocked edit to confirm live), but flagging this as a strong, evidenced lead: whoever next touches
+  this doc should attempt a live-reproduction test (a single-hunk marker-append or single-todo-flip against
+  `data_completion_tradfi_2026_07_15.md`, now well over the 1000L cap) before routing item 2 to the script owner
+  for a fresh design decision — the design call reads as already made and shipped, only the "confirm it live and
+  close" step is missing.

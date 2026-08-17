@@ -215,6 +215,14 @@ restated here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA, stale citation — reaffirms
+  today's own slot-23 finding directly below, no new content.** The sole open item's 2026-07-28-vintage dispatch-shape
+  text (re-run dry-run + fresh retention check + execute) is superseded by the fresh finding already recorded here
+  today: all 900 legacy-B candidates now read "legacy object no longer exists" rather than a coverage-percentage
+  failure, so the real next step is the fresh `migration_orphan_sweep.py --asset-group tradfi` walk tracked in
+  `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` (`assigned_vm: planning`), not a re-run of
+  this doc's own literal dispatch shape. Not reclassifying — the walk itself hasn't run yet, and this remains a real
+  prod-bucket delete gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. `assigned_vm` unchanged.
 - **2026-08-17 (slot-23, `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`'s P1 todo)**: the
   `canonical_twin_path()` lookup-logic bug root-caused below (2026-08-09) was fixed prior to this pass
   (instruments-service@271b3d33, 2026-08-14) — verified correct via regression tests + a live-GCS cross-check. **Twin
