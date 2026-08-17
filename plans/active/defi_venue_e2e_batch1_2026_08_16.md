@@ -338,12 +338,42 @@ source: >-
       why `catalog_staked_basis.py` correctly has no `lending_protocol` field despite the archetype genuinely
       consuming `lending_indices`-derived data. Done-when's second branch ("a real lending-consumption path...
       to justify keeping them") is satisfied by code already present; no UAC/strategy-service edit needed.
-- [ ] [BACKEND] P2. **Gap: AAVE-PLASMA's protocol identity is ambiguous in the archetype catalogue** — every
-      slot/catalogue reference to Aave uses the bare `"aave"` token (e.g. `archetype_slots_defi.py`,
-      `catalog_yield_defi.py`), never a Plasma-chain-disambiguated form, so whether `AAVE-PLASMA` resolves
-      through the same path as `AAVE_V3-*` rows or is silently orphaned isn't determinable from code alone.
-      Done-when: the catalogue explicitly confirms (or denies) AAVE-PLASMA coverage, or this is confirmed
-      genuinely unresolvable pending an upstream disambiguation decision with a cited reason.
+- [x] ✅ [BACKEND] P2. **Gap: AAVE-PLASMA's protocol identity is ambiguous in the archetype catalogue —
+      done 2026-08-17, DENIED: zero current archetype/slot coverage, confirmed by direct read, no code
+      needed.** This todo's own premise ("isn't determinable from code alone") doesn't hold once both layers
+      are actually read together — the answer resolves cleanly to "AAVE-PLASMA has no archetype/slot coverage
+      today":
+      - **Adapter-resolution layer (instrument identity)**: `AAVE-PLASMA` already has a resolvable
+        `VENUE_TO_ADAPTER_KEY` entry — `"AAVE-PLASMA": "aave_v3"`
+        (`unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:391`, added 2026-08-01,
+        same class of explicit-entry gap as `RADIANT-BSC` above it) — same adapter as every other `AAVE_V3-*`
+        chain. This confirms the plan's own step-6 finding (chain is never part of the resolvable venue
+        identity, only the bare protocol token matters) applies to Plasma too: `factory.py`'s
+        `get_position_adapter` matches on bare `"aave"`/`"aave_v3"` regardless of chain, and chain is threaded
+        separately via `RoutingConfig`'s free-form `rpc_url`/`tenderly_fork_rpc_url`/`alchemy_rpc_url` fields
+        (`position/position_interface/routing.py:99-102`) — not an enumerated chain list, so nothing at that
+        layer structurally excludes Plasma.
+      - **Archetype/catalogue layer (does anything actually SELECT Plasma today)**: grepped every catalogue
+        and archetype-slot file in strategy-service (`engine/strategies/v2/archetype_slots_defi.py`,
+        `target_universe/catalog_yield_defi.py`, `target_universe/catalog_carry.py`,
+        `position/position_interface/*`) for `plasma` — **zero hits, anywhere.** Every declared lending/staking
+        slot that names a chain explicitly enumerates one of `ethereum`/`arbitrum`/`optimism`/`base`
+        (e.g. `catalog_carry.py:733-792`'s `("aave_v3", "ethereum"|"arbitrum"|"base", ...)` tuples); no slot,
+        anywhere, ever names Plasma. So while the adapter mechanism WOULD resolve an `AAVE-PLASMA` position if
+        a slot config supplied a Plasma `rpc_url`, no such slot exists in the catalogue as shipped.
+      - **Net answer (done-when's first branch — "the catalogue explicitly confirms or denies coverage")**:
+        DENIED. AAVE-PLASMA is not silently orphaned (the resolution path is real and chain-agnostic, same as
+        every other AAVE_V3 chain) — it is simply never selected by any current archetype/slot declaration.
+        Adding Plasma coverage would be a genuine new-scope archetype/slot-authoring decision (which chain to
+        target next), not a bug fix — out of this bounded gap todo's scope, not tracked further here since it
+        needs an operator/strategy decision, not more code search.
+      - Also confirmed the adjacent chain-id default-to-1 risk this surfaced (`aave.py:166`,
+        `aave_live.py:420-430`: `chain_id` defaults to `1`/Ethereum whenever config omits it) is the SAME
+        mechanism already escalated as a P0 issue doc —
+        [defi_cloud_kms_silent_wrong_chain_id_fallback_2026_08_16](/plans/active/issues/defi_cloud_kms_silent_wrong_chain_id_fallback_2026_08_16.md)
+        — not a new finding, cited not duplicated.
+      No `VENUE_TO_ADAPTER_KEY`/catalogue/archetype edits made — the done-when resolves via the
+      "explicitly confirmed... denied" branch entirely from existing code, no fix implied.
 - [x] ✅ [BACKEND] P0. **Step 9 per unit — done 2026-08-16, 1 major finding escalated as MORE urgent than the
       cefi sibling.** SHIPPED — `unified-trading-pm@285cefec7a`. Transfer routing is generic/chain-scoped, not
       per-protocol — `classify_transfer_type` routes purely on wallet type + custody_provider, the specific
@@ -463,3 +493,18 @@ CARRY_STAKED_BASIS's and CARRY_STAKED_BASIS_DATED's tick-emission signal, and `l
 this exact dispatch-trace citation (dated 2026-08-16, predating this gap todo) — the declaration was correct all
 along, not stale. Full citation trail + the signal-vs-economic-leg distinction written directly into the flipped
 todo above. Remaining open in this plan: 1 P2 todo (AAVE-PLASMA identity ambiguity) — out of scope for this task.
+
+**2026-08-17 — AAVE-PLASMA identity-ambiguity gap resolved, investigation-only, zero code changed. Plan now
+has ZERO open todos.** AO worker task (backend_engineer role, slot 23). Read both layers together instead of
+only the adapter-registry layer the todo's own premise cited: `venue_adapter_keys.py` already has an explicit
+`"AAVE-PLASMA": "aave_v3"` entry (2026-08-01), and `factory.py`'s position-adapter resolution matches on the
+bare protocol token only (chain threaded separately via `RoutingConfig`'s free-form rpc_url fields, not an
+enum) — so nothing at the resolution layer excludes Plasma. But a corpus-wide grep of every strategy-service
+catalogue/archetype-slot/position-interface file for `plasma` returned zero hits — no slot anywhere declares
+Plasma as a chain (every explicit multi-chain slot enumerates ethereum/arbitrum/optimism/base only). Net: the
+catalogue DENIES current AAVE-PLASMA coverage — not because it's structurally orphaned, but because no slot has
+ever selected it; adding one is a new-scope archetype-authoring decision, not a bug fix. Also confirmed the
+chain_id-defaults-to-1 risk this surfaced in `aave.py`/`aave_live.py` is the same mechanism already tracked in
+the P0 `defi_cloud_kms_silent_wrong_chain_id_fallback_2026_08_16` issue doc — cited, not duplicated. Full
+citation trail written into the flipped todo above. This batch plan's own remaining open todos: none — ready
+for the gated finalize plan (`defi_venue_e2e_batch1_2026_08_16_finalize.md`) to run its 6-step archival ritual.
