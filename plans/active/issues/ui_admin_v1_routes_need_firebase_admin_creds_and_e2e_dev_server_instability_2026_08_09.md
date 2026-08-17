@@ -154,3 +154,4 @@ just the ones in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
   record; todo 3 is dependency-blocked on it. Live-verified 2026-08-17: `ci.yml`'s e2e job still has no
   FIREBASE_ADMIN_CREDENTIAL/emulator step and `mock-handler.ts` still routes `/api/v1/` to the real server unchanged —
   gap confirmed still live, not stale.
+- **context-scout 2026-08-17**: populated context_scope (6 entries).

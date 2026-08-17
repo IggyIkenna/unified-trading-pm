@@ -53,6 +53,7 @@ context_scope:
     scripts/quality_gates/detect_template_drift.py,
     scripts/quality_gates/workflow_template_drift_baseline.json,
     scripts/workflow-templates/rollout-workflow-templates.sh,
+    /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md,
   ]
 source: >-
   Hit live 2026-08-14 in slot 26 (infra), gating an unrelated rollout-cloudbuild.py substitutions fix. Same-day
@@ -136,3 +137,7 @@ this doc's job was un-blocking the fleet, not redesigning the gate):
       unified-api-contracts (and any future repo growing a similarly hardcoded-consumer job), mirroring
       `check_cloudbuild_template_drift.py`'s STEP 5.108 consumer-scoped wiring — catches this class of drift at
       introduction instead of on a later unrelated PM commit. Repo: unified-api-contracts.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated context_scope (4 entries).

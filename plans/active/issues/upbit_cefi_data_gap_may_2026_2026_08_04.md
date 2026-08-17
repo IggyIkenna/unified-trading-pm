@@ -38,6 +38,7 @@ context_scope:
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
     /codex/02-data/mvp-scope-canonical.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    configs/data-providers.yaml,
   ]
 ---
 
@@ -253,3 +254,5 @@ Re-dispatched onto this same todo (resumed session). Fleet check (`gcloud comput
 still `RUNNING`, same zone. No change since slot-21's check. Not forcing past the Tardis 1-concurrent-VM cap. Releasing
 again with `reason_code: GATED` — resume condition unchanged: the fleet check above returning nothing `RUNNING` for the
 cefi/tradfi heavy/light pattern.
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).

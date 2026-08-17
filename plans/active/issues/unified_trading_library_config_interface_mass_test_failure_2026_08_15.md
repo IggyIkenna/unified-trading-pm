@@ -40,7 +40,13 @@ assigned_role: infra
 effort: medium
 drift_direction:
 locked_since:
-context_scope: []
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    unified-trading-library/tests/config_interface/,
+    unified-trading-library/tests/cloud_interface/,
+    unified-trading-library/.github/workflows/quality-gates-v2.yml,
+  ]
 ---
 
 ## Finding
@@ -99,3 +105,4 @@ rather than force-shipped past a red gate.
   `assigned_vm: NA` → `planning`. Fresh doc (2026-08-15), no prior audit history, no gate/banner/lock. Todo 1 is a
   diagnose-and-fix task with a stated methodology and a crisp done-when; todo 2 is a mechanical ship once todo 1
   clears. No design/judgment call.
+- **context-scout 2026-08-17**: populated context_scope (4 entries).
