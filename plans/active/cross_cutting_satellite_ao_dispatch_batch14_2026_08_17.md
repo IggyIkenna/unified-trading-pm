@@ -68,9 +68,9 @@ source: >-
 
 ## Todos
 
-- [ ] [AGENT] P1. Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
+- [x] [AGENT] P1. ✅ Add a regression guard so eager imports cannot creep back — a ratcheted module-count or import-graph
       check, shrink-only in the same sense as the other baselines in this corpus. Repo: unified-trading-pm. Source:
-      `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`.
+      `plans/active/lazy_scoped_loading_refactor_2026_08_16.md`. — unified-trading-pm@4173c83c54.
 - [ ] [SCRIPT] P2. Prototype a mechanical checker (standalone script, or a mode on
       `generate_na_doc_tranche_inventory.py`) that flags a doc where the Progress Log's own "extracted to `<path>`"
       phrasing names a doc that is NOT cited on any currently-open checkbox in the same file. Repo: unified-trading-pm.
@@ -137,11 +137,37 @@ source: >-
       passes a `StrategyInstruction` where `ExecutionOrchestrator` expects an `Instruction`, and the caller's own
       return-type contract (`dict[str, object]`) is satisfied at runtime by whatever `None` actually is — both
       claims from the source issue doc verified true, not merely plausible.
-- [ ] [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
+- [x] ✅ [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
       `LiveOrchestrator` and would receive an `ExecutionOrchestrator` instance in production, and check whether a
       `None` return where a `dict` is expected would raise, silently no-op, or corrupt downstream state. Depends on the
       prior todo landing first. Repo: execution-service. Source:
       `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      — **Blast radius: exactly ONE production cast site, two production call chains, both RAISE (not silent
+      no-op/corruption) — but as a caught-and-masked HTTP 500 while the underlying broker order may already have
+      executed.** Cast site: `execution_service/operations/manual/__init__.py:61`
+      (`ManualOperationHandler.get_or_create_orchestrator`, caches a real `ExecutionOrchestrator` under the
+      `LiveOrchestrator` type). `ManualOperationHandler.execute()` (same file, line 96) `return`s
+      `orchestrator.execute_instruction(instruction)` directly — i.e. propagates whatever the real implementation
+      returns (`None`), not the protocol's declared `dict[str, object]`. Two production callers reach this path
+      (`api/manual_instruction_api.py`, only when `_orchestrator is None` and `_manual_handler is not None` — the
+      manual-mode-without-preloaded-orchestrator branch): `_execute_via_orchestrator` (line 326,
+      `result = await _manual_handler.execute(instruction)`) and `_execute_approved_pending` (line 812, same
+      pattern). Both immediately do `result.get("status")` (audit-log write / `_handle_instruction_result`) on a
+      `None` result → `AttributeError: 'NoneType' object has no attribute 'get'`. Both call sites wrap this in a
+      broad `except (ValueError, TypeError, KeyError, AttributeError, RuntimeError)` that logs, audit-logs
+      `MANUAL_INSTRUCTION_FAILED`, and raises `HTTPException(500)` — so the crash IS caught, never an unhandled
+      500 or silent pass-through. **The real risk is not the exception itself but its timing**: `execute_instruction`
+      on `ExecutionOrchestrator` (`engine/orchestrator.py:235`) has already run its full instruction-execution body
+      (order submission to the venue) by the time it falls through to its implicit `None` return — so the operator
+      is told the manual instruction FAILED (500 + `MANUAL_INSTRUCTION_FAILED` audit event) when the underlying
+      order may have actually gone to the venue, creating a false-negative that could prompt a manual retry of an
+      already-executed order. The separate `register_orchestrator` path (`live_execution_handler.py:271`, pre-loaded
+      orchestrators, already `# pyright: ignore[reportArgumentType]`-flagged) feeds the SAME cached-orchestrator dict
+      with no `cast`, so it carries the identical risk through `_orchestrator.execute_instruction()` directly
+      (`manual_instruction_api.py:323,810`) whenever `_orchestrator` is the preloaded real object rather than
+      `None`. No other `cast(LiveOrchestrator, ...)` site exists in the repo (grepped `execution_service/` +
+      `tests/`) — this is the full blast radius. Next todo (real end-to-end test) should assert on this exact
+      false-negative-on-success behavior, not just the type mismatch.
 - [ ] [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
       W1 sub-agent's own test used (`tests/unit/test_external_instruction_api.py` in execution-service) — a real
       `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
@@ -165,3 +191,33 @@ source: >-
   dict[str, object]`, real implementation is `-> None` with no explicit return) hold up under direct citation. Full
   detail in the flipped checkbox above. Next item is the DIAG P1 "if confirmed, determine blast radius" todo — not
   in scope for this dispatch.
+
+- **2026-08-17 (slot 27, infra) — AGENT P1 "add a regression guard so eager imports cannot creep back" flipped —
+  unified-trading-pm@4173c83c54.** Added 3 rules (LL-01/02/03) to the existing `architectural_ratchets.yaml` gate
+  (already run by unified-trading-pm's own `quality-gates.sh`, cross-repo `target_glob` support already proven by
+  the ST-19/PB-19/UI-18 rules) rather than building a new checker script — same shrink-only baseline pattern as the
+  ruff DTZ/TID251 ratchet, applied to a static regex over each of the two lazy-loading fix's guarded files instead of
+  a runtime `sys.modules` count. Chose static-regex over a runtime module-count deliberately: the source plan's own
+  2026-08-16 re-measurement showed `sys.modules` counts drift with unrelated `uv.lock` changes (confirmed causal —
+  a pending `google-cloud-monitoring` dependency addition), so a runtime count would be a flaky shrink-only signal.
+  Guards `execution_service/algorithms/algorithms.py` + `execution_service/__init__.py` (banned:
+  `execution_service.algorithms.impl.*` / the pre-lazy `algorithms.algorithms` re-export shape, unconditional
+  module-top-level) and `strategy_service/engine/strategies/v2/factory.py` (banned: the 10 archetype-family
+  submodule imports), both anchored on column-0/non-`TYPE_CHECKING`-guarded so the existing lazy pattern's own
+  `if TYPE_CHECKING:` blocks never false-positive. Verified both directions: baseline stays at 0 (6 ratchets total,
+  0 violations) on the real current tree, and a standalone regex unit-test (not committed) confirmed each pattern
+  matches a simulated unconditional import of its banned prefix and does NOT match the existing TYPE_CHECKING-guarded
+  form. Shipping this hit a pre-existing repo-wide QG red unrelated to this task (6 broad-except sites over the
+  shrink-only baseline in 3 hook/script files, plus a frontmatter-schema-failing auto-filed issue doc) — verified
+  pre-existing via git-stash diff-out (RULES.md § 4b) and fixed inline (small/mechanical, ≤30min) rather than filing
+  a repo-blocker, since two other slots were independently doing the identical broad-except fix concurrently and a
+  wait-based repo-blocker would have raced the same content anyway; reconciled via 2 rounds of
+  `git pull --rebase --autostash` conflicts (all peer-vs-mine were functionally-identical noqa annotations or a
+  peer's superior real diagnosis superseding my placeholder frontmatter fix — kept the peer's content in both
+  cases, RULES.md § "never delete another agent's already-landed content"). Also noted for whoever reads this: this
+  session hit the QG host-governor's `QG_HOST_RAM_ABORT_PCT` runtime-abort watchdog repeatedly under heavy fleet-wide
+  concurrent-QG contention (6+ slots running `quality-gates.sh` simultaneously) when invoked via `run_in_background`
+  — every backgrounded attempt (including a bare `sleep 60` probe) got killed within seconds to a minute regardless
+  of wait/backoff, while a synchronous foreground invocation with an explicit long `timeout` (590000ms) completed
+  cleanly every time. Root cause not fully isolated (governor RAM-abort vs. something backgrounding-specific); the
+  practical workaround that worked was foreground + long explicit timeout.

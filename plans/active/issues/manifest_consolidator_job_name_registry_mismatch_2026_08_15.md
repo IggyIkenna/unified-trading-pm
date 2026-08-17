@@ -110,3 +110,24 @@ so they were left as a follow-up rather than expanded in-scope for a one-shot es
   `relaunch_consolidator.py` + `escalation.py` in the same session (shipped separately), this doc tracks the remaining
   three-file blast radius.
 - **context-scout 2026-08-17**: populated context_scope (6 entries).
+- **data_pipeline_alerts_reconciler 2026-08-17 (slot 28, dispatch agt-e28b69)**: 6-hourly channel-reconciliation sweep
+  found LIVE evidence this gap is causing ongoing production harm today, not just a theoretical blind spot. Neither
+  condition below reached `#data-pipeline-alerts` (by design — `consolidator_rules.py` routes `CONSOLIDATOR_DOWN`/
+  `MANIFEST_CONSOLIDATION_STALLED` to PagerDuty+Telegram only, no Slack mirror — so Slack silence on this specific
+  gap is expected, not itself a bug; flagged here because "channel quiet" would otherwise read as "fleet healthy").
+  `gcloud logging read` against `dp-alerting-subscriber`'s own ERROR-severity logs (ground truth, not Slack):
+  - `Consolidator DOWN for bucket=market-data-tick-cefi-prd-central-element-323112 heartbeat_age_sec=47326.6` at
+    `12:20:18Z`, climbing from `41949.1` at `10:50:20Z` — i.e. STILL down, continuously, for 13+ hours as of this
+    sweep, not a transient blip.
+  - `Manifest consolidation STALLED for bucket=market-data-tick-tradfi-prd-central-element-323112 streak=14
+    shards_scanned=560 baseline_shards=157` at `11:44:18Z`, climbing from `streak=10` at `11:28:12Z` — shards keep
+    landing but no cycle has merged them, ongoing.
+  - One anomalous `Consolidator DOWN for bucket=unknown heartbeat_age_sec=None` at `11:06:05Z` — bucket resolution
+    itself failed for that single fire; not chased further (single occurrence, did not recur in the 2h window
+    checked), possibly a transient blip during ambient VM churn rather than this doc's registry-name bug specifically.
+  Not independently re-diagnosed against this doc's specific job-name-mismatch root cause this sweep (proportionate
+  scope for a one-shot channel-reconciliation dispatch) — appending as corroborating live evidence that the 3-file
+  watcher/registry gap this doc already tracks is presently allowing a real, multi-hour CeFi outage + a growing
+  tradfi stall to run with only the slow heartbeat-staleness path (which itself paged PagerDuty/Telegram, not Slack)
+  catching it. Given `assigned_vm: planning` is already set, no reclassification needed — flagging for priority
+  given the live-incident evidence now attached, and per the "data pipeline correctness is the heartbeat" HARD RULE.
