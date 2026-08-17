@@ -34,7 +34,11 @@ estimate_calibrated_ai_days:
 locked_by:
 locked_since:
 context_scope:
-  [/codex/02-data/honest-coverage-model.md, /plans/active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md]
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md,
+    market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:
@@ -101,3 +105,5 @@ benign baseline, not part of it.
   human/NA not vm:planning"), preserving the session's breakdown so it survives context compaction. No mutation, no
   further action owned by this doc — follow-ups tracked in the sibling audit plan.
 - **na-eligibility-audit 2026-08-16** [body-hash:3385dde6f650c3f9]: KEEP-NA, valid — Read the full 102-line doc end-to-end. It is a pure-prose "reference" issue doc (doc_type: issue, nature: issue, tags include "reference") preserving a single session's investigation of cefi's 6.4M empty_confirmed rows -- grain de…
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries, was 2) — added `manifest_recorder.py`, the
+  row-key resolver named in the doc's own "Grain" section.

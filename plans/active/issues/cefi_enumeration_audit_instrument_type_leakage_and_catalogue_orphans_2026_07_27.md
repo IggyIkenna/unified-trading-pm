@@ -57,8 +57,8 @@ context_scope:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py,
-    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
-    market-tick-data-service/scripts/migrate_cefi_dated_perps_margin_marker_2026_07_09.py,
+    market-tick-data-service/scripts/migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_margin_marker.py,
   ]
 ---
 
@@ -422,3 +422,7 @@ adjacent axis the same script happens to also report). **Both findings investiga
   `mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`); the 3 files (script + `tardis_margin_marker.py`
   extension + unit tests) sit uncommitted in slot-24's working tree pending the blocker clearing. Do not re-flip the
   todo above to done until a real sha exists.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — swapped the now-superseded pattern-reference
+  script and the long-resolved batch5 plan for today's actually-shipped migration script
+  (`migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py`) and the `tardis_margin_marker.py` module it
+  extends.

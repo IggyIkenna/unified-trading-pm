@@ -578,3 +578,4 @@ before launch.
   fires cover days ≥08-10 via the tier=daemon fix" does NOT currently hold (nothing landed for 08-10). When the forward
   backfill runs (once the Tardis slot frees — `cefi-queue-heavy-binancefutu-x17-20260809-083733` still RUNNING), or
   before relaunching the cron host, RE-PROBE the still-empty days 08-06→08-10 rather than trusting that assumption.
+- **context-scout 2026-08-17**: re-scouted; context_scope unchanged (5 entries), still accurate.

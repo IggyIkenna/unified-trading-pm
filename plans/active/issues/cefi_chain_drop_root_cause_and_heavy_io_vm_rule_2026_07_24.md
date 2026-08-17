@@ -757,3 +757,7 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   `verify_cefi_canonical_4surface_2026_07_20.py` myself in this doc-reconciliation pass (that's a live script
   execution + archive action, out of scope here — no hard evidence yet to flip this todo). **Next dispatch**: run the
   verify script for a clean PASS, then archive this doc + parent per the finalize plan.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — re-verified all 6 entries resolve on
+  disk and remain accurate; the extensive blocker-tracking activity since the last marker concerns
+  `cefi_lighter_zksync_systemic_collision_2026_08_08.md`, already machine-linked via this doc's own `depends_on`
+  field per the 2026-08-09 marker's established rationale, not context_scope.

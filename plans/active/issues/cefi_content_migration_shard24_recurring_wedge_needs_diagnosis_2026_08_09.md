@@ -435,3 +435,6 @@ not `2026-01-07`.
   with this resolution rather than leaving it perpetually retrying an architecturally-impossible action. Every prior
   open todo in this doc is now closed; doc stays `assigned_vm: planning` / `archive_exempt: true` per its own
   frontmatter (no archival action taken or needed).
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) — first scout pass on this doc; the 3
+  pre-existing entries (the shard-24 early-preemption sibling finding, the vm-launcher-runbook codex SSOT, and the
+  migration-VM launcher script) were already well-chosen and all verified to resolve on disk, so kept unchanged.

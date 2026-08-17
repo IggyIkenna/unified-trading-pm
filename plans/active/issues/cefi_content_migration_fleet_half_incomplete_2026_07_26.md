@@ -686,3 +686,6 @@ accordingly.
   this doc's own corpus-wide 44-shard grep (out of scope for the task that surfaced this) — whoever picks up the P1/P2
   todos above should treat shard 24 as resolved and confirm the remaining count directly rather than assuming 44/44
   from this note alone.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — re-verified all 5 entries resolve on
+  disk and remain accurate; the 2026-08-15 shard-24-status pointer references a sibling doc that is independently
+  context-scouted in its own right, not a new dependency here.

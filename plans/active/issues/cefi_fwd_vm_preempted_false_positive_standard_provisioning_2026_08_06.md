@@ -55,7 +55,7 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /plans/archive/2026_08/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
+    /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_compute_ops.py,
     deployment-service/scripts/vm/launch-cefi-forward-poll.sh,
@@ -266,3 +266,9 @@ exposed to this class before the veto shipped.
   the only open checkbox is item 3 (`[SCRIPT] P3`, time-gated serial-console capture, non-blocking). All other items
   `[x]`; no further action pending.
 - **na-eligibility-audit 2026-08-16** [body-hash:6844ea10790869b0]: KEEP-NA, valid — Full end-to-end read (268 lines, single Read, no offset) confirms exactly 1 real open todo, matching both the Phase-0 machine-count and my own grep.
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — fingerprint match: the VM name
+  `cefi-fwd-20260806-064507` (this doc's own subject) is cited by
+  `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` ("same double-insert pattern as
+  cefi-fwd-20260806-064507") as the precedent for a second cefi-fwd VM double-insert/deletion 2 days later — swapped
+  in for the lower-forward-value shard24 archived doc to complete the bidirectional link (the 08-08 doc already cited
+  this one).
