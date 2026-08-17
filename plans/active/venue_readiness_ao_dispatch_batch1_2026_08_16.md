@@ -88,11 +88,24 @@ those stay local by construction and are deliberately absent.
       trees. The MTDS batch-venue side reuses invariant 1's own `batch_capable_venues()` (which IS AST-based),
       loaded by file path rather than `sys.path.insert` after finding the latter shadows the real PyPI `vcr` package
       with `tests/vcr/` for the rest of the pytest session (24 collection errors) — see the test file's docstring.
-- [ ] [BACKEND] P1. **Build SIT invariant 4 — UAC ↔ execution-service address drift.** Assert every contract address
-      execution-service resolves matches the UAC SSOT, so the two cannot diverge silently. This matters because six
-      addresses are now read by BOTH services from one registry, meaning a single error propagates rather than being
-      caught by disagreement. Same AST-static-parsing method as above. Done-when: the invariant fails on a
-      deliberately-introduced address mismatch — demonstrate it, do not assert it.
+- [x] ✅ [BACKEND] P1. **Build SIT invariant 4 — UAC ↔ execution-service address drift.** — **ALREADY SHIPPED before
+      this batch was dispatched**, in the same session that produced this batch's own context_scope doc:
+      `unified-api-contracts@e9201d80` (new `tests/test_lst_token_address_drift_invariant.py`, AST-static-parsing
+      the execution-service side, direct import of UAC's `LST_TOKEN_ADDRESS_BY_CHAIN` on the UAC side) +
+      `system-integration-tests@c30e412851` (wired as invariant #25 in `run_cross_repo_invariants.sh`, entry
+      `"LST token address drift — UAC ⟺ execution-service (cross-repo invariant)"`). Recorded in
+      `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md`'s SIT-invariant-2 todo but never flipped
+      here — this batch plan was authored 2026-08-16 without cross-checking that doc (same duplication shape as
+      this batch's own close-all todo above). **Live-verified this session, not trusted from the issue doc's own
+      claim**: both cited SHAs confirmed ancestors of `origin/live-defi-rollout`; ran
+      `tests/test_lst_token_address_drift_invariant.py` directly (7/7 passed, current state has zero drift);
+      demonstrated the done-when's negative control myself — temporarily set
+      `execution-service/execution_service/defi_execution/protocols/marinade.py`'s `MSOL_MINT` to a deliberately
+      wrong literal, re-ran the suite, confirmed `test_lst_token_addresses_no_drift_from_execution_service` FAILS
+      with an explicit `SOLANA/mSOL: UAC registry=... != execution-service ...` mismatch message (6/7 passed, the
+      other 6 unaffected), then reverted the literal and re-ran to confirm 7/7 green + zero net diff
+      (`git diff`/`git status --porcelain` both empty) before restoring. No code change needed here — flipping
+      only.
 - [ ] [BACKEND] P1. **Migrate execution-service protocol modules onto the UAC LST address SSOT.** Removes the second
       source of truth for LST token addresses. The SSOT is
       `unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py`; `lido.py` already sources
@@ -166,3 +179,16 @@ reference-bucket exemption — and that reasoning was previously implicit/undocu
 one genuine gap: its write target IS oracle-covered and the oracle has covered CEFI/DEFI id-form since 2026-07-20/23,
 but its `canonical` leg stayed TradFi-only. Added a new `[DATA] P1` todo to fix that (real code change, not a doc
 audit) rather than absorbing it into this todo per findings-triage.
+
+**2026-08-17 (slot 7) — SIT invariant 4 todo flipped, no code change needed.** Dispatched against the "Build SIT
+invariant 4" P1 todo. Found it was already shipped — `unified-api-contracts@e9201d80` +
+`system-integration-tests@c30e412851`, per `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md`'s own
+SIT-invariant-2 todo entry — but this batch plan's copy was never checked against that doc when authored 2026-08-16,
+same duplication shape already found once in this plan's close-all todo. Did not trust the issue doc's claim: verified
+both SHAs are ancestors of `origin/live-defi-rollout`, ran `tests/test_lst_token_address_drift_invariant.py` directly
+(7/7 passed), then live-demonstrated the todo's own done-when (a negative control, not an assertion) by temporarily
+setting `execution-service`'s `marinade.py::MSOL_MINT` to a wrong literal, confirming the drift test fails with an
+explicit mismatch message, then reverting and re-confirming 7/7 green + zero net diff. Full detail in the flipped
+checkbox above. Skipped this session's original dispatch (`venue_e2e_wiring-0fc22529c882`, a different plan) as
+GATED before picking this one up — see `/plans/active/venue_e2e_wiring_2026_08_16.md`'s Progress Log for that
+unrelated finding.
