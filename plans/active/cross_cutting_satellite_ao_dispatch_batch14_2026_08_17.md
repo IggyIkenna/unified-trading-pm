@@ -137,11 +137,37 @@ source: >-
       passes a `StrategyInstruction` where `ExecutionOrchestrator` expects an `Instruction`, and the caller's own
       return-type contract (`dict[str, object]`) is satisfied at runtime by whatever `None` actually is — both
       claims from the source issue doc verified true, not merely plausible.
-- [ ] [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
+- [x] ✅ [DIAG] P1. If the prior todo confirms the mismatch, determine blast radius — trace every call site that casts to
       `LiveOrchestrator` and would receive an `ExecutionOrchestrator` instance in production, and check whether a
       `None` return where a `dict` is expected would raise, silently no-op, or corrupt downstream state. Depends on the
       prior todo landing first. Repo: execution-service. Source:
       `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      — **Blast radius: exactly ONE production cast site, two production call chains, both RAISE (not silent
+      no-op/corruption) — but as a caught-and-masked HTTP 500 while the underlying broker order may already have
+      executed.** Cast site: `execution_service/operations/manual/__init__.py:61`
+      (`ManualOperationHandler.get_or_create_orchestrator`, caches a real `ExecutionOrchestrator` under the
+      `LiveOrchestrator` type). `ManualOperationHandler.execute()` (same file, line 96) `return`s
+      `orchestrator.execute_instruction(instruction)` directly — i.e. propagates whatever the real implementation
+      returns (`None`), not the protocol's declared `dict[str, object]`. Two production callers reach this path
+      (`api/manual_instruction_api.py`, only when `_orchestrator is None` and `_manual_handler is not None` — the
+      manual-mode-without-preloaded-orchestrator branch): `_execute_via_orchestrator` (line 326,
+      `result = await _manual_handler.execute(instruction)`) and `_execute_approved_pending` (line 812, same
+      pattern). Both immediately do `result.get("status")` (audit-log write / `_handle_instruction_result`) on a
+      `None` result → `AttributeError: 'NoneType' object has no attribute 'get'`. Both call sites wrap this in a
+      broad `except (ValueError, TypeError, KeyError, AttributeError, RuntimeError)` that logs, audit-logs
+      `MANUAL_INSTRUCTION_FAILED`, and raises `HTTPException(500)` — so the crash IS caught, never an unhandled
+      500 or silent pass-through. **The real risk is not the exception itself but its timing**: `execute_instruction`
+      on `ExecutionOrchestrator` (`engine/orchestrator.py:235`) has already run its full instruction-execution body
+      (order submission to the venue) by the time it falls through to its implicit `None` return — so the operator
+      is told the manual instruction FAILED (500 + `MANUAL_INSTRUCTION_FAILED` audit event) when the underlying
+      order may have actually gone to the venue, creating a false-negative that could prompt a manual retry of an
+      already-executed order. The separate `register_orchestrator` path (`live_execution_handler.py:271`, pre-loaded
+      orchestrators, already `# pyright: ignore[reportArgumentType]`-flagged) feeds the SAME cached-orchestrator dict
+      with no `cast`, so it carries the identical risk through `_orchestrator.execute_instruction()` directly
+      (`manual_instruction_api.py:323,810`) whenever `_orchestrator` is the preloaded real object rather than
+      `None`. No other `cast(LiveOrchestrator, ...)` site exists in the repo (grepped `execution_service/` +
+      `tests/`) — this is the full blast radius. Next todo (real end-to-end test) should assert on this exact
+      false-negative-on-success behavior, not just the type mismatch.
 - [ ] [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
       W1 sub-agent's own test used (`tests/unit/test_external_instruction_api.py` in execution-service) — a real
       `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
