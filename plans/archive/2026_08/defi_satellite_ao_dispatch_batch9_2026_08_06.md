@@ -18,7 +18,7 @@ summary: >-
   MDPS candle-backfill fleet), this batch extracts 17 distinct todos. The remaining 33 non-eligible orphaned docs are
   Deferred below, tagged by taxonomy category (20 operator_gated, 8 genuinely_human_only, 3 too_large_or_risky, 2
   time_gated) — none are re-triageable without an operator ruling or elapsed time.
-status: active
+status: complete # (was: active) 2026-08-17 archival: all 18 todos done, finalize gate cleared, no locked_by
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -76,6 +76,15 @@ drift_direction: advance-code
 ---
 
 # DeFi satellite AO batch 9 — 2026-08-06
+
+> **🟢 ARCHIVED 2026-08-17** — all 18 todos done, no `locked_by`. Reconciled by
+> `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`: all 18 source docs re-checked (16 already
+> correctly-closed-by-citation, 2 orphaned citations fixed), the 2 conflict-parked + 33 non-batchable Deferred items
+> re-verified against live corpus state (10 now archived/resolved, 4 functionally done pending a separate archival
+> sweep, 19 still correctly held) — zero new batch10 candidates, since anything that genuinely cleared since
+> 2026-08-06 was already independently actioned by the standing `/na-eligibility-audit` cadence into
+> `defi_satellite_ao_dispatch_batch16_2026_08_17.md`. Successor: none (extraction batch, not superseded by a single
+> doc). Original path: `plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md`.
 
 **status: active — operator-approved 2026-08-06, dispatching.** Drafted autonomously by the scheduled
 `ag_closeout_auditor` running `/ag-closeout-audit defi`, per

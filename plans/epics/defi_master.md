@@ -63,8 +63,6 @@ related_plans:
   - ../active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch6_2026_07_30.md
   - ../active/defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md
-  - ../active/defi_satellite_ao_dispatch_batch9_2026_08_06.md
-  - ../active/defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md
   - ../active/defi_strategy_pnl_axis_index_2026_07_24.md
   - ../active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
   - ../active/defi_track5_coverage_mvp_backfill_2026_07_24.md
@@ -1789,16 +1787,6 @@ Phase-1/Phase-3 triage of the defi closeout-orphan corpus
 
 **status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: DeFi satellite AO batch 2 — finalize
 (reconcile source docs + resolve deferrals + archive)
-
-### [`defi_satellite_ao_dispatch_batch9_2026_08_06`](../active/defi_satellite_ao_dispatch_batch9_2026_08_06.md)
-
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: DeFi satellite AO batch 9 —
-ag-closeout-audit defi tranche orphan extraction (2026-08-06)
-
-### [`defi_satellite_ao_dispatch_batch9_2026_08_06_finalize`](../active/defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md)
-
-**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: DeFi satellite AO batch 9 — finalize
-(reconcile 17 source docs + archive)
 
 ## P3 — backlog; revisit quarterly
 
