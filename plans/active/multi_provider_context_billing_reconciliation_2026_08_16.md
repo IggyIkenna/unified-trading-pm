@@ -39,7 +39,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -241,6 +241,49 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       dashboard — the stated reason for building this at all: "some models are cheap per turn but need many turns;
       some are cheap per token but use lots of tokens" is only visible on real task data, not a synthetic single-prompt
       probe. Done when: a real dispatched task's turn count and token count are both visible in one place.
+- [ ] [UI] P1. New, operator-confirmed 2026-08-17 (clarifies/narrows the `[DATA] P1` unified-billing-schema todo above,
+      does not duplicate it): extend Codex's and GLM's account treatment to match Anthropic's subscription-shaped
+      weekly/5-hour + `boost_multiplier` machinery specifically — NOT DeepSeek's dollar-balance shape, NOT Gemini's
+      RPM/RPD shape. Operator's own framing: "Codex and GLM have exactly the same structure, or at least similar
+      enough to Anthropic in terms of the monthly subscription... we should just get the same thing right with the
+      boost or the same columns, because we're going to do a direct comparison of those once we put some tasks
+      through those models." Concretely: generalize `compute_claude_wallet_reconciliation()`/`ClaudeWalletPanel.tsx`
+      (already shipped for Anthropic, `agent-orchestrator@616450ffac`) to Codex and GLM, and extend
+      `dashboard/src/layout.tsx:4485`'s `isDeepseek`-only branch to a real `providerUsageKind(provider)` lookup so
+      Codex/GLM stop inheriting the raw `weekly_msg_limit=240` default (`server/accounts.py:142`) with no live signal
+      behind it. Done when: Codex and GLM accounts show the same weekly/5-hour + boost-multiplier columns as
+      Anthropic, computed from a real signal (not the hardcoded default), so a direct model-comparison view is
+      apples-to-apples once tasks start flowing to all three.
+- [ ] [DATA] P1. New (2026-08-17): join per-task compaction occurrence — whether a given `task_id` triggered
+      `forced_precompact`/`forced_compact`/`forced_compact_ineffective` during its own run — onto a queryable
+      per-task record. `ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md` already logs these
+      events with a timestamp + `slot_id` (`server/fleet_kpis.py`/`server/context_lifecycle.py`), and `TaskUsageRow`
+      (`server/orm.py:292`) already carries `assigned_at`/`completed_at` per task — the join key (an event's
+      timestamp falling inside a task's own `[assigned_at, completed_at]` window for that `slot_id`) exists in
+      principle but is never materialized as a field or query today. Precondition for retrospective complexity
+      routing — "give me all tasks that required autocompact," so a model with a small context ceiling can be routed
+      away from tasks that historically need compaction. Done when: a real query (or a new persisted field, e.g.
+      `TaskUsageRow.compact_count`) answers "did task X trigger compaction" for a real historical task without
+      hand-correlating timestamps.
+- [ ] [INFRA] P1. New (2026-08-17): capture the PEAK/high-watermark `context_used_pct` reached during a task, not
+      just the end-state token sums `TaskUsageRow` already stores. `context_lifecycle.py`'s per-tick reader already
+      sees `context_used_pct` live for every active target — nothing records the max value seen during a task's own
+      window onto its durable per-task record. Second precondition for complexity routing (route historically
+      low-peak-context tasks to a model with a small context ceiling). Done when: a real completed task's record
+      shows a real peak-context value, cross-checked against a live session known to have approached a specific pct.
+- [ ] [DATA] P2. New (2026-08-17): capture which repo(s) a task actually touched (from its real diff/commits, not the
+      plan's declared `repos:` frontmatter, which is a stated intent, not a measurement) and persist it per task. No
+      such field exists today — confirmed by grep: `repos_touched`/`repo_count` in `server/` only match unrelated
+      dirty-worktree-state concepts (`server/routes/git_health.py:277`, `server/worktree_clean_check/_report.py:51`).
+      Useful as a difficulty heuristic alongside turns/context. Done when: a real completed task's record shows the
+      real repo(s) it committed to, sourced from actual commit/push evidence.
+- [ ] [DATA] P2. New (2026-08-17): persist the task's `context_scope` (the reading-list already passed to the worker
+      at dispatch, `server/dispatch.py:564`) onto the completed-task record, so it's retrospectively joinable against
+      the task's real turn count/token usage/compaction outcome (todo above). Today `context_scope` is
+      dispatch-time-only and never carried through to `TaskUsageRow` or any other durable per-task table — this is
+      what lets a future analysis ask "does a bigger context_scope reading list predict more turns/context/
+      compaction" rather than assuming it. Done when: a real completed task's record shows both its `context_scope`
+      size and its real outcome metrics (turns/tokens/compacted) joinable in one query.
 
 ## Progress Log
 
@@ -250,4 +293,18 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   provider-agnostic-mechanism-vs-provider-specific-data-accuracy gap in `context_lifecycle.py`, Grok 4.6's 500K
   context ceiling confirmed live (hard-enforced, no self-compaction), and `calibrate_account_value.py`'s deliberate
   (not buggy) reset-window-dropping design. No code written yet — investigation + plan authoring only.
+- **2026-08-17 — 5 new todos from an interactive UI/telemetry review**: operator reviewed the AO dashboard and asked
+  three things. (1) What does "Input per turn" mean — answered inline, not a gap: confirmed real cache-miss input
+  tokens/turn, working as intended (`dashboard/src/TaskUsageWindows.tsx:320-323`, `server/routes/backlog.py:928`), not
+  a tool-call count. (2) Why every account shows Anthropic-shaped weekly/5-hour limits regardless of provider —
+  confirmed a real gap (`server/accounts.py:142`, `dashboard/src/layout.tsx:4485`), narrowed by the operator's own
+  follow-up correction: Codex and GLM are subscription-shaped like Anthropic and should get the SAME
+  weekly/5-hour+boost treatment, not be excluded from it — new `[UI] P1` todo above. (3) Whether enough per-task
+  telemetry exists to retrospectively identify "hard" tasks before more providers go live. Confirmed `TaskUsageRow`
+  (`server/orm.py:292`) already durably captures turn_count/4-way token breakdown/spend/duration per task, but four
+  things do not exist yet — per-task compaction-occurred flag, peak-context high-watermark, real repos-touched, and
+  context_scope size carried through to the completed-task record — added as the 4 new todos above. None of this
+  plan's existing todos covered those four; the existing `[DATA] P1` unified-billing-schema todo is billing-shaped
+  (token counts × published rate), not difficulty-shaped (turns/compaction/context/repos as future routing signals) —
+  kept separate, not merged, since they answer different questions. No code written this session — doc-only.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ee26e6744e46c17e]: KEEP-NA, valid — explicit dated operator ruling on record: 'human plan, not AO-dispatched' for the whole doc's live-testing/design-call content (multi-provider billing/context research).
