@@ -142,6 +142,29 @@ context_scope:
       before including/excluding them, do not guess. Done-when: `.tf` diff drafted, `quality-gates.sh`-green,
       shipped via quickmerge (code only — `tofu apply` stays operator-executed, matching this repo's existing
       pattern of "authored, pending operator apply").
+- [x] ✅ [INFRA] P2. BLOCKED-ON:deployment_service_prod_terraform_drift_2026_08_07 — **RESOLVED 2026-08-16** (the
+      blocker doc itself, full detail there). This diff shipped as a `-target`-safe, QG-green, dirty-deps-carve-out
+      commit — see the next todo's evidence.
+- [x] ✅ [INFRA] P2. **Author the Terraform diff for the canonical-bucket lifecycle exemption set** — `deployment-service@2995d0cf`
+      (2026-08-17, direct-push dirty-deps carve-out, `unified-api-contracts` still blocked at ship time). Discovered
+      while authoring this that the WHOLE dynamic per-kind exemption mechanism (`canonical_strip_lifecycle_kinds`,
+      the kind-resolver locals, the `dynamic "lifecycle_rule"` block) was already live in production for
+      `portfolio-state` via an earlier targeted `tofu apply`, but its `.tf` source was never committed — same drift
+      class as the market-data-cefi incident, caught before it could silently revert on a future blanket apply.
+      **Corrected the terminology confusion this plan's own comment created**: `canonical_strip_lifecycle_kinds` is
+      an EXEMPTION list (membership = rule stripped OFF = stays hot), not a "gets cooled" list — the classification
+      table's "STRIP → COLDLINE@60" Rule column described the pre-existing blanket default these buckets would fall
+      to if left unclassified, not the target state. **Operator resolved 2026-08-17**: the full 47-bucket raw
+      pipeline/working-data estate stays EXEMPT (always-hot, governed by manifest retention only) — added the
+      remaining 12 yaml-derived kinds (market-data, market-data-tick-prediction, instruments-store,
+      instruments-store-prediction, features, features-sports, features-calendar, ml-store, execution-store,
+      strategy-store, strategy-store-prediction, config-store) plus `alerting-service`/`features-commodity`
+      (commodity-signals-batch) to `canonical_strip_lifecycle_kinds`, and removed `uts-{env}-deployment-state`'s
+      separate hand-written `lifecycle_rule` block in `main.tf` directly (not part of the yaml-derived for_each).
+      `backtest-results` (not in `cloud-providers.yaml`, TF-unmanaged, no `.tf` representation exists) fixed live
+      via a direct bucket-level lifecycle-clear instead — confirmed empty rule set after. `pnl-attribution-output`
+      resolved SEPARATELY (see entry below) — NOT a lifecycle-rule question. QG green (full run, exit 0, sentinel
+      `78dfe2ef` == HEAD at push time).
 - [ ] [INFRA] P3. **The 10(IS+MTDS)+8(Group B)=18-jobs→5-per-asset-group consolidation is NOT shipped and is NOT a
       pure Terraform regroup** (verified 2026-08-16, reading `manifest_consolidator_scheduler.tf` directly — no GCS
       calls): both `for_each` blocks pass a single `--bucket` arg per job, one job per bucket, and the file's own
@@ -644,3 +667,32 @@ context_scope:
   history (see Progress Log above) — edits here were made conservatively, touching only the specific todo anchors
   needed for this run's extraction, not restructuring the doc.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **2026-08-17 (interactive session, UNCLEAR-bucket resolution + pnl-attribution-output correction)**: operator
+  resolved all 4 UNCLEAR buckets. `backtest-results`/`alerting-service`/`commodity-signals-batch`/the full 47-bucket
+  exemption ruling shipped as `deployment-service@2995d0cf` (see todo above for full detail).
+  **`pnl-attribution-output` — the classification table's "dead orphan, may just need deleting" call was WRONG,
+  caught by the delete-safety re-check this very todo's own remedy specified.** A dispatched Explore agent first
+  corroborated "genuinely dead orphan, safe to delete" (zero live code references to the bucket NAME anywhere;
+  strategy-service's real PnL-attribution writes resolve to `portfolio-state-prd` via `resolve_bucket_name`/UAC
+  `PATH_REGISTRY`, confirmed via a 2026-07-19 migration doc's own parity check reading the bucket as empty at fold
+  time). Both were consistent with an initial guess at the bucket's full name
+  (`pnl-attribution-output-central-element-323112`) — which 404s, doesn't exist. The REAL bucket is the bare name
+  `pnl-attribution-output` (matches strategy-service's own code comment: "the PnL-attribution output store was a
+  BARE default bucket... never in cloud-providers.yaml"). Listing IT directly, immediately before the planned
+  delete, found **7 real parquet files**, not zero: `by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=
+  funding-rate-dispersion/year=2024/month=01/2024-01-0{1..7}.parquet`. Operator recognized the shape and asked to
+  check `e2e-testing` — confirmed: `e2e-testing/scripts/defi/test_apd_paper_e2e_smoke.py` +
+  `scripts/strategy/scenarios/apd_price_dispersion_btc.json` +
+  `reports/defi_paper_runs/arbitrage_price_dispersion_template.md` (which literally states
+  `dispersion_type: funding-rate-dispersion`, `Archetype: ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion
+  variant)`) is a dedicated paper-trading smoke-test suite for exactly this strategy/variant — the 7 files are its
+  historical paper-run output (Jan 2024 is the smoke test's fixed simulated backtest window, not when the test
+  itself ran). **Operator decision: keep the bucket and its 7 files permanently — it's a useful historical
+  paper-run record, not touched further.** Lesson: a "confirmed empty" classification from 2 independent sources
+  (a written migration doc AND a fresh dispatched-agent investigation) was still wrong, because both silently
+  assumed a bucket-name pattern that doesn't hold for this one bucket — the delete-safety protocol's own
+  "re-verify immediately before touching" step is what caught it, not the prior research. Neither source was
+  lazy; both were victims of a plausible-but-wrong naming assumption neither had reason to question. See
+  `/codex/12-agent-workflow/measurement-claims-discipline.md` for the general pattern this fits (an absence claim is
+  a statement about the probe, not the target, until the probe is proven to have looked in the right place).
