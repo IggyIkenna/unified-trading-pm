@@ -140,12 +140,19 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
       own text ("running before the flip means re-running after"), "run now" is the self-consistent answer. Source:
       `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 2. Done when: the issue doc is updated
       with the decision + evidence, and the source doc's checkbox is flipped.
-- [ ] [REVIEW] P2. **Pick up (or confirm claimed by its owner) `sports_taxonomy_p2_migration_2026_08_08.md`'s dangling
+- [x] ✅ [REVIEW] P2. **Pick up (or confirm claimed by its owner) `sports_taxonomy_p2_migration_2026_08_08.md`'s dangling
       Verification section** (four-surface reconciliation, accepted-exception shrinkage, honest-coverage re-run) — now
       unblocked since the writer has stopped re-accumulating `trades`. Source:
       `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 2. Done when: the section is either
       picked up with progress cited or confirmed already claimed by an active owner, and the source doc's checkbox is
-      flipped.
+      flipped. — **The premise was stale, not dangling.** Read `sports_taxonomy_p2_migration_2026_08_08.md` directly
+      (not just this batch's summary): all 3 Verification todos were already `[x]` done 2026-08-15
+      (slot-9/slot-14), predating the source plan's own same-day "still dangling" claim. That verification correctly
+      surfaced 2 real findings: one RESOLVED+archived, one
+      (`issues/sports_p2_reference_bucket_uppercase_regrowth_2026_08_15.md`, P1 residual restamp) still open but
+      actively GATED-monitored across 5 prior sessions (most recently 2026-08-16), waiting on
+      `instruments-service@b872799efa`'s promote-to-main — not neglected. Source doc's Phase 2 checkbox flipped in
+      the same session; its stale "dangling" prose corrected too.
 - [ ] [DATA] P2. **Census every remaining `data_type=trades` GCS object in the sports raw-tick bucket** as of the
       writer-flip Phase 1 completion; split into (a) objects already twinned by the 2026-08-12 restamp (safe to
       delete later — a verified duplicate exists) vs (b) objects written after that restamp that were never relabeled
@@ -178,6 +185,15 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
   checkboxes annotated with the extraction citation in the same run. **Status set `active`** (not `draft`) per the
   2026-07-30 no-double-gate ruling this skill's own verdict already constitutes the operator decision to apply.
 
+- **2026-08-17 (slot-3, review) — dispatched onto the `[REVIEW] P2` Verification-section todo; found it was a
+  stale-premise resolution, not a pickup.** Read `sports_taxonomy_p2_migration_2026_08_08.md` directly (per the
+  pre-task conflict-check hard rule, not just this batch's or the source plan's summary text) and found all 3
+  Verification todos already `[x]` done 2026-08-15 (slot-9/slot-14) — the source plan's own "still dangling" claim,
+  written the same day, simply predated that work and was never re-checked. Flipped both this todo and the source
+  doc's Phase 2 checkbox, and corrected the source doc's stale prose claim in the same session. Same pattern as the
+  todo-5/6 finding immediately below (a referring doc's premise going stale without anyone re-checking it against
+  the actual target doc) — worth folding into the same process-gap note about the na-eligibility-audit conflict-check
+  protocol not cross-checking claims against the CURRENT state of cited target docs.
 - **2026-08-17 (slot-10, data_engineering) — dispatched onto todo 6 ([DATA] P1, 3-checkpoint pipeline-check sweep);
   found it (and adjacent todo 5) were stale duplicates, not live work.** Before running any of the 15 implied
   pipeline-check dispatches, grepped the corpus for prior sports runs of the same 5 mechanisms per the pre-task

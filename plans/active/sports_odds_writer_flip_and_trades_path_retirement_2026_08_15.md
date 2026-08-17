@@ -31,7 +31,7 @@ related:
 parent_epic: sports_master
 source: interactive-session
 created: 2026-08-15
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 drift_direction: advance-code
 assigned_vm: NA
 execution_scope: local-only
@@ -103,10 +103,11 @@ Phase 1 is unblocked too; sequencing between the two plans is now a scheduling c
 
 **Also explicit non-duplication**: `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md` (open issue, P2)
 already owns the IS-bucket cross-bucket mirror census/relabel (43,726 `trades` / 32 `TRADES` rows on the
-`instruments-store-sports-prd` surface). Referenced below, not repeated. `sports_taxonomy_p2_migration_2026_08_08.md`
-still has its own dangling Verification section (four-surface reconciliation, accepted-exception shrinkage,
-honest-coverage re-run) -- that plan's own todos, not duplicated here; this plan's Phase 2 explicitly gates on them
-completing rather than re-doing them. `sports_taxonomy_p3_consumers_2026_08_08.md` (panel/ML/arb/catalogue/Betfair
+`instruments-store-sports-prd` surface). Referenced below, not repeated. `sports_taxonomy_p2_migration_2026_08_08.md`'s
+Verification section (four-surface reconciliation, accepted-exception shrinkage, honest-coverage re-run) was believed
+dangling at authoring time but was actually already `[x]` done as of 2026-08-15 -- confirmed 2026-08-17 (slot-3,
+review), see Phase 2 todo 2's resolution note below; that plan's own todos, not duplicated here.
+`sports_taxonomy_p3_consumers_2026_08_08.md` (panel/ML/arb/catalogue/Betfair
 consumer wiring) has no overlap with the writer flip -- confirmed via full read, it never touches
 `_build_sports_shard_path()`.
 
@@ -179,11 +180,19 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
       stop new `trades` rows first (running it before the flip means re-running it after); update that issue doc, do not
       re-derive its census here. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`**
       (`assigned_vm: planning`) — Phase 0/1 are both landed, so this decision is now determinable.
-- [ ] [DATA] P2. Once this plan's Phase 0/1 land, `sports_taxonomy_p2_migration_2026_08_08.md`'s own dangling
+- [x] ✅ [DATA] P2. Once this plan's Phase 0/1 land, `sports_taxonomy_p2_migration_2026_08_08.md`'s own dangling
       Verification section (four-surface reconciliation, accepted-exception shrinkage, honest-coverage re-run) can
       finally run against a writer that has stopped re-accumulating `trades` -- flag that plan's owner (or pick it up
       directly if unclaimed) rather than duplicating those todos here. **Extracted 2026-08-17 to
-      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`).
+      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`). **RESOLVED 2026-08-17
+      (slot-3, review) -- the premise was stale, not dangling.** All 3 Verification todos in
+      `sports_taxonomy_p2_migration_2026_08_08.md` were already `[x]` done as of 2026-08-15 (slot-9/slot-14),
+      predating this plan's own authoring-day claim that they were still open. That reconciliation correctly
+      surfaced 2 real findings: `issues/sports_p2_raw_tick_live_writer_still_emits_trades_2026_08_15.md` (RESOLVED,
+      archived) and `issues/sports_p2_reference_bucket_uppercase_regrowth_2026_08_15.md` (still open, P1 residual
+      restamp -- actively GATED-monitored across 5 prior sessions waiting on
+      `instruments-service@b872799efa`'s promote-to-main + redeploy, most recently re-checked 2026-08-16; not
+      neglected, no action needed from this task). Nothing left to pick up.
 
 ## Phase 3 -- retire the orphaned old-path objects ([OPERATOR]-gated GCS delete)
 
