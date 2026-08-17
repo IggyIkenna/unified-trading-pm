@@ -737,3 +737,16 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   `reason_code: "GATED"` (own done-when condition — N=1 cap clear — not yet met; not a genuine ambiguity needing
   `/blocked`), no `park_now` given the ~10-11h ETA exceeds `dispatch_cooldown_max_eta_minutes` (180min default) —
   periodic re-verify (the established pattern throughout this doc) will catch the cap clearing.
+
+- **2026-08-17T~08:00Z (slot-11, backend_engineer craft adopted for this infra-tagged dispatch, dispatched on the
+  10th-relaunch `[INFRA] P1` todo)**: Independent re-verify before acting, per craft north-star "never launch blind."
+  N=1 Tardis cap check **still FAILED** — the same competing VM slot-16 found still holds it:
+  `gcloud compute instances describe cefi-binance-futures-2026-heavy-20260817-010713 --zone=asia-northeast1-c` →
+  `RUNNING`, metadata confirms `VM_TARDIS_CONSUMER=1`, `VM_TASK=cefi-coverage-backfill`, `VM_VENUE=BINANCE-FUTURES`,
+  `VM_START_DATE=2026-04-20`/`VM_END_DATE=2026-08-16` — unchanged from slot-16's identification, still the sole
+  Tardis consumer. `gcloud compute instances list --filter="name~cefi-queue"` confirmed still empty (no 10th relaunch
+  exists). AWS `describe-instances` (running/pending) showed only the two standing orchestrator VMs — no AWS-side
+  Tardis consumer. Did NOT launch the 10th relaunch (would breach the N=1 hard cap while this VM is still live) and did
+  NOT invoke `FORCE=1` (no operator ruling covers it here). Todo remains open — proceed once this competing VM
+  completes or is confirmed dead. Declining via `reason_code: "GATED"` (own done-when condition unmet, not a genuine
+  ambiguity), no `park_now` per the same established multi-hour-ETA rationale.
