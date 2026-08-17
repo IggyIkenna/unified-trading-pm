@@ -51,7 +51,6 @@ context_scope:
   [
     /codex/02-data/lst-exchange-rate-surfaces.md,
     /plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
-    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
     /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
     features-service/features_service/onchain/engine/lst_features.py,
   ]
@@ -867,4 +866,5 @@ tarball once; always check the launcher's own freshness warning output, and if s
 - **2026-08-08 (doc-hygiene)**: Corrected Phase 5 #1's table row — cited doc's credential item is the-odds-api.com
   (sports, cleared 2026-08-03/07), not Tardis; this item's real OOM blocker was fixed 2026-07-26. In-place, still 998L.
 - **na-eligibility-audit 2026-08-16** [body-hash:c84fdaab8684f1c1]: KEEP-NA, valid — 868-line plan (self-reported at 998L as of 2026-08-08, near the 1000L hard cap -- flagged repeatedly by na-eligibility-audit 2026-08-03/2026-08-07 as requiring marker-only edits going forward), personally read end-to-end across both pages.
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — dropped `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (confirmed stale per this doc's own 2026-08-17 plan_reconciler correction: Phase 5 #1's real blocker is an operator-decision-only caution, not that issue).
 - **na-eligibility-audit 2026-08-17**: RECLASSIFY (per-todo split), applied — doc now 869 lines (down from 998L as of 2026-08-08, well clear of the 1000L cap per today's /plan-reconcile extraction — the marker-only restriction from 2026-08-03/07 no longer applies), read end to end. 2 items extracted (conflict-checked, zero prior claims found) to `defi_satellite_ao_dispatch_batch16_2026_08_17.md` (+ finalize, status: active): the operator-ruled catalogue+enumerator v2 regen (line ~116, enumerator half still pending per live timestamp check) and the dex_pool_swaps shard -3 completion check (line ~382, last verified 2026-08-09). Remaining 2 open items (#1 CEX-spot backfill line ~250, #4 lst_yields backfill line ~282) stay correctly KEEP-NA — both explicit operator-owned boundaries per repeatedly-reaffirmed rulings, reconfirmed via today's cited plan_reconciler correction. Doc stays assigned_vm: NA, 2 open todos remaining.

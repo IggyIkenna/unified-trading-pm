@@ -548,3 +548,4 @@ Also still open, correctly not attempted: the `[DATA] P3` billing-schema-extensi
 doesn't); and the two `[OPERATOR]` todos (Moonshot waitlist tracking, ETA unknown; the max-plan reconciliation,
 needs the waitlist to activate first) — both correctly operator-gated, not something to force.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:843074028a63712c]: KEEP-NA, valid — sister doc to the DeepSeek/GLM routing plan, same live billing/credential domain; remaining 5 items are vendor-dependency-blocked, schema-blocked on a sibling plan, or need real multi-turn live-fleet measurement.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).

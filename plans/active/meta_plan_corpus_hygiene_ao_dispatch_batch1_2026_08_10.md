@@ -448,3 +448,4 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   `unified_trading_system_ui_block_list…` -> `[ui]`) since a new AG needs a `related:` path to its closeout family —
   fixed by adding `related:` links to `infra_consolidated_closeout_2026_07_25.md` and
   `ui_consolidated_closeout_2026_07_30.md` respectively; re-check 0 new orphans.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — first scout pass.

@@ -643,3 +643,4 @@ context_scope:
   work — doc stays `assigned_vm: NA`. This doc is large and has documented its own concurrent-edit duplication
   history (see Progress Log above) — edits here were made conservatively, touching only the specific todo anchors
   needed for this run's extraction, not restructuring the doc.
+- **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
