@@ -96,21 +96,36 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
 
 ## Recommended decision
 
-1. `[DATA] P1.` Confirm or refute the service_name hypothesis: re-run `_read_input_index_frame` (or a scoped
-   ad-hoc read) against the DEFI prod raw-tick bucket WITHOUT the `service_name` filter, and check how many of the
-   103 MVP shards' `(venue, data_type)` keys appear under a service_name OTHER than
-   `market-tick-data-service` (most likely `market-data-processing-service`, per the existing lead). Repo:
-   market-data-processing-service / unified-trading-library.
-2. `[DATA] P1.` If confirmed, fix at the source: either MTDS's DeFi writer path is stamping the wrong
-   `service_name` on `record_captured()` calls (fix the writer, most correct) or if some legitimate reason DeFi
-   dex_pool_swaps really is written by MDPS itself, extend `_MTDS_SERVICE_NAME` matching in
-   `_captured_days_by_cell` to accept both (document why). Do NOT silently broaden the matcher without confirming
-   which case this is — the canonical-paths principle this plan already established (never legacy-pass a
-   non-canonical shape) applies here too.
-3. `[SCRIPT] P2.` Separately, `_read_input_index_frame` should genuinely bound its read (date-range or
+1. `[DATA] P1.` ✅ **DONE 2026-08-17 (slot-3, data_engineering).** Confirmed or refuted the service_name
+   hypothesis via a bounded DuckDB read (local downloaded copy, `SET memory_limit`, never a full pandas
+   materialization) against the real DEFI manifest: **REFUTED.** The non-MTDS `service_name` rows
+   (`market-data-processing-service`, 3.58M rows / 38 cells) are legitimate MDPS candle-OUTPUT rows —
+   `DefiSwapAdapter` (`market_data_processing_service/app/adapters/defi/swap_adapter.py`) is registered under the
+   SAME canonical `data_type="dex_pool_swaps"` name as its raw MTDS input, by design (its own docstring cites the
+   2026-06-01 `defi-canonical-naming-ssot.md` ruling) — `_captured_days_by_cell`'s exclusion of them is CORRECT,
+   not a bug.
+   **Real root cause found instead**: real MTDS-service_name captured rows for DEFI carry a **chain-LESS**
+   `venue` column ("UNISWAP_V3", "AAVE", "CURVE", …) plus a separate `chain` column ("ETHEREUM"/"ARBITRUM"/…),
+   while `mdps_mvp_universe("defi")` returns a single **chain-SUFFIXED** venue string
+   ("UNISWAP_V3-ETHEREUM"). `_INPUT_INDEX_COLUMNS` never even read the `chain` column, so
+   `_captured_days_by_cell` could never compose the matching key — every DEFI MVP shard reported zero captured
+   input regardless of real coverage. Confirmed abundant, RECENT real coverage exists once chain is accounted
+   for: e.g. `UNISWAP_V3`/`ETHEREUM`/`dex_pool_swaps` = 1,768,976 rows through 2026-08-13;
+   `UNISWAP_V3`/`ARBITRUM`/`dex_pool_swaps` = 574,557 rows through 2026-08-13; similar depth across
+   BALANCER/CURVE/SUSHISWAP_V3/PANCAKESWAP_V3/AERODROME_V3/CAMELOT_V3 and their respective chains.
+2. `[DATA] P1.` ✅ **DONE 2026-08-17 (slot-3, data_engineering)** — fixed at the source per the corrected root
+   cause above: added `"chain"` to `_INPUT_INDEX_COLUMNS`, and `_captured_days_by_cell` now groups DEFI rows by
+   `(venue, chain, data_type)` and composes the cell key as `f"{venue}-{chain}"` when `chain` is non-blank
+   (falls back to the bare venue for every other asset_group, where `chain` is always blank per
+   `SHARD_AXIS_MATRIX` — regression-tested). 3 new tests
+   (`tests/unit/test_pipeline_e2e_check_defi_chain_axis.py`): composed-key match, no-chain-column fallback,
+   blank-chain fallback. QG green (64s). **Evidence: market-data-processing-service@fae666bef2.**
+3. `[SCRIPT] P2.` Still open. Separately, `_read_input_index_frame` should genuinely bound its read (date-range or
    asset_group-scoped row-group pushdown, not just column pushdown) rather than relying on a bigger VM — the
-   160.4M-row full-manifest read is real waste even once (1) is fixed, and the next AG whose manifest grows past
-   DEFI's current size will re-hit the same OOM ceiling on `e2-highmem-8` too.
-4. `[DATA] P1.` Once (1)/(2) land, re-run DEFI's `--legs force,skip --require-captured --auto-day` matrix again to
-   get a REAL (non-"PROVED NOTHING") verdict, then consolidate all 5 AGs' reports per
-   `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo.
+   160.4M-row full-manifest read is real waste even once (1)/(2) are fixed, and the next AG whose manifest grows
+   past DEFI's current size will re-hit the same OOM ceiling on `e2-highmem-8` too.
+4. `[DATA] P1.` Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
+   --auto-day` matrix again to get a REAL (non-"PROVED NOTHING") verdict, then consolidate all 5 AGs' reports per
+   `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo. **2026-08-17 note**: the plan's own CEFI driver
+   (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) was STILL RUNNING (not terminal) as of this check — do not
+   relaunch it; the DEFI re-run this todo needs is independent and can proceed without waiting on CEFI.

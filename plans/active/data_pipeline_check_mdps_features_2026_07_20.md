@@ -252,6 +252,19 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       re-run produces a REAL verdict instead of "PROVED NOTHING", (c) once (a)/(b) are terminal/fixed, consolidate
       all 5 AGs' reports into one summary and close this plan's headline DeFi-MVP-ETA goal for real. Repos:
       market-data-processing-service, unified-trading-library.
+      **(a)/(b) partial progress 2026-08-17 (slot-3, data_engineering)**: (a) checked — CEFI's driver
+      (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) is STILL RUNNING, not terminal; correctly did NOT
+      relaunch. (b) root-caused + fixed, but the actual root cause was DIFFERENT from what the issue doc's
+      original service_name hypothesis named: that hypothesis was REFUTED by a bounded DuckDB read against the
+      real manifest (the non-MTDS service_name rows are legitimate MDPS candle-output rows, correctly excluded
+      by design). The real cause: DEFI's real captured rows carry a chain-LESS `venue` + separate `chain` column,
+      while `mdps_mvp_universe("defi")` returns a chain-SUFFIXED venue string — `_captured_days_by_cell` never
+      read the `chain` column at all, so no DEFI MVP shard could ever match real coverage. Fixed + regression-tested
+      + shipped: `market-data-processing-service@fae666bef2`. Full evidence in the issue doc's Recommended
+      decision § 1/2. **Genuinely still open**: issue-doc todo 3 (bound `_read_input_index_frame`'s read, P2) and
+      todo 4 (re-run DEFI's force/skip matrix with the fix live to get a REAL verdict, then consolidate all 5 AGs'
+      reports — this is a fresh multi-minute VM launch-and-wait, not done in this session) — plus (a) reaching
+      terminal for CEFI. This checkbox stays open until all of (a)/(b)/(c) are genuinely complete.
 - [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling.
