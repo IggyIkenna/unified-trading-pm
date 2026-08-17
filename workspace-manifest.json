@@ -68,29 +68,29 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.47",
-    "deployment-api": "0.91.2",
-    "deployment-service": "0.152.1",
+    "deployment-api": "0.91.3",
+    "deployment-service": "0.152.2",
     "deployment-ui": "0.1.0",
     "execution-service": "0.82.0",
     "features-service": "0.89.1",
     "fund-administration-service": "0.9.67",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.103.10",
-    "market-tick-data-service": "0.144.0",
+    "market-tick-data-service": "0.144.1",
     "system-integration-tests": "0.15.5",
     "unified-api-contracts": "0.140.0",
-    "unified-trading-library": "0.88.5",
+    "unified-trading-library": "0.88.7",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.30.11",
+    "market-data-processing-service": "0.30.12",
     "e2e-testing": "0.41.23",
     "agent-orchestrator": "0.100.3",
     "greeks-service": "0.18.55",
     "trading-agent-service": "0.13.1",
-    "strategy-service": "0.74.0",
+    "strategy-service": "0.74.1",
     "ml-service": "0.58.34",
-    "alerting-service": "0.63.40",
+    "alerting-service": "0.63.43",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.48"
+    "client-reporting-api": "0.32.50"
   },
   "repositories": {
     "alerting-service": {
@@ -2249,8 +2249,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.88.6",
-      "published_at": "2026-08-17T19:14:56Z",
+      "version": "0.88.7",
+      "published_at": "2026-08-17T22:37:37Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
