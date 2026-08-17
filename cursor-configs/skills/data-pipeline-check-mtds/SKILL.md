@@ -31,7 +31,7 @@ report line is ambiguous, not proof of anything.
 
 ## Canonical-oracle audit (2026-08-16)
 
-Per `/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
+Per `/plans/archive/2026_08/venue_readiness_ao_dispatch_batch1_2026_08_16.md`'s skills-canonical-audit todo — verdict for this
 skill:
 
 - **Oracle routing — FIXED (2026-08-17), no longer a gap.** At audit time (2026-08-16), MTDS's `--legs …,canonical`

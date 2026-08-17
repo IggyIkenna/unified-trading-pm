@@ -498,6 +498,14 @@ Kamino/Jupiter conflated the two.
       now issues are genuinely real, but its HF-gate abort check and post-iteration position readback are best-effort
       until this method reads a real `Pool.getUserAccountData()` view call. Not fixed inline — separate, larger scope
       than the P0 dispatcher-wiring todo that found it (that todo was about writes, this is a read).
+- [ ] [DATA] P3. **Re-count the READ-side coverage figure to include Kamino's bespoke adapter** — this doc's "8"
+      read-side total (the "READ SIDE — shipped 2026-08-15" section's "Before: 3 → After: 8" table) predates the
+      Kamino bespoke adapter, which shipped 2026-08-16, one day later. Deliberately deferred rather than re-counted by
+      `venue_readiness_ao_dispatch_batch1_2026_08_16`'s frontmatter-fix todo (now archived to
+      `plans/archive/2026_08/`) — combining the two partial statements would itself be the re-counting that todo's
+      done-when explicitly ruled out. Once this doc's body states an explicit new total that accounts for Kamino,
+      update the title/summary figures to match it — still no re-counting here, wait for the body's own restated
+      total.
 - [ ] [OPERATOR] P2. **Disclosure decision on out-of-mandate adapters.** `betfair`, `ibkr` and `polymarket` are working
       credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
