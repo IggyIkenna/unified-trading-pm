@@ -523,16 +523,28 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       self-delete — a genuine completion, not a preemption. Launched
       `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` immediately after
       (`sports-manifest-rescan-20260817-144852`) to materialize `empty_confirmed` rows from the new captures.
-- [ ] [SCRIPT] P2. **First rescan attempt (`sports-manifest-rescan-20260817-144852`) died silently mid-run,
-      relaunched as `sports-manifest-rescan-20260817-152312` — verify THIS one completes.** The first instance
-      vanished from `gcloud` while its own `EXIT_STATUS` marker still read `RUNNING` (stale — never updated on
-      termination) and its `run.log` had stalled at `Progress: 51000/142894` (~36%), last write 2026-08-17T14:11Z,
-      tagged `ag=CEFI` in its heartbeat — unclear whether that reflects the actual rescan scope or a shared
-      watchdog default; did not chase further given a fresh relaunch was the faster path. The relaunch's printed
-      command confirms sports-specific scope: `python scripts/rescan_sports_fixtures_canonical.py --workers 16`.
-      Check `vm-logs/sports-manifest-rescan-20260817-152312/run.log` for a clean `DEPLOYMENT_COMPLETED exit_code=0`,
-      and spot-check that the weather VM's new captures show up as `empty_confirmed` (not still
-      `expected_unattempted`) in the manifest afterward.
+- [ ] [SCRIPT] P2. **Two rescan attempts down to the SAME root cause — third attempt (`sports-manifest-rescan-
+      20260817-155832`) in flight, verify THIS one completes.** Attempt 1 (`...144852`) died silently (stale
+      `EXIT_STATUS=RUNNING`, no terminal log line). Attempt 2 (`...152312`) died with a clean, self-diagnosing
+      failure: `DEPLOYMENT_FAILED cause=consolidator_down reason=CONSOLIDATOR_DOWN
+      bucket=instruments-store-cefi-prd-central-element-323112 age_sec=2396 budget_sec=1800` (exit_code=137) — the
+      `ag=CEFI` tag from attempt 1 was real, not cosmetic: this sports rescan has a cross-asset-group health-check
+      that watches the CEFI instruments-store consolidator too, and self-kills if it looks stale.
+      **Likely a genuine threshold mismatch, not a real CEFI outage**: `instruments-store-cefi-prd`'s consolidator
+      cron (`uts-prod-manifest-consolidator-instruments-cefi-cron`) runs `0 * * * *` — HOURLY, confirmed earlier
+      this session — so a 1800s (30min) staleness budget is tighter than that bucket's own normal cadence and will
+      spuriously trip partway through almost every hour. Checked `instruments-store-cefi-prd`'s `_index/latest.json`
+      directly: `last_run_at=2026-08-17T14:01:09Z, success=true` — a normal, successful run, just old relative to
+      the watchdog's 30min window, not evidence of a real outage. **Did NOT touch the watchdog threshold** — it's
+      shared infrastructure code whose full blast radius (how many other buckets/rescans depend on the current
+      1800s default, why it was set there) I haven't investigated; a wrong change here risks breaking the
+      protection for buckets where 30min genuinely IS the right threshold. Retried attempt 3 near the top of the
+      hour so CEFI's cron should have a fresh run by the time the watchdog checks. If attempt 3 ALSO fails on this
+      same cause: this needs a real fix (either loosen this specific bucket's watchdog budget to match its actual
+      hourly cadence, or tighten the CEFI cron itself) rather than another blind retry — file a proper issue doc
+      rather than retrying a fourth time. Check `vm-logs/sports-manifest-rescan-20260817-155832/run.log` for a
+      clean `DEPLOYMENT_COMPLETED exit_code=0`, and spot-check that the weather VM's new captures show up as
+      `empty_confirmed` (not still `expected_unattempted`) in the manifest afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
