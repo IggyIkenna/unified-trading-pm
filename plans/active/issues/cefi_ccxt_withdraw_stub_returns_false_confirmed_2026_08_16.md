@@ -173,13 +173,13 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
       a `TRANSFER` `ExecutionInstruction` through `InstructionRouter` at all today — the wiring makes the router
       dispatch-capable, but nothing yet calls `wiring.router.route_instruction(...)` for a CEX_WITHDRAW/
       SUBACCOUNT_MOVE instruction in the live engine.
-- [ ] [BACKEND] P1. **New: exercise `build_transfer_wiring` end-to-end against a real exchange sandbox/testnet
-      account** (found 2026-08-17, completing the bootstrap-wiring todo above). Needs operator-provisioned sandbox
-      API credentials for at least one CEX_WITHDRAW venue (binance/deribit/bybit/aster testnet). Done-when: a real
-      `execute_withdrawal()` (or `execute_internal_transfer()`) call round-trips through
+- [ ] [BACKEND] P1. BLOCKED-CREDENTIALS: New: exercise `build_transfer_wiring` end-to-end against a real exchange
+      sandbox/testnet account (found 2026-08-17, completing the bootstrap-wiring todo above). Needs
+      operator-provisioned sandbox API credentials for at least one CEX_WITHDRAW venue (binance/deribit/bybit/aster
+      testnet). Done-when: a real `execute_withdrawal()` (or `execute_internal_transfer()`) call round-trips through
       `wiring.router.route_instruction(...)` against that sandbox account and the result is verified against the
-      exchange's own transfer/withdrawal history endpoint — not just a mocked CCXT `AsyncMock`. `BLOCKED-CREDENTIALS`
-      until the operator provisions sandbox keys.
+      exchange's own transfer/withdrawal history endpoint — not just a mocked CCXT `AsyncMock`. Blocked until the
+      operator provisions sandbox keys.
 - [x] ✅ [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** if it
       had ever been reachable — done-when: a cited answer, yes or no, with evidence. **Answer: NO — two
       independent reasons, evidence 2026-08-17.** (1) No existing reconciliation component checks a
