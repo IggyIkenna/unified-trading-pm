@@ -164,13 +164,19 @@ source: >-
       both `raise NotImplementedError`) — batch/paper work via the generic `LedgerPositionAdapter`, but no live
       Gamma-API integration exists. Done-when: live position/balance resolution works for POLYMARKET, or this is
       confirmed out-of-scope for the carve-out's contracted archetypes with a cited reason.
-- [ ] [BACKEND] P1. **Gap: no `archetype_slots_*.py` wires POLYMARKET into any `MARKET_MAKING_*` archetype** —
-      it's only declared for `ARBITRAGE_PRICE_DISPERSION`/`RULES_DIRECTIONAL_EVENT_SETTLED`, not
-      `MARKET_MAKING_PREDICTION`/`_CONTINUOUS`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` — the archetypes step 5
-      confirmed actually consume POLYMARKET's `trades` feature output. Real captured data, real computed
-      features, zero strategy slot using them for the archetypes that need them. Done-when: POLYMARKET is added
-      to at least one `MARKET_MAKING_*` archetype's slot declaration, or the omission is confirmed intentional
-      with a cited reason.
+- [x] ✅ [BACKEND] P1. **Fixed 2026-08-17 — POLYMARKET wired into `MARKET_MAKING_CONTINUOUS`.** SHIPPED —
+      `strategy-service@dc3c0219`. `MARKET_MAKING_PREDICTION`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` were
+      confirmed NOT usable (no engine registered in `ARCHETYPE_ENGINE_REGISTRY` for any of the three —
+      `tests/unit/engine/strategies/v2/test_market_making_engines.py`'s own docstring: "NONE of these engines
+      is registered... registering would make the verdict matrix LIE"). `MARKET_MAKING_CONTINUOUS` IS
+      registered (`MarketMakingContinuousEngine`) and is venue/instrument-agnostic (mid_price + optional
+      fair_value_price feature per tick). New slot `POLYMARKET_BTC_MARKET_MAKING` added to
+      `archetype_slots_cefi.py`, reusing `BTC_UP_DOWN_DAILY` — the same real, already-wired recurring
+      Polymarket market `PREDICTION_ARB_BTC` cross-venue-arbs — as a single-venue-quotable instrument. Also
+      updated `batch_utils.py`'s `STRATEGY_CATEGORIES` + the CEFI-slot-count sanity test (31→32 entries).
+      Pre-existing, unrelated `strategy-service` LDR-red (`test_bare_coinbase_is_not_intercepted_by_the_cefi_route`)
+      hit + verified pre-existing during shipping, tracked/resolved via repo-blocker RB-81272042 (fixed
+      upstream at `strategy-service@e44ced71`, issue doc archived).
 - [x] ✅ [BACKEND] P1. **Re-investigated 2026-08-17 — NOT a gap: POLYMARKET's LIVE path already routes through
       `InstructionActionV2` (the `ATOMIC` variant) exactly like every other sports/prediction venue.** The
       steps-6-8 verdict was based on a grep scoped literally to `execution_service/v2/*` + `backtest_v2/*` paths
