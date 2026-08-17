@@ -138,16 +138,20 @@ interrupted-draft signal — worth the infra-craft triage recognizing both shape
       `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s stagger todo with a real commit sha, or confirm the
       design is superseded and leave that todo open with a note. Repo: unified-trading-pm. Done when: either
       the feature ships for real, or the batch15 todo carries an explicit note that this draft was discarded.
-- [ ] [INFRA] P2. Investigate the second occurrence: why is `deployment-service@e631240990` (a real,
-      properly-trailed commit by slot-27, 2026-08-17T05:56:16Z, adding `scripts/measure_shard_duration_p95.py`)
-      NOT an ancestor of current `live-defi-rollout` HEAD? Check `deployment-service`'s reflog/branch history for
-      a force-push, reset, or rebase that dropped it; if the work is still wanted, re-land
-      `scripts/measure_shard_duration_p95.py` for real (cherry-pick `e631240990` or re-author) and only then let
-      `alert_driven_dependency_revocation_2026_08_12.md`'s Phase 0 measurement todo + the
-      `infra_satellite_ao_dispatch_batch18_2026_08_16.md` archival claim be actioned. Repo: deployment-service +
-      unified-trading-pm. Done when: either the commit is confirmed reachable from HEAD with the script present,
-      or a root cause for its disappearance is documented and the affected plan todos are corrected to NOT claim
-      completion.
+- [x] ✅ [INFRA] P2. DONE 2026-08-17 (slot 5, infra) — Investigate the second occurrence: why is
+      `deployment-service@e631240990` (a real, properly-trailed commit by slot-27, 2026-08-17T05:56:16Z, adding
+      `scripts/measure_shard_duration_p95.py`) NOT an ancestor of current `live-defi-rollout` HEAD? **Resolution:
+      it was a stale-clone false alarm, not a dropped commit.** Re-verified live in slot 5's `deployment-service`
+      clone: `git fetch origin live-defi-rollout` then `git merge-base --is-ancestor e631240990
+      origin/live-defi-rollout` → **true**; `git log --oneline e631240990` shows it in the direct ancestry of
+      current `live-defi-rollout` HEAD (`84bfbae4`); `scripts/measure_shard_duration_p95.py` is present on disk
+      (229 lines, matches the commit diff). No force-push/reset/rebase occurred — slot 9's original check was
+      simply run against a clone that hadn't fetched the commit yet (the commit landed 2026-08-17T05:56:16Z; slot
+      9's investigation session was concurrent). Both downstream docs already reflect the true state as of this
+      check: `plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` is archived, and
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`'s Phase 0 measurement todos are
+      all closed (line 642: "Phase 0 — preconditions and measurement — DONE — all 7 todos, p95/max shard-duration
+      table landed 2026-08-17"). No code change needed; no correction needed to either plan.
 - [ ] [INFRA] P3. Given this exact bug class (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`,
       status: resolved) recurred TWICE in one session on slot 9 within minutes of each other, re-open or
       cross-reference that resolution — the fix may not fully hold under the current ~21-entry autostash-pile
@@ -164,3 +168,8 @@ interrupted-draft signal — worth the infra-craft triage recognizing both shape
   run hit the same warning for a different, unrelated doc pair. Investigated and found a materially different
   failure shape (a real dangling commit, not an unshipped draft) — see the new section above. Not applied;
   filed as new todos rather than a separate doc, since it's the same underlying mechanism.
+- **2026-08-17 (slot 5, infra)**: picked up the P2 todo re: the "dangling commit" second occurrence. Re-checked
+  `deployment-service@e631240990` against a freshly-fetched `origin/live-defi-rollout` — it IS an ancestor, the
+  script file is present on disk, and both downstream plans already show the correct completed state. Root cause
+  was slot 9's clone being behind at the moment of its check, not a real force-push/reset/rebase drop. Closed the
+  todo with no code change required.
