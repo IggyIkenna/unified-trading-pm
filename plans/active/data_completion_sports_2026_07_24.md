@@ -957,3 +957,4 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   it directly as the live tracker for the Transfermarkt `BLOCKED-UPSTREAM-OUTAGE` status, one of the doc's only 2
   remaining open items); kept the data-floor/honest-coverage/vm-launcher codex SSOTs + `honest_coverage.py` + the M-1
   parent, all still accurate.
+- **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries).

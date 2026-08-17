@@ -74,3 +74,4 @@ source: >-
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17**: authored alongside its batch, same pass.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

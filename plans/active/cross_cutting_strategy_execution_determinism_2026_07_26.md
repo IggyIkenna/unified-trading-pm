@@ -136,3 +136,6 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   `plans/archive/issues/`), which this doc's context_scope doesn't reference; still a pure coordination-index doc over 8
   source plans, no source-code path applies.
 - **na-eligibility-audit 2026-08-17** [body-hash:80c0b20796011e73]: KEEP-NA, stale-item corrected -- closed todo #2 (multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions): already fully investigated and answered by the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (same parent_epic), whose completed item (lines 343-369) concludes 'CONFIRMED: NO -- never cited in any actual promotion/sizing decision; nothing to flag', citing this exact doc as Source. Doc stays assigned_vm: NA for its 1 remaining item (todo #1, the dedicated triage). Cross-cutting tranche audit conflict-check finding.
+- **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries) -- todo #2's closure today
+  doesn't invalidate any existing entry; all 6 still relate to the sole remaining item (todo #1's triage over the 8
+  source docs) and still resolve.

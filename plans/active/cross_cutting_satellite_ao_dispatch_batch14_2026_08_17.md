@@ -46,7 +46,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch14_2026_08_17_finalize.md,
   ]
@@ -285,3 +285,8 @@ source: >-
   source doc's own separate DOC P3 follow-up todo ("route each to its owning tranche's next
   `/na-eligibility-audit` pass"), not this dispatch's scope. Full `bash scripts/quality-gates.sh` green before
   shipping.
+
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — swapped the generic na-eligibility-audit
+  SKILL.md pointer for `venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`, the source doc 7 of
+  the 9 remaining open items (the sequenced Unity-venue chain) are extracted from; the 3 non-Unity items landed this
+  session.

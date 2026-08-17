@@ -223,3 +223,5 @@ choice (human-executed, not AO-dispatched).
   found.
 - **context-scout 2026-08-15**: refreshed; context_scope unchanged (6 entries) — sole open todo still the same duplicate
   tracked verbatim in `ao_satellite_ao_dispatch_batch3_2026_07_31.md`, already the last entry here.
+- **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries) -- today's na-eligibility-audit
+  reaffirmed the same sole duplicate todo; existing set remains accurate.
