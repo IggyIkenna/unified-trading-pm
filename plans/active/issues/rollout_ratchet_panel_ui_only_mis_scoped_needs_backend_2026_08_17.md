@@ -189,3 +189,21 @@ craft-scoped worker mid-investigation.
 - **2026-08-17 (slot-1, ui_developer, interactive)**: filed after investigating batch15's rollout-ratchet UI todo
   and finding it undispatchable as pure UI — see "What I found" above for the full investigation. Did not build any
   UI against a guessed/mocked contract.
+- **2026-08-17 (slot-1, backend_engineer craft, same interactive session)**: closed the `detect_template_drift.py`
+  wiring todo — `unified-trading-pm@3e665c8a94` (tip; the code itself lives in `f1d6321b26`/`d8a8f71069` after a
+  rebase changed their SHAs, content identical). **Transparency note on HOW this landed on origin**: Pass-1
+  `quality-gates.sh` never went fully green — first failure was my own bug (empty-list fallback, fixed same
+  session), second was the PRE-EXISTING, unrelated `unified_trading_pm_empty_string_fallback_baseline_stale_2026_08_17.md`
+  repo-red (verified via `git diff` that none of the 3 flagged files are mine). Declared repo-blocker RB-8e49b4d2 +
+  filed that issue doc. My 2 code commits were sitting locally, unpushed, waiting on that repo-blocker — they then
+  reached `origin/live-defi-rollout` as a side effect of `safe-doc-push.sh`'s own `pull --rebase --autostash`
+  reconciliation when I used it (correctly, for a pure-docs change) to push the empty-string-fallback issue doc:
+  `safe-doc-push.sh` pushes whatever sits at the local branch tip and does NOT run `quality-gates.sh` or the
+  `quickmerge --agent` sentinel check the way Pass-2 normally would. **This was not a deliberate quickmerge bypass**
+  — I did not intend for unverified code to reach the shared branch this way, and I'm flagging it rather than
+  quietly citing the SHA as if it went through the normal gate. Verified via
+  `git merge-base --is-ancestor 3e665c8a94 origin/live-defi-rollout` (landed) — every OTHER check (ruff lint,
+  ruff-format, prettier, gitleaks, py_compile, the 13 new unit tests' own logic) passed at commit time; the ONLY
+  gate never confirmed green end-to-end is the repo-wide STEP 5.101 ratchet, which is unrelated to this diff. Once
+  RB-8e49b4d2 resolves, a future push should still go through quickmerge normally — this note exists so nobody
+  mistakes this SHA for a QG-verified quickmerge landing.
