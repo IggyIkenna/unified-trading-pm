@@ -1,0 +1,332 @@
+#!/usr/bin/env python3
+# Epic: system_readiness_master
+# Lifecycle: permanent
+# Delete-when: NA
+"""Readiness state dump -- Tuesday deliverable 1
+(/plans/active/data_pipeline_completion_2026_08_21.md § "Tuesday dumps",
+/plans/epics/system_readiness_master.md § W1).
+
+Derives, per (venue x mode), a readiness verdict across instruments-service
+-> MTDS -> MDPS -> features -> strategy -> execution. Readiness is DERIVED,
+never declared (operator ruling 2026-08-16): a leg with no real machine
+check prints "unverified", never a silent pass. See checks.py's module
+docstring for the exact proxy-vs-fact policy this dump follows.
+
+Strategy leg, stated precisely (per the task): a position adapter must exist
+for this venue in this mode, AND at least one archetype must be registered
+for this venue in this mode -- both, not either (checks.strategy_leg).
+
+Shares its shard enumeration with the honest-coverage-dump skill --
+../../honest-coverage-dump/scripts/shard_universe.py is the single source for
+reading coverage.json and picking the current grain. This dump does not
+re-read GCS objects or re-derive the expected universe itself.
+
+REQUIRES a Python with both unified_api_contracts AND unified_trading_library
+importable (the latter via shard_universe.py's GCS read -- cloud_interface
+only, never a subprocess gcloud/gsutil call, see that module's docstring).
+unified-api-contracts is T0 and does not depend on unified-trading-library,
+so this does NOT run under UAC's own venv -- run it under
+instruments-service's venv instead, which carries both (it owns
+measure_honest_coverage.py, the script that writes the coverage.json this
+dump reads):
+
+    cd instruments-service && .venv/bin/python3 \\
+        ../unified-trading-pm/cursor-configs/skills/readiness-state-dump/scripts/derive_readiness.py
+
+The strategy position-adapter leg additionally shells out to
+strategy-service/.venv (a separate subprocess, never an import -- see
+_strategy_position_probe.py) because that registry lives in strategy-service,
+not UAC. If that venv is absent, the position-adapter half reports
+"unverified" honestly rather than being skipped silently.
+
+Usage:
+    python derive_readiness.py                              # full dump, summary view
+    python derive_readiness.py --verbose --limit 20
+    python derive_readiness.py --venue OKX-FUTURES --mode LIVE
+    python derive_readiness.py --asset-group cefi --json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from collections import defaultdict
+from dataclasses import asdict
+from pathlib import Path
+
+_HERE = Path(__file__).resolve()
+_SKILLS_DIR = _HERE.parents[2]  # .../cursor-configs/skills
+_WORKSPACE_ROOT_DEFAULT = _HERE.parents[5]  # the multi-repo checkout root (siblings: uac, strategy-service, ...)
+
+sys.path.insert(0, str(_SKILLS_DIR / "honest-coverage-dump" / "scripts"))
+from shard_universe import (  # noqa: E402
+    DEFAULT_PROJECT_ID,
+    CoverageReadError,
+    detect_grain,
+    iter_shard_cells,
+    load_coverage,
+    venue_asset_group_map,
+)
+
+import checks  # noqa: E402
+
+from unified_api_contracts.internal.architecture_v2.venue_strategy_consumability import (  # noqa: E402
+    contract_step_17_check,
+)
+from unified_api_contracts.internal.domain.execution_service.transfer_types import (  # noqa: E402
+    VENUE_WALLET_CAPABILITIES,
+)
+from unified_api_contracts.registry.market_data_categories import (  # noqa: E402
+    VENUE_DATA_TYPE_CAPABILITIES,
+    VENUES_BY_ASSET_GROUP,
+)
+from unified_api_contracts.registry.processed_data_dependencies import MDPS_DERIVABLE_DATA_TYPES  # noqa: E402
+
+MODES: tuple[str, ...] = ("BATCH", "PAPER", "LIVE")
+
+
+def _uac_venue_asset_group_map() -> dict[str, str]:
+    out: dict[str, str] = {}
+    for ag, venues in VENUES_BY_ASSET_GROUP.items():
+        for v in venues:
+            out.setdefault(v, ag)
+    return out
+
+
+def _venue_data_types(venue: str) -> frozenset[str]:
+    record = VENUE_DATA_TYPE_CAPABILITIES.get(venue)
+    if record is None:
+        return frozenset()
+    return frozenset(record.data_types.keys())
+
+
+def _query_strategy_position_availability(
+    venues: list[str], workspace_root: Path, skip: bool
+) -> tuple[dict[str, dict[str, str]], str]:
+    """Returns ({venue: {"batch":..,"live":..,"paper":..}}, note)."""
+    if skip:
+        return {}, "skipped via --skip-strategy-probe"
+    strategy_python = workspace_root / "strategy-service" / ".venv" / "bin" / "python3"
+    if not strategy_python.exists():
+        return {}, f"{strategy_python} not found -- strategy-service venv unavailable in this environment"
+    probe_script = _HERE.parent / "_strategy_position_probe.py"
+    proc = subprocess.run(  # noqa: S603 -- fixed argv, no shell
+        [str(strategy_python), str(probe_script)],
+        input=json.dumps(venues),
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=str(workspace_root / "strategy-service"),
+    )
+    if proc.returncode != 0:
+        return {}, f"strategy-service probe subprocess failed (exit {proc.returncode}): {proc.stderr.strip()[:300]}"
+    try:
+        result = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        return {}, f"strategy-service probe returned non-JSON output: {exc}"
+    return result, f"queried {len(result)} venues via strategy-service/.venv"
+
+
+def build_dump(
+    venues: list[str],
+    modes: list[str],
+    coverage_payload: dict | None,
+    position_avail: dict[str, dict[str, str]],
+) -> tuple[list[dict], dict]:
+    grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
+    cov_venue_ag = venue_asset_group_map(coverage_payload) if coverage_payload else {}
+    uac_venue_ag = _uac_venue_asset_group_map()
+    declared_venues = frozenset(VENUE_DATA_TYPE_CAPABILITIES.keys())
+
+    cells_by_venue: dict[str, list] = defaultdict(list)
+    if coverage_payload:
+        for cell in iter_shard_cells(coverage_payload, grain if grain != "unmeasured" else None):
+            cells_by_venue[cell.venue].append(cell)
+
+    layer1_by_venue: dict[str, dict] = {}
+    if coverage_payload:
+        layer1 = (coverage_payload.get("layer_1") or {}).get("by_asset_group") or {}
+        for ag_block in layer1.values():
+            for venue, block in (ag_block.get("by_venue") or {}).items():
+                layer1_by_venue[venue] = block
+
+    wallet_capability_venues = frozenset(VENUE_WALLET_CAPABILITIES.keys())
+
+    rows: list[dict] = []
+    leg_state_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    rollup_state_counts: dict[str, int] = defaultdict(int)
+
+    for venue in venues:
+        asset_group = cov_venue_ag.get(venue) or uac_venue_ag.get(venue) or "UNKNOWN"
+        venue_dts = _venue_data_types(venue)
+        step17 = contract_step_17_check(venue, venue_dts)
+        satisfying = frozenset(a.value if hasattr(a, "value") else str(a) for a in step17.satisfying_archetypes)
+
+        vd_declared = checks.declared(venue, declared_venues)
+        vd_is = checks.instruments_service_refdata(layer1_by_venue.get(venue))
+
+        venue_cells = cells_by_venue.get(venue, [])
+        mtds_cells = [(c.data_type, c.count("captured"), c.reachable_total()) for c in venue_cells]
+        vd_mtds_batch = checks.mtds_captured(mtds_cells)
+
+        vd_mdps = checks.mdps_consumed(venue_dts, MDPS_DERIVABLE_DATA_TYPES)
+        vd_features = checks.features_consumed(venue_dts, step17.orphaned_data_types)
+        vd_archetype = checks.strategy_archetype_registered(satisfying)
+        vd_transfers = checks.execution_transfers(venue, wallet_capability_venues)
+        vd_instruction = checks.execution_instruction()
+
+        mode_avail = position_avail.get(venue)
+
+        for mode in modes:
+            mode_status = mode_avail.get(mode.lower()) if mode_avail else None
+            vd_adapter = checks.strategy_position_adapter(venue, mode, mode_status)
+            vd_strategy = checks.strategy_leg(vd_archetype, vd_adapter)
+
+            # instruments-service / declared / features-consumability / MDPS-capability are
+            # structural (mode-invariant) facts; MTDS capture is BATCH-observed today (see
+            # SKILL.md "What's real vs unverified, and why"). Live/paper capture state is not
+            # observable from coverage.json -- report unverified honestly rather than reusing
+            # the batch verdict.
+            if mode == "BATCH":
+                vd_mtds = vd_mtds_batch
+            else:
+                vd_mtds = checks.Verdict(
+                    "unverified",
+                    f"coverage.json is not mode-partitioned; {mode.lower()} capture state is not observable from this artifact",
+                )
+
+            legs = {
+                "declared": vd_declared,
+                "instruments_service": vd_is,
+                "market_tick_data": vd_mtds,
+                "market_data_processing": vd_mdps,
+                "features": vd_features,
+                "strategy": vd_strategy,
+                "execution_transfers": vd_transfers,
+                "execution_instruction": vd_instruction,
+            }
+            overall = checks.rollup(legs)
+
+            for leg_name, verdict in legs.items():
+                leg_state_counts[leg_name][verdict.state] += 1
+            rollup_state_counts[overall.state] += 1
+
+            rows.append(
+                {
+                    "venue": venue,
+                    "asset_group": asset_group,
+                    "mode": mode,
+                    "legs": {k: asdict(v) for k, v in legs.items()},
+                    "overall": asdict(overall),
+                }
+            )
+
+    summary = {
+        "grain": grain,
+        "venue_count": len(venues),
+        "mode_count": len(modes),
+        "row_count": len(rows),
+        "leg_state_counts": {k: dict(v) for k, v in leg_state_counts.items()},
+        "overall_state_counts": dict(rollup_state_counts),
+    }
+    return rows, summary
+
+
+def _print_human(rows: list[dict], summary: dict, verbose: bool, limit: int) -> None:
+    print(f"Readiness state dump -- grain: {summary['grain']}")
+    print(f"Venues: {summary['venue_count']}, modes: {summary['mode_count']}, rows: {summary['row_count']}")
+    print()
+    print("=== Per-leg verdict counts (across all venues x modes in scope) ===")
+    for leg in checks.LEG_ORDER:
+        counts = summary["leg_state_counts"].get(leg, {})
+        ready = counts.get("ready", 0)
+        not_ready = counts.get("not_ready", 0)
+        unverified = counts.get("unverified", 0)
+        print(f"  {leg:<24} ready={ready:<6} not_ready={not_ready:<6} unverified={unverified:<6}")
+    print()
+    print("=== Overall (rollup) verdict counts ===")
+    for state in ("ready", "not_ready", "unverified"):
+        print(f"  {state:<12} {summary['overall_state_counts'].get(state, 0)}")
+    print()
+
+    if not verbose:
+        print("(pass --verbose for the per-venue-per-mode table, --limit N to cap rows shown)")
+        return
+
+    print(f"=== Per-venue-per-mode rows (showing up to {limit}) ===")
+    for row in rows[:limit]:
+        overall = row["overall"]
+        print(f"  {row['asset_group']}/{row['venue']} [{row['mode']}] -> {overall['state']}  ({overall['evidence']})")
+        for leg in checks.LEG_ORDER:
+            v = row["legs"][leg]
+            print(f"      {leg:<24} {v['state']:<12} {v['evidence']}")
+    if len(rows) > limit:
+        print(f"  ... {len(rows) - limit} more rows omitted (raise --limit or use --json for the full dump)")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--venue", action="append", default=None, help="Filter to one or more venues (repeatable)")
+    parser.add_argument("--asset-group", action="append", default=None, help="Filter to one or more asset_groups (repeatable)")
+    parser.add_argument("--mode", action="append", choices=list(MODES), default=None, help="Filter to one or more modes (repeatable; default all three)")
+    parser.add_argument("--project", default=DEFAULT_PROJECT_ID, help="GCP project hosting the honest-coverage bucket")
+    parser.add_argument("--date", default=None, help="coverage.json date (YYYY-MM-DD); defaults to latest")
+    parser.add_argument("--workspace-root", default=None, help="Override the multi-repo checkout root (default: computed from this file's location)")
+    parser.add_argument("--skip-strategy-probe", action="store_true", help="Skip the strategy-service subprocess; position-adapter leg reports unverified for every row")
+    parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON instead of the human report")
+    parser.add_argument("--verbose", action="store_true", help="Print the full per-venue-per-mode table with per-leg evidence")
+    parser.add_argument("--limit", type=int, default=40, help="Max rows to print in --verbose mode (default 40)")
+    args = parser.parse_args()
+
+    workspace_root = Path(args.workspace_root) if args.workspace_root else _WORKSPACE_ROOT_DEFAULT
+
+    coverage_payload = None
+    coverage_note = "not loaded"
+    try:
+        coverage_payload, resolved_date, gcs_path = load_coverage(args.project, args.date)
+        coverage_note = f"{gcs_path} (date={resolved_date})"
+    except CoverageReadError as exc:
+        print(f"WARNING: could not read coverage.json ({exc}) -- instruments_service/market_tick_data legs report unverified for every row", file=sys.stderr)
+
+    declared_venues = sorted(VENUE_DATA_TYPE_CAPABILITIES.keys())
+    observed_venues = sorted(venue_asset_group_map(coverage_payload).keys()) if coverage_payload else []
+    all_venues = sorted(set(declared_venues) | set(observed_venues))
+
+    venue_filter = set(args.venue) if args.venue else None
+    ag_filter = set(args.asset_group) if args.asset_group else None
+    uac_venue_ag = _uac_venue_asset_group_map()
+    cov_venue_ag = venue_asset_group_map(coverage_payload) if coverage_payload else {}
+
+    venues = []
+    for v in all_venues:
+        if venue_filter and v not in venue_filter:
+            continue
+        ag = cov_venue_ag.get(v) or uac_venue_ag.get(v) or "UNKNOWN"
+        if ag_filter and ag not in ag_filter:
+            continue
+        venues.append(v)
+
+    modes = list(args.mode) if args.mode else list(MODES)
+
+    position_avail, probe_note = _query_strategy_position_availability(venues, workspace_root, args.skip_strategy_probe)
+
+    rows, summary = build_dump(venues, modes, coverage_payload, position_avail)
+    summary["coverage_source"] = coverage_note
+    summary["strategy_probe"] = probe_note
+
+    if args.json:
+        json.dump({"summary": summary, "rows": rows}, sys.stdout, indent=2)
+        print()
+    else:
+        print(f"Coverage source: {coverage_note}")
+        print(f"Strategy position-adapter probe: {probe_note}")
+        print()
+        _print_human(rows, summary, args.verbose, args.limit)
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
