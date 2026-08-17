@@ -174,3 +174,13 @@ on the live capture process itself) is out of scope for this reconciliation swee
     fresh Cloud Build is triggered and its result cited") is not yet met; the next sweep or AO dispatch of that item
     should re-check the live fire-cadence first (cheapest, most direct signal) before re-attempting the build/image
     provenance chase.
+- **2026-08-17 (slot 18, backend_engineer craft, task cefi_satellite_ao_dispatch_batch21-5517a0a936a2)**: batch21 item
+  1 (the extracted deploy-chain check) now CLOSED — all 3 conditions confirmed with hard evidence (content-on-main;
+  Cloud Build `821c691f-8da4-426e-b7b1-9d0614097064` SUCCESS `00:48:57Z`; live revision `dp-alerting-subscriber-00103-zhw`
+  @ 100% traffic, container-content-verified via `docker pull`+extract — the running container genuinely has the fix,
+  not just the registry tag). The deploy chain was never actually broken. But a fresh live-behavior re-check
+  (`06:35Z/06:50Z/07:06Z`) confirms the SAME identity is still firing every 15-16min, ~6h15m post-deploy — a separate,
+  unresolved runtime defect (several obvious hypotheses ruled out: singleton deduplicator, minScale=1/maxScale=1,
+  correct 1800s constant, no override-function interference, no other volatile field in this emission's details).
+  Filed as `plans/active/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (P1, 2 new
+  todos) for the next dispatch to root-cause.
