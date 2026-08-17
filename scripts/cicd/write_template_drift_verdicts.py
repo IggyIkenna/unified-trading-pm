@@ -57,7 +57,7 @@ def run_checker(*, python_executable: str = sys.executable) -> list[dict[str, ob
 def derive_verdict(report: dict[str, object]) -> tuple[str, list[str]]:
     """One repo's drift report -> (verdict, reasons). Errors outrank warnings; a clean report has
     neither, matching the checker's own severity ordering (``run()``'s human-readable summary)."""
-    items_raw = report.get("items", [])
+    items_raw = report.get("items", [])  # noqa: qg-empty-fallback — "no drift items" is a real, meaningful state
     items = items_raw if isinstance(items_raw, list) else []
     has_error = any(isinstance(item, dict) and item.get("severity") == "error" for item in items)
     reasons = [f"[{item.get('check', '?')}] {item.get('message', '')}" for item in items if isinstance(item, dict)]
