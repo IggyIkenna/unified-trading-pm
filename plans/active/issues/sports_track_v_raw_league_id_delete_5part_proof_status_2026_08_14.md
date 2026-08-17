@@ -476,6 +476,46 @@ already caught once.
   repo code changes this session (read-only GCS + VM launch only); ad-hoc analysis script stayed in the session
   scratchpad, never committed.
 
+- **2026-08-17 (slot 27, this session)**: Picked up `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md`'s
+  P1 todo — run a FRESH live-writer check on THIS population specifically, given
+  `sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md` →
+  `sports_legacy_league_vocab_recontamination_2026_08_10.md` found a live writer re-contaminating a DIFFERENT
+  league-vocabulary population (`instruments-store-sports-prd`, `SEGUNDA_DIVISION`) as recently as 2026-08-10, so this
+  bug class was confirmed active in this codebase at the same time the 2026-08-14/16 checks above were running.
+  **Result: Part 3 confirmed clean, more robustly than before.** Ran the existing
+  `list_stale_raw_league_id_candidates_2026_08_14.py` (read-only, path-only classification, zero GCS writes) scoped to
+  `2026-08-14..2026-08-17` — the exact gap since the 2026-08-16 full-range dry-run's own end date — and found **0
+  candidates / 0 already_canonical / 0 unknown for every one of the 4 days**, i.e. literally zero objects of ANY kind
+  exist under the raw-shaped `.../pipeline_mode=batch_odds_api/.../instrument_type=odds/data_type=trades/ticks.parquet`
+  path for this window, not merely zero non-canonical ones. Sanity-checked the script itself still has live GCS access
+  and a correct regex by re-running it against `--day 2025-09-18` (a known non-zero baseline from the 2026-08-15
+  session): got back the identical `392 candidates / 183 already_canonical / 151 unknown` the earlier session recorded
+  — confirms the zero result above is a genuine absence, not a broken probe.
+  **Root cause of the zero result, confirmed via direct code read (not assumed)**: `venue_fetch.py`'s
+  `_build_sports_shard_path()` no longer emits `data_type=trades` at all — as of `market-tick-data-service@28e2eb36` +
+  `@83a1abbdbf` (2026-08-16, `/plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phases
+  0-1, both independently confirmed complete in that plan with live evidence), the writer emits `data_type=odds`
+  exclusively, and the redeployed live VM (`mtds-live-sports-odds-api-odds-20260816-145019`) is independently verified
+  writing real ticks with zero `data_type=trades` writes since. **This is a stronger Part-3 pass than the 2026-08-14
+  finding**: that check showed "no raw-keyed VALUES observed in live rows"; this check shows the entire `data_type=trades`
+  shape this population lives under is now write-frozen fleet-wide — no object, raw-keyed OR canonical-keyed, can land
+  there anymore by any code path.
+  **Confirmed this is a DIFFERENT, unrelated mechanism from the sibling recontamination** (read
+  `sports_legacy_league_vocab_recontamination_2026_08_10.md` in full): that bug was `instruments-service`'s
+  `api_football_reference.py:165` building a league key via raw `build_league_id(country, name)` instead of a
+  registry-resolve step, on a completely separate bucket (`instruments-store-sports-prd`) and write path
+  (reference-data adapters, not the odds-tick fetcher). Track V's own writer
+  (`odds_api_adapter.py`'s `_canonical_league_id()`, in `market-tick-data-service`) already resolves via the numeric
+  `api_football_id` → `LEAGUE_REGISTRY` slug — the correct pattern the sibling bug lacked — and is now moot for this
+  population regardless, since the whole `data_type=trades` write path is retired.
+  **Combined verdict**: Parts 1/2/5 already confirmed clean 144,276/144,276 0-FAIL as of 2026-08-16 (see above); Part 3
+  is now confirmed clean for the full `2026-07-22..2026-08-17` window (23+4 days), on stronger evidence than before.
+  All five parts of the delete-safety proof hold as of this session. **Did NOT execute the delete** — that stays gated
+  on the separate `[OPERATOR]` re-authorization slot-30 already filed a `/blocked` question for on 2026-08-16 (P3 todo
+  above); this task's scope was the live-writer pre-check only, per
+  `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md`. No repo code changes this session (read-only
+  script re-runs only, no new script written).
+
 ## Context scout
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
