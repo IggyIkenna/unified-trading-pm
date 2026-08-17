@@ -229,17 +229,17 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       itself is fully AO-dispatchable.
       **Run 2026-08-17** (direct read of the live `state.db`, no SSM) — see Progress Log "Second calibration pass"
       for the full table, the `sub-e` account-id naming discrepancy, and the flagged >20% swings (`sub-c`, `sub-f`).
-- [ ] [BACKEND] P1. **Attribute cost by PROPORTIONAL ALLOCATION of the real subscription cost, not by dividing list
-      value by a stored multiplier constant.** Formula:
-      `task_cost = window_subscription_cost x (task_list_value / total_list_value_in_window)`. This always sums to
-      exactly what we paid, needs no constant to maintain, and self-corrects when Anthropic changes rates (numerator and
-      denominator move together) — whereas a hardcoded multiplier is workload-dependent and rots. Operator ruling
-      2026-08-10 asked whether Max could simply be `list_value / 200`; measurement says ~190x promo / ~212x standard,
-      but that ratio is a property of THIS cache-heavy workload (99% of window tokens were cache reads, which are cheap
-      at list yet barely move the quota meter), not of the tier — a cache-light workload would measure very differently.
-      The denominator MUST include all consumption on that account in the window (AO + laptop), else AO tasks absorb the
-      whole subscription and are overstated. **Done when**: per-task costs for one window sum to that window's
-      subscription cost within rounding, and a test proves the sum invariant holds when list rates change.
+- [x] ✅ [BACKEND] P1. **`subscription_value.allocate_proportionally()` SHIPPED — agent-orchestrator@54e6347aa7.**
+      `task_cost = window_subscription_cost x (task_list_value / total_list_value_in_window)`, exact by construction
+      (sum-invariant holds regardless of rate changes since numerator and denominator move together). 6 tests in
+      `tests/test_subscription_value_allocation.py` prove: sum-to-window-cost, proportional split, the sum invariant
+      surviving BOTH a uniform rate change (every task's value doubles) and a non-uniform one (one model's rate moves,
+      others don't), zero-total-value returns 0.0 per task rather than dividing by zero, empty input, and the
+      single-task edge case. **Scope note**: this ships the allocation FUNCTION + its invariant proof (the todo's
+      literal done-when, verified with synthetic task-value fixtures) — it is not yet wired to a live window's
+      `task_usage` rows, since todo 12 (immediately below) explicitly supersedes the runtime path with the measured-
+      multiplier form and keeps this allocation form as an OFFLINE reconciliation check, not the hot path. QG green:
+      4017 backend + 387 dashboard tests.
 - [ ] [DATA] P0. **Verify the reservation actually held over the first post-reset window — the operator has RESERVED the
       accounts, so what remains is measurement, not a decision.** Operator ruling 2026-08-10 (evening, see the ruling
       section above): `sub-a-ikenna` (pro) and `sub-e-odum3default` (max20) are dedicated to agent-orchestrator and
