@@ -152,7 +152,11 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    >2 legs will hit this ceiling on ANY machine size. **Mitigation applied for THIS re-run** (relaunch-safe,
    not a design change): relaunched with `PIPELINE_E2E_CHECK_DRIVER_MACHINE_TYPE=e2-highmem-16` (128GB) — with
    only 2 legs and an observed ~24GB leg-2 increment, 128GB leaves ample headroom to reach a real terminal
-   verdict without masking the underlying leak. **Real fix still needed** (separate P2 follow-up, not blocking
+   verdict without masking the underlying leak. **Relaunched 2026-08-17 02:42 UTC**: VM
+   `pipeline-e2e-check-mdps-20260817-024215-f56c11` (identical `--day 2026-07-05 --asset-group DEFI --legs
+   force,skip --require-captured --auto-day` invocation), confirmed `e2-highmem-16` / `PREEMPTIBLE=` (blank —
+   NOT spot, ruling out preemption and supporting the OOM-kill inference) / `STATUS=RUNNING` via the launcher's
+   own `gcloud compute instances create` output. **Real fix still needed** (separate P2 follow-up, not blocking
    this relaunch): explicit `del`/`gc.collect()` of each leg's large intermediate structures
    (`_captured_days_by_cell`'s frame/groupby results) in `pipeline_e2e_check.py` between legs, or run each leg
    in its own subprocess so OS-level cleanup is guaranteed.
