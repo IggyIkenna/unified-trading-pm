@@ -67,11 +67,29 @@ Checked the actual backend data availability for each of the 3 ratchet columns +
 1. **Workflow-template drift** (`unified-trading-pm/scripts/quality_gates/detect_template_drift.py`) — has a
    `--json` machine-readable mode, but is wired ONLY as a pre-commit/QG gate. Zero references to it in
    `.github/workflows/` (no scheduled fleet-wide run), and it writes to no Firestore verdict-store. **No
-   API-readable per-repo drift status exists anywhere.**
-2. **Ruleset/branch-protection drift** (`.github/workflows/rules-alignment-agent.yml`) — a live, real workflow (per
-   the G4 item's own description: "pages WARNING… no UI"); confirmed 0 Firestore/verdict_store references, 4 Slack
-   references. **It only pages Slack — never persists a structured per-repo verdict anywhere deployment-api could
-   read.**
+   API-readable per-repo drift status exists anywhere.** **CORRECTION (2026-08-17, slot-1, same session): a plain
+   scheduled GitHub Actions workflow (as originally proposed below, mirroring `version-coherence-check.yml`) CANNOT
+   run this fleet-wide.** Read `_check_repo()`/`run()`: it iterates every repo in `workspace-manifest.json` and does
+   a pure LOCAL file read per repo (`_qg_path(workspace_root, repo_name).read_text()`) — no `gh api` fallback the
+   way `assert_version_coherence.py` has for repos not checked out locally. A bare `ubuntu-latest` runner only
+   checks out the PM repo itself, so it would see near-100% "missing-file" drift for every OTHER repo — the exact
+   same constraint that made batch15's own qg-baseline-freshness item reject a GH Actions workflow in favor of a
+   systemd timer on the `planning` orchestrator VM (`scripts/orchestrator/qg-baseline-daily-promote.{sh,service,
+   timer}` + `install_qg_baseline_daily_promote.sh`) — that VM's root PM checkout has the full multi-repo workspace
+   as siblings. `--json` output shape (from reading `run()` directly): a LIST (not a dict keyed by repo like
+   `assert_version_coherence.py`) — `[{"repo": str, "type": str, "clean": bool, "items": [{"severity":
+   "error"|"warn", "check": str, "message": str}]}]`.
+2. **Ruleset/branch-protection drift** — **CORRECTION (2026-08-17, slot-1, same session): the G4 item's own citation
+   of `rules-alignment-agent.yml` is WRONG.** That workflow is the "Rules Alignment Agent" — it keeps
+   `.cursor/rules/*.mdc` in sync with PM's own plan files (a completely different concern, confirmed by reading its
+   full header). The REAL branch-protection-ruleset-drift mechanism is `.github/workflows/ruleset-drift-alert.yml`
+   (runs `scripts/repo-management/verify_branch_protection_check_names.py`, Mondays 06:00 UTC, pages Slack via
+   `notify-slack.yml` on drift). The underlying finding still holds for the CORRECT workflow: confirmed 0
+   Firestore/verdict_store references in `ruleset-drift-alert.yml` — it only pages Slack, never persists a
+   structured per-repo verdict anywhere deployment-api could read. Unlike `detect_template_drift.py` (below),
+   `verify_branch_protection_check_names.py` reads via `GH_TOKEN`/`gh api` (cross-repo ruleset REST calls) — no
+   local sibling-repo checkout needed, so wiring Firestore writes into THIS workflow as a normal `ubuntu-latest` GH
+   Actions job (mirroring `version-coherence-check.yml` exactly) is viable as originally proposed.
 3. **Dockerfile digest-pin status** — a closely-related concept already exists, but inside a DIFFERENT, adjacent,
    already-`status: active` feature: `plans/active/artifact_pipeline_observability_2026_07_17.md`'s `/ops/artifacts`
    "running" view. `deployment-api/deployment_api/services/artifact_pipeline/models.py` defines a `DRIFT_PINNED`
@@ -130,12 +148,27 @@ craft-scoped worker mid-investigation.
 
 ## Todos
 
-- [ ] [CODE] P2. Wire `detect_template_drift.py --json` into a scheduled GitHub Actions workflow (mirror
-      `version-coherence-check.yml`'s cadence/shape) writing per-repo verdicts to a new Firestore
-      `template_drift_verdicts` collection. Repo: unified-trading-pm.
-- [ ] [CODE] P2. Wire `rules-alignment-agent.yml` to ALSO write per-repo verdicts to a new
-      `ruleset_drift_verdicts` Firestore collection (currently Slack-paging only, per G4's own framing in
-      `monitoring_control_plane_master_2026_06_10.md`). Repo: unified-trading-pm.
+- [x] ✅ [CODE] P2. **DONE 2026-08-17 (slot-1).** Wired `detect_template_drift.py --json` into a DAILY SYSTEMD
+      TIMER on the `planning` orchestrator VM (NOT a GitHub Actions workflow — see the correction in "What I found"
+      above: the checker reads local sibling-repo files with no `gh api` fallback, same constraint as the
+      qg-baseline-freshness precedent) writing per-repo verdicts to a new Firestore `template_drift_verdicts`
+      collection. Mirrors `scripts/orchestrator/qg-baseline-daily-promote.{sh,service,timer}` +
+      `install_qg_baseline_daily_promote.sh` exactly. New: `scripts/cicd/write_template_drift_verdicts.py` (driver;
+      verdict derived CLEAN/WARN/ERROR from the checker's `clean`/`items[].severity` fields — the checker's own
+      `--json` output is a LIST, not a dict like `assert_version_coherence.py`'s), `TEMPLATE_DRIFT_COLLECTION`
+      constant added to `verdict_store.py`, `scripts/orchestrator/template-drift-daily-check.{sh,service,timer}`
+      (03:23 UTC, offset from qg-baseline's 03:11 to avoid two full fleet sweeps colliding) +
+      `install_template_drift_daily_check.sh`, 13 new unit tests
+      (`tests/unit/test_write_template_drift_verdicts.py`, mirrors `test_write_version_coherence_verdicts.py`'s
+      structure). **Not yet installed on the orchestrator VM** — same posture as its qg-baseline sibling installer:
+      `[OPERATOR]`-run (writes `/etc/systemd/system`, needs root on `planning`); the first live daily tick is still
+      pending. Repo: unified-trading-pm.
+- [ ] [CODE] P2. Wire `ruleset-drift-alert.yml` (the CORRECT workflow — see the correction in "What I found" above;
+      `rules-alignment-agent.yml` was a mis-citation) to ALSO write per-repo verdicts to a new
+      `ruleset_drift_verdicts` Firestore collection (currently Slack-paging only via `notify-slack.yml`). This one
+      CAN be a normal scheduled GitHub Actions workflow (mirror `version-coherence-check.yml`'s Firestore-auth
+      step) — `verify_branch_protection_check_names.py` reads via `GH_TOKEN`/`gh api`, no local checkout needed.
+      Repo: unified-trading-pm.
 - [ ] [CODE] P2. Add a deployment-api route (e.g. `GET /api/rollout-ratchet/overview`) reading both new verdict
       collections via the existing generic `_verdict_store_reader.py`, mirroring `routes/version_coherence.py`'s
       shape exactly (read-only proxy, never re-derive the verdict). Repo: deployment-api. Gated on the two todos

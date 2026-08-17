@@ -1,0 +1,21 @@
+# template-drift-daily-check.timer — daily workflow-template drift verdict refresh.
+#
+# Epic: infrastructure_master
+# Lifecycle: permanent   Delete-when: NA
+#
+# Cadence: once daily, at an off-the-hour minute (03:23 UTC) to avoid colliding with other timers'
+# round-number ticks on this same host — spaced 12 minutes after qg-baseline-daily-promote.timer's
+# 03:11 (same spacing rationale: both are real per-repo local-file-read sweeps over the shared
+# multi-repo workspace, so staggering avoids two full fleet sweeps starting simultaneously).
+[Unit]
+Description=Daily timer for the workflow-template drift verdict refresh
+Documentation=unified-trading-pm/scripts/orchestrator/template-drift-daily-check.sh
+Requires=template-drift-daily-check.service
+
+[Timer]
+OnCalendar=*-*-* 03:23:00
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
