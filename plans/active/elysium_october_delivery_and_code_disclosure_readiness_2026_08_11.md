@@ -907,9 +907,9 @@ Ten planning docs carry this delivery, ~215 open todos between them — listed s
 | `venue_capability_route_axis_and_cross_ag_declarations_2026_08_14` | active | 10/12   |
 | `solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12`    | draft  | 26/2      |
 | `strategy_service_expansion_overlays_config_and_wizard_2026_08_12` | draft | 24/5     |
-| `elysium_carveout_stubbed_strategy_service_2026_08_12`           | draft  | 16/2      |
+| `elysium_carveout_stubbed_strategy_service_2026_08_12`           | draft  | 18/4      |
 | `issues/path_registry_dead_mode_kwarg_…_2026_08_15`              | open   | 2/1       |
-| `issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15` | open | 0/0     |
+| `issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15` | open | 1/0     |
 
 **Artefact sources** (`/codex/14-customer-journeys/commercial-model/`): `platform-architecture.html` ·
 `carveout-engineering.html` · `strategy-service-deep-dive.html` · `ODUM_Elysium_Phase2_Update_2026-07-24.html` ·
@@ -950,52 +950,11 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
   `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up. Extracted the three oldest Progress
   Log entries (2026-08-11 → 2026-08-12 "second pass") to a history doc to keep this plan under the 1000-line cap — see
   the pointer at the end of this section.
-- **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
-  `bash scripts/quality-gates.sh --no-fix 2>&1 | tail -45` in the background, was notified "exit code 0", and reported
-  the gate green. **That 0 was `tail`'s exit code, not the gate's** — a shell pipeline reports its LAST command's
-  status, so piping a gate through `tail`/`grep`/`head` discards the verdict and replaces it with "did the pager run".
-  The output file was exactly 45 lines, which is the tell. Compounding it, the visible tail showed only a
-  peripheral-directory ruff warning, which read as "nearly clean" when in fact the summary had been cut off. **Rule:
-  never pipe a gate. Redirect the full log to a file and capture `$?` on its own line**
-  (`bash scripts/quality-gates.sh > "$LOG" 2>&1; echo "EXIT=$?"`), then read the log. Same shape as the
-  `check_reference_paths` false negative earlier the same day — exit 0 from something that never did the work — which is
-  why this is worth writing down rather than filing as a one-off slip.
-- **2026-08-12 (fourth pass — codex ↔ code reconciliation)** — Operator asked for the remaining fixes plus a
-  reconciliation of codex and strategy-service docs. **The root cause of my own H.5 blind spot turned out to be a
-  documentation defect, not my search technique: the codex allocator SSOT and the code docstring both said "8 allocator
-  archetypes" against a registry of 17, and they corroborated each other.** A false consensus between doc and code is
-  far more dangerous than either being wrong alone, because cross-checking one against the other confirms the error.
-  Fixed in all four locations, including an `authoritative_for:` frontmatter facet that asserted authority over the
-  wrong count. Roster de-duplicated so two codex docs no longer maintain parallel tables — that duplication is what let
-  both drift to the same wrong number. Wrote the missing `CARRY_FUNDING_DISPERSION` archetype doc (implemented and
-  registered, zero codex entry) after reconciling all 60 enum members against doc slugs; corrected four stale counts and
-  a never-existent `templates/archetype-doc.md` link in the architecture-v2 README, replacing counts with the command
-  that derives them. Two archetypes remain undocumented and are now named in the README's own gap table rather than
-  hidden behind an "all archetypes documented" claim that was false. **Refinement to yesterday's ADV tick:** the dynamic
-  ADV universe is real but `enable_dynamic_carry_universe` defaults **False**, so "ADV-filtered" describes the
-  capability and not the running default — now an operator decision. **Counter-finding worth keeping:** the client
-  documents' "26 repositories" is right and the naive recount (31 `.git` dirs) is wrong — five are history-rewrite
-  backup clones sharing a remote. Recorded in the authoring notes with the distinct-remote command, because the next
-  person to measure will otherwise "correct" a correct number.
-
-- **2026-08-12 (third pass)** — **H.5 audited; all four operator asks were already built.** Composite composition is
-  architecture (a) and the allocator composes on two levels (across instances via `target_weights` + family/category
-  guard rails, within an axis via the 2-stage hierarchical rank engines) — so H.3 keying can proceed and **no
-  composite-archetype concept should be built**. Collateral-driven selection gates slot EMISSION, which is stronger than
-  runtime switching, and already encodes the stETH/wstETH per-venue nuance in a reasoned denylist. ADV filters exist and
-  are wired. The dispersion basket is complete and two-sided. Two findings raised to H.7 (SOL staked-basis has zero
-  eligible pairs; the allocator docstring undercounts its registry). **Three published-document corrections, all of the
-  same class — an asserted total that rotted:** the carry-archetype count was 6 and is 7 (the missed one is
-  `CARRY_FUNDING_DISPERSION`, i.e. the number was wrong _because_ the dispersion capability was unknown); "liquidity
-  provision" was listed as a `StrategyFamily` in `carveout-engineering.html` and in the deferral record, having been
-  fixed in the deep dive a day earlier and missed in the other two. **And a correction to my own correction**: I had
-  recorded that family as "invented", which is wrong — `DEFI_LP_CONCENTRATED`/`_POOL`/`_VAULT` are real archetypes, so
-  liquidity provision is a genuine capability that was merely misfiled as a family. Recording an error's shape
-  imprecisely is as costly as the error, because the record is what the next reader acts on. Counts have been removed
-  rather than corrected wherever the argument did not need them.
-
-- **2026-08-11 → 2026-08-12 ("second pass")**: extracted verbatim to
+- **2026-08-11 → 2026-08-12 (all passes)**: extracted verbatim to
   [Progress Log history](/plans/archive/2026_08/elysium_october_delivery_and_code_disclosure_readiness_progress_log_history_2026_08_15.md)
-  (line-cap remediation, `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up). No open todo
-  lived in the extracted text — superseded by this plan's own "State as of 2026-08-13" section above.
+  (line-cap remediation, `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up; extended
+  2026-08-17 to also cover the measurement-lesson entry + fourth pass + third pass — the doc crept back to 1001L
+  after the 2026-08-15 extraction via 2 later-appended entries, see this plan's own `git log`). No open todo lived
+  in any extracted text — every finding in it was already folded into sections H/H.5/H.7/H.11-H.17 above by the
+  time each entry was written, superseded by this plan's own "State as of 2026-08-13" section above.
 - **na-eligibility-audit 2026-08-16** [body-hash:acd8e4c62bb7d4a7]: KEEP-NA, stale items (soft) — 998-line Elysium delivery/disclosure hub, read end to end. 88 open todos: 13 explicit [OPERATOR] decisions, 14 gated on those/named prerequisites, ~52 genuine build/investigate work, 9 flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (kept NA per the client-SLA/HTML-artefact operator-escalation HARD RULE governing this doc, per skill guidance that bounded is not the same test as low-risk). One soft staleness note for a future edit pass (not applied this run, low-confidence text match): section H.2s CustodyRoute-as-rail-axis todo states it supersedes an earlier section-C CustodyRoute framing — worth collapsing when next hand-edited. Not a duplicate-dispatch risk either way; doc stays NA.

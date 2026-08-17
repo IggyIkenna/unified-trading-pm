@@ -334,6 +334,11 @@ Two secondary findings:
       "decommission pacifica for now"). PACIFICA stays fully removed (a `PACIFICA-stays-removed` lock test was added
       @a7ff8417). The remaining PACIFICA FIX/VERIFY todos below are N/A per that resolution (see each todo's own note);
       the LIGHTER/EXTENDED ones are unblocked.
+      **⚠️ CORRECTED 2026-08-17 (plan_reconciler, defi tranche)**: "PACIFICA stays fully removed" / "do NOT re-add it"
+      above and in the two FIX todos immediately below (P2 duplicate-source-risk N/A, P3 "no row to fix") was
+      REVERSED 2026-08-14 — see the `> **SUPERSEDED 2026-08-14**` banner in the `[DECISION]` todo above.
+      PACIFICA-SOLANA is live again; both FIX todos' N/A premises should be re-examined against the live pipeline,
+      not read as still-accurate historical record.
 - [x] [FIX] P2. ✅ **N/A — PACIFICA decommissioned 2026-07-18 (venue fully removed; no pipeline to turn on).** ~~resolve
       the `derivative_ticker`/standalone-`perp_funding` duplicate-source risk~~ (`_umi_pacifica.py:227-276` and
       `_perp_funding_pacifica_lighter.py:125-175` both hit the same `/funding_rate/history` endpoint under two different

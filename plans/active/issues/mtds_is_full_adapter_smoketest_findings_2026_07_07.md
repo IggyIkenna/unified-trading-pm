@@ -290,6 +290,9 @@ the todos already promised.
 3. LIGHTER-ZKSYNC's fix (tracked in [[non_tardis_dexperp_venue_data_status_smoketest_2026_07_07]]) exists only as
    uncommitted working-tree changes as of this smoke test — needs commit + plan-flip before it counts as shipped (a
    separate background agent was already dispatched for this fix; status pending as of this doc's filing).
+   **RESOLVED — verified 2026-08-17 (plan_reconciler)**: shipped and re-verified DONE 2026-07-30,
+   `market-tick-data-service@0c4000a02` (fixes lighter exchange fallback slug + adds Tardis numeric market_id
+   resolution + corrects data_type mapping to `derivative_ticker`), per the sibling doc's own todo entries.
 4. MARGINFI/SOLEND have no reference-data adapter of any kind — worse than the other 5 lending protocols checked; no
    IS-side coverage plan surfaced. **Owner confirmed 2026-08-16 (plan_reconciler)**: tracked in
    `instruments_docs_audit_outstanding_items_2026_07_08.md` §C2 (MARGINFI/SOLEND — DECISION — NEW).

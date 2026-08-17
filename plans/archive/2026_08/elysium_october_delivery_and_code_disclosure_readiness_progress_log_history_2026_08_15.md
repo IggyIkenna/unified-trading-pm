@@ -2,10 +2,12 @@
 doc_type: record
 title: "Extracted Progress Log history — elysium_october_delivery_and_code_disclosure_readiness (2026-08-15 line-cap remediation)"
 summary: >-
-  Verbatim extraction of the three oldest Progress Log entries (2026-08-11 through 2026-08-12 "second pass") from the
-  Elysium October delivery plan — pure historical session narration, superseded by that plan's own "State as of
-  2026-08-13" section and its later Progress Log entries; no open todo lives in the extracted text. Extracted to keep
-  the live plan under the workspace's 1000-line hard cap, per this issue's established extraction pattern.
+  Verbatim extraction of Progress Log entries (2026-08-11 through 2026-08-12, all passes) from the Elysium October
+  delivery plan — pure historical session narration, superseded by that plan's own "State as of 2026-08-13" section
+  and its later Progress Log entries; no open todo lives in the extracted text. Extracted to keep the live plan
+  under the workspace's 1000-line hard cap, per this issue's established extraction pattern. Extended 2026-08-17
+  (plan_reconciler, defi tranche) with 3 more entries (measurement lesson, fourth pass, third pass) after the live
+  plan crept back to 1001L via later-appended entries.
 status: complete
 nature: record
 asset_group: [defi]
@@ -34,6 +36,53 @@ source:
 > Progress Log section.
 
 ## Progress Log (extracted, verbatim)
+
+> **Extended 2026-08-17** (plan_reconciler, defi tranche) — 3 more entries below (measurement lesson, fourth pass,
+> third pass), same extraction rationale, moved after the live plan crept back to 1001L (2 entries appended after
+> the 2026-08-15 extraction). Order preserved from the live doc (its own newest-first convention).
+
+- **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
+  `bash scripts/quality-gates.sh --no-fix 2>&1 | tail -45` in the background, was notified "exit code 0", and reported
+  the gate green. **That 0 was `tail`'s exit code, not the gate's** — a shell pipeline reports its LAST command's
+  status, so piping a gate through `tail`/`grep`/`head` discards the verdict and replaces it with "did the pager run".
+  The output file was exactly 45 lines, which is the tell. Compounding it, the visible tail showed only a
+  peripheral-directory ruff warning, which read as "nearly clean" when in fact the summary had been cut off. **Rule:
+  never pipe a gate. Redirect the full log to a file and capture `$?` on its own line**
+  (`bash scripts/quality-gates.sh > "$LOG" 2>&1; echo "EXIT=$?"`), then read the log. Same shape as the
+  `check_reference_paths` false negative earlier the same day — exit 0 from something that never did the work — which is
+  why this is worth writing down rather than filing as a one-off slip.
+- **2026-08-12 (fourth pass — codex ↔ code reconciliation)** — Operator asked for the remaining fixes plus a
+  reconciliation of codex and strategy-service docs. **The root cause of my own H.5 blind spot turned out to be a
+  documentation defect, not my search technique: the codex allocator SSOT and the code docstring both said "8 allocator
+  archetypes" against a registry of 17, and they corroborated each other.** A false consensus between doc and code is
+  far more dangerous than either being wrong alone, because cross-checking one against the other confirms the error.
+  Fixed in all four locations, including an `authoritative_for:` frontmatter facet that asserted authority over the
+  wrong count. Roster de-duplicated so two codex docs no longer maintain parallel tables — that duplication is what let
+  both drift to the same wrong number. Wrote the missing `CARRY_FUNDING_DISPERSION` archetype doc (implemented and
+  registered, zero codex entry) after reconciling all 60 enum members against doc slugs; corrected four stale counts and
+  a never-existent `templates/archetype-doc.md` link in the architecture-v2 README, replacing counts with the command
+  that derives them. Two archetypes remain undocumented and are now named in the README's own gap table rather than
+  hidden behind an "all archetypes documented" claim that was false. **Refinement to yesterday's ADV tick:** the dynamic
+  ADV universe is real but `enable_dynamic_carry_universe` defaults **False**, so "ADV-filtered" describes the
+  capability and not the running default — now an operator decision. **Counter-finding worth keeping:** the client
+  documents' "26 repositories" is right and the naive recount (31 `.git` dirs) is wrong — five are history-rewrite
+  backup clones sharing a remote. Recorded in the authoring notes with the distinct-remote command, because the next
+  person to measure will otherwise "correct" a correct number.
+- **2026-08-12 (third pass)** — **H.5 audited; all four operator asks were already built.** Composite composition is
+  architecture (a) and the allocator composes on two levels (across instances via `target_weights` + family/category
+  guard rails, within an axis via the 2-stage hierarchical rank engines) — so H.3 keying can proceed and **no
+  composite-archetype concept should be built**. Collateral-driven selection gates slot EMISSION, which is stronger than
+  runtime switching, and already encodes the stETH/wstETH per-venue nuance in a reasoned denylist. ADV filters exist and
+  are wired. The dispersion basket is complete and two-sided. Two findings raised to H.7 (SOL staked-basis has zero
+  eligible pairs; the allocator docstring undercounts its registry). **Three published-document corrections, all of the
+  same class — an asserted total that rotted:** the carry-archetype count was 6 and is 7 (the missed one is
+  `CARRY_FUNDING_DISPERSION`, i.e. the number was wrong _because_ the dispersion capability was unknown); "liquidity
+  provision" was listed as a `StrategyFamily` in `carveout-engineering.html` and in the deferral record, having been
+  fixed in the deep dive a day earlier and missed in the other two. **And a correction to my own correction**: I had
+  recorded that family as "invented", which is wrong — `DEFI_LP_CONCENTRATED`/`_POOL`/`_VAULT` are real archetypes, so
+  liquidity provision is a genuine capability that was merely misfiled as a family. Recording an error's shape
+  imprecisely is as costly as the error, because the record is what the next reader acts on. Counts have been removed
+  rather than corrected wherever the argument did not need them.
 
 - **2026-08-12 (second pass)** — Recorded four un-audited operator asks in H.5: composite-strategy modelling (which
   gates H.3), collateral-driven archetype selection, rotation volume/ADV filter coverage, and the dispersion basket.

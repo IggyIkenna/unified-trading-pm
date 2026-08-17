@@ -3,7 +3,7 @@ doc_type: plan
 title: DeFi satellite AO batch 9 — finalize (reconcile 17 source docs + archive)
 summary: >-
   Gated closeout for defi_satellite_ao_dispatch_batch9_2026_08_06.md — machine-held via depends_on + gate_on_depends:
-  true until every one of that plan's 17 todos is done. Mirrors batch1-8-finalize: reconcile each of the 17 source docs
+  true until every one of that plan's 18 todos is done. Mirrors batch1-8-finalize: reconcile each of the 18 source docs
   (flip/cite the item each batch9 todo closed), re-check the 2 conflict-parked Deferred items + the 33 non-batchable
   Deferred items for whether any blocking condition has since cleared, then archive batch9 via the standard 6-step
   ritual.
@@ -53,13 +53,13 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 9 — finalize
 
-**status: active — gated on batch9's 17 todos via `depends_on` + `gate_on_depends: true`; the dispatcher will not
+**status: active — gated on batch9's 18 todos via `depends_on` + `gate_on_depends: true`; the dispatcher will not
 release these until batch9 is fully done.** (Batch9 itself stays `status: draft` until the operator approves dispatch —
 this finalize plan needs no separate flip, `gate_on_depends` holds it correctly either way per the "no double gate"
 finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
 **BANNER-FIXED 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0)**: the "batch9 stays status: draft"
 claim above is stale — `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s actual frontmatter is
-`status: active — operator-approved 2026-08-06, dispatching`, and all 17 of its todos are now `[x]`. This finalize
+`status: active — operator-approved 2026-08-06, dispatching`, and all 18 of its todos are now `[x]`. This finalize
 plan's gate is clear and it is ready for dispatch.
 
 ## Todos

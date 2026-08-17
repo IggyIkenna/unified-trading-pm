@@ -72,6 +72,17 @@ with a root-cause fix + re-enable. Checked `plans/active/` + `plans/active/issue
 doc referencing these job names, this date, or a "defi scheduler pause" incident — no hit
 (grepped `collect-oracle-prices|collect-dex-pools|collect-evm-defi|collect-solana-defi`
 across the whole corpus; nothing matches a pause/incident narrative for this date). Also
+**⚠️ CORRECTED 2026-08-17 (plan_reconciler, defi tranche)**: the "no hit" claim above is FALSE — re-running the
+identical grep against the live corpus DOES hit `plans/active/defi_consolidated_closeout_2026_07_18.md` Track 8
+(§"INFRA / forward-data: resume steady-state", dated 2026-07-22), which tracks this EXACT same-day 4-scheduler
+pause and names the real gating condition this doc's VM-race check below doesn't account for: resume is gated on
+**Track-1/2 landing (so the crons write the canonical shape) AND the in-flight
+`canonical-migration-defi-rebuild-*` VM finishing** — not merely "no concurrently-running backfill VM." The
+original grep missed it on vocabulary (Track 8 discusses the same incident without repeating the literal
+`collect-oracle-prices`-style CLI-operation-name strings). Re-check Track 8's current gate state before resuming
+any of these 3 schedulers — do not resume on the narrower VM-race check alone.
+
+Also
 checked the `alert_driven_dependency_revocation` `FLEET_HALT` mechanism
 (`RevocationActuator._pause_schedulers` — `/codex/05-infrastructure/data-pipeline-alerts.md`
 § "Alert-driven dependency revocation") as a possible deliberate-pause explanation: that

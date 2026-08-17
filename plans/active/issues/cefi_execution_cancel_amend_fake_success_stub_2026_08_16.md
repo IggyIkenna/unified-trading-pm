@@ -167,11 +167,29 @@ measurement" rule.
       cancel-failure surfacing as `CANCEL_FAILED` not a fake success, partial multi-order failure reporting only
       the failed order, 404/503 error paths, and the multi-venue orchestrator-lookup fix for both `/cancel` and
       `get_instruction_status`. 8593 passed/21 skipped, full `quality-gates.sh --no-fix` green before commit.
-- [ ] [BACKEND] P1. **Decide + implement `amend`'s real semantics per venue** — either wire a genuine
+- [x] ✅ [BACKEND] P1. **Decide + implement `amend`'s real semantics per venue** — either wire a genuine
       modify-order call for venues whose API supports it, or make the endpoint explicitly refuse with a clear
       "not supported for this venue, cancel and replace instead" for venues that don't, verified against each of
       the 12 venues' real API capabilities (don't assume uniformly). Done-when: `/amend` never returns a fake
-      success — either a real amend happened, or a clear refusal was returned.
+      success — either a real amend happened, or a clear refusal was returned. **Fixed —
+      `execution-service@b8d225615b`: chose the explicit-refusal branch, deliberately, for all 12 venues.**
+      Checked CCXT's `has['editOrder']` for all 12 — every one reports `True` — but that flag only means CCXT
+      EXPOSES an `editOrder()` method, not that the exchange has a true exchange-native atomic amend; for
+      several exchanges CCXT implements `editOrder()` as a client-side cancel+create composite instead, and
+      confirming which is which per venue requires each exchange's own API documentation, not something
+      verifiable from this repo checkout. Given the live-money stakes of a silently-non-atomic "amend"
+      (partial-fill/race-condition exposure the caller wouldn't expect from something labeled "amend"), chose to
+      refuse loud (`501`, clear message: "not implemented for any venue today... cancel + replace instead")
+      rather than ship an unverified per-venue modify-order call under this session's time constraints. 2 new
+      tests in `tests/unit/test_manual_amend_explicit_refusal.py`. 8595 passed/21 skipped, full
+      `quality-gates.sh --no-fix` green before commit. **New follow-up todo below** for the deferred per-venue
+      verification, so this doesn't silently stay "good enough forever."
+- [ ] [BACKEND] P2. **Verify true native-atomic `editOrder` support per venue against each exchange's own API
+      docs (not just CCXT's `has['editOrder']` flag), then wire a real amend for confirmed-atomic venues** —
+      follow-up from the P1 above, which deliberately chose blanket refusal over guessing at atomicity. Done-when:
+      a cited per-venue verdict (native-atomic / cancel+replace-emulated / unsupported) for each of the 12
+      venues, with real amend wired for any confirmed-atomic ones and the explicit-refusal path kept for the
+      rest.
 - [ ] [BACKEND] P2. **Audit whether any downstream state (order-tracking, position ledger) would show a stale
       "cancelled" order that is still actually live at the exchange** if this were ever hit before the fix lands
       — bounds the real-world blast radius the same way the withdraw-stub finding's equivalent todo did.
@@ -179,6 +197,12 @@ measurement" rule.
 
 ## Progress Log
 
+- **2026-08-17 (even later still, same session)**: Fixed the `/amend` P1 — `execution-service@b8d225615b`.
+  Chose explicit refusal (501) over an unverified per-venue modify-order call: CCXT's `editOrder=True` flag is
+  present for all 12 venues but doesn't distinguish true exchange-native atomic amend from CCXT's own
+  cancel+create emulation, and confirming that distinction needs each exchange's own API docs. Added a new P2
+  follow-up todo for that verification rather than leave it unrecorded. 2 new tests, full QG green. Only the
+  two P2 todos (per-venue atomicity verification, downstream-state audit) remain open on this doc.
 - **2026-08-17 (later, same session)**: Fixed the `/cancel` wiring P0 — `execution-service@0cb7c767ba`. Now
   calls the real per-venue `cancel_order` (looked up via the orchestrator's own instruction-tracking state, not
   caller input) and returns a genuine outcome instead of a hardcoded status. Found and fixed a second bug along

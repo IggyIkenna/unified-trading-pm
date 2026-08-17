@@ -21,7 +21,7 @@ related:
     /plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /plans/active/issues/manifest_consolidator_job_name_registry_mismatch_2026_08_15.md,
-    /plans/active/honest_coverage_and_data_status_rollup_health_2026_08_16.md,
+    /plans/archive/2026_08/honest_coverage_and_data_status_rollup_health_2026_08_16.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-16"
@@ -330,7 +330,7 @@ context_scope:
   live/committed Terraform drift on `honest-coverage-daily-launcher`'s Cloud Run Job task timeout (300s live vs 1500s
   committed) via an isolated `-target` apply — deliberately tracked in its own plan, not here, since it's about
   honest-coverage/data-status-rollup freshness, not manifest-consolidator cost. Cross-linked for discoverability:
-  `/plans/active/honest_coverage_and_data_status_rollup_health_2026_08_16.md`. That apply did NOT touch or resolve
+  `/plans/archive/2026_08/honest_coverage_and_data_status_rollup_health_2026_08_16.md`. That apply did NOT touch or resolve
   this plan's own terraform-drift blocker (todo 2 above, `deployment_service_prod_terraform_drift_2026_08_07.md`) —
   still exactly as gated.
 - **2026-08-16 (sub-agent session, operator finding: "ensure VMs exit if their consolidator is down for the AG

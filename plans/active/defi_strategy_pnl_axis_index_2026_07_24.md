@@ -12,6 +12,7 @@ asset_group: [defi]
 stage: [meta]
 repos:
   [
+    strategy-service,
     instruments-service,
     market-tick-data-service,
     unified-api-contracts,
