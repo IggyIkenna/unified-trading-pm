@@ -140,19 +140,25 @@ should weigh in on.
       still trips post-fix, that IS a genuinely new signal worth a fresh `/blocked`. The
       2026-08-12/15 ruling authorized the regen itself, not a specific implementation, so this did
       not need to go back to the operator a second time.
-- [ ] [IS] P1. Add streaming accumulation to `enumerate_expected_universe.py`'s `--full-history`
-      branch. Simpler than originally scoped: no per-key incremental range-merge needed —
-      `range_encode()` already only builds the compact `by_key: dict[key, list[date]]` grouping
-      from whatever iterable it's given (it never needed the full row list), so the actual fix is
-      removing `main()`'s redundant `v2_absent: list[ExpectedRow] = []` materialisation and
-      passing a new `counted_expected_rows()` generator (raises `_MaxWritesExceededError` mid-stream,
-      enforcing the halt-safety cap without ever holding more than one row's worth of
-      `ExpectedRow` at a time) directly into `range_encode()`. Implemented + 4 new unit tests
-      added (byte-identical-output-vs-old-shape + no-over-consumption-before-raise), all 245 tests
-      in `tests/unit/scripts/test_enumerate_expected_universe_v2.py` green — **shipped
-      `instruments-service@6384984c`; live-retest still pending.** Repo: instruments-service. Done when: shipped AND a defi
-      `--full-history --apply-write` run completes without needing any `--max-writes-per-run`
-      override beyond the existing 100M cap, verified against the live 78,802-row catalog.
+- [x] ✅ [IS] P1. Add streaming accumulation to `enumerate_expected_universe.py`'s `--full-history`
+      branch — `instruments-service@6384984c`. Removed `main()`'s redundant
+      `v2_absent: list[ExpectedRow] = []` materialisation; a new `counted_expected_rows()`
+      generator (raises `_MaxWritesExceededError` mid-stream) streams candidates directly into
+      `range_encode()`, enforcing the halt-safety cap without ever holding more than one row's
+      worth of `ExpectedRow` at a time. 4 new unit tests (byte-identical-output-vs-old-shape +
+      no-over-consumption-before-raise), all 245 tests in
+      `tests/unit/scripts/test_enumerate_expected_universe_v2.py` green. Split from the original
+      bundled todo (2026-08-17, worker slot-15) since the code half is genuinely done while the
+      live-retest half below is not — see the next todo.
+- [ ] [IS] P1. Live-retest `enumerate_expected_universe.py --asset-group defi --full-history
+      --apply-write` (via `launch-expected-universe-v2-vm.sh`) against the current 100M
+      `--max-writes-per-run` cap now that the streaming fix (`instruments-service@6384984c`) is
+      shipped — confirm the run completes without tripping halt-safety, verified against the live
+      78,802-row defi catalog. If it still trips at 100M post-fix, that IS a genuinely new signal
+      per the operator's `BLK-2efccf37` sequencing (step 3) — fresh `/blocked`, do not silently
+      raise the cap again. Repo: instruments-service. Done when: the VM run's `EXIT_STATUS` is 0
+      (not 5) at the existing 100M cap and the `_index/expected_universe_ranges.parquet` companion
+      is freshly written.
 - [ ] [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
       unbounded-drain code shape (cefi/tradfi/prediction/sports) before anyone else hits this same
       wall blind — sports in particular is flagged elsewhere
@@ -186,3 +192,6 @@ should weigh in on.
   shipped) — checkbox stays unchecked because the todo's own "Done when" also requires the
   `--full-history --apply-write` live retest against the real 78,802-row defi catalog, which has
   NOT happened yet (a VM-launch task, out of backend_engineer craft scope for this session).
+  Split the bundled todo in two: the code half is genuinely `[x]` done
+  (`instruments-service@6384984c`); a fresh `[ ]` todo carries the still-open live-retest half so
+  the checkbox honestly reflects only the part that's actually complete.
