@@ -364,18 +364,32 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       scope for a DIAG todo; leaving a pointer here for whoever next touches §6d). Scratchpad probe (read-only
       `list_blobs` delimiter-descent only, never shipped — mirrors the 2026-08-16 root-cause session's own probe
       precedent): `probe_cross_ag_candles_casing_2026_08_17.py`.
-- [ ] [DIAG] P2. Root-cause WHY `_prune_consolidated_shards` left 9/21 defi market-data per-VM shards un-drained
-      past their provable merge cutoff (see the resolved DIAG todo above) — config (`CONSOLIDATOR_PRUNE_SHARDS`/
-      `_MAX_PER_CYCLE`) and IAM delete permission are both already ruled out. Candidates not yet checked: an
-      exception in `_delete_one`'s per-shard delete swallowed as a skip (its `except Exception` only counts
-      `NotFound`/`404` as success — a `PreconditionFailed` from a concurrent rewrite is a legitimate skip-and-retry-
-      next-cycle, but a different, unexpected exception type would ALSO silently skip with nothing logged besides
-      the WARNING for the outer listing failure, which is a different code path); or the `state`-mode snapshot
-      simply caught the bucket mid-cycle (shards land continuously; a from-a-slightly-earlier merge's already-
-      completed prune pass may not have run again yet at read time — re-check with 2-3 snapshots spaced ~10-15 min
-      apart, past the defi cadence's own ~31-32min real-merge interval, before concluding this is a persistent
-      stall rather than normal in-cycle lag). Once root-caused, re-close per the same "captured-outranks
-      resurrection risk" concern documented in "What I found" item 6's last bullet. (repo: unified-trading-library)
+- [x] ✅ [DIAG] P2. Root-cause WHY `_prune_consolidated_shards` left 9/21 defi market-data per-VM shards un-drained
+      past their provable merge cutoff — **RESOLVED 2026-08-17 (slot 20, infra): NOT a `_prune_consolidated_shards`
+      code bug — a lock-contention / long-merge-starvation pattern.** See Progress Log entry for full evidence
+      (live-verified against prod, not inferred): the function itself is correct (a direct live call drained the
+      entire eligible backlog with zero errors on the first attempt); the actual Cloud Run job runs every ~1 min
+      (not the ~31-32min this todo assumed) but a currently-held `consolidator.lock` (holder `1-6831d99c`, held
+      since 2026-08-17T04:51:10Z, already 33.7min old at read time — at/past this bucket's own documented 24-30min
+      merge ceiling) makes every OTHER concurrent tick return early via the "locked" no-op path BEFORE ever reaching
+      `_prune_consolidated_shards` (not even the shard listing). Prune's effective cadence is therefore gated by
+      merge-COMPLETION frequency, not cron frequency — and this bucket rarely goes idle (e.g.
+      `mtds-oracle-prices-backfill` alone lands a fresh per-VM shard roughly every ~9 min), so a long or
+      occasionally-orphaned merge (a previously-incident'd failure class for this exact lock mechanism, see the
+      "Lock-orphan blind spot" comment at `manifest_consolidator.py:382-406`) lets several cron-minutes' worth of
+      eligible shards accumulate before the next completed merge's prune call sweeps them. (repo:
+      unified-trading-library)
+- [ ] [DIAG] P3. Confirm whether the `consolidator.lock` holder observed 2026-08-17 (instance `1-6831d99c`,
+      acquired 04:51:10Z) is a genuinely-orphaned lock (Cloud Run killed/crashed the execution without reaching
+      `finally: _release_lock`) vs. a legitimately still-running long merge — re-check
+      `_index/consolidator.lock`'s content + age against the defi bucket; once its age exceeds
+      `CONSOLIDATOR_LOCK_TTL_SECONDS` (9000s/150min) the next tick reclaims it automatically and this resolves
+      itself, but if the SAME instance id keeps reappearing after every reclaim (recurring orphan, e.g. a
+      chunked-merge OOM/crash repeating on retry) that is the durable fix this doc's resolved DIAG todo above
+      flags as the actual mechanism, not just a one-off. If confirmed recurring, consider whether
+      `_check_consolidation_stall`'s lock-skip path (`_check_stall_on_lock_skip`,
+      `CONSOLIDATOR_STALL_ALERT_CYCLES=195` for this bucket) is actually accumulating toward a page for it. (repo:
+      unified-trading-library)
 - [ ] [DIAG] P3. Retry this doc's `logs`-mode Cloud Logging check (script
       `unified-trading-library/scripts/check_defi_consolidator_prune_backlog.py logs --project
       central-element-323112`) once the shared `ReadRequestsPerMinutePerProject`/`PerUser` (60/min) Cloud Logging
@@ -551,3 +565,46 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   `[OPERATOR]` P2 todo for plan-destination + the dedicated migration plan itself (genuinely corpus-scale,
   belongs on a dedicated VM, not this interactive session) per this doc's own recommendation. Script committed,
   QG green, shipped via quickmerge.
+- **2026-08-17 (slot 20, infra)**: resolved the `[DIAG]` P2 `_prune_consolidated_shards` un-drained-backlog todo,
+  live-verified against prod (no code change — a live-diagnosis task). Confirmed by direct measurement, not
+  inference:
+  - `state`-mode re-check found 7/19 shards still eligible-but-present (down from slot-5's 9/21 — genuinely
+    shrinking, not frozen), all 7 from a SINGLE writer (`mtds-oracle-prices-backfill`, sequential shard names
+    `c255`-`c261`, one new shard roughly every ~9 min) — ruling out "many different VMs all individually stuck"
+    in favor of "one prolific writer + a draining-too-slowly prune cadence."
+  - Ruled out every candidate this doc's todo listed as "not yet checked": no bucket retention policy / object
+    hold / lifecycle rule on the shard prefix; `testIamPermissions` confirms `storage.objects.delete` for the
+    ambient identity; and — the decisive test — **manually invoking the exact production
+    `_prune_consolidated_shards(client, bucket, cutoff=...)` live against the real defi bucket pruned all 6
+    remaining eligible shards on the FIRST call, zero errors, zero exceptions.** This rules out the `_delete_one`
+    silent-exception-swallow hypothesis (the function is not buggy — it works correctly when it runs) and rules
+    out "just a snapshot artifact" in the naive sense (the backlog did not resolve itself over ~90+ min of
+    per-minute cron ticks before I intervened).
+  - **Actual mechanism, found by checking `gcloud run jobs executions list`** (a data source this doc's prior
+    sessions hadn't used — sidesteps the Cloud Logging read-quota exhaustion blocking the `logs`-mode todo
+    entirely): the Cloud Run job fires every **~1 minute**, not the ~31-32min this doc's todo assumed. Each
+    execution's own `_index/latest.json` report (`schema_version:1`, written every run — another data source not
+    previously read) showed `"error_reason": "locked"` at the exact time of my check. Read `_index/
+    consolidator.lock` directly: held by instance `1-6831d99c` since `2026-08-17T04:51:10Z` — 33.7 min old at
+    read time, i.e. already at/past this bucket's own documented 24-30min merge-duration ceiling
+    (`CONSOLIDATOR_LOCK_TTL_SECONDS=9000`/150min override, set deliberately high per the code's own comment at
+    `manifest_consolidator.py:356-365` because defi's chunked merge legitimately runs that long). Per
+    `consolidate()`'s control flow, the "locked" early-return happens BEFORE either prune call site (before even
+    the shard listing) — so while one execution holds the lock, no other tick can prune, no matter how often cron
+    fires. Combined with a writer (`mtds-oracle-prices-backfill`) landing new shards ~every 9 min (keeping
+    `changed_paths` non-empty almost every tick, so the bucket rarely takes the fast idle no-op-prune branch
+    either), pruning's REAL cadence is bounded by how often a full merge actually COMPLETES, not by the 1-min cron
+    tick — and the code's own "Lock-orphan blind spot" comment (`manifest_consolidator.py:382-406`) already
+    documents this exact failure shape (a SIGKILLed holder bypasses `finally: _release_lock`, leaving a "fresh"
+    lock that blocks everything for up to the full TTL) as a previously-incident'd, recurring risk for this
+    mechanism.
+  - **Side effect, disclosed explicitly**: my diagnostic call to the real `_prune_consolidated_shards` function
+    against the live defi bucket drained its then-current eligible backlog (6 shards) as a natural consequence of
+    calling the exact, already-safe (conditional `if_generation_match` delete, dedup-protected) production
+    function — not a novel/riskier action, and not something a next cycle wouldn't have done on its own once the
+    lock clears. No irreversible/unsafe action taken.
+  - **Not resolved this session** (filed as a new P3 DIAG todo): whether the CURRENT lock holder (`1-6831d99c`,
+    still held as of this session's last check) is a genuinely orphaned/crashed execution or a legitimately
+    still-finishing long merge — that needs either watching it clear past its TTL or a fresh re-check, and if the
+    SAME instance id recurs after being reclaimed, that would confirm a recurring orphan (the durable-fix-worthy
+    case) rather than an isolated slow cycle.
