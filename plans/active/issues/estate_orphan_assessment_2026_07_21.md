@@ -588,3 +588,4 @@ landed before re-starting the investigation from scratch.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-16** [body-hash:eb106d5b4ba9ecad]: KEEP-NA, valid — Read the doc in full (588 lines). 9 of 10 todos are [x] with hard evidence (VM run names, GCS report paths, commit SHAs — e.g.
+- **na-eligibility-audit 2026-08-17** [body-hash:2a1a59f43ef68bc2]: KEEP-NA, valid — Reaffirmed. Sole open item (todo 6, batched-incremental record_cells() refactor) carries a standing CONTESTED-then-reverted history (2026-07-30 defi RECLASSIFY reverted to NA after a 2-1 tally) — citation-hold class (b), a standing ruling. Doc stays assigned_vm: NA.

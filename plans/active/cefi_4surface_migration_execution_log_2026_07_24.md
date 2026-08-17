@@ -949,3 +949,4 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`, which this doc's own sole remaining open todo
   (the cicd-escalation-added Final 4-surface re-proof + archival gate) explicitly names as the doc to read instead of
   duplicate-driving from here.
+- **na-eligibility-audit 2026-08-17** [body-hash:19cf1ba844e6cee9]: KEEP-NA, valid — Reaffirmed. Sole open item (line 881, final 4-surface re-proof + this doc's own archival) is citation-hold class (a): redirects to `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` as the doc carrying the live work. Doc stays assigned_vm: NA.

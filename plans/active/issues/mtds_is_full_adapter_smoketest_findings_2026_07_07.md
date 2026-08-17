@@ -694,3 +694,4 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
   master findings ledger; only 3 items genuinely still open, all open-ended research with no stated done-when beyond
   'investigate'.
 - **na-eligibility-audit 2026-08-16** [body-hash:bd1e6d7b79f57815]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-17** [body-hash:f5bb51df8e7a9e79]: KEEP-NA, valid — Reaffirmed. 4 remaining open items are all open-ended research/investigation (ODDS_API ownership question, 18-month FLUID coverage gap needing an alternate historical read path, untraced 273-row mistagging root-cause, an under-specified drilldown-mockup update) with no determinable done-when. Reaffirmed KEEP-NA 5 times prior (2026-07-30 x2, 2026-08-07, 08-09, 08-16). Doc stays assigned_vm: NA.

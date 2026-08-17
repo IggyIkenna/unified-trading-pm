@@ -336,3 +336,4 @@ None — all 80 non-grace docs in the cefi tranche were read in full by the hunt
   not doc-hygiene gaps — **STILL-OPEN ORDINARY-WORK**. No RESOLVED/AUTO-FIXABLE items found this pass (the na-
   eligibility-audit pass earlier the same day already extracted every bounded item). Doc stays `status: open`,
   `assigned_vm: NA` — not archived (4 genuine open items remain).
+- **na-eligibility-audit 2026-08-17** [body-hash:fe51f315f7be41bd]: KEEP-NA, valid — Reaffirmed same-day. 4 remaining items (line-cap split gated on 2 design/judgment todos, an [OPERATOR] unidentified-VM confirmation, 2 [REVIEW] open-ended meta-process investigations outside this tranche's write scope) already independently re-verified by a same-day plan_reconciler Phase -1 pass. None clears the bounded-outcome bar. Doc stays assigned_vm: NA.

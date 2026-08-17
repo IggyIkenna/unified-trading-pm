@@ -344,3 +344,7 @@ cap.
   `deployment-service`'s working tree carried unrelated foreign WIP (5 terraform files) blocking tarball builds
   throughout Phase 3 — handled each time via a scoped, named `git stash push`/`pop` around just the build step,
   content verified byte-identical before/after, never touched.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-17** [body-hash:bd100f2de8b438e0]: KEEP-NA, valid — First audit pass (fresh doc, created 2026-08-16, no prior marker). 4 open items are live continuations of an in-progress human-executed investigation (operator ruled: human plan, execute today, canary on the live VM — real prod backfill running under this plan's validated config). Item 1 (watermark-emission bug, line 244) touches live-critical-path checkpoint machinery this same session shipped — flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (low confidence) for next-run reassessment rather than extracted. Item 2 (concurrency-6 canary) blocked by the workspace's 1-concurrent-VM Tardis cap while the real backfill runs. Item 3 conditional on an unrun Phase-0 measurement. Item 4 (UTL semaphore hoist) is an undecided design fork on a fleet-shared primitive — flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (low confidence) for next-run reassessment. Doc stays assigned_vm: NA.
