@@ -127,6 +127,16 @@ context_scope:
   false-progress flip. Whoever picks this up next: re-check batch6's own todo statuses first — do not repeat this
   reconciliation until it reads 14/14 `done` (or re-verify the gate_on_depends fix has landed and genuinely holds).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **2026-08-17 (plan_reconciler)**: Re-verified batch6's actual current state — **22 total todos, 19 done, 3 open**
+  (`grep -c '^- \[ \]'`/`'^- \[x\]'` on the source doc), up from the 2026-07-30 entry's "3/14 done, 11 queued"
+  snapshot, now 18 days stale. The 3 remaining open items: Betfair back+lay `[INFRA]` P2 (still blocked on
+  `ACCOUNT_PENDING_PASSWORD_CHANGE` as of 2026-08-12), the Phase-5 canonical-groups backfill `[SCRIPT]` P1
+  (DEFERRED-BY-DESIGN), and a Football/per-event `[DESIGN]` P3 todo added 2026-08-16. **Still NOT dispatch-ready**
+  (3 &gt; 0) — the gate's "don't dispatch yet" conclusion is unchanged, only the count is corrected. Todo 1's own
+  reconciliation scope ("9 source docs") should widen to also sweep the ~9 legitimate mid-execution follow-up todos
+  spawned during batch6's run (Betfair sub-items, team-alias tables, Gold trigger, SUI investigation,
+  manifest-staleness diag, the Football design todo, BQ external tables, pubsub IAM), not just the original 9 source
+  docs, once batch6's 3 remaining items clear.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added the gate_on_depends wiring-gap tracking doc
   (this plan's own Progress Log names it as the root cause the gate never held -- load-bearing, not previously scoped) +
   the batch4-finalize sibling this plan's pattern mirrors.
