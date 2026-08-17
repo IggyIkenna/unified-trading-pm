@@ -11,7 +11,7 @@ summary: >-
   comment (now corrected in the same commit as this issue). The --full-history codepath's own
   code comment already flags it as "not implicated in the 2026-08-01 DeFi OOM — the daily cron
   never passes --full-history", i.e. genuinely untested at this scale.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -27,7 +27,7 @@ created: "2026-08-17"
 author: worker (slot-3, data_engineering craft)
 assigned_vm: planning
 parent_epic: defi_master
-resolved_by:
+resolved_by: slot-23, infra craft, 2026-08-17 — all 5 todos done, regen completed + cross-AG audit shipped
 source: >-
   Live execution of defi_satellite_ao_dispatch_batch16_2026_08_17.md todo "[IS] P1 Execute the
   LST catalogue + expected-universe v2 regen" — the operator-ruled (2026-08-12, reconfirmed
@@ -40,6 +40,13 @@ last_updated: "2026-08-17"
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-17** — all 5 todos done: streaming fix shipped
+> (`instruments-service@6384984c`), live-retest confirmed deterministic, `--full-history
+> --apply-write` regen completed cleanly (294,144,873 candidates, `_index/expected_universe_ranges.parquet`
+> refreshed 2026-08-17), and the cross-asset-group audit todo closed
+> (`instruments-service@f81c23cc` — cefi/tradfi/sports/prediction catalogs all measured larger
+> than defi's, findings + recommendation folded into this doc's Progress Log).
 
 # DeFi `--full-history` expected-universe enumeration exceeds 100M candidates
 
@@ -204,14 +211,16 @@ should weigh in on.
       closed the gap the original wording (written 2026-07-21/2026-08-12) assumed would still be
       open. Repo: instruments-service. Closes `defi_satellite_ao_dispatch_batch16_2026_08_17.md`'s
       `[IS] P1` regen todo — see that plan's own Progress Log for the corresponding cross-reference.
-- [ ] [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
+- [x] ✅ [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
       unbounded-drain code shape (cefi/tradfi/prediction/sports) before anyone else hits this same
       wall blind — sports in particular is flagged elsewhere
       (`asia_northeast1_c_spot_preemption_storm_2026_08_04.md`) as having a 448K+-instrument
       catalog, likely an even worse candidate-volume case. Repo: instruments-service. Done when:
       each asset_group's live catalog row count is measured and compared against its
       `--full-history` feasibility, findings folded into this issue or a fresh one per
-      asset_group.
+      asset_group. **instruments-service@f81c23cc** — see Progress Log for the measured row
+      counts and recommendation; every OTHER asset_group's catalog is LARGER than defi's, sports
+      confirmed the worst.
 
 ## Progress Log
 
@@ -332,3 +341,47 @@ should weigh in on.
   with this evidence. Confirmed via a live `git pull` immediately before editing that slot-19 had
   not already flipped either checkbox (no double-completion). **Remaining open**: the `[SCRIPT] P3`
   cross-asset-group audit todo below — untouched, nobody working it yet.
+- **2026-08-17 (worker, slot-23, infra craft)**: worked the remaining `[SCRIPT] P3` cross-asset-group
+  audit todo. Built a read-only measurement script
+  (`instruments-service/scripts/audit_full_history_candidate_volume_by_ag_2026_08_17.py`) that reads
+  each asset_group's live `prod/catalog.parquet` row count via UTL's `get_storage_client()` +
+  `resolve_bucket_name()` (never a subprocess `gsutil`/`gcloud` — the orchestrator guardrail hard-blocks
+  that path; prediction resolves via the dedicated flat kind `instruments-store-prediction`, not
+  `asset_group="prediction"` on the per-AG `instruments-store` kind, per
+  `instruments_service/engine/orchestrator/catalogue.py`). **Live measured row counts (2026-08-17)**,
+  vs. defi's already-confirmed 78,802 rows / 294,144,873 `--full-history` candidates:
+  - `cefi`: 433,409 rows (5.50x defi) — naive row-count-scaled projection ~1.62B candidates.
+  - `tradfi`: 920,943 rows (11.69x defi) — naive projection ~3.44B candidates.
+  - `sports`: 544,997 rows (6.92x defi) — naive projection ~2.03B candidates. Confirms the todo's own
+    flagged concern directionally (sports IS larger than defi), though the live row count (544,997) is
+    notably below the `asia_northeast1_c_spot_preemption_storm_2026_08_04.md`-cited "448K+" figure's
+    implied trajectory continuing — not a contradiction, that figure predates this measurement by ~2
+    weeks and this corpus grows.
+  - `prediction`: 4,290,867 rows (54.45x defi) — naive projection ~16.0B candidates, by far the largest
+    of the four and ~15x even sports.
+  **Caveat on the projection numbers**: this is a naive linear row-count scaling
+  (`defi_candidates × (ag_rows / defi_rows)`), NOT a live `--scan-only` measurement per asset_group —
+  running a real `--full-history --scan-only` VM pass for all 4 remaining asset_groups was explicitly
+  judged out of scope for a P3 audit todo (that's real VM-minutes × 4, the same "guessing, not
+  engineering" pattern the operator already steered defi away from via `BLK-fbf334bd`'s scan-first
+  ruling) — actual candidate counts also depend on each catalog's `available_from` distribution shape
+  (defi's is unusually broad, 2022-2026), not just row count, so these are directional lower-bound-ish
+  estimates, not calibrated caps. **Finding**: every measured asset_group's catalog is LARGER than
+  defi's — there is no asset_group for which this issue's root cause (catalog size far exceeding the
+  `--full-history` unbounded-drain code path's tested scale) does NOT apply; if anything defi was the
+  SMALLEST-volume case that already needed the streaming fix + a calibrated 350M cap. **Recommendation
+  (not executed this session — a genuine judgment call on sequencing, same class as this issue's
+  original 3-option decision)**: before any of the 4 remaining asset_groups' first real
+  `--full-history --apply-write` run, follow the SAME sequence the operator already ruled for defi
+  (`BLK-fbf334bd`) rather than guessing a cap directly — (1) confirm the streaming fix
+  (`instruments-service@6384984c`, already generic/asset-group-agnostic code, not defi-specific — no
+  further code change needed) is on the branch being run, (2) launch a `--scan-only <large-number>` pass
+  first to learn the true candidate count safely (no write-side memory pressure), (3) size
+  `--max-writes-per-run` off the scan result with the same ~10-20% margin defi used. No asset_group's
+  `--full-history --apply-write` path has actually been exercised yet except defi's (per this issue's
+  own evidence table + final regen todo above) — this audit is a heads-up for whoever picks up that work
+  next, not a completed regen for any of the 4. Filing follow-up execution as fresh per-asset-group work
+  is left to the operator/main agent per the same "genuine judgment call, don't absorb unplanned scope"
+  posture this issue's own earlier entries already modeled — not added as new todos here to avoid
+  pre-committing VM-cost decisions nobody has reviewed. Shipped the measurement script + this todo's
+  findings — instruments-service commit pending in the same turn as this Progress Log entry.

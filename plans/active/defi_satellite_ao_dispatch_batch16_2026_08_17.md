@@ -139,7 +139,7 @@ drift_direction: advance-code
       --apply-write` (v2) against real prod infra — `instruments-service@fd0d12a9`-era catalogue already regenerated
       2026-08-15; the enumerator half was the remaining stale artifact. Full detail (candidate-volume OOM discovery,
       operator-directed code fix, scan-only calibration, the calibrated 350M-cap `--apply-write` launch) is tracked in
-      `issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md` — read that doc for the complete
+      `/plans/archive/issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md` — read that doc for the complete
       trail, not repeated here. **DONE 2026-08-17 — instruments-service, VM
       `expected-universe-v2-defi-20260817-092709`, `run_id=enum-universe-defi-20260817-093209`**: `EVENT
       ENUMERATOR_COMPLETED {candidates: 294144873, range_rows: 267499, eu_days: 288659526, written: 267499,
@@ -211,7 +211,7 @@ commit + ship UTL first, then re-verify + ship MTDS.
 ### Todo 8 ([IS] P1 expected-universe regen) — done — 2026-08-17 (slot-19)
 
 Picked up the `[IS] P1` regen todo. Found it already had a rich in-flight trail from slots 3/15/17/21 in
-`issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md` (OOM discovery, operator-directed
+`/plans/archive/issues/defi_expected_universe_full_history_candidate_volume_2026_08_17.md` (OOM discovery, operator-directed
 streaming fix, scan-only calibration measuring 294,144,873 true candidates). Live-reverified before acting (no other
 slot had landed a write since, no VM currently running), launched the calibrated `--apply-write` run
 (`--max-writes-per-run 350000000`, `MACHINE_TYPE=e2-highmem-16`) → VM `expected-universe-v2-defi-20260817-092709`,
