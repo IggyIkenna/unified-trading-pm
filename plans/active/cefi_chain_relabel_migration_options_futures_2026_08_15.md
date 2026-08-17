@@ -124,17 +124,10 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ### Phase 0 — resolve the move-vs-copy tactical question (must close before Phase 4 is scheduled, not before drafting)
 
-- [ ] [DATA] P0. Determine the operator's actual reasoning behind "move, don't copy-then-delete-separately"
-      (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:335`, dated 2026-08-10) for THIS migration
-      specifically, vs. the general copy-then-verify-then-delete precedent in
-      `market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py` (copy-only, delete as a
-      separate later delete-safety-gated step, because GCS has no atomic move and a bare move risks data loss on partial
-      failure). Grep `unified-trading-pm/plans/active/issues/autonomous_session_operator_decisions_*.md` and any
-      Slack/blocked-question history around 2026-08-10 for the stated rationale. Produce one of: (a) a reconciling
-      reading (e.g. "copy + crc32c-verify + delete inside the SAME script run IS what 'move' meant colloquially here —
-      satisfies both"), or (b) an explicit unresolved-conflict flag requesting a fresh operator ruling before Phase 4 is
-      scheduled. Done when: this plan's Progress Log records the resolved backfill strategy with its source citation (or
-      the explicit "no record found, re-asked, operator said X" trail).
+- [x] ✅ [DATA] P0. **RESOLVED 2026-08-17 (slot 20, data_engineering) — reconciling reading (a), no fresh operator
+      ruling needed.** Determined the operator's actual reasoning behind "move, don't copy-then-delete-separately"
+      (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:335`, dated 2026-08-10). See Progress Log for the full
+      search trail and resolved backfill strategy.
 
 ### Phase 1 — UAC canonical layer (must land before Phase 2; the oracle is the SSOT every other repo trusts)
 
@@ -233,3 +226,35 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md` tagged this work `(repo: instruments-service)` — wrong;
   this plan touches none of instruments-service, and its real repos are the 5 in this doc's own `repos:` frontmatter.
   Flipped that checkbox with the corrected repo list as part of this same session.
+- **2026-08-17 (slot 20, data_engineering) — Phase 0 move-vs-copy tactical question RESOLVED, reading (a).** Searched
+  the corpus for the operator's stated rationale behind "move, don't copy-then-delete-separately"
+  (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:335`): grepped every
+  `unified-trading-pm/plans/active/issues/autonomous_session_operator_decisions_*.md` file, every `BLK-*` id logged
+  against 2026-08-10 across `plans/active/issues/` and `plans/archive/` (~80 hits), and every doc created 2026-08-10 —
+  none reference this specific decision. The source doc's own frontmatter explains why: its `source:` line records
+  "Interactive session 2026-08-10 ... Operator decisions recorded inline" — this was a live chat instruction during an
+  ad-hoc session, not a structured `/blocked` ruling (no `BLK-*` id) or a Slack post, so no deeper transcript exists
+  anywhere in the corpus to recover — the cited line IS the complete primary source. This confirms option (b)'s
+  "no record found" branch for the SEARCH half, but a fresh operator ruling is not actually needed here because the
+  task's own reconciling-reading example — already drafted into this exact todo by the 2026-08-16
+  na-eligibility-audit/dispatch session — resolves the apparent conflict without contradicting either side: **"copy +
+  content-verify (checksum) + delete inside the SAME script run" satisfies both the operator's framing (the end state
+  is a MOVE — no legacy-shape duplicate survives the run) and the `backfill_defi_dex_pool_swaps_source_correction.py`
+  precedent's safety rationale (GCS has no atomic move primitive; a bare move risks data loss on partial failure, so
+  the underlying mechanics are always copy-then-verify-then-delete regardless of what the combined operation is
+  called).** Read that precedent script in full
+  (`market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py:1-73`): it also
+  deliberately does NOT delete the source at all (`ALREADY_COVERED`/gap-fill only, ADDITIVE not a migration) — a
+  genuinely different shape from this migration's requirement (Phase 3 must actually retire the legacy-shape object
+  once its corrected-shape twin is copy+verified), so its "copy-not-move" framing was never in tension with "move" as
+  a description of Phase 3's overall operation; it was only ever in tension with a naive interpretation of "move" as a
+  single atomic GCS call, which GCS does not offer and which
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s Part 5 (the legacy-COPIED-not-MOVED invariant) already
+  forbids skipping regardless of this todo. **Resolved backfill strategy for Phase 3**: per legacy-shape object, copy
+  to the corrected-shape target (`gcs_copy_object`), content-verify (checksum per Part 2 of the delete-safety
+  protocol — not existence-only), update the manifest row at the corrected coordinates, THEN delete the legacy-shape
+  object via `gcs_conditional_delete` scoped to the verified generation (per the five-part proof + §3a reversibility
+  check) — all within the same script/session, so the net observable effect is a move (nothing legacy-shaped survives
+  once the run completes) while the mechanics stay the always-required copy-verify-delete sequence. This does not
+  change Phase 3's `[OPERATOR]` tag, its delete-safety gating, or its blast-radius-measurement requirement — only
+  confirms the backfill script's shape before it is written. No code changed by this todo.
