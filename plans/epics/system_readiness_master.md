@@ -113,6 +113,7 @@ that is DERIVED, never declared, across the whole chain.** The chain, per mode:
 | market-tick-data-service | Is every declared data type captured, at what granularity? |
 | market-data-processing-service | Is the raw shard consumed into something derived? |
 | features-service | Does a feature group consume it? |
+| ml (published outputs) | Where an archetype consumes ML, is that output actually published — Pub/Sub for live, GCS for batch — for this venue and mode? |
 | strategy-service | Is there a position adapter **for this venue, in this mode**, and **at least one archetype registration** for this venue in this mode? |
 | execution-service | Is there an adaptor handling every action the eligible archetypes emit, plus transfers? |
 
@@ -122,8 +123,16 @@ this epic carries its denominator and measurement date.
 
 ## Cross-cutting invariants — true in every workstream below
 
-- **strategy-service reads ONLY processed data** — MDPS and features, never MTDS directly. Operator hard rule. If a
-  strategy appears to need raw ticks, the answer is a feature or a derived candle, not an import.
+- **strategy-service reads ONLY processed data — and via transport or storage, never a service call.** Corrected by the
+  operator 2026-08-17: the processed sources are **MDPS, features-service AND machine-learning outputs** — an earlier
+  draft of this epic listed only MDPS and features, which understated it. What stays absolutely fixed is that
+  **strategy-service never reads MTDS directly**; if a strategy appears to need raw ticks, the answer is a feature, a
+  derived candle or an ML output, not an import.
+  **The access pattern is the load-bearing half**: strategy consumes ML the same way it consumes any processed
+  input — **Pub/Sub for live, GCS for batch** — *not* a direct service-to-service dependency. This is why adding ML as
+  a source does not weaken the tier rule: strategy depends on UTL/UAC and reads published artefacts, so no new
+  service-to-service edge is created. A direct call to an ML service would be a violation; reading its published
+  output is not.
 - **Execution fails closed on granularity.** A venue whose data cannot support a matching class is REFUSED, never
   matched as though tick data existed.
 - **Everything declared lives in UAC** as far as possible — capabilities, registries, eligibility, weightings. SSOT in
