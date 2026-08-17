@@ -24,7 +24,7 @@ summary: >-
   preemption that day goes un-relaunched until the day rolls over. That trade-off (slower shard-completion progress
   for `cefi-aster-2023-*` vs. the storm-prevention the budget was built for) is an operator judgment call, not
   something this worker should decide unilaterally.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -36,7 +36,7 @@ related:
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /plans/active/issues/cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md,
+    /plans/archive/issues/cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
@@ -57,9 +57,8 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
 drift_direction: none
 depends_on: []
-resolved_by:
+resolved_by: deployment-service@2058bab339
 locked_by:
-archive_exempt: true
 context_scope:
   [
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
@@ -71,6 +70,11 @@ context_scope:
 ---
 
 # cefi-aster- launcher-family hit its 2/day RB-INFRA-RELAUNCH dispatch budget — VM left un-relaunched by design
+
+> **📦 ARCHIVED 2026-08-17 — option B implemented, closed.** `deployment-service@2058bab339` implemented the
+> `(launcher-family, shard-year)` finer-grouping-key mechanism per the operator's option-B ruling (see the Todos and
+> Progress Log below). Closed together with `/plans/archive/issues/cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md`
+> against the same commit.
 
 > **🟢 RESOLVED 2026-08-16 (second pass, this session) — banner lifted.** The 304-VM `cefi-aster-` duplicate fleet
 > this banner warned about has been cleaned up (513 duplicate VMs fleet-wide across both `cefi-aster-*` and

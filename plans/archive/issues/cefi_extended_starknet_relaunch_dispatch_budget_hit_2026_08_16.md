@@ -24,7 +24,7 @@ summary: >-
   calendar day, at which point every further preemption that day goes un-relaunched until the day rolls over. That
   trade-off (slower shard-completion progress for `cefi-extended-starknet-*` vs. the storm-prevention the budget was
   built for) is an operator judgment call, not something this worker should decide unilaterally.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -56,7 +56,7 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
 drift_direction: none
 depends_on: []
-resolved_by:
+resolved_by: deployment-service@2058bab339
 locked_by:
 context_scope:
   [
@@ -69,6 +69,11 @@ context_scope:
 ---
 
 # cefi-extended- launcher-family hit its 2/day RB-INFRA-RELAUNCH dispatch budget — VM left un-relaunched by design
+
+> **📦 ARCHIVED 2026-08-17 — option B implemented, closed.** `deployment-service@2058bab339` implemented the
+> `(launcher-family, shard-year)` finer-grouping-key mechanism per the operator's option-B ruling (see the Progress
+> Log below). Closed together with
+> `/plans/archive/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md` against the same commit.
 
 ## What I found
 
