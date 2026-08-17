@@ -32,13 +32,7 @@ source:
 assigned_vm: planning
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md,
-    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
-    e2e-testing/scripts/defi,
-  ]
+context_scope: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md, /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md, e2e-testing/scripts/defi]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -276,3 +270,4 @@ sizing — the operator's core question — is **not a parameter anywhere**; it 
   was decided and shipped 2026-08-09. Updated D4's text accordingly; item stays open and correctly `BLOCKED-CREDENTIALS`
   — the real remaining blocker is the Tenderly-fork + PoolMatcher-fixtures validation environment, unaffected by the
   design shipping.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

@@ -47,14 +47,7 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py,
-    market-tick-data-service/scripts/revert_cefi_live_corrective_migration_overreach_2026_08_16.py,
-    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
-  ]
+context_scope: [/plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md, /codex/05-infrastructure/data-pipeline-alerts.md, market-tick-data-service/scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py, market-tick-data-service/scripts/revert_cefi_live_corrective_migration_overreach_2026_08_16.py, market-tick-data-service/market_tick_data_service/live/websocket_runner.py]
 ---
 
 # DP-FETCH-009 cefi/depth_of_book_10 — root cause was a corrective-migration scoping overreach
@@ -166,3 +159,4 @@ larger data-correctness regression riding on the same commit.
   Reverted + independently re-verified the live-side population (14,112 rows); the batch-side
   question is left open per findings-triage ("ambiguous → diagnose both sides", not guess).
 - **na-eligibility-audit 2026-08-17** [body-hash:d6517143ed480bc9]: RECLASSIFY-SPLIT — extracted bounded item 3 (annotate the migration script with a pointer to this finding) to `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 2, conflict-checked clear. Item 2 (determine whether the 149,309-row batch population is correctly/incorrectly caught) stays genuinely NA at lower confidence — the investigation approach is well-specified but the likely outcome (another manifest CAS revert at larger scale) brushes against the plan-authoring rule's manifest-write gating, so it wasn't confidently extracted without an explicit safe-idempotent justification. Doc stays assigned_vm: NA for that remaining item.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

@@ -40,13 +40,7 @@ archive_exempt: true
 resolved_by:
 last_updated: 2026-08-15
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-  ]
+context_scope: [/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py, /codex/05-infrastructure/data-pipeline-alerts.md]
 source: >-
   Found during the 2026-08-10 scheduled /data-pipeline-alerts-reconcile sweep. Live evidence: `gcloud run jobs
   executions list` shows 4-6 concurrent "Waiting for execution to complete" rows for the exit-code-monitor at any time;
@@ -737,3 +731,4 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
   profiled `kpxh6`-class run (no live reproduction was attempted). Flipped the P1 todo done; filed a P2 live-verify
   follow-up (cron `uts-prod-dp-exit-code-monitor-cron` stays PAUSED until that todo confirms ≥3 clean scheduled
   executions, then resumes it) — this is deliberately NOT closed out as fully resolved.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

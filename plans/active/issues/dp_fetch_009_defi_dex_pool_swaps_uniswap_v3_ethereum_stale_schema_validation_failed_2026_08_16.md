@@ -81,13 +81,7 @@ calibrated_ai_days: 0.12
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py,
-    deployment-service/deployment_service/data_pipeline_monitors/_attempted_failed_index.py,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py, deployment-service/deployment_service/data_pipeline_monitors/_attempted_failed_index.py, /codex/05-infrastructure/data-pipeline-alerts.md]
 ---
 
 ## What I found
@@ -226,3 +220,4 @@ count/ratio).
   No code fix needed, no new issue doc filed (would duplicate this one). `$AUTHORING_SLOT=dp-fleet-monitor` is
   non-numeric — skipped the authoring-slot ping per the role doc (no real originator slot to notify).
   `market-tick-data-service` and `unified-trading-pm` worktrees left clean.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

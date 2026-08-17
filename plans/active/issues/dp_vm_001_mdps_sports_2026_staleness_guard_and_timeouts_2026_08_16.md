@@ -37,14 +37,7 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py,
-    market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/05-infrastructure/manifest-consolidator-ssot.md, market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py, market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py, unified-trading-library/unified_trading_library/manifest_writer/_read_index.py]
 ---
 
 # DP-VM-001 mdps-sports-2026-20260815-040833 — staleness-guard races + timeouts under a concurrent 5-VM sports fleet
@@ -159,3 +152,4 @@ file an issue") already points here, but the reasoning is worth recording:
   earlier same-run classification of items 2/3 as a fresh RECLASSIFY-split candidate; the conflict-check caught that
   batch14 (drafted the same day) already claims this exact ground. Citation-only fix, not a reclassification. Doc
   stays `assigned_vm: NA`.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

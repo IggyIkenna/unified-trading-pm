@@ -50,16 +50,7 @@ related:
     /plans/archive/issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    unified-trading-pm/agents/data_engineering.md,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
-    deployment-service/scripts/recovery/relaunch_stalled_vm.py,
-    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, unified-trading-pm/agents/data_engineering.md, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/scripts/recovery/relaunch_stalled_vm.py, deployment-service/scripts/vm/launch-canonical-migration-vm.sh]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -123,3 +114,4 @@ source: >-
   `canonical-migration-cefi-deribit-sweep-20260816-010754` — confirmed `STARTED` (RUNNING, tarballs fresh). Filed this
   issue for the operator decision on the old VM. Not deleted; not requeued for autonomous deletion.
 - **na-eligibility-audit 2026-08-16** [body-hash:1f4088066aced979]: KEEP-NA, valid — Freshly-filed (2026-08-16, same day as this audit) single-todo issue doc, read in full (124 lines). Its one open todo asks the operator to decide whether to delete an old wedged canonical-migration VM.
+**context-scout 2026-08-17**: populated/refreshed context_scope (7 entries)

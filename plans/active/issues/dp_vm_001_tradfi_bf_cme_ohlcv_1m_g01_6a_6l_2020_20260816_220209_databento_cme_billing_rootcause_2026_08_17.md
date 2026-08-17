@@ -45,13 +45,7 @@ related:
     /plans/active/issues/tradfi_bf_cme_ohlcv_1m_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md, /codex/15-runbooks/incidents/rb_infra_relaunch.md, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-17"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -181,3 +175,4 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
   39-VM wave) before concluding a manual relaunch is not warranted. Did not relaunch. Filed this doc to correct the
   two same-shard sibling docs' "poison instrument" hypothesis and appended a fresh-confirmation entry to the P0
   billing doc's Progress Log (same edit session). No code changed.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

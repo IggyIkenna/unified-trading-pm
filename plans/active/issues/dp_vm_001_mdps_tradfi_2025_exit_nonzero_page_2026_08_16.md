@@ -35,13 +35,7 @@ related:
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -171,3 +165,4 @@ class of failure repeatedly.
   `[OPERATOR]` todo above (root-cause-and-decide) is now answerable with this evidence — leaving the checkbox as-is
   since the decide half is still genuinely operator-gated, but the root-cause half is DONE. Full cross-VM roundup
   (incl. the 2 refuted VMs) recorded in the 2021 sibling doc's Progress Log.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

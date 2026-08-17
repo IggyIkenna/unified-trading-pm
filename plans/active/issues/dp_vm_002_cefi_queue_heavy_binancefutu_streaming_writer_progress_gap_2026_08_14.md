@@ -47,12 +47,7 @@ calibrated_ai_days: 0.05
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
-    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-  ]
+context_scope: [deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh, /codex/05-infrastructure/data-pipeline-alerts.md]
 ---
 
 ## What I found
@@ -154,3 +149,4 @@ and burns escalation-worker cycles (this one included).
   classifier's actual `_PROGRESS_RE` match to an incidental Tier-3 sentinel-fan-out line, confirming the launcher's real
   write marker had no dedicated regex alternative. Shipped the fix (`deployment-service@b7812347ce`, full
   `quality-gates.sh` green) + this issue doc. Pinged authoring slot `dp-fleet-monitor`.
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

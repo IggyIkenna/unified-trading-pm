@@ -35,13 +35,7 @@ related:
     /plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-14"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -154,3 +148,4 @@ guidance both point the same direction: stop and page.
   the `2b2cc58ef3` verification) so the fine-timeframe gap isn't lost. Did not relaunch this VM or attempt a code
   fix — out of this todo's scope (confirm/refute the specific adapter hypothesis, not root-cause every VM from
   scratch); the `[OPERATOR]` relaunch-vs-wait decision above and the SchemaContract gap both remain open follow-ups.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

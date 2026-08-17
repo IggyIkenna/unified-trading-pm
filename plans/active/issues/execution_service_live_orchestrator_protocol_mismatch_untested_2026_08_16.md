@@ -31,11 +31,7 @@ assigned_role: backend_engineer
 effort: medium
 locked_by:
 resolved_by:
-context_scope:
-  [
-    /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
-    execution-service/execution_service/cli/handlers/live_execution_handler.py,
-  ]
+context_scope: [/plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md, execution-service/execution_service/cli/handlers/live_execution_handler.py, execution-service/execution_service/orchestration/orchestrator.py]
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
@@ -90,3 +86,4 @@ full verification.
 checked directly (confirmed), the protocol-mismatch and return-type claims were not independently re-derived before
 filing — see the todos above for that verification work. Flagged to the operator in the same turn this was filed,
 per the workspace's big-finding notification rule (cross-cutting to live execution correctness).
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

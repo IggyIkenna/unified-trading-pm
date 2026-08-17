@@ -34,13 +34,7 @@ related:
     /plans/active/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -147,3 +141,4 @@ this could be a systemic issue in the launcher/capture path rather than two unre
 
 No code changed this
   session.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

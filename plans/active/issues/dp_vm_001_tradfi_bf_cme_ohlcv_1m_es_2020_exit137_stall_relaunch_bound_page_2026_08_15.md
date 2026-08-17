@@ -35,13 +35,7 @@ related:
     /plans/active/issues/dp_vm_001_mdps_cefi_2019_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -153,3 +147,4 @@ retry, not genuinely new information.
   blocked in `anon_pipe_read`), not the actual worker process — so this pull does NOT identify which call in the
   CME OHLCV 1m capture path actually hung; that remains open work for the BACKEND todo above (candidate: an
   unbounded outbound call lacking `timeout=`), not resolved by this cross-VM check.
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

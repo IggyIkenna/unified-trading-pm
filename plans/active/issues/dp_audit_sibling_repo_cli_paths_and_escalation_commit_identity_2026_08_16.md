@@ -64,7 +64,7 @@ locked_by:
 resolved_by:
 last_updated: "2026-08-16"
 locked_since:
-context_scope:
+context_scope: [e2e-testing/scripts/audit/manifest_hygiene_daily.py, e2e-testing/scripts/audit/_dp_common.py, e2e-testing/Dockerfile, unified-trading-library/Dockerfile, /codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md]
 source: >-
   Surfaced directly by the data_pipeline_failure escalation agent (agt-fc531b) while diagnosing + verifying the
   DP-WATCHER-006 / DP_CLOUD_RUN_JOB_FAILED OOM fix for uts-prod-dp-manifest-hygiene-changed — not itself a filed
@@ -285,3 +285,4 @@ in the container's `unified-trading-pm` worktree before the container exits.
   execution against real production data (that's todo (4)/P3's scope, gated on this fix landing) — next Sunday
   08:00 UTC run (or an operator-triggered `gcloud run jobs execute`) will be the first real confirmation that
   `_check_phantom` actually classifies against production manifests, not just that the CLI resolves.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

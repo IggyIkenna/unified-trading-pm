@@ -37,12 +37,7 @@ estimate_calibrated_ai_days: 0.8
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    scripts/quality_gates/check_doc_body_links.py,
-    scripts/quality_gates/doc_body_link_baseline.yaml,
-    /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
-  ]
+context_scope: [scripts/quality_gates/check_doc_body_links.py, scripts/quality_gates/doc_body_link_baseline.yaml, /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md]
 supersedes:
 superseded_by:
 depends_on:
@@ -193,3 +188,4 @@ corpus actually uses was never brought into the checker's purview.
   `/codex/14-customer-journeys/shared-core/strategy-version-governance.md`, `/codex/README.md`, `mega_audit` R14) are
   ALREADY open todos in `docs_reconcile_remaining_broken_links_2026_08_02.md` — no new findings to file. Confirms the
   widened scan surfaces no NEW breakage beyond what P2 baselined + tracked.
+**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

@@ -54,15 +54,7 @@ related:
     /plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md,
     /plans/archive/issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-    deployment-service/scripts/vm/launch-manifest-recon-all-vm.sh,
-    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/scripts/vm/launch-manifest-recon-all-vm.sh, instruments-service/scripts/reconcile_phantom_manifest_rows_all.py, unified-trading-library/unified_trading_library/manifest_writer/_read_index.py]
 created: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -207,3 +199,4 @@ was never previously flagged as at-risk for this same unsliced read.
   `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. The `columns=` slim-read todo above remains
   open — a genuine efficiency fix, not required to close batch6's todo now that a correctly-sized VM proved sufficient.
 - **na-eligibility-audit 2026-08-16** [body-hash:ff4d339f25828573]: RECLASSIFY-SPLIT — extracted bounded item(s) 3 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 1 item remains genuinely NA ([OPERATOR] P3 launcher-registry auto-recovery-binding decision). Doc stays assigned_vm: NA.
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

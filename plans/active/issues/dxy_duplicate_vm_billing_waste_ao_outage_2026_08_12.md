@@ -30,13 +30,7 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
-    /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
-    deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-24h.sh,
-    deployment-service/scripts/wave_launcher.py,
-  ]
+context_scope: [/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md, /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md, deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-24h.sh, deployment-service/scripts/wave_launcher.py]
 ---
 
 # 26+ duplicate DXY VMs — active billing waste, killed
@@ -149,3 +143,4 @@ tmux workers despite the server process being healthy.
   New cleanup todo filed above. Full manifest-count evidence for all 6 tradfi MVP cells (not just these 3) is in
   `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s own Progress Log.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

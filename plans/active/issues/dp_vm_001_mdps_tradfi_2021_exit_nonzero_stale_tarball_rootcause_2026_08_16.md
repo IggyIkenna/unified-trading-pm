@@ -38,15 +38,7 @@ related:
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
   ]
-context_scope:
-  [
-    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/05-infrastructure/vm-tarball-deployment.md,
-    market-data-processing-service/market_data_processing_service/app/adapters/__init__.py,
-    market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py,
-    deployment-service/scripts/vm/create-code-tarballs.sh,
-  ]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /codex/05-infrastructure/vm-tarball-deployment.md, market-data-processing-service/market_data_processing_service/app/adapters/__init__.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py, deployment-service/scripts/vm/create-code-tarballs.sh]
 created: "2026-08-16"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -221,3 +213,4 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   2026-08-16 11:06 tarball rebuild — the standing P2 todo below about refresh cadence is the actual remaining fix) +
   2 genuinely independent failures needing their own follow-up (tracked in their own docs). Shipped via
   `safe-doc-push.sh` (docs-only change, no code).
+**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

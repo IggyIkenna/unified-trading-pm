@@ -48,14 +48,7 @@ depends_on: []
 resolved_by:
 locked_by:
 last_updated: 2026-08-13
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py,
-    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
-    deployment-api/cloudbuild.yaml,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md, deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py, deployment-service/deployment_service/data_pipeline_monitors/escalation.py, deployment-api/cloudbuild.yaml]
 ---
 
 # Escalation-dispatch dedup is inert on the monitor host (no PM clone)
@@ -146,3 +139,4 @@ Marked `assigned_vm: NA` — this is a design decision, not a worker-determinabl
   24h (max attempted_at 2026-08-11, 2d old) and zero `"schema contract violated"` rows since 2026-07-31 — the re-fire is
   100% dedup-inertia (the `_resolve_pm_path`-returns-None path), not a data regression. Worker sessions keep being
   burned until the Option A [CODE] P2 todo lands.
+**context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

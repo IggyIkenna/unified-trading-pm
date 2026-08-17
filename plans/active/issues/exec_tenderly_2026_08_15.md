@@ -26,7 +26,7 @@ assigned_vm: NA
 execution_scope: local-only
 locked_by:
 locked_since:
-context_scope: [execution-service/tests/defi_execution/unit/test_recursive_loop_orchestrator.py]
+context_scope: [execution-service/tests/defi_execution/unit/test_recursive_loop_orchestrator.py, /codex/02-data/external-data-always-available-rule.md]
 supersedes:
 superseded_by:
 depends_on: []
@@ -50,3 +50,7 @@ already exists and is wired, it just cannot execute against live infra without t
       through it) for `execution-service` CI, then un-skip `test_tenderly_fork_full_cycle` and verify it passes against
       the live fork.
 - **na-eligibility-audit 2026-08-16** [body-hash:4939ad84f015af58]: KEEP-NA, valid — Single open todo requires provisioning a live Tenderly fork RPC endpoint + API key (with confirmed Aave V3 pool read/write access) to un-skip `test_tenderly_fork_full_cycle` — no such credential exists in the workspace's ambient GSM/CI secret set, and this cannot be self-served by an agent.
+
+## Progress Log
+
+**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
