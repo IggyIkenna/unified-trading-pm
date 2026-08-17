@@ -174,7 +174,7 @@ def load_baseline() -> tuple[dict[tuple[str, str, str, int], BaselineEntry], str
     if not path.exists():
         return {}, "cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs"
     doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    default_successor = str(doc.get("default_successor", "")) or (
+    default_successor = str(doc.get("default_successor", "")) or (  # noqa: qg-empty-fallback — absent key immediately coalesced to a real default on the next line
         "cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs"
     )
     entries: dict[tuple[str, str, str, int], BaselineEntry] = {}

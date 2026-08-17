@@ -60,7 +60,7 @@ def _build_mappings(df: pd.DataFrame) -> list[dict[str, object]]:
     mappings: list[dict[str, object]] = []
     for _, row in df.iterrows():
         af_id = int(row["api_football_player_id"])
-        af_name = str(row.get("api_football_player_name", ""))
+        af_name = str(row.get("api_football_player_name", ""))  # noqa: qg-empty-fallback — absent field legitimately treated as empty name by the canonical-name lookup
         canonical_id = get_canonical_player_name_from_api_football(af_name, af_id)
 
         us_id_raw = row.get("understat_id")
