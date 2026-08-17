@@ -16,7 +16,7 @@
 ---
 
 <!-- AUTO-INDEX-START -->
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 334 plans across 10 domains. A plan tagged with multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/` by hand._
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 333 plans across 10 domains. A plan tagged with multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/` by hand._
 
 ### cefi (38)
 
