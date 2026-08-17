@@ -19,9 +19,10 @@ scope: [engineer]
 tags: [transfers, financial-correctness, live-money-risk, stub-code, venue-readiness]
 related:
   [
-    /plans/active/cefi_venue_e2e_batch1_2026_08_16.md,
+    /plans/archive/2026_08/cefi_venue_e2e_batch1_2026_08_16.md,
     /plans/active/venue_e2e_wiring_2026_08_16.md,
     /codex/04-architecture/transfer-architecture.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-16
 author: interactive-session
