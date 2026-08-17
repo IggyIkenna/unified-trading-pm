@@ -146,6 +146,40 @@ larger data-correctness regression riding on the same commit.
       buggy path, build the same kind of scoped revert this doc's script demonstrates. The
       presence of 2025/2026 dates (not just the original 2020 incident window) in this
       population is itself a signal worth re-checking, not necessarily proof of a problem.
+      **UPDATE 2026-08-17 (agt-fc69f5, `data_pipeline_failure` escalation worker) — this batch
+      population is NOW ALSO firing DP-FETCH-009 for a SECOND data_type
+      (`cefi/book_snapshot_5`, 15,884/173,890 attempted_failed, flagged "Fresh"), raising this
+      from a deferred follow-up to an actively-paging condition. Partial per-launcher trace done
+      for `book_snapshot_5` specifically (10,368 of its `attempted_failed` rows carry the
+      migration sentinel: `batch_tardis` 5,358, `batch_hyperliquid` 2,896, `batch_aster` 2,114;
+      confirmed `live_*`=0, i.e. the earlier revert is still holding). Code-level finding:
+      `_emit_tier3_for_dt` is called from `_emit_nonsports_tier2_tier3_sentinels`
+      (`sentinels.py:573`), which is a single VENUE-AGNOSTIC sentinel emitter every CeFi venue's
+      Tier-3 fan-out routes through regardless of adapter (Tardis bulk-CSV vs Aster/Hyperliquid's
+      own REST clients) — so the migration's "every CeFi launcher shares this code-level defect"
+      claim is structurally TRUE at the sentinel-emission layer, unlike the live case (a
+      genuinely separate module). This argues AGAINST a simple per-launcher-family exclusion.
+      However, a distinct anomaly remains unresolved: `batch_tardis`'s `attempted_at` values are
+      tightly confined to the actual incident window (`2026-08-15T22:14`–`2026-08-16T04:34`,
+      matching the migration's own claimed `written_at >= 2026-08-15T21:00:00Z` scope), while
+      `batch_aster`/`batch_hyperliquid`'s `attempted_at` values span `2026-07-30`–`2026-08-16`
+      — over 2 weeks BEFORE the incident window this migration was built to correct. Since
+      `attempted_at` is preserved from the original fetch (not rewritten by the migration), this
+      spread is inconsistent with all these rows originating from the one `SINGLE_VM_QUEUE=1`
+      incident run, and is consistent with the sibling concern already raised above (an
+      unrelated, earlier over-catch). Also checked: `_emit_nonsports_tier2_tier3_sentinels`
+      skips (never emits any sentinel, honest `expected_unattempted`) any `date < dt_start` per
+      `get_venue_data_type_start_date(venue, dt)` — so a genuinely pre-launch/pre-coverage shard
+      for Aster/Hyperliquid should never reach the `SOURCE_RETURNED_ZERO` write path at all,
+      which weakens (but does not rule out) a pre-launch-date explanation for the anomaly. Did
+      **NOT** attempt a revert of this book_snapshot_5 batch_aster/batch_hyperliquid population
+      — the evidence is suggestive, not proof, and an incorrect revert here would itself be a
+      data-correctness regression; this needs the same kind of direct GCS-existence check the
+      live investigation used (does a real captured parquet exist for a SAMPLE of these
+      batch_aster/batch_hyperliquid shard/instrument keys?) before either reverting or
+      confirming-and-closing. Given this is now a live, repeat-paging condition (not just a
+      deferred follow-up), recommend the next dispatch on this doc prioritize that direct-GCS
+      sampling check over another duplicate-detection pass.
 - [x] ✅ EXTRACTED — see `plans/active/cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 2 (na-eligibility-audit
       2026-08-17, cefi tranche, conflict-checked clear). Original: [DATA] P3. Consider whether
       `migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py` (still present, not yet deleted per its own
@@ -160,3 +194,20 @@ larger data-correctness regression riding on the same commit.
   question is left open per findings-triage ("ambiguous → diagnose both sides", not guess).
 - **na-eligibility-audit 2026-08-17** [body-hash:d6517143ed480bc9]: RECLASSIFY-SPLIT — extracted bounded item 3 (annotate the migration script with a pointer to this finding) to `cefi_satellite_ao_dispatch_batch21_2026_08_17.md` item 2, conflict-checked clear. Item 2 (determine whether the 149,309-row batch population is correctly/incorrectly caught) stays genuinely NA at lower confidence — the investigation approach is well-specified but the likely outcome (another manifest CAS revert at larger scale) brushes against the plan-authoring rule's manifest-write gating, so it wasn't confidently extracted without an explicit safe-idempotent justification. Doc stays assigned_vm: NA for that remaining item.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-17 (`data_pipeline_failure` escalation worker, slot 9, task `agt-fc69f5`)**: received DP-FETCH-009
+  CRITICAL for `cefi/book_snapshot_5` (15,884/173,890 attempted_failed, "Fresh — 2841 rows in last 1d"). Found this
+  doc via the pre-task plan/issue conflict-check grep. Live bounded manifest read
+  (`run-bounded-analysis.sh`-wrapped, pyarrow column-projected, ~6G peak) confirmed 6,696 of the last-1d 8,956
+  `book_snapshot_5` `attempted_failed` rows carry this doc's exact migration sentinel error_reason (the remainder,
+  2,260, is the separate already-tracked Tardis 403/500 noise). Verified both underlying fix commits
+  (`market-tick-data-service@f134d16595c3e5d1761ec76a7f40041535a6f4e3` the Tier-3 guard,
+  `market-tick-data-service@338d91f0` the migration script) are ancestors of `origin/live-defi-rollout`, and the
+  earlier live-side revert is holding (0 `live_*` rows in the migration-sentinel population for this data_type).
+  Did the per-launcher-family trace todo 2 asks for, scoped to `book_snapshot_5`: confirmed
+  `_emit_tier3_for_dt`/`_emit_nonsports_tier2_tier3_sentinels` is venue-agnostic shared code (not Tardis-specific),
+  which argues the migration's broad match is structurally defensible — but found `batch_aster`/`batch_hyperliquid`'s
+  `attempted_at` timestamps span 2+ weeks before the migration's own claimed incident window while `batch_tardis`'s
+  are tightly confined to it, an unresolved anomaly written up in todo 2 above. Did not revert anything (insufficient
+  proof either way) and did not change any code this session — this is a NEW, previously-undocumented finding that
+  meaningfully narrows todo 2, not a duplicate dispatch. No GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor`
+  (authoring slot) with this outcome.
