@@ -466,6 +466,68 @@ until the next sweep) and is a stopgap, not the root fix.
       fallback was not reached; the concretely-provable unbounded-read gap was the actual mechanism. Repo:
       deployment-service (no code changed this session — live-verify + resume only).
 
+- [x] [BACKEND] P0. **ADDED 2026-08-17 — the "sweep times out" symptom RECURRED after the
+      2026-08-15 fix chain closed it (`48f4e8e6aa`/`2837e6ddeb`, 3/3 clean executions, cron
+      resumed), and the root cause is a COMPLETELY DIFFERENT mechanism from every candidate this
+      doc previously investigated (GCS read throttling, redundant downloads, unbounded blob size,
+      classify-loop backlog).** ✅ Live `gcloud run jobs executions list` (2026-08-17) showed the
+      job mostly healthy (18/20 recent executions completing in 1-20 min) but 2 hard 1800s kills
+      (`r2tsj` 08:00Z, `7tbv2` 00:00Z). Both executions' phase-boundary logs showed all THREE
+      fanned-out read phases (running-census / terminated-base-signals / run-log-prefetch)
+      completing in under 4 seconds combined — the entire read-optimization chain this doc built
+      is working exactly as designed. The kill came from INSIDE the sequential classify/route/emit
+      loop instead: `gcloud logging read` showed
+      `relaunch_preempted_vm: launcher launch-tradfi-bf-cme-ohlcv-1m.sh failed: Command [...]
+      timed out after 900 seconds` — `scripts/recovery/relaunch_backfill_vm.py`'s
+      `_default_run_launcher` invokes the launcher subprocess with a 900s timeout (deliberately
+      set to "match the monitor job's own task timeout" per that function's own comment — not
+      noticing this call runs INSIDE that same 1800s budget). `7tbv2` hit TWO such preempted-VM
+      relaunch dispatches in one sweep (00:04:04Z→00:19:05Z = exactly 900s, then another at
+      00:19:18Z cut off by the 1800s external kill at 00:30:13Z) — 2 dispatches alone exhausts the
+      whole budget regardless of read-phase speed. **Root cause of why the launcher itself takes
+      900s (not stuck — genuinely over-scoped work)**: `launch-tradfi-bf-cme-ohlcv-1m.sh` is NOT
+      in `relaunch_backfill_vm._CLI_SCOPED_LAUNCHER_ARGS` (only
+      `launch-mdps-sharded-backfill.sh` was, from the 2026-08-15
+      `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` fix) — the SAME bug class on a
+      DIFFERENT launcher that fix never covered. A zero-positional-arg relaunch of ONE terminated
+      `tradfi-bf-cme-ohlcv-1m-g<IDX>-...` VM falls through to the script's full-fleet default:
+      ALL 58 CME roots (bundled into `OHLCV_ROOT_GROUPS=10` ≈6-root groups) × every configured
+      year-shard (2020-2026, ~7 years) = ~40-50 `gcloud compute instances create` calls from one
+      relaunch of one dead shard. Confirmed via `launcher_registry.py`'s own comment (line ~140)
+      that this exact VM-name shape (`tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-*`) was already
+      observed as early as 2026-07-31 — this has been silently mass-relaunching the CME fleet on
+      every preemption/OOM for THREE WEEKS, invisible to this entire investigation because nobody
+      previously connected "relaunch actuator dispatch" to "sweep wall-clock" (every prior session
+      here focused on the read phases). **Fixed**: added `--only-group <IDX>` to
+      `launch-tradfi-bf-cme-ohlcv-1m.sh` (mirrors the existing `--only-root`, filters the
+      already-computed `_ROOT_GROUPS` split to exactly one index) and registered
+      `launch-tradfi-bf-cme-ohlcv-1m.sh` in `_CLI_SCOPED_LAUNCHER_ARGS` with a deriver that parses
+      `(group_idx, year)` from the group-form VM name or `(root, year)` from the single-root form
+      — mirrors `_mdps_sharded_relaunch_args` exactly. `deployment-service@451753fd1d`, QG green
+      (3461 passed; shipped via `quickmerge.sh --isolated` after this checkout's shared-slot
+      contention twice reverted the uncommitted edit mid-session — see Progress Log). ✅
+      **Live-verified 2026-08-17**: content-confirmed on `origin/main` (`ONLY_GROUP` present in
+      `launch-tradfi-bf-cme-ohlcv-1m.sh`, checked via `git show origin/main:<path>`, not
+      SHA-ancestor — Option-B direct-promote rewrites commits, a false-negative trap this doc's
+      own history already warns about), rebuilt into `deployment-api` (Cloud Build `fcff8e72`,
+      digest `sha256:e0d6a21e...`, SUCCESS 19:36:33Z —
+      Evidence: cloudbuild=fcff8e72-14a3-4795-97eb-997c394bbe69), then **6 consecutive post-deploy
+      executions — zero task-timeout kills, zero "Terminating task" lines**: `jg5l9` (19:37Z,
+      1m12s — processed a burst of 17 `tradfi-bf-cme-ohlcv-1m-*` OOM VMs, the same
+      `relaunch_cli_args()` code path preemption also uses, classify/route/emit phase 24.1s total
+      vs. one such VM alone previously costing up to 900s), `vt8zl` (20:01Z, 1m10s, natural hourly
+      cron), `fk9sp` (20:09Z, 50s), `cbwcq` (20:33Z, 54s), `pstvf` (20:34Z, 44s), `zbcs6` (20:36Z,
+      52s). Caveat stated honestly: no relaunch/budget log line appeared for `jg5l9`'s 17 OOM VMs
+      (the `_MAX_RELAUNCHES_PER_DAY=2` OOM budget for this prefix was plausibly already exhausted
+      earlier the same day from the pre-fix chaos), so that execution alone doesn't cleanly prove
+      the launcher subprocess was re-invoked — the unambiguous evidence is the dry-run test suite
+      (`TestCmeOnlyGroupScopesRelaunchToOneShard`, proving `--only-group` produces exactly 1 VM
+      instead of ~40-50) combined with the total absence of any 900s-scale stall across all 6 live
+      executions. This is also, independently, a live billing/correctness incident that was fixed
+      alongside the timeout (an accidental ~40-50-VM fleet explosion per relaunch, matching
+      `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`'s pattern) — worth flagging to the
+      operator. Repo: deployment-service.
+
 ## Related
 
 - `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` — the exit-code-monitor OOM (signal 9)
