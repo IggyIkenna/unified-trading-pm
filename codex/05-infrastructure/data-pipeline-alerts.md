@@ -211,6 +211,27 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 > `DP_CONSOLIDATOR_SCHEDULER_PAUSED` had no exact-match `DATA_PIPELINE_ALERT_RULES` entry of its own, risking the
 > generic-catch-all fallthrough. Assigned its own id, DP-WATCHER-004 (table row above).
 
+> **Known gap, OPEN (found 2026-07-31)**: DP-WATCHER-004 detects an accidental pause, but nothing detects the
+> INVERSE — a plan-tracked, INTENTIONAL pause (e.g. a backfill's own pause/apply/resume sequence) getting silently
+> RESUMED before its owning plan's own resume step. A triage agent responding to a DP-WATCHER-004 page has no
+> automated signal distinguishing "genuinely accidental, safe to resume" from "deliberately paused by an in-flight
+> plan, resuming this races it" beyond manually finding the owning plan doc — **confirmed recurred twice in one day
+> (2026-07-31)**: the prediction and tradfi manifest-consolidator crons were both paused as part of
+> `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s tracked pause/apply/resume sequence (raw
+> `gcloud`, not the sanctioned `scheduler_maintenance` CLI, so no maintenance window was registered), and in the
+> tradfi case a triage agent actually RESUMED the cron directly before finding the owning plan — a mistake
+> self-corrected ~3 minutes later with zero consolidator ticks having fired in between (verified via the bucket's
+> `consolidator_run_at` custom field staying pinned across the window), so no data-correctness harm landed this time
+> — but the near-miss is real: a slower catch, or a busier consolidator tick, would have raced the backfill's own
+> snapshot/pause invariant. The fix applied both times was reactive (retroactively register a maintenance window)
+> plus a source-side retrofit (`market-tick-data-service@99b3c953` — the plan's OWN pause action now calls
+> `pause_for_maintenance()` at pause time, not only at resume time) — but no STANDING detector exists that would page
+> if a plan-tracked pause is resumed out of band by anyone/anything else. **Needed detector class**: alert when a
+> `MaintenanceWindow`-covered scheduler job transitions PAUSED→ENABLED before the window's own `locked_by` plan
+> releases it. Full incidents:
+> `/plans/archive/issues/dp_consolidator_scheduler_paused_prediction_recurrence_2026_07_31.md`,
+> `/plans/archive/issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md`.
+
 ## Self-heal actuator layer (Layer-0 recovery — `auto_recover` tier)
 
 An `auto_recover` escalation does not just label — it dispatches a real actuator. The map is
