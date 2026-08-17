@@ -28,6 +28,8 @@ context_scope:
   [
     /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 ---
 
@@ -578,6 +580,10 @@ live SSH-based root-cause session or patience with more relaunches).
 ## Progress Log
 
 - **context-scout 2026-08-15**: populated context_scope (2 entries).
+- **context-scout 2026-08-17**: refreshed context_scope (4 entries) — added the sole actionable open item's own
+  script (`launch-sports-manifest-rescan-vm.sh`) plus the manifest-consolidator SSOT it depends on; the prior
+  2-entry list had zero source-path coverage despite the doc naming dozens of scripts across its many closed
+  sub-findings.
 - **na-eligibility-audit 2026-08-17** [body-hash:cef44b24fc1e387e]: KEEP-NA, valid — sole open item ([DATA] P2,
   odds-VM freshness-skip-window investigation) is open-ended diagnostic work, explicitly "investigated but not
   confirmed" per the doc's own text, with an operator notification already pending (no answer yet) — not a

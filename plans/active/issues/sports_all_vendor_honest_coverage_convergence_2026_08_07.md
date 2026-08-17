@@ -1014,3 +1014,4 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   exhaust before even the first category (CEFI) completes — per-category timing may never log regardless of
   checkpoint state. 2026-08-17T00:00Z passing is not sufficient on its own; re-check must confirm ≥1 real timing
   line has actually appeared. Todo left GATED, unchanged.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries).

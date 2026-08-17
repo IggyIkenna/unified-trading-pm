@@ -40,6 +40,7 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     instruments-service/scripts/build_instrument_catalogue.py,
+    /plans/active/sports_satellite_ao_dispatch_batch14_2026_08_16.md,
   ]
 drift_direction: advance-code
 depends_on: []
@@ -122,3 +123,4 @@ here.
   classification of this doc as an independent RECLASSIFY candidate — the conflict-check caught that batch14 (drafted
   one day prior) already claims this exact ground; dispatching a second copy would race the same VM launcher.
   Citation-only fix, not a reclassification. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-17**: refreshed context_scope (5 entries).

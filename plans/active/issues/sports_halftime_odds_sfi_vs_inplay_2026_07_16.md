@@ -323,3 +323,4 @@ already-fixed-but-unflipped** — every one is genuinely still open.
   (A) scope + dispatch a bounded flip-script mirroring the precedented `remove_football_phantom_rows_2026_08_05.py`/
   `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py` pattern, or (B) rule this stays human-owned given the
   surface's regression history — not resolved by this pass either way, carried into this run's Phase 5 report.
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries), unchanged.

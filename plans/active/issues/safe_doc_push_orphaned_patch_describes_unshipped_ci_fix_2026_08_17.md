@@ -173,3 +173,4 @@ interrupted-draft signal — worth the infra-craft triage recognizing both shape
   script file is present on disk, and both downstream plans already show the correct completed state. Root cause
   was slot 9's clone being behind at the moment of its check, not a real force-push/reset/rebase drop. Closed the
   todo with no code change required.
+- **context-scout 2026-08-17**: refreshed context_scope (3 entries).
