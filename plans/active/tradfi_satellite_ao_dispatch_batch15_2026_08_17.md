@@ -1,0 +1,206 @@
+---
+doc_type: plan
+title: tradfi satellite AO dispatch batch 15 — 2026-08-17
+summary: >-
+  Extraction batch from the tradfi tranche's 2026-08-17 /na-eligibility-audit sweep — 8 conflict-cleared,
+  bounded/deterministic items pulled from 6 source docs (RECLASSIFY per-todo-split candidates from the NA audit).
+  Two items (T2) were narrowed/consolidated across sibling source docs after this audit found their original
+  4-VM scope included 2 VMs already root-caused as billing-blocked elsewhere; two items (T4, T5) were reworded
+  from their source docs' literal text to avoid re-testing an already-disproven hypothesis / repeating a
+  documented incident. Each todo cites its exact source doc; the source docs themselves are NOT touched by this
+  batch (checkbox reconciliation back into each source doc happens in the paired finalize plan, except for the
+  citation-only checkbox flips already applied directly by the audit at extraction time). Conflict-checked against
+  every existing active batch/finalize plan for this tranche (grep sweep for account_delinquent/billing_blocked,
+  resume_after_maintenance/scheduler_maintenance, asyncio.wait_for, check_reference_paths baseline, and the
+  archival target's filename) plus the infra tranche's batch18 (SchedulerMaintenance-adjacent work, confirmed
+  different mechanism/already shipped) before drafting — no item here duplicates ground an existing dispatched
+  todo already claims.
+status: active
+nature: process
+asset_group: [tradfi]
+stage: [data]
+repos: [unified-trading-pm, market-data-processing-service, market-tick-data-service, deployment-service, instruments-service]
+scope: [engineer]
+tags: [tradfi, ao-dispatch, satellite-batch, na-eligibility-audit]
+related:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/data_completion_tradfi_2026_07_15.md,
+    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
+    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md,
+    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2021_exit137_stall_relaunch_bound_page_2026_08_16.md,
+    /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
+    /plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+  ]
+created: "2026-08-17"
+last_updated: "2026-08-17"
+parent_epic: tradfi_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 4.0
+estimate_calibrated_ai_days: 3.2
+assigned_role: data_engineering
+effort: medium
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: []
+sequential: true
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
+source: >-
+  Drafted by the 2026-08-17 /na-eligibility-audit tradfi-tranche scheduled dispatch (dispatch agt-d99b5c). Authored
+  status: active directly per the skill's Phase 3 "the parent skill's own verdict IS the operator decision that
+  flips the draft gate" rule (na-eligibility-audit, unlike ag-closeout-audit, is authorized to apply).
+---
+
+# tradfi satellite AO dispatch batch 15 — 2026-08-17
+
+> Every todo below was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call)
+> by the 2026-08-17 `/na-eligibility-audit tradfi` sweep and conflict-checked against every existing active
+> batch/finalize plan for this tranche (plus the infra tranche's batch18) before being drafted here.
+>
+> **`sequential: true`** — several todos here plausibly touch the SAME shared files (T6/T7/T8 all edit PM-repo
+> docs and T6's ~43-referrer sweep may overlap T7's 2 target docs; T2/T4 may converge on the same launcher/adapter
+> code if the root cause turns out to be shared across `tradfi-bf-cme-ohlcv-1m-` years) — serialized to avoid a
+> concurrent-edit collision per this workspace's "concurrent todos MUST touch different files" rule, since that
+> can't be guaranteed here.
+
+## Todos
+
+- [ ] [SCRIPT] P2. **Live re-verification sweep**, deferred from the archived
+      `/plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` issue doc. Confirm
+      3 already-shipped fixes hold on a fresh live run: (1) `ohlcv_24h` SchemaContract alias for
+      future/equity/options_chain/index (`unified-api-contracts@079d48ff`) — confirm `--data-types ohlcv_24h` no
+      longer crashes for those instrument_types; (2) ETF `ohlcv_1m`/`trades` SchemaContract registration
+      (`unified-api-contracts@0228afe52a`) — confirm a fresh request for those data_types on ETF instruments writes
+      successfully; (3) `instrument_type=option` leaf exclusion from `ohlcv_15m`/`ohlcv_24h` orchestration scans
+      (`market-data-processing-service@2b2cc58ef3`) — confirm the 34 `instrument_type='OPTION'` "No SchemaContract
+      registered" crash lines no longer appear. Fold all 3 into ONE
+      `--data-types "ohlcv_15m ohlcv_24h ohlcv_1m trades"` verification run over CME/NASDAQ/NYSE (repo:
+      market-data-processing-service). ALSO include `ohlcv_1m`/`ohlcv_1s` against a CME OPTION instrument
+      specifically per the 2026-08-16 addendum finding (a pre-fix VM showed the same OPTION SchemaContract crash on
+      those two fine timeframes too — 109,853 occurrences on one VM — not yet independently re-verified post-fix).
+      Done when: the run completes and each of the 4 patterns is confirmed absent, or documented as a fresh finding
+      if still present. Source: `/plans/active/data_completion_tradfi_2026_07_15.md` item 15 (L995).
+
+- [ ] [BACKEND] P1. **Pull + read `run.log` for the two `tradfi-bf-cme-ohlcv-1m-` DP-VM-001 stalls NOT explained by
+      the tracked Databento CME billing block**: `tradfi-bf-cme-ohlcv-1m-btc-2020-20260816-180410` and
+      `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` (the other 2 same-family incidents this week — both
+      `g01-6a-6l-2020` shards — ARE confirmed billing-caused, see
+      `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`
+      — do not re-diagnose those). Use
+      `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess
+      `gsutil`/`gcloud storage`). es-2020's log was already partially pulled (1561 lines, confirmed genuine
+      `WORKER_STALLED`, but the stack trace identifies only the `tee`-wrapper process, not the actual worker — the
+      hung call is still unidentified). Compare both VMs' failure signatures; fix at the root — if a shared code
+      defect, bound the offending call with `asyncio.wait_for` at the per-shard level per the shard-isolation SSOT;
+      if genuinely shard-specific, isolate + skip the poison instrument-date per shard-level failure isolation. Done
+      when: both VMs' `run.log`s are read, a failure signature is identified (or documented as inconclusive), and
+      either a code fix ships or both are confirmed shard-specific poison data. Sources:
+      `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`
+      item 2 (originally 4-VM scope, narrowed here per this audit's cross-doc synthesis),
+      `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md`
+      item 2 (absorbed — do not double-dispatch).
+
+- [ ] [BACKEND] P3. **Optional hardening — DP-VM-001 stall-watchdog billing classification.** The in-VM stall
+      watchdog currently can't distinguish "hung call" from "correctly-fast-failing on a known billing/entitlement
+      error" — both surface as generic `exit_code=137`/`WORKER_STALLED`. Special-case a `402`/`account_delinquent`
+      response into a distinct terminal state (e.g. `DEPLOYMENT_FAILED cause=billing_blocked`) so the fleet monitor
+      and future escalations don't need to manually re-pull `run.log` to tell the two apart — 3 same-day/same-week
+      DP-VM-001 incidents already required this exact manual read. Done when: the watchdog script classifies a
+      402/account_delinquent response into the distinct terminal state, with a test proving the classification.
+      Source:
+      `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`
+      item 2 (P3, optional hardening).
+
+- [ ] [BACKEND] P2. **Pull + read `run.log` for `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2021-20260816-200155`** via
+      `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess).
+      FIRST check whether this shard's failure signature matches the confirmed Databento CME billing-block pattern
+      (402/account_delinquent — see
+      `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`)
+      before assuming a code-defect/poison-instrument cause — the sibling 2020-shard g01-6a-6l stalls both turned
+      out to be billing-caused, not code defects, so check that hypothesis first rather than re-testing the two
+      branches below from scratch. If billing-caused: no code fix needed, redirect to the billing doc, done. If
+      genuinely a different cause: compare against the `btc-2020`/`es-2020` stall signatures (see this batch's
+      Todo 2) and fix at the root — shared code defect → bound with `asyncio.wait_for` at the per-shard level;
+      shard-specific → isolate + skip the poison instrument-date. Done when: the billing-vs-code-defect branch is
+      determined and, if code-defect, either fixed or the two failures are confirmed to share/not-share a
+      signature. Source:
+      `/plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2021_exit137_stall_relaunch_bound_page_2026_08_16.md`
+      item 2 (reworded per this audit — original 2-branch hypothesis didn't account for the now-confirmed billing
+      block third outcome).
+
+- [ ] [INFRA] P2. **Re-enable the tradfi catalogue schedulers via the guarded resume path.** The durable build-time
+      exclusion filter has shipped and been reference-verified (`instruments-service@22a5f197`, cite-verified
+      2026-08-17). Dry-run a manual `build_instrument_catalogue.py` regen to confirm the 4 previously-excluded legs
+      (venue=ICE; venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR); the 2 VIX-cash INDEX ids) stay excluded.
+      THEN re-enable both Cloud Scheduler jobs (`lifecycle-catalogue-regen-tradfi-daily` + the paired
+      manifest-consolidator cron) using `deployment_service/data_pipeline_monitors/scheduler_maintenance.py`'s
+      `resume_after_maintenance()` helper — do **NOT** use a raw `gcloud scheduler jobs resume` call. This exact job
+      has a confirmed incident on record (source doc's own Progress Log): a 2026-06-27 raw `gcloud scheduler jobs
+      resume` by an untargeted agent session silently undid an intentional protective pause with no safety check,
+      causing 6+ weeks of silent catalogue pollution before detection. `scheduler_maintenance.py`'s guarded resume
+      path (built 2026-07-13, specifically to prevent a repeat of this failure mode) is why this todo must not
+      repeat the raw-gcloud pattern. Done when: the dry-run confirms the 4 legs excluded, both jobs are resumed via
+      the guarded helper (not raw gcloud), and a live scheduler-state check confirms both jobs are RUNNING. Source:
+      `/plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` item at L120
+      (reworded per this audit to mandate the guarded helper, per this doc's own tracked incident history).
+
+- [ ] [DOC] P2. **Archive `tradfi_canonical_path_migration_design_2026_07_19.md`.** Run the standard 6-step
+      archival ritual (`codex/11-project-management/`). All todos already `[x]`, its stale Massive-purge section
+      already corrected in place (2026-08-16), `archive_exempt: true` bridge was only pending this correction + a
+      referrer-sweep pass — both preconditions now met. This doc has 43 corpus referrers (confirmed via
+      corpus-wide grep at time of this audit, 2026-08-17) — the archival + corpus-wide referrer-path fixup is the
+      substantial part of this task; budget for it. `locked_by:` is currently empty (unlocked) — re-verify
+      immediately before starting in case another session has since claimed it. Done when: the doc is `git mv`'d to
+      `plans/archive/2026_08/issues/`, carries the standard archival banner, and every one of its ~43 referrers is
+      repointed to the new path (or, for machine-generated/regen-owned referrers per this corpus's established
+      convention — see `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s own precedent for `INDEX.md`/
+      `infrastructure_master.md`-style referrers — left for their own regen tooling). Source:
+      `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 1 (L77) — archival half only; the
+      text-correction half was already done 2026-08-16.
+
+- [ ] [DOCS] P3. **Fix the residual reference-path ratchet regression** from the 2026-08-16 plan_reconciler pass's
+      own archivals (baseline 34, was 38 at filing — 2 of the original 6 were fixed same-run).
+      `tradfi_consolidated_closeout_2026_07_18.md` (×2 references) and
+      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (×2 references) still reference the now-archived
+      `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (+ its `_finalize` sibling) at their pre-archival
+      `/plans/active/...` path. Repoint all 4 references to the current archived path (`/plans/archive/2026_08/...`
+      — confirm the exact archived path via `find` before editing, do not guess it). Both source docs were inside
+      the 12h grace window at filing time (2026-08-16) — by dispatch time this is a new day, so re-verify the grace
+      window has cleared before editing (it should have). Done when: `check_reference_paths.py`'s existence-ratchet
+      count drops back toward the 34 baseline (verify the exact post-fix count — don't assume it hits exactly 34 if
+      other regressions occurred independently in the interim). Source:
+      `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 3 (L100).
+
+- [ ] [DOCS] P3. **Bump stale `last_updated` frontmatter** on the 4 tradfi-tranche docs still outstanding from the
+      2026-08-16 plan_reconciler pass's finding (3 of the original 7 were already fixed that session):
+      `ag_closeout_audit_rollout_2026_07_25.md`, `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`,
+      `estate_orphan_assessment_2026_07_21.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`. For each,
+      set `last_updated` to the doc's real last-git-touch date (`git log -1 --format=%ad --date=short -- <path>`),
+      not today's date. All 4 were inside the 12h grace window at filing time (2026-08-16) — by dispatch time this
+      is a new day, so the grace window should have cleared; re-verify before editing regardless (never edit a doc
+      inside its own 12h grace window). Done when: all 4 docs' `last_updated` fields match their real git last-touch
+      date. Source: `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 4 (L109) — 4/7
+      remaining slice only, the other 3 were already done 2026-08-16.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): drafted this batch from 6 source docs'
+  conflict-cleared RECLASSIFY-per-todo-split candidates. Todo 2 narrowed from its source docs' original combined
+  4-VM scope after cross-referencing the sibling billing-rootcause doc found 2 of those 4 VMs (`g01-6a-6l-2020`
+  pair) already root-caused as billing-blocked — dispatching the original 4-VM wording would have had a worker
+  re-discover that finding from scratch. Todo 4 and Todo 5 reworded from their source docs' literal text for the
+  same reason (avoid re-testing an already-disproven hypothesis / repeating a documented incident).
