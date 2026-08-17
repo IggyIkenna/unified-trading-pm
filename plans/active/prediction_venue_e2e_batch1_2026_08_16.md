@@ -173,11 +173,21 @@ source: >-
       **Net: 0 of prediction's 4 rows reach a genuinely complete end-to-end state today** — even the row that
       passed every prior step fails here on 2 independent legs (position stub, archetype wiring); the 3rd
       (execution adapter) was a false verdict, corrected above.
-- [ ] [BACKEND] P2. **Gap: `PolymarketPositionAdapter`'s live path is stubbed**
-      (`strategy_service/position/position_interface/adapters/polymarket.py`, `get_positions()`/`get_balances()`
-      both `raise NotImplementedError`) — batch/paper work via the generic `LedgerPositionAdapter`, but no live
-      Gamma-API integration exists. Done-when: live position/balance resolution works for POLYMARKET, or this is
-      confirmed out-of-scope for the carve-out's contracted archetypes with a cited reason.
+- [x] ✅ [BACKEND] P2. **Gap: `PolymarketPositionAdapter`'s live path is stubbed — fixed 2026-08-17 (slot 9).**
+      SHIPPED — `strategy-service@890ca8a4ce`. Both legs now work: `get_positions()` calls the real Gamma API
+      (`GET gamma-api.polymarket.com/positions?user=...`) with L2 HMAC-SHA256 auth headers mirroring
+      execution-service's live, real-trading `polymarket_clob.py::_build_l2_headers` byte-for-byte (separate
+      implementation, no cross-service import, per T4) — not a stub, no credential blocker (auth is HMAC over
+      already-held API key/secret, same shape every other CEX adapter in this factory already uses).
+      `get_balances()` reads the wallet's USDC.e (bridged USDC, Polygon PoS) ERC-20 balance via a raw
+      `balanceOf()` eth_call through the existing `_defi_rpc.read_erc20_balance` helper — Polymarket has no
+      venue-side balance endpoint, so the ERC-20 balance IS the balance (same dependency-light approach
+      `generic_token_balance.py` already uses). Constructor gained a `config` param (DeFi RPC resolution,
+      lazily resolved — only `get_balances()` needs it), threaded through `factory.py`'s `case "polymarket":`
+      via the existing `_defi_config(k)` helper. 5 new unit tests (positions mapping, L2 HMAC header
+      verification, USDC.e balance read, combined account snapshot) plus fixed 2 pre-existing integration
+      tests that constructed the adapter without the new required `config` kwarg. QG green (6113 passed, exit
+      0), sentinel-verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P1. **Fixed 2026-08-17 — POLYMARKET wired into `MARKET_MAKING_CONTINUOUS`.** SHIPPED —
       `strategy-service@dc3c0219`. `MARKET_MAKING_PREDICTION`/`_INVENTORY_SKEW`/`_QUEUE_MICROSTRUCTURE` were
       confirmed NOT usable (no engine registered in `ARCHETYPE_ENGINE_REGISTRY` for any of the three —
