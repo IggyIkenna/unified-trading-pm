@@ -100,7 +100,7 @@ resolved_by:
       `unified-api-contracts` landing the new `venue_asset_group` module — a fresh LDR checkout of
       `strategy-service` without that module already on `unified-api-contracts`'s LDR would ImportError in CI;
       shipped `unified-api-contracts` first, verified it landed on origin, then shipped `strategy-service`.
-- [x] ✅ [BACKEND] P2. **DONE 2026-08-17 (Part 3a ONLY), `strategy-service@18a2e9e5` — wired the real
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-17 (Part 3a ONLY), `strategy-service@43352916` — wired the real
       `is_mvp()`-backed `not_mvp_scope` curtailment reason into `strategy_service/cli/handlers/
       paper_universe.py`'s `_resolve_drivable()`, alongside the existing `curtailed_by_operator_constraint`, for
       the 7 archetypes where every drivable row resolves to a single, unambiguous, verified DeFi venue string
@@ -146,18 +146,28 @@ resolved_by:
       wrong canonical-venue or base_ccy resolution would silently mis-curtail genuinely in-scope rows, which the
       parent issue doc's own Finding 1 explicitly calls out as WORSE than leaving the gap open. Repos:
       strategy-service, unified-api-contracts (if a shared canonical-venue resolver belongs there instead).
-- [ ] [BACKEND] P2. **Part (3b-i) — CeFi `base_ccy` verification + wiring for `CARRY_BASIS_DATED` /
-      `CARRY_BASIS_DATED_INV`.** Bounded, AO-dispatchable (no design judgment call — a verify-then-implement-
-      or-honestly-no-op task). Only the binance/bybit×btc/eth deribit-future rows reach drivable (4 rows per
-      archetype; `_basis_dated_config_satisfiable` excludes everything else) — `future_venue="deribit"`
-      resolves cleanly to the literal `CeFiMvpRule.venues` member `"DERIBIT"`; the candidate `base_ccy` key is
-      `future_instrument` (bare `"btc"`/`"eth"`, needs `.upper()`). Concretely: grep-verify `"BTC"` and `"ETH"`
-      are literal members of `CEFI_BASE_ASSET_UNIVERSE`
-      (`unified-api-contracts/unified_api_contracts/registry/cefi_instrument_universe.py`) — if confirmed, add
-      a small CeFi-specific resolver (parallel to `_DEFI_MVP_VENUE_KEYS`/`_resolve_defi_mvp_venue` in
-      `paper_universe.py`) covering ONLY these 2 archetypes' 8 drivable rows and wire it into
-      `_mvp_scope_reason_for_spec`; if NOT confirmed for some reason, document why and leave these 2 archetypes
-      out (do not guess). Repos: strategy-service, unified-api-contracts (read-only verification).
+- [x] ✅ [BACKEND] P2. **Part (3b-i) — CeFi `base_ccy` verification + wiring for `CARRY_BASIS_DATED` /
+      `CARRY_BASIS_DATED_INV` — DONE 2026-08-17, `strategy-service@dc46670cf6`.** Verified before wiring (not
+      guessed): `"DERIBIT"` is a literal `CeFiMvpRule.venues` member and `"BTC"`/`"ETH"` are literal
+      `CEFI_BASE_ASSET_UNIVERSE` members (both `unified-api-contracts`, grep-confirmed, no code change needed
+      there — the read-only verification this todo scoped). Added `_CEFI_BASIS_DATED_MVP_KEYS`/
+      `_resolve_cefi_basis_dated_mvp_cell()` (parallel to `_DEFI_MVP_VENUE_KEYS`/`_resolve_defi_mvp_venue`) to
+      `paper_universe.py`, wired into `_mvp_scope_reason_for_spec` as a second branch calling
+      `is_mvp("cefi", venue, instrument_type, base_ccy=base_ccy)` — `is_mvp()` itself performs the real
+      venue/base_ccy membership check, the resolver only confirms it's asking a CONFIDENT question (gated on
+      `future_venue.upper() == "DERIBIT"`; every TradFi basis-dated row sharing the same config-key shape stays
+      unresolved, `None`, never a guess). Note for the plan's own next reader: the actually-drivable count today
+      is the 2 real binance/deribit crypto rows per archetype (4 total across both archetypes) per
+      `_BASIS_DATED_SATISFIABLE_VENUE_PAIRS = frozenset({("binance", "deribit")})` — the bybit-spot rows this
+      todo's own text cited exist in the catalog (4 rows/archetype, 8 total) but do NOT pass the pre-existing
+      `_basis_dated_config_satisfiable` drivability gate (no captured bybit/deribit raw-tick data), so they never
+      reach this MVP-scope check at all; this wiring is correct for whichever set is drivable at any given time,
+      it doesn't hardcode a row count. 4 new unit tests
+      (`tests/unit/cli/handlers/test_paper_universe.py`): resolver-level (resolves the verified Deribit rows,
+      never guesses a TradFi venue), and `_mvp_scope_reason_for_spec`-level (every real drivable-satisfiable
+      Deribit row of both archetypes stays in-scope today; a synthetic non-universe base_ccy is correctly
+      curtailed with the typed `not_mvp_scope:asset_group=cefi,...` reason). `strategy-service`
+      `quality-gates.sh --no-fix` GREEN (fresh run, exit 0, sentinel matches shipped SHA).
 - [ ] [BACKEND] P2. **[OPERATOR] Part (3b-ii) — BYBIT-FUTURES naming-gap fix + multi-venue `is_mvp()`
       semantics decision, needed before `CARRY_BASIS_PERP` / `CARRY_FUNDING_DISPERSION` /
       `ARBITRAGE_PRICE_DISPERSION` can be wired.** Genuine judgment calls, not a lookup — needs an operator
