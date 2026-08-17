@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [defi, delete-safety, bucket-naming, migration, ssot-contradiction, stale-doc, data-correctness, orphan-bucket]
 related:
   [
-    /plans/active/defi_operator_ruling_ao_dispatch_2026_08_15.md,
+    /plans/archive/2026_08/defi_operator_ruling_ao_dispatch_2026_08_15.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
     /plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,

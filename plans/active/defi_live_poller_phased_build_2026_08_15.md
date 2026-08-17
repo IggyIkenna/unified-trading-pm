@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [defi, live-capture, wsfeedconnector, phased-build, connector-pattern]
 related:
   [
-    /plans/active/defi_operator_ruling_ao_dispatch_2026_08_15.md,
+    /plans/archive/2026_08/defi_operator_ruling_ao_dispatch_2026_08_15.md,
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
@@ -39,7 +39,7 @@ source: "defi_operator_ruling_ao_dispatch_2026_08_15.md todo 3, operator-approve
 locked_by:
 context_scope:
   [
-    /plans/active/defi_operator_ruling_ao_dispatch_2026_08_15.md,
+    /plans/archive/2026_08/defi_operator_ruling_ao_dispatch_2026_08_15.md,
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
   ]
 locked_since:

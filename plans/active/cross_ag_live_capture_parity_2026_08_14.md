@@ -153,10 +153,41 @@ reachable under any canonical key because there IS no canonical key, not because
 it would mean inventing a venue UAC has already ruled out. The validator/resolver fix above still applies to this
 connector (correctly), it just can never turn green for `phoenix` while the venue stays excluded.
 
-- [ ] [OPERATOR] P2. Rule on `phoenix_ws.py`: delete it as dead code targeting a UAC-excluded venue (the honest option,
-      since Jupiter-routed polling still can't produce a `PHOENIX-SOLANA` canonical row), or make the case to restore
-      `PHOENIX-SOLANA` to `VENUES_BY_ASSET_GROUP` for live-only coverage despite the dead REST API — DoD: the ruling is
-      recorded here and `phoenix_ws.py` either removed or left in place with the ruling cited in its docstring.
+> **CORRECTION 2026-08-17 (`defi_operator_ruling_ao_dispatch_2026_08_15.md` todo 1) — the "not in current UAC
+> ... at all" premise above was factually wrong; do NOT delete `phoenix_ws.py`.** Live-verified today:
+> `PHOENIX-SOLANA` IS a real, currently-registered `ALL_DEFI_VENUES` member (`defi_venues.py`, 170 total),
+> `DEFI_VENUE_PHASE="pipeline"` — it was never removed from that registry (confirmed already present as of the
+> 2026-08-09 registry-gap doc, `/plans/archive/2026_08/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`).
+> This finding conflated "not in the narrower live-phase `VENUES_BY_ASSET_GROUP['defi']` subset" (TRUE, still true
+> today, 103 members, by design — the `_DEFI_VENUE_PHASE == "live"` filter, unrelated to the dead REST API) with
+> "not in UAC at all" (FALSE). `VENUE_TO_ASSET_GROUP["PHOENIX-SOLANA"] == "defi"` today, per the 2026-08-09 fix
+> (`unified-api-contracts@7b96791e`). Full evidence + the resolved decision:
+> `/plans/archive/2026_08/defi_operator_ruling_ao_dispatch_2026_08_15.md`'s Progress Log, 2026-08-17 entry.
+
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-17 — do NOT delete; the "UAC-excluded venue" premise was wrong.** See
+      the correction block above. `phoenix_ws.py` is a real, working connector (Jupiter-routed, does not depend on
+      the dead REST API) that IS actively imported via `connectors/__init__.py::register_all()` — not orphaned
+      code. It sits unreachable at DISPATCH time for a different, fixable reason: it registers under bare
+      lowercase venue key `"phoenix"`, which `resolve_ws_feed_venue_key()`'s exact/`.lower()`/`.upper()` chain
+      cannot bridge to the canonical `"PHOENIX-SOLANA"` dispatch key (same resolver-mismatch class already fixed
+      for curve/morpho/orca/raydium above). Two genuine follow-up decisions remain, tracked as their own todos
+      immediately below rather than left in prose. Original text (superseded by the correction above):
+      ~~Rule on `phoenix_ws.py`: delete it as dead code targeting a UAC-excluded venue~~, or make the case to
+      restore `PHOENIX-SOLANA` to `VENUES_BY_ASSET_GROUP` for live-only coverage despite the dead REST API — DoD:
+      the ruling is recorded here and `phoenix_ws.py` either removed or left in place with the ruling cited in
+      its docstring.
+- [ ] [CODE] P3. Re-register `phoenix_ws.py`'s `PhoenixWSFeedConnector` under the canonical chain-suffixed key
+      `PHOENIX-SOLANA` (mirroring the `curve`→`CURVE-ETHEREUM`/`orca`→`ORCA-SOLANA`/`raydium`→`RAYDIUM-SOLANA` fix
+      above) instead of the bare `"phoenix"` key, so `resolve_ws_feed_venue_key()` can actually find it. Only
+      meaningful paired with the next todo — do both together or neither. Source:
+      `defi_operator_ruling_ao_dispatch_2026_08_15.md`'s 2026-08-17 finding. (repo: market-tick-data-service)
+- [ ] [OPERATOR] P3. Rule on whether to promote `PHOENIX-SOLANA` from `DEFI_VENUE_PHASE="pipeline"` to `"live"` in
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`, so live dispatch actually
+      selects it (a priority/resourcing call — `phoenix_ws.py` is fully built and working via Jupiter-routed
+      polling, so the only remaining blocker to real live Phoenix coverage is this phase gate + the resolver-key
+      fix above). DoD: ruling recorded here; if promoted, pair with the resolver-key fix todo above in the same
+      change. Source: `defi_operator_ruling_ao_dispatch_2026_08_15.md`'s 2026-08-17 finding. (repo:
+      unified-api-contracts)
 
 ## Finding C — deployed live shards producing zero rows in three asset groups
 
@@ -439,3 +470,11 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
   `quickmerge --agent --files '<the 4 files>'`, then flip the Finding-C todo above to done with the shipped SHA + a
   post-fix `captured` row citation (the todo's own DoD). Did not attempt to verify via a live VM restart/redeploy this
   session — the fix isn't shipped yet, so nothing on the running VM has changed.
+
+- **2026-08-17 (slot 9, data_engineering, `defi_operator_ruling_ao_dispatch_2026_08_15.md` todo 1)**: resolved the
+  Finding-B `PHOENIX-SOLANA` contradiction flagged by the 2026-08-15 context-scout fingerprint cross-reference
+  above — NOT a real disagreement, two docs correctly describing two different registries. Corrected the stale
+  "not in current UAC ... at all" claim in place (see the `> CORRECTION 2026-08-17` block above Finding B's
+  `[OPERATOR]` todo) and resolved that todo: do NOT delete `phoenix_ws.py`. Full evidence + the two genuine
+  follow-up decisions (canonical-key re-registration; live-phase promotion) are in
+  `/plans/archive/2026_08/defi_operator_ruling_ao_dispatch_2026_08_15.md`'s own Progress Log, same date.
