@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [transfers, financial-correctness, live-money-risk, chain-resolution, venue-readiness]
 related:
   [
-    /plans/active/defi_venue_e2e_batch1_2026_08_16.md,
+    /plans/archive/2026_08/defi_venue_e2e_batch1_2026_08_16.md,
     /plans/active/venue_e2e_wiring_2026_08_16.md,
     /plans/active/issues/cefi_ccxt_withdraw_stub_returns_false_confirmed_2026_08_16.md,
     /codex/04-architecture/transfer-architecture.md,

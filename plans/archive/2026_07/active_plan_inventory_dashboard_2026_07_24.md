@@ -96,11 +96,11 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`bigquery_feature_ml_compute_engine_option_2026_06_08`](./bigquery_feature_ml_compute_engine_option_2026_06_08.md) | master | design | 2/7 | 29% | 3.0 | — |
 | [`defi_track5_coverage_mvp_backfill_2026_07_24`](./defi_track5_coverage_mvp_backfill_2026_07_24.md) | master | infra | 2/5 | 40% | 2.9 | — |
 | [`service_config_ownership_and_instruction_contract_2026_08_12`](./service_config_ownership_and_instruction_contract_2026_08_12.md) | master | refactor | 20/46 | 43% | 2.8 | — |
-| [`ci_satellite_ao_dispatch_batch15_2026_08_16`](./ci_satellite_ao_dispatch_batch15_2026_08_16.md) | master | refactor | 6/25 | 24% | 2.7 | — |
 | [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md) | master | infra | 40/43 | 93% | 2.7 | — |
 | [`venue_readiness_and_registry_hardening_2026_08_16`](./venue_readiness_and_registry_hardening_2026_08_16.md) | master | infra | 19/26 | 73% | 2.6 | — |
 | [`data_status_cell_grid_rearchitecture_2026_07_18`](./data_status_cell_grid_rearchitecture_2026_07_18.md) | master | design | 1/7 | 14% | 2.6 | — |
 | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](./tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md) | master | brand-new | 4/11 | 36% | 2.5 | — |
+| [`ci_satellite_ao_dispatch_batch15_2026_08_16`](./ci_satellite_ao_dispatch_batch15_2026_08_16.md) | master | refactor | 8/25 | 32% | 2.4 | — |
 | [`infra_consolidated_closeout_2026_07_25`](./infra_consolidated_closeout_2026_07_25.md) | master | infra | 1/4 | 25% | 2.4 | — |
 | [`cross_cutting_closeout_observability_and_monitoring_2026_08_09`](./cross_cutting_closeout_observability_and_monitoring_2026_08_09.md) | master | infra | — | — | 2.4 | — |
 | [`defi_satellite_ao_dispatch_batch14_2026_08_16`](./defi_satellite_ao_dispatch_batch14_2026_08_16.md) | master | infra | 0/8 | 0% | 2.4 | — |
@@ -108,13 +108,13 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md) | master | infra | 23/30 | 77% | 2.2 | — |
 | [`venue_capability_route_axis_and_cross_ag_declarations_2026_08_14`](./venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md) | master | infra | 12/22 | 55% | 2.2 | — |
 | [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) | master | research | 5/9 | 56% | 2.1 | — |
+| [`tradfi_satellite_ao_dispatch_batch16_2026_08_17`](./tradfi_satellite_ao_dispatch_batch16_2026_08_17.md) | **orphan** | infra | 1/8 | 12% | 2.1 | — |
 | [`cross_venue_funding_reversion_research_2026_07_24`](./cross_venue_funding_reversion_research_2026_07_24.md) | master | research | 2/15 | 13% | 2.1 | — |
 | [`sports_catalog_league_grain_only_scope_2026_07_08`](./sports_catalog_league_grain_only_scope_2026_07_08.md) | master | research | 3/7 | 43% | 2.1 | — |
 | [`instruments_foundation_phase0_cross_cutting_2026_07_24`](./instruments_foundation_phase0_cross_cutting_2026_07_24.md) | master | design | 9/15 | 60% | 2.0 | — |
 | [`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30`](./tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md) | master | brand-new | 4/8 | 50% | 2.0 | — |
 | [`deployment_registry_firestore_p3_cutover_2026_07_14`](./deployment_registry_firestore_p3_cutover_2026_07_14.md) | master | infra | 1/5 | 20% | 1.9 | — |
 | [`sports_satellite_ao_dispatch_batch14_2026_08_16`](./sports_satellite_ao_dispatch_batch14_2026_08_16.md) | master | infra | 0/10 | 0% | 1.9 | — |
-| [`cefi_chain_relabel_migration_options_futures_2026_08_15`](./cefi_chain_relabel_migration_options_futures_2026_08_15.md) | master | design | 7/14 | 50% | 1.8 | — |
 | [`data_status_catalogue_true_source_phase2_2026_07_24`](./data_status_catalogue_true_source_phase2_2026_07_24.md) | master | design | 0/1 | 0% | 1.8 | — |
 | [`defi_cf2_cf3_legacy_canonical_backfill_2026_08_08`](./defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md) | master | research | 0/6 | 0% | 1.8 | — |
 | [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md) | master | brand-new | 9/10 | 90% | 1.8 | — |
@@ -125,8 +125,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`sports_odds_writer_flip_and_trades_path_retirement_2026_08_15`](./sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md) | master | infra | 6/12 | 50% | 1.6 | — |
 | [`venue_e2e_wiring_finalize_2026_08_16`](./venue_e2e_wiring_finalize_2026_08_16.md) | master | infra | 0/6 | 0% | 1.6 | — |
 | [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) | master | infra | 36/45 | 80% | 1.6 | — |
-| [`defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16`](./defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md) | master | refactor | 0/1 | 0% | 1.6 | — |
-| [`defi_satellite_ao_dispatch_batch16_2026_08_17`](./defi_satellite_ao_dispatch_batch16_2026_08_17.md) | master | infra | 0/9 | 0% | 1.6 | — |
 | [`lazy_scoped_loading_refactor_2026_08_16`](./lazy_scoped_loading_refactor_2026_08_16.md) | master | refactor | 4/8 | 50% | 1.6 | — |
 | [`data_completion_prediction_2026_07_15`](./data_completion_prediction_2026_07_15.md) | master | infra | 5/23 | 22% | 1.6 | — |
 | [`repo_scripts_governance_audit_2026_06_18`](./repo_scripts_governance_audit_2026_06_18.md) | master | infra | 4/11 | 36% | 1.5 | — |
@@ -134,15 +132,16 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`cross_ag_live_capture_parity_2026_08_14`](./cross_ag_live_capture_parity_2026_08_14.md) | master | infra | 9/17 | 53% | 1.5 | — |
 | [`legacy_bucket_dual_write_decommission_2026_07_24`](./legacy_bucket_dual_write_decommission_2026_07_24.md) | master | infra | 5/13 | 38% | 1.5 | — |
 | [`kimi_gemma_provider_onboarding_2026_08_16`](./kimi_gemma_provider_onboarding_2026_08_16.md) | master | brand-new | 9/14 | 64% | 1.4 | — |
+| [`defi_satellite_ao_dispatch_batch16_2026_08_17`](./defi_satellite_ao_dispatch_batch16_2026_08_17.md) | master | infra | 1/9 | 11% | 1.4 | — |
 | [`sports_closeout_track_s2_foldin_2026_07_25`](./sports_closeout_track_s2_foldin_2026_07_25.md) | master | infra | 6/12 | 50% | 1.4 | — |
-| [`cefi_satellite_ao_dispatch_batch20_2026_08_16`](./cefi_satellite_ao_dispatch_batch20_2026_08_16.md) | master | refactor | 1/16 | 6% | 1.3 | — |
 | [`defi_compute_gcp_migration_2026_08_08`](./defi_compute_gcp_migration_2026_08_08.md) | master | infra | 12/18 | 67% | 1.3 | — |
 | [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) | master | infra | 27/40 | 68% | 1.3 | — |
+| [`cefi_chain_relabel_migration_options_futures_2026_08_15`](./cefi_chain_relabel_migration_options_futures_2026_08_15.md) | master | design | 9/14 | 64% | 1.3 | — |
 | [`sports_satellite_ao_dispatch_batch15_2026_08_17`](./sports_satellite_ao_dispatch_batch15_2026_08_17.md) | master | infra | 3/11 | 27% | 1.3 | — |
 | [`sports_satellite_ao_dispatch_batch9_2026_08_04`](./sports_satellite_ao_dispatch_batch9_2026_08_04.md) | master | infra | 22/31 | 71% | 1.3 | — |
+| [`cefi_satellite_ao_dispatch_batch20_2026_08_16`](./cefi_satellite_ao_dispatch_batch20_2026_08_16.md) | master | refactor | 2/16 | 12% | 1.3 | — |
 | [`grok_gemini_translation_proxy_2026_08_14`](./grok_gemini_translation_proxy_2026_08_14.md) | master | brand-new | 11/16 | 69% | 1.2 | — |
 | [`sports_taxonomy_p3_consumers_2026_08_08`](./sports_taxonomy_p3_consumers_2026_08_08.md) | master | infra | 15/18 | 83% | 1.2 | — |
-| [`defi_live_poller_ao_dispatch_batch1_2026_08_16`](./defi_live_poller_ao_dispatch_batch1_2026_08_16.md) | master | infra | 1/2 | 50% | 1.2 | — |
 | [`deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16`](./deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16.md) | master | infra | 0/2 | 0% | 1.2 | — |
 | [`pipeline_mode_partition_migration_2026_06_01`](./pipeline_mode_partition_migration_2026_06_01.md) | master | infra | 0/2 | 0% | 1.2 | — |
 | [`sports_taxonomy_p2_consumer_inventory_2026_08_12`](./sports_taxonomy_p2_consumer_inventory_2026_08_12.md) | master | research | — | — | 1.2 | — |
@@ -151,10 +150,9 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`mtds_file_size_refactor_2026_06_08`](./mtds_file_size_refactor_2026_06_08.md) | master | refactor | 4/9 | 44% | 1.1 | — |
 | [`cefi_consolidated_closeout_2026_07_18`](./cefi_consolidated_closeout_2026_07_18.md) | master | infra | 30/36 | 83% | 1.1 | — |
 | [`tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16`](./tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md) | master | infra | 1/3 | 33% | 1.1 | — |
+| [`prediction_satellite_ao_dispatch_batch12_2026_08_17`](./prediction_satellite_ao_dispatch_batch12_2026_08_17.md) | **orphan** | research | 1/4 | 25% | 1.0 | — |
 | [`asset_class_to_asset_group_rename_2026_07_21`](./asset_class_to_asset_group_rename_2026_07_21.md) | master | refactor | 1/7 | 14% | 1.0 | — |
-| [`defi_venue_e2e_batch1_2026_08_16`](./defi_venue_e2e_batch1_2026_08_16.md) | master | infra | 11/14 | 79% | 1.0 | — |
 | [`prediction_capture_incident_remediation_2026_07_06`](./prediction_capture_incident_remediation_2026_07_06.md) | master | infra | 15/22 | 68% | 1.0 | — |
-| [`prediction_phase_ab_residuals_2026_07_24`](./prediction_phase_ab_residuals_2026_07_24.md) | master | infra | 13/19 | 68% | 1.0 | — |
 | [`ao_satellite_ao_dispatch_batch22_2026_08_16`](./ao_satellite_ao_dispatch_batch22_2026_08_16.md) | master | infra | 0/6 | 0% | 1.0 | — |
 | [`deployment_registry_firestore_p5_verify_2026_07_14`](./deployment_registry_firestore_p5_verify_2026_07_14.md) | master | infra | 2/5 | 40% | 1.0 | — |
 | [`prediction_phase_e_football_arb_live_2026_07_24`](./prediction_phase_e_football_arb_live_2026_07_24.md) | master | infra | 3/5 | 60% | 1.0 | — |
@@ -167,6 +165,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`venue_readiness_ao_dispatch_batch1_finalize_2026_08_16`](./venue_readiness_ao_dispatch_batch1_finalize_2026_08_16.md) | master | infra | 0/6 | 0% | 0.8 | — |
 | [`ao_human_fleet_integration_2026_08_15`](./ao_human_fleet_integration_2026_08_15.md) | master | infra | 24/30 | 80% | 0.8 | — |
 | [`artifact_pipeline_observability_2026_07_17`](./artifact_pipeline_observability_2026_07_17.md) | master | infra | 46/50 | 92% | 0.8 | — |
+| [`defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16`](./defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md) | master | refactor | 1/2 | 50% | 0.8 | — |
 | [`nick_ai_platform_disclosure_artifact_2026_08_16`](./nick_ai_platform_disclosure_artifact_2026_08_16.md) | master | design | 7/9 | 78% | 0.8 | — |
 | [`prediction_phase_c_data_status_ui_2026_07_24`](./prediction_phase_c_data_status_ui_2026_07_24.md) | master | infra | 2/4 | 50% | 0.8 | — |
 | [`sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16`](./sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md) | master | infra | 1/2 | 50% | 0.8 | — |
@@ -178,6 +177,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](./instruments_store_cf_canonicalization_single_walk_2026_07_24.md) | master | infra | 18/26 | 69% | 0.7 | — |
 | [`data_completion_tradfi_2026_07_15`](./data_completion_tradfi_2026_07_15.md) | master | infra | 24/38 | 63% | 0.7 | — |
 | [`tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16`](./tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md) | master | infra | 0/1 | 0% | 0.7 | — |
+| [`prediction_phase_ab_residuals_2026_07_24`](./prediction_phase_ab_residuals_2026_07_24.md) | master | infra | 15/19 | 79% | 0.7 | — |
 | [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](./defi_pipeline_e2e_and_coverage_validation_2026_06_20.md) | master | infra | 5/6 | 83% | 0.7 | — |
 | [`github_actions_operator_gated_followups_2026_07_17`](./github_actions_operator_gated_followups_2026_07_17.md) | master | infra | 20/24 | 83% | 0.7 | — |
 | [`instrument_record_schema_completeness_extra_forbid_2026_07_18`](./instrument_record_schema_completeness_extra_forbid_2026_07_18.md) | master | refactor | 2/6 | 33% | 0.7 | — |
@@ -192,7 +192,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16`](./mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md) | master | infra | 0/1 | 0% | 0.6 | — |
 | [`solana_dex_pool_swaps_indexer_2026_08_08`](./solana_dex_pool_swaps_indexer_2026_08_08.md) | master | brand-new | 2/5 | 40% | 0.6 | — |
 | [`sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16`](./sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16.md) | master | research | 0/1 | 0% | 0.6 | — |
-| [`venue_readiness_ao_dispatch_batch1_2026_08_16`](./venue_readiness_ao_dispatch_batch1_2026_08_16.md) | master | infra | 7/8 | 88% | 0.6 | — |
 | [`data_completion_defi_2026_07_15`](./data_completion_defi_2026_07_15.md) | master | infra | 39/55 | 71% | 0.6 | — |
 | [`deepseek_claude_blended_provider_routing_2026_07_28`](./deepseek_claude_blended_provider_routing_2026_07_28.md) | master | infra | 35/46 | 76% | 0.6 | — |
 | [`prediction_cross_venue_arb_and_coverage_2026_07_24`](./prediction_cross_venue_arb_and_coverage_2026_07_24.md) | master | brand-new | 26/28 | 93% | 0.6 | — |
@@ -227,7 +226,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`ci_satellite_ao_dispatch_batch13_2026_08_13_finalize`](./ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md) | master | infra | 0/3 | 0% | 0.4 | — |
 | [`cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize`](./cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize.md) | master | infra | 0/3 | 0% | 0.4 | — |
 | [`defi_satellite_ao_dispatch_batch14_2026_08_16_finalize`](./defi_satellite_ao_dispatch_batch14_2026_08_16_finalize.md) | master | infra | 0/3 | 0% | 0.4 | — |
-| [`defi_venue_e2e_batch1_2026_08_16_finalize`](./defi_venue_e2e_batch1_2026_08_16_finalize.md) | master | infra | 0/3 | 0% | 0.4 | — |
 | [`manifest_v9_residual_2026_08_15`](./manifest_v9_residual_2026_08_15.md) | master | infra | 0/6 | 0% | 0.4 | — |
 | [`prediction_satellite_ao_dispatch_batch11_2026_08_13_finalize`](./prediction_satellite_ao_dispatch_batch11_2026_08_13_finalize.md) | master | infra | 0/3 | 0% | 0.4 | — |
 | [`prediction_venue_e2e_batch1_2026_08_16_finalize`](./prediction_venue_e2e_batch1_2026_08_16_finalize.md) | master | infra | 0/3 | 0% | 0.4 | — |
@@ -246,6 +244,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`sports_track_h_denominator_prereqs_2026_07_28`](./sports_track_h_denominator_prereqs_2026_07_28.md) | master | infra | 1/2 | 50% | 0.4 | — |
 | [`sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16`](./sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md) | master | research | 0/1 | 0% | 0.4 | — |
 | [`tradfi_satellite_ao_dispatch_batch15_2026_08_17_finalize`](./tradfi_satellite_ao_dispatch_batch15_2026_08_17_finalize.md) | master | infra | 0/4 | 0% | 0.4 | — |
+| [`tradfi_satellite_ao_dispatch_batch16_2026_08_17_finalize`](./tradfi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md) | **orphan** | infra | 0/4 | 0% | 0.4 | — |
 | [`sports_predictions_live_mode_activation_readiness_2026_07_21`](./sports_predictions_live_mode_activation_readiness_2026_07_21.md) | master | design | 4/6 | 67% | 0.4 | — |
 | [`tradfi_manifest_content_recovery_completion_2026_07_24`](./tradfi_manifest_content_recovery_completion_2026_07_24.md) | master | infra | 22/24 | 92% | 0.4 | — |
 | [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) | master | infra | 8/9 | 89% | 0.4 | — |
@@ -281,6 +280,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`cefi_satellite_ao_dispatch_batch21_2026_08_17_finalize`](./cefi_satellite_ao_dispatch_batch21_2026_08_17_finalize.md) | master | infra | 0/3 | 0% | 0.2 | — |
 | [`compute_flexible_cud_sizing_analysis_2026_08_16`](./compute_flexible_cud_sizing_analysis_2026_08_16.md) | master | research | 0/1 | 0% | 0.2 | — |
 | [`deployment_api_unauthenticated_prod_p0_2026_08_10_finalize`](./deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md) | master | infra | 0/4 | 0% | 0.2 | — |
+| [`prediction_satellite_ao_dispatch_batch12_2026_08_17_finalize`](./prediction_satellite_ao_dispatch_batch12_2026_08_17_finalize.md) | **orphan** | infra | 0/3 | 0% | 0.2 | — |
 | [`sports_satellite_ao_dispatch_batch16_2026_08_17_finalize`](./sports_satellite_ao_dispatch_batch16_2026_08_17_finalize.md) | master | infra | 0/3 | 0% | 0.2 | — |
 | [`sports_satellite_ao_dispatch_batch9_2026_08_04_finalize`](./sports_satellite_ao_dispatch_batch9_2026_08_04_finalize.md) | master | infra | 0/2 | 0% | 0.2 | — |
 | [`sports_track_h_denominator_gated_2026_07_28`](./sports_track_h_denominator_gated_2026_07_28.md) | master | infra | 0/1 | 0% | 0.2 | — |
@@ -290,7 +290,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`pacifica_solana_perp_reintegration_2026_08_14`](./pacifica_solana_perp_reintegration_2026_08_14.md) | master | infra | 27/28 | 96% | 0.2 | — |
 | [`cefi_tardis_date_concurrency_2026_08_16`](./cefi_tardis_date_concurrency_2026_08_16.md) | master | infra | 19/22 | 86% | 0.2 | — |
 | [`codex_vs_repo_docs_ssot_audit_2026_06_01`](./codex_vs_repo_docs_ssot_audit_2026_06_01.md) | master | refactor | 29/31 | 94% | 0.2 | — |
-| [`sports_venue_e2e_batch1_2026_08_16`](./sports_venue_e2e_batch1_2026_08_16.md) | master | infra | 6/7 | 86% | 0.2 | — |
 | [`data_pipeline_alert_storm_root_cause_batch_2026_08_10`](./data_pipeline_alert_storm_root_cause_batch_2026_08_10.md) | master | refactor | 29/35 | 83% | 0.2 | — |
 | [`june_2026_vintage_audit_findings_2026_07_27`](./june_2026_vintage_audit_findings_2026_07_27.md) | master | refactor | 35/39 | 90% | 0.2 | — |
 | [`ao_satellite_ao_dispatch_batch22_finalize_2026_08_16`](./ao_satellite_ao_dispatch_batch22_finalize_2026_08_16.md) | master | infra | 0/3 | 0% | 0.2 | — |
@@ -298,7 +297,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`content_derived_backlog_task_ids_2026_08_08_finalize`](./content_derived_backlog_task_ids_2026_08_08_finalize.md) | master | refactor | 0/6 | 0% | 0.2 | — |
 | [`deployment_api_unauthenticated_prod_p0_2026_08_10`](./deployment_api_unauthenticated_prod_p0_2026_08_10.md) | master | infra | 9/12 | 75% | 0.2 | — |
 | [`tradfi_phase_d_terminal_gate_2026_07_24_finalize_2026_08_16`](./tradfi_phase_d_terminal_gate_2026_07_24_finalize_2026_08_16.md) | master | infra | 0/3 | 0% | 0.2 | — |
-| [`ao_satellite_ao_dispatch_batch21_finalize_2026_08_16`](./ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md) | master | infra | 0/4 | 0% | 0.2 | — |
 | [`codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27`](./codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md) | master | infra | 0/1 | 0% | 0.2 | — |
 | [`data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27`](./data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md) | master | infra | 0/1 | 0% | 0.2 | — |
 | [`defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16_finalize`](./defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16_finalize.md) | master | refactor | 0/1 | 0% | 0.2 | — |
@@ -308,6 +306,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`sports_satellite_ao_dispatch_batch5_2026_07_26_finalize`](./sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md) | master | infra | 2/4 | 50% | 0.2 | — |
 | [`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27`](./tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md) | master | infra | 0/1 | 0% | 0.2 | — |
 | [`tradfi_phase_d_terminal_gate_2026_07_24`](./tradfi_phase_d_terminal_gate_2026_07_24.md) | master | infra | 7/8 | 88% | 0.2 | — |
+| [`sports_venue_e2e_batch1_2026_08_16`](./sports_venue_e2e_batch1_2026_08_16.md) | master | infra | 7/8 | 88% | 0.2 | — |
 | [`instruments_completion_tracker_2026_07_06`](./instruments_completion_tracker_2026_07_06.md) | master | infra | 32/39 | 82% | 0.2 | — |
 | [`defi_migration_audit_log_2026_07_24`](./defi_migration_audit_log_2026_07_24.md) | master | design | 18/25 | 72% | 0.2 | — |
 | [`aster_and_cefi_rolling_adv_feature_2026_07_21`](./aster_and_cefi_rolling_adv_feature_2026_07_21.md) | master | brand-new | 8/9 | 89% | 0.2 | — |
@@ -342,10 +341,10 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10`](./meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10.md) | master | refactor | 0/4 | 0% | 0.1 | — |
 | [`one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08`](./one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md) | master | infra | 1/2 | 50% | 0.1 | — |
 | [`tradfi_satellite_ao_dispatch_batch9_2026_08_16_finalize`](./tradfi_satellite_ao_dispatch_batch9_2026_08_16_finalize.md) | master | infra | 0/2 | 0% | 0.1 | — |
-| [`ao_satellite_ao_dispatch_batch21_2026_08_16`](./ao_satellite_ao_dispatch_batch21_2026_08_16.md) | master | infra | 5/7 | 71% | 0.1 | — |
-| [`prediction_venue_e2e_batch1_2026_08_16`](./prediction_venue_e2e_batch1_2026_08_16.md) | master | infra | 10/13 | 77% | 0.1 | — |
 | [`data_status_tab_and_downloads_remediation_2026_06_16`](./data_status_tab_and_downloads_remediation_2026_06_16.md) | master | refactor | 30/33 | 91% | 0.1 | — |
 | [`ui_satellite_ao_dispatch_batch3_2026_08_09`](./ui_satellite_ao_dispatch_batch3_2026_08_09.md) | master | infra | 2/3 | 67% | 0.1 | — |
+| [`prediction_venue_e2e_batch1_2026_08_16`](./prediction_venue_e2e_batch1_2026_08_16.md) | master | infra | 11/14 | 79% | 0.1 | — |
+| [`ao_satellite_ao_dispatch_batch21_finalize_2026_08_16`](./ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md) | master | infra | 2/4 | 50% | 0.1 | — |
 | [`cefi_satellite_ao_dispatch_batch21_2026_08_17`](./cefi_satellite_ao_dispatch_batch21_2026_08_17.md) | master | refactor | 1/2 | 50% | 0.1 | — |
 | [`defi_satellite_ao_dispatch_batch2_2026_07_26`](./defi_satellite_ao_dispatch_batch2_2026_07_26.md) | master | infra | 21/22 | 95% | 0.1 | — |
 | [`instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize`](./instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md) | master | refactor | 0/2 | 0% | 0.1 | — |
@@ -357,7 +356,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`review_agent_evidence_gated_write_capability_2026_08_09`](./review_agent_evidence_gated_write_capability_2026_08_09.md) | master | design | 6/7 | 86% | 0.1 | — |
 | [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) | master | design | 39/42 | 93% | 0.1 | — |
 | [`deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11`](./deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md) | master | infra | 18/19 | 95% | 0.1 | — |
-| [`ao_open_work_consolidated_tracker_2026_08_14`](./ao_open_work_consolidated_tracker_2026_08_14.md) | master | infra | 53/67 | 79% | 0.1 | — |
+| [`defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17`](./defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md) | **orphan** | infra | 0/1 | 0% | 0.1 | — |
 | [`defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16`](./defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16.md) | master | infra | 0/2 | 0% | 0.1 | — |
 | [`defi_satellite_ao_dispatch_batch15_2026_08_16_finalize`](./defi_satellite_ao_dispatch_batch15_2026_08_16_finalize.md) | master | infra | 0/2 | 0% | 0.1 | — |
 | [`doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08`](./doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md) | master | infra | 2/3 | 67% | 0.1 | — |
@@ -371,8 +370,10 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize`](./prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md) | master | infra | 1/2 | 50% | 0.1 | — |
 | [`tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24`](./tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md) | master | infra | 3/4 | 75% | 0.1 | — |
 | [`cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize`](./cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md) | master | infra | 2/3 | 67% | 0.0 | — |
+| [`ao_open_work_consolidated_tracker_2026_08_14`](./ao_open_work_consolidated_tracker_2026_08_14.md) | master | infra | 59/67 | 88% | 0.0 | — |
 | [`orchestrator_vm_e2e_hardening_2026_07_24`](./orchestrator_vm_e2e_hardening_2026_07_24.md) | master | design | 29/30 | 97% | 0.0 | — |
 | [`prediction_satellite_ao_dispatch_batch6_2026_07_29_progresslog`](./prediction_satellite_ao_dispatch_batch6_2026_07_29_progresslog.md) | master | refactor | — | — | 0.0 | — |
+| [`ao_satellite_ao_dispatch_batch21_2026_08_16`](./ao_satellite_ao_dispatch_batch21_2026_08_16.md) | master | infra | 7/7 | 100% | 0.0 | — |
 | [`ao_satellite_ao_dispatch_batch8_2026_08_08`](./ao_satellite_ao_dispatch_batch8_2026_08_08.md) | master | research | 4/4 | 100% | 0.0 | — |
 | [`cefi_casing_residual_ao_dispatch_2026_08_16`](./cefi_casing_residual_ao_dispatch_2026_08_16.md) | master | infra | 1/1 | 100% | 0.0 | — |
 | [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](./cefi_deribit_binance_futures_bundle_verification_2026_06_20.md) | master | infra | 7/7 | 100% | 0.0 | — |
@@ -383,6 +384,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`data_pipeline_e2e_milestones_gate_2026_07_24`](./data_pipeline_e2e_milestones_gate_2026_07_24.md) | master | research | 65/65 | 100% | 0.0 | — |
 | [`data_pipeline_reconciliation_skill_2026_07_20`](./data_pipeline_reconciliation_skill_2026_07_20.md) | master | design | 48/48 | 100% | 0.0 | — |
 | [`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04`](./defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md) | master | refactor | 3/3 | 100% | 0.0 | — |
+| [`defi_live_poller_ao_dispatch_batch1_2026_08_16`](./defi_live_poller_ao_dispatch_batch1_2026_08_16.md) | master | infra | 2/2 | 100% | 0.0 | — |
 | [`defi_satellite_ao_dispatch_batch15_2026_08_16`](./defi_satellite_ao_dispatch_batch15_2026_08_16.md) | master | infra | 1/1 | 100% | 0.0 | — |
 | [`defi_strategy_pnl_axis_index_2026_07_24`](./defi_strategy_pnl_axis_index_2026_07_24.md) | master | infra | 1/1 | 100% | 0.0 | — |
 | [`defi_venue_lst_rates_residual_2026_07_24`](./defi_venue_lst_rates_residual_2026_07_24.md) | master | design | 4/4 | 100% | 0.0 | — |
@@ -400,7 +402,8 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`tradfi_consolidated_closeout_2026_07_18`](./tradfi_consolidated_closeout_2026_07_18.md) | master | infra | 2/2 | 100% | 0.0 | — |
 | [`tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16`](./tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md) | master | infra | 1/1 | 100% | 0.0 | — |
 | [`ui_satellite_ao_dispatch_batch1_2026_08_06`](./ui_satellite_ao_dispatch_batch1_2026_08_06.md) | master | infra | 3/3 | 100% | 0.0 | — |
-| **TOTAL** (333 plans) | 0 orphans, 0 TBD | — | — | **61% done** | **368** | — |
+| [`venue_readiness_ao_dispatch_batch1_2026_08_16`](./venue_readiness_ao_dispatch_batch1_2026_08_16.md) | master | infra | 8/8 | 100% | 0.0 | — |
+| **TOTAL** (336 plans) | 5 orphans, 0 TBD | — | — | **61% done** | **366** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
