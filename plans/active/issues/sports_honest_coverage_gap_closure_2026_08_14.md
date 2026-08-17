@@ -476,40 +476,53 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       `SPORTS Tier-2 sentinel fan-out: provider=ODDS_API date=2020-06-06 rows=1173`), manifest shards updating,
       moving through subsequent dates — the 278-day gap backfill is genuinely running now, not just OS-level
       RUNNING. Loop continues monitoring it same as weather.
-- [ ] [DATA] P2. **Odds VM preempted twice since relaunch (2026-08-16/17); a possible freshness-skip concern
-      surfaced during monitoring, INVESTIGATED BUT NOT CONFIRMED — needs a fresh, more careful look, not a repeat of
-      this session's approach.** Timeline: `mtds-backfill-odds-20260816-230355` (the fix-verification relaunch) and
-      its successor `mtds-backfill-odds-20260816-235352` both vanished from `gcloud` (not found) after a few hours —
-      consistent with routine SPOT preemption (`--instance-termination-action=DELETE` self-deletes on preemption,
-      no graceful shutdown log expected) — NOT re-litigated as a new admission-hold occurrence, that fix is confirmed
-      separately above. **The open question**: while monitoring, `TickDataHandler._apply_freshness_skip()`
-      (`market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py:606`) was found to pass
-      `max_age_hours=_CONCURRENT_LAUNCH_DEDUP_WINDOW_HOURS` (10 minutes) to `check_shard_freshness()` — and that
-      constant's OWN doc-comment (line 65-72) explicitly says "this is NOT a correctness window" and exists only to
-      dedupe two processes racing the same shard within minutes of each other. Using a 10-minute window as the
-      GATE for "should this historical (days/weeks-old) capture be treated as already-done" looks, on its face, like
-      a mismatch between documented intent and actual use — if real, it would mean this handler's skip-if-fresh path
-      can never recognize anything older than 10 minutes as fresh, and would re-attempt every date/league on every
-      relaunch regardless of true capture state. **Live-checked this specific worry and could NOT confirm it**: a
-      candidate example (BUNDESLIGA on 2020-06-14 with 4 bookmakers already captured, log showing "~960 credits"
-      about to be spent) could not be re-located in the VM's own full saved log on a second, more careful pass — the
-      claim outran what I could actually re-verify, so I am not asserting it as confirmed. What DID verify cleanly:
-      real fetches in the live log show variable, plausible costs tied to actual match schedules (`credits_used=0`
-      on no-fixture days, `credits_used=480` for a real 9-fixture BUNDESLIGA day, `remaining=2755046` — a large
-      account balance, not visibly draining fast). **Do not relaunch the odds VM again without either (a) resolving
-      this open question first, or (b) an explicit operator go-ahead** — a notification was already sent asking
-      whether to pause-and-investigate or continue; no answer received as of this entry. If picking this up: read
-      `check_shard_freshness()`'s full body (`unified-trading-library/unified_trading_library/manifest_writer/
-      _queries.py:163`) end-to-end (not just the docstring) to see exactly how `written_at` vs `max_age_hours`
-      combines with `capture_status`/`schema_version` in the actual `is_fresh` computation, and watch ONE single
-      already-captured (date, league) pair through a live re-run to see its ACTUAL completion line (not just the
-      pre-fetch "N calls needed" estimate) before concluding either way.
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-17 — the freshness-skip window is deliberate, tested, safety-motivated
+      behavior, NOT a bug.** Operator asked directly: "essentially we skip already existing data properly via
+      manifest and everything is canonical form" — investigated both halves properly this time (read
+      `check_shard_freshness()`'s FULL body, not just its docstring, plus the actual test suite for this exact
+      mechanism).
+      **Skip-if-fresh, definitively**: `check_shard_freshness()` (`unified-trading-library/unified_trading_library/
+      manifest_writer/_queries.py:163`, the per-venue branch at line 348-351) marks ANY row with `written_at` older
+      than `max_age_hours` as stale, unconditionally, regardless of `capture_status`/`schema_version`. With
+      `TickDataHandler._apply_freshness_skip()` passing `max_age_hours=_CONCURRENT_LAUNCH_DEDUP_WINDOW_HOURS` (10
+      minutes), this means: **a backfill relaunch will always re-attempt every date/league older than 10 minutes,
+      even when a complete, correct, already-captured row exists.** This part of my earlier concern was CORRECT and
+      is now confirmed with the exact code path, not just suspected.
+      **But it is INTENTIONAL, not an oversight** — `market-tick-data-service/tests/unit/
+      test_freshness_source_scope.py`'s `TestApplyFreshnessSkipUsesShortDedupWindow` class exists SPECIFICALLY to
+      pin this behavior and reject reverting it: its docstring says the short window replaced "the prior
+      date-branched 0h-for-old/24h-for-recent split" because that older design let data captured under
+      **pre-fix code silently stay 'fresh' forever**, so a genuine bug fix would never take effect on the next
+      backfill run without the operator remembering `--force` every single time. That older failure mode is the
+      SAME FILE's documented root cause of the actual sports odds_api incident this whole file exists to prevent:
+      an MDPS rollup row satisfied a source-blind freshness check and permanently pinned 572 real odds days "fresh"
+      forever (see `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`). **Shortening/removing this
+      window would reopen that exact, already-fixed incident class fleet-wide** (this handler is the shared
+      `download`-operation handler for cefi/tradfi/prediction/sports, not sports-only) — did NOT touch this code.
+      The accepted tradeoff: some redundant re-fetching of unchanged historical data, in exchange for a guarantee
+      that a correctness bug fix always takes effect and nothing can silently stay wrongly-pinned "fresh" forever.
+      Live-measured cost of that tradeoff looks acceptable: real fetches show plausible, variable per-date costs
+      tied to actual match schedules (`credits_used=0` on no-fixture days, `credits_used=480` for a real 9-fixture
+      day), and the account showed `remaining=2755046` credits — a large, not-visibly-draining balance.
+      **Canonical form, checked fresh (not just the earlier general Tier-1 sample)**: ran the UAC
+      `canonical_path_violations()` machine oracle against 60 objects sampled specifically from TODAY's actual
+      odds_api writes (`market-data-tick-sports-prd`, `raw_tick_data/by_date/day=2020-06-2*`,
+      filtered to `odds_api`-tagged paths) — **0/60 violations.** Combined with this session's earlier-verified
+      fixes (odds_api casing → lowercase `odds`, the `ODDS_API` pseudo-venue / real-bookmaker-venue + `source=`
+      distinction), the data being written right now is in correct canonical form.
+      **Relaunched the odds VM** — the original blocking question is resolved, no code change needed or made.
 - [x] ✅ [DATA] P2. **Weather VM relaunched 2026-08-16** — confirmed the prior VM (`weather-backfill-20260815-011036`)
       was SPOT-preempted (`exit_code=125`, `completed_at=2026-08-15T16:10:03Z`, per its deployment record). Relaunched
       as `weather-backfill-20260816-192237` with the same date range (`2024-01-03 2026-08-02`); verified via SSH the
       `instruments_service` workload process is actually running (PID 5401, accumulating CPU time), not just
       OS-level RUNNING. Once it completes: run `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh`
       to materialize `empty_confirmed` rows.
+- [ ] [SCRIPT] P2. **Run the sports manifest rescan once the weather VM completes** — pulled out of prose in the item
+      above into its own tracked todo (was buried as a follow-up sentence, not a checkbox — the workspace's own
+      "every follow-up is a `- [ ]` todo, never prose" rule). Not yet actionable: `weather-backfill-20260816-192237`
+      is still running as of 2026-08-17 (last checked at date=2025-08-17 of its 2024-01-03..2026-08-02 range, genuine
+      forward progress, not stalled). When it completes: `bash deployment-service/scripts/vm/launch-sports-manifest-
+      rescan-vm.sh` to materialize `empty_confirmed` rows.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
