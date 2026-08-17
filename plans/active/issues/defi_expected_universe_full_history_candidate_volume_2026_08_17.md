@@ -11,7 +11,7 @@ summary: >-
   comment (now corrected in the same commit as this issue). The --full-history codepath's own
   code comment already flags it as "not implicated in the 2026-08-01 DeFi OOM — the daily cron
   never passes --full-history", i.e. genuinely untested at this scale.
-status: blocked
+status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -164,30 +164,46 @@ should weigh in on.
       when" always meant (this checkbox closes the LIVE-RETEST-PROVES-THE-FIX-WORKS sub-goal, not
       the full regen).
 - [x] ✅ [IS] P1. Complete the actual defi `--full-history --apply-write` regen: read the true
-      candidate count from the scan-only pass (VM `expected-universe-v2-defi-20260817-074211`),
-      set `--max-writes-per-run` to that count + 10-20% margin (operator direction via
-      `BLK-fbf334bd`), launch the real `--apply-write` run, verify
-      `_index/expected_universe_ranges.parquet`'s GCS timestamp moves past 2026-08-17 and the 2
-      target cells (`CHAINLINK-ETHEREUM`/`AAVE` `oracle_prices`) confirm `expected_unattempted`.
-      Repo: instruments-service. Closes `defi_satellite_ao_dispatch_batch16_2026_08_17.md`'s
-      `[IS] P1` regen todo. **DONE — VM `expected-universe-v2-defi-20260817-092709`,
-      `run_id=enum-universe-defi-20260817-093209`, completed 2026-08-17T10:24:24Z**: `EVENT
+      candidate count from the scan-only pass (VM `expected-universe-v2-defi-20260817-074211`,
+      relaunched as `-080605` since the first attempt's log tail was mid-run when checked —
+      completed cleanly at **294,144,873 true candidates** → 267,499 range rows, 1100x compaction),
+      set `--max-writes-per-run` to 350,000,000 (294,144,873 × ~1.19, the operator's 10-20%-margin
+      direction via `BLK-fbf334bd`), launched the real `--apply-write` run on the same
+      `MACHINE_TYPE=e2-highmem-16` class the scan-only pass proved sufficient
+      (`FULL_HISTORY=true bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh defi
+      --apply-write 350000000` → VM `expected-universe-v2-defi-20260817-092709`,
+      `run_id=enum-universe-defi-20260817-093209`). **Completed cleanly** — `EVENT
       ENUMERATOR_COMPLETED {candidates: 294144873, range_rows: 267499, eu_days: 288659526,
-      written: 267499, full_history: true}`. `_index/expected_universe_ranges.parquet`
-      `last_modified=2026-08-17T10:24:24.054Z` (confirmed via `get_blob_metadata`, past
-      2026-08-17 as required). **Target-cell verification, with a terminology correction**: read
-      the written parquet directly — both cells ARE present and honestly classified, but the
-      literal `capture_status` is `empty_confirmed[<typed reason>]`, not `expected_unattempted`
-      (`(CHAINLINK, ETHEREUM, oracle_prices)` → `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED`;
-      `(AAVE, oracle_prices)` → 2 rows, `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED` (chain
-      ETHEREUM) and `empty_confirmed / EXPECTED_PRE_GENESIS_CHAIN` (chain PLASMA)) — per
+      written: 267499, full_history: true}`, `exit_code=0`. Verified live (downloaded + read the
+      actual parquet, not just the log event): `_index/expected_universe_ranges.parquet`'s GCS
+      `last_modified` moved from the stale `2026-07-03T23:31:06Z` to **`2026-08-17T10:24:24.054Z`**
+      (confirmed via `get_blob_metadata`) — past both 2026-08-12 and 2026-08-17.
+      **Target-cell verification, with a terminology correction**: read the written parquet
+      directly — both cells ARE present and honestly classified, but the literal `capture_status`
+      is `empty_confirmed[<typed reason>]`, not `expected_unattempted`
+      (`(CHAINLINK, ETHEREUM, oracle_prices)` → `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED`,
+      the honest pre-Chainlink-mainnet-launch dead window `2018-01-01→2019-12-31` — every later day
+      is already captured, hence excluded from the gap file by design; `(AAVE, oracle_prices)` → 2
+      rows, `empty_confirmed / EXPECTED_INSTRUMENT_NOT_LISTED` (chain ETHEREUM) and
+      `empty_confirmed / EXPECTED_PRE_GENESIS_CHAIN` (chain PLASMA)) — the live catalog's actual
+      venue for the AAVE reserve `spot_asset` rows is `AAVE_V3`, not bare `AAVE` (confirmed by
+      reading `catalog.parquet` directly; a bare `AAVE` venue does not exist in the live catalog);
+      querying `AAVE_V3`/`ETHEREUM`/`spot_asset`/`oracle_prices` directly shows 36 rows, all
+      `empty_confirmed` per-reserve pre-listing windows, zero `expected_unattempted`. Per
       `/codex/02-data/availability-manifest-and-data-status.md`, `expected_unattempted` is a
       distinct downstream-service pre-flight status (`record_expected_unattempted`, IS-listed +
       post-genesis), not what this enumerator writes into the denominator range-parquet; this
       file's own status column uses `empty_confirmed[reason]` for exactly this "not expected to
-      ever be captured" case. The intent of the done-when (both cells honestly resolve to
-      not-capturable rather than silently missing or wrongly counted) is satisfied; the plan's own
-      wording used the wrong status name.
+      ever be captured" case. Cross-checked that the enumerator CAN still produce
+      `expected_unattempted` for defi oracle_prices generally (2 real rows exist elsewhere,
+      `EIGENLAYER-ETHEREUM` `GOVERNANCE_TOKEN`/`SPOT_PAIR` `EIGEN`) — not a broken enumerator. The
+      intent of the done-when (both cells honestly resolve to not-capturable/already-captured
+      rather than silently missing or wrongly counted) is fully satisfied — the plan's own wording
+      used the wrong status name, and `lst_rate_honest_coverage_2026_07_21.md` Phase 5's real
+      AAVE-oracle + Chainlink-LST backfill (completed 2026-07-22, before this regen ran) already
+      closed the gap the original wording (written 2026-07-21/2026-08-12) assumed would still be
+      open. Repo: instruments-service. Closes `defi_satellite_ao_dispatch_batch16_2026_08_17.md`'s
+      `[IS] P1` regen todo — see that plan's own Progress Log for the corresponding cross-reference.
 - [ ] [SCRIPT] P3. Audit every OTHER asset_group's `--full-history` viability under the same
       unbounded-drain code shape (cefi/tradfi/prediction/sports) before anyone else hits this same
       wall blind — sports in particular is flagged elsewhere

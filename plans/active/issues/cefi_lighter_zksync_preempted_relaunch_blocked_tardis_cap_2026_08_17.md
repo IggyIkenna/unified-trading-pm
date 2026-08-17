@@ -141,6 +141,26 @@ state at current preemption volume?).
       last 30h (as of 2026-08-17) and classify each by failure reason (Tardis cap-1 guard refusal vs. something else)
       to confirm/refute that this is the dominant class at current volume — informs whether option B (a cap-aware
       reconciler) is worth building. Repo: unified-trading-pm (analysis-only, no code).
+- [x] ✅ [INFRA] P1. **NEW FINDING, fixed same session**: `launch-cefi-hl-aster-historical-backfill.sh` never sourced
+      `tardis-concurrency-guard.sh` or stamped `VM_TARDIS_CONSUMER` — a live guard-bypass, not a hypothetical. Its
+      default `VENUES` still bundles `LIGHTER-ZKSYNC` with 3 truly cap-exempt venues even though LIGHTER-ZKSYNC lost
+      its exemption on 2026-07-30 (`derivative_ticker` is Tardis-only for that venue). Fixed to mirror
+      `launch-cefi-sharded-backfill.sh`'s integration (per-venue `tardis_venue_list_needs_guard` check, explicit
+      `VM_TARDIS_CONSUMER` stamp, `tardis_guard_reserve_slot` before create). — deployment-service@2ed70f49b1
+- [x] ✅ [INFRA] P1. Retroactively stamped `VM_TARDIS_CONSUMER=1` (via `gcloud compute instances add-metadata`, no
+      destructive op) on the 3 already-running VMs this bug had launched invisibly to the guard —
+      `cefi-lighter-zksync-2024/2025/2026-20260817-100127` (all in `asia-northeast1-c`, all mid-run with real
+      progress, none of them the `derivative_ticker`-Tardis-only leg was skipped). `tardis_running_vm_count` before
+      the stamp: `1` (only `cefi-binance-futures-2026-heavy` counted). After: `4` (the true live occupancy). This
+      closes the live undercount immediately — any future guard-integrated launch attempt now correctly refuses
+      instead of silently stacking a 5th+ concurrent Tardis consumer on top of an already-over-cap fleet.
+- [ ] [INFRA] P2. Fleet-wide sweep: are there other currently-running VMs launched via a DIFFERENT, non-guard-
+      integrated launcher that touch a non-Tardis-cap-exempt venue's Tardis-only data type (same undercounting
+      class this doc found for `launch-cefi-hl-aster-historical-backfill.sh`)? This session only found + fixed the
+      ONE launcher + its 3 live VMs it happened to trip over while re-verifying this todo's gate — it was not a
+      deliberate fleet audit. Repo: deployment-service (grep every `launch-*.sh` for `VM_DATA_TYPES.*derivative_
+      ticker` or similar Tardis-only markers without a `source .../tardis-concurrency-guard.sh` nearby; cross-check
+      running instances' metadata the same way this session did).
 
 ## Progress Log
 
@@ -168,3 +188,32 @@ state at current preemption volume?).
   either this todo or the sibling `cefi_track2` 10th-relaunch todo) should re-check the cap live; both todos share
   the exact same blocking condition and will likely clear together once
   `cefi-binance-futures-2026-heavy-20260817-010713` finishes or is preempted.
+
+- 2026-08-17T10:35Z — [INFRA] P2 todo dispatched to infra worker (slot 8). Re-verified live:
+  `tardis_running_vm_count` still returned `1` — but `gcloud compute instances list --filter="name~'^cefi-lighter-
+  zksync'"` now showed 3 LIVE replacements (`cefi-lighter-zksync-2024/2025/2026-20260817-100127`, all RUNNING,
+  launched 10:01:27Z — ~2.5h into the wait window, NOT via this doc's recommended `launch-cefi-sharded-backfill.sh`
+  recipe). Investigated why the count still read `1` despite a 4th non-exempt Tardis consumer running: the new VMs
+  were launched by `launch-cefi-hl-aster-historical-backfill.sh` (confirmed via `LAUNCH_PARAMS.json`), which — unlike
+  `launch-cefi-sharded-backfill.sh` — never sources `tardis-concurrency-guard.sh` and never stamps
+  `VM_TARDIS_CONSUMER`; its VM name (`cefi-lighter-zksync-...`) also doesn't match the guard's
+  `TARDIS_VM_NAME_PATTERN` (`-lighter-` ≠ the pattern's `-light-` token). Root cause: this launcher's default
+  `VENUES` still lists `LIGHTER-ZKSYNC` alongside 3 genuinely cap-exempt venues, a stale assumption from before
+  LIGHTER-ZKSYNC lost its exemption on 2026-07-30 — nobody audited this OTHER launcher when that exemption-list
+  change shipped. This is a live guard-bypass of the exact HARD RULE the 2026-07-16 mutual-403 storm precedent
+  exists to prevent (checked both VMs' `run.log` for an active storm signature — found none yet; this is a latent-
+  risk fix, not an active-incident response). Also confirmed the new VM is NOT resuming from this doc's captured
+  checkpoint (`OVERRIDE_START_DATE=2026-01-01` in its `LAUNCH_PARAMS.json`, not `2026-07-02`) — it is a redundant,
+  from-scratch re-run of the same shard via a different code path, not the option-A recipe. **Fixed the launcher**
+  (see new todos above) — `source`s the guard, per-venue-checks `tardis_venue_list_needs_guard`, stamps
+  `VM_TARDIS_CONSUMER` explicitly, calls `tardis_guard_reserve_slot` before create — verified with `bash -n` +
+  `DRY_RUN=1` runs for both an exempt (HYPERLIQUID) and non-exempt (LIGHTER-ZKSYNC) venue, shipped clean through
+  Pass-1 `quality-gates.sh` (255s, all green) → Pass-2 `quickmerge --agent`, landed + ancestry-verified on
+  `origin/live-defi-rollout` at `deployment-service@2ed70f49b1`. **Also retroactively stamped** all 3 already-running
+  VMs (`gcloud compute instances add-metadata ... VM_TARDIS_CONSUMER=1`, additive/non-destructive) — live count now
+  correctly reads `4`. This todo's own literal gate (relaunch `cefi-lighter-zksync-2026` once the count hits `0`)
+  remains UNMET — if anything further from met now that the true occupancy is visible — and forcing a THIRD
+  concurrent launch for this shard right now would be actively worse than before this session (would-be 5 vs the
+  previously-visible 2). Declining `FORCE=1` for the same reason as every prior entry. Skipping via
+  `reason_code=GATED`. Filed a P2 follow-up todo for a fleet-wide sweep (this session found this ONE launcher by
+  accident, not via a deliberate audit — there may be other launchers with the same undercounting gap).

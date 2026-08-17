@@ -204,11 +204,22 @@ source: >-
       (not mine to re-split unilaterally — review/main's call per `ui_developer.md`'s escalation instruction); did
       not build UI against a guessed/mocked contract.
 
-- [ ] [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate in `sit_gate_treadmill`'s remaining
+- [x] ✅ [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate in `sit_gate_treadmill`'s remaining
       scope** (mirrors the same hoist pattern batch13 already applied to `ldr_to_main_fleet_promote.sh` for a sibling
       case) — safety constraint fully specified in the source doc. Source:
       `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` (line ~146). Gate: matches
-      the batch13-shipped hoist pattern's ancestor+concluded-failure scoping.
+      the batch13-shipped hoist pattern's ancestor+concluded-failure scoping. **CHECKBOX RECONCILIATION 2026-08-17
+      (slot-19, infra craft) — already shipped before this batch was drafted.** The source doc's own line ~146 todo is
+      itself already `[x] ✅ RESOLVED — DONE (plan_reconciler Phase -1, 2026-08-16)`, citing
+      `unified-trading-pm@5ff1205e68` — this batch's Source citation pointed at a since-resolved todo in the source
+      doc and missed the resolution, the same stale-citation shape already caught for this batch's 2 line-cap-split
+      DOC todos. Verified live (not just trusting the citation): `git merge-base --is-ancestor 5ff1205e68 HEAD` on
+      `unified-trading-pm` confirms it's a real ancestor of the current tip; `scripts/cicd/ldr_to_main_fleet_promote.sh`
+      contains `_close_ancestor_failed_promote_prs()` (lines ~470-525) with an explicit header comment "hoisted ABOVE
+      the SIT gate", called at line ~688 with an inline comment confirming it runs "before the content-identical skip
+      below and before the SIT differ/gate section further down" — matches the exact hoist pattern + the
+      ancestor+concluded-failure safety constraint (never mass-close; only a strict ancestor of LDR tip with
+      `quality-gates-v2` CONCLUDED failure) the source doc specified. No code change needed.
 
 - [ ] [DEVOPS] P2. **Fix `sit-gate-stuck-detector.yml`'s remaining dedup-key gap** — re-assess given 3+ subsequent
       recurrences (08-10, 08-14, 08-15) all self-resolved without incident since this was last held back as "too hot to
@@ -383,3 +394,7 @@ source: >-
   standing worktree-prune timer). Full detail on the checkbox above. Fast path is code-shipped but dormant on the CI
   VM until an operator provisions `SHARED_BARE_ROOT` and installs the prune timer — both deliberately gated, not
   overlooked.
+- **2026-08-17 (slot 19, AO-dispatched worker, infra craft).** Checkbox-reconciled the "Hoist the superseded-promote-PR
+  cleanup above the SIT gate" todo — no code change needed, the source doc's own line ~146 item was already resolved
+  2026-08-16 (`unified-trading-pm@5ff1205e68`) before this batch was drafted; verified live that the ancestor is real
+  and the hoisted call site + safety constraint are actually present in `ldr_to_main_fleet_promote.sh` before flipping.

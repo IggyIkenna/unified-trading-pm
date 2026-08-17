@@ -148,10 +148,27 @@ code path.
       `cancel_order`/`get_order_status`/`amend_order` for `futures=True` genuinely hit
       `https://futures.kraken.com/derivatives/api/v3/...`, verified via a unit test asserting the request URL/host,
       not just that a mock was called.
-- [ ] [BACKEND] P1. **Audit for the same class of gap on any other multi-product adapter in this repo** (a single
-      adapter class serving two API surfaces via a boolean flag) — this exact shape (constructor flag set, never
-      read again in the transport layer) is easy to reintroduce. Done-when: a cited sweep result (found N more /
-      found none) across `execution_service/trade_execution/adapters/`.
+- [x] ✅ [BACKEND] P1. **Audit for the same class of gap on any other multi-product adapter in this repo** — swept
+      2026-08-17, **found none**. All 24 files in `execution_service/trade_execution/adapters/` checked via
+      `grep -ln futures *.py` for constructor-level product-toggle flags, then read individually:
+      - **CCXT-backed adapters** (`binance_ccxt.py`, `bybit_ccxt.py`, `okx_ccxt.py`) each correctly thread
+        `self.futures` into `_get_exchange()`'s `ccxt.<venue>(...)` constructor as `options.defaultType`
+        (`"future"`/`"swap"` vs `"spot"`) — CCXT itself routes the REST base URL off that option, so the flag IS
+        read where it matters, unlike Kraken's hand-rolled transport.
+      - **`bitget_native.py`** — the OTHER hand-rolled (non-CCXT) multi-product adapter besides Kraken, same shape
+        as the bug (`futures: bool` constructor param, `self.futures` stored). Verified `place_order` (line 290)
+        DOES branch on `self.futures` to pick `/api/v2/mix/order/place-order` (productType=USDT-FUTURES) vs
+        `/api/v2/spot/trade/place-order` — correctly wired, and Bitget's spot/futures REST bases are genuinely the
+        SAME host (`https://api.bitget.com`, path-differentiated only per its own docs), so there's no missing
+        second base URL to wire in the first place.
+      - **Single-surface adapters** with a `futures` param that's effectively decorative
+        (`aster_ccxt.py`, `deribit_ccxt.py`, `hyperliquid_ccxt.py`, `upbit_ccxt.py`, `coinbase_ccxt.py`) — each is
+        documented inline as perps-only / spot-only / "unused, kept for API consistency"; no second real venue
+        surface exists to misroute to, so this isn't the same failure class (no live-money risk from an unread
+        flag when there's nowhere else for the request to go).
+      - No other adapter file (`cme_adapter.py`, `ice_adapter.py`, `fx_adapter.py`, `nasdaq_adapter.py`,
+        `nyse_adapter.py`, `sports_adapter.py`, `polymarket_adapter.py`, `_native_base.py`, `ccxt_common.py`,
+        `bitfinex_native.py`, `kraken_ws_client.py`) declares a `futures`/multi-product constructor flag at all.
 
 ## Progress Log
 
@@ -174,3 +191,10 @@ code path.
   actionable item — noting for whoever picks it up that UAC's own `_KRAKEN_FUTURES` capability record already
   carries the correct `https://futures.kraken.com` / `https://demo-futures.kraken.com` base URLs as a ready
   reference.
+- **2026-08-17 — P1 sweep complete, found none.** Audited all 24 files in
+  `execution-service/execution_service/trade_execution/adapters/` for the same shape (a multi-product adapter
+  constructor flag stored but never read by the transport layer). CCXT adapters (binance/bybit/okx) correctly
+  thread `self.futures` into `defaultType`; `bitget_native.py` (the only other hand-rolled REST adapter besides
+  Kraken) correctly branches its request path on `self.futures` and has no second base URL to miss (spot+futures
+  share one host). No other adapter declares a comparable flag. Full citation in the todo item above. Todo 2
+  (implement the real Kraken Futures transport) remains the only open item on this issue.

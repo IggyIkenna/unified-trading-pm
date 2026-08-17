@@ -314,12 +314,30 @@ source: >-
       with the reason, rather than left as a silent gap. Remaining work (sourcing a cited address for those
       7 from an external, verifiable source) is out of this bounded task's scope — not tracked further here
       since it needs an operator/external-source decision, not more code search.
-- [ ] [BACKEND] P2. **Gap: UAC's `archetype_consumers` over-declares `CARRY_STAKED_BASIS`/
-      `CARRY_STAKED_BASIS_DATED` as consumers of all 28 `lending_indices` rows, but neither archetype's slot code
-      references any lending protocol at all** — `strategy_service/engine/strategies/v2/target_universe/
-      catalog_staked_basis.py` is LST + perp-hedge only (zero `lending_protocol`/AAVE-family references).
-      Done-when: the UAC `archetype_consumers` declaration for `lending_indices` rows is corrected to drop these
-      2 archetypes, or a real lending-consumption path is added to justify keeping them.
+- [x] ✅ [BACKEND] P2. **Gap: UAC's `archetype_consumers` over-declares `CARRY_STAKED_BASIS`/
+      `CARRY_STAKED_BASIS_DATED` as consumers of all 28 `lending_indices` rows — done 2026-08-17, NOT
+      over-broad: a real, dispatch-traced lending-consumption path already exists, confirmed by direct read,
+      no code changes needed.** This todo's own premise conflated two different things: `catalog_staked_basis.py`
+      (the position/instrument CATALOG) genuinely has zero `lending_protocol`/AAVE-family fields — true, and
+      irrelevant, since UAC's `archetype_consumers` declares FEATURE-DATA consumption, not catalog fields.
+      The actual replay/tick-loader code (`strategy_service/cli/handlers/paper_run_handler.py`) reads real
+      `lending_rates` feature data for BOTH archetypes: `_load_carry_staked_ticks` (paper_run_handler.py:1056-1109)
+      calls `GCSFeatureProvider.get_candles(..., feature_group="lending_rates")`, reading real per-day Aave
+      `supply_apy`/`rate_spread` (`_carry_rates_for_day`, paper_run_handler.py:270-291) to drive the tick-loader's
+      entry/exit signal (`staking_apy_bps`/`funding_apy_bps`) — used by CARRY_STAKED_BASIS directly and reused
+      verbatim by CARRY_STAKED_BASIS_DATED's `_load_staked_basis_dated_ticks` (paper_run_handler.py:1210-1250,
+      docstring: "reuses the EXACT SAME real `lending_rates` (Aave) read `_load_carry_staked_ticks` already
+      drives the plain archetype's entry/exit gate off"). `lending_rates`'s own UAC declaration
+      (`canonical/domain/features/required_inputs.py:101-107`) requires `data_type="lending_indices"`
+      (`asset_group=defi`) — so this genuinely bottoms out in real `lending_indices` data, not a stale label.
+      `archetype_feature_groups.py:56-67` already carries this exact dispatch-trace citation for both archetypes
+      (added 2026-08-16, predates this gap todo). Note for future readers: `lending_rates` here is consumed as
+      a SIGNAL-GATING input for tick emission, not as an economic leg — the archetype's real accrual legs read
+      `lst_yields` (STAKING, via `CanonicalLstYieldsIndexProvider`) and real perp funding data (FUNDING, via
+      `CanonicalDerivativeTickerFundingProvider`), confirmed at paper_run_handler.py:2384-2425 — which is exactly
+      why `catalog_staked_basis.py` correctly has no `lending_protocol` field despite the archetype genuinely
+      consuming `lending_indices`-derived data. Done-when's second branch ("a real lending-consumption path...
+      to justify keeping them") is satisfied by code already present; no UAC/strategy-service edit needed.
 - [ ] [BACKEND] P2. **Gap: AAVE-PLASMA's protocol identity is ambiguous in the archetype catalogue** — every
       slot/catalogue reference to Aave uses the bare `"aave"` token (e.g. `archetype_slots_defi.py`,
       `catalog_yield_defi.py`), never a Plasma-chain-disambiguated form, so whether `AAVE-PLASMA` resolves
@@ -433,3 +451,15 @@ in the shipped code); confirmed via reading the watchdog source and cross-checki
 killed-during-tests runs' logs that the new tests had already passed on the identical tree content. Remaining open
 in this plan: 2 other P2 todos (over-broad UAC `archetype_consumers` for `lending_indices`, AAVE-PLASMA identity
 ambiguity) — out of scope for this task, left for a future dispatch.
+
+**2026-08-17 — `archetype_consumers` over-declaration gap resolved, investigation-only, zero code changed.**
+AO worker task (backend_engineer role, slot 10). Investigated by reading (not inferring) `paper_run_handler.py`'s
+actual tick-loader dispatch, not just the catalog file the todo's own premise cited. Found the todo's premise
+conflated the position/instrument CATALOG (`catalog_staked_basis.py`, genuinely lending-protocol-free) with
+FEATURE-DATA consumption (what `archetype_consumers` actually declares): `_load_carry_staked_ticks` genuinely
+reads real `feature_group="lending_rates"` data (Aave `supply_apy`/`rate_spread`) to drive both
+CARRY_STAKED_BASIS's and CARRY_STAKED_BASIS_DATED's tick-emission signal, and `lending_rates` itself requires
+`data_type="lending_indices"` per UAC's own `required_inputs.py`. `archetype_feature_groups.py` already carries
+this exact dispatch-trace citation (dated 2026-08-16, predating this gap todo) — the declaration was correct all
+along, not stale. Full citation trail + the signal-vs-economic-leg distinction written directly into the flipped
+todo above. Remaining open in this plan: 1 P2 todo (AAVE-PLASMA identity ambiguity) — out of scope for this task.
