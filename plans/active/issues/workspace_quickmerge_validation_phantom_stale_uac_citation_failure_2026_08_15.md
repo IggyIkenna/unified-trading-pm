@@ -121,3 +121,4 @@ more than the ambiguous-finding time budget for a single sweep.
   for this content shape. Did not re-chase the clone-time mechanism beyond this — same effort/ambiguity call as
   slot-21's original triage still holds. No code changed by this entry.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:b10d22b59c109ec8]: KEEP-NA, valid — genuine unresolved phantom-CI investigation needing GH Actions runner-side debug access not available to this session; correctly not escalated further since the failing workflow is schedule-only/advisory.
+- **context-scout 2026-08-17**: re-scouted; context_scope re-verified (2 entries), unchanged.

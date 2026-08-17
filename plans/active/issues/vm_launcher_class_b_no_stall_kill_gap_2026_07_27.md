@@ -211,3 +211,4 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
   **blast-radius-judgment-gated**. Not a bounded worker-determinable outcome.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.

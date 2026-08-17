@@ -42,6 +42,8 @@ context_scope:
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
     /codex/06-coding-standards/integration-testing-layers.md,
     strategy-service/strategy_service/position/models.py,
+    strategy-service/strategy_service/position/position_interface/adapters/,
+    execution-service/execution_service/defi_execution/protocols/,
   ]
 ---
 
@@ -948,6 +950,9 @@ the quickmerge on a later pass once this settles.
 ## Context scout
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
+- **context-scout 2026-08-17**: refreshed context_scope (6 entries) — added the two generic-first adapter
+  directories (`strategy-service`'s `position_interface/adapters/`, `execution-service`'s `defi_execution/protocols/`)
+  that most of the doc's still-open todos actually touch.
 
 ## Progress Log
 

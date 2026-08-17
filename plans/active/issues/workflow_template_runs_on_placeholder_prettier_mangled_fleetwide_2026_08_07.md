@@ -282,3 +282,4 @@ context_scope:
   origin). NOTE: the batch doc's cited `8a7b1860a0` was a mis-citation (that SHA is an unrelated pm_root QG test-fix);
   the actual template-lint commit is `92ab939583` — corrected in the flipped checkbox above. Doc stays open —
   `[DEVOPS] P2` (investigate promote-PR non-supersession) remains genuinely open-ended.
+- **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
