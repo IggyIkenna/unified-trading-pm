@@ -313,12 +313,25 @@ on my inference.
 
 ## Tuesday dumps — the two skills
 
-- [ ] [SKILL] P0. **Readiness state-dump skill** — derived per (venue x mode) across IS -> features, printing
-      `unverified` where a check does not exist. Tuesday deliverable 1. Same artefact the parent epic's W1/W20 name, and
-      the one a handover reader runs for themselves rather than trusting a table someone typed.
-- [ ] [SKILL] P0. **Honest-coverage dump skill** — per-shard coverage read from the manifest at whatever grain the
-      registry currently supports, four capture states reported separately (B16), denominator stated. Tuesday
-      deliverable 2. Re-runs at 3-tuple grain once the `instrument_type` axis lands — no rebuild.
+- [x] ✅ [SKILL] P0. Shipped — `unified-trading-pm@5b3dbf99bd`
+      (`cursor-configs/skills/readiness-state-dump/`). **Readiness state-dump skill** — derived per (venue x mode)
+      across IS -> MTDS -> MDPS -> features -> strategy -> execution, printing `unverified` where a check does not
+      exist. Strategy leg is a real AND of two checks: strategy-service's own `position_read_mode_availability`
+      (mode-aware position adapter) and the shipped contract-step-17 `satisfying_archetypes` (archetype
+      registration) — both, not either. Shares `shard_universe.py` with the honest-coverage-dump skill below.
+      Verified live 2026-08-17 against production data (288 venues x 3 modes, ~20s) — e.g. OKX-FUTURES/BATCH
+      correctly derives `strategy=not_ready` from a `ready` archetype half + a `none` position-adapter half, proving
+      the AND-logic. Tuesday deliverable 1. Same artefact the parent epic's W1/W20 name, and the one a handover
+      reader runs for themselves rather than trusting a table someone typed.
+- [x] ✅ [SKILL] P0. Shipped — `unified-trading-pm@5b3dbf99bd`
+      (`cursor-configs/skills/honest-coverage-dump/`). **Honest-coverage dump skill** — per-shard coverage read
+      straight from the already-computed `coverage.json` (reuses instruments-service's `measure_honest_coverage.py`
+      output verbatim, never recomputes a capture_status), four capture states reported separately (B16) plus a
+      "not-expected" section for Layer-1 stray/missing tuples, denominator stated on every percentage. Grain
+      auto-detected from the payload every run (never hardcoded) — verified live 2026-08-17 the payload already
+      carries populated `by_venue_instrument_type_data_type` (3,960 shards), so this dump already reads 3-tuple
+      grain from the manifest side; re-run after the `VenueCapabilityRecord` axis lands on the declared-capability
+      side to diff against today's output, no code change either way. Tuesday deliverable 2.
 - [ ] [DATA] P1. **Re-run both dumps after the axis lands and diff against the Tuesday output.** The diff is the
       evidence that the granularity upgrade changed what we can say, and it is where a previously-hidden gap surfaces.
 
