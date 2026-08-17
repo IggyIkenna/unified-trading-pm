@@ -73,10 +73,23 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
       untraced commit) — legitimate ratchet-down activity per the file's own convention, just never reflected in
       the prose count. Not fixed here since a correct fix needs the full 159-venue re-measurement, not a 1-line
       edit, and it doesn't affect this invariant's correctness (the test reads the JSON list, never the prose).
-- [ ] [REVIEW] P2. Reconcile each shipped todo back into its true parent's own checkbox: the SIT invariants and the
+- [x] ✅ [REVIEW] P2. Reconcile each shipped todo back into its true parent's own checkbox: the SIT invariants and the
       LST migration into `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14` and
       `e2e_wiring_reachability_audit_2026_08_15`, the skills audit into `venue_smoke_test_bar_2026_08_16`. Re-verify
       each cited commit resolves rather than trusting the parent's copy of the evidence line.
+      — **Done, all six cited SHAs independently re-verified as live ancestors of `origin/live-defi-rollout` before
+      any checkbox was flipped (not trusted from batch1's own copy of the evidence lines) — content spot-checked too,
+      not just ancestry.** `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`: flipped its own SIT
+      invariant 2 todo + deferred-work table row (`unified-api-contracts@86d5f5af46`,
+      `system-integration-tests@cce1adebc6`). `e2e_wiring_reachability_audit_2026_08_15.md`: flipped its own SIT
+      invariant 2 todo (same two SHAs) and added a Chunk-B addendum to its already-checked LST-migration todo
+      (`execution-service@529af8d22c`, `unified-api-contracts@6151de2a2a`). `venue_smoke_test_bar_2026_08_16.md`
+      (held `status: draft`): flipped its own skills-audit todo, citing both the audit
+      (`unified-trading-pm@04fec8f2c4`) and the MTDS canonical-leg gap it found and that got fixed
+      (`market-tick-data-service@f90bf09a37`) — did not flip the plan's `status` itself, since the universe-denominator
+      blocker for its OTHER todos is unaffected. Each parent doc also got a Progress Log entry naming the batch as the
+      actual shipping session, since none of these three parent docs' authors cross-checked against batch1 before it
+      duplicated their todos.
 - [ ] [REVIEW] P2. **Confirm the LST migration did not add eETH or rsETH.** Their absence is a deliberate operator
       ruling (2026-08-16), not an oversight — a worker "completing" the registry would silently reintroduce the orphan
       class the reachability gate exists to catch.
@@ -100,3 +113,14 @@ context_scope: [/plans/active/venue_readiness_ao_dispatch_batch1_2026_08_16.md]
   introduced regression and correctly passed once reverted; both touched repos verified clean afterward. Noted one
   small pre-existing doc-staleness (invariant 2's baseline description says "106", the file holds 99) as a
   non-blocking side finding — not fixed, needs a full re-measurement, doesn't affect the invariant's correctness.
+
+- **2026-08-17 (slot 15, review) — REVIEW P2 "reconcile each shipped todo back into its true parent" flipped.**
+  Read all three parent docs in full (`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`,
+  `e2e_wiring_reachability_audit_2026_08_15.md`, `venue_smoke_test_bar_2026_08_16.md`) and confirmed batch1's SIT
+  invariant 2, LST migration Chunk B, and skills-audit todos each had a matching still-open (or already-checked but
+  incomplete) copy in a parent that was never updated when batch1 shipped — same duplication shape batch1's own
+  Progress Log already documented for its close-all and SIT-invariant-4 todos, just never closed on the receiving
+  end. Independently re-verified (before touching any checkbox) that all 6 cited SHAs are live ancestors of
+  `origin/live-defi-rollout` and spot-checked their content against each claim — did not trust batch1's own copy of
+  the evidence lines. Full detail in the flipped checkbox above. Next open item is the P2 "confirm the LST migration
+  did not add eETH or rsETH" todo.

@@ -41,7 +41,7 @@ estimate_baseline_ai_days: 12.0
 estimate_calibrated_ai_days: 9.6
 assigned_role: backend_engineer
 effort: high
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 locked_by:
 locked_since:
 resolved_by:
@@ -103,13 +103,30 @@ migrated data. Measured 2026-08-16:
 - **Three canonical-changing dispatches landed 2026-08-16 alone** — cefi casing residual, sports venue-vocab +
   league_id delete, tradfi purge extension + twin-delete fix — so the drift is active, not historical.
 
-- [ ] [BACKEND] P0. **Audit all four `/data-pipeline-check-*` skills against current canonical expectations before
+- [x] ✅ [BACKEND] P0. **Audit all four `/data-pipeline-check-*` skills against current canonical expectations before
       W5 depends on them.** Per skill: does its canonical leg call `canonical_path_violations()` or re-implement the
       rule; does it validate the filename instrument_id (the oracle is PATH-STRUCTURE-ONLY and VALUE-BLIND, so
       id-form and `instrument_type`/`data_type`/`venue`/`chain` VALUES must be checked separately or explicitly
       declared unchecked); is its stale-migration banner still true. Done-when: each skill either routes through the
       oracle or records why it cannot, and every banner is re-dated or removed. **This is a prerequisite of every
       other todo in this plan** — a harness that reports green over migrated data makes the whole bar worthless.
+      — **Reconciled 2026-08-17 (slot 15, review), shipped via `venue_readiness_ao_dispatch_batch1_2026_08_16`, not
+      by this plan's own (still-`draft`, undispatched) todo.** `unified-trading-pm@04fec8f2c4` added a per-skill
+      "Canonical-oracle audit (2026-08-16)" section to all four `SKILL.md` files: IS/MDPS/features correctly do NOT
+      route through the oracle (their write targets fall outside its `raw_tick_data/by_date/` scope — the sports
+      reference-bucket exemption class), now stated inline instead of implicit; MTDS was found to be a real gap (its
+      `canonical` leg was TradFi-only despite CEFI/DEFI being oracle-covered since 2026-07-20/23) and both
+      misleading-banner claims (IS, MTDS) were re-verified still accurate. **The MTDS gap this audit found was then
+      fixed, closing the loop this todo's done-when requires** — `market-tick-data-service@f90bf09a37` added
+      `_run_oracle_canonical_leg`, routing CEFI/DEFI shards through `canonical_path_violations(require_pipeline_mode=True)`
+      with negative-control proof (a path missing `pipeline_mode=` fails structurally, a raw wire-symbol filename fails
+      on id-form, a genuine canonical path passes). Both SHAs independently re-verified this session as live ancestors
+      of `origin/live-defi-rollout`; content spot-checked (the "Canonical-oracle audit" section is present verbatim in
+      `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md`, and `_run_oracle_canonical_leg` exists in MTDS's
+      `pipeline_e2e_check.py`). **Filename id-form and independent `venue`/`data_type`/`chain` VALUE-checks remain
+      declared unchecked where the oracle doesn't cover them (IS, MDPS, features)** — per this workspace's standing
+      rule that the oracle is path-structure-only and value-blind, this is the correct, explicitly-stated outcome, not
+      a remaining gap in this todo.
 
 Contract step 1 (venue declared, batch/live capability axis) belongs to
 [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14](/plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md),
@@ -161,3 +178,13 @@ contract, the Databento exemption's real boundary (by source, not by asset group
 settled; held out of ingestion until the universe denominator exists, matching W4. The "what a smoke test must
 prove" section is deliberately specific about failing-on-absence — the pass-on-zero-rows trap has already cost this
 corpus real time, and a smoke-test plan that does not name it invites it back.
+
+**2026-08-17 (slot 15, review) — reconciled the AO dispatch batch's skills-audit shipment back into this doc.**
+Despite this plan sitting `status: draft` (held for the universe-denominator blocker), `venue_readiness_ao_dispatch_batch1_2026_08_16`
+independently dispatched and shipped this doc's own P0 skills-audit todo as a todo of its own, plus the real MTDS
+canonical-leg gap that audit found. Flipped this doc's todo to done, citing both: `unified-trading-pm@04fec8f2c4`
+(the per-skill audit) + `market-tick-data-service@f90bf09a37` (the MTDS canonical-leg fix the audit surfaced). Both
+SHAs independently re-verified as live ancestors of `origin/live-defi-rollout` and content spot-checked, not trusted
+from the batch plan's own copy of the evidence line. This does not flip this plan's `status` to `active` — the
+universe-denominator blocker for the plan's remaining todos is unaffected. Part of
+`venue_readiness_ao_dispatch_batch1_finalize_2026_08_16`'s reconciliation todo.
