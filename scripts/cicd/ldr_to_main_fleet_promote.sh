@@ -358,6 +358,18 @@ fi
 
 RESULT_DIR="$(mktemp -d)"; LOG_DIR="$(mktemp -d)"
 MAXJOBS=6  # tighter than ldr-to-staging (8) — main is more sensitive
+# Stagger the per-repo launch (2026-08-17, ci_satellite_ao_dispatch_batch15_2026_08_16.md item
+# 3). Previously every repo in $REPOS was backgrounded back-to-back with zero delay between
+# launches (only throttled once MAXJOBS were already in flight, by the `wait -n` barrier below)
+# — so the first MAXJOBS repos' subshells all hit their earliest gh api calls / the
+# SIT_DISPATCH_LOCK mkdir race within the same instant. That's the exact shape behind the
+# 2026-08-06 "3 full-workspace-sit dispatches within ~10s" stampede documented in the
+# cross-repo dispatch mutex comment above. A small fixed delay between successive launches
+# spreads that instant out. This does not meaningfully extend the run: process_repo's own gh
+# api calls (SIT checks, workspace-digest reads, provenance checks, ancestor cleanup) each take
+# far longer than STAGGER_SECONDS, so the overall drain stays MAXJOBS-bound, not stagger-bound.
+# Overridable for local/CI testing (e.g. STAGGER_SECONDS=0 to reproduce the old behavior).
+STAGGER_SECONDS="${LDR_MAIN_PROMOTE_STAGGER_SECONDS:-3}"
 
 # ── Provenance gate (D1): only quickmerge-provenanced content ────────────────────
 # Shared helper — called from BOTH the PR-creation path AND every re-arm path inside
@@ -1381,10 +1393,11 @@ else:
   fi
 }
 
-# ── Bounded-parallel driver (cap MAXJOBS) ───────────────────────────────────
+# ── Bounded-parallel driver (cap MAXJOBS, staggered launch) ─────────────────
 while IFS= read -r REPO; do
   [ -z "$REPO" ] && continue
   process_repo "$REPO" > "$LOG_DIR/$REPO.log" 2>&1 &
+  [ "${STAGGER_SECONDS:-0}" != "0" ] && sleep "$STAGGER_SECONDS"
   while [ "$(jobs -rp | wc -l)" -ge "$MAXJOBS" ]; do wait -n 2>/dev/null || true; done
 done <<< "$REPOS"
 wait 2>/dev/null || true
