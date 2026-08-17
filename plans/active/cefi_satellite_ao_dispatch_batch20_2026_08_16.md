@@ -175,3 +175,5 @@ source: >-
       fires instead of silent discard.
 
 ## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)

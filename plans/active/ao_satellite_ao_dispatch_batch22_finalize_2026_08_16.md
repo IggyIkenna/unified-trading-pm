@@ -45,6 +45,7 @@ context_scope:
     /plans/active/ao_satellite_ao_dispatch_batch22_2026_08_16.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
   ]
 source: >-
   Authored alongside batch22 per the mandatory finalize-twin rule (task_template.md §4).
@@ -82,5 +83,6 @@ source: >-
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **2026-08-16** — Authored in the same turn as batch22, per the mandatory finalize-twin rule. `sequential: true`
   since the 3 todos are a genuine reconcile→archive-source→archive-self chain.

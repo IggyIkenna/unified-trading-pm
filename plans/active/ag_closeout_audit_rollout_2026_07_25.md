@@ -127,6 +127,7 @@ context_scope:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 > **Extracted 2026-08-15** — Rounds 1-8 (2026-07-25 session start through 2026-07-26 Round 8, ~850 lines of fully-closed
 > dated narrative: the original 5-AG orphan-audit + first-ever AO-dispatch-batch session, the batch2/batch4 drain pass,
 > the `/plan-reconcile` governance-hardening pass, the 5-AG consolidated-plan split saga (incl. the mass-flip GATE

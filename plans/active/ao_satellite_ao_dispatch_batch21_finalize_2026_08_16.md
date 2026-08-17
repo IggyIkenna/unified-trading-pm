@@ -85,6 +85,7 @@ source: >-
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **2026-08-16** — Authored in the same turn as batch21, per the mandatory finalize-twin rule. `sequential: true` since
   the 4 todos are a genuine reconcile→archive chain (todo 1 needs todos 2-3 of the parent done; todo 2 needs todo 1's
   artifact-update noted; todo 4 needs todos 1-3 closed first).

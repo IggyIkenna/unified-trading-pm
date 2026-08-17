@@ -34,6 +34,12 @@ source: "na-eligibility-audit follow-up Q&A round 6, 2026-08-16"
 locked_by:
 context_scope: [/plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md]
 locked_since:
+context_scope:
+  [
+    /plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md,
+    /plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md,
+    deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
+  ]
 resolved_by:
 ---
 
@@ -67,6 +73,7 @@ resolved_by:
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **2026-08-16 (slot 22, review, AO-dispatched)**: Picked up this finalize todo. Read the dependency plan
   (`cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md`) and the referenced issue doc
   (`okx_futures_instid_marker_convention_mismatch_2026_07_30.md`) first — found the `[OPERATOR] P1` checkbox

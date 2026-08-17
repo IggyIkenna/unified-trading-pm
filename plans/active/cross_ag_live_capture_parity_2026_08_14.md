@@ -341,6 +341,7 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: three open items ruled via AskUserQuestion. (1)
   `phoenix_ws.py` — **delete as dead code** — extracted to `defi_operator_ruling_ao_dispatch_2026_08_15.md`
   (`assigned_vm: planning`), but that plan's own todo 1 flags a contradiction found AFTER this ruling: this doc's own

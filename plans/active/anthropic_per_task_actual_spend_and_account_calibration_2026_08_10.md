@@ -558,6 +558,7 @@ which answers "where did the money go" for a metered wallet and surfaces the una
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)
 ### 2026-08-10 — Diagnosis + first calibration pass (interactive session, read-only)
 
 **Root cause of the blank $ column**: `deepseek_usage._PRICE_PER_MILLION` contained exactly two entries, both DeepSeek.

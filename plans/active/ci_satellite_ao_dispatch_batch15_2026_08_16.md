@@ -270,6 +270,7 @@ source: >-
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
 - **2026-08-16 (interactive session)**: drafted from a 2-agent follow-up survey of the 39 CI-tagged docs still
   carrying open todos after batch14 shipped, plus operator rulings on the line-cap splits and the e2e-testing
   tier-DAG fix (landed directly, ahead of this batch, in

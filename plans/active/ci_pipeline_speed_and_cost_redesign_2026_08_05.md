@@ -343,6 +343,7 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
   unchanged. Sole open todo (warm git-object cache for JIT-ephemeral runners) still carries its own explicit "Do NOT
   roll out until this is understood" constraint pending on-VM diagnosis of the deployed-but-no-op `fast-checkout.sh`

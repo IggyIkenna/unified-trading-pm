@@ -40,3 +40,7 @@ resolved_by:
 # Finalize — CeFi instrument_type casing residual
 
 - [ ] [REVIEW] P2. Confirm the re-count + apply landed with evidence; archive that plan once done and unlocked.
+
+## Progress Log
+
+- **context-scout 2026-08-17**: populated/refreshed context_scope (0 entries -- finalize/gated doc, no independent reading list)

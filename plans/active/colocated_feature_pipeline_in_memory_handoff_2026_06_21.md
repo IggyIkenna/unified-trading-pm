@@ -120,6 +120,7 @@ severities were weakened to `"none"`, masking 574 errors).
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; 3 of 4 todos already carry
   correct SUPERSEDED-BY-BATCH1 citations (the KEEP-NA-STALE fix is already applied) and are deliberately held open as
   the bookkeeping record; the 4th is genuinely gated.

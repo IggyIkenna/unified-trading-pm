@@ -774,6 +774,7 @@ plan can reach zero-open-todos and archive independently.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **2026-08-14 (authoring)**: Created from the 5-parallel-agent code-audit sweep of 44 AO-subject-matter docs run
   earlier this session. 10 already-implemented-but-unflipped items were fixed directly (not tracked here — see
   `unified-trading-pm@0969b12571`/`9906379de6`); the gcloud WIF-poisoning security issue was fully resolved + archived

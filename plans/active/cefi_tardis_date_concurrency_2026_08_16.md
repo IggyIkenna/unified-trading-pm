@@ -37,8 +37,6 @@ context_scope:
   [
     /plans/active/issues/cefi_tardis_date_serial_barrier_still_open_2026_08_16.md,
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
     unified-trading-library/unified_trading_library/service_framework/_adapter.py,
     unified-trading-library/unified_trading_library/manifest_writer/_vm_progress.py,
@@ -301,6 +299,7 @@ cap.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - 2026-08-16 — Filed from a dedicated opus-tier design investigation (full text preserved in the linked issue doc and
   this session's own record). Operator ruled: human plan, execute today, canary on the live VM.
 - 2026-08-16 — **Phase 1 (F1-F8) + Phase 2 implemented, tested, QG-green and SHIPPED** — mtds@bd07cfc3,

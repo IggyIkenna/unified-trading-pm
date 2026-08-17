@@ -121,6 +121,7 @@ questions below are answered.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - 2026-08-16 (slot 17, infra craft): Filed per the `[INFRA] P3` follow-up in
   `understat_eu_typing_sweep_daily_job_oom_2026_08_12.md`, which explicitly asked for this to be scoped as its own
   plan rather than folded into that issue. Classified as a LOCAL (`assigned_vm: NA`) plan per

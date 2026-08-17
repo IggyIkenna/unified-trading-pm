@@ -38,11 +38,10 @@ context_scope:
   [
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
     unified-api-contracts/unified_api_contracts/canonical/_partition_path_canonicality.py,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
+    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
   ]
 supersedes:
 superseded_by:
@@ -175,6 +174,7 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ## Progress Log
 
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-15 (slot-28·backend_engineer)**: drafted this plan per operator ruling on `BLK-f5cd6b22` (scope the
   chain-relabel migration down from a single AO todo into a phased LOCAL plan; default `assigned_vm: NA`; do not resolve
   the move-vs-copy question outside the plan's own drafting). Consumer inventory + file:line citations carried over from
