@@ -517,12 +517,16 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       `instruments_service` workload process is actually running (PID 5401, accumulating CPU time), not just
       OS-level RUNNING. Once it completes: run `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh`
       to materialize `empty_confirmed` rows.
-- [ ] [SCRIPT] P2. **Run the sports manifest rescan once the weather VM completes** — pulled out of prose in the item
-      above into its own tracked todo (was buried as a follow-up sentence, not a checkbox — the workspace's own
-      "every follow-up is a `- [ ]` todo, never prose" rule). Not yet actionable: `weather-backfill-20260816-192237`
-      is still running as of 2026-08-17 (last checked at date=2025-08-17 of its 2024-01-03..2026-08-02 range, genuine
-      forward progress, not stalled). When it completes: `bash deployment-service/scripts/vm/launch-sports-manifest-
-      rescan-vm.sh` to materialize `empty_confirmed` rows.
+- [x] ✅ [SCRIPT] P2. **Weather VM completed + rescan launched, 2026-08-17.** `weather-backfill-20260816-192237`
+      finished cleanly: log shows `[[VM_PROGRESS]] last_completed_date=2026-08-02 monotonic=true` (the full
+      `2024-01-03..2026-08-02` range), `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED exit_code=0`, clean
+      self-delete — a genuine completion, not a preemption. Launched
+      `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` immediately after
+      (`sports-manifest-rescan-20260817-144852`) to materialize `empty_confirmed` rows from the new captures.
+- [ ] [SCRIPT] P2. **Verify `sports-manifest-rescan-20260817-144852` actually completes** — launched, not yet
+      confirmed done. Check its GCS log (`vm-logs/sports-manifest-rescan-20260817-144852/run.log`) for a clean
+      `DEPLOYMENT_COMPLETED exit_code=0`, and spot-check that the weather VM's new captures show up as
+      `empty_confirmed` (not still `expected_unattempted`) in the manifest afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
