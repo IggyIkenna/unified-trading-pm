@@ -210,7 +210,7 @@ source: >-
       adapter; `amend` has zero real implementation anywhere in the codebase. A caller cannot distinguish "the
       order was actually cancelled" from "the stub lied about it" — the same live-money-risk shape as the
       already-fixed CCXT-withdraw-stub (`execution-service@b9ddcd9193`), just for order cancellation. Escalated:
-      `plans/active/issues/cefi_execution_cancel_amend_fake_success_stub_2026_08_16.md`. Done-when: `/cancel`
+      `plans/archive/issues/cefi_execution_cancel_amend_fake_success_stub_2026_08_16.md`. Done-when: `/cancel`
       calls the real per-venue adapter's `cancel_order` (already genuinely implemented, just unreachable) and
       reports its real result; `amend` gets a real implementation or is explicitly documented as unsupported by
       every underlying venue API (verify per-venue before assuming) with the endpoint failing loud instead of
@@ -335,7 +335,7 @@ DIFFERENT 3/12 (root cause: a legacy bare-token venue vocabulary in 2 separate s
 reconciled against the canonical dash-form venue ID — escalated as
 [cefi_live_venue_string_dispatch_broken_2026_08_16](/plans/active/issues/cefi_live_venue_string_dispatch_broken_2026_08_16.md)),
 cancel/amend are fake-success stubs fleet-wide (escalated as
-[cefi_execution_cancel_amend_fake_success_stub_2026_08_16](/plans/active/issues/cefi_execution_cancel_amend_fake_success_stub_2026_08_16.md)
+[cefi_execution_cancel_amend_fake_success_stub_2026_08_16](/plans/archive/issues/cefi_execution_cancel_amend_fake_success_stub_2026_08_16.md)
 — same shape as the already-fixed CCXT-withdraw-stub), and 5 of the 8 archetypes the CSV lists as consumers have
 zero real CEFI slot for any venue (one is a CSV false-positive, three are already-tracked "shipped but not
 registered" in `v2_engine_venue_buildout_2026_06_15.md`, one — `LIQUIDATION_CAPTURE` — is a genuinely new gap,
