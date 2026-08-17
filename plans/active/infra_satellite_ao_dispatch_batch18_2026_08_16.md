@@ -104,7 +104,7 @@ Verdict: clear on all 3 items — proceed.
       consolidator_scheduler_watcher, revocation_actuator); 403 tests green
       (`test_revocation_actuator.py` + `test_data_pipeline_monitors.py` + `test_data_pipeline_monitors_cli.py`);
       full `quality-gates.sh` green. Repo: deployment-service.
-- [ ] [CODE] P2. **`RevocationActuator.release()` never resumes a FLEET_HALT's paused Cloud Scheduler jobs — only
+- [x] ✅ [CODE] P2. **`RevocationActuator.release()` never resumes a FLEET_HALT's paused Cloud Scheduler jobs — only
       clears the generic hold/drain GCS marker.** `_pause_schedulers()` (the open half) calls
       `scheduler_maintenance.make_scheduler_pauser()` per job; `release()` has no symmetric `_resume_schedulers()` —
       confirmed by reading `release()`'s full body, not assumed from its docstring. A FLEET_HALT that opens has no
@@ -117,6 +117,19 @@ Verdict: clear on all 3 items — proceed.
       (already shipped) is what makes `release()` reachable for FLEET_HALT identities at all; this todo assumes that
       fix is live. Needs real tests (this is pause/resume behavior on production scheduler jobs, not a nicety) — mirror
       the existing `_pause_schedulers` test shapes in `tests/unit/test_revocation_actuator.py`. Repo: deployment-service.
+      — **deployment-service@7302b037e7** (2026-08-17). Added `_resume_schedulers()` mirroring `_pause_schedulers()`'s
+      shape; wired into `release()` specifically for `FLEET_HALT`. Resolved question (1) by NOT persisting a job list:
+      `_scheduler_jobs_for(target)` is already a pure function of `target` against the static UAC `SCHEDULER_REGISTRY`
+      — the same lookup `_pause_schedulers` itself uses — so the job set is recomputed on release rather than carried
+      through the `ShardedState` actuation-budget record (which only COUNTS actuations and has no read-back-the-payload
+      method; overloading it would have been the wrong tool). Nothing can drift from what was paused, and a resume
+      against an already-ENABLED job (e.g. one whose own pause call failed and was skipped) is a harmless no-op caught
+      by the same per-job try/except tolerance `_pause_schedulers` already has — partial failure never abandons the
+      rest. 6 new tests in `tests/unit/test_revocation_actuator.py` mirror the existing pause/release shapes: resume
+      fires on FLEET_HALT release, the marker clear and the resume both happen, non-FLEET_HALT releases never touch
+      schedulers, a failing resume doesn't abandon the remaining jobs, an unrecognised target resumes nothing, and a
+      fresh actuator instance (no memory of the original `actuate()` call) still resumes correctly. Full
+      `quality-gates.sh` green (3437 passed, 0 failed, sentinel-verified on the landed SHA).
 
 ## Progress Log
 
