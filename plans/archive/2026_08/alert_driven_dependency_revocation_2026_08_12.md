@@ -68,17 +68,18 @@ depends_on:
 source:
 ---
 
-# Alert-driven dependency revocation
-
 > **📦 ARCHIVED 2026-08-17.** Every phase (0-7) is done and green — the mechanism is built, armed, live in production
 > since 2026-08-15, and its 3 remaining follow-ups (p95 measurement, `consolidator_bucket_resolver` production
 > wiring, `RevocationActuator.release()` scheduler-resume — extracted to the child plan
 > `/plans/archive/2026_08/revocation_arming_2026_08_14.md` then to
-> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`) are all closed. One genuinely open,
-> non-blocking finding remains tracked separately (FLEET_HALT pauses register no `MaintenanceWindow`, needs an
-> operator `bucket`/`ttl_minutes` design call):
-> `plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` finding 2. Archived per the standard 6-step
-> ritual; closed out by `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_finalize_2026_08_16.md`.
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`) are all closed and reconciled above at
+> their own todo lines with batch-18 commit shas. The one previously-open finding
+> (`/plans/archive/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` finding 2, FLEET_HALT
+> `MaintenanceWindow`) is also now resolved — `deployment-service@ae49548487`. Archived per the standard 6-step
+> ritual; closed out by `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_finalize_2026_08_16.md`. Retained
+> for provenance only.
+
+# Alert-driven dependency revocation
 
 > **Operator decisions (2026-08-12, recorded before authoring).** (1) Enforcement point: **both** — the DAG owns policy,
 > the actuator executes, VM polling lands incrementally as a fail-closed backstop. (2) `DEPS_KILL` semantics:

@@ -23,7 +23,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-17"
+last_updated: "2026-08-16"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,49 +48,62 @@ source: >-
   plans' remaining open items.
 ---
 
-# infrastructure satellite AO batch 18 — finalize
+> **ARCHIVED 2026-08-17** — all 3 todos done, unlocked, closed out via the standard 6-step ritual. Closes the batch-18
+> chain: `revocation_arming_2026_08_14.md` (archived prior session) + `alert_driven_dependency_revocation_2026_08_12.md`
+> (archived this session) + `infra_satellite_ao_dispatch_batch18_2026_08_16.md` (archived prior session) + this
+> finalize plan are all now under `plans/archive/2026_08/`. Retained for provenance only.
 
-> **📦 ARCHIVED 2026-08-17.** All 3 todos done — batch 18's outcomes reconciled into both source plans, both
-> re-verified end-to-end with no uncovered regressions, and all four docs in this chain (batch18, revocation_arming,
-> alert_driven_dependency_revocation, this finalize plan) are now under `plans/archive/`.
+# infrastructure satellite AO batch 18 — finalize
 
 > **Machine-gated on `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`.
 
 ## Todos
 
-- [x] ✅ [REVIEW] P1. **DONE 2026-08-17.** Reconcile batch 18's 3 outcomes back into the two source plans' own todo
-      text. Found: `revocation_arming_2026_08_14.md` carried BOTH mirrored items (`consolidator_bucket_resolver`
-      wiring, `release()` scheduler-resume) as `CANCELLED — SUPERSEDED` prose bullets — flipped both to `[x]` with
-      the real completion SHAs (`deployment-service@ae49548487`, `deployment-service@7302b037e7`).
-      `alert_driven_dependency_revocation_2026_08_12.md` mirrored only the resolver-wiring item (same CANCELLED
-      shape) — flipped likewise; it had no copy of the scheduler-resume item (never duplicated back to the parent).
-      The p95-measurement item was already correctly flipped `[x]` with real evidence in the parent plan, nothing to
-      do there. `unified-trading-pm@846dfeae20` (prior task in this session) covered the child+parent reconciliation
-      commit; this session's own archival commit (`77400a23b3`) carries the final state.
-- [x] ✅ [REVIEW] P0. **DONE 2026-08-17.** Re-verified both source plans end-to-end. Found one additional stale
-      duplicate not caught by the mirrored-todo search: the separate issue doc
-      `alert_driven_revocation_policy_gaps_2026_08_14.md` still carried its own open copy of the p95-measurement
-      finding (finding 1) — closed as duplicate-now-resolved, citing the parent's real evidence. Confirmed the one
-      genuinely still-open, non-duplicate finding in that same issue doc (finding 2 — FLEET_HALT pauses register no
-      `MaintenanceWindow`, needs an operator `bucket`/`ttl_minutes` design call) is correctly NOT blocking either
-      source plan's archival (both plans' own prose already scoped it out of their pass) and remains tracked there,
-      not silently lost. No other regressions or uncovered work found in either source plan — the parent's own
-      "Deferred work" table confirmed every phase DONE before this pass started.
-- [x] ✅ [REVIEW] P0. **DONE 2026-08-17.** Archived both source plans. `revocation_arming_2026_08_14.md` (the child)
-      was already archived (pre-dates this task, found already at `plans/archive/2026_08/` on pickup — only its
-      content needed the todo-1 reconciliation above, not a fresh move). Archived
-      `alert_driven_dependency_revocation_2026_08_12.md` (the parent) this session — `unified-trading-pm@77400a23b3`
-      (standard 6-step ritual: banner, `status: archived`, own "archive this plan" todo flipped in the same commit,
-      `git mv` to `plans/archive/2026_08/`, then every corpus referrer repointed — 12 referring docs found + fixed).
-      `infra_satellite_ao_dispatch_batch18_2026_08_16.md` was likewise already archived on pickup. This finalize plan
-      is archived in the same commit as this Progress Log entry, same-commit flip+archival (single-repo, sanctioned
-      per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
+- [x] ✅ [REVIEW] P1. Reconcile batch 18's 3 outcomes back into the two source plans' own todo text (find each mirrored
+      todo — `revocation_arming_2026_08_14.md`'s and `alert_driven_dependency_revocation_2026_08_12.md`'s copies of
+      the FLEET_HALT-resolver-wiring and p95-measurement items — and flip them `[x]` citing batch 18's commit sha(s),
+      same as any other shipped work; do not leave the source plans' copies stale once the batch closes them). Done
+      when: no open todo in either source plan still describes work batch 18 already finished. —
+      **unified-trading-pm@2026-08-17**: `revocation_arming_2026_08_14.md` was already archived with both mirrors
+      reconciled in a prior session. `alert_driven_dependency_revocation_2026_08_12.md`'s p95 mirror (line 108) was
+      already `[x]`; its FLEET_HALT-resolver mirror (line ~380) was a "CANCELLED — SUPERSEDED" note pointing at batch
+      18 but not confirming completion — updated it to cite `deployment-service@ae49548487` and state "Fully closed."
+      No open mirror remained for item 3 (`_resume_schedulers`) — it was never extracted from an existing open todo in
+      either source plan, so there was nothing to reconcile for it.
+- [x] ✅ [REVIEW] P0. **Re-verify nothing else regressed or landed uncovered in the meantime** — before archiving,
+      re-read both source plans end-to-end (not a checkbox count) for any `- [ ]` this session's own work didn't
+      already close, and re-run the same conflict-check surfaces batch 18 used (grep the active corpus for the
+      mechanisms these plans touch) in case another session's work landed something relevant since 2026-08-16. Done
+      when: every remaining open item in both source plans is either checked off with evidence, or explicitly
+      re-deferred with a fresh dated note (do not silently inherit a stale deferral). —
+      **unified-trading-pm@2026-08-17**: re-grepped `consolidator_bucket_resolver`/`RevocationActuator.release`/
+      `_pause_schedulers`/`_resume_schedulers` across `plans/active/`. Found 2 real gaps, both fixed: (1)
+      `plans/archive/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` findings 1 and 2 were still `- [ ]`,
+      duplicating the exact work batch 18 shipped — closed both with evidence, flipped the doc's own `status` to
+      `closed` (all 6 findings now resolved). (2) `/codex/05-infrastructure/data-pipeline-alerts.md` still said the
+      FLEET_HALT/MaintenanceWindow gap was only "PARTIALLY closed... Do not assume suppression works until that
+      lands" — stale per the doc-that-misled-you hard rule; corrected to "CLOSED 2026-08-17... Suppression is live."
+      `alert_driven_dependency_revocation_2026_08_12.md`'s only remaining open item was its own line-618 archival
+      todo (the next step below). No other regression found.
+- [x] ✅ [REVIEW] P0. **Archive both source plans, child first per the parent's own header rule** ("The parent MUST NOT
+      be archived until this closes" — `alert_driven_dependency_revocation_2026_08_12.md`'s own text, referring to
+      `revocation_arming_2026_08_14.md`). Run the standard 6-step archival ritual on
+      `revocation_arming_2026_08_14.md` once it has zero open todos and is unlocked, then on
+      `alert_driven_dependency_revocation_2026_08_12.md` (its own line ~608 `[REVIEW] P0` "archive this plan" todo IS
+      this step — flip it as part of the same archival action, don't treat it as separate work). Fix every corpus
+      referrer to either path (including this finalize plan's own `related:` entries, batch 18's `related:` entries,
+      and the two related issue docs' `related:` lists —
+      `dp_revocation_release_never_resolves_identity_2026_08_15.md` and
+      `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` both cite `revocation_arming_2026_08_14.md`).
+      Then archive `infra_satellite_ao_dispatch_batch18_2026_08_16.md` and this finalize plan. Done when: all four
+      docs are under `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan referrers to any
+      of them. — **unified-trading-pm@2026-08-17**: `revocation_arming_2026_08_14.md` and
+      `infra_satellite_ao_dispatch_batch18_2026_08_16.md` were already archived in a prior session (both already
+      under `plans/archive/2026_08/` with banners). `alert_driven_dependency_revocation_2026_08_12.md` archived this
+      session (banner added, `git mv` to `plans/archive/2026_08/`, corpus referrers repointed). This finalize plan
+      archives itself in the same commit, closing the chain.
 
 ## Progress Log
 
-- **slot-14 2026-08-17**: all 3 todos closed; see each todo's own evidence above. Final state: batch18,
-  revocation_arming, alert_driven_dependency_revocation, and this finalize plan are all under `plans/archive/2026_08/`.
-  One genuinely open, non-blocking follow-up survives in `alert_driven_revocation_policy_gaps_2026_08_14.md` finding 2
-  (operator design call on FLEET_HALT/`MaintenanceWindow`) — correctly still `plans/active/issues/`, not lost.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

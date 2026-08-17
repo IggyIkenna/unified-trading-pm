@@ -368,15 +368,12 @@ coding-standards pointer above for the batch-vs-live scope distinction.
 | ----------------- | --- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- | ------ |
 | DP-REVOCATION-001 | 🔵  | `RevocationActuator` delivers `FLEET_HALT` — Cloud Scheduler jobs paused for a target's asset group | [S] `RevocationActuator._pause_schedulers` | auto-recover (visibility only, never pages — the actuator IS the recovery) | active |
 
-**Known gap, PARTIALLY closed 2026-08-16**: a `FLEET_HALT` pause registers no `MaintenanceWindow`, so `DP-WATCHER-004`
-(above) may treat it as an ACCIDENTAL pause rather than a deliberate one. The mechanism now exists —
-`RevocationActuator.__init__` accepts an injected `consolidator_bucket_resolver` callable and
-`_register_maintenance_windows()` registers a `pause_for_maintenance()` window (surface-scoped-per-target,
-`ttl_minutes=1440`) before pausing — but no production call site passes the resolver yet (`None` at every current
-`RevocationActuator()` construction is a verified no-op). Wiring it in is blocked on a real import cycle (this module
-sits below `escalation.py`; the resolver function sits behind `meta_targets.py`→`meta_watchers.py`→`escalation.py`→
-back to this module) — tracked as an AO-dispatchable todo in
-`/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md`. Do not assume suppression works until that lands.
+**Known gap, CLOSED 2026-08-17**: a `FLEET_HALT` pause previously registered no `MaintenanceWindow`, so `DP-WATCHER-004`
+(above) could treat it as an ACCIDENTAL pause rather than a deliberate one. Fixed via
+`/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2 (`deployment-service@ae49548487`):
+both prod call sites (`escalation.py`'s `_apply_revocation` and `meta_watchers.py`'s release bookend) now pass the
+`consolidator_bucket_resolver`, so `_register_maintenance_windows()` registers a `pause_for_maintenance()` window
+(surface-scoped-per-target, `ttl_minutes=1440`) before every FLEET_HALT pause. Suppression is live.
 
 **A third anti-inertness class, found live 2026-08-15/16: an identity that is EMITTED but never REGISTERED.** The
 "built but not called" failure mode above (actuator with no caller) and "no dependent target resolves" (the

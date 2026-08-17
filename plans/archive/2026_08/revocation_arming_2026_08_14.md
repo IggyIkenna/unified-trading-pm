@@ -537,7 +537,7 @@ in this chain closed and archived. Governing documents:
 
 - `/plans/archive/2026_08/revocation_arming_2026_08_14.md` — this plan, the active child
 - `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` — the parent; cannot archive until this child closes
-- `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` — tracks 2 of the items below; same
+- `/plans/archive/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` — tracks 2 of the items below; same
   underlying work as the parent plan's copies, don't do it twice
 
 Open items across the chain, deduplicated, in priority order:

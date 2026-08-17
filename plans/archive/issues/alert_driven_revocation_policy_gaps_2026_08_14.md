@@ -9,11 +9,12 @@ summary: >-
   2026-08-14 (cicd/plan_health):** the parent plan was un-archived that day — 13 todos incl. 4 P0s were open at the
   time (nothing called RevocationActuator.actuate() outside tests, so the mechanism had never fired in prod). Findings
   1/2/6 below duplicated open todos in that plan (p95/max shard-duration measurement, FLEET_HALT MaintenanceWindow,
-  UTL venv bootstrap) — reconciled 2026-08-17 (findings 1/6 closed as duplicate-now-resolved; finding 2 remains
-  genuinely open, see below). The parent plan is now fully done and archived:
-  `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`. This doc's own finding 2 remains
-  independently valid regardless of the parent plan's archival status.
-status: open
+  UTL venv bootstrap). **CORRECTION 2026-08-17 (reconciled by two independent concurrent sessions — merged here)**:
+  finding 2 (FLEET_HALT MaintenanceWindow) IS resolved — `deployment-service@ae49548487` shipped the wiring, recorded
+  both in the parent plan's own todo and in this doc's finding 2 below — a prior draft of this correction mistakenly
+  called it "genuinely open." All of findings 1/2/6 are duplicate-now-resolved. The parent plan is now fully done and
+  archived: `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -56,8 +57,8 @@ context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/04-arch
 > all plan-scope todos done; it was un-archived that same day (13 open todos incl. 4 P0s) then, once those closed,
 > re-archived for real on 2026-08-17 —
 > `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`. This doc's own 5 findings below are
-> unaffected by that history; findings 1/6 (which duplicated todos reopened in the parent plan) are now closed as
-> duplicate-now-resolved, finding 2 remains genuinely open — see the Progress Log at the bottom.
+> unaffected by that history; all 6 findings (including 1/2/6, which duplicated todos reopened in the parent plan) are
+> now closed as duplicate-now-resolved — see the Progress Log at the bottom.
 
 ## 1. P95/max shard-duration measurement — BLOCKED-CREDENTIALS in dev checkouts (P2)
 
@@ -90,7 +91,13 @@ and close as a non-issue.
 
 **Repo:** deployment-service.
 
-- [ ] [CODE] P2. Resolve per one of the two options above.
+- [x] ✅ [CODE] P2. Resolve per one of the two options above. — **RESOLVED 2026-08-17, option (a) chosen and shipped**,
+      duplicate of the parent plan's own copy (line ~380 of
+      `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`): routed `_pause_schedulers` through
+      `pause_for_maintenance()` via `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch18_2026_08_16.md` item 2,
+      `deployment-service@ae49548487` — both prod call sites (`escalation.py`'s `_apply_revocation` and
+      `meta_watchers.py`'s release bookend) now pass the resolver, so a FLEET_HALT pause registers a
+      `MaintenanceWindow` and DP-WATCHER-004 no longer risks double-paging it. Not redone here.
 
 ## 3. Phase 2's HOLD-vs-DRAIN policy for DP-MANIFEST-001 / DP-CATALOG-001 — confirm intentional (P2)
 
@@ -178,3 +185,7 @@ local check. Environment setup, not a code change.
   respectively as of `44b6410206`). Not resolved here — deciding which copy is canonical is a judgment call outside this
   gate-fix's scope; flagging for `/plan-reconcile` or the operator.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **2026-08-17 (infra_satellite_ao_dispatch_batch18_finalize_2026_08_16.md, re-verify step)**: findings 1 and 2 (the
+  only two still open) both shipped via batch 18 (`deployment-service@e631240990`, `deployment-service@ae49548487`) —
+  closed above with evidence, duplicates of the parent plan's own already-closed copies. All 6 findings now resolved;
+  flipping `status: open` → `closed`.
