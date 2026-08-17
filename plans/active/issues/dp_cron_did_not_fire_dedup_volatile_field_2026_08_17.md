@@ -162,6 +162,14 @@ on the live capture process itself) is out of scope for this reconciliation swee
   5. Registry hygiene (§6 of the skill) done separately this sweep: DP-WATCHER-005/006, DP-VM-012, DP-LIVE-001/002/003/004
      transcribed into `data-pipeline-alerts.md` + `.registry.yaml` (were code-registered but doc-stale since
      2026-08-15/16 per this doc's own flagged gap).
+  6. **CONFIRMED, not just "leans toward" (re-sampled 06:50Z, after the build activity window closed)**: pulled a
+     fresh 1h Slack window and found `mtds-live-cefi-consolidated-20260817-025031`/BYBIT-FUTURES/`book_snapshot_5`
+     fired at 06:35Z and again at 06:50Z — exactly 15min apart, a second, cleaner cooldown-violation than point 2's
+     sample (no ambiguity from alternating gaps this time), and `derivative_ticker` on the same VM/venue shows the
+     same 06:35→06:50 pattern. This is well past the 06:36:58-06:43:30Z build-activity window noted in point 3, so
+     that build activity — whatever it was — did NOT fix the live cadence. **Verdict upgraded from "leans toward
+     not-live" to CONFIRMED not-live as of 06:50Z, ~6h after the fix commit landed on main.** The deploy-chain break
+     is real and current, not a stale/already-resolving observation.
   - Todo 2 (extracted to batch21 item 1) left **unflipped** — the done-when bar ("all 3 conditions confirmed" or "a
     fresh Cloud Build is triggered and its result cited") is not yet met; the next sweep or AO dispatch of that item
     should re-check the live fire-cadence first (cheapest, most direct signal) before re-attempting the build/image
