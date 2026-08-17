@@ -175,10 +175,23 @@ context_scope:
 - [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
       item 6 (folded into the same dispatched item as the Terraform-diff todos above — sequential follow-on, not
       independent).** Not yet executed — tracked there. [REVIEW] P3. **Cost-gain tracking** — after any change above ships, re-run the same `bq query` shape used to
+- **[INFRA] P3. CANCELLED — SUPERSEDED 2026-08-17 (operator rejected, see the 2026-08-17 Progress Log entry
+  below).** The 10(IS+MTDS)+8(Group B)=18-jobs→5-per-asset-group consolidation was verified NOT shipped and NOT a
+  pure Terraform regroup, then explicitly rejected by the operator on architectural grounds (combining buckets into
+  one container invocation means sizing RAM for the worst-case bucket and running sequentially — directly
+  contradicts the already-confirmed finding that per-bucket resource sizing is what's actually working, and would
+  make the market-data-cefi class of incident easier to reproduce, not harder). Do not resurrect without new
+  evidence changing the RAM/time tradeoff.
+- [ ] [REVIEW] P3. **Cost-gain tracking** — after any change above ships, re-run the same `bq query` shape used to
       measure the 2026-07-30 cadence fix (before/after daily cost split on `resource.name LIKE '%manifest-consolidator%'`
-      / the relevant bucket set in `billing_export.gcp_billing_export_v1_resource_...`) to confirm the actual $ delta
+      / the relevant bucket set in `billing_export.gcp_billing_export_resource_v1_016B25_109840_AF2ACB` — table name
+      corrected 2026-08-18, was previously mis-transcribed as `..._v1_resource_...`) to confirm the actual $ delta
       matches the estimate. BigQuery aggregate queries are NOT the I/O this plan avoids — only raw per-object GCS reads
-      are. Done-when: a before/after $/day table posted to this plan's Progress Log.
+      are. **Interim check run 2026-08-18** (an early look, not the full done-when — see Progress Log for the raw
+      table and why 1 day is not enough yet): the previously-EXTRACTED `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
+      item 6 dispatch for this todo is now redundant for that first pass — re-un-extracted here so this plan's own
+      todo tracks the real remaining work (re-check once ~1 week of post-2026-08-17 data exists). Done-when: a clean
+      multi-day before/after $/day table exists with the fix's effect separable from normal day-to-day variance.
 - [x] ✅ [OPERATOR] P1. **Resolve the pre-existing `deployment_service_prod_terraform_drift_2026_08_07` blocker itself**
       — **RESOLVED 2026-08-16**, full detail in that doc (not duplicated here); the client-reporting-batch destroy,
       both Secret IAM destroys, and the meta-watchers memory question all confirmed moot/resolved, plus 2 new
@@ -733,3 +746,65 @@ context_scope:
   shape, all 34 passing. Also flipped the operator-rejected 18→5 job-consolidation todo to a CANCELLED marker (it
   was sitting unchecked despite being resolved on 2026-08-17) and updated
   `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s coverage accounting to match.
+
+- **2026-08-17 (interactive session, remaining watchdog-coverage todos)**: resolved the two genuinely-open
+  watchdog-coverage todos without needing an operator decision — both resolved cleanly from investigating the
+  actual launcher code rather than being a real judgment call. **Compound-VM_SERVICE**: added native
+  comma-separated multi-bucket support to `vm-exec-with-gcs-tee.sh`'s watchdog (rejected the "pick one primary
+  bucket" alternative — it would leave the unpicked bucket's orphaned-shard risk unmonitored, defeating the
+  mechanism). **Continuous/live**: wired `market_tick_data_service`+`live_websocket` launchers via a new §5d block;
+  in the process, disproved the original todo's premise that `*-forward-poll.sh` launchers needed the same
+  treatment — all 10 were verified to already be bounded, `VM_SHUTDOWN_ON_COMPLETION=true` tasks already covered
+  by existing wiring, and one genuinely new gap (`launch-defi-forward-poll.sh`, a variable `--operation` flag) was
+  found and tracked separately instead. 12 new test cases added (`TestVmExecMultiBucketWatchdog`,
+  `TestSetupScriptWiresCompoundAndLiveLaunchers`), 3 pre-existing tests updated for the restructured nested-loop
+  shape, all 34 passing. Also flipped the operator-rejected 18→5 job-consolidation todo to a CANCELLED marker (it
+  was sitting unchecked despite being resolved on 2026-08-17) and updated
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s coverage accounting to match.
+
+- **2026-08-18 (interactive session, cost-gain interim check)**: real `bq` pull against
+  `billing_export.gcp_billing_export_resource_v1_016B25_109840_AF2ACB` (corrected table name — this doc had
+  mis-transcribed it as `..._v1_resource_...` in the cost-gain-tracking todo above, fixed there too), 14-day window.
+
+  | day | total manifest-consolidator net_usd |
+  | --- | --- |
+  | 08-13 | 124.17 |
+  | 08-14 | 125.51 |
+  | 08-15 | 120.38 |
+  | 08-16 | 135.15 |
+  | 08-17 | 95.12 |
+
+  Only ONE day (08-17) post-dates the 2026-08-17 shipping date — not enough to separate the fix's effect from
+  normal day-to-day variance. `market-data-cefi` specifically, isolated: 2.66 (08-15) → 5.06 (08-16, the emergency
+  live `gcloud run jobs update` landed mid-session that day) → 7.93 (08-17, first full day + the `.tf` codification
+  + the timeout-floor bump). **This is a CORRECT rise, not a regression** — before the fix this job was
+  timeout-killed every cycle after ~3654s of pure waste (3 consecutive `Completed=False` runs, zero useful output);
+  the fix trades a cheaper-but-useless cycle for a costlier-but-actually-completing one (~51s at 2x the resource
+  allocation). A simple $/day delta is the wrong lens for this specific resource; the real win (incident resolved,
+  canonical index no longer stale) isn't a cost line item. Verdict: genuinely too early, re-check once ~1 week of
+  post-2026-08-17 data exists (see todo above, re-opened).
+
+- **2026-08-18 (interactive session, CUD-revisit interim check)**: re-ran the live-service resource-name query from
+  `/plans/active/compute_flexible_cud_sizing_analysis_2026_08_16.md` (not the full formal re-analysis — that stays
+  scheduled for ~2026-09-15 — just an early look, since the original "wait for growth to stabilize" premise is
+  worth checking against real data before assuming it still holds). 33-day pull, `mtds-{dex-swaps,perp-funding,
+  dex-pools,live-cefi-consolidated,live-sports-odds-api-trades}` + `mdps-features-live-{cefi,defi}`:
+
+  | period | trend |
+  | --- | --- |
+  | 07-15 to 07-18 | ~$1-2/day (negligible) |
+  | 07-22 to 07-29 | ramping ~$1 → ~$15/day |
+  | 07-30 to 08-05 | ~$28-35/day |
+  | 08-06 to 08-08 | $8.56 → $0 → $0 (gap — same 2 zero-days appear in the manifest-consolidator pull above too,
+    smells like a billing-export gap rather than coincidental real zero-usage across two unrelated resource sets,
+    not investigated further here) |
+  | 08-09 to 08-13 | recovered, climbed to a peak of $40-48/day |
+  | **08-14 to 08-17** | **declining 4 days straight: 38.71 → 35.77 → 32.92 → 16.93** |
+
+  This is materially different from the 2026-08-16 doc's "still growing" finding — the population isn't just
+  plateauing, it's actively falling over the most recent 4 days. Cause not investigated (could be a real stabilization,
+  a temporary dip, or something got stopped — worth a separate look if it persists). **This argues for waiting
+  LONGER, not shorter** — sizing a 1-year commitment against a population moving in an unclear direction (up, down,
+  or about to reverse) carries the same risk whichever direction it's moving. Recommend shortening the re-check
+  cadence from the original 30-day wait to ~1-2 weeks specifically to resolve whether this is a real trend before
+  the scheduled 2026-09-15 full re-analysis, rather than waiting the full window blind to this new signal.

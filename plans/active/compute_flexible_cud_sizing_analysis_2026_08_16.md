@@ -82,12 +82,31 @@ commitment against a still-climbing baseline means either re-buying more later (
 sitting on idle committed spend (footprint growth stalls or reverses) — both are real risks a few more weeks of
 data would resolve.
 
+## Interim check (2026-08-18, 2 days after this doc was written)
+
+Not the full re-analysis (still scheduled below) — an early look at whether the "still climbing" premise still
+holds, since it's cheap to check and the premise is load-bearing for the whole "wait" recommendation. Re-ran the
+same live-service resource-name query (corrected table name: `gcp_billing_export_resource_v1_016B25_109840_AF2ACB`,
+this doc's own method line below had it backwards). **Result: the population is no longer "still climbing" — it
+declined 4 days straight through 08-17** (38.71 → 35.77 → 32.92 → 16.93/day, after peaking ~$40-48/day around
+08-10 to 08-13). Full trend table + the manifest-consolidator cost-gain interim check run alongside it:
+`/plans/active/manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`'s 2026-08-18 Progress Log
+entries. Cause of the decline not investigated. **This does not change the verdict (still don't buy) but does
+change the reasoning** — waiting is no longer just about "let growth stabilize," it's now also "let a possible
+reversal resolve" — and it shortens the sensible re-check cadence (see the updated todo below).
+
 ## Todos
 
-- [ ] [REVIEW] P3. **Re-run this sizing analysis no earlier than ~2026-09-15** (30 days after this session) —
-      same method (bq against `gcp_billing_export_v1_resource`, split spot/on-demand, isolate the live-service
-      resource-name population from one-off campaigns). If the live-service floor has stabilized (stopped growing
-      week-over-week) rather than still climbing, size a CUD off its p10-p25 at that point. Done-when: a fresh
+- [ ] [REVIEW] P3. **Re-check the live-service trend in ~1-2 weeks (not the full 30-day wait)** — the interim
+      check above found a new 4-day DECLINE, not just continued growth, which the original 2026-09-15 date didn't
+      account for. A short re-check resolves whether this is a real plateau/reversal or a temporary dip before
+      waiting the full window blind to it. Done-when: a fresh trend pull shows either the decline continuing/
+      stabilizing/reversing, dated.
+- [ ] [REVIEW] P3. **Full sizing re-analysis no earlier than ~2026-09-15** (30 days after this session, adjust later
+      if the interim check above changes the picture) — same method (bq against
+      `gcp_billing_export_resource_v1_016B25_109840_AF2ACB`, split spot/on-demand, isolate the live-service
+      resource-name population from one-off campaigns). If the live-service floor has stabilized (stopped moving
+      week-over-week) rather than still trending, size a CUD off its p10-p25 at that point. Done-when: a fresh
       30/90-day pull exists with a stable-or-not verdict, dated.
 
 ## Progress Log
