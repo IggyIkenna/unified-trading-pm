@@ -435,30 +435,69 @@ classify_repo() {
     popd >/dev/null || return 0
 }
 
-# Resolve token for a slot. Per-slot token preferred; fall back to global token.
-# In loopback mode (IS_LOOPBACK=1) a missing/unreadable token is NOT fatal — prints
-# nothing and returns 0 (success, empty token) so post_snapshot/post_starve_ping send
-# the request with no Authorization header at all; the orchestrator's own
-# auth.py::_is_trusted_loopback accepts a genuine same-box caller anonymously. The
-# off-VM path (IS_LOOPBACK=0) is unchanged: no token found → return 1 (skip + log).
+# Positively-confirmed-expired check for a candidate token (ff_pull_starvation_watchdog_ping_401_2026_08_16.md
+# root cause: an expired per-slot .orch_token silently shadowed a healthy ~/.orch_token one fallback level
+# down, because resolve_token_for_slot below returned the FIRST readable file regardless of validity). Mirrors
+# decode_jwt_exp's own "can't tell = don't misread as an emergency" contract: only returns true (expired) when
+# the exp claim positively decodes AND has passed — any decode failure (unreadable/non-JWT/future credential
+# shape) means "can't tell", so the caller must treat it as usable rather than skip a possibly-fine credential.
+_token_is_expired() {
+    local token="$1" exp_epoch now_epoch
+    exp_epoch=$(decode_jwt_exp "${token}") || return 1
+    [[ -n "${exp_epoch}" ]] || return 1
+    now_epoch=$(date -u +%s)
+    [[ "${exp_epoch}" -lt "${now_epoch}" ]]
+}
+
+# Resolve token for a slot. Per-slot token preferred; fall back to global token; a
+# candidate that positively decodes as expired is skipped in favor of the next one
+# (2026-08-17 hardening — see _token_is_expired above) instead of being returned
+# blindly, so a stale per-slot file can never again silently shadow a healthy
+# fallback for the life of that file. In loopback mode (IS_LOOPBACK=1) a missing/
+# unreadable/all-expired token is NOT fatal — prints nothing and returns 0 (success,
+# empty token) so post_snapshot/post_starve_ping send the request with no
+# Authorization header at all; the orchestrator's own auth.py::_is_trusted_loopback
+# accepts a genuine same-box caller anonymously. The off-VM path (IS_LOOPBACK=0) is
+# unchanged: no usable token found → return 1 (skip + log).
 resolve_token_for_slot() {
     local slot_id="$1"
     local per_slot="${TABS_DIR}/${slot_id}/.orch_token"
+    local candidate
     if [[ -n "${TOKEN_FILE}" && -r "${TOKEN_FILE}" ]]; then
-        cat "${TOKEN_FILE}"
-        return 0
+        candidate=$(cat "${TOKEN_FILE}")
+        if _token_is_expired "${candidate}"; then
+            log "[token-expired-skip] slot ${slot_id} — TOKEN_FILE expired, falling through" >&2
+        else
+            printf '%s' "${candidate}"
+            return 0
+        fi
     fi
     if [[ -r "${per_slot}" ]]; then
-        cat "${per_slot}"
-        return 0
+        candidate=$(cat "${per_slot}")
+        if _token_is_expired "${candidate}"; then
+            log "[token-expired-skip] slot ${slot_id} — per-slot .orch_token expired, falling through to ~/.orch_token" >&2
+        else
+            printf '%s' "${candidate}"
+            return 0
+        fi
     fi
     if [[ -r "${HOME}/.orch_token" ]]; then
-        cat "${HOME}/.orch_token"
-        return 0
+        candidate=$(cat "${HOME}/.orch_token")
+        if _token_is_expired "${candidate}"; then
+            log "[token-expired-skip] slot ${slot_id} — ~/.orch_token expired, falling through" >&2
+        else
+            printf '%s' "${candidate}"
+            return 0
+        fi
     fi
     if [[ -r "/tmp/orch_token" ]]; then
-        cat "/tmp/orch_token"
-        return 0
+        candidate=$(cat "/tmp/orch_token")
+        if _token_is_expired "${candidate}"; then
+            log "[token-expired-skip] slot ${slot_id} — /tmp/orch_token expired, falling through" >&2
+        else
+            printf '%s' "${candidate}"
+            return 0
+        fi
     fi
     if [[ "${IS_LOOPBACK}" -eq 1 ]]; then
         return 0
