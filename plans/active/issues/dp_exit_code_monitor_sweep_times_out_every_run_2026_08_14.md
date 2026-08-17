@@ -6,13 +6,16 @@ title:
 summary: |
   uts-prod-dp-exit-code-monitor was killed by the Cloud Run 1800s task timeout on every execution measured at filing
   (2026-08-14), spending the whole budget on per-VM run.log downloads that each blew the 30s bounded-call. That GCS/OOM
-  bottleneck was fixed 2026-08-14/15 (see Todo 1). **UPDATE 2026-08-17**: NOT fully resolved — live measurement of 20
-  consecutive hourly executions found 2/20 (10%) still hit the full 1800s timeout, root-caused to a SEPARATE,
-  previously-undiagnosed bottleneck: `_compute_ops.py`'s `preemption_op_checker`/`scheduling_model_checker` call the
-  Compute Engine API directly with NO bounded-call timeout (unlike every GCS read in this module family), and stall
-  ~900s per VM when hit — fixed via `deployment-service@d1cb5f0809`, live-verify in progress (see Todo 5). "on every
-  execution" is no longer literally true post-2026-08-15 (see the 2026-08-17 Progress Log for the real distribution)
-  but the underlying promise ("the sweep completes reliably") remained broken until this fix.
+  bottleneck was fixed 2026-08-14/15 (see Todo 1). Live measurement 2026-08-17 found a 2/20 (10%) residual intermittent
+  failure rate. TWO sessions working in parallel found and fixed TWO distinct, real bugs in the same window: (1, the
+  BETTER-EVIDENCED explanation for the specific `r2tsj`/`7tbv2` incidents, direct log-line proof) an unscoped CME
+  relaunch launcher subprocess mass-relaunching ~40-50 VMs per dispatch and timing out at exactly 900s
+  (`deployment-service@451753fd1d`, see the concurrent-session todo); (2, a genuine but less-certain-for-these-specific-
+  incidents finding, correlational not directly proven) `_compute_ops.py`'s Compute Engine API calls with no
+  bounded-call timeout (`deployment-service@d1cb5f0809`, see Todo 5 + its correction note). **RESOLVED 2026-08-17**:
+  both shipped together, live-verified with 5+ consecutive clean post-deploy executions (44-71s each, zero stall
+  warnings) — the clean runs cannot be cleanly attributed between the two fixes since they landed in the same promote
+  batch. "on every execution" was never literally true post-2026-08-15 (see the 2026-08-17 Progress Log).
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -48,6 +51,7 @@ superseded_by:
 depends_on:
 locked_by:
 locked_since:
+archive_exempt: true
 source: Live confirmation pass on revocation_arming_2026_08_14's OPERATOR P0 todo, 2026-08-14
 ---
 
@@ -155,7 +159,46 @@ that plan.
       actuating. **New defect found in the same pass** (not this issue's scope): the release half of the bookend fails
       on every call — filed separately as
       [`dp_revocation_release_never_resolves_identity_2026_08_15.md`](/plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md).
-- [ ] [INFRA] P1. **ADDED 2026-08-17 (measurement-claims-discipline check on this doc's own "resolved" claim)** — did
+- [x] [INFRA] P1. ✅ SUPERSEDED — a stale, unchecked duplicate of the Todo below (same title/body) was accidentally
+      landed by a `safe-doc-push` shared-index reconcile merge (2026-08-17, two concurrent sessions editing this doc at
+      once). Not real content — kept as a stub (rather than deleted outright) so the todo-conservation check
+      (`check_todo_regression`) doesn't misread the dedup as a content drop. See the checked, evidenced copy below for
+      the actual Compute-Engine-API-timeout finding + its correction note.
+- [x] [BACKEND] P0. **ADDED 2026-08-17 (concurrent session, same measurement window as Todo 5
+      above)** — ✅ **The DIRECT, confirmed mechanism for both `r2tsj`/`7tbv2` timeouts, precisely
+      distinguished from Todo 5's `_compute_ops.py` finding.** Tracing the exact log-line order in
+      `exit_code_fleet_monitor.sweep()`'s classify loop for a candidate-preempted VM:
+      `scheduling_model_checker` runs BEFORE `classify_terminated_vm()`/the "dispatching a
+      preemption-aware relaunch" INFO line; `route_finding()` (which invokes the relaunch actuator)
+      runs AFTER that INFO line and BEFORE the "verdict=" WARNING line. In both `r2tsj` and `7tbv2`,
+      every ~900s gap sits between the "dispatching" INFO line and that SAME VM's "verdict=" line —
+      e.g. `r2tsj`: `08:01:05.454Z ...preempted...dispatching...` →
+      `08:16:05.804Z relaunch_preempted_vm: launcher launch-tradfi-bf-cme-ohlcv-1m.sh failed: ...
+      timed out after 900 seconds` → `08:16:06.375Z ...verdict=preempted` (900.9s, log-named). The
+      gap BEFORE each "dispatching" line (where a stalled `scheduling_model_checker` would show)
+      measured 3-6s in every case checked. Root cause: `launch-tradfi-bf-cme-ohlcv-1m.sh` is not in
+      `relaunch_backfill_vm._CLI_SCOPED_LAUNCHER_ARGS` — the exact bug class
+      `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` closed for
+      `launch-mdps-sharded-backfill.sh`, on a launcher that fix never covered — so a zero-arg
+      relaunch of ONE terminated `tradfi-bf-cme-ohlcv-1m-*` VM launched the FULL CME root×year
+      matrix (~40-50 VMs) instead of one shard, and the launcher subprocess (bounded 900s) blocked
+      the sequential classify loop doing that unintended fan-out. Every non-CME preempted VM in the
+      same 2 executions relaunched in 15-47s. **Fix**: added `--only-group <IDX>` to
+      `launch-tradfi-bf-cme-ohlcv-1m.sh` (mirrors `--only-root`) + registered the launcher in
+      `_CLI_SCOPED_LAUNCHER_ARGS`, deriving `(group_idx|root, year)` from the terminated VM's own
+      name. `deployment-service@451753fd1d`, QG green (3461 passed). **Live-verified**:
+      content-confirmed on `origin/main` (direct `git show`, not SHA-ancestor — Option-B
+      direct-promote rewrites commits), rebuilt (`deployment-api` digest `sha256:e0d6a21e...`,
+      Cloud Build `fcff8e72`, SUCCESS — Evidence: cloudbuild=fcff8e72-14a3-4795-97eb-997c394bbe69),
+      then **6 consecutive post-deploy executions, zero
+      task-timeout kills**: `jg5l9` 19:37Z 1m12s (17 `tradfi-bf-cme-ohlcv-1m-*` OOM VMs processed,
+      classify/route/emit phase 24.1s total — vs. one such VM alone previously costing up to 900s),
+      `vt8zl` 20:01Z 1m10s, `fk9sp` 20:09Z 50s, `cbwcq` 20:33Z 54s, `pstvf` 20:34Z 44s, `zbcs6`
+      20:36Z 52s. Both this fix and Todo 5's are real, independently-confirmed, non-conflicting
+      bugs in the same classify loop — see the sibling doc
+      (`dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`, this job's fix-chain SSOT) for the
+      full evidence trail. Repo: deployment-service.
+- [x] [INFRA] P1. ✅ **ADDED 2026-08-17 (measurement-claims-discipline check on this doc's own "resolved" claim)** — did
       NOT trust Todo 1's 2026-08-15 resolution at face value; pulled `gcloud run jobs executions list` for the 20
       consecutive hourly `uts-prod-dp-exit-code-monitor` executions covering 2026-08-16T23:00Z→2026-08-17T18:00Z. Result:
       18/20 completed in 1-30 min (highly variable but bounded); **2/20 (`r2tsj` 08:00Z, `7tbv2` 00:00Z) still hit the
@@ -165,7 +208,23 @@ that plan.
       line, then goes SILENT for ~900s (907s in `r2tsj`, 905s in `7tbv2`) with ZERO `download_bytes`/GCS bounded-call
       warnings anywhere near the gap — ruling out every previously-fixed GCS/run.log mechanism on this doc and its
       sibling `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. The VM printed immediately after EVERY gap in
-      both executions was a `verdict=preempted`. Reading `exit_code_fleet_monitor.sweep()`'s classify loop end-to-end:
+      both executions was a `verdict=preempted`, which I read as pointing at this file's `scheduling_model_checker`.
+      **CORRECTION (same day, reconciled against the concurrent-session todo above)**: that read was wrong for
+      these 2 specific incidents. My `gcloud logging read` grep filter never included "timed out"/"relaunch"/"failed"
+      patterns, so I never saw the log line the concurrent session found: an EXPLICIT
+      `relaunch_preempted_vm: launcher launch-tradfi-bf-cme-ohlcv-1m.sh failed: ... timed out after 900 seconds`,
+      precisely bracketed between the "dispatching" INFO line and the "verdict=" line — i.e. the stall was in
+      `route_finding()`'s relaunch-actuator dispatch (an unscoped CME launcher subprocess), not in the
+      pre-classify `scheduling_model_checker`/`preemption_op_checker` calls this todo targets. Correlating "VM after
+      the gap is always preempted" with "my fix touches preempted-verdict VMs" was a confound — `route_finding`'s
+      relaunch dispatch ALSO only fires for preempted-verdict VMs, so the same correlation is consistent with either
+      mechanism, and I didn't have the direct evidence to distinguish them until the concurrent session did. This
+      fix (below) is still real, still shipped, and still a genuine hardening (an unbounded Compute Engine API call
+      is a real latent risk on its own terms, matching the same fail-fast discipline used for every GCS read in this
+      module) — but it is NOT proven to be what caused `r2tsj`/`7tbv2` specifically; the concurrent session's
+      CME-launcher-scoping fix is the better-evidenced explanation for those two incidents. Both fixes shipped in the
+      same promote batch (see Todo above), so the clean post-deploy executions cited below cannot be cleanly
+      attributed to this fix alone. Reading `exit_code_fleet_monitor.sweep()`'s classify loop end-to-end:
       `scheduling_model_checker` (`_compute_ops.make_scheduling_model_checker`) is called UNCONDITIONALLY on every
       candidate-preempted verdict (line ~703), and `preemption_op_checker` on every GONE_NO_CAPTURE candidate — both
       call the raw Compute Engine API (`was_instance_preempted` / `aggregated_list_instances`) with **NO bounded-call
@@ -182,16 +241,72 @@ that plan.
       under 5s against a deliberately-hung fake client (mirrors the existing `test_is_vm_preempted_returns_false_
       promptly_on_stall` pattern this module already uses for every other bounded-call site). **This is a resource
       bump alone would NOT have fixed** — no amount of CPU/memory/timeout addresses an unbounded blocking call; this
-      is the genuine root-cause fix the operator's brief asked for, not a stopgap. **Live-verify PENDING** — a
-      background watchdog (`dp_exit_code_monitor_watchdog.sh`, started 2026-08-17T18:39Z) is polling for the fix to
-      reach `main`, confirming the redeployed image carries it (direct in-container `inspect.getsource` check, not
-      just a build-green claim), then watching the next several hourly executions for the absence of the ~900s-gap
-      signature. Do not re-diagnose this class if the watchdog's log still shows executions in flight — check
-      `/private/tmp/claude-501/.../scratchpad/dp_exit_code_monitor_watchdog.log` (session-scoped path; if the file no
-      longer exists, the watchdog's session ended — resume by checking `gcloud run jobs executions list` fresh instead
-      of assuming it completed).
+      is the genuine root-cause fix the operator's brief asked for, not a stopgap. **Live-verify COMPLETE, 2026-08-17
+      20:36Z** — the fix reached `origin/main` at `19:13:50Z` (commit `d0b02e74`, content-verified: `git show
+      origin/main:.../_compute_ops.py | grep call_with_timeout` → 5 hits) after being briefly blocked by an UNRELATED
+      transient GitHub API 503 outage on the fleet-shared `sit-gate/fleet-green` check (the actual cross-repo
+      invariant suite passed; only a SIT_VALIDATED-stamp dispatch step hit `gh: No server is currently available`,
+      self-recovered on the next SIT run — not a defect in this fix). `deployment-api:latest`'s digest advanced past
+      the pre-fix baseline (`sha256:6de48093...` → `sha256:077b8fd5...`, confirmed via `gcloud artifacts docker images
+      describe`, not a Docker daemon on this host — none was running, so direct in-container content-inspection
+      wasn't available; digest-advance past the known pre-fix baseline was the best available signal instead).
+      **5 consecutive post-deploy executions, ALL clean, ZERO failures, ZERO stall/timeout warnings** (verified
+      directly via `gcloud run jobs executions list`, not just the watchdog's own log — the watchdog itself missed 2
+      of these 5 due to its own `--limit=1`-per-poll blind spot, caught and cross-checked manually): `vt8zl`
+      (20:00:02Z, 71s), `fk9sp` (20:08:39Z, 50s), `cbwcq` (20:32:37Z, 54s), `pstvf` (20:33:59Z, 44s), `zbcs6`
+      (20:35:09Z, 52s) — all 44-71s, versus the pre-fix baseline's bimodal 1-30min-or-1800s-timeout pattern. Honest
+      caveat: against the pre-fix ~10% (2/20) intermittent failure rate, 5/5 clean has a non-trivial (~59%) chance of
+      occurring by luck alone if the underlying bug somehow still existed at the same rate — this is strong,
+      mechanistically-grounded evidence (the exact previously-observed ~900s silent-gap signature is absent, and the
+      fix directly closes the specific unbounded call class that produced it), not an absolute statistical proof.
+      Continued casual observation of future hourly executions is worthwhile but not blocking further work.
 
 ## Progress Log
+
+### 2026-08-17 — a THIRD, independent root cause found for the same 2 executions (concurrent session)
+
+Working the operator's brief in parallel with the session that filed Todo 5 below (unbounded
+`_compute_ops.py` calls) — same 2 failing executions (`r2tsj`, `7tbv2`), a DIFFERENT confirmed
+mechanism, not a duplicate. Both fixes are real and now both shipped; this entry exists to
+reconcile the causal attribution precisely rather than let two plausible-sounding explanations
+sit side by side unverified against each other (measurement-claims-discipline).
+
+**Tracing the exact log-line ordering in `exit_code_fleet_monitor.sweep()`'s classify loop**: for
+a candidate-preempted VM, the order is (1) `scheduling_model_checker(name)` — BEFORE
+`classify_terminated_vm()` — (2) `classify_terminated_vm()` resolves the verdict, (3)
+`logger.info("... preempted (SPOT reclaim) — dispatching a preemption-aware relaunch ...")` fires
+immediately after, (4) `_finding_for(...)`, (5) `route_finding(finding, ...)` — this is what
+actually invokes `RelaunchPreemptedVm.relaunch()` → the launcher subprocess — (6) only THEN
+`logger.warning("... verdict=%s ...")`. So a stall between step (1) and the "dispatching" INFO
+line at step (3) would implicate `scheduling_model_checker`; a stall between the "dispatching" INFO
+line (3) and the "verdict=" WARNING line (6) implicates `route_finding`'s actuator dispatch (5).
+
+Re-read both executions' full (unfiltered) logs with this distinction in mind. In BOTH `r2tsj`
+(08:00Z) and `7tbv2` (00:00Z), every ~900s gap sits precisely between a "dispatching" INFO line and
+the SAME VM's "verdict=" WARNING line (step 3→6, not step 1→3) — e.g. `r2tsj`:
+`08:01:05.454Z tradfi-bf-cme-ohlcv-1m-btc-2021-... preempted ... dispatching...` →
+`08:16:05.804Z relaunch_preempted_vm: launcher launch-tradfi-bf-cme-ohlcv-1m.sh failed: ... timed
+out after 900 seconds` → `08:16:06.375Z tradfi-bf-cme-ohlcv-1m-btc-2021-... verdict=preempted` —
+a 900.9s gap that the log itself names: the relaunch launcher subprocess, not the pre-classify
+Compute API checkers. The gap BEFORE each "dispatching" line (where a stalled
+`scheduling_model_checker` would show up) measured 3-6s in every instance checked — fast, not
+900s. Every non-CME preempted VM in the same executions (`cefi-aster-*`, `cefi-hyperliquid-*`,
+`mdps-defi-*`) relaunched in 15-47s; only `tradfi-bf-cme-ohlcv-1m-*` VMs hit the 900s wall — because
+that launcher, invoked with zero CLI scoping, was mass-relaunching the entire CME root×year matrix
+per dispatch (see the sibling doc's todo for the full root-cause + fix,
+`deployment-service@451753fd1d`).
+
+**Conclusion**: `_compute_ops.py`'s missing bounded-call timeout (Todo 5,
+`deployment-service@d1cb5f0809`) is a genuine, independently-worthwhile hardening — an unbounded
+Compute Engine API call IS a real latent risk, matching the same fail-fast pattern already used for
+every GCS read in this module — but it is not what caused these 2 specific measured timeouts; the
+precise log-line bracketing rules it out for both. Both fixes are complementary and now both live
+on `origin/main` (content-verified directly, not via SHA-ancestor — Option-B promote rewrites
+commits, the same false-negative trap this doc's own history already warns about). Leaving Todo 5
+open/unedited (it is correct on its own terms, just not the explanation for its own cited evidence)
+and tracking the confirmed mechanism + its fix in the sibling doc, this doc's actual SSOT for the
+fix chain. Live-verification of the CME-scoping fix (5+ post-deploy executions) is running in the
+background at the time of this entry.
 
 ### 2026-08-17 — residual root-cause found + fixed (unbounded Compute Engine API calls)
 
@@ -201,9 +316,30 @@ executions) that the sweep is genuinely much better than at filing (18/20 clean,
 NOT fully fixed (2/20 still hit the full 1800s cap). Diagnosed a THIRD class of bottleneck this doc's and the sibling
 overlap-storm doc's extensive 2026-08-14/15 GCS/OOM fix history never touched: two unbounded Compute Engine API calls
 in `_compute_ops.py`, called per-VM inside the sequential classify loop. Fixed via the same bounded-call pattern
-already used throughout this module (`deployment-service@d1cb5f0809`). See Todo 5 above for full evidence. Live-verify
-of post-deploy executions is running in the background (watchdog log path in Todo 5) — this doc stays `status: open`
-until that confirms clean executions across the deploy.
+already used throughout this module (`deployment-service@d1cb5f0809`). See Todo 5 above for full evidence.
+
+**Live-verify closed out the same session, 2026-08-17 20:36Z-21:00Z.** The operator (coordinator) explicitly pushed back
+twice mid-session on premature "waiting on it" claims when the background watchdog had not actually produced results
+yet — both times correct: once when a heartbeat notification fired before the watchdog had left Phase 1, and once when
+the watchdog's own SHA-ancestor / timestamp-based deploy-detection logic turned out to be genuinely buggy (Option-B
+direct-promote rewrites commit SHAs so `merge-base --is-ancestor` false-negatives; separately, this host's Artifact
+Registry CLI output appears to render `CREATE_TIME` in local time, not UTC, which produced one false-positive "deployed"
+verdict that let Phase 3 briefly count a PRE-fix execution as clean). Both bugs were caught, fixed (content-based main
+check; digest-comparison deploy check; an in-flight-execution guard to stop a running-not-yet-complete execution from
+being miscounted), and the watchdog re-run cleanly from a fresh baseline. Final ground truth (cross-checked directly via
+`gcloud run jobs executions list`, not solely the watchdog's own log — the watchdog itself missed 2 of the 5 executions
+below due to its own `--limit=1`-per-poll design, since multiple executions landed between 5-minute polls): **5/5
+consecutive post-deploy executions clean, 0 failures, 0 stall/timeout warnings** (`vt8zl` 71s, `fk9sp` 50s, `cbwcq` 54s,
+`pstvf` 44s, `zbcs6` 52s — all 2026-08-17 20:00Z-20:36Z). Also found, while chasing why promotion to `main` was slow, an
+UNRELATED transient GitHub API 503 outage that briefly blocked the fleet-shared `sit-gate/fleet-green` promotion gate
+for ALL repos (not specific to this fix) — self-recovered on the next SIT run, not escalated further per this
+workspace's own CI-flake auto-recovery guidance.
+
+Marking `archive_exempt: true` rather than archiving outright: this doc is (like its sibling
+`dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`) still likely cited as a source doc by other active
+plans/dispatch-batches in this corpus, and a referrer sweep to safely archive it was out of scope for this session — a
+future `/archive-candidates-audit` pass can do that properly. All 5 todos are now `[x]` done; nothing further is open on
+this doc.
 
 ### 2026-08-14 — checkpoint (context compaction)
 
