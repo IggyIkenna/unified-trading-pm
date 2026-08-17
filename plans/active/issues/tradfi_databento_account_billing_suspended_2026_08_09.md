@@ -154,6 +154,24 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       this doc `status: resolved` but un-archived in the interim per this workspace's own `archive_exempt`-bridge
       precedent (`RULED 2026-08-09` in the archival-discipline SSOT) — the doc also still functions as the standing
       awareness/runbook record for this incident class until the sweep lands.
+- [ ] [OPERATOR] P1. **NEW 2026-08-17 (slot 16, data_pipeline_failure escalation agt-4e1517) — the CURRENT
+      `tradfi-bf-cme-ohlcv-1m-` fleet-wide relaunch wave (~29 instances, launched ~09:01-09:06Z today across
+      `btc`/`es`/`eth`/`g01-6a-6l`/`g02-6m-cl`/`g03-ct-hg`/`mbt`/`met`/`nq` groups, years 2020-2026) is confirmed
+      hitting this SAME billing block from each shard's very first CME date.** Spot-checked
+      `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-090227` directly via GCS SDK read:
+      `DatabentoAdapter: GLBX.MDP3 failed [402]: 402 account_delinquent_invoice` on its first three attempted dates
+      (2020-01-02/-03/-07), zero `PROGRESS.json` checkpoint written. Every VM in this wave shares `VENUE=CME`, so
+      every one is equally exposed — not an isolated straggler like the entries above, the WHOLE fresh wave is
+      burning SPOT compute with zero chance of success right now. Each will very likely self-terminate via its own
+      in-VM stall watchdog (~3900s/65min no-progress threshold, the same mechanism the 2026-08-17 entries above
+      confirmed) around ~10:06-10:11Z today, producing a fresh DP-VM-001 alert storm across up to ~29 VMs. Decide:
+      (A) pause the `tradfi-bf-cme-ohlcv-1m-` launcher family's scheduler/wave mechanism until this billing block
+      resolves (avoids the coming alert storm + SPOT burn, at the cost of not auto-resuming the instant billing
+      clears), or (B) accept it as a known, safely self-resolving condition (no data corruption — every failure
+      writes an honest partial manifest — just wasted SPOT compute + alert noise) and let the existing
+      RB-INFRA-RELAUNCH `≤2/(vm-prefix,day)` bound keep absorbing it. Not independently verified: the identity/
+      trigger of whatever launched this wave (looks scheduled/automated, not this session's doing) or whether it
+      already has its own stop condition — flagging for the operator rather than guessing.
 
 ## Plans/issues gated by this doc (sweep log)
 
@@ -356,3 +374,23 @@ archival — no live Databento dependency).
   in the same session. Did not re-page the operator — this doc's existing P0 `[OPERATOR]` invoice todo already
   covers the ask; this is a second independent corroboration, not a new event. No code changed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (1 entries).
+- **2026-08-17 (slot 16, data_pipeline_failure escalation agt-4e1517)**: Received a DUPLICATE dispatch of the
+  identical DP-VM-001 finding agt-dfccf4 (slot 12) already fully diagnosed above — same VM
+  `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-060542`, same `tradfi-bf-cme-ohlcv-1m-` family at its 2/2 relaunch
+  bound. Confirmed via `git log` that agt-dfccf4's doc updates (this doc + the `btc_2020` sibling) had already
+  landed (commit `07fdae278a`) before I started editing — pulled first rather than risk clobbering. Did not
+  re-diagnose or re-edit the already-covered single-VM root cause (would be pure duplication). Independently found
+  NEW information instead: checked the live `tradfi-bf-cme-ohlcv-1m-` fleet and found a fresh ~29-instance
+  fleet-wide wave (launched ~09:01-09:06Z today, spanning 9 instrument groups × up to 7 years each) already
+  running — including a `btc-2020` replacement, `...-090227`. Pulled ITS run.log directly (GCS SDK read) and
+  confirmed it is ALSO hitting the identical `402 account_delinquent_invoice` GLBX.MDP3 signature from its very
+  first attempted date, with zero `PROGRESS.json` checkpoint — the entire fresh wave is currently burning SPOT
+  compute against the still-active billing block with zero chance of success, not just the isolated stragglers the
+  existing entries above cover. Added a new `[OPERATOR]` P1 todo (above) flagging the predictable ~65min-out mass
+  stall-watchdog kill across this wave (a coming DP-VM-001 alert storm) and asking the operator to decide
+  pause-vs-accept. Did not delete any of the ~29 live VMs myself — unlike the 2026-08-15 precedent above (where the
+  agent had personally launched+monitored the one VM it deleted), these were launched by some other
+  scheduled/automated mechanism this session did not identify, so unilaterally deleting a fleet I don't own and
+  only spot-checked one instance of was judged out of this one-shot escalation's scope; deferring to the operator
+  decision above instead. Did not relaunch. Posted a bounded `/blocked` focused on this new wave-scale finding
+  (the root cause itself is already covered by agt-dfccf4's page). No code changed.
