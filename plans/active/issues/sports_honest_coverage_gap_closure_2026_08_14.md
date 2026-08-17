@@ -523,10 +523,16 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       self-delete — a genuine completion, not a preemption. Launched
       `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` immediately after
       (`sports-manifest-rescan-20260817-144852`) to materialize `empty_confirmed` rows from the new captures.
-- [ ] [SCRIPT] P2. **Verify `sports-manifest-rescan-20260817-144852` actually completes** — launched, not yet
-      confirmed done. Check its GCS log (`vm-logs/sports-manifest-rescan-20260817-144852/run.log`) for a clean
-      `DEPLOYMENT_COMPLETED exit_code=0`, and spot-check that the weather VM's new captures show up as
-      `empty_confirmed` (not still `expected_unattempted`) in the manifest afterward.
+- [ ] [SCRIPT] P2. **First rescan attempt (`sports-manifest-rescan-20260817-144852`) died silently mid-run,
+      relaunched as `sports-manifest-rescan-20260817-152312` — verify THIS one completes.** The first instance
+      vanished from `gcloud` while its own `EXIT_STATUS` marker still read `RUNNING` (stale — never updated on
+      termination) and its `run.log` had stalled at `Progress: 51000/142894` (~36%), last write 2026-08-17T14:11Z,
+      tagged `ag=CEFI` in its heartbeat — unclear whether that reflects the actual rescan scope or a shared
+      watchdog default; did not chase further given a fresh relaunch was the faster path. The relaunch's printed
+      command confirms sports-specific scope: `python scripts/rescan_sports_fixtures_canonical.py --workers 16`.
+      Check `vm-logs/sports-manifest-rescan-20260817-152312/run.log` for a clean `DEPLOYMENT_COMPLETED exit_code=0`,
+      and spot-check that the weather VM's new captures show up as `empty_confirmed` (not still
+      `expected_unattempted`) in the manifest afterward.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
@@ -575,8 +581,3 @@ live SSH-based root-cause session or patience with more relaunches).
   Considered and declined RECLASSIFY: staying NA rather than promoting the whole doc's `assigned_vm` for one
   VM-gated, not-yet-actionable script-run todo. Re-flag once the weather VM completes and the rescan is either run
   or explicitly self-justified.
-- **na-eligibility-audit 2026-08-17** [body-hash:b7030f67db7baaab] (dispatch agt-6574d2, third same-day pass, sports
-  tranche): reconfirmed — same verdict, KEEP-NA valid. Sole open item ([SCRIPT] P2 sports-manifest-rescan) not
-  independently re-checked for VM-completion status this pass (live-infra check is out of this audit's scope).
-  Repeated same-day re-audit here was a `_latest_verdict_marker` tie-break bug, now fixed
-  (`generate_na_doc_tranche_inventory.py`) — should stop recurring.
