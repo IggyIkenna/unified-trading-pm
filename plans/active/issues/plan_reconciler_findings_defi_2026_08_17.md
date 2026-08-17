@@ -18,7 +18,7 @@ related: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/active/
 created: "2026-08-17"
 author: plan_reconciler
 source: "agt-5dedc7"
-locked_by: plan_reconciler-agt-5dedc7
+locked_by:
 priority: P2
 assigned_vm: NA
 execution_scope: local-only
