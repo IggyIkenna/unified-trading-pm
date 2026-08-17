@@ -396,3 +396,4 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   original 4 P1-C rows were independently resolved/moot by 2026-08-08, correctly narrowing this item without a whole-doc
   flip. No new bounded content on independent re-read.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:b8189b7aaddf181e]: KEEP-NA, valid — sole open item needs a human decision (backing script no longer exists anywhere); unchanged across 3 prior audit passes.

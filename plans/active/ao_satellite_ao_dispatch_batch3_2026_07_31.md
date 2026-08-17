@@ -538,3 +538,4 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   only, the higher-value zero-context-list case; `STALE` re-scouting is real remaining scope for a future session).
   Still far from this todo's own `NEVER_SCOUTED =0, STALE=0` completion bar — the `docspec.py` `FieldSpec` flip stays
   untouched, deliberately, same as every prior session logged above.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:70f657a3d86ef521]: KEEP-NA, valid — sole open todo is the corpus-wide context_scope backfill, genuinely unbounded ongoing corpus-scale work whose target moves as the corpus grows; reaffirmed across 2+ prior audit passes.

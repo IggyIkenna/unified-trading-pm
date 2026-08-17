@@ -130,3 +130,4 @@ cannot be audited for completeness.
   Item 1 remains operator-only-by-design (only the operator can confirm they personally issued a ruling); item 2 remains
   an unresolved 3-way convention design choice with no stated preference in the doc itself.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:6829cfa50fbda5db]: KEEP-NA, valid — item 1 is an operator-only authenticity confirmation; item 2 is an unresolved 3-way convention design choice with no stated preference; both re-affirmed by 2 prior audit passes.

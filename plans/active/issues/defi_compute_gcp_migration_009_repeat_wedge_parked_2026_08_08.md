@@ -117,3 +117,7 @@ reaching the point where a compact would be needed.
   checkboxes sequentially gated on `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`'s external root-cause
   investigation, confirmed still open/in-flight (mtime 2026-08-09 05:46). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ebbf8125d1073a15]: KEEP-NA, valid — live incident parked pending an external fleet-wide root-cause investigation; operator explicitly re-confirmed 'stays parked' 2026-08-09, not yet safe to unpark.

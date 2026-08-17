@@ -272,3 +272,4 @@ follows correctly — only the webhook config is missing).
   boundary (`agents/RULES.md` § 1: no worker role may edit root clones) — same item cross-referenced in
   `operator_action_items_consolidated_2026_08_08.md`. 5 prior audits agree; no new facts found.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:a6eb1f279cdfe340]: KEEP-NA, valid — sole open item is a host-level secret-configuration action on the live orchestrator's ROOT checkout, explicitly outside any worker's authorized scope per agents/RULES.md §1; re-affirmed unresolved by 5 prior audit passes.

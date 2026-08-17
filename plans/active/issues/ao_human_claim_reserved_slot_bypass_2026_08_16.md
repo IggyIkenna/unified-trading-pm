@@ -120,3 +120,4 @@ full existing `test_human_fleet_endpoints.py` (21 passed) and `test_dispatch_rev
   `human_slot_ids()` guard their siblings already have. Fix implemented + tested (diff left uncommitted per this
   session's read-only-live/code-fix-only scope) — see "Fix" section above.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:da3ed222c3680a3d]: KEEP-NA — the 'second, independent gap' item (ensure_review_agents liveness-verification depth) is ALREADY claimed by the active `ao_satellite_ao_dispatch_batch22_2026_08_16.md` (its todo 6 cites this doc + this exact todo text); leave open, do not duplicate. The [OPERATOR] manual-recovery-decision item stays KEEP-NA.

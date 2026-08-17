@@ -302,3 +302,4 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
   unimplemented engineering work in `agent-orchestrator` — no doc-level fix applies. Doc NOT archived (3 items still
   open).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:df9c05624d0e3a92]: KEEP-NA-STALE (already-duplicated) — CORRECTED from an initial RECLASSIFY read: all 3 open todos are ALREADY claimed verbatim by the active `ao_satellite_ao_dispatch_batch22_2026_08_16.md` (its todos 1-3 cite this doc by path + todo text). Batch22's own finalize plan (todo 2) already owns reconciling/archiving this doc once batch22 ships. Not reclassifying — would dispatch a duplicate.

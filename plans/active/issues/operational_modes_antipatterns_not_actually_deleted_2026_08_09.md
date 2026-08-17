@@ -213,3 +213,4 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
   as this doc's own already-applied corrections) — TL;DR/summary now say "NOT deleted... still live", diagram now has a
   separate `target == FORK` branch. Not re-opening any todo above; this was a docs-reconcile self-consistency finding,
   not new design work.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:8750ba313ec956d0]: KEEP-NA, valid — item 1 is downstream of item 2's operator placeholder; item 2 is explicitly operator-only (needs an owner+target date assigned); item 3 is an unresolved design fork with no stated preference.

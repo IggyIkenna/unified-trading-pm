@@ -286,6 +286,7 @@ not a DeepSeek-specific gap — the shell-out fallback was a reasonable improvis
 capability.) Cost: ~$0.01
 ($4.93→$4.92), confirmed via `GET /user/balance` before/after.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:2f86c13474628411]: KEEP-NA, valid — heavily-shipped live billing/credential/routing infra doc, repeatedly KEEP-NA-verified; remaining 11 items are operator-review pilots gated on external account headroom, one item explicitly extracted elsewhere already, one [OPERATOR] spend decision, and GLM production-readiness engineering flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE given this doc's established high-stakes-infra precedent.
 
 ## Phase 2 — multi-provider generalization + external-ideology reconciliation (2026-07-30)
 

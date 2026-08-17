@@ -316,3 +316,4 @@ template, minus the third-party dependency).
   mandatory smoke-test gate (`[REVIEW] P0`, real skill + real tool call) stays blocked on it. Also still open:
   system-prompt marker verification, quota tracking/gating, cross-checked usage-capture, the `model_pricing.py` Luna
   entry, and streaming support.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:fad9ed0c1cf72aa5]: KEEP-NA, valid — CORRECTED from an initial per-todo-split read: `ag_closeout_audit_ao_parked_2026_08_16.md` (this same tranche's parking register) explicitly states this whole doc is 'excluded from AO-dispatch by operator direction 2026-08-14 (operator is handling both elsewhere, not via this tracker)' — a redirect-banner never-relitigate case (c) found on a sibling surface. Not extracting the Luna rate-card item.

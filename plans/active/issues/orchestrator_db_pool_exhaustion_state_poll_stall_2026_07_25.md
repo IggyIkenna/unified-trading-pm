@@ -312,3 +312,4 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   established "Consider" = judgment-call-not-mandate reading (applied consistently to sibling docs in this tranche),
   this stays a genuine design fork, not a bounded mandate. No new bounded item found.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:4a92957644ba422d]: KEEP-NA, valid — sole remaining item lists multiple viable pool-hardening directions with no stated preference; an established 'Consider X and/or Y' judgment-call reading, per the 2026-08-10 audit's own citation.

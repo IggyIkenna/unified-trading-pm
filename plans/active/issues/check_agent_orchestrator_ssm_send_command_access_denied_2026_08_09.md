@@ -228,3 +228,4 @@ on shared AWS infra, not something to self-grant.
   (~28 live `orch-slot-N` sessions incl. the 2 slots the 2 active escalations were dispatched to) — only §0c's
   watchdog-specific host log tail stayed uncovered, reported as a coverage gap. No new information on the IAM gap
   itself; fourteen days unresolved.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ef79a2d4eaf2fa48]: KEEP-NA, valid — sole open item is an IAM grant to a specific human-named identity (ikenna-worker) on shared AWS infra, explicitly distinct from the orchestrator's-own-identity self-service precedent; 14 independent confirmations over 8 days, no self-service path.

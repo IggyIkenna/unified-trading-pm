@@ -549,3 +549,4 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   FM2/FM3/FM8, already covered/cited in this same doc) and no implementation of the "committed- able but unverified WIP"
   chain this item specifically describes. Still genuinely open, unbuilt design work — 4th consecutive audit pass
   reaching the same conclusion, now with an actual second look performed, not just deferred.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:6822af0002bce136]: KEEP-NA, valid — the 2026-08-15 operator note narrows the design question but the remaining deliverable (dispatch-hook stash-and-proceed flow + a new retention-sweep job) still touches live dispatch-critical-path machinery across multiple files; flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future, more-confident pass or explicit operator sub-scoping, not split now.

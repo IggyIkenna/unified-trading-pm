@@ -186,3 +186,7 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   (todo 11, slot 22). All 4 todos in this doc are now resolved (2 flipped `[x]`, 1 extracted to batch7, 1 flipped here).
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:dc0bb2e0143e9767]: KEEP-NA, valid — 0 open todos, all 4 resolved+verified; frontmatter carries `archive_exempt: true` with a stated rationale (operator-visible historical-blast-radius record) — a deliberate keep-open-as-record, not an oversight, so not archived.

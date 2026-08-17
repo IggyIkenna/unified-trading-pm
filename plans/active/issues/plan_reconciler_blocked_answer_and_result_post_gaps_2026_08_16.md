@@ -142,11 +142,9 @@ worker's ability to read it back via the AO HTTP surface.
       genuinely unrecoverable from `/api/state` too, not just `/api/slots/<N>/messages` — worth checking whether the
       answer is durably written ANYWHERE (a dedicated history table, an audit log) before concluding the content is
       truly gone once pruned.
-- [ ] [BACKEND] P2. **Audit whether other plan_reconciler/na-eligibility-audit runs have silently missed answers to
-      still-open blocked questions**, now that this gap is confirmed live (not just suspected). Query the escalation/
-      blocked-question table for any row with a recorded operator answer but no corresponding worker-side pickup, across
-      recent runs. Done when: a count of affected historical rows is reported (0 is a valid, good answer) and, if any
-      are found, each is individually resolved (apply the answer now, or re-ask if too stale to trust).
+- [x] ✅ [BACKEND] P2. **Audit whether other plan_reconciler/na-eligibility-audit runs have silently missed answers to
+      still-open blocked questions** — extracted (conflict-checked, clear) to
+      `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 1. Track dispatch/completion there, not here.
 
 ## Progress Log
 
@@ -224,3 +222,4 @@ worker's ability to read it back via the AO HTTP surface.
   multi-session investigation with no new lead available from a doc-only re-check; still genuinely open. Doc NOT
   archived (3 items still open).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:30e5fbe610dec495]: RECLASSIFY (per-todo split) — the blocked-question-silent-miss audit item is conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 1; the 2 root-cause investigation todos stay KEEP-NA (live orchestrator-internals judgment work).

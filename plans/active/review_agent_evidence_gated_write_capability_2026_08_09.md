@@ -202,3 +202,4 @@ local sandbox first:
   citation ('operator direction 2026-08-09, local/human track, not AO-dispatched') on a doc adding new write capability
   to the review role — a role ~30 live agents boot from continuously. Never re-litigate hard rule applies directly;
   round9 (same day as authoring) already reached this verdict.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:6d60dfbea309fdbf]: KEEP-NA, valid — explicit dated operator direction ('local/human track, not AO-dispatched') on new write-capability behavior for the review role; sole remaining item is a deliberate burn-in observation gate.

@@ -120,3 +120,4 @@ and the gate passed, so nothing was blocked.
   formatting at all') is a genuine, undecided design/policy call per the doc's own text and the round7/08-08 marker's
   reasoning — agrees, no new facts found.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:88a164971a98eb0d]: KEEP-NA, valid — the mechanical version-bump work already shipped; sole remaining item is a genuine undecided design/policy call (whether the dashboard should gate on formatting at all), reaffirmed across 3 prior audit passes.

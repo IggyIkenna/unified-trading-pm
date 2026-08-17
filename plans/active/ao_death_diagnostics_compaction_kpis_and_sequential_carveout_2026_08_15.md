@@ -232,3 +232,4 @@ to draft-then-catch it.
   against a concurrent peer session's unrelated push, which duplicated the Item-4/root-cause sections three times over —
   resolved by keeping the latest (sha-complete) copy and discarding the two stale ones; verified via a full-file re-read
   before the final push, not just a marker grep.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:a357726d73c656a9]: KEEP-NA, valid — 9 of 9 numbered todos shipped; explicit operator direction that this KPI-dashboard piece stays a human-driven plan, not auto-dispatched; 2 remaining items are small deliberately-deferred P3 follow-ups.

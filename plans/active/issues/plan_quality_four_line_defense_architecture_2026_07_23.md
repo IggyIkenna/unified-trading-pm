@@ -383,3 +383,7 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
   and a genuine unresolved 3-option design fork with no tiebreaker (item 1, line-1-completeness vs. proseWrap). No new
   evidence since the 2026-08-08 operator-Q&A investigation entry changes either disposition.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:071d1a58e8dfb973]: KEEP-NA, valid — 2 remaining items are a repeatedly-re-measured repo-wide CI-policy acceptance gap and an unresolved 3-option design fork (line-1-completeness vs prettier proseWrap), both explicitly non-bounded per a 2026-08-02 operator-ruling citation.

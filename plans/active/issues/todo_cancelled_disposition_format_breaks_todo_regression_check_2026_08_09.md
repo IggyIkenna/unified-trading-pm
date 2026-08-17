@@ -171,3 +171,4 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   plus the finalize plan's own independent re-verification. The 3rd item (Finding-J cross-file fix) is untouched — still
   genuinely NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ce5bc82e1f9d8389]: KEEP-NA, valid — 2 of 3 original items already shipped+verified; sole remaining item self-flags as needing design judgment on cross-file correlation logic, not a mechanical one-liner, ruled KEEP-NA twice already.

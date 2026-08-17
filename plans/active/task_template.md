@@ -651,3 +651,4 @@ start.**
   found ~12 with a genuine `[OPERATOR]` item mixed into an otherwise-dispatchable file. Companion retroactive sweep:
   `/plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md` (assigned_vm: NA, per operator
   direction — the sweep itself is human-judgment classification work, not bounded AO-dispatch work).
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:21ef6ad252ed5d77]: KEEP-NA, valid — this IS the plan-authoring template/guide itself; 0 tracked todos ever, structurally never AO-dispatchable or archivable while it remains the live authoring SSOT.

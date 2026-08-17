@@ -171,3 +171,4 @@ to shape a plan.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries); doc had no prior Progress Log section,
   added a minimal one.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ba0e198553e8878a]: KEEP-NA, valid — todo 1 (re-triage 115 [ao] docs) is explicitly self-declared judgment-heavy classification, not mechanical; todo 3 (sequential:true dispatch-order root-cause) touches live-dispatch-critical-path machinery. Todo 2 (tranche-reopening convention) flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future pass, not split now.

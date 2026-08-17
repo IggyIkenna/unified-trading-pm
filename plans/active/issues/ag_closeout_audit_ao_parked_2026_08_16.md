@@ -211,3 +211,4 @@ deliberate observation/burn-in gate with no worker-executable done-state.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:21df501b3422cfc6]: KEEP-NA, valid — standing parking register for /ag-closeout-audit ao's non-batchable orphaned findings; zero checkbox todos by design (its content IS the tracking mechanism).

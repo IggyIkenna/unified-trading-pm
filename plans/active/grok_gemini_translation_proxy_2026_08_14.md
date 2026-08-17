@@ -515,6 +515,7 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       `account_status: disabled` — zero cost, zero risk while paused, and removing a working registration is a
       live-infra change this cancellation doesn't call for (this is a documentation/scope change, not an infra
       teardown). There is simply no plan to ever un-pause them or raise their spend cap going forward.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:e4999c17192967a1]: KEEP-NA, valid — sibling onboarding plan to the DeepSeek/Claude routing doc; heavy operator-gated credential/pause decisions (accounts deliberately PAUSED per explicit 2026-08-16 operator instruction). 3 of 5 items plausibly bounded on their own engineering shape but flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE given this doc's overall live-credential character, not split now.
 
 ## Context scout
 

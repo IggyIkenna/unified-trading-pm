@@ -119,3 +119,7 @@ Live, directly-observed during routine blocked-queue sweeps:
   `unified-trading-pm@d765b4cfb1`. Flipped this doc's `[OPERATOR]` todo accordingly. The live `unpark` API call itself
   is left as a standing follow-up (no AO dashboard/API access from this session) — noted inline on the todo.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:7dcc5e45d0d9730d]: KEEP-NA, valid — substantive incident already resolved; sole remaining item is an open design question about task_template.md's authoring convention, not a bounded/deterministic outcome.

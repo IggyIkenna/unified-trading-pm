@@ -989,3 +989,4 @@ plan can reach zero-open-todos and archive independently.
   CENTRAL production orchestrator. Live-fixed (`ORCHESTRATOR_VM_ID=planning` restored + service restart, verified a
   stuck escalation successfully dispatched afterward) — see the two new Track 4 items above (fix DONE, root-cause of
   the drift still open). Per operator direction, plugged into this tracker instead of filing a new issue doc.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:c4314f249cf33aef]: KEEP-NA, valid — explicit meta-tracker/pointer doc, never auto-dispatched by design; each todo references its own source doc. Not archivable until its `depends_on` clears (operator direction 2026-08-16).

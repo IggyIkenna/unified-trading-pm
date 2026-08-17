@@ -529,3 +529,4 @@ tracked here rather than silently claimed complete.
   `mdps-e2e-shared-host-teardown-fixed` closure condition. Worth surfacing to whoever roots-causes this: prefer
   foreground execution over backgrounding for any check expected to finish within the timeout budget, until the
   underlying watchdog/RAM-exhaustion mechanism is fixed.
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:34a75202ca1bc9fd]: KEEP-NA, valid — sole open item (--resume/checkpoint capability) is directly gated by an explicit dated 2026-08-02 operator ruling until a named prerequisite condition closes; that condition remains unmet as of the doc's most recent 2026-08-15 reproduction entries.

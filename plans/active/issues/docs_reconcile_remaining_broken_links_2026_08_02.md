@@ -536,3 +536,4 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   corpus-wide this pass (all confirmed clean within the last 4 days by the 2026-08-08/09/10 dispatches; scoped to the
   touched-file set per the established "skip a redundant full fan-out" precedent from 2026-08-08's 4th dispatch).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:01a5dad404998016]: KEEP-NA, valid — heterogeneous corpus of 16 dead-link/staleness findings, each individually needing human judgment (ambiguous successors, scope-mismatch calls); re-verified clean by 6+ prior audit passes with no new bounded item found on independent re-read.

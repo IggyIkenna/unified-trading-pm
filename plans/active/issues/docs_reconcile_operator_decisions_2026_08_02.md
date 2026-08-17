@@ -436,3 +436,4 @@ just tracked here so they aren't lost:
   false-positives already tracked by `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`); 0 CLEARED, 0
   MOVED this run — no baseline changes made. Full Phase-5 report in this run's chat transcript / `/done` evidence.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:0aec3afabab2e46a]: KEEP-NA, valid — all 4 remaining items are explicit BLOCKED-OPERATOR-DECISION authority calls (doctrine/authoritative_for collisions) per docs-reconcile's own contract; item 1 correctly REOPENED 2026-08-12 with new evidence (a live CI consumer), not stale.
