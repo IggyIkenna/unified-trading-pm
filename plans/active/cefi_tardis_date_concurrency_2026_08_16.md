@@ -243,9 +243,24 @@ this session found:
       against a window with zero prior errors on either side; the risk this check guards against — silent content
       divergence — has no plausible mechanism here since neither run failed or partially wrote) — noted as a gap, not
       blocking, given the stronger direct evidence (0 errors either run).
-- [ ] [DATA] P1. **Preemption drill**: with concurrency=3 live, terminate the VM mid-window; confirm
-      `relaunch_backfill_vm.py` resumes from the new watermark with no date in the window ending up missing from the
-      manifest.
+- [ ] [BACKEND] P0. **NEW — found live during the preemption-drill prep, not yet root-caused.** The contiguous-
+      completion watermark ARMS successfully (`"SPOT-resume checkpoint armed"` logged, confirmed) but never actually
+      EMITS — 0 occurrences of the `[[VM_PROGRESS]]` marker in a canary run that cleared 3 full calendar dates with
+      real captures (`cefi-binance-futures-2026-heavy-20260817-002832`). Traced as far as confirming: (a) `VM_NAME`
+      IS exported correctly per-chunk (`setup-data-pipeline-vm.sh:2274`, `VM_NAME="${VM_NAME}-cN" python ...`), so
+      `_resolve_on_vm()` should pass; (b) `--start-date` IS passed correctly per chunk; (c) `record_date_completed`
+      is wired at `engine/orchestrator/__init__.py:717`, right after the manifest write, matching the design. Did
+      NOT find the exact silent-failure point — candidates not yet ruled out: an exception inside
+      `record_date_completed`'s try/except being swallowed (it's deliberately best-effort/never-raises, so a bug
+      there is invisible by design), or `_normalized_date` not matching the format `_is_iso_date`/`_range_start`
+      comparison expects. **Consequence is bounded, not data-loss**: with zero watermark AND the old max-seen mode
+      apparently superseded (not coexisting), a preemption mid-concurrent-run currently has NO checkpoint at all —
+      falls back to replaying from `--start-date`, the exact pre-existing behavior this whole plan traces back to,
+      not a new regression in data correctness. Proceeding with Phase 3's relaunch regardless (throughput fix is
+      independently proven safe via 2 clean canary runs); this bug blocks ONLY the preemption-resume improvement,
+      tracked here for whoever picks it up next — start by adding a diagnostic log inside
+      `record_date_completed`'s `except Exception:` block (currently silent) to catch what's actually being
+      swallowed.
 - [ ] [DATA] P1. If steps above are clean: step to concurrency 6, re-measure; stop at the first step that doesn't
       improve throughput or trips an abort criterion. Do NOT jump straight to TradFi's 20 — that was tuned against a
       different vendor's per-IP budget (~80 vs Tardis's 32).
