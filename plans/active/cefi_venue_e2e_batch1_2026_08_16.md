@@ -202,12 +202,18 @@ source: >-
       (explicit refusal, not a real per-venue amend — CCXT's `editOrder=True` flag doesn't confirm true
       exchange-native atomicity per venue; that verification is the linked issue doc's own open P2 follow-up).
       Full detail + tests in the linked issue doc, both its P0s and its P1 now closed.
-- [ ] [BACKEND] P1. **Gap: `LIQUIDATION_CAPTURE` has zero CEFI archetype slot** — wired exclusively to DeFi
+- [x] ✅ [BACKEND] P1. **Gap: `LIQUIDATION_CAPTURE` has zero CEFI archetype slot** — wired exclusively to DeFi
       protocols (Aave/Uniswap, `archetype_slots_defi.py:348-350`) despite 5 CEFI venues (BINANCE-FUTURES, BYBIT,
       COINBASE-FUTURES, KRAKEN-FUTURES, OKX-SWAP) declaring `liquidations` data with this as their only declared
       consumer — real captured data (per steps 1-5), zero strategy slot using it for any CEFI venue. Done-when:
       at least one CEFI venue is added to `LIQUIDATION_CAPTURE`'s slot declaration, or the CEFI exclusion is
-      confirmed intentional with a cited reason.
+      confirmed intentional with a cited reason. **CEFI exclusion confirmed intentional — strategy-service@f89c6d8235**
+      (cited comment: `LiquidationCaptureEngine` is a flash-loan/on-chain atomic-bundle mechanism structurally
+      inapplicable to a CEX order book; the 5 CEFI "consumers" are a `generate_venue_work_list.py` data_type-name
+      false positive, same shape as the confirmed `MARKET_MAKING_PREDICTION` finding above. Real CEFI variant
+      ("bid-ladder near liq price", per the manifest's `hyperliquid` PARTIAL cell) is unimplemented new archetype
+      design — tracked as quant_dev/backend follow-ups in
+      `plans/active/issues/liquidation_capture_cefi_bid_ladder_variant_unbuilt_2026_08_17.md`.
 - [ ] [BACKEND] P1. **Gap: `CARRY_BASIS_DATED`/`_INV` — BYBIT has zero presence, BINANCE-FUTURES's own
       `futures_chain` data isn't actually the archetype's futures leg, and the capability matrix claims Coinbase
       support that doesn't exist in the real generator (matrix/code drift)** — `target_universe/catalog_carry.py`

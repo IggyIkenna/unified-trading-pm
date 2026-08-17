@@ -146,10 +146,25 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
       `quality-gates.sh` green. Scope note: this todo is the BUILDER change only — `_partition_path_canonicality.py`'s
       oracle widening (dual-acceptance) and the regression tests pinning that dual-acceptance are the next two
       Phase-1 todos below, left untouched here per task scope.
-- [ ] [BACKEND] P1. Widen `_partition_path_canonicality.py`'s oracle (`CEFI_CHAIN_INSTRUMENT_TYPES` /
+- [x] ✅ [BACKEND] P1. Widen `_partition_path_canonicality.py`'s oracle (`CEFI_CHAIN_INSTRUMENT_TYPES` /
       `TRADFI_CHAIN_INSTRUMENT_TYPES` + `canonical_path_violations()`) to accept BOTH the legacy shape
       (`instrument_type=options_chain`) and the corrected shape (`data_type=options_chain`) as canonical for a
-      transitional dual-acceptance window — do NOT reject the legacy shape yet; Phase 4's backfill hasn't run.
+      transitional dual-acceptance window — do NOT reject the legacy shape yet; Phase 4's backfill hasn't run. —
+      unified-api-contracts@b96b28927f. `_cefi_chain_tail_violations` and `_tradfi_path_violations` now detect
+      chain-ness off EITHER `instrument_type` (legacy) OR `data_type` (corrected), both routing to the v6
+      `underlying=/quote=/margin=/ticks.parquet` tail check. Also fixed a real tradfi misclassification bug this
+      widening exposed: the corrected shape's `instrument_type` (`"future"`/`"option"`) is ALSO a
+      `TRADFI_SINGLE_INSTRUMENT_TYPES` member, so routing on chain-ness FIRST (before falling through to the
+      single-instrument-id check) is what stops a corrected-shape chain shard's symbol-less `ticks.parquet` fan-in
+      from getting a false single-instrument-id violation. `_stem_id_form_violations` widened the same way (checks
+      `data_type` too) for symmetry on the degenerate non-`ticks.parquet` v5-fallback edge case. Added 6 new unit
+      tests (`test_cefi_chain_v6_tail_corrected_shape_is_never_flagged`,
+      `test_cefi_chain_bare_v5_tail_corrected_shape_is_flagged`, `test_tradfi_chain_corrected_shape_is_canonical`,
+      `test_tradfi_chain_corrected_shape_bare_tail_is_flagged` + 2 parametrized cases); all 135 pre-existing
+      `test_partition_paths.py`/`test_partition_path_is_canonical.py` tests still pass unmodified (141 total).
+      `quality-gates.sh` green. Scope note: the dedicated dual-acceptance + negative-control regression-test todo
+      below is separate — my tests here cover this todo's own change, not that todo's full negative-control
+      requirement.
 - [ ] [BACKEND] P1. Add regression tests pinning dual-acceptance (both shapes pass `canonical_path_violations()` during
       the window) plus a negative control (a third, made-up shape still fails). `quality-gates.sh` green.
 

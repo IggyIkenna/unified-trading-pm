@@ -160,7 +160,7 @@ those stay local by construction and are deliberately absent.
       path grammar). Both misleading-pass/fail banners (IS, MTDS) re-verified 2026-08-16 as still accurate — the CEFI
       raw→canonical migration remains genuinely incomplete — and kept as-is with a re-verification note rather than
       removed. Parent: `/plans/active/venue_smoke_test_bar_2026_08_16.md`.
-- [ ] [DATA] P1. **Extend `data-pipeline-check-mtds`'s `canonical` leg to route CEFI/DEFI shards through the UAC
+- [x] ✅ [DATA] P1. **Extend `data-pipeline-check-mtds`'s `canonical` leg to route CEFI/DEFI shards through the UAC
       oracle `canonical_path_violations()`**, not just TradFi's bespoke id-form regex. Found by the audit todo above.
       The oracle now covers path-structure for every asset_group and filename id-form for `{tradfi, cefi, defi}`
       (`unified-api-contracts@d40c5d7d`/`@1cd27478`, 2026-07-20/23) — MTDS's `--legs …,canonical` leg
@@ -169,6 +169,25 @@ those stay local by construction and are deliberately absent.
       canonical-shape verification from this checker. Done-when: a CEFI or DEFI shard with a deliberately
       non-canonical path/filename fails the `canonical` leg (negative-control proof, same discipline as the SIT
       invariants above), and a genuinely canonical shard still passes. Repo: market-tick-data-service.
+      **Shipped — `market-tick-data-service@f90bf09a37`.** New `_run_oracle_canonical_leg` dispatched from
+      `_run_canonical_leg` for `asset_group in {CEFI, DEFI}`: lists the shard's REAL written test-bucket objects
+      via `_write_prefix_candidates` (the same helper the force-leg's own write-verification already uses,
+      post-filtered by `venue=`/`data_type=` needles — DeFi's coarse prefix stops at `asset_group=defi/`, one
+      segment before `venue=`) and runs each through `canonical_path_violations(require_pipeline_mode=True)` — no
+      re-implemented regex. SPORTS stays `skipped` (out of scope). **Negative-control proof (the done-when,
+      run in `tests/unit/test_pipeline_e2e_cefi_defi_canonical.py`, not a live VM launch)**: a path missing the
+      now-mandatory `pipeline_mode=` segment fails on the STRUCTURAL class, a raw wire-symbol filename
+      (`ADAF0:USTF0.parquet`, the exact worked example from
+      `/codex/02-data/four-surface-reconciliation-procedure.md` § 2) fails on the ID-FORM class, and a genuine
+      canonical CeFi/DeFi path passes both — 6 new tests, plus a scoping test proving a sibling venue's
+      non-canonical object doesn't leak into this shard's verdict. Updated the two byte-unchanged pins this
+      change necessarily breaks (`test_pipeline_e2e_tradfi_canonical.py::test_canonical_leg_is_skipped_for_non_tradfi_shards`
+      repointed CEFI→SPORTS; `test_pipeline_e2e_prediction_canonical.py`'s RULE-11 parametrize narrowed to
+      SPORTS-only) rather than leaving them silently green-but-wrong. Full `quality-gates.sh` green. **Side
+      finding, filed separately, not fixed here (adjacent but genuinely out of scope for this todo)**: while
+      reading `task_template.md`'s `gate_on_depends` docs for an unrelated task this session, found it gates on
+      a dependency task's checkbox being flipped, not its recorded outcome — see
+      `plans/active/issues/gate_on_depends_checks_completion_not_outcome_2026_08_17.md`.
 - [ ] [DOC] P2. **Fix the venue-coverage issue doc's stale frontmatter.** Its `summary` still says "~30 DeFi
       protocols" while the body carries the corrected figure. Done-when: frontmatter and body agree, sourced from the
       body's measured number, not re-counted.
@@ -222,3 +241,10 @@ Migrated all 3 onto the UAC registry (`execution-service@529af8d22c`), routing t
 already the origin `SOLANA_LST_MINTS` constant UAC's own SOLANA entries were migrated FROM and `jito.py` already
 consumed it — one shared fix point instead of 3 independent ones. Updated the invariant test accordingly
 (`unified-api-contracts@6151de2a2a`). Full detail in the flipped checkbox above.
+
+**2026-08-17 (slot 21, data_engineering) — MTDS canonical-leg CEFI/DEFI extension shipped.** Dispatched against the
+"Extend `data-pipeline-check-mtds`'s `canonical` leg" P1 todo. Full detail in the flipped checkbox above —
+`market-tick-data-service@f90bf09a37`, new `_run_oracle_canonical_leg` routing CEFI/DEFI through
+`unified_api_contracts.canonical_path_violations()`, 6 new unit tests including 2 negative controls (structural +
+id-form) and a venue-scoping test, both pre-existing byte-unchanged skip pins (tradfi/prediction test files)
+repointed to SPORTS-only. `quality-gates.sh` full green before shipping.

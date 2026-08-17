@@ -452,6 +452,30 @@ delete, but the same evidentiary bar applies given real financial data is at sta
     uppercase `POOL` keeps appearing post-fix, the fix has NOT actually deployed live despite being on main and
     needs the new Cloud-Build-staleness DIAG todo resolved first.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **2026-08-17 (slot 10, data_engineering) — re-attempted the gated `[SCRIPT]` re-retirement todo; GATE STILL NOT
+  MET, no retirement attempted, checkbox NOT flipped.** Re-ran slot-32's manifest probe
+  (`market-tick-data-service/scripts/one_offs/verify_mdps_casing_fix_live_via_manifest_2026_08_17.py`, under
+  `run-bounded-analysis.sh`) ~5h after slot-32's check: **identical result** — uppercase `POOL` max(written_at) =
+  `2026-08-16T20:31:16Z` (1,643,557 rows), lowercase `pool` max(written_at) = `2026-08-11T02:55:55Z` (1,925,307
+  rows), **0 rows of either casing written after the fix commit** (`2026-08-16T23:31:54Z`). MDPS still has not
+  processed a single `dex_pool_swaps` candle write since the fix landed — same conclusion as slot-32, now with a
+  second independent confirmation ruling out "the first check just caught an unlucky quiet moment."
+  **New evidence on the Cloud-Build-staleness side question**: `gcloud builds list --project=central-element-323112
+  --limit=8` now shows a FRESH build after the fix landed (`8575b934…`, 2026-08-17T02:14:53Z, SUCCESS) — so the
+  project's Cloud Build is not fleet-wide stalled, ruling out one candidate explanation from slot-32's flag. But
+  that build is `unified-trading-library/e2e-audit`, not MDPS, and a 30-build/30-trigger sweep found **zero**
+  MDPS-named builds AND **`gcloud builds triggers list --project=central-element-323112` returns "Listed 0
+  items"** — this project has NO Cloud Build triggers registered at all. That's new information for the open DIAG
+  todo below (not a resolution): it reframes "is the build pipeline stalled" as "does MDPS even deploy via a
+  Cloud Build trigger in THIS project" — plausibly it deploys via a different project or a non-trigger mechanism
+  (e.g. CI-driven `gcloud builds submit`), which would explain the absence without implying a stall. Root-causing
+  MDPS's actual deploy path is cicd craft, out of scope for this data_engineering session — left the DIAG todo
+  open with this evidence added rather than closing it on an inference.
+  **Did not force a synthetic write** for the same reason slot-32 gave: the smoke-test skill requires an
+  operator-given `--day`, and a forced write would test correctness, not whether the real production path is live.
+  Skipped with `reason_code=GATED` again. Next worker: same as slot-32's guidance — re-check
+  `MAX(written_at)` once genuine new `dex_pool_swaps` capture activity resumes; if the freshest post-fix row is
+  lowercase, the gate is satisfied.
 - **2026-08-17 (slot 25, backend_engineer)**: resolved the `[DIAG]` P2 corpus-wide scoping todo. Wrote
   `market-data-processing-service/scripts/scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`, a
   walk-disciplined stratified-sample scoper reusing `backfill_defi_dex_pool_swaps_source_correction.py`'s own
