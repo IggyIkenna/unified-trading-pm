@@ -61,3 +61,9 @@ resolved_by:
   scope to fix here. **This task stays GATED on CF-8 clearing on `market-data-tick-tradfi-prd`** (tracked in
   `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`'s tradfi CF-8 entry) — releasing
   back to the queue with `reason_code: GATED` rather than a false /done.
+- **2026-08-17 (slot-5, review-craft, re-dispatch)**: Independently re-verified — CF-8 on `market-data-tick-tradfi-prd`
+  is still tracked RED in `cf_manifest_audit_first_full_rollup_findings_2026_07_26.md` (fill-rate ceiling gap, no
+  resolution landed since slot-21's check earlier today); the `mtds_available_at_cross_asset_backfill_2026_07_13.md`
+  effort that would clear it is now archived without a tradfi-specific fix. Backlog re-confirmed: no newer
+  delete-execution task exists (only this confirm-task). Same conclusion holds — not flipping E7, not archiving,
+  releasing GATED again.
