@@ -245,6 +245,16 @@ The registry must answer commercial and operational questions, not just "does th
       `margin_event_emitter.py`/`MarginEvent` pipeline built on UTL's generic core. Converge on one before any
       archetype wires onto either. Tracked in
       `/plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md`.
+- [ ] [OPERATOR] P3. **Target November 2026 — decide whether to extract `position-balance-monitor-service` (PBM)
+      into its own deployed service.** Today PBM's role lives inside strategy-service's `position/` package on top
+      of UTL, so a strategy-service restart has no external source to recover position/margin truth from, and
+      `margin_event_emitter.py`'s own docstring names execution-service, alerting-service and
+      risk-and-exposure-service as consumers whose position-awareness is currently coupled to strategy-service's
+      uptime for no domain reason. Deliberately deferred — not blocking this epic's 2026-08-25 target. Full
+      reasoning and the target topology: `/codex/04-architecture/runtime-deployment-topology.md` (Layer 6). The
+      same un-split gap likely applies to `risk-and-exposure-service` and `pnl-attribution-service`, named in the
+      same doc's Layer 6 as separate target services that also don't exist as separate repos today — worth scoping
+      as one extraction decision rather than three.
 
 ## W8 — Weightings, declared not inferred
 
