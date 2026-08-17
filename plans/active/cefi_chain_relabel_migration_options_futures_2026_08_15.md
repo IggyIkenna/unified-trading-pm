@@ -6,9 +6,10 @@ summary: >-
   members but are currently written into the instrument_type= GCS path segment (data_type= carries the literal "trades")
   across market-tick-data-service, unified-api-contracts (incl. the canonical-path oracle itself),
   market-data-processing-service, deployment-api, and deployment-ui. Drafted per operator ruling on BLK-f5cd6b22
-  (2026-08-15) — this is a genuine cross-repo entity-rename plus a live production GCS data move with unmeasured blast
-  radius, not a mechanical 1-hour fix, so it is scoped here as a phased LOCAL plan (assigned_vm: NA) rather than a
-  single AO-dispatched todo.
+  (2026-08-15) — a genuine cross-repo entity-rename plus a live production GCS data move with unmeasured blast radius,
+  not a mechanical 1-hour fix, so it was scoped as a phased plan rather than a single AO-dispatched todo. Re-verified
+  current and flipped to AO-dispatched (`assigned_vm: planning`) 2026-08-17 per operator ruling; phase gating enforced
+  via `sequential: true` plus an explicit dispatchable Phase-3→4 gate todo (see Progress Log).
 status: active
 nature: design
 asset_group: [cefi]
@@ -19,15 +20,18 @@ tags: [cefi, entity-rename, chain-relabel, options-chain, futures-chain, migrati
 related:
   [
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
+    /plans/active/data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md,
+    /plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15_finalize.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch19_2026_08_13.md,
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-15"
+last_updated: "2026-08-17"
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+sequential: true
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 6
@@ -52,6 +56,11 @@ source: >-
   data_pipeline_alert_storm_root_cause_batch_2026_08_10.md:332-338 (todo #9). Operator ruling on the blocked question
   (2026-08-15): scope down to a phased plan, default assigned_vm: NA given the cross-repo blast radius and
   canonical-oracle change, do not resolve the move-vs-copy tactical question outside the plan's own drafting.
+  SUPERSEDED 2026-08-17: na-eligibility-audit follow-up Q&A round 2 (2026-08-16, recorded in
+  data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md) ruled "re-verify plan is current, then dispatch
+  execution" — re-verification found every Phase 1/2 file:line citation still accurate against live state despite
+  4 intervening MTDS commits + 1 UAC-adjacent commit (none touched the cited chain-relabel code paths); assigned_vm
+  flipped to planning accordingly (see Progress Log for full evidence).
 assigned_role: backend_engineer
 effort: high
 drift_direction: advance-code
@@ -59,12 +68,20 @@ drift_direction: advance-code
 
 # CeFi options_chain/futures_chain path-position entity-rename migration
 
-> **Why this is a separate LOCAL plan, not an AO todo**: the source todo bundled a genuine 5-repo entity-rename (writer,
-> the canonical-path oracle itself, adapters, the whole data-status/catalogue stack, UI) with a live production GCS data
-> move over "6+ years" of vintage data and no measured blast radius.
-> `entity-rename-and-split- consumer-migration-rule.md` requires every consumer to migrate in the SAME change; that is
-> not a 1-hour, single- worker, unattended task. See `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s todo item for
-> the full investigation this plan was drafted from (file:line citations for every consumer below).
+> **Why this WAS a separate LOCAL plan (2026-08-15), and why it is now AO-dispatched (2026-08-17)**: the source todo
+> bundled a genuine 5-repo entity-rename (writer, the canonical-path oracle itself, adapters, the whole
+> data-status/catalogue stack, UI) with a live production GCS data move over "6+ years" of vintage data and no measured
+> blast radius — too much for a 1-hour, single-worker, unattended task, so it was drafted as a phased LOCAL plan.
+> `entity-rename-and-split-consumer-migration-rule.md` requires every consumer to migrate in the SAME change. See
+> `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s todo item for the full investigation this plan was drafted from
+> (file:line citations for every consumer below). **2026-08-17 update**: the operator's na-eligibility-audit follow-up
+> Q&A round 2 (2026-08-16) explicitly ruled to dispatch this plan's execution once re-verified current — see the
+> Progress Log. Per-phase gating stays enforced via `sequential: true` plus the explicit Phase-3→4 dispatchable gate
+> todo below: `task_template.md` documents that a bare `sequential: true` chain SKIPS a non-ingested `[OPERATOR]` todo
+> when computing "immediate predecessor," so Phase 3's `[OPERATOR]` backfill todo alone cannot be trusted to block
+> Phase 4 — the gate todo closes that specific hole. Phase 3's live GCS move/delete still requires the operator per its
+> own `[OPERATOR]` tag and the delete-safety protocol; only the plan's DISPATCH READINESS changed, not who may execute
+> a destructive step.
 
 ## Consumer inventory (entity-rename rule step 1 — already compiled, 2026-08-15 investigation)
 
@@ -163,6 +180,16 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
 
 ### Phase 4 — close out (gated on Phase 3 completing + verifying zero remaining legacy-shape rows)
 
+- [ ] [DATA] P1. **Dispatch gate — do not skip.** `sequential: true` alone does NOT hold this boundary: Phase 3's
+      `[OPERATOR]` todo is excluded from AO ingestion, so the sequential chain's "immediate predecessor" computation
+      SKIPS it and would otherwise make this Phase 4 dispatchable the moment Phase 2 lands
+      (`plans/active/task_template.md` § 4, "`sequential: true` only orders ... ingested/dispatchable todos"). This
+      todo is the real, dispatchable gate: query the manifest (+ a scoped GCS listing) for any remaining legacy-shape
+      (`instrument_type=options_chain`/`futures_chain`/`combo_chain`) rows or objects. If ANY remain, Phase 3's
+      backfill has not finished — `skip-current-task` with `reason_code: GATED` (per `worker.md` § 4c) rather than
+      proceeding; do NOT narrow the oracle while legacy-shape data still exists in production, or every untouched
+      legacy-shape shard starts failing `canonical_path_violations()`. If zero remain, record the verifying query +
+      zero-count here and this todo is done — Phase 4 may proceed.
 - [ ] [BACKEND] P2. Narrow `_partition_path_canonicality.py`'s oracle back to ONLY the corrected shape (remove
       legacy-shape acceptance), completing the entity-rename per the "shard atom identical across writer/manifest/
       status/gate/UI" discipline.
@@ -181,3 +208,28 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   this session's 2-pass Explore-agent investigation (see the source todo's own Progress Log entry in
   `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` for the raw investigation transcript). No code changed.
 - **na-eligibility-audit 2026-08-16** [body-hash:d9dd38ca14bec7be]: KEEP-NA, valid — Read the full 183-line doc end-to-end (single Read, no truncation) plus cross-checked the redirect chain.
+- **2026-08-17 (slot 1, data_engineering, AO-dispatched via `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md`)**:
+  Re-verified this plan against live state per the operator's na-eligibility-audit follow-up Q&A round 2 ruling
+  ("re-verify plan is current, then dispatch execution"). **Result: still current.** Checked every cited file for
+  post-draft (>2026-08-15) commits: UAC's `partition_paths.py`/`_partition_path_canonicality.py` had ZERO commits
+  since the draft — `build_cefi_partition_path`/`build_tradfi_partition_path` still at lines 219/320,
+  `CEFI_CHAIN_INSTRUMENT_TYPES`/`TRADFI_CHAIN_INSTRUMENT_TYPES` still at lines 61/70, `canonical_path_violations`
+  still at line 503, all exactly as cited. MTDS had 4 intervening commits touching the 3 cited orchestrator files
+  (`bd07cfc3`, `ecedb15f`, `83948068`, `28e2eb36`) but none touched the chain-relabel code paths this plan cites —
+  `_write_bundle_shard_row` still at line 164, `_MERGED_DATA_TYPE_MAP` still at line 160 — confirmed by reading each
+  commit's diff (sports `data_type` sanitization, `quarantined_legs` threading, a new Stage-3 read-gate function, and
+  a per-date concurrency fix — all additive/orthogonal, none touched the `instrument_type=`/`data_type=` chain-relabel
+  logic). MDPS's chain adapters + deployment-api's data-status stack: zero commits since draft. deployment-ui: one
+  commit (`080ceb8`) touched only `DataStatusTab.tsx` (coverage-breakdown + asset-group toggle UI, unrelated to
+  path-position rendering) — Phase 2's UI todo is unaffected. **Dispatch-readiness change**: flipped
+  `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`, added `sequential: true`.
+  Before doing so, read `task_template.md` § 4 in full and found a real hazard: a bare `sequential: true` chain skips
+  non-ingested todos (incl. `[OPERATOR]`-tagged ones) when computing the predecessor, so Phase 3's `[OPERATOR]`
+  backfill todo would NOT actually have blocked Phase 4 from dispatching right after Phase 2 landed — closed by
+  inserting an explicit dispatchable `[DATA] P1` gate todo at the top of Phase 4 that checks for zero remaining
+  legacy-shape rows and self-defers via `skip-current-task reason_code=GATED` otherwise (see Phase 4). Authored the
+  required companion finalize plan per the "every AO-dispatched plan needs a gated finalize plan" hard rule:
+  `cefi_chain_relabel_migration_options_futures_2026_08_15_finalize.md`. **Also found**: the citing todo in
+  `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md` tagged this work `(repo: instruments-service)` — wrong;
+  this plan touches none of instruments-service, and its real repos are the 5 in this doc's own `repos:` frontmatter.
+  Flipped that checkbox with the corrected repo list as part of this same session.
