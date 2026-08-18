@@ -70,8 +70,13 @@ Following the exact pattern `escalation_queue_reconciler` already established (s
 - [ ] [BACKEND] P3. **Tests** for the new `plan_health.py` dispatch branch — mirror
       `test_plan_health.py`'s `escalation_reconcile`-mode test shapes (dispatch routes to the right role, mode
       exemptions behave correctly).
-- [ ] [OPERATOR] P3. **Decide the cadence** once the skill has run manually a few times and its typical runtime /
-      finding rate is known — daily is a starting guess, not a measured number.
+- [x] ✅ [OPERATOR] P3. **DECIDED 2026-08-18** — confirmed daily, run around midnight UTC, staggered against the
+      existing `ci_reconciler`/`plan_reconciler` nightly timers (not simultaneous with them) with enough buffer for
+      one retry before morning — supersedes the doc's earlier 06:25 UTC placeholder. Operator's own framing: a
+      later manual re-check (e.g. Harsh on his laptop) should be able to see that the scheduled midnight run
+      already did a "pre-audit" and only need to check the delta since then, rather than redoing the full sweep —
+      worth keeping in mind when the actual dispatch-mode wiring (todo above) designs how this run's output/state
+      gets persisted for a later run to diff against, not just posted to Slack and discarded.
 
 ## Why this wasn't done in the same session as the skill itself
 
