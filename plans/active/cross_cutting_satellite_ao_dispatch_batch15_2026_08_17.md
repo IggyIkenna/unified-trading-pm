@@ -125,10 +125,17 @@ source: >-
       (expected variance — memory-bandwidth-bound on the synthetic payload, not vendor/network-bound).
       Full comparison + raw JSON in `unified-trading-library@a31ab4a2a9`
       (`docs/benchmarks/three_stage_benchmark_2026_08_18.md` § "Portability confirmation — off-Google run").
-- [ ] [BACKEND] P2. Publish the per-shard reference ETA derived from the Google-environment figures, labelled
+- [x] ✅ [BACKEND] P2. Publish the per-shard reference ETA derived from the Google-environment figures, labelled
       REFERENCE (explicitly not a target), alongside the per-stage breakdown that explains it. Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a published reference-ETA table exists,
-      explicitly labelled non-binding.
+      explicitly labelled non-binding. **DONE 2026-08-18 (backend_engineer, slot 6)** —
+      `unified-trading-library@1b74a349a0`:
+      [`three_stage_benchmark_reference_eta_2026_08_18.md`](https://github.com/IggyIkenna/unified-trading-library/blob/live-defi-rollout/docs/benchmarks/three_stage_benchmark_reference_eta_2026_08_18.md).
+      Per-shard, per-mode reference ETA (12 rows) derived from the already-published GCP `planning`-VM
+      harness-validation run (`fetch_bytes/fetch_tput + process_latency + write_bytes/write_tput`), with the
+      per-stage breakdown reproduced alongside it and an explicit "REFERENCE ONLY — NOT A TARGET" banner + a
+      "what would make this binding" section pointing at the still-open real-vendor-fetch follow-up. Linked from
+      the parent `three_stage_benchmark_2026_08_18.md`.
 - [x] ✅ [DOC] P0. Cross-link every gate (B1-B26, P1-P13, L1-L14) in `data_pipeline_completion_2026_08_21.md`'s tables
       to its owning plan/issue doc; where no owning plan exists, record that absence as the finding rather than
       silently absorbing it. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: every gate
