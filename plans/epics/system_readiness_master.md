@@ -261,13 +261,26 @@ The registry must answer commercial and operational questions, not just "does th
       slow-path into the cache; execution handlers only execute a pre-computed decision. Same question applies to
       "capital budget enforced by construction" — a per-tick budget check in execution is a slow-path concern
       leaking into the fast path.
-- [ ] [INVESTIGATE] P1. **Reconcile the operator's "cache" framing against the documented contract.** Both existing
-      docs frame the strategy→execution handoff as instruction *emission* (`StrategyInstructionEnvelope`), not as a
-      cache execution polls per tick; a cache mechanism does exist for a different concern
-      ([instrument-lifecycle-cache-delta-hot-reload.md](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)).
-      Determine whether the tick-readable cache is a real, separate mechanism to document, an evolution of the
-      envelope contract, or shorthand for the two combined — then make the SSOT say so. Client artefacts must not
-      describe a mechanism the code does not have.
+- [ ] [DOC] P1. **Fold the tick-cache mechanism into the boundary SSOT — the design work is ALREADY DONE, do not
+      re-derive it.** The operator's "strategy hands execution a cache it reacts to on a tick basis" framing is
+      real and has real code, independently established by a concurrent session on 2026-08-18
+      (`unified-trading-pm@219a310df0`):
+      [/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md](/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md)
+      gives the full 3-layer design — Layer 1 strategy publishes intent, Layer 2 the execution-side
+      trigger/sensitivity cache, Layer 3 the order-fill algo. `execution_service/engine/delta_proxy_repricer.py`
+      already implements it (strategy publishes reference price + delta/gamma ONCE; execution extrapolates per tick
+      with a `max_adjustment_pct` staleness clamp that flags `stale=True` rather than extrapolating past a sane
+      bound), with real dataclasses and unit tests, plus `QuoteMaintainer` wiring it to a submitter protocol.
+      Blocked on: UAC's `QuoteInstruction` carrying no `delta`/`gamma`/`underlying_instrument_id` (wiring defaults
+      `delta = 1.0`, the spot/perp self-underlying case only), and the strategy-side receipt point (`QuoteHandler`)
+      having been deleted 2026-08-15 as dead code with no replacement. **This epic's job is to cite it, not restate
+      it** — the boundary SSOT names this as the canonical instance of the slow→fast cache handoff and links out.
+- [ ] [OPERATOR] P1. **Answer the 11 judgment calls in that issue doc** — 10 remain open (#6 resolved). Three bear
+      directly on this workstream's own principles and should be ruled consistently with them: #4 (how is "never
+      branch on archetype" *structurally* enforced, not merely conventional — strategy-agnosticism), #9 (reuse
+      `order_semantics.py`'s existing per-venue vocabulary rather than inventing a parallel schema — SSOT), #10
+      (execution consumes strategy's `ExposureAggregator` rather than keeping a duplicate local exposure view — no
+      same-concern-in-two-places). The doc records a default lean on all 11 for the record; it is not a ruling.
 
 - [ ] [BACKEND] P0. **Every strategy-agnostic module and function call lives centrally**, so multiple archetypes call
       one implementation instead of reimplementing it. Reimplementation is drift with a delay fuse.
