@@ -26,7 +26,7 @@ related:
   ]
 created: 2026-08-16
 author: claude-code (interactive session, discovered while diagnosing an unrelated plan-hygiene precommit failure)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra

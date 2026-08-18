@@ -32,7 +32,7 @@ related:
 created: 2026-07-31
 author: unknown
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: uac_master
 source: "slot-3, codex freshness re-review shard-B, discovered re-reviewing order-state-machine.md, 2026-07-31"
 execution_scope: local-only
 drift_direction: needs-decision

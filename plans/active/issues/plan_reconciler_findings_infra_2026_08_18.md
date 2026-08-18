@@ -12,11 +12,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, infra, sharded-run]
-related: [/plans/active/infra_consolidated_closeout_2026_07_25.md, /plans/epics/infrastructure_master.md]
+related: [/plans/active/infra_consolidated_closeout_2026_07_25.md, /plans/epics/security_and_cross_cutting_master.md]
 created: "2026-08-18"
 author: plan_reconciler
 source: agt-830118
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
@@ -31,7 +31,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/epics/infrastructure_master.md,
+    /plans/epics/security_and_cross_cutting_master.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 ---
@@ -315,7 +315,7 @@ None yet — no candidate has been run through adversarial refute-and-confirm an
   verifier sub-agents were needed given the hunters' own findings already carried direct tool-verified evidence
   (commit shas, live file checks) for every item this run applied.
 - **Docs read in full**: 27/27 writable docs (100%), one hunter each per the batch plan — plus the epic hub
-  (`infrastructure_master.md`) and closeout hub (`infra_consolidated_closeout_2026_07_25.md`) read as shared context.
+  (`security_and_cross_cutting_master.md`) and closeout hub (`infra_consolidated_closeout_2026_07_25.md`) read as shared context.
   All 41 grace docs were available as context to hunters that needed them; not deep-read individually.
 - **Tally**: 2 missed-flips confirmed+applied (both false-unchecked, HARD-evidenced); 7 contradictions
   fixed; 1 doc-drift (stale frontmatter date) fixed; 1 mechanical codex correction applied; 2 docs archived

@@ -16,7 +16,7 @@ tags: [quality-gates, quickmerge, scripts, ssot-audit, orchestrator, self-healin
 related: [capability_wizard_and_manifest_2026_06_11]
 created: 2026-06-11
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P3
 source:
   [

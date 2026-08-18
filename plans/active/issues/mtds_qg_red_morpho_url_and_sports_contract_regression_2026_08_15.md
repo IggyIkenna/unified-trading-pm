@@ -13,7 +13,7 @@ repos: [market-tick-data-service, instruments-service]
 scope: [engineer]
 tags: [qg-red, hardcoded-url, adapter-contract-regression, delete-safety-unrelated]
 related: []
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: "tradfi_satellite_ao_dispatch_batch13_2026_08_13.md todo 4 -- discovered while shipping an unrelated fix"
 assigned_vm: NA
 created: 2026-08-15

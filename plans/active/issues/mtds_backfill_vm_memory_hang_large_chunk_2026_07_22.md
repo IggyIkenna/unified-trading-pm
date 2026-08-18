@@ -33,7 +33,7 @@ related:
 created: 2026-07-22
 author: unknown
 priority: P0
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: >-
   Found while launching the LST rate honest coverage plan's #1 CEX-spot contiguity backfill
   (plans/active/lst_rate_honest_coverage_2026_07_21.md Phase 5) — reproduced on 2 independent VM launches before working

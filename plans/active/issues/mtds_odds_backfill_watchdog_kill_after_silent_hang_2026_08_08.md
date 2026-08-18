@@ -36,7 +36,7 @@ related:
 created: 2026-08-08
 author: claude-agent
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: >-
   Found during the autonomous sports honest-coverage convergence monitoring loop (continuation of
   sports_all_vendor_honest_coverage_convergence_2026_08_07.md) while investigating why `mtds-backfill-odds-smallchunk2`

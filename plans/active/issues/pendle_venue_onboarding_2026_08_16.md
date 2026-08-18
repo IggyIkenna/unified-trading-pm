@@ -22,7 +22,7 @@ execution_scope: local-only
 tags: [defi, pendle, venue-onboarding, execution-wiring]
 priority: P2
 source: agent-discovered-2026-08-16
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 related:
   [
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,

@@ -28,7 +28,7 @@ related:
   - /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md
 created: 2026-08-10
 author: /ci-reconcile (interactive, slot-2·laptop)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 source: >-
   /ci-reconcile sweep of #ci-failures since 2026-08-10T00:00Z — 4 python-quality-gates-v2 CRITICAL alerts on

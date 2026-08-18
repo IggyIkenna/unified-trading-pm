@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [quickmerge, versioning, workspace-manifest, ssot-contradiction, blocked]
 related: [/codex/08-workflows/ci-cd-flow.md, /codex/06-coding-standards/semver.md]
 created: 2026-08-10
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

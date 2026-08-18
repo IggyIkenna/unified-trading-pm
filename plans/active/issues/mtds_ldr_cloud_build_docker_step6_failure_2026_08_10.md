@@ -28,7 +28,7 @@ related:
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
 created: 2026-08-10
 author: /ci-reconcile (interactive, slot-2·laptop)
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P2
 source: >-
   /ci-reconcile sweep of #ci-failures, 2026-08-10 — the third of three alerts in the 13:07-13:36Z window (the other two,

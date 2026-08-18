@@ -12,7 +12,7 @@ author: slot-11 (infra)
 source: [plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md]
 status: open
 nature: issue
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 asset_group: [cross-cutting]
 stage: [data]

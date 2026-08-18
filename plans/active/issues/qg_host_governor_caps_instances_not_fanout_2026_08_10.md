@@ -21,7 +21,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-10
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

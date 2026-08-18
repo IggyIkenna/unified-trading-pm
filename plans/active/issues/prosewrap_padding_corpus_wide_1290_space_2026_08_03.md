@@ -26,7 +26,7 @@ related:
   ]
 created: 2026-08-03
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning # reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
 execution_scope: orchestrator-agent
 priority: P3
