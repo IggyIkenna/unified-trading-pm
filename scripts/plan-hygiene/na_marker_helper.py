@@ -33,7 +33,7 @@ import json
 import sys
 from pathlib import Path
 
-PM = Path("/home/ubuntu/unified-trading-system-repos/unified-trading-pm")
+PM = Path(__file__).resolve().parents[2]
 INVENTORY_SCRIPT = PM / "scripts" / "plan-hygiene" / "generate_na_doc_tranche_inventory.py"
 
 
