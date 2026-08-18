@@ -87,18 +87,56 @@ Full findings, root cause, and evidence for every todo below live in the three s
       `unified_trading_library.margin_and_liquidation` (`MarginModelProtocol`, `PortfolioInputs`, HF-mode/MMR-mode
       grading) is already this shape. Full design: [position-risk-centralization](/codex/04-architecture/position-risk-centralization.md).
       Details: [defi_leverage_archetypes_health_factor_wrong_source_2026_08_16](/plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md).
-- [ ] [AGENT] P0. **Reconcile the two parallel mechanisms before wiring anything.** `DeFiHealthAggregator`
-      (`position/core/defi_health_aggregator.py`, DeFi-only, HTTP-only, not live-fed) and `margin_event_emitter.py`
-      (`position/core/margin_event_emitter.py`, built on the UTL generic core, already live-called from
-      `position/cli/handlers/monitor_handler.py`, already consumed by execution-service's `deleverage_executor.py`)
-      both claim to be *the* centralized position-risk path. Determine whether `MarginEvent` (mechanism B) already
-      carries what an archetype's `on_tick()` gate needs (HF, LTV, liquidation price, distance-to-liquidation, per
-      position not just per portfolio) — if so, converge the next two todos onto mechanism B and retire mechanism
-      A instead of fixing it in place. Done-when: a stated decision, with evidence, on which mechanism the
-      archetypes below wire onto. Full context:
+- [x] [AGENT] P0. ✅ RECONCILED 2026-08-18 (unified-trading-pm, doc-only decision) — **Reconcile the two parallel
+      mechanisms before wiring anything.** Read `defi_health_aggregator.py`, `margin_event_emitter.py`,
+      `risk.py` (its caller), `positions_health.py`, and the `MarginHealthSnapshot`/`DeFiAggregatedHealth` schemas
+      in UAC directly rather than trusting either module's docstring claim. Findings:
+      1. **A and B are not actually independent — B's DeFi path already consumes A's output.**
+         `risk.py::update_lending_positions()` calls `_defi_health_aggregator.aggregate(positions)` (mechanism A)
+         and immediately feeds that `DeFiAggregatedHealth` into `emit_margin_event_for_health()` (mechanism B) in
+         the same call. So "retire A, converge on B" is not a straight either/or for the aggregation engine itself
+         — B's DeFi emission depends on A's `aggregate()`. What *is* genuinely redundant is a **third, separate**
+         piece: `positions_health.py`'s `derive_snapshot_from_lending()` independently re-derives
+         collateral/debt/ltv from raw positions (not reusing `DeFiHealthAggregator`) and hardcodes
+         `MarginModel.AAVE_V3` for its liquidation threshold regardless of the position's real protocol — this is
+         the actual duplicate-of-A that should be deleted in favour of a route that reads the same
+         `DeFiHealthAggregator`/`MarginEvent` state.
+      2. **`MarginEvent`'s schema already has every field an archetype gate needs** —
+         `MarginHealthSnapshot` (UAC `internal/risk.py:648`) declares `health_factor`, `ltv_ratio`,
+         `liquidation_price`, `distance_to_liquidation_pct`. But **`margin_event_emitter.py::_build_event()` never
+         populates `liquidation_price`/`distance_to_liquidation_pct` for the DeFi path** — every DeFi `MarginEvent`
+         emitted today has both fields `None`. This must be fixed as part of wiring the archetypes on, not
+         assumed already-done.
+      3. **Granularity gap — MarginEvent's DeFi snapshot is portfolio-combined, not per-position.** It's built
+         from `defi_health.combined_health_factor`/`combined_collateral_usd`/`combined_debt_usd` — one blended
+         figure across every DeFi lending position the client holds, labelled by `riskiest_protocol`. An
+         archetype like `staked_basis.py`'s `LST_AS_MARGIN` structure needs the HF of *its own* posted collateral,
+         not a value diluted by unrelated positions on other protocols. `DeFiAggregatedHealth.protocols: list[
+         ProtocolHealthBreakdown]` (mechanism A's per-protocol breakdown, already computed inside `aggregate()`)
+         is the correct source of per-position granularity — it exists today but isn't surfaced in the published
+         `MarginEvent`.
+      4. **Push vs. pull — `MarginEvent` alone can't serve a synchronous `on_tick()` gate.** It's a best-effort
+         Pub/Sub push, emitted only when severity crosses a non-INFO band (`_classify_hf_severity`) — there is no
+         in-process subscriber/cache inside strategy-service today that an archetype could read synchronously for
+         "the latest known HF for this position." `positions_health.py`'s `/positions/health` route already
+         models the needed shape (pull, 5s-TTL cache) but is HTTP-only and duplicates A's math per finding 1.
+      **Decision**: archetypes wire onto mechanism (B) semantically (`MarginEvent`/`MarginHealthSnapshot` stays
+      the one published schema; do not build a third parallel event type) — but B is not usable as-is. The next
+      three todos must, in order: (a) feed live positions into `risk.py::update_lending_positions()` (which
+      already wires A→B together) rather than into `positions_health.py::update_wallet_health_from_lending`
+      as originally worded (corrected below — that function feeds the redundant third cache, not
+      `DeFiHealthAggregator`); (b) populate `liquidation_price`/`distance_to_liquidation_pct` in
+      `_build_event()` and surface per-protocol (not just combined) HF so an archetype can read its own
+      position's figures, e.g. via an in-process last-known-`DeFiAggregatedHealth` cache the archetypes call
+      directly rather than only reacting to the Pub/Sub stream; (c) once that in-process read path exists,
+      delete `positions_health.py`'s independent `derive_snapshot_from_lending()`/AAVE_V3-hardcoded path and
+      have `/positions/health` read the same state instead of re-deriving it. Full context:
       [position-risk-centralization § Two parallel mechanisms](/codex/04-architecture/position-risk-centralization.md).
 - [ ] [BACKEND] P0. Route execution-service's `HealthFactorMonitor`'s live per-wallet Aave data into
-      `DeFiHealthAggregator`'s state via `update_wallet_health_from_lending` — not a new poller, not the stub
+      `DeFiHealthAggregator`'s state via `risk.py::update_lending_positions()` — **not** via
+      `positions_health.py::update_wallet_health_from_lending` (corrected 2026-08-18: that function feeds a
+      separate, redundant cache that re-derives its own collateral/debt/ltv rather than calling
+      `DeFiHealthAggregator`; see the reconciliation todo above) — and not a new poller, not the stub
       `AavePositionAdapter`. Done-when: the aggregator's state reflects real position data after a live/paper run,
       verified by reading it back.
 - [ ] [BACKEND] P0. Switch `staked_basis.py`'s `_validate_lst_margin_slot` and `recursive_staked.py`'s entry gate
@@ -198,6 +236,16 @@ logic and that no second archetype could ever want. That must be stated, not ass
       legitimately-local constants.
 
 ## Progress Log
+
+- **2026-08-18 (slot 5, backend_engineer)** — Resolved the P0 reconciliation todo. Read the actual call graph
+  (`risk.py::update_lending_positions()` already chains `DeFiHealthAggregator.aggregate()` into
+  `emit_margin_event_for_health()`) rather than trusting either module's docstring. A and B are not independent
+  parallel paths as originally framed — B's DeFi emission depends on A's `aggregate()`; the genuinely redundant
+  piece is `positions_health.py`'s separate `derive_snapshot_from_lending()` re-derivation. Also found the P0
+  todo immediately below named the wrong function (`update_wallet_health_from_lending` feeds the redundant third
+  cache, not `DeFiHealthAggregator`) and corrected it in place per the workspace's stale-pointer rule. Full
+  decision + evidence inline on the checkbox above. No code changed this session — evidence-gathering + decision
+  only, per the todo's own done-when.
 
 - **2026-08-16** — Authored from three same-day issue docs per operator direction (AO-dispatched, one wrapper
   plan). `sequential: true` set deliberately given the real chain among the first several todos — not a reflexive
