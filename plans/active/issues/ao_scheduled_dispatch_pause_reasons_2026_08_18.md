@@ -1,0 +1,100 @@
+---
+doc_type: issue
+title: >-
+  Recorded reasons for the three currently-paused scheduled-dispatch modes (ag_closeout,
+  cefi_mtds_smoke, ci_reconcile) — operator-confirmed 2026-08-18, so a future watchdog run
+  doesn't re-flag them as a forgotten pause
+summary: >-
+  ao-watchdog's first live run (2026-08-18) found `GET /api/scheduled-dispatch/status` reporting
+  three modes paused (ag_closeout, cefi_mtds_smoke, ci_reconcile), responsible for 316 of the
+  fleet's `no_capacity` dispatch attempts over the trailing 72h. `scheduled_dispatch_pause.py`
+  stores only a bare set of mode names (no `paused_at`/`reason` field exists in the mechanism
+  itself) — exactly the structural gap that let 6 modes sit forgotten-paused from an unrelated
+  2026-08-11 investigation for days, per `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`.
+  Operator confirmed live (2026-08-18) that all three are currently intentional, not forgotten,
+  and gave the reason for each — recorded below with today's date since the mechanism itself
+  can't say when the pause actually started.
+status: open
+nature: issue
+asset_group: [ao]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags: [ao-watchdog, scheduled-dispatch, operator-decision]
+related:
+  [
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+    /cursor-configs/skills/ao-watchdog/SKILL.md,
+  ]
+created: "2026-08-18"
+parent_epic: agent_operating_framework_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: research
+assigned_role: infra
+drift_direction: none
+source: >-
+  Interactive /ao-watchdog run, 2026-08-18 (this session) — GET /api/scheduled-dispatch/status
+  surfaced 3 paused modes with no reason/timestamp stored; reasons given live by the operator in
+  chat when asked whether to resume them.
+resolved_by:
+locked_by:
+---
+
+# Recorded reasons for the three currently-paused scheduled-dispatch modes
+
+## Current state (confirmed live 2026-08-18 via `GET /api/scheduled-dispatch/status`)
+
+```
+paused: ["ag_closeout", "cefi_mtds_smoke", "ci_reconcile"]
+```
+
+`scheduled_dispatch_pause.py` stores this as a bare `set[str]` — no timestamp, no reason. The
+three reasons below come from the operator directly (2026-08-18 chat), not from any system field.
+
+## `cefi_mtds_smoke` — paused: cost/orphan-resource risk, pending deployment-service registration
+
+The smoke test spins up real cloud resources and currently consumes too much of them. Before
+re-enabling, the resources it launches need to be properly registered as deployment-service-
+managed services so they're actually monitored and killed if the spawning agent dies mid-run —
+today, an agent death after spawn risks an orphaned, unmonitored, unbilled-for resource running
+indefinitely. This is the same failure class `/vm-preemption-billing-waste-audit` and the
+resource-watchdog subsystem exist to catch generally; this specific test's resources aren't yet
+wired into that net.
+
+**Unblocks when**: the smoke test's spawned resources are registered as deployment-service-managed
+(so kill-on-orphan applies to them too).
+
+## `ag_closeout` — paused: heavy concurrent manual reconciliation work in flight
+
+A lot of time-reconciliation work (`ag-closeout-audit` scope) is happening manually/actively right
+now across asset groups. Running the automated `ag_closeout_auditor` concurrently would step on
+that in-flight work rather than complement it.
+
+**Unblocks when**: the current manual reconciliation wave settles — operator judgment call, not a
+fixed date.
+
+## `ci_reconcile` — paused: intentionally manual, pending confidence in escalation routing
+
+CI reconciliation is being run manually as a daily task on purpose, not via the automated timer,
+until there's more confidence and stability in how `/ci-reconcile` findings should route into
+escalation tasks. This is a deliberate maturity gate, not a bug workaround — the operator wants to
+observe the manual process for longer before trusting the timer to run it unattended.
+
+**Unblocks when**: the operator judges the CI-reconcile-to-escalation routing pattern stable
+enough to automate.
+
+## Follow-up
+
+- [ ] [SCRIPT] P2. Add a `reason` + `paused_at` field to `scheduled_dispatch_pause.py`'s storage
+      (currently a bare `set[str]` via `dedup_state.load_seen_keys`/`save_seen_keys` — needs a
+      small schema change to a `dict[str, {reason, paused_at}]` or equivalent), and surface both
+      on `GET /api/scheduled-dispatch/status` and the dashboard's pause UI. This is the structural
+      fix for the gap this doc exists to paper over by hand — without it, every future watchdog
+      run (or operator) has to re-ask "why is this paused" from scratch, exactly as happened here
+      and in the 2026-08-11 incident. (repo: agent-orchestrator)
+- [ ] [REVIEW] P3. Once `ci_reconcile`'s manual-daily-task period produces enough signal on
+      escalation-routing reliability, resume the timer and archive this doc's `ci_reconcile`
+      section (or the whole doc, if all three have resolved by then). (repo: NA — operator
+      judgment call on timing)

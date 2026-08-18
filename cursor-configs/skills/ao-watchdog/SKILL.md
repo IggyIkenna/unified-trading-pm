@@ -338,6 +338,14 @@ pulled in Step 1). Read the output against the status model
   for weeks (this exact class of bug — 6 modes left paused from an unrelated 2026-08-11 investigation, misread as
   "error" on every retry for days — is documented in
   `agent-orchestrator/scripts/install-escalation-queue-reconciler-timer.sh`'s own header comment).
+  **Currently-known paused modes (as of 2026-08-18, operator-confirmed intentional — check
+  `plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md` for the full reasons before
+  re-flagging these as a mystery):** `cefi_mtds_smoke` (cost/orphan-resource risk, pending deployment-service
+  registration of its spawned resources), `ag_closeout` (heavy concurrent manual AG-closeout reconciliation in
+  flight), `ci_reconcile` (deliberately run manually as a daily task until escalation-routing confidence is
+  higher). If `GET /api/scheduled-dispatch/status` still shows exactly these three paused, treat it as expected
+  and move on; if the SET has changed (a new mode paused, or one of these three unexpectedly resumed), that's a
+  real finding — check the issue doc's "Unblocks when" for each before assuming anything.
 - **Capacity-queue depth** (`ScheduledJobQueueRow`) — a persistently non-empty queue across multiple ticks means
   the fleet's scheduled-job reserve (`scheduled_task_slot_reserve()`, default 4) is undersized relative to actual
   contention; this is a capacity-sizing finding, not a per-job bug.
