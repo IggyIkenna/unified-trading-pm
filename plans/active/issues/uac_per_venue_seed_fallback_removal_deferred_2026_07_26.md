@@ -48,7 +48,11 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_role: backend_engineer
-archive_exempt: true
+archive_exempt: true # FLAGGED 2026-08-18 (plan_reconciler) — no inline justification comment exists for this
+  # exemption (contra the `archive_exempt` convention requiring one), and this doc's sole todo is now [x] with 0
+  # open todos left. Not unilaterally archived this pass (the original reasoning for the exemption is unknown, and
+  # archival is a 6-step ritual with a referrer sweep) — routed to a future `/archive-candidates-audit` pass to
+  # either document the real reason or archive.
 context_scope:
   [
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,

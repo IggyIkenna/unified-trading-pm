@@ -34,7 +34,10 @@ resolved_by:
 locked_by:
 assigned_vm: planning
 assigned_role: data_engineering
-archive_exempt: true
+archive_exempt: true # FLAGGED 2026-08-18 (plan_reconciler) — the BRIDGE-comment gap this doc's own line 455 already
+  # self-notes (below) still has no inline reason attached to the field itself. Not unilaterally archived this pass
+  # (original reasoning unknown, archival is a 6-step ritual with a referrer sweep) — routed to a future
+  # `/archive-candidates-audit` pass to either document the real reason or archive.
 code_refs:
   [
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,

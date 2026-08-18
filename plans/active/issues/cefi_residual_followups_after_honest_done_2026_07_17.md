@@ -435,10 +435,13 @@ pairs stay honest-unresolved (reported, never guessed).
       the D4 GCS cutover cannot run until every one carries it (the drain stops WRITERS only; readers keep running
       against renamed/rewritten objects). Includes an **execution-service redeploy** even though it needs no code
       change. (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service) —
-      **STILL OPEN (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 1, slot-3, 2026-07-26)**:
-      attempted from this worktree — infra-craft work (Cloud Run deploy), out of `backend_engineer` scope, and no Cloud
-      Run services found for these 4 consumers from this worktree. Spun to a fresh dispatchable todo:
-      `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 1.
+      Spun to a fresh dispatchable todo: `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md`
+      todo 1 — attempted from this worktree at spin-off time (2026-07-26) as infra-craft work (Cloud Run deploy), out
+      of `backend_engineer` scope, no Cloud Run services found for these 4 consumers from this worktree. **CORRECTED
+      2026-08-18 (plan_reconciler)**: was mis-worded "STILL OPEN" despite the checkbox above already reading `[x]` —
+      self-contradictory syntax. The spun-off target is now confirmed `status: resolved` (archived, todo 1 `[x]`
+      RULED 2026-07-26, BLK-dca02ac2) — this line's `[x]` correctly reflects the spin-off action itself, and the
+      underlying work it spun off to is also done.
 - [x] ✅ [INFRA] P1. **Fix the features-service image build — stale base-image UAC (non-cutover-blocking).** features'
       `6ab22c6` main build FAILS: `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` → ImportError, because features
       uses `uv pip install --no-sources` and relies on the UAC baked into its pinned `BASE_IMAGE_DIGEST`
@@ -503,10 +506,10 @@ pairs stay honest-unresolved (reported, never guessed).
       while the catalogue has them as `FUTURE`, so the 3-tuple honestly misses. Correcting the manifest itype
       PERPETUAL→FUTURE for dated symbols would recover most of them. Separate data-quality task, NOT a cutover blocker
       (leaving them raw is the correct never-guess behaviour; they are delisted historical). (found 2026-07-18 Phase-C
-      honest-unresolved audit.) (repo: instruments-service) — **STILL OPEN
-      (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 3, slot-3, 2026-07-26)**: the manifest
+      honest-unresolved audit.) (repo: instruments-service) — spun to
+      `cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 3 (slot-3, 2026-07-26): the manifest
       row_key includes `instrument_type`, so a blind relabel can collide with an already-existing FUTURE row for the
-      same shard atom — needs the same collision-aware dedup logic as
+      same shard atom — needed the same collision-aware dedup logic as
       `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`, not a blind in-place relabel. Spun to a fresh
       dispatchable todo: `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.
 - [x] ✅ [SCRIPT] P0. **DONE (todo 2 of

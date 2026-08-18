@@ -38,7 +38,11 @@ priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-last_updated: "2026-08-02" # 2026-08-02: added 3 self-dispatched-but-unlinked citations (ag-closeout-audit linkage-gap fix); was 2026-07-25 (appended the parent's "Pass-through from the 2026-07-18 consolidated canonicalisation audit" section verbatim, 4-child split pass, cefi.4)
+last_updated: "2026-08-18" # 2026-08-18: plan_reconciler cefi_master epic-scoped reconcile — added a consolidated
+  # STALE-DIGEST FIX correction block (22 over-counted + 1 under-counted + 1 misfiled entry, see body). Was
+  # 2026-08-02: added 3 self-dispatched-but-unlinked citations (ag-closeout-audit linkage-gap fix); was 2026-07-25
+  # (appended the parent's "Pass-through from the 2026-07-18 consolidated canonicalisation audit" section verbatim,
+  # 4-child split pass, cefi.4)
 locked_by:
 locked_since:
 supersedes:
@@ -68,6 +72,47 @@ context_scope:
 > top-level items are listed; `- [x]` items are omitted. Docs with 0 open todos get a one-line disposition instead of
 > sub-bullets. Docs with >8 open todos list every P0/P1 in full and cap P2/P3 with a `+N more` marker — never a silent
 > drop.
+
+> **STALE-DIGEST FIX (plan_reconciler, cefi_master epic-scoped reconcile, 2026-08-18)**: a corpus-wide grep verified
+> 22 of the entries below claim MORE open work than the target doc actually has (target already archived/resolved,
+> or its open-count shrunk since), 1 entry UNDER-counts (target grew), and 1 entry is misfiled under the wrong
+> section — independently spot-verified this pass (6/25 rows re-checked via direct `status:`/open-checkbox grep,
+> 6/6 exact match to the hunter's own claims). This corrects the digest's own stated purpose ("so an AO worker can
+> act from this doc alone") via one consolidated table rather than 24 separate dense-list micro-edits (high
+> edit-collision risk in a frequently-touched shared doc) — treat this table as authoritative over the per-entry
+> text below until each entry is itself updated on next touch:
+>
+> | Entry (approx. line, pre-fix) | Target doc | Digest claimed | Live actual (2026-08-18) |
+> |---|---|---|---|
+> | ~97 | `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` | 4 open (items 5-8) | archived, `status: resolved`, 0 open |
+> | ~109 | `bug_c_normalize_id_collision_options_futures_2026_07_22.md` | 3 open | archived, `status: resolved`, 0 open |
+> | ~116 | `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md` | 5 open (items 1-5) | archived, `status: resolved`, 0 open |
+> | ~133 | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` | 3 open | archived, `status: resolved`, 0 open |
+> | ~138 | `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` | 2 open | archived, `status: resolved`, 0 open |
+> | ~189 | `onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` | 4 open | `status: open`, **2** open |
+> | ~244 | `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` — "14 open" | 14 | `status: open`, **7** open |
+> | ~262 | `coverage_floor_registries_no_cross_propagation_2026_07_17.md` | 6 open | `status: open`, **1** open |
+> | ~272 | `instrument_availability_hive_canonicalisation_2026_07_21.md` | 2 open (items 7-8) | archived, `status: resolved`, 0 open |
+> | ~283 | `estate_orphan_assessment_2026_07_21.md` | 4 open (items 3-6) | `status: open`, **1** open |
+> | ~295 | `features_by_date_root_canonicalisation_2026_07_21.md` | 3 open (items 6-8) | archived, `status: resolved`, 0 open |
+> | ~321 | `migration_orphan_sweep_performance_decay_2026_07_22.md` | 1 open | archived (location), `status: open` (stale field), 0 open |
+> | ~359 | `fail_hard_canonical_enforcement_design_2026_07_20.md` | 6 open | `status: open`, **1** open |
+> | ~370 | `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` | 7 open | `status: open`, **1** open |
+> | ~401 | `rotate_exchange_keys_stale_venue_registry_2026_07_23.md` | 3 open | archived, `status: resolved`, 0 open |
+> | ~412 | `group_c_cloud_run_job_failures_triage_2026_07_16.md` | 1 open | archived, `status: resolved`, 0 open |
+> | ~493 | `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — "22 open" | 22 | `status: active`, **10** open |
+> | ~550 | `adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` | 3 open | `status: open`, **1** open |
+> | ~560 | `candle_feature_canonical_path_divergence_2026_07_20.md` — "exactly 8 open" | 8 | `status: archived`, 0 open |
+> | ~587 | `cefi_residual_followups_after_honest_done_2026_07_17.md` — "14 open" | 14 | `status: open`, **5** open |
+> | ~613 | `deribit_options_chain_af_g4_blocker_2026_07_03.md` | 4 open | `status: open`, **1** open |
+> | ~619 | `instrument_id_format_canonicalization_2026_07_08.md` | 2 open | archived, `status: resolved`, 0 open |
+> | ~654 | `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` | ~3 still-open | `status: open`, **2** open |
+> | ~627 (UNDER-counted) | `mtds_is_full_adapter_smoketest_findings_2026_07_07.md` | 3 open | `status: open`, **5** open (doc grew) |
+> | ~446-455 (misfiled) | `cefi_ml_directional_continuous_live_2026_06_20.md` | listed under "Cross-AG-touching (cefi + defi/prediction)" | `asset_group` corrected `[cefi,defi]`→`[cefi]` 2026-08-08 (pure-cefi, zero DeFi content) — same orthogonality fix already applied to the immediately-preceding sibling entry (`cefi_deribit_binance_futures_bundle_verification_2026_06_20.md`) but missed here |
+>
+> Evidence: `grep -m1 '^status:' <file>` + `grep -cE '^[[:space:]]*[-*] \[ \]' <file>` per row, this session (not a
+> re-derivation of this doc's own prior 3 self-corrected "STALE-DIGEST FIX (…2026-08-16)" entries below — those stay
+> as already-fixed precedent; this table extends, does not replace, that established annotation pattern).
 
 > Full 4-surface migration Progress Log detail (KRAKEN-SPOT dry-runs, fleet-monitoring lessons, etc.) lives in
 > [`plans/active/cefi_4surface_migration_execution_log_2026_07_24.md`](/plans/active/cefi_4surface_migration_execution_log_2026_07_24.md)

@@ -85,8 +85,11 @@ for the dead VM, so nothing was banked; a relaunch starts from the same gap.
 Two SEPARATE solo per-venue launches, not bundled via `SINGLE_VM_QUEUE=1` — mirrors what worked for the
 BINANCE-FUTURES resume this session (see `cefi_tardis_date_concurrency_2026_08_16.md`) and avoids the queue-mode
 false-empty-confirmed bug class documented in `cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md`
-(now fixed at the code level, `market-tick-data-service@bd07cfc3`, but per-venue solo launches remain the safer
-shape regardless):
+(now fixed at the code level, `market-tick-data-service@f134d16595c3e5d1761ec76a7f40041535a6f4e3` — **CORRECTED
+2026-08-18 (plan_reconciler)**: was citing `bd07cfc3`, an unrelated commit ("fix(orchestrator): make per-date state
+process-scoped..."); the real Tier-3 sentinel fix is `f134d165...`, per
+`cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md:109`, both git-verified ancestors of
+`origin/live-defi-rollout` — but per-venue solo launches remain the safer shape regardless):
 
 ```
 VENUES="OKX-SPOT"   YEARS="2025" ONLY="OKX-SPOT:2025:heavy"   START_DATE="2025-01-01" ...

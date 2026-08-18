@@ -113,9 +113,9 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
       coverage asserting the child `cmd` list carries `--force` iff the parent `args.force` is set. **Done**:
       `market-data-processing-service@e9f9819`, quality-gates.sh green, quickmerge-landed + verified ancestor of
       `origin/live-defi-rollout`.
-- [ ] [DATA] P2. Once `mdps-backfill-cefi-20260808-095136` reaches a terminal state (completed or preempted), relaunch
-      the CeFi Track-7 candle regen SCOPED PER-DAY (single-day `--start-date`==`--end-date` launches for each of the 6
-      target days, NOT the full 2023-06-01→2026-01-01 range — the launcher has no day-list flag, and the full-range
+- [ ] [DATA] P2. Relaunch the CeFi Track-7 candle regen SCOPED PER-DAY once `mdps-backfill-cefi-20260808-095136`
+      reaches a terminal state (completed or preempted) — single-day `--start-date`==`--end-date` launches for each
+      of the 6 target days, NOT the full 2023-06-01→2026-01-01 range — the launcher has no day-list flag, and the full-range
       scope is what caused 2 prior preemptions plus ~8 months of unnecessary compute at the observed ~12 min/day rate)
       now that the force-forwarding fix is live. (repo: deployment-service, market-data-processing-service)
       Safe-idempotent justification (no `[OPERATOR]` tag needed): a `--force` candle-regen backfill VM launch, no GCS

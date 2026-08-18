@@ -411,5 +411,9 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
   — capability-registered but no live capture attempt has reached the manifest yet, so no exposure to confirm/fix there
   today. Filed follow-up fix + registry-drift todos in a new issue doc per this todo's own instruction:
   `issues/cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md`. Read-only audit — no code shipped,
-  per this todo's scope.
+  per this todo's scope. **CROSS-LINK added 2026-08-18 (plan_reconciler)**: this confirms the SAME
+  canonical-write-only vulnerable path for DERIBIT `futures_chain`; whether it ALSO explains DERIBIT `options_chain`'s
+  100% attempted_failed (this repo's `deribit_options_chain_af_g4_blocker_2026_07_03.md`, gated separately on the
+  Track-2 coverage backfill) is not yet confirmed either way — that doc should be checked against this fix rather
+  than treated as an independent blocker.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).

@@ -95,8 +95,9 @@ either give `resolve_instruments_blob` a same-connector fallback to the most-rec
 have the launcher warn/gate on it. Both are legitimate; leaving the choice to whichever worker picks this up
 since either closes the gap.
 
-- [ ] [DATA] P2. In `market-tick-data-service/market_tick_data_service/instrument_availability_paths.py` /
-      `live/_is_universe.py`, add a bounded fallback: when `day=<today>`'s `instruments.parquet` is absent for
+- [ ] [DATA] P2. Add a bounded fallback in
+      `market-tick-data-service/market_tick_data_service/instrument_availability_paths.py` /
+      `live/_is_universe.py`: when `day=<today>`'s `instruments.parquet` is absent for
       a venue, look back up to N prior days (e.g. 3) for the most recent available partition and use it (log
       clearly that it's a fallback, not silently treat it as today's fresh data) instead of returning an empty
       universe until the daily job lands. Add a unit test covering the fallback + the "no partition in the

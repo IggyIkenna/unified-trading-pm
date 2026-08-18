@@ -79,9 +79,9 @@ source: >-
 
 ## Todos
 
-- [ ] [SCRIPT] P3. `aggregate_from_15s_efficient` (market-data-processing-service, `fast_candle_aggregation.py:333-
-      359`) fires a false-positive "adapter density bug" NaN-in-open/close WARNING on every liquidations shard with
-      any zero-liquidation window (659,791+ occurrences) — confirmed false positive (liquidations is inherently
+- [ ] [SCRIPT] P3. Exempt `aggregate_from_15s_efficient` from a false-positive "adapter density bug" NaN warning
+      (market-data-processing-service, `fast_candle_aggregation.py:333-359`) that fires on every liquidations shard
+      with any zero-liquidation window (659,791+ occurrences) — confirmed false positive (liquidations is inherently
       sparse/event-driven; a null open/close on a zero-liquidation window is correct honest-absence, not a density
       bug). Give it the same `_honest_absence_frame` exemption `derivative_ticker` already has, keyed on
       `liquidation_count`/`liquidation_notional_usd` presence (or widen the existing check). Source:
@@ -224,9 +224,9 @@ source: >-
       attempt (launched 2026-08-15) appends past the gate. Source:
       `plans/active/issues/plan_reconciler_findings_cefi_2026_08_16.md`. Done-when: the doc is under the 1000-line
       hard cap with a child doc holding the split-out content and `depends_on`/`related` wired correctly.
-- [ ] [SCRIPT] P2. `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s sole open todo re-points to a
-      NEW 19-VM HYPERLIQUID fleet found running 2026-08-16 that no task in the doc launched — identify/confirm it's
-      the expected relaunch before assuming progress. Source:
+- [ ] [SCRIPT] P2. Identify/confirm the NEW 19-VM HYPERLIQUID fleet found running 2026-08-16 that no task in
+      `coverage_floor_registries_no_cross_propagation_2026_07_17.md` launched (that doc's sole open todo re-points to
+      it) before assuming progress. Source:
       `plans/active/issues/plan_reconciler_findings_cefi_2026_08_16.md`. Done-when: the fleet's origin is confirmed
       (which launcher/dispatch started it) and the source doc's todo is updated accordingly.
 - [ ] [DOC] P3. `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` has ≥11 link-TEXT/href mismatches

@@ -69,7 +69,9 @@ context_scope:
 > real but a DIFFERENT, broader defect (WITHIN-bundle: 7 raw contracts collapsing to 1 emitted, confirmed on both BYBIT
 > and DERIBIT) — not a cross-write race, so not fixable via merge-on-write/per-cell serialization. Title/summary kept
 > verbatim (existing cross-refs); see the "Hypothesis (as stated) REFUTED by current-code reading" entry below for
-> ground truth. Sole remaining todo (line ~127) is still open, gated on the post-fix relaunch's per-underlying
+> ground truth. Sole remaining todo (see the Todos section below — **CORRECTED 2026-08-18, plan_reconciler**: was
+> citing a stale line number "~127" that had already drifted to 137 before this pass; a line-number self-reference
+> re-rots on every edit, so pointing at the section name instead) is still open, gated on the post-fix relaunch's per-underlying
 > contract-count audit.
 
 ## What I found
@@ -134,10 +136,9 @@ read-merge-write instead of overwrite) as a new P1 todo here.
 
 ## Todos
 
-- [ ] [DATA] P1. Once the Track-7 per-day-scoped post-fix relaunch (queued in
-      `cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`) completes and is audited, check whether BYBIT 15s/1m
-      bundles for the 6 target days still show only 1 `instrument_id` despite `Force: True` confirmed in the per-date
-      child log. **Done when**: either (a) confirmed FIXED — bundles carry both BTC+ETH legs, this doc is closed as a
+- [ ] [DATA] P1. Check whether BYBIT 15s/1m bundles for the 6 target days still show only 1 `instrument_id` despite
+      `Force: True` confirmed in the per-date child log, once the Track-7 per-day-scoped post-fix relaunch (queued in
+      `cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`) completes and is audited. **Done when**: either (a) confirmed FIXED — bundles carry both BTC+ETH legs, this doc is closed as a
       non-issue (the concurrent-write race did not manifest, e.g. because tasks per output path are actually serialized
       somewhere this reading missed), or (b) confirmed BROKEN — bundles still single-symbol with force correctly true,
       in which case scope + implement the genuine fix (see the **2026-08-10 slot-27** Progress Log entry — the

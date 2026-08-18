@@ -668,7 +668,7 @@ produced reports) — see the plan diff in the same commit as this issue doc.
       dry-run confirmed 1 VM. Launched `cefi-queue-heavy-binancefutu-x17-20260815-220349`, `tardis-guard` 1/1. Verified
       STARTED (`RUNNING` ~45s) + PROGRESS (2 UTL reads, `2019-01-14`→`2019-02-04`, monotonic). `-003` blocked.
 
-- [ ] [INFRA] P1. **10th relaunch of the cefi coverage-backfill VM** — the 9th VM
+- [ ] [INFRA] P1. **Relaunch (10th attempt) the cefi coverage-backfill VM** — the 9th VM
       (`cefi-queue-heavy-binancefutu-x17-20260815-220349`) died `2026-08-16T15:14:50 UTC`, ~4-5min after a
       `compute.instances.migrateOnHostMaintenance` live-migration event, ~17h10m after its `2026-08-15T22:04:03 UTC`
       launch — a failure mode distinct from the 3 preemptions / 2 WORKER_STALLED kills already catalogued above (worth
