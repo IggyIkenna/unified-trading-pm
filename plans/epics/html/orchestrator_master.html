@@ -212,6 +212,12 @@
     position: sticky;
     top: 0;
   }
+  table.ledger th[data-sort] { cursor: pointer; user-select: none; }
+  table.ledger th[data-sort]:hover { color: var(--ink); }
+  table.ledger th[data-sort]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .sort-ind { display: inline-block; margin-left: 5px; opacity: 0.35; font-size: 9px; }
+  th[data-sort].sort-active { color: var(--ink); }
+  th[data-sort].sort-active .sort-ind { opacity: 1; color: var(--accent); }
   table.ledger td {
     padding: 9px 14px;
     border-bottom: 1px solid var(--line);
@@ -376,7 +382,12 @@
       <table class="ledger">
         <caption>Aggregator plans (batch/satellite/finalize/tracker) are flagged AGG and excluded from the deduped stat-strip counts, matching <code>/open-task-count</code>'s methodology.</caption>
         <thead>
-          <tr><th>Doc</th><th>Type</th><th>Dispatch</th><th>Progress</th></tr>
+          <tr id="ledger-head">
+            <th data-sort="doc" tabindex="0" role="button" aria-label="Sort by document title">Doc<span class="sort-ind">▲</span></th>
+            <th data-sort="type" tabindex="0" role="button" aria-label="Sort by plan, aggregated plan, or issue">Type<span class="sort-ind">▲</span></th>
+            <th data-sort="dispatch" tabindex="0" role="button" aria-label="Sort by dispatch status">Dispatch<span class="sort-ind">▲</span></th>
+            <th data-sort="progress" tabindex="0" role="button" aria-label="Sort by open/done progress">Progress<span class="sort-ind">▼</span></th>
+          </tr>
         </thead>
         <tbody id="ledger-body"></tbody>
       </table>
@@ -594,11 +605,61 @@ doc's open [OPERATOR] todo. Repo: agent-orchestrator.</div>
     </tr>`;
   }
 
-  const sorted = children.slice().sort((a, b) => {
-    if (a.doc_type !== b.doc_type) return a.doc_type === "plan" ? -1 : 1;
-    return b.open_count - a.open_count;
+  // ---------- §4 ledger: click-to-sort columns ----------
+  // "Type" ranks plan < aggregated plan < issue, matching how the table's own pills read left to
+  // right; "Dispatch" ranks by how close to executing: planning (AO-dispatched) < draft < na.
+  const typeRank = (c) => (c.doc_type === "issue" ? 2 : c.is_aggregator ? 1 : 0);
+  const dispatchRank = (c) => (c.status === "draft" ? 1 : c.assigned_vm === "planning" ? 0 : 2);
+  const SORT_ACCESSORS = {
+    doc: (c) => c.title.toLowerCase(),
+    type: typeRank,
+    dispatch: dispatchRank,
+    progress: (c) => c.open_count,
+  };
+  // Each column's sensible first click: Progress opens on "most open work first" (matching the
+  // page's original default view), the rest open alphabetically/rank-ascending.
+  const DEFAULT_DIR = { doc: "asc", type: "asc", dispatch: "asc", progress: "desc" };
+
+  let sortState = { key: "progress", dir: "desc" };
+
+  function applySort(rows, key, dir) {
+    const accessor = SORT_ACCESSORS[key];
+    const sign = dir === "asc" ? 1 : -1;
+    return rows.slice().sort((a, b) => {
+      const av = accessor(a), bv = accessor(b);
+      if (av < bv) return -1 * sign;
+      if (av > bv) return 1 * sign;
+      return b.open_count - a.open_count; // stable secondary: most-open-work-first
+    });
+  }
+
+  function renderLedger() {
+    const rows = applySort(children, sortState.key, sortState.dir);
+    document.getElementById("ledger-body").innerHTML = rows.map(rowHtml).join("");
+    document.querySelectorAll("#ledger-head th[data-sort]").forEach((th) => {
+      const active = th.dataset.sort === sortState.key;
+      th.classList.toggle("sort-active", active);
+      th.querySelector(".sort-ind").textContent = active ? (sortState.dir === "asc" ? "▲" : "▼") : "▲";
+    });
+  }
+
+  function toggleSort(key) {
+    if (sortState.key === key) {
+      sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+    } else {
+      sortState = { key, dir: DEFAULT_DIR[key] };
+    }
+    renderLedger();
+  }
+
+  document.querySelectorAll("#ledger-head th[data-sort]").forEach((th) => {
+    th.addEventListener("click", () => toggleSort(th.dataset.sort));
+    th.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSort(th.dataset.sort); }
+    });
   });
-  document.getElementById("ledger-body").innerHTML = sorted.map(rowHtml).join("");
+
+  renderLedger();
 
   const deskItems = [];
   children.forEach((c) => {
