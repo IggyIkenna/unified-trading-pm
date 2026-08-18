@@ -126,10 +126,16 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       2021-01-04..2026-04-15): 100% `empty_confirmed`/ `SOURCE_RETURNED_ZERO` — the fleet ran cleanly (VM-lifecycle
       proof: 7 shards, zero preemptions) but captured literally 0 real ES ohlcv bars across the entire attempted window.
       This is the activity-vs-target-artifact trap the async-wait-discipline codex SSOT warns about: "fleet FINISHED"
-      was VM-completion proof, not data-capture proof. Full evidence + recommended root-cause diagnosis steps (not
-      executed here — this is a genuine, uniform zero-yield pattern that needs adapter-level investigation, not a
-      mechanical re-run): `plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md` (archived 2026-08-09,
-      resolved). **Did NOT update `tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell row this session** — that file
+      was VM-completion proof, not data-capture proof. Full evidence:
+      `plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md` (archived 2026-08-09). **CORRECTED
+      2026-08-18 (plan_reconciler)**: that archived doc's own final resolution (same day, 2026-07-30) says the
+      opposite of "needs adapter-level investigation" — RESOLVED via 2 now-fixed infra bugs (a stall-timeout vs.
+      consolidator-lock horizon mismatch, and a manifest-consolidator chunking bug from FRED history) plus 1
+      manifest-write bug (`venue_fetch.py::_record_venue_shard_counts` hardcoding a blank `instrument_id` for
+      chain-bundle types) — "real ES data captures today, from this exact re-launched fleet, once both infra bugs
+      stopped blocking it" (archived doc :212-214). No further adapter-level investigation is needed; the open
+      question is whether the fixes' downstream effects (a fresh capture run) have been folded into this doc's own
+      MVP-cell tracking, which the entry above already flags as not done this session. **Did NOT update `tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell row this session** — that file
       had an uncommitted in-progress edit (mtime <120s) from another active session at the time of this check; whoever
       owns that edit should fold this measured result into the "S&P index futures (ES)" row next (cite this todo + the
       new issue doc).
@@ -383,10 +389,13 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
           incorrectly typed as spot-pairs) and the 12 cefi-singles' `EQUITY`/`EQUITY-USD` rows (NVDA/MSFT/
           CRCL/INTC/GOOGL/AMD/TSLA/AMZN/META/HOOD/AAPL/BABA — `unified_api_contracts.TRADFI_DATABENTO_INSTRUMENTS`
           filtered `asset_group=="cefi"`; each ticker's `SPOT_PAIR` row is already covered by the NASDAQ/NYSE leg, only
-          the `EQUITY`/`EQUITY-USD` rows remain). Needs its own explicit operator confirmation before executing (not
-          blanket-covered by the 4-leg go-ahead). Same target bucket/blob, same script pattern as the executed purge —
+          the `EQUITY`/`EQUITY-USD` rows remain). Same target bucket/blob, same script pattern as the executed purge —
           mechanical once confirmed. Also needs the same scheduler-pause precondition (currently already paused from the
-          4-leg purge; re-verify live state at execution time, don't assume it's still paused).
+          4-leg purge; re-verify live state at execution time, don't assume it's still paused). **CORRECTED 2026-08-18
+          (plan_reconciler)**: "needs its own explicit operator confirmation" is now stale — the operator ALREADY
+          extended the go-ahead to this residual 2-leg set (2026-08-16, see this doc's own Progress Log below) and
+          the work is extracted + queued at `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`
+          (`assigned_vm: planning`, unlocked). Not re-executed here to avoid racing that dispatch.
     - [x] ✅ [SCRIPT] P1. **G1.a.2 §7.1 follow-up — massive.py (the OPRA/I:VIX pollution source)** — DONE
           instruments-service@1198549 (LDR). massive KEPT as the tradfi FALLBACK (operator 2026-06-25); endpoint
           `https://api.polygon.io` VERIFIED correct (Polygon.io→Massive 2025-10-30 rebrand kept the host). Removed the

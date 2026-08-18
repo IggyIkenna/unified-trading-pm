@@ -46,7 +46,7 @@ related:
     /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-30" # phantom-manifest dry-run attempted, aborted for shared-host memory safety — see the Phase C todo's addendum; needs a dedicated VM re-run
+last_updated: "2026-08-16" # bumped 2026-08-18 (plan_reconciler) to real git last-touch date; phantom-manifest dry-run attempted, aborted for shared-host memory safety — see the Phase C todo's addendum; needs a dedicated VM re-run
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -125,8 +125,10 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
 - [x] ✅ [BACKEND] P1. **VERIFY: CME `mbp_10`/`trades`/`tbbo` `VENUE_DATA_TYPE_CAPABILITIES` declares billing-gated
       status, not full-history-available** —
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Databento tradfi's billing
-      entitlement is 1-month L3 + 1-year L1, so `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are
-      billing-gated by design, not a bug. Gate: `VENUE_DATA_TYPE_CAPABILITIES` confirmed to declare mbp_10/trades/tbbo
+      entitlement is 1-month **L2** + 1-year L1, so `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are
+      billing-gated by design, not a bug. **CORRECTED 2026-08-18 (plan_reconciler)**: was "L3", independently
+      re-verified live — `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py`
+      maps `mbp-10`→`L2` (33-day free window), `trades`/`tbbo`→`L1`. `mbo`, not `mbp_10`, is the L3 schema. Gate: `VENUE_DATA_TYPE_CAPABILITIES` confirmed to declare mbp_10/trades/tbbo
       as billing-gated (declared possible, not chased to full L3 history) — a pure verify, no code change. (repos:
       market-tick-data-service, unified-api-contracts) **DONE 2026-08-15 (/plan-reconcile)** — verified with live code
       quoted in `plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md:7-9`:
@@ -213,7 +215,8 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
 ## Phase C — data-status + honest-coverage (still-open residue only — closed verdicts live in the history companion)
 
 - [ ] [CODE] P2. **Billing-gated Databento L2/L3 cells must not count as `attempted_failed`.** Databento tradfi's
-      billing entitlement is 1-month L3 + 1-year L1, so `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections
+      billing entitlement is 1-month **L2** + 1-year L1 (corrected 2026-08-18, plan_reconciler — see Phase A2 above),
+      so `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections
       are EXPECTED, not real failures — but no classification mechanism currently excludes them, so a hit outside the
       entitlement window records `attempted_failed` today. Wire a durable classification (a new UAC
       `classify_venue_error()` outcome or `expected_reason` value) that recognizes the billing-entitlement-guard

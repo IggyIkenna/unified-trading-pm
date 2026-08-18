@@ -62,7 +62,11 @@ is in
       `betway`, `bovada`, `coral`, `fanduel`, `ladbrokes_uk`, `paddypower`, `pinnacle`, `skybet`, `unibet_uk`,
       `williamhill`) — a column-swap at some write path, not a real venue (0% coverage throughout, no real data
       behind it). Find the writer stamping this and fix the column mapping; low severity (cosmetic/data-hygiene,
-      doesn't affect real bookmaker coverage numbers) but worth closing before it grows.
+      doesn't affect real bookmaker coverage numbers) but worth closing before it grows. **DUPLICATE-TRACKING NOTE
+      (2026-08-18, plan_reconciler)**: `plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`
+      independently tracks the SAME underlying bug (its P1/P2 todos describe the identical lowercase-bookmaker/
+      FOOTBALL-venue column-swap) with no cross-reference either direction — whoever picks either of these up
+      should check the other first to avoid duplicate/conflicting work.
 - [ ] [AGENT] P2. **TradFi `tbbo` and `yield_curve` have real captured production data with zero registered
       schema.** `tbbo`: real captures at CME (507 rows, 100%)/NYSE (10,567, 65.96%)/NASDAQ (2,493, 33.33%) — cefi
       has a `SchemaContract` for tbbo, tradfi does not. `yield_curve`: FRED's flagship data type, 14,399 rows,

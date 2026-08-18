@@ -151,6 +151,46 @@ doc making the "self-sufficient to completion" claim
   <13.5min VM silent-death signature discovered 2026-08-17 (previously prose-only in the Progress Log, HARD RULE
   violation).
 
+## Checkpoint 3 — applied
+
+**Contradictions fixed** (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, both P1, both independently
+re-verified against external evidence before applying):
+- Internal contradiction between the doc's own "na-eligibility-audit log" section (stale: "P2 residual purge needs
+  separate operator confirmation") and its own "Progress Log" section (accurate: "operator extended the go-ahead,
+  extracted to `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`") — added a citation to the
+  actual todo pointing at the extraction target, retired the stale framing.
+- "Concerning zero-capture finding" for ES CME futures framed as needing "adapter-level investigation" — its own
+  cited archived doc (`tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`) actually resolved this via 2 infra bugs +
+  1 manifest-write bug (independently re-verified the exact resolution text this pass). Corrected the framing.
+
+**Countable corrections applied** (AUTO-RESOLVE per skill calibration — both independently re-verified via direct
+code/live checks before writing):
+- `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` — Databento tradfi's ~33-day billing tier corrected
+  L3→L2 in 2 places (independently verified against live
+  `unified-api-contracts/.../databento_subscription_allowlist.py`: `mbp-10`→`L2`, confirmed `mbo` is the real L3
+  schema). Also bumped stale `last_updated: "2026-07-30"` → `"2026-08-16"` (real git last-touch date).
+- `tradfi_consolidated_closeout_2026_07_18.md` — digest child-plan open-todo counts were stale in 2 sections
+  (claimed 3/2 open for 2 child plans; live `grep -c` this pass shows 1/1, and phase_d's remaining item is a
+  DIFFERENT todo than either one named in the stale text). Added correction notes with the live counts rather
+  than surgically rewriting the dense historical bullet text (lower risk of a worse mismatch in a 900L doc).
+
+**Prose→todo conversion** (HARD RULE — "every follow-up is a todo, never prose"):
+- `tradfi_canonical_path_migration_design_2026_07_19.md` — this doc is archive-ready (all displayed todos `[x]`,
+  archival already queued via `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 6) but its own
+  "Deferred work" table named 2 items of real, substantial undone work (a 207,438-object combo_chain migration +
+  a short-code→display-name migration) tracked only as prose — converted both into canonical `- [ ] [DATA] P2.`
+  todos so they survive the pending archival instead of silently disappearing.
+
+**AO-dispatch-readiness / hygiene**:
+- `retirement_completeness_pollutant_reverify_ice_still_live_2026_08_15.md` — added the missing
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` citation to an `[OPERATOR]` todo that stated the need
+  for one but never included it. Also flagged (not resolved — needs a live remeasurement, see "Filed" below) that
+  this doc's own BARCHART row-count contradicts a same-day sibling doc.
+- `nick_ai_audit_data_quality_findings_2026_08_16.md` — added a duplicate-tracking cross-reference to
+  `b21_distinct_values_noncanonical_live_2026_08_18.md` (both independently track the identical sports
+  FOOTBALL-venue/lowercase-bookmaker column-swap bug, zero cross-reference either direction; `b21` itself is
+  grace-protected so only this side could be fixed this pass).
+
 ## Refuted (dropped by verify)
 
 - **`mtds_is_full_adapter_smoketest_findings_2026_07_07.md` hedge-pointer finding (batch-5 hunter, "Open question
