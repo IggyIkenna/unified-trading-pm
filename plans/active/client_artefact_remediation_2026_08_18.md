@@ -73,274 +73,56 @@ different files).
   [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md)
   § E — this plan does not re-create that gate.
 
-## A. Elysium walkthrough — accuracy fixes (P0)
+## Split 2026-08-18 — this plan is now the SPEC + TOOLING gate; per-file work lives in three children
 
-- [ ] [DOC] P0. **Fix the instruction-type count in `strategy-service-walkthrough.html` §01/§03**: currently says
-      "9 Instruction types" / "the nine action types" and lists 9. `unified-api-contracts/unified_api_contracts/
-      internal/architecture_v2/schemas.py` declares 11 `StrategyInstructionEnvelope` subclasses (verified directly
-      2026-08-18) — add `TransferInstructionV2` (line 327) and `BridgeInstructionV2` (line 336) to §03's table with
-      their real fields, and update the stat-row to 11. Audit finding: § Section 2, Axis 2, finding 1.
-- [ ] [DOC] P0. **Fix §02's strategy-family list** — currently shows 5 families including an invented "Liquidity
-      provision" entry. `StrategyFamily(StrEnum)` in `unified-api-contracts/.../architecture_v2/enums.py` has 9 real
-      members: `ML_DIRECTIONAL, RULES_DIRECTIONAL, CARRY_AND_YIELD, ARBITRAGE_STRUCTURAL, MARKET_MAKING,
-      EVENT_DRIVEN, VOL_TRADING, STAT_ARB_PAIRS, PORTFOLIO`. Replace the invented list with the real 9, matching the
-      correction already applied to the sibling `strategy-service-deep-dive.html` per
-      `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` § F (never applied to this document).
-      Audit finding: § Section 2, Axis 2, finding 2.
-- [ ] [DOC] P0. **Soften §11 "Automated movement"** — re-verified 2026-08-18 against
-      `execution-service/execution_service/transfer_coordinator.py`: only `SUBACCOUNT_MOVE` auto-registers a
-      handler; `CEX_WITHDRAW` is commented "NOT WIRED"; gas top-up/floor has no implementation anywhere;
-      `REBALANCE` is enum-only; `TransferCoordinator` is never instantiated in production code. Rewrite the section
-      to state which rails have zero production wiring today rather than presenting dust-sweep/gas-top-up/rebalance
-      as working "partial" capability. **Do not overstate readiness while the underlying system gap is still open**
-      — see § "Real system gaps" below; this is a content-accuracy fix, not a claim that the gap is closed.
-- [ ] [DOC] P1. **REVISED 2026-08-18 — the original custody finding was a FALSE POSITIVE; do not "fix" the block.**
-      The audit claimed `SigningSurface` wrongly names `FIREBLOCKS_MPC` and wrongly omits `ceffu`, "which IS a
-      working branch." Re-verification falsified both halves: (a) `ceffu` is **not** working —
-      `execution-service/execution_service/custody/factory.py` logs it as "CeffuCustodyProvider (Binance
-      institutional MPC — **STUB pending API spec**)"; (b) CEFFU's absence from the enum is a **deliberate,
-      documented decision** — `unified-api-contracts/unified_api_contracts/internal/architecture_v2/
-      custody_surfaces.py` carries a named constant `CEFFU_ROUTES_VIA_COPPER_NOTE` stating CEFFU's signing routes
-      *via Copper*, so seeding a CEFFU surface would mean "inventing an enum member"; (c) `FIREBLOCKS_MPC` is
-      covered by `SigningSurfaceStatus.OUT_OF_SCOPE` ("enum member retained for future flexibility but NOT a
-      May-23 / June-1 target"). The artefact's quote is accurate **and** the architecture is coherent. **Correct
-      action**: add one sentence explaining the CEFFU-routes-via-Copper design and the `OUT_OF_SCOPE` status, so a
-      reader doesn't reach the same wrong conclusion the audit did. Editing the enum list would make the document
-      wrong.
-- [ ] [DOC] P1. **Fix the stale §05→§08 cross-reference** — "the determinism proof in §08" should point to §09,
-      where the actual `live − batch = (paper − batch) + (live − paper)` decomposition lives.
-- [ ] [DOC] P2. **Soften §12's capital-budget "enforced by construction" claim** — the wallet-funding framing is
-      narrower and more defensible than "capital_budget_amount is enforced" (still `UNVERIFIED` per
-      `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` § B), but currently reads as a settled
-      guarantee. Qualify or narrow the claim to exactly what's true (funding isolation), not enforcement of the
-      budget field itself.
-- [ ] [DOC] P2. **Add a caveat near §08/§09's hard equality claim** — `paper == batch-rerun` is asserted
-      unconditionally, but per `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` § H.8 (open
-      P0), the now-default-ON dynamic universe currently lacks the manifest-pinning needed to guarantee this exactly
-      when the universe resolution date differs between runs. State the guarantee's real current scope rather than
-      an unconditional claim.
+Operator direction 2026-08-18: split by artefact for parallelism. File collision was the only real constraint, so
+each child owns a disjoint file set and the three run **concurrently**.
 
-## B. Elysium walkthrough — disclosure and completeness (P1/P2)
+| Child                                                                                                                   | Owns                                                                        | Gated?                     |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------- |
+| [siblings](/plans/active/client_artefact_remediation_siblings_2026_08_18.md)                                             | deep-dive · platform-architecture · carveout-engineering · ODUM Phase2        | **No — P0 stop-ship**      |
+| [elysium](/plans/active/client_artefact_remediation_elysium_2026_08_18.md)                                                | `strategy-service-walkthrough.html`                                          | on this plan's spec        |
+| [nickai](/plans/active/client_artefact_remediation_nickai_2026_08_18.md)                                                  | `platform-external-api-walkthrough.html`                                     | on this plan's spec        |
 
-- [ ] [DOC] P1. **Add a scope statement near the top of `strategy-service-walkthrough.html`** stating this describes
-      the full production repository (the voluntary full-repo-send artefact per
-      `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` § E), distinct from the future,
-      narrower carve-out package (`elysium_carveout_stubbed_strategy_service_2026_08_12.md`). Resolves the audit's
-      disclosure-boundary finding 1 — currently "Elysium" is never named anywhere in the document and there is no
-      hosted-vs-carved framing at all.
-- [ ] [DOC] P1. **Add a one-line carve/hosted split note to §09** distinguishing strategy-owned position/fee/PnL
-      reconciliation (the disclosed side) from custodian-spanning balance/transfer reconciliation (the withheld
-      `ReconciliationService`/`TreasuryService` IP per the carve-out plan) — relevant primarily once this content is
-      reused for the future carve-out artefact.
-- [ ] [DOC] P2. **Add mirrored-custody routing content** (§11) — Copper/Ceffu two-custodian mirroring, without
-      naming ClearLoop or describing reconciliation mechanics: *"Custody is not single-provider. A wallet's signing
-      surface can sit with more than one custodian at once, and balances mirrored onto a venue through one custodian
-      are tracked distinctly from balances held directly — the routing between them is a capability of the custody
-      layer, resolved beneath the strategy contract rather than by it."*
-- [ ] [DOC] P2. **Add funding-route / per-client custody binding content** (§11) — a short paragraph stating that
-      funding a strategy instance resolves against what that client has granted access to (venues, custodians,
-      borrow/lend counterparties) rather than a single fixed path, without describing the route-resolution
-      algorithm.
-- [ ] [DOC] P2. **Add a capability-wizard boundary note** (§04) — one sentence: a separate capability layer,
-      upstream of strategy-service's own config-schema wizard, resolves which archetypes/parameters a client may
-      configure at all; what §04 validates is form, not eligibility.
-- [ ] [DOC] P2. **Add rank-allocator weighting-layer content** — a new short passage stating that within a feasible
-      universe, instances are weighted (not run at equal size) by a rank-allocation layer scoring candidates on an
-      axis (coin/venue/protocol/expiry) — without naming the 17-engine registry count or specific engines.
-- [ ] [DOC] P2. **Add book-level overlay content** (§12) — vol-target, beta-hedge, no-trade band and rank-buffer as
-      a pre-decision sizing/veto layer, distinct from per-position limits already shown.
-- [ ] [DOC] P2. **Name the "strategy reads only processed data, never MTDS directly" invariant explicitly** — not
-      stated anywhere in this artefact (grep-confirmed 0 hits for MDPS/features-service/MTDS/Pub-Sub). Add one
-      sentence near §01's data-flow description.
-- [ ] [DOC] P2. **Add fee/gas-as-decision-input content** (§03/§08) — currently fees/gas appear only as a
-      post-hoc reconciled quantity; state that expected fees (clearing, exchange, gas where relevant) are folded
-      into the economics a slot is ranked and sized on.
-- [ ] [DOC] P3. **Extend §03's `AtomicInstruction` block with a one-line worked example** (e.g. a recursive-staked
-      entry: borrow → swap → stake) to connect the schema to the real chained-sequence reasoning already shown
-      elsewhere in §12's emergency-flatten example.
+Todos were **moved, not copied** — nothing below duplicates a child. This plan deliberately holds no per-file edit:
+its todos define the marks the children apply, and build the tooling that stops all of this recurring.
 
-## C. Nick AI walkthrough — accuracy fixes (P0/P1)
-
-- [ ] [DOC] P0. **Rewrite §2/§3's external-API status framing** — both currently badged `live` without qualification.
-      Re-verified 2026-08-18: `instruments-service` (`GET /v1/instruments`, `GET /v1/instruments/bulk`) and
-      `market-tick-data-service` (`GET /external/market-data/availability`, `.../delivery/batch`,
-      `.../delivery/stream`) have real, auth-protected, live-verified external surfaces
-      (`instruments-service@2fcf7a19`, `market-tick-data-service@6fefa63676`). `execution-service`
-      (`POST /external/instructions`, `execution-service@3567e7a180`) is live **for TRADE instructions only** — the
-      other 10 of 11 `StrategyInstructionV2` types return an honest HTTP 501, not the same contract the artefact
-      currently implies. `strategy-service` still has no true counterparty-facing surface (admin-token-gated
-      internal tooling only) — keep that specific claim as `planned`. Name the concrete live endpoints and the
-      TRADE-only caveat rather than a blanket "you get the contract our own execution service gets."
-- [ ] [DOC] P1. **Fix §4's four-state coverage table** — the "Expected, absent" row (`empty_confirmed`) is marked
-      "counts against coverage: Yes," but the "How to read 48.54%" callout two paragraphs later defines the
-      denominator as `captured + attempted-failed + expected-unattempted` only, with no mention of `empty_confirmed`
-      — an internal contradiction verified directly against the HTML (lines 508-512 vs 536-542). Either add the
-      missing state's correct denominator treatment to the table, or reconcile the "Yes" verdict against the stated
-      formula so the two agree.
-- [ ] [DOC] P1. **Reconcile the 288-venue figure** — currently stated alone with no cross-reference to the three
-      legitimately-different venue-count units the owning plan's own pre-audit explicitly instructed be stated
-      together (151 canonical / 183 physical / "158-84" stale). Either state all units side by side, or explicitly
-      scope "288" as the 2026-08-18 readiness-manifest grain, not directly comparable to the registry-declared
-      counts.
-- [ ] [DOC] P2. **Fix §14's "19-step contract" mislabel** — the quoted 864-row / 0-844-20 rollup was produced by the
-      readiness-state-dump skill's 8-leg model (declared/IS/MTDS/MDPS/features/ml/strategy/execution), not the
-      19-step Venue Readiness Contract used elsewhere in the pre-audit. Name the correct framework, or state both
-      and which produced these specific numbers.
-- [ ] [DOC] P2. **Qualify §16's "a great deal of testnet work is already complete"** with the real per-AG gaps: no
-      per-venue cefi testnet declaration found anywhere; sports' live credential-probe surface is entirely stubbed;
-      tradfi's only live credential-health probe covers Tardis only; Polymarket has no testnet and no written
-      paper-trading ruling. Keep the real progress that does exist (AAVE Sepolia, Solana LST devnet, Kalshi demo
-      host) but don't state it as a blanket "already complete."
-- [ ] [DOC] P3. **Scope §5's "every figure is pending measurement" lede** to the coverage-percentage cells only —
-      the readiness splits shown in the same tree summaries (e.g. "DeFi — 0 ready / 133 not-ready / 47 unverified")
-      are already real, measured 2026-08-18 figures, not pending.
-
-## D. Nick AI walkthrough — missing capability (P1/P2)
-
-- [ ] [DOC] P1. **Add the 7 fully-absent capability sections**: fee/gas breakdown (clearing/broker/exchange/gas/
-      other, consumed by strategy for decisions and execution for alpha PnL); collateral usability and cross-margin
-      logic per venue; manual trade capability on every venue as the disaster path; a reconciliation framework
-      section (thresholds/tolerances/intervals/degraded-behaviour/manual-trade-seen-vs-not-seen); PnL attribution
-      across every risk/exposure dimension; risk in native-token AND share-class-normalised terms plus the Greeks
-      and DART's dimensions; latency/tracing (time-received/time-sent), preflight input registration, and per-input
-      staleness SLAs. **Write these as what the system is targeting, not as already-live** — every one of these maps
-      to an open, unchecked P0 item in `system_readiness_master.md` (W5/W10/W12/W13/W16/W17) with zero items checked
-      off; see § "Real system gaps" below. Draft copy for all 7 is in the audit's sub-agent transcript
-      (§ Nick-AI-missing-capability agent) and should be pulled directly, calibrated for accurate present-tense vs.
-      target-state framing before insertion.
-- [ ] [DOC] P2. **Add the 4 present-thin capability sections**: transfer rails/custody eligibility per venue
-      (Copper/Ceffu/manual/automated-prime-broker-per-broker/IBKR/Alpaca, not just qualitative rail-type language);
-      the batch=live determinism mechanism by name (UTL `EventTransport` facade, `InMemoryTransport` for
-      paper/colocated vs Pub/Sub for live); order lifecycle vocabulary (creates/updates/cancels/amends, plus
-      execution-service state recovery on restart); TWAP named explicitly alongside straight-market in the
-      execution-depths section.
-- [ ] [DOC] P2. **Name MDPS/features-service explicitly as the intermediary** in §1's architecture diagram/table
-      between MTDS and Strategy — resolves the "strategy reads only processed data, never MTDS directly" drift-risk
-      for this artefact too (currently MTDS/MDPS/features are collapsed into one undifferentiated "Market data" box
-      with a direct arrow to Strategy).
-
-## E. Evidence-provenance tiers + audit-gap closure (added 2026-08-18, operator ruling)
-
-**Operator ruling 2026-08-18**: the artefacts carry a SECOND axis, orthogonal to the existing
-`live`/`partial`/`planned` status. Status says what the system **does**; the evidence tier says **how we know**, so
-the operator can scroll the document before sending and see exactly which claims are settled and which need a
-check. Three tiers, rendered as a distinct visual mark (not reusing the status pill):
-
-| Tier                | Meaning                                                                                              |
-| ------------------- | ---------------------------------------------------------------------------------------------------- |
-| **machine-verified** | Checked against code or measured data; names the command/skill/symbol so it is re-auditable on demand |
-| **needs-check**      | Stated in good faith, not yet validated — operator or agent must confirm before the document is sent  |
-| **assumption**       | Our best current understanding, explicitly not verified                                              |
-
-Same ruling: **do NOT withhold full system functionality from the artefacts.** The operator uses the top-down view
-to spot duplication, misplaced logic and wrong-home concerns. Missing capability is written in and marked, never
-omitted.
-
-- [ ] [DOC] P0. **Introduce the evidence-tier axis in both artefacts** — legend entry alongside the existing
-      status legend, a distinct mark, and a one-line explanation of what the operator should do with each tier.
-      Must not visually collide with `live`/`partial`/`planned`.
-- [ ] [DOC] P0. **Tag every claim-bearing section in both artefacts with an evidence tier.** Default to
-      `needs-check` — `machine-verified` requires naming the verifying command, skill or code symbol inline, and
-      that citation is what makes the re-audit prompt cheap to run later.
-- [ ] [DOC] P0. **Re-grade all `live` badges against the stricter definition** — "reachable on a production path
-      AND validated with real capital" landed in both artefacts at `unified-trading-pm@832033d094`, but the marks
-      were never re-graded and the 2026-08-18 audit never checked them (grep-confirmed: zero occurrences of "real
-      capital" in the audit report). **Measured: 17 sections still marked `live`** — 7 in
-      `platform-external-api-walkthrough.html`, 10 in `strategy-service-walkthrough.html`, of 39 graded sections
-      across both. A `live` mark now needs POSITIVE capital-validation evidence; the master epic's own scope is
-      "everything except going live with capital," so expect most to move to `partial`.
-- [ ] [DOC] P0. **Audit the inherited glossary / canonical-instrument-ID material (Axis 0).** Both artefacts carry
-      venue-glossary and canonical-ID content sourced from a sub-agent report and never verified; the 2026-08-18
-      audit ran zero probes on it. Check every ID example against `build_canonical_instrument_id()` and every venue
-      name against `VENUE_TO_ADAPTER_KEY` / `VENUE_CHAIN_MAP`. **Also check the framing, not just the syntax**: the
-      point of a single dispatch function is that ONE envelope spans asset groups — content presenting per-asset-
-      group ID *rules* inverts the asset-group-agnostic principle and teaches future readers the wrong model.
-- [ ] [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content**, added at operator request and never
-      probed. `ARCHETYPE_FEATURE_GROUPS` declares ~40 of 60 and its docstring deliberately refuses to guess the
-      rest — any artefact claim implying full coverage is wrong.
-- [ ] [DOC] P1. **Ground or cut the forward claim** — `platform-external-api-walkthrough.html` states work "on the
-      current plan complete over the remainder of this year" with no cited basis in any plan (verified present
-      2026-08-18; the audit never flagged it). A counterparty can hold us to it. Find a citation or remove it.
-- [ ] [RESEARCH] P1. **Research real per-venue transfer rails / custody eligibility / collateral / cross-margin,
-      then write the best current answer into the artefact marked `assumption` or `needs-check`.** Measured
-      2026-08-18: **no UAC registry field answers these** — `VenueCapabilityRecord` is market-data only (`route` +
-      `data_types`); `VenueCapability` covers actions (`spot_trade`…`stake`); a registry-wide grep for
+- [ ] [DOC] P0. **Define the evidence-tier spec** — exact markup, wording and legend copy for `machine-verified` /
+      `needs-check` / `assumption`, visually distinct from the `live`/`partial`/`planned` status pill. Children
+      apply it to their own file, so defining it once here is what keeps the two documents consistent. Rule:
+      default is `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol
+      inline, which is what makes a later re-audit cheap.
+- [ ] [DOC] P0. **Define the owner-mark spec** — how a section names the workstream/plan/epic that closes it, per
+      `system_readiness_master.md` W21's closure invariant. Keep it terse enough to sit beside two other marks.
+- [ ] [SCRIPT] P0. **Build a banned-term / disclosure checker over the artefact directory, and wire it into QG.**
+      Measured 2026-08-18: **no checker anywhere greps client artefacts for the banned client name** — the
+      six-hit stop-ship in `strategy-service-deep-dive.html` was found only because an audit was commissioned, and
+      nothing would catch a recurrence tomorrow. Must scan **raw file text, not rendered prose** (one original hit
+      was inside an SVG `<text>` element), cover all six files in
+      `codex/14-customer-journeys/commercial-model/`, and derive its rules from
+      [show-dont-show-discipline](/codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md) — the
+      codex SSOT — rather than restating them. Also flag performance-figure patterns; note that legitimate uses
+      exist ("net carry (annualised, bps)"), so this warns for review rather than hard-failing on the word alone.
+- [ ] [SCRIPT] P1. **Build the enum-drift check** validating artefact-quoted enum data against the UAC enums.
+      Root cause of two P0s: enum contents are hand-transcribed into six HTMLs, so one concern lives in seven
+      places. Proof it recurs — the invented strategy family reached three documents, and
+      `/codex/04-architecture/strategy-execution-protocol.md` correctly said "11 actions" while the artefact said
+      9. Cover all six artefacts; ratchet-baseline it; name which enum each claim derives from.
+- [ ] [RESEARCH] P1. **Research real per-venue transfer rails / custody eligibility / collateral / cross-margin.**
+      Measured: **no UAC registry field answers these** — `VenueCapabilityRecord` is market-data only (`route` +
+      `data_types`), `VenueCapability` covers actions, and a registry-wide grep for
       `cross_margin|collateral_eligib|transfer_rail|withdraw_enabled|margin_asset` returns empty. Per operator
-      ruling, this content goes IN (marked), it is not withheld — but the research output must also spawn a
-      registry-extension todo under `system_readiness_master.md` W5 so the artefact ends up downstream of a machine
-      SSOT rather than becoming the de-facto SSOT itself.
-- [ ] [SCRIPT] P1. **Add a QG check validating artefact-quoted enum data against the UAC enums** (operator ruling
-      2026-08-18). Root cause of two of this audit's three P0s: enum contents are hand-transcribed into six client
-      HTMLs, so the same concern lives in seven places. Proof it recurs — the strategy-family correction was
-      applied to `strategy-service-deep-dive.html` and never reached `strategy-service-walkthrough.html`, and
-      `/codex/04-architecture/strategy-execution-protocol.md` has correctly said "11 polymorphic actions" all
-      along while the artefact said 9. Check must cover all six artefacts in
-      `codex/14-customer-journeys/commercial-model/`, be ratchet-baselined like the other checkers, and name which
-      enum each artefact claim derives from.
-- [ ] [REVIEW] P1. **Re-verify the six audit findings the audit itself did NOT independently check.** The report
-      names them explicitly (targets-not-deltas, atomic multi-leg, cross-client-transfer-impossible, attestation,
-      archetype counts 60/32, capital budget). This is now a demonstrated failure mode, not a hypothetical — the
-      custody P1 in § A dissolved on first re-verification. Treat each as unconfirmed until checked against code.
-- [ ] [REVIEW] P2. **Audit the four sibling client artefacts never covered** —
-      `platform-architecture.html` (252 KB, the largest client doc in the repo), `carveout-engineering.html`
-      (87 KB), `strategy-service-deep-dive.html` (66 KB),
-      `ODUM_Elysium_Phase2_Update_2026-07-24.html` (14 KB). Disclosure boundary FIRST and reported separately.
-      The audit covered 2 of 6 client-facing HTMLs.
-- [ ] [REVIEW] P2. **Cross-document consistency sweep across all six artefacts.** No agent has compared documents
-      to each other — the 4 sub-agents split two-per-artefact by axis, so sibling drift was invisible by
-      construction and the one instance found was luck. Sweep for contradictory counts, enum members, status marks,
-      venue numbers and mode vocabulary; separately verify every internal anchor resolves (one stale §05→§08 was
-      found by reading — do it mechanically).
-
-## F. Second-pass audit results (5 agents, landed 2026-08-18 `unified-trading-pm@8b7e78e21f`)
-
-The 5 findings docs are `/plans/audit/results/client_artefact_{live_regrade, axis0_content_verification,
-sibling_docs_audit, cross_document_consistency, forward_claim_and_reverification}_2026_08_18.md`. **The four sibling
-artefacts had no owning plan until this section** — they carry the only HARD disclosure violations found anywhere
-in the corpus, and the first-pass audit never opened them.
-
-- [ ] [DOC] P0. **STOP-SHIP: the banned client name appears 6× in `strategy-service-deep-dive.html`.** Independently
-      verified 2026-08-18 by direct grep — 6 hits, one of them inside an SVG `<text>` element (so a prose-only sweep
-      would miss it). Used as the name of Copper's collateral-mirroring service, i.e. factually correct and still a
-      hard-rule violation: this name never appears in a client-facing artefact. **This document must not be sent to
-      anyone until this is cleared.** Removing it needs a rewrite of the surrounding custody explanation, not a
-      find-and-replace — the mirroring mechanism it describes is real and worth keeping; only the product name goes.
-      Grep all six artefacts after the fix, not just this one.
-- [ ] [DOC] P0. **Performance figures in two client documents**, violating the owning plan's "no performance figure
-      anywhere until the overlays land" rule. Verified directly: `platform-architecture.html` — "consistent positive
-      annualised returns, generally ranging from single digits into double digits"; the ODUM Phase2 email —
-      "increasingly confident the strategies generate consistent positive annualised…". **Note for whoever fixes
-      this**: `platform-architecture.html`'s other `annualised` hits are legitimate and must NOT be stripped —
-      "net carry (annualised, bps)" is a metric label and "stablecoin borrow rate, typically 5–8% annualised" is a
-      market fact, not our performance.
-- [ ] [DOC] P0. **`platform-architecture.html` asserts the staked-basis structure as present-tense capability** —
-      the sibling audit found this materially false. Re-frame as target-state, or cut.
-- [ ] [DOC] P0. **The invented strategy family is in THREE documents, not one.** Verified by direct count:
-      `platform-architecture.html` 4 hits, `strategy-service-walkthrough.html` 2, `carveout-engineering.html` 1
-      ("Liquidity provision" / "DeFi liquidity provision" / "liquidation capture"). § A's todo scoped the fix to
-      one document; it must cover all three. Same for the custody Fireblocks/Ceffu mismatch, now a confirmed
-      three-way contradiction — and note § A's correction that the mismatch is **deliberate and documented**, so
-      the fix is an explanatory note in all three, never an edit to the enum list.
-- [ ] [DOC] P0. **RESOLVED VERDICT — every `live` badge downgrades to `partial`.** The re-grade audit measured 36
-      badge instances (18 per file, including one embedded sub-badge each) and 16 top-level `live` sections (6 Nick
-      AI + 10 Elysium) — **not the 39/17/7-10 figures in the dispatch brief, which were my own over-count from a
-      markup grep**. An exhaustive workspace-wide search for positive real-capital evidence (a real fill, a mainnet
-      transaction, a reconciled live P&L, a funded live client) found **none anywhere**, so no section survives the
-      conjunctive test. This is the definition working as designed, not a writing defect: the owning epic
-      deliberately excludes going live with capital before 2026-08-25.
-- [ ] [DOC] P0. **RESOLVED VERDICT — cut the forward claim.** The corpus search found no committed basis anywhere
-      for "most venues and strategies on the current plan complete over the remainder of this year." Cut it rather
-      than soften it.
-- [ ] [DOC] P1. **Fix the CeFi spot-pair instrument-ID example in BOTH artefacts** — uses the instrument-type token
-      `SPOT` where the real one is `SPOT_PAIR`. The other 3 of 4 ID examples verified byte-for-byte correct against
-      `build_canonical_instrument_id()`/`build_instrument_id()`, and all 7 named venues are real, correctly spelled
-      and correctly bound in `VENUE_TO_ADAPTER_KEY` — so this is a single wrong token, not a systemic ID problem.
-- [ ] [REVIEW] P1. **Reconcile the two re-verification findings that did NOT confirm.** 4 of 6 came back CONFIRMED
-      (including cross-client-transfer-impossible, via a different real production path than the one originally
-      cited); the remaining 2 need a verdict before either artefact ships.
-- [ ] [PROCESS] P1. **Bring the four sibling artefacts under a tracked owner permanently** — this plan now covers
-      them, but they reached a client-sendable state with P0 violations and no plan at all. Feed this instance into
-      `system_readiness_master.md` W21's closure-invariant check as its first regression case.
+      ruling the best current answer goes into the artefacts marked `assumption`/`needs-check` rather than being
+      withheld — **and this todo's output must spawn a registry-extension todo under W5**, so the artefact ends up
+      downstream of a machine SSOT instead of becoming one.
+- [x] [REVIEW] P1. ✅ **Audit the four sibling artefacts** — delivered by the second-pass audit,
+      `unified-trading-pm@8b7e78e21f`; findings in
+      [sibling-docs audit](/plans/audit/results/client_artefact_sibling_docs_audit_2026_08_18.md). Remediation
+      moved to the siblings child.
+- [x] [REVIEW] P1. ✅ **Cross-document consistency sweep across all six artefacts** — delivered,
+      `unified-trading-pm@8b7e78e21f`; findings in
+      [cross-document consistency](/plans/audit/results/client_artefact_cross_document_consistency_2026_08_18.md).
+      Found the invented family in three documents and the three-way custody contradiction.
 
 ## Real system gaps — already tracked, not duplicated here
 
@@ -363,6 +145,58 @@ Mirrored-custody routing, the funding-route graph, the rank-allocator weighting 
 (`CUSTODY_TRANSFER` rail, `ALLOCATOR_ARCHETYPE_REGISTRY`'s 17 engines, the carved `risk-guards-local` overlays per
 `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` § H.5) — their absence from the artefact is
 purely a documentation gap, which is why they're todos in § B rather than cross-references here.
+
+## Disposition of todos moved by the 2026-08-18 split
+
+Every todo below left this plan for a child in the table above. Recorded as SUPERSEDED dispositions rather than
+deleted, so the todo total is conserved and each one stays traceable to where it now lives.
+
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Fix the instruction-type count in `strategy-service-walkthrough.html` §01/§03" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Fix §02's strategy-family list" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Soften §11 "Automated movement"" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "REVISED 2026-08-18 — the original custody finding was a FALSE POSITIVE; do not "fix"…" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Fix the stale §05→§08 cross-reference" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Soften §12's capital-budget "enforced by construction" claim" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add a caveat near §08/§09's hard equality claim" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add a scope statement near the top of `strategy-service-walkthrough.html`" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add a one-line carve/hosted split note to §09" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add mirrored-custody routing content" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add funding-route / per-client custody binding content" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add a capability-wizard boundary note" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add rank-allocator weighting-layer content" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add book-level overlay content" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Name the "strategy reads only processed data, never MTDS directly" invariant explicitly" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add fee/gas-as-decision-input content" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P3. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Extend §03's `AtomicInstruction` block with a one-line worked example" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Rewrite §2/§3's external-API status framing" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Fix §4's four-state coverage table" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Reconcile the 288-venue figure" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Fix §14's "19-step contract" mislabel" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Qualify §16's "a great deal of testnet work is already complete"" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P3. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Scope §5's "every figure is pending measurement" lede" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add the 7 fully-absent capability sections" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add the 4 present-thin capability sections" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Name MDPS/features-service explicitly as the intermediary" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Introduce the evidence-tier axis in both artefacts" now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Tag every claim-bearing section in both artefacts with an evidence tier." now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Re-grade all `live` badges against the stricter definition" now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Audit the inherited glossary / canonical-instrument-ID material (Axis 0)." now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Audit the archetype-readiness (batch/paper/live) content" now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Ground or cut the forward claim" now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[RESEARCH] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "**Research real per-venue transfer rails / custody eligibility / colla" now tracked in `retained in this plan (spec/tooling)`.**
+- **[SCRIPT] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Add a QG check validating artefact-quoted enum data against the UAC enums" now tracked in `retained in this plan (spec/tooling)`.**
+- **[REVIEW] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Re-verify the six audit findings the audit itself did NOT independently check." now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[REVIEW] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Audit the four sibling client artefacts never covered" now tracked in `client_artefact_remediation_siblings_2026_08_18`.**
+- **[REVIEW] P2. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Cross-document consistency sweep across all six artefacts." now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "STOP-SHIP: the banned client name appears 6× in `strategy-service-deep-dive.html`." now tracked in `client_artefact_remediation_siblings_2026_08_18`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Performance figures in two client documents" now tracked in `client_artefact_remediation_siblings_2026_08_18`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "`platform-architecture.html` asserts the staked-basis structure as present-tense capa…" now tracked in `client_artefact_remediation_siblings_2026_08_18`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "The invented strategy family is in THREE documents, not one." now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "RESOLVED VERDICT — every `live` badge downgrades to `partial`." now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[DOC] P0. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "RESOLVED VERDICT — cut the forward claim." now tracked in `client_artefact_remediation_nickai_2026_08_18`.**
+- **[DOC] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Fix the CeFi spot-pair instrument-ID example in BOTH artefacts" now tracked in `client_artefact_remediation_elysium_2026_08_18 + client_artefact_remediation_nickai_2026_08_18 (decomposed per file)`.**
+- **[REVIEW] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Reconcile the two re-verification findings that did NOT confirm." now tracked in `client_artefact_remediation_elysium_2026_08_18`.**
+- **[PROCESS] P1. CANCELLED — SUPERSEDED 2026-08-18 (split by artefact, per operator ruling): "Bring the four sibling artefacts under a tracked owner permanently" now tracked in `client_artefact_remediation_siblings_2026_08_18`.**
 
 ## Progress Log
 
