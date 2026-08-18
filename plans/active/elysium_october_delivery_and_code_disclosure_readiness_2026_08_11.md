@@ -907,7 +907,7 @@ Ten planning docs carry this delivery, ~215 open todos between them — listed s
 | `venue_capability_route_axis_and_cross_ag_declarations_2026_08_14` | active | 10/12   |
 | `solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12`    | draft  | 26/2      |
 | `strategy_service_expansion_overlays_config_and_wizard_2026_08_12` | draft | 24/5     |
-| `elysium_carveout_stubbed_strategy_service_2026_08_12`           | draft  | 18/4      |
+| `elysium_carveout_stubbed_strategy_service_2026_08_12`           | draft  | 17/5      |
 | `issues/path_registry_dead_mode_kwarg_…_2026_08_15`              | open   | 2/1       |
 | `issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15` | open | 1/0     |
 

@@ -16,7 +16,11 @@ stage: [execution]
 repos: [execution-service]
 scope: [engineer]
 tags: [credential-blocked, tenderly, aave-v3, integration-test, defi-execution]
-related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
+related:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md,
+  ]
 created: 2026-08-15
 author: ci_reconciler (agt-f0dda8, slot 8)
 source: ci_reconciler CI sweep (quality-gates-v2 red on execution-service live-defi-rollout push 37bfaeed)

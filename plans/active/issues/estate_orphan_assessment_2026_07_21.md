@@ -1,14 +1,17 @@
 ---
 doc_type: issue
 title:
-  Estate orphan assessment 2026-07-21 — sports has 214K ORPHAN_REAL objects; defi/cefi/tradfi blocked on multi-GB
-  manifest download (need a VM)
+  Estate orphan assessment 2026-07-21 — sports/cefi/defi orphan populations measured (prediction hung, tradfi still
+  pending)
 summary:
-  Ran migration_orphan_sweep per asset_group (GCS→manifest, single-walk, read-only). SPORTS is measured — 214,319
-  ORPHAN_REAL objects (real data with no manifest row — the silent-write gap) plus 34,385 LEGACY_DUPLICATE, reports
-  written to the GCS audit parquets. prediction hung in the classification phase (30 min no progress, killed).
-  defi/cefi/tradfi FAILED in-session on the multi-GB availability-index download (ChunkedEncodingError — defi index is
-  ~1.8GB) — the assessment for those three needs the sanctioned VM run, not an in-session walk.
+  Ran migration_orphan_sweep per asset_group (GCS→manifest, single-walk, read-only). UPDATED 2026-08-18
+  (plan_reconciler, corrected stale title/summary — see body for full detail) — SPORTS measured — 214,319 ORPHAN_REAL
+  objects (real data with no manifest row — the silent-write gap) plus 34,385 LEGACY_DUPLICATE. The original
+  in-session walk FAILED on defi/cefi/tradfi's multi-GB availability-index download, but both CEFI (935,714
+  orphan_class_E, sweep `orphan-sweep-cefi-20260722-161432`) and DEFI (15,865,384 orphan_class_E, the largest of any
+  asset_group) were subsequently COMPLETED via the sanctioned VM run by 2026-07-24 (session 3) — see body Progress
+  Log for both. Prediction hung in the classification phase (30 min no progress, killed) and TradFi's status was not
+  re-confirmed in this pass — verify current state before treating either as still-pending.
 status: open
 nature: issue
 asset_group: [sports, defi, cefi, tradfi, prediction]
