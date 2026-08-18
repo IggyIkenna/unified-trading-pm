@@ -87,11 +87,11 @@ each child owns a disjoint file set and the three run **concurrently**.
 Todos were **moved, not copied** — nothing below duplicates a child. This plan deliberately holds no per-file edit:
 its todos define the marks the children apply, and build the tooling that stops all of this recurring.
 
-- [ ] [DOC] P0. **Define the evidence-tier spec** — exact markup, wording and legend copy for `machine-verified` /
+- [x] [DOC] P0. ✅ **Define the evidence-tier spec** — exact markup, wording and legend copy for `machine-verified` /
       `needs-check` / `assumption`, visually distinct from the `live`/`partial`/`planned` status pill. Children
       apply it to their own file, so defining it once here is what keeps the two documents consistent. Rule:
       default is `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol
-      inline, which is what makes a later re-audit cheap.
+      inline, which is what makes a later re-audit cheap. **Shipped `unified-trading-pm@171dc40739 + ec08cccad1`.**
 - [ ] [DOC] P0. **Define the owner-mark spec** — how a section names the workstream/plan/epic that closes it, per
       `system_readiness_master.md` W21's closure invariant. Keep it terse enough to sit beside two other marks.
 - [ ] [SCRIPT] P0. **Build a banned-term / disclosure checker over the artefact directory, and wire it into QG.**
