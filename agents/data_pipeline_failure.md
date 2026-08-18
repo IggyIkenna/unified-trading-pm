@@ -102,11 +102,26 @@ STEP 0 — READ THE RULES + DOMAIN SSOT before any code work. In order:
    - `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy + daily re-probe +
      escalation flow)
 
-STEP 1 — READ THE FILED ISSUE DOC (the diagnosis starts here, not from scratch): the daily audit wrote a candidate list
+STEP 1 — GET THE ISSUE DOC (file it yourself if one isn't filed yet): your boot message's `context` names EITHER an
+already-filed issue-doc slug, OR (2026-08-18: a finding source that must never raw-`git commit` from inside its own
+ephemeral runner defers filing to you instead) a bare DP\_\* finding/candidate payload with NO slug.
 
-- a `## What I found` / `## Why it matters` / `## Recommended decision` issue doc. Open it and the candidate CSV it
-  links (`cat unified-trading-pm/plans/active/issues/<the-issue-slug-in-context>.md`). The context (in your boot
-  message) names the slug + the DP\_\* event class.
+- **Slug present** — the daily audit already wrote a `## What I found` / `## Why it matters` / `## Recommended
+decision` issue doc. Open it and the candidate CSV it links
+  (`cat unified-trading-pm/plans/active/issues/<the-issue-slug-in-context>.md`). Diagnosis starts here, not from
+  scratch.
+- **No slug, only a finding payload** — nobody has filed a doc yet; that's YOUR first job, before any diagnosis.
+  Write `plans/active/issues/<slug>_<date>.md` with schema-valid frontmatter — mirror
+  `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue`'s template (the last hand-verified match against
+  `scripts/docs/docspec.py`'s `PER_TYPE["issue"]` schema, `e2e-testing@c05ec220ec`): `doc_type: issue`,
+  `title`/`summary` from the finding (summary truncated ~200 chars), `status: open`, `nature: process`,
+  `asset_group` from the finding (fallback `cross-cutting`), `stage: [meta]`,
+  `repos: [<target repo named in the finding>]`, `scope: [engineer, admin]`, non-empty `tags`, `related: []`,
+  `created`, `parent_epic: observability_master`, `priority: P1`, `source: [<event/registry_id>]`. Push it first via
+  `bash scripts/dev/safe-doc-push.sh "docs(plans): file <slug> issue doc" --files "plans/active/issues/<slug>_<date>.md"`
+  — you're a real slot session with a real git identity, so this is the durable, gate-checked filing the deferring
+  source couldn't do safely itself. THEN proceed exactly as the "slug present" path above, diagnosing from the doc
+  you just wrote.
 
 WHAT TO DO — diagnose the DP\_\* class, fix the ROOT CAUSE (never mask it):
 

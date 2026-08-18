@@ -25,7 +25,7 @@ related:
     /plans/archive/issues/ci_escalation_wall_type_mismatch_silent_human_only_2026_07_27.md,
   ]
 created: 2026-08-12
-last_reviewed: 2026-08-15
+last_reviewed: 2026-08-18
 authoritative_for:
   [ci-escalation wall_type catalog, AO agent-role-to-wall_type mapping, 3-tier escalation timing pattern]
 referenced_by: []
@@ -155,6 +155,17 @@ narrowly in `server/escalation.py`'s `escalate()`: `repo == "unified-trading-pm"
 (other repos, and every non-escalation dispatch path elsewhere in the codebase, are unaffected). This is a KNOWN,
 accepted tradeoff — a future `/ci-reconcile` § 5 check on PM escalation dispatch does not need to re-diagnose it as a
 fresh mystery.
+
+## `data_pipeline_failure` — issue-doc filing is now agent-backed, not just agent-consumed (2026-08-18)
+
+Until 2026-08-18 the `data_pipeline_failure` boot prompt (`agents/data_pipeline_failure.md`) only ever CONSUMED a
+pre-filed PM issue doc — the actual filing was done by an unsupervised script (e2e-testing's manifest-hygiene audit,
+raw `git commit` from inside its own ephemeral Cloud Run Job), which silently dropped a real finding three times in
+one week. The boot prompt now also handles a bare candidate payload with no pre-filed doc, filing one itself (with
+schema-valid frontmatter) before diagnosing — closing the loop deployment-service's own escalation substrate already
+half-built (`route_finding`'s `no_pm_clone_on_disk` defer-to-agent branch). See
+`/codex/05-infrastructure/data-pipeline-alerts.md` § "Never raw-`git commit` a finding from an ephemeral/untracked
+runner" and `/plans/active/dp_audit_escalation_agent_backed_filing_2026_08_18.md`.
 
 ## Still-open coverage gaps (not fixed this pass)
 
