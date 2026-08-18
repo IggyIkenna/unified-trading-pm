@@ -90,7 +90,7 @@
     "ml-service": "0.58.44",
     "alerting-service": "0.63.55",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.63"
+    "client-reporting-api": "0.32.64"
   },
   "repositories": {
     "alerting-service": {
@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.140.2",
-      "published_at": "2026-08-18T09:50:55Z",
+      "version": "0.140.3.dev1+g389b6375c",
+      "published_at": "2026-08-18T20:07:28Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
