@@ -134,7 +134,7 @@ an actual host-endangering condition.
       bucket) — following it would have been a no-op. Mirroring the launcher flag as originally scoped would have
       shipped a fix that looked plausible but did nothing for the actual failure.
       **Real fix, shipped:**
-      (1) `unified-trading-library@<pending-quickmerge-sha>` — added an explicit escape-hatch config field
+      (1) `unified-trading-library@61d6f77729` — added an explicit escape-hatch config field
       `manifest_consolidated_staleness_override_sec` (env `MANIFEST_CONSOLIDATED_STALENESS_OVERRIDE_SEC`,
       `config_interface/cloud_config.py`), consulted FIRST in `_state._resolve_consolidated_staleness_sec()` before
       the AG lookup — additive only, `None` by default, so all existing call sites across cefi/defi/tradfi/sports
@@ -145,7 +145,7 @@ an actual host-endangering condition.
       an earlier edit dropped it, then fixed by restoring the label and only rewording the remediation sentence).
       Added regression tests in the same file: explicit override wins over the sports AG default and over the
       generic global default; absent override preserves existing AG-wins-over-generic precedence unchanged.
-      (2) `deployment-service@<pending-quickmerge-sha>` — added `--consolidator-staleness-sec` to
+      (2) `deployment-service@d19f3cdc48` — added `--consolidator-staleness-sec` to
       `launch-mtds-sports-odds-backfill-vm.sh` (unset by default, zero behavior change unless passed), setting BOTH
       `MANIFEST_CONSOLIDATED_STALENESS_SEC` (shell-watchdog parity with the rescan launcher) AND the new
       `MANIFEST_CONSOLIDATED_STALENESS_OVERRIDE_SEC` (the var that actually moves the Python-level gate for this
