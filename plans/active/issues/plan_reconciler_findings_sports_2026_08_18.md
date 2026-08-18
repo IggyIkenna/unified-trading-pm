@@ -31,8 +31,8 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: review
 assigned_vm: NA
 execution_scope: local-only
-locked_by: "plan_reconciler (agt-57336e) since 2026-08-18T02:32:34Z"
-locked_since: "2026-08-18T02:32:34Z"
+locked_by:
+locked_since:
 supersedes: plan_reconciler_findings_sports_2026_08_16
 superseded_by:
 resolved_by:
@@ -254,8 +254,8 @@ Coverage below for the full list; not enumerated here individually as none has a
 - **STEP 4 verification**: this orchestrator independently re-ran the hunters' own cited evidence (not trusting
   self-report) for every item that became a Flips-verified/Archive/Contradiction-fixed action above — 3 archival
   checkbox-count re-checks, 6 sha-ancestry re-checks (2 hit the known squash-merge trap, resolved via direct
-  content/symbol verification instead), 1 file-deletion re-check, 1 doc-status re-check. `confirmed=12` (4 flips + 4
-  contradictions-fixed + 1 archived + 3 archive-verified-but-deferred), `refuted=1` (this orchestrator's own
+  content/symbol verification instead), 1 file-deletion re-check, 1 doc-status re-check. `confirmed=11` (4 flips + 4
+  contradictions-fixed + 1 archived + 2 archive-verified-but-deferred), `refuted=1` (this orchestrator's own
   prompt-authoring error, see Refuted above, not a corpus finding).
 - No dedicated cross-batch reconciler was spawned for the sports_master A/B split — neither batch's own contradiction
   list referenced a claim in the other batch's file set, so no cross-batch pair was suspected; this is a
@@ -290,3 +290,10 @@ writes and used only as read-only context where cited by a hunter or this orches
   raised — every finding this run either had HARD evidence enabling a direct auto-fix, or was judged lower-priority/
   out-of-scope-for-this-pass and routed as a documented recommendation rather than requiring an operator ruling.
   Proceeding to Phase 5's exit hygiene gate + STEP 7 final report.
+- **2026-08-18 (conclusion)**: Phase 5 exit hygiene gate confirmed clean of sports-tranche-attributable hard failures
+  (remaining corpus-wide failures verified via direct script invocation to belong to other concurrently-active
+  tranches or pre-existing standing ratchets owned elsewhere). Corrected an internal arithmetic slip in this doc's own
+  STEP-4 tally (`confirmed=12` → `confirmed=11`; the enumerated Archive-candidates list only supports 2
+  archive-verified-but-deferred docs, not 3 — matches the "3 archival checkbox-count re-checks" figure exactly: 1
+  landed + 2 deferred). `locked_by` cleared. STEP 7 result POST + STEP 8 `/done` follow immediately; 0 blocked
+  questions means STEP 8's loop-and-wait collapses to immediate completion per the one-shot lifecycle contract.
