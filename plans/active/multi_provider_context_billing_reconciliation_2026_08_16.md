@@ -38,7 +38,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-17
+last_updated: 2026-08-18
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -338,8 +338,59 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       size and its real outcome metrics (turns/tokens/compacted) joinable in one query. **Extracted 2026-08-18
       (na-eligibility-audit, ao tranche) → `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 4** —
       conflict-checked clear. Track dispatch/completion there, not here.
+- [ ] [BACKEND] P2. **New, operator ask 2026-08-18 — hourly, clock-aligned time-series aggregation per
+      (provider, role_group).** Build a new endpoint (extending `server/fleet_kpis.py`'s existing
+      `DailyDispatchEfficiency` pattern to hourly granularity, not a parallel mechanism) that buckets by FIXED UTC
+      clock-hour boundaries (00:00, 01:00, 02:00, ... — `GROUP BY` the hour, never a trailing "last N hours from now"
+      window, which is a DIFFERENT shape from every existing `window_hours` lookback endpoint in this codebase, e.g.
+      the wallet-reconciliation panels' 1h/24h/7d/Lifetime — operator explicitly flagged this distinction, don't
+      conflate the two). Range defaults to since-inception (the earliest `task_usage`/`account_usage_history` row) but
+      accepts an operator-supplied `start`/`end`. Each hour bucket reports, per (provider, `task_role_group()`):
+      published API rate (`model_pricing.py`'s rate card — the headline number, not a computed effective rate), raw
+      token usage (4-way breakdown, reusing `window_task_usage_totals`'s categories), actual $ spent (from
+      `task_usage.spend_usd` / the relevant wallet reconciliation for subscription-shaped providers), task-completion
+      count, AND dispatch-ATTEMPT count (not just completions) — reusing `DispatchRetryStats`/`spawn_retry_count`
+      (`server/autospawn.py`, `server/orm.py`) plus the `activity_log` dispatch-event vocabulary
+      `fleet_kpis.py`'s own docstring already documents, generalized from fleet-wide to per-(provider, role). This is
+      the "trying a lot of times but not landing the task" signal the operator specifically wants visible, distinct
+      from and alongside the completion count. Done when: a real query over a real historical range returns hourly
+      buckets with all five series populated for at least one provider/role pair, and a burst (a real hour with
+      materially more dispatches/tokens than its neighbors) is visibly identifiable in the raw output.
+- [ ] [UI] P2. **New, operator ask 2026-08-18 — adopt a charting library (operator's explicit choice over a
+      hand-rolled SVG alternative, since this dashboard has zero charting precedent today — confirmed via
+      `dashboard/package.json`, no recharts/chart.js/d3/victory/visx/nivo anywhere).** Add the dependency, confirm it
+      composes cleanly with this dashboard's existing `tsc --noEmit` / vitest / prettier / bundle-size expectations
+      before building anything on top of it. Done when: a minimal proof-of-concept chart renders real data from the
+      new hourly endpoint above, with `pw:L2 ✓` per `/codex/06-coding-standards/ui-testing-layers.md`.
+- [ ] [UI] P2. **New, operator ask 2026-08-18 — shared popup/modal chart component, launched from MULTIPLE entry
+      points, not duplicated per-panel.** One component consuming the new hourly endpoint (provider/role/date-range
+      filters), opened via a launch button/icon added to BOTH `FleetKpis.tsx` (the KPI panel) AND each wallet-
+      reconciliation / task-usage panel (`ClaudeWalletPanel.tsx`, `DeepSeekWalletPanel.tsx`, `KimiWalletPanel.tsx`,
+      `TaskUsageWindows.tsx`) — the operator's own framing ("in each of the wallet reconciliations or the task usage
+      breakdowns, you could spin it up from there"). Depends on the two todos above (needs real data + the charting
+      dependency in place first). Done when: the popup opens from at least two distinct entry points and renders the
+      same live data both times, with `pw:L2 ✓` covering at least one entry point's launch-and-render path.
 
 ## Progress Log
+
+- **2026-08-18 (/plan-brainstorm) — 3 new todos added: hourly per-provider/per-role usage time-series + chart UI.**
+  Operator ask: plot usage over time per provider, broken down by role, showing published API rates/usage/real $
+  spent/task-completion counts, PLUS dispatch-attempt counts (not just completions — "trying a lot of times" without
+  landing the task is its own signal), launched as a popup from the KPI panel and/or each wallet-reconciliation/
+  task-usage panel. Operator explicitly ruled: fold into an existing plan, no new plan doc. Researched first (this
+  doc's own `context_scope` + `FleetKpis.tsx`/`server/fleet_kpis.py`): `DailyDispatchEfficiency`/
+  `RoleDispatchEfficiency`/`DispatchRetryStats` already exist (daily-granularity dispatch/done/retry KPIs) — this is
+  NOT greenfield, it's an hourly generalization + a new billing/rate dimension layered on. The plan that originally
+  built FleetKpis (`ao_fleet_observability_kpis_2026_07_20`) is archived, and the only other active KPI-adjacent plan
+  (`ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md`) is scoped to compaction/death-
+  diagnostics specifically — neither is the right home, so this doc (already covering per-task/per-provider billing
+  reconciliation) is. Two operator decisions resolved via `/plan-brainstorm` clarifying questions: (1) adopt a real
+  charting library (not hand-rolled SVG) despite this being the dashboard's first-ever charting dependency; (2)
+  hourly buckets (not daily) to actually surface intraday burst patterns. Operator separately clarified mid-session:
+  buckets must be FIXED UTC clock-hour boundaries (00:00, 01:00, ...), never a rolling "last N hours from now"
+  window — a different shape from every existing `window_hours` lookback endpoint in this codebase (the wallet
+  panels' own 1h/24h/7d/Lifetime toggle shipped earlier today), folded into the new todo's own text so it isn't
+  conflated by whoever builds it.
 
 - **2026-08-18 — Grok (xAI) decommissioned, operator decision; every open todo above narrowed to drop it.** Reason
   stated verbatim: no subscription/Max-style tier and no free tier — pure metered pay-per-token — judged pointless
