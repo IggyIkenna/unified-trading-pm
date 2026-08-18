@@ -84,3 +84,42 @@ something reported that day turns out wrong, correct it in the NEXT entry, not r
   points) — CPU avg 13.3%/max 99.9%, load-avg-1m avg 1.3/max 15.2 (real oversubscription at peak, ~1.9x core count),
   iowait avg 0.8%/max 44.1%, swap avg 0.5%/max 9.5%. Verdict: correctly sized, not over-provisioned — the low average
   masks genuine burst demand that would get worse on a smaller box. No watchdog alerts fired in 24h. Not a finding.
+
+## 2026-08-18 (second pass, agt-d23e6a, scheduled hourly sweep)
+
+**Delta since last run**: new persistent alert found (PM promote-PR corpus-ratchet block) and partially fixed;
+2 transient CRITICAL alerts confirmed self-healed; spend/VM health not re-run this pass (unchanged from above).
+
+- **Persistent alerts (non-auto-resolving)**: `unified-trading-pm`'s `checks` QG slice was blocking every LDR→main
+  promote PR (#3457, #3459, #3460, #3461 — visible live in `GET /api/escalations/active` as a chain of
+  `promote_qg_failure` escalations) on 3 unrelated hard-fail ratchets: (1) `check_reference_paths` existence 35 vs
+  baseline 34 — root cause: `plans/active/issues/ag_closeout_audit_ci_parked_2026_08_16.md` cited a target doc that
+  had since been archived (active→archive move, stale path never updated) — **fixed**, repointed to
+  `/plans/archive/issues/...`; (2) `check_ag_closeout_linkage` 1 orphan — `defi_perp_daily_ctx_hl_forward_gap_since_
+2026_06_02_2026_08_04_finalize_2026_08_08.md` had no body-mention in `defi_consolidated_closeout_2026_07_18.md` —
+  **fixed**, citation added (had to trim the addition to stay under the 1000-line hard cap, doc was already at 997L);
+  (3) `check_artefact_disclosure` 6 hard hits of the banned client name in `strategy-service-deep-dive.html` — **left
+  alone**, already an open P0 todo in the actively-dispatched `plans/active/client_artefact_remediation_siblings_
+2026_08_18.md` (line 68, `sequential: true`), fixing it here would risk colliding with that plan's in-flight work.
+  Shipped `unified-trading-pm@8f916bd82f`, verified on origin; (1) and (2) confirmed clear locally post-fix. The
+  promote PR will still show red until the sibling plan's ClearLoop redaction lands — expected, not a new gap.
+- **Self-healed, confirmed via current green state**: `agent-orchestrator` QG-slice cancel/timeout (20:06Z);
+  `trading-agent-service`/`market-tick-data-service`/`ml-service`/`unified-trading-library` QG-slice failures
+  (21:07-21:15Z, all same-SHA retry-succeeded at 22:05Z — transient runner flake, no code fix needed, no open
+  promote PRs on any of the 4); `deployment-service` main-branch FAILING→FEATURE_GREEN (ci-status-update, 22:09Z);
+  Cloud Run traffic-pin on `signal-broadcast-smoke-receiver` (19:12Z) — live `gcloud run services describe` shows
+  100% traffic on the latest revision, not pinned. No Slack RECOVERED post found for the traffic-pin specifically
+  (asymmetric-alerting gap, § 0d) — worth a one-line note, not a new incident.
+- **Coverage gap**: could not verify `glue-runner-crash-loop-watchdog`'s 20:01Z CRITICAL (`github-glue-runner-
+unified-api-contracts@glue-1.service`, "10.2h active, current job's own start time not resolvable") via live SSM —
+  `ikenna-worker` AWS identity lacks `ssm:SendCommand` on `i-042a6332509482556` and isn't one of the two ambient
+  self-service identities this workspace's IAM self-grant rule covers, so no self-grant attempted. Indirect check:
+  `unified-api-contracts`'s own GH Actions history shows zero in-progress runs and clean `success` completions both
+  before and after 20:01Z — no evidence of an actually-hung job, consistent with the known `unit_active_seconds`
+  false-positive class this skill already documents (the alert's own "current job's own start time not resolvable"
+  phrase matches that failure mode exactly). Likely false alarm, not confirmed — flagging the SSM access gap itself
+  as worth a fix (a read-only `ssm:SendCommand`/`ssm:GetCommandInvocation` grant scoped to this instance would let
+  `/ci-reconcile` verify this class directly instead of inferring from GH Actions data).
+- **ci-reconcile ran**: yes (second pass this UTC day, scheduled dispatch agt-d23e6a).
+- **GH Actions spend**: not re-pulled this pass — see the first entry above, unchanged.
+- **CI VM resource health**: not re-run this pass — see the first entry above, unchanged.
