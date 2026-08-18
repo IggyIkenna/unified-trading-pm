@@ -992,3 +992,9 @@ edits in `agent-orchestrator` for the lead session to review and ship.
   todo was satisfiable via the log-derived script instead of an `accounts.json` schema change, and pricing wasn't
   implicated), and the plan doc's checkboxes above (left unflipped intentionally — operator/lead session flips them
   after QG confirms and ships).
+
+**Gate 4 of the operator's 8-gate provider-readiness framework (credit-exhaustion-aware dispatch) is tracked in
+`plans/audit/provider_smoke_test_registry_2026_08_18.md`, not here** — added there instead of appended to this file
+to stay under the 1000-line hard cap (this file was already at 995 lines). See that doc's "Gate 4" section for the
+tasks-remaining formula, poll-cadence-vs-reset-window audit, and restart-survivability todos, which reference this
+plan's `select_account_for_spawn()`/stratified-rotation mechanism as their integration point.

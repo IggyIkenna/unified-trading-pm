@@ -270,3 +270,47 @@ Operator reported agents "keep respawning without finishing their tasks and burn
   `[INVESTIGATE]` checkbox left unflipped — that call is for the lead session after review, per dispatch
   instructions. No code changed; read-only SSM only (`check-ao-backlog-status.sh`/`query-ao-state-db-readonly.sh`
   pattern, `state.db` opened `mode=ro`).
+- **sub-agent investigation 2026-08-18 (continued, part 3 — ROOT CAUSE FOUND for the original 08-11 mechanism)**:
+  asked to push further. Re-examined the raw 2026-08-11 04:00-06:00Z burst directly — no diagnostic instrumentation
+  existed that day, so this uses the raw slot-scope `tmux_session_lost` timestamps themselves, independent of the
+  `tmux_server_alive`/`account_snapshot` fields the entries above rely on. Bucketed every death into 2-second
+  windows and counted distinct slots dying together. Result: **the entire 2-hour window is made of ~30 recurring
+  mass-simultaneous-death clusters**, roughly one every 5-15 minutes (04:09, 04:12-13, 04:18-19, 04:35, 04:43-44,
+  04:51, 05:07-08, 05:15, 05:22-24, 05:29, 05:34, 05:39, 05:54, 05:58-59...), each killing 3 to 21+ slots within the
+  same 2 seconds — the identical shape as the `tmux_server_alive: false` mass-kill-server signature independently
+  confirmed above for 08-13, just far more frequent and larger per-burst here. Fully consistent with the sibling
+  doc's own timeline: **Layer 1 (the `TMUX_TMPDIR` isolation that stops any bare process from reaching the fleet's
+  shared tmux socket) didn't ship until 2026-08-13** — on 08-11 the fleet was still 100% on the ambient default
+  socket, maximally exposed the entire time.
+
+  **This falsifies a claim carried in my own entry above (inherited from the static-analysis pass, itself never
+  independently checked against the raw data).** Pulled all 12 of slot 15's deaths in this window and checked, for
+  each, how many OTHER slots also died within ±3 seconds: **every single one** had a large simultaneous peer group
+  (n=12 to n=28 other slots dying in the same instant) — slot 15 was never dying alone. The "Slot 15's separate
+  pattern... NOT simultaneous with other slots... stays genuinely unexplained" framing does not survive an actual
+  clustering check — it was an unverified assumption, not a measured fact. Slot 15 wasn't special: it just kept
+  getting statistically caught by a fleet-wide event recurring every 5-15 minutes, same as every other slot visible
+  in each cluster above.
+
+  **Root cause, confidently, for the ORIGINAL 2026-08-11 crash loop — both the mass burst and slot 15's pattern**:
+  the SAME ambient-default-tmux-socket kill-server vulnerability the sibling doc
+  (`ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`) root-caused and fixed via its 4-layer fix (all landed
+  2026-08-13, zero recurrence confirmed 5 days clean per the entry above). **DeepSeek was never causal** — purely
+  incidental: 100% of the fleet was forced onto 2 DeepSeek accounts that exact day (the Anthropic-credit-outage this
+  doc opened with), so every death that day necessarily showed a DeepSeek `account_id`, which is why the
+  investigation understandably chased a DeepSeek-specific mechanism that was never really there. The flap-detector
+  gap (already fixed same-day) independently explains why it went undetected regardless of cause. What remains
+  genuinely unconfirmed: the specific process(es) issuing the `kill-server`/`tmux` calls against the ambient socket
+  on 08-11 itself — unlike the 08-13 catches, no strace/auditd/journalctl evidence survives from that day to name a
+  culprit PID. But the mechanism CLASS this doc's own `[INVESTIGATE]` todo asks to confirm ("the actual DeepSeek
+  tmux-session-death mechanism") is now answered: it isn't a DeepSeek mechanism at all.
+
+  Checked one more angle before concluding: `checkout_sha` at each slot-15 death cycles through 3 values
+  (`6e3d06c`, `62e9be7`, `a4531e1` — the last being this doc's own `a4531e1293` git-health fix landing
+  mid-investigation) with clusters continuing under all three, ruling out "one of that day's own deploys caused it"
+  and confirming the mechanism predates, and was unaffected by, this doc's own same-day fixes.
+
+  Not flipping `[INVESTIGATE]` unilaterally — evidence is confident enough to recommend closing it, but leaving that
+  call to whoever reviews, per the standing instruction on this doc. No code changed; read-only SSM only, same
+  `state.db mode=ro` pattern, this time cross-analyzing raw pre-instrumentation timestamps rather than the
+  diagnostic fields captured after 08-12.
