@@ -276,6 +276,25 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 - [ ] [INFRA] P2.7.3. **Live → reconcile to paper → (∴ to batch)** — same machinery with real venue fills; report
       live↔paper execution alpha + confirm `live↔batch = determinism(≈0) + execution(measured)`. Repo: (gated on live
       custody readiness — `BLOCKED-OPERATOR-DECISION` until a live wallet is approved).
+- [x] ✅ [INFRA] P2.7.4. **`blrs-daily-determinism` Cloud Run Job wired to the wrong CLI operation, paging daily** —
+      DONE (2026-08-18, `deployment-service@e3826a7f7c`). DP-WATCHER-006 CRITICAL page every scheduled run since
+      `paper_determinism_enabled` flipped to `true` by default: Stage B invoked `--operation reconcile` (the
+      LIVE-trading T+1 recon path — `stage0_config_pull`), which unconditionally requires an execution-store
+      config snapshot + ML/strategy `t1-recon` `_SUCCESS` markers that no producer writes for this paper-week-soak
+      pipeline → `exit 1` daily. Switched to `--operation daily-determinism` (P7.1-B `DailyDeterminismHandler`,
+      shipped 2026-06-20 per P2.7.1/P2.7.2 above but never wired into this terraform — the header comment claiming
+      it "is NOT yet implemented" was stale), which honest-no-ops (`status: ok, skipped: no_run_configured`) instead
+      of crashing when `paper_ledger_root`/`batch_ledger_root` are unset. Repo: deployment-service. Issue:
+      `plans/active/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`.
+- [ ] [INFRA] P2.7.5. **Wire `paper_ledger_root`/`batch_ledger_root` + a batch-rerun trigger stage into the
+      `blrs-daily-determinism` cron** — found while fixing P2.7.4. `ReconConfig.paper_ledger_root`/
+      `batch_ledger_root` default `""` and nothing in `paper_week_determinism_scheduler.tf` ever populates them, so
+      `--operation daily-determinism` currently runs as a permanent (correct, honest) no-op — it never actually
+      reconciles. Needs: (1) a stage that triggers strategy-service's existing `batch-rerun` CLI op
+      (`cli/handlers/batch_rerun.py`, proven ε=0 — P2.7.2/P9.B) against the prior day's paper run to produce "run
+      B"'s ledger, and (2) a mechanism (wrapper script or Cloud Scheduler body override, since the run_id isn't
+      known at `tofu apply` time) to resolve "yesterday's paper run_id" and inject both ledger roots as env vars
+      into the daily-determinism job. Repo: deployment-service + strategy-service.
 
 ## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
 

@@ -93,3 +93,13 @@ B: Also attempt the full ledger-root wiring in this same session (requires desig
 "yesterday's paper run_id" dynamically — a real design decision, not a mechanical fix).
 
 Going with A — see Progress Log / commit for the shipped fix.
+
+## Progress Log
+
+- **2026-08-18** — Diagnosed via `gcloud run jobs executions list` + `gcloud logging read` (2 consecutive failed
+  executions, 2026-08-17 and 2026-08-18, identical `[Stage 0] FAILED — Missing upstream data` error). Fixed:
+  `deployment-service@e3826a7f7c` (`--operation reconcile` → `--operation daily-determinism`, dead `RECONCILE_DATE`
+  env var dropped, stale header comment corrected), verified on `origin/live-defi-rollout`. Follow-up gap
+  (ledger-root wiring) tracked as `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` P2.7.5.
+  Status kept `open` pending P2.7.5 — the immediate CRITICAL page is resolved, but this doc's title ("wired to the
+  wrong CLI operation") is now historical; re-verify next scheduled run (02:30 UTC) exits 0 before closing.
