@@ -2,180 +2,862 @@
 
 <style>
   :root {
-    --ground: #f6f7fa; --surface: #ffffff; --surface-2: #eef1f7; --surface-3: #e4e9f2;
-    --ink: #0c1424; --ink-2: #3b475f; --ink-3: #6b7794;
-    --rule: #d8deea; --rule-strong: #b6c1d6;
-    --accent: #8c6d14; --accent-wash: rgba(140, 109, 20, 0.09);
-    --g-data: #107c5f; --g-exec: #3b62c4; --g-post: #a38112;
-    --g-data-wash: rgba(16, 124, 95, 0.09); --g-exec-wash: rgba(59, 98, 196, 0.1); --g-post-wash: rgba(163, 129, 18, 0.11);
-    --good: #0f7a4e; --warn: #96660a; --crit: #ad2f24;
+    --ground: #f6f7fa;
+    --surface: #ffffff;
+    --surface-2: #eef1f7;
+    --surface-3: #e4e9f2;
+    --ink: #0c1424;
+    --ink-2: #3b475f;
+    --ink-3: #6b7794;
+    --rule: #d8deea;
+    --rule-strong: #b6c1d6;
+    --accent: #8c6d14;
+    --accent-wash: rgba(140, 109, 20, 0.09);
+    --g-data: #107c5f;
+    --g-exec: #3b62c4;
+    --g-post: #a38112;
+    --g-data-wash: rgba(16, 124, 95, 0.09);
+    --g-exec-wash: rgba(59, 98, 196, 0.1);
+    --g-post-wash: rgba(163, 129, 18, 0.11);
+    --good: #0f7a4e;
+    --warn: #96660a;
+    --crit: #ad2f24;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", ui-serif, Georgia, serif;
     --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-    --shell: 1200px; --prose: 74ch;
+    --shell: 1200px;
+    --prose: 74ch;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ground: #0a0f1e; --surface: #131c33; --surface-2: #1b2745; --surface-3: #223056;
-      --ink: #edf1fa; --ink-2: #b4c0d8; --ink-3: #8492af; --rule: #23304f; --rule-strong: #3a4b74;
-      --accent: #d4af37; --accent-wash: rgba(212, 175, 55, 0.12);
-      --g-data: #15907a; --g-exec: #4c7fda; --g-post: #ae8c24;
-      --g-data-wash: rgba(21, 144, 122, 0.16); --g-exec-wash: rgba(76, 127, 218, 0.18); --g-post-wash: rgba(174, 140, 36, 0.17);
-      --good: #3fc98d; --warn: #dfb143; --crit: #ef7d6f;
+      --ground: #0a0f1e;
+      --surface: #131c33;
+      --surface-2: #1b2745;
+      --surface-3: #223056;
+      --ink: #edf1fa;
+      --ink-2: #b4c0d8;
+      --ink-3: #8492af;
+      --rule: #23304f;
+      --rule-strong: #3a4b74;
+      --accent: #d4af37;
+      --accent-wash: rgba(212, 175, 55, 0.12);
+      --g-data: #15907a;
+      --g-exec: #4c7fda;
+      --g-post: #ae8c24;
+      --g-data-wash: rgba(21, 144, 122, 0.16);
+      --g-exec-wash: rgba(76, 127, 218, 0.18);
+      --g-post-wash: rgba(174, 140, 36, 0.17);
+      --good: #3fc98d;
+      --warn: #dfb143;
+      --crit: #ef7d6f;
     }
   }
   :root[data-theme="dark"] {
-    --ground: #0a0f1e; --surface: #131c33; --surface-2: #1b2745; --surface-3: #223056;
-    --ink: #edf1fa; --ink-2: #b4c0d8; --ink-3: #8492af; --rule: #23304f; --rule-strong: #3a4b74;
-    --accent: #d4af37; --accent-wash: rgba(212, 175, 55, 0.12);
-    --g-data: #15907a; --g-exec: #4c7fda; --g-post: #ae8c24;
-    --g-data-wash: rgba(21, 144, 122, 0.16); --g-exec-wash: rgba(76, 127, 218, 0.18); --g-post-wash: rgba(174, 140, 36, 0.17);
-    --good: #3fc98d; --warn: #dfb143; --crit: #ef7d6f;
+    --ground: #0a0f1e;
+    --surface: #131c33;
+    --surface-2: #1b2745;
+    --surface-3: #223056;
+    --ink: #edf1fa;
+    --ink-2: #b4c0d8;
+    --ink-3: #8492af;
+    --rule: #23304f;
+    --rule-strong: #3a4b74;
+    --accent: #d4af37;
+    --accent-wash: rgba(212, 175, 55, 0.12);
+    --g-data: #15907a;
+    --g-exec: #4c7fda;
+    --g-post: #ae8c24;
+    --g-data-wash: rgba(21, 144, 122, 0.16);
+    --g-exec-wash: rgba(76, 127, 218, 0.18);
+    --g-post-wash: rgba(174, 140, 36, 0.17);
+    --good: #3fc98d;
+    --warn: #dfb143;
+    --crit: #ef7d6f;
   }
-  body { background: var(--ground); color: var(--ink); font-family: var(--serif); font-size: 17.5px; line-height: 1.62; -webkit-font-smoothing: antialiased; }
-  .shell { max-width: var(--shell); margin: 0 auto; padding: 0 32px 96px; }
-  p, ul, ol { max-width: var(--prose); } p { margin: 0 0 1.05em; }
-  ul, ol { margin: 0 0 1.15em; padding-left: 1.35em; } li { margin-bottom: 0.45em; } li::marker { color: var(--ink-3); }
-  a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
-  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
-  code, .mono { font-family: var(--mono); font-size: 0.845em; }
-  code { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 3px; padding: 0.08em 0.34em; white-space: nowrap; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell {
+    max-width: var(--shell);
+    margin: 0 auto;
+    padding: 0 32px 96px;
+  }
+  p,
+  ul,
+  ol {
+    max-width: var(--prose);
+  }
+  p {
+    margin: 0 0 1.05em;
+  }
+  ul,
+  ol {
+    margin: 0 0 1.15em;
+    padding-left: 1.35em;
+  }
+  li {
+    margin-bottom: 0.45em;
+  }
+  li::marker {
+    color: var(--ink-3);
+  }
+  a {
+    color: var(--ink);
+    text-decoration-color: var(--accent);
+    text-underline-offset: 3px;
+  }
+  a:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  code,
+  .mono {
+    font-family: var(--mono);
+    font-size: 0.845em;
+  }
+  code {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.08em 0.34em;
+    white-space: nowrap;
+  }
 
-  .masthead { border-bottom: 1px solid var(--rule-strong); padding: 56px 0 34px; margin-bottom: 12px; }
-  .eyebrow { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 26px; }
-  .eyebrow .mark { color: var(--accent); letter-spacing: 0.2em; } .eyebrow .sep { color: var(--rule-strong); }
-  .eyebrow .conf { border: 1px solid var(--accent); color: var(--accent); background: var(--accent-wash); border-radius: 3px; padding: 3px 9px; letter-spacing: 0.13em; }
-  h1 { font-size: clamp(2.3rem, 5vw, 3.5rem); line-height: 1.05; font-weight: 400; letter-spacing: -0.018em; text-wrap: balance; margin: 0 0 0.5em; max-width: 25ch; }
-  h1 .light { color: var(--ink-3); font-style: italic; }
-  .standfirst { font-size: 1.16rem; line-height: 1.56; color: var(--ink-2); max-width: 64ch; margin-bottom: 26px; }
-  .factbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(136px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
-  .factbar div { background: var(--surface); padding: 13px 15px; }
-  .factbar dt { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px; }
-  .factbar dd { margin: 0; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; line-height: 1.4; }
+  .masthead {
+    border-bottom: 1px solid var(--rule-strong);
+    padding: 56px 0 34px;
+    margin-bottom: 12px;
+  }
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    align-items: center;
+    margin-bottom: 26px;
+  }
+  .eyebrow .mark {
+    color: var(--accent);
+    letter-spacing: 0.2em;
+  }
+  .eyebrow .sep {
+    color: var(--rule-strong);
+  }
+  .eyebrow .conf {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: var(--accent-wash);
+    border-radius: 3px;
+    padding: 3px 9px;
+    letter-spacing: 0.13em;
+  }
+  h1 {
+    font-size: clamp(2.3rem, 5vw, 3.5rem);
+    line-height: 1.05;
+    font-weight: 400;
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+    margin: 0 0 0.5em;
+    max-width: 25ch;
+  }
+  h1 .light {
+    color: var(--ink-3);
+    font-style: italic;
+  }
+  .standfirst {
+    font-size: 1.16rem;
+    line-height: 1.56;
+    color: var(--ink-2);
+    max-width: 64ch;
+    margin-bottom: 26px;
+  }
+  .factbar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .factbar div {
+    background: var(--surface);
+    padding: 13px 15px;
+  }
+  .factbar dt {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 5px;
+  }
+  .factbar dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+  }
 
-  .contents { margin: 38px 0 0; border-top: 1px solid var(--rule); padding-top: 22px; }
-  .contents h2 { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.17em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
-  .contents ol { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 2px 28px; }
-  .contents li { margin: 0; }
-  .contents a { display: flex; gap: 12px; align-items: baseline; padding: 7px 0; text-decoration: none; border-bottom: 1px solid var(--rule); }
-  .contents a:hover, .contents a:hover .ttl { color: var(--accent); }
-  .contents .num { font-family: var(--mono); font-size: 11px; color: var(--accent); min-width: 1.6em; }
-  .contents .ttl { font-size: 0.93rem; color: var(--ink-2); }
+  .contents {
+    margin: 38px 0 0;
+    border-top: 1px solid var(--rule);
+    padding-top: 22px;
+  }
+  .contents h2 {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 14px;
+  }
+  .contents ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+    gap: 2px 28px;
+  }
+  .contents li {
+    margin: 0;
+  }
+  .contents a {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding: 7px 0;
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .contents a:hover,
+  .contents a:hover .ttl {
+    color: var(--accent);
+  }
+  .contents .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 1.6em;
+  }
+  .contents .ttl {
+    font-size: 0.93rem;
+    color: var(--ink-2);
+  }
 
-  section { padding-top: 72px; scroll-margin-top: 24px; }
-  .sec-head { display: flex; gap: 16px; align-items: baseline; border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 24px; }
-  .sec-head .num { font-family: var(--mono); font-size: 12px; color: var(--accent); padding-top: 0.55em; }
-  .sec-head h2 { font-size: clamp(1.5rem, 3vw, 2.05rem); font-weight: 400; line-height: 1.14; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
-  h3 { font-family: var(--sans); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); margin: 2.2em 0 0.85em; }
-  .lede { font-size: 1.07rem; color: var(--ink-2); max-width: 66ch; }
+  section {
+    padding-top: 72px;
+    scroll-margin-top: 24px;
+  }
+  .sec-head {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    border-top: 2px solid var(--ink);
+    padding-top: 16px;
+    margin-bottom: 24px;
+  }
+  .sec-head .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    padding-top: 0.55em;
+  }
+  .sec-head h2 {
+    font-size: clamp(1.5rem, 3vw, 2.05rem);
+    font-weight: 400;
+    line-height: 1.14;
+    letter-spacing: -0.012em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 2.2em 0 0.85em;
+  }
+  .lede {
+    font-size: 1.07rem;
+    color: var(--ink-2);
+    max-width: 66ch;
+  }
 
-  .keypoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; margin: 22px 0 26px; max-width: none; }
-  .keypoints > div { background: var(--surface); padding: 13px 16px 14px; }
-  .keypoints b { font-family: var(--sans); font-size: 11.5px; font-weight: 700; color: var(--ink); display: block; margin-bottom: 4px; }
-  .keypoints span { font-family: var(--sans); font-size: 12px; line-height: 1.45; color: var(--ink-3); display: block; }
+  .keypoints {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    margin: 22px 0 26px;
+    max-width: none;
+  }
+  .keypoints > div {
+    background: var(--surface);
+    padding: 13px 16px 14px;
+  }
+  .keypoints b {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .keypoints span {
+    font-family: var(--sans);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ink-3);
+    display: block;
+  }
 
-  details.sec-body { max-width: none; margin: 0; }
-  details.sec-body > summary { display: flex; gap: 11px; align-items: baseline; list-style: none; cursor: pointer; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); transition: border-color 0.12s ease, color 0.12s ease; }
-  details.sec-body > summary::-webkit-details-marker { display: none; }
-  details.sec-body > summary::before { content: "Open"; font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); background: var(--accent-wash); border-radius: 3px; padding: 2px 7px; flex: none; line-height: 1.35; }
-  details.sec-body[open] > summary::before { content: "Close"; }
-  details.sec-body > summary::after { content: "▾"; margin-left: auto; color: var(--ink-3); font-size: 11px; }
-  details.sec-body[open] > summary::after { content: "▴"; }
-  details.sec-body > summary:hover { border-color: var(--rule-strong); color: var(--ink); }
-  details.sec-body[open] > summary { margin-bottom: 10px; }
-  @media (prefers-reduced-motion: reduce) { details.sec-body > summary { transition: none; } }
+  details.sec-body {
+    max-width: none;
+    margin: 0;
+  }
+  details.sec-body > summary {
+    display: flex;
+    gap: 11px;
+    align-items: baseline;
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 16px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--ink-2);
+    transition:
+      border-color 0.12s ease,
+      color 0.12s ease;
+  }
+  details.sec-body > summary::-webkit-details-marker {
+    display: none;
+  }
+  details.sec-body > summary::before {
+    content: "Open";
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    background: var(--accent-wash);
+    border-radius: 3px;
+    padding: 2px 7px;
+    flex: none;
+    line-height: 1.35;
+  }
+  details.sec-body[open] > summary::before {
+    content: "Close";
+  }
+  details.sec-body > summary::after {
+    content: "▾";
+    margin-left: auto;
+    color: var(--ink-3);
+    font-size: 11px;
+  }
+  details.sec-body[open] > summary::after {
+    content: "▴";
+  }
+  details.sec-body > summary:hover {
+    border-color: var(--rule-strong);
+    color: var(--ink);
+  }
+  details.sec-body[open] > summary {
+    margin-bottom: 10px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    details.sec-body > summary {
+      transition: none;
+    }
+  }
 
-  details.ref { max-width: none; border: 1px solid var(--rule); border-radius: 5px; margin: 22px 0; overflow: hidden; }
-  details.ref > summary { padding: 13px 18px; background: var(--surface-2); display: flex; gap: 10px; align-items: baseline; list-style: none; cursor: pointer; font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); }
-  details.ref > summary::-webkit-details-marker { display: none; }
-  details.ref > summary::before { content: "＋"; font-family: var(--mono); font-size: 12px; color: var(--accent); flex: none; line-height: 1; }
-  details.ref[open] > summary::before { content: "－"; }
-  details.ref[open] > summary { border-bottom: 1px solid var(--rule); }
-  details.ref > summary:hover { color: var(--accent); }
-  details.ref > summary .tag-ref { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3); margin-left: auto; flex: none; }
-  details.ref > .plate, details.ref > .code { margin: 0; border: none; border-radius: 0; }
+  details.ref {
+    max-width: none;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    margin: 22px 0;
+    overflow: hidden;
+  }
+  details.ref > summary {
+    padding: 13px 18px;
+    background: var(--surface-2);
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--ink-2);
+  }
+  details.ref > summary::-webkit-details-marker {
+    display: none;
+  }
+  details.ref > summary::before {
+    content: "＋";
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    flex: none;
+    line-height: 1;
+  }
+  details.ref[open] > summary::before {
+    content: "－";
+  }
+  details.ref[open] > summary {
+    border-bottom: 1px solid var(--rule);
+  }
+  details.ref > summary:hover {
+    color: var(--accent);
+  }
+  details.ref > summary .tag-ref {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-left: auto;
+    flex: none;
+  }
+  details.ref > .plate,
+  details.ref > .code {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+  }
 
-  .plate { margin: 24px 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
-  .plate-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; padding: 12px 18px; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
-  .plate-head .label { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-3); }
-  .plate-head .note { font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); }
-  .plate-body { padding: 18px; } .scroll-x { overflow-x: auto; }
+  .plate {
+    margin: 24px 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .plate-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+  }
+  .plate-head .label {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .plate-head .note {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+  .plate-body {
+    padding: 18px;
+  }
+  .scroll-x {
+    overflow-x: auto;
+  }
 
-  table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 13px; line-height: 1.45; }
-  th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
-  th { font-size: 10px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--rule-strong); white-space: nowrap; }
-  td:last-child, th:last-child { padding-right: 0; }
-  tbody tr:last-child td { border-bottom: none; }
-  td .mono { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
-  .grp { border-left: 3px solid var(--rule); padding-left: 11px; }
-  .grp-data { border-left-color: var(--g-data); } .grp-exec { border-left-color: var(--g-exec); } .grp-post { border-left-color: var(--g-post); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    border-bottom: 1px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+  td:last-child,
+  th:last-child {
+    padding-right: 0;
+  }
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+  td .mono {
+    display: block;
+    font-size: 11.5px;
+    color: var(--ink-3);
+    margin-top: 2px;
+  }
+  .grp {
+    border-left: 3px solid var(--rule);
+    padding-left: 11px;
+  }
+  .grp-data {
+    border-left-color: var(--g-data);
+  }
+  .grp-exec {
+    border-left-color: var(--g-exec);
+  }
+  .grp-post {
+    border-left-color: var(--g-post);
+  }
 
-  .code { font-family: var(--mono); font-size: 12.5px; line-height: 1.62; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 4px; padding: 16px 18px; margin: 20px 0; overflow-x: auto; white-space: pre; color: var(--ink-2); max-width: none; }
-  .code b { color: var(--ink); font-weight: 600; }
-  .code i { color: var(--ink-3); font-style: normal; }
-  .code .k { color: var(--g-exec); font-weight: 600; }
+  .code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.62;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin: 20px 0;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--ink-2);
+    max-width: none;
+  }
+  .code b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .code i {
+    color: var(--ink-3);
+    font-style: normal;
+  }
+  .code .k {
+    color: var(--g-exec);
+    font-weight: 600;
+  }
 
-  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; margin: 26px 0; }
-  .stat { background: var(--surface); padding: 17px 18px 15px; }
-  .stat .v { font-family: var(--serif); font-size: 1.8rem; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; display: block; }
-  .stat .k { font-family: var(--sans); font-size: 11px; line-height: 1.42; color: var(--ink-3); display: block; margin-top: 8px; }
-  .stat .u { font-size: 0.6em; color: var(--ink-3); }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 26px 0;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 17px 18px 15px;
+  }
+  .stat .v {
+    font-family: var(--serif);
+    font-size: 1.8rem;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    display: block;
+  }
+  .stat .k {
+    font-family: var(--sans);
+    font-size: 11px;
+    line-height: 1.42;
+    color: var(--ink-3);
+    display: block;
+    margin-top: 8px;
+  }
+  .stat .u {
+    font-size: 0.6em;
+    color: var(--ink-3);
+  }
 
-  .callout { border-left: 3px solid var(--accent); background: var(--accent-wash); padding: 16px 20px; margin: 24px 0; border-radius: 0 4px 4px 0; max-width: 84ch; }
-  .callout p { max-width: none; } .callout p:last-child { margin-bottom: 0; }
-  .callout .tag { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 7px; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-wash);
+    padding: 16px 20px;
+    margin: 24px 0;
+    border-radius: 0 4px 4px 0;
+    max-width: 84ch;
+  }
+  .callout p {
+    max-width: none;
+  }
+  .callout p:last-child {
+    margin-bottom: 0;
+  }
+  .callout .tag {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 7px;
+  }
 
-  figure { margin: 24px 0; } figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
-  figcaption { font-family: var(--sans); font-size: 12.5px; line-height: 1.5; color: var(--ink-3); margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); max-width: 96ch; }
-  figcaption b { color: var(--ink-2); font-weight: 600; }
+  figure {
+    margin: 24px 0;
+  }
+  figure svg {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+  figcaption {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-3);
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+    max-width: 96ch;
+  }
+  figcaption b {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
 
-  footer { margin-top: 80px; border-top: 2px solid var(--ink); padding-top: 22px; font-family: var(--sans); font-size: 12px; color: var(--ink-3); line-height: 1.6; }
-  footer .who { color: var(--ink-2); font-weight: 600; }
+  footer {
+    margin-top: 80px;
+    border-top: 2px solid var(--ink);
+    padding-top: 22px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+  footer .who {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
 
-  @media print { body { background: #fff; color: #000; font-size: 10.5pt; } section { padding-top: 26px; break-inside: avoid; } .plate, figure, table, .code { break-inside: avoid; } .contents { display: none; } details { display: block; } details > summary { display: none; } }
+  @media print {
+    body {
+      background: #fff;
+      color: #000;
+      font-size: 10.5pt;
+    }
+    section {
+      padding-top: 26px;
+      break-inside: avoid;
+    }
+    .plate,
+    figure,
+    table,
+    .code {
+      break-inside: avoid;
+    }
+    .contents {
+      display: none;
+    }
+    details {
+      display: block;
+    }
+    details > summary {
+      display: none;
+    }
+  }
 </style>
 <style>
   /* Status marks + the nested coverage tree, built from the same tokens. */
-  .st { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-        padding: 2px 7px; border-radius: 3px; white-space: nowrap; border: 1px solid currentColor; }
-  .st-live { color: var(--good); background: var(--g-data-wash); }
-  .st-part { color: var(--warn); background: var(--g-post-wash); }
-  .st-plan { color: var(--crit); background: var(--accent-wash); }
-  .sec-head .st { align-self: center; margin-left: auto; }
-  .legend { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; font-family: var(--sans);
-            font-size: 12px; color: var(--ink-3); margin: 22px 0 0; }
-  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .st {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid currentColor;
+  }
+  .st-live {
+    color: var(--good);
+    background: var(--g-data-wash);
+  }
+  .st-part {
+    color: var(--warn);
+    background: var(--g-post-wash);
+  }
+  .st-plan {
+    color: var(--crit);
+    background: var(--accent-wash);
+  }
+  .sec-head .st {
+    align-self: center;
+    margin-left: auto;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink-3);
+    margin: 22px 0 0;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
 
   /* PENDING marker — every unmeasured figure wears this. Deliberately loud. */
-  .pend { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-          color: var(--crit); border: 1px dashed var(--crit); border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
+  .pend {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--crit);
+    border: 1px dashed var(--crit);
+    border-radius: 3px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
 
   /* Nested coverage tree: asset group -> venue -> instrument type -> data type. */
-  details.tree { max-width: none; border: 1px solid var(--rule); border-radius: 4px; margin: 10px 0; background: var(--surface); }
-  details.tree > summary { display: flex; gap: 12px; align-items: center; list-style: none; cursor: pointer;
-                           padding: 11px 15px; font-family: var(--sans); font-size: 13px; color: var(--ink); }
-  details.tree > summary::-webkit-details-marker { display: none; }
-  details.tree > summary::before { content: "▸"; color: var(--accent); font-size: 11px; flex: none; }
-  details.tree[open] > summary::before { content: "▾"; }
-  details.tree[open] > summary { border-bottom: 1px solid var(--rule); }
-  details.tree > summary:hover { color: var(--accent); }
-  details.tree > summary .nm { font-weight: 600; }
-  details.tree > summary .meta { margin-left: auto; font-family: var(--mono); font-size: 11.5px;
-                                 font-variant-numeric: tabular-nums; color: var(--ink-3); flex: none; }
-  .tree-body { padding: 6px 15px 12px; }
-  details.tree details.tree { margin: 6px 0 6px 14px; background: var(--surface-2); }
-  details.tree details.tree details.tree { background: var(--surface-3); }
-  .bar { display: inline-block; width: 74px; height: 6px; border-radius: 3px; background: var(--surface-3);
-         overflow: hidden; vertical-align: middle; margin-right: 8px; border: 1px solid var(--rule); }
-  .bar i { display: block; height: 100%; background: var(--g-data); }
-  .bar.b-part i { background: var(--warn); } .bar.b-low i { background: var(--crit); }
+  details.tree {
+    max-width: none;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    margin: 10px 0;
+    background: var(--surface);
+  }
+  details.tree > summary {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    list-style: none;
+    cursor: pointer;
+    padding: 11px 15px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink);
+  }
+  details.tree > summary::-webkit-details-marker {
+    display: none;
+  }
+  details.tree > summary::before {
+    content: "▸";
+    color: var(--accent);
+    font-size: 11px;
+    flex: none;
+  }
+  details.tree[open] > summary::before {
+    content: "▾";
+  }
+  details.tree[open] > summary {
+    border-bottom: 1px solid var(--rule);
+  }
+  details.tree > summary:hover {
+    color: var(--accent);
+  }
+  details.tree > summary .nm {
+    font-weight: 600;
+  }
+  details.tree > summary .meta {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-3);
+    flex: none;
+  }
+  .tree-body {
+    padding: 6px 15px 12px;
+  }
+  details.tree details.tree {
+    margin: 6px 0 6px 14px;
+    background: var(--surface-2);
+  }
+  details.tree details.tree details.tree {
+    background: var(--surface-3);
+  }
+  .bar {
+    display: inline-block;
+    width: 74px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface-3);
+    overflow: hidden;
+    vertical-align: middle;
+    margin-right: 8px;
+    border: 1px solid var(--rule);
+  }
+  .bar i {
+    display: block;
+    height: 100%;
+    background: var(--g-data);
+  }
+  .bar.b-part i {
+    background: var(--warn);
+  }
+  .bar.b-low i {
+    background: var(--crit);
+  }
 
   /* Evidence tier — a SECOND mark, orthogonal to the status pill above: how we know a claim, not what state it is in.
      Deliberately a different shape (dashed outline pill, monospace) so the two marks are never confused at a glance. */
-  .ev { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
-        padding: 1px 8px; border-radius: 10px; white-space: nowrap; border: 1px dashed currentColor; background: transparent; }
-  .ev-verified { color: var(--g-data); } .ev-check { color: var(--ink-3); } .ev-assumed { color: var(--warn); }
-  .sec-head .ev { align-self: center; }
+  .ev {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 1px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    border: 1px dashed currentColor;
+    background: transparent;
+  }
+  .ev-verified {
+    color: var(--g-data);
+  }
+  .ev-check {
+    color: var(--ink-3);
+  }
+  .ev-assumed {
+    color: var(--warn);
+  }
+  .sec-head .ev {
+    align-self: center;
+  }
 </style>
 
 <div class="shell">
@@ -194,8 +876,9 @@
     <p class="standfirst">
       Everything below is reachable over an API you call from outside, using the same service-to-service contracts our
       own services use internally. This guide covers what data exists and its real boundaries, how instructions are
-      expressed once and routed anywhere, and what it takes to connect. <b>Coverage and readiness figures are measured
-      as of 2026-08-18</b>, each carrying its denominator; where a figure has no measured basis, none is given.
+      expressed once and routed anywhere, and what it takes to connect.
+      <b>Coverage and readiness figures are measured as of 2026-08-18</b>, each carrying its denominator; where a figure
+      has no measured basis, none is given.
     </p>
 
     <div class="legend">
@@ -205,7 +888,10 @@
       <span><b class="pend">pending</b> figure not yet measured — never estimated</span>
     </div>
     <div class="legend">
-      <span><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named inline</span>
+      <span
+        ><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named
+        inline</span
+      >
       <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
       <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
     </div>
@@ -214,29 +900,90 @@
   <nav class="contents">
     <h2>Contents — every section collapses</h2>
     <ol>
-      <li><a href="#s0"><span class="num">00</span><span class="ttl">How to read this</span></a></li>
-      <li><a href="#s1"><span class="num">01</span><span class="ttl">The platform, end to end</span></a></li>
-      <li><a href="#s2"><span class="num">02</span><span class="ttl">How you connect</span></a></li>
-      <li><a href="#s3"><span class="num">03</span><span class="ttl">Contracts and reference data</span></a></li>
-      <li><a href="#s4"><span class="num">04</span><span class="ttl">The coverage model</span></a></li>
-      <li><a href="#s5"><span class="num">05</span><span class="ttl">Coverage by asset group</span></a></li>
-      <li><a href="#s6"><span class="num">06</span><span class="ttl">Getting the data</span></a></li>
-      <li><a href="#s7"><span class="num">07</span><span class="ttl">Shard schemas</span></a></li>
-      <li><a href="#s8"><span class="num">08</span><span class="ttl">The instruction contract</span></a></li>
-      <li><a href="#s9"><span class="num">09</span><span class="ttl">Archetypes and registry scope</span></a></li>
-      <li><a href="#s10"><span class="num">10</span><span class="ttl">The strategy wizard</span></a></li>
-      <li><a href="#s11"><span class="num">11</span><span class="ttl">Configuration surface</span></a></li>
-      <li><a href="#s12"><span class="num">12</span><span class="ttl">Execution: routing and algos</span></a></li>
-      <li><a href="#s13"><span class="num">13</span><span class="ttl">Treasury, wallets, transfers</span></a></li>
-      <li><a href="#s14"><span class="num">14</span><span class="ttl">Readiness: batch, paper, live</span></a></li>
-      <li><a href="#s15"><span class="num">15</span><span class="ttl">Security and the audit record</span></a></li>
-      <li><a href="#s16"><span class="num">16</span><span class="ttl">Integration path</span></a></li>
-      <li><a href="#s17"><span class="num">17</span><span class="ttl">Measured versus projected</span></a></li>
+      <li>
+        <a href="#s0"><span class="num">00</span><span class="ttl">How to read this</span></a>
+      </li>
+      <li>
+        <a href="#s1"><span class="num">01</span><span class="ttl">The platform, end to end</span></a>
+      </li>
+      <li>
+        <a href="#s2"><span class="num">02</span><span class="ttl">How you connect</span></a>
+      </li>
+      <li>
+        <a href="#s3"><span class="num">03</span><span class="ttl">Contracts and reference data</span></a>
+      </li>
+      <li>
+        <a href="#s4"><span class="num">04</span><span class="ttl">The coverage model</span></a>
+      </li>
+      <li>
+        <a href="#s5"><span class="num">05</span><span class="ttl">Coverage by asset group</span></a>
+      </li>
+      <li>
+        <a href="#s6"><span class="num">06</span><span class="ttl">Getting the data</span></a>
+      </li>
+      <li>
+        <a href="#s7"><span class="num">07</span><span class="ttl">Shard schemas</span></a>
+      </li>
+      <li>
+        <a href="#s8"><span class="num">08</span><span class="ttl">The instruction contract</span></a>
+      </li>
+      <li>
+        <a href="#s9"><span class="num">09</span><span class="ttl">Archetypes and registry scope</span></a>
+      </li>
+      <li>
+        <a href="#s10"><span class="num">10</span><span class="ttl">The strategy wizard</span></a>
+      </li>
+      <li>
+        <a href="#s11"><span class="num">11</span><span class="ttl">Configuration surface</span></a>
+      </li>
+      <li>
+        <a href="#s12"><span class="num">12</span><span class="ttl">Execution: routing and algos</span></a>
+      </li>
+      <li>
+        <a href="#s13"><span class="num">13</span><span class="ttl">Treasury, wallets, transfers</span></a>
+      </li>
+      <li>
+        <a href="#s14"><span class="num">14</span><span class="ttl">Readiness: batch, paper, live</span></a>
+      </li>
+      <li>
+        <a href="#s15"><span class="num">15</span><span class="ttl">Security and the audit record</span></a>
+      </li>
+      <li>
+        <a href="#s16"><span class="num">16</span><span class="ttl">Integration path</span></a>
+      </li>
+      <li>
+        <a href="#s17"><span class="num">17</span><span class="ttl">Measured versus projected</span></a>
+      </li>
+      <li>
+        <a href="#s18"><span class="num">18</span><span class="ttl">Fees and gas, by component</span></a>
+      </li>
+      <li>
+        <a href="#s19"><span class="num">19</span><span class="ttl">Collateral and cross-margin, per venue</span></a>
+      </li>
+      <li>
+        <a href="#s20"><span class="num">20</span><span class="ttl">Manual trade — the disaster path</span></a>
+      </li>
+      <li>
+        <a href="#s21"><span class="num">21</span><span class="ttl">Reconciliation framework</span></a>
+      </li>
+      <li>
+        <a href="#s22"><span class="num">22</span><span class="ttl">PnL attribution, across every dimension</span></a>
+      </li>
+      <li>
+        <a href="#s23"><span class="num">23</span><span class="ttl">Risk: native, share-class, and Greeks</span></a>
+      </li>
+      <li>
+        <a href="#s24"><span class="num">24</span><span class="ttl">Latency, preflight, and staleness SLAs</span></a>
+      </li>
     </ol>
   </nav>
 
   <section id="s0">
-    <div class="sec-head"><span class="num">00</span><h2>How to read this</h2><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">00</span>
+      <h2>How to read this</h2>
+      <b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       This document is deliberately long and deliberately collapsed. Nothing is hidden — everything is one click away —
       but you should never have to scroll past a section you do not care about.
@@ -244,22 +991,39 @@
     <details class="sec-body" open>
       <summary>The three conventions worth knowing before you start</summary>
       <div class="keypoints">
-        <div><b>Collapse anything</b><span>Sections collapse. Inside coverage, an asset group collapses, then a venue, then an instrument type. Fold away what you are not evaluating</span></div>
-        <div><b>Status is per-section</b><span>Every section carries live, partial or planned — against one test: can something on a production path actually reach it</span></div>
-        <div><b>Numbers carry provenance</b><span>A figure is either measured with its date and denominator, or marked pending. There is no third category</span></div>
+        <div>
+          <b>Collapse anything</b
+          ><span
+            >Sections collapse. Inside coverage, an asset group collapses, then a venue, then an instrument type. Fold
+            away what you are not evaluating</span
+          >
+        </div>
+        <div>
+          <b>Status is per-section</b
+          ><span
+            >Every section carries live, partial or planned — against one test: can something on a production path
+            actually reach it</span
+          >
+        </div>
+        <div>
+          <b>Numbers carry provenance</b
+          ><span
+            >A figure is either measured with its date and denominator, or marked pending. There is no third
+            category</span
+          >
+        </div>
       </div>
       <div class="callout">
         <span class="tag">Where this is in its life</span>
         <p>
-          Finishing this does not require reinventing design patterns or a long stretch of hypothetical
-          architecture work. The patterns are settled and shipped; what remains is <b>commercially led</b> — we add
-          venues because someone wants to trade them, not to fill a matrix. <b>We will not build for a market that does
-          not exist.</b>
+          Finishing this does not require reinventing design patterns or a long stretch of hypothetical architecture
+          work. The patterns are settled and shipped; what remains is <b>commercially led</b> — we add venues because
+          someone wants to trade them, not to fill a matrix. <b>We will not build for a market that does not exist.</b>
         </p>
         <p>
-          So treat what follows as a starting point rather than a finished inventory. <b>Nothing in the architecture
-          stops a new venue being added</b> — adding one is a declaration plus an adapter, not a redesign. That is the
-          whole point of the normalisation described below.
+          So treat what follows as a starting point rather than a finished inventory.
+          <b>Nothing in the architecture stops a new venue being added</b> — adding one is a declaration plus an
+          adapter, not a redesign. That is the whole point of the normalisation described below.
         </p>
       </div>
       <div class="callout">
@@ -278,7 +1042,11 @@
   </section>
 
   <section id="s1">
-    <div class="sec-head"><span class="num">01</span><h2>The platform, end to end</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">01</span>
+      <h2>The platform, end to end</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       Five layers. You can take any one of them without the others — the contracts between them are the same contracts
       you would call from outside.
@@ -286,19 +1054,31 @@
     <details class="sec-body" open>
       <summary>The layers, and what each one owns</summary>
       <figure>
-        <svg viewBox="0 0 900 300" role="img" aria-label="Five platform layers: reference data and market data feed strategy, which emits normalised instructions to execution, which routes to venues. Security spans all layers.">
+        <svg
+          viewBox="0 0 900 300"
+          role="img"
+          aria-label="Five platform layers: reference data and market data feed strategy, which emits normalised instructions to execution, which routes to venues. Security spans all layers."
+        >
           <defs>
-            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            <marker
+              id="ar"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <polygon points="0,0 10,5 0,10" fill="currentColor" />
             </marker>
           </defs>
           <g fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="20" y="40" width="170" height="72" rx="4"/>
-            <rect x="20" y="140" width="170" height="72" rx="4"/>
-            <rect x="250" y="90" width="170" height="72" rx="4"/>
-            <rect x="480" y="90" width="170" height="72" rx="4"/>
-            <rect x="710" y="90" width="170" height="72" rx="4"/>
-            <rect x="20" y="240" width="860" height="40" rx="4" stroke-dasharray="5 4"/>
+            <rect x="20" y="40" width="170" height="72" rx="4" />
+            <rect x="20" y="140" width="170" height="72" rx="4" />
+            <rect x="250" y="90" width="170" height="72" rx="4" />
+            <rect x="480" y="90" width="170" height="72" rx="4" />
+            <rect x="710" y="90" width="170" height="72" rx="4" />
+            <rect x="20" y="240" width="860" height="40" rx="4" stroke-dasharray="5 4" />
           </g>
           <g font-family="ui-sans-serif, system-ui" font-size="13" fill="currentColor">
             <text x="105" y="70" text-anchor="middle" font-weight="600">Reference data</text>
@@ -311,13 +1091,15 @@
             <text x="565" y="140" text-anchor="middle" font-size="11">algos + routing</text>
             <text x="795" y="120" text-anchor="middle" font-weight="600">Venues</text>
             <text x="795" y="140" text-anchor="middle" font-size="11">CeFi, DeFi, more</text>
-            <text x="450" y="265" text-anchor="middle" font-size="12" font-style="italic">Security, audit and client isolation span every layer</text>
+            <text x="450" y="265" text-anchor="middle" font-size="12" font-style="italic">
+              Security, audit and client isolation span every layer
+            </text>
           </g>
           <g stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ar)">
-            <path d="M190 76 L 250 110"/>
-            <path d="M190 176 L 250 142"/>
-            <path d="M420 126 L 480 126"/>
-            <path d="M650 126 L 710 126"/>
+            <path d="M190 76 L 250 110" />
+            <path d="M190 176 L 250 142" />
+            <path d="M420 126 L 480 126" />
+            <path d="M650 126 L 710 126" />
           </g>
           <g font-family="ui-sans-serif, system-ui" font-size="11" fill="currentColor" opacity="0.75">
             <text x="450" y="118" text-anchor="middle">instruction</text>
@@ -325,23 +1107,54 @@
           </g>
         </svg>
         <figcaption>
-          <b>The seam that matters is the third arrow.</b> Strategy emits a normalised instruction; execution decides how
-          to achieve it. That split is why a new venue or a new order algorithm does not change strategy code, and why
-          you can adopt the instruction contract without adopting our execution.
+          <b>The seam that matters is the third arrow.</b> Strategy emits a normalised instruction; execution decides
+          how to achieve it. That split is why a new venue or a new order algorithm does not change strategy code, and
+          why you can adopt the instruction contract without adopting our execution.
         </figcaption>
       </figure>
       <h3>What each layer owns</h3>
       <div class="plate">
-        <div class="plate-head"><span class="label">Layer responsibilities</span><span class="note">Each is independently adoptable</span></div>
+        <div class="plate-head">
+          <span class="label">Layer responsibilities</span><span class="note">Each is independently adoptable</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Layer</th><th>Owns</th><th>You would use it to</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Owns</th>
+                <th>You would use it to</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td class="grp grp-data">Reference data</td><td>Instrument and contract definitions, identifiers, coverage windows</td><td>Resolve what an instrument <em>is</em>, consistently across venues</td></tr>
-              <tr><td class="grp grp-data">Market data</td><td>Tick, book and derived data per venue, with declared boundaries — raw capture, candle/derived computation and feature computation are three separate services behind this one box</td><td>Research, backtest, or feed a live model</td></tr>
-              <tr><td class="grp grp-exec">Strategy</td><td>The unified instruction contract, archetypes, configuration</td><td>Express intent once, asset-class agnostic</td></tr>
-              <tr><td class="grp grp-exec">Execution</td><td>Algo selection, routing, adaptors, chained sequences</td><td>Turn intent into venue actions without writing venue code</td></tr>
-              <tr><td class="grp grp-post">Security</td><td>Signing surfaces, client isolation, the immutable audit record</td><td>Satisfy the controls this has to pass anyway</td></tr>
+              <tr>
+                <td class="grp grp-data">Reference data</td>
+                <td>Instrument and contract definitions, identifiers, coverage windows</td>
+                <td>Resolve what an instrument <em>is</em>, consistently across venues</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data">Market data</td>
+                <td>
+                  Tick, book and derived data per venue, with declared boundaries — raw capture, candle/derived
+                  computation and feature computation are three separate services behind this one box
+                </td>
+                <td>Research, backtest, or feed a live model</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec">Strategy</td>
+                <td>The unified instruction contract, archetypes, configuration</td>
+                <td>Express intent once, asset-class agnostic</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec">Execution</td>
+                <td>Algo selection, routing, adaptors, chained sequences</td>
+                <td>Turn intent into venue actions without writing venue code</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post">Security</td>
+                <td>Signing surfaces, client isolation, the immutable audit record</td>
+                <td>Satisfy the controls this has to pass anyway</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -351,9 +1164,13 @@
         <p>
           The box above folds three real services together for readability: market-tick-data-service (raw capture),
           market-data-processing-service — <b>MDPS</b> — (candle and derived-data computation), and features-service
-          (feature computation). <b>Strategy reads only the processed output of that pipeline; it never calls
-          market-tick-data-service directly.</b> The single arrow into Strategy in the diagram above is a
-          simplification of that chain, not a claim that strategy talks to raw market data.
+          (feature computation).
+          <b
+            >Strategy reads only the processed output of that pipeline; it never calls market-tick-data-service
+            directly.</b
+          >
+          The single arrow into Strategy in the diagram above is a simplification of that chain, not a claim that
+          strategy talks to raw market data.
         </p>
       </div>
       <div class="callout">
@@ -367,7 +1184,11 @@
   </section>
 
   <section id="s2">
-    <div class="sec-head"><span class="num">02</span><h2>How you connect</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
+    <div class="sec-head">
+      <span class="num">02</span>
+      <h2>How you connect</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+    </div>
     <p class="lede">
       You call the same contracts our services call. There is no separate "external" API with reduced fidelity, because
       a second API surface is a second thing to keep true.
@@ -378,26 +1199,75 @@
         Our services do not share a database or import each other's code. They integrate by API contract, which is a
         constraint we imposed on ourselves for testability — and it is the reason an external caller is not a special
         case. Where an endpoint is live, you get the exact same contract our own services call. Not every surface is
-        live yet, and the table below names exactly which ones are and are not, rather than implying a blanket
-        "you get everything we get."
+        live yet, and the table below names exactly which ones are and are not, rather than implying a blanket "you get
+        everything we get."
       </p>
       <div class="keypoints">
-        <div><b>Contract-first</b><span>Every request and response is a declared, versioned schema — not a convention</span></div>
-        <div><b>No shared state</b><span>Services integrate over the wire; you are one more caller, not an exception</span></div>
-        <div><b>Same failure semantics</b><span>Venue error codes map to one classified outcome, so retries mean the same thing everywhere</span></div>
-        <div><b>Per-client isolation</b><span>Every call is scoped to a client; funds never move between clients by construction</span></div>
+        <div>
+          <b>Contract-first</b
+          ><span>Every request and response is a declared, versioned schema — not a convention</span>
+        </div>
+        <div>
+          <b>No shared state</b><span>Services integrate over the wire; you are one more caller, not an exception</span>
+        </div>
+        <div>
+          <b>Same failure semantics</b
+          ><span>Venue error codes map to one classified outcome, so retries mean the same thing everywhere</span>
+        </div>
+        <div>
+          <b>Per-client isolation</b
+          ><span>Every call is scoped to a client; funds never move between clients by construction</span>
+        </div>
       </div>
       <details class="ref">
-        <summary>The surfaces, named exactly — endpoint, reachability, shape<span class="tag-ref">API shape</span></summary>
+        <summary>
+          The surfaces, named exactly — endpoint, reachability, shape<span class="tag-ref">API shape</span>
+        </summary>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Surface</th><th>Endpoint</th><th>Reachable today</th><th>Shape</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Surface</th>
+                <th>Endpoint</th>
+                <th>Reachable today</th>
+                <th>Shape</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>Instruments</td><td><code>GET /v1/instruments</code><br><code>GET /v1/instruments/bulk</code></td><td>Yes</td><td>Query + bulk parquet dump</td></tr>
-              <tr><td>Market data availability</td><td><code>GET /external/market-data/availability</code></td><td>Yes</td><td>Query by asset group, venue, instrument type, data type</td></tr>
-              <tr><td>Market data delivery</td><td><code>GET /external/market-data/delivery/batch</code><br><code>GET /external/market-data/delivery/stream</code></td><td>Yes</td><td>Daily batch parquet; streaming for live</td></tr>
-              <tr><td>Instructions</td><td><code>POST /external/instructions</code></td><td><b>TRADE only</b> — the other 10 action types return HTTP 501</td><td>One instruction envelope, any asset class</td></tr>
-              <tr><td>Strategy</td><td>— none —</td><td>No</td><td>No counterparty-facing surface yet — <b class="st st-plan">planned</b></td></tr>
+              <tr>
+                <td>Instruments</td>
+                <td><code>GET /v1/instruments</code><br /><code>GET /v1/instruments/bulk</code></td>
+                <td>Yes</td>
+                <td>Query + bulk parquet dump</td>
+              </tr>
+              <tr>
+                <td>Market data availability</td>
+                <td><code>GET /external/market-data/availability</code></td>
+                <td>Yes</td>
+                <td>Query by asset group, venue, instrument type, data type</td>
+              </tr>
+              <tr>
+                <td>Market data delivery</td>
+                <td>
+                  <code>GET /external/market-data/delivery/batch</code><br /><code
+                    >GET /external/market-data/delivery/stream</code
+                  >
+                </td>
+                <td>Yes</td>
+                <td>Daily batch parquet; streaming for live</td>
+              </tr>
+              <tr>
+                <td>Instructions</td>
+                <td><code>POST /external/instructions</code></td>
+                <td><b>TRADE only</b> — the other 10 action types return HTTP 501</td>
+                <td>One instruction envelope, any asset class</td>
+              </tr>
+              <tr>
+                <td>Strategy</td>
+                <td>— none —</td>
+                <td>No</td>
+                <td>No counterparty-facing surface yet — <b class="st st-plan">planned</b></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -405,26 +1275,31 @@
       <div class="callout">
         <span class="tag">The honest state behind "you get the contract our own execution service gets"</span>
         <p>
-          That is true only for the endpoints marked reachable above. On instructions specifically: <b>only the
-          TRADE action is live end-to-end</b> today, routed through the same <code>ManualOperationHandler →
-          LiveOrchestrator.execute_instruction()</code> path our own internal manual-trade surface uses. Every other
-          action on the envelope — swap, lend, borrow, stake, unstake, quote, transfer, bridge, atomic, cancel —
-          returns an honest HTTP 501: not a silent drop, but not yet the same contract either. Strategy-service itself
-          has no counterparty-facing surface at all yet; its real endpoints today are admin-token-gated internal
-          tooling (registry reads, a restriction-profile router, an operational-mode flip).
+          That is true only for the endpoints marked reachable above. On instructions specifically:
+          <b>only the TRADE action is live end-to-end</b> today, routed through the same
+          <code>ManualOperationHandler → LiveOrchestrator.execute_instruction()</code> path our own internal
+          manual-trade surface uses. Every other action on the envelope — swap, lend, borrow, stake, unstake, quote,
+          transfer, bridge, atomic, cancel — returns an honest HTTP 501: not a silent drop, but not yet the same
+          contract either. Strategy-service itself has no counterparty-facing surface at all yet; its real endpoints
+          today are admin-token-gated internal tooling (registry reads, a restriction-profile router, an
+          operational-mode flip).
         </p>
       </div>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
         <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code> and
-        <code>execution-service/execution_service/api/external_instruction_api.py</code>. Auth model and rate
-        limits — <b class="pend">pending</b>, to be stated exactly rather than sketched.
+        <code>execution-service/execution_service/api/external_instruction_api.py</code>. Auth model and rate limits —
+        <b class="pend">pending</b>, to be stated exactly rather than sketched.
       </p>
     </details>
   </section>
 
   <section id="s3">
-    <div class="sec-head"><span class="num">03</span><h2>Contracts and reference data</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
+    <div class="sec-head">
+      <span class="num">03</span>
+      <h2>Contracts and reference data</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+    </div>
     <p class="lede">
       One definition of what an instrument is, shared by every layer above it. This is the layer that makes the others
       comparable.
@@ -433,8 +1308,8 @@
       <summary>Instrument identity, coverage windows, and the bulk dump</summary>
       <p>
         Reference data is a service, not a file. It resolves an instrument to a canonical identity, carries the window
-        over which data is expected to exist, and tells you where the archive for it lives. Venue lists and adapter
-        keys live in the shared contracts package, so a venue means the same thing to every service.
+        over which data is expected to exist, and tells you where the archive for it lives. Venue lists and adapter keys
+        live in the shared contracts package, so a venue means the same thing to every service.
       </p>
       <h3>Why identity is the hard part</h3>
       <p>
@@ -444,9 +1319,23 @@
       </p>
       <h3>Glossary — the two words that carry the most weight</h3>
       <div class="keypoints">
-        <div><b>Venue</b><span>"Whose price is this." A price-source identity — deliberately decoupled from whether we can trade there. A separate predicate answers executability</span></div>
-        <div><b>Asset group</b><span>CeFi, DeFi, TradFi, sports, prediction. The five worlds the same contracts span</span></div>
-        <div><b>Instrument ID</b><span>A canonical identity built by one dispatcher for every asset group, so the same thing has the same name everywhere</span></div>
+        <div>
+          <b>Venue</b
+          ><span
+            >"Whose price is this." A price-source identity — deliberately decoupled from whether we can trade there. A
+            separate predicate answers executability</span
+          >
+        </div>
+        <div>
+          <b>Asset group</b><span>CeFi, DeFi, TradFi, sports, prediction. The five worlds the same contracts span</span>
+        </div>
+        <div>
+          <b>Instrument ID</b
+          ><span
+            >A canonical identity built by one dispatcher for every asset group, so the same thing has the same name
+            everywhere</span
+          >
+        </div>
       </div>
       <p>
         <b>Venue is broader than "exchange", deliberately.</b> It can be a centralised exchange, a bookmaker, a
@@ -469,61 +1358,63 @@
         worth caring about: whatever you pull, you get a normalised identity, so the same underlying thing carries the
         same name regardless of which world it came from.
       </p>
-      <div class="code"><i># CeFi / DeFi / TradFi — venue, instrument type, symbol</i>
-<b>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</b>
+      <div class="code">
+        <i># CeFi / DeFi / TradFi — venue, instrument type, symbol</i>
+        <b>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</b>
 
-BINANCE-SPOT:SPOT_PAIR:BTCUSDT
-AAVE_V3-ARBITRUM:LENDING:USDC        <i># chain rides in the venue token</i>
-CME:FUTURE:ES-20260320               <i># dated derivatives append the expiry</i></div>
+        BINANCE-SPOT:SPOT_PAIR:BTCUSDT AAVE_V3-ARBITRUM:LENDING:USDC
+        <i># chain rides in the venue token</i> CME:FUTURE:ES-20260320 <i># dated derivatives append the expiry</i>
+      </div>
       <p>
         DeFi token symbols preserve on-chain case (<code>aUSDC</code>, <code>stETH</code>) because that case is
-        meaningful on chain; CeFi and TradFi symbols are uppercased. Dated derivatives append
-        <code>-YYYYMMDD</code>, and options add strike and side.
+        meaningful on chain; CeFi and TradFi symbols are uppercased. Dated derivatives append <code>-YYYYMMDD</code>,
+        and options add strike and side.
       </p>
       <h3>The example worth dwelling on</h3>
       <p>
         Event markets are where normalisation earns its keep. The same real-world outcome, quoted on a sports exchange
         and on a prediction market, resolves to two IDs that <b>differ only in the venue token</b>:
       </p>
-      <div class="code">FOOTBALL:<b>BETFAIR_EX_UK</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME
-FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
+      <div class="code">
+        FOOTBALL:<b>BETFAIR_EX_UK</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME
+        FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME
+      </div>
       <p>
-        Sport, market, league, season, fixture and selection are identical. Only the venue differs — so comparing
-        venues is a group-by, not an integration project. That is a bookmaker and a prediction market, in two different
-        asset groups, made directly comparable by construction.
+        Sport, market, league, season, fixture and selection are identical. Only the venue differs — so comparing venues
+        is a group-by, not an integration project. That is a bookmaker and a prediction market, in two different asset
+        groups, made directly comparable by construction.
       </p>
       <div class="callout">
         <span class="tag">What this is used for today, and one honest boundary</span>
         <p>
           A cross-venue detector over Kalshi, Polymarket and Betfair is <b>shipped and paper-proven end to end</b>. It
-          normalises every venue onto one YES-probability scale — including de-vigging Betfair's decimal back/lay
-          odds — and scans venue pairs for a box. Kalshi joins that comparison <em>at the probability layer</em>: its
-          native identity is a market ticker (<code>KXBTCD-26JUN24-T95000</code>) rather than the fixture grammar
-          above, so it is normalised for comparison rather than sharing the same ID string.
+          normalises every venue onto one YES-probability scale — including de-vigging Betfair's decimal back/lay odds —
+          and scans venue pairs for a box. Kalshi joins that comparison <em>at the probability layer</em>: its native
+          identity is a market ticker (<code>KXBTCD-26JUN24-T95000</code>) rather than the fixture grammar above, so it
+          is normalised for comparison rather than sharing the same ID string.
         </p>
         <p>
           <b>The boundary, stated rather than blurred:</b> the two-line example above is a real, shipped code example.
-          The equivalent "compare across venues by group-by" property is demonstrated for sports and prediction
-          markets; for CeFi, DeFi and TradFi the same <em>builder</em> and the same ID shape apply, but we do not claim
-          a live cross-venue arbitrage proof there.
+          The equivalent "compare across venues by group-by" property is demonstrated for sports and prediction markets;
+          for CeFi, DeFi and TradFi the same <em>builder</em> and the same ID shape apply, but we do not claim a live
+          cross-venue arbitrage proof there.
         </p>
       </div>
       <details class="ref">
         <summary>Instrument record — the fields that travel<span class="tag-ref">Schema</span></summary>
-        <div class="code"><span class="k">class</span> <b>InstrumentRecord</b>:
-    instrument_id:               <i>str</i>   <i># canonical identity</i>
-    venue:                       <i>str</i>
-    instrument_type:             <i>str</i>   <i># spot | perp | future | option | ...</i>
-    source_archive_url_template: <i>str</i>   <i># where the archive lives</i>
-    coverage_start:              <i>date</i>  <i># when data is expected to begin</i>
-    coverage_end:                <i>date | None</i></div>
+        <div class="code">
+          <span class="k">class</span> <b>InstrumentRecord</b>: instrument_id: <i>str</i>
+          <i># canonical identity</i> venue: <i>str</i> instrument_type: <i>str</i>
+          <i># spot | perp | future | option | ...</i> source_archive_url_template: <i>str</i>
+          <i># where the archive lives</i> coverage_start: <i>date</i>
+          <i># when data is expected to begin</i> coverage_end: <i>date | None</i>
+        </div>
       </details>
       <p>
-        Delivery: query for a single instrument, or take the whole universe as a parquet dump and join it locally —
-        live today as <code>GET /v1/instruments</code> and <code>GET /v1/instruments/bulk</code> on
-        instruments-service.
+        Delivery: query for a single instrument, or take the whole universe as a parquet dump and join it locally — live
+        today as <code>GET /v1/instruments</code> and <code>GET /v1/instruments/bulk</code> on instruments-service.
       </p>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against <code>unified_api_contracts/canonical/instrument_key.py</code>,
         <code>unified_api_contracts/_instrument_enums.py</code> and
         <code>instruments-service/instruments_service/api/routers/external.py</code>.
@@ -532,7 +1423,11 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s4">
-    <div class="sec-head"><span class="num">04</span><h2>The coverage model</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">04</span>
+      <h2>The coverage model</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       The most important section in this document. How we state what we have, and — more importantly — how we state what
       we do not.
@@ -545,16 +1440,44 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
         hiding the gaps that are real.
       </p>
       <div class="plate">
-        <div class="plate-head"><span class="label">Capture states</span><span class="note">Every shard is in exactly one</span></div>
+        <div class="plate-head">
+          <span class="label">Capture states</span><span class="note">Every shard is in exactly one</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>State</th><th>Meaning</th><th>Counts against coverage?</th></tr></thead>
+            <thead>
+              <tr>
+                <th>State</th>
+                <th>Meaning</th>
+                <th>Counts against coverage?</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><b>Captured</b></td><td>Data is present and verified</td><td>No — this is the numerator</td></tr>
-              <tr><td><b>Attempted, failed</b></td><td>Fetch was attempted; it failed or errored</td><td>Yes — this is the real gap</td></tr>
-              <tr><td><b>Expected, unattempted</b></td><td>In scope, not yet fetched</td><td>Yes — and it is the recoverable half</td></tr>
-              <tr><td><b>Expected, confirmed empty</b></td><td>Attempted; genuinely nothing there for this shard</td><td>No — a confirmed absence is not a gap</td></tr>
-              <tr><td><b>Not expected</b></td><td>Venue or instrument did not exist then</td><td>No — excluded from the denominator entirely</td></tr>
+              <tr>
+                <td><b>Captured</b></td>
+                <td>Data is present and verified</td>
+                <td>No — this is the numerator</td>
+              </tr>
+              <tr>
+                <td><b>Attempted, failed</b></td>
+                <td>Fetch was attempted; it failed or errored</td>
+                <td>Yes — this is the real gap</td>
+              </tr>
+              <tr>
+                <td><b>Expected, unattempted</b></td>
+                <td>In scope, not yet fetched</td>
+                <td>Yes — and it is the recoverable half</td>
+              </tr>
+              <tr>
+                <td><b>Expected, confirmed empty</b></td>
+                <td>Attempted; genuinely nothing there for this shard</td>
+                <td>No — a confirmed absence is not a gap</td>
+              </tr>
+              <tr>
+                <td><b>Not expected</b></td>
+                <td>Venue or instrument did not exist then</td>
+                <td>No — excluded from the denominator entirely</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -573,10 +1496,25 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
         per chain. A single headline percentage across all of them would be an average over incomparable things.
       </p>
       <div class="stat-row">
-        <div class="stat"><span class="v">660</span><span class="k">Venue × instrument-type × data-type triples in scope <span class="u">(12 unresolved, disclosed)</span></span></div>
-        <div class="stat"><span class="v">48.54<span class="u">%</span></span><span class="k">Reachable coverage, volume-weighted <span class="u">denominator 119,500,618</span></span></div>
+        <div class="stat">
+          <span class="v">660</span
+          ><span class="k"
+            >Venue × instrument-type × data-type triples in scope
+            <span class="u">(12 unresolved, disclosed)</span></span
+          >
+        </div>
+        <div class="stat">
+          <span class="v">48.54<span class="u">%</span></span
+          ><span class="k">Reachable coverage, volume-weighted <span class="u">denominator 119,500,618</span></span>
+        </div>
         <div class="stat"><span class="v">3,960</span><span class="k">Shards in scope, measured 2026-08-18</span></div>
-        <div class="stat"><span class="v">288</span><span class="k">Venues in the 2026-08-18 coverage manifest, readiness-dump grain <span class="u">— not directly comparable to registry-declared counts</span></span></div>
+        <div class="stat">
+          <span class="v">288</span
+          ><span class="k"
+            >Venues in the 2026-08-18 coverage manifest, readiness-dump grain
+            <span class="u">— not directly comparable to registry-declared counts</span></span
+          >
+        </div>
       </div>
       <div class="callout">
         <span class="tag">How to read 48.54%</span>
@@ -596,57 +1534,114 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s5">
-    <div class="sec-head"><span class="num">05</span><h2>Coverage by asset group</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">05</span>
+      <h2>Coverage by asset group</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       The full hierarchy, collapsed. Open only the asset group you care about; inside it, only the venue; inside that,
       only the instrument type.
     </p>
     <details class="sec-body" open>
       <summary>Browse the universe — asset group, venue, instrument type, data type</summary>
-      <p style="font-size: 0.95rem; color: var(--ink-3);">
-        Structure shown with representative entries beneath the asset-group headers. Each header's ready /
-        not-ready / unverified split is measured (2026-08-18, the same readiness pass as <a href="#s14">§14</a>);
-        every coverage-percentage cell beneath it is <b class="pend">pending</b> measurement — the hierarchy,
-        grouping and controls are what this draft is asking you to react to.
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
+        Structure shown with representative entries beneath the asset-group headers. Each header's ready / not-ready /
+        unverified split is measured (2026-08-18, the same readiness pass as <a href="#s14">§14</a>); every
+        coverage-percentage cell beneath it is <b class="pend">pending</b> measurement — the hierarchy, grouping and
+        controls are what this draft is asking you to react to.
       </p>
 
       <details class="tree">
         <summary><span class="nm">CeFi</span><span class="meta">0 ready / 5 not-ready / 19 unverified</span></summary>
         <div class="tree-body">
           <details class="tree">
-            <summary><span class="nm">Binance</span><span class="meta"><span class="pend">pending</span></span></summary>
+            <summary>
+              <span class="nm">Binance</span><span class="meta"><span class="pend">pending</span></span>
+            </summary>
             <div class="tree-body">
               <details class="tree">
-                <summary><span class="nm">Perpetual</span><span class="meta"><span class="pend">pending</span></span></summary>
+                <summary>
+                  <span class="nm">Perpetual</span><span class="meta"><span class="pend">pending</span></span>
+                </summary>
                 <div class="tree-body scroll-x">
                   <table>
-                    <thead><tr><th>Data type</th><th>Coverage</th><th>From</th><th>Granularity</th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Data type</th>
+                        <th>Coverage</th>
+                        <th>From</th>
+                        <th>Granularity</th>
+                      </tr>
+                    </thead>
                     <tbody>
-                      <tr><td>Trades</td><td><span class="pend">pending</span></td><td><span class="pend">pending</span></td><td>tick</td></tr>
-                      <tr><td>Book snapshots</td><td><span class="pend">pending</span></td><td><span class="pend">pending</span></td><td>L2</td></tr>
-                      <tr><td>Funding rate</td><td><span class="pend">pending</span></td><td><span class="pend">pending</span></td><td>per interval</td></tr>
-                      <tr><td>Candles</td><td><span class="pend">pending</span></td><td><span class="pend">pending</span></td><td>1m and up</td></tr>
+                      <tr>
+                        <td>Trades</td>
+                        <td><span class="pend">pending</span></td>
+                        <td><span class="pend">pending</span></td>
+                        <td>tick</td>
+                      </tr>
+                      <tr>
+                        <td>Book snapshots</td>
+                        <td><span class="pend">pending</span></td>
+                        <td><span class="pend">pending</span></td>
+                        <td>L2</td>
+                      </tr>
+                      <tr>
+                        <td>Funding rate</td>
+                        <td><span class="pend">pending</span></td>
+                        <td><span class="pend">pending</span></td>
+                        <td>per interval</td>
+                      </tr>
+                      <tr>
+                        <td>Candles</td>
+                        <td><span class="pend">pending</span></td>
+                        <td><span class="pend">pending</span></td>
+                        <td>1m and up</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
               </details>
               <details class="tree">
-                <summary><span class="nm">Spot</span><span class="meta"><span class="pend">pending</span></span></summary>
-                <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Same data-type breakdown as above.</p></div>
+                <summary>
+                  <span class="nm">Spot</span><span class="meta"><span class="pend">pending</span></span>
+                </summary>
+                <div class="tree-body">
+                  <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">Same data-type breakdown as above.</p>
+                </div>
               </details>
             </div>
           </details>
           <details class="tree">
-            <summary><span class="nm">Bybit</span><span class="meta"><span class="pend">pending</span></span></summary>
-            <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Venue-level rollup, then instrument types.</p></div>
+            <summary>
+              <span class="nm">Bybit</span><span class="meta"><span class="pend">pending</span></span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                Venue-level rollup, then instrument types.
+              </p>
+            </div>
           </details>
           <details class="tree">
-            <summary><span class="nm">OKX</span><span class="meta"><span class="pend">pending</span></span></summary>
-            <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Venue-level rollup, then instrument types.</p></div>
+            <summary>
+              <span class="nm">OKX</span><span class="meta"><span class="pend">pending</span></span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                Venue-level rollup, then instrument types.
+              </p>
+            </div>
           </details>
           <details class="tree">
-            <summary><span class="nm">Deribit</span><span class="meta"><span class="pend">pending</span></span></summary>
-            <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Options-heavy; instrument-type breakdown differs.</p></div>
+            <summary>
+              <span class="nm">Deribit</span><span class="meta"><span class="pend">pending</span></span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                Options-heavy; instrument-type breakdown differs.
+              </p>
+            </div>
           </details>
         </div>
       </details>
@@ -654,35 +1649,57 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
       <details class="tree">
         <summary><span class="nm">DeFi</span><span class="meta">0 ready / 133 not-ready / 47 unverified</span></summary>
         <div class="tree-body">
-          <p style="font-size:0.93rem;color:var(--ink-3);">
+          <p style="font-size: 0.93rem; color: var(--ink-3)">
             On-chain venues carry an extra axis — chain — because the same protocol on two chains is two different
             coverage questions.
           </p>
           <details class="tree">
-            <summary><span class="nm">Ethereum</span><span class="meta"><span class="pend">pending</span></span></summary>
-            <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Protocols on this chain, then instrument and data types.</p></div>
+            <summary>
+              <span class="nm">Ethereum</span><span class="meta"><span class="pend">pending</span></span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                Protocols on this chain, then instrument and data types.
+              </p>
+            </div>
           </details>
           <details class="tree">
-            <summary><span class="nm">Solana</span><span class="meta"><span class="pend">pending</span></span></summary>
-            <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Protocols on this chain, then instrument and data types.</p></div>
+            <summary>
+              <span class="nm">Solana</span><span class="meta"><span class="pend">pending</span></span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                Protocols on this chain, then instrument and data types.
+              </p>
+            </div>
           </details>
         </div>
       </details>
 
       <details class="tree">
         <summary><span class="nm">TradFi</span><span class="meta">0 ready / 9 not-ready / 0 unverified</span></summary>
-        <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Vendor-sourced; the boundary disclosure differs and is stated per dataset.</p></div>
+        <div class="tree-body">
+          <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+            Vendor-sourced; the boundary disclosure differs and is stated per dataset.
+          </p>
+        </div>
       </details>
 
       <details class="tree">
-        <summary><span class="nm">Prediction</span><span class="meta">0 ready / 0 not-ready / 1 unverified</span></summary>
-        <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Event-scoped instruments; coverage is stated per event family.</p></div>
+        <summary>
+          <span class="nm">Prediction</span><span class="meta">0 ready / 0 not-ready / 1 unverified</span>
+        </summary>
+        <div class="tree-body">
+          <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+            Event-scoped instruments; coverage is stated per event family.
+          </p>
+        </div>
       </details>
 
       <details class="tree">
         <summary><span class="nm">Sports</span><span class="meta">0 ready / 49 not-ready / 1 unverified</span></summary>
         <div class="tree-body">
-          <p style="font-size:0.93rem;color:var(--ink-3);margin:0;">
+          <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
             Carries an explicit data floor — odds data begins at a known date, and anything before it is excluded from
             the denominator rather than reported as a gap.
           </p>
@@ -692,7 +1709,11 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s6">
-    <div class="sec-head"><span class="num">06</span><h2>Getting the data</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
+    <div class="sec-head">
+      <span class="num">06</span>
+      <h2>Getting the data</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+    </div>
     <p class="lede">
       Two modes, one availability model: ask what exists, then take it as a daily batch file or as a live stream.
     </p>
@@ -723,16 +1744,21 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
           expected difference you learn to ignore.
         </p>
       </div>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly: <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>'s
-        <code>/delivery/stream</code> route is backed by the UTL <code>unified_trading_library.streaming.event_facade</code>
+        <code>/delivery/stream</code> route is backed by the UTL
+        <code>unified_trading_library.streaming.event_facade</code>
         (<code>get_transport</code>) — the same facade the internal live-tick sink publishes through.
       </p>
     </details>
   </section>
 
   <section id="s7">
-    <div class="sec-head"><span class="num">07</span><h2>Shard schemas</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">07</span>
+      <h2>Shard schemas</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       Exactly what is in each file, per data type. Collapsed by data type so you can read only the ones you would
       consume.
@@ -741,37 +1767,33 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
       <summary>Per-data-type schemas</summary>
       <details class="ref">
         <summary>Trades<span class="tag-ref">Schema</span></summary>
-        <div class="code">timestamp        <i>datetime[UTC]</i>
-instrument_id    <i>str</i>
-price            <i>decimal</i>
-size             <i>decimal</i>
-side             <i>str</i>
-trade_id         <i>str</i></div>
+        <div class="code">
+          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> price <i>decimal</i> size <i>decimal</i> side
+          <i>str</i> trade_id <i>str</i>
+        </div>
       </details>
       <details class="ref">
         <summary>Book snapshot<span class="tag-ref">Schema</span></summary>
-        <div class="code">timestamp        <i>datetime[UTC]</i>
-instrument_id    <i>str</i>
-bids             <i>list[[price, size]]</i>
-asks             <i>list[[price, size]]</i>
-depth            <i>int</i></div>
+        <div class="code">
+          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> bids <i>list[[price, size]]</i> asks
+          <i>list[[price, size]]</i> depth <i>int</i>
+        </div>
       </details>
       <details class="ref">
         <summary>Candles<span class="tag-ref">Schema</span></summary>
-        <div class="code">timestamp        <i>datetime[UTC]</i>
-instrument_id    <i>str</i>
-timeframe        <i>str</i>
-open high low close  <i>decimal</i>
-volume           <i>decimal</i></div>
+        <div class="code">
+          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> timeframe <i>str</i> open high low close
+          <i>decimal</i> volume <i>decimal</i>
+        </div>
       </details>
       <details class="ref">
         <summary>Funding rate<span class="tag-ref">Schema</span></summary>
-        <div class="code">timestamp        <i>datetime[UTC]</i>
-instrument_id    <i>str</i>
-funding_rate     <i>decimal</i>
-next_funding_at  <i>datetime[UTC]</i></div>
+        <div class="code">
+          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> funding_rate <i>decimal</i> next_funding_at
+          <i>datetime[UTC]</i>
+        </div>
       </details>
-      <p style="font-size:0.95rem;color:var(--ink-3);">
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
         Remaining data types — on-chain, sports odds, prediction, TradFi vendor datasets — <b class="pend">pending</b>,
         to be listed exhaustively rather than by example.
       </p>
@@ -779,7 +1801,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s8">
-    <div class="sec-head"><span class="num">08</span><h2>The instruction contract</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
+    <div class="sec-head">
+      <span class="num">08</span>
+      <h2>The instruction contract</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+    </div>
     <p class="lede">
       One envelope for every action, on every asset class. Swap, lend, transfer, stake, withdraw, back, lay — the same
       shape, the same lifecycle, the same audit record.
@@ -792,22 +1818,19 @@ next_funding_at  <i>datetime[UTC]</i></div>
         set is what makes that translation tractable: the interface emits one shape, and the number of things downstream
         has to understand does not grow with the number of venues.
       </p>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> — the real,
         declared <code>StrategyInstructionEnvelope</code> family used by the external instruction endpoint in
         <a href="#s2">§02</a>.
       </p>
       <details class="ref">
         <summary>The instruction envelope<span class="tag-ref">Contract</span></summary>
-        <div class="code"><span class="k">class</span> <b>StrategyInstructionEnvelope</b>:
-    action:              <i>InstructionAction</i>   <i># what to do</i>
-    instrument:          <i>InstrumentKey</i>
-    quantity:            <i>decimal</i>
-    reference_price:     <i>decimal</i>            <i># the benchmark it assumed</i>
-    execution_policy_ref: <i>str</i>               <i># which policy governs it</i>
-    urgency:             <i>Urgency</i>
-    eligible_venues:     <i>list[str]</i>
-    venue_constraints:   <i>VenueConstraints</i></div>
+        <div class="code">
+          <span class="k">class</span> <b>StrategyInstructionEnvelope</b>: action: <i>InstructionAction</i>
+          <i># what to do</i> instrument: <i>InstrumentKey</i> quantity: <i>decimal</i> reference_price: <i>decimal</i>
+          <i># the benchmark it assumed</i> execution_policy_ref: <i>str</i> <i># which policy governs it</i> urgency:
+          <i>Urgency</i> eligible_venues: <i>list[str]</i> venue_constraints: <i>VenueConstraints</i>
+        </div>
       </details>
       <div class="callout">
         <span class="tag">The design decision worth noticing</span>
@@ -819,15 +1842,39 @@ next_funding_at  <i>datetime[UTC]</i></div>
       </div>
       <h3>The action vocabulary</h3>
       <div class="plate">
-        <div class="plate-head"><span class="label">Actions</span><span class="note">One vocabulary across asset classes</span></div>
+        <div class="plate-head">
+          <span class="label">Actions</span><span class="note">One vocabulary across asset classes</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Family</th><th>Actions</th><th>Applies to</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>Actions</th>
+                <th>Applies to</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td class="grp grp-exec">Trade</td><td>Buy, sell, close</td><td>Spot, perps, futures, options</td></tr>
-              <tr><td class="grp grp-exec">On-chain</td><td>Swap, lend, borrow, repay, stake, unstake</td><td>DeFi protocols</td></tr>
-              <tr><td class="grp grp-exec">Event</td><td>Back, lay</td><td>Sports and prediction venues</td></tr>
-              <tr><td class="grp grp-post">Movement</td><td>Transfer, deposit, withdraw</td><td>Wallets, exchanges, custody</td></tr>
+              <tr>
+                <td class="grp grp-exec">Trade</td>
+                <td>Buy, sell, close</td>
+                <td>Spot, perps, futures, options</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec">On-chain</td>
+                <td>Swap, lend, borrow, repay, stake, unstake</td>
+                <td>DeFi protocols</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec">Event</td>
+                <td>Back, lay</td>
+                <td>Sports and prediction venues</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post">Movement</td>
+                <td>Transfer, deposit, withdraw</td>
+                <td>Wallets, exchanges, custody</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -840,7 +1887,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s9">
-    <div class="sec-head"><span class="num">09</span><h2>Archetypes and registry scope</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">09</span>
+      <h2>Archetypes and registry scope</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       A strategy is an archetype plus configuration. Archetypes declare what they need through registry contracts, and
       the system checks those declarations rather than trusting them.
@@ -860,9 +1911,16 @@ next_funding_at  <i>datetime[UTC]</i></div>
       </p>
       <div class="keypoints">
         <div><b>Declared inputs</b><span>Each archetype names the data types and feature groups it requires</span></div>
-        <div><b>Checked, not trusted</b><span>A declaration that the data cannot satisfy is caught before it runs</span></div>
-        <div><b>Venue scope</b><span>Archetypes are offered only for venues whose capability record supports them</span></div>
-        <div><b>Additive</b><span>A new archetype declares its needs and inherits the whole pipeline — no bespoke wiring</span></div>
+        <div>
+          <b>Checked, not trusted</b><span>A declaration that the data cannot satisfy is caught before it runs</span>
+        </div>
+        <div>
+          <b>Venue scope</b><span>Archetypes are offered only for venues whose capability record supports them</span>
+        </div>
+        <div>
+          <b>Additive</b
+          ><span>A new archetype declares its needs and inherits the whole pipeline — no bespoke wiring</span>
+        </div>
       </div>
       <div class="callout">
         <span class="tag">On what is not described here</span>
@@ -876,7 +1934,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s10">
-    <div class="sec-head"><span class="num">10</span><h2>The strategy wizard</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">10</span>
+      <h2>The strategy wizard</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       Configuration is the real surface area of a strategy platform. The wizard generates it — validated against the
       same schemas the services enforce — instead of asking anyone to hand-write it.
@@ -896,17 +1958,49 @@ next_funding_at  <i>datetime[UTC]</i></div>
         driven by an agent, because it is schema-validated at every stage rather than free-form.
       </p>
       <div class="plate">
-        <div class="plate-head"><span class="label">Wizard stages</span><span class="note">Each stage validates before the next unlocks</span></div>
+        <div class="plate-head">
+          <span class="label">Wizard stages</span><span class="note">Each stage validates before the next unlocks</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Stage</th><th>Decides</th><th>Constrained by</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Decides</th>
+                <th>Constrained by</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>Archetype</td><td>Which strategy shape</td><td>What the archetype registry offers</td></tr>
-              <tr><td>Universe</td><td>Instruments and venues</td><td>Venue capability and data coverage</td></tr>
-              <tr><td>Sizing</td><td>Capital and position limits</td><td>Risk envelope</td></tr>
-              <tr><td>Risk</td><td>Drawdown, leverage, exposure bounds</td><td>Governing limits</td></tr>
-              <tr><td>Execution</td><td>Policy reference and urgency</td><td>Available policies for the action set</td></tr>
-              <tr><td>Identity</td><td>Slot and deployment target</td><td>Client scope and isolation</td></tr>
+              <tr>
+                <td>Archetype</td>
+                <td>Which strategy shape</td>
+                <td>What the archetype registry offers</td>
+              </tr>
+              <tr>
+                <td>Universe</td>
+                <td>Instruments and venues</td>
+                <td>Venue capability and data coverage</td>
+              </tr>
+              <tr>
+                <td>Sizing</td>
+                <td>Capital and position limits</td>
+                <td>Risk envelope</td>
+              </tr>
+              <tr>
+                <td>Risk</td>
+                <td>Drawdown, leverage, exposure bounds</td>
+                <td>Governing limits</td>
+              </tr>
+              <tr>
+                <td>Execution</td>
+                <td>Policy reference and urgency</td>
+                <td>Available policies for the action set</td>
+              </tr>
+              <tr>
+                <td>Identity</td>
+                <td>Slot and deployment target</td>
+                <td>Client scope and isolation</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -919,7 +2013,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
           form — it is the registry contracts made interactive, which is why its output is valid by construction.
         </p>
       </div>
-      <p style="font-size:0.95rem;color:var(--ink-3);">
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
         Wizard stage detail, screenshots and the generated-config example — <b class="pend">pending</b>, to be expanded
         in the next pass.
       </p>
@@ -927,7 +2021,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s11">
-    <div class="sec-head"><span class="num">11</span><h2>Configuration surface</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">11</span>
+      <h2>Configuration surface</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       Every service declares its configuration in one place, with a schema, hot-reloadable and centrally stored. What a
       thing is configured to do never requires reading its implementation.
@@ -935,12 +2033,17 @@ next_funding_at  <i>datetime[UTC]</i></div>
     <details class="sec-body">
       <summary>The config model, and what you would need to set</summary>
       <div class="keypoints">
-        <div><b>One module per service</b><span>Config has a single findable home; splitting happens only for file size, never by design</span></div>
+        <div>
+          <b>One module per service</b
+          ><span>Config has a single findable home; splitting happens only for file size, never by design</span>
+        </div>
         <div><b>Schema-backed</b><span>Values are typed and validated, not an untyped bag</span></div>
-        <div><b>Hot-reloadable</b><span>A limit change takes effect without a restart — including credentials</span></div>
+        <div>
+          <b>Hot-reloadable</b><span>A limit change takes effect without a restart — including credentials</span>
+        </div>
         <div><b>Centrally stored</b><span>The instance lives in object storage; the schema lives in code</span></div>
       </div>
-      <p style="font-size:0.95rem;color:var(--ink-3);">
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
         The specific configuration an integrator must supply — credentials, client identity, venue selection, limits —
         <b class="pend">pending</b>, to be enumerated exactly.
       </p>
@@ -948,7 +2051,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s12">
-    <div class="sec-head"><span class="num">12</span><h2>Execution: routing and algos</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">12</span>
+      <h2>Execution: routing and algos</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       Execution decides <em>how</em>. It selects an algorithm from policy, routes to a venue adaptor, and can chain
       dependent steps into one sequence.
@@ -960,22 +2067,42 @@ next_funding_at  <i>datetime[UTC]</i></div>
         to get the connectivity.
       </p>
       <div class="plate">
-        <div class="plate-head"><span class="label">Adoption depths</span><span class="note">Each is a superset of the one above</span></div>
+        <div class="plate-head">
+          <span class="label">Adoption depths</span><span class="note">Each is a superset of the one above</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Depth</th><th>You get</th><th>Suits</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Depth</th>
+                <th>You get</th>
+                <th>Suits</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><b>1. Connectivity</b></td><td>Normalised routing to venue adaptors; one instruction shape, many venues</td><td>You already have execution logic and want reach</td></tr>
-              <tr><td><b>2. Algorithms</b></td><td>Policy-selected execution algos rather than straight market orders</td><td>You want execution quality without building it</td></tr>
-              <tr><td><b>3. Sequences</b></td><td>Chained dependent actions as one governed unit — borrow, then swap, then stake</td><td>Multi-step on-chain positions</td></tr>
+              <tr>
+                <td><b>1. Connectivity</b></td>
+                <td>Normalised routing to venue adaptors; one instruction shape, many venues</td>
+                <td>You already have execution logic and want reach</td>
+              </tr>
+              <tr>
+                <td><b>2. Algorithms</b></td>
+                <td>Policy-selected execution algos rather than straight market orders</td>
+                <td>You want execution quality without building it</td>
+              </tr>
+              <tr>
+                <td><b>3. Sequences</b></td>
+                <td>Chained dependent actions as one governed unit — borrow, then swap, then stake</td>
+                <td>Multi-step on-chain positions</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
       <h3>Policy-driven algo selection</h3>
       <p>
-        Algorithms are chosen by a versioned, content-hashed policy table gated on the instruction's action and
-        urgency — not hard-coded per strategy. Changing execution behaviour is a policy change, and because policies are
+        Algorithms are chosen by a versioned, content-hashed policy table gated on the instruction's action and urgency
+        — not hard-coded per strategy. Changing execution behaviour is a policy change, and because policies are
         versioned, any fill can be traced to the exact policy that governed it.
       </p>
       <h3>Chained sequences</h3>
@@ -992,7 +2119,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
       </p>
       <details class="ref">
         <summary>Venue error handling<span class="tag-ref">Contract</span></summary>
-        <p style="padding: 14px 18px; margin: 0; font-size: 0.95rem;">
+        <p style="padding: 14px 18px; margin: 0; font-size: 0.95rem">
           Every venue's documented response and error codes map to one classified outcome — retry, reconnect, or fail —
           in a single registry keyed by venue and code. A venue's failure behaviour is therefore known before
           production, and a retry means the same thing on every venue.
@@ -1002,7 +2129,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s13">
-    <div class="sec-head"><span class="num">13</span><h2>Treasury, wallets, transfers</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
+    <div class="sec-head">
+      <span class="num">13</span>
+      <h2>Treasury, wallets, transfers</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+    </div>
     <p class="lede">
       Both halves are available: querying balances, and instructing movement. They are separable, and most integrations
       want the first before the second.
@@ -1024,15 +2155,15 @@ next_funding_at  <i>datetime[UTC]</i></div>
         <span class="tag">A guarantee worth stating plainly</span>
         <p>
           Funds never move between clients. Every transfer is scoped to a single client identity and the code raises
-          rather than executing a cross-client movement. This is enforced at the contract layer, not left to
-          operational discipline.
+          rather than executing a cross-client movement. This is enforced at the contract layer, not left to operational
+          discipline.
         </p>
       </div>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly: <code>execution-service/execution_service/isolation_policy.py</code>'s
         <code>assert_client_allowed()</code>, called from the live path in
-        <code>execution-service/execution_service/engine/modes/live/trigger.py</code> — a cross-client event is
-        logged and dropped, not executed.
+        <code>execution-service/execution_service/engine/modes/live/trigger.py</code> — a cross-client event is logged
+        and dropped, not executed.
       </p>
       <h3>Signing surfaces</h3>
       <p>
@@ -1043,7 +2174,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s14">
-    <div class="sec-head"><span class="num">14</span><h2>Readiness: batch, paper, live</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
+    <div class="sec-head">
+      <span class="num">14</span>
+      <h2>Readiness: batch, paper, live</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+    </div>
     <p class="lede">
       Three modes, stated per venue rather than as a platform-wide claim. What separates them is which accounts exist,
       not which code exists.
@@ -1051,14 +2186,38 @@ next_funding_at  <i>datetime[UTC]</i></div>
     <details class="sec-body" open>
       <summary>The mode model and how readiness is derived</summary>
       <div class="plate">
-        <div class="plate-head"><span class="label">Modes</span><span class="note">A venue sits at the highest mode whose requirements all hold</span></div>
+        <div class="plate-head">
+          <span class="label">Modes</span
+          ><span class="note">A venue sits at the highest mode whose requirements all hold</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Mode</th><th>Means</th><th>Needs</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Mode</th>
+                <th>Means</th>
+                <th>Needs</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><b>Batch</b></td><td>Research and backtest against history, honestly</td><td>No venue credentials</td></tr>
-              <tr><td><b>Paper</b></td><td>Runs forward without capital at risk. Either against a venue testnet, or simulated through our own matching</td><td>Live market data; testnet accounts where they exist</td></tr>
-              <tr><td><b>Live</b></td><td>Real capital</td><td>Live credentials and funded accounts</td></tr>
+              <tr>
+                <td><b>Batch</b></td>
+                <td>Research and backtest against history, honestly</td>
+                <td>No venue credentials</td>
+              </tr>
+              <tr>
+                <td><b>Paper</b></td>
+                <td>
+                  Runs forward without capital at risk. Either against a venue testnet, or simulated through our own
+                  matching
+                </td>
+                <td>Live market data; testnet accounts where they exist</td>
+              </tr>
+              <tr>
+                <td><b>Live</b></td>
+                <td>Real capital</td>
+                <td>Live credentials and funded accounts</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1066,9 +2225,9 @@ next_funding_at  <i>datetime[UTC]</i></div>
       <div class="callout">
         <span class="tag">Readiness is computed, not declared</span>
         <p>
-          A venue's mode is derived from checks rather than written down, so it cannot drift as the system changes. Where
-          a check does not yet exist, the venue reports <b>unverified</b> — never a pass. A readiness table that cannot
-          say "I don't know" is not telling you anything.
+          A venue's mode is derived from checks rather than written down, so it cannot drift as the system changes.
+          Where a check does not yet exist, the venue reports <b>unverified</b> — never a pass. A readiness table that
+          cannot say "I don't know" is not telling you anything.
         </p>
       </div>
       <h3>Why batch and paper must agree</h3>
@@ -1079,17 +2238,64 @@ next_funding_at  <i>datetime[UTC]</i></div>
       </p>
       <h3>Measured readiness — 2026-08-18</h3>
       <div class="plate">
-        <div class="plate-head"><span class="label">Derived readiness, pipeline legs</span><span class="note">288 venues × 3 modes = 864 rows</span></div>
+        <div class="plate-head">
+          <span class="label">Derived readiness, pipeline legs</span
+          ><span class="note">288 venues × 3 modes = 864 rows</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Asset group</th><th>Ready</th><th>Not ready</th><th>Unverified</th><th>Rows (BATCH)</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Asset group</th>
+                <th>Ready</th>
+                <th>Not ready</th>
+                <th>Unverified</th>
+                <th>Rows (BATCH)</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>CeFi</td><td>0</td><td>5</td><td>19</td><td>24</td></tr>
-              <tr><td>DeFi</td><td>0</td><td>133</td><td>47</td><td>180</td></tr>
-              <tr><td>TradFi</td><td>0</td><td>9</td><td>0</td><td>9</td></tr>
-              <tr><td>Sports</td><td>0</td><td>49</td><td>1</td><td>50</td></tr>
-              <tr><td>Prediction</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
-              <tr><td>Unattributed</td><td>0</td><td>16</td><td>8</td><td>24</td></tr>
+              <tr>
+                <td>CeFi</td>
+                <td>0</td>
+                <td>5</td>
+                <td>19</td>
+                <td>24</td>
+              </tr>
+              <tr>
+                <td>DeFi</td>
+                <td>0</td>
+                <td>133</td>
+                <td>47</td>
+                <td>180</td>
+              </tr>
+              <tr>
+                <td>TradFi</td>
+                <td>0</td>
+                <td>9</td>
+                <td>0</td>
+                <td>9</td>
+              </tr>
+              <tr>
+                <td>Sports</td>
+                <td>0</td>
+                <td>49</td>
+                <td>1</td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Prediction</td>
+                <td>0</td>
+                <td>0</td>
+                <td>1</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td>Unattributed</td>
+                <td>0</td>
+                <td>16</td>
+                <td>8</td>
+                <td>24</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1099,8 +2305,8 @@ next_funding_at  <i>datetime[UTC]</i></div>
         <p>
           A venue has a readiness state; so does a <b>strategy archetype</b>, and so does each
           <b>(archetype, venue)</b> pair. They are genuinely different questions — an archetype is only usable on a
-          venue whose data satisfies the inputs it declares, so a fully-captured venue with no archetype able to
-          consume it is not a ready venue.
+          venue whose data satisfies the inputs it declares, so a fully-captured venue with no archetype able to consume
+          it is not a ready venue.
         </p>
         <p>
           <b class="st st-plan">planned</b> — a capability audit deriving archetype readiness across batch, paper and
@@ -1112,12 +2318,12 @@ next_funding_at  <i>datetime[UTC]</i></div>
         <span class="tag">Reading "ready = 0" correctly</span>
         <p>
           <b>Zero venues currently clear the bar, and the bar is ours.</b> A venue is ready only when every leg of an
-          8-leg readiness model — declared, instruments-service, market data, processing, features, strategy,
-          execution transfers, execution instruction — passes a real machine check; one failing or unchecked leg
-          fails the venue. This is not "nothing works"; it is "we grade strictly and have not yet wired every check".
-          Reported plainly, because a readiness model that cannot return zero is not measuring anything.
+          8-leg readiness model — declared, instruments-service, market data, processing, features, strategy, execution
+          transfers, execution instruction — passes a real machine check; one failing or unchecked leg fails the venue.
+          This is not "nothing works"; it is "we grade strictly and have not yet wired every check". Reported plainly,
+          because a readiness model that cannot return zero is not measuring anything.
         </p>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
           Verified against the readiness-state-dump derivation's 8-leg model (<code>declared</code>,
           <code>instruments_service</code>, <code>market_tick_data</code>, <code>market_data_processing</code>,
           <code>features</code>, <code>strategy</code>, <code>execution_transfers</code>,
@@ -1148,7 +2354,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s15">
-    <div class="sec-head"><span class="num">15</span><h2>Security and the audit record</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">15</span>
+      <h2>Security and the audit record</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       Treated as a prerequisite of delivery rather than a later hardening pass, because it is a control layer this has
       to satisfy regardless.
@@ -1156,10 +2366,25 @@ next_funding_at  <i>datetime[UTC]</i></div>
     <details class="sec-body">
       <summary>Isolation, immutability, and what the record has to answer</summary>
       <div class="keypoints">
-        <div><b>Client isolation</b><span>Per-client scoping end to end; cross-client movement raises rather than executes</span></div>
-        <div><b>Immutable records</b><span>Positions, trades, fills, orders and instructions are append-only; changes are audited status transitions</span></div>
-        <div><b>Credential handling</b><span>Secrets from a managed store, hot-reloadable, never in configuration files</span></div>
-        <div><b>Kill switches</b><span>Scoped halts — all live, per archetype, or per venue — with defined resume paths</span></div>
+        <div>
+          <b>Client isolation</b
+          ><span>Per-client scoping end to end; cross-client movement raises rather than executes</span>
+        </div>
+        <div>
+          <b>Immutable records</b
+          ><span
+            >Positions, trades, fills, orders and instructions are append-only; changes are audited status
+            transitions</span
+          >
+        </div>
+        <div>
+          <b>Credential handling</b
+          ><span>Secrets from a managed store, hot-reloadable, never in configuration files</span>
+        </div>
+        <div>
+          <b>Kill switches</b
+          ><span>Scoped halts — all live, per archetype, or per venue — with defined resume paths</span>
+        </div>
       </div>
       <h3>The question an audit record must answer</h3>
       <p>
@@ -1177,23 +2402,55 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s16">
-    <div class="sec-head"><span class="num">16</span><h2>Integration path</h2><b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b></div>
+    <div class="sec-head">
+      <span class="num">16</span>
+      <h2>Integration path</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b>
+    </div>
     <p class="lede">
       What connecting actually involves, in the order it would happen, and what is needed from each side.
     </p>
     <details class="sec-body">
       <summary>Sequence, dependencies, and the honest position on venue connectivity</summary>
       <div class="plate">
-        <div class="plate-head"><span class="label">Sequence</span><span class="note">Each step is independently useful</span></div>
+        <div class="plate-head">
+          <span class="label">Sequence</span><span class="note">Each step is independently useful</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Step</th><th>What happens</th><th>Needs from you</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th>What happens</th>
+                <th>Needs from you</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>1. Reference data</td><td>Resolve instruments; take the universe dump</td><td>Nothing — read-only</td></tr>
-              <tr><td>2. Market data</td><td>Query availability, pull batch history</td><td>Which asset groups and data types</td></tr>
-              <tr><td>3. Live data</td><td>Subscribe to streams</td><td>Transport preference</td></tr>
-              <tr><td>4. Instructions</td><td>Emit instructions against paper</td><td>Client identity and config</td></tr>
-              <tr><td>5. Execution</td><td>Route to venues</td><td>Venue credentials and funded accounts</td></tr>
+              <tr>
+                <td>1. Reference data</td>
+                <td>Resolve instruments; take the universe dump</td>
+                <td>Nothing — read-only</td>
+              </tr>
+              <tr>
+                <td>2. Market data</td>
+                <td>Query availability, pull batch history</td>
+                <td>Which asset groups and data types</td>
+              </tr>
+              <tr>
+                <td>3. Live data</td>
+                <td>Subscribe to streams</td>
+                <td>Transport preference</td>
+              </tr>
+              <tr>
+                <td>4. Instructions</td>
+                <td>Emit instructions against paper</td>
+                <td>Client identity and config</td>
+              </tr>
+              <tr>
+                <td>5. Execution</td>
+                <td>Route to venues</td>
+                <td>Venue credentials and funded accounts</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1201,20 +2458,23 @@ next_funding_at  <i>datetime[UTC]</i></div>
       <div class="callout">
         <span class="tag">The honest position on step 5</span>
         <p>
-          Steps 1 to 4 need nothing from a venue. Step 5 is where venue credentials and capital have to be in place,
-          and the remaining work there depends on which venues you want. Testnet readiness is currently mixed rather
-          than uniformly complete: real progress exists (AAVE on Sepolia, a Solana LST devnet, a Kalshi demo host),
-          and real gaps remain (no per-venue CeFi testnet declaration yet, sports' live-credential probe is still
-          stubbed, TradFi's only live probe covers Tardis, and Polymarket has neither a testnet nor a written
-          paper-trading ruling). Schemas and contracts do not change between these steps, so beginning at step 1
-          costs nothing later.
+          Steps 1 to 4 need nothing from a venue. Step 5 is where venue credentials and capital have to be in place, and
+          the remaining work there depends on which venues you want. Testnet readiness is currently mixed rather than
+          uniformly complete: real progress exists (AAVE on Sepolia, a Solana LST devnet, a Kalshi demo host), and real
+          gaps remain (no per-venue CeFi testnet declaration yet, sports' live-credential probe is still stubbed,
+          TradFi's only live probe covers Tardis, and Polymarket has neither a testnet nor a written paper-trading
+          ruling). Schemas and contracts do not change between these steps, so beginning at step 1 costs nothing later.
         </p>
       </div>
     </details>
   </section>
 
   <section id="s17">
-    <div class="sec-head"><span class="num">17</span><h2>Measured versus projected</h2><b class="st st-plan">planned</b><b class="ev ev-check">? check</b></div>
+    <div class="sec-head">
+      <span class="num">17</span>
+      <h2>Measured versus projected</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+    </div>
     <p class="lede">
       A single place listing every figure in this document, how it was obtained, and when. If a number is not here, it
       is not a number we are standing behind.
@@ -1227,17 +2487,60 @@ next_funding_at  <i>datetime[UTC]</i></div>
         labelled and their basis stated.
       </p>
       <div class="plate">
-        <div class="plate-head"><span class="label">Figure provenance</span><span class="note">To be completed by measurement, not estimate</span></div>
+        <div class="plate-head">
+          <span class="label">Figure provenance</span
+          ><span class="note">To be completed by measurement, not estimate</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Figure</th><th>Denominator</th><th>Measured</th><th>Basis</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Figure</th>
+                <th>Denominator</th>
+                <th>Measured</th>
+                <th>Basis</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>Venue universe size</td><td>660 (venue × instrument_type × data_type) triples; 288 venues in the coverage manifest</td><td>2026-08-18</td><td>capability registry, re-run from source</td></tr>
-              <tr><td>Current coverage</td><td>48.54% reachable, volume-weighted; denominator 119,500,618 over 3,960 shards</td><td>2026-08-18</td><td>availability manifest, via the honest-coverage dump</td></tr>
-              <tr><td>Obtainable coverage</td><td><b>No measured basis.</b> A previously-circulated figure was checked and no projection, document or measurement supports it — so none is stated here</td><td>—</td><td>deliberately absent</td></tr>
-              <tr><td>Per-AG current size</td><td>bytes and rows</td><td><span class="pend">pending</span></td><td>object store</td></tr>
-              <tr><td>Per-AG expected size</td><td>bytes and rows, post-backfill</td><td><span class="pend">pending</span></td><td>projection — basis to be stated</td></tr>
-              <tr><td>Readiness per AG</td><td>288 venues × 3 modes = 864 rows — ready 0, not_ready 844, unverified 20</td><td>2026-08-18</td><td>readiness contract, derived not declared</td></tr>
+              <tr>
+                <td>Venue universe size</td>
+                <td>660 (venue × instrument_type × data_type) triples; 288 venues in the coverage manifest</td>
+                <td>2026-08-18</td>
+                <td>capability registry, re-run from source</td>
+              </tr>
+              <tr>
+                <td>Current coverage</td>
+                <td>48.54% reachable, volume-weighted; denominator 119,500,618 over 3,960 shards</td>
+                <td>2026-08-18</td>
+                <td>availability manifest, via the honest-coverage dump</td>
+              </tr>
+              <tr>
+                <td>Obtainable coverage</td>
+                <td>
+                  <b>No measured basis.</b> A previously-circulated figure was checked and no projection, document or
+                  measurement supports it — so none is stated here
+                </td>
+                <td>—</td>
+                <td>deliberately absent</td>
+              </tr>
+              <tr>
+                <td>Per-AG current size</td>
+                <td>bytes and rows</td>
+                <td><span class="pend">pending</span></td>
+                <td>object store</td>
+              </tr>
+              <tr>
+                <td>Per-AG expected size</td>
+                <td>bytes and rows, post-backfill</td>
+                <td><span class="pend">pending</span></td>
+                <td>projection — basis to be stated</td>
+              </tr>
+              <tr>
+                <td>Readiness per AG</td>
+                <td>288 venues × 3 modes = 864 rows — ready 0, not_ready 844, unverified 20</td>
+                <td>2026-08-18</td>
+                <td>readiness contract, derived not declared</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1245,12 +2548,400 @@ next_funding_at  <i>datetime[UTC]</i></div>
     </details>
   </section>
 
+  <section id="s18">
+    <div class="sec-head">
+      <span class="num">18</span>
+      <h2>Fees and gas, by component</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+    </div>
+    <p class="lede">
+      A cost that is not broken into its components cannot be reasoned about. This section describes the target shape
+      for fee and gas modelling — it is specified, not built, and nothing below is live anywhere in the pipeline today.
+    </p>
+    <details class="sec-body" open>
+      <summary>Five components, two consumers</summary>
+      <p>
+        The target model breaks every cost into <b>clearing, broker, exchange, gas, and other</b> — the last a
+        deliberately loose bucket, for cases like paying a third party to execute on your behalf. The same breakdown is
+        meant to exist in both strategy-service and execution-service, for two different reasons.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Cost components</span><span class="note">Target shape — not yet implemented</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Covers</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Clearing</td>
+                <td>Central-counterparty or settlement cost, where a venue has one</td>
+              </tr>
+              <tr>
+                <td>Broker</td>
+                <td>Commission charged by an intermediary the order routes through</td>
+              </tr>
+              <tr>
+                <td>Exchange</td>
+                <td>The venue's own trading fee, maker or taker</td>
+              </tr>
+              <tr>
+                <td>Gas</td>
+                <td>On-chain execution cost — variable, and paid regardless of fill outcome</td>
+              </tr>
+              <tr>
+                <td>Other</td>
+                <td>
+                  A loose field for costs that do not fit the above — for example, paying a third party for execution
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="keypoints">
+        <div>
+          <b>In strategy-service</b><span>So a decision can weigh the cost of acting before it acts, not after</span>
+        </div>
+        <div>
+          <b>In execution-service</b
+          ><span>So the realised cost is baked into alpha PnL rather than sitting outside it</span>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">The honest state today</span>
+        <p>
+          Fee and gas cost is not broken into these components anywhere in the pipeline as of this writing. Nothing in
+          this section is a measured figure — it is the target shape a specified, unbuilt piece of work is expected to
+          take.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s19">
+    <div class="sec-head">
+      <span class="num">19</span>
+      <h2>Collateral and cross-margin, per venue</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b>
+    </div>
+    <p class="lede">
+      Two questions every venue's margin-eligible capital has to answer: what can be used as collateral, and does it net
+      against other positions in the same account. Neither is answered by a machine-readable source today.
+    </p>
+    <details class="sec-body" open>
+      <summary>Best current understanding — explicitly not a registry</summary>
+      <div class="callout">
+        <span class="tag">Why this section is marked differently from the rest of the document</span>
+        <p>
+          Every other section in this document either cites a verified source or names a specified-but-unbuilt piece of
+          work. This one cannot do either: a workspace-wide search found
+          <b>no field, in any registry, that declares collateral eligibility or cross-margin behaviour per venue.</b>
+          The venue-capability record used elsewhere in this document covers market data and tradeable actions, not
+          this. What follows is the best current understanding of the shape of the problem — <b>not</b> a queryable
+          fact, and deliberately not a per-venue matrix, because inventing one would look more authoritative than it is.
+        </p>
+      </div>
+      <div class="keypoints">
+        <div>
+          <b>Collateral usability</b
+          ><span
+            >Which assets a venue will accept as margin, and at what haircut or conversion — this varies by venue and is
+            not uniform across them</span
+          >
+        </div>
+        <div>
+          <b>Cross-margin</b
+          ><span
+            >Whether positions across instrument types on the same venue share one margin pool, or sit in fully siloed
+            accounts — this changes both capital efficiency and liquidation risk, and differs venue by venue</span
+          >
+        </div>
+      </div>
+      <p>
+        Both questions are venue-specific by nature, which is exactly why they belong in a declared registry rather than
+        being re-discovered per integration. Producing that registry is now a tracked follow-on to this document, not an
+        open-ended gap — the fix is to make this section obsolete by making it queryable.
+      </p>
+    </details>
+  </section>
+
+  <section id="s20">
+    <div class="sec-head">
+      <span class="num">20</span>
+      <h2>Manual trade — the disaster path</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+    </div>
+    <p class="lede">
+      Automation fails sometimes. When it does, the requirement is a human able to place a trade directly on the venue,
+      without waiting for the automated pipeline to recover — for every venue, with no exceptions.
+    </p>
+    <details class="sec-body">
+      <summary>Why "no exceptions" is the actual requirement</summary>
+      <p>
+        A manual-trade path that exists for most venues protects nothing on the one venue where an outage actually
+        happens. The requirement is unconditional by design: every venue this platform can reach automatically must also
+        be reachable manually, using the same audit record as an automated fill.
+      </p>
+      <div class="keypoints">
+        <div><b>No exceptions</b><span>Every venue, not just the ones it was easy to build first</span></div>
+        <div>
+          <b>Bypasses the pipeline</b><span>Available when the normal instruction path is the thing that is down</span>
+        </div>
+        <div>
+          <b>Same audit record</b
+          ><span>A manual fill is recorded the same way an automated one is — not a side channel</span>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">The honest state today</span>
+        <p>
+          This is specified, not built, and coverage across venues is unverified. It is a P0 item precisely because it
+          is the fallback for every other P0 item in this document failing at once.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s21">
+    <div class="sec-head">
+      <span class="num">21</span>
+      <h2>Reconciliation framework</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+    </div>
+    <p class="lede">
+      What we believe we hold has to be checked against what the venue says we hold, on a defined cadence, with a
+      defined answer for what happens when the two disagree or the check itself cannot run.
+    </p>
+    <details class="sec-body" open>
+      <summary>One generic model, with per-venue specifics named rather than hidden</summary>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Target behaviour</span><span class="note">Specified — not yet built</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Element</th>
+                <th>Target behaviour</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Thresholds, tolerances, intervals</td>
+                <td>
+                  One generic model everywhere, with per-venue values named explicitly where venue behaviour genuinely
+                  differs — not a bespoke model per venue
+                </td>
+              </tr>
+              <tr>
+                <td>Correcting a position</td>
+                <td>
+                  Booked as its own audited reconciliation entry — never a silent overwrite of the position record
+                </td>
+              </tr>
+              <tr>
+                <td>Reconciliation bad or down</td>
+                <td>
+                  A defined, bounded behaviour rather than an undefined state — the system knows it cannot currently
+                  trust the check
+                </td>
+              </tr>
+              <tr>
+                <td>A manually-entered position (<a href="#s20">§20</a>)</td>
+                <td>
+                  Bookable as seen-by-the-system or not-yet-seen, so a position we know we hold is never deleted just
+                  because reconciliation has not caught up to it yet
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Why reconciliation pauses before a manual entry, rather than fighting it</span>
+        <p>
+          A disaster-path manual trade (<a href="#s20">§20</a>) is, by definition, a position the automated
+          reconciliation loop has not independently observed yet. The target design has reconciliation pause on that
+          position rather than treat the mismatch as an error, and excludes the resulting persistent-delta entry from
+          the reconciliation delta until the venue's own record catches up.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s22">
+    <div class="sec-head">
+      <span class="num">22</span>
+      <h2>PnL attribution, across every dimension</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+    </div>
+    <p class="lede">
+      If exposure can be sliced a certain way, PnL has to be attributable the same way, in the same buckets — otherwise
+      the two numbers cannot be checked against each other.
+    </p>
+    <details class="sec-body">
+      <summary>Attribution follows exposure, not the other way around</summary>
+      <p>
+        The target design attributes PnL across every risk metric and every exposure-normalisation metric this document
+        describes (<a href="#s23">§23</a>), in the same dimensions and the same buckets those are reported in. That is a
+        deliberate constraint, not an ambition: a PnL number that cannot be sliced the same way its matching exposure
+        number is sliced cannot be reconciled against it, and an unreconcilable pair of numbers is worse than either
+        number alone.
+      </p>
+      <div class="keypoints">
+        <div>
+          <b>Same dimensions as risk</b
+          ><span
+            >Account, instrument, instrument type — whatever axis exposure is reported on, PnL attributes on the same
+            axis</span
+          >
+        </div>
+        <div>
+          <b>A first-class output</b
+          ><span>Alongside account balances, risk and normalised exposure — not a derived afterthought</span>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">The honest state today</span>
+        <p>
+          This is specified, not built. Nothing in this section is a measured figure, and no PnL attribution is
+          currently reported on this platform in the shape described here.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s23">
+    <div class="sec-head">
+      <span class="num">23</span>
+      <h2>Risk: native, share-class, and Greeks</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+    </div>
+    <p class="lede">
+      Risk stated only in each instrument's own units cannot be summed across a book. Risk stated only in one normalised
+      currency loses what a venue-native reader actually needs. The target design carries both, always.
+    </p>
+    <details class="sec-body" open>
+      <summary>Both axes, three dimensions, every Greek</summary>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Target shape</span><span class="note">Specified — not yet built</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Axis</th>
+                <th>Carries</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Native</td>
+                <td>Exposure in the instrument's own token or contract terms — what a venue-native reader expects</td>
+              </tr>
+              <tr>
+                <td>Share-class-normalised</td>
+                <td>
+                  The same exposure converted onto one comparable basis, so positions in different underlyings sum and
+                  break down together
+                </td>
+              </tr>
+              <tr>
+                <td>Dimensions</td>
+                <td>Account (a specific venue instance for a client), instrument ID, instrument type</td>
+              </tr>
+              <tr>
+                <td>Greeks</td>
+                <td>Net delta, basis risk, and the rest of the standard set</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Why this has to match what DART already shows</span>
+        <p>
+          The DART interface already presents risk, alerts, health and live-PnL views to operators today. The target
+          data model is required to <b>serve those views, not diverge from them</b> — a risk model built independently
+          of what the UI already needs would mean rebuilding the UI's data layer twice. This is a constraint on the
+          build, not a new capability being promised.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <section id="s24">
+    <div class="sec-head">
+      <span class="num">24</span>
+      <h2>Latency, preflight, and staleness SLAs</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+    </div>
+    <p class="lede">
+      Two failure modes matter more than most: a strategy that starts without everything it needs, and one that cannot
+      tell how stale its inputs are. The target design closes both, and fails closed by default.
+    </p>
+    <details class="sec-body" open>
+      <summary>Registration-time checks, not runtime surprises</summary>
+      <div class="keypoints">
+        <div>
+          <b>Triggers named explicitly</b
+          ><span
+            >What a strategy reacts to and when — time-based or event-based, normally a subscription to a broadcast
+            stream rather than a poll</span
+          >
+        </div>
+        <div>
+          <b>Latency traced</b
+          ><span
+            >Every artefact records when its data was received and when it was sent, so a slow leg is attributable
+            rather than inferred</span
+          >
+        </div>
+        <div>
+          <b>Preflight at registration</b
+          ><span
+            >A strategy missing a required input fails registration, not a live run — the expensive way to learn it is
+            discovering it mid-run</span
+          >
+        </div>
+        <div>
+          <b>Per-input staleness SLA</b
+          ><span
+            >A defined reasonable wait before a given input is treated as stale, named per input rather than assumed
+            platform-wide</span
+          >
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">RULED — missing or stale data fails closed by default</span>
+        <p>
+          Every strategy is considered startup-ready only once it has fresh data across everything it needs — position,
+          PnL, risk, the specific venues it trades, and every market-data input it consumes — checked for both
+          <b>presence</b> and <b>freshness</b>. Absent or stale fails closed by default; any deliberate fail-open
+          exception has to be stated and justified per input, not left as an unhandled gap that happens to proceed.
+        </p>
+      </div>
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
+        This is specified, not built. No trigger, latency-tracing or staleness-SLA mechanism described here is live
+        today.
+      </p>
+    </details>
+  </section>
+
   <footer>
     <p class="lede">
-      <span class="who">Odum Research</span> — platform integration guide. <b>Measured edition, 2026-08-18.</b>
-      Coverage, denominator and readiness figures are live measurements with their date and denominator stated.
-      Remaining <b class="pend">pending</b> markers are figures not yet measured — they are placeholders, never
-      estimates, and a figure with no measured basis is omitted rather than approximated.
+      <span class="who">Odum Research</span> — platform integration guide.
+      <b>Measured edition, 2026-08-18.</b> Coverage, denominator and readiness figures are live measurements with their
+      date and denominator stated. Remaining <b class="pend">pending</b> markers are figures not yet measured — they are
+      placeholders, never estimates, and a figure with no measured basis is omitted rather than approximated.
     </p>
     <p>
       Status reflects what is reachable on a production path AND validated with real capital — not what exists in a
