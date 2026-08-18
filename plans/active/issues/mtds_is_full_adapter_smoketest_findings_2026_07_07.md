@@ -199,6 +199,12 @@ the entire date's capture (schema mismatch, uncaught).
   only the abandoned V1 vault is reachable. Real coverage gap, no plan surfaced.
 - **[GMX_DRIFT]** `solana_defi_drift.py:67` → `solana_defi_handler.py:376` — dead `/stats/markets` endpoint (404); the
   real fix (Drift SDK constants) already landed in instruments-service's `drift.py` but was never propagated to MTDS.
+  **MOOT — verified by plan_reconciler 2026-08-18, precision correction on the banner below**: this line is a
+  DIFFERENT protocol (Solana Drift, a perps DEX) than GMX despite sharing the `[GMX_DRIFT]` tag name — the "GMX
+  capture path deletion" reason the banner below states does not actually apply to it. It is moot for its OWN,
+  independent reason instead: DRIFT/PACIFICA were purged by operator ruling 2026-07-16 (confirmed live: `find
+  instruments-service -iname "*drift*"` → 0 hits; `solana_defi_drift.py` no longer exists in `market-tick-data-service`
+  either), a week before the GMX removal below. Same moot conclusion, correct citation.
 - **[TRADFI]** `databento/adapter.py:764-766` — CME event contracts assumed `instrument_class="BAG"`; real Databento
   returns C/P — 0 real `EVENT_CONTRACT` rows exist anywhere, all silently mistyped OPTION.
 - **[TRADFI]** `umi_tick_provider.py:123,493,499` — ICE/CBOE index instruments (Yahoo-sourced) fall through to Databento

@@ -333,12 +333,10 @@ the VM-scale run:
 
 | Item                                                                                             | State / why deferred                                                                                                | Blocked on                                                                                                        |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Backfill `odds_targets` across `2019-08-01..2026-07-31`                                          | Not done — real, scoped AO-eligible work, unclaimed                                                                 | Nobody — see `/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` |
-| Relaunch the 5 sports CLV ensemble trainer VMs (4th attempt) and report the measured delta       | Not done — depends on the backfill above; do NOT relaunch before it lands, confirmed 3× now this exact failure mode | The backfill item above                                                                                           |
+| Backfill `odds_targets` across `2019-08-01..2026-07-31`                                          | **RESOLVED 2026-08-16, verified by plan_reconciler 2026-08-18** — `resolved_by: slot-3`, see the archived blocker doc | Cleared — see `/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` |
+| Relaunch the 5 sports CLV ensemble trainer VMs (4th attempt) and report the measured delta       | **Blocker cleared 2026-08-16** — the backfill above landed; this item should now be re-attempted, not held         | None (was: the backfill item above)                                                                               |
 | Write measured coverage + rmse/mae/r2-per-outcome delta into this doc AND the T2H/T6H parent doc | Not done — depends on the relaunch above                                                                            | The relaunch item above                                                                                           |
 | Flip todo 2's checkbox with evidence                                                             | Not done — depends on all of the above                                                                              | The items above                                                                                                   |
 
-**Recommended next item**: pick up
-`/plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`'s backfill todo
-first — relaunching the trainer VMs again before that lands would just reproduce this exact 3-hours-burned-for-nothing
-cycle a 4th time.
+**Recommended next item (updated 2026-08-18 by plan_reconciler)**: the backfill blocker landed 2026-08-16 (see table
+above) — relaunch the 5 CLV trainer VMs (4th attempt) now and report the measured delta, per todo 2 below.

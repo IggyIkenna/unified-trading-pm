@@ -171,15 +171,14 @@ possibly-ripe-once-Phase-1-is-independently-reverified, not guessed at here.
       (repo: features-service, market-data-processing-service). Done when: the 3-date export gap is root-caused +
       fixed (or confirmed honest-absence) with evidence, and the Option-C ownership/staleness question is resolved
       with evidence, both cited in the source doc.
-- [ ] [DIAG] P2. **Repair Track O `attempted_at` keys against current venue names.** Trace which renamed venue(s)
-      (BETFAIR_SB_UK/BETFAIR_EX_EU/BETFAIR_EX_UK, MATCHBOOK/PINNACLE's current trades-equivalent) absorbed the
-      pre-clobber snapshot's rows, re-run the `attempted_at` dry-run join against the correct current keys. If the
-      clobber defect persists under the new keys, re-target the CAS-write repair (the doc's own prose "Recommended
-      decision" step 3 — convert to a checkbox as part of this todo). If no live counterpart survives, close as moot
-      with evidence. `quality-gates.sh --no-fix` green before any commit; ship via quickmerge. Source:
-      `sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (repo: market-tick-data-service). Done when: the
-      dry-run join is re-run against corrected keys and the doc's checkbox + prose step are resolved with cited
-      evidence either way.
+- [ ] [DIAG] P2. **DUPLICATE — do not dispatch, found by plan_reconciler 2026-08-18.** ~~Repair Track O `attempted_at`
+      keys against current venue names...~~ This exact task (same source doc, same scope) was already extracted the
+      SAME day (2026-08-16) to `/plans/active/sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md` (+
+      gated finalize), per `sports_track_o_attempted_at_keys_extinct_2026_08_14.md`'s own Progress Log ("2026-08-16 —
+      na-eligibility-audit follow-up... extracted to `sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md`
+      for AO dispatch"). This batch's own "Conflict-check findings" section did not catch this one. Leaving this item
+      struck-through (not deleted) for traceability rather than silently dropped — do NOT activate/dispatch it; the
+      live copy is the other doc.
 - [ ] [CODE] P2. **Fix ml-service `_infer_domain` missing FOOTYSTATS venue classification.**
       `cross_asset_training_pipeline.py::_infer_domain`'s venue-classification set is missing FOOTYSTATS, which
       causes FOOTYSTATS-derived `instrument_id`s to misclassify as CEFI. Add FOOTYSTATS to the correct
