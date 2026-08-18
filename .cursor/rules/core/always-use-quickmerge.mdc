@@ -13,29 +13,43 @@ RULE: ALWAYS run `bash scripts/quickmerge.sh "message"`. NEVER run `scripts/qual
 WHY: Quickmerge runs dependency cascade, pre-flight audit, quality gates, Act simulation, and PR creation. Standalone quality gates miss critical checks.
 CODEX: 06-coding-standards/feature-branch-workflow.md, 06-coding-standards/quality-gates.md
 
-## Three-Tier Branch Model
+## LDR-Trunk Branch Model
+
+> Supersedes the old "Three-Tier" model this section used to describe (`feat/* → staging → main` with a
+> per-commit PR and `--to-staging` as the sole breaking-change path). That model was retired by the
+> `ldr_trunk_promotion_decoupling_2026_06_10` change (see `scripts/quickmerge.sh`'s own dated comments) —
+> `--to-staging` is now a **no-op kept only for backwards compat**.
 
 ```
-feat/*   → QG only, no PR (feature iteration — auto-detected, no --no-pr needed)
-staging  → convergence zone; breaking changes + SIT; auto-PR targets main after SIT
-main     → always stable; NEVER a direct target for breaking changes
+live-defi-rollout (LDR)  → EVERY normal commit lands here first, gateless (no PR, no SIT on this hop)
+main                     → default promote is LDR→main DIRECT (3-gate: sit-gate/fleet-green +
+                            quality-gates-v2 + quickmerge-provenance), automated fleet job, not a manual step
+staging                  → DORMANT by default; only a major/breaking bump or an explicit operator
+                            decision routes through it (still present, still reversible — not deleted)
 ```
 
 | Commit type | Target | Command |
 |-------------|--------|---------|
-| `fix:` / `feat:` / `chore:` | main (direct) | `bash scripts/quickmerge.sh "fix: ..."` |
-| `feat!:` / `BREAKING CHANGE:` | staging (via --to-staging) | `bash scripts/quickmerge.sh "feat!: ..." --to-staging` |
-| Feature iteration | no PR | auto when on `feat/*` branch |
+| Ordinary (`fix:`/`feat:`/`chore:`) | LDR, then auto-promoted LDR→main | `bash scripts/quickmerge.sh "fix: ..." --agent --files '<paths>'` |
+| Production incident (break-glass) | LDR, abbreviated SIT | `bash scripts/quickmerge.sh "fix: ... [hotfix]" --hotfix --files '<paths>'` |
+| Rarest break-glass — fast-track ONE commit to main | LDR + cherry-pick onto its own v2-gated PR (no protection bypass) | `--hotfix-to-main` (operator-gated `QUICKMERGE_HOTFIX_TO_MAIN_OK=1`, `[hotfix-main]` marker required) |
 
-**Hotfix path:** Non-breaking commits go directly to main. No staging gate needed.
-**Breaking change path:** MUST use `--to-staging`. Cascade runs through staging. SIT validates. `staging-to-main.yml` merges to main automatically after SIT passes.
-**Staging lock:** If `staging_status.locked = true` in `workspace-manifest.json`, `--to-staging` exits with queue message. Non-breaking quickmerge to main is NOT blocked.
+**`--to-staging` is a no-op** (kept for backward compat only — every normal commit already routes to LDR, not
+staging). **NEVER treat "main direct" as the default for a non-breaking commit** — quickmerge always lands on
+LDR first; LDR→main promotion is a separate, automated fleet-wide job, not something a single quickmerge call
+does directly.
+
+Full current flag-by-flag detail (`--build`, `--dep-branch`, tier-readiness gates, staging-lock semantics):
+`/codex/08-workflows/ci-cd-flow.md` + `bash scripts/quickmerge.sh --help` — this section covers only the core
+landing-target model; verify flag specifics against the live script, since flags evolve faster than doc review.
 
 ## Dependency Cascade
 
-- **Feature mode (--dep-branch):** cascades across dep repos on a named feature branch; QG only, no PR. Branch auto-derived from current git branch.
-- **Staging mode (--to-staging):** cascades breaking change through ALL actual dependents (recursive DAG walk via `topologicalOrder`); PRs target staging. Branch auto-derived from HEAD.
-- **`--branch NAME` + `--to-staging`** → hard fail (mutually exclusive).
+- **`--dep-branch` is HUMAN-ONLY** — agents must never pass it (the script hard-refuses it in `--agent` mode);
+  agents rely on `active_feature_branch` auto-derived from the manifest instead.
+- **`--to-staging`** is the retired no-op described above — do not use it to try to trigger a dependency cascade;
+  see `/codex/08-workflows/ci-cd-flow.md` + `codex/08-workflows/dependency-cascade.md` for the current cascade
+  mechanics under the LDR-trunk model.
 - The cascade is **selective**: only repos with a dependency edge to the changed repo are touched. Not all 60 repos.
 
 **SSOT:** `unified-trading-pm/codex/08-workflows/ci-cd-flow.md` (§ "Dependency promotion") + `codex/08-workflows/dependency-cascade.md`

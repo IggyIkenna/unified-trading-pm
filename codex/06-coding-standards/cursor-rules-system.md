@@ -126,6 +126,8 @@ broken pointer.
 
 ## SSOT ownership
 
-The canonical rules directory is `unified-trading-pm/.cursor/rules/`. The workspace symlink at `.cursorrules` (root)
-forwards to the workspace-level rules. Per-repo `.cursor/rules/` directories do NOT exist — all rules are centrally
-managed in PM.
+The canonical rules directory is `unified-trading-pm/.cursor/rules/`. `.cursorrules` (root) is **NOT** a symlink — it
+is a separate, independently-maintained regular file with its own content (confirmed live: a real file, not a link).
+`scripts/rollout-agent-symlinks.sh` deliberately does NOT commit `.cursor/rules/` or `.cursorrules` as symlinks into
+other repos; each host instead gets them copied as plain files by `setup-workspace-from-manifest.sh`. Per-repo
+`.cursor/rules/` directories do NOT exist as a SOURCE — all rules are centrally authored in PM and propagated out.
