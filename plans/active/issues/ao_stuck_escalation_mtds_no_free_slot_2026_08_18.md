@@ -1,26 +1,28 @@
 ---
 doc_type: issue
 title: >-
-  Stuck escalation agt-ed7277 (market-tick-data-service, data_pipeline_failure) — 61 dispatch
-  attempts, never once dispatched, "no free configured slot" — likely account-pool exhaustion,
-  not an escalation-mechanism bug
+  Stuck escalation agt-ed7277 (market-tick-data-service, data_pipeline_failure) — CONFIRMED: all
+  3 CI-escalation-reserved slots (32, 33, 9001) are themselves paused, not an account-exhaustion
+  or escalation-mechanism bug
 summary: >-
-  /escalation-queue-reconcile Step 1 (2026-08-18, this session) found escalation `agt-ed7277`
+  /escalation-queue-reconcile Step 1-2 (2026-08-18, this session) found escalation `agt-ed7277`
   (market-tick-data-service, data_pipeline_failure) stuck `status=queued`, `dispatched_at=null`,
-  `attempts=61`, `reescalations=0`, `created_at` ~90+ min past the 45-min deadline,
-  `last_error="no free configured slot to dispatch escalation onto"`. Step 2 confirmed
-  escalation.py's tuning constants have NOT drifted (RESOLUTION_DEADLINE_MINUTES=45,
-  MAX_REESCALATIONS=10, PAGE_AFTER_REESCALATIONS=2, RECONCILE_UNRESOLVED_WINDOW_HOURS=24 — all
-  match expected) and the dedicated 3-slot CI-escalation reserve (`DEFAULT_CI_ESCALATION_SLOT_RESERVE`,
-  config.py:436) is a real, correctly-sized mechanism, not itself misconfigured. The same watchdog
-  run separately found the account pool heavily constrained right now (22 disabled + 5 rate_limited
-  + 2 high_usage, no accounts reporting cleanly available) — this matches the EXACT root-cause class
-  already diagnosed for the 2026-08-05 incident in
-  `plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` (there,
-  "no free configured slot" traced to Claude account-pool exhaustion, not fleet/reserve saturation).
-  Not yet confirmed with the same rigor that incident used (didn't trace which specific accounts the
-  3 reserved slots are currently bound to) — flagging as the leading hypothesis, not a proven root
-  cause.
+  attempts climbing (61 -> 103 across the session), `last_error="no free configured slot to
+  dispatch escalation onto"`. escalation.py's tuning constants are confirmed NOT drifted, and the
+  dedicated 3-slot CI-escalation reserve (`DEFAULT_CI_ESCALATION_SLOT_RESERVE=3`, config.py:436)
+  is correctly sized. **Root cause CONFIRMED (not just hypothesized)**: the actual 3 reserved slot
+  ids are 32, 33, and 9001 (the top-3 non-review slot ids at the time) — `GET /api/state` shows
+  ALL THREE currently `status=paused`, `worker_alive=false`. That alone fully explains "no free
+  configured slot" regardless of account health: the reserve is structurally paused, not just
+  capacity-constrained. A secondary, real risk: slots 32 and 33 are BOTH bound to the SAME account
+  (`sub-b-iggy2london`, `status=high_usage`, 88% of its weekly message limit used, `overage_status:
+  rejected`/`overage_disabled_reason: out_of_credits` — so it cannot burst past quota via overage)
+  — even once unpaused, 2 of the 3 reserved slots draw from one shrinking budget. Slot 9001 has no
+  account bound at all (`account_id: null`). This is NOT the same root-cause class as the
+  2026-08-05 incident (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`, pure account-pool
+  exhaustion) — that was this doc's initial hypothesis before the slot-level data came in; corrected
+  here rather than left standing, per the workspace's own "fix a misleading doc in the same turn"
+  rule.
 status: open
 nature: issue
 asset_group: [ao]
@@ -48,11 +50,12 @@ source: >-
   out mechanism drift.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
-# Stuck escalation agt-ed7277 — likely account-pool exhaustion, not an escalation-mechanism bug
+# Stuck escalation agt-ed7277 — CONFIRMED: the 3 reserved slots are themselves paused
 
-## The row (as pulled 2026-08-18 ~08:xx UTC)
+## The row (last pulled 2026-08-18 ~09:27 UTC)
 
 ```json
 {
@@ -64,51 +67,59 @@ locked_by:
   "dispatched_at": null,
   "resolved_at": null,
   "resolution": null,
-  "attempts": 61,
+  "attempts": 103,
   "reescalations": 0,
   "last_error": "no free configured slot to dispatch escalation onto"
 }
 ```
 
 `reescalations=0` and `resolved_at=null` rule out the re-escalation-aware exception in the
-`/escalation-queue-reconcile` skill's own Step 1 (that exception is for a row judged by
-`resolved_at` after a `still_red_reescalated` flip — this row never got that far). Judged on its
-real `created_at`, it is genuinely stuck: 61 attempts, zero successful dispatches, ~90+ minutes
-past the 45-minute deadline.
+`/escalation-queue-reconcile` skill's own Step 1 — this row never reached that cycle. Attempts
+climbed 61 -> 103 over roughly 40 minutes of this session with zero successful dispatches: the
+mechanism is retrying correctly, it just has nowhere to land.
 
 ## What's confirmed NOT the cause
 
 - `escalation.py` tuning constants match expected values exactly — no reverted/drifted constant.
-- `DEFAULT_CI_ESCALATION_SLOT_RESERVE = 3` (`config.py:436`) is live and the reserved-slot-id
-  derivation (`ci_escalation_reserved_slot_ids`, top-3 non-review slot ids) is intact — this
-  mechanism was built for exactly this wall_type (`data_pipeline_failure` is one of the three
-  covered types per its own docstring).
-- The 3 highest-numbered non-review slots showed live tmux sessions at investigation time — the
-  reserve isn't structurally *absent*, so this doesn't look like a config/reserve-sizing bug on
-  its face.
+- `DEFAULT_CI_ESCALATION_SLOT_RESERVE = 3` (`config.py:436`) is live and correctly sized.
 
-## Leading hypothesis (not yet fully proven)
+## CONFIRMED root cause
 
-The same watchdog run's account-pool check found `accounts_summary: {disabled: 22, rate_limited:
-5, high_usage: 2}` — no account reporting cleanly available. If the 3 CI-escalation-reserved slots
-are themselves bound to disabled/rate-limited accounts, "no free configured slot" would read
-literally true even though the slot *processes* exist — this is the exact shape the 2026-08-05
-incident (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`) already diagnosed: 94% of that
-day's `no free configured slot`-flavored failures traced to Claude account exhaustion, not fleet
-saturation, not a reserve-sizing bug.
+`GET /api/state` slot data:
 
-**Not yet confirmed**: which accounts the 3 reserved slots (highest-numbered non-review slot ids at
-the time) are currently bound to, and whether those specific accounts are among the
-disabled/rate-limited set. That's the next concrete step to fully close this out.
+```json
+[
+  {"slot_id": 32, "status": "paused", "account_id": "sub-b-iggy2london", "worker_alive": false},
+  {"slot_id": 33, "status": "paused", "account_id": "sub-b-iggy2london", "worker_alive": false},
+  {"slot_id": 9001, "status": "paused", "account_id": null, "worker_alive": false}
+]
+```
+
+Slots 32/33/9001 ARE the current CI-escalation reserve (top-3 non-review slot ids). **All three are
+individually paused with `worker_alive: false`** — the reserve mechanism and account pool are both
+fine in the abstract; the concrete, physical slots reserved for escalation dispatch simply cannot
+spawn anything right now because they're paused. This fully explains "no free configured slot"
+without needing an account-exhaustion story at all.
+
+**Secondary risk, worth fixing even after unpausing**: slots 32 and 33 are both bound to the SAME
+account, `sub-b-iggy2london` (operator-identified live in chat) — `status: high_usage`,
+`weekly_pct: 88` (1056/1200 weekly messages used, resets 2026-08-23), `five_hour_pct: 17` (healthier
+short-term), `overage_status: rejected`, `overage_disabled_reason: out_of_credits` (cannot burst
+past its plan quota). Two of the three reserved slots drawing from one account nearing its weekly
+cap is a single point of failure for the whole reserve. Slot 9001 has no account bound at all
+(`account_id: null`) — it can't dispatch anything regardless of pause state until one is assigned.
 
 ## Follow-up
 
-- [ ] [SCRIPT] P1. Confirm which accounts the current CI-escalation-reserved slots are bound to
-      and cross-check against the disabled/rate_limited list — if confirmed, this closes as
-      "account exhaustion, self-resolving as accounts reset" (same disposition as the 2026-08-05
-      incident); if NOT confirmed, this is a live escalation-mechanism bug needing a fresh Step-2
-      diagnosis. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Pull `overage_disabled_reason` (the real field — this session's first pass
-      queried the wrong field name and got nulls) for the 22 disabled accounts to understand
-      whether this is a temporary overage window or something needing operator action. (repo:
+- [x] [SCRIPT] P1. Confirm which accounts the current CI-escalation-reserved slots are bound to —
+      DONE, see above. Root cause is the pause state, not account exhaustion. (repo:
       agent-orchestrator)
+- [ ] [OPERATOR] P1. Decide whether to resume slots 32/33/9001 now — asked live in chat
+      2026-08-18, awaiting the operator's answer at time of filing. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Assign a real account to slot 9001 (`account_id: null` today) and consider
+      spreading 32/33 across two different accounts instead of double-booking sub-b, so the
+      reserve doesn't share a single quota ceiling. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Pull `overage_disabled_reason` for the other 21 disabled accounts (the field
+      name this session's first pass got wrong) to understand whether that's a temporary overage
+      window or something needing operator action — separate from this specific stuck row, but
+      surfaced by the same investigation. (repo: agent-orchestrator)
