@@ -101,7 +101,7 @@ active AO-dispatch plan — see this run's parked-findings doc for detail, not d
 
 - [`ao_residuals_after_dispatch_hardening_2026_07_17.md`](/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md)
 - [`data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`](/plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md)
-- [`ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md`](/plans/active/issues/ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md) —
+- [`ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md`](/plans/archive/2026_08/issues/ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md) — RESOLVED + archived 2026-08-18 —
   retagged into `[ao]` 2026-08-16 by `/ag-closeout-audit sports` (was `[sports, meta]`, a mistag — 100%
   agent-orchestrator dispatch/`auto_park` internals; see that run's sports-tranche parked-findings doc, Finding 1).
   Its own sole Follow-up item is already `[x]` shipped (`agent-orchestrator@153c0a0f3f`) — only the archival ritual

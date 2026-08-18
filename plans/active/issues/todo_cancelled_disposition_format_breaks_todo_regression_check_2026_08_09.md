@@ -23,7 +23,7 @@ repos: [unified-trading-pm]
 scope: [engineer]
 tags: [ssot-contradiction, todo-format, quality-gates, plan-hygiene, findings-triage]
 related:
-  [/plans/active/task_template.md, /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md]
+  [/plans/active/task_template.md, /plans/archive/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md]
 created: 2026-08-09
 author: unknown
 parent_epic: agent_operating_framework_master
@@ -44,7 +44,7 @@ superseded_by:
 source:
   "Found while recording a 2026-08-09 operator ruling on uac_value_only_config_change_breaks_utl_untested_2026_07_20.md
   and cleaning up that doc's todo-eligibility gaps before an assigned_vm: NA -> planning reclassification."
-context_scope: [/plans/active/task_template.md, scripts/plan-hygiene/check_todo_regression.sh, /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md]
+context_scope: [/plans/active/task_template.md, scripts/plan-hygiene/check_todo_regression.sh, /plans/archive/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md]
 ---
 
 # CANCELLED/SUPERSEDED disposition format vs `check_todo_regression.sh`
