@@ -9,7 +9,7 @@ summary: >-
   `morpho_defi_ws.py`, `kalshi_ws.py`, `jito_defi_ws.py`, `polymarket_ws.py`, `polymarket_clob_ws.py`) and the
   exact lowercase keys are still accurate against live code before executing the rename — then execute if
   confirmed.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,7 +22,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-18"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -49,6 +49,16 @@ locked_since:
 resolved_by:
 ---
 
+> **✅ ARCHIVED 2026-08-18 (complete)** — canonicalization independently re-verified by review (finalize task
+> `mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16_finalize.md`): every in-scope venue key is
+> dual-registered live (curve/orca/raydium/morpho/phoenix/jito confirmed by direct grep of `live/connectors/`;
+> kalshi correctly owned by `kalshi_clob_ws.py`'s canonical `KALSHI` key; polymarket's two-connector dual-casing
+> confirmed intentional). QG green (`quality-gates-v2` consistently passing on `live-defi-rollout`). Fallback
+> lookup in `websocket_streaming_handler.py` remains in place by design, not an oversight — its removal is the
+> one remaining step, correctly split off and tracked at
+> `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md` (P3,
+> `[OPERATOR]`-gated).
+
 # Re-verify then execute WS_FEED_CONNECTOR_FACTORIES venue-key casing canonicalization
 
 ## Todos
@@ -64,7 +74,9 @@ resolved_by:
       scripts). Remove the case-insensitive fallback entirely — the registry itself must be consistent, not
       papered over at lookup time. QG green. Repo: market-tick-data-service. — **Canonicalization complete**
       (every in-scope venue now dual-registered under its canonical UPPERCASE UAC key or already-canonical:
-      curve/orca/raydium/morpho/jito@`market-tick-data-service@767c4208a8`, phoenix@`market-tick-data-service@49a2d0c9`,
+      curve/orca/raydium/morpho/jito already dual-registered pre-existing via
+      `market-tick-data-service@44db26bc` (2026-08-14, predates this task — see Progress Log correction),
+      phoenix@`market-tick-data-service@49a2d0c9`,
       kalshi already-canonical via `kalshi_clob_ws.py`, polymarket's cross-connector dual-casing confirmed
       intentional/final). **Fallback removal split off** to
       `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md` (needs one
@@ -173,3 +185,18 @@ resolved_by:
   `engine/connectors/websocket_streaming_handler.py` path does not exist; real path is
   `cli/handlers/websocket_streaming_handler.py`), and added the `connector_registry.py` (WS_FEED_CONNECTOR_FACTORIES
   definition site) and the `connectors/` directory (covers every per-venue file named in this doc's todo/Progress Log).
+- **2026-08-18 (review, slot-7) — independent verification + one citation correction, then archived.** Per review's
+  evidence-backed-completion HARD RULE, ran the build/state verification myself rather than trusting the checkbox's
+  self-report: `git merge-base --is-ancestor` confirmed both cited SHAs (`767c4208a8`, `49a2d0c9`) are real ancestors
+  of `market-tick-data-service@live-defi-rollout` HEAD; `git show --stat` on each confirmed their actual content;
+  a corpus-wide `grep -rn register_ws_feed_connector` across `live/connectors/` confirmed every claimed
+  dual-registration is live now (curve/orca/raydium/morpho/jito/phoenix); `kalshi_ws.py`'s own docstring confirms
+  why it correctly does NOT dual-register `KALSHI` (owned by `kalshi_clob_ws.py`); `polymarket_clob_ws.py`'s own
+  docstring confirms the two-connector dual-casing is intentional. `quality-gates-v2` showed 8/8 green on
+  `live-defi-rollout` across the relevant window. **Found the checkbox mis-cited `767c4208a8` as the source of the
+  curve/orca/raydium/morpho/jito dual-registration** — that SHA is actually the unrelated kalshi-docstring-only
+  commit; the real source is the pre-existing `44db26bc` (2026-08-14, predates this task entirely, found by
+  slot-22's own `git log` investigation but not what got cited in the checkbox's evidence line). Corrected above.
+  Archiving now: zero open todos, not locked, source todo verified genuinely complete for its addressable scope;
+  fallback removal remains open but is correctly a SEPARATE, already-tracked `[OPERATOR]`-gated issue
+  (`/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`), not lost by this move.
