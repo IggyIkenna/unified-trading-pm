@@ -780,3 +780,31 @@ complete, self-sustaining (odds VM keeps running/relaunching on its own pattern)
   with no stated safe-idempotency citation in this doc, consistent with the 2026-08-17 second-pass audit's explicit
   decline-to-reclassify on the same grounds (live, frequently multi-touched ops-journal character, not a bounded task
   list) — nothing has changed about that character since. Doc stays `assigned_vm: NA`.
+
+- **Pre-compact 2026-08-18 (interactive session, continuation of the 2026-08-17 handoff)**: closed the
+  `merge_into_canonical()` fix for real — it took 2 MORE rounds beyond the 3 already landed pre-compaction
+  (`unified-trading-library@151fa70510` streamed the existing-index READ, which was still monolithic even after the
+  write side was chunked; `@280b6bdf92` replaced sampling-based schema inference with reading the schema straight
+  from the existing Parquet file's own footer metadata, after sampling missed a sparse column's one real value twice
+  — `underlying` then, in a different live run, `quarantined_legs`). Live-verified on TWO independent real merges:
+  FIXTURES (63,100,561 rows, `sports-manifest-rescan-20260818-011546`) and WEATHER (16,837,402 rows,
+  `sports-manifest-rescan-20260818-100629`), both `exit_code=0`. Along the way: found + fixed a related
+  consolidator-staleness false-positive specific to direct-write migration tools (`deployment-service@58d79be4e6`
+  `--entity-type`, `@76991b62e9` `--consolidator-staleness-sec`); the same root cause stalled the live odds backfill
+  VM for ~40+ min with growing (not fixed) date loss — diagnosed, documented
+  (`sports_odds_vm_consolidator_stale_stall_2026_08_18.md`, P1), self-resolved once the WEATHER write landed.
+  **Genuinely new finding, NOT fixed**: the WEATHER rescan itself ran clean but its scan/grouping logic produced only
+  1 manifest row from 2125 blobs — the original "make weather visible" goal is still open, filed as its own `[SCRIPT]
+  P2` todo above; the rescan infra (`merge_into_canonical()`) is no longer the blocker.
+  **Lessons worth carrying**: (1) schema inference by SAMPLING data is structurally unsound for a streaming/chunked
+  parquet merge — a sparse column's one real value can live in any batch, and no amount of wider sampling closes
+  that for good; reading the schema from the existing file's own Parquet metadata needs no sample at all and is the
+  correct fix, not just a wider one. (2) A consolidator-staleness watchdog keyed to a bucket file's last-modified
+  time false-positives the moment a direct-write migration tool (not a per-VM-shard producer) is the most recent
+  writer — a healthy consolidator with genuinely nothing new to merge looks identical to a down one on that single
+  signal; confirm via the Cloud Run Job's own execution history before concluding an outage. (3) This session's
+  shared-slot checkout collision was NOT hypothetical: a peer session's git operation silently reverted one
+  uncommitted doc edit mid-session (caught by verifying content on disk before re-shipping, not by trusting
+  `safe-doc-push`'s exit code), and at pre-compact time three more foreign, live-mtime (`<1 min` old) dirty files
+  sit in this same checkout from another active session — left untouched per the liveness-gating rule; only
+  `ahead=0` + a clean-of-MY-changes tree was verified, not a fully clean `git status`.
