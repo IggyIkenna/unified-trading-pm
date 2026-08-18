@@ -56,7 +56,7 @@ source:
     direct invocation, not from the Slack alert text",
   ]
 resolved_by:
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
+archive_exempt: true # STALE as of 2026-08-18 (na-eligibility-audit) -- was accurate 2026-08-16 (plan_reconciler Phase -1, 0 open todos then) but a NEW [SCRIPT] P3 todo landed 2026-08-17 (swallowed-error logging gap in ldr_to_main_fleet_promote.sh:638) -- doc is genuinely NOT zero-open-todo right now, this field is currently moot rather than load-bearing. Leaving in place rather than removing: harmless either way, and the doc may return to 0-open once that todo is picked up.
 locked_by:
 locked_since:
 context_scope:
@@ -441,3 +441,11 @@ ticks)`. No repo currently blocked; nothing to fix, nothing to push. This is the
 pattern this doc's own Finding 2 correction already anticipated — the `CONTEXT` field is stamped at
 original-detection time and does not refresh on redispatch, so a worker must always re-run the detector live rather
 than trust the cited run URL's age.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 1 genuinely open item (the [SCRIPT] P3 swallowed-
+error-logging gap added 2026-08-17), tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE: the fix itself reads as small and
+bounded (echo captured stderr before falling back to {}, check both call sites), but this doc is a LIVE,
+high-edit-velocity incident tracker (7 dated cicd-escalation entries through today) -- deliberately NOT extracted this
+pass to avoid any edit-collision risk with an in-flight escalation. Flagging for extraction on a calmer day rather
+than dispatching against a hot file. See the archive_exempt frontmatter note above for why that field is currently
+stale-but-harmless.

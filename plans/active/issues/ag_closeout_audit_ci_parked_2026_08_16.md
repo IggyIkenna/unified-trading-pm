@@ -209,7 +209,11 @@ chat-ephemeral, home" rule regardless.
       made. Escalating rather than letting a 7th audit re-confirm the same non-decision: either explicitly rule this
       out of scope (stop future reconfirmation churn) or provide the missing design call so it becomes AO-eligible.
       Done when: operator rules, or the doc is explicitly marked won't-fix.
-- [ ] [DOCS] P2. **Pre-scope `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`'s
+- [x] ✅ [DOCS] P2. **DONE 2026-08-18 (na-eligibility-audit, ci tranche).** Extracted into
+      `plans/active/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md` (content carried
+      forward verbatim, not resolved — the new doc still needs a live re-check). Source doc
+      (`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`) checkbox flipped citing the
+      extraction; it now has 0 open todos. Was: **Pre-scope `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`'s
       surviving P2 item** (investigate why a promote-PR wasn't superseded after greeks-service@f5a63a8 landed —
       2 unconfirmed hypotheses, no done-when) — split into its own bounded issue doc with a concrete done-when, or
       resolve the judgment call interactively. na-eligibility-audit recommended this exact fix on 2026-08-08/09; never
@@ -254,3 +258,9 @@ correctly re-confirmed, not silently dropped, per the "informational finding is 
 generated this run, 9 accounted for (5 as todos + 4 as explicit no-new-action re-confirmations documented above) —
 balanced.**
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid — the 4 no-new-action items (gcloud-WIF ruling,
+  workflow_template_drift_repeated design question, plan_reconciler_findings_ci_2026_08_16 out-of-scope, the 2
+  cross-tranche mistag flags) all independently re-confirmed unchanged on direct read. Todos item 3 (pre-scope
+  workflow_template_runs_on_placeholder) executed this run — see the flipped checkbox above. The remaining items
+  (2 [OPERATOR], 2 [DOC] cross-tranche retags not this tranche's to execute, 1 [DOCS] extraction still gated on
+  batch15 draining) are unchanged and correctly still open.

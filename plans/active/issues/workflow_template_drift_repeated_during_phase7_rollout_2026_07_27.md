@@ -200,3 +200,11 @@ one-off task -- and it is demonstrably still live and correct: the 2026-08-06 Pr
 stale-drift-vs-active-migration pattern, and correctly used the doc's own prescribed carve-out.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- unchanged, 7th consecutive confirmation. NOT
+re-litigating: `plan_reconciler_findings_ci_2026_08_16.md` already annotated (not force-closed) that the design
+question's blast radius has shrunk since `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` went
+10/11 done (independently re-checked today -- still 10/11, todo 10 remains genuinely undecided), and
+`ag_closeout_audit_ci_parked_2026_08_16.md` already filed the operator-ruling ask for this doc as its own Todos item 2
+rather than let it be reconfirmed a 7th time with no decision. Not duplicating that escalation here -- see that doc
+for the standing ask.

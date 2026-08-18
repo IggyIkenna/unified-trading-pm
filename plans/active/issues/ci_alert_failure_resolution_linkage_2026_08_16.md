@@ -115,3 +115,14 @@ source: >-
 
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added `/codex/04-architecture/ci-alerting.md`,
   the SSOT this doc's own `related:` field already cited but its context_scope hadn't yet surfaced.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid. 2 open items: todo 2 ([BACKEND] P2, extend the
+streak_start_sha linkage to ldr-to-main-promote.yml's drain-bot messages) reads bounded and was already independently
+conflict-checked clear by `ag_closeout_audit_ci_parked_2026_08_16.md` ("ready to extract into batch16 whenever one is
+next drafted... or let the operator decide to add it to batch15 directly if they want it sooner") — respecting that
+standing recommendation rather than unilaterally drafting `batch16` now: `ci_satellite_ao_dispatch_batch15_2026_08_16.md`
+independently re-checked today, still has ~14 of 25 todos open (not meaningfully drained), so the iterative-drain
+condition that recommendation was gated on has not yet been met. Todo 3 ([BACKEND] P3, "consider whether
+ldr-ci-monitor.yml... should also cite streak_start_sha") is explicitly operator-gated ("Done when: the operator
+confirms whether this is worth the added complexity"). Tagged todo 2 `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` (ready,
+deferred on timing) and todo 3 `OPERATOR_QUESTION`. Doc stays NA; no extraction this pass.

@@ -101,6 +101,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+archive_exempt: true # 2026-08-18 (na-eligibility-audit) -- 0 open todos as of this pass's extraction (see Progress Log), but NOT archived: deliberately deferred to a dedicated archival sweep rather than rushed in this audit pass, same caution plan_reconciler_findings_ci_2026_08_16.md applied to sibling zero-checkbox docs on this same hot corpus.
 source: cicd-escalation-agt-62ba62
 context_scope:
   [
@@ -227,7 +228,11 @@ context_scope:
       `notify-slack.yml` + `staging-lock-check.yml` + `quality-gates-v2.yml.tmpl` only (7 of the original 9 templates
       were converted to `unified-trading-ci`-hosted `workflow_call` stubs by a separate dedup effort). (repo:
       unified-trading-pm)
-- [ ] [DEVOPS] P2. Investigate: after `greeks-service@f5a63a8` landed on LDR (content/TIER-A/SIT/LABEL-CHECK all PASS
+- [x] ✅ [DEVOPS] P2. **EXTRACTED 2026-08-18 (na-eligibility-audit, ci tranche)** — split into its own properly-scoped
+      doc per this doc's own 2026-08-08/09 recommendation, never executed until now:
+      `plans/active/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md`. Content carried
+      forward verbatim, not resolved — that new doc still needs a live re-check before it's dispatchable. Was:
+      Investigate: after `greeks-service@f5a63a8` landed on LDR (content/TIER-A/SIT/LABEL-CHECK all PASS
       per `scripts/cicd/ldr_to_main_fleet_promote.sh --repo greeks-service` re-runs 31156978197 + 31157072912), the
       stale promotion PR #420 (head=`promote/greeks-service/49b92a1a7ca0`, the pre-fix SHA) was NOT superseded by a
       fresh per-SHA ref/PR at `f5a63a8` — the run's own summary tallied `Promoted (0)`/`Blocked (0)`/`Conflicted (0)`/
@@ -283,3 +288,9 @@ context_scope:
   the actual template-lint commit is `92ab939583` — corrected in the flipped checkbox above. Doc stays open —
   `[DEVOPS] P2` (investigate promote-PR non-supersession) remains genuinely open-ended.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): the sole surviving open item (the promote-PR non-supersession
+investigation) is extracted to its own doc — see the flipped checkbox above for the full citation. This doc now has 0
+open todos and is a confirmed, ready-to-archive candidate; archival itself (6-step ritual + referrer sweep) is
+deliberately deferred to a dedicated archival sweep rather than rushed in this audit pass, per the same caution
+`plan_reconciler_findings_ci_2026_08_16.md` applied to 5 comparable zero-checkbox docs on this same hot corpus.

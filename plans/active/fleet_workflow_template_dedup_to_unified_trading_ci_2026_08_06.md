@@ -492,3 +492,8 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
   dropped).
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid — unchanged since the 2026-08-09 verdict. `grep -cE
+'^- \[ \]'` confirms exactly 1 open todo (todo 10), still explicitly self-described as "genuinely optional...
+consider whether... warrants a standing guard" — a priority/design call on whether to build it at all, not a spec a
+worker can execute. `assigned_vm: NA` correct.
