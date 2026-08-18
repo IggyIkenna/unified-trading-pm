@@ -269,6 +269,17 @@ code/live checks before writing):
   `tradfi_reconciliation_2026_08_17_findings_2026_08_17.md`) says 9,119 rows / stamp 2026-07-07. Off by ~2x /
   ~2mo, neither doc cross-references the other. Both docs already carry a note pointing at this discrepancy.
 
+**Premise changed since filing, needs re-flagging once grace clears**:
+- `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 8 (a queued operator-decision item, "RECOMMEND
+  OPTION B" — keep `tradfi_consolidated_closeout_2026_07_18.md` as the tranche coordination index rather than
+  fold+archive) frames its premise as "near-complete, exactly 1 open todo (line 234)". **Live-verified this pass**:
+  `tradfi_consolidated_closeout_2026_07_18.md` now has **0 open top-level checkboxes** (both `[x]`, the line-234
+  item VERIFIED 2026-08-04, plus a second item since closed) — the doc moved from "near-complete" to "fully-done at
+  the top level" (its digest-tracked child-plan work, fixed in Checkpoint 3, is separate from its OWN checkboxes).
+  This doesn't answer the decision, but the operator should re-read it against current state — "fully-done, keep as
+  archive-exempt index" is a different framing than "near-complete, decide whether to fold." Could not fix directly
+  — this doc is grace-protected (Checkpoint 2 touched it this same run).
+
 **Observational, not a doc-edit** (for the operator/next pass's awareness):
 - `tradfi_vm_resource_utilization_downsize_2026_08_10.md` — sole open todo (well-specified) stale-in-queue,
   released `GATED` 3x on 2026-08-10, no Progress Log entry since (8 days as of this run). Worth a fresh look —
