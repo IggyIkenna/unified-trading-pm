@@ -15,7 +15,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [admin, engineer]
 tags: [git-hygiene, multi-agent-safety, stash]
-related: [/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md]
+related: [/plans/active/ao_consolidated_closeout_2026_08_12.md]
 created: 2026-07-26
 author: unknown
 last_updated: 2026-07-30
