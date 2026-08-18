@@ -652,24 +652,55 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
          `test_manifest_migrator_merges_across_mismatched_columns` as a permanent regression guard — the prior test
          fixture never exercised frames with different column sets, which is exactly why bug (a)/(b) surfaced only
          against a real dataset, not the unit suite.
-      **Final live verification**: `sports-manifest-rescan-20260818-011546` completed clean —
+      **Final live verification (FIXTURES)**: `sports-manifest-rescan-20260818-011546` completed clean —
       `Wrote 63100561 rows to .../availability_index.parquet` (47,053,527 new + 16,047,034 preserved = exact match),
       `exit_code=0`, self-deleted correctly. Peak memory 81.6% of the 64GB `e2-highmem-8` (~52GB) — right-sized, not
       over-provisioned; no launcher downsize warranted from this one sample.
-      **New finding from this verification, NOT yet done — see the new todo below**: this run only rescanned
-      FIXTURES (`--entity-type` defaults to `FIXTURES` and the launcher never passed it through) — the manifest has
-      **zero** `WEATHER` rows, so the weather VM's completed captures (`last_completed_date=2026-08-02`) still won't
-      show as `empty_confirmed`. That was the ORIGINAL reason this whole rescan chain was requested — not yet closed.
-- [ ] [SCRIPT] P2. **Rescan WEATHER entity-type — the original point of this whole chain, still open.** The just-fixed
-      `merge_into_canonical()` code path is now proven correct on a real 63M-row production merge (todo above), so a
-      WEATHER-entity-type rescan should work cleanly. Added `--entity-type` passthrough to
-      `launch-sports-manifest-rescan-vm.sh` (`deployment-service`, ships alongside this todo) since the launcher
-      previously had no way to request anything but the `FIXTURES` default. Run:
-      `bash launch-sports-manifest-rescan-vm.sh --entity-type WEATHER --machine-type e2-highmem-8` (keep the
-      confirmed-sufficient machine type until a WEATHER-specific sample says otherwise — WEATHER's row count is
-      unknown/likely smaller than FIXTURES' 47M, so this may be conservative). After it completes, spot-check that
-      the weather VM's new captures show up as `empty_confirmed` (not still `expected_unattempted`) in the manifest —
-      that check is what actually closes this whole chain out.
+      **Two MORE rounds were needed before a WEATHER rescan (below) actually exercised this path end to end**:
+      4. `unified-trading-library@151fa70510` — the READ side (loading the existing 16M/63M-row index) was STILL
+         monolithic (`pd.read_parquet` in one shot) even after the write side was chunked; fine at 16M rows, SIGKILL'd
+         once the FIXTURES merge above grew the index to 63M. Fixed via `_stream_merge_with_existing`: downloads the
+         existing index to a local file and streams its Parquet row groups via `pq.ParquetFile.iter_batches`,
+         applying the drop-predicate per bounded batch — never holding the existing index whole either.
+      5. `unified-trading-library@280b6bdf92` — streaming the existing-index READ surfaced a schema-inference bug:
+         sampling one real value per column from `new_frames` + the FIRST existing batch missed a sparse column's
+         one real value when it lived in a LATER batch (hit for `underlying`, then — after a first attempted fix —
+         for `quarantined_legs`, a different column, in a different live run). No amount of wider sampling closes
+         this class for good; the actual fix stops sampling entirely and reads the target Arrow schema straight from
+         the existing file's own Parquet footer metadata (`pq.ParquetFile(...).schema_arrow`) — no data scan needed,
+         so there's no sample to miss anything from. Also dropped a redundant pandas `.astype()` pre-cast that was a
+         latent NaN-casting trap; `pa.Table.from_pandas(..., schema=...)` already handles null-casting for whatever
+         type the schema declares.
+      **Genuinely final live verification**: `sports-manifest-rescan-20260818-100629` (WEATHER entity-type, see the
+      todo below) completed clean on its first try with all 5 fixes in place — `Wrote 16837402 rows`
+      (16,837,401 preserved + 1 new), `exit_code=0`. `merge_into_canonical()` is now proven correct on TWO independent
+      real production merges (63M-row FIXTURES, 16.8M-row WEATHER) and is unconditionally DONE — no more OOM/schema
+      surprises expected from further growth, since neither side of the merge (read or write) ever holds more than
+      one bounded chunk in memory, and the schema comes from metadata, not a guess.
+- [x] ✅ [SCRIPT] P2. **WEATHER entity-type rescan RAN successfully — but surfaced a genuinely NEW, separate bug; the
+      original "make weather visible" goal is still NOT closed.** Added `--entity-type` passthrough plus
+      `--consolidator-staleness-sec` (see the odds-VM issue doc below) to `launch-sports-manifest-rescan-vm.sh`
+      (`deployment-service@58d79be4e6`, `@76991b62e9`). `sports-manifest-rescan-20260818-100629` ran clean, but its
+      own scan phase logged `Scan complete: 1 per-(date, league_id) WEATHER rows across 2125 blobs` — confirmed in
+      the resulting manifest: exactly ONE `WEATHER` row exists (`date=2025-12-03, league_id=CHILE_PRIMERA,
+      capture_status=captured`), despite the weather VM having processed dates through `2026-08-02` across many
+      venues before this rescan ran. This is a bug in the WEATHER-entity scan/grouping logic itself
+      (`instruments-service/scripts/rescan_sports_fixtures_canonical.py`'s WEATHER scanner, e.g. its venue_id→league_id
+      join via fixtures) — NOT the `merge_into_canonical()` code this todo chain fixed, which correctly merged
+      whatever the scanner handed it. See the new todo below — this needs its own investigation before the weather
+      VM's captures will actually show as `empty_confirmed`.
+- [ ] [SCRIPT] P2. **WEATHER entity-type scanner undercounts massively — investigate
+      `rescan_sports_fixtures_canonical.py`'s WEATHER scan/grouping logic.** Confirmed 2026-08-18: scanning 2125
+      `weather.parquet` blobs produced exactly 1 per-(date, league_id) manifest row, when the weather VM
+      (`weather-backfill-20260816-192237` lineage) processed dates through `2026-08-02` across many venues before
+      this rescan ran — the real row count should be orders of magnitude higher. Likely suspects (not yet
+      diagnosed): the venue_id→league_id join via fixtures (`--entity-type WEATHER`'s own doc comment: "join
+      venue_id→league_id via fixtures") silently dropping unmatched venues, or a grouping-key bug collapsing what
+      should be many distinct (date, league_id) groups into effectively one. Start by reading `_scan_weather_blob`
+      in `instruments-service/scripts/rescan_sports_fixtures_canonical.py` and comparing its row output against a
+      direct read of a few raw `weather.parquet` blobs to see where the row count collapses. This is what actually
+      closes the "make weather visible in the manifest" goal — the rescan infra itself (`merge_into_canonical()`) is
+      proven correct and is not the blocker here.
 - [x] ✅ [SCRIPT] P1. **SFI's 7-date retry DONE 2026-08-16 — real data captured, manifest correctly recorded.** All 7
       dates ran twice: first pass captured real data (10,990 / 14,747 / 3,505 / 17,700 / 25,806 / 20,378 / 995 rows)
       but hit `ManifestWriter write failed: legacy (non-per-VM) direct canonical index write REFUSED` on every date —
@@ -689,19 +720,20 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
 
 | Item | State / why deferred | Blocked on |
 | --- | --- | --- |
-| `ManifestMigrator.merge_into_canonical()` streaming rewrite | **DONE + LIVE-VERIFIED 2026-08-18** — `unified-trading-library@15d8cc8f15`/`d25bc7156e`/`1a9407ac68`, 3 iterations, each caught a real bug a live production-shaped run surfaced (see the todo above). Final run `sports-manifest-rescan-20260818-011546`: 63,100,561 rows written, `exit_code=0` | Nobody — complete |
-| Rescan WEATHER entity-type (new todo above) | The FIXTURES rescan is done, but this whole chain started to make weather's captures visible in the manifest and that STILL hasn't happened — `--entity-type` defaults to `FIXTURES`, launcher had no passthrough (now added, `deployment-service`, ships with this doc) | Nobody — self-contained VM launch, no operator input needed once picked up |
-| odds_api 278-day backfill (above) | Admission-hold self-deadlock FIXED + hardened (24h TTL, `deployment-service@80123c3ccc`). Freshness-skip-window question fully INVESTIGATED AND RESOLVED 2026-08-17: confirmed deliberate/tested anti-regression behavior, not a bug — no code change needed. VM currently RUNNING (`mtds-backfill-odds-20260817-062648`), genuinely progressing (`2020-11-19` as of last check, launched from `2020-06-06`) | Nobody — just keep monitoring to completion or next preemption+relaunch, same pattern as weather |
-| Weather VM completion | Weather VM **COMPLETED FULLY** 2026-08-17 (`last_completed_date=2026-08-02`, clean exit) | The WEATHER rescan (row above) is what makes this visible in the manifest |
+| `ManifestMigrator.merge_into_canonical()` streaming rewrite | **DONE + LIVE-VERIFIED TWICE 2026-08-18** — `unified-trading-library@15d8cc8f15`/`d25bc7156e`/`1a9407ac68`/`151fa70510`/`280b6bdf92`, 5 iterations, each caught a real bug a live production-shaped run surfaced (see the todo above). Proven on TWO independent real merges: FIXTURES (63,100,561 rows) and WEATHER (16,837,402 rows), both `exit_code=0` | Nobody — complete |
+| WEATHER entity-type scanner undercount (new todo above) | The rescan infra is fixed and the WEATHER rescan RAN clean, but its own scan found only 1 row across 2125 blobs — a genuinely new, separate bug in the scan/grouping logic, not yet diagnosed | Nobody — needs a fresh read of `_scan_weather_blob`, no operator input needed to start |
+| odds_api 278-day backfill (above) | Admission-hold self-deadlock FIXED + hardened (24h TTL, `deployment-service@80123c3ccc`). Freshness-skip-window question fully INVESTIGATED AND RESOLVED 2026-08-17: confirmed deliberate/tested anti-regression behavior, not a bug. Hit + recovered from a separate `ManifestConsolidatorStaleError` stall 2026-08-18 (see `sports_odds_vm_consolidator_stale_stall_2026_08_18.md`, P1) caused by this session's own rescans resetting the canonical index's staleness clock — self-resolved once the WEATHER rescan's write landed, VM RUNNING and genuinely progressing again (`2021-03-02` as of last check) | Nobody for the odds VM itself — the P1 launcher-override todo in the linked issue doc stays open as a structural hardening item |
+| Weather VM completion | Weather VM **COMPLETED FULLY** 2026-08-17 (`last_completed_date=2026-08-02`, clean exit) | The WEATHER scanner undercount (row above) is what's still blocking this from showing correctly in the manifest |
 | SFI 7-date retry (above) | Done 2026-08-16 — data + manifest shard both correct, absorbed into the canonical index (confirmed via a later consolidator run showing `verdict: produced`) | Nobody — complete |
 | UAC pinning-test stash (`odds_api_source_not_venue_fix` in `unified-api-contracts`) | Last known state: still stranded as of 2026-08-16 (not re-verified this session — may have been picked up by a peer session or gone stale; check `git stash list` fresh before assuming) | Nobody — cheap, standalone, unrelated to everything else in this doc |
 | api_football derived-entity backlog reclassification `--apply` (748,363→ now merged; the SEPARATE 72,955 genuine-gap cells from the original FIXTURES_OUTCOMES dry-run) | Operator-owned — needs a decision on the 72,955 unprovable cells, not a mechanical retry | Operator review of the original dry-run counts (see the FIXTURES_OUTCOMES todo higher in this doc) |
 | Broader multi-venue `ODDS`/`odds` casing pattern (betfair, footystats) found but explicitly out-of-scope this session | Already tracked elsewhere, not lost | See `plans/active/issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md` — a peer session already filed this independently |
 
-**Recommended next item**: launch the WEATHER-entity-type rescan (todo above) — `merge_into_canonical()` is now fixed
-and live-verified on a real 63M-row FIXTURES merge, so this should be a clean run with the new `--entity-type`
-launcher flag. Everything else in this doc is either complete, self-sustaining (odds VM keeps running/relaunching on
-its own pattern), or genuinely operator-gated.
+**Recommended next item**: diagnose the WEATHER entity-type scanner undercount (todo above) — read
+`_scan_weather_blob` in `rescan_sports_fixtures_canonical.py` against a few raw `weather.parquet` blobs to find where
+2125 blobs collapse into 1 manifest row. `merge_into_canonical()` itself is done and proven twice over; this is now
+the sole remaining blocker on the original "make weather visible" goal. Everything else in this doc is either
+complete, self-sustaining (odds VM keeps running/relaunching on its own pattern), or genuinely operator-gated.
 
 ## Progress Log
 
