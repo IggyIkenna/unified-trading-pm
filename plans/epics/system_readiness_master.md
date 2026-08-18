@@ -358,6 +358,15 @@ The registry must answer commercial and operational questions, not just "does th
       dimensions, defaulting fail-closed, with any deliberate fail-open exception stated and justified per input,
       not assumed by an unhandled-`None` code path. First concrete instance:
       `strategy_service_centralization_fixes_2026_08_16.md`'s DeFi health-factor gates.
+- [ ] [BACKEND] P1. **Generic price-sensitivity contract for fast execution-side repricing — real infra exists,
+      unwired on both ends.** Found 2026-08-18: execution-service already has a fully-written, unit-tested
+      delta/gamma linearization engine (`DeltaProxyRepricer` + `QuoteMaintainer`) that is exactly the "strategy
+      caches a reference + sensitivity once, execution-service extrapolates cheaply against a live feed without a
+      round-trip" pattern this workstream's Pub/Sub-triggers model implies — but its strategy-side receipt point
+      (`QuoteHandler`) was deleted 2026-08-15 as dead code with no replacement, no live underlying-tick loop drives
+      it, and the arb-leg-repricing analog (`price_dispersion.py`) has zero implementation at all (only an unused
+      declarative enum naming the concept). Full detail + 9 todos:
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 
 ## W17 — Fees and gas
 
@@ -473,6 +482,9 @@ the class gate B9 exists to catch).
 exist, signals unproduced: the reachability class again) ·
 `execution_order_tracker_missing_cancelled_amended_status_2026_08_17` (P2 — directly W11's "every incremental step
 including updates and cancels").
+
+**W16 triggers/latency**: `execution_delta_proxy_repricer_generalization_2026_08_18` (P1 — real, unwired
+delta/gamma repricing infra; generalizes beyond MEV to market-making and arb-leg repricing).
 
 **Features**: `features_service_calendar_domain_manifest_tracking_gap_2026_08_18` (P2) + the banned-vendor P1 above.
 
