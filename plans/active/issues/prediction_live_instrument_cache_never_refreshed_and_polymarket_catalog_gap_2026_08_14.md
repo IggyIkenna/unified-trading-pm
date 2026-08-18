@@ -152,3 +152,9 @@ and is flagged, not diagnosed further, here.
   for the redirect item (`- [ ] [DATA] P1. Diagnose the prediction live-capture stall...`), not a todo ordinal. The
   substance both entries describe (a real, deliberate mutual redirect) is verified accurate — only the "todo 224"
   label was imprecise. Corrected in place above rather than left to keep misleading a future reader.
+- **na-eligibility-audit 2026-08-18** [body-hash:6421e3c290c99166]: KEEP-NA, valid — 3 open items re-confirmed: all
+  explicitly redirect to `cross_ag_live_capture_parity_2026_08_14.md` (confirmed mutual redirect, not a duplicate —
+  `KEEP_NA_STALE_DUPLICATE` does not apply) or to an instruments-service investigation blocked on trigger-log access
+  this session lacks. A redirect banner means the dispatch mechanism would be wrong even though the todo text itself
+  reads boundable — flipping `assigned_vm` here would misroute the work. Consistent with 3 prior passes. Doc stays
+  NA.

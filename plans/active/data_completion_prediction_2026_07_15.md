@@ -473,3 +473,8 @@ range never overlaps a still-in-flight per-market-only day).
   checkbox (C0 copy-walk, superseded by E4) and re-confirmed the RECLASSIFY verdict, no new source/codex reference
   introduced; M-1 coordinator, 3 pipeline/bucket/manifest codex SSOTs, and `rebuild_prediction_manifest.py` remain
   accurate.
+- **na-eligibility-audit 2026-08-18** [body-hash:86135e39270c896d]: KEEP-NA, valid — 18 open items re-confirmed
+  genuinely NA (design/VM/delete-gated cross-repo CQG-bundle object-layer migration + 5 downstream-service C-walks),
+  consistent with 6 prior audit passes (2026-07-30, 08-06, 08-07, round11 08-09, 08-10, and this run) and 4-5
+  independent `/ag-closeout-audit` "0 AO-eligible" rulings on the same Phase-B migration. Not re-litigated. No
+  reclassification.

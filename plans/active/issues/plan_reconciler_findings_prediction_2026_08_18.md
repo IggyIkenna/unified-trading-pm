@@ -346,3 +346,11 @@ fixing 11 other tranches' concurrent NA growth would defeat the sharded-run desi
   above) — matches 2/2 prior runs' identical finding for this exact check. Inventory regenerated (343 plans, 0
   orphans, 0 TBD). **This dispatch asked no new blocked-questions** (BLK-e7b0e8da was CLOSED, not newly opened) —
   completing via `/done` per STEP 8's "immediately if you asked none" clause.
+- **na-eligibility-audit 2026-08-18** [body-hash:b8facf84d70527a2]: KEEP-NA, valid (first verdict — doc created
+  today) — 5 open items: a cross-cutting tooling-gap routing note (`last_updated` staleness, owned by the
+  context-scout/na-eligibility-audit/plan_reconciler skills themselves, not per-doc content) and 4 carried-forward
+  12h grace-window mechanical re-check placeholders (Betfair `[INFRA]` tag, `mdps_fleet_duplicate_relaunch_explosion`
+  reclassify question, `task_template.md:402` stale ref — corpus-wide normative doc, not prediction-specific —, and
+  the batch7+finalize archival referrer-fix). None is a bounded worker-determinable outcome; the grace items
+  self-resolve on their own schedule and the routing note needs a skill-owner decision, not a per-doc dispatch. Doc
+  stays NA.

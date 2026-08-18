@@ -271,3 +271,7 @@ requiring this specific run to act (all were already correctly left open by the 
   (`prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` / `.md`) that would actually need editing to
   perform the archival are THEMSELVES still inside grace (touched ~2026-08-17T15:37:52Z, ~10.5h ago at this check) —
   will re-check later in this same dispatch once they clear.
+- **na-eligibility-audit 2026-08-18** [body-hash:b3fb80422bf39cc1]: KEEP-NA, valid — sole open item (batch7+finalize
+  archival referrer-fix) re-confirmed non-dispatchable: purely a 12h grace-window mechanical placeholder that
+  self-resolves once the target docs age past grace, not judgment work and not this tranche's AO-dispatch surface.
+  `BLK-e7b0e8da` (this doc's other former open item) is now closed. Doc stays NA.
