@@ -257,5 +257,11 @@ unblocked on a CI runner.
   `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07` newly orphaned within `ci`'s own family (this
   Progress Log entry IS that link-back fix) — the other 2 retagged docs were already reachable and needed no further
   linkage fix. Re-verified 0→0 new orphans after this entry landed.
+- **/ci-reconcile 2026-08-18**: filed
+  [/plans/active/issues/mdps_main_qg_tests_slice_oserror_cannot_send_2026_08_18.md](/plans/active/issues/mdps_main_qg_tests_slice_oserror_cannot_send_2026_08_18.md)
+  — market-data-processing-service `main` branch `quality-gates-v2` regressed MAIN_GREEN -> FAILING
+  (QG_SLICE=tests, single `OSError: cannot send (already closed?)` signature, flake-vs-real
+  regression unconfirmed; a re-run was dispatched to test the flake hypothesis). This entry IS the
+  link-back fix for that doc's `asset_group: [ci]` family membership.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:498e5d37d2cac002]: KEEP-NA, valid -- Zero open todos of its own (it is a reachability-map/coordination hub over 5 Tracks), but explicitly not moot: `archive_exempt: true` is set in frontmatter with a clear stated reason, and the doc carries a dated REVIVED banner (2026-08-10, operator ruling BLK-9a03622c option A) explaining it was un-archived specifically because archiving it left two substantial shipped P1 plans with no consolidated-closeout coordinator. The banner names a live, still-open 'next action' (verify both plans' remaining work is tracked here; fold new ci-tagged issues into a fresh batch plan). This is a standing coordination hub deliberately kept alive, not a stale/moot doc.
