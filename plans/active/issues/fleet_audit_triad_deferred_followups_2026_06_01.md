@@ -48,10 +48,13 @@ context_scope:
 
 # Deferred follow-ups — fleet-audit triad
 
-> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** These stay **deferred** as written. The
-> Tardis-paid-key item is explicitly **NOT activated** (operator won't — see `running_vm_fleet_status_2026_05_27.md`);
-> the GCS-migration items remain operator-deferred (no whole-corpus walk). **Slot 7 does not action any item here** — it
-> is a "let it be" tail. No manifest-canonicalisation / GCS-migration work by slot 7.
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** These stay **deferred** as written. ~~The
+> Tardis-paid-key item is explicitly **NOT activated** (operator won't — see `running_vm_fleet_status_2026_05_27.md`)~~
+> **CORRECTED 2026-08-18 (plan_reconciler cross-cutting)**: the Tardis paid key WAS activated — operator ruling
+> 2026-07-12 (finding 228), reconfirmed 2026-07-27 (see the doc's own body below); the "NOT activated" framing here
+> is 2026-06-01 history, superseded 5+ weeks ago. The GCS-migration items remain operator-deferred (no whole-corpus
+> walk) — that half of this banner still holds. **Slot 7 does not action any item here** — it is a "let it be" tail.
+> No manifest-canonicalisation / GCS-migration work by slot 7.
 
 The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped;
 these are the consciously-deferred tails ("let it be" — not to be actioned until the operator chooses). Captured here so
@@ -172,14 +175,18 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
 
 ## Why it matters
 
-The log-archive durability gap is the only one with operational teeth: VM logs older than 14 days will expire because
-nothing rolls them into the durable archive. Acceptable while the operator has explicitly deferred — flagged so it is a
-known, not a surprise.
+~~The log-archive durability gap is the only one with operational teeth: VM logs older than 14 days will expire because
+nothing rolls them into the durable archive.~~ **CORRECTED 2026-08-18 (plan_reconciler cross-cutting)**: this gap
+closed 2026-07-18 — the "From `canonical_vm_log_archival`" section above shows the rolling-archive cron is DONE +
+verified ENABLED (confirmed again 2026-07-28). No item in this doc still carries "operational teeth"; everything
+below is genuinely inert "let it be" history.
 
 ## Recommended decision
 
-Leave deferred. Revisit the log-archive crons if/when long-horizon VM-log forensics are needed, and the CeFi migration
-when the paid Tardis tier is activated.
+~~Leave deferred. Revisit the log-archive crons if/when long-horizon VM-log forensics are needed, and the CeFi migration
+when the paid Tardis tier is activated.~~ **CORRECTED 2026-08-18**: both trigger conditions already fired — the
+log-archive crons are live (2026-07-18) and the paid Tardis tier is activated (2026-07-12) — nothing here needs
+revisiting; this doc's only remaining live topic is the `locked_by: harsh-fleet-audit` operator-check noted below.
 
 ## Progress Log
 

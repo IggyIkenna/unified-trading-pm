@@ -7,7 +7,7 @@ summary:
   coverage 81.28% → 86.18% (~955 new tests, 11 modules; 17,204 pass / 0 fail; zero hacks/suppressions/source-changes),
   surfacing real source-level findings along the way (reported, not fixed, to avoid bundling unreviewed production
   behaviour changes into the coverage push).
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,8 +21,7 @@ parent_epic: infrastructure_master
 priority: P2
 source: [features-service test-coverage session 2026-06-10, /codex/06-coding-standards/script-homes.md]
 assigned_vm: planning
-resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+resolved_by: plan_reconciler (agt-6602ee), 2026-08-18
 locked_by:
 context_scope:
   [
@@ -36,6 +35,9 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-31
 ---
+
+> **🗄️ ARCHIVED 2026-08-18 (plan_reconciler cross-cutting, agt-6602ee)** — all 8 tracked todos `[x]`, unlocked. The
+> `archive_exempt: true` BRIDGE marker (2026-08-12) named exactly this mechanical follow-on step; executed now.
 
 ## What I found
 

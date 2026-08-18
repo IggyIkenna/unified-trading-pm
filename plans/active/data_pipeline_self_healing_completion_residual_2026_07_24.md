@@ -26,7 +26,9 @@ created: "2026-07-24"
 last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only # corrected 2026-08-18 (plan_reconciler cross-cutting) -- was orchestrator-agent, an
+  # invalid pairing with assigned_vm:NA (task_template.md's 2 valid pairings are NA+local-only or
+  # planning+orchestrator-agent)
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
