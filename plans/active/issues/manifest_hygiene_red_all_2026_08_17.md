@@ -421,6 +421,93 @@ credential/rate-limit issue on IS's OWN Polymarket catalogue source, or a filter
 change that now excludes POLYMARKET) — needs an `instruments-service` repo trace + its own run logs
 for 2026-08-09→2026-08-10.
 
+## Diagnosis update (2026-08-18, slot-22) — LIVE `written_at` measurement REFUTES slot-14 round 2's "near-live" conclusion; every known writer for the DELISTED/NOT_LISTED reasons is now ruled out
+
+Per the open `[OPERATOR/DATA] P1. LIVE-verify` todo's part 2 (what does
+`prediction_tier3_lifecycle.py::_classify_prediction_tier3_reason` actually cover), read the
+call site directly: `sentinels.py::_emit_tier3_for_dt` line ~685-689 loads the lifecycle map
+(and therefore can ever produce a `_classify_prediction_tier3_reason` verdict) **only when
+`venue.upper() in {"POLYMARKET","KALSHI"} and dt == "trades"`** — confirmed by reading the exact
+guard, not inferred from the docstring. For any other `dt` (including
+`prediction_canonical_question_group`), `_prediction_lifecycle_map` is `{}`, so `_lc_reason` is
+always `None` and the branch never stamps `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED`. **This
+means the Tier-3 sentinel fan-out — the mechanism BOTH prior diagnosis rounds pointed at as the
+likely source of those reasons on CQG cells — structurally cannot be the writer.** The
+`prediction_tier3_lifecycle.py` module docstring ("classifying per-market condition_id/ticker
+trades cells") is accurate; the confusion in prior rounds came from `_emit_lifecycle_prefetch_skips`
+(`_polymarket_helpers.py:321-340`)'s own docstring claiming "the downstream Tier-3 sentinel fan-out
+... independently re-derives this classification" — true for `trades`, but that docstring doesn't
+scope the claim to `dt=="trades"` and reads as if it covers CQG too. **Fix the misleading docstring
+in the same turn this is read** (CLAUDE.md "a doc/comment that misled you is a finding") — filed as
+a P3 todo below rather than freelanced (touches prod adapter code, wants its own QG pass).
+
+**Live measurement (bounded, no new whole-corpus walk)** — ran a `scripts/dev/run-bounded-analysis.sh`-
+wrapped read of `_index/availability_index.parquet` (bucket
+`market-data-tick-pred-prd-central-element-323112`), filtered in-memory to
+`venue=POLYMARKET, data_type∈{trades,prediction_canonical_question_group}, date∈{2026-07-27,2026-08-03}`
+(516,302 rows before filter to the two dates; script not committed, scratchpad-only per the
+diagnostic-throwaway convention). This is the SAME cell slot-14 round 2 measured — this session
+pulled `written_at` distributions the prior measurement didn't report.
+
+**Result: the `written_at` values are NOT clustered near each row's own date — they show REPEATED
+REWRITES, most heavily on 2026-08-09.**
+
+| cell | capture_status/error_reason breakdown | distinct `written_at` dates observed |
+| --- | --- | --- |
+| POLYMARKET/prediction_canonical_question_group/2026-07-27 (90 rows) | 56 `expected_unattempted`; 34 `empty_confirmed` (28 `EXPECTED_INSTRUMENT_DELISTED`, 6 `EXPECTED_INSTRUMENT_NOT_LISTED`) | 2026-07-27 (original), **2026-07-30, 2026-07-31**, 2026-08-09 (×2 distinct clusters: ~01:32 UTC and ~14:07-14:36 UTC) |
+| POLYMARKET/prediction_canonical_question_group/2026-08-03 (79 rows) | 67 `expected_unattempted`; 12 `empty_confirmed` (`EXPECTED_INSTRUMENT_DELISTED`) | 2026-08-03 (original), 2026-08-09 (×2 clusters: ~01:32 UTC and ~14:06-14:24 UTC) |
+| POLYMARKET/trades/2026-07-27 (196,303 rows) | 196,295 `empty_confirmed(SOURCE_RETURNED_ZERO)`; 8 `captured` | 2026-07-28 (8 distinct sub-timestamps, the original per-date run), **2026-08-09T14:02:30.2xxxxx (196,303 near-identical microsecond-apart stamps — a full bulk rewrite of every row in this shard)** |
+| POLYMARKET/trades/2026-08-03 (319,830 rows) | 319,793 `empty_confirmed`; 37 `captured` | 2026-08-04 (original per-date run), 2026-08-05 (more original-run stamps) — did not need to sample past this to establish the point |
+
+Slot-14 round 2 measured `written_at ≈ 2026-08-03T01:32:40Z`/`2026-07-27T01:32:36Z` for these cells
+and concluded "near-live, not frozen" — **that measurement is real but incomplete**: it read only
+one `written_at` value per cell (or an aggregate) and didn't check for multiple distinct values.
+The `~01:32 UTC` stamp IS present and IS close to each row's own date — but it is not the ONLY
+write event, and — critically — it recurs on LATER dates too for the SAME (venue, data_type, date)
+cell: the 2026-07-27 cell was rewritten again at `2026-07-30T01:32`, `2026-07-31T01:33`, AND
+`2026-08-09T01:32`, always at the same ~01:32 UTC time-of-day. A live per-date orchestrator run for
+`date=2026-07-27` only runs once, shortly after that date; it does not explain why the SAME cell
+gets touched again 3, 4, and 13 days later, always at the same time of day.
+
+**Ruled out `canonicalize_prediction_manifest_2026_07_18.py --bundle-mode normalize` as the source
+of the DELISTED/NOT_LISTED content** (though it IS almost certainly the 08-09 ~14:0x-14:3x cluster —
+its `_apply_targets_in_place` only mutates `data_type`/`instrument_type`/`source`, confirmed by
+reading the function body; `build_canonical_frame`/`_apply_additive_shard` unconditionally bump
+`written_at = datetime.now(UTC).isoformat()` on line 722 for every row it touches, **regardless of
+whether content changed** — this is the exact "fresh written_at, unchanged error_reason" signature
+measured live). It never touches `capture_status`/`error_reason` — grep confirms zero references
+to `EmptyConfirmedReason`/`EXPECTED_INSTRUMENT_*` anywhere in the file. Likewise ruled out
+`rebuild_prediction_manifest.py` (zero references to `EmptyConfirmedReason`/`EXPECTED_INSTRUMENT_*`
+either). And per the docstring-vs-guard finding above, the Tier-3 sentinel fan-out cannot write
+these reasons for `dt="prediction_canonical_question_group"` — its lifecycle map is `{}` for any
+`dt != "trades"`. `_finalize_prediction_bundles` (the live per-date CQG writer) also cannot: its
+only three write calls are `record_captured_from_counts` (success path), `record_failed(error=
+"missing_available_at_envelope")`, and `record_empty(reason="SOURCE_RETURNED_ZERO")` — no
+`EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reason string appears anywhere in
+`manifest_finalize.py`'s CQG code path (confirmed by direct read, not grep-absence).
+
+**Conclusion: a FOURTH, still-unidentified writer produced the ORIGINAL `EXPECTED_INSTRUMENT_
+DELISTED`/`_NOT_LISTED` classification on these CQG cells** — every writer in the current codebase
+that touches this cell has now been read and ruled out (`_finalize_prediction_bundles`,
+`_emit_tier3_for_dt`, `canonicalize_prediction_manifest_2026_07_18.py`,
+`rebuild_prediction_manifest.py`). Two live possibilities, neither yet confirmed:
+(1) the original stamp predates all four of these — an EARLIER, now-removed or since-narrowed
+version of the Tier-3 fan-out (before the `dt == "trades"` guard was added — the file's own header
+says it was "Extracted from sentinels.py" and the 2026-07-14 P1 plan
+`prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` may show the guard
+narrowing from "all prediction dts" to "trades only" without a corresponding manifest rewrite of
+already-stamped CQG rows — this is a git-history/plan-history question, answerable without new live
+GCS reads); or (2) there is a recurring ~01:32 UTC daily process (NOT the documented `0 9 * * *`
+empty re-probe/auto-flip cron, which fires 8 hours later and only re-touches TODAY's new empties,
+not a cell 3-13 days in the past) that neither this nor any prior session has located — needs a
+search of Cloud Scheduler job configs / `deployment-service`'s prediction-specific cron registrations
+for anything firing near 01:3x UTC.
+
+This does not change the operator-ruling ask from the prior round (still needed: whether to loosen
+the coverage gate or not) — it DOES mean that ruling should NOT be made on the assumption that the
+current live orchestrator code is what's producing these specific manifest rows; it structurally
+is not, for either candidate CQG-bundle writer that exists today.
+
 ## Todos
 
 - [x] ✅ [CODE] P1. Manifest hygiene RED — diagnosed (not fully fixed) 2026-08-17 slot-14. See "Diagnosis"
@@ -456,21 +543,21 @@ for 2026-08-09→2026-08-10.
       data, not another read. Split into the concrete live-verification todo below (does NOT supersede
       the still-open `prediction_tier3_lifecycle.py` classifier-scope question from the prior todo — kept
       below alongside it).
-- [ ] [OPERATOR/DATA] P1. LIVE-verify (not another code read) why POLYMARKET's `prediction_canonical_
-      question_group` cells stay `expected_unattempted`/`empty_confirmed` on 2026-07-27 and 2026-08-03
-      despite captured `trades` rows that day. Needs `data_engineering`/`backend_engineer` GCS read
-      access + either (a) actual orchestrator run logs for those two dates (grep for writer construction /
-      `download_batch` retry markers for venue=POLYMARKET), or (b) a temporary instrumented count added at
-      `_record_venue_shard_counts`'s `if writer.prediction_cluster_counts:` call site
-      (`venue_fetch.py:446`) run against one of the two dates, to determine live whether the accumulator is
-      genuinely empty at that point or whether a second writer instance is in play. ALSO confirm what
-      `prediction_tier3_lifecycle.py::_classify_prediction_tier3_reason` (source of the measured
-      `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons) is applied against for
-      `data_type=prediction_canonical_question_group` cells — its own docstring describes a
-      per-market-`trades`-cell classifier, not a CQG-bundle one, so this may be a second, independent
-      misapplied-classifier bug rather than the same mechanism. `NOTIFIED OPERATOR` per CLAUDE.md
-      big-finding rule (data-correctness, 3 sessions now without a confirmed root cause) — see `/blocked`
-      on slot-14, 2026-08-17 (still open).
+- [x] ✅ [DATA] P1. LIVE-verified 2026-08-18 slot-22 — see "Diagnosis update (2026-08-18, slot-22)"
+      above. Confirmed via direct code read (not inference from a docstring) that
+      `_classify_prediction_tier3_reason` can NEVER fire for `data_type=prediction_canonical_
+      question_group` — its lifecycle map is loaded only when `dt == "trades"`
+      (`sentinels.py::_emit_tier3_for_dt` line ~687). Confirmed via a live bounded `written_at` read
+      of the prod manifest index that the measured `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED`
+      rows were rewritten MULTIPLE times (2026-07-27's cell: 07-27, 07-30, 07-31, 08-09×2; 08-03's
+      cell: 08-03, 08-09×2) — REFUTES slot-14 round 2's "written_at near-live, not frozen" reading
+      (that measurement only sampled one written_at value per cell). Read + ruled out every
+      candidate writer currently in the codebase (`_finalize_prediction_bundles`, the Tier-3
+      fan-out, `canonicalize_prediction_manifest_2026_07_18.py`, `rebuild_prediction_manifest.py`)
+      as the source of the DELISTED/NOT_LISTED classification — none of them write that reason
+      vocabulary for this data_type. Root cause is now narrowed to two live hypotheses (a
+      now-removed/narrowed earlier Tier-3 guard, or an unidentified ~01:32 UTC recurring process)
+      — split into the two todos below rather than guessed at.
 - [x] ✅ [DATA] P1. Diagnosed 2026-08-18 slot-19 — see "Diagnosis update (2026-08-18, slot-19)" above.
       ROOT-CAUSED via live GCS listing (not just code read): NOT an MTDS/adapter/API bug — CF-11
       fetch-failure signalling is intact (zero `attempted_failed` rows anywhere). The real cause is
@@ -482,6 +569,30 @@ for 2026-08-09→2026-08-10.
       10-row `empty_confirmed`/`SOURCE_RETURNED_ZERO` placeholder, masking what is actually an
       upstream catalogue-availability gap. Split into the instruments-service-scoped todo below
       (different repo than this issue's `repos:` frontmatter — not freelanced here).
+- [ ] [DATA] P2. Check git history on `sentinels.py`/`prediction_tier3_lifecycle.py` (or its
+      pre-split location in the monolithic `sentinels.py`) for whether the `dt == "trades"` guard
+      on the Tier-3 lifecycle map (line ~687, `_emit_tier3_for_dt`) was ever broader (e.g. covered
+      `prediction_canonical_question_group` too) before being narrowed, and whether that narrowing
+      commit left already-stamped CQG rows unrewritten. See "Diagnosis update (2026-08-18,
+      slot-22)" above for why this is the leading hypothesis for the still-unidentified writer of
+      the `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons on CQG cells. `market-tick-data-service`.
+- [ ] [DATA] P2. Find what recurring process touches the POLYMARKET
+      `prediction_canonical_question_group` manifest cell at ~01:32 UTC on dates AFTER the cell's
+      own date (measured live: 2026-07-27's cell rewritten again at 07-30/07-31/08-09, always
+      ~01:32-01:33 UTC) — NOT the documented `0 9 * * *` empty re-probe/auto-flip cron (wrong time,
+      and that cron only re-touches TODAY's new empties per its own spec, not a 3-13-day-old cell).
+      Search Cloud Scheduler job configs / `deployment-service`'s prediction-specific cron
+      registrations for anything firing near 01:3x UTC. See "Diagnosis update (2026-08-18,
+      slot-22)" above. `deployment-service` (or wherever the ~01:32 cron is registered — unconfirmed).
+- [ ] [DATA] P3. Fix the misleading docstring in `_polymarket_helpers.py::_emit_lifecycle_
+      prefetch_skips` (lines ~328-332) — it claims "the downstream Tier-3 sentinel fan-out ...
+      independently re-derives this classification" for `EXPECTED_INSTRUMENT_NOT_LISTED`/
+      `_DELISTED` without scoping the claim to `dt=="trades"`, which reads as if it also covers
+      `prediction_canonical_question_group` — confirmed false by direct read of
+      `sentinels.py::_emit_tier3_for_dt`'s lifecycle-map guard (see "Diagnosis update
+      (2026-08-18, slot-22)" above). This misreading is what led two prior diagnosis rounds
+      (slot-14, slot-9/slot-6) to keep pointing at the Tier-3 fan-out as the CQG-cell writer.
+      `market-tick-data-service`.
 - [ ] [DATA] P1. Trace WHY instruments-service's POLYMARKET instrument-catalogue writer
       (`instruments_service/engine/orchestrator/process_write.py::_write_prediction_venue`) stopped
       emitting `instrument_availability/by_date/day={date}/.../venue=POLYMARKET/...` objects starting
@@ -506,3 +617,10 @@ for 2026-08-09→2026-08-10.
 - **slot-19 2026-08-18**: root-caused the POLYMARKET raw `trades` DIVERGENT_EMPTY todo — upstream
   instruments-service catalogue gap (POLYMARKET instrument_availability writes stopped 2026-08-10),
   not an MTDS adapter bug. Flipped that todo, filed the instruments-service-scoped follow-up.
+- **slot-22 2026-08-18**: LIVE-verified the CQG-bundle `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED`
+  question — ruled out every current-codebase writer via a mix of direct code reads and a bounded
+  live `written_at` read of the prod manifest index (script scratchpad-only, not committed). Key
+  finding: these rows were rewritten multiple times (not written once near-live), which refutes
+  slot-14 round 2's "near-live, not frozen" reading. Flipped the LIVE-verify todo, filed two P2
+  follow-ups (git-history check on the Tier-3 guard; find the ~01:32 UTC recurring writer) plus a
+  P3 docstring-fix todo.
