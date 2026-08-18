@@ -227,8 +227,8 @@ be a recorded decision, not an accident of which one someone happened to impleme
 
 ## The query-don't-derive gate
 
-- [ ] [BACKEND] P0. **A downstream service must query the catalogue for an instrument attribute, never derive or
-      hardcode it.** Tick size and contract size are the specimens: a service computing its own tick size is carrying
+- [ ] [BACKEND] P0. **A downstream service must query the catalogue for an instrument attribute, never derive or hardcode it.**
+      Tick size and contract size are the specimens: a service computing its own tick size is carrying
       a stale copy of a mutable field. Add a check that fails when a consumer hardcodes an attribute the catalogue
       owns — this is the same class as the reference-data-in-a-code-path rule in
       [`/plans/active/strategy_service_centralization_fixes_2026_08_16.md`](/plans/active/strategy_service_centralization_fixes_2026_08_16.md),

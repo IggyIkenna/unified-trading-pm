@@ -81,8 +81,8 @@ codex rule, not a plan's restatement of it.
       those would damage correct content.
 - [ ] [DOC] P0. **Re-frame `platform-architecture.html`'s staked-basis capability claim** — asserted present-tense,
       found materially false by the sibling audit. Target-state framing, or cut.
-- [ ] [DOC] P0. **Remove the invented strategy family from `platform-architecture.html` (4 hits) and
-      `carveout-engineering.html` (1 hit)** — "Liquidity provision" / "DeFi liquidity provision" / "liquidation
+- [ ] [DOC] P0. **Remove the invented strategy family from `platform-architecture.html` (4 hits) and `carveout-engineering.html` (1 hit)** —
+      "Liquidity provision" / "DeFi liquidity provision" / "liquidation
       capture" is not a member of `StrategyFamily`, whose real enum has 9 named members. The
       `strategy-service-walkthrough.html` instance (2 hits) belongs to the Elysium child plan, not here.
 - [ ] [DOC] P1. **Reconcile the three-way custody contradiction** across the sibling documents. Per § A of the

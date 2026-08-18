@@ -90,6 +90,11 @@ estimate_calibrated_ai_days: 48.0
 
 # System Readiness Master
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/5a00f0e6-7480-4001-8cab-398e8a40fe34 (generated 2026-08-19,
+`/plan-reconcile system_readiness_master`)
+
 > **Target completion: 2026-08-25.** Everything in this epic except **going live with capital**. Paper, testnet,
 > batch, readiness derivation, coverage, scaffolding, reconciliation, security — all in scope. Live capital is not.
 
@@ -178,9 +183,9 @@ The spine. Everything else feeds it.
       re-run must not silently re-fetch what is already captured, and must not silently skip what is absent.
 - [ ] [BACKEND] P0. **Manifest consolidators must be running, or VMs exit** — a launcher that proceeds against a stale
       index writes into a lie. Gate on index freshness and fail loudly rather than degrade.
-- [ ] [BACKEND] P0. **Every venue's shards (instrument_type × chain × data_type) must be consumed by at least one of
-      MDPS or features.** If nothing consumes it, storing it has no purpose — the shard is either a missing consumer or
-      a data type that should not exist. Orphan output is a finding, never a footnote.
+- [ ] [BACKEND] P0. **Every venue's shards (instrument_type × chain × data_type) must be consumed by at least one of MDPS or features.**
+      If nothing consumes it, storing it has no purpose — the shard is either a missing consumer or a data type that
+      should not exist. Orphan output is a finding, never a footnote.
 - [ ] [BACKEND] P1. **Cheap and safe coverage increase** — the download path must be both. Spot where possible, resume
       from measured progress, never replay from `START_DATE`, and never let a cost optimisation weaken a correctness
       check.
@@ -203,8 +208,8 @@ The spine. Everything else feeds it.
 
 - [ ] [BACKEND] P0. **Data-pipeline alerts for deployment health across VMs and Cloud Run**, with auto-escalation and
       auto-reconciliation. Standing conditions dedup by state transition; automatic lifecycle events never page.
-- [ ] [BACKEND] P0. **Data-status honest-coverage rollup AND drilldown for instruments-service, MTDS, MDPS and
-      features** — the rollup is the headline, the drilldown is what makes it believable.
+- [ ] [BACKEND] P0. **Data-status honest-coverage rollup AND drilldown for instruments-service, MTDS, MDPS and features** —
+      the rollup is the headline, the drilldown is what makes it believable.
 - [ ] [BACKEND] P0. **Spot preemption auto-recovery resumes at the right place** — from measured progress, never a
       replay. A recovery that restarts from the beginning is a cost bug wearing a correctness mask.
 - [ ] [BACKEND] P0. **No duplicate VMs running.** Detect and prevent, do not merely alert.
@@ -240,8 +245,8 @@ The registry must answer commercial and operational questions, not just "does th
 - [ ] [BACKEND] P0. **Scaffold ALL strategy archetypes, not just the MVP ones.** The MVP set must be understood
       deeply, but the scaffolding of every archetype is what prevents a heavy refactor each time another comes online.
       The structure is the deliverable here, not the alpha.
-- [ ] [BACKEND] P0. **Every archetype / family / slot fully configurable, with all config in `config*.py` in the same
-      place**, hot-reloadable **including credentials**.
+- [ ] [BACKEND] P0. **Every archetype / family / slot fully configurable, with all config in `config*.py` in the same place**,
+      hot-reloadable **including credentials**.
 - [ ] [BACKEND] P0. **Configuration must be fully derivable from the strategy wizard** — the wizard is not a
       convenience layer, it is the sanctioned way config comes into being, and an agent must be able to drive it.
 - [ ] [BACKEND] P0. **Complete the strategy wizard.** Every stage, constrained by the layer beneath it, emitting config
@@ -250,8 +255,8 @@ The registry must answer commercial and operational questions, not just "does th
 
 ## W7 — Centralisation and anti-drift
 
-- [ ] [DOC] P0. **Generalise the slow-path/fast-path boundary beyond venue routing — EXTEND the existing SSOT, do
-      NOT author a new one.** Operator ruling 2026-08-18 restated the boundary as: *strategy decides WHAT we want to
+- [ ] [DOC] P0. **Generalise the slow-path/fast-path boundary beyond venue routing — EXTEND the existing SSOT, do NOT author a new one.**
+      Operator ruling 2026-08-18 restated the boundary as: *strategy decides WHAT we want to
       do (slow path) and hands execution a cache it can react to fast on a tick basis; execution decides HOW (fast
       path).* Measured 2026-08-18: that boundary IS owned, but only for venue routing —
       [/codex/04-architecture/slow-fast-routing-split.md](/codex/04-architecture/slow-fast-routing-split.md) is
@@ -272,8 +277,8 @@ The registry must answer commercial and operational questions, not just "does th
       slow-path into the cache; execution handlers only execute a pre-computed decision. Same question applies to
       "capital budget enforced by construction" — a per-tick budget check in execution is a slow-path concern
       leaking into the fast path.
-- [ ] [DOC] P1. **Fold the tick-cache mechanism into the boundary SSOT — the design work is ALREADY DONE, do not
-      re-derive it.** The operator's "strategy hands execution a cache it reacts to on a tick basis" framing is
+- [ ] [DOC] P1. **Fold the tick-cache mechanism into the boundary SSOT — the design work is ALREADY DONE, do not re-derive it.**
+      The operator's "strategy hands execution a cache it reacts to on a tick basis" framing is
       real and has real code, independently established by a concurrent session on 2026-08-18
       (`unified-trading-pm@219a310df0`):
       [/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md](/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md)
