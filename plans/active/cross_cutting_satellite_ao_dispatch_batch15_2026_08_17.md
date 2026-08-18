@@ -176,11 +176,28 @@ source: >-
       cefi 1,706 non-canon/4,649 `.bak` of 49,340; defi 31,522/0 of 141,866; tradfi 67/**17,132** of 32,945; sports
       **182,316**/0 of 362,347 (confirms finding 4 corpus-wide). Full table + cross-check against the bounded cefi
       sample added to `instruments_catalogue_definitions_and_field_history_2026_08_17.md` (same commit).
-- [ ] [BACKEND] P1. Verify the DeFi-address immutability assumption (can pool/contract addresses migrate or be
+- [x] ✅ [BACKEND] P1. Verify the DeFi-address immutability assumption (can pool/contract addresses migrate or be
       proxy-upgraded) rather than carrying it as belief; if mutable, add to the declared-mutable field set. Source:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`. Repo: instruments-service.
       Done-when: a written determination with citations exists (a real migration/upgrade event found, or a
-      documented absence of one over the observed period).
+      documented absence of one over the observed period). **Done (2026-08-18)**: determination = addresses are
+      **NOT safely immutable** — mutable, per two independent citations. (1) The codebase's own architecture doc
+      already assumes an already-cataloged instrument's on-chain address can change in place:
+      `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md:192` names "if Lido's contract address
+      changes mid-day" as a scenario the hot-reload/delta-cache path must propagate — this predates and contradicts
+      the immutable-by-belief assumption. (2) Real-world protocol-version migrations mint a brand-new contract
+      address for the same economic market (Aave V2 `LendingPool` → V3 `Pool`; Compound V2 Comptroller/cToken
+      markets → V3 Comet markets) — under this system's address-derived instrument_id scheme
+      (`instrument_id = pool_address.lower()`, `unified_api_contracts/canonical/crosscutting/defi.py:259-261`), that
+      class of event does NOT mutate an existing `pool_address` field in place — it mints a new instrument_id while
+      the old one is retired, so it is already correctly modeled as an instrument-lifecycle event, not a field
+      mutation. No dedicated "declared mutable fields" registry exists yet in UAC (0 hits for
+      `mutable_fields`/`MUTABLE_FIELDS`/`declared_mutable`) — that registry is a separate not-yet-implemented P0 item
+      in the parent plan, gated on operator ratification of the whole design (that plan's item #2, `[OPERATOR]`).
+      Recommendation for whoever implements that registry: declare `pool_address`, `base_asset_contract_address`,
+      `quote_asset_contract_address`, `atoken_address`, `debt_token_address`
+      (`unified-api-contracts/unified_api_contracts/internal/reference/instrument.py:268-296`) MUTABLE — citation (1)
+      above is a concrete in-place-change scenario the design must handle, not merely a hypothetical.
 
 ## From `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
 
@@ -230,6 +247,15 @@ source: >-
   manifest-side artifacts per B13/single-walk discipline; no new GCS reads. Real finding, not a formality: the
   path→manifest (orphan) direction has never been assessed for 3 of 5 asset groups, and the 2 that have been
   measured are ~26 days stale — the report files 4 follow-up todos to close this.
+- **2026-08-18 (backend_engineer, slot 9, task `cross_cutting_satellite_ao_dispatch_batch15-c15395d2c7a6`)**: item
+  (DeFi-address immutability) done — factual investigation, no code change needed. Determination: NOT immutable —
+  see the citations on the flipped checkbox above. Read `unified_api_contracts/internal/reference/instrument.py`
+  (address fields), `unified_api_contracts/canonical/crosscutting/defi.py` (address-derived `instrument_id`),
+  `/codex/02-data/defi-canonical-naming-ssot.md` (address-collision handling), and
+  `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` (the Lido in-place-change scenario) —
+  confirmed no existing `mutable_fields`/`declared_mutable` registry in UAC (0 grep hits), so no registry edit was
+  possible/needed this round; that registry itself is a separate P0 item still gated on operator ratification in
+  the parent plan.
 - **2026-08-18 (infra, slot 21)**: item 7 (gate cross-linking) done. Grepped `plans/active/` for a candidate owning
   doc per gate topic, read the strongest matches in full (`data_pipeline_e2e_milestones_gate_2026_07_24.md`,
   `venue_readiness_and_registry_hardening_2026_08_16.md`, `venue_smoke_test_bar_2026_08_16.md`,
