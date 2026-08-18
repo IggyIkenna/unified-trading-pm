@@ -30,8 +30,8 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: "plan_reconciler (agt-6602ee) since 2026-08-18T02:27:32Z"
-locked_since: "2026-08-18T02:27:32Z"
+locked_by:
+locked_since:
 depends_on: []
 context_scope:
   [
