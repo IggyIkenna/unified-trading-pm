@@ -53,6 +53,12 @@ depends_on: []
 context_scope: [market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py, market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py, strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py, /plans/active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md]
 ---
 
+> **✅ ARCHIVED 2026-08-18 (plan_reconciler)** — all 3 todos `[x]` with hard evidence
+> (market-tick-data-service@f5753479 for the code fix; slot-23 2026-08-15's live verification for the `[DIAG] P3`
+> follow-up), `status: open` unlocked, no `archive_exempt` block. See
+> `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md` for the gated finalize
+> companion's own remaining reconciliation work.
+
 # HYPERLIQUID `perp_daily_ctx` forward gap since 2026-06-02
 
 ## What was found

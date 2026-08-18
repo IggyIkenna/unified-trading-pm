@@ -1,0 +1,1188 @@
+<!-- generated: 2026-08-18T00:00:00Z by /plan-reconcile defi_master (epic-scoped, interactive) -->
+<title>DeFi Master Ledger</title>
+<style>
+  @font-face {
+    font-family: "ui-serif-fallback";
+    src: local("Iowan Old Style"), local("Charter"), local("Georgia");
+  }
+
+  :root {
+    --bg: #eef0ea;
+    --surface: #ffffff;
+    --surface-2: #f5f6f1;
+    --border: #d7dcd1;
+    --border-strong: #b9c1b3;
+    --text: #1a221d;
+    --text-muted: #59665f;
+    --text-faint: #8b968f;
+    --accent: #256e5c;
+    --accent-soft: #e2efe9;
+    --bronze: #8c5a26;
+    --bronze-soft: #f2e6d6;
+    --good: #2e6fa3;
+    --good-soft: #e4eef7;
+    --warn: #9a6a17;
+    --warn-soft: #f5ecd8;
+    --critical: #a23f35;
+    --critical-soft: #f6e3e0;
+    --shadow: 0 1px 2px rgba(20, 30, 25, 0.06), 0 6px 20px rgba(20, 30, 25, 0.05);
+    --radius: 3px;
+    --font-display: "Futura", "Avenir Next Condensed", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Iowan Old Style", "Charter", Georgia, "Times New Roman", serif;
+    --font-mono: "SF Mono", "Menlo", "Consolas", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0e13;
+      --surface: #131a21;
+      --surface-2: #1c2530;
+      --border: #26313c;
+      --border-strong: #34424f;
+      --text: #e7e2d3;
+      --text-muted: #97a3ad;
+      --text-faint: #6b7680;
+      --accent: #4fa893;
+      --accent-soft: #16332c;
+      --bronze: #c08a52;
+      --bronze-soft: #2e2417;
+      --good: #6e9bc4;
+      --good-soft: #16232e;
+      --warn: #d9a441;
+      --warn-soft: #2e2611;
+      --critical: #d9695a;
+      --critical-soft: #2e1917;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0a0e13;
+    --surface: #131a21;
+    --surface-2: #1c2530;
+    --border: #26313c;
+    --border-strong: #34424f;
+    --text: #e7e2d3;
+    --text-muted: #97a3ad;
+    --text-faint: #6b7680;
+    --accent: #4fa893;
+    --accent-soft: #16332c;
+    --bronze: #c08a52;
+    --bronze-soft: #2e2417;
+    --good: #6e9bc4;
+    --good-soft: #16232e;
+    --warn: #d9a441;
+    --warn-soft: #2e2611;
+    --critical: #d9695a;
+    --critical-soft: #2e1917;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  code,
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    margin-top: 40px;
+    padding: 36px 40px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    position: relative;
+  }
+
+  .masthead::before,
+  .masthead::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .masthead::before {
+    top: 8px;
+  }
+
+  .masthead::after {
+    bottom: 8px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 11.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bronze);
+    font-weight: 600;
+  }
+
+  .masthead h1 {
+    margin: 10px 0 14px;
+    font-size: clamp(34px, 5vw, 54px);
+    font-weight: 700;
+    letter-spacing: 0.005em;
+    color: var(--text);
+  }
+
+  .dek {
+    max-width: 68ch;
+    font-size: 17px;
+    color: var(--text-muted);
+    margin: 0 0 18px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .meta-row b {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  /* ---------- Chips (scope) ---------- */
+  .chip-section {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .chip-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-right: 4px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    border: 1px solid var(--border-strong);
+  }
+
+  .chip.in {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .chip.out {
+    background: var(--surface-2);
+    color: var(--text-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--critical);
+  }
+
+  /* ---------- Section shell ---------- */
+  section {
+    margin-top: 52px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-strong);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .section-head h2 {
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .section-num {
+    font-family: var(--font-mono);
+    color: var(--bronze);
+    margin-right: 10px;
+  }
+
+  .section-sub {
+    font-size: 13px;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+  }
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border-strong);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .stat-tile {
+    background: var(--surface);
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-num {
+    font-family: var(--font-mono);
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .stat-tile.accent .stat-num {
+    color: var(--accent);
+  }
+
+  .stat-tile.bronze .stat-num {
+    color: var(--bronze);
+  }
+
+  .stat-tile.warn .stat-num {
+    color: var(--warn);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  @media (max-width: 860px) {
+    .stat-strip {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* ---------- Ledger table ---------- */
+  .ledger {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    border-radius: var(--radius);
+  }
+
+  .ledger th {
+    text-align: left;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: var(--surface-2);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap;
+  }
+
+  .ledger td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .ledger tr:last-child td {
+    border-bottom: none;
+  }
+
+  .ledger tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--surface-2) 40%, transparent);
+  }
+
+  .doc-path {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+
+  .doc-title {
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 130px;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--critical-soft);
+    overflow: hidden;
+    min-width: 60px;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--accent);
+  }
+
+  .bar-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--border-strong);
+    color: var(--text-faint);
+  }
+
+  .tag.agg {
+    color: var(--bronze);
+    border-color: var(--bronze);
+    background: var(--bronze-soft);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .pill.active {
+    background: var(--good-soft);
+    color: var(--good);
+  }
+
+  .pill.draft {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+
+  .pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ---------- Operator desk ---------- */
+  .vault-box {
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .vault-row {
+    display: grid;
+    grid-template-columns: 1fr 2.2fr;
+    gap: 20px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .vault-row:last-child {
+    border-bottom: none;
+  }
+
+  .vault-row .doc-path {
+    font-size: 13px;
+  }
+
+  .vault-quote {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 8px 12px;
+    border-radius: 2px;
+  }
+
+  @media (max-width: 720px) {
+    .vault-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---------- Scope needed / closed-out lists ---------- */
+  .card-list {
+    display: grid;
+    gap: 14px;
+  }
+
+  .fcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+
+  .fcard.scope {
+    border-left-color: var(--warn);
+  }
+
+  .fcard h4 {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .fcard p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .fcard .doc-path {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .rec {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--bronze);
+  }
+
+  /* ---------- Lanes ---------- */
+  .lanes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--border-strong);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .lane {
+    background: var(--surface);
+    padding: 18px 18px 20px;
+  }
+
+  .lane-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--bronze);
+    letter-spacing: 0.1em;
+  }
+
+  .lane h4 {
+    margin: 6px 0 10px;
+    font-size: 15px;
+  }
+
+  .lane ul {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .lane li {
+    margin-bottom: 5px;
+  }
+
+  .lane .count {
+    display: block;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---------- Dispatch prompts ---------- */
+  .prompt {
+    background: #0d1115;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+
+  :root:not([data-theme="dark"]) .prompt {
+    background: #14181c;
+  }
+
+  .prompt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #191f24;
+    border-bottom: 1px solid #2a333a;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #9fb0a5;
+  }
+
+  .prompt-head b {
+    color: #e7e2d3;
+  }
+
+  .prompt pre {
+    margin: 0;
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 12.3px;
+    line-height: 1.6;
+    color: #d7d2c3;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ---------- Notes ---------- */
+  .notes {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .notes ul {
+    padding-left: 20px;
+  }
+
+  .notes li {
+    margin-bottom: 8px;
+  }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    text-align: center;
+  }
+</style>
+
+<div class="wrap">
+  <div class="masthead">
+    <div class="eyebrow">Asset-Group Epic Ledger · L0</div>
+    <h1>DeFi Master</h1>
+    <p class="dek">
+      The on-chain execution ledger for the DeFi asset group — lending/staking archetypes, DEX-perp adapters, the
+      per-chain data pipeline, custody, and the satellite-dispatch batch machinery that keeps 48 child docs
+      reconciled against it. Generated by <code>/plan-reconcile defi_master</code>, an epic-scoped pass.
+    </p>
+    <div class="meta-row">
+      <span><b>Generated</b> 2026-08-18</span>
+      <span><b>Epic doc</b> plans/epics/defi_master.md</span>
+      <span><b>Corpus</b> 50 parent_epic:defi_master docs</span>
+      <span><b>Tier</b> L0 · P0</span>
+      <span><b>Mode</b> interactive, epic-scoped, working-tree-only</span>
+    </div>
+  </div>
+
+  <div class="chip-section">
+    <span class="chip-label">In scope</span>
+    <span class="chip in">carry_staked_basis</span>
+    <span class="chip in">ARBITRAGE_PRICE_DISPERSION</span>
+    <span class="chip in">Hyperliquid · Aster perp DEXs</span>
+    <span class="chip in">Copper · Cloud-KMS custody</span>
+    <span class="chip-label" style="margin-left: 14px">Explicitly excluded</span>
+    <span class="chip out">LIGHTER-ZKSYNC (reclassified CeFi)</span>
+    <span class="chip out">EXTENDED-STARKNET (CeFi)</span>
+    <span class="chip out">PACIFICA-SOLANA (CeFi)</span>
+    <span class="chip out">Fireblocks custody</span>
+  </div>
+
+  <section id="stats">
+    <div class="section-head">
+      <h2><span class="section-num">01</span>Headline</h2>
+      <span class="section-sub">count_open_tasks.py methodology, deduped + aggregator-excluded</span>
+    </div>
+    <div class="stat-strip">
+      <div class="stat-tile accent">
+        <span class="stat-num">65</span>
+        <span class="stat-label">Open todos</span>
+        <span class="stat-sub">107 raw across 48 docs, 12 of them aggregators</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-num">116</span>
+        <span class="stat-label">Done todos</span>
+        <span class="stat-sub">172 raw, deduped</span>
+      </div>
+      <div class="stat-tile warn">
+        <span class="stat-num">5</span>
+        <span class="stat-label">On the operator's desk</span>
+        <span class="stat-sub">tagged [OPERATOR], human-gated</span>
+      </div>
+      <div class="stat-tile bronze">
+        <span class="stat-num">29</span>
+        <span class="stat-label">Fixed this pass</span>
+        <span class="stat-sub">26 mechanical edits + 3 archived docs</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-num">4</span>
+        <span class="stat-label">Needs extra scoping</span>
+        <span class="stat-sub">live-infra or design follow-up</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="breakdown">
+    <div class="section-head">
+      <h2><span class="section-num">02</span>Plan-by-plan breakdown</h2>
+      <span class="section-sub">29 plans</span>
+    </div>
+    <div class="table-scroll">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>Plan</th>
+            <th>Status</th>
+            <th>Open / done</th>
+            <th>Operator gate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="doc-title">Archetype catalog identity extension</span><span class="doc-path">defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><span class="bar-count">1 / 4</span></div></td>
+            <td><span class="vault-quote" style="font-size:11.5px;padding:4px 8px">BYBIT-FUTURES naming-gap</span></td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">↳ finalize</span><span class="doc-path">…_finalize.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">1 / 0</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Consolidated closeout</span><span class="doc-path">defi_consolidated_closeout_2026_07_18.md</span> <span class="tag agg">aggregator</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><span class="bar-count">10 / 16</span></div></td>
+            <td><span class="vault-quote" style="font-size:11.5px;padding:4px 8px">PURGE-then-seed delete-safety</span></td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Distinct-values zero-noncanonical</span><span class="doc-path">…_finalize.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">2 / 0</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Hyperliquid k-prefix casing fix</span><span class="doc-path">…ao_dispatch_2026_08_16.md (+ finalize)</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">2 / 0</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Instruments-store v9 Gate C — apply-write</span><span class="doc-path">defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md</span></td>
+            <td><span class="pill draft">draft</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">3 / 0</span></div></td>
+            <td><span class="vault-quote" style="font-size:11.5px;padding:4px 8px">irreversible whole-corpus --apply</span></td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">↳ finalize</span><span class="doc-path">…_finalize.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">1 / 0</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Live-poller phased build — 39 blocked-build venues</span><span class="doc-path">defi_live_poller_phased_build_2026_08_15.md</span></td>
+            <td><span class="pill draft">draft</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><span class="bar-count">1 / 3</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Migration dedicated-bucket-retired — finalize</span><span class="doc-path">…_finalize_2026_08_16.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">2 / 0</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Perp_daily_ctx HL forward-gap — finalize</span><span class="doc-path">…_finalize_2026_08_08.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="bar-count">1 / 1</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Pipeline E2E + coverage validation</span><span class="doc-path">defi_pipeline_e2e_and_coverage_validation_2026_06_20.md (+ finalize)</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:71%"></div></div><span class="bar-count">2 / 5</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Satellite batch 11</span><span class="doc-path">defi_satellite_ao_dispatch_batch11_2026_08_09.md (+ finalize)</span> <span class="tag agg">aggregator</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><span class="bar-count">4 / 12</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Satellite batch 14</span><span class="doc-path">defi_satellite_ao_dispatch_batch14_2026_08_16.md (+ finalize)</span> <span class="tag agg">aggregator</span></td>
+            <td><span class="pill draft">draft</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">11 / 0</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Satellite batch 16</span><span class="doc-path">defi_satellite_ao_dispatch_batch16_2026_08_17.md (+ finalize)</span> <span class="tag agg">aggregator</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:27%"></div></div><span class="bar-count">8 / 3</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Satellite batch 17</span><span class="doc-path">defi_satellite_ao_dispatch_batch17_2026_08_18.md (+ finalize)</span> <span class="tag agg">aggregator</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:25%"></div></div><span class="bar-count">3 / 1</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Satellite batch 2</span><span class="doc-path">defi_satellite_ao_dispatch_batch2_2026_07_26.md (+ finalize)</span> <span class="tag agg">aggregator</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:81%"></div></div><span class="bar-count">5 / 21</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Satellite batch 3 — finalize</span><span class="doc-path">defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md</span> <span class="tag agg">aggregator</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><span class="bar-count">1 / 3</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Strategy/PnL axis index</span><span class="doc-path">defi_strategy_pnl_axis_index_2026_07_24.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-count">0 / 1</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Track 0-1 — per-instrument canon ID</span><span class="doc-path">defi_track01_per_instrument_and_canon_id_2026_07_24.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="bar-count">2 / 23</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Track 5 — coverage backfill → MVP</span><span class="doc-path">defi_track5_coverage_mvp_backfill_2026_07_24.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><span class="bar-count">3 / 2</span></div></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Pacifica-Solana perp reintegration</span><span class="doc-path">pacifica_solana_perp_reintegration_2026_08_14.md</span></td>
+            <td><span class="pill active">active</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="bar-count">1 / 27</span></div></td>
+            <td><span class="vault-quote" style="font-size:11.5px;padding:4px 8px">provision Pacifica sandbox?</span></td>
+          </tr>
+          <tr>
+            <td><span class="doc-title">Solana LST carry — Jupiter perps + Kamino borrow</span><span class="doc-path">solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md</span></td>
+            <td><span class="pill draft">draft</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:11%"></div></div><span class="bar-count">25 / 3</span></div></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-head" style="margin-top: 34px">
+      <h2><span class="section-num">02b</span>Issue docs</h2>
+      <span class="section-sub">19 issues</span>
+    </div>
+    <div class="table-scroll">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>Issue</th>
+            <th>Open / done</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="doc-title">Balancer dex_pool_state writer schema mismatch</span><span class="doc-path">defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:83%"></div></div><span class="bar-count">1 / 5</span></div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Gas net-cost wiring — genuinely mixed</span><span class="doc-path">defi_gas_net_cost_partial_wiring_gap_2026_08_17.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="bar-count">3 / 3</span></div></td><td>quant_dev craft work, not data_engineering</td></tr>
+          <tr><td><span class="doc-title">MDPS candle backfill — terminal outcome</span><span class="doc-path">defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-count">0 / 2</span></div></td><td>archive candidate — outside this pass's fix list</td></tr>
+          <tr><td><span class="doc-title">Migration dedicated-bucket architecture — retired</span><span class="doc-path">defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><span class="bar-count">1 / 4</span></div></td><td>epic hub's own stale bucket-arch sections banner-fixed this pass</td></tr>
+          <tr><td><span class="doc-title">Morpho lending-indices — never wired</span><span class="doc-path">defi_morpho_lending_indices_never_wired_2026_07_12.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><span class="bar-count">1 / 9</span></div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Orphan-bucket delete list included canonical bucket</span><span class="doc-path">defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><span class="bar-count">1 / 3</span></div></td><td>near-miss on a live-bucket delete, now fixed</td></tr>
+          <tr><td><span class="doc-title">Pyth oracle prices — seeded feeds unfetchable</span><span class="doc-path">defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:83%"></div></div><span class="bar-count">1 / 5</span></div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">deployment-ui capability bundle — stale Pacifica drift</span><span class="doc-path">deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">1 / 0</span></div></td><td>execution_scope dispatch-gate fixed this pass</td></tr>
+          <tr><td><span class="doc-title">dex_pool_fees phantom premise</span><span class="doc-path">dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:66%"></div></div><span class="bar-count">1 / 2</span></div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Tenderly-fork integration test — credential-blocked</span><span class="doc-path">exec_tenderly_2026_08_15.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">1 / 0</span></div></td><td>operator credential ask</td></tr>
+          <tr><td><span class="doc-title">MEV engines — 3 of 4 have no opportunity-detection producer</span><span class="doc-path">mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:33%"></div></div><span class="bar-count">4 / 2</span></div></td><td>strategy-correctness gap, real-money implications</td></tr>
+          <tr><td><span class="doc-title">MTDS gas-fees migration script — unbounded memory</span><span class="doc-path">mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:66%"></div></div><span class="bar-count">2 / 4</span></div></td><td>stale SHA + scope-fork reframed this pass</td></tr>
+          <tr><td><span class="doc-title">na-eligibility-audit defi 08-16 / 08-17 / 08-18</span><span class="doc-path">na_eligibility_audit_defi_blocks_2026_08_{16,17,18}.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-count">0 / 0</span></div></td><td>index/run-journal docs, verdict re-confirmed this pass</td></tr>
+          <tr><td><span class="doc-title">plan_reconciler findings — 08-16 / 08-17 / 08-18</span><span class="doc-path">plan_reconciler_findings_defi_2026_08_{16,17,18}.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-count">1 / 8</span></div></td><td>Phase -1 reconciled this pass — 2 checkboxes flipped, 08-17</td></tr>
+          <tr><td><span class="doc-title">plan_reconciler findings — defi_master epic (this pass)</span><span class="doc-path">plan_reconciler_findings_defi_master_epic_2026_08_18.md</span></td><td><div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">0 / 0</span></div></td><td>this run's own findings doc — narrative, not checkbox-tracked</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="operator-desk">
+    <div class="section-head">
+      <h2><span class="section-num">03</span>On the operator's desk</h2>
+      <span class="section-sub">5 items, human-gated</span>
+    </div>
+    <div class="vault-box">
+      <div class="vault-row">
+        <div><span class="doc-title">Archetype catalog identity</span><span class="doc-path">defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md</span></div>
+        <div><span class="vault-quote">Part (3b-ii) — BYBIT-FUTURES naming-gap fix + multi-venue is_mvp()</span></div>
+      </div>
+      <div class="vault-row">
+        <div><span class="doc-title">Consolidated closeout — PURGE-then-seed</span><span class="doc-path">defi_consolidated_closeout_2026_07_18.md</span></div>
+        <div><span class="vault-quote">real prod-GCS delete: 1.79M duplicate + ~219.5K phantom rows, then a 63.9M-row reseed — delete-safety note added this pass</span></div>
+      </div>
+      <div class="vault-row">
+        <div><span class="doc-title">Instruments-store v9 Gate C</span><span class="doc-path">defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md</span></div>
+        <div><span class="vault-quote">Fire the explicit --apply write — irreversible whole-corpus migration, rollback via pre_migration_2026_06_08.parquet</span></div>
+      </div>
+      <div class="vault-row">
+        <div><span class="doc-title">Pacifica-Solana perp reintegration</span><span class="doc-path">pacifica_solana_perp_reintegration_2026_08_14.md</span></div>
+        <div><span class="vault-quote">Decide whether to provision a Pacifica sandbox credential (surfaced 2026-08-15)</span></div>
+      </div>
+      <div class="vault-row">
+        <div><span class="doc-title">Tenderly fork integration test</span><span class="doc-path">exec_tenderly_2026_08_15.md</span></div>
+        <div><span class="vault-quote">Provision Tenderly fork RPC endpoint + API key; confirm Aave V3 pool read/write access</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scoping">
+    <div class="section-head">
+      <h2><span class="section-num">04</span>Needs extra scoping</h2>
+      <span class="section-sub">4 items — live-infra checks or a design call, not mechanical</span>
+    </div>
+    <div class="card-list">
+      <div class="fcard scope">
+        <span class="doc-path">defi_satellite_ao_dispatch_batch11_2026_08_09.md</span>
+        <h4>995 lines, self-flagged for condensing</h4>
+        <p>The doc's own Progress Log already warned "next tick MUST condense 35th-38th-era journal entries" —
+          only partially acted on since. Sits just under the 1000L hard cap.</p>
+        <span class="rec">[WORKER REC] condense the ~640-975 near-duplicate pre-compact entries before the next append</span>
+      </div>
+      <div class="fcard scope">
+        <span class="doc-path">defi_satellite_ao_dispatch_batch11_2026_08_09.md</span>
+        <h4>Deferred infra-gate check is 7 days stale</h4>
+        <p>The "mdps-defi fleet drain / manifest-consolidator pause" gate table hasn't been live-re-checked
+          since 2026-08-11.</p>
+        <span class="rec">[WORKER REC] data_engineering pass to re-verify current GCP/VM state</span>
+      </div>
+      <div class="fcard scope">
+        <span class="doc-path">defi_track01_per_instrument_and_canon_id_2026_07_24.md</span>
+        <h4>R3-run checkbox still partial — scope-coverage unconfirmed</h4>
+        <p>VM <code>canonical-migration-defi-rebuild-20260810-204358</code>'s terminal SUCCESS is now correctly
+          cited (this pass fixed a mis-citation), but whether it covers R3's FULL remaining scope — vs. one
+          resumed sub-window — needs a fresh live check.</p>
+        <span class="rec">[WORKER REC] data_engineering confirms scope coverage, then flips the checkbox</span>
+      </div>
+      <div class="fcard scope">
+        <span class="doc-path">solana_dex_pool_swaps_indexer_2026_08_08.md</span>
+        <h4>Todo 5 — live AO-dispatch-readiness gap</h4>
+        <p>A VM-launch/data todo with no [OPERATOR] tag or safe-idempotent justification. Confirmed a LIVE gap
+          (doc is active + assigned_vm: planning, already dispatched) by both today's tranche run and this pass.</p>
+        <span class="rec">[WORKER REC] add the tag or a stated safe-idempotent justification before next dispatch</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="closed-out">
+    <div class="section-head">
+      <h2><span class="section-num">05</span>Closed out this pass</h2>
+      <span class="section-sub">29 items — 26 mechanical fixes + 3 archived docs</span>
+    </div>
+    <div class="card-list">
+      <div class="fcard">
+        <h4>Epic hub drift (2 fixes)</h4>
+        <p><code>defi_master.md</code>'s <code>related_plans:</code> was missing 3 still-open child plans
+          (added); its "MTDS DeFi slice" + "Discoveries during Priority #5" sections presented the
+          dedicated-per-data_type bucket architecture as current fact — it was retired 2026-07-10..07-16.
+          Added STALE banners to both, citing the retirement doc.</p>
+      </div>
+      <div class="fcard">
+        <h4>Satellite-batch citation + count drift (4 fixes)</h4>
+        <p>Batch14-finalize's "todos 1 and 3" → "1 and 2" (source doc has only 2 items); batch11-finalize's
+          "12 todos" ×3 → "13" (a mid-execution split never propagated to the finalize companion); batch16's
+          duplicate <code>effort: high</code> YAML key removed; batch2-finalize's todo-3 prose corrected — one
+          sub-item's retag is confirmed live, only one sub-item remains genuinely open.</p>
+      </div>
+      <div class="fcard">
+        <h4>Mis-citations + stale evidence (4 fixes)</h4>
+        <p>Pacifica doc's Progress Log line was genuinely truncated on disk + its "26/27" count was off by one
+          (fixed to 27/28, closed honestly without fabricating the missing text). Track01's VM-success citation
+          pointed at a section that never actually names the VM (grep-verified, re-pointed at the real
+          corroborating docs). mtds_gas_fees's stale <code>@6593011</code> SHA (a pre-history-rewrite dangling
+          hash) corrected to the doc's own already-correct <code>@5bc11b8</code>.</p>
+      </div>
+      <div class="fcard">
+        <h4>Dispatch-eligibility + design-fork reframe (2 fixes)</h4>
+        <p><code>deployment_ui_capability_bundle_stale_drift_pacifica</code> had <code>assigned_vm: planning</code>
+          paired with <code>execution_scope: local-only</code> — code-verified (<code>count_open_tasks.py:130</code>)
+          this silently excluded it from the AO-dispatch-eligible count. Fixed. mtds_gas_fees's "per-slot RSS
+          ceiling, out of scope to design" todo reframed — a matching mechanism already exists
+          (<code>ORCHESTRATOR_WORKER_MEMORY_MAX</code>) but is unarmed fleet-wide; the open question is now
+          narrower.</p>
+      </div>
+      <div class="fcard">
+        <h4>14 stale <code>last_updated</code> frontmatter fields</h4>
+        <p>Bumped to each file's real <code>git log -1</code> date, verified per-file before applying —
+          spans consolidated_closeout, both batch-2/3 finalize pairs, strategy_pnl_axis_index, track01, track5,
+          pacifica, solana_lst_carry, the balancer + morpho + gas-fees issue docs, and both na-eligibility-audit
+          dated docs.</p>
+      </div>
+      <div class="fcard">
+        <h4>Phase -1: 2 checkboxes flipped in <code>plan_reconciler_findings_defi_2026_08_17.md</code></h4>
+        <p>Both were already independently confirmed resolved by the same-day tranche run's own Phase -1 but
+          never flipped in the 2026-08-17 doc itself — a "routed finding never delivered back" gap this pass
+          closed, plus split the AO-dispatch-readiness-tagging item into its fixed/still-open halves.</p>
+      </div>
+      <div class="fcard">
+        <h4>3 docs archived — 6-step ritual, 10 referrer paths fixed</h4>
+        <p><code>defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md</code>,
+          <code>defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md</code>, and
+          <code>features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md</code> —
+          all fully done, unlocked, <code>archive_exempt</code> bridge markers gone stale. Moved to
+          <code>plans/archive/2026_08/issues/</code>; every path-form referrer across 5 active docs repointed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="lanes">
+    <div class="section-head">
+      <h2><span class="section-num">06</span>Parallel-tab flow for what's left</h2>
+      <span class="section-sub">5 lanes, non-colliding files</span>
+    </div>
+    <div class="lanes">
+      <div class="lane">
+        <span class="lane-num">LANE 1</span>
+        <h4>Satellite-batch reconciliation</h4>
+        <ul>
+          <li>batch11 + finalize</li>
+          <li>batch14 + finalize</li>
+          <li>batch16 + finalize</li>
+          <li>batch17 + finalize</li>
+        </ul>
+        <span class="count">17 open todos</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">LANE 2</span>
+        <h4>Core data-pipeline tracks</h4>
+        <ul>
+          <li>consolidated_closeout</li>
+          <li>track01</li>
+          <li>track5</li>
+          <li>pipeline_e2e_and_coverage</li>
+        </ul>
+        <span class="count">16 open todos</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">LANE 3</span>
+        <h4>Standalone issue docs</h4>
+        <ul>
+          <li>balancer schema mismatch</li>
+          <li>morpho never-wired</li>
+          <li>gas net-cost wiring</li>
+          <li>mev-engines producers</li>
+          <li>orphan-bucket / pyth / dex-pool-fees</li>
+        </ul>
+        <span class="count">11 open todos</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">LANE 4</span>
+        <h4>Solana LST carry build</h4>
+        <ul>
+          <li>solana_lst_carry_jupiter_perps_and_kamino_borrow (single large doc)</li>
+        </ul>
+        <span class="count">25 open todos</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">LANE 5</span>
+        <h4>Small AO-dispatch pairs</h4>
+        <ul>
+          <li>archetype-catalog-identity + finalize</li>
+          <li>hyperliquid k-prefix + finalize</li>
+          <li>distinct-values-zero-noncanonical finalize</li>
+          <li>migration-dedicated-bucket finalize</li>
+          <li>instruments-store v9 Gate C + finalize</li>
+        </ul>
+        <span class="count">9 open todos</span>
+      </div>
+    </div>
+    <p class="notes" style="margin-top: 14px">
+      Full parallelism holds here — each lane's files are disjoint from every other lane's. Lane 4 is a single
+      large doc (25 todos, one file) so it isn't itself further sub-dividable without a within-doc split; treat
+      it as one tab's worth of sequential work.
+    </p>
+  </section>
+
+  <section id="dispatch">
+    <div class="section-head">
+      <h2><span class="section-num">07</span>Dispatch prompts</h2>
+      <span class="section-sub">copy-paste per lane</span>
+    </div>
+    <div class="prompt">
+      <div class="prompt-head"><b>Lane 1</b> — satellite-batch reconciliation (docs-only)</div>
+      <pre>Paste cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of this session before your first tool call.
+
+Reconcile the 4 open DeFi satellite-dispatch batch/finalize pairs against fresh state:
+plans/active/defi_satellite_ao_dispatch_batch{11,14,16,17}_2026_08_*.md (+ their _finalize.md companions).
+For each finalize plan's "source-doc reconciliation" todo: confirm every cited source doc's item was actually
+flipped/cited as done-when specified — do not trust the parent batch's own checkbox alone. This is docs-only
+(unified-trading-pm), no code QG needed. Ship via scripts/dev/safe-doc-push.sh, stage by name.</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-head"><b>Lane 2</b> — core data-pipeline tracks</div>
+      <pre>Paste cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of this session before your first tool call.
+
+Work the remaining open todos in plans/active/defi_consolidated_closeout_2026_07_18.md,
+defi_track01_per_instrument_and_canon_id_2026_07_24.md, defi_track5_coverage_mvp_backfill_2026_07_24.md, and
+defi_pipeline_e2e_and_coverage_validation_2026_06_20.md (+ finalize). Several touch live GCS/manifest state —
+read /codex/02-data/gcs-and-manifest-delete-safety-protocol.md before any delete-shaped todo. If you touch
+service code, implement + verify quality-gates.sh genuinely green, then stop — don't ship.</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-head"><b>Lane 3</b> — standalone issue docs</div>
+      <pre>Paste cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of this session before your first tool call.
+
+Work plans/active/issues/{defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04,
+defi_morpho_lending_indices_never_wired_2026_07_12, defi_gas_net_cost_partial_wiring_gap_2026_08_17,
+mev_engines_opportunity_detection_signals_unproduced_2026_08_18,
+defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15,
+defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03,
+dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12}.md. mev_engines and gas_net_cost are
+strategy-correctness gaps with real-money implications — read the doc's own severity framing before touching.
+Implement + verify quality-gates.sh genuinely green in each touched repo, then stop — don't ship.</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-head"><b>Lane 4</b> — Solana LST carry build</div>
+      <pre>Paste cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of this session before your first tool call.
+
+Drive plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md's 25 open todos (single doc,
+status: draft — confirm whether it should flip to active before dispatching further). Read the doc's own §A
+gates in full first; several downstream todos are sequenced behind them. Implement + verify quality-gates.sh
+genuinely green in each touched repo, then stop — don't ship.</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-head"><b>Lane 5</b> — small AO-dispatch pairs</div>
+      <pre>Paste cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of this session before your first tool call.
+
+Work the remaining open todos across plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md
+(+ finalize), defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md (+ finalize),
+defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize.md,
+defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16.md, and
+defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md (+ finalize — status: draft, operator-gated, do not
+fire the --apply todo). Implement + verify quality-gates.sh genuinely green in each touched repo, then stop.</pre>
+    </div>
+  </section>
+
+  <section id="notes">
+    <div class="section-head">
+      <h2><span class="section-num">08</span>Notes &amp; methodology</h2>
+    </div>
+    <div class="notes">
+      <ul>
+        <li>Corpus is every doc where <code>rg "^parent_epic: defi_master$"</code> matches (48 after this pass's
+          3 archivals + 1 new findings doc; frontmatter-driven, not the filename-substring inventory script — see
+          <code>/codex/11-project-management/epic-html-report-format.md</code>). A parallel, broader
+          defi-<em>tranche</em> population (<code>asset_group:[defi]</code>, ~131 docs) is a different axis,
+          reconciled separately the same day — see <code>plan_reconciler_findings_defi_2026_08_18.md</code>.</li>
+        <li>Open/done counts are <code>scripts/plan-hygiene/count_open_tasks.py</code>'s own dedup methodology
+          via <code>epic_report_data.py --epic defi_master</code> — not hand-counted.</li>
+        <li><b>DO NOT SHIP constraint</b>: this run's shared checkout showed a concurrent session's unrelated
+          <code>ci</code>-tranche work in <code>git status</code> throughout (untouched, unstaged by this pass).
+          Every fix above landed in the working tree only — a lead session ships this pass's own file list by
+          name, not a blanket <code>git add</code>.</li>
+        <li>1 Phase-0 mechanical flag was refuted on adversarial verification:
+          <code>defi_strategy_pnl_axis_index_2026_07_24.md</code> looked like a fully-done archival candidate
+          (0 open todos) but carries an explicit standing-reference-hub exemption the mechanical checker doesn't
+          read.</li>
+        <li>22 of 48 docs are "near-complete" (≤1 open todo) — the expected steady-state shape for an
+          AO-heavy satellite-batch epic, not a backlog to drain in one pass (per SKILL.md's own guidance, ongoing
+          near-complete handling routes through the regular audit cadence).</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>DeFi Master Ledger · plans/epics/defi_master.md · generated 2026-08-18 by /plan-reconcile (epic-scoped)</footer>
+</div>

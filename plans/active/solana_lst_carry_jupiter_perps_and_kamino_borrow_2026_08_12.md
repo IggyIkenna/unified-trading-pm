@@ -41,7 +41,7 @@ related:
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-08-12
-last_updated: "2026-08-14"
+last_updated: "2026-08-17"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only

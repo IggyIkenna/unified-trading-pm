@@ -3,7 +3,8 @@ doc_type: plan
 title: DeFi satellite AO batch 11 — finalize (reconcile 6 source docs + archive)
 summary: >-
   Gated closeout for defi_satellite_ao_dispatch_batch11_2026_08_09.md — machine-held via depends_on + gate_on_depends:
-  true until every one of that plan's 12 todos is done. Reconciles each of the 6 source docs (flip/cite the item each
+  true until every one of that plan's 13 todos is done (was 12; one item split mid-execution 2026-08-09, text
+  corrected 2026-08-18). Reconciles each of the 6 source docs (flip/cite the item each
   batch11 todo closed), re-checks the not-extracted items listed in batch11's own report for whether any blocking
   condition has since cleared, then archives batch11 via the standard 6-step ritual.
 status: active
@@ -55,12 +56,12 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 11 — finalize
 
-**status: active — gated on batch11's 12 todos via `depends_on` + `gate_on_depends: true`; the dispatcher will not
-release these until batch11 is fully done.**
+**status: active — gated on batch11's 13 todos (was 12, see frontmatter note) via `depends_on` + `gate_on_depends: true`;
+the dispatcher will not release these until batch11 is fully done.**
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Source-doc reconciliation**: for each of batch11's 12 todos, confirm the cited source doc's own
+- [ ] [REVIEW] P1. **Source-doc reconciliation**: for each of batch11's 13 todos, confirm the cited source doc's own
       checkbox/item was flipped or annotated with the closing citation as that todo's Done-when specified. The 6 source
       docs to check: `defi_consolidated_closeout_2026_07_18.md` (Track 2, 1 item),
       `defi_migration_audit_log_2026_07_24.md` (3 "wire a real source" items),

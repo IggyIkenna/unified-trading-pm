@@ -106,7 +106,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-02"
+last_updated: "2026-08-18"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only

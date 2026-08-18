@@ -45,7 +45,7 @@ related:
     /plans/active/issues/mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md,
     /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
-    /plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md,
+    /plans/archive/2026_08/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md,
     /plans/active/issues/pendle_venue_onboarding_2026_08_16.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2026_lock_ttl_staleness_budget_mismatch_2026_08_15.md,
     /plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md,
@@ -161,7 +161,7 @@ separate re-grep was needed to establish "no overlap" for these 8 items.
       window vs the recent window — and check the drop against the named venue retirement's actual pool-removal
       scope to classify each drop as retirement-explained vs unexplained. Repo: instruments-service. Source:
       `defi_satellite_ao_dispatch_batch14_2026_08_16.md` extracted from
-      `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md`. Done when: the census
+      `plans/archive/2026_08/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md`. Done when: the census
       produces a per-venue density-drop table with each drop classified retirement-explained vs unexplained.
 - [ ] [BACKEND] P2. **Wire the Pendle venue's execution-service dispatch + UAC SIT invariant registration.**
       Resolve the `pendle_markets` config, wire `PendleConnector` into `DeFiAdapter`'s `_dispatch_defi_operation`

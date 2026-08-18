@@ -37,7 +37,10 @@ estimate_calibrated_ai_days: 0.64
 assigned_role: data_engineering
 effort: max
 drift_direction: none
-depends_on: [defi_by_date_capture_cron_stale_2026_08_16]
+depends_on: [] # was [defi_by_date_capture_cron_stale_2026_08_16] — cleared 2026-08-18 (plan_reconciler): that
+  # issue was archived 2026-08-16 as a false positive (see this doc's own body § "Why this is status: draft" (b)),
+  # so the target no longer exists; depends_on here was always informational context per the 2026-08-17
+  # plan_reconciler finding, not a machine gate
 supersedes:
 superseded_by:
 source: >-

@@ -53,10 +53,13 @@ related_plans:
   - ../active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md
   - ../active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16_finalize.md
   - ../active/defi_consolidated_closeout_2026_07_18.md
+  - ../active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md
   - ../active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04_finalize.md
   - ../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16.md
   - ../active/defi_hyperliquid_kprefix_coin_casing_fix_ao_dispatch_2026_08_16_finalize.md
+  - ../active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md
   - ../active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16_finalize.md
+  - ../active/defi_live_poller_phased_build_2026_08_15.md
   - ../archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16.md
   - ../archive/2026_08/defi_live_poller_ao_dispatch_batch1_2026_08_16_finalize.md
   - ../active/defi_migration_dedicated_bucket_architecture_retired_2026_08_14_finalize_2026_08_16.md
@@ -105,6 +108,11 @@ locked_since: 2026-05-07
 > plan.**
 
 # DeFi Master — asset_group umbrella
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/7bb4de8a-3524-4b57-9ee4-c1ad506b81ee (generated 2026-08-18,
+`/plan-reconcile defi_master`)
 
 > **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE) `BatchExecutionMode` enum +
 > `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59. Re-verify any archetype-keyed batch/live routing code before touching
@@ -682,6 +690,16 @@ these venues.
 
 ### MTDS DeFi slice (`market_tick_data_to_100pct` — DeFi)
 
+> **⚠️ STALE — bucket architecture retired 2026-07-10..07-16 (flagged by `/plan-reconcile defi_master` 2026-08-18).**
+> The dedicated-per-data_type bucket table + the "deployment-api correctly handles the split... routes each
+> per-data_type to its dedicated bucket" claim below describe the ARCHITECTURE AS OF 2026-05-07, since reversed:
+> every DeFi handler now converges on the single shared `market-data-tick-defi-{env}-{pid}` bucket (all 8 dedicated
+> bucket kinds removed from `cloud-providers.yaml` 2026-07-10..07-16 — see
+> [`defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`](../active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md),
+> corroborated by [`defi_consolidated_closeout_2026_07_18.md`](../active/defi_consolidated_closeout_2026_07_18.md)'s
+> own "Headline verdict"). Do NOT act on the per-bucket routing claims below as current fact — read as historical
+> archaeology only, same as this section's sibling `— SUPERSEDED 2026-06-20` blocks.
+
 > **CORRECTION 2026-05-07 — earlier "PLANNING-CRITICAL" claim retracted.** A sub-agent + main-agent jointly misread the
 > DeFi manifest layout, surfaced an alarming "Arb/Base/Polygon at 0%" finding, and pushed it as a planning-critical
 > correction. Re-verification by walking ALL DeFi buckets shows the original plan numbers are defensible — the misread
@@ -1078,6 +1096,11 @@ shipping with the Fork-1 prep batches below).
       `reconcile_legacy_blank_to_typed_reason.py`-style sweep).
 
 ### Discoveries during Priority #5 (slot 3, 2026-05-11)
+
+> **⚠️ STALE — the per-data_type DeFi buckets named throughout this section were retired 2026-07-10..07-16**
+> (flagged by `/plan-reconcile defi_master` 2026-08-18). See the identical banner on § "MTDS DeFi slice" above for
+> the evidence; this section's fixes were real and historically correct for the architecture at the time, but the
+> bucket names are no longer live — read as archaeology, not current routing fact.
 
 - [x] [SCRIPT] P0. **Manifest consolidator daemon was NOT polling the per-data_type DeFi buckets** —
       `lending-indices-{pid}`, `dex-swaps-{pid}`, `evm-defi-{pid}`, `gas-fees-{pid}`, `oracle-prices-{pid}`,

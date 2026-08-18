@@ -55,6 +55,11 @@ locked_by:
 resolved_by:
 ---
 
+> **✅ ARCHIVED 2026-08-18 (plan_reconciler)** — all 4 "Recommended decision" items `[x]` with hard evidence
+> (operator ruling 2026-08-03, worktree-absence verification 2026-08-12, agent-orchestrator@d71f1d9 shipped fix).
+> `archive_exempt: true` here was a "deferred to a separate follow-on pass" bridge note dated 2026-08-12 (6+ days
+> stale) — this run executes that deferred archival pass.
+
 # What I found
 
 While working `delta_one_candle_loader_no_pass_through_path_defi-003`, a `git status` in my slot's

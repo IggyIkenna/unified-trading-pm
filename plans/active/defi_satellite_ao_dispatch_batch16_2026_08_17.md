@@ -64,7 +64,6 @@ source: >-
   `/na-eligibility-audit defi` (2026-08-17). Every item below cleared the shared conflict-check
   (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) against every active defi covering
   doc. Per-item Source: citations below point at the exact originating doc + todo.
-effort: high
 sequential: false
 drift_direction: advance-code
 ---
