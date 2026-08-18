@@ -6,7 +6,7 @@ summary: >-
   contract steps 1-9 across every prediction (venue, data_type) row from `unified-api-contracts/scripts/
   generate_venue_work_list.py` (4 rows, measured 2026-08-16; re-run the script, this count is not a constant).
   Not an extraction from another source doc — no operator-gated item mixed in, per task_template.md §3 finding Y.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data, features, strategy, execution]
@@ -377,3 +377,7 @@ gaps — a different root cause than what this doc originally (wrongly) assumed.
   (integration-testing-layers, shard-level-failure-isolation) for the 2 concrete open-gap source targets (the
   POLYMARKET live position-adapter stub, and the shipped `prediction_ingest.py` the stale-WIP triage todo compares
   against).
+
+**2026-08-18 — all todos done, archiving now (slot 3, review).** Zero open todos, unlocked. No prose-only
+deferrals found (grepped for "not tracked further"/"for later"/"deferred" — none). Ready for the gated finalize
+plan (`prediction_venue_e2e_batch1_2026_08_16_finalize.md`) to run its 6-step archival ritual.
