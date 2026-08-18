@@ -21,10 +21,10 @@ tags: [ci, cicd, close-out, consolidation, quickmerge, github-actions, cloud-bui
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
-    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /codex/07-security/self-hosted-runner-security-posture.md,
+    /codex/08-workflows/ci-cd-flow.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 context_scope:
@@ -263,5 +263,12 @@ unblocked on a CI runner.
   (QG_SLICE=tests, single `OSError: cannot send (already closed?)` signature, flake-vs-real
   regression unconfirmed; a re-run was dispatched to test the flake hypothesis). This entry IS the
   link-back fix for that doc's `asset_group: [ci]` family membership.
+- **/ci-reconcile 2026-08-18 (second pass, same day)**: filed
+  [/plans/active/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md](/plans/active/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md)
+  — root-caused the 13-repo simultaneous QG RED/GREEN cascade (PM-manifest-validity single point of failure via
+  `run-all-validators.sh`, cloned into every repo's own checks slice) and a silent SLACK_CI_WEBHOOK_URL gap on 9
+  repos. Both fixed live this session (`unified-trading-pm@176ff63dab` validator retry + gh secret repropagation
+  from GSM); 3 follow-up audit/hardening todos remain open. This entry IS the link-back fix for that doc's
+  `asset_group: [ci]` family membership.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:498e5d37d2cac002]: KEEP-NA, valid -- Zero open todos of its own (it is a reachability-map/coordination hub over 5 Tracks), but explicitly not moot: `archive_exempt: true` is set in frontmatter with a clear stated reason, and the doc carries a dated REVIVED banner (2026-08-10, operator ruling BLK-9a03622c option A) explaining it was un-archived specifically because archiving it left two substantial shipped P1 plans with no consolidated-closeout coordinator. The banner names a live, still-open 'next action' (verify both plans' remaining work is tracked here; fold new ci-tagged issues into a fresh batch plan). This is a standing coordination hub deliberately kept alive, not a stale/moot doc.
