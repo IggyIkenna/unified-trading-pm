@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: resource-samples-bq native BigQuery subscription not picking up net_sent_rate_bytes_sec column after 55+ min
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -18,7 +18,7 @@ priority: P2
 source: [interactive session investigation 2026-08-18]
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: interactive session, resumed post-compact, 2026-08-18
 summary: >-
   The resource-samples-bq native BigQuery subscription (useTableSchema: true) hasn't picked up the
   net_sent_rate_bytes_sec column added to resource_samples 55+ minutes ago, despite 4 real end-to-end publish
@@ -85,3 +85,16 @@ session because:
 3. Once confirmed, flip Track 1 Todo 2's checkbox with the query result as evidence, delete the 4 probe rows
    (`DELETE FROM deployment_operational_data.resource_samples WHERE deployment_id LIKE
    'net-egress-observability-verify-probe-2026-08-18%'`), and archive/resolve this issue doc.
+
+## Resolution (2026-08-18, resumed post-compact)
+
+Step 1 of the recommended resolution was sufficient — checked again after real elapsed time and the native
+subscription's schema-cache refresh had completed on its own, no delete/recreate needed. Live query against
+`deployment_operational_data.resource_samples` (last 2h) showed non-null `net_sent_rate_bytes_sec` for VMs launched
+after the code shipped (e.g. `tradfi-bf-cme-ohlcv-1m-eth-2020-20260818-210302`: 83864.74 bytes/sec), confirming the
+end-to-end pipe. VMs launched before the code change still show null, as expected (the sampler runs inside each VM's
+own long-running daemon, not hot-reloaded — they'll pick it up on their next natural relaunch, not a defect). The 4
+synthetic probe rows (`deployment_id LIKE 'net-egress-observability-verify-probe-2026-08-18%'`) were deleted from
+`resource_samples` per step 3. Track 1 Todo 2 flipped in
+`/plans/active/deployment_network_egress_ingress_observability_2026_08_18.md` with this evidence. No further action
+needed on this issue.
