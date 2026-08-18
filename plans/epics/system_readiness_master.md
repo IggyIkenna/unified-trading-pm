@@ -372,16 +372,36 @@ The registry must answer commercial and operational questions, not just "does th
 ## W20 — Skills and automation
 
 Automation is how 300–500 tasks/day becomes throughput rather than churn, and it is the beginning of handover
-documentation. 23 skills exist today; these extend the pattern.
+documentation. These extend the existing skill corpus. **The constraints under each item below are load-bearing,
+not commentary** — derived once, and otherwise re-derived or missed by whoever builds the skill.
 
 - [x] ✅ [SKILL] P0. **Readiness state dump** (see W1) — venue × archetype × mode, derived. — Shipped, same evidence
       as W1's checkbox (`unified-trading-pm@5b3dbf99bd`).
+- [x] ✅ [SKILL] P0. **Honest coverage dump** — per-shard coverage from the manifest, four capture states separately,
+      denominator stated. Shipped `unified-trading-pm@5b3dbf99bd` alongside the readiness dump; evidence in
+      `/plans/active/data_pipeline_completion_2026_08_21.md` § "Tuesday dumps". **Was missing from this list
+      entirely** — added 2026-08-18 so the epic's skill inventory is complete.
 - [ ] [SKILL] P0. **Strategy capability audit** — what each archetype can actually trade given real coverage.
+      **Constraint**: its output is honestly PARTIAL by construction — `ARCHETYPE_FEATURE_GROUPS` declares ~40 of 60
+      archetypes and its docstring deliberately refuses to guess the rest ("a wrong entry would silently mislead a
+      contract-step-17 BACKTESTABLE check — worse than an honest gap"). Report the remainder as a measured limit; do
+      NOT fill it. This is also why the 2026-08-18 readiness dump's strategy leg passes only 24/864.
 - [ ] [SKILL] P1. **Venue registry completeness check** — collateral, cross-margin, transfer eligibility, manual-trade
       capability, per venue.
+      **Constraint**: report three distinct values — present / absent / `unverified`. An absent capability and an
+      unchecked one are different findings and must never be collapsed. Manual-trade capability is required for EVERY
+      venue with no exceptions (it is the disaster path), so its absence is a P0 finding, not a noted gap.
 - [ ] [SKILL] P1. **Shard utilisation / orphan sweep** — every shard consumed by MDPS or features; every declared
       data_type, instrument_type, venue and chain consumed somewhere.
+      **Constraint (SAFETY)**: emits a CONSUMPTION VERDICT ONLY — **never a delete suggestion**. A false orphan verdict
+      could send someone deleting live data; runtime-resolved consumers do not appear in a token grep, so it must READ
+      the consumer rather than infer from grep count, and print `unverified` when uncertain.
+      **Constraint (consistency)**: reuse the shard-enumeration engine the two shipped dumps share
+      (`scripts/shard_universe.py`) — a third independent enumeration would disagree on the denominator, which is worse
+      than being slower.
 - [ ] [SKILL] P1. **Exchange contract drift check** — cassette re-run gated on venue version change.
+      **Blocked on the OPERATOR, not on engineering**: needs test accounts with credentials per venue (W14) before
+      cassettes can be pinned. Do not dispatch ahead of those credentials or it stalls mid-build.
 - [ ] [SKILL] P2. **Strategy config completeness check** — every archetype/family/slot fully configurable and
       wizard-derivable.
 
