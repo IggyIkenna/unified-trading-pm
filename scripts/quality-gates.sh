@@ -865,6 +865,23 @@ if [ -f "$ARCHIVE_REF_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Epic HTML report freshness (warn-only, soft-launch — 2026-08-18) ──
+# check_epic_html_freshness.py, part of the epic taxonomy restructure + HTML-artifact convention
+# (/plans/active/epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md Phase 5). Every active,
+# non-superseded epic under plans/epics/*.md should eventually have a published
+# plans/epics/html/<slug>.html report (SSOT: codex/11-project-management/epic-html-report-format.md
+# "Storage + publish convention") no older than the epic doc's own last_updated. WARN-ONLY — same
+# soft-launch contract as check_parent_epic_alignment.py (no --strict here): as of 2026-08-18 this
+# corpus has ZERO plans/epics/html/*.html artifacts yet (Phase 4/6 of the same plan build the
+# generator), so a hard-fail-by-default launch would immediately red every epic. Flip to --strict
+# once the corpus is caught up (tracked as a follow-up, not done here).
+EPIC_HTML_FRESHNESS_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_epic_html_freshness.py"
+if [ -f "$EPIC_HTML_FRESHNESS_CHECKER" ]; then
+    echo "Running epic HTML report freshness check (warn-only)..."
+    python3 "$EPIC_HTML_FRESHNESS_CHECKER" --quiet
+    log_success "Epic HTML report freshness check completed (advisory — see any WARN lines above)"
+fi
+
 # ── Post-gates: Conflict-marker gate (plan hygiene — catches committed git conflict markers) ──
 # check_conflict_markers.sh lives ONLY in the pre-commit hook (run_hygiene_sweep.sh --precommit)
 # and in no CI/CD workflow or quality-gates.sh path. A pre-commit bypass (--no-verify, git rebase
