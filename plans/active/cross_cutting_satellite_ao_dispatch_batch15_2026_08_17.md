@@ -121,10 +121,15 @@ source: >-
       REFERENCE (explicitly not a target), alongside the per-stage breakdown that explains it. Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a published reference-ETA table exists,
       explicitly labelled non-binding.
-- [ ] [DOC] P0. Cross-link every gate (B1-B26, P1-P13, L1-L14) in `data_pipeline_completion_2026_08_21.md`'s tables
+- [x] ✅ [DOC] P0. Cross-link every gate (B1-B26, P1-P13, L1-L14) in `data_pipeline_completion_2026_08_21.md`'s tables
       to its owning plan/issue doc; where no owning plan exists, record that absence as the finding rather than
       silently absorbing it. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: every gate
-      row in that doc's tables carries an owning-doc link or an explicit "no owning doc" note.
+      row in that doc's tables carries an owning-doc link or an explicit "no owning doc" note. **Done 2026-08-18**:
+      added an "Owning doc" column to all 6 gate tables (B1-B8, B9-B20, B21-B23, B24-B26, PAPER P1-P13, LIVE L1-L14),
+      resolving all 53 rows. Finding: 29/53 (55%) have no dedicated owning plan/issue doc — enumerated in a new
+      summary blockquote under the doc's existing "Tie-in to existing plans" bullet, most tracing to a codex SSOT
+      policy rather than a tracked work item, or genuinely uncovered anywhere in the corpus (e.g. P6 stream
+      continuity, L2 SLOs, L12 access control).
 - [x] ✅ [DATA] P0. Tuesday checkpoint: record BATCH/PAPER/LIVE readiness stage per shard across instruments-service
       through features-service, all asset groups (`unverified` is a legitimate recorded value where no check
       exists). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a per-shard stage table
@@ -217,3 +222,11 @@ source: >-
   manifest-side artifacts per B13/single-walk discipline; no new GCS reads. Real finding, not a formality: the
   path→manifest (orphan) direction has never been assessed for 3 of 5 asset groups, and the 2 that have been
   measured are ~26 days stale — the report files 4 follow-up todos to close this.
+- **2026-08-18 (infra, slot 21)**: item 7 (gate cross-linking) done. Grepped `plans/active/` for a candidate owning
+  doc per gate topic, read the strongest matches in full (`data_pipeline_e2e_milestones_gate_2026_07_24.md`,
+  `venue_readiness_and_registry_hardening_2026_08_16.md`, `venue_smoke_test_bar_2026_08_16.md`,
+  `venue_e2e_wiring_2026_08_16.md`, `manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`), then added
+  an "Owning doc" column to all 6 gate tables in `data_pipeline_completion_2026_08_21.md` (53 rows total). 24 gates
+  resolved to a real plan/issue doc or codex SSOT; 29 (55%) recorded as "no owning doc found" rather than forced onto
+  a weak keyword match — summarised in a new blockquote finding under that doc's "Tie-in to existing plans" section.
+  `unified-trading-pm@<pending>`.
