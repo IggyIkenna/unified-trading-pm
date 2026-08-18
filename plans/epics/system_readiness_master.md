@@ -275,12 +275,24 @@ The registry must answer commercial and operational questions, not just "does th
       `delta = 1.0`, the spot/perp self-underlying case only), and the strategy-side receipt point (`QuoteHandler`)
       having been deleted 2026-08-15 as dead code with no replacement. **This epic's job is to cite it, not restate
       it** — the boundary SSOT names this as the canonical instance of the slow→fast cache handoff and links out.
-- [ ] [OPERATOR] P1. **Answer the 11 judgment calls in that issue doc** — 10 remain open (#6 resolved). Three bear
-      directly on this workstream's own principles and should be ruled consistently with them: #4 (how is "never
-      branch on archetype" *structurally* enforced, not merely conventional — strategy-agnosticism), #9 (reuse
-      `order_semantics.py`'s existing per-venue vocabulary rather than inventing a parallel schema — SSOT), #10
-      (execution consumes strategy's `ExposureAggregator` rather than keeping a duplicate local exposure view — no
-      same-concern-in-two-places). The doc records a default lean on all 11 for the record; it is not a ruling.
+**Ownership split — W16 delivers, W7 constrains.** The design doc is pointed at from two workstreams (W16 in the
+issue-doc corpus below, W7 here) and that is intentional, but ownership is singular: **W16 — Triggers, latency and
+preflight owns BUILDING the sensitivity/trigger cache**; W7 owns only the invariant that it must not become
+execution-owned policy. Do not open delivery todos for the cache here — they belong to W16 and the design doc.
+
+The 11 judgment calls are tracked in the design doc itself and are NOT restated here — that doc is the single place
+of record, and a second tickable copy is exactly the duplication this workstream exists to prevent. Three of them
+bear on W7's principles and should be ruled consistently with them: **#4** (is "never branch on archetype"
+*structurally* enforced or merely conventional — strategy-agnosticism), **#9** (reuse `order_semantics.py`'s
+existing per-venue vocabulary rather than inventing a parallel schema — SSOT), **#10** (execution consumes
+strategy's `ExposureAggregator` rather than keeping a duplicate local exposure view — no same-concern-in-two-places).
+
+- [ ] [PROCESS] P1. **Re-tag the design doc's gated todo so AO cannot pick up an operator decision.** Its
+      `[DESIGN] P1` todo reads "Design `ExecutionSensitivityEntry` + `AmbientMarketLean`, resolving judgment calls
+      1-5 and 9" — that bundles an operator ruling with worker-executable design. Per the dispatch-eligibility rule
+      (an AO todo's outcome must be determinable by the worker alone), the rulings need their own `[OPERATOR]` gate
+      in that doc, with the design todo gated behind it. Same check for the `[DESIGN] P2` todos resolving calls 7
+      and 8. Without this, a worker either invents a ruling or stalls.
 
 - [ ] [BACKEND] P0. **Every strategy-agnostic module and function call lives centrally**, so multiple archetypes call
       one implementation instead of reimplementing it. Reimplementation is drift with a delay fuse.
