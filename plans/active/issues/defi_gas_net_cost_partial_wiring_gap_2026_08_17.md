@@ -132,11 +132,11 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       design decision on scope, not a blind guess). Repo: strategy-service (+ features-service if the composite
       lives there). Done when: `CARRY_STAKED_BASIS` nets a real non-zero gas term in a live/paper run, with a
       regression test; `paper_run_handler.py`'s hardcode removed. — strategy-service@f09969fe94
-- [ ] [STRATEGY] P2. Implement `JIT_LIQUIDITY`'s (`strategy-service/.../mev/jit_liquidity.py`) documented
+- [x] ✅ [STRATEGY] P2. Implement `JIT_LIQUIDITY`'s (`strategy-service/.../mev/jit_liquidity.py`) documented
       gas+IL+flash-fee profitability threshold in `on_tick()`, or correct the docstring if the threshold is
       deliberately not enforced (state which, with the reasoning). Repo: strategy-service. Done when: either the
       threshold is implemented and unit-tested, or the docstring is corrected to match actual behavior with a cited
-      reason.
+      reason. — strategy-service@fbf78dfe20 (see Progress Log for the scope note on the IL term).
 - [ ] [STRATEGY] P3. Net `BACKRUN`'s (`strategy-service/.../mev/backrun.py:73-93`) already-available
       `block_priority_gas_p90_gwei_<chain>` feature against its `spread_bps` profitability gate (currently used only
       for inclusion-bid sizing, never subtracted from the gated spread). Repo: strategy-service. Done when:
@@ -207,6 +207,31 @@ execution-service's gas-cost models and features-service's onchain calculators. 
   gated. Both repos' `quality-gates.sh` green (sentinel-verified pre-quickmerge); features-service's own
   `test_golden_fixture_phase0_resolve_build_order.py` updated for the new calculator group (expected drift, not a
   regression). Shipped features-service@20d71ed0fb, strategy-service@0088d62fe8.
+- **2026-08-18 (slot-16, ui_developer craft, adopted STRATEGY per craft-adoption rule)**: closed the `[STRATEGY] P2`
+  `JIT_LIQUIDITY` todo — implemented, not docstring-only. Gate: captured swap fee (`pending_size *
+  dex_swap_fee_bps_<pool> / 10000` — real per-pool fee tier feature from
+  `features-service/.../dex_pool_swap_flow_calculator.py`, falling back to UAC `FEES_REGISTRY`'s cited Uniswap V3
+  30bps default only when that feature is absent/0.0) must exceed the mint+burn gas cost (2x `FEES_REGISTRY`'s cited
+  Uniswap V3 gas-unit estimate x the real `gas_price_gwei_<chain>` feature, at the same $3000 ETH-equivalent fallback
+  already established twice — `mev/liquidation_bundle.py`'s `_bundle_gas_cost_usd` + features-onchain's
+  `GasCostUsdCalculator`) plus, only when a new `flash_loan_source` param is set, a real
+  `flash_loan_fee_bps_<flash_loan_source>` fee on the deployed capital — by `min_profit_usd` (new param, default
+  $10). Mirrors the sibling `mev/liquidation_bundle.py` engine's exact feature-key + registry-fallback conventions
+  (closest same-package precedent, not staked_basis's) rather than inventing a new pattern.
+  **Scope decision on the IL term**: NOT netted into the gate — grepped the whole codebase for a live pre-trade
+  price-impact producer and found none; the only price-impact computation anywhere (`mev/sandwich_theoretical.py`)
+  is an explicitly POST-hoc tracer over CONFIRMED pre/post-swap prices, structurally unusable before an
+  as-yet-unconfirmed pending swap lands. Docstring corrected to state this explicitly with the cited reasoning
+  (module-level, not a passing comment) rather than silently omitting the term or leaving the stale claim in place —
+  this satisfies the todo's own "implement, or correct the docstring... state which, with reasoning" alternative for
+  the one term that has no real data to net. 4 new regression tests added
+  (`test_jit_nets_captured_fee_against_gas_and_reports_attestations`,
+  `test_jit_skips_when_gas_cost_exceeds_captured_fee`, `test_jit_nets_flash_loan_fee_when_flash_loan_source_set`, plus
+  the 2 pre-existing entry-trigger tests re-verified unaffected) covering: real-feature profitable case, an
+  extreme-gas unprofitable case, and the conditional flash-loan-fee path. `quality-gates.sh` full run green (6119
+  passed, sentinel-verified at HEAD before quickmerge — not a sentinel-hit skip). Shipped strategy-service@fbf78dfe20.
+  Remaining sibling todos in this doc (STRATEGY P3 `BACKRUN`, STRATEGY P3 `ExecutionCostEstimator`, STRATEGY P2
+  `LIQUIDATION_CAPTURE` paper-universe registration below) are untouched — separate scope, not part of this task.
 - [ ] [STRATEGY] P2. Register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
       `paper_run_handler.py` (mirroring how `ARBITRAGE_PRICE_DISPERSION`/DEX-pool archetypes are wired) so it can
       actually run end-to-end in a real paper run — currently NOT in `paper_universe.py`'s drivable
