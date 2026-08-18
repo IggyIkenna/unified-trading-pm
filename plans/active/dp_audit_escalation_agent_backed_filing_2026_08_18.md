@@ -120,14 +120,17 @@ exists on one side and is never actually exercised end-to-end.
       per CLAUDE.md's cloud-identity-self-service rule) rather than assuming it's already there. Done-when: a unit
       test asserts `file_escalation_issue` no longer imports/calls `subprocess`/`git`, and a new test confirms the
       `repository_dispatch` call fires with the finding's full candidate details on a genuine RED verdict.
-- [ ] [BACKEND] P1. Fix
+- [x] 3. ✅ [BACKEND] P1. Fix
       `deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py::write_issue_doc`'s
       frontmatter template — it currently emits only `title`/`created`/`author`/`parent_epic`/`assigned_vm`/
       `source`/`locked_by`, missing `doc_type`/`summary`/`status`/`nature`/`asset_group`/`stage`/`repos`/`scope`/
       `tags`/`related`/`priority` that `docspec.py`'s `PER_TYPE["issue"]` requires — the same frontmatter-drift bug
       class already fixed once in e2e-testing's `_dp_common.py` (`e2e-testing@c05ec220ec`). Mirror that fix's field
       derivation. Done-when: a new test parses the generated frontmatter with `yaml.safe_load` and asserts every
-      docspec-required field for `doc_type: issue` is present and correctly valued.
+      docspec-required field for `doc_type: issue` is present and correctly valued. —
+      deployment-service@f2fb7973126a5f59afe7ca943a65a4a162433225 (quality-gates.sh green, 313s; new test file
+      `tests/unit/test_escalation_issue_writer.py` covers all universal-core + PER_TYPE["issue"] fields, summary
+      truncation, and the asset_group derivation's plain/compound/absent shapes).
 - [ ] [REVIEW] P1. End-to-end live verification, gated on the three todos above landing: plant a real RED finding
       (a genuine schema/divergence anomaly, mirroring the 2026-08-16/17 verification runs) against the `-test-`
       buckets or a controlled prod-equivalent run of the manifest-hygiene audit, and confirm the full loop fires with

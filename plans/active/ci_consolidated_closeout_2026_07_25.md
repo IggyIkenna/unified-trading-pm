@@ -258,7 +258,7 @@ unblocked on a CI runner.
   Progress Log entry IS that link-back fix) — the other 2 retagged docs were already reachable and needed no further
   linkage fix. Re-verified 0→0 new orphans after this entry landed.
 - **/ci-reconcile 2026-08-18**: filed
-  [/plans/active/issues/mdps_main_qg_tests_slice_oserror_cannot_send_2026_08_18.md](/plans/active/issues/mdps_main_qg_tests_slice_oserror_cannot_send_2026_08_18.md)
+  [/plans/archive/2026_08/issues/mdps_main_qg_tests_slice_oserror_cannot_send_2026_08_18.md](/plans/archive/2026_08/issues/mdps_main_qg_tests_slice_oserror_cannot_send_2026_08_18.md)
   — market-data-processing-service `main` branch `quality-gates-v2` regressed MAIN_GREEN -> FAILING
   (QG_SLICE=tests, single `OSError: cannot send (already closed?)` signature, flake-vs-real
   regression unconfirmed; a re-run was dispatched to test the flake hypothesis). This entry IS the
