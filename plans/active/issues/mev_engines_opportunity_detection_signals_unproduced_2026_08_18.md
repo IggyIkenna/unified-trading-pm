@@ -75,12 +75,19 @@ each specific key name — not the feature_group's existence, the EXACT key.
    `.get(key, 0.0)`. Same shape: `pending_size < min_swap_threshold_usd` is always true when the key defaults to
    0.0, so the position never mints. The codex archetype doc's claim ("today the engine reads a features-onchain
    inferred signal") was not confirmed by this search — no calculator anywhere produces this specific key.
-3. **`LIQUIDATION_BUNDLE`** (`strategy-service/.../mev/liquidation_bundle.py:265-267`) —
+3. **`LIQUIDATION_BUNDLE`** (`strategy-service/.../mev/liquidation_bundle.py:265-269`, `_candidate_from_features`) —
    `liq_candidate_debt_amount_<id>`, `liq_candidate_health_factor_<id>`, `liq_candidate_liq_bonus_pct_<id>`, all
-   `.get(id_key)` with no default shown at these call sites (likely `None`, worth confirming) — meaning candidate
-   IDENTIFICATION (which position is even liquidatable) has no producer, distinct from `LIQUIDATION_CAPTURE`'s
-   already-declared `liquidation_clusters`/`liquidation_band_prediction` feature_groups, which this engine does NOT
-   appear to read from directly (not confirmed as the same underlying data by this pass).
+   `.get(id_key)` with **no default — confirmed 2026-08-18**: on any missing key the function returns `None` for
+   that whole candidate (explicit `is None` checks, own docstring: "Returns `None` when any required key is
+   missing — the orchestrator should backfill the calculator before this engine emits"), and `on_tick()` `continue`s
+   past it. This is a clean skip, not a raise and not a silent-zero — genuinely different failure mode from
+   BACKRUN/JIT_LIQUIDITY's `.get(key, 0.0)`, which fabricates a comparison against a fake zero instead of declining
+   to act. The real gap is entirely upstream: nothing produces the `liq_candidate_*_<id>` values in the first
+   place, AND `candidate_ids` itself is a static `self.params` config string with no producer populating it
+   dynamically — candidate IDENTIFICATION (which position is even liquidatable, and what its id is) has no producer
+   at all, distinct from `LIQUIDATION_CAPTURE`'s already-declared `liquidation_clusters`/`liquidation_band_prediction`
+   feature_groups, which this engine does NOT read from directly (not confirmed as the same underlying data by this
+   pass).
 
 ## Why this wasn't fixed in the same commit
 
@@ -141,7 +148,10 @@ this doc's own established pattern of infrastructure existing without being wire
 - [ ] [FEATURES] P2. **Build or confirm the JIT_LIQUIDITY pending-swap-size producer**
       (`jit_pending_swap_size_usd_<pool>`) — the codex doc's own text says this should already exist as an
       "inferred signal," which this session's search did not find; reconcile the doc against the code before
-      building anything new.
+      building anything new. **Related, not a substitute**: once this producer exists, JIT_LIQUIDITY is also the
+      best-fit MEV consumer of the generic sensitivity/repricing pattern tracked in
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` — but that pattern only
+      speeds up reacting to a signal, it does not produce one; sequence this todo first regardless.
 - [ ] [STRATEGY] P2. **Build the LIQUIDATION_BUNDLE candidate-identification producer**
       (`liq_candidate_*_<id>`) — likely reuses `LIQUIDATION_CAPTURE`'s existing `liquidation_clusters`/
       `liquidation_band_prediction` feature_groups, but the exact ID-keyed shape these `.get()` calls expect needs

@@ -73,15 +73,17 @@ drift_direction: advance-code
       when: each of the 3 MEV engines' call (or non-call) to `simulate-bundle` is confirmed with cited file:line
       evidence, and any genuine gap found is filed as its own follow-up rather than fixed inline if it needs a design
       call.
-- [ ] [REVIEW] P1. **Confirm the exact default behavior at `liquidation_bundle.py:265-267`.**
-      `liq_candidate_debt_amount_<id>`, `liq_candidate_health_factor_<id>`, `liq_candidate_liq_bonus_pct_<id>` are read
-      via `.get(id_key)` with no explicit default shown in the source doc's own pass — could be `None` (raising
-      downstream), a bare `KeyError`, or silently coerced to something else. Read the exact call sites and trace what
-      actually happens on a miss before any fix to the candidate-identification producer is scoped. Repo:
-      strategy-service. Source: `plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md`
-      todo 2 (line ~131). Done when: the exact default/failure behavior is confirmed with cited code evidence and
-      reported back into the source doc (and, if it's a silent-default masking a real gap, flagged the same way the
-      sibling `backrun`/`jit_liquidity` trigger-defaults-to-0.0 pattern already is in that doc).
+- [x] ✅ [REVIEW] P1. **Confirmed the exact default behavior at `liquidation_bundle.py:265-269`
+      (`_candidate_from_features`).** `.get(id_key)` — no default argument at all. On any missing key the function
+      returns `None` for the whole candidate (explicit `is None` checks; own docstring: "Returns `None` when any
+      required key is missing — the orchestrator should backfill the calculator before this engine emits"), and
+      `on_tick()` `continue`s past that candidate. Not a `KeyError`, not a silent coercion, and — the important
+      contrast — NOT the same silent-zero pattern as `backrun`/`jit_liquidity`'s `.get(key, 0.0)`: this engine
+      declines to act on missing data instead of fabricating a comparison against a fake zero. Net effect on the
+      candidate-identification producer todo: purely additive — no engine-side correctness fix needed alongside it.
+      Repo: strategy-service. Reported back into the source doc
+      (`plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md`, §"NOT WIRED" item 3,
+      updated same pass).
 
 ## Progress Log
 
@@ -99,3 +101,7 @@ drift_direction: advance-code
   candidate-identification triggers) — zero prior claims found on either extracted item. Paired with
   `defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md` (`depends_on` + `gate_on_depends: true`,
   `status: active`) in the same turn.
+- **2026-08-18 (interactive, slot-6)**: closed the `[REVIEW] P1` `liquidation_bundle.py` default-behavior todo —
+  direct code read of `_candidate_from_features` (lines 255-287), no design call needed. Finding reported back into
+  the source doc per the todo's own "Done when" bar. Remaining item in this batch (`[REVIEW] P2` Tenderly
+  `simulate-bundle` call-site confirmation) untouched — separate scope, not part of this pass.
