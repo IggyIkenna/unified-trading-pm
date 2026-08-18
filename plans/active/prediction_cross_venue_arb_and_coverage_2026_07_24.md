@@ -402,6 +402,7 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
   extraction — the line-cap issue this note used to describe is resolved); context_scope re-verified (5 entries),
   unchanged.
 
+- **na-eligibility-audit 2026-08-18** [body-hash:277e25cf50a59509]: KEEP-NA, valid -- 2 open items re-confirmed genuine open-ended design/judgment work: an undecided infra tarball-overwrite-race mitigation (2 named options, no directive) and a fixture-pairing design residual explicitly gated by an in-text "(no false pairs -- operator)" annotation. Doc stays NA.
 ## Extracted items index (2026-08-09)
 
 > **Mechanical todo-conservation index — not live work.** `check_todo_regression.sh` counts total `- [ ]`/`- [x]` lines

@@ -302,3 +302,4 @@ context_scope:
   status:active, 7 open todos, Phase-B `--apply` not started). Doc stays NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified, unchanged.
+- **na-eligibility-audit 2026-08-18** [body-hash:39431b602f991e5b]: KEEP-NA, valid -- depends_on+gate_on_depends:true on prediction_phase_ab_residuals_2026_07_24 re-confirmed live still open (its own P0 migration todo unchecked). All 5 open items here are downstream of that unfinished migration. Doc stays NA.

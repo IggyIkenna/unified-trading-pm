@@ -146,3 +146,4 @@ and is flagged, not diagnosed further, here.
   code. Cross-checked `cross_ag_live_capture_parity_2026_08_14.md` and confirmed a mutual redirect (that plan's own
   todo 224 stays open specifically pending this doc's fix), not a duplicate extraction — `KEEP_NA_STALE_DUPLICATE`
   does not apply. Doc stays NA.
+- **na-eligibility-audit 2026-08-18** [body-hash:eb19afefaee42f7d]: KEEP-NA, valid -- all 3 open items explicitly redirect to cross_ag_live_capture_parity_2026_08_14.md (mutual redirect re-confirmed -- that plan's own todo 224 stays open pending this doc) or to an instruments-service investigation blocked on trigger-log access this session does not have. Doc stays NA -- flipping assigned_vm here would misroute the dispatch mechanism.

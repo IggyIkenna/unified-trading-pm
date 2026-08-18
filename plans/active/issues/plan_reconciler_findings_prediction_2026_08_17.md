@@ -260,3 +260,4 @@ requiring this specific run to act (all were already correctly left open by the 
   now open 3 calendar days). Doc stays NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-18** [body-hash:cc95bff0e06a121e]: KEEP-NA, valid -- 2 open items re-confirmed: the archival referrer-fix self-resolves only once plans/epics/predictions_master.md clears its own 12h grace window (still inside it), and BLK-e7b0e8da remains an unresolved [OPERATOR] governance question the doc explicitly declines to self-resolve. Doc stays NA.

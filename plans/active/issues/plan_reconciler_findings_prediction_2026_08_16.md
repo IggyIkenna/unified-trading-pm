@@ -523,3 +523,4 @@ in this same run.
   13 open items re-confirmed genuinely non-dispatchable (12h-grace-window mechanical re-checks self-owned by this same
   skill's recurring cadence, cross-tranche routing notes, and the standing `BLK-e7b0e8da` operator escalation) — none
   is orphaned bounded work needing a separate AO dispatch. Doc stays NA.
+- **na-eligibility-audit 2026-08-18** [body-hash:154fc93fbc50cf4a]: KEEP-NA, valid (prediction tranche) -- 13 open items re-confirmed: 12h grace-window mechanical re-check placeholders, cross-tranche routing pointers (tradfi/cross-cutting, not this tranche's to dispatch), one standing unresolved OPERATOR governance escalation (BLK-e7b0e8da), and judgment-call investigation notes with no single determinable owner. None is a bounded worker-determinable outcome sitting undispatched in this doc. Doc stays NA.

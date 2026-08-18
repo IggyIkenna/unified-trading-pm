@@ -128,3 +128,4 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
   confirmed permanent `[OPERATOR]` hard-stop per
   `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s own "manifest `--apply`
   reserved for human execution forever" ruling. Doc stays NA (1 open item remains).
+- **na-eligibility-audit 2026-08-18** [body-hash:f3121130a8653f4b]: KEEP-NA, valid -- the 1 remaining open item (manifest --apply reclassification of 38,020 out-of-lifecycle POLYMARKET rows) is a confirmed permanent [OPERATOR] hard-stop per /codex/02-data/gcs-and-manifest-delete-safety-protocol.md and a standing dated ruling in prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md. Doc stays NA.
