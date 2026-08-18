@@ -153,9 +153,17 @@ The spine. Everything else feeds it.
       at least one strategy archetype must be registered for this venue in this mode. Both, not either.
 - [ ] [BACKEND] P0. **Readiness applies to archetypes too**, not only venues — an archetype has its own batch / paper /
       live state, and a venue-archetype pair has one as well.
-- [ ] [SKILL] P0. **Build a readiness state-dump skill** — one invocation prints the current derived state across every
+- [x] ✅ [SKILL] P0. **Build a readiness state-dump skill** — one invocation prints the current derived state across every
       venue, archetype, and mode, with `unverified` where checks do not exist. This is the artefact the presentation
-      docs quote and the handover reader runs themselves.
+      docs quote and the handover reader runs themselves. — `unified-trading-pm@5b3dbf99bd`
+      (`cursor-configs/skills/readiness-state-dump/`). Shipped and verified live 2026-08-17 against real prod data
+      (288 venues × 3 modes = 864 rows, ~20s), also recorded done in the gate-register plan's own "Tuesday dumps"
+      section (`data_pipeline_completion_2026_08_21.md`). Grain is per (venue × mode); archetype is folded into the
+      strategy leg's real AND-check (`position_read_mode_availability` + the shipped contract-step-17
+      `satisfying_archetypes`) rather than reported as a separate third axis — the substantive ask (derived state,
+      `unverified` surfaced honestly, runnable by a handover reader) is met. Re-run live 2026-08-18: rollup
+      ready=0/not_ready=844/unverified=20 across 864 rows; `execution_instruction` leg 100% unverified fleet-wide —
+      a real gap this dump now makes visible, not yet named elsewhere in this epic's Definition of done.
 - [ ] [SKILL] P1. **Build a strategy-capability audit skill** — what can each archetype actually trade, given real
       coverage and real venue capability.
 
@@ -366,7 +374,8 @@ The registry must answer commercial and operational questions, not just "does th
 Automation is how 300–500 tasks/day becomes throughput rather than churn, and it is the beginning of handover
 documentation. 23 skills exist today; these extend the pattern.
 
-- [ ] [SKILL] P0. **Readiness state dump** (see W1) — venue × archetype × mode, derived.
+- [x] ✅ [SKILL] P0. **Readiness state dump** (see W1) — venue × archetype × mode, derived. — Shipped, same evidence
+      as W1's checkbox (`unified-trading-pm@5b3dbf99bd`).
 - [ ] [SKILL] P0. **Strategy capability audit** — what each archetype can actually trade given real coverage.
 - [ ] [SKILL] P1. **Venue registry completeness check** — collateral, cross-margin, transfer eligibility, manual-trade
       capability, per venue.
