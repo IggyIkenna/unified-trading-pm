@@ -299,7 +299,7 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       plan's request/message allowance is sufficient capacity for the number of tasks intended to run through it.
       Done when: a real measured requests-per-task figure exists for at least one subscription-shaped provider,
       derived from real completed tasks, not estimated.
-- [ ] [DATA] P1. New (2026-08-17): join per-task compaction occurrence — whether a given `task_id` triggered
+- [x] ✅ [DATA] P1. New (2026-08-17): join per-task compaction occurrence — whether a given `task_id` triggered
       `forced_precompact`/`forced_compact`/`forced_compact_ineffective` during its own run — onto a queryable
       per-task record. `ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md` already logs these
       events with a timestamp + `slot_id` (`server/fleet_kpis.py`/`server/context_lifecycle.py`), and `TaskUsageRow`
@@ -309,26 +309,31 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       routing — "give me all tasks that required autocompact," so a model with a small context ceiling can be routed
       away from tasks that historically need compaction. Done when: a real query (or a new persisted field, e.g.
       `TaskUsageRow.compact_count`) answers "did task X trigger compaction" for a real historical task without
-      hand-correlating timestamps.
-- [ ] [INFRA] P1. New (2026-08-17): capture the PEAK/high-watermark `context_used_pct` reached during a task, not
+      hand-correlating timestamps. **Extracted 2026-08-18 (na-eligibility-audit, ao tranche) → `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 1** — conflict-checked clear (outside the doc-level Non-goals ruling's own stated scope). Track dispatch/completion there, not here.
+- [x] ✅ [INFRA] P1. New (2026-08-17): capture the PEAK/high-watermark `context_used_pct` reached during a task, not
       just the end-state token sums `TaskUsageRow` already stores. `context_lifecycle.py`'s per-tick reader already
       sees `context_used_pct` live for every active target — nothing records the max value seen during a task's own
       window onto its durable per-task record. Second precondition for complexity routing (route historically
       low-peak-context tasks to a model with a small context ceiling). Done when: a real completed task's record
       shows a real peak-context value, cross-checked against a live session known to have approached a specific pct.
-- [ ] [DATA] P2. New (2026-08-17): capture which repo(s) a task actually touched (from its real diff/commits, not the
+      **Extracted 2026-08-18 (na-eligibility-audit, ao tranche) → `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 2** — conflict-checked clear. Track dispatch/completion there, not here.
+- [x] ✅ [DATA] P2. New (2026-08-17): capture which repo(s) a task actually touched (from its real diff/commits, not the
       plan's declared `repos:` frontmatter, which is a stated intent, not a measurement) and persist it per task. No
       such field exists today — confirmed by grep: `repos_touched`/`repo_count` in `server/` only match unrelated
       dirty-worktree-state concepts (`server/routes/git_health.py:277`, `server/worktree_clean_check/_report.py:51`).
       Useful as a difficulty heuristic alongside turns/context. Done when: a real completed task's record shows the
-      real repo(s) it committed to, sourced from actual commit/push evidence.
-- [ ] [DATA] P2. New (2026-08-17): persist the task's `context_scope` (the reading-list already passed to the worker
+      real repo(s) it committed to, sourced from actual commit/push evidence. **Extracted 2026-08-18
+      (na-eligibility-audit, ao tranche) → `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 3** —
+      conflict-checked clear. Track dispatch/completion there, not here.
+- [x] ✅ [DATA] P2. New (2026-08-17): persist the task's `context_scope` (the reading-list already passed to the worker
       at dispatch, `server/dispatch.py:564`) onto the completed-task record, so it's retrospectively joinable against
       the task's real turn count/token usage/compaction outcome (todo above). Today `context_scope` is
       dispatch-time-only and never carried through to `TaskUsageRow` or any other durable per-task table — this is
       what lets a future analysis ask "does a bigger context_scope reading list predict more turns/context/
       compaction" rather than assuming it. Done when: a real completed task's record shows both its `context_scope`
-      size and its real outcome metrics (turns/tokens/compacted) joinable in one query.
+      size and its real outcome metrics (turns/tokens/compacted) joinable in one query. **Extracted 2026-08-18
+      (na-eligibility-audit, ao tranche) → `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 4** —
+      conflict-checked clear. Track dispatch/completion there, not here.
 
 ## Progress Log
 
@@ -367,3 +372,4 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   run through it. Replaced the single prior todo with these 7, rather than leaving both (no work had landed against
   the original yet). No code written this session — doc-only.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ee26e6744e46c17e]: KEEP-NA, valid — explicit dated operator ruling on record: 'human plan, not AO-dispatched' for the whole doc's live-testing/design-call content (multi-provider billing/context research).
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: RECLASSIFY (per-todo split) — re-read end to end. The doc-level 'human plan' ruling correctly covers the bulk of the remaining ~19 open todos (live-testing verification, schema/methodology design work, the GLM/Codex boost-parity workstream), all KEEP-NA on that citation. But 4 telemetry-capture todos added 2026-08-17 (compaction-occurrence join, peak-context watermark, repo-touched capture, context_scope-size capture) are pure bounded backend/DB engineering with zero design or live-testing judgment component — outside the cited ruling's own stated scope. Conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch24_2026_08_18.md` items 1-4. Doc stays `assigned_vm: NA` for its remaining ~19 items.

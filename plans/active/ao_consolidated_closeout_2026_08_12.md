@@ -131,12 +131,14 @@ fresh scan:
       (violation message now names archived closeout match(es) + flags "tranche may need reopening"). Reconciled
       2026-08-14 per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
       `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
-- [ ] [INFRA] P3. **Decide the tranche-reopening convention and write it down.** This plan invented one (open a
+- [x] ✅ [INFRA] P3. **Decide the tranche-reopening convention and write it down.** This plan invented one (open a
       `<ag>_consolidated_closeout_<new-date>.md` for the new cycle, leave the archived one untouched). It is not
       recorded anywhere as the convention, so the next person to hit this will invent a different one — most likely
       editing the archived doc, which is worse. Done when:
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` states what to do when an archived tranche
-      produces new findings. Repo: unified-trading-pm.
+      produces new findings. Repo: unified-trading-pm. **Extracted 2026-08-18 (na-eligibility-audit, ao tranche) →
+      `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 5** — conflict-checked clear (closing the loop on this
+      item's 2026-08-17 `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` flag). Track dispatch/completion there, not here.
 - [x] ✅ [INFRA] P3. **Check whether the other archived tranches have the same latent gap.** `ao` was found by accident.
       Any tranche whose coordinator is archived while its asset group still has active docs is one commit away from the
       same block. Done when: every asset group is confirmed to have either an active coordinator or genuinely zero
@@ -172,3 +174,4 @@ to shape a plan.
 - **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries); doc had no prior Progress Log section,
   added a minimal one.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ba0e198553e8878a]: KEEP-NA, valid — todo 1 (re-triage 115 [ao] docs) is explicitly self-declared judgment-heavy classification, not mechanical; todo 3 (sequential:true dispatch-order root-cause) touches live-dispatch-critical-path machinery. Todo 2 (tranche-reopening convention) flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future pass, not split now.
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: RECLASSIFY (per-todo split) — closing the loop on the 2026-08-17 marker's MISCLASSIFIED_LIKELY_AO_ELIGIBLE flag on the tranche-reopening-convention todo: the convention text is already fully specified in the todo itself (transcription into a named codex doc, no open judgment call), so it clears the RECLASSIFY bar on its own. Conflict-checked clear (no other active doc claims this) and extracted to `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 5. The re-triage todo (self-declared judgment-heavy) and the dispatch-order root-cause todo (live-dispatch-critical-path) both re-confirmed KEEP-NA. Doc stays `assigned_vm: NA`.
