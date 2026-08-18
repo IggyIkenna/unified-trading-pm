@@ -342,6 +342,13 @@ is (per the AWS migration plan Phase 1.5):
 
 ## Open questions
 
+- **Standalone cloud-abstraction package for leasable/self-hostable services (raised 2026-08-18)**: should
+  `unified_trading_library.cloud_interface` be extracted into its own package (no UTL scipy/pandas/scikit-learn
+  dependency chain) so services that might run separately from the core trading system — agent-orchestrator, the
+  CI-runner fleet — can depend on cloud-provider resolution without inheriting UTL's full dependency graph? Raised
+  during `/plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md` planning (the CI VM's resource-history-sampler
+  already needed a dedicated venv just for this, per `ci_vm_exposure_remediation_2026_08_06.md`). Operator decision:
+  defer — `cloud_interface` stays inside UTL for now, extraction not scoped before **~March 2027**.
 - Should we ship a `cloud-shim` wrapper that auto-translates `gcloud storage cp` → `aws s3 cp` for legacy scripts during
   the migration window? (probably no — encourages laziness)
 - How strict is the lint on third-party SDK imports? Allow-list (`import boto3` allowed in `aws_*.py`-suffixed files
