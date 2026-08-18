@@ -113,8 +113,21 @@ between the codex archetype doc and the live registry, not a data gap. **Not yet
 data_type per venue actually carries health-factor/position-risk fields specifically (vs. only generic lending-rate
 data) — the calculator-build todo below should verify this as its first step, not assume it.
 
+**Bundle-simulation infrastructure exists** (found 2026-08-18, answering "do we need Tenderly too"): a real
+`TenderlyExecutionProvider` already exists (`execution-service/execution_service/providers/tenderly.py`) — Tenderly
+Virtual TestNet fork + `simulate-bundle` support (`TenderlyTx`/`BundleSimResult`), wired into the core
+`matching_engine.py` (not governance-only — `governance/proposal_simulator.py` is a separate consumer of the same
+generic provider). **Not confirmed**: whether `liquidation_bundle.py`/`jit_liquidity.py`/`sandwich_theoretical.py`
+actually call it before submitting a bundle, or whether it's available-but-unused for MEV specifically (matching
+this doc's own established pattern of infrastructure existing without being wired to its obvious consumer).
+
 ## Todos
 
+- [ ] [REVIEW] P2. **Confirm whether the MEV engines actually call `TenderlyExecutionProvider.simulate-bundle`
+      before submission** — infrastructure exists and is wired into `matching_engine.py`, but no MEV-engine call
+      site was confirmed this session. If unused, that's a real pre-submission safety gap for `LIQUIDATION_BUNDLE`'s
+      atomic flash-loan bundle in particular (a revert there costs gas only, but an unsimulated bundle is still a
+      worse bet than a simulated one).
 - [ ] [REVIEW] P1. **Confirm the exact default behavior** at `liquidation_bundle.py:265-267` (no explicit default
       shown in this pass — could be `None`, raising downstream, or silently coerced) before scoping the fix.
 - [ ] [FEATURES] P2. **Build the BACKRUN opportunity-detection calculator** — `backrun_target_swap_size_usd_<chain>`
