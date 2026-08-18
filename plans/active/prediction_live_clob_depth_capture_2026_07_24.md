@@ -916,3 +916,8 @@ sports/prediction-track blocker.
   this skill. Doc stays NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
+
+- **na-eligibility-audit 2026-08-18 (prediction tranche, re-verify)** [body-hash:3cc78be393f54574]: KEEP-NA, valid
+  (not-applicable — re-confirmed 0 open todos via a fresh full read + grep across every checkbox-marker variant;
+  every prose "[ ]" mention is historical narration). `archive_exempt: true` defers the archival call to
+  `/archive-candidates-audit`, not this skill. Doc stays NA.
