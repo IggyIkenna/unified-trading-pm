@@ -30,7 +30,7 @@ related:
   ]
 created: "2026-08-14"
 author: claude-agent
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 source: >-
   Split off during the cross-cutting satellite AO batch13b finalize plan's todo-2 archival pass (review, slot 20,

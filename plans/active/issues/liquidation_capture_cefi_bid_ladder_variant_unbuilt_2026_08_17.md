@@ -22,7 +22,7 @@ author: worker-slot-11
 source:
   - cefi_venue_e2e_batch1_2026_08_16.md LIQUIDATION_CAPTURE gap todo (task cefi_venue_e2e_batch1-86f64bd3ee20)
 assigned_vm: NA
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resolved_by:
 locked_by:
 priority: P3

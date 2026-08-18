@@ -29,7 +29,7 @@ related:
 created: 2026-07-27
 author: unknown
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: "slot-3, infra, todo 10 benchmark work (data_pipeline_check_mdps_features_2026_07_20.md), 2026-07-27"
 execution_scope: orchestrator-agent
 drift_direction: advance-code

@@ -25,7 +25,7 @@ related:
   [/codex/05-infrastructure/per-tab-worktrees.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 created: 2026-08-11
 last_updated: "2026-08-11"
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5

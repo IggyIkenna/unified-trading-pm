@@ -38,7 +38,7 @@ created: 2026-08-15
 author: slot-6 (backend_engineer)
 last_updated: 2026-08-15
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: >-
   Relaunching the TRADFI:volatility benchmark per tradfi_satellite_ao_dispatch_batch13_2026_08_13.md's "Todo 2: relaunch
   TRADFI:volatility benchmark once todo 1 lands" (slot-6, backend_engineer, 2026-08-15).

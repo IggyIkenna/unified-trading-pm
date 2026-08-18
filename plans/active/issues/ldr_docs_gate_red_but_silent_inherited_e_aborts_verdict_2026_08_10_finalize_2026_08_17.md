@@ -20,7 +20,7 @@ related:
   ]
 created: "2026-08-17"
 author: na_eligibility_auditor (dispatch agt-775398, slot 23)
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P2
 source: >-
   Mandatory finalize companion for the 2026-08-17 /na-eligibility-audit cross-cutting-tranche RECLASSIFY(whole-doc)

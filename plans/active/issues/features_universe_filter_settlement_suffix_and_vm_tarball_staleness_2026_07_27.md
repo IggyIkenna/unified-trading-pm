@@ -21,7 +21,7 @@ related: [data_pipeline_check_mdps_features_2026_07_20]
 created: 2026-07-27
 author: unknown
 priority: P0
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: "/data-pipeline-check-features driver run against CEFI:delta_one, 2026-07-27 (slot-3)"
 execution_scope: orchestrator-agent
 drift_direction: advance-code

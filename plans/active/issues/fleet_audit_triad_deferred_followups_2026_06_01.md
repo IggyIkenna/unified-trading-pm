@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-01
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 source:
   [

@@ -15,7 +15,7 @@ repos: [features-service]
 scope: [engineer]
 tags: [honest-coverage, manifest, calendar, features-service, data-pipeline-correctness]
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 created: 2026-08-18

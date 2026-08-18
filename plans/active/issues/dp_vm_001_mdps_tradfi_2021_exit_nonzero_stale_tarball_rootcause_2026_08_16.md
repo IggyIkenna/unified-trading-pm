@@ -40,7 +40,7 @@ related:
   ]
 context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /codex/05-infrastructure/vm-tarball-deployment.md, market-data-processing-service/market_data_processing_service/app/adapters/__init__.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py, deployment-service/scripts/vm/create-code-tarballs.sh]
 created: "2026-08-16"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

@@ -68,7 +68,7 @@ related:
 created: 2026-07-27
 author: unknown
 priority: P0
-parent_epic: infrastructure_master
+parent_epic: ci_master
 source: "cicd agent, slot-16, escalation agt-2cbf1d (execution-service ldr_qg_failure), 2026-07-27"
 execution_scope: orchestrator-agent
 drift_direction: advance-code

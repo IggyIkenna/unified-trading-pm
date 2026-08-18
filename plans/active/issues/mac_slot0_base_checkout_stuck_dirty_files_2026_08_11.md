@@ -31,7 +31,7 @@ related:
 context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh]
 created: 2026-08-11
 last_updated: 2026-08-11
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P3

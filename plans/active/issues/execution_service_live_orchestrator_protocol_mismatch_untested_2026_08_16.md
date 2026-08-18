@@ -24,7 +24,7 @@ source: >-
   Side-discovery during nick_ai_platform_readiness_remediation_2026_08_16.md's W1 execution-service todo — the
   sub-agent needed a real (non-mock) LiveOrchestrator to prove its instruction-submission surface reaches a real
   fill, and in doing so found the actual production orchestrator doesn't satisfy the protocol.
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 assigned_vm: NA
 assigned_role: backend_engineer

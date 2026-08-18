@@ -37,7 +37,7 @@ source: dp-fleet-monitor
 resolved_by: ""
 locked_by: ""
 created: 2026-08-14
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

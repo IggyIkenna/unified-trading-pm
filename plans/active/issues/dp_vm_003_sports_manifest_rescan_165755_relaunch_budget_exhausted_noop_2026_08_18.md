@@ -55,7 +55,7 @@ context_scope:
     deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh,
   ]
 created: "2026-08-18"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P3

@@ -31,7 +31,7 @@ related:
 created: "2026-08-07"
 author: unknown
 source: [backlog task defi_satellite_ao_dispatch_batch9-018, slot 8]
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

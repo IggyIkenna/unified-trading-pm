@@ -47,7 +47,7 @@ related:
   ]
 context_scope: [/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md, /codex/15-runbooks/incidents/rb_infra_relaunch.md, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-17"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
