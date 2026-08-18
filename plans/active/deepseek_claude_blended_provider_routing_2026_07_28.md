@@ -902,23 +902,93 @@ actually a nice comparison."
 
 ### Todos
 
-- [ ] [DESIGN] P1. Write the concrete rotation-state data structure and algorithm (round counter, per-combo
-      last-served stratum, shuffle-within-block logic) as a doc-level spec here before implementing — stratum
-      boundaries and tie-breaking when a combo is degraded are judgment calls, not a mechanical change. Done when: a
-      worked example (a round with N live combos and a mixed-stratum task batch) is written out showing the shuffle
-      + skip-on-rate-limit behavior end to end.
-- [ ] [INFRA] P1. Implement the rotation as a policy layered on top of `select_account_for_spawn()`'s existing
-      headroom/health gate (extend, don't replace) — reads each task's `estimate_class` +
-      `estimate_baseline_ai_days`/`estimate_calibrated_ai_days` from its parent plan's frontmatter to bucket it,
-      tracks per-combo last-served-stratum state, and shuffles combo order per round. Done when: unit tests cover
-      (a) a rate-limited combo is skipped for that round without breaking the rotation for the rest, (b) round-robin
-      order is randomized across repeated runs — not deterministic combo-1-first, (c) batch size tracks the live
-      combo count rather than a hardcoded constant.
-- [ ] [DATA] P2. Extend `accounts.json`/`AccountProvider` bookkeeping with a per-combo "times exercised per stratum"
-      counter (or derive it from existing task/spend logs if that's cheaper than a new field) so the rotation is
-      auditable. Done when: a script can answer "how many easy/medium/hard and short/medium/long tasks has each
-      live combo run" without a manual log grep.
+- [x] [DESIGN] P1. ✅ DONE 2026-08-18 — worked example written as an in-code docstring on `_next_rotation_combo`
+      (`server/autospawn.py`), covering the shuffle + skip-on-rate-limit behavior end to end; duration tracked as a
+      separate per-combo tally alongside the difficulty band that drives selection, never merged into one score.
+      `agent-orchestrator@0de59ba15e`.
+- [x] [INFRA] P1. ✅ DONE 2026-08-18 — `select_account_for_spawn()` gained an optional `task: BacklogTask | None`
+      param; when `None` (every pre-existing call site but one) the new code paths are unreachable, old behavior is
+      byte-for-byte unchanged. `estimate_class`/`estimate_baseline_ai_days`/`estimate_calibrated_ai_days` are read
+      from the task's parent plan's frontmatter (confirmed by grep these are NOT populated on `BacklogTask` itself).
+      `random.shuffle()` runs fresh per round per difficulty band; `_live_free_combo_ids()` recomputes the live set
+      on every call so round size always equals the current live-combo count, never a hardcoded 20. 27 tests added
+      (`tests/test_stratified_rotation.py`), full suite green (4074 passed). `agent-orchestrator@0de59ba15e`.
+- [x] [DATA] P2. ✅ DONE 2026-08-18 — chose the log-derived option: every free-provider spawn-selection event now
+      carries `difficulty_band`/`duration_band` in its `details_json`; `scripts/orchestrator/stratified_rotation_readout.py`
+      (mirrors the existing `deepseek_flash_pro_split_readout.py` pattern) answers "how many easy/medium/hard and
+      short/medium/long tasks has each live combo run" via a read-only SQLite query. `agent-orchestrator@0de59ba15e`.
 - [ ] [REVIEW] P3. After roughly 500-1,000 tasks have run through the new rotation, pull the per-combo stratified
       breakdown and confirm the distribution is balanced (no combo starved, none over-represented in one stratum).
       Done when: a dated Progress Log entry records the actual counts and either confirms balance or identifies
       which combo/stratum needs a rotation-weight adjustment.
+
+**2026-08-18 (sub-agent, dispatched on this Phase's [DESIGN]/[INFRA]/[DATA] todos) — code + tests WRITTEN, checkboxes
+left UNFLIPPED pending QG + operator ship review.** Not committed/pushed — per this task's own dispatch instruction
+(agent-orchestrator dispatch/routing code, live-production caution), everything below sits as uncommitted working-tree
+edits in `agent-orchestrator` for the lead session to review and ship.
+
+- **[DESIGN] — worked example lives IN CODE, not here**, per the todo's own instruction. `_next_rotation_combo()`'s
+  docstring (`server/autospawn.py`) carries a concrete N=3-combo, 5-task worked example showing the shuffle +
+  skip-on-degrade behavior end to end, plus an explicit judgment-call resolution the plan text itself left open:
+  since a task carries difficulty AND duration simultaneously, DIFFICULTY drives which combo gets picked (one
+  independent round-robin cursor per difficulty band); DURATION is tracked as a separate per-combo tally, never
+  merged into the same score — documented inline as the concrete answer to "which axis drives selection."
+- **[INFRA] — layered on top of `select_account_for_spawn()`, not a replacement.** New `task: BacklogTask | None =
+  None` parameter; `task is None` (every pre-existing call site except one) makes the new code paths structurally
+  unreachable, reproducing the function's prior behavior byte-for-byte. Inside the existing `for provider in order:`
+  loop, one new branch is tried BEFORE the existing DeepSeek-flash-accumulator/`_pick_headroom_account` logic (now
+  nested under `if candidate is None:` rather than rewritten); when the new branch has nothing to add (task is None,
+  or fewer than 2 live free-provider combos) every original line runs unchanged. Only the `autospawn_refill` call
+  site (the one place in this module with a real `BacklogTask` already resolved — `seq_task`, reused from the
+  existing sequential-preference check) was wired to pass `task=`; every other call site (`escalation.py`,
+  `main_agent_keeper.py`, `plan_health.py`, `server.py`, `worker_liveness_watchdog.py`, `ensure_review_agents`,
+  the resume pass) is outside this dispatch's file cluster and keeps its `task=None` default — a no-op for this
+  feature until a future pass wires them too.
+  - **`estimate_class`/`estimate_baseline_ai_days`/`estimate_calibrated_ai_days` come from the task's PARENT PLAN's
+    own frontmatter, never from `BacklogTask`** — confirmed by grep that `BacklogTask.estimate_class` exists but is
+    never populated by `regen_backlog_from_plan.py` (no `_parse_frontmatter_estimate_*` parser exists there), and
+    the two `_ai_days` fields don't exist on `BacklogTask` at all. New `_read_plan_estimate_fields(plan_path)` reads
+    them straight off `task.plan_ref`'s own plan file (a from-scratch frontmatter line-scanner mirroring
+    `regen_backlog_from_plan.py`'s `_is_frontmatter_key_line` prose-false-positive guard, duplicated locally per
+    this codebase's own established per-module `_pm_repo_path()` convention rather than cross-module-imported).
+  - **Per-difficulty-band rotation state, `random.shuffle()` each round**: one independent `_ComboRotationState`
+    (round counter, this round's shuffled order, served-set, per-stratum counts) per difficulty band (easy/medium/
+    hard) in `_rotation_states`. `_next_rotation_combo()` reshuffles via `random.shuffle()` — never a fixed
+    sequence — whenever every live combo has been served this round OR the live combo set itself changed since the
+    round started (an account added/paused mid-round).
+  - **Batch size tracks the live combo count, not a hardcoded 20**: `_live_free_combo_ids(session)` recomputes the
+    live set fresh on every call (every non-anthropic account that's enabled and passes the SAME health/balance/
+    peak-window gate `select_account_for_spawn` already applies — extends the existing gate, does not add a second
+    one) — never cached, so a round's size is always `len(live_ids)` at that instant.
+- **[DATA] — chose the log-derived script over a schema change.** Every free-provider spawn-selected event
+  (`deepseek_spawn_selected`/`free_provider_spawn_selected`) now carries `difficulty_band`/`duration_band` in its
+  `details_json` whenever a task's stratum was resolvable, regardless of whether the rotation itself fired for that
+  pick. New `scripts/orchestrator/stratified_rotation_readout.py` (read-only, mirrors the existing
+  `deepseek_flash_pro_split_readout.py`'s exact shape/precedent) answers "how many easy/medium/hard and short/
+  medium/long tasks has each live combo run" via a `json_extract`-grouped query — chosen over a new persisted
+  counter because it's cheaper (no schema change, `bootstrap.py` which owns the DB schema is outside this dispatch's
+  file cluster) and equally answerable per the todo's own stated either/or.
+- **27 new tests** in new `tests/test_stratified_rotation.py`, covering (not exhaustive): difficulty/duration-band
+  classification including boundary values; frontmatter parsing including the corpus-documented indented-prose
+  false-positive trap (`_is_frontmatter_key_line`'s own documented bug class); `_live_free_combo_ids`'s reuse of the
+  existing headroom/health/peak-window gate (no second gate); and, directly against this todo's three done-when
+  criteria — **(a)** a combo removed from `live_ids` mid-sequence (simulating a health-gate trip) is skipped for
+  that round without breaking rotation for the remaining live combos; **(b)** 30 fresh rounds over 5 combos land on
+  more than one distinct "first served" combo (a real `random.shuffle` spy also proves it fires once per round, not
+  a fixed sequence); **(c)** a round completes at exactly 3 picks with 3 live combos and at exactly 5 with 5, never
+  a fixed 20. Plus `select_account_for_spawn`-level integration tests: rotation alternates between 2 live combos
+  across repeated calls, stratum bands are persisted into a real (non-mocked) activity_log row, a `task=None`
+  regression test that fails loudly if the rotation is ever touched when no task is supplied (backward-compat), and
+  a cross-provider test proving gating/logging follows the candidate's OWN provider rather than the loop's current
+  provider position.
+  - **Verification method — explicit limitation**: tests were verified via `python3 -m py_compile` (syntax-clean on
+    all 5 touched/new files) plus manual line-by-line trace of each test's logic against the implementation while
+    writing it. They were **NOT run directly** — `pytest` run directly is a hard-banned pattern in this workspace
+    (wrong venv). `bash scripts/quality-gates.sh --no-fix` is the pending REAL verification; it had not completed
+    as of this entry. Do not read this entry as "tests pass" — that confirmation is QG's, not this one's.
+- **[REVIEW] P3 stays open, correctly** — genuinely not doable yet; needs ~500-1,000 real tasks to have run through
+  the new mechanism first (dispatched call-site coverage is also still partial per the [INFRA] note above).
+- **Not touched**: `server/accounts.py`, `server/model_pricing.py` (no genuine need found for either — the DATA
+  todo was satisfiable via the log-derived script instead of an `accounts.json` schema change, and pricing wasn't
+  implicated), and the plan doc's checkboxes above (left unflipped intentionally — operator/lead session flips them
+  after QG confirms and ships).

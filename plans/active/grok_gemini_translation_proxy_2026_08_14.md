@@ -175,12 +175,14 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       deliberately NOT a dependency of this repo's `pyproject.toml` (see that file's own comment).
       `agent-orchestrator@2dafd5a14c` (dependency, later reverted) → `@31687b54dc` (isolated-venv fix + Gemini headroom
       wiring, see below).
-- [ ] [REVIEW] P0. Verify system-prompt + `tool_use`/`tool_result` translation correctness with a real skill/tool-call
-      smoke test before any live fleet traffic — LiteLLM is designed for this, but it must be proven against THIS
-      workspace's actual tool schemas, not assumed correct from general maturity. **Still open 2026-08-16** — only a
-      plain-text completion was smoke-tested through the proxy (see the P0 above), not a real tool-calling exchange.
-      **Narrowed 2026-08-18 (Grok decommissioned)**: Done when: a real multi-step tool-calling exchange completes
-      correctly through the proxy for the Gemini backend.
+- [x] [REVIEW] P0. ✅ DONE 2026-08-18 — `server/gemini_translation_smoke.py` starts the real litellm proxy subprocess
+      against the real deployed `config/litellm/grok_gemini_proxy.yaml` and drives a real 2-turn tool_use→tool_result
+      exchange through `/v1/messages` against a real Gemini backend (project `gen-lang-client-0008266149`). Verified
+      live 3 separate times: tool name/id/input args survive translation exactly, `stop_reason` correctly becomes
+      `tool_use`, and the tool_result content correctly reaches the model's final answer (id-correlation, not just
+      name-correlation, confirmed) — no translation bug found. Also added 5 always-run structural tests cross-checking
+      the deployed config against `gemini_headroom.py`'s known rate-ceiling variants
+      (`tests/test_gemini_litellm_translation_smoke.py`). `agent-orchestrator@0de59ba15e`.
 - [x] [INFRA] P1. ✅ Register `AccountProvider` value `"grok"` + extend `"gemini"` with `gcp_project`. **DONE
       2026-08-16** — all 8 accounts (2 Grok + 6 Gemini, using 3 of the operator's 4 confirmed free-tier projects)
       registered in the live `accounts.json` and confirmed parsing cleanly via the real `load_accounts()` Pydantic
@@ -244,6 +246,66 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       with real Gemini quality and consumption-rate numbers lands.
 
 ## Progress Log
+
+- **2026-08-18 (later, dispatched sub-agent session) — `[REVIEW] P0` tool_use/tool_result translation smoke-test gate:
+  BUILT + LIVE-VERIFIED against a real Gemini backend. Translation was ALREADY CORRECT — no bug found, no fix needed.
+  Checkbox left UNFLIPPED per this session's instruction; lead session to review + ship.**
+
+  **Scope finding first**: this repo owns NO Anthropic<->Gemini translation code of its own (unlike DeepSeek's
+  bespoke `server/deepseek_native_translate.py`) — this plan's whole design delegates translation entirely to
+  LiteLLM's own library (litellm[proxy] 1.97.0). There is therefore nothing to unit-test as pure local logic; the
+  only real verification is running the actual deployed proxy config against a real Gemini backend and inspecting
+  what comes back — a mock of litellm's internals can't catch a real litellm<->Gemini translation bug.
+
+  **Built** (both files new, uncommitted): `agent-orchestrator/server/gemini_translation_smoke.py` — credential
+  resolution (`GEMINI_SMOKE_TEST_API_KEY` override, else GSM-via-UTL through the live accounts.json's registered
+  gemini `AccountDef.api_key_secret_name` — mirrors `deepseek_native_proxy_server.py`'s own GSM-degrades-gracefully
+  convention); litellm-CLI resolution (`LITELLM_PROXY_BIN` override, else the `~/.venvs/litellm-proxy` install-script
+  convention, else PATH — deliberately never this repo's own `.venv`); starts the REAL `litellm` CLI subprocess
+  against the REAL `config/litellm/grok_gemini_proxy.yaml`; drives a real 2-turn tool_use -> tool_result exchange
+  through its Anthropic-shaped `/v1/messages`. Plus `agent-orchestrator/tests/test_gemini_litellm_translation_smoke.py`
+  — 5 structural tests (always run, no creds needed: config parses, >=1 gemini backend declared, every gemini
+  `model_name` maps to a known `server/gemini_headroom.py` `GEMINI_RATE_CEILINGS` variant — catches a model alias the
+  rate gate wouldn't protect, litellm-bin resolution never points at this repo's own `.venv`) + 1 live round-trip
+  test marked `@pytest.mark.integration @pytest.mark.smoke` (both pre-registered in pyproject.toml), which skips
+  cleanly with a clear message when litellm[proxy] or Gemini credentials aren't resolvable — same shape as this
+  repo's existing `pytest.importorskip("moto")` pattern for an optional dependency.
+
+  **Live-verified, real credentials, real network, 3 separate runs, all passed.** First reproduced the exact
+  fastapi/starlette incompatibility this plan's 2026-08-16 entry already documented (`get_flat_dependant` removed
+  from `fastapi.dependencies.utils` on an unpinned litellm[proxy] install) in an independent ad-hoc venv, and
+  confirmed the documented fix (`fastapi<0.120,>=0.110`) resolves it — an independent re-confirmation of that
+  finding, not just trusting the prose. Then started the real litellm 1.97.0 proxy against the REAL
+  `config/litellm/grok_gemini_proxy.yaml` (all 3 `GEMINI_API_KEY_PROJn` env vars set to one real free-tier key,
+  `gemini-api-key-gen-lang-client-0008266149` via GSM — the same genuinely-free, billing-disabled project confirmed
+  in this plan's own 2026-08-16 sweep), targeting `gemini-3.5-flash-lite-proj1`:
+  - **Turn 1**: sent a `get_weather` tool definition + an instruction pinning exact arguments (city=Tokyo,
+    unit=celsius). Real response: `tool_use` block with `name="get_weather"`, a real non-empty `id` (e.g.
+    `call_3221808`, varies per run), `input={"city": "Tokyo", "unit": "celsius"}` — exact match, no corruption of
+    tool name, id, or input schema/arguments — and `stop_reason="tool_use"` correctly translated.
+  - **Turn 2**: sent a `tool_result` back keyed by the turn-1 `tool_use_id`, content containing a planted unique
+    marker + "72 degrees celsius". Real response: final text correctly referenced "72 degrees Celsius" — proving
+    id-correlation AND content survived the round trip. This specifically matters for Gemini: its own native
+    function-calling protocol correlates a function response by NAME, not Anthropic's opaque id, so this proves
+    LiteLLM's id<->name remapping works, not just that content passed through somewhere.
+
+  **Conclusion**: satisfies the todo's 2026-08-18-narrowed done-when ("a real multi-step tool-calling exchange
+  completes correctly through the proxy for the Gemini backend") — unlike DeepSeek's onboarding saga, no real
+  translation bug was found here; today's litellm 1.97.0 + gemini/gemini-3.5-flash-lite tool_use/tool_result
+  translation is already correct.
+
+  **Honest scope / what's NOT covered**: proven live against a real Gemini backend and a real litellm[proxy]
+  install (same `fastapi<0.120` pin the install script uses) in an ad-hoc isolated venv on this session's dev
+  machine — not yet separately re-run ON the orchestrator VM's actual deployed `~/.venvs/litellm-proxy` +
+  systemd unit itself, though that's a trivial follow-up (`tests/test_gemini_litellm_translation_smoke.py` already
+  auto-resolves that exact venv path, or GSM accounts.json creds, when run there — no code change needed). Plain
+  system-prompt-only translation (the todo's other named target) was not separately re-exercised this session — it
+  was already smoke-tested as a plain-text completion per the 2026-08-16 entry; only tool-calling was newly proven
+  here. QG: `ruff check`/`ruff format --check`/`basedpyright` all clean (0 errors) on both new files, confirmed
+  independently of the full-suite run. A full local `quality-gates.sh --no-fix` run was in progress at the time
+  this entry was written, on a checkout with several other concurrent live sessions' uncommitted WIP present
+  (e.g. `server/autospawn.py`, untouched by this work) — not waited on further; the two new files' own targeted
+  lint/type/test checks (above) are the load-bearing verification for this todo specifically.
 
 - **2026-08-18 — Grok (xAI) fully decommissioned, operator decision.** Reason stated verbatim: Grok has no
   subscription/Max-style tier and no free tier — pure metered pay-per-token — judged pointless to keep running
