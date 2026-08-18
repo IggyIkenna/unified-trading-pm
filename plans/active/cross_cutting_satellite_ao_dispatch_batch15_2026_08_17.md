@@ -85,10 +85,18 @@ source: >-
       `GET /distinct-values/{asset_group}` against the newest nightly honest-coverage rollup (source_date
       2026-08-18). Full per-value breakdown + 8 follow-up todos filed:
       [`/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`](/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md).
-- [ ] [DATA] P0. Verify B22 in BOTH directions, per asset group, off the manifest — manifest→path (does every entry
+- [x] ✅ [DATA] P0. Verify B22 in BOTH directions, per asset group, off the manifest — manifest→path (does every entry
       have an object?) AND path→manifest (does every object have an entry?). Manifest-driven; no new whole-corpus
       GCS walk (B13 discipline). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a
       per-AG bidirectional reconciliation report is produced, citing the manifest as the sole read surface.
+      **Done 2026-08-18** —
+      [`data_pipeline_reconciliation_b22_bidirectional_2026_08_18.md`](/plans/audit/results/data_pipeline_reconciliation_b22_bidirectional_2026_08_18.md).
+      Synthesized from already-published per-AG manifest-side artifacts (phantom + orphan-sweep read-backs), zero new
+      GCS reads. Headline finding: direction 1 (manifest→path/phantom) has some coverage on all 5 AGs; direction 2
+      (path→manifest/orphan) has **never been assessed** for cefi, tradfi, or prediction, and the two AGs that have
+      been measured (defi 63.74% orphan_real, sports 27,348 objects) are both ~26 days stale — confirming the gate
+      text's own warning that path→manifest is the direction that gets skipped. 4 follow-up todos filed in the
+      report itself (not this doc) to close the per-AG gaps.
 - [x] ✅ [DATA] P0. Establish whether B23's schemas (the 51-column instruments schema) are locked and versioned, and
       if not, what locking them requires. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`.
       Done-when: a written determination (locked-and-versioned: yes/no) is recorded, plus, if no, a concrete
@@ -204,3 +212,8 @@ source: >-
   touching the schema (membership-only, never freeze/hash-gated) — determination: locked-and-versioned = NO.
   Recorded in `data_pipeline_completion_2026_08_21.md`'s B23 blockquote; 4-part fix filed as tracked follow-up in
   `instruments_schema_not_locked_versioned_2026_08_18.md` (new discovered scope, not absorbed into this item).
+- **2026-08-18 (slot 7, backend_engineer, task `cross_cutting_satellite_ao_dispatch_batch15-1d0c8d58f6ff`)**: item 2
+  (B22 bidirectional) done — see the report linked on the checkbox above. Synthesized entirely from already-published
+  manifest-side artifacts per B13/single-walk discipline; no new GCS reads. Real finding, not a formality: the
+  path→manifest (orphan) direction has never been assessed for 3 of 5 asset groups, and the 2 that have been
+  measured are ~26 days stale — the report files 4 follow-up todos to close this.
