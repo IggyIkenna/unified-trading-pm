@@ -224,9 +224,17 @@ grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked
       `coverage_floor_registries_no_cross_propagation_2026_07_17.md`'s sole open todo re-points to a
       NEW 19-VM HYPERLIQUID fleet found running 2026-08-16 that no task in the doc launched — identify/confirm it's
       the expected relaunch before assuming progress.
-- [ ] [OPERATOR] P3. Unidentified live VM `mdps-backfill-cefi-20260816-162418` (found via `gcloud compute instances list`
-      2026-08-16) doesn't match any doc in the cefi-batch-5 hunter's 13-doc read — confirm it's a legitimate
-      known launch, not a duplicate/orphaned one.
+- [x] [OPERATOR] P3. **RESOLVED — plan_reconciler Phase -1, 2026-08-18**: `mdps-backfill-cefi-20260816-162418` is a
+      confirmed legitimate relaunch, not orphaned — `dp_vm_003_mdps_backfill_cefi_181733_already_superseded_2026_08_16.md`
+      documents it as the DP-VM-003 escalation (`agt-576027`) response replacing stalled/gone
+      `mdps-backfill-cefi-20260815-181733`, launched 2026-08-16T15:24:57Z (~4.5min after the stalled VM's last
+      checkpoint write), same asset_group/data_type, date range a strict superset of the outstanding work. Note:
+      `gcloud` re-check 2026-08-18 shows it still RUNNING 2 days on — plausible for a 2020-01-01→2026-01-31 full
+      backfill, not independently re-verified healthy-vs-stalled this pass; worth a `/vm-preemption-billing-waste-audit`
+      look if it's still running next time this doc is touched. Original text: Unidentified live VM
+      `mdps-backfill-cefi-20260816-162418` (found via `gcloud compute instances list` 2026-08-16) doesn't match any
+      doc in the cefi-batch-5 hunter's 13-doc read — confirm it's a legitimate known launch, not a duplicate/orphaned
+      one.
 - [x] [DOC] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
       `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 13. Original text:
       `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` has a systematic link-TEXT/href
@@ -267,7 +275,13 @@ grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked
       2026-08-09 audit that still called it unimplemented. NOT a clean flip candidate (doesn't obviously eliminate
       the per-day-subprocess architecture the two named options targeted) — needs a re-profile before deciding
       whether the todo is now fully closed or just partially addressed.
-- [ ] [REVIEW] P3. Possible shared root-cause across the `dp_vm_00N_*` VM-relaunch-chaos family (13 docs dated
+- [x] [REVIEW] P3. **RESOLVED — plan_reconciler Phase -1, 2026-08-18**: the hypothesized shared fix SHIPPED —
+      `vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md` is now `status: resolved`
+      (archived to `/plans/archive/issues/`), its launcher-checkpoint-resume-under-new-name fix landed
+      `deployment-service@71bfa99e60` (2026-08-17, verified ancestor of `origin/live-defi-rollout`). The `dp_vm_00N_*`
+      family has since grown to 20 docs (was 13) — whether each individual symptom doc still needs its own closure
+      now that the shared mechanism is fixed is a fresh question outside this pass's scope, not re-investigated here.
+      Original text: Possible shared root-cause across the `dp_vm_00N_*` VM-relaunch-chaos family (13 docs dated
       2026-08-14 through 2026-08-16, still accumulating): `vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s
       open todo 1 (give the launcher family a way to discover/resume a prior VM's checkpoint under a new name) reads
       as a plausible fix for a meaningful slice of this family's individual symptom reports. Not independently
@@ -344,3 +358,12 @@ None — all 80 non-grace docs in the cefi tranche were read in full by the hunt
   `assigned_vm: NA` — not archived (4 genuine open items remain).
 - **na-eligibility-audit 2026-08-17** [body-hash:fe51f315f7be41bd]: KEEP-NA, valid — Reaffirmed same-day. 4 remaining items (line-cap split gated on 2 design/judgment todos, an [OPERATOR] unidentified-VM confirmation, 2 [REVIEW] open-ended meta-process investigations outside this tranche's write scope) already independently re-verified by a same-day plan_reconciler Phase -1 pass. None clears the bounded-outcome bar. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **plan_reconciler Phase -1 reconciliation, 2026-08-18** (tranche=cefi, dispatch `agt-421c89`, slot 13): re-verified
+  all 4 remaining open items against fresh state. 2 RESOLVED with hard evidence (see checkbox flips above): the
+  unidentified-VM confirmation and the `dp_vm_00N_*` shared-root-cause hypothesis (`deployment-service@71bfa99e60`,
+  verified ancestor). 2 STILL-OPEN ORDINARY-WORK, unchanged: the `[INFRA] P2` line-cap split
+  (`cefi_book_snapshot5_...` re-confirmed 1080L, 2 open design/judgment todos, last touched 2026-08-16 — outside the
+  12h grace window) and the `[REVIEW] P3` AO-dispatch duplicate-escalation dedup suggestion (no follow-up doc found,
+  still outside cefi-tranche write scope). Doc stays `status: open`, `locked_by: plan_reconciler-agt-2e82f7`
+  unchanged (not archived — 2 genuine open items remain; the lock gates archival/unlock only, per
+  `agents/plan_reconciler.md`, not general Progress-Log append edits already made by 2 prior sibling-skill passes).
